@@ -1,6 +1,25 @@
 robot:
   model: go2
 
+simulation:
+  scene: third_party/unitree_mujoco/unitree_robots/go2/scene.xml
+
+motion:
+  # Exclusive locomotion backend: "rl" (local policy / sim) or "sport" (Unitree Move).
+  backend: rl
+  max_vx: 0.6
+  max_vy: 0.4
+  max_vyaw: 1.0
+  sport:
+    enabled: false
+    interface: lo
+    domain_id: 1
+  rl:
+    enabled: true
+    # Path to an ONNX or TorchScript Go2 locomotion policy (optional).
+    policy_path: ""
+    control_dt: 0.02
+
 language_model:
   enabled: false
   provider: llama_cpp

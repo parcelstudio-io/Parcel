@@ -12,6 +12,15 @@ class Pose:
 
 
 @dataclass(frozen=True)
+class VelocityCommand:
+    """Body-frame velocity request for locomotion backends."""
+
+    vx: float = 0.0
+    vy: float = 0.0
+    vyaw: float = 0.0
+
+
+@dataclass(frozen=True)
 class WifiCard:
     name: str
     interface: str

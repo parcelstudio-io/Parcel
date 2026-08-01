@@ -24,6 +24,7 @@ voice = [
 
 [project.scripts]
 parcel-agent = "parcel_robot.cli:main"
+parcel-sim = "parcel_robot.sim:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

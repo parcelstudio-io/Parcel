@@ -15,7 +15,13 @@ class FakeModel:
 
     def decide(self, transcript, tools, context):
         assert transcript
-        assert {tool["name"] for tool in tools} == {"run_pose", "stop_motion", "get_status"}
+        assert {tool["name"] for tool in tools} == {
+            "run_pose",
+            "set_velocity",
+            "set_motion_backend",
+            "stop_motion",
+            "get_status",
+        }
         return self.decision
 
 

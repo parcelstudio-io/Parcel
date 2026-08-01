@@ -7,6 +7,7 @@ from typing import Any
 import yaml
 
 from .models import ModuleSpec, Pose, WifiCard
+from .safety import SafetyLimits
 
 
 class ConfigStore:
@@ -26,6 +27,17 @@ class ConfigStore:
             )
             for name, item in self.data.get("poses", {}).items()
         }
+
+    def motion_config(self) -> dict[str, Any]:
+        return self.section("motion") if "motion" in self.data else {"backend": "rl"}
+
+    def safety_limits(self) -> SafetyLimits:
+        motion = self.motion_config()
+        return SafetyLimits(
+            max_vx=float(motion.get("max_vx", 0.6)),
+            max_vy=float(motion.get("max_vy", 0.4)),
+            max_vyaw=float(motion.get("max_vyaw", 1.0)),
+        )
 
     def wifi_cards(self) -> dict[str, WifiCard]:
         return {

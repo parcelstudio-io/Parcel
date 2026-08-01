@@ -5,7 +5,8 @@ import json
 from .agent import VoiceAgent
 from .config import ConfigStore
 from .memory import ConversationMemory
-from .models import Pose
+from .models import Pose, VelocityCommand
+from .motion import build_motion_router
 from .providers import LlamaCppProvider
 
 try:
@@ -27,6 +28,7 @@ class ParcelAgentNode(Node):
         super().__init__("parcel_voice_agent")
         store = ConfigStore(config_path)
         self.pose_pub = self.create_publisher(String, "/parcel/pose_request", 10)
+        self.walk_pub = self.create_publisher(String, "/parcel/walk_request", 10)
         self.stop_pub = self.create_publisher(String, "/parcel/stop_request", 10)
         self.reply_pub = self.create_publisher(String, "/parcel/voice_reply", 10)
         model_config = store.section("language_model")
@@ -38,6 +40,11 @@ class ParcelAgentNode(Node):
                 timeout=float(model_config.get("timeout", 30)),
             )
         memory_config = store.section("memory")
+        motion = build_motion_router(
+            store.motion_config(),
+            on_command=self.publish_walk,
+            on_stop=self.publish_stop,
+        )
         self.agent = VoiceAgent(
             store.poses(),
             store.load_modules(),
@@ -45,6 +52,8 @@ class ParcelAgentNode(Node):
             language_model=language_model,
             stop_publisher=self.publish_stop,
             memory=ConversationMemory(memory_config.get("path", ":memory:")),
+            motion=motion,
+            safety_limits=store.safety_limits(),
         )
         self.create_subscription(String, "/parcel/transcript", self.on_transcript, 10)
 
@@ -54,6 +63,13 @@ class ParcelAgentNode(Node):
             {"name": pose.name, "duration": pose.duration, "joints": pose.joints}
         )
         self.pose_pub.publish(message)
+
+    def publish_walk(self, command: VelocityCommand) -> None:
+        message = String()
+        message.data = json.dumps(
+            {"vx": command.vx, "vy": command.vy, "vyaw": command.vyaw}
+        )
+        self.walk_pub.publish(message)
 
     def publish_stop(self) -> None:
         message = String()

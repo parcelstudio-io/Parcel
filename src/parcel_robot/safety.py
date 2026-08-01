@@ -10,6 +10,12 @@ from .models import Pose, ToolCall, ToolResult
 class SafetyLimits:
     max_pose_duration: float = 10.0
     max_abs_joint_position: float = 3.2
+    max_vx: float = 0.6
+    max_vy: float = 0.4
+    max_vyaw: float = 1.0
+
+
+ALLOWED_BACKENDS = frozenset({"sport", "rl"})
 
 
 class SafetySupervisor:
@@ -29,6 +35,10 @@ class SafetySupervisor:
             if call.arguments:
                 return ToolResult(call.name, False, "get_status takes no arguments")
             return ToolResult(call.name, True, "Status request approved")
+        if call.name == "set_motion_backend":
+            return self._validate_backend(call)
+        if call.name == "set_velocity":
+            return self._validate_velocity(call)
         if call.name != "run_pose":
             return ToolResult(call.name, False, f"Tool is not allowed: {call.name}")
         if self.emergency_stopped:
@@ -46,6 +56,39 @@ class SafetySupervisor:
             if not math.isfinite(value) or abs(value) > self.limits.max_abs_joint_position:
                 return ToolResult(call.name, False, "Pose contains an unsafe joint position")
         return ToolResult(call.name, True, f"Pose approved: {pose.name}")
+
+    def _validate_backend(self, call: ToolCall) -> ToolResult:
+        if set(call.arguments) != {"name"} or not isinstance(call.arguments["name"], str):
+            return ToolResult(call.name, False, "set_motion_backend requires only a string name")
+        name = call.arguments["name"]
+        if name not in ALLOWED_BACKENDS:
+            return ToolResult(call.name, False, f"Unknown motion backend: {name}")
+        return ToolResult(call.name, True, f"Motion backend approved: {name}")
+
+    def _validate_velocity(self, call: ToolCall) -> ToolResult:
+        if self.emergency_stopped:
+            return ToolResult(call.name, False, "Motion is disabled by emergency stop")
+        allowed = {"vx", "vy", "vyaw"}
+        if not set(call.arguments).issubset(allowed):
+            return ToolResult(call.name, False, "set_velocity only accepts vx, vy, vyaw")
+        values = {
+            key: float(call.arguments.get(key, 0.0))
+            for key in ("vx", "vy", "vyaw")
+        }
+        if any(not math.isfinite(value) for value in values.values()):
+            return ToolResult(call.name, False, "set_velocity values must be finite")
+        if abs(values["vx"]) > self.limits.max_vx:
+            return ToolResult(call.name, False, "vx exceeds the configured safe limit")
+        if abs(values["vy"]) > self.limits.max_vy:
+            return ToolResult(call.name, False, "vy exceeds the configured safe limit")
+        if abs(values["vyaw"]) > self.limits.max_vyaw:
+            return ToolResult(call.name, False, "vyaw exceeds the configured safe limit")
+        return ToolResult(
+            call.name,
+            True,
+            f"Velocity approved: vx={values['vx']:.2f} vy={values['vy']:.2f} "
+            f"vyaw={values['vyaw']:.2f}",
+        )
 
     def engage_emergency_stop(self) -> None:
         self.emergency_stopped = True

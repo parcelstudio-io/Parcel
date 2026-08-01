@@ -17,8 +17,10 @@ modules separate so the same intent layer can later run against a physical dog.
 - A Gemma/llama.cpp structured-tool adapter with deterministic validation.
 - whisper.cpp speech recognition and isolated Sesame CSM-1B client adapters.
 - YAML-defined poses and Wi-Fi/network-card profiles.
+- A motion router with exclusive **Sport Move** and **RL locomotion** backends.
 - A Python extension interface for custom sensors, behaviors, or hardware.
-- ROS topics for transcript input, pose requests, and spoken replies.
+- ROS topics for transcript input, pose/walk requests, and spoken replies.
+- Local `parcel-sim` MuJoCo preview for poses and walk intents.
 - MuJoCo, audio capture, linting, and test packages installed in `.parcel`.
 
 The first ROS boundary is intentionally simple:
@@ -27,12 +29,14 @@ The first ROS boundary is intentionally simple:
 | --- | --- | --- |
 | `/parcel/transcript` | `std_msgs/String` | Speech-to-text result enters the agent |
 | `/parcel/pose_request` | `std_msgs/String` | JSON pose intent sent to a controller |
+| `/parcel/walk_request` | `std_msgs/String` | JSON body-frame velocity for locomotion |
 | `/parcel/voice_reply` | `std_msgs/String` | Reply for a text-to-speech node |
 | `/parcel/stop_request` | `std_msgs/String` | High-priority stop intent |
 
-Pose requests are not sent directly to motors. A controller/bridge must validate
-joint limits, interpolate the trajectory, implement an emergency stop, and then
-translate the request into Unitree low-level commands.
+Pose and walk requests are not sent directly to motors. A controller/bridge must
+validate limits, implement an emergency stop, and translate the request into
+Unitree commands or RL joint targets. Only one locomotion backend should be
+active at a time—see [Motion backends](docs/MOTION.md).
 
 ## Installed Python environment
 
@@ -73,7 +77,20 @@ python -m pip install -e ".[dev,voice]"
 ```bash
 source .parcel/bin/activate
 parcel-agent --text "do the sit pose"
+parcel-agent --text "walk forward"
+parcel-agent --text "use sport backend"
 parcel-agent --text "status"
+```
+
+Local MuJoCo pose/walk preview (clone `unitree_mujoco` under `third_party/` first):
+
+```bash
+# terminal 1
+parcel-sim
+
+# terminal 2
+parcel-agent --sim --text "do the sit pose"
+parcel-agent --sim --text "walk forward"
 ```
 
 With a local `llama-server` running and configured in `robot.yaml`:
@@ -256,10 +273,13 @@ selection, deployment commands, trust boundaries, privacy, and latency targets.
 src/parcel_robot/
 ├── agent.py          # transcript command routing
 ├── config.py         # YAML loaders and dynamic modules
-├── config/robot.yaml # poses, cards, and modules
+├── config/robot.yaml # poses, motion backends, cards, modules
+├── motion.py         # Sport Move + RL locomotion router
 ├── modules.py        # extension protocol and example
+├── sim.py            # MuJoCo preview for poses/walk
 └── ros_node.py       # ROS topic boundary
 tests/                # non-ROS unit tests
+docs/MOTION.md        # Sport vs RL setup guide
 ```
 
 Official references:
