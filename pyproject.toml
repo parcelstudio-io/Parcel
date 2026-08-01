@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "parcel-robot-dog"
+version = "0.1.0"
+description = "Extensible ROS 2 voice-agent controls for a Unitree robot dog"
+requires-python = ">=3.10"
+dependencies = [
+  "mujoco>=3.3,<4",
+  "numpy>=2,<3",
+  "PyYAML>=6,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<9",
+  "ruff>=0.12,<1",
+]
+voice = [
+  "sounddevice>=0.5,<1",
+]
+
+[project.scripts]
+parcel-agent = "parcel_robot.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+parcel_robot = ["config/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+

@@ -1,0 +1,21 @@
+.parcel/
+build/
+install/
+log/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+parcel_memory.sqlite3
+
+# Local model downloads (fetch from Hugging Face; do not commit weights)
+models/**/.cache/
+models/**/*.pt
+models/**/*.safetensors
+models/**/*.incomplete
+*.incomplete
+
+# Nested clone of Sesame CSM (has its own .git)
+third_party/
+
