@@ -61,8 +61,10 @@ parcel-sim
 parcel-agent --sim --text "walk forward"
 ```
 
-`parcel-sim` applies a crude free-base velocity for walk intents so the stack can
-be tested end-to-end before a real gait policy is loaded.
+`parcel-sim` runs a **scripted open-loop trot** for walk intents so the legs
+cycle while the free base is pushed along. That is only a visual/control-stack
+preview—not Unitree Sport gait and not a trained RL policy. Replace it by
+loading a real policy via `motion.rl.policy_path` or enabling Sport Move.
 
 ## Sport Move backend
 

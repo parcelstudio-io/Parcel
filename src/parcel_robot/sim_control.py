@@ -94,6 +94,23 @@ class PoseController:
         self._active = False
         self._hold = True
 
+    def hold_joints(self, joints: dict[str, float]) -> None:
+        """Immediately hold the given joint targets (used by the walk gait)."""
+        missing = []
+        for joint_name, value in joints.items():
+            matched = False
+            for binding in self.bindings:
+                if binding.joint_name == joint_name:
+                    self._targets[binding.actuator_id] = float(value)
+                    matched = True
+                    break
+            if not matched:
+                missing.append(joint_name)
+        if missing:
+            raise KeyError(f"unknown joints for this model: {', '.join(missing)}")
+        self._active = False
+        self._hold = True
+
     def step(self, data: mujoco.MjData, dt: float) -> None:
         if self._active:
             self._elapsed += float(dt)

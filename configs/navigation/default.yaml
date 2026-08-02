@@ -1,0 +1,21 @@
+# Active city-navigation stack for Parcel.
+# Full MetaUrban city + pedestrians require a Conda Python 3.9 + GPU host.
+# See docs/NAVIGATION_CITY.md.
+
+active_model: stub_v0
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+metaurban:
+  enabled: false
+  density_ped: 1.0
+  density_obj: 0.4
+  mode: social_nav   # point_nav | social_nav
+
+safety:
+  max_vx: 0.45
+  max_vy: 0.25
+  max_vyaw: 0.8
+  stop_distance_m: 0.8
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

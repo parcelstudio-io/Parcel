@@ -19,7 +19,7 @@ class ConfigStore:
             self.data: dict[str, Any] = yaml.safe_load(stream) or {}
 
     def poses(self) -> dict[str, Pose]:
-        return {
+        legacy = {
             name: Pose(
                 name=name,
                 joints={joint: float(value) for joint, value in item["joints"].items()},
@@ -27,6 +27,33 @@ class ConfigStore:
             )
             for name, item in self.data.get("poses", {}).items()
         }
+        try:
+            from parcel_robot.skills.catalog import SkillCatalog
+
+            catalog = SkillCatalog.load(self.skills_root())
+            poses = catalog.as_pose_map()
+            poses.update(legacy)
+            return poses
+        except (FileNotFoundError, OSError, KeyError, ValueError, TypeError):
+            return legacy
+
+    def skills_root(self) -> Path:
+        configured = None
+        if "skills" in self.data and isinstance(self.data["skills"], dict):
+            configured = self.data["skills"].get("root")
+        if not configured:
+            configured = "configs/skills"
+        path = Path(str(configured)).expanduser()
+        if path.is_absolute():
+            return path
+        bases = [self.path.parent.parent, Path.cwd()]
+        if len(self.path.parents) >= 4:
+            bases.insert(0, self.path.parents[3])
+        for base in bases:
+            candidate = (base / path).resolve()
+            if candidate.is_dir():
+                return candidate
+        return (Path.cwd() / path).resolve()
 
     def motion_config(self) -> dict[str, Any]:
         return self.section("motion") if "motion" in self.data else {"backend": "rl"}

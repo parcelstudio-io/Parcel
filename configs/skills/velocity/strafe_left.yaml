@@ -1,0 +1,18 @@
+id: strafe_left
+name: Strafe left
+kind: velocity
+enabled: true
+tags:
+- locomotion
+- velocity
+velocity:
+  vx: 0.0
+  vy: 0.2
+  vyaw: 0.0
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: locomotion_velocity
+  control_dt: 0.02

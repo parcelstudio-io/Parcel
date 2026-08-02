@@ -10,21 +10,25 @@ from .models import Pose, VelocityCommand
 from .motion import build_motion_router
 from .providers import LlamaCppProvider
 from .ros_node import run
-from .sim_ipc import DEFAULT_SOCKET, publish_pose, publish_stop, publish_velocity
+from .sim_ipc import DEFAULT_SOCKET
+from .skills.api import Dog
 
-DEFAULT_CONFIG = Path(__file__).with_name("config") / "robot.yaml"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_CONFIG = REPO_ROOT / "configs" / "robot.yaml"
+FALLBACK_CONFIG = Path(__file__).with_name("config") / "robot.yaml"
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Parcel robot-dog voice agent")
-    parser.add_argument("--config", default=str(DEFAULT_CONFIG))
+    default_config = DEFAULT_CONFIG if DEFAULT_CONFIG.is_file() else FALLBACK_CONFIG
+    parser.add_argument("--config", default=str(default_config))
     parser.add_argument("--ros", action="store_true", help="run as a ROS 2 node")
     parser.add_argument("--text", help="test one transcribed command without ROS")
     parser.add_argument("--llm", action="store_true", help="use the configured llama.cpp server")
     parser.add_argument(
         "--sim",
         action="store_true",
-        help="send pose/walk requests to a running parcel-sim MuJoCo viewer",
+        help="send skill requests to a running parcel-sim MuJoCo viewer",
     )
     parser.add_argument(
         "--socket",
@@ -51,33 +55,36 @@ def main() -> None:
 
     def publish(pose: Pose) -> None:
         published.append(pose)
-        if args.sim:
-            publish_pose(pose, args.socket)
 
     def on_walk(command: VelocityCommand) -> None:
         walks.append(command)
-        if args.sim:
-            publish_velocity(command, args.socket)
 
     def stop() -> None:
-        if args.sim:
-            publish_stop(args.socket)
+        pass
 
     motion = build_motion_router(
         store.motion_config(),
         on_command=on_walk,
-        on_stop=stop if args.sim else None,
+        on_stop=None,
+    )
+    dog = Dog.from_config(
+        args.config,
+        sim_socket=args.socket if args.sim else None,
+        motion=motion,
+        on_pose=publish,
+        on_velocity=on_walk,
     )
 
     agent = VoiceAgent(
-        store.poses(),
+        dog.poses() or store.poses(),
         store.load_modules(),
         publish,
         language_model=language_model,
-        stop_publisher=stop,
+        stop_publisher=lambda: dog.stop(),
         memory=ConversationMemory(),
         motion=motion,
         safety_limits=store.safety_limits(),
+        dog=dog,
     )
     if args.text:
         print(agent.handle_text(args.text))
@@ -86,6 +93,8 @@ def main() -> None:
         if walks:
             print(f"walk request: {walks[-1]}")
         print(f"motion: {motion.status()}")
+        if dog.executor.selected:
+            print(f"skill: {dog.executor.selected}")
         return
     parser.error("choose --ros or --text")
 

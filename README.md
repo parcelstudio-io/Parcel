@@ -72,7 +72,48 @@ python -m pip install -e ".[dev,voice]"
 
 `COLCON_IGNORE` prevents colcon from searching the virtual environment.
 
-## Try the agent without ROS
+## Skills catalog, city scene, and Dog API
+
+See [Skills / city / RL implementation](docs/IMPLEMENTATION_SKILLS_CITY_RL.md).
+
+```bash
+source .parcel/bin/activate
+# Public API
+python - <<'PY'
+from parcel_robot.skills import Dog
+dog = Dog.from_config("configs/robot.yaml")
+print(len(dog.list_skills()), "skills")
+print(dog.execute("jump"))
+PY
+
+# City sim + button pad
+./scripts/launch_sim.sh
+
+# RL env smoke (no display)
+python examples/rl_env_smoke.py
+
+# City navigation (POI grounding + stub pedestrians / social reward)
+python examples/nav_city_smoke.py
+```
+
+City navigation, open-weight model registry, and MetaUrban setup:
+see [City navigation](docs/NAVIGATION_CITY.md).
+
+```bash
+# On a Conda Python 3.9 + GPU host (not this Python 3.14 venv):
+./scripts/setup_metaurban.sh
+
+# Switch navigator model in configs/navigation/default.yaml
+# active_model: stub_v0 | citywalker_v1 | navila_v1 | nomad_v1 | vint_v1
+
+python - <<'PY'
+from parcel_robot.skills import Dog
+dog = Dog.from_config("configs/robot.yaml")
+dog.set_nav_pose((0, 0, 0), 0)
+mission, cmd = dog.navigate("I want you to go to the coffee shop at 42nd street")
+print(mission.goal, cmd)
+PY
+```
 
 ```bash
 source .parcel/bin/activate
@@ -85,10 +126,26 @@ parcel-agent --text "status"
 Local MuJoCo pose/walk preview (clone `unitree_mujoco` under `third_party/` first):
 
 ```bash
+./scripts/launch_sim.sh
+```
+
+That starts `parcel-sim` and the `parcel-control` button pad together. Or run them
+separately:
+
+```bash
 # terminal 1
 parcel-sim
 
-# terminal 2
+# terminal 2 — button pad (no CLI commands needed)
+parcel-control
+```
+
+Or focus the MuJoCo window and use keys: `W/S` forward/back, `A/D` strafe,
+`Q/E` turn, `Space` stop, `1` sit, `2` bow.
+
+You can still drive it from the agent:
+
+```bash
 parcel-agent --sim --text "do the sit pose"
 parcel-agent --sim --text "walk forward"
 ```

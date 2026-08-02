@@ -29,6 +29,7 @@ class VoiceAgent:
         memory: ConversationMemory | None = None,
         motion: MotionRouter | None = None,
         safety_limits: SafetyLimits | None = None,
+        dog=None,
     ):
         self.poses = poses
         self.modules = modules
@@ -37,7 +38,13 @@ class VoiceAgent:
         self.stop_publisher = stop_publisher or (lambda: None)
         self.memory = memory or ConversationMemory()
         self.motion = motion
-        self.safety = SafetySupervisor(poses, safety_limits)
+        self.dog = dog
+        self.safety = SafetySupervisor(poses, safety_limits, skill_ids=self._skill_ids())
+
+    def _skill_ids(self) -> list[str]:
+        if self.dog is None:
+            return sorted(self.poses)
+        return self.dog.catalog.ids()
 
     def handle_text(self, transcript: str) -> str:
         text = re.sub(r"\s+", " ", transcript.strip().lower())
@@ -51,7 +58,6 @@ class VoiceAgent:
                 )
                 return self._execute(decision, transcript=text)
             except (RuntimeError, TypeError, ValueError):
-                # A model outage or malformed output must not remove basic commands.
                 pass
 
         backend_match = re.fullmatch(r"use (sport|rl)(?: backend)?", text)
@@ -65,6 +71,14 @@ class VoiceAgent:
 
         walk = self._parse_walk(text)
         if walk is not None:
+            if self.dog is not None:
+                skill = "walk_forward"
+                if walk.vx < 0:
+                    skill = "walk_backward"
+                elif abs(walk.vyaw) > abs(walk.vx):
+                    skill = "turn_left" if walk.vyaw > 0 else "turn_right"
+                result = self.dog.execute(skill, vx=walk.vx, vy=walk.vy, vyaw=walk.vyaw)
+                return self._walk_reply(walk) if result.accepted else result.message
             if self.motion is None:
                 return "Locomotion is not configured"
             call = ToolCall(
@@ -76,16 +90,50 @@ class VoiceAgent:
                 transcript=text,
             )
 
-        pose_match = re.fullmatch(r"(?:do|pose|show) (?:the )?(.+?)(?: pose)?", text)
-        if pose_match:
-            pose_name = pose_match.group(1).replace(" ", "_")
-            pose = self.poses.get(pose_name)
+        nav_directive = self._parse_navigate(text)
+        if nav_directive is not None and self.dog is not None:
+            try:
+                mission, cmd = self.dog.navigate(nav_directive)
+            except (LookupError, RuntimeError, ValueError) as error:
+                return f"I couldn't navigate there. {error}"
+            place = mission.goal.label or mission.goal.poi_id
+            if cmd.stop:
+                return f"Arrived at {place}."
+            return (
+                f"Navigating to {place} "
+                f"(vx={cmd.vx:.2f}, vyaw={cmd.vyaw:.2f}; {cmd.note})."
+            )
+
+        skill_match = re.fullmatch(
+            r"(?:do|pose|show|run|perform) (?:the )?(.+?)(?: pose| skill| action)?",
+            text,
+        )
+        if skill_match:
+            skill_name = skill_match.group(1).replace(" ", "_")
+            if self.dog is not None and skill_name in self.dog.catalog.ids():
+                result = self.dog.execute(skill_name)
+                return (
+                    f"Running {skill_name}"
+                    if result.accepted
+                    else f"I couldn't do that safely. {result.message}"
+                )
+            pose = self.poses.get(skill_name)
             if pose is None:
-                return f"Unknown pose: {pose_name}"
+                return f"Unknown pose: {skill_name}"
             if self.motion is not None:
                 self.motion.stop()
             self.pose_publisher(pose)
             return f"Running {pose.name} pose"
+
+        if self.dog is not None:
+            bare = text.replace(" ", "_")
+            if bare in self.dog.catalog.ids():
+                result = self.dog.execute(bare)
+                return (
+                    f"Running {bare}"
+                    if result.accepted
+                    else f"I couldn't do that safely. {result.message}"
+                )
 
         command, _, argument = text.partition(" ")
         for module in self.modules:
@@ -112,6 +160,21 @@ class VoiceAgent:
         return None
 
     @staticmethod
+    def _parse_navigate(text: str) -> str | None:
+        """Extract destination phrases like 'go to the coffee shop at 42nd street'."""
+        patterns = [
+            r"(?:i want you to |please )?(?:go|navigate|walk|take me) to (.+)",
+            r"(?:head|drive) to (.+)",
+        ]
+        for pattern in patterns:
+            match = re.fullmatch(pattern, text)
+            if match:
+                dest = match.group(1).strip(" .!")
+                if dest and dest not in {"forward", "backward", "back", "left", "right"}:
+                    return dest
+        return None
+
+    @staticmethod
     def _walk_reply(command: VelocityCommand) -> str:
         if abs(command.vyaw) > abs(command.vx) and abs(command.vyaw) > abs(command.vy):
             direction = "left" if command.vyaw > 0 else "right"
@@ -132,9 +195,18 @@ class VoiceAgent:
                 failures.append(result.message)
                 continue
             if call.name == "run_pose":
-                if self.motion is not None:
-                    self.motion.stop()
-                self.pose_publisher(self.poses[call.arguments["name"]])
+                name = call.arguments["name"]
+                if self.dog is not None and name in self.dog.catalog.ids():
+                    detail = self.dog.execute(name).message
+                else:
+                    if self.motion is not None:
+                        self.motion.stop()
+                    self.pose_publisher(self.poses[name])
+            elif call.name == "run_skill":
+                if self.dog is None:
+                    failures.append("Skill catalog is not configured")
+                    continue
+                detail = self.dog.execute(str(call.arguments["name"])).message
             elif call.name == "set_velocity":
                 if self.motion is None:
                     failures.append("Locomotion is not configured")
@@ -150,9 +222,30 @@ class VoiceAgent:
                     failures.append("Locomotion is not configured")
                     continue
                 detail = self.motion.set_backend(str(call.arguments["name"]))
+            elif call.name == "navigate":
+                if self.dog is None:
+                    failures.append("Navigation requires the Dog API")
+                    continue
+                directive = str(call.arguments.get("directive", "")).strip()
+                if not directive:
+                    failures.append("navigate requires a directive")
+                    continue
+                try:
+                    mission, cmd = self.dog.navigate(directive)
+                except (LookupError, RuntimeError, ValueError) as error:
+                    failures.append(str(error))
+                    continue
+                place = mission.goal.label or mission.goal.poi_id
+                detail = (
+                    f"Arrived at {place}."
+                    if cmd.stop
+                    else f"Navigating to {place} (vx={cmd.vx:.2f})."
+                )
             elif call.name == "stop_motion":
                 self.safety.engage_emergency_stop()
-                if self.motion is not None:
+                if self.dog is not None:
+                    self.dog.stop()
+                elif self.motion is not None:
                     self.motion.stop()
                 self.stop_publisher()
             elif call.name == "get_status":
@@ -178,13 +271,24 @@ class VoiceAgent:
         return None
 
     def tool_definitions(self) -> list[dict[str, Any]]:
+        skill_enum = self._skill_ids()
         tools: list[dict[str, Any]] = [
             {
                 "name": "run_pose",
-                "description": "Run one configured pose.",
+                "description": "Run one configured pose skill.",
                 "parameters": {
                     "type": "object",
-                    "properties": {"name": {"type": "string", "enum": sorted(self.poses)}},
+                    "properties": {"name": {"type": "string", "enum": sorted(self.poses) or skill_enum}},
+                    "required": ["name"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "name": "run_skill",
+                "description": "Run any catalog skill (pose, trajectory, gait, velocity).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"name": {"type": "string", "enum": skill_enum}},
                     "required": ["name"],
                     "additionalProperties": False,
                 },
@@ -211,6 +315,19 @@ class VoiceAgent:
                         "name": {"type": "string", "enum": ["sport", "rl"]},
                     },
                     "required": ["name"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "name": "navigate",
+                "description": (
+                    "Navigate to a place from a natural-language directive "
+                    "(e.g. coffee shop at 42nd street)."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {"directive": {"type": "string"}},
+                    "required": ["directive"],
                     "additionalProperties": False,
                 },
             },

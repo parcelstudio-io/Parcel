@@ -18,12 +18,32 @@ def pose_to_message(pose: Pose) -> dict:
     }
 
 
-def velocity_to_message(command: VelocityCommand) -> dict:
-    return {
+def velocity_to_message(
+    command: VelocityCommand,
+    *,
+    gait_style: str | None = None,
+    frequency_hz: float | None = None,
+) -> dict:
+    message = {
         "type": "walk",
         "vx": command.vx,
         "vy": command.vy,
         "vyaw": command.vyaw,
+    }
+    if gait_style is not None:
+        message["gait_style"] = gait_style
+    if frequency_hz is not None:
+        message["frequency_hz"] = float(frequency_hz)
+    return message
+
+
+def trajectory_to_message(skill) -> dict:
+    return {
+        "type": "trajectory",
+        "name": skill.id,
+        "keyframes": [
+            {"t": frame.t, "joints": dict(frame.joints)} for frame in skill.keyframes
+        ],
     }
 
 
@@ -64,9 +84,22 @@ def publish_pose(pose: Pose, socket_path: Path | str = DEFAULT_SOCKET) -> None:
 
 
 def publish_velocity(
-    command: VelocityCommand, socket_path: Path | str = DEFAULT_SOCKET
+    command: VelocityCommand,
+    socket_path: Path | str = DEFAULT_SOCKET,
+    *,
+    gait_style: str | None = None,
+    frequency_hz: float | None = None,
 ) -> None:
-    send_message(velocity_to_message(command), socket_path)
+    send_message(
+        velocity_to_message(
+            command, gait_style=gait_style, frequency_hz=frequency_hz
+        ),
+        socket_path,
+    )
+
+
+def publish_trajectory(skill, socket_path: Path | str = DEFAULT_SOCKET) -> None:
+    send_message(trajectory_to_message(skill), socket_path)
 
 
 def publish_stop(socket_path: Path | str = DEFAULT_SOCKET) -> None:
@@ -86,7 +119,7 @@ class PoseSocketServer:
         server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         server.bind(str(self.socket_path))
         server.listen(8)
-        server.settimeout(0.05)
+        server.setblocking(False)
         self._server = server
 
     def close(self) -> None:
@@ -103,12 +136,12 @@ class PoseSocketServer:
         while True:
             try:
                 conn, _ = self._server.accept()
-            except TimeoutError:
+            except BlockingIOError:
                 break
             except OSError:
                 break
             with conn:
-                conn.settimeout(0.2)
+                conn.settimeout(0.05)
                 chunks: list[bytes] = []
                 try:
                     while True:

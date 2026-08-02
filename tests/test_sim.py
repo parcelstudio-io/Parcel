@@ -4,7 +4,8 @@ from pathlib import Path
 import mujoco
 import pytest
 
-from parcel_robot.models import Pose
+from parcel_robot.gait import ScriptedTrotGait
+from parcel_robot.models import Pose, VelocityCommand
 from parcel_robot.sim_control import PoseController, bind_actuators
 from parcel_robot.sim_ipc import (
     PoseSocketServer,
@@ -77,6 +78,15 @@ def test_pose_controller_moves_toward_targets():
 def test_pose_message_roundtrip():
     pose = Pose("bow", {"FL_hip_joint": 0.1}, duration=1.25)
     assert message_to_pose(pose_to_message(pose)) == pose
+
+
+def test_scripted_trot_cycles_legs():
+    gait = ScriptedTrotGait()
+    first = gait.joints_for(VelocityCommand(vx=0.3), 0.02)
+    for _ in range(20):
+        later = gait.joints_for(VelocityCommand(vx=0.3), 0.02)
+    assert later["FL_thigh_joint"] != first["FL_thigh_joint"]
+    assert later["FR_thigh_joint"] != pytest.approx(later["FL_thigh_joint"], abs=1e-6)
 
 
 def test_socket_publish_and_poll(tmp_path):

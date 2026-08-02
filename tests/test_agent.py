@@ -1,6 +1,9 @@
+from pathlib import Path
+
 from parcel_robot.agent import VoiceAgent
 from parcel_robot.config import ConfigStore
 from parcel_robot.models import Pose
+from parcel_robot.skills import Dog
 
 
 def test_pose_command_publishes_pose():
@@ -37,3 +40,10 @@ modules:
 
     assert agent.handle_text("status") == "scout is ready"
 
+
+def test_navigate_directive_with_dog():
+    dog = Dog.from_config(Path(__file__).resolve().parents[1] / "configs" / "robot.yaml")
+    agent = VoiceAgent(dog.poses(), [], lambda pose: None, dog=dog)
+    reply = agent.handle_text("I want you to go to the coffee shop at 42nd street")
+    assert "coffee" in reply.lower()
+    assert "Navigating" in reply or "Arrived" in reply

@@ -1,0 +1,13 @@
+id: stub_v0
+type: stub
+version: "0.0.1"
+description: Offline straight-line mid-level navigator for API/tests without weights.
+checkpoint: ""
+device: cpu
+rl:
+  enabled: true
+  trainable: true
+  algo: ppo
+  obs_keys: [goal_delta, velocity]
+  action_space: mid_level_velocity
+  reward: social_nav_v1

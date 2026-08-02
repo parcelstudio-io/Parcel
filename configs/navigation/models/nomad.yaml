@@ -1,0 +1,14 @@
+id: nomad_v1
+type: nomad
+version: "1.0.0"
+description: NoMaD goal-masked diffusion policy (visualnav-transformer family).
+homepage: https://github.com/robodhruv/visualnav-transformer
+checkpoint: models/nav/nomad_v1.pt
+device: cuda
+rl:
+  enabled: true
+  trainable: true
+  algo: diffusion_il
+  obs_keys: [rgb, goal_image]
+  action_space: mid_level_velocity
+  reward: social_nav_v1

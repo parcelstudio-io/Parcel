@@ -1,0 +1,28 @@
+id: bow
+name: Bow
+kind: pose
+enabled: true
+tags:
+- pose
+- social
+duration: 1.2
+joints:
+  FL_hip_joint: 0.0
+  FL_thigh_joint: 1.2
+  FL_calf_joint: -2.2
+  FR_hip_joint: 0.0
+  FR_thigh_joint: 1.2
+  FR_calf_joint: -2.2
+  RL_hip_joint: 0.0
+  RL_thigh_joint: 0.8
+  RL_calf_joint: -1.6
+  RR_hip_joint: 0.0
+  RR_thigh_joint: 0.8
+  RR_calf_joint: -1.6
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: pose_hold
+  control_dt: 0.02

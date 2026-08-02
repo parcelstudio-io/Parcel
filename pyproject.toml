@@ -25,12 +25,13 @@ voice = [
 [project.scripts]
 parcel-agent = "parcel_robot.cli:main"
 parcel-sim = "parcel_robot.sim:main"
+parcel-control = "parcel_robot.control_panel:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-parcel_robot = ["config/*.yaml"]
+parcel_robot = ["config/*.yaml", "scenes/*.xml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

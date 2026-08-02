@@ -17,6 +17,7 @@ class FakeModel:
         assert transcript
         assert {tool["name"] for tool in tools} == {
             "run_pose",
+            "run_skill",
             "set_velocity",
             "set_motion_backend",
             "stop_motion",

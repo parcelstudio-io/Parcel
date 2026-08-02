@@ -1,0 +1,63 @@
+robot:
+  model: go2
+
+simulation:
+  scene: src/parcel_robot/scenes/city_block.xml
+
+skills:
+  root: configs/skills
+
+navigation:
+  enabled: true
+  config: configs/navigation/default.yaml
+
+motion:
+  backend: rl
+  max_vx: 0.6
+  max_vy: 0.4
+  max_vyaw: 1.0
+  sport:
+    enabled: false
+    interface: lo
+    domain_id: 1
+  rl:
+    enabled: true
+    policy_path: ""
+    control_dt: 0.02
+
+language_model:
+  enabled: false
+  provider: llama_cpp
+  base_url: http://127.0.0.1:8080
+  model: gemma
+  timeout: 30
+
+speech:
+  stt_provider: whisper_cpp
+  whisper_url: http://127.0.0.1:8178
+  tts_provider: csm
+  csm_url: http://127.0.0.1:8090
+  speaker: 0
+
+memory:
+  path: parcel_memory.sqlite3
+
+# Legacy inline poses kept as a shim; canonical skills live under configs/skills/.
+poses: {}
+
+wifi_cards:
+  simulator:
+    interface: lo
+    ros_domain_id: 1
+    purpose: simulation
+  robot:
+    interface: enp3s0
+    ros_domain_id: 0
+    purpose: physical_robot
+
+modules:
+  - name: status
+    class: parcel_robot.modules.StatusModule
+    enabled: true
+    config:
+      label: parcel-dog

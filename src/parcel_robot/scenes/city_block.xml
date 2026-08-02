@@ -1,0 +1,63 @@
+<mujoco model="parcel_city_block">
+  <!-- Stylized city block for Go2 skill / RL development. -->
+  <include file="../../../third_party/unitree_mujoco/unitree_robots/go2/go2.xml"/>
+  <!-- go2.xml meshdir is relative to this scene file; override after include. -->
+  <compiler meshdir="../../../third_party/unitree_mujoco/unitree_robots/go2/assets"
+    angle="radian" autolimits="true"/>
+
+  <statistic center="0 0 0.4" extent="8"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.35 0.35 0.35" specular="0 0 0"/>
+    <rgba haze="0.45 0.5 0.55 1"/>
+    <global azimuth="-140" elevation="-18"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.45 0.62 0.82" rgb2="0.08 0.12 0.18"
+      width="512" height="3072"/>
+    <texture type="2d" name="asphalt" builtin="checker" mark="edge" rgb1="0.22 0.22 0.24"
+      rgb2="0.18 0.18 0.2" markrgb="0.3 0.3 0.32" width="256" height="256"/>
+    <texture type="2d" name="sidewalk" builtin="flat" rgb1="0.55 0.55 0.52" width="128" height="128"/>
+    <material name="asphalt" texture="asphalt" texuniform="true" texrepeat="8 8" reflectance="0.05"/>
+    <material name="sidewalk" texture="sidewalk" reflectance="0.08"/>
+    <material name="building_a" rgba="0.62 0.58 0.52 1"/>
+    <material name="building_b" rgba="0.45 0.5 0.55 1"/>
+    <material name="building_c" rgba="0.7 0.68 0.64 1"/>
+    <material name="crosswalk" rgba="0.92 0.92 0.9 1"/>
+    <material name="bench" rgba="0.35 0.28 0.2 1"/>
+    <material name="curb" rgba="0.5 0.5 0.48 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="2 1 6" dir="-0.2 -0.1 -1" diffuse="0.8 0.8 0.75" castshadow="true"/>
+    <light pos="-3 -2 5" dir="0.3 0.2 -1" diffuse="0.35 0.35 0.4"/>
+
+    <!-- Road -->
+    <geom name="road" type="plane" size="12 12 0.05" material="asphalt" friction="0.9"/>
+
+    <!-- Sidewalk strip -->
+    <geom name="sidewalk" type="box" pos="0 3.2 0.06" size="8 1.0 0.06" material="sidewalk"/>
+    <geom name="curb" type="box" pos="0 2.15 0.05" size="8 0.08 0.05" material="curb"/>
+
+    <!-- Crosswalk stripes -->
+    <geom name="xw1" type="box" pos="2.5 0.8 0.002" size="0.15 1.2 0.002" material="crosswalk"/>
+    <geom name="xw2" type="box" pos="2.9 0.8 0.002" size="0.15 1.2 0.002" material="crosswalk"/>
+    <geom name="xw3" type="box" pos="3.3 0.8 0.002" size="0.15 1.2 0.002" material="crosswalk"/>
+    <geom name="xw4" type="box" pos="3.7 0.8 0.002" size="0.15 1.2 0.002" material="crosswalk"/>
+
+    <!-- Buildings -->
+    <geom name="bldg_1" type="box" pos="-4.5 5.5 2.0" size="1.8 1.5 2.0" material="building_a"/>
+    <geom name="bldg_2" type="box" pos="-1.0 5.8 2.8" size="1.4 1.2 2.8" material="building_b"/>
+    <geom name="bldg_3" type="box" pos="2.2 5.6 1.6" size="1.5 1.4 1.6" material="building_c"/>
+    <geom name="bldg_4" type="box" pos="5.5 5.4 2.4" size="1.6 1.5 2.4" material="building_a"/>
+    <geom name="bldg_5" type="box" pos="-5.5 -4.5 1.8" size="1.7 1.4 1.8" material="building_b"/>
+    <geom name="bldg_6" type="box" pos="5.0 -5.0 2.2" size="1.8 1.6 2.2" material="building_c"/>
+
+    <!-- Bench on sidewalk -->
+    <geom name="bench_seat" type="box" pos="-2.5 3.0 0.28" size="0.7 0.22 0.06" material="bench"/>
+    <geom name="bench_back" type="box" pos="-2.5 3.18 0.42" size="0.7 0.05 0.18" material="bench"/>
+    <geom name="bench_leg_l" type="box" pos="-3.05 3.0 0.14" size="0.05 0.18 0.14" material="bench"/>
+    <geom name="bench_leg_r" type="box" pos="-1.95 3.0 0.14" size="0.05 0.18 0.14" material="bench"/>
+  </worldbody>
+</mujoco>

@@ -8,6 +8,7 @@ from .memory import ConversationMemory
 from .models import Pose, VelocityCommand
 from .motion import build_motion_router
 from .providers import LlamaCppProvider
+from .skills.api import Dog
 
 try:
     import rclpy
@@ -20,7 +21,7 @@ except ImportError:  # Allows configuration and command tests without ROS instal
 
 
 class ParcelAgentNode(Node):
-    """ROS boundary for transcripts, pose requests, and spoken responses."""
+    """ROS boundary for transcripts, pose/walk requests, and spoken responses."""
 
     def __init__(self, config_path: str):
         if rclpy is None:
@@ -29,6 +30,7 @@ class ParcelAgentNode(Node):
         store = ConfigStore(config_path)
         self.pose_pub = self.create_publisher(String, "/parcel/pose_request", 10)
         self.walk_pub = self.create_publisher(String, "/parcel/walk_request", 10)
+        self.skill_pub = self.create_publisher(String, "/parcel/skill_request", 10)
         self.stop_pub = self.create_publisher(String, "/parcel/stop_request", 10)
         self.reply_pub = self.create_publisher(String, "/parcel/voice_reply", 10)
         model_config = store.section("language_model")
@@ -45,8 +47,34 @@ class ParcelAgentNode(Node):
             on_command=self.publish_walk,
             on_stop=self.publish_stop,
         )
+
+        def on_pose(pose: Pose) -> None:
+            self.publish_pose(pose)
+
+        def on_trajectory(skill) -> None:
+            message = String()
+            message.data = json.dumps(
+                {
+                    "name": skill.id,
+                    "kind": skill.kind,
+                    "keyframes": [
+                        {"t": frame.t, "joints": dict(frame.joints)}
+                        for frame in skill.keyframes
+                    ],
+                }
+            )
+            self.skill_pub.publish(message)
+
+        self.dog = Dog.from_config(
+            config_path,
+            motion=motion,
+            on_pose=on_pose,
+            on_velocity=self.publish_walk,
+            on_trajectory=on_trajectory,
+            on_stop=self.publish_stop,
+        )
         self.agent = VoiceAgent(
-            store.poses(),
+            self.dog.poses() or store.poses(),
             store.load_modules(),
             self.publish_pose,
             language_model=language_model,
@@ -54,6 +82,7 @@ class ParcelAgentNode(Node):
             memory=ConversationMemory(memory_config.get("path", ":memory:")),
             motion=motion,
             safety_limits=store.safety_limits(),
+            dog=self.dog,
         )
         self.create_subscription(String, "/parcel/transcript", self.on_transcript, 10)
 
