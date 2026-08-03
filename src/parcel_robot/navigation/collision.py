@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 
@@ -20,6 +21,7 @@ def apply_collision_brake(
     *,
     nearest_person_m: float | None,
     nearest_obstacle_m: float | None,
+    nearest_obstacle_bearing_rad: float | None = None,
     policy: CollisionPolicy | None = None,
 ) -> tuple[float, float, str]:
     """Scale mid-level velocity; never invents perception — caller supplies ranges."""
@@ -34,7 +36,16 @@ def apply_collision_brake(
             scale = min(scale, policy.slow_scale)
             note = "person_slow"
 
-    if nearest_obstacle_m is not None:
+    obstacle_relevant = True
+    speed = math.hypot(vx, vy)
+    if nearest_obstacle_bearing_rad is not None and speed > 1e-6:
+        travel_bearing = math.atan2(vy, vx)
+        angle_error = (
+            nearest_obstacle_bearing_rad - travel_bearing + math.pi
+        ) % (2.0 * math.pi) - math.pi
+        obstacle_relevant = abs(angle_error) < 1.15
+
+    if nearest_obstacle_m is not None and obstacle_relevant:
         if nearest_obstacle_m < policy.obstacle_stop_m:
             return 0.0, 0.0, "obstacle_stop"
         if nearest_obstacle_m < policy.obstacle_slow_m:

@@ -10,6 +10,9 @@ from .motion import MotionRouter
 from .providers import LanguageModel
 from .safety import SafetyLimits, SafetySupervisor
 
+EMERGENCY_STOP_PHRASES = frozenset({"stop", "emergency stop", "stop now"})
+CommitGuard = Callable[[Callable[[], str]], str]
+
 
 class VoiceAgent:
     """Maps a transcript to safe robot actions.
@@ -29,6 +32,8 @@ class VoiceAgent:
         memory: ConversationMemory | None = None,
         motion: MotionRouter | None = None,
         safety_limits: SafetyLimits | None = None,
+        behavior_publisher: Callable[[str], str] | None = None,
+        navigation_publisher: Callable[[str], str] | None = None,
         dog=None,
     ):
         self.poses = poses
@@ -38,6 +43,8 @@ class VoiceAgent:
         self.stop_publisher = stop_publisher or (lambda: None)
         self.memory = memory or ConversationMemory()
         self.motion = motion
+        self.behavior_publisher = behavior_publisher
+        self.navigation_publisher = navigation_publisher
         self.dog = dog
         self.safety = SafetySupervisor(poses, safety_limits, skill_ids=self._skill_ids())
 
@@ -47,16 +54,50 @@ class VoiceAgent:
         return self.dog.catalog.ids()
 
     def handle_text(self, transcript: str) -> str:
+        return self._handle_text(transcript, None)
+
+    def handle_text_guarded(self, transcript: str, commit: CommitGuard) -> str:
+        """Plan freely, then atomically commit only if the voice turn is current."""
+
+        return self._handle_text(transcript, commit)
+
+    def _handle_text(self, transcript: str, commit: CommitGuard | None) -> str:
         text = re.sub(r"\s+", " ", transcript.strip().lower())
-        if text in {"stop", "emergency stop", "stop now"}:
+        if text in EMERGENCY_STOP_PHRASES:
             return self._execute(AgentDecision("Stopping.", (ToolCall("stop_motion"),)))
+
+        if text in {"follow", "follow me", "come with me", "heel"}:
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision(
+                        "I will follow you.",
+                        (ToolCall("set_behavior", {"mode": "follow"}),),
+                    ),
+                    transcript=text,
+                ),
+            )
+        if text in {"stay", "wait", "wait here", "hold position"}:
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision(
+                        "I will stay here.",
+                        (ToolCall("set_behavior", {"mode": "stay"}),),
+                    ),
+                    transcript=text,
+                ),
+            )
 
         if self.language_model is not None:
             try:
                 decision = self.language_model.decide(
                     text, self.tool_definitions(), self.memory.recent()
                 )
-                return self._execute(decision, transcript=text)
+                return self._commit(
+                    commit,
+                    lambda: self._execute(decision, transcript=text),
+                )
             except (RuntimeError, TypeError, ValueError):
                 pass
 
@@ -64,9 +105,12 @@ class VoiceAgent:
         if backend_match and self.motion is not None:
             name = backend_match.group(1)
             call = ToolCall("set_motion_backend", {"name": name})
-            return self._execute(
-                AgentDecision(f"Switching to the {name} backend.", (call,)),
-                transcript=text,
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision(f"Switching to the {name} backend.", (call,)),
+                    transcript=text,
+                ),
             )
 
         walk = self._parse_walk(text)
@@ -77,31 +121,29 @@ class VoiceAgent:
                     skill = "walk_backward"
                 elif abs(walk.vyaw) > abs(walk.vx):
                     skill = "turn_left" if walk.vyaw > 0 else "turn_right"
-                result = self.dog.execute(skill, vx=walk.vx, vy=walk.vy, vyaw=walk.vyaw)
-                return self._walk_reply(walk) if result.accepted else result.message
+                return self._commit(
+                    commit,
+                    lambda: self._execute_walk_skill(skill, walk),
+                )
             if self.motion is None:
                 return "Locomotion is not configured"
             call = ToolCall(
                 "set_velocity",
                 {"vx": walk.vx, "vy": walk.vy, "vyaw": walk.vyaw},
             )
-            return self._execute(
-                AgentDecision(self._walk_reply(walk), (call,)),
-                transcript=text,
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision(self._walk_reply(walk), (call,)),
+                    transcript=text,
+                ),
             )
 
         nav_directive = self._parse_navigate(text)
         if nav_directive is not None and self.dog is not None:
-            try:
-                mission, cmd = self.dog.navigate(nav_directive)
-            except (LookupError, RuntimeError, ValueError) as error:
-                return f"I couldn't navigate there. {error}"
-            place = mission.goal.label or mission.goal.poi_id
-            if cmd.stop:
-                return f"Arrived at {place}."
-            return (
-                f"Navigating to {place} "
-                f"(vx={cmd.vx:.2f}, vyaw={cmd.vyaw:.2f}; {cmd.note})."
+            return self._commit(
+                commit,
+                lambda: self._execute_navigation(nav_directive),
             )
 
         skill_match = re.fullmatch(
@@ -110,38 +152,72 @@ class VoiceAgent:
         )
         if skill_match:
             skill_name = skill_match.group(1).replace(" ", "_")
-            if self.dog is not None and skill_name in self.dog.catalog.ids():
-                result = self.dog.execute(skill_name)
-                return (
-                    f"Running {skill_name}"
-                    if result.accepted
-                    else f"I couldn't do that safely. {result.message}"
-                )
-            pose = self.poses.get(skill_name)
-            if pose is None:
+            if skill_name not in self._skill_ids() and skill_name not in self.poses:
                 return f"Unknown pose: {skill_name}"
-            if self.motion is not None:
-                self.motion.stop()
-            self.pose_publisher(pose)
-            return f"Running {pose.name} pose"
+            return self._commit(
+                commit,
+                lambda: self._execute_named_skill(skill_name),
+            )
 
         if self.dog is not None:
             bare = text.replace(" ", "_")
             if bare in self.dog.catalog.ids():
-                result = self.dog.execute(bare)
-                return (
-                    f"Running {bare}"
-                    if result.accepted
-                    else f"I couldn't do that safely. {result.message}"
+                return self._commit(
+                    commit,
+                    lambda: self._execute_named_skill(bare),
                 )
 
         command, _, argument = text.partition(" ")
         for module in self.modules:
             if command in module.commands():
-                response = module.handle(command, argument)
-                if response is not None:
-                    return response
+                return self._commit(
+                    commit,
+                    lambda module=module: module.handle(command, argument)
+                    or "I did not understand that command",
+                )
         return "I did not understand that command"
+
+    @staticmethod
+    def _commit(commit: CommitGuard | None, action: Callable[[], str]) -> str:
+        return action() if commit is None else commit(action)
+
+    def _execute_walk_skill(self, skill: str, walk: VelocityCommand) -> str:
+        assert self.dog is not None
+        result = self.dog.execute(skill, vx=walk.vx, vy=walk.vy, vyaw=walk.vyaw)
+        return self._walk_reply(walk) if result.accepted else result.message
+
+    def _execute_navigation(self, directive: str) -> str:
+        assert self.dog is not None
+        if self.navigation_publisher is not None:
+            try:
+                return self.navigation_publisher(directive)
+            except (LookupError, RuntimeError, ValueError) as error:
+                return f"I couldn't navigate there. {error}"
+        try:
+            mission, cmd = self.dog.navigate(directive)
+        except (LookupError, RuntimeError, ValueError) as error:
+            return f"I couldn't navigate there. {error}"
+        place = mission.goal.label or mission.goal.poi_id
+        if cmd.stop:
+            return f"Arrived at {place}."
+        return (
+            f"Navigating to {place} "
+            f"(vx={cmd.vx:.2f}, vyaw={cmd.vyaw:.2f}; {cmd.note})."
+        )
+
+    def _execute_named_skill(self, skill_name: str) -> str:
+        if self.dog is not None and skill_name in self.dog.catalog.ids():
+            result = self.dog.execute(skill_name)
+            return (
+                f"Running {skill_name}"
+                if result.accepted
+                else f"I couldn't do that safely. {result.message}"
+            )
+        pose = self.poses[skill_name]
+        if self.motion is not None:
+            self.motion.stop()
+        self.pose_publisher(pose)
+        return f"Running {pose.name} pose"
 
     def _parse_walk(self, text: str) -> VelocityCommand | None:
         limits = self.safety.limits
@@ -186,14 +262,17 @@ class VoiceAgent:
     def _execute(self, decision: AgentDecision, transcript: str | None = None) -> str:
         if transcript:
             self.memory.add("user", transcript)
-        failures = []
-        detail = None
-        for call in decision.tool_calls:
-            result = self.safety.validate(call)
+        validations = [(call, self.safety.validate(call)) for call in decision.tool_calls]
+        for _, result in validations:
             self.memory.add("tool", result.message)
-            if not result.accepted:
-                failures.append(result.message)
-                continue
+        failures = [result.message for _, result in validations if not result.accepted]
+        if failures:
+            reply = f"I couldn't do that safely. {failures[0]}"
+            self.memory.add("assistant", reply)
+            return reply
+
+        detail = None
+        for call, _ in validations:
             if call.name == "run_pose":
                 name = call.arguments["name"]
                 if self.dog is not None and name in self.dog.catalog.ids():
@@ -230,17 +309,28 @@ class VoiceAgent:
                 if not directive:
                     failures.append("navigate requires a directive")
                     continue
-                try:
-                    mission, cmd = self.dog.navigate(directive)
-                except (LookupError, RuntimeError, ValueError) as error:
-                    failures.append(str(error))
+                if self.navigation_publisher is not None:
+                    try:
+                        detail = self.navigation_publisher(directive)
+                    except (LookupError, RuntimeError, ValueError) as error:
+                        failures.append(str(error))
+                else:
+                    try:
+                        mission, cmd = self.dog.navigate(directive)
+                    except (LookupError, RuntimeError, ValueError) as error:
+                        failures.append(str(error))
+                        continue
+                    place = mission.goal.label or mission.goal.poi_id
+                    detail = (
+                        f"Arrived at {place}."
+                        if cmd.stop
+                        else f"Navigating to {place} (vx={cmd.vx:.2f})."
+                    )
+            elif call.name == "set_behavior":
+                if self.behavior_publisher is None:
+                    failures.append("Behavior control is not configured")
                     continue
-                place = mission.goal.label or mission.goal.poi_id
-                detail = (
-                    f"Arrived at {place}."
-                    if cmd.stop
-                    else f"Navigating to {place} (vx={cmd.vx:.2f})."
-                )
+                detail = self.behavior_publisher(str(call.arguments["mode"]))
             elif call.name == "stop_motion":
                 self.safety.engage_emergency_stop()
                 if self.dog is not None:
@@ -328,6 +418,18 @@ class VoiceAgent:
                     "type": "object",
                     "properties": {"directive": {"type": "string"}},
                     "required": ["directive"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "name": "set_behavior",
+                "description": "Start owner following or hold the current position.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "mode": {"type": "string", "enum": ["follow", "stay"]},
+                    },
+                    "required": ["mode"],
                     "additionalProperties": False,
                 },
             },

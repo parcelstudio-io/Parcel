@@ -20,6 +20,8 @@ class FakeModel:
             "run_skill",
             "set_velocity",
             "set_motion_backend",
+            "navigate",
+            "set_behavior",
             "stop_motion",
             "get_status",
         }
@@ -55,6 +57,42 @@ def test_hallucinated_pose_is_rejected():
 
     assert "couldn't do that safely" in agent.handle_text("Do a flip")
     assert sent == []
+
+
+def test_invalid_multi_action_plan_is_rejected_atomically():
+    sent = []
+    pose = Pose("sit", {"hip": 0.5})
+    agent = VoiceAgent(
+        {"sit": pose},
+        [],
+        sent.append,
+        language_model=FakeModel(
+            AgentDecision(
+                "Sitting and sprinting.",
+                (
+                    ToolCall("run_pose", {"name": "sit"}),
+                    ToolCall("set_velocity", {"vx": 100.0}),
+                ),
+            )
+        ),
+    )
+
+    assert "couldn't do that safely" in agent.handle_text("Sit and then sprint")
+    assert sent == []
+
+
+def test_follow_and_stay_publish_only_whitelisted_behaviors():
+    modes = []
+    agent = VoiceAgent(
+        {},
+        [],
+        lambda pose: None,
+        behavior_publisher=lambda mode: modes.append(mode) or mode,
+    )
+
+    assert agent.handle_text("follow me") == "I will follow you."
+    assert agent.handle_text("stay") == "I will stay here."
+    assert modes == ["follow", "stay"]
 
 
 def test_stop_bypasses_language_model():

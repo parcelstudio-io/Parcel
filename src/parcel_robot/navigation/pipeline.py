@@ -114,11 +114,15 @@ class DirectiveNavigator:
             self.mission.status = "arrived"
             return MidLevelCommand(stop=True, note=cmd.note or "arrived")
 
+        obstacle_bearing = observation.extras.get("obstacle_bearing_rad")
+        if not isinstance(obstacle_bearing, (int, float)):
+            obstacle_bearing = None
         vx, vy, cnote = apply_collision_brake(
             cmd.vx,
             cmd.vy,
             nearest_person_m=observation.nearest_person_m,
             nearest_obstacle_m=observation.nearest_obstacle_m,
+            nearest_obstacle_bearing_rad=obstacle_bearing,
             policy=self.collision,
         )
         max_vx = float(self.safety.get("max_vx", 1.0))
@@ -129,7 +133,7 @@ class DirectiveNavigator:
         vyaw = max(-max_vyaw, min(max_vyaw, cmd.vyaw))
         note = f"{cmd.note}|{cnote}" if cmd.note else cnote
         if cnote.endswith("_stop"):
-            return MidLevelCommand(vx=0.0, vy=0.0, vyaw=0.0, stop=False, note=note)
+            return MidLevelCommand(vx=0.0, vy=0.0, vyaw=vyaw, stop=False, note=note)
         return MidLevelCommand(vx=vx, vy=vy, vyaw=vyaw, stop=False, note=note)
 
     def stop(self) -> None:

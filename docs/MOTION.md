@@ -20,7 +20,7 @@ active walk backend.
 
 ## Configure
 
-In [`src/parcel_robot/config/robot.yaml`](../src/parcel_robot/config/robot.yaml):
+In the canonical [`configs/robot.yaml`](../configs/robot.yaml):
 
 ```yaml
 motion:
@@ -61,9 +61,10 @@ parcel-sim
 parcel-agent --sim --text "walk forward"
 ```
 
-`parcel-sim` runs a **scripted open-loop trot** for walk intents so the legs
-cycle while the free base is pushed along. That is only a visual/control-stack
-preview—not Unitree Sport gait and not a trained RL policy. Replace it by
+`parcel-sim` runs a **scripted open-loop trot** for walk intents while a
+game-like kinematic root integrator advances the base and zeros unstable root
+velocity. That is only a visual/control-stack preview—not Unitree Sport gait,
+contact-faithful locomotion, or a trained RL policy. Replace it by
 loading a real policy via `motion.rl.policy_path` or enabling Sport Move.
 
 ## Sport Move backend
@@ -104,5 +105,7 @@ runner—never both at once.
 ## Safety
 
 `set_velocity` is fail-closed: non-finite values and velocities above
-`max_vx` / `max_vy` / `max_vyaw` are rejected. `stop` engages the emergency latch
-and stops the active backend.
+`max_vx` / `max_vy` / `max_vyaw` are rejected. The UI's ordinary **Stop** cancels
+motion without latching; **Emergency stop** latches both runtime and simulator
+until an operator explicitly clears it. Exact voice phrases `stop`, `stop now`,
+and `emergency stop` take the latching path.

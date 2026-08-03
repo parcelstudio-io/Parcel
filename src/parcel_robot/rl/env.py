@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -34,11 +35,19 @@ class Go2Env:
         scene: str | Path | None = None,
         use_mujoco: bool = False,
         max_episode_steps: int = 500,
+        action_kp: float = 20.0,
+        action_kd: float = 0.5,
     ):
+        if not math.isfinite(action_kp) or not math.isfinite(action_kd):
+            raise ValueError("action PD gains must be finite")
+        if action_kp <= 0.0 or action_kd < 0.0:
+            raise ValueError("action PD gains require kp > 0 and kd >= 0")
         self.dog = Dog.from_config(config_path)
         self.skill_id = skill_id
         self.max_episode_steps = max_episode_steps
         self.use_mujoco = use_mujoco
+        self.action_kp = action_kp
+        self.action_kd = action_kd
         self._step_count = 0
         self._progress = 0.0
         self._model = None
@@ -113,12 +122,29 @@ class Go2Env:
     def step(self, action):
         self._step_count += 1
         self._progress = min(1.0, self._step_count / max(1, self.max_episode_steps))
-        obs = self.dog.step_policy(action)
+        targets = np.asarray(action, dtype=np.float64).reshape(-1)[:12]
+        if targets.size and not np.all(np.isfinite(targets)):
+            raise ValueError("RL action contains non-finite joint targets")
+        targets = np.clip(targets, -3.14, 3.14)
+        obs = self.dog.step_policy(targets)
         if self._model is not None and self._data is not None:
             import mujoco
 
-            ctrl = np.asarray(action, dtype=np.float64).reshape(-1)[: self._model.nu]
-            self._data.ctrl[: ctrl.shape[0]] = ctrl
+            padded_targets = self.dog._last_action
+            count = min(self._model.nu, padded_targets.size)
+            for actuator_id in range(count):
+                joint_id = int(self._model.actuator_trnid[actuator_id, 0])
+                if joint_id < 0:
+                    continue
+                qpos_adr = int(self._model.jnt_qposadr[joint_id])
+                dof_adr = int(self._model.jnt_dofadr[joint_id])
+                torque = self.action_kp * (
+                    padded_targets[actuator_id] - self._data.qpos[qpos_adr]
+                ) - self.action_kd * self._data.qvel[dof_adr]
+                if self._model.actuator_ctrllimited[actuator_id]:
+                    low, high = self._model.actuator_ctrlrange[actuator_id]
+                    torque = float(np.clip(torque, low, high))
+                self._data.ctrl[actuator_id] = torque
             mujoco.mj_step(self._model, self._data)
             obs = self._mujoco_obs()
         skill = self.dog.catalog.get(self.skill_id)

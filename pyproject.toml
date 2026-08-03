@@ -19,6 +19,7 @@ dev = [
   "ruff>=0.12,<1",
 ]
 voice = [
+  "msgpack>=1.1,<2",
   "sounddevice>=0.5,<1",
 ]
 
@@ -26,12 +27,13 @@ voice = [
 parcel-agent = "parcel_robot.cli:main"
 parcel-sim = "parcel_robot.sim:main"
 parcel-control = "parcel_robot.control_panel:main"
+parcel-panel = "parcel_robot.web_panel:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-parcel_robot = ["config/*.yaml", "scenes/*.xml"]
+parcel_robot = ["config/*.yaml", "scenes/*.xml", "ui/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -39,4 +41,3 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-

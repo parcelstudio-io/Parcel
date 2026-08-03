@@ -145,11 +145,14 @@ class Dog:
         nearest_person_m: float | None = None,
         nearest_obstacle_m: float | None = None,
         model_id: str | None = None,
+        publish: bool = True,
+        extras: dict[str, Any] | None = None,
     ):
         """Ground a language directive and emit one collision-aware mid-level step.
 
         Returns ``(mission, MidLevelCommand)``. Call repeatedly with updated pose /
-        proximity to continue the mission; use ``MetaUrbanNavEnv`` for full RL loops.
+        proximity to continue the mission; ``MetaUrbanNavEnv`` currently provides
+        only an offline kinematic RL-loop scaffold.
         """
         from parcel_robot.navigation import NavObservation
 
@@ -165,13 +168,14 @@ class Dog:
             heading_deg=self._nav_heading_deg,
             nearest_person_m=nearest_person_m,
             nearest_obstacle_m=nearest_obstacle_m,
+            extras=dict(extras or {}),
         )
         cmd = nav.step(obs)
         if not cmd.stop:
             self._velocity_cmd = VelocityCommand(vx=cmd.vx, vy=cmd.vy, vyaw=cmd.vyaw)
-            if self.executor.on_velocity is not None:
+            if publish and self.executor.on_velocity is not None:
                 self.executor.on_velocity(self._velocity_cmd)
-            elif self.motion is not None:
+            elif publish and self.motion is not None:
                 self.motion.walk(self._velocity_cmd)
         else:
             self._velocity_cmd = VelocityCommand()

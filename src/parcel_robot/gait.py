@@ -42,9 +42,16 @@ class ScriptedTrotGait:
     _stand: dict[str, float] = field(default_factory=lambda: dict(_STAND))
 
     def set_style(self, style: str, frequency_hz: float | None = None) -> None:
-        params = _STYLE.get(style, _STYLE["trot"])
-        self.style = style if style in _STYLE else "trot"
-        self.frequency_hz = float(frequency_hz if frequency_hz is not None else params["frequency_hz"])
+        if style not in _STYLE:
+            raise ValueError(f"unsupported gait style: {style!r}")
+        params = _STYLE[style]
+        frequency = float(
+            frequency_hz if frequency_hz is not None else params["frequency_hz"]
+        )
+        if not math.isfinite(frequency) or not 0.2 <= frequency <= 5.0:
+            raise ValueError("gait frequency must be finite and between 0.2 and 5 Hz")
+        self.style = style
+        self.frequency_hz = frequency
         self.step_amplitude = float(params["step_amplitude"])
         self.lift_amplitude = float(params["lift_amplitude"])
 
@@ -101,15 +108,23 @@ class TrajectoryPlayer:
     _frames: list[tuple[float, dict[str, float]]] = field(default_factory=list)
 
     def start(self, keyframes: list[dict]) -> None:
-        frames = sorted(
-            (
-                (float(frame["t"]), {str(k): float(v) for k, v in dict(frame["joints"]).items()})
-                for frame in keyframes
-            ),
-            key=lambda item: item[0],
-        )
-        if len(frames) < 2:
-            raise ValueError("trajectory needs at least two keyframes")
+        if not 2 <= len(keyframes) <= 500:
+            raise ValueError("trajectory needs between two and 500 keyframes")
+        frames: list[tuple[float, dict[str, float]]] = []
+        previous = -1.0
+        for frame in keyframes:
+            timestamp = float(frame["t"])
+            joints = {str(k): float(v) for k, v in dict(frame["joints"]).items()}
+            if not math.isfinite(timestamp) or not 0.0 <= timestamp <= 30.0:
+                raise ValueError("trajectory timestamp is outside the safe range")
+            if timestamp <= previous:
+                raise ValueError("trajectory timestamps must be strictly increasing")
+            if not joints or any(
+                not math.isfinite(value) or abs(value) > 3.2 for value in joints.values()
+            ):
+                raise ValueError("trajectory contains unsafe joint values")
+            frames.append((timestamp, joints))
+            previous = timestamp
         self._frames = frames
         self.elapsed = 0.0
         self.active = True

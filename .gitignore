@@ -12,10 +12,13 @@ parcel_memory.sqlite3
 # Local model downloads (fetch from Hugging Face; do not commit weights)
 models/**/.cache/
 models/**/*.pt
+models/**/*.pth
 models/**/*.safetensors
+models/**/*.gguf
+models/**/*.bin
 models/**/*.incomplete
 *.incomplete
+MUJOCO_LOG.TXT
 
 # Nested clone of Sesame CSM (has its own .git)
 third_party/
-

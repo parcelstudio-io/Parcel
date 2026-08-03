@@ -1,9 +1,11 @@
 # Parcel robot dog
 
-An extensible starting point for a voice-controlled Unitree robot dog. The first
-target is a **Go2** in Unitree's MuJoCo simulator, connected through **ROS 2**.
-The application keeps voice, poses, network selection, and optional hardware
-modules separate so the same intent layer can later run against a physical dog.
+A safety-gated development stack for an owner-following, voice-enabled Unitree
+robot dog. The working local target is a **Go2** in MuJoCo with persistent
+navigation, collision braking, owner-follow behavior, manual controls, local
+open-weight reasoning, and a browser control deck. Engine-neutral backend and
+ROS boundaries keep the same intent layer usable for richer simulators and a
+later physical dog.
 
 > Current host note: this machine is Ubuntu 26.04 with Python 3.14 and does not
 > currently have ROS 2 installed. Unitree documents Ubuntu 22.04 + ROS 2 Humble
@@ -11,16 +13,47 @@ modules separate so the same intent layer can later run against a physical dog.
 > is fully set up for application development and MuJoCo, but native Unitree
 > ROS 2 must be built in a supported Humble environment (host, VM, or container).
 
+## Quick start
+
+The models and native servers are installed in ignored local directories. Start
+the CPU Gemma reasoner, MuJoCo window, and browser panel together:
+
+```bash
+cd /home/jaewoo-jang/Desktop/Projects/Parcel
+./scripts/launch_stack.sh
+```
+
+The panel opens at <http://127.0.0.1:8765>. Try manual hold-to-drive controls,
+move the simulated owner, then send `follow me`, `stay`, or `navigate to the
+crosswalk`. The text box streams partial hypotheses to `/api/voice/text` but
+executes only the final submission. Fish S2 and whisper.cpp servers are optional
+while this desktop has no connected microphone/speaker endpoint:
+
+```bash
+./scripts/launch_stack.sh --fish       # GPU TTS; review Fish's model license
+./scripts/launch_stack.sh --whisper    # local ASR service
+```
+
+Those flags start and health-check the isolated speech services; they do not
+enable browser microphone capture or playback. Connecting them to the running
+duplex coordinator is the next device-transport step after adding a real audio
+endpoint and acoustic echo cancellation.
+
+Architecture, model choices, audio-device findings, and limitations are in
+[Voice-enabled development stack](docs/DEVELOPMENT_STACK.md).
+
 ## What is included
 
 - A transcript-to-command agent with a safe, explicit command grammar.
 - A Gemma/llama.cpp structured-tool adapter with deterministic validation.
-- whisper.cpp speech recognition and isolated Sesame CSM-1B client adapters.
+- whisper.cpp recognition plus cancellable Fish S2 and Sesame CSM adapters.
 - YAML-defined poses and Wi-Fi/network-card profiles.
 - A motion router with exclusive **Sport Move** and **RL locomotion** backends.
 - A Python extension interface for custom sensors, behaviors, or hardware.
 - ROS topics for transcript input, pose/walk requests, and spoken replies.
-- Local `parcel-sim` MuJoCo preview for poses and walk intents.
+- MuJoCo owner/obstacle telemetry and a browser panel for driving and text voice.
+- Central priority arbitration, command TTLs, proximity braking, and latched E-stop.
+- Persistent owner-follow and point-navigation behavior loops.
 - MuJoCo, audio capture, linting, and test packages installed in `.parcel`.
 
 The first ROS boundary is intentionally simple:
@@ -30,6 +63,7 @@ The first ROS boundary is intentionally simple:
 | `/parcel/transcript` | `std_msgs/String` | Speech-to-text result enters the agent |
 | `/parcel/pose_request` | `std_msgs/String` | JSON pose intent sent to a controller |
 | `/parcel/walk_request` | `std_msgs/String` | JSON body-frame velocity for locomotion |
+| `/parcel/skill_request` | `std_msgs/String` | Named catalog skill request |
 | `/parcel/voice_reply` | `std_msgs/String` | Reply for a text-to-speech node |
 | `/parcel/stop_request` | `std_msgs/String` | High-priority stop intent |
 
@@ -39,6 +73,9 @@ Unitree commands or RL joint targets. Only one locomotion backend should be
 active at a time—see [Motion backends](docs/MOTION.md).
 
 ## Installed Python environment
+
+Full host GPU / dependency inventory: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
+Locked pip freeze: [requirements-lock.txt](requirements-lock.txt).
 
 The existing `.parcel` virtual environment is used for every pip package. It
 currently contains the editable project plus:
@@ -53,7 +90,7 @@ currently contains the editable project plus:
 Activate and verify it:
 
 ```bash
-cd /home/jaewoo-jang/Desktop/parcel
+cd /home/jaewoo-jang/Desktop/Projects/Parcel
 source .parcel/bin/activate
 python -c "import mujoco; print(mujoco.__version__)"
 pytest
@@ -86,7 +123,7 @@ print(len(dog.list_skills()), "skills")
 print(dog.execute("jump"))
 PY
 
-# City sim + button pad
+# City sim + browser control deck
 ./scripts/launch_sim.sh
 
 # RL env smoke (no display)
@@ -103,8 +140,8 @@ see [City navigation](docs/NAVIGATION_CITY.md).
 # On a Conda Python 3.9 + GPU host (not this Python 3.14 venv):
 ./scripts/setup_metaurban.sh
 
-# Switch navigator model in configs/navigation/default.yaml
-# active_model: stub_v0 | citywalker_v1 | navila_v1 | nomad_v1 | vint_v1
+# Keep active_model: stub_v0 for the implemented adapter. The other registry
+# entries are research metadata and fail closed until vendor inference is wired.
 
 python - <<'PY'
 from parcel_robot.skills import Dog
@@ -123,21 +160,21 @@ parcel-agent --text "use sport backend"
 parcel-agent --text "status"
 ```
 
-Local MuJoCo pose/walk preview (clone `unitree_mujoco` under `third_party/` first):
+Local MuJoCo pose/walk preview:
 
 ```bash
 ./scripts/launch_sim.sh
 ```
 
-That starts `parcel-sim` and the `parcel-control` button pad together. Or run them
+That starts `parcel-sim` and the `parcel-panel` browser UI together. Or run them
 separately:
 
 ```bash
 # terminal 1
 parcel-sim
 
-# terminal 2 — button pad (no CLI commands needed)
-parcel-control
+# terminal 2 — browser panel
+parcel-panel --llm
 ```
 
 Or focus the MuJoCo window and use keys: `W/S` forward/back, `A/D` strafe,
@@ -149,6 +186,11 @@ You can still drive it from the agent:
 parcel-agent --sim --text "do the sit pose"
 parcel-agent --sim --text "walk forward"
 ```
+
+The viewer hotkeys and direct `parcel-agent --sim` commands are debugging paths.
+They use simulator-side limits, watchdog, and E-stop latch, but bypass
+`RobotRuntime` priority arbitration and its owner/obstacle telemetry gate. Use
+the browser control deck for end-to-end safety and behavior development.
 
 With a local `llama-server` running and configured in `robot.yaml`:
 
@@ -209,9 +251,9 @@ In a second terminal, configure Unitree ROS for loopback and simulation domain
 source /opt/ros/humble/setup.bash
 source "$HOME/unitree/unitree_ros2/setup_local.sh"
 export ROS_DOMAIN_ID=1
-cd /home/jaewoo-jang/Desktop/parcel
+cd /home/jaewoo-jang/Desktop/Projects/Parcel
 source .parcel/bin/activate
-parcel-agent --ros --config src/parcel_robot/config/robot.yaml
+parcel-agent --ros --config configs/robot.yaml
 ```
 
 The virtual environment must be created with the same system Python used by the
@@ -234,7 +276,7 @@ loopback interface `lo` and `ROS_DOMAIN_ID=1`.
 
 ## Add a custom pose
 
-Edit [`src/parcel_robot/config/robot.yaml`](src/parcel_robot/config/robot.yaml):
+Edit the canonical [`configs/robot.yaml`](configs/robot.yaml):
 
 ```yaml
 poses:
@@ -302,8 +344,9 @@ modules:
 
 ## Voice pipeline
 
-The core accepts finalized transcripts and emits reply text, so speech providers
-are replaceable. Add two ROS nodes:
+The browser runtime accepts partial and final text at `/api/voice/text`; partials
+can interrupt output but never execute actions. It emits reply text, so speech
+providers remain replaceable. Add two ROS nodes for physical audio:
 
 1. microphone + voice activity detection + speech-to-text → `/parcel/transcript`
 2. `/parcel/voice_reply` → text-to-speech + speaker
@@ -318,8 +361,10 @@ The implemented adapters are:
 - `WhisperCppProvider`: WAV audio to whisper.cpp `/inference`
 - `LlamaCppProvider`: transcript to strict Gemma JSON/tool calls
 - `SafetySupervisor`: allowlist and pose-limit validation
-- `CsmSpeechProvider`: reply text to an isolated CSM WAV service
-- `VoicePipeline`: composes one complete utterance
+- `FishSpeechProvider`: local Fish S2 MessagePack/WAV streaming with cancellation
+- `DuplexVoiceSession`: partial/final text, stale-turn suppression, and barge-in
+- `CsmSpeechProvider`: optional legacy Sesame CSM WAV adapter
+- `VoicePipeline`: composes a single STT/reasoning/TTS utterance
 
 See [Voice intelligence and model design](docs/VOICE_AI_MODELS.md) for model
 selection, deployment commands, trust boundaries, privacy, and latency targets.
@@ -329,14 +374,18 @@ selection, deployment commands, trust boundaries, privacy, and latency targets.
 ```text
 src/parcel_robot/
 ├── agent.py          # transcript command routing
+├── runtime.py        # arbitration, behavior loops, telemetry, final safety gate
+├── backends/         # replaceable simulator / robot transport boundary
 ├── config.py         # YAML loaders and dynamic modules
-├── config/robot.yaml # poses, motion backends, cards, modules
 ├── motion.py         # Sport Move + RL locomotion router
 ├── modules.py        # extension protocol and example
-├── sim.py            # MuJoCo preview for poses/walk
+├── sim.py            # MuJoCo city/owner/obstacle simulation
+├── web_panel.py      # local HTTP API and browser control deck
+├── voice_pipeline.py # text-first duplex voice coordination
 └── ros_node.py       # ROS topic boundary
 tests/                # non-ROS unit tests
 docs/MOTION.md        # Sport vs RL setup guide
+configs/robot.yaml    # canonical runtime configuration
 ```
 
 Official references:

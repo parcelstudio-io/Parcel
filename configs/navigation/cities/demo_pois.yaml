@@ -41,5 +41,6 @@ pois:
       - crosswalk near coffee
     street: 42nd street
     category: crosswalk
-    position: [38.0, 2.0, 0.0]
-    heading_deg: 90.0
+    # Kept inside the compact MuJoCo city block for an end-to-end demo.
+    position: [3.5, -0.6, 0.0]
+    heading_deg: 0.0

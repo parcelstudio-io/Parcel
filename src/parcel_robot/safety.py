@@ -49,6 +49,8 @@ class SafetySupervisor:
             return self._validate_skill(call)
         if call.name == "navigate":
             return self._validate_navigate(call)
+        if call.name == "set_behavior":
+            return self._validate_behavior(call)
         if call.name != "run_pose":
             return ToolResult(call.name, False, f"Tool is not allowed: {call.name}")
         if self.emergency_stopped:
@@ -98,6 +100,18 @@ class SafetySupervisor:
         if name not in ALLOWED_BACKENDS:
             return ToolResult(call.name, False, f"Unknown motion backend: {name}")
         return ToolResult(call.name, True, f"Motion backend approved: {name}")
+
+    def _validate_behavior(self, call: ToolCall) -> ToolResult:
+        if self.emergency_stopped:
+            return ToolResult(call.name, False, "Motion is disabled by emergency stop")
+        if set(call.arguments) != {"mode"} or not isinstance(
+            call.arguments.get("mode"), str
+        ):
+            return ToolResult(call.name, False, "set_behavior requires only a string mode")
+        mode = call.arguments["mode"]
+        if mode not in {"follow", "stay"}:
+            return ToolResult(call.name, False, f"Unknown behavior: {mode}")
+        return ToolResult(call.name, True, f"Behavior approved: {mode}")
 
     def _validate_velocity(self, call: ToolCall) -> ToolResult:
         if self.emergency_stopped:

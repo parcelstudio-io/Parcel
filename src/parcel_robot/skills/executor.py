@@ -78,7 +78,10 @@ class SkillExecutor:
                 message = self.motion.walk(command)
             else:
                 message = f"Velocity {command}"
-            if self.on_velocity is not None:
+            # MotionRouter owns its delivery hook when configured. Calling the
+            # same hook twice publishes one skill twice in ROS deployments.
+            motion_hook = self.motion.on_command if self.motion is not None else None
+            if self.on_velocity is not None and self.on_velocity != motion_hook:
                 self.on_velocity(command)
             if self.sim_socket is not None:
                 publish_velocity(

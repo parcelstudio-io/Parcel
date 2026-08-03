@@ -1,3 +1,4 @@
+import math
 import time
 from pathlib import Path
 
@@ -10,8 +11,10 @@ from parcel_robot.sim_control import PoseController, bind_actuators
 from parcel_robot.sim_ipc import (
     PoseSocketServer,
     message_to_pose,
+    message_to_velocity,
     pose_to_message,
     publish_pose,
+    validate_simulator_message,
 )
 
 SCENE = (
@@ -78,6 +81,42 @@ def test_pose_controller_moves_toward_targets():
 def test_pose_message_roundtrip():
     pose = Pose("bow", {"FL_hip_joint": 0.1}, duration=1.25)
     assert message_to_pose(pose_to_message(pose)) == pose
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        {"version": 1, "type": "walk", "vx": math.nan, "vy": 0.0, "vyaw": 0.0},
+        {"version": 1, "type": "walk", "vx": 0.7, "vy": 0.0, "vyaw": 0.0},
+        {
+            "version": 1,
+            "type": "pose",
+            "name": "unsafe",
+            "duration": 1.0,
+            "joints": {"FL_hip_joint": math.inf},
+        },
+        {
+            "version": 1,
+            "type": "trajectory",
+            "name": "bad-order",
+            "keyframes": [
+                {"t": 1.0, "joints": {"FL_hip_joint": 0.0}},
+                {"t": 0.5, "joints": {"FL_hip_joint": 0.1}},
+            ],
+        },
+        {"version": 1, "type": "owner_visibility", "visible": "false"},
+    ],
+)
+def test_simulator_boundary_rejects_unsafe_messages(message):
+    with pytest.raises((TypeError, ValueError)):
+        validate_simulator_message(message)
+
+
+def test_velocity_parser_rejects_boolean_numbers():
+    with pytest.raises(TypeError):
+        message_to_velocity(
+            {"version": 1, "type": "walk", "vx": False, "vy": 0.0, "vyaw": 0.0}
+        )
 
 
 def test_scripted_trot_cycles_legs():

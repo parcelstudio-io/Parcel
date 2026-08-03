@@ -56,8 +56,8 @@ echo
 echo "Done. Activate with: conda activate $ENV_NAME"
 echo "Then from Parcel root:"
 echo "  PYTHONPATH=src python examples/nav_city_smoke.py"
-echo "For living city render (GPU):"
-echo "  PYTHONPATH=src python -c \"from parcel_robot.navigation import MetaUrbanNavEnv; MetaUrbanNavEnv(use_metaurban=True)\""
+echo "Parcel's live MetaUrban step/observation adapter is not implemented yet."
+echo "The install above prepares vendor research; use the offline scaffold meanwhile."
 echo
-echo "Download open-weight navigators into models/nav/ (CityWalker / NaVILA / NoMaD)."
-echo "Set configs/navigation/default.yaml active_model: citywalker_v1 | navila_v1 | ..."
+echo "Keep active_model: stub_v0 until a vendor navigator adapter is implemented."
+echo "See docs/NAVIGATION_CITY.md for the CityWalker / NaVILA research path."

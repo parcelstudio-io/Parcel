@@ -48,10 +48,40 @@ def test_directive_navigator_stub_moves_toward_goal():
     nav.close()
 
 
+def test_directive_navigator_turns_away_from_close_obstacle():
+    nav = DirectiveNavigator.from_config(NAV_CFG)
+    nav.start("go to the crosswalk")
+    command = nav.step(
+        NavObservation(
+            position=(0.0, 0.0, 0.0),
+            heading_deg=0.0,
+            nearest_obstacle_m=0.5,
+            extras={"obstacle_bearing_rad": 0.2},
+        )
+    )
+
+    assert command.vx == 0.0
+    assert command.vyaw < 0.0
+    assert "obstacle_stop" in command.note
+    nav.close()
+
+
 def test_collision_brake_stops_for_nearby_person():
     vx, vy, note = apply_collision_brake(0.5, 0.0, nearest_person_m=0.5, nearest_obstacle_m=None)
     assert vx == 0.0 and vy == 0.0
     assert note == "person_stop"
+
+
+def test_collision_brake_allows_motion_away_from_obstacle():
+    vx, vy, note = apply_collision_brake(
+        0.3,
+        0.0,
+        nearest_person_m=None,
+        nearest_obstacle_m=0.4,
+        nearest_obstacle_bearing_rad=2.0,
+    )
+
+    assert (vx, vy, note) == (0.3, 0.0, "clear")
 
 
 def test_checkpoint_model_missing_weights():

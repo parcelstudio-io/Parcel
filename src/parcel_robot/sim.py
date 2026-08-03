@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import math
 import time
 from pathlib import Path
 
 import mujoco
 import mujoco.viewer
+import numpy as np
 
 from .config import ConfigStore
 from .gait import ScriptedTrotGait, TrajectoryPlayer
@@ -73,20 +75,165 @@ def run_simulator(
     gait = ScriptedTrotGait()
     trajectory = TrajectoryPlayer()
     walk_command: VelocityCommand | None = None
+    last_motion_at = time.monotonic()
+    last_walk_log_at = 0.0
+    last_logged_walk: VelocityCommand | None = None
+    owner_visible = True
+    emergency_stopped = False
     pending: list[dict] = []
     pose_hotkeys = {ord("1"): "sit", ord("2"): "bow"}
+    base_position = np.array(data.qpos[:3], dtype=np.float64)
+    base_yaw = 0.0
+
+    owner_body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "owner")
+    owner_mocap_id = int(model.body_mocapid[owner_body_id]) if owner_body_id >= 0 else -1
+    obstacle_geom_ids: list[int] = []
+    for geom_id in range(model.ngeom):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id) or ""
+        if name.startswith(("obstacle_", "bldg_", "bench_", "owner_")):
+            obstacle_geom_ids.append(geom_id)
+
+    def robot_yaw() -> float:
+        if model.nq < 7:
+            return 0.0
+        w, x, y, z = (float(value) for value in data.qpos[3:7])
+        return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+
+    base_yaw = robot_yaw()
+
+    def place_kinematic_base(dt: float) -> None:
+        """Advance the game-like base without injecting unstable root forces."""
+        nonlocal base_yaw
+        if model.nq < 7 or model.nv < 6:
+            return
+        if walk_command is not None and dt > 0.0:
+            cosine = math.cos(base_yaw)
+            sine = math.sin(base_yaw)
+            allow_translation = True
+            obstacle = nearest_obstacle()
+            if obstacle is not None and float(obstacle["distance_m"]) <= 0.08:
+                travel_angle = math.atan2(walk_command.vy, walk_command.vx)
+                angle_error = (
+                    float(obstacle["bearing_rad"]) - travel_angle + math.pi
+                ) % (2.0 * math.pi) - math.pi
+                allow_translation = abs(angle_error) >= 1.15
+            if allow_translation:
+                base_position[0] += (
+                    cosine * walk_command.vx - sine * walk_command.vy
+                ) * dt
+                base_position[1] += (
+                    sine * walk_command.vx + cosine * walk_command.vy
+                ) * dt
+            base_yaw = (base_yaw + walk_command.vyaw * dt + math.pi) % (
+                2.0 * math.pi
+            ) - math.pi
+        data.qpos[:3] = base_position
+        half_yaw = base_yaw * 0.5
+        data.qpos[3:7] = (math.cos(half_yaw), 0.0, 0.0, math.sin(half_yaw))
+        data.qvel[:6] = 0.0
+
+    def nearest_obstacle() -> dict[str, float | str] | None:
+        if model.nq < 2 or not obstacle_geom_ids:
+            return None
+        px, py = float(data.qpos[0]), float(data.qpos[1])
+        heading = robot_yaw()
+        candidates: list[dict[str, float | str]] = []
+        robot_radius = 0.32
+        for geom_id in obstacle_geom_ids:
+            gx, gy = (float(value) for value in data.geom_xpos[geom_id, :2])
+            geom_type = int(model.geom_type[geom_id])
+            if geom_type == int(mujoco.mjtGeom.mjGEOM_BOX):
+                sx, sy = (float(value) for value in model.geom_size[geom_id, :2])
+                dx = max(abs(px - gx) - sx, 0.0)
+                dy = max(abs(py - gy) - sy, 0.0)
+                distance = math.hypot(dx, dy) - robot_radius
+            elif geom_type in {
+                int(mujoco.mjtGeom.mjGEOM_CYLINDER),
+                int(mujoco.mjtGeom.mjGEOM_CAPSULE),
+                int(mujoco.mjtGeom.mjGEOM_SPHERE),
+            }:
+                radius = float(model.geom_size[geom_id, 0])
+                distance = math.hypot(px - gx, py - gy) - radius - robot_radius
+            else:
+                continue
+            bearing = (math.atan2(gy - py, gx - px) - heading + math.pi) % (
+                2.0 * math.pi
+            ) - math.pi
+            candidates.append(
+                {
+                    "id": mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id)
+                    or f"geom-{geom_id}",
+                    "distance_m": max(0.0, distance),
+                    "bearing_rad": bearing,
+                    "x": gx,
+                    "y": gy,
+                }
+            )
+        return min(candidates, key=lambda item: float(item["distance_m"])) if candidates else None
+
+    def state_snapshot() -> dict:
+        obstacle = nearest_obstacle()
+        obstacle_distance = float(obstacle["distance_m"]) if obstacle is not None else None
+        if owner_mocap_id >= 0:
+            owner_x, owner_y = (
+                float(data.mocap_pos[owner_mocap_id, 0]),
+                float(data.mocap_pos[owner_mocap_id, 1]),
+            )
+        else:
+            owner_x, owner_y = 0.0, 0.0
+        command = walk_command or VelocityCommand()
+        return {
+            "type": "status",
+            "backend": "mujoco",
+            "timestamp": time.monotonic(),
+            "sim_time": float(data.time),
+            "robot": {
+                "x": float(data.qpos[0]) if model.nq > 0 else 0.0,
+                "y": float(data.qpos[1]) if model.nq > 1 else 0.0,
+                "z": float(data.qpos[2]) if model.nq > 2 else 0.0,
+                "yaw": robot_yaw(),
+            },
+            "owner": {
+                "id": "owner-1",
+                "x": owner_x,
+                "y": owner_y,
+                "visible": owner_visible,
+                "confidence": 1.0 if owner_visible else 0.0,
+            },
+            "nearest_obstacle_m": obstacle_distance,
+            "nearest_obstacle": obstacle,
+            "collision": obstacle_distance is not None and obstacle_distance <= 0.01,
+            "emergency_stopped": emergency_stopped,
+            "command": {"vx": command.vx, "vy": command.vy, "vyaw": command.vyaw},
+        }
+
+    def stop_local() -> None:
+        nonlocal last_motion_at, walk_command
+        walk_command = None
+        last_motion_at = time.monotonic()
+        trajectory.stop()
+        gait.reset()
+        controller.hold_joints(gait.standing_joints())
+        data.qvel[:] = 0.0
 
     def apply_local(message: dict) -> None:
-        nonlocal walk_command
+        nonlocal emergency_stopped, last_logged_walk, last_motion_at
+        nonlocal last_walk_log_at, owner_visible, walk_command
         kind = message.get("type")
-        if kind == "stop":
-            walk_command = None
-            trajectory.stop()
-            gait.reset()
-            controller.hold_joints(gait.standing_joints())
-            data.qvel[:] = 0.0
+        if kind == "emergency_stop":
+            emergency_stopped = True
+            stop_local()
+            print("emergency stop latched", flush=True)
+        elif kind == "clear_emergency_stop":
+            emergency_stopped = False
+            stop_local()
+            print("emergency stop cleared", flush=True)
+        elif kind == "stop":
+            stop_local()
             print("stop requested", flush=True)
         elif kind == "pose":
+            if emergency_stopped:
+                raise ValueError("simulator motion is disabled by emergency stop")
             walk_command = None
             trajectory.stop()
             gait.reset()
@@ -94,23 +241,60 @@ def run_simulator(
             controller.apply_pose(pose, data)
             print(f"applying pose: {pose.name}", flush=True)
         elif kind == "walk":
+            if emergency_stopped:
+                raise ValueError("simulator motion is disabled by emergency stop")
             trajectory.stop()
-            walk_command = message_to_velocity(message)
+            requested = message_to_velocity(message)
+            walk_command = VelocityCommand(
+                vx=float(np.clip(requested.vx, -walk_vx * 2.0, walk_vx * 2.0)),
+                vy=float(np.clip(requested.vy, -walk_vx * 2.0, walk_vx * 2.0)),
+                vyaw=float(np.clip(requested.vyaw, -walk_yaw * 2.5, walk_yaw * 2.5)),
+            )
+            last_motion_at = time.monotonic()
             style = str(message.get("gait_style", "trot"))
             freq = message.get("frequency_hz")
             gait.set_style(style, float(freq) if freq is not None else None)
             gait.reset()
-            print(
-                f"walk command: vx={walk_command.vx:.2f} "
-                f"vy={walk_command.vy:.2f} vyaw={walk_command.vyaw:.2f} style={style}",
-                flush=True,
+            now = time.monotonic()
+            change = (
+                float("inf")
+                if last_logged_walk is None
+                else max(
+                    abs(walk_command.vx - last_logged_walk.vx),
+                    abs(walk_command.vy - last_logged_walk.vy),
+                    abs(walk_command.vyaw - last_logged_walk.vyaw),
+                )
             )
+            if change >= 0.08 or now - last_walk_log_at >= 1.0:
+                print(
+                    f"walk command: vx={walk_command.vx:.2f} "
+                    f"vy={walk_command.vy:.2f} vyaw={walk_command.vyaw:.2f} style={style}",
+                    flush=True,
+                )
+                last_logged_walk = walk_command
+                last_walk_log_at = now
         elif kind == "trajectory":
+            if emergency_stopped:
+                raise ValueError("simulator motion is disabled by emergency stop")
             walk_command = None
             gait.reset()
             frames = list(message.get("keyframes") or [])
             trajectory.start(frames)
             print(f"trajectory: {message.get('name', 'unnamed')}", flush=True)
+        elif kind == "owner_move":
+            dx = float(message.get("dx", 0.0))
+            dy = float(message.get("dy", 0.0))
+            if not math.isfinite(dx) or not math.isfinite(dy) or abs(dx) > 1 or abs(dy) > 1:
+                raise ValueError("owner move is outside the allowed range")
+            if owner_mocap_id >= 0:
+                data.mocap_pos[owner_mocap_id, 0] = np.clip(
+                    data.mocap_pos[owner_mocap_id, 0] + dx, -10.0, 10.0
+                )
+                data.mocap_pos[owner_mocap_id, 1] = np.clip(
+                    data.mocap_pos[owner_mocap_id, 1] + dy, -10.0, 10.0
+                )
+        elif kind == "owner_visibility":
+            owner_visible = bool(message.get("visible", True))
         else:
             print(f"ignored message: {kind!r}", flush=True)
 
@@ -143,7 +327,7 @@ def run_simulator(
                     }
                 )
 
-    server = PoseSocketServer(socket_path)
+    server = PoseSocketServer(socket_path, state_provider=state_snapshot)
     server.start()
     print(f"Parcel sim ready: {scene}", flush=True)
     print(f"Listening for poses/walk/trajectory on {socket_path}", flush=True)
@@ -155,11 +339,17 @@ def run_simulator(
             sim_time_wall = time.perf_counter()
             next_view = sim_time_wall
             while viewer.is_running():
+                if walk_command is not None and time.monotonic() - last_motion_at > 0.65:
+                    apply_local({"type": "stop"})
+                    print("motion watchdog stopped a stale command", flush=True)
                 for message in pending:
                     apply_local(message)
                 pending.clear()
                 for message in server.poll():
-                    apply_local(message)
+                    try:
+                        apply_local(message)
+                    except (KeyError, TypeError, ValueError) as error:
+                        print(f"rejected simulator command: {error}", flush=True)
 
                 now = time.perf_counter()
                 steps = 0
@@ -170,12 +360,10 @@ def run_simulator(
                         controller.hold_joints(traj_joints)
                     elif walk_command is not None:
                         controller.hold_joints(gait.joints_for(walk_command, dt))
-                        if model.nq >= 7:
-                            data.qvel[0] = walk_command.vx
-                            data.qvel[1] = walk_command.vy
-                            data.qvel[5] = walk_command.vyaw
+                    place_kinematic_base(dt)
                     controller.step(data, dt)
                     mujoco.mj_step(model, data)
+                    place_kinematic_base(0.0)
                     controller.step(data, 0.0)
                     sim_time_wall += dt
                     steps += 1

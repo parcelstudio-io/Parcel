@@ -3,13 +3,22 @@
 ## Reality check (this machine)
 
 - Current MuJoCo `city_block.xml` is a **stylized block**, not a living city.
-- Full cities with walking humans need a dedicated urban sim.
-- Host today: **Python 3.14 only**, **no NVIDIA GPU / nvidia-smi**. MetaUrban expects **Python ~3.9** and a GPU.
-- Parcel therefore ships a **navigation stack + model registry** that targets MetaUrban, while staying runnable offline (stubs) until a compatible env exists.
+- The host has an RTX 5000 Ada (32 GB) and Python 3.14; MetaUrban still needs a
+  separate Python 3.9 environment.
+- Parcel now runs a persistent simulator navigation loop with POI grounding,
+  command arbitration, obstacle range/bearing, reactive turning, and a final
+  proximity brake. Full visual/social navigation remains a later stage.
 
 ## Recommended simulation platform
 
-**[MetaUrban / metaurban](https://github.com/metadriverse/metaurban)** (ICLR 2025)
+Use **MuJoCo first**, then add an urban simulator behind `SimulatorBackend`.
+MuJoCo is the active platform because it provides the official Go2 body/joints,
+fast physics, reproducible tests, and low GPU contention. For later city-scale
+visual/social navigation, evaluate
+**[MetaUrban](https://github.com/metadriverse/metaurban)** and
+**[SimWorld](https://simworld.readthedocs.io/en/latest/)**. SimWorld has useful
+LLM/VLM, traffic, procedural-city, and robotics interfaces but is explicitly
+under active development.
 
 Why this over CARLA / Isaac / raw MuJoCo:
 
@@ -18,7 +27,8 @@ Why this over CARLA / Isaac / raw MuJoCo:
 | MetaUrban | Infinite compositional cities, SMPL pedestrians | Delivery bots, quadrupeds, etc. | Gym + SB3 | Lighter than Isaac |
 | CARLA | Large cities + peds | Vehicle-centric | Yes | Heavy |
 | Isaac Sim | High fidelity | Strong | Yes | Very heavy |
-| MuJoCo parcel scene | Boxes only | Go2 meshes | Custom | Light, not a city |
+| MuJoCo Parcel scene | Compact block + owner + obstacles | Official Go2 | Custom | Active, light |
+| SimWorld | Procedural city + traffic | Robotics module | Agent/waypoint APIs | Promising, active development |
 
 Install (on a GPU Linux box with Conda Python 3.9):
 
@@ -47,7 +57,8 @@ directive
   → SemanticGrounder (POI / map / optional VLM)
   → NavigatorModel (citywalker | navila | nomad | vint | stub)
   → MidLevelCommand (vx, vy, vyaw) or waypoints
-  → Dog / MotionRouter / MetaUrban env step
+  → Dog / MotionRouter / MuJoCo backend (implemented)
+  → future MetaUrban action adapter (not implemented)
   → collision / social cost in RL reward
 ```
 
@@ -72,13 +83,9 @@ src/parcel_robot/navigation/
   grounder.py                 # language → POI / goal pose
   pipeline.py                 # DirectiveNavigator
   models/
-    stub.py
-    citywalker.py             # weight download + inference adapter (optional deps)
-    navila.py
-    nomad.py
-    vint.py
+    __init__.py               # working stub; other types fail closed
   envs/
-    metaurban_env.py          # Gym wrapper when metaurban is installed
+    metaurban_env.py          # offline kinematic Gym-like scaffold
     rewards.py                # social nav / collision penalties
 docs/NAVIGATION_CITY.md
 scripts/setup_metaurban.sh
@@ -101,6 +108,10 @@ env = MetaUrbanNavEnv(navigator=nav, density_ped=1.0)
 obs, info = env.reset(options={"directive": mission.directive})
 ```
 
+Despite its historical class name, that environment is the offline kinematic
+scaffold. `use_metaurban=True` deliberately raises `NotImplementedError`: merely
+importing/resetting the vendor environment is not a working Parcel backend.
+
 Also exposed on `Dog.navigate(directive: str)` when `navigation.config` is set in `robot.yaml`.
 
 ## RL organization
@@ -121,22 +132,27 @@ rl:
   reward: social_nav_v1
 ```
 
-`parcel_robot.navigation.envs.metaurban_env.MetaUrbanNavEnv` is the training env (PointNav / SocialNav) once MetaUrban is installed. Use Stable-Baselines3 / custom loops **outside** the voice process.
+`parcel_robot.navigation.envs.metaurban_env.MetaUrbanNavEnv` can exercise
+PointNav/SocialNav loop shapes offline. A real MetaUrban training environment
+still needs action/observation mapping, lifecycle, reward, and render wiring.
+Keep Stable-Baselines3/custom loops **outside** the voice process.
 
 ## What works today vs later
 
-| Capability | Today | After MetaUrban + GPU + weights |
+| Capability | Today | Research integration required |
 | --- | --- | --- |
 | POI grounding for demo directives | Yes (`demo_pois.yaml`) | Expand map / VLM |
-| Multi-model registry + versions | Yes | Load real checkpoints |
-| Stub navigator (straight to goal) | Yes | Replace with CityWalker/NaVILA |
-| Living city + pedestrians | No (need MetaUrban) | `drive_in_dynamic_env` |
-| Don’t bump people | Reward stubs + velocity clamp | SocialNav + vision policy |
+| Multi-model registry + versions | Metadata only beyond `stub_v0` | Implement vendor loaders/adapters |
+| Stub navigator + persistent runtime loop | Yes | Implement and test CityWalker/NaVILA inference |
+| Reactive obstacle bearing turn + final brake | Yes | Add learned/local map planner |
+| Living city + pedestrians | No | Implement the MetaUrban backend adapter |
+| Don’t bump people | Ground-truth owner + directional brake | Perception + SocialNav/local planner |
 
 ## Next host setup
 
-1. Install Conda + Python 3.9, NVIDIA drivers/CUDA.  
-2. `./scripts/setup_metaurban.sh`  
-3. Download CityWalker and/or NaVILA checkpoints into `models/nav/`.  
-4. Set `configs/navigation/default.yaml` → `active_model: citywalker_v1` (or `navila_v1`).  
-5. Train / fine-tune via `MetaUrbanNavEnv` with `rl.reward: social_nav_v1`.
+1. Install Conda + Python 3.9 (the NVIDIA driver/CUDA-compatible GPU is ready).
+2. Run `./scripts/setup_metaurban.sh`.
+3. Implement a MetaUrban `SimulatorBackend`/Gym adapter and test real steps and observations.
+4. Implement CityWalker or NaVILA preprocessing/inference/output conversion.
+5. Download the matching checkpoint, add regression fixtures, then change `active_model` from `stub_v0`.
+6. Train/fine-tune with the real environment and `social_nav_v1` reward only after those adapters are verified.

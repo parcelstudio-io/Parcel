@@ -1,0 +1,1636 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080c12">
+  <title>Parcel · Robot Dog Control</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a0f;
+      --panel: rgba(17, 23, 32, 0.92);
+      --panel-raised: rgba(23, 31, 43, 0.96);
+      --panel-soft: rgba(255, 255, 255, 0.035);
+      --line: rgba(255, 255, 255, 0.09);
+      --line-strong: rgba(255, 255, 255, 0.16);
+      --text: #f4f7fb;
+      --muted: #8f9bab;
+      --teal: #56e6c2;
+      --teal-dark: #113d36;
+      --amber: #ffc76a;
+      --red: #ff6f78;
+      --red-dark: #4b171e;
+      --blue: #7db3ff;
+      --radius: 18px;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% -15%, rgba(49, 148, 134, 0.19), transparent 37%),
+        radial-gradient(circle at 92% 4%, rgba(73, 110, 177, 0.16), transparent 31%),
+        var(--bg);
+    }
+
+    button, input, textarea { font: inherit; }
+
+    button { color: inherit; }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--teal);
+      outline-offset: 2px;
+    }
+
+    .shell {
+      width: min(1540px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 22px 0 38px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border: 1px solid rgba(86, 230, 194, 0.3);
+      border-radius: 13px;
+      background: linear-gradient(145deg, rgba(86, 230, 194, 0.2), rgba(86, 230, 194, 0.04));
+      box-shadow: inset 0 0 28px rgba(86, 230, 194, 0.05);
+    }
+
+    .brand-mark svg { width: 25px; height: 25px; }
+
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--teal);
+      font-size: 0.69rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.25rem, 2.1vw, 1.75rem);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .connection {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: max-content;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.025);
+      font-size: 0.78rem;
+    }
+
+    .connection-dot,
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--muted);
+      box-shadow: 0 0 0 4px rgba(143, 155, 171, 0.08);
+    }
+
+    .connection.live .connection-dot,
+    .status-card[data-tone="good"] .status-dot {
+      background: var(--teal);
+      box-shadow: 0 0 0 4px rgba(86, 230, 194, 0.1), 0 0 14px rgba(86, 230, 194, 0.48);
+    }
+
+    .connection.offline .connection-dot,
+    .status-card[data-tone="danger"] .status-dot {
+      background: var(--red);
+      box-shadow: 0 0 0 4px rgba(255, 111, 120, 0.1), 0 0 14px rgba(255, 111, 120, 0.4);
+    }
+
+    .status-card[data-tone="warn"] .status-dot {
+      background: var(--amber);
+      box-shadow: 0 0 0 4px rgba(255, 199, 106, 0.1);
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .status-card {
+      min-width: 0;
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.028);
+    }
+
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 750;
+      letter-spacing: 0.095em;
+      text-transform: uppercase;
+    }
+
+    .status-value {
+      overflow: hidden;
+      font-size: 0.91rem;
+      font-weight: 680;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(270px, 0.82fr) minmax(390px, 1.45fr) minmax(290px, 0.9fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(155deg, var(--panel-raised), var(--panel));
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 17px 18px 0;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 0.99rem;
+      letter-spacing: -0.01em;
+    }
+
+    .panel-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      line-height: 1.45;
+    }
+
+    .panel-body { padding: 17px 18px 18px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(0, 0, 0, 0.14);
+      font-size: 0.66rem;
+      font-weight: 750;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .badge.estop {
+      border-color: rgba(255, 111, 120, 0.38);
+      color: #ffc4c8;
+      background: rgba(255, 111, 120, 0.12);
+    }
+
+    .manual-panel,
+    .mission-panel { min-height: 470px; }
+
+    .speed-control {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px 12px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel-soft);
+    }
+
+    .speed-control label {
+      color: var(--muted);
+      font-size: 0.73rem;
+      font-weight: 700;
+    }
+
+    .speed-control output {
+      color: var(--teal);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.76rem;
+      font-weight: 750;
+    }
+
+    .speed-control input {
+      grid-column: 1 / -1;
+      width: 100%;
+      accent-color: var(--teal);
+    }
+
+    .drive-pad {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .drive-button,
+    .owner-button,
+    .action-button,
+    .send-button {
+      border: 1px solid var(--line-strong);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035));
+      box-shadow: inset 0 1px rgba(255, 255, 255, 0.05), 0 7px 18px rgba(0, 0, 0, 0.16);
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease, transform 90ms ease;
+    }
+
+    .drive-button:hover,
+    .owner-button:hover,
+    .action-button:hover,
+    .send-button:hover {
+      border-color: rgba(86, 230, 194, 0.43);
+      background: linear-gradient(180deg, rgba(86, 230, 194, 0.12), rgba(86, 230, 194, 0.045));
+    }
+
+    .drive-button:active,
+    .drive-button.pressed,
+    .owner-button:active,
+    .action-button:active,
+    .send-button:active {
+      transform: translateY(1px) scale(0.985);
+    }
+
+    .drive-button.pressed {
+      border-color: rgba(86, 230, 194, 0.7);
+      color: var(--teal);
+      background: rgba(86, 230, 194, 0.12);
+    }
+
+    .drive-button {
+      display: grid;
+      min-height: 70px;
+      padding: 8px;
+      place-items: center;
+      border-radius: 13px;
+    }
+
+    .drive-button.stop-motion {
+      border-color: rgba(255, 199, 106, 0.34);
+      color: var(--amber);
+    }
+
+    .drive-icon {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .drive-label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 720;
+    }
+
+    kbd {
+      display: inline-grid;
+      min-width: 19px;
+      height: 19px;
+      padding: 0 4px;
+      place-items: center;
+      border: 1px solid var(--line-strong);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      color: var(--muted);
+      background: rgba(0, 0, 0, 0.18);
+      font-family: inherit;
+      font-size: 0.6rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .control-note {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-top: 13px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      line-height: 1.45;
+    }
+
+    .control-note .pulse {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 auto;
+      margin-top: 3px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 9px rgba(86, 230, 194, 0.55);
+    }
+
+    .arena-panel { min-height: 470px; }
+
+    .arena-wrap {
+      position: relative;
+      min-height: 368px;
+      margin: 14px 14px 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #0a1017;
+    }
+
+    #arena {
+      display: block;
+      width: 100%;
+      height: 368px;
+    }
+
+    .arena-legend {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 7px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 7px;
+      color: #b6c0ce;
+      background: rgba(5, 9, 14, 0.75);
+      backdrop-filter: blur(8px);
+      font-size: 0.62rem;
+      font-weight: 700;
+    }
+
+    .legend-swatch {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    .legend-swatch.owner { background: var(--amber); }
+    .legend-swatch.clearance { background: transparent; border: 1px dashed var(--red); }
+
+    .telemetry {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      margin: 14px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--line);
+    }
+
+    .telemetry-item {
+      min-width: 0;
+      padding: 11px 12px;
+      background: #101720;
+    }
+
+    .telemetry-label {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 0.62rem;
+      font-weight: 720;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .telemetry-value {
+      display: block;
+      overflow: hidden;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.79rem;
+      font-weight: 680;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .action-button {
+      min-height: 52px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 760;
+      text-align: left;
+    }
+
+    .action-button small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 0.62rem;
+      font-weight: 550;
+    }
+
+    .action-button.follow { color: var(--teal); }
+    .action-button.stay { color: var(--blue); }
+    .action-button.stop { color: var(--amber); }
+
+    .action-button.emergency {
+      border-color: rgba(255, 111, 120, 0.48);
+      color: #fff;
+      background: linear-gradient(180deg, rgba(255, 111, 120, 0.22), rgba(122, 26, 37, 0.2));
+    }
+
+    .action-button.clear-estop {
+      grid-column: 1 / -1;
+      min-height: 39px;
+      color: #ffc1c5;
+      text-align: center;
+      background: rgba(255, 111, 120, 0.07);
+    }
+
+    .section-divider {
+      height: 1px;
+      margin: 17px 0;
+      background: var(--line);
+    }
+
+    .section-label {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: 0.66rem;
+      font-weight: 780;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .owner-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 36px);
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .owner-button {
+      width: 36px;
+      height: 34px;
+      border-radius: 9px;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .owner-center {
+      display: grid;
+      place-items: center;
+      color: var(--amber);
+      font-size: 0.7rem;
+    }
+
+    .command-panel {
+      grid-column: 1 / -1;
+    }
+
+    .command-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.95fr) minmax(320px, 1.05fr) minmax(320px, 1.05fr);
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .command-box,
+    .log-box {
+      min-width: 0;
+      min-height: 256px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(5, 9, 14, 0.44);
+    }
+
+    .command-box { padding: 16px; }
+
+    .command-heading,
+    .log-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0;
+      font-size: 0.82rem;
+      font-weight: 760;
+    }
+
+    .command-description {
+      margin: 8px 0 14px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 1.55;
+    }
+
+    .command-form {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .command-form input {
+      min-width: 0;
+      flex: 1;
+      height: 43px;
+      padding: 0 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 11px;
+      color: var(--text);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .command-form input::placeholder { color: #697586; }
+
+    .send-button {
+      min-width: 70px;
+      padding: 0 14px;
+      border-radius: 11px;
+      color: #06120f;
+      background: var(--teal);
+      font-size: 0.74rem;
+      font-weight: 830;
+    }
+
+    .send-button:hover {
+      color: #06120f;
+      background: #7bf1d4;
+    }
+
+    .quick-commands {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .quick-command {
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.64rem;
+    }
+
+    .quick-command:hover { border-color: rgba(86, 230, 194, 0.35); color: var(--text); }
+
+    .log-box {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .log-header {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .log-count {
+      color: var(--muted);
+      font-size: 0.65rem;
+      font-weight: 650;
+    }
+
+    .log-list {
+      height: 205px;
+      margin: 0;
+      padding: 10px;
+      overflow: auto;
+      list-style: none;
+      scrollbar-color: #344151 transparent;
+      scrollbar-width: thin;
+    }
+
+    .empty-log {
+      display: grid;
+      height: 100%;
+      min-height: 150px;
+      place-items: center;
+      color: #697586;
+      font-size: 0.7rem;
+      text-align: center;
+    }
+
+    .chat-item,
+    .event-item {
+      margin-bottom: 8px;
+      padding: 9px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .chat-item[data-role="user"] { border-left: 2px solid var(--blue); }
+    .chat-item[data-role="assistant"] { border-left: 2px solid var(--teal); }
+    .chat-item[data-role="error"] { border-left: 2px solid var(--red); }
+
+    .log-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 0.59rem;
+      font-weight: 720;
+      letter-spacing: 0.045em;
+      text-transform: uppercase;
+    }
+
+    .log-text {
+      margin: 0;
+      color: #d5dce6;
+      font-size: 0.7rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .event-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 9px;
+      align-items: start;
+    }
+
+    .event-icon {
+      width: 7px;
+      height: 7px;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 8px rgba(125, 179, 255, 0.38);
+    }
+
+    .event-item[data-level="error"] .event-icon { background: var(--red); }
+    .event-item[data-level="warning"] .event-icon { background: var(--amber); }
+    .event-item[data-level="success"] .event-icon { background: var(--teal); }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 20;
+      max-width: min(380px, calc(100vw - 36px));
+      padding: 11px 13px;
+      border: 1px solid rgba(255, 111, 120, 0.35);
+      border-radius: 11px;
+      color: #ffd5d8;
+      background: rgba(63, 18, 24, 0.96);
+      box-shadow: var(--shadow);
+      font-size: 0.72rem;
+      line-height: 1.45;
+      transform: translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .toast.visible { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 1120px) {
+      .status-grid { grid-template-columns: repeat(5, minmax(120px, 1fr)); overflow-x: auto; }
+      .layout { grid-template-columns: minmax(260px, 0.75fr) minmax(430px, 1.25fr); }
+      .mission-panel { grid-column: 1 / -1; min-height: auto; }
+      .mission-panel .panel-body { display: grid; grid-template-columns: 1fr 1px 0.7fr; gap: 18px; }
+      .mission-panel .section-divider { width: 1px; height: auto; margin: 0; }
+      .command-layout { grid-template-columns: 1fr 1fr; }
+      .command-box { grid-column: 1 / -1; min-height: auto; }
+    }
+
+    @media (max-width: 740px) {
+      .shell { width: min(100% - 20px, 620px); padding-top: 14px; }
+      .topbar { align-items: flex-start; }
+      .connection { padding: 8px 10px; }
+      .connection-time { display: none; }
+      .status-grid { grid-template-columns: repeat(5, 132px); margin-right: -10px; }
+      .layout { grid-template-columns: 1fr; }
+      .manual-panel, .arena-panel, .mission-panel { grid-column: auto; min-height: auto; }
+      .arena-wrap { min-height: 310px; }
+      #arena { height: 310px; }
+      .mission-panel .panel-body { display: block; }
+      .mission-panel .section-divider { width: auto; height: 1px; margin: 17px 0; }
+      .command-panel { grid-column: auto; }
+      .command-layout { grid-template-columns: 1fr; padding: 12px; }
+      .command-box { grid-column: auto; }
+      .command-form { flex-direction: column; }
+      .send-button { min-height: 41px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M9 11.5h14v9H9zM11 20.5v4M21 20.5v4M12 9V6.5M20 9V6.5" stroke="#56e6c2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M6.5 13.5H9M23 13.5h2.5" stroke="#56e6c2" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="13" cy="15.5" r="1" fill="#56e6c2"/><circle cx="19" cy="15.5" r="1" fill="#56e6c2"/>
+          </svg>
+        </div>
+        <div>
+          <p class="eyebrow">Parcel Robotics</p>
+          <h1>Robot dog control deck</h1>
+        </div>
+      </div>
+      <div id="connection" class="connection offline" role="status" aria-live="polite">
+        <span class="connection-dot"></span>
+        <span id="connection-label">Connecting</span>
+        <span id="connection-time" class="connection-time">—</span>
+      </div>
+    </header>
+
+    <section class="status-grid" aria-label="System status">
+      <article class="status-card" id="status-sim" data-tone="neutral">
+        <div class="status-label"><span class="status-dot"></span>Simulator</div>
+        <div class="status-value">Unknown</div>
+      </article>
+      <article class="status-card" id="status-agent" data-tone="neutral">
+        <div class="status-label"><span class="status-dot"></span>Agent</div>
+        <div class="status-value">Unknown</div>
+      </article>
+      <article class="status-card" id="status-follow" data-tone="neutral">
+        <div class="status-label"><span class="status-dot"></span>Behavior</div>
+        <div class="status-value">Idle</div>
+      </article>
+      <article class="status-card" id="status-audio" data-tone="neutral">
+        <div class="status-label"><span class="status-dot"></span>Audio</div>
+        <div class="status-value">Text mode</div>
+      </article>
+      <article class="status-card" id="status-model" data-tone="neutral">
+        <div class="status-label"><span class="status-dot"></span>Model</div>
+        <div class="status-value">Unknown</div>
+      </article>
+    </section>
+
+    <section class="layout">
+      <article class="panel manual-panel">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Manual movement</h2>
+            <p class="panel-subtitle">Hold a button or use the keyboard.</p>
+          </div>
+          <span class="badge">Local control</span>
+        </header>
+        <div class="panel-body">
+          <div class="speed-control">
+            <label for="speed">Drive speed</label>
+            <output id="speed-value" for="speed">0.30 m/s</output>
+            <input id="speed" type="range" min="0.10" max="0.60" step="0.05" value="0.30">
+          </div>
+
+          <div class="drive-pad" aria-label="Robot motion controls">
+            <button class="drive-button motion-control" data-vyaw="1" data-key="q" aria-label="Rotate left">
+              <span><span class="drive-icon">↶</span><span class="drive-label">Rotate</span></span><kbd>Q</kbd>
+            </button>
+            <button class="drive-button motion-control" data-vx="1" data-key="w" aria-label="Move forward">
+              <span><span class="drive-icon">↑</span><span class="drive-label">Forward</span></span><kbd>W</kbd>
+            </button>
+            <button class="drive-button motion-control" data-vyaw="-1" data-key="e" aria-label="Rotate right">
+              <span><span class="drive-icon">↷</span><span class="drive-label">Rotate</span></span><kbd>E</kbd>
+            </button>
+            <button class="drive-button motion-control" data-vy="1" data-key="a" aria-label="Strafe left">
+              <span><span class="drive-icon">←</span><span class="drive-label">Strafe</span></span><kbd>A</kbd>
+            </button>
+            <button class="drive-button stop-motion" id="motion-stop" aria-label="Stop motion">
+              <span><span class="drive-icon">■</span><span class="drive-label">Stop</span></span><kbd>Space</kbd>
+            </button>
+            <button class="drive-button motion-control" data-vy="-1" data-key="d" aria-label="Strafe right">
+              <span><span class="drive-icon">→</span><span class="drive-label">Strafe</span></span><kbd>D</kbd>
+            </button>
+            <span aria-hidden="true"></span>
+            <button class="drive-button motion-control" data-vx="-1" data-key="s" aria-label="Move backward">
+              <span><span class="drive-icon">↓</span><span class="drive-label">Reverse</span></span><kbd>S</kbd>
+            </button>
+            <span aria-hidden="true"></span>
+          </div>
+          <div class="control-note">
+            <span class="pulse"></span>
+            <span>Dead-man control is active: releasing all controls sends zero velocity. Arrow keys drive forward, reverse, and rotate.</span>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel arena-panel">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Live simulator</h2>
+            <p class="panel-subtitle">Robot and owner position in the simulated world.</p>
+          </div>
+          <span id="estop-badge" class="badge">E-stop clear</span>
+        </header>
+        <div class="arena-wrap">
+          <canvas id="arena" aria-label="Top-down simulator map"></canvas>
+          <div class="arena-legend" aria-hidden="true">
+            <span class="legend-item"><span class="legend-swatch"></span>Robot</span>
+            <span class="legend-item"><span class="legend-swatch owner"></span>Owner</span>
+            <span class="legend-item"><span class="legend-swatch clearance"></span>Nearest obstacle</span>
+          </div>
+        </div>
+        <div class="telemetry" aria-label="Position telemetry">
+          <div class="telemetry-item"><span class="telemetry-label">Robot</span><span id="robot-position" class="telemetry-value">x — · y —</span></div>
+          <div class="telemetry-item"><span class="telemetry-label">Owner</span><span id="owner-position" class="telemetry-value">x — · y —</span></div>
+          <div class="telemetry-item"><span class="telemetry-label">Obstacle</span><span id="obstacle-distance" class="telemetry-value">— m</span></div>
+        </div>
+      </article>
+
+      <article class="panel mission-panel">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Behavior & safety</h2>
+            <p class="panel-subtitle">High-level owner and motion modes.</p>
+          </div>
+        </header>
+        <div class="panel-body">
+          <div>
+            <div class="action-grid">
+              <button class="action-button follow" data-action="follow">Follow owner<small>Acquire and maintain distance</small></button>
+              <button class="action-button stay" data-action="stay">Stay<small>Hold the current position</small></button>
+              <button class="action-button stop" data-action="stop">Stop<small>Cancel active motion</small></button>
+              <button class="action-button emergency" data-action="emergency_stop">Emergency stop<small>Latch all motion off</small></button>
+              <button class="action-button clear-estop" data-action="clear_emergency_stop">Clear emergency-stop latch</button>
+            </div>
+          </div>
+          <div class="section-divider"></div>
+          <div>
+            <p class="section-label">Move simulated owner · 0.5 m</p>
+            <div class="owner-pad" aria-label="Move simulated owner">
+              <span></span><button class="owner-button" data-owner-dx="0" data-owner-dy="0.5" aria-label="Move owner north">↑</button><span></span>
+              <button class="owner-button" data-owner-dx="-0.5" data-owner-dy="0" aria-label="Move owner west">←</button><span class="owner-center">Owner</span><button class="owner-button" data-owner-dx="0.5" data-owner-dy="0" aria-label="Move owner east">→</button>
+              <span></span><button class="owner-button" data-owner-dx="0" data-owner-dy="-0.5" aria-label="Move owner south">↓</button><span></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel command-panel">
+        <div class="command-layout">
+          <section class="command-box" aria-labelledby="command-heading">
+            <h2 class="command-heading" id="command-heading">Voice command · text input <span class="badge">Streaming-ready</span></h2>
+            <p class="command-description">This uses the same command path as future microphone transcripts, so behavior can be developed before duplex audio is enabled.</p>
+            <form id="command-form" class="command-form">
+              <input id="command-input" name="command" autocomplete="off" maxlength="500" placeholder="Try “follow me”, “stay”, or “walk forward”" aria-label="Voice command as text">
+              <button class="send-button" type="submit">Send</button>
+            </form>
+            <div class="quick-commands" aria-label="Example commands">
+              <button class="quick-command" type="button" data-command="follow me">Follow me</button>
+              <button class="quick-command" type="button" data-command="stay here">Stay here</button>
+              <button class="quick-command" type="button" data-command="walk forward">Walk forward</button>
+              <button class="quick-command" type="button" data-command="navigate to the crosswalk">Go to crosswalk</button>
+              <button class="quick-command" type="button" data-command="stop">Stop</button>
+            </div>
+          </section>
+
+          <section class="log-box" aria-labelledby="chat-heading">
+            <header class="log-header">
+              <h2 class="log-heading" id="chat-heading">Conversation <span id="chat-count" class="log-count">0 messages</span></h2>
+            </header>
+            <ol id="chat-log" class="log-list" aria-live="polite"><li class="empty-log">Text commands and agent replies appear here.</li></ol>
+          </section>
+
+          <section class="log-box" aria-labelledby="event-heading">
+            <header class="log-header">
+              <h2 class="log-heading" id="event-heading">Event stream <span id="event-count" class="log-count">0 events</span></h2>
+            </header>
+            <ol id="event-log" class="log-list" aria-live="polite"><li class="empty-log">Waiting for simulator events…</li></ol>
+          </section>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="alert"></div>
+
+  <script>
+    "use strict";
+
+    const CSRF_TOKEN = "__PARCEL_CSRF_TOKEN__";
+    const POLL_INTERVAL_MS = 750;
+    const API_TIMEOUT_MS = 4500;
+    const state = {
+      snapshot: {},
+      connected: false,
+      lastSync: null,
+      heldKeys: new Set(),
+      heldPointers: new Map(),
+      lastMotion: { vx: 0, vy: 0, vyaw: 0 },
+      pendingMotion: null,
+      motionInFlight: false,
+      localChat: [],
+      localEvents: [],
+    };
+
+    const el = (id) => document.getElementById(id);
+    const connection = el("connection");
+    const toast = el("toast");
+    const canvas = el("arena");
+    const context = canvas.getContext("2d");
+    const speedInput = el("speed");
+    const speedValue = el("speed-value");
+    let toastTimer = null;
+    let partialTranscriptTimer = null;
+
+    function asNumber(value, fallback = 0) {
+      const result = Number(value);
+      return Number.isFinite(result) ? result : fallback;
+    }
+
+    function firstDefined(...values) {
+      return values.find((value) => value !== undefined && value !== null);
+    }
+
+    function capitalize(value) {
+      const text = String(value ?? "unknown").replaceAll("_", " ").trim();
+      return text ? text.charAt(0).toUpperCase() + text.slice(1) : "Unknown";
+    }
+
+    function positionFrom(value) {
+      if (Array.isArray(value)) {
+        return { x: asNumber(value[0]), y: asNumber(value[1]), heading: asNumber(value[2]) };
+      }
+      if (!value || typeof value !== "object") return { x: 0, y: 0, heading: 0, known: false };
+      const nested = value.position;
+      if (Array.isArray(nested)) {
+        return {
+          ...value,
+          x: asNumber(nested[0]),
+          y: asNumber(nested[1]),
+          heading: asNumber(firstDefined(value.heading, value.heading_deg, nested[2])),
+          known: true,
+        };
+      }
+      return {
+        ...value,
+        x: asNumber(firstDefined(value.x, value.dx)),
+        y: asNumber(firstDefined(value.y, value.dy)),
+        heading: asNumber(firstDefined(value.heading, value.heading_deg, value.yaw)),
+        known: value.x !== undefined || value.y !== undefined,
+      };
+    }
+
+    function readStatus(snapshot, names, fallback = "unknown") {
+      const raw = firstDefined(...names.map((name) => snapshot[name]));
+      if (raw && typeof raw === "object") {
+        const status = firstDefined(raw.status, raw.state, raw.mode, raw.value, raw.name);
+        const detail = firstDefined(raw.name, raw.model, raw.detail);
+        if (status !== undefined && detail && String(detail).toLowerCase() !== String(status).toLowerCase()) {
+          return `${capitalize(status)} · ${detail}`;
+        }
+        return capitalize(firstDefined(status, fallback));
+      }
+      return capitalize(firstDefined(raw, fallback));
+    }
+
+    function statusTone(value) {
+      const text = String(value).toLowerCase();
+      if (/error|fault|offline|failed|stopped|unavailable|disconnected/.test(text)) return "danger";
+      if (/starting|loading|search|acquir|warn|text mode|disabled|idle|standby/.test(text)) return "warn";
+      if (/ready|running|online|connected|following|active|listening|available|clear/.test(text)) return "good";
+      return "neutral";
+    }
+
+    function updateStatusCard(id, value, forcedTone) {
+      const card = el(id);
+      card.querySelector(".status-value").textContent = value;
+      card.dataset.tone = forcedTone || statusTone(value);
+      card.title = value;
+    }
+
+    function snapshotParts(snapshot) {
+      const robot = positionFrom(firstDefined(snapshot.robot, snapshot.robot_position, snapshot.pose));
+      const owner = positionFrom(firstDefined(snapshot.owner, snapshot.owner_position, snapshot.target));
+      const obstacleDistance = asNumber(firstDefined(
+        snapshot.obstacle_distance_m,
+        snapshot.obstacle_distance,
+        snapshot.nearest_obstacle_m,
+        snapshot.telemetry?.obstacle_distance_m
+      ), NaN);
+      const emergencyStopped = Boolean(firstDefined(
+        snapshot.emergency_stopped,
+        snapshot.estop,
+        snapshot.e_stop,
+        snapshot.safety?.emergency_stopped,
+        false
+      ));
+      return { robot, owner, obstacleDistance, emergencyStopped };
+    }
+
+    function renderSnapshot(snapshot) {
+      const sim = readStatus(snapshot, ["simulator", "sim", "sim_status"], "unknown");
+      const agent = readStatus(snapshot, ["agent", "agent_status"], "unknown");
+      const follow = readStatus(snapshot, ["follow", "follow_status", "behavior"], "idle");
+      const navigation = readStatus(snapshot, ["navigation", "navigation_status"], "idle");
+      const audio = readStatus(snapshot, ["audio", "audio_status", "voice"], "text mode");
+      const model = readStatus(snapshot, ["model", "model_status", "reasoning_model"], "unknown");
+      updateStatusCard("status-sim", sim);
+      updateStatusCard("status-agent", agent);
+      const navigationEnabled = Boolean(snapshot.navigation?.enabled);
+      updateStatusCard("status-follow", navigationEnabled ? `Nav · ${navigation}` : follow);
+      updateStatusCard("status-audio", audio);
+      updateStatusCard("status-model", model);
+
+      const { robot, owner, obstacleDistance, emergencyStopped } = snapshotParts(snapshot);
+      el("robot-position").textContent = `x ${robot.x.toFixed(2)} · y ${robot.y.toFixed(2)}`;
+      el("owner-position").textContent = `x ${owner.x.toFixed(2)} · y ${owner.y.toFixed(2)}`;
+      el("obstacle-distance").textContent = Number.isFinite(obstacleDistance)
+        ? `${obstacleDistance.toFixed(2)} m`
+        : "— m";
+      const badge = el("estop-badge");
+      badge.textContent = emergencyStopped ? "E-stop latched" : "E-stop clear";
+      badge.classList.toggle("estop", emergencyStopped);
+
+      renderLogs(snapshot);
+      drawArena();
+    }
+
+    function normalizeLogItem(item, defaultRole = "system") {
+      if (typeof item === "string") return { role: defaultRole, text: item, timestamp: null };
+      if (!item || typeof item !== "object") return { role: defaultRole, text: String(item), timestamp: null };
+      let text = firstDefined(item.text, item.message, item.content, item.detail, item.event);
+      if (text === undefined) {
+        try { text = JSON.stringify(item); } catch (_) { text = String(item); }
+      }
+      return {
+        role: String(firstDefined(item.role, item.source, item.type, item.level, defaultRole)).toLowerCase(),
+        level: String(firstDefined(item.level, item.severity, "info")).toLowerCase(),
+        text: String(text),
+        timestamp: firstDefined(item.timestamp, item.time, item.created_at, null),
+      };
+    }
+
+    function displayTime(value) {
+      if (!value) return "now";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    }
+
+    function renderLogs(snapshot) {
+      const serverChat = firstDefined(snapshot.chat, snapshot.messages, snapshot.chat_log, []);
+      const serverEvents = firstDefined(snapshot.events, snapshot.event_log, snapshot.logs, []);
+      const chatItems = [
+        ...(Array.isArray(serverChat) ? serverChat : []),
+        ...state.localChat,
+      ].map((item) => normalizeLogItem(item, "system")).slice(-80);
+      const eventItems = [
+        ...(Array.isArray(serverEvents) ? serverEvents : []),
+        ...state.localEvents,
+      ].map((item) => normalizeLogItem(item, "info")).slice(-100);
+
+      renderChat(chatItems);
+      renderEvents(eventItems);
+    }
+
+    function renderChat(items) {
+      const list = el("chat-log");
+      list.replaceChildren();
+      el("chat-count").textContent = `${items.length} ${items.length === 1 ? "message" : "messages"}`;
+      if (!items.length) {
+        const empty = document.createElement("li");
+        empty.className = "empty-log";
+        empty.textContent = "Text commands and agent replies appear here.";
+        list.append(empty);
+        return;
+      }
+      for (const item of items) {
+        const row = document.createElement("li");
+        const role = /assistant|agent|robot/.test(item.role)
+          ? "assistant"
+          : /user|client|owner/.test(item.role) ? "user" : /error/.test(item.role) ? "error" : "system";
+        row.className = "chat-item";
+        row.dataset.role = role;
+        const meta = document.createElement("div");
+        meta.className = "log-meta";
+        const who = document.createElement("span");
+        who.textContent = capitalize(role);
+        const when = document.createElement("span");
+        when.textContent = displayTime(item.timestamp);
+        meta.append(who, when);
+        const message = document.createElement("p");
+        message.className = "log-text";
+        message.textContent = item.text;
+        row.append(meta, message);
+        list.append(row);
+      }
+      list.scrollTop = list.scrollHeight;
+    }
+
+    function renderEvents(items) {
+      const list = el("event-log");
+      list.replaceChildren();
+      el("event-count").textContent = `${items.length} ${items.length === 1 ? "event" : "events"}`;
+      if (!items.length) {
+        const empty = document.createElement("li");
+        empty.className = "empty-log";
+        empty.textContent = "Waiting for simulator events…";
+        list.append(empty);
+        return;
+      }
+      for (const item of items) {
+        const row = document.createElement("li");
+        row.className = "event-item";
+        row.dataset.level = item.level;
+        const icon = document.createElement("span");
+        icon.className = "event-icon";
+        const content = document.createElement("div");
+        const meta = document.createElement("div");
+        meta.className = "log-meta";
+        const source = document.createElement("span");
+        source.textContent = capitalize(item.role);
+        const when = document.createElement("span");
+        when.textContent = displayTime(item.timestamp);
+        meta.append(source, when);
+        const message = document.createElement("p");
+        message.className = "log-text";
+        message.textContent = item.text;
+        content.append(meta, message);
+        row.append(icon, content);
+        list.append(row);
+      }
+      list.scrollTop = list.scrollHeight;
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.max(1, window.devicePixelRatio || 1);
+      const width = Math.max(1, Math.round(rect.width * ratio));
+      const height = Math.max(1, Math.round(rect.height * ratio));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      drawArena();
+    }
+
+    function drawArena() {
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+      if (!width || !height) return;
+      context.clearRect(0, 0, width, height);
+
+      const { robot, owner, obstacleDistance } = snapshotParts(state.snapshot);
+      const obstacles = Array.isArray(state.snapshot.obstacles)
+        ? state.snapshot.obstacles.map(positionFrom)
+        : [];
+      const points = [robot, owner, ...obstacles];
+      let span = 5;
+      for (const point of points) span = Math.max(span, Math.abs(point.x) + 2, Math.abs(point.y) + 2);
+      if (Number.isFinite(obstacleDistance)) span = Math.max(span, obstacleDistance + 2);
+      const scale = Math.min(width, height) / (span * 2.25);
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const screen = (point) => ({ x: centerX + point.x * scale, y: centerY - point.y * scale });
+
+      context.fillStyle = "#0a1017";
+      context.fillRect(0, 0, width, height);
+
+      const gridStep = Math.max(24, scale);
+      context.beginPath();
+      context.lineWidth = 1;
+      context.strokeStyle = "rgba(255,255,255,0.045)";
+      for (let x = centerX % gridStep; x < width; x += gridStep) {
+        context.moveTo(x, 0); context.lineTo(x, height);
+      }
+      for (let y = centerY % gridStep; y < height; y += gridStep) {
+        context.moveTo(0, y); context.lineTo(width, y);
+      }
+      context.stroke();
+
+      context.beginPath();
+      context.strokeStyle = "rgba(255,255,255,0.09)";
+      context.moveTo(centerX, 0); context.lineTo(centerX, height);
+      context.moveTo(0, centerY); context.lineTo(width, centerY);
+      context.stroke();
+
+      const robotScreen = screen(robot);
+      const ownerScreen = screen(owner);
+      context.beginPath();
+      context.setLineDash([5, 6]);
+      context.strokeStyle = "rgba(255,199,106,0.36)";
+      context.moveTo(robotScreen.x, robotScreen.y);
+      context.lineTo(ownerScreen.x, ownerScreen.y);
+      context.stroke();
+      context.setLineDash([]);
+
+      if (Number.isFinite(obstacleDistance) && obstacleDistance > 0) {
+        context.beginPath();
+        context.setLineDash([4, 5]);
+        context.arc(robotScreen.x, robotScreen.y, obstacleDistance * scale, 0, Math.PI * 2);
+        context.strokeStyle = obstacleDistance < 0.8
+          ? "rgba(255,111,120,0.8)"
+          : "rgba(255,111,120,0.3)";
+        context.stroke();
+        context.setLineDash([]);
+      }
+
+      for (const obstacle of obstacles) {
+        const point = screen(obstacle);
+        context.fillStyle = "rgba(255,111,120,0.68)";
+        context.fillRect(point.x - 4, point.y - 4, 8, 8);
+      }
+
+      const ownerVisible = firstDefined(owner.visible, owner.tracked, true) !== false;
+      context.beginPath();
+      context.arc(ownerScreen.x, ownerScreen.y, 8, 0, Math.PI * 2);
+      context.fillStyle = ownerVisible ? "#ffc76a" : "#6f6657";
+      context.shadowColor = ownerVisible ? "rgba(255,199,106,0.55)" : "transparent";
+      context.shadowBlur = 12;
+      context.fill();
+      context.shadowBlur = 0;
+      context.font = "700 10px system-ui";
+      context.fillStyle = "rgba(255,230,189,0.85)";
+      context.fillText("OWNER", ownerScreen.x + 12, ownerScreen.y + 4);
+
+      const angle = -robot.heading * Math.PI / 180;
+      context.save();
+      context.translate(robotScreen.x, robotScreen.y);
+      context.rotate(angle);
+      context.beginPath();
+      context.moveTo(13, 0);
+      context.lineTo(-9, -8);
+      context.lineTo(-5, 0);
+      context.lineTo(-9, 8);
+      context.closePath();
+      context.fillStyle = "#56e6c2";
+      context.shadowColor = "rgba(86,230,194,0.55)";
+      context.shadowBlur = 14;
+      context.fill();
+      context.restore();
+      context.shadowBlur = 0;
+      context.font = "700 10px system-ui";
+      context.fillStyle = "rgba(196,255,240,0.85)";
+      context.fillText("PARCEL", robotScreen.x + 15, robotScreen.y + 4);
+
+      const distance = Math.hypot(owner.x - robot.x, owner.y - robot.y);
+      context.font = "600 10px system-ui";
+      context.fillStyle = "rgba(255,255,255,0.5)";
+      context.fillText(`${distance.toFixed(2)} m`, (robotScreen.x + ownerScreen.x) / 2 + 5, (robotScreen.y + ownerScreen.y) / 2 - 6);
+    }
+
+    async function api(path, options = {}) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+      try {
+        const response = await fetch(path, {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Parcel-CSRF": CSRF_TOKEN,
+            ...(options.headers || {}),
+          },
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          let detail = "";
+          try { detail = (await response.json()).detail || ""; } catch (_) { detail = await response.text(); }
+          throw new Error(`${response.status} ${response.statusText}${detail ? ` · ${detail}` : ""}`);
+        }
+        if (response.status === 204) return {};
+        const type = response.headers.get("content-type") || "";
+        return type.includes("application/json") ? response.json() : {};
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function pollState() {
+      try {
+        const snapshot = await api("/api/state", { method: "GET" });
+        state.snapshot = snapshot && typeof snapshot === "object" ? snapshot : {};
+        state.connected = true;
+        state.lastSync = new Date();
+        connection.className = "connection live";
+        el("connection-label").textContent = "Runtime online";
+        el("connection-time").textContent = state.lastSync.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        renderSnapshot(state.snapshot);
+      } catch (error) {
+        state.connected = false;
+        connection.className = "connection offline";
+        el("connection-label").textContent = "Runtime offline";
+        el("connection-time").textContent = state.lastSync ? `last ${state.lastSync.toLocaleTimeString()}` : "—";
+      }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("visible"), 3600);
+    }
+
+    function localEvent(text, level = "info", role = "ui") {
+      state.localEvents.push({ text, level, role, timestamp: new Date().toISOString() });
+      state.localEvents = state.localEvents.slice(-20);
+      renderLogs(state.snapshot);
+    }
+
+    async function postJson(path, body, successMessage) {
+      try {
+        const response = await api(path, { method: "POST", body: JSON.stringify(body) });
+        if (successMessage) localEvent(successMessage, "success");
+        if (response && typeof response === "object" && response.state) {
+          state.snapshot = response.state;
+          renderSnapshot(state.snapshot);
+        }
+        return response;
+      } catch (error) {
+        const message = `${path} failed: ${error.message}`;
+        localEvent(message, "error");
+        showToast(message);
+        throw error;
+      }
+    }
+
+    function motionEqual(a, b) {
+      return a.vx === b.vx && a.vy === b.vy && a.vyaw === b.vyaw;
+    }
+
+    function queueMotion(command, force = false) {
+      const normalized = {
+        vx: Number(command.vx.toFixed(3)),
+        vy: Number(command.vy.toFixed(3)),
+        vyaw: Number(command.vyaw.toFixed(3)),
+      };
+      if (!force && motionEqual(normalized, state.lastMotion) && !state.pendingMotion) return;
+      state.pendingMotion = normalized;
+      drainMotionQueue();
+    }
+
+    async function drainMotionQueue() {
+      if (state.motionInFlight || !state.pendingMotion) return;
+      state.motionInFlight = true;
+      const command = state.pendingMotion;
+      state.pendingMotion = null;
+      try {
+        await postJson("/api/motion", command);
+        state.lastMotion = command;
+      } catch (_) {
+        // postJson already surfaces the failure; retain the last confirmed command.
+      } finally {
+        state.motionInFlight = false;
+        if (state.pendingMotion) drainMotionQueue();
+      }
+    }
+
+    const keyVectors = {
+      w: { vx: 1 }, ArrowUp: { vx: 1 },
+      s: { vx: -1 }, ArrowDown: { vx: -1 },
+      a: { vy: 1 },
+      d: { vy: -1 },
+      q: { vyaw: 1 }, ArrowLeft: { vyaw: 1 },
+      e: { vyaw: -1 }, ArrowRight: { vyaw: -1 },
+    };
+
+    function computeMotion() {
+      const unit = { vx: 0, vy: 0, vyaw: 0 };
+      const vectors = [];
+      for (const key of state.heldKeys) if (keyVectors[key]) vectors.push(keyVectors[key]);
+      for (const vector of state.heldPointers.values()) vectors.push(vector);
+      for (const vector of vectors) {
+        unit.vx += asNumber(vector.vx);
+        unit.vy += asNumber(vector.vy);
+        unit.vyaw += asNumber(vector.vyaw);
+      }
+      const speed = asNumber(speedInput.value, 0.3);
+      const yawSpeed = Math.min(1.0, speed * 1.7);
+      return {
+        vx: Math.max(-speed, Math.min(speed, unit.vx * speed)),
+        vy: Math.max(-speed, Math.min(speed, unit.vy * speed)),
+        vyaw: Math.max(-yawSpeed, Math.min(yawSpeed, unit.vyaw * yawSpeed)),
+      };
+    }
+
+    function syncPressedButtons() {
+      document.querySelectorAll(".motion-control").forEach((button) => {
+        const key = button.dataset.key;
+        const pointerPressed = [...state.heldPointers.values()].some((vector) => vector.button === button);
+        button.classList.toggle("pressed", state.heldKeys.has(key) || pointerPressed);
+      });
+    }
+
+    function updateMotion() {
+      syncPressedButtons();
+      queueMotion(computeMotion());
+    }
+
+    function clearMotionInputs() {
+      state.heldKeys.clear();
+      state.heldPointers.clear();
+      syncPressedButtons();
+      queueMotion({ vx: 0, vy: 0, vyaw: 0 }, true);
+    }
+
+    document.querySelectorAll(".motion-control").forEach((button) => {
+      const vector = {
+        vx: asNumber(button.dataset.vx),
+        vy: asNumber(button.dataset.vy),
+        vyaw: asNumber(button.dataset.vyaw),
+        button,
+      };
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        button.setPointerCapture(event.pointerId);
+        state.heldPointers.set(event.pointerId, vector);
+        updateMotion();
+      });
+      const release = (event) => {
+        if (!state.heldPointers.has(event.pointerId)) return;
+        state.heldPointers.delete(event.pointerId);
+        updateMotion();
+      };
+      button.addEventListener("pointerup", release);
+      button.addEventListener("pointercancel", release);
+      button.addEventListener("lostpointercapture", release);
+    });
+
+    function isTypingTarget(target) {
+      return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target?.isContentEditable;
+    }
+
+    window.addEventListener("keydown", (event) => {
+      if (isTypingTarget(event.target) || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.code === "Space") {
+        event.preventDefault();
+        clearMotionInputs();
+        postJson("/api/action", { action: "stop" }, "Stop requested").catch(() => {});
+        return;
+      }
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      if (!keyVectors[key]) return;
+      event.preventDefault();
+      if (!state.heldKeys.has(key)) {
+        state.heldKeys.add(key);
+        updateMotion();
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      if (!state.heldKeys.delete(key)) return;
+      event.preventDefault();
+      updateMotion();
+    });
+
+    window.addEventListener("blur", clearMotionInputs);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) clearMotionInputs();
+    });
+
+    el("motion-stop").addEventListener("click", () => {
+      clearMotionInputs();
+      postJson("/api/action", { action: "stop" }, "Stop requested").catch(() => {});
+    });
+
+    speedInput.addEventListener("input", () => {
+      speedValue.textContent = `${asNumber(speedInput.value).toFixed(2)} m/s`;
+      if (state.heldKeys.size || state.heldPointers.size) updateMotion();
+    });
+
+    document.querySelectorAll("[data-action]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.action;
+        if (["stop", "emergency_stop"].includes(action)) clearMotionInputs();
+        postJson("/api/action", { action }, `${capitalize(action)} requested`).catch(() => {});
+      });
+    });
+
+    document.querySelectorAll("[data-owner-dx]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const dx = asNumber(button.dataset.ownerDx);
+        const dy = asNumber(button.dataset.ownerDy);
+        postJson("/api/owner", { dx, dy }, `Owner moved by (${dx.toFixed(1)}, ${dy.toFixed(1)}) m`).catch(() => {});
+      });
+    });
+
+    async function submitCommand(text) {
+      const clean = text.trim();
+      if (!clean) return;
+      state.localChat.push({ role: "user", text: clean, timestamp: new Date().toISOString() });
+      renderLogs(state.snapshot);
+      try {
+        const response = await postJson("/api/voice/text", { text: clean, is_final: true });
+        const reply = firstDefined(response?.reply, response?.message, response?.text);
+        if (response?.state) {
+          // The authoritative response already contains both conversation entries.
+          state.localChat = [];
+          renderLogs(state.snapshot);
+        } else if (reply) {
+          state.localChat.push({ role: "assistant", text: String(reply), timestamp: new Date().toISOString() });
+          renderLogs(state.snapshot);
+        }
+      } catch (error) {
+        state.localChat.push({ role: "error", text: `Command failed: ${error.message}`, timestamp: new Date().toISOString() });
+        renderLogs(state.snapshot);
+      }
+    }
+
+    el("command-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      clearTimeout(partialTranscriptTimer);
+      const input = el("command-input");
+      const text = input.value;
+      input.value = "";
+      submitCommand(text);
+    });
+
+    el("command-input").addEventListener("input", (event) => {
+      clearTimeout(partialTranscriptTimer);
+      const partial = event.target.value.trim();
+      if (!partial) return;
+      partialTranscriptTimer = setTimeout(() => {
+        api("/api/voice/text", {
+          method: "POST",
+          body: JSON.stringify({ text: partial, is_final: false }),
+        }).catch(() => {
+          // The regular state poll surfaces service health; partial hypotheses
+          // are deliberately best-effort and never execute robot actions.
+        });
+      }, 180);
+    });
+
+    document.querySelectorAll("[data-command]").forEach((button) => {
+      button.addEventListener("click", () => submitCommand(button.dataset.command));
+    });
+
+    new ResizeObserver(resizeCanvas).observe(canvas);
+    resizeCanvas();
+    pollState();
+    setInterval(() => {
+      if (!document.hidden) pollState();
+    }, POLL_INTERVAL_MS);
+    setInterval(() => {
+      // Runtime leases expire after 450 ms. Refresh only while an operator is
+      // actively holding a key/pointer so a dropped browser still fails safe.
+      if (!document.hidden && (state.heldKeys.size || state.heldPointers.size)) {
+        queueMotion(computeMotion(), true);
+      }
+    }, 180);
+  </script>
+</body>
+</html>

@@ -11,10 +11,12 @@ from parcel_robot.navigation.pipeline import DirectiveNavigator
 
 
 class MetaUrbanNavEnv:
-    """Gym-like city navigation env.
+    """Gym-like kinematic city-navigation scaffold.
 
-    Uses MetaUrban/metaurban when installed; otherwise a kinematic stub city so
-    RL loops and DirectiveNavigator can be exercised offline.
+    The default kinematic world exercises RL-loop and navigator interfaces
+    offline. ``use_metaurban=True`` is fail-closed until a real observation,
+    action, reward, and lifecycle adapter is implemented; importing or resetting
+    a vendor environment is not presented as functional integration.
     """
 
     metadata: ClassVar[dict[str, Any]] = {
@@ -53,21 +55,16 @@ class MetaUrbanNavEnv:
 
     def _init_metaurban(self) -> None:
         try:
-            from metaurban import SidewalkStaticMetaUrbanEnv  # type: ignore
+            import metaurban as _metaurban  # type: ignore  # noqa: F401
         except ImportError as error:
             raise ImportError(
                 "metaurban is not installed. Run ./scripts/setup_metaurban.sh "
                 "on a Conda Python 3.9 + GPU host. See docs/NAVIGATION_CITY.md"
             ) from error
-        self._backend = SidewalkStaticMetaUrbanEnv(
-            {
-                "use_render": False,
-                "num_scenarios": 1,
-                "agent_type": "Wheelchair",
-                "random_spawn_lane_index": False,
-                "traffic_density": 0.0,
-                "object_density": self.density_obj,
-            }
+        raise NotImplementedError(
+            "MetaUrban is installed, but Parcel's real step/observation adapter "
+            "is not implemented. Use use_metaurban=False for the kinematic "
+            "scaffold and see docs/NAVIGATION_CITY.md."
         )
 
     def reset(self, *, seed: int | None = None, options: dict | None = None):

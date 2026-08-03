@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from ..base import MidLevelCommand, Mission, ModelSpec, NavObservation, Navigator
+from ..base import MidLevelCommand, Mission, ModelSpec, Navigator, NavObservation
 
 
 class StubNavigator:
@@ -14,9 +14,15 @@ class StubNavigator:
         self.arrive_radius_m = arrive_radius_m
         self.cruise_vx = cruise_vx
         self._mission: Mission | None = None
+        self._avoiding = False
+        self._avoid_direction = 0.0
+        self._avoid_heading_deg = 0.0
 
     def reset(self, mission: Mission) -> None:
         self._mission = mission
+        self._avoiding = False
+        self._avoid_direction = 0.0
+        self._avoid_heading_deg = 0.0
         mission.status = "running"
 
     def act(self, observation: NavObservation, mission: Mission) -> MidLevelCommand:
@@ -38,7 +44,37 @@ class StubNavigator:
         err = ((target_heading - observation.heading_deg + 180.0) % 360.0) - 180.0
         vyaw = max(-0.8, min(0.8, err / 45.0))
         vx = self.cruise_vx * brake * max(0.15, 1.0 - abs(err) / 90.0)
-        return MidLevelCommand(vx=vx, vy=0.0, vyaw=vyaw, note=f"stub dist={dist:.1f}")
+        obstacle_bearing = observation.extras.get("obstacle_bearing_rad")
+        if (
+            observation.nearest_obstacle_m is not None
+            and observation.nearest_obstacle_m < 1.2
+            and isinstance(obstacle_bearing, (int, float))
+            and abs(float(obstacle_bearing)) < 1.15
+            and not self._avoiding
+        ):
+            self._avoiding = True
+            self._avoid_direction = -1.0 if float(obstacle_bearing) >= 0.0 else 1.0
+            self._avoid_heading_deg = (
+                observation.heading_deg + self._avoid_direction * 80.0 + 180.0
+            ) % 360.0 - 180.0
+
+        if self._avoiding and isinstance(obstacle_bearing, (int, float)):
+            clearance = observation.nearest_obstacle_m
+            if clearance is None or clearance > 1.35:
+                self._avoiding = False
+            else:
+                # A tiny deterministic Bug-style fallback: align to a fixed
+                # tangent heading, then walk that line until clearance grows.
+                heading_error = (
+                    self._avoid_heading_deg - observation.heading_deg + 180.0
+                ) % 360.0 - 180.0
+                vyaw = max(-0.7, min(0.7, heading_error / 45.0))
+                vx = 0.22 if abs(heading_error) < 25.0 else 0.0
+        if self._avoiding:
+            note = f"stub avoid_obstacle dist={dist:.1f}"
+        else:
+            note = f"stub dist={dist:.1f}"
+        return MidLevelCommand(vx=vx, vy=0.0, vyaw=vyaw, note=note)
 
     def close(self) -> None:
         self._mission = None

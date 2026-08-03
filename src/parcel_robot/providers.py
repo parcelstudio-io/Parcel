@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import threading
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any, Protocol
 from urllib.error import HTTPError, URLError
@@ -22,8 +24,27 @@ class SpeechSynthesizer(Protocol):
     def synthesize(self, text: str) -> bytes: ...
 
 
+class StreamingSpeechSynthesizer(SpeechSynthesizer, Protocol):
+    def synthesize_stream(
+        self,
+        text: str,
+        *,
+        cancel_event: threading.Event | None = None,
+    ) -> Iterator[bytes]: ...
+
+
 class SpeechRecognizer(Protocol):
     def transcribe(self, wav_audio: bytes) -> str: ...
+
+
+class SpeechServiceError(RuntimeError):
+    """A local speech service could not complete a request."""
+
+
+@dataclass(frozen=True)
+class ProviderHealth:
+    available: bool
+    detail: str
 
 
 @dataclass
@@ -85,6 +106,178 @@ class CsmSpeechProvider:
                 return response.read()
         except (HTTPError, URLError, TimeoutError) as error:
             raise RuntimeError(f"CSM service request failed: {error}") from error
+
+
+@dataclass
+class FishSpeechProvider:
+    """Client for a local Fish Speech S2 `/v1/tts` service.
+
+    Fish keeps its semantic/audio tokens inside the TTS server. This adapter's
+    public boundary is deliberately text in and audio bytes out, so codec tokens
+    can never be confused with instructions for the robot's action reasoner.
+
+    The current Fish server only supports WAV for streamed synthesis. Its first
+    response chunk is a WAV header and subsequent chunks contain mono PCM16 audio
+    (44.1 kHz for S2 Pro). A streaming sink should consume the chunks in order.
+    """
+
+    base_url: str = "http://127.0.0.1:8091"
+    reference_id: str | None = None
+    api_key: str | None = None
+    timeout: float = 120.0
+    chunk_size: int = 4096
+    max_new_tokens: int = 1024
+    chunk_length: int = 200
+    top_p: float = 0.8
+    repetition_penalty: float = 1.1
+    temperature: float = 0.8
+    normalize: bool = True
+
+    def __post_init__(self) -> None:
+        if self.timeout <= 0:
+            raise ValueError("Fish Speech timeout must be positive")
+        if self.chunk_size <= 0:
+            raise ValueError("Fish Speech chunk_size must be positive")
+        if not 100 <= self.chunk_length <= 1000:
+            raise ValueError("Fish Speech chunk_length must be between 100 and 1000")
+
+    def health(self) -> ProviderHealth:
+        """Probe the service without raising when it is offline or still loading."""
+
+        request = Request(
+            f"{self.base_url.rstrip('/')}/v1/health",
+            headers=self._headers("application/json"),
+            method="GET",
+        )
+        try:
+            with urlopen(request, timeout=min(self.timeout, 5.0)) as response:
+                result = json.load(response)
+        except (HTTPError, URLError, TimeoutError, OSError, json.JSONDecodeError) as error:
+            return ProviderHealth(False, f"Fish Speech unavailable: {error}")
+        if isinstance(result, dict) and result.get("status") == "ok":
+            return ProviderHealth(True, "Fish Speech ready")
+        return ProviderHealth(False, "Fish Speech returned an invalid health response")
+
+    def is_healthy(self) -> bool:
+        return self.health().available
+
+    def synthesize(self, text: str) -> bytes:
+        """Return one complete WAV file."""
+
+        response = self._open_tts(text, streaming=False)
+        try:
+            return response.read()
+        except (HTTPError, URLError, TimeoutError, OSError) as error:
+            raise SpeechServiceError(f"Fish Speech response failed: {error}") from error
+        finally:
+            response.close()
+
+    def synthesize_stream(
+        self,
+        text: str,
+        *,
+        cancel_event: threading.Event | None = None,
+    ) -> Iterator[bytes]:
+        """Return a stream that can be cancelled safely from another thread."""
+
+        response = self._open_tts(text, streaming=True)
+        return _FishAudioStream(response, self.chunk_size, cancel_event)
+
+    def _open_tts(self, text: str, *, streaming: bool) -> Any:
+        clean_text = text.strip()
+        if not clean_text:
+            raise ValueError("Fish Speech text cannot be empty")
+        request = Request(
+            f"{self.base_url.rstrip('/')}/v1/tts?format=msgpack",
+            data=_pack_msgpack(self._payload(clean_text, streaming=streaming)),
+            headers=self._headers("audio/wav", content_type="application/msgpack"),
+            method="POST",
+        )
+        try:
+            return urlopen(request, timeout=self.timeout)
+        except (HTTPError, URLError, TimeoutError, OSError) as error:
+            raise SpeechServiceError(f"Fish Speech request failed: {error}") from error
+
+    def _payload(self, text: str, *, streaming: bool) -> dict[str, Any]:
+        return {
+            "text": text,
+            "references": [],
+            "reference_id": self.reference_id,
+            "format": "wav",
+            "latency": "normal",
+            "max_new_tokens": self.max_new_tokens,
+            "chunk_length": self.chunk_length,
+            "top_p": self.top_p,
+            "repetition_penalty": self.repetition_penalty,
+            "temperature": self.temperature,
+            "streaming": streaming,
+            "use_memory_cache": "on" if self.reference_id else "off",
+            "seed": None,
+            "normalize": self.normalize,
+        }
+
+    def _headers(self, accept: str, *, content_type: str | None = None) -> dict[str, str]:
+        headers = {"Accept": accept}
+        if content_type is not None:
+            headers["Content-Type"] = content_type
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
+
+
+class _FishAudioStream(Iterator[bytes]):
+    """Closable HTTP response iterator used to make barge-in immediate."""
+
+    def __init__(
+        self,
+        response: Any,
+        chunk_size: int,
+        external_cancel: threading.Event | None,
+    ):
+        self._response = response
+        self._chunk_size = chunk_size
+        self._external_cancel = external_cancel
+        self._cancelled = threading.Event()
+        self._close_lock = threading.Lock()
+        self._closed = False
+
+    def __iter__(self) -> _FishAudioStream:
+        return self
+
+    def __next__(self) -> bytes:
+        if self._should_stop():
+            self.close()
+            raise StopIteration
+        try:
+            chunk = self._response.read(self._chunk_size)
+        except (HTTPError, URLError, TimeoutError, OSError) as error:
+            if self._should_stop():
+                raise StopIteration from None
+            self.close()
+            raise SpeechServiceError(f"Fish Speech stream failed: {error}") from error
+        if not chunk or self._should_stop():
+            self.close()
+            raise StopIteration
+        return chunk
+
+    def cancel(self) -> None:
+        self._cancelled.set()
+        self.close()
+
+    def close(self) -> None:
+        with self._close_lock:
+            if self._closed:
+                return
+            self._closed = True
+            try:
+                self._response.close()
+            except OSError:
+                pass
+
+    def _should_stop(self) -> bool:
+        return self._closed or self._cancelled.is_set() or bool(
+            self._external_cancel and self._external_cancel.is_set()
+        )
 
 
 @dataclass
@@ -162,6 +355,19 @@ def _post_json(url: str, payload: dict[str, Any], timeout: float) -> dict[str, A
     if not isinstance(result, dict):
         raise TypeError("language-model server returned an invalid response")
     return result
+
+
+def _pack_msgpack(payload: dict[str, Any]) -> bytes:
+    try:
+        import msgpack
+    except ImportError as error:
+        raise SpeechServiceError(
+            "Fish Speech requires MessagePack support; install the 'voice' extra"
+        ) from error
+    try:
+        return msgpack.packb(payload, use_bin_type=True)
+    except (TypeError, ValueError) as error:
+        raise SpeechServiceError("Fish Speech request could not be encoded") from error
 
 
 def _multipart_field(boundary: str, name: str, value: str) -> bytes:

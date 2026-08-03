@@ -22,18 +22,26 @@ motion:
     control_dt: 0.02
 
 language_model:
-  enabled: false
+  enabled: true
   provider: llama_cpp
   base_url: http://127.0.0.1:8080
-  model: gemma
-  timeout: 30
+  model: gemma-4-26b-a4b
+  timeout: 90
 
 speech:
+  mode: auto
   stt_provider: whisper_cpp
   whisper_url: http://127.0.0.1:8178
-  tts_provider: csm
-  csm_url: http://127.0.0.1:8090
-  speaker: 0
+  tts_provider: fish_s2
+  fish_url: http://127.0.0.1:8091
+  fish_reference_id: null
+  fish_streaming: true
+  barge_in: true
+
+safety:
+  obstacle_stop_m: 0.65
+  obstacle_slow_m: 1.2
+  telemetry_stale_s: 0.6
 
 memory:
   path: parcel_memory.sqlite3
