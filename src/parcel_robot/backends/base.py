@@ -24,6 +24,19 @@ class OwnerTrack:
 
 
 @dataclass(frozen=True)
+class DynamicAgentTrack:
+    agent_id: str
+    kind: str
+    x: float
+    y: float
+    vx: float
+    vy: float
+    radius_m: float
+    yaw: float = 0.0
+    confidence: float = 1.0
+
+
+@dataclass(frozen=True)
 class SimObservation:
     timestamp: float
     robot: RobotPose
@@ -31,6 +44,11 @@ class SimObservation:
     nearest_obstacle_m: float | None = None
     nearest_obstacle_bearing_rad: float | None = None
     nearest_obstacle_id: str | None = None
+    nearest_person_m: float | None = None
+    nearest_person_bearing_rad: float | None = None
+    nearest_person_id: str | None = None
+    nearest_person_ttc_s: float | None = None
+    dynamic_agents: tuple[DynamicAgentTrack, ...] = ()
     collision: bool = False
     emergency_stopped: bool = False
     backend: str = "unknown"

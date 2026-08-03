@@ -41,13 +41,14 @@
         var(--bg);
     }
 
-    button, input, textarea { font: inherit; }
+    button, input, textarea, select { font: inherit; }
 
     button { color: inherit; }
 
     button:focus-visible,
     input:focus-visible,
-    textarea:focus-visible {
+    textarea:focus-visible,
+    select:focus-visible {
       outline: 2px solid var(--teal);
       outline-offset: 2px;
     }
@@ -424,11 +425,13 @@
     }
 
     .legend-swatch.owner { background: var(--amber); }
+    .legend-swatch.person { background: var(--blue); }
+    .legend-swatch.cyclist { background: #d77dff; }
     .legend-swatch.clearance { background: transparent; border: 1px dashed var(--red); }
 
     .telemetry {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 1px;
       margin: 14px;
       overflow: hidden;
@@ -517,6 +520,32 @@
       font-weight: 780;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+    }
+
+    .profile-control {
+      display: grid;
+      gap: 7px;
+      margin-top: 14px;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel-soft);
+    }
+
+    .profile-control select {
+      width: 100%;
+      min-height: 36px;
+      padding: 0 9px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      color: var(--text);
+      background: #101720;
+    }
+
+    .activity-summary {
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.4;
     }
 
     .owner-pad {
@@ -879,7 +908,7 @@
         <header class="panel-header">
           <div>
             <h2 class="panel-title">Live simulator</h2>
-            <p class="panel-subtitle">Robot and owner position in the simulated world.</p>
+            <p class="panel-subtitle">Live city actors, personal space, and robot pose.</p>
           </div>
           <span id="estop-badge" class="badge">E-stop clear</span>
         </header>
@@ -888,6 +917,8 @@
           <div class="arena-legend" aria-hidden="true">
             <span class="legend-item"><span class="legend-swatch"></span>Robot</span>
             <span class="legend-item"><span class="legend-swatch owner"></span>Owner</span>
+            <span class="legend-item"><span class="legend-swatch person"></span>Pedestrian</span>
+            <span class="legend-item"><span class="legend-swatch cyclist"></span>Cyclist</span>
             <span class="legend-item"><span class="legend-swatch clearance"></span>Nearest obstacle</span>
           </div>
         </div>
@@ -895,6 +926,7 @@
           <div class="telemetry-item"><span class="telemetry-label">Robot</span><span id="robot-position" class="telemetry-value">x — · y —</span></div>
           <div class="telemetry-item"><span class="telemetry-label">Owner</span><span id="owner-position" class="telemetry-value">x — · y —</span></div>
           <div class="telemetry-item"><span class="telemetry-label">Obstacle</span><span id="obstacle-distance" class="telemetry-value">— m</span></div>
+          <div class="telemetry-item"><span class="telemetry-label">Dynamic crowd</span><span id="crowd-status" class="telemetry-value">0 actors</span></div>
         </div>
       </article>
 
@@ -913,6 +945,11 @@
               <button class="action-button stop" data-action="stop">Stop<small>Cancel active motion</small></button>
               <button class="action-button emergency" data-action="emergency_stop">Emergency stop<small>Latch all motion off</small></button>
               <button class="action-button clear-estop" data-action="clear_emergency_stop">Clear emergency-stop latch</button>
+            </div>
+            <div class="profile-control">
+              <label class="section-label" for="personality-select">Dog personality</label>
+              <select id="personality-select" aria-label="Dog personality"></select>
+              <div id="activity-summary" class="activity-summary">No queued social action</div>
             </div>
           </div>
           <div class="section-divider"></div>
@@ -941,6 +978,8 @@
               <button class="quick-command" type="button" data-command="stay here">Stay here</button>
               <button class="quick-command" type="button" data-command="walk forward">Walk forward</button>
               <button class="quick-command" type="button" data-command="navigate to the crosswalk">Go to crosswalk</button>
+              <button class="quick-command" type="button" data-command="I am feeling sad">Sad response</button>
+              <button class="quick-command" type="button" data-command="I am very happy">Happy response</button>
               <button class="quick-command" type="button" data-command="stop">Stop</button>
             </div>
           </section>
@@ -1099,6 +1138,21 @@
       el("obstacle-distance").textContent = Number.isFinite(obstacleDistance)
         ? `${obstacleDistance.toFixed(2)} m`
         : "— m";
+      const dynamicAgents = Array.isArray(snapshot.dynamic_agents) ? snapshot.dynamic_agents : [];
+      const nearestPerson = snapshot.nearest_person;
+      const nearestText = Number.isFinite(Number(nearestPerson?.distance_m))
+        ? ` · safety focus ${Number(nearestPerson.distance_m).toFixed(1)} m`
+        : "";
+      el("crowd-status").textContent = `${dynamicAgents.length} actors${nearestText}`;
+      const runningActivity = snapshot.activities?.running;
+      const pendingActivities = Array.isArray(snapshot.activities?.pending)
+        ? snapshot.activities.pending : [];
+      el("activity-summary").textContent = runningActivity
+        ? `Executing ${capitalize(runningActivity.name)}`
+        : pendingActivities.length
+          ? `${pendingActivities.length} queued · ${capitalize(pendingActivities[0].name)}`
+          : "No queued social action";
+      syncPersonality(snapshot.agent);
       const badge = el("estop-badge");
       badge.textContent = emergencyStopped ? "E-stop latched" : "E-stop clear";
       badge.classList.toggle("estop", emergencyStopped);
@@ -1238,7 +1292,10 @@
       const obstacles = Array.isArray(state.snapshot.obstacles)
         ? state.snapshot.obstacles.map(positionFrom)
         : [];
-      const points = [robot, owner, ...obstacles];
+      const dynamicAgents = Array.isArray(state.snapshot.dynamic_agents)
+        ? state.snapshot.dynamic_agents.map(positionFrom)
+        : [];
+      const points = [robot, owner, ...obstacles, ...dynamicAgents];
       let span = 5;
       for (const point of points) span = Math.max(span, Math.abs(point.x) + 2, Math.abs(point.y) + 2);
       if (Number.isFinite(obstacleDistance)) span = Math.max(span, obstacleDistance + 2);
@@ -1249,6 +1306,24 @@
 
       context.fillStyle = "#0a1017";
       context.fillRect(0, 0, width, height);
+
+      const worldRect = (x, y, worldWidth, worldHeight, fill) => {
+        const topLeft = screen({ x: x - worldWidth / 2, y: y + worldHeight / 2 });
+        context.fillStyle = fill;
+        context.fillRect(topLeft.x, topLeft.y, worldWidth * scale, worldHeight * scale);
+      };
+      worldRect(0, 0, 16, 4.3, "rgba(55,62,70,0.52)");
+      worldRect(0, 3.2, 16, 2.0, "rgba(126,127,121,0.22)");
+      worldRect(0, -3.0, 16, 1.5, "rgba(126,127,121,0.22)");
+      for (const x of [2.5, 2.9, 3.3, 3.7]) {
+        worldRect(x, 0.8, 0.3, 2.4, "rgba(230,232,228,0.38)");
+      }
+      for (const building of [
+        [-4.5, 5.5, 3.6, 3.0], [-1, 5.8, 2.8, 2.4], [2.2, 5.6, 3, 2.8],
+        [5.5, 5.4, 3.2, 3], [-5.5, -4.5, 3.4, 2.8], [5, -5, 3.6, 3.2],
+      ]) {
+        worldRect(...building, "rgba(83,98,112,0.45)");
+      }
 
       const gridStep = Math.max(24, scale);
       context.beginPath();
@@ -1293,6 +1368,35 @@
         const point = screen(obstacle);
         context.fillStyle = "rgba(255,111,120,0.68)";
         context.fillRect(point.x - 4, point.y - 4, 8, 8);
+      }
+
+      for (const actor of dynamicAgents) {
+        const point = screen(actor);
+        const isCyclist = actor.kind === "cyclist";
+        context.beginPath();
+        context.arc(point.x, point.y, 1.2 * scale, 0, Math.PI * 2);
+        context.fillStyle = isCyclist
+          ? "rgba(215,125,255,0.035)" : "rgba(125,179,255,0.035)";
+        context.fill();
+        context.setLineDash([3, 5]);
+        context.strokeStyle = isCyclist
+          ? "rgba(215,125,255,0.18)" : "rgba(125,179,255,0.18)";
+        context.stroke();
+        context.setLineDash([]);
+        context.beginPath();
+        context.arc(point.x, point.y, isCyclist ? 6 : 5, 0, Math.PI * 2);
+        context.fillStyle = isCyclist ? "#d77dff" : "#7db3ff";
+        context.fill();
+        const velocityEnd = screen({
+          x: actor.x + asNumber(actor.vx) * 0.8,
+          y: actor.y + asNumber(actor.vy) * 0.8,
+        });
+        context.beginPath();
+        context.moveTo(point.x, point.y);
+        context.lineTo(velocityEnd.x, velocityEnd.y);
+        context.strokeStyle = isCyclist
+          ? "rgba(215,125,255,0.72)" : "rgba(125,179,255,0.72)";
+        context.stroke();
       }
 
       const ownerVisible = firstDefined(owner.visible, owner.tracked, true) !== false;
@@ -1382,6 +1486,25 @@
       toast.classList.add("visible");
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove("visible"), 3600);
+    }
+
+    function syncPersonality(agentState) {
+      const select = el("personality-select");
+      const profiles = Array.isArray(agentState?.personalities) ? agentState.personalities : [];
+      const signature = profiles.map((profile) => `${profile.id}:${profile.name}`).join("|");
+      if (select.dataset.signature !== signature) {
+        select.replaceChildren();
+        for (const profile of profiles) {
+          const option = document.createElement("option");
+          option.value = String(profile.id);
+          option.textContent = String(profile.name);
+          select.append(option);
+        }
+        select.dataset.signature = signature;
+      }
+      if (agentState?.personality && select.value !== agentState.personality) {
+        select.value = agentState.personality;
+      }
     }
 
     function localEvent(text, level = "info", role = "ui") {
@@ -1566,6 +1689,16 @@
         const dy = asNumber(button.dataset.ownerDy);
         postJson("/api/owner", { dx, dy }, `Owner moved by (${dx.toFixed(1)}, ${dy.toFixed(1)}) m`).catch(() => {});
       });
+    });
+
+    el("personality-select").addEventListener("change", (event) => {
+      const personality = event.target.value;
+      if (!personality) return;
+      postJson(
+        "/api/personality",
+        { personality },
+        `Personality changed to ${capitalize(personality)}`
+      ).catch(() => {});
     });
 
     async function submitCommand(text) {

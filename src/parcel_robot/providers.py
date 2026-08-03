@@ -8,7 +8,7 @@ from typing import Any, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from .models import AgentDecision, ToolCall
+from .models import ActionProposal, AffectEstimate, AgentDecision, ToolCall
 
 
 class LanguageModel(Protocol):
@@ -54,6 +54,10 @@ class LlamaCppProvider:
     base_url: str = "http://127.0.0.1:8080"
     model: str = "gemma"
     timeout: float = 30.0
+    system_prompt: str = ""
+
+    def set_system_prompt(self, prompt: str) -> None:
+        self.system_prompt = prompt.strip()
 
     def decide(
         self,
@@ -61,12 +65,13 @@ class LlamaCppProvider:
         tools: list[dict[str, Any]],
         context: list[dict[str, str]],
     ) -> AgentDecision:
+        fallback = (
+            "You are Parcel, a robot dog. Return one JSON object with reply, "
+            "tool_calls, intent, affect, and next_action. Use null for affect or "
+            "next_action when unnecessary. Never invent poses or joint values."
+        )
         system = (
-            "You are Parcel, a robot dog. Respond with exactly one JSON object: "
-            '{"reply":"short spoken reply","tool_calls":[{"name":"tool","arguments":{}}]}. '
-            "Only use the supplied tools. Never invent poses or joint values. "
-            "A request can be refused by returning an empty tool_calls list.\n"
-            f"TOOLS={json.dumps(tools, separators=(',', ':'))}"
+            f"{self.system_prompt or fallback}\nTOOLS={json.dumps(tools, separators=(',', ':'))}"
         )
         payload = {
             "model": self.model,
@@ -275,8 +280,10 @@ class _FishAudioStream(Iterator[bytes]):
                 pass
 
     def _should_stop(self) -> bool:
-        return self._closed or self._cancelled.is_set() or bool(
-            self._external_cancel and self._external_cancel.is_set()
+        return (
+            self._closed
+            or self._cancelled.is_set()
+            or bool(self._external_cancel and self._external_cancel.is_set())
         )
 
 
@@ -326,6 +333,12 @@ def parse_model_decision(content: str) -> AgentDecision:
         raise ValueError("model response was not valid JSON") from error
     if not isinstance(data, dict) or not isinstance(data.get("reply"), str):
         raise TypeError("model response must contain a string reply")
+    if len(data["reply"]) > 500:
+        raise ValueError("model response reply is too long")
+    allowed_top_level = {"reply", "tool_calls", "intent", "affect", "next_action"}
+    unknown = set(data) - allowed_top_level
+    if unknown:
+        raise ValueError(f"model response contains unsupported fields: {sorted(unknown)}")
     raw_calls = data.get("tool_calls", [])
     if not isinstance(raw_calls, list) or len(raw_calls) > 4:
         raise ValueError("model response tool_calls must be a list of at most four calls")
@@ -333,11 +346,84 @@ def parse_model_decision(content: str) -> AgentDecision:
     for item in raw_calls:
         if not isinstance(item, dict) or not isinstance(item.get("name"), str):
             raise TypeError("each tool call must contain a name")
+        if not set(item).issubset({"name", "arguments"}):
+            raise ValueError("tool call contains unsupported fields")
         arguments = item.get("arguments", {})
         if not isinstance(arguments, dict):
             raise TypeError("tool arguments must be an object")
         calls.append(ToolCall(item["name"], arguments))
-    return AgentDecision(data["reply"].strip(), tuple(calls))
+    intent = data.get("intent", "conversation")
+    if not isinstance(intent, str) or not intent.strip() or len(intent) > 80:
+        raise TypeError("model response intent must be a short string")
+    affect = _parse_affect(data.get("affect"))
+    next_action = _parse_action_proposal(data.get("next_action"))
+    return AgentDecision(
+        data["reply"].strip(),
+        tuple(calls),
+        intent.strip(),
+        affect,
+        next_action,
+    )
+
+
+def _parse_affect(value: object) -> AffectEstimate | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) != {"label", "confidence"}:
+        raise TypeError("affect must contain only label and confidence")
+    label = value.get("label")
+    confidence = value.get("confidence")
+    if label not in {"happy", "sad", "neutral", "unknown"}:
+        raise ValueError("affect label is not allowed")
+    if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
+        raise TypeError("affect confidence must be numeric")
+    numeric = float(confidence)
+    if not 0.0 <= numeric <= 1.0:
+        raise ValueError("affect confidence must be between zero and one")
+    return AffectEstimate(str(label), numeric)
+
+
+def _parse_action_proposal(value: object) -> ActionProposal | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise TypeError("next_action must be an object or null")
+    allowed = {
+        "kind",
+        "name",
+        "trigger",
+        "timing_preference",
+        "interruption_request",
+        "reason",
+    }
+    unknown = set(value) - allowed
+    if unknown:
+        raise ValueError(f"next_action contains unsupported fields: {sorted(unknown)}")
+    if value.get("kind") != "skill":
+        raise ValueError("next_action currently supports only semantic skills")
+    name = value.get("name")
+    if not isinstance(name, str) or not name.strip() or len(name) > 80:
+        raise TypeError("next_action name must be a short string")
+    trigger = value.get("trigger", "inferred_affect")
+    if trigger not in {"inferred_affect", "explicit_command"}:
+        raise ValueError("next_action trigger is not allowed")
+    timing = value.get("timing_preference", "when_safe")
+    if timing not in {"when_safe", "now"}:
+        raise ValueError("next_action timing preference is not allowed")
+    interruption = value.get("interruption_request", "none")
+    if interruption not in {"none", "safe_checkpoint"}:
+        raise ValueError("next_action interruption request is not allowed")
+    reason = value.get("reason", "")
+    if not isinstance(reason, str) or len(reason) > 240:
+        raise TypeError("next_action reason must be a short string")
+    return ActionProposal(
+        kind="skill",
+        name=name.strip(),
+        trigger=str(trigger),
+        timing_preference=str(timing),
+        interruption_request=str(interruption),
+        reason=reason.strip(),
+    )
 
 
 def _post_json(url: str, payload: dict[str, Any], timeout: float) -> dict[str, Any]:
@@ -372,7 +458,5 @@ def _pack_msgpack(payload: dict[str, Any]) -> bytes:
 
 def _multipart_field(boundary: str, name: str, value: str) -> bytes:
     return (
-        f"--{boundary}\r\n"
-        f'Content-Disposition: form-data; name="{name}"\r\n\r\n'
-        f"{value}\r\n"
+        f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'
     ).encode()

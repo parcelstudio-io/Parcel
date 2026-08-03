@@ -17,7 +17,9 @@ from parcel_robot.sim_ipc import (
     send_message,
 )
 
-from .base import OwnerTrack, RobotPose, SimObservation
+from .base import DynamicAgentTrack, OwnerTrack, RobotPose, SimObservation
+
+MAX_DYNAMIC_AGENTS = 64
 
 
 def _finite_float(value: object, field: str) -> float:
@@ -57,6 +59,30 @@ class MujocoSocketBackend:
         bearing = obstacle_detail.get("bearing_rad")
         if bearing is not None:
             bearing = _finite_float(bearing, "nearest_obstacle.bearing_rad")
+        person_distance = data.get("nearest_person_m")
+        if person_distance is not None:
+            person_distance = _finite_float(person_distance, "nearest_person_m")
+            if person_distance < 0.0:
+                raise ValueError("simulator nearest_person_m cannot be negative")
+        person_detail = data.get("nearest_person") or {}
+        if not isinstance(person_detail, dict):
+            raise TypeError("simulator nearest_person must be an object or null")
+        person_bearing = person_detail.get("bearing_rad")
+        if person_bearing is not None:
+            person_bearing = _finite_float(person_bearing, "nearest_person.bearing_rad")
+        person_ttc = person_detail.get("time_to_collision_s")
+        if person_ttc is not None:
+            person_ttc = _finite_float(person_ttc, "nearest_person.time_to_collision_s")
+            if person_ttc < 0.0:
+                raise ValueError("simulator nearest-person TTC cannot be negative")
+        raw_agents = data.get("dynamic_agents", [])
+        if not isinstance(raw_agents, list):
+            raise TypeError("simulator dynamic_agents must be a list")
+        if len(raw_agents) > MAX_DYNAMIC_AGENTS:
+            raise ValueError("simulator reported too many dynamic agents")
+        dynamic_agents = tuple(
+            _parse_dynamic_agent(item, index) for index, item in enumerate(raw_agents)
+        )
         timestamp = _finite_float(data.get("timestamp"), "timestamp")
         if timestamp <= 0.0 or timestamp > time.monotonic() + 5.0:
             raise ValueError("simulator timestamp is outside the valid monotonic range")
@@ -95,9 +121,12 @@ class MujocoSocketBackend:
             ),
             nearest_obstacle_m=obstacle,
             nearest_obstacle_bearing_rad=bearing,
-            nearest_obstacle_id=(
-                str(obstacle_detail["id"]) if obstacle_detail.get("id") else None
-            ),
+            nearest_obstacle_id=(str(obstacle_detail["id"]) if obstacle_detail.get("id") else None),
+            nearest_person_m=person_distance,
+            nearest_person_bearing_rad=person_bearing,
+            nearest_person_id=(str(person_detail["id"]) if person_detail.get("id") else None),
+            nearest_person_ttc_s=person_ttc,
+            dynamic_agents=dynamic_agents,
             collision=collision,
             emergency_stopped=emergency_stopped,
             backend=backend,
@@ -131,3 +160,28 @@ class MujocoSocketBackend:
             {"version": 1, "type": "owner_visibility", "visible": bool(visible)},
             self.socket_path,
         )
+
+
+def _parse_dynamic_agent(item: object, index: int) -> DynamicAgentTrack:
+    if not isinstance(item, dict):
+        raise TypeError(f"simulator dynamic_agents[{index}] must be an object")
+    agent_id = item.get("id")
+    kind = item.get("kind")
+    if not isinstance(agent_id, str) or not agent_id.strip() or len(agent_id) > 80:
+        raise TypeError(f"simulator dynamic_agents[{index}].id is invalid")
+    if kind not in {"pedestrian", "cyclist", "vehicle"}:
+        raise ValueError(f"simulator dynamic_agents[{index}].kind is invalid")
+    radius = _finite_float(item.get("radius_m"), f"dynamic_agents[{index}].radius_m")
+    if not 0.05 <= radius <= 5.0:
+        raise ValueError(f"simulator dynamic_agents[{index}].radius_m is invalid")
+    return DynamicAgentTrack(
+        agent_id=agent_id,
+        kind=kind,
+        x=_finite_float(item.get("x"), f"dynamic_agents[{index}].x"),
+        y=_finite_float(item.get("y"), f"dynamic_agents[{index}].y"),
+        vx=_finite_float(item.get("vx"), f"dynamic_agents[{index}].vx"),
+        vy=_finite_float(item.get("vy"), f"dynamic_agents[{index}].vy"),
+        radius_m=radius,
+        yaw=_finite_float(item.get("yaw", 0.0), f"dynamic_agents[{index}].yaw"),
+        confidence=1.0,
+    )

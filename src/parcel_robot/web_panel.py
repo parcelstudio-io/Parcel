@@ -110,6 +110,10 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
                 )
                 self._send_json({"message": message})
                 return
+            if path == "/api/personality":
+                message = self.server.runtime.set_personality(self._string(payload, "personality"))
+                self._send_json({"message": message, "state": self.server.runtime.snapshot()})
+                return
             self._send_json({"detail": "not found"}, HTTPStatus.NOT_FOUND)
         except PermissionError as error:
             self._send_json({"detail": str(error)}, HTTPStatus.FORBIDDEN)

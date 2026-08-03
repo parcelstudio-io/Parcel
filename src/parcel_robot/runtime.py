@@ -14,11 +14,18 @@ from parcel_robot.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
 from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
 from parcel_robot.backends.base import SimObservation, SimulatorBackend
 from parcel_robot.config import ConfigStore
-from parcel_robot.core import CommandArbiter, MotionIntent
+from parcel_robot.core import (
+    ActivityContext,
+    ActivityCoordinator,
+    CommandArbiter,
+    MotionIntent,
+    VelocitySmoother,
+)
 from parcel_robot.memory import ConversationMemory
-from parcel_robot.models import Pose, VelocityCommand
+from parcel_robot.models import ActionProposal, Pose, VelocityCommand
 from parcel_robot.motion import build_motion_router
 from parcel_robot.navigation.follow import FollowOwnerController
+from parcel_robot.prompting import PromptLibrary
 from parcel_robot.providers import LanguageModel
 from parcel_robot.skills.api import Dog
 from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceTurn
@@ -42,6 +49,14 @@ class RobotRuntime:
         self.backend = backend
         self.loop_period = 1.0 / loop_hz
         self.arbiter = CommandArbiter(self.store.safety_limits())
+        smoother_config = self.store.motion_config().get("smoothing") or {}
+        if not isinstance(smoother_config, dict):
+            raise TypeError("motion.smoothing must be a mapping")
+        self.velocity_smoother = VelocitySmoother(
+            linear_accel=float(smoother_config.get("linear_accel", 0.9)),
+            linear_decel=float(smoother_config.get("linear_decel", 1.4)),
+            yaw_accel=float(smoother_config.get("yaw_accel", 1.8)),
+        )
         self.follow = FollowOwnerController()
         self.audio_status = audio_status or detect_audio_devices()
         safety_config = self.store.section("safety")
@@ -84,6 +99,30 @@ class RobotRuntime:
         self._last_send_at = 0.0
         self._was_moving = False
         self._proximity_state = "clear"
+        agent_config = self.store.agent_config()
+        self.prompt_library = PromptLibrary(self.store.prompts_root())
+        self._personality = str(agent_config.get("personality", "gentle_companion"))
+        self._function_profiles = agent_config.get(
+            "functions", ["companion", "navigator", "manual_assistant"]
+        )
+        if not isinstance(self._function_profiles, list) or not all(
+            isinstance(item, str) for item in self._function_profiles
+        ):
+            raise TypeError("agent.functions must be a list of profile IDs")
+        personality = self.prompt_library.personality(self._personality)
+        for function_id in self._function_profiles:
+            self.prompt_library.function(function_id)
+        affect_config = agent_config.get("affect") or {}
+        if not isinstance(affect_config, dict):
+            raise TypeError("agent.affect must be a mapping")
+        self._affect_minimum_confidence = float(affect_config.get("minimum_confidence", 0.75))
+        if not 0.0 <= self._affect_minimum_confidence <= 1.0:
+            raise ValueError("agent affect minimum_confidence must be between zero and one")
+        self.activities = ActivityCoordinator(
+            proposal_ttl_s=float(affect_config.get("proposal_ttl_s", 20.0)),
+            cooldown_s=float(affect_config.get("social_action_cooldown_s", 8.0)),
+        )
+        self._activity_complete_at = 0.0
         self._voice_detail: dict[str, object] = {
             "mode": "text",
             "status": "idle",
@@ -117,6 +156,10 @@ class RobotRuntime:
             safety_limits=self.store.safety_limits(),
             behavior_publisher=self.set_behavior,
             navigation_publisher=self.start_navigation,
+            action_proposal_publisher=self.propose_action,
+            system_prompt_provider=self._render_system_prompt,
+            affect_minimum_confidence=self._affect_minimum_confidence,
+            affect_actions=personality.affect_actions,
             dog=self.dog,
         )
         # Feed the duplex coordinator through ``handle_text`` so streamed ASR
@@ -149,10 +192,12 @@ class RobotRuntime:
             return
         self._closed = True
         self._stop_event.set()
-        self.follow.stop()
-        self.stop_navigation()
-        self.agent.safety.engage_emergency_stop()
         with self._command_lock:
+            self.follow.stop()
+            self.stop_navigation()
+            self.agent.safety.engage_emergency_stop()
+            self.activities.clear("runtime_closed")
+            self._activity_complete_at = 0.0
             self.arbiter.engage_emergency_stop()
             try:
                 emergency = getattr(self.backend, "emergency_stop", None)
@@ -164,6 +209,7 @@ class RobotRuntime:
                 pass
             self._last_sent = VelocityCommand()
             self._was_moving = False
+            self.velocity_smoother.reset()
         self.voice_session.close(timeout=2.0)
         if self._thread is not None:
             self._thread.join(timeout=2.0)
@@ -192,11 +238,15 @@ class RobotRuntime:
         if all(abs(value) < 1e-9 for value in values):
             self.stop_motion()
             return "Manual motion stopped"
-        return self.submit_motion(
-            "manual",
-            VelocityCommand(vx=values[0], vy=values[1], vyaw=values[2]),
-            ttl=0.45,
-        )
+        # Serialize ownership acquisition with activity dispatch. If an action
+        # already crossed the dispatch boundary this waits for it, then manual
+        # control becomes authoritative before returning to the operator.
+        with self._command_lock:
+            return self.submit_motion(
+                "manual",
+                VelocityCommand(vx=values[0], vy=values[1], vyaw=values[2]),
+                ttl=0.45,
+            )
 
     def stop_motion(self) -> None:
         with self._command_lock:
@@ -207,11 +257,14 @@ class RobotRuntime:
                 self._record_sim_error(error)
             self._last_sent = VelocityCommand()
             self._was_moving = False
+            self.velocity_smoother.reset()
 
     def emergency_stop(self) -> None:
-        self.follow.stop()
-        self.stop_navigation()
         with self._command_lock:
+            self.follow.stop()
+            self.stop_navigation()
+            self.activities.clear("emergency_stop")
+            self._activity_complete_at = 0.0
             self.arbiter.engage_emergency_stop()
             try:
                 emergency = getattr(self.backend, "emergency_stop", None)
@@ -223,6 +276,7 @@ class RobotRuntime:
                 self._record_sim_error(error)
             self._last_sent = VelocityCommand()
             self._was_moving = False
+            self.velocity_smoother.reset()
         self._emit("safety", "Emergency stop latched", "error")
 
     def clear_emergency_stop(self) -> str:
@@ -245,23 +299,29 @@ class RobotRuntime:
         if self._closed:
             raise RuntimeError("runtime is closed")
         if mode == "follow":
-            if self.arbiter.emergency_stopped:
-                raise RuntimeError("motion is disabled by emergency stop")
-            self.stop_navigation()
-            self.follow.start()
-            with self._lock:
-                self._behavior_generation += 1
-                self._follow_detail = self.follow.snapshot()
+            with self._command_lock:
+                if self._closed:
+                    raise RuntimeError("runtime is closed")
+                if self.arbiter.emergency_stopped:
+                    raise RuntimeError("motion is disabled by emergency stop")
+                self.stop_navigation()
+                self.follow.start()
+                with self._lock:
+                    self._behavior_generation += 1
+                    self._follow_detail = self.follow.snapshot()
             self._emit("behavior", "Owner-follow enabled", "success")
             return "Owner-follow enabled"
         if mode == "stay":
-            self.follow.stop()
-            with self._lock:
-                self._behavior_generation += 1
-            self.stop_navigation()
-            self.stop_motion()
-            with self._lock:
-                self._follow_detail = self.follow.snapshot()
+            with self._command_lock:
+                self.follow.stop()
+                with self._lock:
+                    self._behavior_generation += 1
+                self.stop_navigation()
+                self.activities.clear("owner_requested_stay")
+                self._activity_complete_at = 0.0
+                self.stop_motion()
+                with self._lock:
+                    self._follow_detail = self.follow.snapshot()
             self._emit("behavior", "Holding position", "info")
             return "Holding position"
         raise ValueError(f"unknown behavior: {mode}")
@@ -277,6 +337,16 @@ class RobotRuntime:
         if self.arbiter.emergency_stopped:
             raise RuntimeError("motion is disabled by emergency stop")
 
+        with self._command_lock:
+            return self._start_navigation_locked(clean)
+
+    def _start_navigation_locked(self, clean: str) -> str:
+        """Start a mission while serialized against social-action dispatch."""
+
+        if self._closed:
+            raise RuntimeError("runtime is closed")
+        if self.arbiter.emergency_stopped:
+            raise RuntimeError("motion is disabled by emergency stop")
         self.follow.stop()
         with self._lock:
             self._behavior_generation += 1
@@ -292,6 +362,9 @@ class RobotRuntime:
                 )
             mission, command = self.dog.navigate(
                 clean,
+                nearest_person_m=(
+                    observation.nearest_person_m if observation is not None else None
+                ),
                 nearest_obstacle_m=(
                     observation.nearest_obstacle_m if observation is not None else None
                 ),
@@ -328,12 +401,13 @@ class RobotRuntime:
             self._behavior_generation += 1
             was_enabled = self._navigation_directive is not None
             self._navigation_directive = None
-            self._navigation_detail = {
-                **self._navigation_detail,
-                "enabled": False,
-                "state": "idle",
-                "reason": "navigation_disabled",
-            }
+            if was_enabled:
+                self._navigation_detail = {
+                    **self._navigation_detail,
+                    "enabled": False,
+                    "state": "idle",
+                    "reason": "navigation_disabled",
+                }
         self.arbiter.cancel("navigation")
         if was_enabled:
             with self._navigation_lock:
@@ -345,9 +419,12 @@ class RobotRuntime:
         if name == "stay":
             return self.set_behavior("stay")
         if name == "stop":
-            self.follow.stop()
-            self.stop_navigation()
-            self.stop_motion()
+            with self._command_lock:
+                self.follow.stop()
+                self.stop_navigation()
+                self.activities.clear("operator_stop")
+                self._activity_complete_at = 0.0
+                self.stop_motion()
             self._emit("operator", "Motion stopped", "warning")
             return "Stopped"
         if name == "emergency_stop":
@@ -356,6 +433,205 @@ class RobotRuntime:
         if name == "clear_emergency_stop":
             return self.clear_emergency_stop()
         raise ValueError(f"unknown action: {name}")
+
+    def list_personalities(self) -> list[dict[str, str]]:
+        return [
+            {"id": profile.id, "name": profile.name}
+            for profile in self.prompt_library.list_personalities()
+        ]
+
+    def set_personality(self, profile_id: str) -> str:
+        profile = self.prompt_library.personality(profile_id)
+        # Voice turns acquire the locks in this order while composing a prompt;
+        # keep the displayed profile and affect mapping as one coherent update.
+        with self._agent_lock:
+            with self._lock:
+                self._personality = profile.id
+            self.agent.configure_personality(profile.affect_actions)
+        self._emit("agent", f"Personality changed to {profile.name}", "success")
+        return f"Personality set to {profile.name}"
+
+    def propose_action(self, proposal: ActionProposal) -> str:
+        if proposal.kind != "skill":
+            raise ValueError("only semantic skill proposals are supported")
+        try:
+            skill = self.dog.catalog.get(proposal.name)
+        except KeyError as error:
+            raise ValueError(f"unknown proposed skill: {proposal.name}") from error
+        if skill.kind not in {"pose", "trajectory"}:
+            raise ValueError("action proposals are limited to bounded pose/trajectory skills")
+        context = self._activity_context()
+        result = self.activities.submit(proposal, context)
+        level = "info" if result.accepted else "warning"
+        self._emit("activity", result.message, level)
+        status = {
+            "execute": "Accepted",
+            "defer": "Deferred",
+            "reject": "Rejected",
+        }.get(result.disposition, "Rejected")
+        return f"{status}: {result.message}"
+
+    def _activity_context(self) -> ActivityContext:
+        arbitration = self.arbiter.snapshot()
+        with self._lock:
+            navigation_active = self._navigation_directive is not None
+        return ActivityContext(
+            emergency_stopped=bool(arbitration["emergency_stopped"]),
+            active_source=(
+                str(arbitration["active_source"])
+                if arbitration["active_source"] is not None
+                else None
+            ),
+            navigation_active=navigation_active,
+            follow_active=self.follow.enabled,
+            physical_activity_active=self.activities.running() is not None,
+        )
+
+    def _step_activities(self) -> None:
+        now = time.monotonic()
+        running = self.activities.running()
+        if running is not None:
+            context = self._activity_context()
+            preemptor = context.busy_reason
+            if preemptor not in {None, "physical_activity"}:
+                finished = self.activities.finish(
+                    success=False,
+                    detail=f"preempted_by_{preemptor}",
+                    now=now,
+                )
+                self._activity_complete_at = 0.0
+                if finished is not None:
+                    self._emit(
+                        "activity",
+                        f"{finished.proposal.name} preempted by {preemptor}",
+                        "warning",
+                    )
+                return
+            if now >= self._activity_complete_at:
+                finished = self.activities.finish(
+                    success=True,
+                    detail="duration_elapsed",
+                    now=now,
+                )
+                self._activity_complete_at = 0.0
+                if finished is not None:
+                    self._emit(
+                        "activity",
+                        f"Completed {finished.proposal.name}",
+                        "success",
+                    )
+            return
+
+        record = self.activities.start_ready(self._activity_context(), now=now)
+        if record is None:
+            return
+        # ``start_ready`` and physical dispatch are separate operations so that
+        # coordinator callbacks never run while its lock is held. Revalidate
+        # under the command lock: Stop/Stay/E-stop/manual/navigation use this
+        # same boundary, preventing a cleared record from executing afterward.
+        with self._command_lock:
+            current = self.activities.running()
+            context = self._activity_context()
+            if (
+                current is None
+                or current.activity_id != record.activity_id
+                or context.busy_reason not in {None, "physical_activity"}
+                or self._closed
+            ):
+                if current is not None and current.activity_id == record.activity_id:
+                    self.activities.finish(
+                        success=False,
+                        detail=f"dispatch_cancelled_by_{context.busy_reason or 'runtime'}",
+                        now=now,
+                    )
+                self._activity_complete_at = 0.0
+                return
+            try:
+                skill = self.dog.catalog.get(record.proposal.name)
+                result = self.dog.execute(record.proposal.name)
+                if not result.accepted:
+                    raise RuntimeError(result.message)
+                if skill.kind == "trajectory" and skill.keyframes:
+                    duration = float(skill.keyframes[-1].t)
+                else:
+                    duration = float(skill.duration)
+                self._activity_complete_at = now + max(0.1, min(30.0, duration + 0.15))
+                self._emit("activity", f"Executing {record.proposal.name}", "success")
+            except (KeyError, OSError, RuntimeError, TypeError, ValueError) as error:
+                self.activities.finish(success=False, detail=str(error), now=now)
+                self._activity_complete_at = 0.0
+                self._emit("activity", f"Action failed: {error}", "error")
+
+    def _render_system_prompt(self) -> str:
+        with self._lock:
+            personality = self._personality
+            functions = list(self._function_profiles)
+        return self.prompt_library.render_system(
+            personality_id=personality,
+            function_ids=functions,
+            runtime_context=self._prompt_runtime_context(),
+        )
+
+    def _prompt_runtime_context(self) -> dict[str, object]:
+        arbitration = self.arbiter.snapshot()
+        with self._lock:
+            observation = self._observation
+            navigation = dict(self._navigation_detail)
+            personality = self._personality
+        running = self.activities.running()
+        if running is not None:
+            active_kind = "skill"
+            active_phase = running.proposal.name
+            interruptibility = "immediate"
+        elif navigation.get("enabled"):
+            active_kind = "navigate"
+            active_phase = str(navigation.get("state", "navigating"))
+            interruptibility = "never"
+        elif self.follow.enabled:
+            active_kind = "follow"
+            active_phase = self.follow.state
+            interruptibility = "safe_checkpoint"
+        elif arbitration["active_source"] is not None:
+            active_kind = str(arbitration["active_source"])
+            active_phase = "moving"
+            interruptibility = "never"
+        else:
+            active_kind = "idle"
+            active_phase = "idle"
+            interruptibility = "safe_checkpoint"
+        command = arbitration["command"]
+        assert isinstance(command, dict)
+        available_social = [
+            skill.id
+            for skill in self.dog.list_skills(tag="social")
+            if skill.kind in {"pose", "trajectory"}
+        ]
+        return {
+            "active_activity": {
+                "kind": active_kind,
+                "phase": active_phase,
+                "interruptibility": interruptibility,
+            },
+            "motion": {
+                "source": arbitration["active_source"],
+                "moving": any(abs(float(value)) > 1e-6 for value in command.values()),
+            },
+            "safety": {
+                "emergency_stopped": arbitration["emergency_stopped"],
+                "telemetry_fresh": (
+                    observation is not None
+                    and time.monotonic() - observation.timestamp <= self.telemetry_stale_s
+                ),
+                "nearest_obstacle_m": (
+                    observation.nearest_obstacle_m if observation is not None else None
+                ),
+                "nearest_person_ttc_s": (
+                    observation.nearest_person_ttc_s if observation is not None else None
+                ),
+            },
+            "available_social_skills": available_social,
+            "personality": personality,
+        }
 
     def move_owner(self, dx: float, dy: float) -> str:
         if self._closed:
@@ -502,6 +778,7 @@ class RobotRuntime:
             voice = dict(self._voice_detail)
             sim_status = self._sim_status
             sim_error = self._sim_error
+            personality = self._personality
         if not self.follow.enabled:
             follow = self.follow.snapshot()
         robot: dict[str, object] = {"x": 0.0, "y": 0.0, "z": 0.0, "heading": 0.0}
@@ -514,6 +791,8 @@ class RobotRuntime:
         }
         obstacle = None
         collision = False
+        dynamic_agents: list[dict[str, object]] = []
+        nearest_person: dict[str, object] | None = None
         if observation is not None:
             robot = {
                 "x": observation.robot.x,
@@ -530,6 +809,26 @@ class RobotRuntime:
             }
             obstacle = observation.nearest_obstacle_m
             collision = observation.collision
+            dynamic_agents = [
+                {
+                    "id": track.agent_id,
+                    "kind": track.kind,
+                    "x": track.x,
+                    "y": track.y,
+                    "vx": track.vx,
+                    "vy": track.vy,
+                    "yaw": track.yaw,
+                    "radius_m": track.radius_m,
+                }
+                for track in observation.dynamic_agents
+            ]
+            if observation.nearest_person_id is not None:
+                nearest_person = {
+                    "id": observation.nearest_person_id,
+                    "distance_m": observation.nearest_person_m,
+                    "bearing_rad": observation.nearest_person_bearing_rad,
+                    "time_to_collision_s": observation.nearest_person_ttc_s,
+                }
         arbitration = self.arbiter.snapshot()
         return {
             "simulator": {
@@ -540,6 +839,8 @@ class RobotRuntime:
             "agent": {
                 "status": "ready",
                 "active_source": arbitration["active_source"],
+                "personality": personality,
+                "personalities": self.list_personalities(),
             },
             "follow": follow,
             "navigation": navigation,
@@ -548,10 +849,13 @@ class RobotRuntime:
             "model": {"status": self._model_status, "detail": self._model_detail},
             "robot": robot,
             "owner": owner,
+            "dynamic_agents": dynamic_agents,
+            "nearest_person": nearest_person,
             "obstacle_distance_m": obstacle,
             "collision": collision,
             "emergency_stopped": arbitration["emergency_stopped"],
             "motion": arbitration,
+            "activities": self.activities.snapshot(),
             "events": events,
             "chat": chat,
         }
@@ -571,18 +875,21 @@ class RobotRuntime:
                     self._sim_status = "connected"
                     self._sim_error = ""
                 if observation.emergency_stopped and not self.arbiter.emergency_stopped:
-                    self.follow.stop()
-                    with self._lock:
-                        self._behavior_generation += 1
-                        self._navigation_directive = None
-                        self._navigation_detail = {
-                            **self._navigation_detail,
-                            "enabled": False,
-                            "state": "idle",
-                            "reason": "simulator_emergency_stop",
-                        }
-                    self.agent.safety.engage_emergency_stop()
-                    self.arbiter.engage_emergency_stop()
+                    with self._command_lock:
+                        self.follow.stop()
+                        with self._lock:
+                            self._behavior_generation += 1
+                            self._navigation_directive = None
+                            self._navigation_detail = {
+                                **self._navigation_detail,
+                                "enabled": False,
+                                "state": "idle",
+                                "reason": "simulator_emergency_stop",
+                            }
+                        self.activities.clear("simulator_emergency_stop")
+                        self._activity_complete_at = 0.0
+                        self.agent.safety.engage_emergency_stop()
+                        self.arbiter.engage_emergency_stop()
                     self._emit("safety", "Simulator emergency stop adopted", "error")
             except (OSError, RuntimeError, TypeError, ValueError) as error:
                 observation = None
@@ -615,11 +922,7 @@ class RobotRuntime:
                         except RuntimeError:
                             pass
                 if still_following and decision.state != last_follow_state:
-                    level = (
-                        "warning"
-                        if decision.state in {"blocked", "lost", "stale"}
-                        else "info"
-                    )
+                    level = "warning" if decision.state in {"blocked", "lost", "stale"} else "info"
                     self._emit("follow", f"{decision.state}: {decision.reason}", level)
                     last_follow_state = decision.state
                 elif not still_following:
@@ -632,6 +935,8 @@ class RobotRuntime:
 
             self._step_navigation(observation)
 
+            self._step_activities()
+
             self._dispatch_active()
             elapsed = time.monotonic() - started
             self._stop_event.wait(max(0.0, self.loop_period - elapsed))
@@ -640,10 +945,25 @@ class RobotRuntime:
         with self._command_lock:
             now = time.monotonic()
             active = self.arbiter.current(now)
-            command = active.command if active is not None else VelocityCommand()
+            command = (
+                self.velocity_smoother.step(active.command, now=now)
+                if active is not None
+                else VelocityCommand()
+            )
+            if (
+                active is not None
+                and math.hypot(active.command.vx, active.command.vy) <= 1e-9
+                and abs(active.command.vyaw) > 1e-9
+            ):
+                # A rotate-in-place target is a discrete nonholonomic mode
+                # transition. Brake translation immediately while retaining
+                # angular smoothing, otherwise residual forward velocity makes
+                # the robot arc/slide during the first alignment ticks.
+                command = VelocityCommand(vyaw=command.vyaw)
             with self._lock:
                 observation = self._observation
             command, proximity_state = self._collision_safe(command, observation)
+            self.velocity_smoother.force(command, now=now)
             if proximity_state != self._proximity_state:
                 if proximity_state == "stopped":
                     self._emit("safety", "Proximity stop: obstacle too close", "warning")
@@ -659,8 +979,7 @@ class RobotRuntime:
                     self._last_sent = command
                     self._last_send_at = now
                     self._was_moving = any(
-                        abs(value) > 1e-6
-                        for value in (command.vx, command.vy, command.vyaw)
+                        abs(value) > 1e-6 for value in (command.vx, command.vy, command.vyaw)
                     )
                 except OSError as error:
                     self._record_sim_error(error)
@@ -671,6 +990,7 @@ class RobotRuntime:
                     self._record_sim_error(error)
                 self._last_sent = VelocityCommand()
                 self._was_moving = False
+                self.velocity_smoother.reset(now=now)
 
     def _step_navigation(self, observation: SimObservation | None) -> None:
         with self._lock:
@@ -699,11 +1019,15 @@ class RobotRuntime:
                 )
                 mission, command = self.dog.navigate(
                     directive,
+                    nearest_person_m=observation.nearest_person_m,
                     nearest_obstacle_m=observation.nearest_obstacle_m,
                     publish=False,
                     extras={
                         "obstacle_bearing_rad": observation.nearest_obstacle_bearing_rad,
                         "obstacle_id": observation.nearest_obstacle_id,
+                        "person_bearing_rad": observation.nearest_person_bearing_rad,
+                        "person_id": observation.nearest_person_id,
+                        "person_ttc_s": observation.nearest_person_ttc_s,
                     },
                 )
         except (LookupError, RuntimeError, TypeError, ValueError) as error:
@@ -773,6 +1097,19 @@ class RobotRuntime:
                 return VelocityCommand(vyaw=command.vyaw), "stopped"
             return command, "clear"
         translating = math.hypot(command.vx, command.vy) > 1e-6
+        person_ttc = observation.nearest_person_ttc_s
+        predictive_state = "clear"
+        if translating and person_ttc is not None:
+            if person_ttc <= 0.8:
+                return VelocityCommand(vyaw=command.vyaw), "stopped"
+            if person_ttc < 1.8:
+                scale = max(0.15, (person_ttc - 0.8) / 1.0)
+                command = VelocityCommand(
+                    vx=command.vx * scale,
+                    vy=command.vy * scale,
+                    vyaw=command.vyaw,
+                )
+                predictive_state = "slowing"
         distance = observation.nearest_obstacle_m
         if not translating:
             return command, "clear"
@@ -786,9 +1123,9 @@ class RobotRuntime:
         if observation.collision and toward_obstacle:
             return VelocityCommand(vyaw=command.vyaw), "stopped"
         if not toward_obstacle:
-            return command, "clear"
+            return command, predictive_state
         if distance is None:
-            return command, "clear"
+            return command, predictive_state
         if distance <= self.obstacle_stop_m:
             return VelocityCommand(vyaw=command.vyaw), "stopped"
         if distance < self.obstacle_slow_m:
@@ -802,7 +1139,7 @@ class RobotRuntime:
                 ),
                 "slowing",
             )
-        return command, "clear"
+        return command, predictive_state
 
     def _record_sim_error(self, error: BaseException) -> None:
         message = str(error)

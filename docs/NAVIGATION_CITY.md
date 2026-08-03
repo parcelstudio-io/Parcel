@@ -2,23 +2,27 @@
 
 ## Reality check (this machine)
 
-- Current MuJoCo `city_block.xml` is a **stylized block**, not a living city.
+- Current MuJoCo `city_block.xml` is a compact living-city regression scene:
+  seven moving pedestrians, one cyclist, seeded routes, and full track telemetry.
 - The host has an RTX 5000 Ada (32 GB) and Python 3.14; MetaUrban still needs a
   separate Python 3.9 environment.
-- Parcel now runs a persistent simulator navigation loop with POI grounding,
-  command arbitration, obstacle range/bearing, reactive turning, and a final
-  proximity brake. Full visual/social navigation remains a later stage.
+- Parcel now runs a persistent simulator navigation loop with rotate-first
+  alignment, acceleration limits, person/obstacle telemetry, predictive TTC
+  braking, and a final proximity gate. Full visual learned navigation remains a
+  later stage.
 
 ## Recommended simulation platform
 
 Use **MuJoCo first**, then add an urban simulator behind `SimulatorBackend`.
 MuJoCo is the active platform because it provides the official Go2 body/joints,
 fast physics, reproducible tests, and low GPU contention. For later city-scale
-visual/social navigation, evaluate
-**[MetaUrban](https://github.com/metadriverse/metaurban)** and
-**[SimWorld](https://simworld.readthedocs.io/en/latest/)**. SimWorld has useful
-LLM/VLM, traffic, procedural-city, and robotics interfaces but is explicitly
-under active development.
+visual/social navigation, integrate
+**[MetaUrban](https://github.com/metadriverse/metaurban)** first. Use
+**[URBAN-SIM](https://github.com/metadriverse/urban-sim)** for later articulated
+Go2/Isaac training and **[SimWorld](https://github.com/SimWorld-AI/SimWorld)**
+for the most game-like photorealistic demo profile. iGibson is now a design
+reference rather than the recommended backend. See
+[Dynamic city and behavior architecture](DYNAMIC_CITY_AND_BEHAVIOR.md).
 
 Why this over CARLA / Isaac / raw MuJoCo:
 
@@ -145,14 +149,15 @@ Keep Stable-Baselines3/custom loops **outside** the voice process.
 | Multi-model registry + versions | Metadata only beyond `stub_v0` | Implement vendor loaders/adapters |
 | Stub navigator + persistent runtime loop | Yes | Implement and test CityWalker/NaVILA inference |
 | Reactive obstacle bearing turn + final brake | Yes | Add learned/local map planner |
-| Living city + pedestrians | No | Implement the MetaUrban backend adapter |
-| Don’t bump people | Ground-truth owner + directional brake | Perception + SocialNav/local planner |
+| Living city + pedestrians | Yes, compact seeded MuJoCo crowd | MetaUrban procedural backend |
+| Don’t bump people | Person tracks, TTC/proximity braking | Predictive SocialNav/MPPI + real perception |
+| Turn before translating | Yes, align/track hysteresis | Nav2 Rotation Shim + MPPI/RPP |
 
 ## Next host setup
 
 1. Install Conda + Python 3.9 (the NVIDIA driver/CUDA-compatible GPU is ready).
 2. Run `./scripts/setup_metaurban.sh`.
-3. Implement a MetaUrban `SimulatorBackend`/Gym adapter and test real steps and observations.
+3. Implement MetaUrban as a separate versioned IPC service and test real steps and observations.
 4. Implement CityWalker or NaVILA preprocessing/inference/output conversion.
 5. Download the matching checkpoint, add regression fixtures, then change `active_model` from `stub_v0`.
 6. Train/fine-tune with the real environment and `social_nav_v1` reward only after those adapters are verified.

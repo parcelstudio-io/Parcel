@@ -29,6 +29,7 @@ class ModelRegistry:
                 homepage=str(data.get("homepage", "")),
                 checkpoint=str(data.get("checkpoint", "")),
                 device=str(data.get("device", "cpu")),
+                controller=dict(data.get("controller") or {}),
                 rl=dict(data.get("rl") or {}),
                 source_path=str(path),
             )
@@ -55,4 +56,7 @@ class ModelRegistry:
     def create(self, model_id: str, **kwargs: Any):
         from .models import build_navigator
 
-        return build_navigator(self.get(model_id), **kwargs)
+        spec = self.get(model_id)
+        options = dict(spec.controller)
+        options.update(kwargs)
+        return build_navigator(spec, **options)

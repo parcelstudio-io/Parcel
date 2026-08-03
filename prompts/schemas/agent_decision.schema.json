@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Parcel agent decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reply", "tool_calls", "intent", "affect", "next_action"],
+  "properties": {
+    "reply": {"type": "string", "maxLength": 500},
+    "tool_calls": {"type": "array", "maxItems": 4},
+    "intent": {"type": "string", "maxLength": 80},
+    "affect": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["label", "confidence"],
+          "properties": {
+            "label": {"enum": ["happy", "sad", "neutral", "unknown"]},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        }
+      ]
+    },
+    "next_action": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name", "trigger", "timing_preference", "interruption_request", "reason"],
+          "properties": {
+            "kind": {"const": "skill"},
+            "name": {"type": "string", "maxLength": 80},
+            "trigger": {"enum": ["inferred_affect", "explicit_command"]},
+            "timing_preference": {"enum": ["when_safe", "now"]},
+            "interruption_request": {"enum": ["none", "safe_checkpoint"]},
+            "reason": {"type": "string", "maxLength": 240}
+          }
+        }
+      ]
+    }
+  }
+}

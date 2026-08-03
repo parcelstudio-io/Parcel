@@ -60,12 +60,15 @@ class SkillExecutor:
         skill = self.select(skill_id)
         if skill.kind == "pose":
             pose = Pose(skill.id, dict(skill.joints), duration=skill.duration)
+            # Stop locomotion before publishing the pose. In the simulator the
+            # stop hook restores standing joints, so doing this afterward would
+            # immediately overwrite the requested pose.
+            if self.motion is not None:
+                self.motion.stop()
             if self.on_pose is not None:
                 self.on_pose(pose)
             if self.sim_socket is not None:
                 publish_pose(pose, self.sim_socket)
-            if self.motion is not None:
-                self.motion.stop()
             return ExecutionResult(skill.id, skill.kind, f"Pose {skill.id}", True)
 
         if skill.kind in {"velocity", "gait"}:

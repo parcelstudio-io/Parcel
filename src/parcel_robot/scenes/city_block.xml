@@ -27,6 +27,9 @@
     <material name="crosswalk" rgba="0.92 0.92 0.9 1"/>
     <material name="bench" rgba="0.35 0.28 0.2 1"/>
     <material name="curb" rgba="0.5 0.5 0.48 1"/>
+    <material name="city_grass" rgba="0.22 0.42 0.2 1"/>
+    <material name="city_glass" rgba="0.2 0.42 0.56 1" reflectance="0.35"/>
+    <material name="city_metal" rgba="0.16 0.18 0.2 1"/>
   </asset>
 
   <worldbody>
@@ -39,6 +42,14 @@
     <!-- Sidewalk strip -->
     <geom name="sidewalk" type="box" pos="0 3.2 0.06" size="8 1.0 0.06" material="sidewalk"/>
     <geom name="curb" type="box" pos="0 2.15 0.05" size="8 0.08 0.05" material="curb"/>
+    <geom name="sidewalk_south" type="box" pos="0 -3.0 0.06" size="8 0.75 0.06" material="sidewalk"/>
+    <geom name="curb_south" type="box" pos="0 -2.2 0.05" size="8 0.08 0.05" material="curb"/>
+
+    <!-- Lane markings make heading and motion easier to judge. -->
+    <geom name="lane_1" type="box" pos="-5.5 0 0.003" size="1.1 0.035 0.003" rgba="0.92 0.78 0.18 1"/>
+    <geom name="lane_2" type="box" pos="-2.7 0 0.003" size="1.1 0.035 0.003" rgba="0.92 0.78 0.18 1"/>
+    <geom name="lane_3" type="box" pos="0.1 0 0.003" size="1.1 0.035 0.003" rgba="0.92 0.78 0.18 1"/>
+    <geom name="lane_4" type="box" pos="5.7 0 0.003" size="1.1 0.035 0.003" rgba="0.92 0.78 0.18 1"/>
 
     <!-- Crosswalk stripes -->
     <geom name="xw1" type="box" pos="2.5 0.8 0.002" size="0.15 1.2 0.002" material="crosswalk"/>
@@ -53,6 +64,27 @@
     <geom name="bldg_4" type="box" pos="5.5 5.4 2.4" size="1.6 1.5 2.4" material="building_a"/>
     <geom name="bldg_5" type="box" pos="-5.5 -4.5 1.8" size="1.7 1.4 1.8" material="building_b"/>
     <geom name="bldg_6" type="box" pos="5.0 -5.0 2.2" size="1.8 1.6 2.2" material="building_c"/>
+
+    <!-- Storefront windows and a small planted plaza. -->
+    <geom name="window_1" type="box" pos="-4.5 3.99 1.9" size="0.75 0.015 0.7" material="city_glass"/>
+    <geom name="window_2" type="box" pos="-1.0 4.59 1.8" size="0.7 0.015 0.8" material="city_glass"/>
+    <geom name="window_3" type="box" pos="2.2 4.19 1.4" size="0.75 0.015 0.65" material="city_glass"/>
+    <geom name="window_4" type="box" pos="5.5 3.89 1.8" size="0.75 0.015 0.75" material="city_glass"/>
+    <geom name="planter_1" type="cylinder" pos="-5.0 3.15 0.18" size="0.45 0.18" material="city_grass"/>
+    <geom name="tree_1" type="cylinder" pos="-5.0 3.15 0.9" size="0.10 0.75" rgba="0.32 0.2 0.1 1"/>
+    <geom name="tree_top_1" type="sphere" pos="-5.0 3.15 1.85" size="0.58" rgba="0.18 0.48 0.19 1"/>
+    <geom name="planter_2" type="cylinder" pos="5.0 3.1 0.18" size="0.45 0.18" material="city_grass"/>
+    <geom name="tree_2" type="cylinder" pos="5.0 3.1 0.9" size="0.10 0.75" rgba="0.32 0.2 0.1 1"/>
+    <geom name="tree_top_2" type="sphere" pos="5.0 3.1 1.85" size="0.58" rgba="0.18 0.48 0.19 1"/>
+
+    <!-- Street furniture / crossing signals. -->
+    <geom name="lamp_post_1" type="cylinder" pos="0.2 3.15 1.35" size="0.06 1.35" material="city_metal"/>
+    <geom name="lamp_head_1" type="sphere" pos="0.2 3.15 2.75" size="0.14" rgba="1 0.86 0.5 1"/>
+    <geom name="lamp_post_2" type="cylinder" pos="-6.7 -2.9 1.35" size="0.06 1.35" material="city_metal"/>
+    <geom name="lamp_head_2" type="sphere" pos="-6.7 -2.9 2.75" size="0.14" rgba="1 0.86 0.5 1"/>
+    <geom name="signal_post" type="cylinder" pos="3.85 2.1 1.0" size="0.055 1.0" material="city_metal"/>
+    <geom name="signal_box" type="box" pos="3.85 2.1 2.05" size="0.16 0.12 0.28" material="city_metal"/>
+    <geom name="signal_walk" type="sphere" pos="3.85 1.97 2.12" size="0.07" rgba="0.2 0.95 0.45 1"/>
 
     <!-- Bench on sidewalk -->
     <geom name="bench_seat" type="box" pos="-2.5 3.0 0.28" size="0.7 0.22 0.06" material="bench"/>
@@ -73,6 +105,59 @@
         contype="0" conaffinity="0" rgba="0.15 0.68 0.95 1"/>
       <geom name="owner_head" type="sphere" pos="0 0 1.78" size="0.2"
         contype="0" conaffinity="0" rgba="0.92 0.72 0.55 1"/>
+    </body>
+
+    <!-- Lightweight living-city actors. The Python route controller advances
+         these mocap bodies deterministically and publishes their tracks. -->
+    <body name="pedestrian_1" mocap="true" pos="-6.2 3.0 0">
+      <geom name="pedestrian_1_body" type="capsule" fromto="0 0 0.15 0 0 1.48" size="0.20"
+        contype="0" conaffinity="0" rgba="0.95 0.35 0.25 1"/>
+      <geom name="pedestrian_1_head" type="sphere" pos="0 0 1.7" size="0.18"
+        contype="0" conaffinity="0" rgba="0.72 0.45 0.28 1"/>
+    </body>
+    <body name="pedestrian_2" mocap="true" pos="5.7 3.55 0">
+      <geom name="pedestrian_2_body" type="capsule" fromto="0 0 0.15 0 0 1.42" size="0.19"
+        contype="0" conaffinity="0" rgba="0.62 0.32 0.9 1"/>
+      <geom name="pedestrian_2_head" type="sphere" pos="0 0 1.64" size="0.18"
+        contype="0" conaffinity="0" rgba="0.86 0.62 0.44 1"/>
+    </body>
+    <body name="pedestrian_3" mocap="true" pos="3.15 -3.0 0">
+      <geom name="pedestrian_3_body" type="capsule" fromto="0 0 0.15 0 0 1.5" size="0.21"
+        contype="0" conaffinity="0" rgba="0.18 0.68 0.42 1"/>
+      <geom name="pedestrian_3_head" type="sphere" pos="0 0 1.73" size="0.19"
+        contype="0" conaffinity="0" rgba="0.5 0.3 0.2 1"/>
+    </body>
+    <body name="pedestrian_4" mocap="true" pos="-5.5 -2.7 0">
+      <geom name="pedestrian_4_body" type="capsule" fromto="0 0 0.15 0 0 1.38" size="0.18"
+        contype="0" conaffinity="0" rgba="0.96 0.7 0.18 1"/>
+      <geom name="pedestrian_4_head" type="sphere" pos="0 0 1.6" size="0.17"
+        contype="0" conaffinity="0" rgba="0.72 0.48 0.3 1"/>
+    </body>
+    <body name="pedestrian_5" mocap="true" pos="-2.0 1.8 0">
+      <geom name="pedestrian_5_body" type="capsule" fromto="0 0 0.15 0 0 1.46" size="0.20"
+        contype="0" conaffinity="0" rgba="0.22 0.5 0.92 1"/>
+      <geom name="pedestrian_5_head" type="sphere" pos="0 0 1.68" size="0.18"
+        contype="0" conaffinity="0" rgba="0.38 0.22 0.15 1"/>
+    </body>
+    <body name="pedestrian_6" mocap="true" pos="4.8 -1.5 0">
+      <geom name="pedestrian_6_body" type="capsule" fromto="0 0 0.15 0 0 1.44" size="0.19"
+        contype="0" conaffinity="0" rgba="0.9 0.25 0.62 1"/>
+      <geom name="pedestrian_6_head" type="sphere" pos="0 0 1.66" size="0.18"
+        contype="0" conaffinity="0" rgba="0.82 0.57 0.38 1"/>
+    </body>
+    <body name="pedestrian_7" mocap="true" pos="-3.8 1.4 0">
+      <geom name="pedestrian_7_body" type="capsule" fromto="0 0 0.15 0 0 1.52" size="0.21"
+        contype="0" conaffinity="0" rgba="0.2 0.76 0.75 1"/>
+      <geom name="pedestrian_7_head" type="sphere" pos="0 0 1.75" size="0.19"
+        contype="0" conaffinity="0" rgba="0.58 0.36 0.22 1"/>
+    </body>
+    <body name="cyclist_1" mocap="true" pos="-7.0 0 0">
+      <geom name="cyclist_1_bike" type="box" pos="0 0 0.48" size="0.52 0.14 0.10"
+        contype="0" conaffinity="0" rgba="0.08 0.12 0.15 1"/>
+      <geom name="cyclist_1_body" type="capsule" fromto="0 0 0.58 0 0 1.4" size="0.18"
+        contype="0" conaffinity="0" rgba="0.95 0.55 0.08 1"/>
+      <geom name="cyclist_1_head" type="sphere" pos="0 0 1.62" size="0.17"
+        contype="0" conaffinity="0" rgba="0.4 0.25 0.16 1"/>
     </body>
   </worldbody>
 </mujoco>

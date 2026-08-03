@@ -3,6 +3,10 @@ robot:
 
 simulation:
   scene: src/parcel_robot/scenes/city_block.xml
+  dynamic_city:
+    enabled: true
+    seed: 7
+    speed_scale: 1.0
 
 skills:
   root: configs/skills
@@ -16,6 +20,10 @@ motion:
   max_vx: 0.6
   max_vy: 0.4
   max_vyaw: 1.0
+  smoothing:
+    linear_accel: 0.9
+    linear_decel: 1.4
+    yaw_accel: 1.8
   sport:
     enabled: false
     interface: lo
@@ -31,6 +39,15 @@ language_model:
   base_url: http://127.0.0.1:8080
   model: gemma-4-26b-a4b
   timeout: 90
+
+agent:
+  prompts_root: prompts
+  personality: gentle_companion
+  functions: [companion, navigator, manual_assistant]
+  affect:
+    minimum_confidence: 0.75
+    social_action_cooldown_s: 8
+    proposal_ttl_s: 20
 
 speech:
   mode: auto  # falls back to streaming text when no audio endpoint is connected

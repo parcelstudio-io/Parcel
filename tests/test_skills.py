@@ -3,6 +3,7 @@ from pathlib import Path
 from parcel_robot.gait import TrajectoryPlayer
 from parcel_robot.skills.api import Dog
 from parcel_robot.skills.catalog import SkillCatalog
+from parcel_robot.skills.executor import SkillExecutor
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "configs" / "skills"
@@ -32,6 +33,26 @@ def test_dog_execute_pose_and_velocity():
     assert walks and walks[-1].vx > 0
     assert dog.select("jump").id == "jump"
     assert len(dog.obs()) == 48
+
+
+def test_pose_stops_locomotion_before_publishing_pose():
+    events = []
+
+    class Motion:
+        def stop(self):
+            events.append("stop")
+            return "stopped"
+
+    executor = SkillExecutor(
+        SkillCatalog.load(SKILLS),
+        motion=Motion(),  # type: ignore[arg-type]
+        on_pose=lambda pose: events.append(f"pose:{pose.name}"),
+    )
+
+    result = executor.execute("sit")
+
+    assert result.accepted
+    assert events == ["stop", "pose:sit"]
 
 
 def test_trajectory_player_interpolates():

@@ -16,8 +16,8 @@ microphone (future device transport; text stream is active now)
   → whisper.cpp
   → finalized transcript
   → Gemma 4 / llama.cpp
-  → structured tool call
-  → deterministic SafetySupervisor
+  → structured tool call and optional semantic action proposal
+  → deterministic SafetySupervisor + ActivityCoordinator
   → priority arbiter + TTL + proximity brake
   → simulator or ROS controller
 
@@ -28,7 +28,9 @@ spoken reply
 ```
 
 The probabilistic components are outside the motor-control boundary. Only named,
-preconfigured actions can cross it.
+preconfigured actions can cross it. A semantic proposal can be executed,
+deferred, expired, or rejected after fresh task state is checked; see
+[Dynamic city and behavior architecture](DYNAMIC_CITY_AND_BEHAVIOR.md).
 
 ## Why Gemma 4 26B-A4B
 
@@ -45,15 +47,24 @@ checkpoint is designed for multi-GPU serving and is hundreds of gigabytes even
 when quantized. The application talks to llama.cpp's OpenAI-compatible
 `/v1/chat/completions` endpoint and does not depend on a hosted service.
 
-Parcel gives the model a dynamically generated list of allowable pose names. It
-requests exactly this response shape:
+Parcel gives the model a dynamically generated list of allowable pose names and
+a bounded snapshot of current task state. A response may include one semantic
+next action:
 
 ```json
 {
-  "reply": "Sitting down.",
-  "tool_calls": [
-    {"name": "run_pose", "arguments": {"name": "sit"}}
-  ]
+  "reply": "I'm here with you.",
+  "tool_calls": [],
+  "intent": "conversation",
+  "affect": {"label": "sad", "confidence": 0.86},
+  "next_action": {
+    "kind": "skill",
+    "name": "play_bow",
+    "trigger": "inferred_affect",
+    "timing_preference": "when_safe",
+    "interruption_request": "none",
+    "reason": "gentle acknowledgement"
+  }
 }
 ```
 
@@ -64,6 +75,7 @@ The response is parsed strictly:
 - tool names and arguments are validated again by `SafetySupervisor`;
 - unknown poses and tools are rejected;
 - joint values never come from the language model;
+- force overrides, model priorities, and unknown action fields are rejected;
 - an invalid response falls back to deterministic command parsing.
 
 Gemma may still hallucinate facts. Robot manuals and operational information

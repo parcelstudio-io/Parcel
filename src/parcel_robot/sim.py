@@ -10,6 +10,7 @@ import mujoco.viewer
 import numpy as np
 
 from .config import ConfigStore
+from .dynamic_city import DynamicCity, select_social_collision_candidate
 from .gait import ScriptedTrotGait, TrajectoryPlayer
 from .models import Pose, VelocityCommand
 from .sim_control import PoseController
@@ -19,14 +20,52 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = REPO_ROOT / "configs" / "robot.yaml"
 FALLBACK_CONFIG = Path(__file__).with_name("config") / "robot.yaml"
 DEFAULT_SCENE = Path(__file__).with_name("scenes") / "city_block.xml"
-FLAT_SCENE = (
-    REPO_ROOT
-    / "third_party"
-    / "unitree_mujoco"
-    / "unitree_robots"
-    / "go2"
-    / "scene.xml"
+FLAT_SCENE = REPO_ROOT / "third_party" / "unitree_mujoco" / "unitree_robots" / "go2" / "scene.xml"
+LOGICAL_OBSTACLE_PREFIXES = (
+    "obstacle_",
+    "bldg_",
+    "bench_",
+    "owner_",
+    "pedestrian_",
+    "cyclist_",
+    "planter_",
+    "tree_",
+    "lamp_",
+    "signal_",
 )
+ROBOT_OBSTACLE_HEIGHT_M = 0.9
+
+
+def is_logical_obstacle_name(name: str) -> bool:
+    return name.startswith(LOGICAL_OBSTACLE_PREFIXES)
+
+
+def select_relevant_obstacle(
+    candidates: list[dict[str, float | str]],
+    command: VelocityCommand | None,
+) -> dict[str, float | str] | None:
+    """Prefer the nearest obstacle in the current translation corridor.
+
+    A globally closer object behind the robot must not mask an object in front.
+    When the robot is not translating, global clearance remains the useful
+    fallback for planners and the UI.
+    """
+
+    if not candidates:
+        return None
+    translating = command is not None and math.hypot(command.vx, command.vy) > 1e-6
+    if translating:
+        travel_angle = math.atan2(command.vy, command.vx)
+        directional = []
+        for item in candidates:
+            angle_error = (float(item["bearing_rad"]) - travel_angle + math.pi) % (
+                2.0 * math.pi
+            ) - math.pi
+            if abs(angle_error) < 1.15:
+                directional.append(item)
+        if directional:
+            return min(directional, key=lambda item: float(item["distance_m"]))
+    return min(candidates, key=lambda item: float(item["distance_m"]))
 
 
 def resolve_scene(config_path: Path, override: str | None) -> Path:
@@ -56,6 +95,9 @@ def run_simulator(
     walk_yaw: float = 0.4,
     simulate_dt: float = 0.005,
     viewer_dt: float = 0.02,
+    dynamic_city_enabled: bool = True,
+    dynamic_city_seed: int = 7,
+    dynamic_city_speed_scale: float = 1.0,
 ) -> None:
     if not scene.exists():
         raise FileNotFoundError(
@@ -85,12 +127,40 @@ def run_simulator(
     base_position = np.array(data.qpos[:3], dtype=np.float64)
     base_yaw = 0.0
 
+    dynamic_city = DynamicCity.default(
+        enabled=dynamic_city_enabled,
+        seed=dynamic_city_seed,
+        speed_scale=dynamic_city_speed_scale,
+    )
+    dynamic_mocap_ids: dict[str, int] = {}
+    for actor in dynamic_city.agents:
+        body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, actor.spec.body_name)
+        if body_id >= 0 and int(model.body_mocapid[body_id]) >= 0:
+            dynamic_mocap_ids[actor.spec.agent_id] = int(model.body_mocapid[body_id])
+
+    def place_dynamic_agents() -> None:
+        for actor in dynamic_city.agents:
+            mocap_id = dynamic_mocap_ids.get(actor.spec.agent_id)
+            if mocap_id is None:
+                continue
+            data.mocap_pos[mocap_id, :] = (actor.x, actor.y, 0.0)
+            half_yaw = actor.yaw * 0.5
+            data.mocap_quat[mocap_id, :] = (
+                math.cos(half_yaw),
+                0.0,
+                0.0,
+                math.sin(half_yaw),
+            )
+
+    place_dynamic_agents()
+    mujoco.mj_forward(model, data)
+
     owner_body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "owner")
     owner_mocap_id = int(model.body_mocapid[owner_body_id]) if owner_body_id >= 0 else -1
     obstacle_geom_ids: list[int] = []
     for geom_id in range(model.ngeom):
         name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id) or ""
-        if name.startswith(("obstacle_", "bldg_", "bench_", "owner_")):
+        if is_logical_obstacle_name(name):
             obstacle_geom_ids.append(geom_id)
 
     def robot_yaw() -> float:
@@ -113,20 +183,14 @@ def run_simulator(
             obstacle = nearest_obstacle()
             if obstacle is not None and float(obstacle["distance_m"]) <= 0.08:
                 travel_angle = math.atan2(walk_command.vy, walk_command.vx)
-                angle_error = (
-                    float(obstacle["bearing_rad"]) - travel_angle + math.pi
-                ) % (2.0 * math.pi) - math.pi
+                angle_error = (float(obstacle["bearing_rad"]) - travel_angle + math.pi) % (
+                    2.0 * math.pi
+                ) - math.pi
                 allow_translation = abs(angle_error) >= 1.15
             if allow_translation:
-                base_position[0] += (
-                    cosine * walk_command.vx - sine * walk_command.vy
-                ) * dt
-                base_position[1] += (
-                    sine * walk_command.vx + cosine * walk_command.vy
-                ) * dt
-            base_yaw = (base_yaw + walk_command.vyaw * dt + math.pi) % (
-                2.0 * math.pi
-            ) - math.pi
+                base_position[0] += (cosine * walk_command.vx - sine * walk_command.vy) * dt
+                base_position[1] += (sine * walk_command.vx + cosine * walk_command.vy) * dt
+            base_yaw = (base_yaw + walk_command.vyaw * dt + math.pi) % (2.0 * math.pi) - math.pi
         data.qpos[:3] = base_position
         half_yaw = base_yaw * 0.5
         data.qpos[3:7] = (math.cos(half_yaw), 0.0, 0.0, math.sin(half_yaw))
@@ -142,6 +206,20 @@ def run_simulator(
         for geom_id in obstacle_geom_ids:
             gx, gy = (float(value) for value in data.geom_xpos[geom_id, :2])
             geom_type = int(model.geom_type[geom_id])
+            gz = float(data.geom_xpos[geom_id, 2])
+            if geom_type == int(mujoco.mjtGeom.mjGEOM_BOX):
+                half_height = float(model.geom_size[geom_id, 2])
+            elif geom_type == int(mujoco.mjtGeom.mjGEOM_SPHERE):
+                half_height = float(model.geom_size[geom_id, 0])
+            elif geom_type in {
+                int(mujoco.mjtGeom.mjGEOM_CYLINDER),
+                int(mujoco.mjtGeom.mjGEOM_CAPSULE),
+            }:
+                half_height = float(model.geom_size[geom_id, 0] + model.geom_size[geom_id, 1])
+            else:
+                half_height = 0.0
+            if gz - half_height > ROBOT_OBSTACLE_HEIGHT_M:
+                continue
             if geom_type == int(mujoco.mjtGeom.mjGEOM_BOX):
                 sx, sy = (float(value) for value in model.geom_size[geom_id, :2])
                 dx = max(abs(px - gx) - sx, 0.0)
@@ -156,9 +234,7 @@ def run_simulator(
                 distance = math.hypot(px - gx, py - gy) - radius - robot_radius
             else:
                 continue
-            bearing = (math.atan2(gy - py, gx - px) - heading + math.pi) % (
-                2.0 * math.pi
-            ) - math.pi
+            bearing = (math.atan2(gy - py, gx - px) - heading + math.pi) % (2.0 * math.pi) - math.pi
             candidates.append(
                 {
                     "id": mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id)
@@ -169,7 +245,7 @@ def run_simulator(
                     "y": gy,
                 }
             )
-        return min(candidates, key=lambda item: float(item["distance_m"])) if candidates else None
+        return select_relevant_obstacle(candidates, walk_command)
 
     def state_snapshot() -> dict:
         obstacle = nearest_obstacle()
@@ -181,7 +257,35 @@ def run_simulator(
             )
         else:
             owner_x, owner_y = 0.0, 0.0
+        robot_x = float(data.qpos[0]) if model.nq > 0 else 0.0
+        robot_y = float(data.qpos[1]) if model.nq > 1 else 0.0
+        heading = robot_yaw()
         command = walk_command or VelocityCommand()
+        robot_vx = math.cos(heading) * command.vx - math.sin(heading) * command.vy
+        robot_vy = math.sin(heading) * command.vx + math.cos(heading) * command.vy
+        active_tracks = dynamic_city.snapshots(dynamic_mocap_ids)
+        social_tracks = list(active_tracks)
+        owner_is_visible = owner_visible and owner_mocap_id >= 0
+        if owner_is_visible:
+            social_tracks.append(
+                {
+                    "id": "owner-1",
+                    "kind": "owner",
+                    "x": owner_x,
+                    "y": owner_y,
+                    "vx": 0.0,
+                    "vy": 0.0,
+                    "radius_m": 0.22,
+                }
+            )
+        person = select_social_collision_candidate(
+            social_tracks,
+            robot_x=robot_x,
+            robot_y=robot_y,
+            robot_heading_rad=heading,
+            robot_vx=robot_vx,
+            robot_vy=robot_vy,
+        )
         return {
             "type": "status",
             "backend": "mujoco",
@@ -197,11 +301,20 @@ def run_simulator(
                 "id": "owner-1",
                 "x": owner_x,
                 "y": owner_y,
-                "visible": owner_visible,
-                "confidence": 1.0 if owner_visible else 0.0,
+                "visible": owner_is_visible,
+                "confidence": 1.0 if owner_is_visible else 0.0,
             },
             "nearest_obstacle_m": obstacle_distance,
             "nearest_obstacle": obstacle,
+            "nearest_person_m": float(person["distance_m"]) if person else None,
+            "nearest_person": person,
+            "dynamic_agents": active_tracks,
+            "dynamic_city": {
+                "enabled": dynamic_city.enabled,
+                "seed": dynamic_city.seed,
+                "speed_scale": dynamic_city.speed_scale,
+                "active_agents": len(dynamic_mocap_ids) if dynamic_city.enabled else 0,
+            },
             "collision": obstacle_distance is not None and obstacle_distance <= 0.01,
             "emergency_stopped": emergency_stopped,
             "command": {"vx": command.vx, "vy": command.vy, "vyaw": command.vyaw},
@@ -243,6 +356,10 @@ def run_simulator(
         elif kind == "walk":
             if emergency_stopped:
                 raise ValueError("simulator motion is disabled by emergency stop")
+            was_walking = walk_command is not None
+            was_in_trajectory = trajectory.active
+            previous_style = gait.style
+            previous_frequency = gait.frequency_hz
             trajectory.stop()
             requested = message_to_velocity(message)
             walk_command = VelocityCommand(
@@ -254,7 +371,13 @@ def run_simulator(
             style = str(message.get("gait_style", "trot"))
             freq = message.get("frequency_hz")
             gait.set_style(style, float(freq) if freq is not None else None)
-            gait.reset()
+            if (
+                not was_walking
+                or was_in_trajectory
+                or previous_style != gait.style
+                or abs(previous_frequency - gait.frequency_hz) > 1e-9
+            ):
+                gait.reset()
             now = time.monotonic()
             change = (
                 float("inf")
@@ -355,6 +478,8 @@ def run_simulator(
                 steps = 0
                 while sim_time_wall <= now and steps < max_steps_per_frame:
                     dt = model.opt.timestep
+                    dynamic_city.step(dt)
+                    place_dynamic_agents()
                     traj_joints = trajectory.joints_for(dt)
                     if traj_joints is not None:
                         controller.hold_joints(traj_joints)
@@ -383,30 +508,47 @@ def run_simulator(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Parcel MuJoCo simulator for skills / city scene"
-    )
+    parser = argparse.ArgumentParser(description="Parcel MuJoCo simulator for skills / city scene")
     default_config = DEFAULT_CONFIG if DEFAULT_CONFIG.is_file() else FALLBACK_CONFIG
     parser.add_argument("--config", default=str(default_config))
     parser.add_argument("--scene", help="path to a MuJoCo MJCF scene")
     parser.add_argument("--socket", default=str(DEFAULT_SOCKET))
     parser.add_argument("--kp", type=float, default=60.0, help="position gain")
     parser.add_argument("--kd", type=float, default=2.0, help="damping gain")
+    parser.add_argument(
+        "--static-city",
+        action="store_true",
+        help="disable moving pedestrians and cyclists",
+    )
     args = parser.parse_args()
 
     config_path = Path(args.config)
     store = ConfigStore(config_path)
     limits = store.safety_limits()
+    simulation = store.section("simulation") if "simulation" in store.data else {}
+    dynamic_config = simulation.get("dynamic_city") or {}
+    if not isinstance(dynamic_config, dict):
+        parser.error("simulation.dynamic_city must be a mapping")
     scene = resolve_scene(config_path, args.scene)
-    run_simulator(
-        scene=scene,
-        socket_path=Path(args.socket),
-        poses=store.poses(),
-        kp=args.kp,
-        kd=args.kd,
-        walk_vx=min(0.3, limits.max_vx),
-        walk_yaw=min(0.4, limits.max_vyaw),
-    )
+    try:
+        run_simulator(
+            scene=scene,
+            socket_path=Path(args.socket),
+            poses=store.poses(),
+            kp=args.kp,
+            kd=args.kd,
+            walk_vx=min(0.3, limits.max_vx),
+            walk_yaw=min(0.4, limits.max_vyaw),
+            dynamic_city_enabled=(
+                bool(dynamic_config.get("enabled", True)) and not args.static_city
+            ),
+            dynamic_city_seed=int(dynamic_config.get("seed", 7)),
+            dynamic_city_speed_scale=float(dynamic_config.get("speed_scale", 1.0)),
+        )
+    except KeyboardInterrupt:
+        # The server/viewer context managers have already released their
+        # resources; keep an ordinary Ctrl-C shutdown quiet for developers.
+        pass
 
 
 if __name__ == "__main__":

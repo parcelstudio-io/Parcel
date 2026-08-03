@@ -1,0 +1,161 @@
+from __future__ import annotations
+
+import json
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+_PROFILE_ID = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+_MAX_PROMPT_BYTES = 128_000
+
+
+@dataclass(frozen=True)
+class PersonalityProfile:
+    id: str
+    name: str
+    instruction: str
+    reply_style: tuple[str, ...]
+    affect_actions: dict[str, str]
+
+
+@dataclass(frozen=True)
+class FunctionProfile:
+    id: str
+    name: str
+    instruction: str
+
+
+class PromptLibrary:
+    """Loads trusted, repository-owned prompt fragments by validated IDs."""
+
+    def __init__(self, root: str | Path):
+        self.root = Path(root).expanduser().resolve()
+        if not self.root.is_dir():
+            raise FileNotFoundError(f"prompt directory not found: {self.root}")
+
+    def list_personalities(self) -> list[PersonalityProfile]:
+        return [
+            self.personality(path.stem)
+            for path in sorted(self._dir("personalities").glob("*.yaml"))
+        ]
+
+    def personality(self, profile_id: str) -> PersonalityProfile:
+        data = self._yaml("personalities", profile_id)
+        identity = self._identity(data, profile_id)
+        instruction = self._required_text(data, "instruction")
+        reply_style = data.get("reply_style") or []
+        affect_actions = data.get("affect_actions") or {}
+        if not isinstance(reply_style, list) or not all(
+            isinstance(item, str) and item.strip() for item in reply_style
+        ):
+            raise TypeError("personality reply_style must be a list of strings")
+        if not isinstance(affect_actions, dict) or not all(
+            key in {"happy", "sad"} and isinstance(value, str) and _PROFILE_ID.fullmatch(value)
+            for key, value in affect_actions.items()
+        ):
+            raise TypeError("personality affect_actions contains an invalid mapping")
+        return PersonalityProfile(
+            id=identity,
+            name=str(data.get("name", identity)),
+            instruction=instruction,
+            reply_style=tuple(item.strip() for item in reply_style),
+            affect_actions=dict(affect_actions),
+        )
+
+    def function(self, profile_id: str) -> FunctionProfile:
+        data = self._yaml("functions", profile_id)
+        identity = self._identity(data, profile_id)
+        return FunctionProfile(
+            id=identity,
+            name=str(data.get("name", identity)),
+            instruction=self._required_text(data, "instruction"),
+        )
+
+    def render_system(
+        self,
+        *,
+        personality_id: str,
+        function_ids: list[str] | tuple[str, ...],
+        runtime_context: dict[str, Any],
+    ) -> str:
+        personality = self.personality(personality_id)
+        functions = [self.function(profile_id) for profile_id in function_ids]
+        core = self._text("system", "core.md")
+        action_policy = self._text("system", "action_policy.md")
+        dynamic_template = self._text("dynamic", "runtime_context.md.tmpl")
+        if dynamic_template.count("{{RUNTIME_CONTEXT_JSON}}") != 1:
+            raise ValueError("dynamic prompt must contain one runtime-context placeholder")
+        encoded_context = json.dumps(
+            runtime_context,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        )
+        dynamic = dynamic_template.replace("{{RUNTIME_CONTEXT_JSON}}", encoded_context)
+        function_text = "\n\n".join(
+            f"### {profile.name} ({profile.id})\n{profile.instruction}" for profile in functions
+        )
+        style = "\n".join(f"- {rule}" for rule in personality.reply_style)
+        affect_map = json.dumps(personality.affect_actions, sort_keys=True)
+        return "\n\n".join(
+            (
+                core,
+                action_policy,
+                (
+                    f"## Active personality: {personality.name}\n{personality.instruction}\n"
+                    f"Reply style:\n{style}\nAffect action preferences: {affect_map}"
+                ),
+                f"## Enabled functionality\n{function_text}",
+                dynamic,
+            )
+        ).strip()
+
+    def _yaml(self, section: str, profile_id: str) -> dict[str, Any]:
+        self._validate_id(profile_id)
+        path = self._dir(section) / f"{profile_id}.yaml"
+        text = self._read(path)
+        value = yaml.safe_load(text) or {}
+        if not isinstance(value, dict):
+            raise TypeError(f"prompt profile must be a mapping: {path}")
+        return value
+
+    def _text(self, section: str, filename: str) -> str:
+        return self._read(self._dir(section) / filename).strip()
+
+    def _dir(self, section: str) -> Path:
+        path = (self.root / section).resolve()
+        if path.parent != self.root:
+            raise ValueError("prompt section escaped the configured root")
+        return path
+
+    def _read(self, path: Path) -> str:
+        resolved = path.resolve()
+        if self.root not in resolved.parents:
+            raise ValueError("prompt path escaped the configured root")
+        size = resolved.stat().st_size
+        if size > _MAX_PROMPT_BYTES:
+            raise ValueError(f"prompt file is too large: {resolved}")
+        return resolved.read_text(encoding="utf-8")
+
+    @staticmethod
+    def _validate_id(profile_id: str) -> None:
+        if not isinstance(profile_id, str) or not _PROFILE_ID.fullmatch(profile_id):
+            raise ValueError(f"invalid prompt profile id: {profile_id!r}")
+
+    @staticmethod
+    def _required_text(data: dict[str, Any], field: str) -> str:
+        value = data.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise TypeError(f"prompt profile requires non-empty {field}")
+        return value.strip()
+
+    def _identity(self, data: dict[str, Any], expected: str) -> str:
+        identity = data.get("id")
+        if identity != expected:
+            raise ValueError(f"prompt profile id must match filename: {expected}")
+        self._validate_id(identity)
+        return identity

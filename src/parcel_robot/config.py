@@ -58,6 +58,23 @@ class ConfigStore:
     def motion_config(self) -> dict[str, Any]:
         return self.section("motion") if "motion" in self.data else {"backend": "rl"}
 
+    def agent_config(self) -> dict[str, Any]:
+        return self.section("agent") if "agent" in self.data else {}
+
+    def prompts_root(self) -> Path:
+        configured = self.agent_config().get("prompts_root", "prompts")
+        path = Path(str(configured)).expanduser()
+        if path.is_absolute():
+            return path.resolve()
+        bases = [self.path.parent.parent, Path.cwd()]
+        if len(self.path.parents) >= 4:
+            bases.insert(0, self.path.parents[3])
+        for base in bases:
+            candidate = (base / path).resolve()
+            if candidate.is_dir():
+                return candidate
+        return (Path.cwd() / path).resolve()
+
     def safety_limits(self) -> SafetyLimits:
         motion = self.motion_config()
         return SafetyLimits(

@@ -23,9 +23,10 @@ cd /home/jaewoo-jang/Desktop/Projects/Parcel
 ./scripts/launch_stack.sh
 ```
 
-The panel opens at <http://127.0.0.1:8765>. Try manual hold-to-drive controls,
-move the simulated owner, then send `follow me`, `stay`, or `navigate to the
-crosswalk`. The text box streams partial hypotheses to `/api/voice/text` but
+The panel opens at <http://127.0.0.1:8765>. The city now includes seeded moving
+pedestrians and a cyclist. Try manual hold-to-drive controls, move the simulated
+owner, then send `follow me`, `navigate to the crosswalk`, `I am feeling sad`,
+or `I am very happy`. The text box streams partial hypotheses to `/api/voice/text` but
 executes only the final submission. Fish S2 and whisper.cpp servers are optional
 while this desktop has no connected microphone/speaker endpoint:
 
@@ -54,6 +55,10 @@ Architecture, model choices, audio-device findings, and limitations are in
 - MuJoCo owner/obstacle telemetry and a browser panel for driving and text voice.
 - Central priority arbitration, command TTLs, proximity braking, and latched E-stop.
 - Persistent owner-follow and point-navigation behavior loops.
+- Rotate-first, forward-preferred goal navigation with bounded lateral motion
+  available for manual control, skills, recovery, and compatible planners.
+- A deterministic living-city crowd with full dynamic-agent telemetry.
+- Trusted personality/function prompt templates and deferred social gestures.
 - MuJoCo, audio capture, linting, and test packages installed in `.parcel`.
 
 The first ROS boundary is intentionally simple:
@@ -133,8 +138,10 @@ python examples/rl_env_smoke.py
 python examples/nav_city_smoke.py
 ```
 
-City navigation, open-weight model registry, and MetaUrban setup:
+City navigation, dynamic simulator research, action policy, open-weight model
+registry, and MetaUrban setup:
 see [City navigation](docs/NAVIGATION_CITY.md).
+See also [Dynamic city and behavior architecture](docs/DYNAMIC_CITY_AND_BEHAVIOR.md).
 
 ```bash
 # On a Conda Python 3.9 + GPU host (not this Python 3.14 venv):

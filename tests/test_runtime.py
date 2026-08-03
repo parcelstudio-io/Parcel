@@ -97,6 +97,20 @@ class FakeSimulatorBackend:
         with self._condition:
             return self._condition.wait_for(lambda: self.stop_count >= count, timeout)
 
+    def wait_for_trajectories(self, count: int, timeout: float = 1.0) -> bool:
+        with self._condition:
+            return self._condition.wait_for(lambda: len(self.trajectories) >= count, timeout)
+
+    def set_robot_pose(self, pose: RobotPose) -> None:
+        with self._condition:
+            self._observation = replace(self._observation, robot=pose)
+            self._condition.notify_all()
+
+    def set_emergency_stopped(self, stopped: bool) -> None:
+        with self._condition:
+            self._observation = replace(self._observation, emergency_stopped=stopped)
+            self._condition.notify_all()
+
     def move_count(self) -> int:
         with self._condition:
             return len(self.moves)
@@ -320,7 +334,10 @@ def test_runtime_dispatches_manual_stop_and_latched_estop(
     try:
         assert "accepted manual" in runtime.manual_motion(0.2, -0.1, 0.3)
         assert backend.wait_for_moves(1)
-        assert backend.move_history()[-1] == VelocityCommand(vx=0.2, vy=-0.1, vyaw=0.3)
+        first = backend.move_history()[-1]
+        assert 0.0 < first.vx <= 0.2
+        assert -0.1 <= first.vy < 0.0
+        assert 0.0 < first.vyaw <= 0.3
 
         stops = backend.stopped_count()
         assert runtime.action("stop") == "Stopped"
@@ -359,7 +376,7 @@ def test_runtime_follow_refreshes_commands_and_stay_stops_loop(
         assert backend.wait_for_moves(2)
         first, second = backend.move_history()[:2]
         assert first.vx > 0.0
-        assert second == first
+        assert 0.0 < first.vx < second.vx
 
         stops = backend.stopped_count()
         assert runtime.action("stay") == "Holding position"
@@ -527,9 +544,7 @@ def test_runtime_final_proximity_gate_preserves_escape_turn(
     runtime_config: Path,
     audio_status: AudioDeviceStatus,
 ) -> None:
-    backend = FakeSimulatorBackend(
-        _observation(0.0, obstacle_m=0.3, obstacle_bearing_rad=0.0)
-    )
+    backend = FakeSimulatorBackend(_observation(0.0, obstacle_m=0.3, obstacle_bearing_rad=0.0))
     runtime = RobotRuntime(
         runtime_config,
         backend,
@@ -540,7 +555,10 @@ def test_runtime_final_proximity_gate_preserves_escape_turn(
     try:
         runtime.manual_motion(0.2, 0.0, 0.4)
         assert backend.wait_for_moves(1)
-        assert backend.move_history()[-1] == VelocityCommand(vyaw=0.4)
+        command = backend.move_history()[-1]
+        assert command.vx == 0.0
+        assert command.vy == 0.0
+        assert 0.0 < command.vyaw <= 0.4
     finally:
         runtime.close()
 
@@ -574,9 +592,7 @@ def test_runtime_serializes_dispatch_with_operator_stop(
         dispatcher.start()
         assert entered_move.wait(1.0)
 
-        stopper = threading.Thread(
-            target=lambda: (runtime.stop_motion(), stop_returned.set())
-        )
+        stopper = threading.Thread(target=lambda: (runtime.stop_motion(), stop_returned.set()))
         stopper.start()
         assert not stop_returned.wait(0.05)
         release_move.set()
@@ -590,6 +606,55 @@ def test_runtime_serializes_dispatch_with_operator_stop(
         assert backend.move_count() == move_count
     finally:
         release_move.set()
+        runtime.close()
+
+
+def test_rotate_in_place_target_brakes_residual_translation_immediately(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(time.monotonic()))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    runtime._observation = _observation(time.monotonic())
+    try:
+        runtime.manual_motion(0.4, 0.0, 0.0)
+        runtime._dispatch_active()
+        assert backend.move_history()[-1].vx > 0.0
+
+        runtime.arbiter.cancel("manual")
+        runtime.submit_motion("navigation", VelocityCommand(vyaw=0.6), ttl=1.0)
+        runtime._dispatch_active()
+
+        aligned = backend.move_history()[-1]
+        assert aligned.vx == 0.0
+        assert aligned.vy == 0.0
+        assert aligned.vyaw > 0.0
+    finally:
+        runtime.close()
+
+
+def test_operator_stop_cancels_activity_between_ready_and_dispatch(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(time.monotonic()))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    try:
+        runtime.handle_text("I am feeling sad")
+        with runtime._command_lock:
+            dispatcher = threading.Thread(target=runtime._step_activities)
+            dispatcher.start()
+            deadline = time.monotonic() + 1.0
+            while runtime.activities.running() is None and time.monotonic() < deadline:
+                time.sleep(0.005)
+            assert runtime.activities.running() is not None
+            assert runtime.action("stop") == "Stopped"
+        dispatcher.join(1.0)
+
+        assert not dispatcher.is_alive()
+        assert backend.trajectories == []
+        assert runtime.snapshot()["activities"]["running"] is None
+    finally:
         runtime.close()
 
 
@@ -612,7 +677,87 @@ def test_runtime_telemetry_loss_blocks_translation(
     try:
         runtime.manual_motion(0.2, 0.0, 0.2)
         assert backend.wait_for_moves(1)
-        assert backend.move_history()[-1] == VelocityCommand(vyaw=0.2)
+        command = backend.move_history()[-1]
+        assert command.vx == 0.0
+        assert command.vy == 0.0
+        assert 0.0 < command.vyaw <= 0.2
         assert runtime.snapshot()["simulator"]["status"] == "disconnected"
+    finally:
+        runtime.close()
+
+
+def test_social_affect_action_runs_from_idle_without_model(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status, loop_hz=50.0)
+    try:
+        assert runtime.handle_text("I am feeling sad") == "I'm here with you."
+        pending = runtime.snapshot()["activities"]["pending"]
+        assert pending[0]["name"] == "play_bow"
+
+        runtime.start()
+        assert backend.wait_for_trajectories(1)
+        assert backend.trajectories[0].id == "play_bow"
+    finally:
+        runtime.close()
+
+
+def test_social_affect_action_defers_until_navigation_finishes(
+    navigation_runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(
+        navigation_runtime_config,
+        backend,
+        audio_status=audio_status,
+        loop_hz=50.0,
+    )
+    runtime.start()
+    try:
+        assert runtime.handle_text("navigate to the crosswalk") == "Navigating to crosswalk."
+        assert backend.wait_for_moves(1)
+        reply = runtime.handle_text("I am very happy")
+        assert reply.startswith("I'm happy with you!")
+        assert "wait until the current task" in reply
+        pending = runtime.snapshot()["activities"]["pending"]
+        assert pending[0]["name"] == "paw_wave"
+        assert pending[0]["disposition"] == "defer"
+        assert backend.trajectories == []
+
+        backend.set_robot_pose(RobotPose(x=3.5, y=-0.6, z=0.32, yaw=0.0))
+        assert backend.wait_for_trajectories(1)
+        assert backend.trajectories[0].id == "paw_wave"
+        assert runtime.snapshot()["navigation"]["state"] == "arrived"
+    finally:
+        runtime.close()
+
+
+def test_simulator_estop_clears_deferred_social_actions(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(0.0, owner_x=3.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status, loop_hz=50.0)
+    runtime.set_behavior("follow")
+    runtime.handle_text("I am feeling sad")
+    assert runtime.snapshot()["activities"]["pending"]
+
+    runtime.start()
+    try:
+        backend.set_emergency_stopped(True)
+        deadline = time.monotonic() + 1.0
+        while not runtime.snapshot()["emergency_stopped"] and time.monotonic() < deadline:
+            time.sleep(0.01)
+        snapshot = runtime.snapshot()
+        assert snapshot["emergency_stopped"] is True
+        assert snapshot["activities"]["pending"] == []
+
+        backend.set_emergency_stopped(False)
+        runtime.clear_emergency_stop()
+        time.sleep(0.1)
+        assert backend.trajectories == []
     finally:
         runtime.close()

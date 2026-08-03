@@ -55,6 +55,7 @@ class ModelSpec:
     homepage: str = ""
     checkpoint: str = ""
     device: str = "cpu"
+    controller: dict[str, Any] = field(default_factory=dict)
     rl: dict[str, Any] = field(default_factory=dict)
     source_path: str = ""
 

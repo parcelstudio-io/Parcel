@@ -43,9 +43,30 @@ class ToolCall:
 
 
 @dataclass(frozen=True)
+class AffectEstimate:
+    label: str
+    confidence: float
+
+
+@dataclass(frozen=True)
+class ActionProposal:
+    """A semantic suggestion; the runtime, never the model, chooses timing."""
+
+    kind: str
+    name: str
+    trigger: str = "inferred_affect"
+    timing_preference: str = "when_safe"
+    interruption_request: str = "none"
+    reason: str = ""
+
+
+@dataclass(frozen=True)
 class AgentDecision:
     reply: str
     tool_calls: tuple[ToolCall, ...] = ()
+    intent: str = "conversation"
+    affect: AffectEstimate | None = None
+    next_action: ActionProposal | None = None
 
 
 @dataclass(frozen=True)
