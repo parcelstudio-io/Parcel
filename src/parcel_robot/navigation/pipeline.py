@@ -129,6 +129,9 @@ class DirectiveNavigator:
         max_vy = float(self.safety.get("max_vy", 1.0))
         max_vyaw = float(self.safety.get("max_vyaw", 1.5))
         vx = max(-max_vx, min(max_vx, vx))
+        # Preserve bounded lateral motion from controllers that intentionally
+        # use it (for example close repositioning or recovery). The default
+        # point-goal controller is forward-preferred and normally emits vy=0.
         vy = max(-max_vy, min(max_vy, vy))
         vyaw = max(-max_vyaw, min(max_vyaw, cmd.vyaw))
         note = f"{cmd.note}|{cnote}" if cmd.note else cnote
