@@ -1,0 +1,1655 @@
+"""Calibrated, sensor-faithful native replay of the BARN ROS 2 boundary.
+
+This is a dedicated non-official evaluator.  It preserves Parcel's policy and
+routes a deterministic 360-degree, 720-ray scan through the exact calibrated
+``BarnRos2AdapterCore`` used by the ROS 2 submission.  The evaluator owns the
+world geometry, raw sensor construction, collision checks, and score; none of
+those private values cross the policy boundary.
+
+The runner intentionally differs from :mod:`barn_native`: a policy ``stop``
+latches a zero command while evaluator time continues to the official timeout,
+matching the official evaluator's external process semantics.  It is still an
+ideal unicycle/circular-obstacle approximation, not Gazebo and not a leaderboard
+score.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import multiprocessing
+import time
+from collections import Counter
+from collections.abc import Mapping, Sequence
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from statistics import fmean
+from typing import Any
+
+import numpy as np
+
+from . import barn_native as barn_native_module
+from . import barn_ros2_adapter as barn_ros2_adapter_module
+from .barn_native import (
+    BARN_EVALUATOR_COMMIT,
+    DEFAULT_ROBOT_RADIUS_M,
+    JACKAL_MELODIC_REFERENCE_COMMIT,
+    JACKAL_SIMULATOR_MELODIC_REFERENCE_COMMIT,
+    OFFICIAL_GOAL_XY,
+    OFFICIAL_REFERENCE_SPEED_MPS,
+    OFFICIAL_START_HEADING_RAD,
+    OFFICIAL_START_XY,
+    OFFICIAL_STEP_DT_S,
+    OFFICIAL_SUCCESS_RADIUS_M,
+    OFFICIAL_TIMEOUT_S,
+    BarnAction,
+    BarnEvaluatorDiagnostics,
+    BarnObservation,
+    BarnWorld,
+    CylinderObstacle,
+    barn_navigation_metric,
+    cast_lidar,
+    load_barn_world,
+    load_generated_barn_world,
+)
+from .barn_policy_specs import (
+    BarnPolicySpec,
+    ProcessPolicyDescriptor,
+    parcel_baseline_policy_spec,
+    parcel_experimental_config_spec,
+    parcel_reference_config_spec,
+)
+from .barn_ros2_adapter import (
+    BARN_ROS2_ADAPTER_ID,
+    BARN_ROS2_BASE_FRAME_ID,
+    BARN_ROS2_LIDAR_CALIBRATION,
+    BARN_ROS2_LIDAR_FRAME_ID,
+    BARN_ROS2_SOURCE_COMMIT,
+    BARN_ROS2_SOURCE_ID,
+    BARN_ROS2_STATIC_GOAL_ODOM_XY,
+    BarnRos2AdapterCore,
+    BarnRos2Policy,
+    BarnRos2SensorFrame,
+    BarnRos2VelocityCommand,
+    LidarNormalizationDiagnostics,
+)
+
+BARN_SENSOR_FAITHFUL_EVALUATION_KIND = (
+    "barn-calibrated-sensor-faithful-native-headless-non-official"
+)
+BARN_SENSOR_FAITHFUL_RUNNER_ID = "parcel-barn-calibrated-native-v1"
+BARN_SOURCE = "https://github.com/Daffan/the-barn-challenge"
+
+# The pinned 2026 ROS 2 robot publishes a full-circle Hokuyo scan from a focal
+# point 0.12 m ahead of base_link.  Both seam endpoints are represented, just
+# like sensor_msgs/LaserScan angle_min=-pi, angle_max=+pi with 720 samples.
+CALIBRATED_LIDAR_ANGLE_MIN_RAD = -math.pi
+CALIBRATED_LIDAR_ANGLE_MAX_RAD = math.pi
+CALIBRATED_LIDAR_RAY_COUNT = 720
+CALIBRATED_LIDAR_RANGE_MIN_M = 0.06
+CALIBRATED_LIDAR_RANGE_MAX_M = 30.0
+CALIBRATED_LIDAR_FOV_DEG = 360.0
+CALIBRATED_LIDAR_FORWARD_M = 0.12
+CALIBRATED_ODOMETRY_LAG_S = 0.005
+
+# This label describes the calibrated boundary and deliberately does not reuse
+# BarnPolicySpec's historical ``270_degree_lidar`` label.
+CALIBRATED_POLICY_INPUTS = (
+    "goal_in_odom_frame",
+    "platform_odometry",
+    "360_degree_720_ray_front_lidar",
+    "simulation_clock",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CalibratedBarnConfig:
+    """Reproducible dynamics and fixed calibrated sensor profile."""
+
+    dt_s: float = OFFICIAL_STEP_DT_S
+    timeout_s: float = OFFICIAL_TIMEOUT_S
+    success_radius_m: float = OFFICIAL_SUCCESS_RADIUS_M
+    robot_radius_m: float = DEFAULT_ROBOT_RADIUS_M
+    max_forward_speed_mps: float = OFFICIAL_REFERENCE_SPEED_MPS
+    max_reverse_speed_mps: float = OFFICIAL_REFERENCE_SPEED_MPS
+    max_yaw_rate_rps: float = 4.0
+    lidar_angle_min_rad: float = CALIBRATED_LIDAR_ANGLE_MIN_RAD
+    lidar_angle_max_rad: float = CALIBRATED_LIDAR_ANGLE_MAX_RAD
+    lidar_ray_count: int = CALIBRATED_LIDAR_RAY_COUNT
+    lidar_range_min_m: float = CALIBRATED_LIDAR_RANGE_MIN_M
+    lidar_range_max_m: float = CALIBRATED_LIDAR_RANGE_MAX_M
+    lidar_forward_m: float = CALIBRATED_LIDAR_FORWARD_M
+    odometry_lag_s: float = CALIBRATED_ODOMETRY_LAG_S
+    sensor_stamp_origin_s: float = 1.0
+    max_sensor_skew_s: float = 0.05
+    trace_stride_steps: int = 10
+    trace_max_samples: int = 256
+
+    def __post_init__(self) -> None:
+        positive = {
+            "dt_s": self.dt_s,
+            "timeout_s": self.timeout_s,
+            "success_radius_m": self.success_radius_m,
+            "robot_radius_m": self.robot_radius_m,
+            "max_forward_speed_mps": self.max_forward_speed_mps,
+            "max_reverse_speed_mps": self.max_reverse_speed_mps,
+            "max_yaw_rate_rps": self.max_yaw_rate_rps,
+            "lidar_range_min_m": self.lidar_range_min_m,
+            "lidar_range_max_m": self.lidar_range_max_m,
+        }
+        for name, value in positive.items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError(f"{name} must be numeric")
+            if not math.isfinite(float(value)) or float(value) <= 0.0:
+                raise ValueError(f"{name} must be finite and positive")
+        exact = {
+            "lidar_angle_min_rad": (
+                self.lidar_angle_min_rad,
+                CALIBRATED_LIDAR_ANGLE_MIN_RAD,
+            ),
+            "lidar_angle_max_rad": (
+                self.lidar_angle_max_rad,
+                CALIBRATED_LIDAR_ANGLE_MAX_RAD,
+            ),
+            "lidar_forward_m": (self.lidar_forward_m, CALIBRATED_LIDAR_FORWARD_M),
+        }
+        for name, (actual, expected) in exact.items():
+            if not math.isclose(float(actual), expected, rel_tol=0.0, abs_tol=1e-12):
+                raise ValueError(f"{name} is fixed by the calibrated BARN sensor profile")
+        if self.lidar_ray_count != CALIBRATED_LIDAR_RAY_COUNT:
+            raise ValueError("lidar_ray_count is fixed at 720 by the calibrated profile")
+        if not math.isclose(
+            self.lidar_range_min_m,
+            CALIBRATED_LIDAR_RANGE_MIN_M,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("lidar_range_min_m is fixed by the calibrated profile")
+        if not math.isclose(
+            self.lidar_range_max_m,
+            CALIBRATED_LIDAR_RANGE_MAX_M,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("lidar_range_max_m is fixed by the calibrated profile")
+        if not math.isclose(
+            self.odometry_lag_s,
+            CALIBRATED_ODOMETRY_LAG_S,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("odometry_lag_s is fixed by the calibrated replay profile")
+        if not math.isfinite(self.sensor_stamp_origin_s) or self.sensor_stamp_origin_s < 0.01:
+            raise ValueError("sensor_stamp_origin_s must be finite and at least 0.01")
+        if not math.isfinite(self.max_sensor_skew_s) or not 0.0 <= self.max_sensor_skew_s <= 0.5:
+            raise ValueError("max_sensor_skew_s must be in [0, 0.5]")
+        if self.odometry_lag_s > self.max_sensor_skew_s:
+            raise ValueError("odometry_lag_s must not exceed max_sensor_skew_s")
+        for name, value in (
+            ("trace_stride_steps", self.trace_stride_steps),
+            ("trace_max_samples", self.trace_max_samples),
+        ):
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                raise ValueError(f"{name} must be a positive integer")
+
+
+# Kept as a descriptive alias for callers that discovered the implementation
+# under its module name before the calibrated API was finalized.
+SensorFaithfulConfig = CalibratedBarnConfig
+
+
+@dataclass(frozen=True, slots=True)
+class CalibratedPolicySpec:
+    """A BarnPolicySpec relabeled for the exact calibrated ROS observation API."""
+
+    underlying: BarnPolicySpec
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.underlying, BarnPolicySpec):
+            raise TypeError("underlying must be a BarnPolicySpec")
+
+    @property
+    def policy_id(self) -> str:
+        return self.underlying.policy_id
+
+    @property
+    def execution_device(self) -> str:
+        return self.underlying.execution_device
+
+    @property
+    def experimental(self) -> bool:
+        return self.underlying.experimental
+
+    def ensure_enabled(self, *, allow_experimental: bool = False) -> None:
+        self.underlying.ensure_enabled(allow_experimental=allow_experimental)
+
+    def create(
+        self,
+        *,
+        episode_seed: int,
+        allow_experimental: bool = False,
+    ) -> BarnRos2Policy:
+        policy = self.underlying.create(
+            episode_seed=episode_seed,
+            allow_experimental=allow_experimental,
+        )
+        if not isinstance(policy, BarnRos2Policy):
+            raise TypeError("calibrated policies must also implement close()")
+        return policy
+
+    def require_process_descriptor(self) -> ProcessPolicyDescriptor:
+        return self.underlying.require_process_descriptor()
+
+    def report_metadata(self) -> dict[str, Any]:
+        metadata = self.underlying.report_metadata()
+        underlying_adapter_id = str(metadata["adapter_id"])
+        metadata["underlying_policy_adapter_id"] = underlying_adapter_id
+        metadata["adapter_id"] = BARN_ROS2_ADAPTER_ID
+        metadata["policy_inputs"] = list(CALIBRATED_POLICY_INPUTS)
+        metadata["sensor_transport"] = {
+            "id": BARN_ROS2_ADAPTER_ID,
+            "source_id": BARN_ROS2_SOURCE_ID,
+            "source_commit": BARN_ROS2_SOURCE_COMMIT,
+            "lidar_frame_id": BARN_ROS2_LIDAR_FRAME_ID,
+            "base_frame_id": BARN_ROS2_BASE_FRAME_ID,
+            "goal_odom_xy": list(BARN_ROS2_STATIC_GOAL_ODOM_XY),
+        }
+        provenance = metadata.setdefault("provenance", {})
+        provenance["calibrated_sensor_transport"] = {
+            "id": _relative_source_id(Path(barn_ros2_adapter_module.__file__)),
+            "sha256": _sha256(Path(barn_ros2_adapter_module.__file__)),
+        }
+        return metadata
+
+
+def calibrated_policy_spec(spec: BarnPolicySpec | CalibratedPolicySpec) -> CalibratedPolicySpec:
+    """Wrap one existing factory without changing the policy it constructs."""
+
+    if isinstance(spec, CalibratedPolicySpec):
+        return spec
+    return CalibratedPolicySpec(spec)
+
+
+def calibrated_reference_config_spec(
+    config_path: str | Path,
+    *,
+    reference_id: str,
+    description: str,
+) -> CalibratedPolicySpec:
+    return calibrated_policy_spec(
+        parcel_reference_config_spec(
+            config_path,
+            reference_id=reference_id,
+            description=description,
+        )
+    )
+
+
+def calibrated_experimental_config_spec(
+    config_path: str | Path,
+    *,
+    experiment_id: str,
+    description: str,
+) -> CalibratedPolicySpec:
+    return calibrated_policy_spec(
+        parcel_experimental_config_spec(
+            config_path,
+            experiment_id=experiment_id,
+            description=description,
+        )
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class SensorTransportDiagnostics:
+    """Per-episode evidence from public sensor transport fields only."""
+
+    profile_id: str
+    raw_fov_deg: float
+    raw_ray_count: int
+    lidar_forward_m: float
+    frame_count: int
+    normalization_failures: int
+    finite_hit_count: int
+    self_return_count: int
+    reprojected_hit_count: int
+    reprojected_clear_count: int
+    first_normalization: dict[str, Any] | None
+    last_normalization: dict[str, Any] | None
+    maximum_sensor_skew_s: float
+    raw_scan_sha256: tuple[str, ...]
+    policy_observation_steps: tuple[int, ...]
+    policy_observation_sha256: tuple[str, ...]
+    published_action_steps: tuple[int, ...]
+    published_action_sha256: tuple[str, ...]
+    published_action_values: tuple[tuple[int, float, float, bool], ...]
+    latency: dict[str, float]
+
+
+@dataclass(frozen=True, slots=True)
+class ShieldStallDiagnostics:
+    """Policy-output evidence used to diagnose safety-shield deadlocks."""
+
+    policy_stop_latched: bool
+    policy_stop_latch_step: int | None
+    issued_policy_command_steps: int
+    positive_command_steps: int
+    reverse_command_steps: int
+    turn_only_command_steps: int
+    obstacle_stop_steps: int
+    max_consecutive_obstacle_stop_steps: int
+    controller_phase_counts: dict[str, int]
+    safety_phase_counts: dict[str, int]
+    trace: tuple[dict[str, Any], ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SensorFaithfulEpisodeResult:
+    """One calibrated native result; never an official Gazebo score."""
+
+    evaluation_kind: str
+    official_gazebo_score: bool
+    world_index: int
+    success: bool
+    collided: bool
+    timed_out: bool
+    stopped: bool
+    status: str
+    elapsed_time_s: float
+    navigation_metric: float
+    optimal_path_length_m: float
+    optimal_time_s: float
+    traveled_distance_m: float
+    final_position_xy: tuple[float, float]
+    final_heading_rad: float
+    steps: int
+    last_action_note: str
+    evaluator_diagnostics: BarnEvaluatorDiagnostics
+    sensor_diagnostics: SensorTransportDiagnostics
+    shield_stall_diagnostics: ShieldStallDiagnostics
+
+
+def _wrap_angle(angle: float) -> float:
+    return (angle + math.pi) % (2.0 * math.pi) - math.pi
+
+
+def world_pose_to_odom(
+    position_xy: tuple[float, float],
+    heading_rad: float,
+) -> tuple[tuple[float, float], float]:
+    """Express a BARN world pose in the evaluator's start-relative odom frame."""
+
+    if len(position_xy) != 2 or not all(math.isfinite(float(value)) for value in position_xy):
+        raise ValueError("position_xy must contain two finite values")
+    if not math.isfinite(heading_rad):
+        raise ValueError("heading_rad must be finite")
+    delta_x = float(position_xy[0]) - OFFICIAL_START_XY[0]
+    delta_y = float(position_xy[1]) - OFFICIAL_START_XY[1]
+    cosine = math.cos(OFFICIAL_START_HEADING_RAD)
+    sine = math.sin(OFFICIAL_START_HEADING_RAD)
+    return (
+        (cosine * delta_x + sine * delta_y, -sine * delta_x + cosine * delta_y),
+        _wrap_angle(heading_rad - OFFICIAL_START_HEADING_RAD),
+    )
+
+
+def cast_sensor_faithful_lidar(
+    position_xy: tuple[float, float],
+    heading_rad: float,
+    cylinders: Sequence[CylinderObstacle],
+    *,
+    config: CalibratedBarnConfig | None = None,
+) -> tuple[float, ...]:
+    """Cast the raw offset scan, including the analytic robot self circle.
+
+    The self circle exists only in this sensor ray cast.  It is never appended
+    to collision geometry.  Clear rays use positive infinity, matching ROS
+    ``LaserScan`` and the exact normalizer's no-return convention.
+    """
+
+    profile = config or CalibratedBarnConfig()
+    calibration = BARN_ROS2_LIDAR_CALIBRATION
+    cosine = math.cos(heading_rad)
+    sine = math.sin(heading_rad)
+    sensor_position = (
+        position_xy[0] + cosine * calibration.lidar_forward_m - sine * calibration.lidar_left_m,
+        position_xy[1] + sine * calibration.lidar_forward_m + cosine * calibration.lidar_left_m,
+    )
+    sensor_heading = heading_rad + calibration.lidar_yaw_rad
+    self_circles = tuple(
+        CylinderObstacle(
+            center_xy=(
+                position_xy[0] + cosine * mask.forward_m - sine * mask.left_m,
+                position_xy[1] + sine * mask.forward_m + cosine * mask.left_m,
+            ),
+            # The physical surface is radius 0.05 m.  The 0.005 m mask margin
+            # belongs to measurement filtering, not sensor/collision geometry.
+            radius_m=mask.radius_m,
+            source_name="analytic_robot_self_mask",
+        )
+        for mask in calibration.self_masks
+    )
+    raw = cast_lidar(
+        sensor_position,
+        sensor_heading,
+        tuple(cylinders) + self_circles,
+        angle_min_rad=profile.lidar_angle_min_rad,
+        angle_max_rad=profile.lidar_angle_max_rad,
+        ray_count=profile.lidar_ray_count,
+        max_range_m=profile.lidar_range_max_m,
+    )
+    return tuple(
+        math.inf if value >= profile.lidar_range_max_m - 1e-9 else float(value) for value in raw
+    )
+
+
+def _policy_observation_sha256(observation: BarnObservation) -> str:
+    digest = hashlib.sha256()
+    header = np.asarray(
+        (
+            observation.position_xy[0],
+            observation.position_xy[1],
+            observation.heading_rad,
+            observation.lidar_angle_min_rad,
+            observation.lidar_angle_increment_rad,
+            observation.time_s,
+        ),
+        dtype="<f8",
+    )
+    scan = np.asarray(observation.lidar_ranges_m, dtype="<f8")
+    digest.update(len(scan).to_bytes(8, byteorder="little", signed=False))
+    digest.update(header.tobytes(order="C"))
+    digest.update(scan.tobytes(order="C"))
+    return digest.hexdigest()
+
+
+def _scan_sha256(ranges: Sequence[float]) -> str:
+    scan = np.asarray(tuple(ranges), dtype="<f8")
+    digest = hashlib.sha256()
+    digest.update(len(scan).to_bytes(8, byteorder="little", signed=False))
+    digest.update(scan.tobytes(order="C"))
+    return digest.hexdigest()
+
+
+def _published_action_sha256(command: BarnRos2VelocityCommand) -> str:
+    digest = hashlib.sha256()
+    values = np.asarray((command.forward_mps, command.yaw_rate_rps), dtype="<f8")
+    note = command.note.encode("utf-8")
+    digest.update(values.tobytes(order="C"))
+    digest.update(b"\x01" if command.stop else b"\x00")
+    digest.update(len(note).to_bytes(8, byteorder="little", signed=False))
+    digest.update(note)
+    return digest.hexdigest()
+
+
+class _InstrumentedPolicy:
+    """Hash the exact post-normalization observation before delegation."""
+
+    def __init__(self, policy: BarnRos2Policy) -> None:
+        self.policy = policy
+        self.observation_hashes: list[str] = []
+        self.closed = False
+
+    def reset(
+        self,
+        start_xy: tuple[float, float],
+        heading_rad: float,
+        goal_xy: tuple[float, float],
+    ) -> None:
+        self.policy.reset(start_xy, heading_rad, goal_xy)
+
+    def act(self, observation: BarnObservation) -> BarnAction:
+        self.observation_hashes.append(_policy_observation_sha256(observation))
+        return self.policy.act(observation)
+
+    def close(self) -> None:
+        if self.closed:
+            return
+        self.closed = True
+        self.policy.close()
+
+
+def _unicycle_step(
+    position: tuple[float, float],
+    heading: float,
+    velocity: float,
+    yaw_rate: float,
+    dt_s: float,
+) -> tuple[tuple[float, float], float]:
+    if abs(yaw_rate) < 1e-12:
+        return (
+            (
+                position[0] + velocity * math.cos(heading) * dt_s,
+                position[1] + velocity * math.sin(heading) * dt_s,
+            ),
+            _wrap_angle(heading),
+        )
+    next_heading = heading + yaw_rate * dt_s
+    radius = velocity / yaw_rate
+    return (
+        (
+            position[0] + radius * (math.sin(next_heading) - math.sin(heading)),
+            position[1] + radius * (math.cos(heading) - math.cos(next_heading)),
+        ),
+        _wrap_angle(next_heading),
+    )
+
+
+def _segment_collides(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    cylinders: Sequence[CylinderObstacle],
+    robot_radius_m: float,
+) -> bool:
+    delta_x = end[0] - start[0]
+    delta_y = end[1] - start[1]
+    length_squared = delta_x * delta_x + delta_y * delta_y
+    for cylinder in cylinders:
+        if length_squared <= 1e-18:
+            distance = math.dist(start, cylinder.center_xy)
+        else:
+            projection = (
+                (cylinder.center_xy[0] - start[0]) * delta_x
+                + (cylinder.center_xy[1] - start[1]) * delta_y
+            ) / length_squared
+            projection = min(max(projection, 0.0), 1.0)
+            closest = (start[0] + projection * delta_x, start[1] + projection * delta_y)
+            distance = math.dist(closest, cylinder.center_xy)
+        if distance <= robot_radius_m + cylinder.radius_m:
+            return True
+    return False
+
+
+def _integrate_collision_terminal(
+    position: tuple[float, float],
+    heading: float,
+    velocity: float,
+    yaw_rate: float,
+    dt_s: float,
+    cylinders: Sequence[CylinderObstacle],
+    robot_radius_m: float,
+) -> tuple[tuple[float, float], float, bool]:
+    """Integrate exact unicycle arcs with conservative swept collision checks."""
+
+    substeps = max(
+        1,
+        math.ceil(abs(velocity) * dt_s / 0.025),
+        math.ceil(abs(yaw_rate) * dt_s / 0.05),
+    )
+    sub_dt = dt_s / substeps
+    cursor = position
+    cursor_heading = heading
+    for _ in range(substeps):
+        next_position, next_heading = _unicycle_step(
+            cursor,
+            cursor_heading,
+            velocity,
+            yaw_rate,
+            sub_dt,
+        )
+        if _segment_collides(cursor, next_position, cylinders, robot_radius_m):
+            return position, heading, True
+        cursor = next_position
+        cursor_heading = next_heading
+    return cursor, cursor_heading, False
+
+
+def _point_collides(
+    position: tuple[float, float],
+    cylinders: Sequence[CylinderObstacle],
+    robot_radius_m: float,
+) -> bool:
+    return any(
+        math.dist(position, cylinder.center_xy) <= robot_radius_m + cylinder.radius_m
+        for cylinder in cylinders
+    )
+
+
+def _minimum_signed_clearance(
+    position: tuple[float, float],
+    cylinders: Sequence[CylinderObstacle],
+    robot_radius_m: float,
+) -> float | None:
+    if not cylinders:
+        return None
+    return min(
+        math.dist(position, cylinder.center_xy) - robot_radius_m - cylinder.radius_m
+        for cylinder in cylinders
+    )
+
+
+def _latency_summary(samples: Mapping[str, Sequence[float]]) -> dict[str, float]:
+    result: dict[str, float] = {}
+    for prefix, raw_values in samples.items():
+        values = sorted(float(value) for value in raw_values)
+        if not values:
+            continue
+        result[f"{prefix}_count"] = float(len(values))
+        result[f"{prefix}_mean_ms"] = fmean(values)
+        for label, quantile in (("p50", 0.50), ("p95", 0.95), ("p99", 0.99)):
+            index = max(0, min(len(values) - 1, math.ceil(quantile * len(values)) - 1))
+            result[f"{prefix}_{label}_ms"] = values[index]
+        result[f"{prefix}_max_ms"] = values[-1]
+    return result
+
+
+def _note_phases(note: str) -> tuple[str, str]:
+    parts = [part.strip() for part in note.split("|") if part.strip()]
+    if not parts:
+        return "<none>", "<none>"
+    controller = parts[0].split(maxsplit=1)[0]
+    safety = (
+        "obstacle_stop" if "obstacle_stop" in parts else (parts[-1] if len(parts) > 1 else "<none>")
+    )
+    return controller, safety
+
+
+def _append_bounded_trace(
+    trace: list[dict[str, Any]],
+    item: dict[str, Any],
+    *,
+    maximum: int,
+    force: bool = False,
+) -> None:
+    if trace and trace[-1]["step"] == item["step"]:
+        trace[-1] = item
+        return
+    if len(trace) < maximum:
+        trace.append(item)
+    elif force:
+        trace[-1] = item
+
+
+class SensorFaithfulBarnRunner:
+    """Execute one calibrated native episode around the exact ROS adapter core."""
+
+    def __init__(
+        self,
+        world: BarnWorld,
+        config: CalibratedBarnConfig | None = None,
+    ) -> None:
+        if not isinstance(world, BarnWorld):
+            raise TypeError("world must be a BarnWorld")
+        self._world = world
+        self._config = config or CalibratedBarnConfig()
+
+    def run(self, policy: BarnRos2Policy) -> SensorFaithfulEpisodeResult:
+        if not isinstance(policy, BarnRos2Policy):
+            raise TypeError("policy must implement reset(), act(), and close()")
+        config = self._config
+        instrumented = _InstrumentedPolicy(policy)
+        core: BarnRos2AdapterCore | None = None
+        try:
+            core = BarnRos2AdapterCore(
+                instrumented,
+                goal_xy=BARN_ROS2_STATIC_GOAL_ODOM_XY,
+                lidar_calibration=BARN_ROS2_LIDAR_CALIBRATION,
+                require_lidar_calibration=True,
+                max_sensor_skew_s=config.max_sensor_skew_s,
+            )
+            return self._run_with_core(core, instrumented)
+        finally:
+            if core is not None:
+                core.close()
+            else:
+                instrumented.close()
+
+    def _run_with_core(
+        self,
+        core: BarnRos2AdapterCore,
+        instrumented: _InstrumentedPolicy,
+    ) -> SensorFaithfulEpisodeResult:
+        config = self._config
+        position = OFFICIAL_START_XY
+        heading = OFFICIAL_START_HEADING_RAD
+        elapsed = 0.0
+        traveled = 0.0
+        steps = 0
+        collided = _point_collides(position, self._world.cylinders, config.robot_radius_m)
+        stopped = False
+        stop_latch_step: int | None = None
+        last_note = ""
+        max_steps = math.ceil(config.timeout_s / config.dt_s)
+
+        initial_goal_distance = math.dist(position, OFFICIAL_GOAL_XY)
+        closest_goal_distance = initial_goal_distance
+        closest_goal_time = 0.0
+        initial_clearance = _minimum_signed_clearance(
+            position,
+            self._world.cylinders,
+            config.robot_radius_m,
+        )
+        minimum_clearance = initial_clearance
+        clearance_sum = 0.0 if initial_clearance is None else initial_clearance
+        clearance_count = 0 if initial_clearance is None else 1
+
+        normalizations: list[LidarNormalizationDiagnostics] = []
+        raw_scan_hashes: list[str] = []
+        observation_steps: list[int] = []
+        action_steps: list[int] = []
+        action_hashes: list[str] = []
+        action_values: list[tuple[int, float, float, bool]] = []
+        latency_samples: dict[str, list[float]] = {
+            "raw_lidar_cast": [],
+            "calibrated_adapter_core_step": [],
+        }
+        controller_phases: Counter[str] = Counter()
+        safety_phases: Counter[str] = Counter()
+        positive_steps = 0
+        reverse_steps = 0
+        turn_only_steps = 0
+        obstacle_stop_steps = 0
+        consecutive_obstacle_stop = 0
+        maximum_consecutive_obstacle_stop = 0
+        previous_phase: tuple[str, str] | None = None
+        trace: list[dict[str, Any]] = []
+
+        while not collided and steps < max_steps:
+            if math.dist(position, OFFICIAL_GOAL_XY) <= config.success_radius_m:
+                break
+
+            if stop_latch_step is None:
+                scan_started = time.perf_counter_ns()
+                raw_ranges = cast_sensor_faithful_lidar(
+                    position,
+                    heading,
+                    self._world.cylinders,
+                    config=config,
+                )
+                latency_samples["raw_lidar_cast"].append(
+                    (time.perf_counter_ns() - scan_started) / 1e6
+                )
+                raw_scan_hashes.append(_scan_sha256(raw_ranges))
+                odom_position, odom_heading = world_pose_to_odom(position, heading)
+                stamp = config.sensor_stamp_origin_s + elapsed
+                frame = BarnRos2SensorFrame(
+                    stamp_s=stamp,
+                    position_xy=odom_position,
+                    heading_rad=odom_heading,
+                    lidar_ranges_m=raw_ranges,
+                    lidar_angle_min_rad=config.lidar_angle_min_rad,
+                    lidar_angle_increment_rad=(
+                        (config.lidar_angle_max_rad - config.lidar_angle_min_rad)
+                        / (config.lidar_ray_count - 1)
+                    ),
+                    lidar_range_min_m=config.lidar_range_min_m,
+                    lidar_range_max_m=config.lidar_range_max_m,
+                    odometry_stamp_s=stamp - config.odometry_lag_s,
+                    lidar_frame_id=BARN_ROS2_LIDAR_FRAME_ID,
+                    odometry_child_frame_id=BARN_ROS2_BASE_FRAME_ID,
+                )
+                adapter_started = time.perf_counter_ns()
+                command = core.step(frame)
+                latency_samples["calibrated_adapter_core_step"].append(
+                    (time.perf_counter_ns() - adapter_started) / 1e6
+                )
+                observation_steps.append(steps)
+                normalization = core.last_normalization_diagnostics
+                if normalization is None:
+                    raise RuntimeError("calibrated adapter omitted normalization diagnostics")
+                normalizations.append(normalization)
+                last_note = command.note
+                if command.stop:
+                    stopped = True
+                    stop_latch_step = steps
+            else:
+                # Official evaluator semantics: a policy stop does not end the
+                # external episode.  Zero remains latched until success/timeout.
+                command = BarnRos2VelocityCommand(
+                    0.0,
+                    0.0,
+                    stop=True,
+                    note="policy_stop_latched",
+                )
+
+            action_steps.append(steps)
+            action_hashes.append(_published_action_sha256(command))
+            action_values.append(
+                (steps, float(command.forward_mps), float(command.yaw_rate_rps), command.stop)
+            )
+            controller_phase, safety_phase = _note_phases(command.note)
+            controller_phases[controller_phase] += 1
+            safety_phases[safety_phase] += 1
+            issued_by_policy = stop_latch_step is None or steps == stop_latch_step
+            if issued_by_policy:
+                if command.forward_mps >= 0.005:
+                    positive_steps += 1
+                elif command.forward_mps <= -0.005:
+                    reverse_steps += 1
+                elif abs(command.yaw_rate_rps) >= 0.005 and not command.stop:
+                    turn_only_steps += 1
+            is_obstacle_stop = (
+                issued_by_policy
+                and not command.stop
+                and abs(command.forward_mps) < 0.005
+                and safety_phase == "obstacle_stop"
+            )
+            if is_obstacle_stop:
+                obstacle_stop_steps += 1
+                consecutive_obstacle_stop += 1
+                maximum_consecutive_obstacle_stop = max(
+                    maximum_consecutive_obstacle_stop,
+                    consecutive_obstacle_stop,
+                )
+            else:
+                consecutive_obstacle_stop = 0
+
+            velocity = min(
+                max(command.forward_mps, -config.max_reverse_speed_mps),
+                config.max_forward_speed_mps,
+            )
+            yaw_rate = min(
+                max(command.yaw_rate_rps, -config.max_yaw_rate_rps),
+                config.max_yaw_rate_rps,
+            )
+            odom_position, odom_heading = world_pose_to_odom(position, heading)
+            phase = (controller_phase, safety_phase)
+            should_trace = steps % config.trace_stride_steps == 0 or phase != previous_phase
+            trace_item = {
+                "step": steps,
+                "time_s": elapsed,
+                "world_position_xy": position,
+                "world_heading_rad": heading,
+                "odom_position_xy": odom_position,
+                "odom_heading_rad": odom_heading,
+                "published_forward_mps": command.forward_mps,
+                "published_yaw_rate_rps": command.yaw_rate_rps,
+                "published_stop": command.stop,
+                "controller_phase": controller_phase,
+                "safety_phase": safety_phase,
+                "note": command.note[:240],
+                "policy_observation_sha256": (
+                    instrumented.observation_hashes[-1] if issued_by_policy else None
+                ),
+                "published_action_sha256": action_hashes[-1],
+            }
+            if should_trace:
+                _append_bounded_trace(
+                    trace,
+                    trace_item,
+                    maximum=config.trace_max_samples,
+                )
+            previous_phase = phase
+
+            step_dt = min(config.dt_s, config.timeout_s - elapsed)
+            next_position, next_heading, collided = _integrate_collision_terminal(
+                position,
+                heading,
+                velocity,
+                yaw_rate,
+                step_dt,
+                self._world.cylinders,
+                config.robot_radius_m,
+            )
+            if not collided:
+                traveled += math.dist(position, next_position)
+                position = next_position
+                heading = next_heading
+            steps += 1
+            elapsed = min(config.timeout_s, steps * config.dt_s)
+            if collided:
+                minimum_clearance = (
+                    0.0 if minimum_clearance is None else min(minimum_clearance, 0.0)
+                )
+                clearance_sum += 0.0
+                clearance_count += 1
+            else:
+                goal_distance = math.dist(position, OFFICIAL_GOAL_XY)
+                if goal_distance < closest_goal_distance:
+                    closest_goal_distance = goal_distance
+                    closest_goal_time = elapsed
+                clearance = _minimum_signed_clearance(
+                    position,
+                    self._world.cylinders,
+                    config.robot_radius_m,
+                )
+                if clearance is not None:
+                    minimum_clearance = (
+                        clearance
+                        if minimum_clearance is None
+                        else min(minimum_clearance, clearance)
+                    )
+                    clearance_sum += clearance
+                    clearance_count += 1
+
+        success = not collided and math.dist(position, OFFICIAL_GOAL_XY) <= config.success_radius_m
+        timed_out = not collided and not success and elapsed >= config.timeout_s
+        status = "collided" if collided else ("succeeded" if success else "timeout")
+        if action_steps:
+            final_odom_position, final_odom_heading = world_pose_to_odom(position, heading)
+            final_trace = {
+                "step": steps,
+                "time_s": elapsed,
+                "world_position_xy": position,
+                "world_heading_rad": heading,
+                "odom_position_xy": final_odom_position,
+                "odom_heading_rad": final_odom_heading,
+                "published_forward_mps": 0.0 if stopped else action_values[-1][1],
+                "published_yaw_rate_rps": 0.0 if stopped else action_values[-1][2],
+                "published_stop": stopped,
+                "controller_phase": "terminal",
+                "safety_phase": "<none>",
+                "note": status,
+                "policy_observation_sha256": None,
+                "published_action_sha256": action_hashes[-1],
+            }
+            _append_bounded_trace(
+                trace,
+                final_trace,
+                maximum=config.trace_max_samples,
+                force=True,
+            )
+
+        sensor = SensorTransportDiagnostics(
+            profile_id=BARN_ROS2_ADAPTER_ID,
+            raw_fov_deg=CALIBRATED_LIDAR_FOV_DEG,
+            raw_ray_count=config.lidar_ray_count,
+            lidar_forward_m=config.lidar_forward_m,
+            frame_count=len(normalizations),
+            normalization_failures=0,
+            finite_hit_count=sum(item.finite_hit_count for item in normalizations),
+            self_return_count=sum(item.self_return_count for item in normalizations),
+            reprojected_hit_count=sum(item.reprojected_hit_count for item in normalizations),
+            reprojected_clear_count=sum(item.reprojected_clear_count for item in normalizations),
+            first_normalization=(asdict(normalizations[0]) if normalizations else None),
+            last_normalization=(asdict(normalizations[-1]) if normalizations else None),
+            maximum_sensor_skew_s=max(
+                (abs(item.lidar_stamp_s - item.odometry_stamp_s) for item in normalizations),
+                default=0.0,
+            ),
+            raw_scan_sha256=tuple(raw_scan_hashes),
+            policy_observation_steps=tuple(observation_steps),
+            policy_observation_sha256=tuple(instrumented.observation_hashes),
+            published_action_steps=tuple(action_steps),
+            published_action_sha256=tuple(action_hashes),
+            published_action_values=tuple(action_values),
+            latency=_latency_summary(latency_samples),
+        )
+        shield = ShieldStallDiagnostics(
+            policy_stop_latched=stopped,
+            policy_stop_latch_step=stop_latch_step,
+            issued_policy_command_steps=len(observation_steps),
+            positive_command_steps=positive_steps,
+            reverse_command_steps=reverse_steps,
+            turn_only_command_steps=turn_only_steps,
+            obstacle_stop_steps=obstacle_stop_steps,
+            max_consecutive_obstacle_stop_steps=maximum_consecutive_obstacle_stop,
+            controller_phase_counts=dict(sorted(controller_phases.items())),
+            safety_phase_counts=dict(sorted(safety_phases.items())),
+            trace=tuple(trace),
+        )
+        return self._result(
+            success=success,
+            collided=collided,
+            timed_out=timed_out,
+            stopped=stopped,
+            status=status,
+            elapsed=elapsed,
+            traveled=traveled,
+            position=position,
+            heading=heading,
+            steps=steps,
+            last_note=last_note,
+            initial_goal_distance=initial_goal_distance,
+            closest_goal_distance=closest_goal_distance,
+            closest_goal_time=closest_goal_time,
+            minimum_clearance=minimum_clearance,
+            clearance_sum=clearance_sum,
+            clearance_count=clearance_count,
+            sensor=sensor,
+            shield=shield,
+        )
+
+    def _result(
+        self,
+        *,
+        success: bool,
+        collided: bool,
+        timed_out: bool,
+        stopped: bool,
+        status: str,
+        elapsed: float,
+        traveled: float,
+        position: tuple[float, float],
+        heading: float,
+        steps: int,
+        last_note: str,
+        initial_goal_distance: float,
+        closest_goal_distance: float,
+        closest_goal_time: float,
+        minimum_clearance: float | None,
+        clearance_sum: float,
+        clearance_count: int,
+        sensor: SensorTransportDiagnostics,
+        shield: ShieldStallDiagnostics,
+    ) -> SensorFaithfulEpisodeResult:
+        length = self._world.optimal_path_length_m
+        final_goal_distance = math.dist(position, OFFICIAL_GOAL_XY)
+        net_progress = initial_goal_distance - final_goal_distance
+        maximum_progress = initial_goal_distance - closest_goal_distance
+        evaluator = BarnEvaluatorDiagnostics(
+            evaluator_private_state=True,
+            initial_goal_distance_m=initial_goal_distance,
+            closest_goal_distance_m=closest_goal_distance,
+            closest_goal_time_s=closest_goal_time,
+            final_goal_distance_m=final_goal_distance,
+            net_goal_progress_m=net_progress,
+            maximum_goal_progress_m=maximum_progress,
+            maximum_goal_progress_fraction=maximum_progress / initial_goal_distance,
+            goal_progress_efficiency=(maximum_progress / traveled if traveled > 0.0 else 0.0),
+            minimum_signed_obstacle_clearance_m=minimum_clearance,
+            mean_signed_obstacle_clearance_m=(
+                clearance_sum / clearance_count if clearance_count else None
+            ),
+            clearance_sample_count=clearance_count,
+            traveled_to_reference_path_ratio=traveled / length,
+            successful_reference_route_efficiency=(
+                length / traveled if success and traveled > 0.0 else None
+            ),
+            mean_translational_speed_mps=traveled / elapsed if elapsed > 0.0 else 0.0,
+        )
+        return SensorFaithfulEpisodeResult(
+            evaluation_kind=BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
+            official_gazebo_score=False,
+            world_index=self._world.world_index,
+            success=success,
+            collided=collided,
+            timed_out=timed_out,
+            stopped=stopped,
+            status=status,
+            elapsed_time_s=elapsed,
+            navigation_metric=barn_navigation_metric(success, elapsed, length),
+            optimal_path_length_m=length,
+            optimal_time_s=length / OFFICIAL_REFERENCE_SPEED_MPS,
+            traveled_distance_m=traveled,
+            final_position_xy=position,
+            final_heading_rad=heading,
+            steps=steps,
+            last_action_note=last_note,
+            evaluator_diagnostics=evaluator,
+            sensor_diagnostics=sensor,
+            shield_stall_diagnostics=shield,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class _EpisodeRequest:
+    world: BarnWorld
+    config: CalibratedBarnConfig
+    trial: int
+    episode_seed: int
+    process_policy: ProcessPolicyDescriptor
+
+
+@dataclass(frozen=True, slots=True)
+class _EpisodeExecution:
+    detail: dict[str, Any]
+    latency_samples_ms: dict[str, tuple[float, ...]]
+    policy_diagnostics: dict[str, Any]
+
+
+def _execute_episode(
+    *,
+    world: BarnWorld,
+    config: CalibratedBarnConfig,
+    policy: BarnRos2Policy,
+    trial: int,
+    episode_seed: int,
+) -> _EpisodeExecution:
+    result = SensorFaithfulBarnRunner(world, config).run(policy)
+    latency_samples_fn = getattr(policy, "latency_samples_ms", None)
+    policy_diagnostics_fn = getattr(policy, "policy_diagnostics", None)
+    raw_latency = latency_samples_fn() if callable(latency_samples_fn) else {}
+    policy_diagnostics = policy_diagnostics_fn() if callable(policy_diagnostics_fn) else {}
+    if not isinstance(policy_diagnostics, dict):
+        policy_diagnostics = {}
+    detail = asdict(result)
+    detail["trial"] = int(trial)
+    detail["episode_seed"] = int(episode_seed)
+    detail["final_distance_to_goal_m"] = math.dist(result.final_position_xy, OFFICIAL_GOAL_XY)
+    latency_metrics_fn = getattr(policy, "latency_metrics", None)
+    detail["latency"] = {
+        **result.sensor_diagnostics.latency,
+        **(latency_metrics_fn() if callable(latency_metrics_fn) else {}),
+    }
+    detail["policy_diagnostics"] = policy_diagnostics
+    return _EpisodeExecution(
+        detail=detail,
+        latency_samples_ms={
+            str(name): tuple(float(value) for value in values)
+            for name, values in raw_latency.items()
+        },
+        policy_diagnostics=policy_diagnostics,
+    )
+
+
+def _run_process_episode(request: _EpisodeRequest) -> _EpisodeExecution:
+    policy = request.process_policy.create(episode_seed=request.episode_seed)
+    if not isinstance(policy, BarnRos2Policy):
+        raise TypeError("process descriptor policy must implement the calibrated policy API")
+    return _execute_episode(
+        world=request.world,
+        config=request.config,
+        policy=policy,
+        trial=request.trial,
+        episode_seed=request.episode_seed,
+    )
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        while chunk := stream.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _relative_source_id(path: Path) -> str:
+    resolved = path.resolve()
+    repo_root = Path(__file__).resolve().parents[2]
+    try:
+        return resolved.relative_to(repo_root).as_posix()
+    except ValueError:
+        return str(resolved)
+
+
+def _world_provenance(world: BarnWorld) -> dict[str, Any]:
+    return {
+        "world_index": world.world_index,
+        "world": (
+            None
+            if world.world_path is None
+            else {
+                "id": _relative_source_id(world.world_path),
+                "sha256": _sha256(world.world_path),
+            }
+        ),
+        "reference_path": (
+            None
+            if world.path_path is None
+            else {
+                "id": _relative_source_id(world.path_path),
+                "sha256": _sha256(world.path_path),
+            }
+        ),
+    }
+
+
+def _config_sha256(config: CalibratedBarnConfig) -> str:
+    payload = json.dumps(asdict(config), sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _validate_manifest_hash(value: str | None) -> str:
+    if (
+        value is None
+        or len(value) != 64
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise ValueError("generated corpus requires its lowercase SHA-256 manifest hash")
+    return value
+
+
+def _aggregate_executions(
+    executions: Sequence[_EpisodeExecution],
+    *,
+    world_count: int,
+    trials: int,
+    long_shield_stall_steps: int,
+) -> dict[str, Any]:
+    episodes = [execution.detail for execution in executions]
+    count = len(episodes)
+    succeeded = [episode for episode in episodes if bool(episode["success"])]
+    outcomes = Counter(str(episode["status"]) for episode in episodes)
+    latency_samples: dict[str, list[float]] = {}
+    policy_controller_phases: Counter[str] = Counter()
+    policy_safety_phases: Counter[str] = Counter()
+    for execution in executions:
+        for name, values in execution.latency_samples_ms.items():
+            latency_samples.setdefault(name, []).extend(values)
+        policy_controller_phases.update(
+            {
+                str(name): int(value)
+                for name, value in execution.policy_diagnostics.get(
+                    "controller_phase_counts", {}
+                ).items()
+            }
+        )
+        policy_safety_phases.update(
+            {
+                str(name): int(value)
+                for name, value in execution.policy_diagnostics.get(
+                    "safety_phase_counts", {}
+                ).items()
+            }
+        )
+    evaluator_items = [episode["evaluator_diagnostics"] for episode in episodes]
+    clearances = [
+        float(item["minimum_signed_obstacle_clearance_m"])
+        for item in evaluator_items
+        if item["minimum_signed_obstacle_clearance_m"] is not None
+    ]
+    route_efficiencies = [
+        float(item["successful_reference_route_efficiency"])
+        for item in evaluator_items
+        if item["successful_reference_route_efficiency"] is not None
+    ]
+    shields = [episode["shield_stall_diagnostics"] for episode in episodes]
+    sensors = [episode["sensor_diagnostics"] for episode in episodes]
+    long_stall_count = sum(
+        int(item["max_consecutive_obstacle_stop_steps"]) >= long_shield_stall_steps
+        for item in shields
+    )
+    return {
+        "episodes": float(count),
+        "worlds": float(world_count),
+        "trials_per_world": float(trials),
+        "success_rate": sum(bool(episode["success"]) for episode in episodes) / count,
+        "navigation_metric": fmean(float(episode["navigation_metric"]) for episode in episodes),
+        "collision_rate": sum(bool(episode["collided"]) for episode in episodes) / count,
+        "timeout_rate": sum(bool(episode["timed_out"]) for episode in episodes) / count,
+        # A policy stop is a timeout-latched zero command in this evaluator.
+        "stopped_outside_goal_rate": 0.0,
+        "policy_stop_latch_rate": sum(bool(episode["stopped"]) for episode in episodes) / count,
+        "mean_elapsed_time_s": fmean(float(episode["elapsed_time_s"]) for episode in episodes),
+        "mean_success_time_s": (
+            fmean(float(episode["elapsed_time_s"]) for episode in succeeded) if succeeded else 0.0
+        ),
+        "mean_final_distance_to_goal_m": fmean(
+            float(episode["final_distance_to_goal_m"]) for episode in episodes
+        ),
+        "mean_traveled_distance_m": fmean(
+            float(episode["traveled_distance_m"]) for episode in episodes
+        ),
+        **_latency_summary(latency_samples),
+        "sensor_diagnostics": {
+            "long_shield_stall_threshold_steps": long_shield_stall_steps,
+            "long_shield_stall_episode_count": long_stall_count,
+            "sensor_normalization_failures": sum(
+                int(item["normalization_failures"]) for item in sensors
+            ),
+            "reverse_command_steps": sum(int(item["reverse_command_steps"]) for item in shields),
+            "obstacle_stop_steps": sum(int(item["obstacle_stop_steps"]) for item in shields),
+            "max_consecutive_obstacle_stop_steps": max(
+                (int(item["max_consecutive_obstacle_stop_steps"]) for item in shields),
+                default=0,
+            ),
+            "normalized_frame_count": sum(int(item["frame_count"]) for item in sensors),
+            "self_return_count": sum(int(item["self_return_count"]) for item in sensors),
+        },
+        "evaluator_diagnostics": {
+            "private_state_not_exposed_to_policy": True,
+            "outcome_counts": dict(sorted(outcomes.items())),
+            "failure_counts": {
+                key: value for key, value in sorted(outcomes.items()) if key != "succeeded"
+            },
+            "mean_net_goal_progress_m": fmean(
+                float(item["net_goal_progress_m"]) for item in evaluator_items
+            ),
+            "mean_maximum_goal_progress_m": fmean(
+                float(item["maximum_goal_progress_m"]) for item in evaluator_items
+            ),
+            "mean_maximum_goal_progress_fraction": fmean(
+                float(item["maximum_goal_progress_fraction"]) for item in evaluator_items
+            ),
+            "mean_goal_progress_efficiency": fmean(
+                float(item["goal_progress_efficiency"]) for item in evaluator_items
+            ),
+            "mean_closest_goal_distance_m": fmean(
+                float(item["closest_goal_distance_m"]) for item in evaluator_items
+            ),
+            "minimum_signed_obstacle_clearance_m": min(clearances) if clearances else None,
+            "mean_episode_minimum_signed_obstacle_clearance_m": (
+                fmean(clearances) if clearances else None
+            ),
+            "mean_traveled_to_reference_path_ratio": fmean(
+                float(item["traveled_to_reference_path_ratio"]) for item in evaluator_items
+            ),
+            "mean_successful_reference_route_efficiency": (
+                fmean(route_efficiencies) if route_efficiencies else None
+            ),
+            "mean_translational_speed_mps": fmean(
+                float(item["mean_translational_speed_mps"]) for item in evaluator_items
+            ),
+        },
+        "policy_diagnostics": {
+            "controller_phase_counts": dict(sorted(policy_controller_phases.items())),
+            "safety_phase_counts": dict(sorted(policy_safety_phases.items())),
+            "note": "Policy-provided notes are diagnostics, not evaluator failure labels.",
+        },
+    }
+
+
+def run_sensor_faithful_suite(
+    *,
+    assets_root: str | Path,
+    world_indices: Sequence[int],
+    policy_spec: BarnPolicySpec | CalibratedPolicySpec | None = None,
+    trials: int = 1,
+    suite_seed: int = 20260803,
+    workers: int = 1,
+    allow_experimental: bool = False,
+    config: CalibratedBarnConfig | None = None,
+    generated_corpus: bool = False,
+    asset_manifest_sha256: str | None = None,
+    long_shield_stall_steps: int = 50,
+) -> dict[str, Any]:
+    """Run calibrated episodes, optionally in isolated spawned CPU workers."""
+
+    if not world_indices or len({int(value) for value in world_indices}) != len(world_indices):
+        raise ValueError("world_indices must be non-empty and contain no duplicates")
+    if not 1 <= trials <= 100:
+        raise ValueError("trials must be in [1, 100]")
+    if not 0 <= suite_seed < 2**63:
+        raise ValueError("suite_seed must be in [0, 2**63)")
+    if isinstance(workers, bool) or not isinstance(workers, int) or not 1 <= workers <= 128:
+        raise ValueError("workers must be an integer in [1, 128]")
+    if (
+        isinstance(long_shield_stall_steps, bool)
+        or not isinstance(long_shield_stall_steps, int)
+        or long_shield_stall_steps < 1
+    ):
+        raise ValueError("long_shield_stall_steps must be a positive integer")
+    calibrated_config = config or CalibratedBarnConfig()
+    spec = calibrated_policy_spec(policy_spec or parcel_baseline_policy_spec())
+    spec.ensure_enabled(allow_experimental=allow_experimental)
+    if workers > 1 and spec.execution_device.strip().lower() != "cpu":
+        raise ValueError("workers > 1 is supported only for CPU policies")
+    process_policy = spec.require_process_descriptor() if workers > 1 else None
+
+    if generated_corpus:
+        manifest_hash = _validate_manifest_hash(asset_manifest_sha256)
+        loader = load_generated_barn_world
+    else:
+        if asset_manifest_sha256 is not None:
+            raise ValueError("asset_manifest_sha256 is valid only for a generated corpus")
+        manifest_hash = None
+        loader = load_barn_world
+    worlds = [loader(assets_root, int(index)) for index in world_indices]
+    episode_inputs = [
+        (world, trial, suite_seed + int(world.world_index) * 1_009 + trial)
+        for world in worlds
+        for trial in range(trials)
+    ]
+    effective_workers = min(workers, len(episode_inputs))
+    if effective_workers > 1:
+        assert process_policy is not None
+        requests = [
+            _EpisodeRequest(
+                world=world,
+                config=calibrated_config,
+                trial=trial,
+                episode_seed=episode_seed,
+                process_policy=process_policy,
+            )
+            for world, trial, episode_seed in episode_inputs
+        ]
+        context = multiprocessing.get_context("spawn")
+        with ProcessPoolExecutor(
+            max_workers=effective_workers,
+            mp_context=context,
+        ) as executor:
+            executions = list(executor.map(_run_process_episode, requests, chunksize=1))
+    else:
+        executions = []
+        for world, trial, episode_seed in episode_inputs:
+            policy = spec.create(
+                episode_seed=episode_seed,
+                allow_experimental=allow_experimental,
+            )
+            executions.append(
+                _execute_episode(
+                    world=world,
+                    config=calibrated_config,
+                    policy=policy,
+                    trial=trial,
+                    episode_seed=episode_seed,
+                )
+            )
+
+    aggregate = _aggregate_executions(
+        executions,
+        world_count=len(worlds),
+        trials=trials,
+        long_shield_stall_steps=long_shield_stall_steps,
+    )
+    harness_path = Path(__file__).resolve()
+    native_path = Path(barn_native_module.__file__).resolve()
+    adapter_path = Path(barn_ros2_adapter_module.__file__).resolve()
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "evaluation_kind": BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
+        "official_gazebo_score": False,
+        "benchmark": {
+            "id": BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
+            "source": BARN_SOURCE,
+            "source_commit": BARN_EVALUATOR_COMMIT,
+            "public_world_indices": [int(index) for index in world_indices],
+            "official_gazebo_score": False,
+            "asset_scope": (
+                "generated-public-style-development" if generated_corpus else "public-barn-static"
+            ),
+            "asset_manifest_sha256": manifest_hash,
+            "native_reference_source_commits": {
+                "jackal_melodic": JACKAL_MELODIC_REFERENCE_COMMIT,
+                "jackal_simulator_melodic": JACKAL_SIMULATOR_MELODIC_REFERENCE_COMMIT,
+            },
+            "ros2_sensor_source": {
+                "id": BARN_ROS2_SOURCE_ID,
+                "commit": BARN_ROS2_SOURCE_COMMIT,
+            },
+        },
+        "policy": spec.report_metadata(),
+        "execution": {
+            "evaluator_device": "cpu",
+            "lidar_raycast_device": "cpu",
+            "kinematics_device": "cpu",
+            "policy_declared_device": spec.execution_device,
+            "episode_workers_requested": workers,
+            "episode_workers_effective": effective_workers,
+            "process_start_method": "spawn" if effective_workers > 1 else None,
+            "durable_report_writer": "caller_or_parent_process_only",
+        },
+        "suite_seed": suite_seed,
+        # Keep this key compatible with compare_barn_reports.
+        "native_config": asdict(calibrated_config),
+        "provenance": {
+            "config_sha256": _config_sha256(calibrated_config),
+            "harness": {"id": _relative_source_id(harness_path), "sha256": _sha256(harness_path)},
+            "native_geometry": {
+                "id": _relative_source_id(native_path),
+                "sha256": _sha256(native_path),
+            },
+            "calibrated_adapter": {
+                "id": _relative_source_id(adapter_path),
+                "sha256": _sha256(adapter_path),
+            },
+            "assets": [_world_provenance(world) for world in worlds],
+        },
+        "aggregate": aggregate,
+        "top_decile_target": {
+            "official_protocol": False,
+            "pass": False,
+            "note": "This calibrated native proxy cannot establish an official percentile.",
+        },
+        "episodes": [execution.detail for execution in executions],
+        "notes": [
+            "Non-official calibrated native approximation; not a Gazebo or leaderboard score.",
+            "The policy receives only start-relative odometry, a normalized 360-degree LiDAR scan, clock, and odom-frame goal.",
+            "Raw SDF geometry, collision truth, reference path, and optimal path length remain evaluator-private.",
+            "A policy stop latches zero velocity until success or the 100 s evaluator timeout.",
+            "LiDAR normalization is the exact BarnRos2AdapterCore path used by the ROS 2 submission.",
+            "Observation/action hashes are post-run causal diagnostics and never enter policy observations.",
+        ],
+    }
+
+
+def _causal_pair_fields(
+    baseline_episode: Mapping[str, Any],
+    candidate_episode: Mapping[str, Any],
+) -> dict[str, Any]:
+    baseline_sensor = baseline_episode["sensor_diagnostics"]
+    candidate_sensor = candidate_episode["sensor_diagnostics"]
+    baseline_observations = dict(
+        zip(
+            baseline_sensor["policy_observation_steps"],
+            baseline_sensor["policy_observation_sha256"],
+            strict=True,
+        )
+    )
+    candidate_observations = dict(
+        zip(
+            candidate_sensor["policy_observation_steps"],
+            candidate_sensor["policy_observation_sha256"],
+            strict=True,
+        )
+    )
+    baseline_actions = dict(
+        zip(
+            baseline_sensor["published_action_steps"],
+            baseline_sensor["published_action_sha256"],
+            strict=True,
+        )
+    )
+    candidate_actions = dict(
+        zip(
+            candidate_sensor["published_action_steps"],
+            candidate_sensor["published_action_sha256"],
+            strict=True,
+        )
+    )
+    common_action_steps = sorted(baseline_actions.keys() & candidate_actions.keys())
+    first_divergence = next(
+        (step for step in common_action_steps if baseline_actions[step] != candidate_actions[step]),
+        None,
+    )
+    identical_observation = (
+        first_divergence is not None
+        and baseline_observations.get(first_divergence) is not None
+        and baseline_observations.get(first_divergence)
+        == candidate_observations.get(first_divergence)
+    )
+    prior_observation_steps = [
+        step
+        for step in baseline_observations.keys() & candidate_observations.keys()
+        if first_divergence is None or step <= first_divergence
+    ]
+    return {
+        "first_published_action_divergence_step": first_divergence,
+        "first_divergence_on_identical_policy_observation": identical_observation,
+        "policy_observations_identical_through_first_action_divergence": all(
+            baseline_observations[step] == candidate_observations[step]
+            for step in prior_observation_steps
+        ),
+        "mode_affected": identical_observation,
+    }
+
+
+def run_sensor_faithful_comparison(
+    *,
+    assets_root: str | Path,
+    world_indices: Sequence[int],
+    candidate_spec: BarnPolicySpec | CalibratedPolicySpec,
+    baseline_spec: BarnPolicySpec | CalibratedPolicySpec | None = None,
+    trials: int = 1,
+    suite_seed: int = 20260803,
+    workers: int = 1,
+    allow_experimental: bool = False,
+    config: CalibratedBarnConfig | None = None,
+    generated_corpus: bool = False,
+    asset_manifest_sha256: str | None = None,
+    long_shield_stall_steps: int = 50,
+) -> dict[str, Any]:
+    """Run paired arms on identical worlds/seeds and add causal hash evidence."""
+
+    candidate = calibrated_policy_spec(candidate_spec)
+    baseline = calibrated_policy_spec(baseline_spec or parcel_baseline_policy_spec())
+    if not candidate.experimental:
+        raise ValueError("candidate_spec must be explicitly marked experimental")
+    if baseline.experimental:
+        raise ValueError("baseline_spec must not be experimental")
+    common = {
+        "assets_root": assets_root,
+        "world_indices": world_indices,
+        "trials": trials,
+        "suite_seed": suite_seed,
+        "workers": workers,
+        "config": config,
+        "generated_corpus": generated_corpus,
+        "asset_manifest_sha256": asset_manifest_sha256,
+        "long_shield_stall_steps": long_shield_stall_steps,
+    }
+    baseline_report = run_sensor_faithful_suite(policy_spec=baseline, **common)
+    candidate_report = run_sensor_faithful_suite(
+        policy_spec=candidate,
+        allow_experimental=allow_experimental,
+        **common,
+    )
+    # Reuse the established scalar delta contract, then extend each pair with
+    # exact policy-observation/published-action causal evidence.
+    from .compare_barn import compare_barn_reports
+
+    comparison = compare_barn_reports(baseline_report, candidate_report)
+    baseline_by_key = {
+        (int(item["world_index"]), int(item["trial"])): item for item in baseline_report["episodes"]
+    }
+    candidate_by_key = {
+        (int(item["world_index"]), int(item["trial"])): item
+        for item in candidate_report["episodes"]
+    }
+    mode_affected = 0
+    for pair in comparison["paired_episodes"]:
+        key = (int(pair["world_index"]), int(pair["trial"]))
+        causal = _causal_pair_fields(baseline_by_key[key], candidate_by_key[key])
+        pair.update(causal)
+        mode_affected += int(bool(causal["mode_affected"]))
+    comparison["mode_affected_episode_count"] = mode_affected
+    comparison["causal_hash_contract"] = {
+        "policy_observation": "exact normalized BarnObservation including full scan bytes",
+        "published_action": "BarnRos2VelocityCommand values, stop flag, and note",
+    }
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "evaluation_kind": f"{BARN_SENSOR_FAITHFUL_EVALUATION_KIND}-paired-comparison",
+        "official_gazebo_score": False,
+        "baseline": baseline_report,
+        "candidate": candidate_report,
+        "comparison": comparison,
+        "target_status": {
+            "official_gate_pass": False,
+            "note": "A paired calibrated native proxy cannot establish official rank.",
+        },
+    }
+
+
+__all__ = [
+    "BARN_SENSOR_FAITHFUL_EVALUATION_KIND",
+    "BARN_SENSOR_FAITHFUL_RUNNER_ID",
+    "CALIBRATED_LIDAR_ANGLE_MAX_RAD",
+    "CALIBRATED_LIDAR_ANGLE_MIN_RAD",
+    "CALIBRATED_LIDAR_FORWARD_M",
+    "CALIBRATED_LIDAR_FOV_DEG",
+    "CALIBRATED_LIDAR_RANGE_MAX_M",
+    "CALIBRATED_LIDAR_RANGE_MIN_M",
+    "CALIBRATED_LIDAR_RAY_COUNT",
+    "CALIBRATED_POLICY_INPUTS",
+    "CalibratedBarnConfig",
+    "CalibratedPolicySpec",
+    "SensorFaithfulBarnRunner",
+    "SensorFaithfulConfig",
+    "SensorFaithfulEpisodeResult",
+    "SensorTransportDiagnostics",
+    "ShieldStallDiagnostics",
+    "calibrated_experimental_config_spec",
+    "calibrated_policy_spec",
+    "calibrated_reference_config_spec",
+    "cast_sensor_faithful_lidar",
+    "run_sensor_faithful_comparison",
+    "run_sensor_faithful_suite",
+    "world_pose_to_odom",
+]
