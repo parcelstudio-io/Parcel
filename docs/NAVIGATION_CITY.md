@@ -129,10 +129,81 @@ controller. Region goals such as `sidewalk` are verified geometrically at
 arrival. Searches are bounded by `semantic_search.max_steps` and fail without
 translating when no reachable target is confirmed.
 
+Semantic completion is relation-specific rather than a generic point radius:
+
+- `inside sidewalk` samples a collision-free interior pose, validates the
+  swept centerline against LiDAR surfaces, keeps the complete robot footprint
+  inside the region, turns to keep the region in view, and independently
+  rechecks the current camera polygon after stopping;
+- `near lamppost` associates the camera object with its LiDAR identity, chooses
+  a safe stand-off on the sidewalk support surface, enforces both a minimum
+  collision gap and maximum one-metre body-to-object vicinity, then rechecks
+  the current object track and associated LiDAR surface range before holding;
+- a progress watchdog re-observes and replans a stalled semantic mission twice,
+  then fails closed instead of emitting an endless velocity command.
+
+Geometric arrival enters a `verifying` phase rather than immediately reporting
+success. Runtime sends an explicit locomotion stop and waits for fresh controller
+feedback, the configured settled linear/yaw thresholds, and Unitree Sport stop
+confirmation. The live spatial relation must still be valid after the body has
+settled, and the camera/LiDAR observation used for that check must still be fresh.
+Missing feedback, stale perception, a lost/changed target, or an unsafe target
+range cannot produce an `arrived` result; stop verification is bounded and fails
+closed.
+
+The local baseline controller latches a specific blocking obstacle and a
+world-frame tangent until both that obstacle and the direct-goal corridor are
+clear. It still turns before translating and normally emits forward velocity,
+while bounded lateral velocity remains available to future controllers. The
+final runtime collision gate is a separate pure component shared by the live
+runtime and the headless quality harness. Bounded simulator LiDAR preserves
+closest-per-geometry hits and angular coverage before adding facade samples, so
+dense returns behind the robot cannot evict a forward hazard.
+
 MuJoCo publishes visible sidewalk/crosswalk polygons as a diagnostics-only
 semantic-camera adapter for deterministic tests. Production deployments must
 replace it with camera segmentation/open-vocabulary features fused with depth or
 LiDAR; simulator semantic truth is never presented as a production sensor.
+
+### Headless semantic-task quality gate
+
+`HeadlessCityQualityHarness` loads the real `city_block.xml` with no viewer,
+advances a fixed simulation clock, and runs the production command parser,
+semantic resolver, point navigator, spatial controller, and reactive safety
+gate. Controller inputs contain only typed camera/depth semantic tracks, LiDAR,
+owner tracking, and odometry. A separate truth oracle evaluates outcomes and is
+never fed back into planning. The harness loads its selected navigation
+configuration plus collision, orbit, and settled-speed thresholds from the same
+`configs/robot.yaml` used by runtime, so configuration changes are exercised by
+the gate.
+
+Run the commissioning gate with:
+
+```bash
+python -m pytest -q \
+  tests/test_headless_city_tasks.py \
+  tests/test_mujoco_lidar.py \
+  tests/test_city_orbit_clearance.py
+```
+
+The gate currently proves:
+
+1. sidewalk requests from two road starts end fully inside the correct sidewalk
+   and off the road;
+2. lamppost requests from a road approach and a cramped building-side start end
+   on sidewalk support, safely outside the hard-stop envelope, within one metre
+   from robot body to post surface, and stopped;
+3. the default owner is acquired, approached, and orbited once with independent
+   angular/radial/path assertions, complete 12-bin coverage, no contact, and a
+   zero terminal command;
+4. timeouts remain failures—the harness records the controller command before
+   cleanup, so cleanup cannot make a moving failure look stopped.
+
+The world uses MuJoCo geometry and exact oriented-surface LiDAR returns, but base
+motion is intentionally kinematic (`mj_forward`, not contact-dynamics
+`mj_step`). It is a fast behavior regression gate, not evidence that a learned
+gait or Unitree Sport controller is physically qualified. Hardware-in-loop and
+full contact-physics tests remain required before deployment.
 
 ### Local dynamic context
 

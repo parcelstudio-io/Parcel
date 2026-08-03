@@ -22,6 +22,7 @@ from .base import (
     LidarObstacle,
     OwnerTrack,
     RobotPose,
+    SemanticObjectTrack,
     SemanticRegionTrack,
     SimObservation,
 )
@@ -29,6 +30,7 @@ from .base import (
 MAX_DYNAMIC_AGENTS = 64
 MAX_LIDAR_OBSTACLES = 64
 MAX_SEMANTIC_REGIONS = 64
+MAX_SEMANTIC_OBJECTS = 64
 
 
 def _finite_float(value: object, field: str) -> float:
@@ -108,6 +110,14 @@ class MujocoSocketBackend:
         semantic_regions = tuple(
             _parse_semantic_region(item, index) for index, item in enumerate(raw_regions)
         )
+        raw_objects = data.get("semantic_objects", [])
+        if not isinstance(raw_objects, list):
+            raise TypeError("simulator semantic_objects must be a list")
+        if len(raw_objects) > MAX_SEMANTIC_OBJECTS:
+            raise ValueError("simulator reported too many semantic objects")
+        semantic_objects = tuple(
+            _parse_semantic_object(item, index) for index, item in enumerate(raw_objects)
+        )
         timestamp = _finite_float(data.get("timestamp"), "timestamp")
         if timestamp <= 0.0 or timestamp > time.monotonic() + 5.0:
             raise ValueError("simulator timestamp is outside the valid monotonic range")
@@ -154,6 +164,7 @@ class MujocoSocketBackend:
             nearest_person_ttc_s=person_ttc,
             dynamic_agents=dynamic_agents,
             semantic_regions=semantic_regions,
+            semantic_objects=semantic_objects,
             collision=collision,
             emergency_stopped=emergency_stopped,
             backend=backend,
@@ -263,12 +274,52 @@ def _parse_semantic_region(item: object, index: int) -> SemanticRegionTrack:
     metadata = item.get("metadata") or {}
     if not isinstance(metadata, dict):
         raise TypeError(f"simulator semantic_regions[{index}].metadata must be an object")
+    reachable = item.get("reachable", True)
+    if not isinstance(reachable, bool):
+        raise TypeError(f"simulator semantic_regions[{index}].reachable must be a boolean")
     return SemanticRegionTrack(
         region_id=region_id,
         label=label,
         polygon=polygon,
         confidence=confidence,
         source=str(item.get("source", "simulator_semantic_camera")),
-        reachable=bool(item.get("reachable", True)),
+        reachable=reachable,
+        metadata=dict(metadata),
+    )
+
+
+def _parse_semantic_object(item: object, index: int) -> SemanticObjectTrack:
+    if not isinstance(item, dict):
+        raise TypeError(f"simulator semantic_objects[{index}] must be an object")
+    allowed = {"id", "label", "position", "confidence", "source", "reachable", "metadata"}
+    if not set(item).issubset(allowed):
+        raise ValueError(f"simulator semantic_objects[{index}] contains unsupported fields")
+    object_id, label = item.get("id"), item.get("label")
+    if not isinstance(object_id, str) or not object_id.strip() or len(object_id) > 128:
+        raise TypeError(f"simulator semantic_objects[{index}].id is invalid")
+    if not isinstance(label, str) or not label.strip() or len(label) > 160:
+        raise TypeError(f"simulator semantic_objects[{index}].label is invalid")
+    raw_position = item.get("position")
+    if not isinstance(raw_position, list) or len(raw_position) != 3:
+        raise TypeError(f"simulator semantic_objects[{index}].position is invalid")
+    confidence = _finite_float(item.get("confidence"), f"semantic_objects[{index}].confidence")
+    if not 0.0 <= confidence <= 1.0:
+        raise ValueError(f"simulator semantic_objects[{index}].confidence is invalid")
+    metadata = item.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        raise TypeError(f"simulator semantic_objects[{index}].metadata must be an object")
+    reachable = item.get("reachable", True)
+    if not isinstance(reachable, bool):
+        raise TypeError(f"simulator semantic_objects[{index}].reachable must be a boolean")
+    return SemanticObjectTrack(
+        object_id=object_id,
+        label=label,
+        position=tuple(
+            _finite_float(value, f"semantic_objects[{index}].position")
+            for value in raw_position
+        ),
+        confidence=confidence,
+        source=str(item.get("source", "simulator_semantic_camera")),
+        reachable=reachable,
         metadata=dict(metadata),
     )

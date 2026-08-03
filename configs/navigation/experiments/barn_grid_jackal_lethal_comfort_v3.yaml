@@ -1,0 +1,35 @@
+# NON-DEPLOYABLE, eval-only native BARN Jackal clearance experiment.
+#
+# The native proxy models a 0.32 m-radius Jackal disc. The selected hard map
+# inflation and brake boundary are 0.35 m from an obstacle surface: body plus
+# a 0.03 m hard margin. The prior 0.10 m margin remains a traversable comfort
+# cost. This profile is not a physical-Go2 safety claim and does not modify
+# configs/navigation/default.yaml, configs/robot.yaml, or grid_v1.
+active_model: grid_clearance_v2
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+progress_watchdog:
+  timeout_steps: 800
+  max_semantic_replans: 2
+
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  # Go2-compatible velocity cap retained; only this native Jackal clearance
+  # profile changes, and it remains explicitly disabled for deployment.
+  max_vx: 0.60
+  max_vy: 0.40
+  max_vyaw: 1.0
+  stop_distance_m: 0.35
+  obstacle_slow_m: 0.75
+  slow_scale: 0.45
+  reaction_time_s: 0.12
+  predictive_mode: speed_cap
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

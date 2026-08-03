@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "split_id": "barn-frontier-detour-v4-hash30-20",
+  "created_at": "2026-08-03T00:00:00Z",
+  "purpose": "One-shot development and sealed confirmation partition for the frontier-detour-v4 challenger",
+  "benchmark": {
+    "source": "https://github.com/Daffan/the-barn-challenge",
+    "public_world_count": 300,
+    "source_partition_rule": "world_id % 6 == 5"
+  },
+  "partition": {
+    "seed": "parcel-barn-frontier-detour-v4-20260803",
+    "algorithm": "Sort source world IDs by (sha256(UTF-8 seed + ':' + decimal world ID), world ID); first 30 are development and remaining 20 are sealed confirmation",
+    "source_world_ids": [
+      5, 11, 17, 23, 29, 35, 41, 47, 53, 59,
+      65, 71, 77, 83, 89, 95, 101, 107, 113, 119,
+      125, 131, 137, 143, 149, 155, 161, 167, 173, 179,
+      185, 191, 197, 203, 209, 215, 221, 227, 233, 239,
+      245, 251, 257, 263, 269, 275, 281, 287, 293, 299
+    ],
+    "development_world_ids": [
+      5, 17, 23, 29, 53, 77, 83, 89, 95, 107,
+      119, 125, 131, 143, 149, 155, 161, 167, 173, 191,
+      203, 215, 239, 245, 251, 263, 269, 275, 281, 293
+    ],
+    "sealed_confirmation_world_ids": [
+      11, 35, 41, 47, 59, 65, 71, 101, 113, 137,
+      179, 185, 197, 209, 221, 227, 233, 257, 287, 299
+    ],
+    "source_world_ids_sha256": "48619a67303920386742ac7711932786659173486bc1687ce5c12b00ee8c820b",
+    "development_world_ids_sha256": "0d51110a91e78d98d8721aad36d502e334975931b2b0b5f0c1015dde64e907d9",
+    "sealed_confirmation_world_ids_sha256": "9faec373792750b9032a9892a9dec3cc81f2a4da6ae2736172988c9627c7f679"
+  },
+  "protocol": {
+    "development_may_be_inspected": true,
+    "sealed_confirmation_must_not_be_run_or_inspected_during_development": true,
+    "confirmation_is_single_use_after_candidate_and_promotion_rule_are_frozen": true,
+    "frozen_0_mod_6_worlds_are_not_fresh_confirmation": true,
+    "suite_seed": 20260803,
+    "trials_per_world": 1,
+    "lidar_rays": 720
+  },
+  "promotion_gate_frozen_before_development": {
+    "reference_policy": "grid_frontier_cached_v3",
+    "candidate_policy": "grid_frontier_detour_v4",
+    "same_world_trial_seed_and_native_config": true,
+    "minimum_paired_success_gains": 2,
+    "maximum_paired_success_regressions": 0,
+    "navigation_metric_delta_must_be_positive": true,
+    "candidate_collision_rate_must_equal": 0.0,
+    "minimum_signed_clearance_must_be_at_least": 0.075,
+    "maximum_clearance_regression_m": 0.005,
+    "maximum_controller_mean_latency_ratio": 1.20,
+    "maximum_controller_p99_latency_ratio": 1.20,
+    "detour_controller_phase_must_be_exercised": true,
+    "all_conditions_required_for_single_sealed_confirmation": true
+  },
+  "status": {
+    "development_open": true,
+    "sealed_confirmation_opened": false,
+    "sealed_confirmation_run_id": null
+  }
+}

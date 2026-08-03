@@ -1,0 +1,44 @@
+# EXPERIMENTAL / DEPLOYMENT DISABLED.
+#
+# This v8 treatment is wired only behind this explicit experimental mode; no
+# production/default profile selects it. It replaces the unsafe one-nearest-
+# return projected cap with a final shield that examines every normalized
+# 720-ray bin, constrains every observed finite return over the commanded
+# heading sweep, and exposes unavailable bins.  It
+# does not prove safety through those unobserved directions.  A separately
+# frozen paired protocol is required before this explicitly selected mode may
+# be used for deployment evidence.  The default navigation profile is
+# unchanged.
+deployment_enabled: false
+active_model: grid_v1
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+progress_watchdog:
+  timeout_steps: 800
+  max_semantic_replans: 2
+
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  max_vx: 0.45
+  max_vy: 0.25
+  max_vyaw: 0.8
+  stop_distance_m: 0.8
+  predictive_mode: all_ray_yaw_swept_projected_speed_cap
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0
+  all_ray_yaw_swept_cap:
+    profile_id: parcel-v8-all-ray-yaw-swept-projected-cap
+    stop_distance_m: 0.8
+    reaction_horizon_s: 0.12
+    control_period_s: 0.1
+    required_ray_count: 720
+    full_circle_tolerance_rad: 0.00001
+    closing_epsilon_mps: 0.000000001
+    certificate_tolerance_m: 0.000000001

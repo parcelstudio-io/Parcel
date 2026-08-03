@@ -1,0 +1,63 @@
+{
+  "aggregate_metrics": {
+    "adapter_act_count": 568.0,
+    "adapter_act_max_ms": 0.199762,
+    "adapter_act_mean_ms": 0.12036432042253521,
+    "adapter_act_p50_ms": 0.104888,
+    "adapter_act_p95_ms": 0.166682,
+    "adapter_act_p99_ms": 0.18561,
+    "collision_rate": 0.0,
+    "controller_step_count": 568.0,
+    "controller_step_max_ms": 0.063917,
+    "controller_step_mean_ms": 0.026132001760563378,
+    "controller_step_p50_ms": 0.023015,
+    "controller_step_p95_ms": 0.034863,
+    "controller_step_p99_ms": 0.049976,
+    "episodes": 1.0,
+    "mean_elapsed_time_s": 56.7,
+    "mean_final_distance_to_goal_m": 7.226066932503784,
+    "mean_success_time_s": 0.0,
+    "mean_traveled_distance_m": 3.6417992872461773,
+    "navigation_metric": 0.0,
+    "stopped_outside_goal_rate": 1.0,
+    "success_rate": 0.0,
+    "timeout_rate": 0.0,
+    "trials_per_world": 1.0,
+    "worlds": 1.0
+  },
+  "benchmark": {
+    "id": "barn-native-headless-non-official",
+    "source": "https://github.com/Daffan/the-barn-challenge",
+    "source_commit": "bf5a226f6088ec96bf0d2dbee3253a8ea6119b83"
+  },
+  "change_description": "Initial unchanged Parcel DirectiveNavigator sensor-adapter smoke baseline on pinned BARN public world 0.",
+  "components": {
+    "adapter": {
+      "hash": "dc086e546bc901f720af95781d6e6e9654e0492b4fc623575c74d616d7ae7789",
+      "id": "parcel-directive-navigator-barn-sensor-adapter-v1"
+    },
+    "agent": {
+      "id": "DirectiveNavigator"
+    },
+    "config": {
+      "hash": "194122945598bfbf6b0de32dfa0fe6b84545af216b1e3528a6309b1beb075f9b",
+      "id": "configs/navigation/default.yaml"
+    },
+    "model": {
+      "hash": "47746536aa1c46ae11651a74c94bed4f05619266be5a20605f390b323efd3ad4",
+      "id": "stub_v0"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/runs/barn-native-20260803T080927158538Z-a3c0f3d7.json",
+    "sha256": "34256510877107824fcdb9981ee2894b97cadb034cd86cc6bdfd84b9080cad7b",
+    "size_bytes": 3825
+  },
+  "run_id": "barn-native-20260803T080927158538Z-a3c0f3d7",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T08:09:27.161829Z"
+}

@@ -1,0 +1,67 @@
+{
+  "aggregate_metrics": {
+    "action_collisions": 0,
+    "asset_hashes_verified": true,
+    "cuda_device_count": 1,
+    "cuda_driver_init_passed": true,
+    "discrete_actions_executed": 3,
+    "egl_device_count": 1,
+    "egl_initialize_passed": true,
+    "egl_version": "1.5",
+    "elapsed_ms": 1318.900083,
+    "forward_displacement_m": 0.2500881936561302,
+    "gpu_render_executed": true,
+    "habitat_sim_version": "0.1.4",
+    "navigation_episode_executed": false,
+    "navigation_metrics_emitted": false,
+    "navmesh_loaded": true,
+    "network_available_inside_sandbox": false,
+    "official_evaluator_executed": false,
+    "official_rank_eligible": false,
+    "parcel_policy_executed": false,
+    "pointnav_goal_read_or_used": false,
+    "rgbd_frames_rendered": 4,
+    "rootfs_entry_count": 87944,
+    "rootfs_inventory_verified": true,
+    "scene_loaded": true,
+    "simulator_constructed": true,
+    "smoke_passed": true,
+    "top_decile_evidence": false
+  },
+  "benchmark": {
+    "id": "habitat-test-assets-exact-runtime-scene-smoke-non-evaluation",
+    "source": "https://github.com/facebookresearch/habitat-sim.git",
+    "source_commit": "57ee4941dc4765240f0f91f70b2c97a919bf9038"
+  },
+  "change_description": "First exact archived-runtime non-Habitat-2020 test-asset smoke: verified public ungated CC-BY-NC-4.0 scene and independently hashed PointNav start fixture, then CUDA/EGL, simulator construction, navmesh load, four RGB-D renders, and three discrete actions passed in a network-disabled read-only Bubblewrap sandbox. No goal, Parcel policy, evaluator, navigation episode, metric, or rank.",
+  "components": {
+    "adapter": {
+      "hash": "54d3c8567530da1ca055c1343acc9aa88ba5c45149733fcbd076b65b041cc1aa",
+      "id": "evals/external/habitat2020_test_assets.py"
+    },
+    "agent": {
+      "hash": "60c953db9f7e9848669dd8846f1147561a24eb27f1e817ee7421785cfdc2743f",
+      "id": "evals/external/habitat2020_scene_smoke_py36.py"
+    },
+    "config": {
+      "hash": "3912404b7a170754a737cc2b257f6cadbd0b40e0f14f7d32e7f4454c41a969bc",
+      "id": "evals/external/habitat2020_test_assets_manifest.json"
+    },
+    "model": {
+      "hash": "sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+      "id": "fairembodied/habitat-challenge"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/habitat2020/habitat-test-assets-gpu-scene-smoke-20260803-baseline01.json",
+    "sha256": "aed6afcb2e9af98f4f6ed8c3a3f636845e70a34b14057b1904493f8530330137",
+    "size_bytes": 11454
+  },
+  "run_id": "habitat-test-assets-gpu-scene-smoke-20260803T152317Z",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T15:23:49.380039Z"
+}

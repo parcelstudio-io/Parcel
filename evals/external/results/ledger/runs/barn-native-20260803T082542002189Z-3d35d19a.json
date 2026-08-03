@@ -1,0 +1,63 @@
+{
+  "aggregate_metrics": {
+    "adapter_act_count": 24222.0,
+    "adapter_act_max_ms": 0.399664,
+    "adapter_act_mean_ms": 0.1734437490710924,
+    "adapter_act_p50_ms": 0.172431,
+    "adapter_act_p95_ms": 0.20522,
+    "adapter_act_p99_ms": 0.226052,
+    "collision_rate": 0.0,
+    "controller_step_count": 24222.0,
+    "controller_step_max_ms": 0.114964,
+    "controller_step_mean_ms": 0.021767730575509868,
+    "controller_step_p50_ms": 0.021383,
+    "controller_step_p95_ms": 0.028163,
+    "controller_step_p99_ms": 0.037547,
+    "episodes": 50.0,
+    "mean_elapsed_time_s": 48.346000000000004,
+    "mean_final_distance_to_goal_m": 8.323429728808232,
+    "mean_success_time_s": 24.900000000000002,
+    "mean_traveled_distance_m": 2.955887067164495,
+    "navigation_metric": 0.004555772302033728,
+    "stopped_outside_goal_rate": 0.98,
+    "success_rate": 0.02,
+    "timeout_rate": 0.0,
+    "trials_per_world": 1.0,
+    "worlds": 50.0
+  },
+  "benchmark": {
+    "id": "barn-native-headless-non-official",
+    "source": "https://github.com/Daffan/the-barn-challenge",
+    "source_commit": "bf5a226f6088ec96bf0d2dbee3253a8ea6119b83"
+  },
+  "change_description": "Canonical unchanged Parcel DirectiveNavigator baseline across all 50 BARN public worlds using the pinned Jackal Melodic UST-10 native ray model (720 rays, 270 degrees, 30 m); one deterministic sensor-only native non-official trial per world.",
+  "components": {
+    "adapter": {
+      "hash": "dc086e546bc901f720af95781d6e6e9654e0492b4fc623575c74d616d7ae7789",
+      "id": "parcel-directive-navigator-barn-sensor-adapter-v1"
+    },
+    "agent": {
+      "id": "DirectiveNavigator"
+    },
+    "config": {
+      "hash": "194122945598bfbf6b0de32dfa0fe6b84545af216b1e3528a6309b1beb075f9b",
+      "id": "configs/navigation/default.yaml"
+    },
+    "model": {
+      "hash": "47746536aa1c46ae11651a74c94bed4f05619266be5a20605f390b323efd3ad4",
+      "id": "stub_v0"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/runs/barn-native-20260803T082542002189Z-3d35d19a.json",
+    "sha256": "4f92016da553a1ea2a5f49c2405896d4584977ae1a46aae4396bb7af03d724a8",
+    "size_bytes": 69223
+  },
+  "run_id": "barn-native-20260803T082542002189Z-3d35d19a",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T08:25:42.007265Z"
+}

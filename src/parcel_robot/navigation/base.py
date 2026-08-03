@@ -26,6 +26,9 @@ class GoalPose:
     heading_deg: float = 0.0
     poi_id: str = ""
     label: str = ""
+    # Semantic regions/objects need a much tighter terminal tolerance than a
+    # mapped landmark. ``None`` preserves the navigator's configured default.
+    arrival_radius_m: float | None = None
 
 
 @dataclass

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-conversation-quality-v1",
+  "runner_version": "live-conversation-quality-v1",
+  "frozen": true,
+  "case_count": 10,
+  "cases_file": "evals/companion/conversation_quality_v1/cases.json",
+  "physical_navigation_episode_count": 0,
+  "human_review_required": true,
+  "locked_files": [
+    {
+      "path": "evals/companion/conversation_quality_v1/cases.json",
+      "sha256": "03151c0fe50b8269af96096a5088cd2f68a09a09157e09cdc5dce09cedc36979"
+    },
+    {
+      "path": "evals/companion/conversation_quality_v1/result.schema.json",
+      "sha256": "735415015dffc8652f4ceaa9fb14c8905cf45715a39ecd0b77fc2325efbfefde"
+    },
+    {
+      "path": "prompts/system/core.md",
+      "sha256": "fdf3ea28a8a18ec56a885b2ab8ad729ab9ce6b2192dfdff14a49d51daaef624e"
+    },
+    {
+      "path": "prompts/system/action_policy.md",
+      "sha256": "056a7fc087ea7ac3f6f7a8b62b75e9b7e9278312f89942dbbc8ace5a442ab08d"
+    },
+    {
+      "path": "prompts/dynamic/runtime_context.md.tmpl",
+      "sha256": "c78fd9d7276d24450cbdd0c505d8eb59a3782013b432a50f7f882103a8427321"
+    },
+    {
+      "path": "prompts/functions/companion.yaml",
+      "sha256": "385b0eb5100f263565c2cb5442fa6dbc0f43590f3b5e2b2fd673a34d778c06d0"
+    },
+    {
+      "path": "prompts/personalities/calm_guardian.yaml",
+      "sha256": "9898f1b3e952c4092d29933abc30af198d1f9cf32ce2a0e6cbb536ccb64f3dcf"
+    },
+    {
+      "path": "prompts/personalities/gentle_companion.yaml",
+      "sha256": "03a6e24ab4ee0a7121384ac13edb8601962277c29bf626f6589b7346bca53e11"
+    },
+    {
+      "path": "prompts/personalities/playful_companion.yaml",
+      "sha256": "31f3437b6be34eafbe4883e5880079e53b0dc554b15837dd61a88db26d290d57"
+    }
+  ]
+}

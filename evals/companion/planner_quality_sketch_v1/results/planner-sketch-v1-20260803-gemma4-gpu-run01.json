@@ -1,0 +1,842 @@
+{
+  "aggregate": {
+    "case_count": 5,
+    "failed_case_count": 2,
+    "latency_ms": {
+      "model_http_full": {
+        "count": 5,
+        "maximum": 2551.699,
+        "mean": 2075.735,
+        "median": 2037.06,
+        "minimum": 1433.62,
+        "p95_nearest_rank": 2551.699
+      },
+      "model_ttft": {
+        "count": 5,
+        "maximum": 765.74,
+        "mean": 615.026,
+        "median": 751.266,
+        "minimum": 173.136,
+        "p95_nearest_rank": 765.74
+      },
+      "plan_compile": {
+        "count": 4,
+        "maximum": 0.208,
+        "mean": 0.124,
+        "median": 0.102,
+        "minimum": 0.086,
+        "p95_nearest_rank": 0.208
+      },
+      "plan_validation": {
+        "count": 4,
+        "maximum": 0.333,
+        "mean": 0.18,
+        "median": 0.131,
+        "minimum": 0.126,
+        "p95_nearest_rank": 0.333
+      },
+      "runner_case": {
+        "count": 5,
+        "maximum": 2551.938,
+        "mean": 2076.234,
+        "median": 2037.514,
+        "minimum": 1434.464,
+        "p95_nearest_rank": 2551.938
+      }
+    },
+    "model_output_bytes": {
+      "count": 5,
+      "maximum": 623.0,
+      "mean": 488.0,
+      "median": 417.0,
+      "minimum": 381.0,
+      "p95_nearest_rank": 623.0
+    },
+    "passed_case_count": 3,
+    "physical_navigation_episode_count": 0,
+    "physical_navigation_success_rate": null,
+    "plan_quality_accuracy": 0.6,
+    "tokens": {
+      "completion": {
+        "count": 5,
+        "maximum": 216.0,
+        "mean": 173.8,
+        "median": 153.0,
+        "minimum": 138.0,
+        "p95_nearest_rank": 216.0
+      },
+      "prompt": {
+        "count": 5,
+        "maximum": 1956.0,
+        "mean": 1901.8,
+        "median": 1888.0,
+        "minimum": 1882.0,
+        "p95_nearest_rank": 1956.0
+      },
+      "total": {
+        "count": 5,
+        "maximum": 2168.0,
+        "mean": 2075.6,
+        "median": 2049.0,
+        "minimum": 2025.0,
+        "p95_nearest_rank": 2168.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "admitted_plan_ir": {
+        "goal": {
+          "relation": "inside",
+          "target": {
+            "kind": "semantic_region",
+            "query": "sidewalk"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-sidewalk_then_hold",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "inside",
+              "target": "sidewalk",
+              "tolerance_m": null
+            },
+            "timeout_s": 120.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "parcel-task-2b2be1ca3cc652a391904083"
+      },
+      "case_id": "sidewalk_then_hold",
+      "failures": [],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-sidewalk_then_hold:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1",
+        "schema_version": 1,
+        "spatial_references": [
+          "sidewalk"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "6a53b8d851ddb2df4452497aff86f77a7288d69da6761c623956c5ba9e0328c6",
+        "turn_id": "planner-v2-sidewalk_then_hold",
+        "urgency_cues": []
+      },
+      "passed": true,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 150,
+        "model_http_ms": 1433.62,
+        "model_json_validation_ms": 0.145,
+        "model_mode": "plan",
+        "model_output_bytes": 417,
+        "model_output_contract": "plan_sketch_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 173.136,
+        "plan_compile_ms": 0.208,
+        "plan_validation_ms": 0.333,
+        "prompt_tokens": 1888,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 1434.464,
+        "total_tokens": 2038
+      },
+      "raw_plan_sketch": {
+        "goal": {
+          "kind": "semantic_region",
+          "query": "sidewalk",
+          "relation": "inside"
+        },
+        "schema_version": 1,
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "navigation": {
+              "relation": "inside",
+              "target": "sidewalk"
+            },
+            "skill": "NavigateTo"
+          },
+          {
+            "arguments": {},
+            "navigation": null,
+            "skill": "Hold"
+          }
+        ]
+      },
+      "snapshot_id": "planner-v2-snapshot-1",
+      "validation": {
+        "code": null,
+        "effective_invariants": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "do_not_interrupt_critical_task"
+        ],
+        "plan_sha256": "b3ef4019a9cdb989383307f24cf17cf5df5491f381569f8c5af0f2a125bd1fd4",
+        "status": "accepted",
+        "validated_snapshot_id": "planner-v2-snapshot-1"
+      }
+    },
+    {
+      "admitted_plan_ir": {
+        "goal": {
+          "relation": "near",
+          "target": {
+            "kind": "semantic_object",
+            "query": "lamppost"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-sidewalk_then_lamppost",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "inside",
+              "target": "sidewalk",
+              "tolerance_m": null
+            },
+            "timeout_s": 120.0
+          },
+          {
+            "arguments": {
+              "directive": "lamppost"
+            },
+            "id": "step_2",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "near",
+              "target": "lamppost",
+              "tolerance_m": null
+            },
+            "timeout_s": 120.0
+          },
+          {
+            "arguments": {},
+            "id": "step_3",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "parcel-task-a7044ea956a51a694c7d4388"
+      },
+      "case_id": "sidewalk_then_lamppost",
+      "failures": [],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-sidewalk_then_lamppost:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1",
+        "schema_version": 1,
+        "spatial_references": [
+          "sidewalk",
+          "lamppost"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "ec18077135771b67fa7623bf1de2cd986271aead1a680f03aaee8a29e969f63c",
+        "turn_id": "planner-v2-sidewalk_then_lamppost",
+        "urgency_cues": []
+      },
+      "passed": true,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 212,
+        "model_http_ms": 2419.145,
+        "model_json_validation_ms": 0.14,
+        "model_mode": "plan",
+        "model_output_bytes": 606,
+        "model_output_contract": "plan_sketch_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 629.832,
+        "plan_compile_ms": 0.106,
+        "plan_validation_ms": 0.131,
+        "prompt_tokens": 1956,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 2419.655,
+        "total_tokens": 2168
+      },
+      "raw_plan_sketch": {
+        "goal": {
+          "kind": "semantic_object",
+          "query": "lamppost",
+          "relation": "near"
+        },
+        "schema_version": 1,
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "navigation": {
+              "relation": "inside",
+              "target": "sidewalk"
+            },
+            "skill": "NavigateTo"
+          },
+          {
+            "arguments": {
+              "directive": "lamppost"
+            },
+            "navigation": {
+              "relation": "near",
+              "target": "lamppost"
+            },
+            "skill": "NavigateTo"
+          },
+          {
+            "arguments": {},
+            "navigation": null,
+            "skill": "Hold"
+          }
+        ]
+      },
+      "snapshot_id": "planner-v2-snapshot-2",
+      "validation": {
+        "code": null,
+        "effective_invariants": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "do_not_interrupt_critical_task"
+        ],
+        "plan_sha256": "ed20dd7cf45e9b68998b4cf1c506d46bbb3956656dabfae1fb59ac3d5f40586a",
+        "status": "accepted",
+        "validated_snapshot_id": "planner-v2-snapshot-2"
+      }
+    },
+    {
+      "admitted_plan_ir": {
+        "goal": {
+          "relation": "relative",
+          "target": {
+            "kind": "owner",
+            "query": "away from owner"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-five_steps_away_then_hold",
+        "steps": [
+          {
+            "arguments": {
+              "direction": "away_from_owner",
+              "steps": 5
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "lidar_fresh",
+              "owner_visible"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "MoveRelative",
+            "success": {
+              "confidence_min": null,
+              "fact": "distance_travelled",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 60.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "parcel-task-ada06901f9b3af5d73d004d7"
+      },
+      "case_id": "five_steps_away_then_hold",
+      "failures": [
+        "goal"
+      ],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-five_steps_away_then_hold:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1",
+        "schema_version": 1,
+        "spatial_references": [
+          "owner"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "b1729dbe34123cbceff4ef13e36340a0dd91e0b3385eb7171772b266d9935751",
+        "turn_id": "planner-v2-five_steps_away_then_hold",
+        "urgency_cues": []
+      },
+      "passed": false,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 138,
+        "model_http_ms": 1937.151,
+        "model_json_validation_ms": 0.117,
+        "model_mode": "plan",
+        "model_output_bytes": 381,
+        "model_output_contract": "plan_sketch_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 765.74,
+        "plan_compile_ms": 0.086,
+        "plan_validation_ms": 0.13,
+        "prompt_tokens": 1887,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 1937.601,
+        "total_tokens": 2025
+      },
+      "raw_plan_sketch": {
+        "goal": {
+          "kind": "owner",
+          "query": "away from owner",
+          "relation": "relative"
+        },
+        "schema_version": 1,
+        "steps": [
+          {
+            "arguments": {
+              "direction": "away_from_owner",
+              "steps": 5
+            },
+            "navigation": null,
+            "skill": "MoveRelative"
+          },
+          {
+            "arguments": {},
+            "navigation": null,
+            "skill": "Hold"
+          }
+        ]
+      },
+      "snapshot_id": "planner-v2-snapshot-3",
+      "validation": {
+        "code": null,
+        "effective_invariants": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "preserve_owner_visibility",
+          "do_not_interrupt_critical_task"
+        ],
+        "plan_sha256": "58125a411b384464f22b49d759f7148254800a9103c12f61deac6551ef88cc74",
+        "status": "accepted",
+        "validated_snapshot_id": "planner-v2-snapshot-3"
+      }
+    },
+    {
+      "admitted_plan_ir": null,
+      "case_id": "orbit_then_follow_behind",
+      "failures": [
+        "provider"
+      ],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-orbit_then_follow_behind:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1",
+        "schema_version": 1,
+        "spatial_references": [
+          "owner"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "d4d50564364f03ca79958bb21fcafd97cb5c16ad9adcb5bcdceffa8f301177a1",
+        "turn_id": "planner-v2-orbit_then_follow_behind",
+        "urgency_cues": []
+      },
+      "passed": false,
+      "provider_error": {
+        "message": "only NavigateTo may include navigation grounding",
+        "type": "ValueError"
+      },
+      "provider_metrics": {
+        "completion_tokens": 216,
+        "model_http_ms": 2551.699,
+        "model_json_validation_ms": 0.117,
+        "model_mode": "plan",
+        "model_output_bytes": 623,
+        "model_parse_error": "ValueError",
+        "model_streaming": true,
+        "model_ttft_ms": 755.157,
+        "plan_compile_ms": null,
+        "plan_validation_ms": null,
+        "prompt_tokens": 1882,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 2551.938,
+        "total_tokens": 2098
+      },
+      "raw_plan_sketch": null,
+      "snapshot_id": "planner-v2-snapshot-4",
+      "validation": {
+        "code": null,
+        "effective_invariants": [],
+        "plan_sha256": null,
+        "status": "not_run",
+        "validated_snapshot_id": null
+      }
+    },
+    {
+      "admitted_plan_ir": {
+        "goal": {
+          "relation": "near",
+          "target": {
+            "kind": "semantic_object",
+            "query": "lamppost"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 2,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-correct_active_task_to_lamppost",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "lamppost"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "near",
+              "target": "lamppost",
+              "tolerance_m": null
+            },
+            "timeout_s": 120.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "active-navigation"
+      },
+      "case_id": "correct_active_task_to_lamppost",
+      "failures": [],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.98,
+        "matched_rule": "task_correction",
+        "original_transcript_ref": "turn:planner-v2-correct_active_task_to_lamppost:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1",
+        "schema_version": 1,
+        "spatial_references": [
+          "lamppost"
+        ],
+        "speech_act": "correction",
+        "transcript_sha256": "e4df027840d3e0cc2eaaeb07678afe791ced730ca4f2ac5476536ef1bed5cb73",
+        "turn_id": "planner-v2-correct_active_task_to_lamppost",
+        "urgency_cues": []
+      },
+      "passed": true,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 153,
+        "model_http_ms": 2037.06,
+        "model_json_validation_ms": 0.108,
+        "model_mode": "plan",
+        "model_output_bytes": 413,
+        "model_output_contract": "plan_sketch_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 751.266,
+        "plan_compile_ms": 0.098,
+        "plan_validation_ms": 0.126,
+        "prompt_tokens": 1896,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 2037.514,
+        "total_tokens": 2049
+      },
+      "raw_plan_sketch": {
+        "goal": {
+          "kind": "semantic_object",
+          "query": "lamppost",
+          "relation": "near"
+        },
+        "schema_version": 1,
+        "steps": [
+          {
+            "arguments": {
+              "directive": "lamppost"
+            },
+            "navigation": {
+              "relation": "near",
+              "target": "lamppost"
+            },
+            "skill": "NavigateTo"
+          },
+          {
+            "arguments": {},
+            "navigation": null,
+            "skill": "Hold"
+          }
+        ]
+      },
+      "snapshot_id": "planner-v2-snapshot-5",
+      "validation": {
+        "code": null,
+        "effective_invariants": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "do_not_interrupt_critical_task"
+        ],
+        "plan_sha256": "d1bfa4b42c76152f3424f7d3c2488de86af1397922c6c2eecb238c440ffa609b",
+        "status": "accepted",
+        "validated_snapshot_id": "planner-v2-snapshot-5"
+      }
+    }
+  ],
+  "change_description": "Frozen five-case PlanSketch v1 GPU challenger paired to PlanIR run06 semantics.",
+  "claims": {
+    "does_not_prove": [
+      "semantic skill execution or physical navigation success",
+      "camera or LiDAR perception accuracy",
+      "collision avoidance, Unitree locomotion, or conversation quality",
+      "latency or token improvement without comparison to a separately valid paired PlanIR run"
+    ],
+    "proves": [
+      "PlanSketch generation quality on the selected frozen compound cases",
+      "deterministic compilation of raw PlanSketch into trusted PlanIR",
+      "paired router, snapshot, registry, semantic scoring, and PlanIR validation compatibility",
+      "recorded provider TTFT, full-call latency, output bytes, and token counts when supplied by the server"
+    ]
+  },
+  "corpus": {
+    "cases_path": "evals/companion/planner_quality_v2/cases.json",
+    "cases_sha256": "6717f2fbda80920133f20f4584630f78748b6146c17222600bf71471e9272d1a",
+    "context_binding_version": "trusted-envelope-v1",
+    "contract_compiler_version": "plansketch-v1-to-semantic-planir-v1",
+    "frozen": true,
+    "output_contract": "plan_sketch_v1",
+    "paired_reference_suite": "parcel-planner-quality-v2",
+    "planner_prompt": "prompts/system/planner_sketch.md",
+    "planner_prompt_sha256": "609259572b17d976d3bf999010da0228ff891bb48dd8f396218901734cbefae3",
+    "response_schema": "prompts/schemas/plan_sketch_v1.schema.json",
+    "response_schema_sha256": "82cf50b2a99476edac7af12e09804482275a38e5299c31180fc7061f5b1ad0be",
+    "selected_case_ids": [
+      "sidewalk_then_hold",
+      "sidewalk_then_lamppost",
+      "five_steps_away_then_hold",
+      "orbit_then_follow_behind",
+      "correct_active_task_to_lamppost"
+    ],
+    "semantic_scorer": "planner-quality-v2-identical"
+  },
+  "inference": {
+    "device": {
+      "gpu_layers": 999,
+      "profile": "cuda:rtx5000ada:sm89:31-of-31-layers",
+      "threads": 32
+    },
+    "generation": {
+      "plan_enable_thinking": false,
+      "plan_max_tokens": 1024,
+      "plan_temperature": 0.0,
+      "plan_timeout_s": 90.0,
+      "top_p": 0.9
+    },
+    "model": {
+      "artifact": "models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf",
+      "artifact_sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+      "artifact_size_bytes": 14439363584,
+      "id": "gemma-4-26b-a4b",
+      "quantization": "Q4_0 QAT"
+    },
+    "server": {
+      "backend": "llama.cpp",
+      "base_url": "http://127.0.0.1:8081",
+      "cache_state": "warm",
+      "version": "llama.cpp b10236 (1464c62d8), official CUDA12 OCI"
+    }
+  },
+  "recorded_at_utc": "2026-08-03T12:53:37.151266Z",
+  "run_id": "planner-sketch-v1-20260803125337Z-899f5494",
+  "runner_version": "runtime-routed-plansketch-quality-v1",
+  "schema_version": 1,
+  "suite_id": "parcel-planner-quality-sketch-v1"
+}

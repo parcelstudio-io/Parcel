@@ -1,0 +1,30 @@
+# EXPERIMENTAL, deployment-disabled causal BARN safety-profile challenger.
+#
+# Effective behavior is identical to barn_grid_v1.yaml except for the single
+# safety.predictive_mode leaf below.  In particular, the 0.8 m hard obstacle
+# boundary, speed limits, model, planner, and watchdog remain unchanged.  The
+# exact historical reference intentionally keeps its implicit default `stop`
+# mode so its bytes continue to match the calibrated world-0 run bundle.
+active_model: grid_v1
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+progress_watchdog:
+  timeout_steps: 800
+  max_semantic_replans: 2
+
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  max_vx: 0.45
+  max_vy: 0.25
+  max_vyaw: 0.8
+  stop_distance_m: 0.8
+  predictive_mode: projected_speed_cap
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

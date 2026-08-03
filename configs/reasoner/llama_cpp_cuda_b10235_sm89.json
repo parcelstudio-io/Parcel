@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "profile_id": "llama-b10235-cuda-sm89-gemma4-26b-a4b-q4",
+  "source": {
+    "repository": "https://github.com/ggml-org/llama.cpp.git",
+    "commit": "221f0f6356efe2260023208365705ec5d5a7c8f5",
+    "release_build": 10235,
+    "build_documentation": "https://github.com/ggml-org/llama.cpp/blob/221f0f6356efe2260023208365705ec5d5a7c8f5/docs/build.md"
+  },
+  "build": {
+    "source_dir": "third_party/llama.cpp-src/llama-b10235",
+    "build_dir": "third_party/llama.cpp-build/llama-b10235-cuda-sm89",
+    "generator": "Ninja",
+    "required_tools": {
+      "git": [
+        "git"
+      ],
+      "cmake": [
+        "cmake"
+      ],
+      "ninja": [
+        "ninja"
+      ],
+      "cuda_compiler": [
+        "nvcc"
+      ],
+      "c_compiler": [
+        "cc",
+        "gcc",
+        "clang"
+      ],
+      "cxx_compiler": [
+        "c++",
+        "g++",
+        "clang++"
+      ]
+    },
+    "cmake_defines": {
+      "BUILD_SHARED_LIBS": "ON",
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_CUDA_ARCHITECTURES": "89",
+      "GGML_CUDA": "ON",
+      "GGML_NATIVE": "OFF",
+      "LLAMA_BUILD_APP": "OFF",
+      "LLAMA_BUILD_EXAMPLES": "OFF",
+      "LLAMA_BUILD_SERVER": "ON",
+      "LLAMA_BUILD_TESTS": "OFF",
+      "LLAMA_BUILD_TOOLS": "ON",
+      "LLAMA_BUILD_UI": "OFF",
+      "LLAMA_OPENSSL": "OFF"
+    },
+    "target": "llama-server"
+  },
+  "runtime": {
+    "current_binary": "third_party/llama.cpp-bin/llama-b10235/llama-server",
+    "cuda_binary": "third_party/llama.cpp-build/llama-b10235-cuda-sm89/bin/llama-server",
+    "model": {
+      "path": "models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf",
+      "size_bytes": 14439363584,
+      "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d"
+    },
+    "context_size": 8192,
+    "generation_threads": 32,
+    "batch_threads": 32,
+    "requested_gpu_layers": 999
+  },
+  "admission": {
+    "target_compute_capability": "8.9",
+    "minimum_total_vram_mib": 24576,
+    "minimum_free_vram_mib": 18432,
+    "minimum_runtime_reserve_over_weight_file_mib": 4096
+  }
+}

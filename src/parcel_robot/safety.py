@@ -109,7 +109,7 @@ class SafetySupervisor:
         if set(call.arguments) != {"mode"} or not isinstance(call.arguments.get("mode"), str):
             return ToolResult(call.name, False, "set_behavior requires only a string mode")
         mode = call.arguments["mode"]
-        if mode not in {"follow", "stay"}:
+        if mode not in {"follow", "follow_behind", "stay"}:
             return ToolResult(call.name, False, f"Unknown behavior: {mode}")
         return ToolResult(call.name, True, f"Behavior approved: {mode}")
 

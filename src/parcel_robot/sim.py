@@ -9,10 +9,17 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 
+from .city_semantics import extract_city_semantics, visible_city_semantics
 from .config import ConfigStore
 from .dynamic_city import DynamicCity, select_social_collision_candidate
 from .gait import ScriptedTrotGait, TrajectoryPlayer
 from .models import Pose, VelocityCommand
+from .mujoco_lidar import (
+    MAX_LIDAR_OBSTACLES,
+    ROBOT_FOOTPRINT_RADIUS_M,
+    ROBOT_OBSTACLE_HEIGHT_M,
+    scan_mujoco_lidar,
+)
 from .sim_control import PoseController
 from .sim_ipc import DEFAULT_SOCKET, PoseSocketServer, message_to_pose, message_to_velocity
 
@@ -33,10 +40,6 @@ LOGICAL_OBSTACLE_PREFIXES = (
     "lamp_",
     "signal_",
 )
-ROBOT_OBSTACLE_HEIGHT_M = 0.9
-MAX_LIDAR_OBSTACLES = 64
-
-
 def is_logical_obstacle_name(name: str) -> bool:
     return name.startswith(LOGICAL_OBSTACLE_PREFIXES)
 
@@ -169,31 +172,11 @@ def run_simulator(
     owner_body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "owner")
     owner_mocap_id = int(model.body_mocapid[owner_body_id]) if owner_body_id >= 0 else -1
     obstacle_geom_ids: list[int] = []
-    semantic_region_specs: list[dict[str, object]] = []
     for geom_id in range(model.ngeom):
         name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id) or ""
         if is_logical_obstacle_name(name):
             obstacle_geom_ids.append(geom_id)
-        label = (
-            "sidewalk"
-            if name.startswith("sidewalk")
-            else ("crosswalk" if name.startswith("xw") else "")
-        )
-        if label and int(model.geom_type[geom_id]) == int(mujoco.mjtGeom.mjGEOM_BOX):
-            x, y = float(model.geom_pos[geom_id, 0]), float(model.geom_pos[geom_id, 1])
-            sx, sy = float(model.geom_size[geom_id, 0]), float(model.geom_size[geom_id, 1])
-            semantic_region_specs.append(
-                {
-                    "id": name,
-                    "label": label,
-                    "polygon": [
-                        [x - sx, y - sy],
-                        [x + sx, y - sy],
-                        [x + sx, y + sy],
-                        [x - sx, y + sy],
-                    ],
-                }
-            )
+    semantic_region_specs, semantic_object_specs = extract_city_semantics(model)
 
     def robot_yaw() -> float:
         if model.nq < 7:
@@ -233,51 +216,26 @@ def run_simulator(
             return []
         px, py = float(data.qpos[0]), float(data.qpos[1])
         heading = robot_yaw()
-        candidates: list[dict[str, float | str]] = []
-        robot_radius = 0.32
-        for geom_id in obstacle_geom_ids:
-            gx, gy = (float(value) for value in data.geom_xpos[geom_id, :2])
-            geom_type = int(model.geom_type[geom_id])
-            gz = float(data.geom_xpos[geom_id, 2])
-            if geom_type == int(mujoco.mjtGeom.mjGEOM_BOX):
-                half_height = float(model.geom_size[geom_id, 2])
-            elif geom_type == int(mujoco.mjtGeom.mjGEOM_SPHERE):
-                half_height = float(model.geom_size[geom_id, 0])
-            elif geom_type in {
-                int(mujoco.mjtGeom.mjGEOM_CYLINDER),
-                int(mujoco.mjtGeom.mjGEOM_CAPSULE),
-            }:
-                half_height = float(model.geom_size[geom_id, 0] + model.geom_size[geom_id, 1])
-            else:
-                half_height = 0.0
-            if gz - half_height > ROBOT_OBSTACLE_HEIGHT_M:
-                continue
-            if geom_type == int(mujoco.mjtGeom.mjGEOM_BOX):
-                sx, sy = (float(value) for value in model.geom_size[geom_id, :2])
-                dx = max(abs(px - gx) - sx, 0.0)
-                dy = max(abs(py - gy) - sy, 0.0)
-                distance = math.hypot(dx, dy) - robot_radius
-            elif geom_type in {
-                int(mujoco.mjtGeom.mjGEOM_CYLINDER),
-                int(mujoco.mjtGeom.mjGEOM_CAPSULE),
-                int(mujoco.mjtGeom.mjGEOM_SPHERE),
-            }:
-                radius = float(model.geom_size[geom_id, 0])
-                distance = math.hypot(px - gx, py - gy) - radius - robot_radius
-            else:
-                continue
-            bearing = (math.atan2(gy - py, gx - px) - heading + math.pi) % (2.0 * math.pi) - math.pi
-            candidates.append(
-                {
-                    "id": mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id)
-                    or f"geom-{geom_id}",
-                    "distance_m": max(0.0, distance),
-                    "bearing_rad": bearing,
-                    "x": gx,
-                    "y": gy,
-                }
+        return [
+            {
+                "id": hit.obstacle_id,
+                "distance_m": hit.distance_m,
+                "bearing_rad": hit.bearing_rad,
+                "x": hit.surface_x,
+                "y": hit.surface_y,
+            }
+            for hit in scan_mujoco_lidar(
+                model,
+                data,
+                obstacle_geom_ids,
+                robot_x=px,
+                robot_y=py,
+                robot_heading=heading,
+                robot_radius_m=ROBOT_FOOTPRINT_RADIUS_M,
+                obstacle_height_m=ROBOT_OBSTACLE_HEIGHT_M,
+                limit=MAX_LIDAR_OBSTACLES,
             )
-        return sorted(candidates, key=lambda item: float(item["distance_m"]))[:MAX_LIDAR_OBSTACLES]
+        ]
 
     def nearest_obstacle() -> dict[str, float | str] | None:
         return select_relevant_obstacle(lidar_obstacles(), walk_command)
@@ -303,18 +261,9 @@ def run_simulator(
         active_tracks = dynamic_city.snapshots(dynamic_mocap_ids)
         social_tracks = list(active_tracks)
         owner_is_visible = owner_visible and owner_mocap_id >= 0
-        if owner_is_visible:
-            social_tracks.append(
-                {
-                    "id": "owner-1",
-                    "kind": "owner",
-                    "x": owner_x,
-                    "y": owner_y,
-                    "vx": 0.0,
-                    "vy": 0.0,
-                    "radius_m": 0.22,
-                }
-            )
+        # The enrolled owner is a distinct camera track, not a generic crowd
+        # obstacle. Runtime applies an owner-specific envelope so intentional
+        # follow/orbit behaviors do not hide nearby pedestrian hazards.
         person = select_social_collision_candidate(
             social_tracks,
             robot_x=robot_x,
@@ -323,28 +272,13 @@ def run_simulator(
             robot_vx=robot_vx,
             robot_vy=robot_vy,
         )
-        visible_regions = []
-        for spec in semantic_region_specs:
-            polygon = spec["polygon"]
-            assert isinstance(polygon, list)
-            cx = sum(float(point[0]) for point in polygon) / len(polygon)
-            cy = sum(float(point[1]) for point in polygon) / len(polygon)
-            distance = math.hypot(cx - robot_x, cy - robot_y)
-            bearing = (math.atan2(cy - robot_y, cx - robot_x) - heading + math.pi) % (
-                2.0 * math.pi
-            ) - math.pi
-            # This is an explicitly labelled simulator test adapter, standing in
-            # for a production semantic camera + depth fusion process.
-            if distance <= 12.0 and abs(bearing) <= math.radians(70.0):
-                visible_regions.append(
-                    {
-                        **spec,
-                        "confidence": 0.98,
-                        "source": "simulator_semantic_camera",
-                        "reachable": True,
-                        "metadata": {"diagnostics_only": True},
-                    }
-                )
+        visible_regions, visible_objects = visible_city_semantics(
+            semantic_region_specs,
+            semantic_object_specs,
+            robot_x=robot_x,
+            robot_y=robot_y,
+            robot_heading=heading,
+        )
         return {
             "type": "status",
             "backend": "mujoco",
@@ -370,6 +304,7 @@ def run_simulator(
             "nearest_person": person,
             "dynamic_agents": active_tracks,
             "semantic_regions": visible_regions,
+            "semantic_objects": visible_objects,
             "dynamic_city": {
                 "enabled": dynamic_city.enabled,
                 "seed": dynamic_city.seed,

@@ -6,6 +6,7 @@ import time
 import pytest
 
 from parcel_robot.backends import mujoco as mujoco_backend
+from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.backends.mujoco import MujocoSocketBackend
 
 
@@ -58,6 +59,27 @@ def _status() -> dict:
                 "metadata": {"diagnostics_only": True},
             }
         ],
+        "semantic_objects": [
+            {
+                "id": "lamp_post_1",
+                "label": "lamppost",
+                "position": [0.2, 3.15, 0.0],
+                "confidence": 0.97,
+                "source": "simulator_semantic_camera",
+                "reachable": True,
+                "metadata": {
+                    "aliases": ["lamp post", "street light"],
+                    "stand_off_m": 1.2,
+                    "support_label": "sidewalk",
+                    "support_polygon": [
+                        [-8.0, 2.2],
+                        [8.0, 2.2],
+                        [8.0, 4.2],
+                        [-8.0, 4.2],
+                    ],
+                },
+            }
+        ],
         "collision": False,
         "emergency_stopped": False,
     }
@@ -77,6 +99,36 @@ def test_mujoco_backend_accepts_complete_finite_observation(monkeypatch):
     assert observation.dynamic_agents[0].vx == -0.4
     assert observation.semantic_regions[0].label == "sidewalk"
     assert observation.semantic_regions[0].metadata == {"diagnostics_only": True}
+    assert observation.semantic_objects[0].object_id == "lamp_post_1"
+    assert observation.semantic_objects[0].position == (0.2, 3.15, 0.0)
+    assert observation.semantic_objects[0].metadata is not None
+    assert observation.semantic_objects[0].metadata["support_label"] == "sidewalk"
+
+
+def test_sim_observation_preserves_legacy_positional_tail_fields() -> None:
+    observation = SimObservation(
+        1.0,
+        RobotPose(),
+        OwnerTrack(),
+        None,
+        None,
+        None,
+        (),
+        None,
+        None,
+        None,
+        None,
+        (),
+        (),
+        True,
+        True,
+        "legacy-backend",
+    )
+
+    assert observation.collision is True
+    assert observation.emergency_stopped is True
+    assert observation.backend == "legacy-backend"
+    assert observation.semantic_objects == ()
 
 
 @pytest.mark.parametrize(
@@ -94,6 +146,22 @@ def test_mujoco_backend_accepts_complete_finite_observation(monkeypatch):
         (
             lambda status: status["semantic_regions"][0].update(confidence=1.5),
             r"semantic_regions\[0\].confidence",
+        ),
+        (
+            lambda status: status["semantic_objects"][0].update(confidence=1.5),
+            r"semantic_objects\[0\].confidence",
+        ),
+        (
+            lambda status: status["semantic_objects"][0].update(position=[0.2, math.nan, 0.0]),
+            r"semantic_objects\[0\].position",
+        ),
+        (
+            lambda status: status["semantic_objects"][0].update(metadata=["invalid"]),
+            r"semantic_objects\[0\].metadata",
+        ),
+        (
+            lambda status: status["semantic_objects"][0].update(reachable="false"),
+            r"semantic_objects\[0\].reachable",
         ),
     ],
 )

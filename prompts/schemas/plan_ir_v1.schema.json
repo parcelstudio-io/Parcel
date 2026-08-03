@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parcel.local/schemas/plan_ir_v1.schema.json",
+  "title": "Parcel PlanIR v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "task_id",
+    "plan_revision",
+    "source_turn_id",
+    "goal",
+    "invariants",
+    "steps",
+    "requested_interrupt"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "task_id": {"$ref": "#/$defs/identifier"},
+    "plan_revision": {"type": "integer", "minimum": 1, "maximum": 1000000},
+    "source_turn_id": {"$ref": "#/$defs/identifier"},
+    "goal": {"$ref": "#/$defs/goal"},
+    "invariants": {
+      "type": "array",
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stay_within_local_orbit",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "preserve_owner_visibility",
+          "do_not_interrupt_critical_task"
+        ]
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {"$ref": "#/$defs/step"}
+    },
+    "requested_interrupt": {"enum": ["interrupt_now", "at_checkpoint", "when_idle"]}
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+    },
+    "goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relation", "target", "tolerance_m"],
+      "properties": {
+        "relation": {"enum": ["inside", "near", "behind", "orbit", "hold", "safe_pose", "relative"]},
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "query"],
+          "properties": {
+            "kind": {"enum": ["semantic_region", "semantic_object", "owner", "current_pose", "safe_region"]},
+            "query": {"type": "string", "maxLength": 160}
+          }
+        },
+        "tolerance_m": {"type": "number", "minimum": 0, "maximum": 5}
+      }
+    },
+    "success": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fact", "target", "tolerance_m", "confidence_min"],
+      "properties": {
+        "fact": {"type": "string", "minLength": 1, "maxLength": 80},
+        "target": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "minLength": 1, "maxLength": 160}
+          ]
+        },
+        "tolerance_m": {"type": "null"},
+        "confidence_min": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "number", "minimum": 0, "maximum": 1}
+          ]
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "skill",
+        "arguments",
+        "preconditions",
+        "success",
+        "timeout_s",
+        "max_attempts",
+        "recovery",
+        "resources",
+        "interruptibility"
+      ],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "skill": {
+          "enum": [
+            "NavigateTo",
+            "FollowFormation",
+            "OrbitOwner",
+            "MoveRelative",
+            "Hold",
+            "Pose",
+            "Gesture",
+            "Vocalize",
+            "AskClarification",
+            "ReturnToSafePose"
+          ]
+        },
+        "arguments": {"type": "object"},
+        "preconditions": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "camera_fresh",
+              "lidar_fresh",
+              "base_available",
+              "posture_available",
+              "voice_available",
+              "attention_available",
+              "owner_visible",
+              "owner_heading_available",
+              "robot_stopped",
+              "target_grounded",
+              "battery_critical",
+              "safe_region_grounded"
+            ]
+          }
+        },
+        "success": {"$ref": "#/$defs/success"},
+        "timeout_s": {"type": "number", "minimum": 0.1, "maximum": 300},
+        "max_attempts": {"type": "integer", "minimum": 1, "maximum": 3},
+        "recovery": {
+          "type": "array",
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["replan", "alternate_candidate", "rescan", "ask_user", "wait", "reacquire_owner", "safe_stop"]
+          }
+        },
+        "resources": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {"enum": ["base", "posture", "voice", "attention"]}
+        },
+        "interruptibility": {"enum": ["immediate", "checkpoint", "when_idle", "never"]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"skill": {"const": "NavigateTo"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/navigate_arguments"},
+              "success": {
+                "properties": {
+                  "fact": {"enum": ["inside", "near"]},
+                  "target": {"type": "string", "minLength": 1, "maxLength": 160, "pattern": "^[^:]+$"}
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {"properties": {"skill": {"const": "FollowFormation"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/follow_arguments"},
+              "success": {"properties": {"fact": {"const": "behind"}, "target": {"const": "owner"}}}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"skill": {"const": "OrbitOwner"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/orbit_arguments"},
+              "success": {"properties": {"fact": {"const": "orbit_complete"}, "target": {"const": "owner"}}}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"skill": {"const": "MoveRelative"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/relative_arguments"},
+              "success": {"properties": {"fact": {"const": "distance_travelled"}, "target": {"type": "null"}}}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"skill": {"const": "Hold"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/empty_arguments"},
+              "success": {"properties": {"fact": {"const": "motion_stopped"}, "target": {"type": "null"}}}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"skill": {"enum": ["Pose", "Gesture"]}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/named_arguments"},
+              "success": {"properties": {"fact": {"const": "skill_completed"}, "target": {"type": "null"}}}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"skill": {"const": "Vocalize"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/utterance_arguments"},
+              "success": {"properties": {"fact": {"const": "utterance_sent"}, "target": {"type": "null"}}}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"skill": {"const": "AskClarification"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/question_arguments"},
+              "success": {"properties": {"fact": {"const": "utterance_sent"}, "target": {"type": "null"}}}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"skill": {"const": "ReturnToSafePose"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/safe_pose_arguments"},
+              "success": {"properties": {"fact": {"const": "safe_pose"}, "target": {"type": "null"}}}
+            }
+          }
+        }
+      ]
+    },
+    "navigate_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directive"],
+      "properties": {
+        "directive": {"type": "string", "minLength": 1, "maxLength": 160, "pattern": "^[^:]+$"}
+      }
+    },
+    "follow_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relation", "distance_m"],
+      "properties": {
+        "relation": {"const": "behind"},
+        "distance_m": {"type": "number", "minimum": 0.8, "maximum": 3}
+      }
+    },
+    "orbit_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "size", "revolutions"],
+      "properties": {
+        "direction": {"enum": ["clockwise", "counterclockwise"]},
+        "size": {"enum": ["small", "normal", "wide"]},
+        "revolutions": {"type": "number", "minimum": 0.25, "maximum": 1}
+      }
+    },
+    "relative_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "steps"],
+      "properties": {
+        "direction": {"enum": ["forward", "backward", "away_from_owner"]},
+        "steps": {"type": "integer", "minimum": 1, "maximum": 12}
+      }
+    },
+    "empty_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 0
+    },
+    "named_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 80}
+      }
+    },
+    "utterance_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1, "maxLength": 500}
+      }
+    },
+    "question_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question"],
+      "properties": {
+        "question": {"type": "string", "minLength": 1, "maxLength": 300}
+      }
+    },
+    "safe_pose_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pose"],
+      "properties": {
+        "pose": {"type": "string", "minLength": 1, "maxLength": 80}
+      }
+    }
+  }
+}

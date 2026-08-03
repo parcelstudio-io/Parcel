@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "portfolio_id": "parcel-navigation-top-decile-v1",
+  "frozen_at_utc": "2026-08-03T00:00:00Z",
+  "objective": {
+    "statement": "Place in the top 10% independently on every adopted ranked evaluator while all product-relevance and safety gates pass.",
+    "quantile": 0.9,
+    "rank_rule": "rank <= ceil(0.10 * frozen_cohort_size)",
+    "aggregation": "conjunctive",
+    "averaging_across_evaluators_allowed": false,
+    "recorded_achievement": null,
+    "claim_requirements": [
+      "Every official_ranked target has eligible evidence from its exact official protocol and meets its frozen rank target.",
+      "Every proxy_development_gate and internal_pass_fail gate passes.",
+      "No adopted unresolved_top_decile target remains unresolved."
+    ]
+  },
+  "official_ranked_targets": [
+    {
+      "id": "habitat2020_pointnav_test_challenge",
+      "adopted": true,
+      "claim_class": "official_ranked",
+      "protocol_id": "habitat20-pointnav-test-ch",
+      "source": {
+        "url": "https://aihabitat.org/challenge/2020/",
+        "section": "PointNav Challenge Leaderboard (sorted by SPL)",
+        "accessed_at_utc": "2026-08-03T00:00:00Z"
+      },
+      "cohort": {
+        "published_ranked_entries": 6,
+        "top_decile_rank_cutoff": 1
+      },
+      "metric": {
+        "name": "spl",
+        "direction": "maximize",
+        "threshold": 0.21,
+        "threshold_relation": ">=",
+        "threshold_kind": "official_page_displayed_value",
+        "tie_at_displayed_threshold": false
+      },
+      "eligibility": {
+        "requires_exact_official_protocol": true,
+        "requires_official_rank_confirmation": true,
+        "parcel_offline_proxy_eligible": false,
+        "historical_challenge_closed": true
+      }
+    },
+    {
+      "id": "habitat2020_objectnav_test_challenge",
+      "adopted": true,
+      "claim_class": "official_ranked",
+      "protocol_id": "habitat20-objectnav-test-ch",
+      "source": {
+        "url": "https://aihabitat.org/challenge/2020/",
+        "section": "ObjectNav Challenge Leaderboard (sorted by SPL)",
+        "accessed_at_utc": "2026-08-03T00:00:00Z"
+      },
+      "cohort": {
+        "published_ranked_entries": 6,
+        "top_decile_rank_cutoff": 1
+      },
+      "metric": {
+        "name": "spl",
+        "direction": "maximize",
+        "threshold": 0.1,
+        "threshold_relation": ">=",
+        "threshold_kind": "official_page_displayed_value",
+        "tie_at_displayed_threshold": true
+      },
+      "eligibility": {
+        "requires_exact_official_protocol": true,
+        "requires_official_rank_confirmation": true,
+        "parcel_offline_proxy_eligible": false,
+        "historical_challenge_closed": true
+      }
+    },
+    {
+      "id": "barn2026_simulation_qualifier",
+      "adopted": true,
+      "claim_class": "official_ranked",
+      "protocol_id": "barn-challenge-2026-simulation-qualifier",
+      "target_manifest_ref": "barn_2026_top_decile.json",
+      "source": {
+        "url": "https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf",
+        "section": "Table I: Simulation Results",
+        "accessed_at_utc": "2026-08-03T00:00:00Z"
+      },
+      "cohort": {
+        "published_ranked_entries": 17,
+        "top_decile_rank_cutoff": 2
+      },
+      "metric": {
+        "name": "mean_navigation_score",
+        "direction": "maximize",
+        "threshold": 0.488,
+        "threshold_relation": ">=",
+        "threshold_kind": "official_report_value",
+        "tie_at_displayed_threshold": false
+      },
+      "eligibility": {
+        "requires_exact_official_protocol": true,
+        "requires_official_rank_confirmation": true,
+        "parcel_offline_proxy_eligible": false,
+        "historical_challenge_closed": true
+      }
+    }
+  ],
+  "proxy_development_gates": [
+    {
+      "id": "barn_native_public50",
+      "adopted": true,
+      "claim_class": "proxy_development_gate",
+      "protocol_id": "barn-native-headless-non-official",
+      "claim_eligible": false,
+      "fixed_scope": {
+        "worlds": "50 public BARN worlds",
+        "trials_per_world": 1,
+        "lidar": "720 rays, 270 degrees, 30 m",
+        "adapter": "ParcelBarnAdapter"
+      },
+      "promotion_gate": {
+        "comparison": "candidate_vs_promoted_incumbent_on_identical_scope",
+        "must_improve_at_least_one": [
+          "mean_navigation_score",
+          "success_rate"
+        ],
+        "must_not_regress": [
+          "collision_rate",
+          "controller_safety_tests"
+        ]
+      },
+      "note": "This gate guides hill climbing but can never substantiate an official BARN rank."
+    }
+  ],
+  "internal_pass_fail_gates": [
+    {
+      "id": "parcel_companion_semantic_navigation",
+      "adopted": true,
+      "claim_class": "internal_pass_fail",
+      "gate": "all_tests_pass",
+      "test_paths": [
+        "tests/test_headless_city_tasks.py",
+        "tests/test_semantic_navigation_regressions.py",
+        "tests/test_city_orbit_clearance.py"
+      ],
+      "purpose": "Prevent geometric-score tuning from removing instruction following, semantic vicinity, orbit, or collision behavior."
+    },
+    {
+      "id": "unitree_go2_control_safety",
+      "adopted": true,
+      "claim_class": "internal_pass_fail",
+      "gate": "all_tests_pass",
+      "test_paths": [
+        "tests/test_control.py",
+        "tests/test_unitree_control.py"
+      ],
+      "purpose": "Preserve closed-loop command freshness, stop, limit, fault, and Go2 body-command semantics."
+    }
+  ],
+  "unresolved_targets": [
+    {
+      "id": "threewe_pointnav",
+      "adopted": true,
+      "claim_class": "unresolved_top_decile",
+      "source": "https://3we.org/benchmarks",
+      "source_lock_key": "threewe_robot_platform",
+      "source_commit": "6073a1bd0a30b6ca1348027ac35b05832b97bfe9",
+      "leaderboard_snapshot": {
+        "path": "data/leaderboard.json",
+        "sha256": "5740907e0aafcf38eaf08ebd0cbb1c366465aa7e790401e9f723ab96fefa4323",
+        "version": "1.0.0",
+        "last_updated": "2025-05-17",
+        "observed_backend_entry_counts": {
+          "gazebo": 2,
+          "isaac_sim": 1,
+          "mock": 1
+        }
+      },
+      "candidate_metrics": ["success_rate", "spl"],
+      "numeric_threshold": null,
+      "blocks_portfolio_claim": true,
+      "reason": "The pinned snapshot mixes Gazebo, Isaac Sim, and mock entries. The alpha runner uses one seed-42 RNG and a persistent Robot rather than the documented seeds 0-99 with episode resets, uses a 30 second timeout rather than 60, trusts the backend success boolean instead of enforcing the documented 0.5 m radius, and reports endpoint displacement rather than traveled path length to SPL. It owns Robot.move_to without an external-agent hook, so replacing it to call Parcel would change the evaluator boundary.",
+      "resolution_required": "Obtain an organizer-confirmed immutable runner with a task-correct external-agent hook, episode resets, authoritative seed/timeout/success/path-length semantics, and a backend-specific cohort with ranking metric and tie rule; only then freeze rank cutoff and threshold."
+    },
+    {
+      "id": "threewe_objectnav",
+      "adopted": true,
+      "claim_class": "unresolved_top_decile",
+      "source": "https://3we.org/benchmarks",
+      "source_lock_key": "threewe_robot_platform",
+      "source_commit": "6073a1bd0a30b6ca1348027ac35b05832b97bfe9",
+      "leaderboard_snapshot": {
+        "path": "data/leaderboard.json",
+        "sha256": "5740907e0aafcf38eaf08ebd0cbb1c366465aa7e790401e9f723ab96fefa4323",
+        "version": "1.0.0",
+        "last_updated": "2025-05-17",
+        "observed_backend_entry_counts": {
+          "gazebo": 1
+        }
+      },
+      "candidate_metrics": ["success_rate", "spl", "discovery_distance"],
+      "numeric_threshold": null,
+      "blocks_portfolio_claim": true,
+      "reason": "The pinned snapshot has only one Gazebo ObjectNav entry. The code samples a category independently from a goal pose, never presents the category to an agent, sends hidden target coordinates directly to Robot.move_to, and never applies the generated start pose. The documented 120 second timeout conflicts with the implementation's 60 seconds, and no immutable external-agent hook can evaluate Parcel unchanged.",
+      "resolution_required": "Obtain an organizer-confirmed ObjectNav observation/action boundary that reveals the category but not target coordinates, resets every episode, uses the authoritative timeout/seed contract, and exposes an immutable policy hook plus backend-specific cohort; only then freeze rank cutoff and threshold."
+    },
+    {
+      "id": "threewe_exploration",
+      "adopted": true,
+      "claim_class": "unresolved_top_decile",
+      "source": "https://3we.org/benchmarks",
+      "source_lock_key": "threewe_robot_platform",
+      "source_commit": "6073a1bd0a30b6ca1348027ac35b05832b97bfe9",
+      "leaderboard_snapshot": {
+        "path": "data/leaderboard.json",
+        "sha256": "5740907e0aafcf38eaf08ebd0cbb1c366465aa7e790401e9f723ab96fefa4323",
+        "version": "1.0.0",
+        "last_updated": "2025-05-17",
+        "observed_backend_entry_counts": {
+          "gazebo": 1
+        }
+      },
+      "candidate_metrics": ["coverage_percent", "efficiency_ratio"],
+      "numeric_threshold": null,
+      "blocks_portfolio_claim": true,
+      "reason": "The pinned snapshot has only one Gazebo Exploration entry. Documentation specifies a 180 second timeout and efficiency ratio, while the alpha runner defaults to 120 seconds and exposes no efficiency ratio. Its Gazebo/ROS backend explicitly issues no exploration commands and samples coverage after at most one second; its mock backend returns perfect coverage. Neither path evaluates an injectable Parcel policy.",
+      "resolution_required": "Obtain an organizer-confirmed real Exploration controller/evaluator, authoritative coverage and efficiency metrics, timeout/seed/reset contract, immutable external-agent interface, and backend-specific cohort; only then freeze rank cutoff and threshold."
+    }
+  ]
+}

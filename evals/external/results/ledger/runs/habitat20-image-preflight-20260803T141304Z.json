@@ -1,0 +1,49 @@
+{
+  "aggregate_metrics": {
+    "compressed_layer_size_bytes": 3210119745,
+    "container_executed": false,
+    "gpu_kernel_executed": false,
+    "habitat_sim_executed": false,
+    "host_compute_capability": "8.9",
+    "host_nvidia_gpu_detected": true,
+    "image_config_verified": true,
+    "image_layers_downloaded": false,
+    "layer_descriptor_count": 23,
+    "navigation_metrics_emitted": false,
+    "official_rank_eligible": false,
+    "preflight_passed": true,
+    "registry_manifest_verified": true,
+    "scene_loaded": false,
+    "top_decile_evidence": false
+  },
+  "benchmark": {
+    "id": "habitat20-archived-image-gpu-preflight-non-evaluation",
+    "source": "https://github.com/facebookresearch/habitat-challenge.git",
+    "source_commit": "ddf1575532aecc4df2f4cd4c5db173b8eada3e1e"
+  },
+  "change_description": "Live immutable-registry and host-GPU prerequisite preflight for the exact archived Habitat 2020 image; no layers, container, kernel, scene, evaluator, Parcel policy, or navigation metric executed.",
+  "components": {
+    "adapter": {
+      "id": "not-exercised"
+    },
+    "agent": {
+      "id": "not-exercised"
+    },
+    "config": {
+      "hash": "sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+      "id": "fairembodied-habitat-challenge-pinned-image"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/habitat2020/habitat20-image-registry-gpu-preflight-20260803.json",
+    "sha256": "950879126fbe635bec3ace0454278bbefe16face4c7e90d84861f8ff49cd6bdf",
+    "size_bytes": 5847
+  },
+  "run_id": "habitat20-image-preflight-20260803T141304Z",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T14:15:19.631179Z"
+}

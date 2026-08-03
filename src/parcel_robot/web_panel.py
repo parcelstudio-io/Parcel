@@ -231,14 +231,22 @@ def build_runtime(
 ) -> RobotRuntime:
     store = ConfigStore(config_path)
     model_config = store.section("language_model")
+    planner_config = store.section("planner_model")
     enabled = bool(model_config.get("enabled", False)) if use_llm is None else use_llm
+    planner_enabled = bool(planner_config.get("enabled", False))
+    if use_llm is False:
+        planner_enabled = False
     language_model = None
+    planner_model = None
     if enabled:
         language_model = LlamaCppProvider.from_config(model_config)
+    if planner_enabled:
+        planner_model = LlamaCppProvider.from_config(planner_config)
     return RobotRuntime(
         config_path,
         MujocoSocketBackend(socket_path),
         language_model=language_model,
+        planner_model=planner_model,
     )
 
 

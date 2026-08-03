@@ -1,0 +1,337 @@
+{
+  "audit_kind": "parcel-llama-cpp-cuda-readiness",
+  "blockers": [
+    {
+      "component": "build",
+      "detail": "source checkout is absent or not at 1464c62d88f699ec9700c8010bbfdbc603a9efd6",
+      "id": "pinned_llama_cpp_source_missing",
+      "resolution": "fetch the exact commit into the profile source_dir; never build an unpinned branch"
+    },
+    {
+      "component": "build",
+      "detail": "none of ['cmake'] is available on PATH",
+      "id": "build_tool_cmake_missing",
+      "resolution": "provide the tool in an isolated/user-space toolchain; this doctor never installs it"
+    },
+    {
+      "component": "build",
+      "detail": "none of ['ninja'] is available on PATH",
+      "id": "build_tool_ninja_missing",
+      "resolution": "provide the tool in an isolated/user-space toolchain; this doctor never installs it"
+    },
+    {
+      "component": "build",
+      "detail": "none of ['nvcc'] is available on PATH",
+      "id": "build_tool_cuda_compiler_missing",
+      "resolution": "provide the tool in an isolated/user-space toolchain; this doctor never installs it"
+    },
+    {
+      "component": "build",
+      "detail": "none of ['cc', 'gcc', 'clang'] is available on PATH",
+      "id": "build_tool_c_compiler_missing",
+      "resolution": "provide the tool in an isolated/user-space toolchain; this doctor never installs it"
+    },
+    {
+      "component": "build",
+      "detail": "none of ['c++', 'g++', 'clang++'] is available on PATH",
+      "id": "build_tool_cxx_compiler_missing",
+      "resolution": "provide the tool in an isolated/user-space toolchain; this doctor never installs it"
+    }
+  ],
+  "build": {
+    "build_dir": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-build/llama-b10236-cuda-sm89",
+    "source": {
+      "actual_commit": null,
+      "commit_matches": false,
+      "detected": false,
+      "error": "pinned source checkout is missing",
+      "expected_commit": "1464c62d88f699ec9700c8010bbfdbc603a9efd6",
+      "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-src/llama-b10236"
+    },
+    "toolchain": {
+      "c_compiler": {
+        "candidates": [
+          "cc",
+          "gcc",
+          "clang"
+        ],
+        "detected": false,
+        "path": null
+      },
+      "cmake": {
+        "candidates": [
+          "cmake"
+        ],
+        "detected": false,
+        "path": null
+      },
+      "cuda_compiler": {
+        "candidates": [
+          "nvcc"
+        ],
+        "detected": false,
+        "path": null
+      },
+      "cxx_compiler": {
+        "candidates": [
+          "c++",
+          "g++",
+          "clang++"
+        ],
+        "detected": false,
+        "path": null
+      },
+      "git": {
+        "candidates": [
+          "git"
+        ],
+        "detected": true,
+        "path": "/usr/bin/git"
+      },
+      "ninja": {
+        "candidates": [
+          "ninja"
+        ],
+        "detected": false,
+        "path": null
+      }
+    }
+  },
+  "claims": {
+    "measured_gpu_layers_offloaded": null,
+    "measured_peak_vram_mib": null,
+    "model_loaded": false,
+    "navigation_or_planning_behavior_changed": false,
+    "planner_run_performed": false
+  },
+  "classification": {
+    "binary_cuda_ready": true,
+    "gpu_planner_run_authorized": true,
+    "memory_admission_ready": true,
+    "model_ready": true,
+    "nvidia_driver_ready": true,
+    "ready_for_gpu_inference": true,
+    "ready_to_build_pinned_cuda_binary": false
+  },
+  "distribution": {
+    "binary_matches_entrypoint": true,
+    "critical_file_count": 7,
+    "critical_files": [
+      {
+        "confined_to_rootfs": true,
+        "detected": true,
+        "error": null,
+        "expected_sha256": "e3c775bb274d01d5c3345f37aaea55470902187b4433d2689eab367fa4150f3c",
+        "expected_size_bytes": 17912,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+        "ready": true,
+        "relative_path": "app/llama-server",
+        "sha256": "e3c775bb274d01d5c3345f37aaea55470902187b4433d2689eab367fa4150f3c",
+        "size_bytes": 17912
+      },
+      {
+        "confined_to_rootfs": true,
+        "detected": true,
+        "error": null,
+        "expected_sha256": "98653d00859da34d11235ba22a95ef19f60e068946095f536b9a43fac5baa6d9",
+        "expected_size_bytes": 169839920,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/libggml-cuda.so",
+        "ready": true,
+        "relative_path": "app/libggml-cuda.so",
+        "sha256": "98653d00859da34d11235ba22a95ef19f60e068946095f536b9a43fac5baa6d9",
+        "size_bytes": 169839920
+      },
+      {
+        "confined_to_rootfs": true,
+        "detected": true,
+        "error": null,
+        "expected_sha256": "f408e6529c8d7301bdace1206a71327da558aff5e692df886e1555b9468c46f9",
+        "expected_size_bytes": 7680896,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/libllama-server-impl.so",
+        "ready": true,
+        "relative_path": "app/libllama-server-impl.so",
+        "sha256": "f408e6529c8d7301bdace1206a71327da558aff5e692df886e1555b9468c46f9",
+        "size_bytes": 7680896
+      },
+      {
+        "confined_to_rootfs": true,
+        "detected": true,
+        "error": null,
+        "expected_sha256": "c3a75b33af334a3486d197dbd1584a2985183ba4688d237a2be5f2f679329920",
+        "expected_size_bytes": 728800,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.90",
+        "ready": true,
+        "relative_path": "usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.90",
+        "sha256": "c3a75b33af334a3486d197dbd1584a2985183ba4688d237a2be5f2f679329920",
+        "size_bytes": 728800
+      },
+      {
+        "confined_to_rootfs": true,
+        "detected": true,
+        "error": null,
+        "expected_sha256": "031ce6c2cbfbb9468f040527cab5c599069ce5609e73e28f87503881063eac21",
+        "expected_size_bytes": 116388640,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/local/cuda-12.8/targets/x86_64-linux/lib/libcublas.so.12.8.4.1",
+        "ready": true,
+        "relative_path": "usr/local/cuda-12.8/targets/x86_64-linux/lib/libcublas.so.12.8.4.1",
+        "sha256": "031ce6c2cbfbb9468f040527cab5c599069ce5609e73e28f87503881063eac21",
+        "size_bytes": 116388640
+      },
+      {
+        "confined_to_rootfs": true,
+        "detected": true,
+        "error": null,
+        "expected_sha256": "10b5e6631cf8115c661eb895ed1533826308b58f7956466f53d236a40c9b622c",
+        "expected_size_bytes": 751771728,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/local/cuda-12.8/targets/x86_64-linux/lib/libcublasLt.so.12.8.4.1",
+        "ready": true,
+        "relative_path": "usr/local/cuda-12.8/targets/x86_64-linux/lib/libcublasLt.so.12.8.4.1",
+        "sha256": "10b5e6631cf8115c661eb895ed1533826308b58f7956466f53d236a40c9b622c",
+        "size_bytes": 751771728
+      },
+      {
+        "confined_to_rootfs": true,
+        "detected": true,
+        "error": null,
+        "expected_sha256": "42ba6acaf7c1211480668f252c71801c8f54c72424f59f8a4d5462f394796ad6",
+        "expected_size_bytes": 383583952,
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/lib/x86_64-linux-gnu/libnccl.so.2.25.1",
+        "ready": true,
+        "relative_path": "usr/lib/x86_64-linux-gnu/libnccl.so.2.25.1",
+        "sha256": "42ba6acaf7c1211480668f252c71801c8f54c72424f59f8a4d5462f394796ad6",
+        "size_bytes": 383583952
+      }
+    ],
+    "entrypoint": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+    "index_digest": "sha256:fd68d13013141833e8214ecad6e1fbefb532db6a00b980cdecfe33603dbf2675",
+    "kind": "oci_image",
+    "manifest_digest": "sha256:fcd0f95f2c70156f03ed47c22ff4bea95018bada125c5772af71e83f2c35f2e4",
+    "marker_error": null,
+    "marker_matches_profile": true,
+    "marker_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/.parcel-oci-provenance.json",
+    "ready": true,
+    "rootfs": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs",
+    "rootfs_confined": true,
+    "verified_critical_file_count": 7
+  },
+  "host": {
+    "gpus": [
+      {
+        "compute_capability": "8.9",
+        "driver_version": "595.84",
+        "memory_free_mib": 31086,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1143,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "uuid": "GPU-97535feb-2b93-d984-921f-885dda608bb1"
+      }
+    ],
+    "nvidia_smi": {
+      "detected": true,
+      "error": null,
+      "output": "NVIDIA RTX 5000 Ada Generation, GPU-97535feb-2b93-d984-921f-885dda608bb1, 595.84, 8.9, 32760, 1143, 31086",
+      "path": "/usr/bin/nvidia-smi",
+      "returncode": 0
+    },
+    "selected_gpu": {
+      "compute_capability": "8.9",
+      "driver_version": "595.84",
+      "memory_free_mib": 31086,
+      "memory_total_mib": 32760,
+      "memory_used_mib": 1143,
+      "name": "NVIDIA RTX 5000 Ada Generation",
+      "uuid": "GPU-97535feb-2b93-d984-921f-885dda608bb1"
+    }
+  },
+  "inference_binary": {
+    "cuda_backend_artifacts": [
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/libggml-cuda.so"
+    ],
+    "cuda_capable": true,
+    "cuda_linkage_detected": false,
+    "device_probe": {
+      "detected": true,
+      "error": null,
+      "output": "Available devices:\n  CUDA0: NVIDIA RTX 5000 Ada Generation (32227 MiB, 30767 MiB free)",
+      "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+      "returncode": 0
+    },
+    "hash_error": null,
+    "library_dirs": [
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app",
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/local/cuda-12.8/targets/x86_64-linux/lib",
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/lib",
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/lib64",
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/lib",
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/lib64"
+    ],
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+    "preload_libraries": [
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/lib/x86_64-linux-gnu/libnccl.so.2.25.1"
+    ],
+    "reported_devices": [
+      "CUDA0: NVIDIA RTX 5000 Ada Generation (32227 MiB, 30767 MiB free)"
+    ],
+    "sha256": "e3c775bb274d01d5c3345f37aaea55470902187b4433d2689eab367fa4150f3c",
+    "size_bytes": 17912,
+    "version_matches_profile": true,
+    "version_probe": {
+      "detected": true,
+      "error": null,
+      "output": "version: 10236 (1464c62d8)\nbuilt with GNU 14.2.0 for Linux x86_64",
+      "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+      "returncode": 0
+    }
+  },
+  "memory_admission": {
+    "compute_capability_ready": true,
+    "free_memory_ready": true,
+    "minimum_free_vram_mib": 18432,
+    "minimum_runtime_reserve_over_weight_file_mib": 4096,
+    "minimum_total_vram_mib": 24576,
+    "note": "The floor is an admission estimate, not measured peak model/KV/runtime VRAM.",
+    "runtime_reserve_ready": true,
+    "target_compute_capability": "8.9",
+    "total_memory_ready": true,
+    "weight_file_mib": 13770.45,
+    "weights_only_free_headroom_mib": 17315.55
+  },
+  "model": {
+    "actual_sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+    "actual_size_bytes": 14439363584,
+    "detected": true,
+    "error": null,
+    "expected_sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+    "expected_size_bytes": 14439363584,
+    "hash_matches": true,
+    "hash_verified": true,
+    "magic": "GGUF",
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf",
+    "ready": true,
+    "size_matches": true
+  },
+  "profile": {
+    "cmake_defines": {
+      "BUILD_SHARED_LIBS": "ON",
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_CUDA_ARCHITECTURES": "89",
+      "GGML_CUDA": "ON",
+      "GGML_NATIVE": "OFF",
+      "LLAMA_BUILD_APP": "OFF",
+      "LLAMA_BUILD_EXAMPLES": "OFF",
+      "LLAMA_BUILD_SERVER": "ON",
+      "LLAMA_BUILD_TESTS": "OFF",
+      "LLAMA_BUILD_TOOLS": "ON",
+      "LLAMA_BUILD_UI": "OFF",
+      "LLAMA_OPENSSL": "OFF"
+    },
+    "id": "llama-b10236-cuda12-oci-gemma4-26b-a4b-q4",
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/configs/reasoner/llama_cpp_cuda12_oci_b10236.json",
+    "release_build": 10236,
+    "requested_gpu_layers": 999,
+    "source_commit": "1464c62d88f699ec9700c8010bbfdbc603a9efd6",
+    "source_repository": "https://github.com/ggml-org/llama.cpp.git"
+  },
+  "recorded_at_utc": "2026-08-03T12:38:00.846961Z",
+  "schema_version": 1
+}

@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parcel.local/schemas/plan_sketch_v1.schema.json",
+  "x-parcel-output-contract": "plan_sketch_v1",
+  "title": "Parcel PlanSketch v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "goal", "steps"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "goal": {"$ref": "#/$defs/goal"},
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {"$ref": "#/$defs/step"}
+    }
+  },
+  "$defs": {
+    "goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relation", "kind", "query"],
+      "properties": {
+        "relation": {
+          "enum": ["inside", "near", "behind", "orbit", "hold", "safe_pose", "relative"]
+        },
+        "kind": {
+          "enum": ["semantic_region", "semantic_object", "owner", "current_pose", "safe_region"]
+        },
+        "query": {"type": "string", "maxLength": 160}
+      }
+    },
+    "navigation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relation", "target"],
+      "properties": {
+        "relation": {"enum": ["inside", "near"]},
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[^:]+$"
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skill", "arguments", "navigation"],
+      "properties": {
+        "skill": {
+          "enum": [
+            "NavigateTo",
+            "FollowFormation",
+            "OrbitOwner",
+            "MoveRelative",
+            "Hold",
+            "Pose",
+            "Gesture",
+            "Vocalize",
+            "AskClarification",
+            "ReturnToSafePose"
+          ]
+        },
+        "arguments": {"type": "object"},
+        "navigation": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/navigation"}
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"skill": {"const": "NavigateTo"}}},
+          "then": {
+            "properties": {
+              "arguments": {"$ref": "#/$defs/navigate_arguments"},
+              "navigation": {"$ref": "#/$defs/navigation"}
+            }
+          },
+          "else": {"properties": {"navigation": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"skill": {"const": "FollowFormation"}}},
+          "then": {"properties": {"arguments": {"$ref": "#/$defs/follow_arguments"}}}
+        },
+        {
+          "if": {"properties": {"skill": {"const": "OrbitOwner"}}},
+          "then": {"properties": {"arguments": {"$ref": "#/$defs/orbit_arguments"}}}
+        },
+        {
+          "if": {"properties": {"skill": {"const": "MoveRelative"}}},
+          "then": {"properties": {"arguments": {"$ref": "#/$defs/relative_arguments"}}}
+        },
+        {
+          "if": {"properties": {"skill": {"const": "Hold"}}},
+          "then": {"properties": {"arguments": {"$ref": "#/$defs/empty_arguments"}}}
+        },
+        {
+          "if": {"properties": {"skill": {"enum": ["Pose", "Gesture"]}}},
+          "then": {"properties": {"arguments": {"$ref": "#/$defs/named_arguments"}}}
+        },
+        {
+          "if": {"properties": {"skill": {"const": "Vocalize"}}},
+          "then": {"properties": {"arguments": {"$ref": "#/$defs/utterance_arguments"}}}
+        },
+        {
+          "if": {"properties": {"skill": {"const": "AskClarification"}}},
+          "then": {"properties": {"arguments": {"$ref": "#/$defs/question_arguments"}}}
+        },
+        {
+          "if": {"properties": {"skill": {"const": "ReturnToSafePose"}}},
+          "then": {"properties": {"arguments": {"$ref": "#/$defs/safe_pose_arguments"}}}
+        }
+      ]
+    },
+    "navigate_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directive"],
+      "properties": {
+        "directive": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[^:]+$"
+        }
+      }
+    },
+    "follow_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relation", "distance_m"],
+      "properties": {
+        "relation": {"const": "behind"},
+        "distance_m": {"type": "number", "minimum": 0.8, "maximum": 3}
+      }
+    },
+    "orbit_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "size", "revolutions"],
+      "properties": {
+        "direction": {"enum": ["clockwise", "counterclockwise"]},
+        "size": {"enum": ["small", "normal", "wide"]},
+        "revolutions": {"type": "number", "minimum": 0.25, "maximum": 1}
+      }
+    },
+    "relative_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "steps"],
+      "properties": {
+        "direction": {"enum": ["forward", "backward", "away_from_owner"]},
+        "steps": {"type": "integer", "minimum": 1, "maximum": 12}
+      }
+    },
+    "empty_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 0
+    },
+    "named_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 80}}
+    },
+    "utterance_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {"text": {"type": "string", "minLength": 1, "maxLength": 500}}
+    },
+    "question_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question"],
+      "properties": {"question": {"type": "string", "minLength": 1, "maxLength": 300}}
+    },
+    "safe_pose_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pose"],
+      "properties": {"pose": {"type": "string", "minLength": 1, "maxLength": 80}}
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "aggregate_metrics": {
+    "collision_rate": 0.0,
+    "elapsed_time_s": 100.007,
+    "episode_count": 1,
+    "gpu_used": false,
+    "navigation_metric": 0.0,
+    "official_protocol": false,
+    "organizer_attested": false,
+    "package_only": false,
+    "parcel_adapter_exercised": true,
+    "success_rate": 0.0,
+    "timeout_rate": 1.0,
+    "top_decile_evidence": false,
+    "trials_per_world": 1,
+    "world_indices": [
+      0
+    ]
+  },
+  "benchmark": {
+    "id": "barn-ros2-2026-parcel-world0-rootless-compatibility",
+    "source": "https://github.com/Saadmaghani/The-Barn-Challenge-Ros2.git",
+    "source_commit": "d6c575b51e477bd524d634e12cffeb34036fcd1e"
+  },
+  "change_description": "Calibrated Parcel ROS2 LiDAR transport v2 with explicit base-to-LiDAR extrinsic, robot self-return invalidation, and scan/odometry synchronization; the unchanged grid_v1 DirectiveNavigator is packaged through upstream launch_navigation_stack for one local public-world-0 cache-only compatibility episode.",
+  "components": {
+    "adapter": {
+      "hash": "sha256:b3a7372c208c47a73553533d1cc3f38b4105e049b4d23ff7db028ad42c60431d",
+      "id": "parcel-barn-ros2-calibrated-sensor-transport-v2"
+    },
+    "agent": {
+      "hash": "sha256:75f7ff4dfbf45d36f67cdf3eb3eac6a7e9d05abf48350db449ca23d93b597813",
+      "id": "parcel-directive-navigator-grid-v1-unchanged"
+    },
+    "config": {
+      "hash": "sha256:807909c4e58868e3e6023fea0113a71b00d7036276e29fb1ed5caa6d848df0c1",
+      "id": "configs/navigation/experiments/barn_grid_v1.yaml"
+    },
+    "model": {
+      "hash": "sha256:0d0700f8568d62f17d8b8c707ba2ec46e9c8539c626fb95d3eda201fa08f297b",
+      "id": "grid_v1"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/barn_ros2/parcel-world0-20260803T155459Z-75f7ff4d.json",
+    "sha256": "aeb891585a930c3168e6864e8fa6618274ffb729a93ba2cb611d8b70cba513e9",
+    "size_bytes": 4085
+  },
+  "run_id": "barn-ros2-parcel-20260803T155459Z-world0-75f7ff4d",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T15:57:03.220811Z"
+}

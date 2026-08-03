@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parcel.local/evals/companion/brain_v1/report.schema.json",
+  "title": "Parcel Companion Brain v1 Contract Evaluation Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "suite_id",
+    "runner_version",
+    "corpus",
+    "passed",
+    "aggregate",
+    "cases",
+    "claims"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "suite_id": {"const": "parcel-companion-brain-v1"},
+    "runner_version": {"const": "brain-contract-integration-v1"},
+    "corpus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frozen", "integration_cases_sha256", "selected_case_ids"],
+      "properties": {
+        "frozen": {"const": true},
+        "integration_cases_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "selected_case_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "passed": {"type": "boolean"},
+    "aggregate": {
+      "type": "object",
+      "required": [
+        "case_count",
+        "passed_case_count",
+        "failed_case_count",
+        "expected_boundary_outcome_accuracy",
+        "expected_fail_closed_case_count",
+        "matched_fail_closed_case_count",
+        "fail_closed_expectation_accuracy",
+        "physical_navigation_episode_count",
+        "physical_navigation_success_rate"
+      ],
+      "properties": {
+        "case_count": {"type": "integer", "minimum": 0},
+        "passed_case_count": {"type": "integer", "minimum": 0},
+        "failed_case_count": {"type": "integer", "minimum": 0},
+        "expected_boundary_outcome_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+        "expected_fail_closed_case_count": {"type": "integer", "minimum": 0},
+        "matched_fail_closed_case_count": {"type": "integer", "minimum": 0},
+        "fail_closed_expectation_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+        "intent_frames_validated": {"type": "integer", "minimum": 0},
+        "plan_contracts_parsed": {"type": "integer", "minimum": 0},
+        "plans_admitted": {"type": "integer", "minimum": 0},
+        "plans_rejected": {"type": "integer", "minimum": 0},
+        "executive_submissions": {"type": "integer", "minimum": 0},
+        "semantic_dispatches": {"type": "integer", "minimum": 0},
+        "runtime_callbacks": {"type": "integer", "minimum": 0},
+        "controller_polls": {"type": "integer", "minimum": 0},
+        "typed_results": {"type": "integer", "minimum": 0},
+        "verified_facts_emitted": {"type": "integer", "minimum": 0},
+        "verified_facts_accepted": {"type": "integer", "minimum": 0},
+        "reports_accepted": {"type": "integer", "minimum": 0},
+        "stale_reports_ignored": {"type": "integer", "minimum": 0},
+        "interrupts_requested": {"type": "integer", "minimum": 0},
+        "logical_ticks": {"type": "integer", "minimum": 0},
+        "physical_navigation_episode_count": {"const": 0},
+        "physical_navigation_success_rate": {"type": "null"}
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "scenario", "passed", "expected", "actual", "failures", "metrics"],
+        "properties": {
+          "case_id": {"type": "string", "minLength": 1},
+          "scenario": {"type": "string", "minLength": 1},
+          "passed": {"type": "boolean"},
+          "expected": {"type": "object"},
+          "actual": {"type": "object"},
+          "failures": {"type": "array", "items": {"type": "string"}},
+          "metrics": {
+            "type": "object",
+            "additionalProperties": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "does_not_prove": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

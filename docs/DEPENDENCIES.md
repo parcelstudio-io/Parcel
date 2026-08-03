@@ -126,6 +126,9 @@ stub pedestrians (no MetaUrban required).
 | Service | Runtime | Weights | Launch |
 | --- | --- | --- | --- |
 | Gemma 4 26B-A4B QAT Q4 | official llama.cpp CPU binary | 14.4 GB GGUF | `scripts/launch_reasoner.sh` |
+| Gemma CUDA profile | official, provenance-pinned llama.cpp b10236 CUDA 12 OCI runtime | same verified GGUF | `scripts/launch_reasoner_gpu.sh` (**admitted; 31/31 layers measured**) |
+| Ministral 3 8B Instruct challenger | same pinned b10236 CUDA 12 OCI runtime through an overlay profile | 5.20 GB Q4_K_M GGUF | **installed and measured at 35/35 layers, but rejected for activation after 5/10 conversation and 3/5 PlanIR** |
+| Ministral 3 8B Reasoning planner control | same pinned b10236 CUDA 12 OCI runtime through a separate overlay profile | 5.20 GB Q4_K_M GGUF | **installed and measured at 35/35 layers, but rejected at a predeclared 0/1 PlanSketch compatibility gate after malformed output exhausted 1,024 tokens; no full-suite or conversation claim** |
 | Fish Audio S2 Pro | isolated uv Python 3.12, Torch 2.8 `cu129` | about 11 GB | `scripts/launch_fish_speech.sh` |
 | whisper.cpp `base.en` | official CPU binary | 142 MB | `scripts/launch_whisper.sh` |
 | Silero VAD v6.2 | whisper.cpp VAD model | 885 KB | enabled by `scripts/launch_whisper.sh` |
@@ -140,6 +143,25 @@ license, so it is opt-in in `launch_stack.sh`.
 ALSA detects the Realtek ALC1220 and direct capture works, but PipeWire has no
 connected source and only Dummy Output. Parcel therefore selects text mode.
 Connecting a microphone/speaker is still required before enabling audio I/O.
+
+The b10235 CPU fallback is not CUDA-capable, but Parcel now stages the exact
+official b10236 CUDA 12 OCI runtime separately. Its 13/13 image layers, 7/7
+critical files, server version/hash, model hash, CUDA device, compute
+capability, and VRAM floors passed admission. A verbose run measured 31/31
+layers offloaded and 15,280 MiB attributed to the idle loaded server. Run the
+read-only doctor before making any GPU claim:
+
+```bash
+PYTHONPATH=src .parcel/bin/python -m parcel_robot.reasoner_gpu \
+  --profile configs/reasoner/llama_cpp_cuda12_oci_b10236.json \
+  --use-cuda-build-output --require-inference-ready
+```
+
+The frozen five-case GPU planner run passed 5/5 and reduced median usable-plan
+latency from 19,664.294 ms on CPU to 5,657.459 ms, but it executed zero
+physical episodes. The safe staging recipe, exact audit, placement evidence,
+and limitations are in [`REASONER_GPU_PROFILE.md`](REASONER_GPU_PROFILE.md).
+The OCI path never overwrites the working CPU binary.
 
 ---
 
@@ -223,7 +245,8 @@ are wired and tested. Keep `active_model: stub_v0`; see
 | stable-baselines3 | PPO fine-tune on `MetaUrbanNavEnv` | `parcel-metaurban` |
 | `portaudio19-dev` | Optional Python/PyAudio client; Fish API does not need it | OS |
 | `python3-tk` | `parcel-control` GUI | OS |
-| CUDA toolkit (`nvcc`) | Only if compiling CUDA extensions | OS (optional) |
+| CUDA toolkit (`nvcc`) | llama.cpp CUDA build and optional CUDA extensions; absent now | isolated toolchain or OS (optional) |
+| CMake + Ninja + C/C++ compilers | pinned llama.cpp CUDA build; absent now | isolated toolchain or OS (optional) |
 
 ---
 
@@ -234,9 +257,12 @@ are wired and tested. Keep `active_model: stub_v0`; see
 | GPU compute / CUDA driver | Yes (RTX 5000 Ada) |
 | `.parcel` MuJoCo + skills + tests | Yes |
 | Stub city nav + pedestrian braking | Yes (`MetaUrbanNavEnv` kinematic stub) |
-| Gemma structured action reasoning | Yes (CPU llama.cpp profile) |
+| Gemma structured action reasoning | Yes (CPU fallback or admitted CUDA llama.cpp profile) |
+| Gemma GPU offload | Yes: verified official b10236 CUDA 12 OCI runtime; 31/31 layers measured. Source compilation remains optional/unavailable. |
 | Fish S2 Pro server | Yes, opt-in (uses most GPU VRAM) |
 | Microphone/speaker duplex | Text prerequisite only; no connected endpoints |
+| BARN ROS/Gazebo runtime smoke | Yes, cache-only Bubblewrap/PRoot: unchanged upstream MPPI completed one public world; no Parcel/SIF/score claim |
+| BARN Parcel 50×10 public protocol | **Blocked**: the corrected single-world hook started but never translated enough to begin the evaluator trial, so no row exists; first-sensor/command telemetry must localize the liveness stall, and upstream-tested Singularity/SIF execution is still unavailable |
 | Living MetaUrban city + SMPL humans | **Blocked** on a real Parcel backend adapter (and Conda 3.9) |
 | CityWalker / NaVILA inference | **Blocked** on vendor adapters, dependencies, and weights |
 

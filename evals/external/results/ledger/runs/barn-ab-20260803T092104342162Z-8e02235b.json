@@ -1,0 +1,206 @@
+{
+  "aggregate_metrics": {
+    "baseline": {
+      "adapter_act_count": 24222.0,
+      "adapter_act_max_ms": 0.52942,
+      "adapter_act_mean_ms": 0.17297417215754274,
+      "adapter_act_p50_ms": 0.17223,
+      "adapter_act_p95_ms": 0.203757,
+      "adapter_act_p99_ms": 0.222446,
+      "collision_rate": 0.0,
+      "controller_step_count": 24222.0,
+      "controller_step_max_ms": 0.248536,
+      "controller_step_mean_ms": 0.02164295479316324,
+      "controller_step_p50_ms": 0.021252,
+      "controller_step_p95_ms": 0.027311,
+      "controller_step_p99_ms": 0.037026,
+      "episodes": 50.0,
+      "evaluator_diagnostics": {
+        "failure_counts": {
+          "stopped_outside_goal": 49
+        },
+        "mean_closest_goal_distance_m": 8.113947538654164,
+        "mean_episode_minimum_signed_obstacle_clearance_m": 0.5033217852013643,
+        "mean_goal_progress_efficiency": 0.6028568353330566,
+        "mean_maximum_goal_progress_fraction": 0.18860524613458357,
+        "mean_maximum_goal_progress_m": 1.8860524613458358,
+        "mean_net_goal_progress_m": 1.6765702711917678,
+        "mean_successful_reference_route_efficiency": 1.260411634875017,
+        "mean_translational_speed_mps": 0.06417050488528833,
+        "mean_traveled_to_reference_path_ratio": 0.25815228966290166,
+        "minimum_signed_obstacle_clearance_m": 0.45745459099890423,
+        "outcome_counts": {
+          "stopped_outside_goal": 49,
+          "succeeded": 1
+        },
+        "private_state_not_exposed_to_policy": true
+      },
+      "mean_elapsed_time_s": 48.346000000000004,
+      "mean_final_distance_to_goal_m": 8.323429728808232,
+      "mean_success_time_s": 24.900000000000002,
+      "mean_traveled_distance_m": 2.955887067164495,
+      "navigation_metric": 0.004555772302033728,
+      "policy_diagnostics": {
+        "note": "Policy-provided notes are not evaluator failure labels.",
+        "terminal_action_note_counts": {
+          "navigation_no_progress": 49,
+          "track_goal err=0.0 dist=1.0|clear": 1
+        }
+      },
+      "stopped_outside_goal_rate": 0.98,
+      "success_rate": 0.02,
+      "timeout_rate": 0.0,
+      "trials_per_world": 1.0,
+      "worlds": 50.0
+    },
+    "candidate": {
+      "adapter_act_count": 32026.0,
+      "adapter_act_max_ms": 313.936709,
+      "adapter_act_mean_ms": 33.82973816592769,
+      "adapter_act_p50_ms": 18.672087,
+      "adapter_act_p95_ms": 115.644013,
+      "adapter_act_p99_ms": 122.191486,
+      "collision_rate": 0.0,
+      "controller_step_count": 32026.0,
+      "controller_step_max_ms": 313.776367,
+      "controller_step_mean_ms": 33.6711939851683,
+      "controller_step_p50_ms": 18.511209,
+      "controller_step_p95_ms": 115.469891,
+      "controller_step_p99_ms": 122.015891,
+      "episodes": 50.0,
+      "evaluator_diagnostics": {
+        "failure_counts": {
+          "stopped_outside_goal": 29,
+          "timeout": 3
+        },
+        "mean_closest_goal_distance_m": 5.412155343316124,
+        "mean_episode_minimum_signed_obstacle_clearance_m": 0.4718772994273672,
+        "mean_goal_progress_efficiency": 0.8157349226647223,
+        "mean_maximum_goal_progress_fraction": 0.45878446566838754,
+        "mean_maximum_goal_progress_m": 4.587844656683876,
+        "mean_net_goal_progress_m": 4.580931344156123,
+        "mean_successful_reference_route_efficiency": 1.211080580591751,
+        "mean_translational_speed_mps": 0.16334989355583282,
+        "mean_traveled_to_reference_path_ratio": 0.43455362922993257,
+        "minimum_signed_obstacle_clearance_m": 0.08067643186533903,
+        "outcome_counts": {
+          "stopped_outside_goal": 29,
+          "succeeded": 18,
+          "timeout": 3
+        },
+        "private_state_not_exposed_to_policy": true
+      },
+      "mean_elapsed_time_s": 63.99400000000001,
+      "mean_final_distance_to_goal_m": 5.419068655843876,
+      "mean_success_time_s": 24.08888888888889,
+      "mean_traveled_distance_m": 4.9645474871082005,
+      "navigation_metric": 0.08859490601491275,
+      "policy_diagnostics": {
+        "note": "Policy-provided notes are not evaluator failure labels.",
+        "terminal_action_note_counts": {
+          "grid_recover_scan status=no_path|clear": 1,
+          "grid_recover_scan status=no_path|obstacle_slow": 1,
+          "grid_recover_scan status=planned|obstacle_slow": 1,
+          "grid_track err=-0.0 goal=1.0 route=2 status=planned|clear": 11,
+          "grid_track err=0.0 goal=1.0 route=2 status=planned|clear": 7,
+          "navigation_no_progress": 29
+        }
+      },
+      "stopped_outside_goal_rate": 0.58,
+      "success_rate": 0.36,
+      "timeout_rate": 0.06,
+      "trials_per_world": 1.0,
+      "worlds": 50.0
+    },
+    "comparison": {
+      "candidate_minus_baseline": {
+        "collision_rate": 0.0,
+        "mean_episode_minimum_signed_obstacle_clearance_m": -0.03144448577399711,
+        "mean_final_distance_to_goal_m": -2.904361072964356,
+        "mean_goal_progress_efficiency": 0.2128780873316657,
+        "mean_maximum_goal_progress_m": 2.70179219533804,
+        "navigation_metric": 0.08403913371287902,
+        "stopped_outside_goal_rate": -0.4,
+        "success_rate": 0.33999999999999997,
+        "timeout_rate": 0.06
+      },
+      "paired_episode_count": 50,
+      "paired_outcomes": {
+        "collision_gains": 0,
+        "collision_regressions": 0,
+        "metric_improvements": 18,
+        "metric_regressions": 0,
+        "metric_ties": 32,
+        "success_gains": 17,
+        "success_regressions": 0
+      },
+      "safety_regression": false,
+      "same_worlds_trials_config_and_seeds": true
+    },
+    "target_status": {
+      "baseline": {
+        "leaderboard_claim_allowed": false,
+        "minimum_official_score": 0.488,
+        "note": "Native proxy scores are not official or leaderboard-comparable.",
+        "numeric_reference_met": false,
+        "official_gate_eligible": false,
+        "official_gate_pass": false,
+        "score": 0.004555772302033728,
+        "score_gap": -0.48344422769796624,
+        "source": "https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf",
+        "status": "native_proxy_reference_only",
+        "target_id": "barn-2026-simulation-official-top-decile-v1"
+      },
+      "candidate": {
+        "leaderboard_claim_allowed": false,
+        "minimum_official_score": 0.488,
+        "note": "Native proxy scores are not official or leaderboard-comparable.",
+        "numeric_reference_met": false,
+        "official_gate_eligible": false,
+        "official_gate_pass": false,
+        "score": 0.08859490601491275,
+        "score_gap": -0.3994050939850872,
+        "source": "https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf",
+        "status": "native_proxy_reference_only",
+        "target_id": "barn-2026-simulation-official-top-decile-v1"
+      },
+      "note": "A paired native proxy comparison cannot pass the official target gate.",
+      "official_gate_pass": false
+    }
+  },
+  "benchmark": {
+    "id": "barn-native-paired-comparison-headless-non-official",
+    "source": "https://github.com/Daffan/the-barn-challenge",
+    "source_commit": "bf5a226f6088ec96bf0d2dbee3253a8ea6119b83"
+  },
+  "change_description": "All-50 public validation of development-selected grid_v1: cached A*, immediate route invalidation, 360-ray mapping, blind-rear-safe recovery, Go2-compatible 0.6 m/s cap, and explicit native BARN Jackal clearance profile; no public-world tuning and production Go2 safety unchanged.",
+  "components": {
+    "adapter": {
+      "hash": "c8b4c72b0b1c513ce986e7bf56b106498696a464dc134fbde0bd873e56ec657a",
+      "id": "parcel-directive-navigator-barn-sensor-adapter-v1"
+    },
+    "agent": {
+      "id": "DirectiveNavigator"
+    },
+    "config": {
+      "hash": "d376f85c7ee912125d1b68a8887f0c96c73780ec66effc1e5833afcd2afd3e91",
+      "id": "configs/navigation/experiments/barn_grid_jackal_clearance_v2.yaml"
+    },
+    "model": {
+      "hash": "0d0700f8568d62f17d8b8c707ba2ec46e9c8539c626fb95d3eda201fa08f297b",
+      "id": "grid_v1"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/runs/barn-ab-20260803T092104342162Z-8e02235b.json",
+    "sha256": "32199bfaa55f5dc6c7ad1594c05074ee59398fb98a63da8caeea5cc266851ebb",
+    "size_bytes": 271166
+  },
+  "run_id": "barn-ab-20260803T092104342162Z-8e02235b",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T09:21:04.346870Z"
+}

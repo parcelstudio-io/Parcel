@@ -46,6 +46,23 @@ spatial_behaviors:
   stall_timeout_s: 20
   timeout_s: 120
 
+# "follow" keeps the legacy direct distance controller. "follow_behind" is an
+# explicit camera-track formation: it needs two bounded owner-motion updates,
+# stages around (never through) the owner, and holds if heading becomes stale.
+owner_follow:
+  behind_distance_m: 1.9
+  owner_keepout_m: 1.55
+  staging_radius_m: 2.1
+  staging_lookahead_rad: 0.35
+  heading_min_displacement_m: 0.08
+  heading_min_speed_mps: 0.10
+  heading_max_speed_mps: 3.0
+  heading_smoothing_alpha: 0.35
+  heading_min_updates: 2
+  heading_stale_after_s: 0.8
+  prediction_horizon_s: 0.25
+  prediction_max_m: 0.25
+
 metrics:
   max_turns: 200
 
@@ -113,6 +130,14 @@ language_model:
   context_char_budget: 12000
   max_tokens: 256
   enable_thinking: false
+  # The same loaded Gemma backbone gets a separate, slower PlanIR contract.
+  # It is selected only for deliberative physical tasks by the bounded router.
+  plan_timeout: 90
+  plan_max_tokens: 1024
+  # Live testing showed the 1,024-token thinking budget could be exhausted
+  # before any PlanIR was emitted. Constrained direct JSON is the safe default.
+  plan_enable_thinking: false
+  plan_temperature: 0.0
   max_stream_events: 4096
   max_response_bytes: 131072
 
@@ -121,6 +146,12 @@ agent:
   personality: gentle_companion
   conversation_history_messages: 16
   functions: [companion, navigator, spatial_reasoner, manual_assistant]
+  brain:
+    enabled: true
+    # Only semantic skills with runtime adapters and verified success checks.
+    skills: [NavigateTo, FollowFormation, OrbitOwner, MoveRelative, Hold, Vocalize, AskClarification]
+    maximum_total_timeout_s: 600
+    max_task_records: 256
   affect:
     minimum_confidence: 0.75
     social_action_cooldown_s: 8

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "target_id": "barn-2026-simulation-official-top-decile-v1",
+  "frozen_at_utc": "2026-08-03T00:00:00Z",
+  "benchmark": {
+    "id": "barn-challenge-2026-simulation-qualifier",
+    "name": "Fifth BARN Challenge at ICRA 2026 - simulation qualifier",
+    "source": "https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf",
+    "source_sha256": "688c58b0846f3c0b362814b42a64b4fd6aa130d4752908ddc831ee2aad112bd3",
+    "source_table": "Table I: Simulation Results",
+    "registered_team_count": 17,
+    "reported_numeric_score_count": 12,
+    "official_protocol": {
+      "simulator": "Gazebo with standardized Clearpath Jackal",
+      "sensor": "270-degree Hokuyo 2D LiDAR",
+      "unseen_world_count": 50,
+      "trials_per_world": 10,
+      "maximum_speed_mps": 2.0,
+      "maximum_episode_score": 0.5,
+      "collision_is_failure": true,
+      "not_reaching_goal_is_failure": true
+    }
+  },
+  "published_scores_descending": [
+    {"rank": 1, "team": "IN2 BOT", "score": 0.4975},
+    {"rank": 2, "team": "EW-Glab", "score": 0.4880},
+    {"rank": 3, "team": "KKato", "score": 0.4856},
+    {"rank": 4, "team": "UFAM + INDT", "score": 0.4814},
+    {"rank": 5, "team": "ASU ROAR", "score": 0.4619},
+    {"rank": 6, "team": "Team Robo", "score": 0.4515},
+    {"rank": 7, "team": "Helios", "score": 0.4455},
+    {"rank": 8, "team": "CRAL", "score": 0.4289},
+    {"rank": 9, "team": "PANAV", "score": 0.3682},
+    {"rank": 10, "team": "Deptron", "score": 0.3392},
+    {"rank": 11, "team": "eYantra", "score": 0.3119},
+    {"rank": 12, "team": "LAMA", "score": 0.0517}
+  ],
+  "target": {
+    "objective": "top_decile",
+    "quantile": 0.9,
+    "rank_cutoff_in_registered_cohort": 2,
+    "nearest_rank_cutoff_in_numeric_cohort": 2,
+    "minimum_official_mean_navigation_score": 0.4880,
+    "derivation": "Top ceil(10% * 17) = 2 registered ranks; the nearest-rank 90th percentile of the 12 published numeric scores also begins at rank 2."
+  },
+  "eligibility": {
+    "official_gate_requires_standardized_protocol": true,
+    "native_proxy_is_officially_eligible": false,
+    "native_proxy_numeric_comparison_is_leaderboard_claim": false,
+    "reason": "Parcel's native runner uses public worlds, deterministic planar kinematics, a circular footprint and a non-official timing implementation rather than the standardized hidden-world Gazebo evaluation."
+  }
+}

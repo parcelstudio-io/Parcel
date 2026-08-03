@@ -1,0 +1,38 @@
+id: grid_window_v2
+type: grid
+version: "2.0.0-experiment"
+description: >-
+  Eval-only larger rolling LiDAR window for testing whether BARN failures are
+  caused by losing route context. Not enabled by the production configuration.
+checkpoint: ""
+device: cpu
+controller:
+  cruise_vx: 0.60
+  align_enter_deg: 28.0
+  align_exit_deg: 7.0
+  max_yaw_rate: 0.90
+  min_align_yaw_rate: 0.20
+  yaw_gain: 1.40
+  slowdown_radius_m: 2.0
+  control_dt_s: 0.1
+  max_linear_accel: 0.9
+  max_yaw_accel: 1.8
+  grid_resolution_m: 0.10
+  # A 12.1 m radius contains BARN's nominal 10 m point goal from the first
+  # scan, while still using only odometry and the incremental 270-degree LiDAR.
+  grid_size_cells: 241
+  map_safety_margin_m: 0.10
+  lidar_range_cap_m: 12.0
+  unknown_cost: 2.5
+  lookahead_m: 0.90
+  recovery_yaw_rate: 0.35
+  recovery_reverse_vx: -0.12
+  recovery_scan_steps: 30
+  recovery_reverse_steps: 0
+  replan_interval_steps: 5
+  lidar_stride: 2
+rl:
+  enabled: false
+  trainable: false
+  obs_keys: [goal_delta, odometry, lidar]
+  action_space: mid_level_velocity

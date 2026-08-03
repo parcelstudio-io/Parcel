@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "evaluation_id": "habitat20-pointnav-public-validation",
+  "description": "Archived Habitat Challenge 2020 PointNav public-validation contract for Parcel adapters.",
+  "eligibility": {
+    "official_rank_eligible": false,
+    "leaderboard_comparable": false,
+    "reason": "The historical EvalAI challenge is frozen and inactive, and its hidden test-standard/test-challenge scenes and episodes are unavailable locally.",
+    "allowed_claim": "official-code public-validation result"
+  },
+  "challenge_source": {
+    "lock_key": "habitat_challenge_2020",
+    "repository": "https://github.com/facebookresearch/habitat-challenge.git",
+    "commit": "ddf1575532aecc4df2f4cd4c5db173b8eada3e1e",
+    "checkout_relative_path": ".cache/external-evals/repos/habitat_challenge_2020"
+  },
+  "container": {
+    "base_tag": "fairembodied/habitat-challenge:testing_2020_habitat_base_docker",
+    "base_digest": "sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+    "base_reference": "fairembodied/habitat-challenge@sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+    "registry": {
+      "api": "https://registry-1.docker.io/v2",
+      "auth_url": "https://auth.docker.io/token",
+      "auth_service": "registry.docker.io",
+      "repository": "fairembodied/habitat-challenge",
+      "manifest_media_type": "application/vnd.docker.distribution.manifest.v2+json",
+      "config_media_type": "application/vnd.docker.container.image.v1+json",
+      "config_digest": "sha256:75e366deb8ce44eaa3b24d164f17042a28543a5cf2ceac20d1eda3dee69cdb5e",
+      "config_size_bytes": 14463,
+      "layer_count": 23,
+      "compressed_layer_size_bytes": 3210119745
+    },
+    "architecture": "linux/amd64",
+    "archived_python": "3.6",
+    "archived_cuda": "10.1",
+    "compressed_size_bytes_observed": 3210119745
+  },
+  "task": {
+    "id": "habitat20-pointnav-val-mini",
+    "split": "val_mini",
+    "config_relative_path": "configs/challenge_pointnav2020.local.rgbd.yaml",
+    "config_sha256": "65732a56859cb5423d57e24b76d81bdda1d5b6dc6390c70554f0ae44170176dc",
+    "episodes_relative_path": "habitat-challenge-data/pointgoal_gibson_v2/val_mini/content/Pablo.json.gz",
+    "episodes_sha256": "cee3bec9cc8dbd6232e7bcffd90db245dd15076d0e3ab84c7a6fc009e5bfa6cf",
+    "expected_episode_count": 30,
+    "required_scene_relative_path": "habitat-challenge-data/data/scene_datasets/gibson/Pablo.glb",
+    "required_scene_id": "gibson/Pablo.glb",
+    "scene_access": "User must accept the Gibson research terms and provide the Habitat-format scene asset.",
+    "max_episode_steps": 500,
+    "success_distance_m": 0.36,
+    "agent_radius_m": 0.18,
+    "agent_height_m": 0.88,
+    "forward_step_m": 0.25,
+    "turn_angle_deg": 30.0,
+    "allow_sliding": false,
+    "actions": [
+      "STOP",
+      "MOVE_FORWARD",
+      "TURN_LEFT",
+      "TURN_RIGHT"
+    ],
+    "sensors": {
+      "rgb": {
+        "width": 640,
+        "height": 360,
+        "hfov_deg": 70.0,
+        "noise_model": "GaussianNoiseModel"
+      },
+      "depth": {
+        "width": 640,
+        "height": 360,
+        "hfov_deg": 70.0,
+        "min_depth_m": 0.1,
+        "max_depth_m": 10.0,
+        "normalized": true,
+        "noise_model": "RedwoodDepthNoiseModel"
+      },
+      "goal": {
+        "key": "pointgoal",
+        "format": "POLAR",
+        "dimensionality": 2,
+        "reference_frame": "episode_start",
+        "updated_with_ground_truth_pose": false
+      },
+      "gps_compass_available": false
+    },
+    "actuation_noise": {
+      "action_space_config": "pyrobotnoisy",
+      "robot": "LoCoBot",
+      "controller": "Proportional",
+      "noise_multiplier": 0.5
+    },
+    "metrics": [
+      "distance_to_goal",
+      "success",
+      "spl",
+      "soft_spl"
+    ]
+  },
+  "license_free_compatibility_assets": {
+    "official_documentation": "https://github.com/facebookresearch/habitat-sim/blob/main/DATASETS.md#habitat-test-scenes",
+    "scene_download_uid": "habitat_test_scenes",
+    "pointnav_episode_download_uid": "habitat_test_pointnav_dataset",
+    "credential_or_clickthrough_acceptance_required": false,
+    "frozen_gibson_val_mini_equivalent": false,
+    "official_rank_eligible": false,
+    "allowed_use": "real Habitat-Sim rendering and action-contract compatibility smoke",
+    "forbidden_claim": "Do not substitute these test assets for Gibson Pablo val_mini or report their result as Habitat 2020 challenge SPL."
+  },
+  "adapter": {
+    "protocol_version": 1,
+    "arrival_radius_m": 0.3,
+    "depth_scan_bins": 181,
+    "pose_source": "nominal commanded-action dead reckoning",
+    "scan_source": "calibrated center-horizon projection of the official depth camera",
+    "privileged_inputs_forbidden": [
+      "simulator_agent_state",
+      "navmesh",
+      "geodesic_distance",
+      "shortest_path",
+      "collision_truth",
+      "episode_goal_world_position",
+      "evaluation_metrics"
+    ]
+  }
+}

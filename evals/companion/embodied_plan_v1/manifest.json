@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-embodied-plan-v1",
+  "runner_version": "headless-executive-adapter-v1",
+  "frozen": true,
+  "frozen_at_utc": "2026-08-03T16:45:00Z",
+  "case_count": 5,
+  "base_motion": "deterministic_kinematic_mujoco_geometry",
+  "policy_observation_contract": ["camera", "lidar", "owner_track", "odometry"],
+  "evaluator_truth_available_to_policy": false,
+  "unsupported_skills": ["FollowFormation"],
+  "locked_inputs": {
+    "episodes": {
+      "path": "evals/companion/embodied_plan_v1/episodes.json",
+      "sha256": "54215a96b403d7c8e15203941916af60a400a4b21b9a9d9e31502aa8d3661954"
+    },
+    "planner_cases": {
+      "path": "evals/companion/planner_quality_v2/cases.json",
+      "sha256": "6717f2fbda80920133f20f4584630f78748b6146c17222600bf71471e9272d1a"
+    },
+    "accepted_plans": {
+      "path": "evals/companion/planner_quality_v2/results/planner-v2-20260803-gemma4-cpu-run05.json",
+      "sha256": "e38fc6394fd6344fa3f223ecc753e40f9663951f0acafe8580f27656f064f3b4"
+    },
+    "city_scene": {
+      "path": "src/parcel_robot/scenes/city_block.xml",
+      "sha256": "bbb4d6e75d92294fa5bc59db0b6b0810482bb475a5e3b6afd489596338184426"
+    },
+    "robot_config": {
+      "path": "configs/robot.yaml",
+      "sha256": "2e4eb8f3f9dd844191051a35527ae59971dd62032769525b26ed6179f3f48511"
+    },
+    "result_schema": {
+      "path": "evals/companion/embodied_plan_v1/result.schema.json",
+      "sha256": "f851421f793294cb759fe0e4e897dcf684e5c2ca8a1af156abaf64b49e3eb195"
+    }
+  }
+}

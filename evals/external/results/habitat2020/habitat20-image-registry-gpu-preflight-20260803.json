@@ -1,0 +1,155 @@
+{
+  "evaluation": {
+    "allowed_claim": "archived image retrieval and host GPU prerequisite preflight",
+    "habitat_sim_executed": false,
+    "id": "habitat20-pointnav-public-validation",
+    "leaderboard_comparable": false,
+    "navigation_metrics_emitted": false,
+    "official_evaluator_executed": false,
+    "official_rank_eligible": false,
+    "scene_loaded": false,
+    "scope": "archived-image-registry-and-host-gpu-preflight"
+  },
+  "execution": {
+    "compressed_image_bytes_downloaded": 0,
+    "container_executed": false,
+    "dataset_downloaded_or_used": false,
+    "evaluator_semantics_modified": false,
+    "gpu_kernel_executed": false,
+    "gpu_render_executed": false,
+    "image_layers_downloaded": false,
+    "licensed_scene_required_for_this_preflight": false,
+    "production_parcel_behavior_modified": false,
+    "registry_elapsed_ms": 464.72932,
+    "registry_network_requests_executed": true
+  },
+  "generated_at_utc": "2026-08-03T14:13:04.814804+00:00",
+  "provenance": {
+    "container_reference": "fairembodied/habitat-challenge@sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+    "manifest_path": "evals/external/habitat2020_manifest.json",
+    "manifest_sha256": "17611fd4945819f8213bbe6ceebcff118ff359e3e2bc9dff7cb5ec94f73fa290",
+    "request_urls": {
+      "config": "https://registry-1.docker.io/v2/fairembodied/habitat-challenge/blobs/sha256:75e366deb8ce44eaa3b24d164f17042a28543a5cf2ceac20d1eda3dee69cdb5e",
+      "manifest": "https://registry-1.docker.io/v2/fairembodied/habitat-challenge/manifests/sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b"
+    },
+    "runner_path": "evals/external/habitat2020_image_preflight.py",
+    "runner_sha256": "ef873c444af9963c88d5169315dc61c95c4234e9ccf6d209e2b05970d466dab3"
+  },
+  "readiness": {
+    "gpu_runtime_compatibility": "unverified_requires_container_execution",
+    "ready_for_content_addressed_layer_fetch": true,
+    "ready_for_habitat_gpu_render": false,
+    "remaining_next_step": "Materialize the exact pinned layers in an isolated runtime and run a no-dataset CUDA/EGL import smoke before any terms-gated Gibson scene run."
+  },
+  "result": {
+    "checks": [
+      {
+        "detail": "expected=sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b; actual=sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+        "id": "manifest_payload_digest",
+        "passed": true
+      },
+      {
+        "detail": "expected=sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b; header=sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+        "id": "registry_content_digest",
+        "passed": true
+      },
+      {
+        "detail": "application/vnd.docker.distribution.manifest.v2+json",
+        "id": "manifest_media_type",
+        "passed": true
+      },
+      {
+        "detail": "schemaVersion=2",
+        "id": "manifest_schema",
+        "passed": true
+      },
+      {
+        "detail": "digest=sha256:75e366deb8ce44eaa3b24d164f17042a28543a5cf2ceac20d1eda3dee69cdb5e; size=14463; mediaType=application/vnd.docker.container.image.v1+json",
+        "id": "config_descriptor",
+        "passed": true
+      },
+      {
+        "detail": "digest=sha256:75e366deb8ce44eaa3b24d164f17042a28543a5cf2ceac20d1eda3dee69cdb5e; size=14463",
+        "id": "config_payload",
+        "passed": true
+      },
+      {
+        "detail": "count=23; unique=True; compressed_bytes=3210119745",
+        "id": "layer_descriptors",
+        "passed": true
+      },
+      {
+        "detail": "type=layers; diff_ids=23",
+        "id": "rootfs_chain",
+        "passed": true
+      },
+      {
+        "detail": "os=linux; architecture=amd64",
+        "id": "image_platform",
+        "passed": true
+      },
+      {
+        "detail": "CUDA_VERSION=10.1.243",
+        "id": "archived_cuda_declaration",
+        "passed": true
+      },
+      {
+        "detail": "history_contains=python=3.6",
+        "id": "archived_python_declaration",
+        "passed": true
+      },
+      {
+        "detail": "history contains the challenge-2020 habitat-sim source build",
+        "id": "challenge_2020_sim_build",
+        "passed": true
+      },
+      {
+        "detail": "[{\"compute_capability\": \"8.9\", \"driver_version\": \"595.84\", \"memory_total_mib\": 32760, \"name\": \"NVIDIA RTX 5000 Ada Generation\"}]",
+        "id": "host_nvidia_gpu",
+        "passed": true
+      },
+      {
+        "detail": "{\"/dev/nvidia-uvm\": true, \"/dev/nvidia0\": true, \"/dev/nvidiactl\": true}",
+        "id": "host_nvidia_device_nodes",
+        "passed": true
+      },
+      {
+        "detail": "{\"libEGL_nvidia\": \"libEGL_nvidia.so.0\", \"libcuda\": \"libcuda.so.1\"}",
+        "id": "host_nvidia_compute_graphics_libraries",
+        "passed": true
+      }
+    ],
+    "failed_checks": [],
+    "host_gpu": {
+      "detected": true,
+      "device_nodes": {
+        "/dev/nvidia-uvm": true,
+        "/dev/nvidia0": true,
+        "/dev/nvidiactl": true
+      },
+      "error": null,
+      "gpus": [
+        {
+          "compute_capability": "8.9",
+          "driver_version": "595.84",
+          "memory_total_mib": 32760,
+          "name": "NVIDIA RTX 5000 Ada Generation"
+        }
+      ],
+      "libraries": {
+        "libEGL_nvidia": "libEGL_nvidia.so.0",
+        "libcuda": "libcuda.so.1"
+      }
+    },
+    "passed": true,
+    "registry": {
+      "compressed_layer_size_bytes": 3210119745,
+      "config_digest": "sha256:75e366deb8ce44eaa3b24d164f17042a28543a5cf2ceac20d1eda3dee69cdb5e",
+      "image_created_at_utc": "2020-05-21T03:51:03.623592109Z",
+      "layer_count": 23,
+      "manifest_digest": "sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b"
+    }
+  },
+  "run_id": "habitat20-image-preflight-20260803T141304Z",
+  "schema_version": 1
+}

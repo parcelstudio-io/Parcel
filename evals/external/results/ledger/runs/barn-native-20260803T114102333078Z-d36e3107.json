@@ -1,0 +1,105 @@
+{
+  "aggregate_metrics": {
+    "adapter_act_count": 27355.0,
+    "adapter_act_max_ms": 348.403987,
+    "adapter_act_mean_ms": 92.2643842481082,
+    "adapter_act_p50_ms": 45.21276,
+    "adapter_act_p95_ms": 238.077233,
+    "adapter_act_p99_ms": 289.203018,
+    "collision_rate": 0.0,
+    "controller_step_count": 27355.0,
+    "controller_step_max_ms": 348.090824,
+    "controller_step_mean_ms": 91.93291719864742,
+    "controller_step_p50_ms": 44.792865,
+    "controller_step_p95_ms": 237.65843,
+    "controller_step_p99_ms": 288.744495,
+    "episodes": 50.0,
+    "evaluator_diagnostics": {
+      "failure_counts": {
+        "stopped_outside_goal": 23,
+        "timeout": 1
+      },
+      "mean_closest_goal_distance_m": 4.489080585772975,
+      "mean_episode_minimum_signed_obstacle_clearance_m": 0.4452130381184613,
+      "mean_goal_progress_efficiency": 0.8039500993760171,
+      "mean_maximum_goal_progress_fraction": 0.5510919414227025,
+      "mean_maximum_goal_progress_m": 5.510919414227025,
+      "mean_net_goal_progress_m": 5.5102472593785725,
+      "mean_successful_reference_route_efficiency": 1.215263296174214,
+      "mean_translational_speed_mps": 0.21099353078636857,
+      "mean_traveled_to_reference_path_ratio": 0.5099761475810981,
+      "minimum_signed_obstacle_clearance_m": 0.08292988521631008,
+      "outcome_counts": {
+        "stopped_outside_goal": 23,
+        "succeeded": 26,
+        "timeout": 1
+      },
+      "private_state_not_exposed_to_policy": true
+    },
+    "mean_elapsed_time_s": 54.66400000000001,
+    "mean_final_distance_to_goal_m": 4.489752740621427,
+    "mean_success_time_s": 25.907692307692308,
+    "mean_traveled_distance_m": 5.854163802543944,
+    "navigation_metric": 0.1220562063483351,
+    "policy_diagnostics": {
+      "controller_phase_counts": {
+        "grid_align": 1544,
+        "grid_recover_scan": 18827,
+        "grid_track": 6961,
+        "navigation_no_progress": 23
+      },
+      "note": "Policy-provided notes are not evaluator failure labels.",
+      "safety_phase_counts": {
+        "<none>": 23,
+        "clear": 16729,
+        "obstacle_slow": 10603
+      },
+      "terminal_action_note_counts": {
+        "grid_recover_scan status=no_path|obstacle_slow": 1,
+        "grid_track err=-0.0 goal=1.0 route=2 status=planned|clear": 10,
+        "grid_track err=0.0 goal=1.0 route=2 status=planned|clear": 16,
+        "navigation_no_progress": 23
+      }
+    },
+    "stopped_outside_goal_rate": 0.46,
+    "success_rate": 0.52,
+    "timeout_rate": 0.02,
+    "trials_per_world": 1.0,
+    "worlds": 50.0
+  },
+  "benchmark": {
+    "id": "barn-native-headless-non-official",
+    "source": "https://github.com/Daffan/the-barn-challenge",
+    "source_commit": "bf5a226f6088ec96bf0d2dbee3253a8ea6119b83"
+  },
+  "change_description": "Disjoint dev3 tuning of the same frontier candidate: observed-only connected-component search selects goal-progressing scan frontier; frozen 0-mod-6 worlds excluded",
+  "components": {
+    "adapter": {
+      "hash": "34e8f48cd0333d8beaf5b08b16f66493297b3550f7d29a9151ec9fe676ceb838",
+      "id": "parcel-directive-navigator-barn-sensor-adapter-v1"
+    },
+    "agent": {
+      "id": "DirectiveNavigator"
+    },
+    "config": {
+      "hash": "a61567d859b56aac9409143e47e9bc5acf9adb4c5aee6be44ff34953d41b9fd5",
+      "id": "configs/navigation/experiments/barn_grid_frontier_v2.yaml"
+    },
+    "model": {
+      "hash": "64b3ccf2a127b66e36327eac25d45c8c6717830196b5c6052547328697c9cb40",
+      "id": "grid_frontier_v2"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/runs/barn-native-20260803T114102333078Z-d36e3107.json",
+    "sha256": "71503e920c4ba0c0f709f32066a390142efd200f31f26fd546c3e7cb9bd9a42c",
+    "size_bytes": 134647
+  },
+  "run_id": "barn-native-20260803T114102333078Z-d36e3107",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T11:41:02.337117Z"
+}

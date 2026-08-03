@@ -3,13 +3,17 @@ from __future__ import annotations
 import json
 import threading
 import time
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .models import ActionProposal, AffectEstimate, AgentDecision, ToolCall
+
+if False:  # pragma: no cover - type-only imports without a runtime dependency cycle
+    from .brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
+    from .brain.plan_sketch import PlanSketch
 
 
 class LanguageModel(Protocol):
@@ -19,6 +23,19 @@ class LanguageModel(Protocol):
         tools: list[dict[str, Any]],
         context: list[dict[str, str]],
     ) -> AgentDecision: ...
+
+
+class PlanningModel(Protocol):
+    def plan(
+        self,
+        transcript: str,
+        *,
+        intent_frame: IntentFrame,
+        observation: ObservationSnapshot,
+        skill_contracts: dict[str, object],
+        response_schema: dict[str, Any],
+        system_prompt: str,
+    ) -> PlanIR | PlanSketch: ...
 
 
 class SpeechSynthesizer(Protocol):
@@ -67,6 +84,10 @@ class LlamaCppProvider:
     context_char_budget: int = 12_000
     max_tokens: int = 256
     enable_thinking: bool = False
+    plan_timeout: float = 90.0
+    plan_max_tokens: int = 1024
+    plan_enable_thinking: bool = False
+    plan_temperature: float = 0.0
     max_stream_events: int = 4096
     max_response_bytes: int = 131_072
     last_metrics: dict[str, object] = field(default_factory=dict, init=False)
@@ -76,10 +97,10 @@ class LlamaCppProvider:
     def __post_init__(self) -> None:
         if not self.base_url.strip():
             raise ValueError("llama.cpp base_url cannot be empty")
-        if self.timeout <= 0:
-            raise ValueError("llama.cpp timeout must be positive")
-        if not 0.0 <= self.temperature <= 2.0:
-            raise ValueError("llama.cpp temperature must be between zero and two")
+        if self.timeout <= 0 or self.plan_timeout <= 0:
+            raise ValueError("llama.cpp timeouts must be positive")
+        if not 0.0 <= self.temperature <= 2.0 or not 0.0 <= self.plan_temperature <= 2.0:
+            raise ValueError("llama.cpp temperatures must be between zero and two")
         if not 0.0 < self.top_p <= 1.0:
             raise ValueError("llama.cpp top_p must be between zero and one")
         if not 1 <= self.context_messages <= 64:
@@ -88,6 +109,8 @@ class LlamaCppProvider:
             raise ValueError("llama.cpp context_char_budget must be between 1000 and 100000")
         if not 64 <= self.max_tokens <= 4096:
             raise ValueError("llama.cpp max_tokens must be between 64 and 4096")
+        if not 128 <= self.plan_max_tokens <= 4096:
+            raise ValueError("llama.cpp plan_max_tokens must be between 128 and 4096")
         if not 64 <= self.max_stream_events <= 65_536:
             raise ValueError("llama.cpp max_stream_events must be between 64 and 65536")
         if not 4096 <= self.max_response_bytes <= 4_194_304:
@@ -108,6 +131,10 @@ class LlamaCppProvider:
             context_char_budget=int(config.get("context_char_budget", 12_000)),
             max_tokens=int(config.get("max_tokens", 256)),
             enable_thinking=bool(config.get("enable_thinking", False)),
+            plan_timeout=float(config.get("plan_timeout", config.get("timeout", 90))),
+            plan_max_tokens=int(config.get("plan_max_tokens", 1024)),
+            plan_enable_thinking=bool(config.get("plan_enable_thinking", False)),
+            plan_temperature=float(config.get("plan_temperature", 0.0)),
             max_stream_events=int(config.get("max_stream_events", 4096)),
             max_response_bytes=int(config.get("max_response_bytes", 131_072)),
         )
@@ -128,13 +155,6 @@ class LlamaCppProvider:
         tools: list[dict[str, Any]],
         context: list[dict[str, str]],
     ) -> AgentDecision:
-        self.last_metrics = {}
-        request_cancel = threading.Event()
-        with self._cancel_lock:
-            previous = self._active_cancel
-            self._active_cancel = request_cancel
-        if previous is not None:
-            previous.set()
         fallback = (
             "You are Parcel, a robot dog. Return one JSON object with reply, "
             "tool_calls, intent, affect, and next_action. Use null for affect or "
@@ -171,6 +191,104 @@ class LlamaCppProvider:
                 "schema": _decision_response_schema(tools),
             },
         }
+        return self._request_structured(
+            payload,
+            timeout=self.timeout,
+            mode="fast",
+            parser=parse_model_decision,
+        )
+
+    def plan(
+        self,
+        transcript: str,
+        *,
+        intent_frame: IntentFrame,
+        observation: ObservationSnapshot,
+        skill_contracts: dict[str, object],
+        response_schema: dict[str, Any],
+        system_prompt: str,
+    ) -> PlanIR | PlanSketch:
+        """Use the already-loaded backbone in a separate constrained plan mode."""
+
+        from .brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
+        from .brain.plan_sketch import PlanSketch
+        from .brain.runtime_adapter import (
+            PLAN_SKETCH_OUTPUT_CONTRACT,
+            planner_output_contract,
+        )
+
+        if not isinstance(intent_frame, IntentFrame):
+            raise TypeError("plan mode requires a parsed IntentFrame")
+        if not isinstance(observation, ObservationSnapshot):
+            raise TypeError("plan mode requires a parsed ObservationSnapshot")
+        if not isinstance(response_schema, dict) or not response_schema:
+            raise TypeError("plan mode requires a non-empty response schema")
+        if not isinstance(skill_contracts, dict) or not skill_contracts:
+            raise TypeError("plan mode skill contracts must be a non-empty object")
+        clean_prompt = system_prompt.strip()
+        if not clean_prompt:
+            raise ValueError("plan mode system prompt cannot be empty")
+        output_contract = planner_output_contract(response_schema)
+        plan_input = json.dumps(
+            {
+                "original_transcript": transcript,
+                "intent_frame": intent_frame.as_dict(),
+                "observation_snapshot": observation.as_dict(),
+                "skill_contracts": skill_contracts,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+            allow_nan=False,
+        )
+        if len(plan_input) > 96_000:
+            raise ValueError("plan mode input exceeds the bounded prompt budget")
+        payload = {
+            "model": self.model,
+            "temperature": self.plan_temperature,
+            "top_p": self.top_p,
+            "max_tokens": self.plan_max_tokens,
+            "reasoning_effort": "medium" if self.plan_enable_thinking else "none",
+            "chat_template_kwargs": {"enable_thinking": self.plan_enable_thinking},
+            "messages": [
+                {"role": "system", "content": clean_prompt},
+                {"role": "user", "content": plan_input},
+            ],
+            "response_format": {
+                "type": "json_object",
+                "schema": response_schema,
+            },
+        }
+        if output_contract == PLAN_SKETCH_OUTPUT_CONTRACT:
+            parser = lambda content: PlanSketch.from_mapping(_json_object(content, "PlanSketch"))
+        else:
+            parser = lambda content: PlanIR.from_mapping(_json_object(content, "PlanIR"))
+        result = self._request_structured(
+            payload,
+            timeout=self.plan_timeout,
+            mode="plan",
+            parser=parser,
+        )
+        self.last_metrics["model_output_contract"] = output_contract
+        return result
+
+    def _request_structured(
+        self,
+        payload: dict[str, Any],
+        *,
+        timeout: float,
+        mode: str,
+        parser: Callable[[str], Any],
+    ) -> Any:
+        """Make one cancellable constrained request and measure the same boundaries."""
+
+        self.last_metrics = {}
+        request_cancel = threading.Event()
+        with self._cancel_lock:
+            previous = self._active_cancel
+            self._active_cancel = request_cancel
+        if previous is not None:
+            previous.set()
         request_started = time.monotonic()
         try:
             if self.streaming:
@@ -179,7 +297,7 @@ class LlamaCppProvider:
                 content, usage, first_output = _post_chat_stream(
                     f"{self.base_url.rstrip('/')}/v1/chat/completions",
                     payload,
-                    self.timeout,
+                    timeout,
                     max_events=self.max_stream_events,
                     max_content_bytes=self.max_response_bytes,
                     cancel_event=request_cancel,
@@ -189,7 +307,7 @@ class LlamaCppProvider:
                 response = _post_json(
                     f"{self.base_url.rstrip('/')}/v1/chat/completions",
                     payload,
-                    self.timeout,
+                    timeout,
                     max_response_bytes=self.max_response_bytes,
                     cancel_event=request_cancel,
                 )
@@ -198,8 +316,6 @@ class LlamaCppProvider:
             response_received = time.monotonic()
             if request_cancel.is_set():
                 raise ModelRequestCancelled("language-model request was superseded")
-            decision = parse_model_decision(content)
-            parsed = time.monotonic()
             usage = response.get("usage") if isinstance(response.get("usage"), dict) else {}
             self.last_metrics = {
                 "model_http_ms": round((response_received - request_started) * 1000.0, 3),
@@ -208,15 +324,44 @@ class LlamaCppProvider:
                     if first_output is not None
                     else None
                 ),
-                "model_json_validation_ms": round((parsed - response_received) * 1000.0, 3),
+                "model_json_validation_ms": None,
                 "model_streaming": self.streaming,
+                "model_mode": mode,
                 "reasoning_first_output_estimated": first_output is None,
                 "_first_output_monotonic": first_output,
                 "prompt_tokens": usage.get("prompt_tokens"),
                 "completion_tokens": usage.get("completion_tokens"),
                 "total_tokens": usage.get("total_tokens"),
+                "model_output_bytes": (
+                    len(content.encode("utf-8")) if isinstance(content, str) else None
+                ),
             }
-            return decision
+            try:
+                result = parser(content)
+            except (RuntimeError, TypeError, ValueError) as error:
+                parsed = time.monotonic()
+                self.last_metrics["model_json_validation_ms"] = round(
+                    (parsed - response_received) * 1000.0, 3
+                )
+                self.last_metrics["model_parse_error"] = type(error).__name__
+                raise
+            parsed = time.monotonic()
+            self.last_metrics["model_json_validation_ms"] = round(
+                (parsed - response_received) * 1000.0, 3
+            )
+            return result
+        except Exception as error:
+            if not self.last_metrics:
+                self.last_metrics = {
+                    "model_http_ms": round(
+                        (time.monotonic() - request_started) * 1000.0,
+                        3,
+                    ),
+                    "model_mode": mode,
+                    "model_request_error": type(error).__name__,
+                    "model_streaming": self.streaming,
+                }
+            raise
         finally:
             with self._cancel_lock:
                 if self._active_cancel is request_cancel:
@@ -581,11 +726,18 @@ class WhisperCppProvider:
         return text.strip()
 
 
-def parse_model_decision(content: str) -> AgentDecision:
+def _json_object(content: str, label: str) -> dict[str, object]:
     try:
         data = json.loads(content)
     except json.JSONDecodeError as error:
-        raise ValueError("model response was not valid JSON") from error
+        raise ValueError(f"model {label} response was not valid JSON") from error
+    if not isinstance(data, dict):
+        raise TypeError(f"model {label} response must be a JSON object")
+    return data
+
+
+def parse_model_decision(content: str) -> AgentDecision:
+    data = _json_object(content, "decision")
     if not isinstance(data, dict) or not isinstance(data.get("reply"), str):
         raise TypeError("model response must contain a string reply")
     if len(data["reply"]) > 500:

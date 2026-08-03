@@ -1,0 +1,62 @@
+{
+  "aggregate_metrics": {
+    "cuda_device_count": 1,
+    "cuda_driver_init_passed": true,
+    "egl_device_count": 1,
+    "egl_initialize_passed": true,
+    "egl_probe_passed": true,
+    "egl_version": "1.5",
+    "elapsed_ms": 561.432697,
+    "gpu_kernel_executed": false,
+    "gpu_render_executed": false,
+    "habitat_sim_imported": true,
+    "habitat_sim_version": "0.1.4",
+    "image_layers_verified": 23,
+    "navigation_episode_executed": false,
+    "navigation_metrics_emitted": false,
+    "official_rank_eligible": false,
+    "python_version": "3.6.10",
+    "rootfs_entry_count": 87944,
+    "rootfs_inventory_verified": true,
+    "scene_loaded": false,
+    "simulator_constructed": false,
+    "smoke_passed": true,
+    "top_decile_evidence": false
+  },
+  "benchmark": {
+    "id": "habitat20-archived-oci-gpu-import-smoke-non-evaluation",
+    "source": "https://github.com/facebookresearch/habitat-challenge.git",
+    "source_commit": "ddf1575532aecc4df2f4cd4c5db173b8eada3e1e"
+  },
+  "change_description": "Corrected exact archived-image isolated GPU/import smoke after preserving the failed host-GLVND-loader attempt: archived GLVND client plus ABI-audited host NVIDIA vendor libraries; CUDA, EGL 1.5 device initialization, and Habitat-Sim 0.1.4 import passed. No dataset, scene, simulator, evaluator, navigation policy, render, kernel, or metric executed.",
+  "components": {
+    "adapter": {
+      "hash": "4526fdcc3a66864a5792a188a387c7ef27ebe4c3258f92472113cf945e60607c",
+      "id": "evals/external/habitat2020_oci_runtime.py"
+    },
+    "agent": {
+      "hash": "28234e861452f6358d85e6a4c7372ec8aebc13e03851c48211e2825661d06c94",
+      "id": "evals/external/habitat2020_gpu_smoke_py36.py"
+    },
+    "config": {
+      "hash": "df01058694052f33745b2c4394f10818222b3754ebba1f1f16b2a54071ae9b76",
+      "id": "evals/external/habitat2020_manifest.json"
+    },
+    "model": {
+      "hash": "sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+      "id": "fairembodied/habitat-challenge"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/habitat2020/habitat20-oci-gpu-import-smoke-20260803-baseline02.json",
+    "sha256": "be4a6acba149bee47661936ee5a90947b39e22313a411f02d17eeff839c49424",
+    "size_bytes": 4115
+  },
+  "run_id": "habitat20-oci-gpu-import-smoke-20260803T145414Z",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T14:55:05.581515Z"
+}

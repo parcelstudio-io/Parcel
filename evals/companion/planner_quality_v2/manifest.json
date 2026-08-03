@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-planner-quality-v2",
+  "runner_version": "runtime-routed-plan-quality-v4",
+  "frozen": true,
+  "frozen_at_utc": "2026-08-03T11:33:15Z",
+  "case_count": 5,
+  "cases_file": "cases.json",
+  "cases_sha256": "6717f2fbda80920133f20f4584630f78748b6146c17222600bf71471e9272d1a",
+  "planner_prompt": "prompts/system/planner_v2.md",
+  "planner_prompt_sha256": "4ca75618d5765d4e6812c3d18826dc77ec989969064290d4a336db496896914c",
+  "plan_schema": "prompts/schemas/plan_ir_v1.schema.json",
+  "plan_schema_sha256": "a4bb6d64cbf92716d3590e46e385a518f815eda0c3a3a121fd98e1a00b1218ba",
+  "physical_navigation_episode_count": 0
+}

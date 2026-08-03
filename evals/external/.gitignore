@@ -1,0 +1,10 @@
+results/*
+!results/README.md
+!results/ledger/
+!results/ledger/**
+!results/habitat2020/
+!results/habitat2020/README.md
+!results/habitat2020/*.json
+__pycache__/
+*.pyc
+.pytest_cache/

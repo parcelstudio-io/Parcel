@@ -1,0 +1,51 @@
+id: grid_safe_valley_v5
+type: grid
+version: "5.0.0-experimental"
+description: >-
+  Eval-only cached observed-frontier controller with a fresh-sensor,
+  rotate-first safe-valley micro-advance when no route is executable. Not
+  enabled for deployment.
+checkpoint: ""
+device: cpu
+controller:
+  cruise_vx: 0.60
+  align_enter_deg: 28.0
+  align_exit_deg: 7.0
+  max_yaw_rate: 0.90
+  min_align_yaw_rate: 0.20
+  yaw_gain: 1.40
+  slowdown_radius_m: 2.0
+  control_dt_s: 0.1
+  max_linear_accel: 0.9
+  max_yaw_accel: 1.8
+  grid_resolution_m: 0.10
+  grid_size_cells: 161
+  map_safety_margin_m: 0.10
+  lidar_range_cap_m: 12.0
+  unknown_cost: 2.5
+  lookahead_m: 0.90
+  reachable_frontier_fallback: true
+  frontier_search_mode: observed_first
+  frontier_band_m: 0.60
+  frontier_min_progress_m: 0.10
+  recovery_yaw_rate: 0.35
+  recovery_reverse_vx: -0.12
+  recovery_scan_steps: 30
+  recovery_reverse_steps: 0
+  safe_valley_micro_advance: true
+  # Frozen before development execution. Each commitment rotates first and
+  # then advances only through a completely observed swept body envelope.
+  safe_valley_advance_m: 0.40
+  safe_valley_min_advance_m: 0.10
+  safe_valley_advance_vx: 0.18
+  safe_valley_max_attempts: 4
+  safe_valley_timestamp_slop_s: 0.02
+  safe_valley_clearance_weight: 0.08
+  safe_valley_hysteresis_weight: 0.20
+  replan_interval_steps: 5
+  lidar_stride: 2
+rl:
+  enabled: false
+  trainable: false
+  obs_keys: [goal_delta, odometry, lidar]
+  action_space: mid_level_velocity

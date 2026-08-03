@@ -1,0 +1,293 @@
+{
+  "assets": {
+    "bundle_id": "habitat-test-assets-compat-v1",
+    "credential_or_clickthrough_used": false,
+    "goal_read_or_used": false,
+    "manifest_sha256": "3912404b7a170754a737cc2b257f6cadbd0b40e0f14f7d32e7f4454c41a969bc",
+    "pointnav_archive_sha256": "4ddf3403507c6ea44add9e375134d3564219f4376d11b16ed3efe16245a167d7",
+    "scene_license": "cc-by-nc-4.0",
+    "scene_repository_commit": "910c783fb954da8497ea5f811b843a76590ddddc",
+    "test_fixture_episode_id": "0"
+  },
+  "claims": {
+    "cuda_compute_kernel_executed": false,
+    "dataset_mounted_or_used": true,
+    "gpu_render_executed": true,
+    "image_entrypoint_executed": false,
+    "image_hooks_executed": false,
+    "navigation_episode_executed": false,
+    "navigation_score_available": false,
+    "network_available_inside_sandbox": false,
+    "official_evaluator_executed": false,
+    "package_manager_executed": false,
+    "parcel_policy_executed": false,
+    "scene_loaded": true,
+    "simulator_constructed": true
+  },
+  "evaluation": {
+    "allowed_claim": "non-Habitat-2020 test-asset simulator/render/discrete-action compatibility smoke",
+    "forbidden_claim": "These assets are not Gibson Pablo or Habitat 2020 val_mini and cannot produce challenge SR, SPL, soft-SPL, rank, or top-decile evidence.",
+    "habitat_2020_protocol": false,
+    "leaderboard_comparable": false,
+    "navigation_episode_executed": false,
+    "navigation_metrics_emitted": false,
+    "official_evaluator_executed": false,
+    "official_rank_eligible": false
+  },
+  "generated_at_utc": "2026-08-03T15:23:17.753914+00:00",
+  "provenance": {
+    "all_asset_hashes_verified_before_execution": true,
+    "all_compressed_image_layer_hashes_verified_before_execution": true,
+    "asset_manifest_path": "evals/external/habitat2020_test_assets_manifest.json",
+    "glvnd_client_source": "archived_image_rootfs",
+    "injected_host_driver_libraries": [
+      "libEGL_nvidia.so.0",
+      "libGLX_nvidia.so.0",
+      "libcuda.so",
+      "libcuda.so.1",
+      "libnvidia-allocator.so",
+      "libnvidia-allocator.so.1",
+      "libnvidia-eglcore.so.595.84",
+      "libnvidia-glcore.so.595.84",
+      "libnvidia-glsi.so.595.84",
+      "libnvidia-gpucomp.so.595.84",
+      "libnvidia-ptxjitcompiler.so",
+      "libnvidia-ptxjitcompiler.so.1",
+      "libnvidia-tls.so.595.84"
+    ],
+    "injected_host_driver_max_required_glibc": {
+      "libEGL_nvidia.so.0": "2.7.0",
+      "libGLX_nvidia.so.0": "2.4.0",
+      "libcuda.so": "2.9.0",
+      "libcuda.so.1": "2.9.0",
+      "libnvidia-allocator.so": "2.7.0",
+      "libnvidia-allocator.so.1": "2.7.0",
+      "libnvidia-eglcore.so.595.84": "2.10.0",
+      "libnvidia-glcore.so.595.84": "2.10.0",
+      "libnvidia-glsi.so.595.84": "2.7.0",
+      "libnvidia-gpucomp.so.595.84": "2.7.0",
+      "libnvidia-ptxjitcompiler.so": "2.7.0",
+      "libnvidia-ptxjitcompiler.so.1": "2.7.0",
+      "libnvidia-tls.so.595.84": "2.2.5"
+    },
+    "runner_path": "evals/external/habitat2020_test_assets.py",
+    "runner_sha256": "54d3c8567530da1ca055c1343acc9aa88ba5c45149733fcbd076b65b041cc1aa",
+    "smoke_script_path": "evals/external/habitat2020_scene_smoke_py36.py",
+    "smoke_script_sha256": "60c953db9f7e9848669dd8846f1147561a24eb27f1e817ee7421785cfdc2743f"
+  },
+  "result": {
+    "passed": true,
+    "probe": {
+      "actions": {
+        "collisions": [
+          false,
+          false,
+          false
+        ],
+        "executed": [
+          "move_forward",
+          "turn_left",
+          "turn_right"
+        ],
+        "passed": true,
+        "position_displacement_m": 0.2500881936561302,
+        "states": [
+          {
+            "position": [
+              -1.469801425933838,
+              0.19814591109752655,
+              12.448321342468262
+            ],
+            "position_norm": 12.536358833312988,
+            "rotation_xyzw": [
+              0.0,
+              0.45363849401474,
+              0.0,
+              0.8911857604980469
+            ]
+          },
+          {
+            "position": [
+              -1.469801425933838,
+              0.19814591109752655,
+              12.448321342468262
+            ],
+            "position_norm": 12.536358833312988,
+            "rotation_xyzw": [
+              0.0,
+              0.6688370108604431,
+              0.0,
+              0.7434090971946716
+            ]
+          },
+          {
+            "position": [
+              -1.469801425933838,
+              0.19814591109752655,
+              12.448321342468262
+            ],
+            "position_norm": 12.536358833312988,
+            "rotation_xyzw": [
+              0.0,
+              0.4536385238170624,
+              0.0,
+              0.8911858201026917
+            ]
+          }
+        ],
+        "turn_changed_orientation": true
+      },
+      "claims": {
+        "cuda_compute_kernel_executed": false,
+        "discrete_actions_executed": true,
+        "gpu_render_executed": true,
+        "navigation_episode_executed": false,
+        "navigation_metrics_emitted": false,
+        "official_evaluator_executed": false,
+        "parcel_policy_executed": false,
+        "pointnav_fixture_start_state_used": true,
+        "pointnav_goal_read_or_used": false,
+        "scene_loaded": true,
+        "simulator_constructed": true,
+        "stop_task_action_executed": false
+      },
+      "cuda": {
+        "cu_device_get_count_result": 0,
+        "cu_init_result": 0,
+        "device_count": 1,
+        "library_loaded": true,
+        "passed": true
+      },
+      "egl": {
+        "device_count": 1,
+        "egl_initialize_result": true,
+        "egl_version": "1.5",
+        "extension_functions_resolved": true,
+        "library_loaded": true,
+        "passed": true,
+        "query_devices_result": true
+      },
+      "habitat_sim_version": "0.1.4",
+      "navmesh_loaded": true,
+      "passed": true,
+      "python_version": "3.6.10 |Anaconda, Inc.| (default, May  8 2020, 02:54:21) \n[GCC 7.3.0]",
+      "rendering": {
+        "frame_count": 4,
+        "frames": [
+          {
+            "color_dtype": "uint8",
+            "color_sha256": "aaf3fb365979346a9bcc329e327faa3eb58054d4041fc3d083158662bf1c1316",
+            "color_shape": [
+              128,
+              128,
+              4
+            ],
+            "color_value_range": 233,
+            "depth_dtype": "float32",
+            "depth_sha256": "088fc0c2d9d6d626ea174aa5fc95ac7269829e8aaf12886fab6ae7cccb98fc53",
+            "depth_shape": [
+              128,
+              128
+            ],
+            "positive_depth_pixels": 16384
+          },
+          {
+            "color_dtype": "uint8",
+            "color_sha256": "eab9482b349aac02a136f19a88deb84188ba75e37b78bec4b1657d05577a3f1b",
+            "color_shape": [
+              128,
+              128,
+              4
+            ],
+            "color_value_range": 232,
+            "depth_dtype": "float32",
+            "depth_sha256": "75126ea634d9999771cbfa57debb59a9a8ccd29086d55a36438524dfbd9af037",
+            "depth_shape": [
+              128,
+              128
+            ],
+            "positive_depth_pixels": 16384
+          },
+          {
+            "color_dtype": "uint8",
+            "color_sha256": "e5dd35dc438c022808f0026deda332a02206121bdde2d1259eb58b7b3437b929",
+            "color_shape": [
+              128,
+              128,
+              4
+            ],
+            "color_value_range": 236,
+            "depth_dtype": "float32",
+            "depth_sha256": "d853282e9c623c41b835b85f29e87e19bb34496a31137ac7900e216be34a113c",
+            "depth_shape": [
+              128,
+              128
+            ],
+            "positive_depth_pixels": 16384
+          },
+          {
+            "color_dtype": "uint8",
+            "color_sha256": "b3599aca85d519fd0c7a839a47072464e3fe1236404753dd86b490c30bec66bd",
+            "color_shape": [
+              128,
+              128,
+              4
+            ],
+            "color_value_range": 232,
+            "depth_dtype": "float32",
+            "depth_sha256": "2f250dd6623ea81aaf9cefd18f13dba55bb5ea71002783558985df4992358b3c",
+            "depth_shape": [
+              128,
+              128
+            ],
+            "positive_depth_pixels": 16384
+          }
+        ],
+        "passed": true
+      },
+      "scene_loaded": true,
+      "schema_version": 1,
+      "simulator_constructed": true,
+      "start_state": {
+        "position": [
+          -1.2676633596420288,
+          0.2047852873802185,
+          12.595427513122559
+        ],
+        "position_norm": 12.660715103149414,
+        "rotation_xyzw": [
+          0.0,
+          0.45363849401474,
+          0.0,
+          0.8911857604980469
+        ]
+      }
+    }
+  },
+  "run_id": "habitat-test-assets-gpu-scene-smoke-20260803T152317Z",
+  "runtime": {
+    "asset_mount_read_only": true,
+    "bubblewrap_exit_code": 0,
+    "elapsed_ms": 1318.900083,
+    "image_manifest_digest": "sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+    "network_available_inside_sandbox": false,
+    "result_parse_error": null,
+    "rootfs_inventory": {
+      "algorithm": "sha256-canonical-json-lines-depth-first-raw-name-order-v1",
+      "directory_count": 8996,
+      "entry_count": 87944,
+      "excluded_paths": [
+        ".parcel-habitat-oci.json"
+      ],
+      "regular_file_bytes": 7925803803,
+      "regular_file_count": 72482,
+      "schema_version": 1,
+      "sha256": "65caf2c814dd7d26b2430d65fcae97dc6ddd2cad279e79d5b085180f3b7be9ba",
+      "symlink_count": 6466
+    },
+    "rootfs_inventory_verified_before_execution": true,
+    "stderr": "WARNING: Logging before InitGoogleLogging() is written to STDERR\nI0803 15:23:16.912101     2 Simulator.cpp:64] Loading navmesh from /opt/parcel-smoke/data/scene_datasets/habitat-test-scenes/skokloster-castle.navmesh\nI0803 15:23:16.912182     2 Simulator.cpp:66] Loaded.\nI0803 15:23:16.912206     2 SceneGraph.h:92] Created DrawableGroup: \nI0803 15:23:16.912401     2 WindowlessContext.cpp:100] [EGL] Detected 1 EGL devices\nI0803 15:23:16.912479     2 WindowlessContext.cpp:121] [EGL] Selected EGL device 0 for CUDA device 0\nI0803 15:23:16.914480     2 WindowlessContext.cpp:135] [EGL] Version: 1.5\nI0803 15:23:16.914484     2 WindowlessContext.cpp:136] [EGL] Vendor: NVIDIA\nI0803 15:23:16.970441     2 ResourceManager.cpp:1099] Importing Basis files as BC7\nW0803 15:23:17.602717     2 Simulator.cpp:161] :\n---\n The active scene does not contain semantic annotations. \n---\nI0803 15:23:17.603016 2 simulator.py:143] Loaded navmesh /opt/parcel-smoke/data/scene_datasets/habitat-test-scenes/skokloster-castle.navmesh\nI0803 15:23:17.612792     2 Simulator.cpp:38] Deconstructing Simulator\nI0803 15:23:17.612814     2 SemanticScene.h:40] Deconstructing SemanticScene\nI0803 15:23:17.612818     2 SceneManager.h:24] Deconstructing SceneManager\nI0803 15:23:17.612818     2 SceneGraph.h:25] Deconstructing SceneGraph\nI0803 15:23:17.612826     2 RenderTarget.h:51] Deconstructing RenderTarget\nI0803 15:23:17.612982     2 Sensor.h:80] Deconstructing Sensor\nI0803 15:23:17.612985     2 RenderTarget.h:51] Deconstructing RenderTarget\nI0803 15:23:17.613049     2 Sensor.h:80] Deconstructing Sensor\nI0803 15:23:17.613070     2 Renderer.cpp:33] Deconstructing Renderer\nI0803 15:23:17.613075     2 WindowlessContext.h:16] Deconstructing WindowlessContext\nI0803 15:23:17.613077     2 WindowlessContext.cpp:245] Deconstructing GL context\n",
+    "timed_out": false
+  },
+  "schema_version": 1
+}

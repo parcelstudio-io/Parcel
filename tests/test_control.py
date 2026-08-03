@@ -812,6 +812,38 @@ def test_close_waits_for_inflight_update_then_compensates_before_teardown() -> N
     assert manager.snapshot(now=clock()).lifecycle == ControlLifecycle.CLOSED
 
 
+def test_late_older_stop_completion_cannot_rebase_newer_feedback_boundary() -> None:
+    clock = FakeClock()
+    source = FakeStateSource(_state(clock()))
+    controller = RecordingController()
+    manager = ControlManager(controller, source, clock=clock)
+
+    with manager._lock:
+        older_generation = manager._begin_stop_delivery_locked()
+        newer_generation = manager._begin_stop_delivery_locked()
+        clock.advance(0.001)
+        source.state = _state(clock(), sequence=2)
+        assert manager._complete_stop_delivery_locked(
+            newer_generation,
+            reason="newer_compensating_stop",
+        )
+        newer_completed_at = manager._stop_completed_at
+        newer_feedback_sequence = manager._stop_feedback_sequence
+
+        # Model an older asynchronous E-stop worker reacquiring the lifecycle
+        # lock only after newer feedback is already visible.
+        clock.advance(0.001)
+        source.state = _state(clock(), sequence=3)
+        assert not manager._complete_stop_delivery_locked(
+            older_generation,
+            reason="stale_emergency_stop",
+        )
+
+        assert manager._stop_completed_at == newer_completed_at
+        assert manager._stop_feedback_sequence == newer_feedback_sequence
+        assert manager._last_stop_reason == "newer_compensating_stop"
+
+
 def test_close_timeout_leaves_controller_open_and_can_be_safely_retried() -> None:
     clock = FakeClock()
     source = FakeStateSource(_state(clock()))

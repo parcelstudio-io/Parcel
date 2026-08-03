@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-live-planner-v1",
+  "runner_version": "live-planir-boundary-v1",
+  "standalone_probe_profile": "full_default_registry/raw_plan_schema",
+  "frozen": true,
+  "frozen_at_utc": "2026-08-03T00:00:00Z",
+  "case_file": "sidewalk_case.json",
+  "case_sha256": "67d90bbf9a22fa71c439a7f04c151e6177e210a43653980eb0ed77620903f3ba",
+  "planner_prompt": "prompts/system/planner_v1.md",
+  "planner_prompt_sha256": "9144e227115c16419e4208debae74939b23dac57e6b5db62a17ddef25be6ca21",
+  "plan_schema": "prompts/schemas/plan_ir_v1.schema.json",
+  "plan_schema_sha256": "a4bb6d64cbf92716d3590e46e385a518f815eda0c3a3a121fd98e1a00b1218ba",
+  "result_schema": "result.schema.json",
+  "result_schema_sha256": "62885736c285603ca0a2652654062daee85914aa8302db450d6db25ecd535a55",
+  "physical_navigation_episode_count": 0
+}

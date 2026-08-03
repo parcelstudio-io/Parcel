@@ -1,0 +1,28 @@
+# Eval-only feature gate for the first map/A* hill-climb experiment.
+#
+# This selects the same grid_v1 model that can run on a Go2 sensor bridge and
+# retains Parcel's production velocity and collision limits.  BARN's adapter
+# discards lateral velocity because the standardized Jackal is differential
+# drive; the production controller contract remains holonomic.
+active_model: grid_v1
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+progress_watchdog:
+  timeout_steps: 800
+  max_semantic_replans: 2
+
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  max_vx: 0.45
+  max_vy: 0.25
+  max_vyaw: 0.8
+  stop_distance_m: 0.8
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

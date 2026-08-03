@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "profile_id": "llama-b10236-cuda12-oci-gemma4-26b-a4b-q4",
+  "source": {
+    "repository": "https://github.com/ggml-org/llama.cpp.git",
+    "commit": "1464c62d88f699ec9700c8010bbfdbc603a9efd6",
+    "release_build": 10236,
+    "build_documentation": "https://github.com/ggml-org/llama.cpp/blob/1464c62d88f699ec9700c8010bbfdbc603a9efd6/docs/build.md"
+  },
+  "distribution": {
+    "kind": "oci_image",
+    "registry": "ghcr.io",
+    "repository": "ggml-org/llama.cpp",
+    "tag": "server-cuda12-b10236",
+    "index_digest": "sha256:fd68d13013141833e8214ecad6e1fbefb532db6a00b980cdecfe33603dbf2675",
+    "manifest_digest": "sha256:fcd0f95f2c70156f03ed47c22ff4bea95018bada125c5772af71e83f2c35f2e4",
+    "config": {
+      "digest": "sha256:45f395fb4c9ebcaeb8007cc63147c731b229a1dfb7fd769d1c39e7d74825c9db",
+      "size": 18100
+    },
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    },
+    "layers": [
+      {"digest": "sha256:5a7813e071bfadf18aaa6ca8318be4824a9b6297b3240f2cc84c1db6f4113040", "size": 29754290},
+      {"digest": "sha256:a102f36d092c0e9e0bef8c97854f606af9156aa36ab408e6fa4b88e27124a7e6", "size": 6947129},
+      {"digest": "sha256:05ec76e31584ec109785cc7045bd88df0240411233c2fcdad66b621c662034c0", "size": 64290636},
+      {"digest": "sha256:398182656c471d6ecca3c2d6d30e97193b40ffc8028a94515093960322f3d64e", "size": 183},
+      {"digest": "sha256:73389fbd088f5ed5d9fd258baced59de092978b4f483920ea6d074522a105119", "size": 6885},
+      {"digest": "sha256:cbb9175a9bc5f6553f8c0c5025ea9521898b8a3956ee24798dc35c24c6185053", "size": 2058008382},
+      {"digest": "sha256:3d6ab8c799cda2f4c6a6277b0e24dd2231c5de83b0316968b7cce81156bb8be0", "size": 59618},
+      {"digest": "sha256:7209097bfb98d6f8b422984480f1fddead5ea62f8900ff6b6548e060b71aca76", "size": 1684},
+      {"digest": "sha256:545a3ada5b6bc612a11c13a659775d67eeda5a61615e7f49c76ecd24adcad626", "size": 1524},
+      {"digest": "sha256:aa5048c7b2e1c01218fbbf9ebf49e847df3df6502877de66ad45f97e86dd85ea", "size": 261895173},
+      {"digest": "sha256:8be59ad0074cee897209124ba08bfbc1761b64c5a50149e82ec6b0ff253c5256", "size": 165089721},
+      {"digest": "sha256:3b3b56bd98dffc436b64689f1e3a7c3aed7dbb8ed0a2b1e91e7502acebf2cbae", "size": 24652},
+      {"digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1", "size": 32}
+    ],
+    "rootfs_dir": "third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs",
+    "entrypoint": "app/llama-server",
+    "critical_files": [
+      {"path": "app/llama-server", "size": 17912, "sha256": "e3c775bb274d01d5c3345f37aaea55470902187b4433d2689eab367fa4150f3c"},
+      {"path": "app/libggml-cuda.so", "size": 169839920, "sha256": "98653d00859da34d11235ba22a95ef19f60e068946095f536b9a43fac5baa6d9"},
+      {"path": "app/libllama-server-impl.so", "size": 7680896, "sha256": "f408e6529c8d7301bdace1206a71327da558aff5e692df886e1555b9468c46f9"},
+      {"path": "usr/local/cuda-12.8/targets/x86_64-linux/lib/libcudart.so.12.8.90", "size": 728800, "sha256": "c3a75b33af334a3486d197dbd1584a2985183ba4688d237a2be5f2f679329920"},
+      {"path": "usr/local/cuda-12.8/targets/x86_64-linux/lib/libcublas.so.12.8.4.1", "size": 116388640, "sha256": "031ce6c2cbfbb9468f040527cab5c599069ce5609e73e28f87503881063eac21"},
+      {"path": "usr/local/cuda-12.8/targets/x86_64-linux/lib/libcublasLt.so.12.8.4.1", "size": 751771728, "sha256": "10b5e6631cf8115c661eb895ed1533826308b58f7956466f53d236a40c9b622c"},
+      {"path": "usr/lib/x86_64-linux-gnu/libnccl.so.2.25.1", "size": 383583952, "sha256": "42ba6acaf7c1211480668f252c71801c8f54c72424f59f8a4d5462f394796ad6"}
+    ],
+    "expected_image_version": "b10236",
+    "expected_image_revision": "1464c62d88f699ec9700c8010bbfdbc603a9efd6",
+    "cuda_version": "12.8.1"
+  },
+  "build": {
+    "source_dir": "third_party/llama.cpp-src/llama-b10236",
+    "build_dir": "third_party/llama.cpp-build/llama-b10236-cuda-sm89",
+    "generator": "Ninja",
+    "required_tools": {
+      "git": ["git"],
+      "cmake": ["cmake"],
+      "ninja": ["ninja"],
+      "cuda_compiler": ["nvcc"],
+      "c_compiler": ["cc", "gcc", "clang"],
+      "cxx_compiler": ["c++", "g++", "clang++"]
+    },
+    "cmake_defines": {
+      "BUILD_SHARED_LIBS": "ON",
+      "CMAKE_BUILD_TYPE": "Release",
+      "CMAKE_CUDA_ARCHITECTURES": "89",
+      "GGML_CUDA": "ON",
+      "GGML_NATIVE": "OFF",
+      "LLAMA_BUILD_APP": "OFF",
+      "LLAMA_BUILD_EXAMPLES": "OFF",
+      "LLAMA_BUILD_SERVER": "ON",
+      "LLAMA_BUILD_TESTS": "OFF",
+      "LLAMA_BUILD_TOOLS": "ON",
+      "LLAMA_BUILD_UI": "OFF",
+      "LLAMA_OPENSSL": "OFF"
+    },
+    "target": "llama-server"
+  },
+  "runtime": {
+    "current_binary": "third_party/llama.cpp-bin/llama-b10235/llama-server",
+    "cuda_binary": "third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+    "library_dirs": [
+      "third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app",
+      "third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/local/cuda/lib64",
+      "third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/local/cuda-12.8/targets/x86_64-linux/lib"
+    ],
+    "preload_libraries": [
+      "third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/usr/lib/x86_64-linux-gnu/libnccl.so.2.25.1"
+    ],
+    "model": {
+      "path": "models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf",
+      "size_bytes": 14439363584,
+      "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d"
+    },
+    "context_size": 8192,
+    "generation_threads": 32,
+    "batch_threads": 32,
+    "requested_gpu_layers": 999
+  },
+  "admission": {
+    "target_compute_capability": "8.9",
+    "minimum_total_vram_mib": 24576,
+    "minimum_free_vram_mib": 18432,
+    "minimum_runtime_reserve_over_weight_file_mib": 4096
+  }
+}

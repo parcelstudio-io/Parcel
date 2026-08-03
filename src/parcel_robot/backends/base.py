@@ -57,6 +57,19 @@ class SemanticRegionTrack:
 
 
 @dataclass(frozen=True)
+class SemanticObjectTrack:
+    """Camera/depth-grounded object usable as a relational navigation goal."""
+
+    object_id: str
+    label: str
+    position: tuple[float, float, float]
+    confidence: float
+    source: str = "perception"
+    reachable: bool = True
+    metadata: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
 class SimObservation:
     timestamp: float
     robot: RobotPose
@@ -74,6 +87,7 @@ class SimObservation:
     collision: bool = False
     emergency_stopped: bool = False
     backend: str = "unknown"
+    semantic_objects: tuple[SemanticObjectTrack, ...] = ()
 
 
 class SimulatorBackend(Protocol):

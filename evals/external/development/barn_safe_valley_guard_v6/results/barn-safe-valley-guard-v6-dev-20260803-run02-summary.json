@@ -1,0 +1,100 @@
+{
+  "candidate": {
+    "collision_rate": 0.0,
+    "controller_step_p99_ms": 84.3841,
+    "guarded_safe_valley_advance_steps": 964,
+    "minimum_signed_clearance_m": 0.08321989283057797,
+    "navigation_metric": 0.12029362925349155,
+    "policy": "grid_safe_valley_guard_v6",
+    "success_rate": 0.5,
+    "timeout_rate": 0.13333333333333333
+  },
+  "corpus_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20",
+  "corpus_manifest_sha256": "821e70935c447007614e1a6b939c9a1d0769443cebdf7f5028e4bdcf348e13a5",
+  "decision": {
+    "confirmation_command_authorized": false,
+    "confirmation_execution_implemented": false,
+    "deployment_enabled": false,
+    "reason": "One or more predeclared development gates failed; sealed confirmation remains ungenerated, unopened, and unauthorized.",
+    "root_authorization_required": true,
+    "selected_for_single_sealed_confirmation": false
+  },
+  "development_world_count": 30,
+  "evaluation_kind": "barn-native-safe-valley-guard-v6-generated-development-non-official",
+  "full_report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/development/barn_safe_valley_guard_v6/results/runs/barn-safe-valley-guard-v6-dev-20260803-run02.json",
+    "sha256": "6d2e31366e1d8318ad3bba37aea834fcbb96fab4247568421d2ba51433ebe319",
+    "size_bytes": 211066
+  },
+  "gate_diagnostics": {
+    "all_conditions_passed": false,
+    "candidate_controller_p99_ms": 84.3841,
+    "candidate_minimum_signed_clearance_m": 0.08321989283057797,
+    "candidate_timeout_rate": 0.13333333333333333,
+    "clearance_floor_delta_m": 0.0,
+    "controller_p99_latency_ratio": 1.0123464272625684,
+    "guard_affected_paired_episodes": 10,
+    "guarded_safe_valley_advance_steps": 964,
+    "reference_controller_p99_ms": 83.354964,
+    "reference_minimum_signed_clearance_m": 0.08321989283057797,
+    "reference_timeout_rate": 0.13333333333333333
+  },
+  "ledger_record_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/development/barn_safe_valley_guard_v6/results/ledger/runs/barn-safe-valley-guard-v6-dev-20260803-run02.json",
+  "limitations": [
+    "Generated native CPU proxy; not official Gazebo BARN or a leaderboard score.",
+    "Both reference and candidate are deployment-disabled experimental policies.",
+    "No v4, v5, or v6 confirmation asset was generated, opened, or evaluated."
+  ],
+  "official_gazebo_score": false,
+  "paired": {
+    "candidate_minus_reference": {
+      "collision_rate": 0.0,
+      "mean_episode_minimum_signed_obstacle_clearance_m": 0.010393401945973631,
+      "mean_final_distance_to_goal_m": 0.06449468747183351,
+      "mean_goal_progress_efficiency": -0.006448616565801646,
+      "mean_maximum_goal_progress_m": -0.06449468747183307,
+      "navigation_metric": 0.0,
+      "stopped_outside_goal_rate": 0.0,
+      "success_rate": 0.0,
+      "timeout_rate": 0.0
+    },
+    "outcomes": {
+      "collision_gains": 0,
+      "collision_regressions": 0,
+      "metric_improvements": 0,
+      "metric_regressions": 0,
+      "metric_ties": 30,
+      "success_gains": 0,
+      "success_regressions": 0
+    }
+  },
+  "promotion_gate": {
+    "controller_p99_latency_absolute": true,
+    "controller_p99_latency_ratio": true,
+    "guarded_safe_valley_advance_phase_exercised": true,
+    "maximum_paired_success_regressions": true,
+    "minimum_guard_affected_paired_episodes": true,
+    "minimum_signed_clearance_floor": true,
+    "no_clearance_floor_regression": true,
+    "no_timeout_rate_increase": true,
+    "nonnegative_navigation_metric_delta": true,
+    "same_world_trial_seed_native_config_and_manifest": true,
+    "zero_candidate_collision_rate": true,
+    "zero_candidate_timeout_rate": false
+  },
+  "reference": {
+    "collision_rate": 0.0,
+    "controller_step_p99_ms": 83.354964,
+    "minimum_signed_clearance_m": 0.08321989283057797,
+    "navigation_metric": 0.12029362925349155,
+    "policy": "grid_safe_valley_v5",
+    "success_rate": 0.5,
+    "timeout_rate": 0.13333333333333333
+  },
+  "run_id": "barn-safe-valley-guard-v6-dev-20260803-run02",
+  "schema_version": 1,
+  "sealed_confirmation_evaluated": false,
+  "sealed_confirmation_generated": false,
+  "sealed_confirmation_opened": false,
+  "timestamp_utc": "2026-08-03T15:28:46.145378Z"
+}

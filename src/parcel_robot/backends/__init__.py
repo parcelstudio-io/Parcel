@@ -3,6 +3,8 @@ from .base import (
     LidarObstacle,
     OwnerTrack,
     RobotPose,
+    SemanticObjectTrack,
+    SemanticRegionTrack,
     SimObservation,
     SimulatorBackend,
 )
@@ -14,6 +16,8 @@ __all__ = [
     "MujocoSocketBackend",
     "OwnerTrack",
     "RobotPose",
+    "SemanticObjectTrack",
+    "SemanticRegionTrack",
     "SimObservation",
     "SimulatorBackend",
 ]

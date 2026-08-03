@@ -46,6 +46,24 @@ def observation(
             "walk in a small clockwise circle around me",
             SpatialIntent("orbit_owner", "clockwise", size="small", revolutions=1.0),
         ),
+        (
+            "walk around the owner 1 time",
+            SpatialIntent(
+                "orbit_owner",
+                "counterclockwise",
+                size="normal",
+                revolutions=1.0,
+            ),
+        ),
+        (
+            "walk around me once",
+            SpatialIntent(
+                "orbit_owner",
+                "counterclockwise",
+                size="normal",
+                revolutions=1.0,
+            ),
+        ),
     ],
 )
 def test_parse_bounded_spatial_intents(text, expected):
@@ -61,6 +79,7 @@ def test_parse_bounded_spatial_intents(text, expected):
         "walk away from me many steps",
         "walk away from me 500 steps",
         "walk in a circle around me three times",
+        "walk around me 2 times",
     ],
 )
 def test_spatial_parser_does_not_execute_negated_hypothetical_or_unbounded_text(text):
@@ -149,25 +168,32 @@ def test_small_orbit_radius_clears_the_default_owner_safety_envelope():
     assert config.min_orbit_radius_m == pytest.approx(config.minimum_safe_orbit_radius(0.65))
 
 
-def test_orbit_progress_completes_one_bounded_revolution():
+@pytest.mark.parametrize(
+    ("direction", "direction_sign"),
+    [("counterclockwise", 1.0), ("clockwise", -1.0)],
+)
+def test_orbit_progress_completes_one_bounded_revolution(direction, direction_sign):
     controller = SpatialBehaviorController()
     radius = controller.config.min_orbit_radius_m
     owner = OwnerTrack(x=0.0, y=0.0, visible=True, confidence=1.0)
     controller.start(
-        SpatialIntent("orbit_owner", "counterclockwise", size="small"),
-        observation(robot=RobotPose(x=radius, y=0.0, yaw=math.pi / 2), owner=owner),
+        SpatialIntent("orbit_owner", direction, size="small"),
+        observation(
+            robot=RobotPose(x=radius, y=0.0, yaw=direction_sign * math.pi / 2),
+            owner=owner,
+        ),
         now=1.0,
     )
 
     decision = None
     for index in range(1, 66):
-        angle = index * 0.1
+        angle = direction_sign * index * 0.1
         decision = controller.step(
             observation(
                 robot=RobotPose(
                     x=radius * math.cos(angle),
                     y=radius * math.sin(angle),
-                    yaw=angle + math.pi / 2,
+                    yaw=angle + direction_sign * math.pi / 2,
                 ),
                 owner=owner,
             ),
@@ -180,6 +206,176 @@ def test_orbit_progress_completes_one_bounded_revolution():
     assert decision.done
     assert decision.reason == "orbit_complete"
     assert decision.progress == 1.0
+
+
+def test_orbit_oscillation_does_not_accumulate_forward_progress():
+    controller = SpatialBehaviorController()
+    radius = controller.config.default_orbit_radius_m
+    owner = OwnerTrack(x=0.0, y=0.0, visible=True, confidence=1.0)
+    controller.start(
+        SpatialIntent("orbit_owner", "counterclockwise"),
+        observation(robot=RobotPose(x=radius, yaw=math.pi / 2), owner=owner),
+        now=1.0,
+    )
+
+    decision = None
+    for index in range(80):
+        angle = 0.2 if index % 2 == 0 else 0.0
+        decision = controller.step(
+            observation(
+                robot=RobotPose(
+                    x=radius * math.cos(angle),
+                    y=radius * math.sin(angle),
+                    yaw=angle + math.pi / 2,
+                ),
+                owner=owner,
+            ),
+            now=1.0 + (index + 1) * 0.1,
+        )
+        assert not decision.done
+
+    assert decision is not None
+    assert decision.progress == pytest.approx(0.0, abs=1e-9)
+    assert controller.snapshot()["progress"] == pytest.approx(0.0, abs=1e-9)
+
+
+def test_reverse_orbit_motion_cancels_net_progress():
+    controller = SpatialBehaviorController()
+    radius = controller.config.default_orbit_radius_m
+    owner = OwnerTrack(x=0.0, y=0.0, visible=True, confidence=1.0)
+    controller.start(
+        SpatialIntent("orbit_owner", "counterclockwise"),
+        observation(robot=RobotPose(x=radius, yaw=math.pi / 2), owner=owner),
+        now=1.0,
+    )
+
+    decision = None
+    angles = [0.2, 0.4, 0.6, 0.8, 1.0, 0.8, 0.6]
+    for index, angle in enumerate(angles, start=1):
+        decision = controller.step(
+            observation(
+                robot=RobotPose(
+                    x=radius * math.cos(angle),
+                    y=radius * math.sin(angle),
+                    yaw=angle + math.pi / 2,
+                ),
+                owner=owner,
+            ),
+            now=1.0 + index * 0.1,
+        )
+
+    assert decision is not None
+    assert not decision.done
+    assert decision.progress == pytest.approx(0.6 / (2.0 * math.pi))
+    assert controller.snapshot()["progress"] == pytest.approx(0.6)
+
+
+def test_off_ring_angular_motion_receives_no_orbit_credit():
+    controller = SpatialBehaviorController()
+    radius = controller.config.default_orbit_radius_m
+    off_ring_radius = radius + controller.config.waypoint_tolerance_m + 0.1
+    owner = OwnerTrack(x=0.0, y=0.0, visible=True, confidence=1.0)
+    controller.start(
+        SpatialIntent("orbit_owner", "counterclockwise"),
+        observation(robot=RobotPose(x=radius, yaw=math.pi / 2), owner=owner),
+        now=1.0,
+    )
+
+    decision = None
+    for index in range(1, 66):
+        angle = index * 0.1
+        decision = controller.step(
+            observation(
+                robot=RobotPose(
+                    x=off_ring_radius * math.cos(angle),
+                    y=off_ring_radius * math.sin(angle),
+                    yaw=angle + math.pi / 2,
+                ),
+                owner=owner,
+            ),
+            now=1.0 + index * 0.1,
+        )
+        assert not decision.done
+
+    assert decision is not None
+    assert decision.progress == pytest.approx(0.0, abs=1e-9)
+    assert controller.snapshot()["progress"] == pytest.approx(0.0, abs=1e-9)
+
+
+def test_orbit_does_not_complete_away_from_its_terminal_gate():
+    controller = SpatialBehaviorController()
+    radius = controller.config.default_orbit_radius_m
+    off_ring_radius = radius + controller.config.waypoint_tolerance_m + 0.1
+    owner = OwnerTrack(x=0.0, y=0.0, visible=True, confidence=1.0)
+    controller.start(
+        SpatialIntent("orbit_owner", "counterclockwise"),
+        observation(robot=RobotPose(x=radius, yaw=math.pi / 2), owner=owner),
+        now=1.0,
+    )
+
+    decision = None
+    step = 0
+    for step, index in enumerate(range(1, 62), start=1):
+        angle = index * 0.1
+        decision = controller.step(
+            observation(
+                robot=RobotPose(
+                    x=radius * math.cos(angle),
+                    y=radius * math.sin(angle),
+                    yaw=angle + math.pi / 2,
+                ),
+                owner=owner,
+            ),
+            now=1.0 + step * 0.1,
+        )
+        assert not decision.done
+
+    # Change phase while outside the credit corridor, then re-enter far from
+    # the terminal point. The next on-ring delta puts net progress over 2*pi,
+    # but completion must still wait until the robot is near its endpoint.
+    for angle in (6.2, 0.5):
+        step += 1
+        decision = controller.step(
+            observation(
+                robot=RobotPose(
+                    x=off_ring_radius * math.cos(angle),
+                    y=off_ring_radius * math.sin(angle),
+                    yaw=angle + math.pi / 2,
+                ),
+                owner=owner,
+            ),
+            now=1.0 + step * 0.1,
+        )
+        assert not decision.done
+
+    step += 1
+    decision = controller.step(
+        observation(
+            robot=RobotPose(
+                x=radius * math.cos(0.5),
+                y=radius * math.sin(0.5),
+                yaw=0.5 + math.pi / 2,
+            ),
+            owner=owner,
+        ),
+        now=1.0 + step * 0.1,
+    )
+    assert not decision.done
+    step += 1
+    decision = controller.step(
+        observation(
+            robot=RobotPose(
+                x=radius * math.cos(0.7),
+                y=radius * math.sin(0.7),
+                yaw=0.7 + math.pi / 2,
+            ),
+            owner=owner,
+        ),
+        now=1.0 + step * 0.1,
+    )
+
+    assert not decision.done
+    assert controller.snapshot()["progress"] > 2.0 * math.pi
 
 
 def test_spatial_tool_schema_rejects_unbounded_or_extra_arguments():

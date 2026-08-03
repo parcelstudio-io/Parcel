@@ -7,12 +7,15 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
+.cache/external-evals/
+.cache/reasoner/
 parcel_memory.sqlite3
 
 # Local model downloads (fetch from Hugging Face; do not commit weights)
 models/**/.cache/
 models/**/*.pt
 models/**/*.pth
+models/**/*.ckpt
 models/**/*.safetensors
 models/**/*.gguf
 models/**/*.bin

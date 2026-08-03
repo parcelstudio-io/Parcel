@@ -48,6 +48,18 @@ def test_prompt_library_rejects_profile_path_traversal():
         library.personality("../system/core")
 
 
+def test_prompt_library_loads_defensive_plan_schema_and_instruction():
+    library = PromptLibrary(REPO / "prompts")
+
+    schema = library.schema("plan_ir_v1.schema.json")
+    schema["title"] = "mutated by caller"
+
+    assert library.schema("plan_ir_v1.schema.json")["title"] == "Parcel PlanIR v1"
+    assert "Return exactly one PlanIR JSON object" in library.planner_system()
+    with pytest.raises(ValueError, match="invalid prompt schema filename"):
+        library.schema("../plan_ir_v1.schema.json")
+
+
 def test_model_decision_parses_bounded_semantic_action():
     decision = parse_model_decision(
         json.dumps(

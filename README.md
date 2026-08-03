@@ -123,8 +123,8 @@ Activate and verify it:
 cd /home/jaewoo-jang/Desktop/Projects/Parcel
 source .parcel/bin/activate
 python -c "import mujoco; print(mujoco.__version__)"
-pytest
-ruff check .
+python -m pytest
+ruff check src/parcel_robot tests
 ```
 
 To reproduce the Python install in a compatible environment:
@@ -142,6 +142,33 @@ python -m pip install -e ".[dev,voice]"
 ## Skills catalog, city scene, and Dog API
 
 See [Skills / city / RL implementation](docs/IMPLEMENTATION_SKILLS_CITY_RL.md).
+
+The measured BARN baseline, hierarchical instruction-following design,
+open-weight navigation model decisions, and MetaUrban/Isaac evaluation roadmap
+are in [Companion navigation and instruction-following architecture](docs/COMPANION_NAVIGATION_ARCHITECTURE.md).
+The evidence behind the split conversation/planning/navigation brain, current
+open-weight model candidates, GPU admission profiles, and experiment matrix is
+in [AI brain and navigation research](docs/AI_BRAIN_AND_NAVIGATION_RESEARCH.md).
+The frozen live semantic-planning gate and its append-only run history are in
+[planner quality v2](evals/companion/planner_quality_v2/README.md) and its
+[result ledger](evals/companion/planner_quality_v2/results/README.md). The
+admitted CPU and full-CUDA baselines both passed 5/5 selected semantic cases;
+the GPU run reduced median usable-plan latency to 5.657 seconds but executed
+zero physical episodes. The separate headless embodied PlanIR gate passed 4/4
+supported cases with zero collisions while explicitly leaving moving-owner
+follow unsupported. Neither result is a conversation or official benchmark
+score.
+The separate frozen conversation calibration records Gemma at 6/10 machine
+cases and 9/10 structured-safety checks; human review is still absent. A fully
+GPU-admitted Ministral 3 8B Instruct challenger started much faster but
+regressed to 5/10 conversation cases and 3/5 PlanIR, so it remains
+deployment-disabled. Exact artifacts, raw failures, latency, and promotion
+decisions are in the research report and append-only ledgers.
+The pinned external evaluators, sensor-only adapter, run commands, and immutable
+result ledger are documented in [Offline external navigation evals](evals/external/README.md).
+An unchanged upstream Nav2 MPPI stack now completes one public BARN world in a
+cache-only ROS/Gazebo rootfs, but that is runtime compatibility—not a Parcel,
+500-episode, official, or top-decile score.
 
 ```bash
 source .parcel/bin/activate
@@ -161,6 +188,10 @@ python examples/rl_env_smoke.py
 
 # City navigation (POI grounding + stub pedestrians / social reward)
 python examples/nav_city_smoke.py
+
+# Deterministic city-task outcome gate (no viewer)
+python -m pytest -q tests/test_headless_city_tasks.py tests/test_mujoco_lidar.py \
+  tests/test_city_orbit_clearance.py
 ```
 
 City navigation, dynamic simulator research, action policy, open-weight model
@@ -207,6 +238,26 @@ parcel-sim
 
 # terminal 2 — browser panel
 parcel-panel --llm
+```
+
+`language_model` remains the shared conversation/PlanIR default. To run a
+separately evaluated planning specialist, configure and enable the optional
+`planner_model` section on a different local endpoint. The browser runtime sends
+the original transcript directly to that lane, reports conversation/planner
+health independently, and attributes plan latency to the provider that served
+it. `parcel-panel --no-llm` disables both lanes. A specialist section is
+intentionally absent from the frozen default robot configuration because the
+measured Ministral challengers did not beat the Gemma quality gates; add
+`planner_model` only to an experimental deployment configuration.
+
+```yaml
+planner_model:
+  enabled: true
+  base_url: http://127.0.0.1:8082
+  model: an-admitted-planner
+  streaming: true
+  plan_timeout: 90
+  plan_max_tokens: 1024
 ```
 
 Or focus the MuJoCo window and use keys: `W/S` forward/back, `A/D` strafe,

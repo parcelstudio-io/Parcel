@@ -1,0 +1,1819 @@
+{
+  "benchmark_scope": {
+    "evaluation_kind": "barn-native-headless-non-official-generated-development",
+    "generator_inputs": {
+      "difficulty_quant.py": {
+        "sha256": "380ebd69aaece4301ec53a1ec255bb70ba91af76a19ccac24c82cbb41a25ae04",
+        "size_bytes": 8449
+      },
+      "gen_world_ca.py": {
+        "sha256": "626d7a10d0a9117ae5d5a06e3475e4ae5c7538486d2bddd9d009b4331b681616",
+        "size_bytes": 23548
+      },
+      "world-boilerplate/cylinder_define.txt": {
+        "sha256": "bf1fd3451e4549103dee21a5a2a7b30fee4f4f6495814e359b1d445a29851312",
+        "size_bytes": 1582
+      },
+      "world-boilerplate/cylinder_place.txt": {
+        "sha256": "d7f09a54a8d6adc32dca89ad23d15bbb0e718f828b7fc439ea1e45b312f7eb23",
+        "size_bytes": 364
+      },
+      "world-boilerplate/world_boiler_end.txt": {
+        "sha256": "bd0d8774039cf6ade2d96e9f97aeef7d6ce0ae3865e90fdd3d425ccca899a6b4",
+        "size_bytes": 360
+      },
+      "world-boilerplate/world_boiler_mid.txt": {
+        "sha256": "09e18c57191fa89299b0ee991b546cb05646fb360713c33637fb519f77f71293",
+        "size_bytes": 542
+      },
+      "world-boilerplate/world_boiler_start.txt": {
+        "sha256": "4558a3752fd9e0acb4f2a8ed7736a766ec1b27f08b33f999f02f0549c41ad1ae",
+        "size_bytes": 2461
+      },
+      "world_writer.py": {
+        "sha256": "2ccf2abfa3853330846e8c6ec7ee7547c1d9c2ca513d062dfe43e199e9335b98",
+        "size_bytes": 4349
+      }
+    },
+    "leaderboard_claim": false,
+    "official_gazebo_score": false,
+    "source_generator": "https://github.com/dperille/jackal-map-creation.git",
+    "source_generator_commit": "295ca5cc7b9b0ecea93013f0c49c5a1ca4352151",
+    "source_generator_license": "NOASSERTION"
+  },
+  "corpus_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20",
+  "created_at": "2026-08-03T15:26:05Z",
+  "development_corpus": {
+    "assets_root": "/home/jaewoo-jang/Desktop/Projects/Parcel/.cache/external-evals/generated/barn_safe_valley_guard_v6/development/test_data",
+    "corpus_sha256": "fd587ef042b8fae124c4b0b2779548023d0b374eaf5d4bd9759ea4b0d00ff579",
+    "episodes": [
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2000",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2000.npy",
+            "sha256": "00f75a3e7ca34e03a281a88482c79ca482301daaa8eac8f9b54388676c59e014",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2000.npy",
+            "sha256": "5f60fd66563ae162a4fbcd1e5625d22e20c36ba93d260189d55d68270bff561f",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2000.npy",
+            "sha256": "7e43f383a48d4749a145c98e596fe77ecc5db5a4d0f8aa94758ee9a1188c236e",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2000.npy",
+            "sha256": "3539daa3ded36f1ae63504a71ca2a8886b5b41b796da096e49a810148d60b6e3",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_2000.world",
+            "sha256": "3041f9e008a2ecf0d9f51209c47ec56826db80a6d8d465650aa41e39ed05a688",
+            "size_bytes": 427052
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1001806141,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2000
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2001",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2001.npy",
+            "sha256": "549fceed61429b6265ea8f853abbc3236bedbae01980f9553f08775279978a7c",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2001.npy",
+            "sha256": "a2b10514d610e3125414abacb04b42b5b58dc98c9b91d4ccd9749b75d10c5793",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2001.npy",
+            "sha256": "fe6afaf1d248fef08a5f39c22a1fa70a65bb0282e9604aebb1323f9989e1b6ca",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2001.npy",
+            "sha256": "7653ce4f0822fc5c31f551a6ea34efe9bde382ff600a0b9100e17d219bfb8103",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_2001.world",
+            "sha256": "cc670193e901199adb1ce5d68b7528a55d209ff553be64daf985875b4051f32b",
+            "size_bytes": 439706
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 120799131,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2001
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2002",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2002.npy",
+            "sha256": "30d888ea566be5ca7c380ad26cdef0adb0b30646408d2ef1e5f95a22e69bb7d9",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2002.npy",
+            "sha256": "745f7cde2ed6e446f1a7c4ea07eb9d5f27a9d27a8510e7e1c7f449afe33e84b2",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2002.npy",
+            "sha256": "0411f0c1506e8150b391ce1259318711cbc4f8dc5065f19e4872351372fefbcf",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2002.npy",
+            "sha256": "fbd9f5178e55e08fe78ac42bd5b31fd87e1fe4257f579306ea6d3452ca4e5487",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_2002.world",
+            "sha256": "572796641528e0a42fa8014ef82500fa7af3bb6ee645a21ff1c86db67f393bfd",
+            "size_bytes": 433379
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 389607983,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2002
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2003",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2003.npy",
+            "sha256": "e059deeb27c4973d8a777a17f7589cb82a982a260fe9e1e8aea53a1fae7de489",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2003.npy",
+            "sha256": "24d5389a62256d1f3eeac57e339c9b7ef74bee4ec2aec4f2ae7760ff58991e9e",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2003.npy",
+            "sha256": "f123e93c51433ffc1c26d91a8ad74db56d0d53fe00b754d50cba9bda8ef196de",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2003.npy",
+            "sha256": "ad114373794e2bd82ed4ea007123f238c4a08fcea1b92b09ca64cf0cda88f753",
+            "size_bytes": 736
+          },
+          "world": {
+            "path": "world_files/world_2003.world",
+            "sha256": "b69490925a726eb50dff6d524e4bd9e0e495164ea0d51efba8791be88c443b9d",
+            "size_bytes": 572573
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1825946429,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2003
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2004",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2004.npy",
+            "sha256": "8a29046ccd4c8b91e3064ac77df441364203ae9b738dd74744bee379a89372e2",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2004.npy",
+            "sha256": "d6ecb384ddfbe0a5869ebc6280278989b3c3b48559a6b4e4d3a00831609e6bc5",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2004.npy",
+            "sha256": "1bac430b3b868e32900aa7897378c1963e380a6d6baa0eac11c4d6168abf3e42",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2004.npy",
+            "sha256": "5abd59eff44a65f1c1601c860b59ef08c2306aa8adf91828c184ff16daac677a",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_2004.world",
+            "sha256": "e9869244daf50c98f69b8b87180e36c1d362466d6d5504d286f3aee84a23b50c",
+            "size_bytes": 467123
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 773408121,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2004
+      },
+      {
+        "accepted_attempt": 3,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2005",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2005.npy",
+            "sha256": "d1d99bc2f14fd5faec3717813ef0fac6a8d3ecfcc96ecb0fdc07c57c93a8553a",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2005.npy",
+            "sha256": "9e3174058d41f4c704e4558e9acda16cf5610e28b8adbec5fc6e58dd67452f24",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2005.npy",
+            "sha256": "efbe2fc9802108440c2ced8b87ec44da4acf8032306d94979dfe5d7f38b17bce",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2005.npy",
+            "sha256": "eefeb09a92f2865f33cda637b772e777a1cc0984de83e6c0653b557f5de93eec",
+            "size_bytes": 688
+          },
+          "world": {
+            "path": "world_files/world_2005.world",
+            "sha256": "a084ff30f064075fa8285644db4981b548031282eebe70efc15ffa22094be5b8",
+            "size_bytes": 502976
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1254111344,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2005
+      },
+      {
+        "accepted_attempt": 14,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2006",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2006.npy",
+            "sha256": "81ad4b5c4747398d1255a3cb7b07566aa9c4e68efed964883613f25bc447b899",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2006.npy",
+            "sha256": "bf3f894860a13d5b0c62bc17718edfc02865843fbe4f44b48369250109d01e2f",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2006.npy",
+            "sha256": "5d4ef72bd40d6f17b3639adaec02f8b4b3dacac12a5f71aaea2c33d6eaea7134",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2006.npy",
+            "sha256": "8bf784eca2f6f16302c1cc5d9afc8120ca2d6506da96e4aa64af872b1c8254fd",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_2006.world",
+            "sha256": "4ffb8c7951f4ce272b63c42675f25391aa5e90e85e16a994b4e397f82aa39b28",
+            "size_bytes": 673805
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 716652270,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2006
+      },
+      {
+        "accepted_attempt": 4,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2007",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2007.npy",
+            "sha256": "5f5eb4ba23805de0bb60c8f96823e062a59206638ab2bd95f4217ad77c9ef3fd",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2007.npy",
+            "sha256": "92476ce309791ff7375dff2d8f206380c98210f7dac9719b3b3302a92ac1e0c1",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2007.npy",
+            "sha256": "6f2ccabc1653144dce37317d04fa87d01f147ec4d1a6dae2f70dd705c581c851",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2007.npy",
+            "sha256": "c26046a7f72b417360d2d106c69558bb33017d0c0d870763b6af994c753d3ebd",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_2007.world",
+            "sha256": "2b3450c9d4a84a92630e5dffbab183965610a4149d19b1f61714b900d4d9e127",
+            "size_bytes": 608426
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 858615647,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2007
+      },
+      {
+        "accepted_attempt": 5,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2008",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2008.npy",
+            "sha256": "5ca993556e5d747b498b7db8504de921938e42dce1b181e301396a1863410b60",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2008.npy",
+            "sha256": "98b80baa89b1808ce8e57cec007b6702985dc1178007a8a83db40e40c015b89f",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2008.npy",
+            "sha256": "81a7784ffd4b91dbce5ba519a4cd3137644879498970bb159ea79bdc4fc788a4",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2008.npy",
+            "sha256": "2193539e80c8fcaf6d14a649cd02acb7f24234b9a32ded12b9b0c132636bc81e",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_2008.world",
+            "sha256": "92df4c8c02ca79360f556574d8dbd30523a1fa648ef11b05501b2a1e43759265",
+            "size_bytes": 627407
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 2022688924,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2008
+      },
+      {
+        "accepted_attempt": 220,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2009",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2009.npy",
+            "sha256": "69d96c73a155a19b74123bc533bb4cf83aedc74e882b3e979cae4ea82b36898c",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2009.npy",
+            "sha256": "ddd2c1820ae9888ecf17aed788d66d01793623abb009d4467299416a0bb16eed",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2009.npy",
+            "sha256": "b619081b7970046106da90a40b72324b50abe916236eb77c072798c473074624",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2009.npy",
+            "sha256": "5f408a60b6f1cd0345ecbdf462682a6bf69d8d847f73a9fa585ad7fa00b5525d",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_2009.world",
+            "sha256": "0e5fb7d7689d4624bf0b13be45066a448f66da44ec1c1aac42ae0c33ff483ccd",
+            "size_bytes": 697004
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1887485376,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2009
+      },
+      {
+        "accepted_attempt": 685,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2010",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2010.npy",
+            "sha256": "c42cce756faefea0c89e0a73da385bdbda91f3208cb848415aea84dd6d89a04b",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2010.npy",
+            "sha256": "258e6ecc70015321eafd009a65c6a78df15d1ab8590ad474d6eab2086c2e7999",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2010.npy",
+            "sha256": "db2dc98796c01caa623c21e020001f00fb799f773c26019e284f0b9853daa1f3",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2010.npy",
+            "sha256": "71d42397af545d7dcc8f1adad616e1aaeb81b88d20e9664b470871c0cf156894",
+            "size_bytes": 688
+          },
+          "world": {
+            "path": "world_files/world_2010.world",
+            "sha256": "8febcda6010aeca6c507ef868ca7122997094e8046288757fba295d7eecbd35a",
+            "size_bytes": 661151
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1256565183,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2010
+      },
+      {
+        "accepted_attempt": 270,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2011",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2011.npy",
+            "sha256": "8fccb5241b4e6604d9405a2b39bb16c8151df681daf6f4ba169eb5d8330ad20e",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2011.npy",
+            "sha256": "4571cfa38aa806f4861665eb96dadb9028f3e3807a258bbda92a5c4d60834983",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2011.npy",
+            "sha256": "b90039ec1b2aff6578ddba97e4854ad26b0a54631c8293afe492cff9c0f4db2e",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2011.npy",
+            "sha256": "a48b0abc32ab7765e09eb24f9fe9ab364a494de835873faa28ee78d0fbce53fe",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_2011.world",
+            "sha256": "41db8e42f044143f1c3f825f5990fbb98f7fff5b6ad7f6aead3878c323f516fd",
+            "size_bytes": 663260
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 466300230,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2011
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2012",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2012.npy",
+            "sha256": "420e055007ccf0fbdfeba4a188468f01dc2eba425b7ffdae9434339c69dbd1da",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2012.npy",
+            "sha256": "73a0ca563c41c877b7b46e00c8348f3b8ba5d8a1fbc158f62ff50901fcd9bb92",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2012.npy",
+            "sha256": "0e508cedeaf491a02f65987efb4618f05cc6b1e374878ae602a34c56cd721bda",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2012.npy",
+            "sha256": "9ff50569f483058bccbf307d243fa3dd92bf219bc473a50095bbc66815b2a63a",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_2012.world",
+            "sha256": "a3abc3fdcfb584ef787ef06d9368060a7d15150fd9c9b6ca927149769ee6802f",
+            "size_bytes": 448142
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 875515609,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2012
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2013",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2013.npy",
+            "sha256": "60dbccc82b73470fb1de0cce4174a4386ac93fe569e8d60639afae5d9bfef4ec",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2013.npy",
+            "sha256": "d9762c8c9fed56310029c640a63bd2883e7c5e35efbbf76a16641de717a1f42d",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2013.npy",
+            "sha256": "5fe390b76ea3e993ff13fe8918acd2410f0bdde734a138633241433ca2034d46",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2013.npy",
+            "sha256": "0936d9cb726ea216ef92e63fd560baef587c36dc7a2b357c544d0c5404b348c9",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_2013.world",
+            "sha256": "0fd12b12c27ff6d93f3d85405143fee2af1dee5ac840abf8555e28a1c624e221",
+            "size_bytes": 456578
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1552069432,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2013
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2014",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2014.npy",
+            "sha256": "99a050482f8b561b335fecf625997f33edd8fca2db7655f165625bbecb1100d8",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2014.npy",
+            "sha256": "f723dbe27dcff2e7ab613490463c68770fac7a846ca63cfcec489ba90abe62ff",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2014.npy",
+            "sha256": "dda924a465b9694c42a5a6d5e13d42d7758b2a21f013dc9da7fff949c24e6633",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2014.npy",
+            "sha256": "b93c52c01cbeb582873d477d73edff907b99251a9ab6884ad9e0f78c4185bd90",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_2014.world",
+            "sha256": "a3ad84415653c363f2436cc3272f04e643a07c7f5748eae19d24d03b60b9d04b",
+            "size_bytes": 473450
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1830000886,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2014
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2015",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2015.npy",
+            "sha256": "82c293436742e30043074ad374bb7fe6ab899d248495a47fc1fd217dd57381e9",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2015.npy",
+            "sha256": "63f33135f2cce767eb35415296e9efcc7ff274c5cf22cbe312879411c907b531",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2015.npy",
+            "sha256": "55cc6fa4311654166198b02a41a69eed575c755071395bda01c73debccc068d5",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2015.npy",
+            "sha256": "5a0300f39837b36218e43ae019dcb5efcd83c9d7ddb46b92d76fda0d6eaa6522",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_2015.world",
+            "sha256": "073583f3d61c666e168d02f6e499d29acb4eb402fbba0efc256470a83c35ca64",
+            "size_bytes": 519848
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1477065939,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2015
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2016",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2016.npy",
+            "sha256": "922863bc72e6013c88efc30513e711aae5cf929952b805a7ce2cea75bbed3418",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2016.npy",
+            "sha256": "ce9c138c50556588095593f37aed5996b45b07dab98f7b975c3bd1f225a75a9b",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2016.npy",
+            "sha256": "f6a831358cf37f71a2960636331424b48ae60ff84fe51696e4f02e35ca384673",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2016.npy",
+            "sha256": "efa8f0aba1c9289b70ea8edf41c682297d1fbfbf942f2e5e85cb158ff08b7fd8",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_2016.world",
+            "sha256": "09131aa5f760e391836d110a3e8db77baf77ac3d51e81c31b68d09f5118d941f",
+            "size_bytes": 492431
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 2138774161,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2016
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2017",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2017.npy",
+            "sha256": "987972950d195f3f8b5320cd7e49bf2bb6561cec63d649350e00ef922ca4246f",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2017.npy",
+            "sha256": "58bcde36690ef6e2844559f2fe4079ee21209294e371e94b4b4303843f1251aa",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2017.npy",
+            "sha256": "2d85794ba301350d0027b8dd9f5ab478a4fd01cc3287f96f34f8f65d4e75246e",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2017.npy",
+            "sha256": "e2f0d53c027cad73c48fc32ee67cee214c24f0428c7bd7a7c1423c49e754d22b",
+            "size_bytes": 720
+          },
+          "world": {
+            "path": "world_files/world_2017.world",
+            "sha256": "8b6a319a4b0ce7fc2f0d95bdeb5596ea2d4c0baffc744ff8f1dba63925fcc8cf",
+            "size_bytes": 492431
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 653916796,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2017
+      },
+      {
+        "accepted_attempt": 9,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2018",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2018.npy",
+            "sha256": "81e03450107360b37e3524e415b38188c6e1c69e71bab4a2e386f2886a39d6da",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2018.npy",
+            "sha256": "5b006e1dae0f62e7bc1f45b713b626920c9b6c94253441cd72bfcf5390ac932b",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2018.npy",
+            "sha256": "9767041a18eaaae43bfe847b9e59b117056bbdb166f6e0ea47b6b39852a7da89",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2018.npy",
+            "sha256": "227610e34958766c7742dc4380773c6f81ae05c3681a8cbf9198c177b4610c1c",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_2018.world",
+            "sha256": "0a59c625dbd7210c6f3bd9f360012669efe680f547895c1fed2e787f05279def",
+            "size_bytes": 555701
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1667192343,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2018
+      },
+      {
+        "accepted_attempt": 4,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2019",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2019.npy",
+            "sha256": "dd9a88f4f01abe3204cef4f0962c54f4018d79382d9fcf07c37f6257d9ba2702",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2019.npy",
+            "sha256": "b0524df6ecc025c717eb3026504ca7edbc5fb600ae440f10d3022cbf32f6b339",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2019.npy",
+            "sha256": "072d434d1705fe943a5da38a56f87dfc33b2e2e60b525042d090df5c5ff8f83c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2019.npy",
+            "sha256": "a2cea617f239b55fad1c80e9e51757723dab4c8903ae01a0f0f666627d85d673",
+            "size_bytes": 656
+          },
+          "world": {
+            "path": "world_files/world_2019.world",
+            "sha256": "09ea135cc59c3a8b92b48acc2e4acceaaf8ce9fbc8bcf991a6dafe72d41d0814",
+            "size_bytes": 570464
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1081663315,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2019
+      },
+      {
+        "accepted_attempt": 16,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2020",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2020.npy",
+            "sha256": "fc86b9874c613d04ca8ce76e4ca116b7860403ce1e43d6e4870efb78e5809b65",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2020.npy",
+            "sha256": "a9e4d28bfce7124aca2e32d780d32da493f9315adf9864838b187b88e2f71574",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2020.npy",
+            "sha256": "766fe6edbf4f42e77c4697b9d8b051d7cc5f11988d915cbd40e6ebfd4b9ba9d8",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2020.npy",
+            "sha256": "8ada27e9e71337b3d54e94e8ff9da5b302b3e850f4fe7149d0b973e4f7eaa6ce",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_2020.world",
+            "sha256": "782d97aa2e7fee84f0ad9f1bbf132fd6ea7fdd07edc43f892a9f17e9463a02f1",
+            "size_bytes": 604208
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 872770657,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2020
+      },
+      {
+        "accepted_attempt": 665,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2021",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2021.npy",
+            "sha256": "ed0a3e79d0f4fe6fd7d68c24cdad0d469b0f50e2891fdf65631a94e453fcc066",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2021.npy",
+            "sha256": "fbd42e18c7c0c0dcb56e895dcd27d5291e00a03c6d910730a0902e448924aece",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2021.npy",
+            "sha256": "b45a5cbbd41e5fd6d5c4f1d92c5369bece746beba93dd1479ff0aed6d3f3435d",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2021.npy",
+            "sha256": "614cfd41165f722edabe63ec964da2449f8f4830a9336f1376157e013152a165",
+            "size_bytes": 752
+          },
+          "world": {
+            "path": "world_files/world_2021.world",
+            "sha256": "5856320b800c6fb4430be94e01befcb1b4f17badb591b838070b586e6c20e092",
+            "size_bytes": 631625
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 387068112,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2021
+      },
+      {
+        "accepted_attempt": 136,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2022",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2022.npy",
+            "sha256": "98fd6cf3ffb2cae330c219bdf7a35dc387197136d3d150f3a1651afcd35f9cb8",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2022.npy",
+            "sha256": "71d21c603f7a44088b13d31a97c2bf0f7be550a60a305b7649acebc89bd7d8a7",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2022.npy",
+            "sha256": "a280efca2227fdbc10d4a1aa21d55e90d4a5a5654a9f0f35edfa2dfa531c8374",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2022.npy",
+            "sha256": "fb27bdd7d9aad3406546067ea737343710a73688c6299f311195fe6110e2528b",
+            "size_bytes": 688
+          },
+          "world": {
+            "path": "world_files/world_2022.world",
+            "sha256": "a282417286227a7c6d7e3f459623253827b3fa0393d25dd5776cefc59c3dec92",
+            "size_bytes": 665369
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1199006075,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2022
+      },
+      {
+        "accepted_attempt": 737,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2023",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2023.npy",
+            "sha256": "1b507e3bf64316a532d4e8fea3c25feca42718c7ee3bd83cf134d14542b03a54",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2023.npy",
+            "sha256": "7d18513d8e7e3108ae85f917848ee2ca46458278143e6f4e79bc2778cb07a4e7",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2023.npy",
+            "sha256": "cdbc0769fb97c9af00988c66fa4d649fc216df53cefceaf5e814ec4dc4af6823",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2023.npy",
+            "sha256": "9be8197b8127fbe7bcc684f0a67c87dae6459c5ba7e259981b8d007040baf4d3",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_2023.world",
+            "sha256": "02da8fd4f4a9b67b99f733c6a6e6e1626ba26536b5b811cd755f80a6d073860c",
+            "size_bytes": 715985
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1695777618,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2023
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2024",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2024.npy",
+            "sha256": "0807bcb362ec7bee9ab6d19dd05b39e70a10d9cf8536d28aef4f01b50a3240cd",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2024.npy",
+            "sha256": "3e63cf3bb1db469d784e4b8896d1704bebfe0ddebd2b2de5763005cba851c00f",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2024.npy",
+            "sha256": "99954a711a5a2f2c5a4e880d09ed67ee248193a3daedebab26ba90f3ad54d461",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2024.npy",
+            "sha256": "9eb8fafb74a917df6fbdefd90eda30624a555dec38f6cef09422f77b81b08bbb",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_2024.world",
+            "sha256": "861499b0e2f44326315b37d4d95597b8190fee4680f9d1b48b9b06693376cf05",
+            "size_bytes": 443924
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 274878113,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2024
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2025",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2025.npy",
+            "sha256": "1ba4a0f26d5d841f0255c6ba0ed3fc4415418945daf63ca1873c0549d4b02fc3",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2025.npy",
+            "sha256": "9318a664b9123678f693dbfbb767207892c45bfce99559914148d2e98a5bbebf",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2025.npy",
+            "sha256": "8854f803a970d1156436b0e105fb0b8cb79de720d73eec2780c24890abb87744",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2025.npy",
+            "sha256": "aa8bd6c8844f2447f54c1f8cd6f2ea55247ce0d60a0862bd56600cc1b7f79dbb",
+            "size_bytes": 752
+          },
+          "world": {
+            "path": "world_files/world_2025.world",
+            "sha256": "aa7a050e9298a4af4ed4fbcd981646e2d03e182a5acf914ed592af3648d2f402",
+            "size_bytes": 427052
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1048727369,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2025
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2026",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2026.npy",
+            "sha256": "3712663b21ba1b409df5934e5c52a93d200bc9f4dd16ff77a3953f477c56d2a8",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2026.npy",
+            "sha256": "b0a5cc52a935958435cd21507d89805cc77ae486c21229924e318fadb79798c8",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2026.npy",
+            "sha256": "204f2d8b741f3a2b33928c9c029bd5f1a88cdf7838a20c0c0a34674cc476d560",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2026.npy",
+            "sha256": "51d66ae8ef73a98a0309336fe3377d030737119736a5538ff00b6a1d25c2e6d3",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_2026.world",
+            "sha256": "ed95b494a5436b2895589311ffec0b020fac798efc02a8eb9a3b4ae32d18b242",
+            "size_bytes": 424943
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1280875299,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2026
+      },
+      {
+        "accepted_attempt": 3,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2027",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2027.npy",
+            "sha256": "0c8fa967c3dc1dd3be9f5401dd036f23311d3b92eebf7a00e9d7b7271a6264d8",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2027.npy",
+            "sha256": "ea108944ebf5a1107bb6d5a2372521b80a549d4c4aa3f2fdbe9c7f1d06c0b244",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2027.npy",
+            "sha256": "43d19610d88453ee3f192f94f01cc38f88a2dffd5ffdfef7360d04b93fca9b58",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2027.npy",
+            "sha256": "1013d73fa45e54c1dcfaf36a94af7e578ca10f2e9578dac41111299805885fec",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_2027.world",
+            "sha256": "cfda38c24d9e198f80be23ba3164394fff14dba139c0e19498734a6ba74348e0",
+            "size_bytes": 517739
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 255814409,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 2027
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2028",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2028.npy",
+            "sha256": "4a0a834fdd14abf77d5d3aa9a165aa3d3b96d37e07f01a104675a1d47bfd602f",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2028.npy",
+            "sha256": "b09cca524fdce17f027aeb99b9acb9e60771edd11cb9aa8f0db6b6347e5a2068",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2028.npy",
+            "sha256": "51952b9c44f2b4d34889afb7d09de5e174ac4e2992f57cc1b31753ce7de7a5dd",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2028.npy",
+            "sha256": "f595fdeed44c58df010a651a0b9e1fd6eb07537bbc965592c8b44be05dc4de6a",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_2028.world",
+            "sha256": "1b06b5d152faffcd0e342b439bd8db48ca702144f5164e24da17d64b72ba2b35",
+            "size_bytes": 528284
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1341811182,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 2028
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-safe-valley-guard-v6-generated-20260803-dev30-sealed20/development/2029",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_2029.npy",
+            "sha256": "c84f632ef378885a271a510beaaa6ddcd127d25f1e79914acfc39080080b2053",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_2029.npy",
+            "sha256": "f7f3f0c516783e57854d271ba60ad648f3dbbe385ade92216160a64f0a61769b",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_2029.npy",
+            "sha256": "eb5118f2493e8241439d206c07e7fc9b8c3d4bf0da5cef9f4f5f8eb1aca39006",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_2029.npy",
+            "sha256": "401b21a8c1a6380f17146a64df47a9c2fd2eafcc4193ab574ed277ddfae09a90",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_2029.world",
+            "sha256": "6e744932b618848b90d089f87671d6e29491615517cd0efce1ba045b89780dcd",
+            "size_bytes": 515630
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1091530836,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 2029
+      }
+    ],
+    "generation_log_sha256": "42aaef0d0fcf5da04feac9c05c9fde9f36bb563ba94d15a40d4b8713c0bbfc17",
+    "world_count": 30
+  },
+  "frozen_policy_inputs_before_execution": {
+    "challenger_config": {
+      "path": "configs/navigation/experiments/barn_grid_safe_valley_guard_v6.yaml",
+      "sha256": "3c7bfdc5766c726ce69447fd58762d9cc98ad0c5f4c77a089277d8f6b32e9808",
+      "size_bytes": 1024
+    },
+    "challenger_model": {
+      "path": "configs/navigation/models/grid_safe_valley_guard_v6.yaml",
+      "sha256": "1da5a6633ea0759e4303a5fa21cfd83a7291056eb45ee67c3142e7699465edc2",
+      "size_bytes": 1513
+    },
+    "harness_files": {
+      "adapter": {
+        "path": "evals/external/parcel_barn_adapter.py",
+        "sha256": "9b2e2ad76542567ba009774e1e16f2703cf00a8801ec5a81e01f787d3547104c",
+        "size_bytes": 13605
+      },
+      "agents": {
+        "path": "evals/external/agents.py",
+        "sha256": "3ea94d6d78998aa487a71a19b3961ecfb393cab16b1f8a84d701838586af1aee",
+        "size_bytes": 3428
+      },
+      "barn_native": {
+        "path": "evals/external/barn_native.py",
+        "sha256": "64185d8f8e09fa9d307b14e8636b13a1febf0a6dc4d3f68933503f6535de4fb1",
+        "size_bytes": 31657
+      },
+      "barn_targets": {
+        "path": "evals/external/barn_targets.py",
+        "sha256": "ca952fad65ab9b83ad45c3642657f0fdc636d032ce89803e06e324f27fcc1b9c",
+        "size_bytes": 4445
+      },
+      "compare_barn": {
+        "path": "evals/external/compare_barn.py",
+        "sha256": "3adaed333026f47269b0ed44d29d8fd755fd5e83e3e4547d556bc68a3f7a56a1",
+        "size_bytes": 13737
+      },
+      "compatibility": {
+        "path": "evals/external/compatibility.py",
+        "sha256": "e2b41d50f31605a32352627687acf13873ee5c0abe997a8d8b2a1094c30a992b",
+        "size_bytes": 7615
+      },
+      "episodes": {
+        "path": "evals/external/episodes.py",
+        "sha256": "c3fa5d541053c944600c8cc2a450be2a8c1fbc61a480b3d30a1a08051ee2a6e2",
+        "size_bytes": 7955
+      },
+      "evals_package": {
+        "path": "evals/__init__.py",
+        "sha256": "20f39f4d95d6ae45c31f86e4233485a180ba93388442bdeb178734653986ec97",
+        "size_bytes": 84
+      },
+      "experiment_runner": {
+        "path": "evals/external/run_safe_valley_guard_v6.py",
+        "sha256": "d1a31eb24af69ecae1c4a658380d85ac26f3af574faf2cc24ab2e61fce9c9c28",
+        "size_bytes": 19794
+      },
+      "external_package": {
+        "path": "evals/external/__init__.py",
+        "sha256": "3687b445d5954ad1e1cbfb85080ce85d6653f7168dcbc8b245f1985ac78f98cb",
+        "size_bytes": 705
+      },
+      "gate_helper": {
+        "path": "evals/external/run_safe_valley_v5.py",
+        "sha256": "1ff054b66c37522a6220854d99fd8bbe67f6d8edb98629418454614b36bf6a36",
+        "size_bytes": 19296
+      },
+      "generator_engine": {
+        "path": "evals/external/generate_safe_valley_v5_corpus.py",
+        "sha256": "8e63e70b8579db5ba3612c56805dfe985de3a0221a4d216f34b144d68ce14001",
+        "size_bytes": 21837
+      },
+      "generator_wrapper": {
+        "path": "evals/external/generate_safe_valley_guard_v6_corpus.py",
+        "sha256": "60a3d7197663389298e5bc875274628e98520a14b2a6ebe78f24d9826b350fd6",
+        "size_bytes": 13227
+      },
+      "ledger": {
+        "path": "evals/external/ledger.py",
+        "sha256": "61b19fc8f84ba1323ee30f2e5dbecd5d9b7b8394184ca2cfcc08176a6f5c57d3",
+        "size_bytes": 15813
+      },
+      "metrics": {
+        "path": "evals/external/metrics.py",
+        "sha256": "a2fea68ba30df9b58e25ed868a3204fd3299bd558f331ef1cd2d4a4ee0e78803",
+        "size_bytes": 5184
+      },
+      "policy_specs": {
+        "path": "evals/external/barn_policy_specs.py",
+        "sha256": "3bf3a13b4cc578087d99c85a469c71a0694b203909a2b6bbc0a9bdce357459b4",
+        "size_bytes": 15720
+      },
+      "preflight_refreeze": {
+        "path": "evals/external/refreeze_safe_valley_guard_v6_preflight.py",
+        "sha256": "6349493c578f0f7cefeee64df6d0c2415eb4e683333eab8320d96f599efc8ede",
+        "size_bytes": 14164
+      },
+      "run_barn": {
+        "path": "evals/external/run_barn.py",
+        "sha256": "84be1f738eda42b167f480c781d8437a8163eb7db62e370fa1940938b15eed97",
+        "size_bytes": 22137
+      },
+      "runner": {
+        "path": "evals/external/runner.py",
+        "sha256": "9ca7c8f769f2e28ccda8f74609fe665c52eed460fd6bcb07d9259ce42b42a0db",
+        "size_bytes": 9399
+      }
+    },
+    "policy_source_tree": {
+      "path": "src/parcel_robot",
+      "sha256": "ba49b751e8ddbec786ac269145cb40e036948fe54348a8e530114afcba40ae4d"
+    },
+    "reference_config": {
+      "path": "configs/navigation/experiments/barn_grid_safe_valley_v5.yaml",
+      "sha256": "cde88ca1aaf4c5fd6b13cda02d8da12e88a9fb15d31c47aad566bf2eb33c119e",
+      "size_bytes": 1017
+    },
+    "reference_model": {
+      "path": "configs/navigation/models/grid_safe_valley_v5.yaml",
+      "sha256": "a27f09ba6f8f9d6f745825b688f985afc6ff304f744181068b98f085cba47e20",
+      "size_bytes": 1473
+    }
+  },
+  "identity_partition": {
+    "development_disjoint_from_confirmation": true,
+    "development_disjoint_from_forbidden": true,
+    "development_world_ids": [
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025,
+      2026,
+      2027,
+      2028,
+      2029
+    ],
+    "development_world_ids_sha256": "f0026745944020b8fb6100c2d60f3196e106e4591279d98d1170134c33fbf945",
+    "forbidden_ids_sha256": "1020a85433792db9b7fb2103ace9cf99731588987133e5f67bbaaed9306ad344",
+    "forbidden_static_public_and_v5_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219,
+      220,
+      221,
+      222,
+      223,
+      224,
+      225,
+      226,
+      227,
+      228,
+      229,
+      230,
+      231,
+      232,
+      233,
+      234,
+      235,
+      236,
+      237,
+      238,
+      239,
+      240,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255,
+      256,
+      257,
+      258,
+      259,
+      260,
+      261,
+      262,
+      263,
+      264,
+      265,
+      266,
+      267,
+      268,
+      269,
+      270,
+      271,
+      272,
+      273,
+      274,
+      275,
+      276,
+      277,
+      278,
+      279,
+      280,
+      281,
+      282,
+      283,
+      284,
+      285,
+      286,
+      287,
+      288,
+      289,
+      290,
+      291,
+      292,
+      293,
+      294,
+      295,
+      296,
+      297,
+      298,
+      299,
+      1000,
+      1001,
+      1002,
+      1003,
+      1004,
+      1005,
+      1006,
+      1007,
+      1008,
+      1009,
+      1010,
+      1011,
+      1012,
+      1013,
+      1014,
+      1015,
+      1016,
+      1017,
+      1018,
+      1019,
+      1020,
+      1021,
+      1022,
+      1023,
+      1024,
+      1025,
+      1026,
+      1027,
+      1028,
+      1029,
+      1030,
+      1031,
+      1032,
+      1033,
+      1034,
+      1035,
+      1036,
+      1037,
+      1038,
+      1039,
+      1040,
+      1041,
+      1042,
+      1043,
+      1044,
+      1045,
+      1046,
+      1047,
+      1048,
+      1049
+    ],
+    "namespace_note": "IDs 2000+ are native-proxy corpus identifiers, never official/public BARN IDs 0-299; v5 IDs 1000-1049 are forbidden.",
+    "sealed_confirmation_world_ids": [
+      2030,
+      2031,
+      2032,
+      2033,
+      2034,
+      2035,
+      2036,
+      2037,
+      2038,
+      2039,
+      2040,
+      2041,
+      2042,
+      2043,
+      2044,
+      2045,
+      2046,
+      2047,
+      2048,
+      2049
+    ],
+    "sealed_confirmation_world_ids_sha256": "f3dab9841388cc24a4c182b65ca9d63be94bbc210a50056429d427bcdae42c5c"
+  },
+  "manifest_revision": {
+    "authorized_harness_hash_changes": {
+      "compatibility": {
+        "classification": "concurrent_non_policy_compatibility_table_prose",
+        "imported_by_paired_barn_runner": false,
+        "path": "evals/external/compatibility.py",
+        "predecessor_sha256": "96721e0e36c43fa1cb6ef67f6defd1d2d2361b343b0cf5e50cb43bf25cc23a65",
+        "repaired_sha256": "e2b41d50f31605a32352627687acf13873ee5c0abe997a8d8b2a1094c30a992b"
+      },
+      "experiment_runner": {
+        "classification": "metadata_only_baseline_reference_spec_repair",
+        "path": "evals/external/run_safe_valley_guard_v6.py",
+        "predecessor_sha256": "5ef99441488e23bbe5d690ff35d804229e14b0cec754cb9e01e2b900cba89fbf",
+        "repaired_sha256": "d1a31eb24af69ecae1c4a658380d85ac26f3af574faf2cc24ab2e61fce9c9c28"
+      }
+    },
+    "change": "Use parcel_reference_config_spec for v5 so the paired harness recognizes it as the immutable reference; its config, model, source, deployment state, and behavior are unchanged.",
+    "corpus_reused_without_episode_execution_or_outcome_inspection": true,
+    "failed_preflight": {
+      "path": "evals/external/development/barn_safe_valley_guard_v6/results/preflight/barn-safe-valley-guard-v6-dev-20260803-run01-failed-before-episodes.json",
+      "sha256": "d09d21a5e753dbe29616631f7862ea11d584c25a2bbec5a978476290f3af25c7",
+      "size_bytes": 1637
+    },
+    "hypothesis_protocol_and_promotion_gate_unchanged": true,
+    "predecessor": {
+      "path": "evals/external/development/barn_safe_valley_guard_v6/split.json",
+      "sha256": "47dddf6b54a8cc6b962f6bb4b16912a2d72266187126e13c6559af0f0949cd63",
+      "size_bytes": 56804
+    },
+    "repaired_run_id": "barn-safe-valley-guard-v6-dev-20260803-run02",
+    "revision": 2
+  },
+  "predeclared_hypothesis": {
+    "causal_prediction": "Rejecting raster-edge advances will keep signed clearance at or above 0.075 m and stop marginal advances from delaying the existing progress watchdog into an episode timeout, without success, metric, collision, or CPU regression.",
+    "single_behavioral_change": "Add exactly resolution/sqrt(2) to v5 raw-valley admission and swept-envelope radius; make no scan-sweep, attempt-count, velocity, planner, or shield change.",
+    "targeted_v5_failures": {
+      "clearance_floor_m": 0.07203440034836457,
+      "timeout_count": 2
+    }
+  },
+  "promotion_gate_frozen_before_development": {
+    "all_conditions_required_for_single_sealed_confirmation": true,
+    "candidate_collision_rate_must_equal": 0.0,
+    "candidate_policy": "grid_safe_valley_guard_v6",
+    "candidate_timeout_rate_must_equal": 0.0,
+    "candidate_timeout_rate_must_not_exceed_reference": true,
+    "guarded_safe_valley_advance_phase_must_be_exercised": true,
+    "maximum_clearance_floor_regression_m": 0.0,
+    "maximum_controller_p99_latency_ms": 100.0,
+    "maximum_controller_p99_latency_ratio": 1.2,
+    "maximum_paired_success_regressions": 0,
+    "minimum_guard_affected_paired_episodes": 1,
+    "minimum_signed_clearance_must_be_at_least": 0.075,
+    "navigation_metric_delta_must_be_nonnegative": true,
+    "reference_policy": "grid_safe_valley_v5",
+    "same_world_trial_seed_native_config_and_manifest": true
+  },
+  "protocol_frozen_before_development": {
+    "episode_workers": 4,
+    "evaluator_private_geometry_never_enters_policy": true,
+    "lidar_rays": 720,
+    "paired_reference_replay_required": true,
+    "policy_inputs": [
+      "goal",
+      "odometry",
+      "270_degree_lidar",
+      "clock"
+    ],
+    "reference_and_candidate_use_identical_assets_trials_seeds_native_config": true,
+    "sealed_confirmation_must_not_be_generated_opened_or_run_during_development": true,
+    "suite_seed": 20260803,
+    "trials_per_world": 1
+  },
+  "purpose": "Content-addressed metadata-only refreeze of the v6 one-shot development protocol after run01 aborted before episode execution",
+  "schema_version": 1,
+  "sealed_confirmation_recipe": {
+    "evaluated": false,
+    "generated": false,
+    "opened": false,
+    "parameter_algorithm": "same fixed 30x30 BARN fill/smoothing schedule as development, offset by world_id - 2000",
+    "root_authorization_required_even_after_development_pass": true,
+    "seed_algorithm": "uint64_be(sha256(namespace + ':' + world_id + ':' + attempt)[0:8]) bitwise-and 0x7fffffff; accept first connected map",
+    "seed_namespace": "parcel-safe-valley-guard-v6-generated-corpus-20260803",
+    "single_use_only_after_all_development_gates_pass": true,
+    "world_ids": [
+      2030,
+      2031,
+      2032,
+      2033,
+      2034,
+      2035,
+      2036,
+      2037,
+      2038,
+      2039,
+      2040,
+      2041,
+      2042,
+      2043,
+      2044,
+      2045,
+      2046,
+      2047,
+      2048,
+      2049
+    ]
+  },
+  "status_at_freeze": {
+    "aborted_preflight_count": 1,
+    "authorized_repaired_development_run_id": "barn-safe-valley-guard-v6-dev-20260803-run02",
+    "deployment_enabled": false,
+    "development_assets_generated_and_hashed": true,
+    "development_policy_execution_started": false,
+    "last_aborted_preflight_run_id": "barn-safe-valley-guard-v6-dev-20260803-run01",
+    "sealed_confirmation_generated": false,
+    "sealed_confirmation_opened": false,
+    "sealed_confirmation_run_id": null
+  }
+}

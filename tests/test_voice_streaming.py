@@ -1,11 +1,14 @@
 import json
 import threading
+import time
+from pathlib import Path
 from urllib.error import URLError
 
 import msgpack
 import pytest
 
 from parcel_robot import providers
+from parcel_robot.brain import DeterministicIntentRouter, ObservationSnapshot
 from parcel_robot.providers import (
     FishSpeechProvider,
     LlamaCppProvider,
@@ -13,6 +16,8 @@ from parcel_robot.providers import (
     SpeechServiceError,
 )
 from parcel_robot.voice_pipeline import DuplexVoiceSession
+
+REPO = Path(__file__).resolve().parents[1]
 
 
 class FakeResponse:
@@ -142,6 +147,130 @@ def test_llama_provider_streams_for_true_first_output_timing(monkeypatch):
     assert provider.last_metrics["reasoning_first_output_estimated"] is False
     assert provider.last_metrics["model_ttft_ms"] is not None
     assert provider.last_metrics["total_tokens"] == 21
+
+
+def test_llama_provider_reuses_backbone_for_separate_plan_mode(monkeypatch):
+    now = time.monotonic()
+    frame = DeterministicIntentRouter().route(
+        "Walk to the sidewalk and then wait.", turn_id="turn-plan-1"
+    )
+    snapshot = ObservationSnapshot.from_mapping(
+        {
+            "schema_version": 1,
+            "snapshot_id": "snapshot-plan-1",
+            "captured_at_monotonic_s": now,
+            "camera": {
+                "name": "camera",
+                "available": True,
+                "fresh": True,
+                "source": "test_camera",
+                "observed_at_monotonic_s": now,
+                "age_ms": 0.0,
+            },
+            "lidar": {
+                "name": "lidar",
+                "available": True,
+                "fresh": True,
+                "source": "test_lidar",
+                "observed_at_monotonic_s": now,
+                "age_ms": 0.0,
+            },
+            "robot": {
+                "moving": False,
+                "controller_state": "ready",
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "yaw_rad": 0.0,
+            },
+            "safety": {
+                "emergency_stopped": False,
+                "collision_imminent": False,
+                "telemetry_fresh": True,
+                "nearest_obstacle_m": 3.0,
+                "nearest_person_m": None,
+            },
+            "battery": {"state": "unavailable", "percent": None, "source": "unavailable"},
+            "task": {
+                "state": "idle",
+                "task_id": None,
+                "plan_revision": None,
+                "step_id": None,
+                "at_checkpoint": True,
+            },
+            "resource_leases": [],
+            "entities": [],
+        }
+    )
+    raw_plan = {
+        "schema_version": 1,
+        "task_id": "task-plan-1",
+        "plan_revision": 1,
+        "source_turn_id": "turn-plan-1",
+        "goal": {
+            "relation": "hold",
+            "target": {"kind": "current_pose", "query": ""},
+            "tolerance_m": 0.0,
+        },
+        "invariants": ["keep_collision_margin"],
+        "steps": [
+            {
+                "id": "hold",
+                "skill": "Hold",
+                "arguments": {},
+                "preconditions": ["base_available"],
+                "success": {
+                    "fact": "motion_stopped",
+                    "target": None,
+                    "tolerance_m": None,
+                    "confidence_min": None,
+                },
+                "timeout_s": 5.0,
+                "max_attempts": 1,
+                "recovery": ["safe_stop"],
+                "resources": ["base"],
+                "interruptibility": "immediate",
+            }
+        ],
+        "requested_interrupt": "at_checkpoint",
+    }
+    event = json.dumps({"choices": [{"delta": {"content": json.dumps(raw_plan)}}]})
+    response = FakeResponse([f"data: {event}\n".encode(), b"data: [DONE]\n"])
+    requests = []
+
+    def fake_urlopen(request, timeout):
+        requests.append((request, timeout))
+        return response
+
+    monkeypatch.setattr(providers, "urlopen", fake_urlopen)
+    provider = LlamaCppProvider(
+        model="shared-gemma",
+        plan_timeout=12,
+        plan_max_tokens=768,
+    )
+    schema = json.loads((REPO / "prompts/schemas/plan_ir_v1.schema.json").read_text())
+
+    plan = provider.plan(
+        "Walk to the sidewalk and then wait.",
+        intent_frame=frame,
+        observation=snapshot,
+        skill_contracts={"schema_version": 1, "skills": [{"name": "Hold"}]},
+        response_schema=schema,
+        system_prompt="Return PlanIR only.",
+    )
+
+    assert plan.task_id == "task-plan-1"
+    request, timeout = requests[0]
+    payload = json.loads(request.data)
+    planner_input = json.loads(payload["messages"][-1]["content"])
+    assert payload["model"] == "shared-gemma"
+    assert payload["max_tokens"] == 768
+    assert payload["chat_template_kwargs"] == {"enable_thinking": False}
+    assert payload["temperature"] == 0.0
+    assert payload["response_format"]["schema"]["title"] == "Parcel PlanIR v1"
+    assert planner_input["original_transcript"] == "Walk to the sidewalk and then wait."
+    assert timeout == 12
+    assert provider.last_metrics["model_mode"] == "plan"
 
 
 def test_llama_provider_bounds_stream_and_validates_tuning(monkeypatch):

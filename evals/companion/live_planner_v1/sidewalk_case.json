@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "case_id": "live-sidewalk-plan-v1",
+  "description": "Ground a safety-motivated sidewalk request and propose bounded semantic navigation followed by a hold.",
+  "fixture_provenance": "Semantic fields and sensor ages reproduce live Run 5. Process-local absolute monotonic timestamps are normalized while preserving each recorded age.",
+  "transcript": "Can you go to the sidewalk so that you are not on the road. It's dangerous.",
+  "intent_frame": {
+    "schema_version": 1,
+    "turn_id": "live-sidewalk-v5",
+    "route": "direct_skill",
+    "confidence": 1.0,
+    "speech_act": "request",
+    "affect_evidence": null,
+    "spatial_references": [
+      "sidewalk"
+    ],
+    "urgency_cues": [
+      "dangerous"
+    ],
+    "requires_fresh_scene": true,
+    "original_transcript_ref": "turn:live-sidewalk-v5:final",
+    "transcript_sha256": "4da1bca75cc09f9b9abf11ed8095f27696bc38ab07ae6c0a6ecce4bd13827046",
+    "router_version": "deterministic-v1",
+    "matched_rule": "navigation_directive"
+  },
+  "observation_snapshot": {
+    "schema_version": 1,
+    "snapshot_id": "live-sidewalk-snapshot-v5",
+    "captured_at_monotonic_s": 100.0,
+    "camera": {
+      "name": "camera",
+      "available": true,
+      "fresh": true,
+      "source": "camera_semantic",
+      "observed_at_monotonic_s": 99.97,
+      "age_ms": 30.0
+    },
+    "lidar": {
+      "name": "lidar",
+      "available": true,
+      "fresh": true,
+      "source": "lidar_scan",
+      "observed_at_monotonic_s": 99.98,
+      "age_ms": 20.0
+    },
+    "robot": {
+      "moving": false,
+      "controller_state": "ready",
+      "x": null,
+      "y": null,
+      "z": null,
+      "yaw_rad": null
+    },
+    "safety": {
+      "emergency_stopped": false,
+      "collision_imminent": false,
+      "telemetry_fresh": true,
+      "nearest_obstacle_m": 2.4,
+      "nearest_person_m": null
+    },
+    "battery": {
+      "state": "normal",
+      "percent": 80.0,
+      "source": "controller_telemetry"
+    },
+    "task": {
+      "state": "idle",
+      "task_id": null,
+      "plan_revision": null,
+      "step_id": null,
+      "at_checkpoint": true
+    },
+    "resource_leases": [],
+    "entities": [
+      {
+        "entity_id": "semantic-region-1",
+        "kind": "semantic_region",
+        "label": "sidewalk",
+        "confidence": 0.96,
+        "source": "camera_semantic",
+        "observed_at_monotonic_s": 99.97,
+        "attributes": {
+          "traversable": true
+        }
+      }
+    ]
+  }
+}

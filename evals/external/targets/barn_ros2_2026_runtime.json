@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "runtime_id": "barn-2026-ros2-jazzy-public-compatibility-v1",
+  "frozen_at_utc": "2026-08-03T00:00:00Z",
+  "official_sources": {
+    "challenge_page": "https://people.cs.gmu.edu/~xiao/Research/BARN_Challenge/BARN_Challenge26.html",
+    "report": "https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf",
+    "repository": "https://github.com/Saadmaghani/The-Barn-Challenge-Ros2.git",
+    "repository_commit": "d6c575b51e477bd524d634e12cffeb34036fcd1e",
+    "critical_files_sha256": {
+      "jackal_helper/config/nav2.yaml": "de82e458e199051858c9c8ba42a7813217a23fc47c14e5b53defb55ba0cac901",
+      "jackal_helper/launch/BARN_runner.launch.py": "eb72c149b41c996922ed739b217c2ecd8fca242a06c05440d3b04289dbda0ec5",
+      "jackal_helper/launch/nav2_bringup.launch.py": "2f2f0de14b00b7b6798db57bcc4e1c89bee7ec10b979d1c6f387dd71b627611e",
+      "jackal_helper/scripts/barn_runner.py": "a4794ea1c271ca89b2d5496e954a5709d78f4a024a211a707c4a07b84b10f3a3"
+    }
+  },
+  "container": {
+    "runtime": "singularity-ce",
+    "tested_version": "4.3.0",
+    "installer_url": "https://github.com/sylabs/singularity/releases/download/v4.3.0/singularity-ce_4.3.0-noble_amd64.deb",
+    "installer_sha256": "0d165a619a4d7ff094e041c59e1f17490b08c6bd8705378db474c823b0efc0e8",
+    "installer_size_bytes": 52091122,
+    "installer_package_version": "4.3.0-noble",
+    "installer_architecture": "amd64",
+    "extracted_critical_files_sha256": {
+      "usr/bin/singularity": "1118b188fda4abc4b4b6d99082215f7b4189e741a81442be4cc51a0fabb8a406",
+      "usr/lib/x86_64-linux-gnu/singularity/bin/starter": "a64b9b0d3b152b93cdc13172c81a734384f6e38a4e7c18ae8a9d781600992ec9",
+      "etc/singularity/singularity.conf": "e0d49dc6e0b1af089eab62f30ffdd73f10bf31677a183d898e48c4c349b1d514"
+    },
+    "source_archive_url": "https://github.com/sylabs/singularity/releases/download/v4.3.0/singularity-ce-4.3.0.tar.gz",
+    "source_archive_sha256": "1c881dd269e8420301efb064be5893dd6d73a3bac79f641e3a7878a8f38eada0",
+    "local_base_image": "docker.io/library/ros:jazzy",
+    "local_base_image_manifest_digest": "sha256:31daab66eef9139933379fb67159449944f4e2dcf2e22c2d12cc715f29873e0f",
+    "local_base_image_linux_amd64_manifest_digest": "sha256:567b81bc54f44479e16ef1b75e4984d132f154b6511ea4fc851ee6bde76c30f8",
+    "base_image_digest_observed_at_utc": "2026-08-03T00:00:00Z",
+    "base_image_note": "This digest freezes a reproducible local compatibility image. It is not evidence of the organizers' private judge image digest."
+  },
+  "rootless_diagnostic": {
+    "official_compatibility_gate": false,
+    "bubblewrap_version_observed": "0.11.1",
+    "proot_url": "https://proot.gitlab.io/proot/bin/proot",
+    "proot_version_observed": "5.3.1-99a84175",
+    "proot_sha256": "b7f2adf5a225000a164f4905aabefeebe11c4c1d5bedff5e1fe8866c48dd70d2",
+    "proot_size_bytes": 1948896,
+    "note": "Bubblewrap plus PRoot is a cache-only diagnostic fallback for this restricted host. It is not the upstream-tested Singularity/SIF path and cannot satisfy the public-container or official-score gates."
+  },
+  "protocol": {
+    "simulator": "Gazebo Harmonic through ros_gz",
+    "ros_distribution": "jazzy",
+    "ros_supported_host": "Ubuntu 24.04 Noble amd64",
+    "robot": "Clearpath Jackal J100 differential drive",
+    "policy_inputs": [
+      "goal_in_odom_frame",
+      "platform_odometry",
+      "front_2d_lidar",
+      "simulation_clock"
+    ],
+    "policy_forbidden_inputs": [
+      "world_sdf",
+      "collision_truth",
+      "reference_path",
+      "optimal_path_length",
+      "hidden_world_identity"
+    ],
+    "input_topics": {
+      "lidar": "/front/scan",
+      "odometry": "/platform/odom/filtered"
+    },
+    "output_topic": "/cmd_vel",
+    "output_message": "geometry_msgs/msg/TwistStamped",
+    "public_world_indices": [
+      0, 6, 12, 18, 24, 30, 36, 42, 48, 54,
+      60, 66, 72, 78, 84, 90, 96, 102, 108, 114,
+      120, 126, 132, 138, 144, 150, 156, 162, 168, 174,
+      180, 186, 192, 198, 204, 210, 216, 222, 228, 234,
+      240, 246, 252, 258, 264, 270, 276, 282, 288, 294
+    ],
+    "public_trials_per_world": 10,
+    "hidden_world_count": 50,
+    "hidden_trials_per_world": 10,
+    "success_radius_m": 1.0,
+    "timeout_s": 100.0,
+    "reference_speed_mps": 2.0,
+    "episode_score_clip": [2.0, 8.0],
+    "maximum_episode_score": 0.5
+  },
+  "adapter_boundary": {
+    "location": "evals/external/barn_ros2_adapter.py",
+    "production_package_modified": false,
+    "official_evaluator_modified": false,
+    "documented_submission_hook": "launch_navigation_stack in jackal_helper/launch/BARN_runner.launch.py",
+    "lateral_velocity_transport": "not_available_on_differential_drive",
+    "control_period_s": 0.1
+  },
+  "known_upstream_findings": [
+    {
+      "id": "public_test_loop_skips_first_seven_worlds",
+      "severity": "protocol_blocker",
+      "evidence": "The pinned ROS 2 test.sh loops i=7..49 although its comment and README specify all 50 indices 0,6,...,294.",
+      "safe_local_action": "Invoke the documented 0..49 index set explicitly without changing the evaluator."
+    },
+    {
+      "id": "report_script_uses_stale_lower_clip",
+      "severity": "metric_blocker",
+      "evidence": "The pinned report_test.py recomputes with 4*OT while barn_runner.py records the current 2*OT score.",
+      "safe_local_action": "Preserve evaluator output and aggregate its recorded sixth column; report the discrepancy upstream."
+    }
+  ],
+  "eligibility": {
+    "public_container_run_is_official_score": false,
+    "hidden_organizer_run_required": true,
+    "official_2026_hard_deadline": "2026-05-08",
+    "post_event_evaluation_confirmed": false,
+    "leaderboard_claim_allowed_without_organizer_attestation": false
+  },
+  "gpu": {
+    "required": false,
+    "local_passthrough_supported_by_wrapper": true,
+    "organizer_simulation_gpu_promised": false,
+    "official_physical_final_gpu_available": false,
+    "cpu_compatibility_required": true,
+    "note": "The official page promises a Xeon CPU for simulation and no GPU for the physical final. Parcel's grid/A-star policy must therefore remain CPU-capable."
+  }
+}

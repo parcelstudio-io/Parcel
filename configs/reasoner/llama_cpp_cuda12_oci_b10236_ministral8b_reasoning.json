@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "extends": "llama_cpp_cuda12_oci_b10236.json",
+  "profile_id": "llama-b10236-cuda12-oci-ministral3-8b-reasoning-q4-k-m",
+  "runtime": {
+    "model": {
+      "path": "models/reasoner/ministral-3-8b-reasoning-2512/Ministral-3-8B-Reasoning-2512-Q4_K_M.gguf",
+      "size_bytes": 5198910368,
+      "sha256": "894aa3645ef8708a81dbe201c26105ce37c4c741252c89c5a78f81b49ac438c6"
+    },
+    "context_size": 8192,
+    "generation_threads": 32,
+    "batch_threads": 32,
+    "requested_gpu_layers": 999
+  },
+  "admission": {
+    "target_compute_capability": "8.9",
+    "minimum_total_vram_mib": 12288,
+    "minimum_free_vram_mib": 9216,
+    "minimum_runtime_reserve_over_weight_file_mib": 4096
+  }
+}

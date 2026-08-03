@@ -1,0 +1,329 @@
+{
+  "evaluation": {
+    "allowed_claim": "public-artifact adapter contract smoke",
+    "habitat_sim_scene_loaded": false,
+    "id": "habitat20-pointnav-public-validation",
+    "leaderboard_comparable": false,
+    "navigation_metrics_emitted": false,
+    "official_evaluator_executed": false,
+    "official_rank_eligible": false,
+    "scope": "public-val-mini-adapter-contract-smoke"
+  },
+  "execution": {
+    "declared_device": "cpu",
+    "full_evaluator_blockers": [
+      {
+        "category": "user_gated_asset",
+        "id": "licensed_gibson_scene",
+        "remediation": "Accept the Gibson research terms, then place the Habitat-format Pablo.glb at this exact path."
+      },
+      {
+        "category": "runtime",
+        "id": "docker_engine",
+        "remediation": "Install Docker Engine from Docker's Ubuntu repository."
+      },
+      {
+        "category": "runtime",
+        "id": "nvidia_container_toolkit",
+        "remediation": "Install and configure NVIDIA Container Toolkit for Docker."
+      },
+      {
+        "category": "provenance",
+        "id": "pinned_archived_image",
+        "remediation": "Pull exactly fairembodied/habitat-challenge@sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b; do not evaluate an unpinned tag."
+      }
+    ],
+    "full_evaluator_gpu_detected": true,
+    "full_evaluator_readiness": false,
+    "gpu_used": false,
+    "python_executable": "/home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python",
+    "python_version": "3.14.4",
+    "reason": "This smoke validates IPC and contracts; full Habitat-Sim rendering is the CUDA workload."
+  },
+  "fixture": {
+    "depth": "normalized max-depth float32 360x640x1",
+    "kind": "synthetic-contract-only",
+    "pointgoal": "deterministic rho/phi sweep independent of evaluator geometry",
+    "privileged_simulator_state_used": false,
+    "rgb": "zeros uint8 360x640x3"
+  },
+  "generated_at_utc": "2026-08-03T13:16:45.199234+00:00",
+  "limitations": [
+    "No Gibson scene was loaded and no licensed dataset was downloaded.",
+    "Synthetic RGB-D frames do not measure navigation quality, collisions, Success, SPL, or Soft-SPL.",
+    "Passing this smoke does not make the historical public split official-rank eligible.",
+    "The unchanged controller still needs a full pinned Habitat-Sim public-validation run after the user supplies Pablo.glb and the archived GPU runtime is available."
+  ],
+  "provenance": {
+    "active_model": {
+      "active_model": "stub_v0",
+      "declared_device": "cpu",
+      "model_spec_path": "configs/navigation/models/stub.yaml",
+      "model_spec_sha256": "47746536aa1c46ae11651a74c94bed4f05619266be5a20605f390b323efd3ad4",
+      "model_type": "stub"
+    },
+    "bridge_sha256": "c3f8397e009642ee681847076f9ebc3f887f0401141feb3d61b1c6a55da0510a",
+    "challenge_commit": "ddf1575532aecc4df2f4cd4c5db173b8eada3e1e",
+    "challenge_repository": "https://github.com/facebookresearch/habitat-challenge.git",
+    "checkout_clean": true,
+    "checkout_head": "ddf1575532aecc4df2f4cd4c5db173b8eada3e1e",
+    "episode_archive_path": "habitat-challenge-data/pointgoal_gibson_v2/val_mini/content/Pablo.json.gz",
+    "episode_archive_sha256": "cee3bec9cc8dbd6232e7bcffd90db245dd15076d0e3ab84c7a6fc009e5bfa6cf",
+    "manifest_path": "evals/external/habitat2020_manifest.json",
+    "manifest_sha256": "4b366e6d128828224494428b56e13e8fb0b4f43ca8aa7e1a58039a4605e97370",
+    "navigation_config_path": "configs/navigation/default.yaml",
+    "navigation_config_sha256": "194122945598bfbf6b0de32dfa0fe6b84545af216b1e3528a6309b1beb075f9b",
+    "official_config_path": "configs/challenge_pointnav2020.local.rgbd.yaml",
+    "official_config_sha256": "65732a56859cb5423d57e24b76d81bdda1d5b6dc6390c70554f0ae44170176dc",
+    "parcel_git": {
+      "dirty": true,
+      "head": "22c97214df0516774cac31c51864b575d2c29542",
+      "porcelain_entry_count": 123
+    },
+    "parcel_python_tree": {
+      "algorithm": "sha256(relative_posix_path + NUL + bytes + NUL)",
+      "file_count": 88,
+      "sha256": "1cba082f952ea48d83c671f44c7d4a2c5e7ab8bda89535f26119c57d855e73dd"
+    },
+    "public_archive_episode_count": 30,
+    "public_archive_scene_ids": [
+      "gibson/Pablo.glb"
+    ],
+    "runner_sha256": "f626b6d6bca04c622c832f27693b5149c92f7792f2b6d76265d95059fc0bfb3d",
+    "sidecar_sha256": "82fd86e68e43a6f4dedf52b5f5c922fbb0ecd628c48b71fbf1a948a0512c269f",
+    "source_lock_sha256": "aa2e31a551d551711fecb15d3881e8fc320990700d35c11974b225be97ef38e8"
+  },
+  "result": {
+    "action_counts": {
+      "MOVE_FORWARD": 10,
+      "TURN_LEFT": 10,
+      "TURN_RIGHT": 10
+    },
+    "actions": [
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.0,
+        "public_episode_id": "0",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 1.25,
+        "public_episode_id": "1",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.5,
+        "public_episode_id": "2",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.75,
+        "public_episode_id": "3",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 2.0,
+        "public_episode_id": "4",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.0,
+        "public_episode_id": "5",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.25,
+        "public_episode_id": "6",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 1.5,
+        "public_episode_id": "7",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.75,
+        "public_episode_id": "8",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 2.0,
+        "public_episode_id": "9",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 1.0,
+        "public_episode_id": "10",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.25,
+        "public_episode_id": "11",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.5,
+        "public_episode_id": "12",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 1.75,
+        "public_episode_id": "13",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 2.0,
+        "public_episode_id": "14",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.0,
+        "public_episode_id": "15",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 1.25,
+        "public_episode_id": "16",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.5,
+        "public_episode_id": "17",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.75,
+        "public_episode_id": "18",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 2.0,
+        "public_episode_id": "19",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.0,
+        "public_episode_id": "20",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.25,
+        "public_episode_id": "21",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 1.5,
+        "public_episode_id": "22",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.75,
+        "public_episode_id": "23",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 2.0,
+        "public_episode_id": "24",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 1.0,
+        "public_episode_id": "25",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.25,
+        "public_episode_id": "26",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_RIGHT",
+        "fixture_pointgoal_phi_rad": -1.0471975511965976,
+        "fixture_pointgoal_rho_m": 1.5,
+        "public_episode_id": "27",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "MOVE_FORWARD",
+        "fixture_pointgoal_phi_rad": 0.0,
+        "fixture_pointgoal_rho_m": 1.75,
+        "public_episode_id": "28",
+        "scene_id": "gibson/Pablo.glb"
+      },
+      {
+        "action": "TURN_LEFT",
+        "fixture_pointgoal_phi_rad": 1.0471975511965976,
+        "fixture_pointgoal_rho_m": 2.0,
+        "public_episode_id": "29",
+        "scene_id": "gibson/Pablo.glb"
+      }
+    ],
+    "episodes_exercised": 30,
+    "expected_public_episodes": 30,
+    "one_step_sidecar_latency_ms": {
+      "max": 99.39474,
+      "measurement_scope": "episode start and action synchronous JSONL round-trips; not control-loop E2E latency",
+      "median": 0.1225755,
+      "p95_nearest_rank": 0.232842,
+      "sample_count": 30
+    },
+    "passed": true,
+    "scope_complete": true,
+    "total_wall_ms": 105.242741
+  },
+  "run_id": "habitat20-contract-smoke-20260803T131645199234Z-a7ec2eaf",
+  "schema_version": 1
+}

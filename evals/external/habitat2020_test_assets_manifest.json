@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "bundle_id": "habitat-test-assets-compat-v1",
+  "description": "Non-gated Habitat test assets for one exact-runtime simulator/render/discrete-action compatibility smoke.",
+  "eligibility": {
+    "habitat_2020_protocol": false,
+    "official_evaluator_allowed": false,
+    "official_rank_eligible": false,
+    "leaderboard_comparable": false,
+    "navigation_metrics_allowed": false,
+    "allowed_claim": "non-Habitat-2020 test-asset simulator/render/discrete-action compatibility smoke",
+    "forbidden_claim": "These assets are not Gibson Pablo or Habitat 2020 val_mini and cannot produce challenge SR, SPL, soft-SPL, rank, or top-decile evidence."
+  },
+  "official_data_utility": {
+    "repository": "https://github.com/facebookresearch/habitat-sim.git",
+    "commit": "57ee4941dc4765240f0f91f70b2c97a919bf9038",
+    "path": "src_python/habitat_sim/utils/datasets_download.py",
+    "url": "https://raw.githubusercontent.com/facebookresearch/habitat-sim/57ee4941dc4765240f0f91f70b2c97a919bf9038/src_python/habitat_sim/utils/datasets_download.py",
+    "size_bytes": 37111,
+    "sha256": "54bef3d4fbc3a38898cb02ac62897fc47d4b677af15bd80e5aab0c33cabb4cf1",
+    "scene_uid": "habitat_test_scenes",
+    "pointnav_uid": "habitat_test_pointnav_dataset",
+    "requires_auth_for_these_uids": false
+  },
+  "official_documentation": {
+    "path": "DATASETS.md",
+    "url": "https://raw.githubusercontent.com/facebookresearch/habitat-sim/57ee4941dc4765240f0f91f70b2c97a919bf9038/DATASETS.md",
+    "size_bytes": 13979,
+    "sha256": "86b46339f61dbff6cf7bb0b5ad22693d68412cb0607a207fe835e22c9112d5ed"
+  },
+  "scene_asset": {
+    "uid": "habitat_test_scenes",
+    "repository": "https://huggingface.co/datasets/ai-habitat/habitat_test_scenes.git",
+    "commit": "910c783fb954da8497ea5f811b843a76590ddddc",
+    "public": true,
+    "gated": false,
+    "credential_required": false,
+    "license": "cc-by-nc-4.0",
+    "license_source": "dataset card at the frozen repository commit",
+    "selected_scene": "skokloster-castle.glb",
+    "files": [
+      {
+        "path": "scene_datasets/habitat-test-scenes/README.md",
+        "url": "https://huggingface.co/datasets/ai-habitat/habitat_test_scenes/raw/910c783fb954da8497ea5f811b843a76590ddddc/README.md",
+        "size_bytes": 835,
+        "sha256": "86168a39d12f9ca696f008b91dcadd8a4dcc5e48a214ee9b8cbf4b93ea1805e4"
+      },
+      {
+        "path": "scene_datasets/habitat-test-scenes/skokloster-castle.glb",
+        "url": "https://huggingface.co/datasets/ai-habitat/habitat_test_scenes/resolve/910c783fb954da8497ea5f811b843a76590ddddc/skokloster-castle.glb",
+        "size_bytes": 38295764,
+        "sha256": "b14e29e17f5e31d86a1002eefd77b7d345b265006481739ae480a847e6623f56"
+      },
+      {
+        "path": "scene_datasets/habitat-test-scenes/skokloster-castle.navmesh",
+        "url": "https://huggingface.co/datasets/ai-habitat/habitat_test_scenes/resolve/910c783fb954da8497ea5f811b843a76590ddddc/skokloster-castle.navmesh",
+        "size_bytes": 28192,
+        "sha256": "1a9a5bd123af8001f0ea2c5c8d326cb3fd39808ca771fc766856af8f0772391d"
+      }
+    ],
+    "attribution": [
+      "The King's Hall by Skokloster Castle (Skoklosters slott)",
+      "Habitat Test Scenes dataset by AI Habitat"
+    ]
+  },
+  "pointnav_asset": {
+    "uid": "habitat_test_pointnav_dataset",
+    "official_utility_url": "http://dl.fbaipublicfiles.com/habitat/habitat-test-pointnav-dataset_v1.0.zip",
+    "download_url": "https://dl.fbaipublicfiles.com/habitat/habitat-test-pointnav-dataset_v1.0.zip",
+    "credential_required": false,
+    "package_name": "habitat-test-pointnav-dataset_v1.0.zip",
+    "version": "1.0",
+    "size_bytes": 894623,
+    "sha256": "4ddf3403507c6ea44add9e375134d3564219f4376d11b16ed3efe16245a167d7",
+    "etag": "84fca7fb97f795edb6359da2a70b7df5",
+    "s3_version_id": "QCCAJG7xsyn5iPGhQYpa0aGeBkrsZl2g",
+    "members": [
+      {
+        "archive_path": "v1/test/test.json.gz",
+        "path": "datasets/pointnav/habitat-test-scenes/v1/test/test.json.gz",
+        "size_bytes": 26544,
+        "sha256": "9c43a094bd7bb7c5bfd4a56b5be049a04e0b78df51367938fd21d07e021d2572"
+      },
+      {
+        "archive_path": "v1/train/train.json.gz",
+        "path": "datasets/pointnav/habitat-test-scenes/v1/train/train.json.gz",
+        "size_bytes": 857539,
+        "sha256": "038402d588ddc37140e9b4cdae6fcf30371729f8ea75e45bb366b1df9ff5fc89"
+      },
+      {
+        "archive_path": "v1/val/val.json.gz",
+        "path": "datasets/pointnav/habitat-test-scenes/v1/val/val.json.gz",
+        "size_bytes": 9313,
+        "sha256": "60463e83bfec39b15a6c255639bcc54bd727e93156af200e4cf4a283b6ec507c"
+      }
+    ],
+    "smoke_split": "val",
+    "smoke_episode_id": "0",
+    "expected_smoke_scene_id": "data/scene_datasets/habitat-test-scenes/skokloster-castle.glb",
+    "expected_val_episode_count": 100
+  },
+  "smoke": {
+    "sensor_resolution": [
+      128,
+      128
+    ],
+    "sensor_uuids": [
+      "color_sensor",
+      "depth_sensor"
+    ],
+    "actions": [
+      "move_forward",
+      "turn_left",
+      "turn_right"
+    ],
+    "forward_step_m": 0.25,
+    "turn_angle_deg": 30.0,
+    "allow_sliding": false,
+    "seed": 0
+  }
+}

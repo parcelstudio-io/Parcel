@@ -9,6 +9,7 @@ from parcel_robot.backends.base import SimObservation
 from parcel_robot.models import SpatialIntent, VelocityCommand
 
 NUMBER_WORDS = {
+    "once": 1,
     "one": 1,
     "two": 2,
     "three": 3,
@@ -119,7 +120,7 @@ def parse_spatial_intent(text: str) -> SpatialIntent | None:
         r"(?:(?P<direction_before>clockwise|counterclockwise)\s+)?circles?"
         r"(?:\s+(?P<direction_after>clockwise|counterclockwise))?\s+around\s+"
         r"(?:me|owner|the owner)"
-        r"(?:\s+(?P<count>[a-z0-9]+)\s+(?:times?|circles?))?",
+        r"(?:\s+(?P<count>[a-z0-9]+)(?:\s+(?:times?|circles?))?)?",
         clean,
     )
     if orbit:
@@ -135,6 +136,22 @@ def parse_spatial_intent(text: str) -> SpatialIntent | None:
             "orbit_owner",
             direction,
             size=size,
+            revolutions=1.0,
+        )
+
+    around_owner = re.fullmatch(
+        r"(?:walk|move|go)\s+around\s+(?:me|owner|the owner)"
+        r"(?:\s+(?P<count>[a-z0-9]+)(?:\s+times?)?)?",
+        clean,
+    )
+    if around_owner:
+        count = _step_count(around_owner.group("count"), default=1)
+        if count != 1:
+            return None
+        return SpatialIntent(
+            "orbit_owner",
+            "counterclockwise",
+            size="normal",
             revolutions=1.0,
         )
 
@@ -222,6 +239,7 @@ class SpatialBehaviorController:
         self._orbit_phase = "idle"
         self._orbit_start_angle = 0.0
         self._last_angle = 0.0
+        self._last_orbit_on_ring = False
         self._orbit_progress = 0.0
         self._aligning = True
         self._last_motion_at = 0.0
@@ -248,6 +266,7 @@ class SpatialBehaviorController:
         self._heading = robot.yaw
         self._aligning = True
         self._orbit_progress = 0.0
+        self._last_orbit_on_ring = False
         self._owner_anchor = None
         self._last_motion_at = timestamp
         self._last_motion_pose = (robot.x, robot.y, robot.yaw)
@@ -292,12 +311,14 @@ class SpatialBehaviorController:
                 if abs(distance - self._orbit_radius) <= self.config.waypoint_tolerance_m
                 else "approach_ring"
             )
+            self._last_orbit_on_ring = self._orbit_phase == "orbit"
         return self.snapshot()
 
     def stop(self) -> None:
         self._intent = None
         self._orbit_phase = "idle"
         self._orbit_progress = 0.0
+        self._last_orbit_on_ring = False
         self._aligning = True
         self._owner_anchor = None
 
@@ -394,6 +415,9 @@ class SpatialBehaviorController:
             if goal_distance <= self.config.waypoint_tolerance_m:
                 self._orbit_phase = "orbit"
                 self._last_angle = angle
+                self._last_orbit_on_ring = (
+                    abs(distance - self._orbit_radius) <= self.config.waypoint_tolerance_m
+                )
                 self._aligning = True
             else:
                 target_heading = math.atan2(goal_y - robot.y, goal_x - robot.x)
@@ -405,14 +429,31 @@ class SpatialBehaviorController:
                     0.0,
                 )
 
+        on_ring = abs(distance - self._orbit_radius) <= self.config.waypoint_tolerance_m
         delta = _wrap(angle - self._last_angle)
-        signed_delta = direction_sign * delta
-        if 0.0 < signed_delta < math.pi / 2.0:
-            self._orbit_progress += signed_delta
+        if self._last_orbit_on_ring and on_ring and abs(delta) < math.pi / 2.0:
+            # Net signed phase prevents back-and-forth motion from looking like
+            # repeated forward progress. Samples outside the requested radial
+            # corridor establish a new phase baseline but receive no orbit credit.
+            self._orbit_progress += direction_sign * delta
         self._last_angle = angle
+        self._last_orbit_on_ring = on_ring
         target_progress = self._intent.revolutions * 2.0 * math.pi
-        fraction = min(1.0, self._orbit_progress / max(target_progress, 1e-6))
-        if self._orbit_progress >= target_progress - 0.12:
+        fraction = max(
+            0.0,
+            min(1.0, self._orbit_progress / max(target_progress, 1e-6)),
+        )
+        finish_angle = _wrap(self._orbit_start_angle + direction_sign * target_progress)
+        finish_x = self._center[0] + self._orbit_radius * math.cos(finish_angle)
+        finish_y = self._center[1] + self._orbit_radius * math.sin(finish_angle)
+        finish_distance = math.hypot(robot.x - finish_x, robot.y - finish_y)
+        finish_angle_tolerance = 2.0 * math.asin(
+            min(1.0, self.config.waypoint_tolerance_m / (2.0 * self._orbit_radius))
+        )
+        if (
+            self._orbit_progress >= target_progress - finish_angle_tolerance
+            and finish_distance <= self.config.waypoint_tolerance_m
+        ):
             return SpatialDecision(VelocityCommand(), True, "completed", "orbit_complete", 1.0)
 
         lookahead_angle = angle + direction_sign * 0.34

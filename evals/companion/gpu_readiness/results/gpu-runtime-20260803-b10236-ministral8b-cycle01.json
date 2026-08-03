@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "audit_kind": "parcel-llama-cpp-cuda-runtime-evidence",
+  "run_id": "gpu-runtime-20260803-b10236-ministral8b-cycle01",
+  "recorded_at_utc": "2026-08-03T13:33:55.314Z",
+  "profile": {
+    "id": "llama-b10236-cuda12-oci-ministral3-8b-instruct-q4-k-m",
+    "readiness_result": "evals/companion/gpu_readiness/results/gpu-readiness-20260803-b10236-ministral8b-instruct-oci-cuda.json",
+    "server_build": 10236,
+    "server_commit": "1464c62d88f699ec9700c8010bbfdbc603a9efd6",
+    "device": "NVIDIA RTX 5000 Ada Generation",
+    "device_uuid": "GPU-97535feb-2b93-d984-921f-885dda608bb1",
+    "requested_gpu_layers": 999,
+    "context_size": 8192,
+    "model_sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+    "model_size_bytes": 5198911904
+  },
+  "placement": {
+    "actual_gpu_layers_offloaded": 35,
+    "total_model_layers_reported": 35,
+    "repeating_layers_offloaded": 33,
+    "output_layer_offloaded": true,
+    "full_layer_offload": true,
+    "cuda_model_buffer_mib": 4662.05,
+    "cuda_kv_buffer_mib": 1088.0,
+    "cuda_compute_buffer_mib": 116.01,
+    "cpu_mapped_model_buffer_mib": 288.0
+  },
+  "memory_snapshots_mib": {
+    "pre_load_host_total": {
+      "used": 1141,
+      "free": 31088
+    },
+    "post_load_idle_host_total": {
+      "used": 7369,
+      "free": 24860
+    },
+    "post_load_idle_server_process": 6220,
+    "post_shutdown_host_total": {
+      "used": 1140,
+      "free": 31089
+    },
+    "measured_peak": null,
+    "note": "These are point-in-time nvidia-smi observations from the placement-verification load, not a sampled peak trace."
+  },
+  "full_cuda_smoke": {
+    "request": "Reply with exactly READY.",
+    "response": "READY.",
+    "prompt_tokens": 541,
+    "completion_tokens": 4,
+    "prompt_seconds": 0.108,
+    "completion_seconds": 0.038,
+    "requests_processing_after_capture": 0,
+    "requests_deferred_after_capture": 0
+  },
+  "evaluations": [
+    {
+      "suite": "parcel-conversation-quality-v1",
+      "role": "development_only_compact_conversation_challenger",
+      "result": "evals/companion/conversation_quality_v1/results/conversation-v1-20260803-ministral8b-instruct-gpu-run01.json",
+      "run_id": "conversation-v1-20260803132913Z-7f1692ef"
+    },
+    {
+      "suite": "parcel-planner-quality-v2",
+      "role": "development_only_compact_planir_challenger",
+      "result": "evals/companion/planner_quality_v2/results/planner-v2-20260803-ministral8b-instruct-gpu-run01.json",
+      "run_id": "planner-v2-20260803133028Z-fb46a335"
+    }
+  ],
+  "server_logs": {
+    "evaluation_load": {
+      "repository_path": ".cache/reasoner/llama-b10236-cuda-ministral8b-instruct.log",
+      "gitignored": true,
+      "size_bytes": 14650,
+      "sha256": "d8b14e1d02171c72dad9ae1fe43f249d5eac3b8310347af42f042e9e33ba7883",
+      "note": "Retained evaluation log records request timings and clean shutdown but was not launched at verbose placement logging."
+    },
+    "placement_verification_load": {
+      "repository_path": ".cache/reasoner/llama-b10236-cuda-ministral8b-instruct-placement.log",
+      "gitignored": true,
+      "size_bytes": 254810,
+      "sha256": "79bdf9e6db762e1b0b0f0f543963630975934c7be814d4ae6bee9cbd75842043",
+      "verified_events": [
+        "offloaded output layer to GPU",
+        "offloaded 33 repeating layers to GPU",
+        "offloaded 35/35 layers to GPU",
+        "CUDA0 model buffer size = 4662.05 MiB",
+        "CUDA0 KV buffer size = 1088.00 MiB",
+        "CUDA0 compute buffer size = 116.01 MiB",
+        "model loaded and listened on 127.0.0.1:8081",
+        "full-CUDA READY smoke completed",
+        "clean shutdown after SIGINT"
+      ]
+    }
+  },
+  "classification": {
+    "model_loaded": true,
+    "full_cuda_layer_offload_measured": true,
+    "full_cuda_inference_smoke_performed": true,
+    "development_evaluations_performed": true,
+    "clean_shutdown_verified": true,
+    "vram_returned_near_baseline": true,
+    "promoted_for_conversation": false,
+    "promoted_for_planning": false
+  },
+  "claims": {
+    "proves": [
+      "full-layer CUDA placement and inference for the exact pinned Ministral artifact and b10236 runtime",
+      "point-in-time loaded and restored VRAM observations",
+      "execution of the linked development-only conversation and planning evaluations under the same exact launch profile"
+    ],
+    "does_not_prove": [
+      "peak VRAM across every request",
+      "conversation quality without human review",
+      "physical navigation, collision avoidance, perception, or Unitree quality",
+      "quality parity with Gemma or promotion of Ministral",
+      "top-percentile performance on an external benchmark"
+    ]
+  }
+}

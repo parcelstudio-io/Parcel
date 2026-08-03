@@ -1,0 +1,67 @@
+{
+  "aggregate": {
+    "byte_reduction_fraction": 0.732126,
+    "case_count": 5,
+    "model_latency_ms": null,
+    "model_tokens": null,
+    "physical_navigation_episode_count": 0,
+    "plan_ir_v1_canonical_bytes": 5413,
+    "plan_sketch_v1_canonical_bytes": 1450
+  },
+  "artifact_type": "offline_planner_contract_serialization_counterfactual",
+  "cases": [
+    {
+      "byte_reduction_fraction": 0.720542,
+      "case_id": "sidewalk_then_hold",
+      "plan_ir_v1_canonical_bytes": 959,
+      "plan_sketch_v1_canonical_bytes": 268
+    },
+    {
+      "byte_reduction_fraction": 0.714823,
+      "case_id": "sidewalk_then_lamppost",
+      "plan_ir_v1_canonical_bytes": 1329,
+      "plan_sketch_v1_canonical_bytes": 379
+    },
+    {
+      "byte_reduction_fraction": 0.741622,
+      "case_id": "five_steps_away_then_hold",
+      "plan_ir_v1_canonical_bytes": 925,
+      "plan_sketch_v1_canonical_bytes": 239
+    },
+    {
+      "byte_reduction_fraction": 0.745547,
+      "case_id": "orbit_then_follow_behind",
+      "plan_ir_v1_canonical_bytes": 1179,
+      "plan_sketch_v1_canonical_bytes": 300
+    },
+    {
+      "byte_reduction_fraction": 0.74143,
+      "case_id": "correct_active_task_to_lamppost",
+      "plan_ir_v1_canonical_bytes": 1021,
+      "plan_sketch_v1_canonical_bytes": 264
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "model token reduction",
+      "latency improvement",
+      "PlanSketch generation quality",
+      "semantic skill execution or physical navigation success"
+    ],
+    "proves": [
+      "serialized contract size for equivalent recorded model-owned semantics"
+    ]
+  },
+  "method": {
+    "encoding": "canonical_compact_sorted_ascii_json",
+    "model_inference_performed": false,
+    "projection": "model_owned_goal_ordered_skills_arguments_and_explicit_navigation_grounding",
+    "tokenizer_used": null
+  },
+  "schema_version": 1,
+  "source": {
+    "path": "evals/companion/planner_quality_v2/results/planner-v2-20260803-gemma4-cpu-run05.json",
+    "run_id": "planner-v2-20260803120316Z-6406b694",
+    "sha256": "e38fc6394fd6344fa3f223ecc753e40f9663951f0acafe8580f27656f064f3b4"
+  }
+}

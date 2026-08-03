@@ -1,0 +1,34 @@
+# EXPERIMENTAL, deployment-disabled fresh-sensor safe-valley challenger.
+#
+# Relative to selected cached frontier v3, this changes only recovery after an
+# observed-only route returns partial/no_path. It uses timestamped odometry and
+# 270-degree LiDAR to rotate toward a passable valley, revalidates every cell in
+# the newly swept body corridor, advances at most 0.40 m, stops, and replans.
+# It cannot reverse or strafe. Production defaults and all sealed v4 worlds are
+# unchanged.
+active_model: grid_safe_valley_v5
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+progress_watchdog:
+  timeout_steps: 800
+  max_semantic_replans: 2
+
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  max_vx: 0.60
+  max_vy: 0.40
+  max_vyaw: 1.0
+  stop_distance_m: 0.38
+  obstacle_slow_m: 0.75
+  slow_scale: 0.45
+  reaction_time_s: 0.12
+  predictive_mode: projected_speed_cap
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

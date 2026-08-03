@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-planner-quality-sketch-v1",
+  "runner_version": "runtime-routed-plansketch-quality-v1",
+  "frozen": true,
+  "frozen_at_utc": "2026-08-03T12:47:26Z",
+  "case_count": 5,
+  "output_contract": "plan_sketch_v1",
+  "physical_navigation_episode_count": 0,
+  "locked_inputs": {
+    "cases": {
+      "path": "evals/companion/planner_quality_v2/cases.json",
+      "sha256": "6717f2fbda80920133f20f4584630f78748b6146c17222600bf71471e9272d1a"
+    },
+    "planner_prompt": {
+      "path": "prompts/system/planner_sketch.md",
+      "sha256": "609259572b17d976d3bf999010da0228ff891bb48dd8f396218901734cbefae3"
+    },
+    "response_schema": {
+      "path": "prompts/schemas/plan_sketch_v1.schema.json",
+      "sha256": "82cf50b2a99476edac7af12e09804482275a38e5299c31180fc7061f5b1ad0be"
+    }
+  },
+  "paired_semantics": {
+    "reference_suite": "parcel-planner-quality-v2",
+    "router": "parcel_robot.brain.DeterministicIntentRouter",
+    "snapshot_builder": "evals.companion.run_planner_quality_v2._snapshot",
+    "semantic_scorer": "evals.companion.run_planner_quality_v2._score_plan",
+    "registry_profile": "runtime-supported-owner-heading-enabled"
+  }
+}

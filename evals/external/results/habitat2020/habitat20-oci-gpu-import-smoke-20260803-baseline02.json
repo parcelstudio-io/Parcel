@@ -1,0 +1,114 @@
+{
+  "claims": {
+    "dataset_mounted_or_used": false,
+    "gpu_kernel_executed": false,
+    "gpu_render_executed": false,
+    "image_entrypoint_executed": false,
+    "image_hooks_executed": false,
+    "navigation_score_available": false,
+    "network_available_inside_sandbox": false,
+    "package_manager_executed": false,
+    "simulator_constructed": false
+  },
+  "evaluation": {
+    "allowed_claim": "exact archived image CUDA/EGL/Habitat-Sim import smoke",
+    "leaderboard_comparable": false,
+    "navigation_episode_executed": false,
+    "navigation_metrics_emitted": false,
+    "official_evaluator_executed": false,
+    "official_rank_eligible": false,
+    "scene_loaded": false
+  },
+  "generated_at_utc": "2026-08-03T14:54:14.181815+00:00",
+  "provenance": {
+    "all_compressed_layer_hashes_verified_before_execution": true,
+    "egl_vendor_manifest_source": "archived_image_rootfs",
+    "glvnd_client_source": "archived_image_rootfs",
+    "injected_host_driver_libraries": [
+      "libEGL_nvidia.so.0",
+      "libGLX_nvidia.so.0",
+      "libcuda.so",
+      "libcuda.so.1",
+      "libnvidia-allocator.so",
+      "libnvidia-allocator.so.1",
+      "libnvidia-eglcore.so.595.84",
+      "libnvidia-glcore.so.595.84",
+      "libnvidia-glsi.so.595.84",
+      "libnvidia-gpucomp.so.595.84",
+      "libnvidia-ptxjitcompiler.so",
+      "libnvidia-ptxjitcompiler.so.1",
+      "libnvidia-tls.so.595.84"
+    ],
+    "injected_host_driver_max_required_glibc": {
+      "libEGL_nvidia.so.0": "2.7.0",
+      "libGLX_nvidia.so.0": "2.4.0",
+      "libcuda.so": "2.9.0",
+      "libcuda.so.1": "2.9.0",
+      "libnvidia-allocator.so": "2.7.0",
+      "libnvidia-allocator.so.1": "2.7.0",
+      "libnvidia-eglcore.so.595.84": "2.10.0",
+      "libnvidia-glcore.so.595.84": "2.10.0",
+      "libnvidia-glsi.so.595.84": "2.7.0",
+      "libnvidia-gpucomp.so.595.84": "2.7.0",
+      "libnvidia-ptxjitcompiler.so": "2.7.0",
+      "libnvidia-ptxjitcompiler.so.1": "2.7.0",
+      "libnvidia-tls.so.595.84": "2.2.5"
+    },
+    "runner_path": "evals/external/habitat2020_oci_runtime.py",
+    "runner_sha256": "4526fdcc3a66864a5792a188a387c7ef27ebe4c3258f92472113cf945e60607c",
+    "smoke_script_path": "evals/external/habitat2020_gpu_smoke_py36.py",
+    "smoke_script_sha256": "28234e861452f6358d85e6a4c7372ec8aebc13e03851c48211e2825661d06c94"
+  },
+  "result": {
+    "passed": true,
+    "probe": {
+      "claims": {
+        "dataset_used": false,
+        "gpu_render_executed": false,
+        "navigation_episode_executed": false,
+        "navigation_metrics_emitted": false,
+        "scene_loaded": false,
+        "simulator_constructed": false
+      },
+      "cuda": {
+        "cu_device_get_count_result": 0,
+        "cu_init_result": 0,
+        "device_count": 1,
+        "library_loaded": true,
+        "passed": true
+      },
+      "egl": {
+        "device_count": 1,
+        "egl_initialize_result": true,
+        "egl_version": "1.5",
+        "extension_functions_resolved": true,
+        "library_loaded": true,
+        "passed": true,
+        "query_devices_result": true
+      },
+      "habitat_sim": {
+        "imported": true,
+        "module_file": "/opt/conda/envs/habitat/lib/python3.6/site-packages/habitat_sim-0.1.4-py3.6-linux-x86_64.egg/habitat_sim/__init__.py",
+        "module_version": "0.1.4",
+        "passed": true,
+        "scene_loaded": false,
+        "simulator_constructed": false
+      },
+      "passed": true,
+      "python_version": "3.6.10 |Anaconda, Inc.| (default, May  8 2020, 02:54:21) \n[GCC 7.3.0]",
+      "schema_version": 1
+    }
+  },
+  "run_id": "habitat20-oci-gpu-import-smoke-20260803T145414Z",
+  "runtime": {
+    "bubblewrap_exit_code": 0,
+    "elapsed_ms": 561.432697,
+    "isolated_rootfs_process_executed": true,
+    "manifest_digest": "sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+    "result_parse_error": null,
+    "rootfs": "/home/jaewoo-jang/Desktop/Projects/Parcel/.cache/external-evals/runtime/habitat2020-oci/761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b/rootfs",
+    "stderr": "",
+    "timed_out": false
+  },
+  "schema_version": 1
+}

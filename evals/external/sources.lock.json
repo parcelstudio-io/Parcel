@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "barn_challenge": {
+      "kind": "git",
+      "url": "https://github.com/Daffan/the-barn-challenge.git",
+      "commit": "bf5a226f6088ec96bf0d2dbee3253a8ea6119b83",
+      "license": "MIT",
+      "purpose": "Primary metric-navigation gate; includes the 300 public BARN worlds and paths"
+    },
+    "barn_challenge_ros2_2026": {
+      "kind": "git",
+      "url": "https://github.com/Saadmaghani/The-Barn-Challenge-Ros2.git",
+      "commit": "d6c575b51e477bd524d634e12cffeb34036fcd1e",
+      "license": "NOASSERTION",
+      "purpose": "Official 2026 ROS 2 Jazzy/Gazebo compatibility path; evaluator remains external and unchanged outside its documented navigation-stack hook"
+    },
+    "habitat_challenge_2020": {
+      "kind": "git",
+      "url": "https://github.com/facebookresearch/habitat-challenge.git",
+      "commit": "ddf1575532aecc4df2f4cd4c5db173b8eada3e1e",
+      "license": "MIT",
+      "purpose": "Second traced contest; archived 2020 PointNav/ObjectNav evaluator integration"
+    },
+    "threewe_robot_platform": {
+      "kind": "git",
+      "url": "https://github.com/telleroutlook/3we-robot-platform.git",
+      "commit": "6073a1bd0a30b6ca1348027ac35b05832b97bfe9",
+      "license": "Apache-2.0",
+      "purpose": "Adopted 3WE portfolio source; pins the alpha SDK, benchmark implementation, scene declarations, documentation, and public leaderboard snapshot for compatibility auditing"
+    },
+    "barn_generator": {
+      "kind": "git",
+      "url": "https://github.com/dperille/jackal-map-creation.git",
+      "commit": "295ca5cc7b9b0ecea93013f0c49c5a1ca4352151",
+      "license": "NOASSERTION",
+      "purpose": "BARN dataset generation and coordinate/footprint provenance"
+    },
+    "jackal_melodic": {
+      "kind": "git",
+      "url": "https://github.com/jackal/jackal.git",
+      "commit": "0d8d76f96bd52102b69a3b9cb735fd5f9e15f695",
+      "license": "BSD-3-Clause",
+      "purpose": "Direct BARN runtime dependency; pins Jackal geometry and the simulated UST-10 LiDAR configuration"
+    },
+    "jackal_simulator_melodic": {
+      "kind": "git",
+      "url": "https://github.com/jackal/jackal_simulator.git",
+      "commit": "f72ffe1c160db5595dc033b323eb924abec539c4",
+      "license": "BSD-3-Clause",
+      "purpose": "Direct BARN runtime dependency; pins the Gazebo Jackal launch/model integration"
+    },
+    "jackal_desktop_melodic": {
+      "kind": "git",
+      "url": "https://github.com/jackal/jackal_desktop.git",
+      "commit": "5dbf81c6266c3810d37b3d966a22ec149fd28e99",
+      "license": "BSD-3-Clause",
+      "purpose": "Direct BARN runtime dependency; pins the referenced desktop navigation packages"
+    }
+  }
+}

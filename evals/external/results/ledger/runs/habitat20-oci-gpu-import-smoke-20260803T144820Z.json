@@ -1,0 +1,56 @@
+{
+  "aggregate_metrics": {
+    "cuda_device_count": 1,
+    "cuda_driver_init_passed": true,
+    "egl_probe_passed": false,
+    "elapsed_ms": 139.021573,
+    "failure_class": "host_glvnd_loader_glibc_incompatibility",
+    "gpu_kernel_executed": false,
+    "gpu_render_executed": false,
+    "habitat_sim_imported": false,
+    "image_layers_verified": 23,
+    "navigation_episode_executed": false,
+    "navigation_metrics_emitted": false,
+    "official_rank_eligible": false,
+    "rootfs_inventory_verified": true,
+    "scene_loaded": false,
+    "smoke_passed": false,
+    "top_decile_evidence": false
+  },
+  "benchmark": {
+    "id": "habitat20-archived-oci-gpu-import-smoke-non-evaluation",
+    "source": "https://github.com/facebookresearch/habitat-challenge.git",
+    "source_commit": "ddf1575532aecc4df2f4cd4c5db173b8eada3e1e"
+  },
+  "change_description": "First exact archived-image isolated GPU/import smoke after verified materialization: CUDA initialized and enumerated one GPU; EGL failed before Habitat-Sim import because the harness injected a host GLVND loader requiring GLIBC_2.33. No dataset, scene, simulator, evaluator, navigation policy, render, kernel, or metric executed.",
+  "components": {
+    "adapter": {
+      "hash": "4d9818974432414be6701366c4c861ffbc3888b16f716252bb5899b342a4026f",
+      "id": "evals/external/habitat2020_oci_runtime.py"
+    },
+    "agent": {
+      "hash": "28234e861452f6358d85e6a4c7372ec8aebc13e03851c48211e2825661d06c94",
+      "id": "evals/external/habitat2020_gpu_smoke_py36.py"
+    },
+    "config": {
+      "hash": "df01058694052f33745b2c4394f10818222b3754ebba1f1f16b2a54071ae9b76",
+      "id": "evals/external/habitat2020_manifest.json"
+    },
+    "model": {
+      "hash": "sha256:761ca2230667add6ab241a0eaff16984dc271486ec659984ae13ccab57a9c52b",
+      "id": "fairembodied/habitat-challenge"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/habitat2020/habitat20-oci-gpu-import-smoke-20260803-baseline01.json",
+    "sha256": "8c764f0aaeb532c4fac4391313f6c11774a8755893daaa8a83c7d77eae53b7f0",
+    "size_bytes": 3064
+  },
+  "run_id": "habitat20-oci-gpu-import-smoke-20260803T144820Z",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T14:50:50.759628Z"
+}

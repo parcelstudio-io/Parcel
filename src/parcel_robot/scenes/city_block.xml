@@ -93,14 +93,17 @@
     <geom name="bench_leg_r" type="box" pos="-1.95 3.0 0.14" size="0.05 0.18 0.14" material="bench"/>
 
     <!-- Explicit navigation obstacles used by simulator telemetry. -->
-    <geom name="obstacle_crate" type="box" pos="1.6 1.25 0.3" size="0.35 0.35 0.3"
+    <!-- Kept outside the owner's default 1.6 m orbit annulus. -->
+    <geom name="obstacle_crate" type="box" pos="5.8 1.0 0.3" size="0.35 0.35 0.3"
       rgba="0.72 0.36 0.12 1"/>
     <geom name="obstacle_bollard" type="cylinder" pos="-1.4 -1.1 0.45" size="0.18 0.45"
       rgba="0.85 0.7 0.12 1"/>
 
     <!-- A movable stand-in for the enrolled owner. Perception backends will
          eventually replace this oracle pose with RGB-D + UWB fusion. -->
-    <body name="owner" mocap="true" pos="3.0 0 0">
+    <!-- Default commissioning location has a continuously verified 1.6 m
+         orbit corridor clear of every static city fixture. -->
+    <body name="owner" mocap="true" pos="2.0 -0.5 0">
       <geom name="owner_body" type="capsule" fromto="0 0 0.1 0 0 1.55" size="0.22"
         contype="0" conaffinity="0" rgba="0.15 0.68 0.95 1"/>
       <geom name="owner_head" type="sphere" pos="0 0 1.78" size="0.2"

@@ -1,0 +1,192 @@
+{
+  "aggregate": {
+    "case_count": 1,
+    "failed_case_count": 1,
+    "latency_ms": {
+      "model_http_full": {
+        "count": 1,
+        "maximum": 12262.204,
+        "mean": 12262.204,
+        "median": 12262.204,
+        "minimum": 12262.204,
+        "p95_nearest_rank": 12262.204
+      },
+      "model_ttft": {
+        "count": 1,
+        "maximum": 343.803,
+        "mean": 343.803,
+        "median": 343.803,
+        "minimum": 343.803,
+        "p95_nearest_rank": 343.803
+      },
+      "plan_compile": null,
+      "plan_validation": null,
+      "runner_case": {
+        "count": 1,
+        "maximum": 12262.362,
+        "mean": 12262.362,
+        "median": 12262.362,
+        "minimum": 12262.362,
+        "p95_nearest_rank": 12262.362
+      }
+    },
+    "model_output_bytes": {
+      "count": 1,
+      "maximum": 3804.0,
+      "mean": 3804.0,
+      "median": 3804.0,
+      "minimum": 3804.0,
+      "p95_nearest_rank": 3804.0
+    },
+    "passed_case_count": 0,
+    "physical_navigation_episode_count": 0,
+    "physical_navigation_success_rate": null,
+    "plan_quality_accuracy": 0.0,
+    "tokens": {
+      "completion": {
+        "count": 1,
+        "maximum": 1024.0,
+        "mean": 1024.0,
+        "median": 1024.0,
+        "minimum": 1024.0,
+        "p95_nearest_rank": 1024.0
+      },
+      "prompt": {
+        "count": 1,
+        "maximum": 1938.0,
+        "mean": 1938.0,
+        "median": 1938.0,
+        "minimum": 1938.0,
+        "p95_nearest_rank": 1938.0
+      },
+      "total": {
+        "count": 1,
+        "maximum": 2962.0,
+        "mean": 2962.0,
+        "median": 2962.0,
+        "minimum": 2962.0,
+        "p95_nearest_rank": 2962.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "admitted_plan_ir": null,
+      "case_id": "sidewalk_then_hold",
+      "failures": [
+        "provider"
+      ],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-sidewalk_then_hold:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1",
+        "schema_version": 1,
+        "spatial_references": [
+          "sidewalk"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "6a53b8d851ddb2df4452497aff86f77a7288d69da6761c623956c5ba9e0328c6",
+        "turn_id": "planner-v2-sidewalk_then_hold",
+        "urgency_cues": []
+      },
+      "passed": false,
+      "provider_error": {
+        "message": "model PlanSketch response was not valid JSON",
+        "type": "ValueError"
+      },
+      "provider_metrics": {
+        "completion_tokens": 1024,
+        "model_http_ms": 12262.204,
+        "model_json_validation_ms": 0.04,
+        "model_mode": "plan",
+        "model_output_bytes": 3804,
+        "model_parse_error": "ValueError",
+        "model_streaming": true,
+        "model_ttft_ms": 343.803,
+        "plan_compile_ms": null,
+        "plan_validation_ms": null,
+        "prompt_tokens": 1938,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 12262.362,
+        "total_tokens": 2962
+      },
+      "raw_plan_sketch": null,
+      "snapshot_id": "planner-v2-snapshot-1",
+      "validation": {
+        "code": null,
+        "effective_invariants": [],
+        "plan_sha256": null,
+        "status": "not_run",
+        "validated_snapshot_id": null
+      }
+    }
+  ],
+  "change_description": "Development-only frozen PlanSketch compatibility warm-up for official Ministral 3 8B Reasoning; no activation",
+  "claims": {
+    "does_not_prove": [
+      "semantic skill execution or physical navigation success",
+      "camera or LiDAR perception accuracy",
+      "collision avoidance, Unitree locomotion, or conversation quality",
+      "latency or token improvement without comparison to a separately valid paired PlanIR run"
+    ],
+    "proves": [
+      "PlanSketch generation quality on the selected frozen compound cases",
+      "deterministic compilation of raw PlanSketch into trusted PlanIR",
+      "paired router, snapshot, registry, semantic scoring, and PlanIR validation compatibility",
+      "recorded provider TTFT, full-call latency, output bytes, and token counts when supplied by the server"
+    ]
+  },
+  "corpus": {
+    "cases_path": "evals/companion/planner_quality_v2/cases.json",
+    "cases_sha256": "6717f2fbda80920133f20f4584630f78748b6146c17222600bf71471e9272d1a",
+    "context_binding_version": "trusted-envelope-v1",
+    "contract_compiler_version": "plansketch-v1-to-semantic-planir-v1",
+    "frozen": true,
+    "output_contract": "plan_sketch_v1",
+    "paired_reference_suite": "parcel-planner-quality-v2",
+    "planner_prompt": "prompts/system/planner_sketch.md",
+    "planner_prompt_sha256": "609259572b17d976d3bf999010da0228ff891bb48dd8f396218901734cbefae3",
+    "response_schema": "prompts/schemas/plan_sketch_v1.schema.json",
+    "response_schema_sha256": "82cf50b2a99476edac7af12e09804482275a38e5299c31180fc7061f5b1ad0be",
+    "selected_case_ids": [
+      "sidewalk_then_hold"
+    ],
+    "semantic_scorer": "planner-quality-v2-identical"
+  },
+  "inference": {
+    "device": {
+      "gpu_layers": 999,
+      "profile": "cuda:rtx5000ada:sm89:35-of-35-layers",
+      "threads": 32
+    },
+    "generation": {
+      "plan_enable_thinking": true,
+      "plan_max_tokens": 1024,
+      "plan_temperature": 0.0,
+      "plan_timeout_s": 90.0,
+      "top_p": 0.9
+    },
+    "model": {
+      "artifact": "models/reasoner/ministral-3-8b-reasoning-2512/Ministral-3-8B-Reasoning-2512-Q4_K_M.gguf",
+      "artifact_sha256": "894aa3645ef8708a81dbe201c26105ce37c4c741252c89c5a78f81b49ac438c6",
+      "artifact_size_bytes": 5198910368,
+      "id": "ministral-3-8b-reasoning-2512",
+      "quantization": "Q4_K_M"
+    },
+    "server": {
+      "backend": "llama.cpp",
+      "base_url": "http://127.0.0.1:8082",
+      "cache_state": "cold",
+      "version": "llama.cpp b10236 (1464c62d8), official CUDA12 OCI"
+    }
+  },
+  "recorded_at_utc": "2026-08-03T13:54:50.811146Z",
+  "run_id": "planner-sketch-v1-20260803135450Z-a15cbc37",
+  "runner_version": "runtime-routed-plansketch-quality-v1",
+  "schema_version": 1,
+  "suite_id": "parcel-planner-quality-sketch-v1"
+}

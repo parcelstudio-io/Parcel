@@ -18,6 +18,18 @@ semantic_search:
   max_steps: 80
   yaw_rate: 0.35
 
+# Re-ground a semantic target when the body makes no meaningful goal progress.
+# At the 10 Hz runtime rate this is 40 s, allowing a bounded obstacle detour;
+# two fresh camera/LiDAR plans are allowed before the mission fails closed.
+progress_watchdog:
+  timeout_steps: 400
+  max_semantic_replans: 2
+
+# Once the geometric goal is reached, request a locomotion stop and wait for
+# fresh measured-velocity confirmation before declaring semantic success.
+terminal_verification:
+  stop_timeout_steps: 30
+
 safety:
   max_vx: 0.45
   max_vy: 0.25

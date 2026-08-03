@@ -1,0 +1,27 @@
+# NON-DEPLOYABLE, eval-only BARN ablation. This changes only the sensor-built
+# rolling-map extent; it preserves Parcel's controller and safety boundaries.
+active_model: grid_window_v2
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+progress_watchdog:
+  timeout_steps: 800
+  max_semantic_replans: 2
+
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  max_vx: 0.60
+  max_vy: 0.40
+  max_vyaw: 1.0
+  stop_distance_m: 0.38
+  obstacle_slow_m: 0.75
+  slow_scale: 0.45
+  reaction_time_s: 0.12
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

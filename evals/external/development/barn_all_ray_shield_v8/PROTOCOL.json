@@ -1,0 +1,376 @@
+{
+  "corpus_id": "barn-all-ray-shield-v8-generated-20260803-dev30-holdout20",
+  "development_world_ids": [
+    4000,
+    4001,
+    4002,
+    4003,
+    4004,
+    4005,
+    4006,
+    4007,
+    4008,
+    4009,
+    4010,
+    4011,
+    4012,
+    4013,
+    4014,
+    4015,
+    4016,
+    4017,
+    4018,
+    4019,
+    4020,
+    4021,
+    4022,
+    4023,
+    4024,
+    4025,
+    4026,
+    4027,
+    4028,
+    4029
+  ],
+  "forbidden_world_id_ranges_inclusive": [
+    [
+      0,
+      299
+    ],
+    [
+      1000,
+      1049
+    ],
+    [
+      2000,
+      2049
+    ],
+    [
+      3000,
+      3049
+    ]
+  ],
+  "operational_holdout": {
+    "assets_materialized": false,
+    "cryptographically_sealed": false,
+    "recipe": {
+      "acceptance": "first connected upstream BARN map; no policy execution; post-generation evaluator-private geometric targeting audit must pass",
+      "generator_commit": "295ca5cc7b9b0ecea93013f0c49c5a1ca4352151",
+      "parameter_algorithm": "offset=world_id-4000; fill=(0.15,0.20,0.25,0.30)[(offset//3)%4]; smooth=(2,3,4)[offset%3]; rows=30; columns=30",
+      "seed_algorithm": "uint64_be(sha256(namespace + ':' + world_id + ':' + attempt)[0:8]) bitwise-and 0x7fffffff",
+      "seed_namespace": "parcel-barn-all-ray-shield-v8-generated-corpus-20260803",
+      "world_ids": [
+        4030,
+        4031,
+        4032,
+        4033,
+        4034,
+        4035,
+        4036,
+        4037,
+        4038,
+        4039,
+        4040,
+        4041,
+        4042,
+        4043,
+        4044,
+        4045,
+        4046,
+        4047,
+        4048,
+        4049
+      ]
+    },
+    "recipe_commitment_sha256": "fe962d642e20ce5bc594f407340c9ad45cb29ad464d58f6ab9ac349d127ca773"
+  },
+  "paired_protocol": {
+    "episode_workers": 4,
+    "execution_schedule": [
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24296803,
+        "trial": 0,
+        "world_id": 4000
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24297812,
+        "trial": 0,
+        "world_id": 4001
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24298821,
+        "trial": 0,
+        "world_id": 4002
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24299830,
+        "trial": 0,
+        "world_id": 4003
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24300839,
+        "trial": 0,
+        "world_id": 4004
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24301848,
+        "trial": 0,
+        "world_id": 4005
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24302857,
+        "trial": 0,
+        "world_id": 4006
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24303866,
+        "trial": 0,
+        "world_id": 4007
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24304875,
+        "trial": 0,
+        "world_id": 4008
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24305884,
+        "trial": 0,
+        "world_id": 4009
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24306893,
+        "trial": 0,
+        "world_id": 4010
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24307902,
+        "trial": 0,
+        "world_id": 4011
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24308911,
+        "trial": 0,
+        "world_id": 4012
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24309920,
+        "trial": 0,
+        "world_id": 4013
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24310929,
+        "trial": 0,
+        "world_id": 4014
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24311938,
+        "trial": 0,
+        "world_id": 4015
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24312947,
+        "trial": 0,
+        "world_id": 4016
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24313956,
+        "trial": 0,
+        "world_id": 4017
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24314965,
+        "trial": 0,
+        "world_id": 4018
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24315974,
+        "trial": 0,
+        "world_id": 4019
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24316983,
+        "trial": 0,
+        "world_id": 4020
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24317992,
+        "trial": 0,
+        "world_id": 4021
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24319001,
+        "trial": 0,
+        "world_id": 4022
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24320010,
+        "trial": 0,
+        "world_id": 4023
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24321019,
+        "trial": 0,
+        "world_id": 4024
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24322028,
+        "trial": 0,
+        "world_id": 4025
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24323037,
+        "trial": 0,
+        "world_id": 4026
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24324046,
+        "trial": 0,
+        "world_id": 4027
+      },
+      {
+        "arm_order": "reference_then_candidate",
+        "episode_seed": 24325055,
+        "trial": 0,
+        "world_id": 4028
+      },
+      {
+        "arm_order": "candidate_then_reference",
+        "episode_seed": 24326064,
+        "trial": 0,
+        "world_id": 4029
+      }
+    ],
+    "execution_schedule_sha256": "7d0aade4251b8228e2ca1f4c5c85f71fac583adacb79150c161cc99bcaa1b1f8",
+    "order_schedule": [
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference",
+      "reference_then_candidate",
+      "candidate_then_reference"
+    ],
+    "order_schedule_sha256": "6277cb0978592c80e883d8301792425dc4f43d41c70e823da667a8b18951abcc",
+    "suite_seed": 20260803,
+    "trials_per_world": 1
+  },
+  "promotion_gate": {
+    "all_conditions_required_before_any_holdout_authorization": true,
+    "all_first_divergences_must_share_identical_observation": true,
+    "candidate_policy": "historical-bundle-plus-reviewed-v8-all-ray-delta",
+    "candidate_timeout_rate_must_not_exceed_reference": true,
+    "evidence_and_certification_latency_excluded_from_controller_latency": true,
+    "exact_one_factor_source_delta": true,
+    "maximum_candidate_collisions": 0,
+    "maximum_candidate_observed_return_certificate_violations": 0,
+    "maximum_controller_p99_latency_ms": 100.0,
+    "maximum_controller_p99_latency_ratio": 1.2,
+    "maximum_paired_success_regressions": 0,
+    "minimum_candidate_signed_body_clearance_m": 0.475,
+    "minimum_global_nearest_not_limiting_cases": 1,
+    "minimum_mode_affected_paired_episodes": 1,
+    "minimum_navigation_metric_delta": 0.01,
+    "minimum_paired_success_gains": 3,
+    "minimum_success_rate_delta": 0.1,
+    "no_perception_requires_zero_translation": true,
+    "reference_policy": "historical-world0-75f7ff4d-exact-bundle",
+    "required_classified_rays_per_policy_issued_action": 720,
+    "same_world_trial_seed_calibration_runtime_and_schedule": true
+  },
+  "protocol_id": "parcel-barn-v8-all-ray-paired-development-v1",
+  "schema_version": 1,
+  "targeting_contract": {
+    "assignment": {
+      "4000": "global_nearest_not_limiting",
+      "4001": "global_nearest_not_limiting",
+      "4002": "global_nearest_not_limiting",
+      "4003": "global_nearest_not_limiting",
+      "4004": "global_nearest_not_limiting",
+      "4005": "global_nearest_not_limiting",
+      "4006": "global_nearest_not_limiting",
+      "4007": "global_nearest_not_limiting",
+      "4008": "global_nearest_not_limiting",
+      "4009": "global_nearest_not_limiting",
+      "4010": "global_nearest_not_limiting",
+      "4011": "global_nearest_not_limiting",
+      "4012": "global_nearest_not_limiting",
+      "4013": "global_nearest_not_limiting",
+      "4014": "global_nearest_not_limiting",
+      "4015": "yaw_sweep_rotation_limited",
+      "4016": "yaw_sweep_rotation_limited",
+      "4017": "yaw_sweep_rotation_limited",
+      "4018": "yaw_sweep_rotation_limited",
+      "4019": "yaw_sweep_rotation_limited",
+      "4020": "yaw_sweep_rotation_limited",
+      "4021": "yaw_sweep_rotation_limited",
+      "4022": "yaw_sweep_rotation_limited",
+      "4023": "yaw_sweep_rotation_limited",
+      "4024": "yaw_sweep_rotation_limited",
+      "4025": "yaw_sweep_rotation_limited",
+      "4026": "yaw_sweep_rotation_limited",
+      "4027": "yaw_sweep_rotation_limited",
+      "4028": "yaw_sweep_rotation_limited",
+      "4029": "yaw_sweep_rotation_limited"
+    },
+    "control_period_s": 0.1,
+    "forward_mps": 0.45,
+    "policy_executed_during_targeting": false,
+    "reaction_horizon_s": 0.12,
+    "strict_epsilon": 0.0001,
+    "yaw_rates_rps": [
+      -0.8,
+      0.8
+    ]
+  }
+}

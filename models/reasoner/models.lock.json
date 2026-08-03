@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "models": {
+    "ministral_3_8b_instruct_2512_q4_k_m": {
+      "filename": "ministral-3-8b-instruct-2512/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+      "url": "https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512-GGUF/resolve/0102285ad796bd99af90f58de616092e5630e970/Ministral-3-8B-Instruct-2512-Q4_K_M.gguf?download=true",
+      "size_bytes": 5198911904,
+      "sha256": "33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761",
+      "source": "https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512-GGUF",
+      "source_commit": "0102285ad796bd99af90f58de616092e5630e970",
+      "upstream_filename": "Ministral-3-8B-Instruct-2512-Q4_K_M.gguf",
+      "license": "Apache-2.0",
+      "activation": "challenger_only_until_gpu_admission_and_held_out_parcel_quality_gates_pass"
+    },
+    "ministral_3_8b_reasoning_2512_q4_k_m": {
+      "filename": "ministral-3-8b-reasoning-2512/Ministral-3-8B-Reasoning-2512-Q4_K_M.gguf",
+      "url": "https://huggingface.co/mistralai/Ministral-3-8B-Reasoning-2512-GGUF/resolve/4413bc9b7b091ddad28101650d1395f5e045a328/Ministral-3-8B-Reasoning-2512-Q4_K_M.gguf?download=true",
+      "size_bytes": 5198910368,
+      "sha256": "894aa3645ef8708a81dbe201c26105ce37c4c741252c89c5a78f81b49ac438c6",
+      "source": "https://huggingface.co/mistralai/Ministral-3-8B-Reasoning-2512-GGUF",
+      "source_commit": "4413bc9b7b091ddad28101650d1395f5e045a328",
+      "upstream_filename": "Ministral-3-8B-Reasoning-2512-Q4_K_M.gguf",
+      "license": "Apache-2.0",
+      "activation": "challenger_only_until_gpu_admission_and_held_out_parcel_quality_gates_pass"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parcel.local/schemas/embodied-plan-v1-result.schema.json",
+  "title": "Parcel embodied PlanIR execution result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "suite_id",
+    "runner_version",
+    "run_id",
+    "recorded_at_utc",
+    "change_description",
+    "corpus",
+    "aggregate",
+    "cases",
+    "claims"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "suite_id": {"const": "parcel-embodied-plan-v1"},
+    "runner_version": {"const": "headless-executive-adapter-v1"},
+    "run_id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "recorded_at_utc": {"type": "string", "minLength": 1},
+    "change_description": {"type": "string", "minLength": 1, "maxLength": 500},
+    "corpus": {"type": "object"},
+    "aggregate": {
+      "type": "object",
+      "required": [
+        "case_count",
+        "passed_case_count",
+        "failed_case_count",
+        "unsupported_case_count",
+        "supported_case_count",
+        "supported_case_success_rate",
+        "physical_skill_episode_count",
+        "simulator_step_count",
+        "collision_count",
+        "timeout_count",
+        "minimum_clearance_m"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "case_id",
+          "seed",
+          "status",
+          "reason",
+          "support",
+          "plan",
+          "executive",
+          "physical",
+          "semantic"
+        ]
+      }
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"]
+    }
+  }
+}

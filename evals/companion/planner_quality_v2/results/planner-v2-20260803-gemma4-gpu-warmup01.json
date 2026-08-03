@@ -1,0 +1,314 @@
+{
+  "aggregate": {
+    "case_count": 1,
+    "failed_case_count": 0,
+    "latency_ms": {
+      "model_http": {
+        "count": 1,
+        "maximum": 5363.156,
+        "mean": 5363.156,
+        "median": 5363.156,
+        "minimum": 5363.156,
+        "p95_nearest_rank": 5363.156
+      },
+      "model_ttft": {
+        "count": 1,
+        "maximum": 603.187,
+        "mean": 603.187,
+        "median": 603.187,
+        "minimum": 603.187,
+        "p95_nearest_rank": 603.187
+      },
+      "runner_case": {
+        "count": 1,
+        "maximum": 5363.972,
+        "mean": 5363.972,
+        "median": 5363.972,
+        "minimum": 5363.972,
+        "p95_nearest_rank": 5363.972
+      }
+    },
+    "passed_case_count": 1,
+    "physical_navigation_episode_count": 0,
+    "physical_navigation_success_rate": null,
+    "plan_quality_accuracy": 1.0,
+    "tokens": {
+      "completion": {
+        "count": 1,
+        "maximum": 519.0,
+        "mean": 519.0,
+        "median": 519.0,
+        "minimum": 519.0,
+        "p95_nearest_rank": 519.0
+      },
+      "prompt": {
+        "count": 1,
+        "maximum": 2280.0,
+        "mean": 2280.0,
+        "median": 2280.0,
+        "minimum": 2280.0,
+        "p95_nearest_rank": 2280.0
+      },
+      "total": {
+        "count": 1,
+        "maximum": 2799.0,
+        "mean": 2799.0,
+        "median": 2799.0,
+        "minimum": 2799.0,
+        "p95_nearest_rank": 2799.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "admitted_plan": {
+        "goal": {
+          "relation": "inside",
+          "target": {
+            "kind": "semantic_region",
+            "query": "sidewalk"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-sidewalk_then_hold",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available",
+              "camera_fresh",
+              "lidar_fresh",
+              "target_grounded"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "inside",
+              "target": "sidewalk",
+              "tolerance_m": null
+            },
+            "timeout_s": 120.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "parcel-task-2b2be1ca3cc652a391904083"
+      },
+      "case_id": "sidewalk_then_hold",
+      "failures": [],
+      "intent_frame": {
+        "affect_evidence": null,
+        "confidence": 0.92,
+        "matched_rule": "compound_physical_request",
+        "original_transcript_ref": "turn:planner-v2-sidewalk_then_hold:final",
+        "requires_fresh_scene": true,
+        "route": "deliberative_plan",
+        "router_version": "deterministic-v1",
+        "schema_version": 1,
+        "spatial_references": [
+          "sidewalk"
+        ],
+        "speech_act": "request",
+        "transcript_sha256": "6a53b8d851ddb2df4452497aff86f77a7288d69da6761c623956c5ba9e0328c6",
+        "turn_id": "planner-v2-sidewalk_then_hold",
+        "urgency_cues": []
+      },
+      "passed": true,
+      "provider_error": null,
+      "provider_metrics": {
+        "completion_tokens": 519,
+        "model_http_ms": 5363.156,
+        "model_json_validation_ms": 0.214,
+        "model_mode": "plan",
+        "model_output_bytes": 1441,
+        "model_output_contract": "plan_ir_v1",
+        "model_streaming": true,
+        "model_ttft_ms": 603.187,
+        "prompt_tokens": 2280,
+        "reasoning_first_output_estimated": false,
+        "runner_case_elapsed_ms": 5363.972,
+        "total_tokens": 2799
+      },
+      "raw_plan": {
+        "goal": {
+          "relation": "inside",
+          "target": {
+            "kind": "semantic_region",
+            "query": "sidewalk"
+          },
+          "tolerance_m": 0.0
+        },
+        "invariants": [],
+        "plan_revision": 1,
+        "requested_interrupt": "at_checkpoint",
+        "schema_version": 1,
+        "source_turn_id": "planner-v2-sidewalk_then_hold",
+        "steps": [
+          {
+            "arguments": {
+              "directive": "sidewalk"
+            },
+            "id": "step_1",
+            "interruptibility": "checkpoint",
+            "max_attempts": 1,
+            "preconditions": [
+              "target_grounded"
+            ],
+            "recovery": [
+              "alternate_candidate",
+              "ask_user",
+              "replan",
+              "rescan",
+              "safe_stop"
+            ],
+            "resources": [
+              "base",
+              "attention"
+            ],
+            "skill": "NavigateTo",
+            "success": {
+              "confidence_min": null,
+              "fact": "inside",
+              "target": "sidewalk",
+              "tolerance_m": null
+            },
+            "timeout_s": 120.0
+          },
+          {
+            "arguments": {},
+            "id": "step_2",
+            "interruptibility": "immediate",
+            "max_attempts": 1,
+            "preconditions": [
+              "base_available"
+            ],
+            "recovery": [
+              "safe_stop"
+            ],
+            "resources": [
+              "base"
+            ],
+            "skill": "Hold",
+            "success": {
+              "confidence_min": null,
+              "fact": "motion_stopped",
+              "target": null,
+              "tolerance_m": null
+            },
+            "timeout_s": 10.0
+          }
+        ],
+        "task_id": "planner-v2-sidewalk_then_hold:final"
+      },
+      "snapshot_id": "planner-v2-snapshot-1",
+      "validation": {
+        "code": null,
+        "effective_invariants": [
+          "keep_collision_margin",
+          "avoid_road_when_not_crossing",
+          "stop_on_stale_perception",
+          "yield_to_people",
+          "do_not_interrupt_critical_task"
+        ],
+        "plan_sha256": "b3ef4019a9cdb989383307f24cf17cf5df5491f381569f8c5af0f2a125bd1fd4",
+        "status": "accepted"
+      }
+    }
+  ],
+  "change_description": "GPU cache warm-up calibration only; one frozen case, not the five-case baseline.",
+  "claims": {
+    "does_not_prove": [
+      "semantic skill execution or physical navigation success",
+      "camera or LiDAR perception accuracy",
+      "collision avoidance, Unitree locomotion, or conversation quality"
+    ],
+    "proves": [
+      "live or fake provider PlanIR quality on the selected frozen compound cases",
+      "runtime-router, admitted-schema, fresh-snapshot, and validator compatibility",
+      "system compilation of PlanIR controller boilerplate"
+    ]
+  },
+  "corpus": {
+    "baseline_planner_prompt_sha256": "4ca75618d5765d4e6812c3d18826dc77ec989969064290d4a336db496896914c",
+    "cases_sha256": "6717f2fbda80920133f20f4584630f78748b6146c17222600bf71471e9272d1a",
+    "context_binding_version": "trusted-envelope-v1",
+    "contract_compiler_version": "semantic-planir-compiler-v1",
+    "frozen": true,
+    "plan_schema_sha256": "a4bb6d64cbf92716d3590e46e385a518f815eda0c3a3a121fd98e1a00b1218ba",
+    "planner_prompt": "prompts/system/planner.md",
+    "planner_prompt_is_manifest_default": false,
+    "planner_prompt_sha256": "52e3636ae1e4f3042d8cbd9839b6cd0b41883ecc7744d223a2b724796743f44e",
+    "selected_case_ids": [
+      "sidewalk_then_hold"
+    ]
+  },
+  "inference": {
+    "device": {
+      "gpu_layers": 999,
+      "profile": "cuda:rtx5000ada:sm89:31-of-31-layers",
+      "threads": 32
+    },
+    "generation": {
+      "plan_enable_thinking": false,
+      "plan_max_tokens": 1024,
+      "plan_temperature": 0.0,
+      "plan_timeout_s": 90.0,
+      "top_p": 0.9
+    },
+    "model": {
+      "artifact": "models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf",
+      "artifact_sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+      "artifact_size_bytes": 14439363584,
+      "id": "gemma-4-26b-a4b",
+      "quantization": "Q4_0 QAT"
+    },
+    "server": {
+      "backend": "llama.cpp",
+      "base_url": "http://127.0.0.1:8081",
+      "cache_state": "cold",
+      "version": "llama.cpp b10236 (1464c62d8), official CUDA12 OCI"
+    }
+  },
+  "recorded_at_utc": "2026-08-03T12:42:04.327287Z",
+  "run_id": "planner-v2-20260803124204Z-724df04c",
+  "runner_version": "runtime-routed-plan-quality-v4",
+  "schema_version": 1,
+  "suite_id": "parcel-planner-quality-v2"
+}

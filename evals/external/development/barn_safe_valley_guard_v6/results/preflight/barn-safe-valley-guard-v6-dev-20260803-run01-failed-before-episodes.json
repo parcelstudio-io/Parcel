@@ -1,0 +1,24 @@
+{
+  "confirmation_generated_opened_or_evaluated": false,
+  "episode_outcomes_inspected": false,
+  "episode_policy_executions": 0,
+  "exception": {
+    "boundary": "run_barn_comparison baseline metadata validation before run_barn_suite",
+    "message": "baseline_spec must not be experimental",
+    "type": "ValueError"
+  },
+  "ledger_written": false,
+  "metrics_generated": false,
+  "outcome": "failed_preflight_before_episode_execution",
+  "output_absence_verified": {
+    "full_report": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/development/barn_safe_valley_guard_v6/results/runs/barn-safe-valley-guard-v6-dev-20260803-run01.json",
+    "ledger_index": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/development/barn_safe_valley_guard_v6/results/ledger/runs.jsonl",
+    "ledger_record": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/development/barn_safe_valley_guard_v6/results/ledger/runs/barn-safe-valley-guard-v6-dev-20260803-run01.json",
+    "summary": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/development/barn_safe_valley_guard_v6/results/barn-safe-valley-guard-v6-dev-20260803-run01-summary.json"
+  },
+  "recorded_at": "2026-08-03T15:26:05Z",
+  "repair_scope": "Classify the byte-identical v5 config/model as a non-experimental immutable paired reference while keeping deployment_enabled=false; no controller or gate change. Also content-address the root-authorized concurrent compatibility-table prose change, which is not imported by the paired BARN runner.",
+  "report_written": false,
+  "run_id": "barn-safe-valley-guard-v6-dev-20260803-run01",
+  "schema_version": 1
+}

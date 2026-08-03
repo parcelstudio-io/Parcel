@@ -8,9 +8,69 @@ from collections import Counter, deque
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
+PLANNING_STAGE_DEFINITIONS = {
+    "intent_routed": (
+        "The deterministic intent router has classified the final user turn and "
+        "produced its versioned IntentFrame."
+    ),
+    "observation_snapshot": (
+        "A bounded, sensor-grounded ObservationSnapshot is ready for planning."
+    ),
+    "plan_first_output": (
+        "The first output token or equivalent partial output from the planning model."
+    ),
+    "plan_response": (
+        "The complete planning-model response has been received and parsed as PlanIR."
+    ),
+    "plan_validated": (
+        "PlanIR has passed schema, semantic, capability, freshness, and safety validation."
+    ),
+    "plan_accepted": (
+        "The validated plan has been admitted by the task executive for execution."
+    ),
+}
+
+PLANNING_LATENCY_DEFINITIONS = {
+    "UserQueryEndToFirstPlanOutput": (
+        "End of final user input to the first planning-model output token; for a "
+        "non-streaming provider, the complete parsed planning response."
+    ),
+    "UserQueryEndToAcceptedPlan": (
+        "End of final user input to admission of a validated plan by the task executive."
+    ),
+    "IntentRouting": "End of final user input to production of IntentFrame.",
+    "ObservationSnapshotBuild": (
+        "IntentFrame production to completion of the bounded planning observation snapshot."
+    ),
+    "PlanTimeToFirstOutput": (
+        "Observation snapshot completion to the first planning-model output token; for a "
+        "non-streaming provider, the complete parsed planning response."
+    ),
+    "PlanDecode": (
+        "Observation snapshot completion to receipt and parsing of the complete PlanIR."
+    ),
+    "PlanValidation": "Complete PlanIR parsing to successful plan validation.",
+    "PlanAcceptance": "Successful plan validation to task-executive admission.",
+}
+
+# Stable names for rolling ComponentMetrics observations. The tracker remains
+# deliberately open to application-specific component names, while these names
+# let the runtime and dashboard agree on the split-brain/control-loop vocabulary.
+COMPONENT_METRIC_DEFINITIONS = {
+    "IntentRouter": "Wall-clock duration of deterministic intent routing.",
+    "ObservationSnapshotBuild": (
+        "Wall-clock duration of building a bounded camera/LiDAR planning snapshot."
+    ),
+    "PlanModel": "Wall-clock duration of the complete planning-model request.",
+    "PlanValidation": "Wall-clock duration of PlanIR validation against fresh state.",
+    "PlanAcceptance": "Wall-clock duration of task-executive plan admission.",
+    "ExecutiveTick": "Wall-clock duration of one non-LLM task-executive tick.",
+}
+
 STAGES = frozenset(
     {
         "query_end",
+        *PLANNING_STAGE_DEFINITIONS,
         "reasoning_start",
         "reasoning_first_output",
         "action_commit_start",
@@ -104,7 +164,7 @@ class LatencyTracker:
                 return
             # First-byte/first-response metrics must remain the first observed
             # occurrence even if a provider retries or emits multiple chunks.
-            if stage == "reasoning_first_output" and stage in trace.stages:
+            if stage in {"reasoning_first_output", "plan_first_output"} and stage in trace.stages:
                 trace.stages[stage] = min(trace.stages[stage], timestamp)
             else:
                 trace.stages.setdefault(stage, timestamp)
@@ -207,7 +267,10 @@ class LatencyTracker:
                     "software lower-bound estimate until acoustic presentation timestamps "
                     "are available."
                 ),
+                **PLANNING_LATENCY_DEFINITIONS,
             },
+            "stage_definitions": dict(PLANNING_STAGE_DEFINITIONS),
+            "component_definitions": dict(COMPONENT_METRIC_DEFINITIONS),
             "aggregate": aggregates,
             "aggregate_by_status": aggregate_by_status,
             "status_counts": dict(Counter(str(row["status"]) for row in rows)),
@@ -260,6 +323,9 @@ def _trace_row(trace: TurnTrace) -> dict[str, object]:
         if (value := stages.get(name)) is not None
     ]
     first_response = min(response_candidates) if response_candidates else None
+    first_plan_output = (
+        "plan_first_output" if "plan_first_output" in stages else "plan_response"
+    )
 
     def delta(start: str | float, end: str | float) -> float | None:
         start_value = stages.get(start) if isinstance(start, str) else start
@@ -278,6 +344,14 @@ def _trace_row(trace: TurnTrace) -> dict[str, object]:
             if "reasoning_first_output" in stages
             else "reasoning_response",
         ),
+        "UserQueryEndToFirstPlanOutput": delta(query_end, first_plan_output),
+        "UserQueryEndToAcceptedPlan": delta(query_end, "plan_accepted"),
+        "IntentRouting": delta(query_end, "intent_routed"),
+        "ObservationSnapshotBuild": delta("intent_routed", "observation_snapshot"),
+        "PlanTimeToFirstOutput": delta("observation_snapshot", first_plan_output),
+        "PlanDecode": delta("observation_snapshot", "plan_response"),
+        "PlanValidation": delta("plan_response", "plan_validated"),
+        "PlanAcceptance": delta("plan_validated", "plan_accepted"),
         "QueueWait": delta(query_end, "reasoning_start"),
         "Reasoning": delta(
             "reasoning_start",
@@ -323,6 +397,7 @@ def _aggregate(values: list[float]) -> dict[str, float | int] | None:
         "mean_ms": round(statistics.fmean(ordered), 3),
         "p50_ms": percentile(0.50),
         "p95_ms": percentile(0.95),
+        "p99_ms": percentile(0.99),
         "max_ms": round(max(ordered), 3),
     }
 

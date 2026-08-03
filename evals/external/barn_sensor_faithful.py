@@ -27,7 +27,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import fmean
-from typing import Any
+from typing import Any, Literal, cast
 
 import numpy as np
 
@@ -40,7 +40,6 @@ from .barn_native import (
     JACKAL_SIMULATOR_MELODIC_REFERENCE_COMMIT,
     OFFICIAL_GOAL_XY,
     OFFICIAL_REFERENCE_SPEED_MPS,
-    OFFICIAL_START_HEADING_RAD,
     OFFICIAL_START_XY,
     OFFICIAL_STEP_DT_S,
     OFFICIAL_SUCCESS_RADIUS_M,
@@ -55,12 +54,14 @@ from .barn_native import (
     load_barn_world,
     load_generated_barn_world,
 )
+from .barn_policy_sidecar import IsolatedPolicyDescriptor
 from .barn_policy_specs import (
     BarnPolicySpec,
     ProcessPolicyDescriptor,
     parcel_baseline_policy_spec,
     parcel_experimental_config_spec,
     parcel_reference_config_spec,
+    validate_isolated_policy_pair,
 )
 from .barn_ros2_adapter import (
     BARN_ROS2_ADAPTER_ID,
@@ -76,6 +77,11 @@ from .barn_ros2_adapter import (
     BarnRos2VelocityCommand,
     LidarNormalizationDiagnostics,
 )
+from .barn_v8_action_certifier import FROZEN_V8_BARN_EVALUATOR_PROFILE
+from .barn_v8_action_evidence import (
+    V8ActionEvidenceBuilder,
+    read_v8_action_evidence,
+)
 
 BARN_SENSOR_FAITHFUL_EVALUATION_KIND = (
     "barn-calibrated-sensor-faithful-native-headless-non-official"
@@ -89,11 +95,20 @@ BARN_SOURCE = "https://github.com/Daffan/the-barn-challenge"
 CALIBRATED_LIDAR_ANGLE_MIN_RAD = -math.pi
 CALIBRATED_LIDAR_ANGLE_MAX_RAD = math.pi
 CALIBRATED_LIDAR_RAY_COUNT = 720
-CALIBRATED_LIDAR_RANGE_MIN_M = 0.06
-CALIBRATED_LIDAR_RANGE_MAX_M = 30.0
+CALIBRATED_LIDAR_RANGE_MIN_M = 0.05
+CALIBRATED_LIDAR_RANGE_MAX_M = 25.0
 CALIBRATED_LIDAR_FOV_DEG = 360.0
 CALIBRATED_LIDAR_FORWARD_M = 0.12
 CALIBRATED_ODOMETRY_LAG_S = 0.005
+CALIBRATED_TRIAL_START_TRANSLATION_M = 0.1
+CALIBRATED_START_HEADING_RAD = 1.57
+
+REFERENCE_THEN_CANDIDATE = "reference_then_candidate"
+CANDIDATE_THEN_REFERENCE = "candidate_then_reference"
+PairedArmOrder = Literal[
+    "reference_then_candidate",
+    "candidate_then_reference",
+]
 
 # This label describes the calibrated boundary and deliberately does not reuse
 # BarnPolicySpec's historical ``270_degree_lidar`` label.
@@ -116,6 +131,7 @@ class CalibratedBarnConfig:
     max_forward_speed_mps: float = OFFICIAL_REFERENCE_SPEED_MPS
     max_reverse_speed_mps: float = OFFICIAL_REFERENCE_SPEED_MPS
     max_yaw_rate_rps: float = 4.0
+    start_heading_rad: float = CALIBRATED_START_HEADING_RAD
     lidar_angle_min_rad: float = CALIBRATED_LIDAR_ANGLE_MIN_RAD
     lidar_angle_max_rad: float = CALIBRATED_LIDAR_ANGLE_MAX_RAD
     lidar_ray_count: int = CALIBRATED_LIDAR_RAY_COUNT
@@ -123,6 +139,8 @@ class CalibratedBarnConfig:
     lidar_range_max_m: float = CALIBRATED_LIDAR_RANGE_MAX_M
     lidar_forward_m: float = CALIBRATED_LIDAR_FORWARD_M
     odometry_lag_s: float = CALIBRATED_ODOMETRY_LAG_S
+    trial_start_translation_m: float = CALIBRATED_TRIAL_START_TRANSLATION_M
+    startup_timeout_s: float = 10.0
     sensor_stamp_origin_s: float = 1.0
     max_sensor_skew_s: float = 0.05
     trace_stride_steps: int = 10
@@ -137,6 +155,7 @@ class CalibratedBarnConfig:
             "max_forward_speed_mps": self.max_forward_speed_mps,
             "max_reverse_speed_mps": self.max_reverse_speed_mps,
             "max_yaw_rate_rps": self.max_yaw_rate_rps,
+            "startup_timeout_s": self.startup_timeout_s,
             "lidar_range_min_m": self.lidar_range_min_m,
             "lidar_range_max_m": self.lidar_range_max_m,
         }
@@ -155,6 +174,14 @@ class CalibratedBarnConfig:
                 CALIBRATED_LIDAR_ANGLE_MAX_RAD,
             ),
             "lidar_forward_m": (self.lidar_forward_m, CALIBRATED_LIDAR_FORWARD_M),
+            "trial_start_translation_m": (
+                self.trial_start_translation_m,
+                CALIBRATED_TRIAL_START_TRANSLATION_M,
+            ),
+            "start_heading_rad": (
+                self.start_heading_rad,
+                CALIBRATED_START_HEADING_RAD,
+            ),
         }
         for name, (actual, expected) in exact.items():
             if not math.isclose(float(actual), expected, rel_tol=0.0, abs_tol=1e-12):
@@ -223,6 +250,34 @@ class CalibratedPolicySpec:
     def experimental(self) -> bool:
         return self.underlying.experimental
 
+    @property
+    def agent_id(self) -> str:
+        return self.underlying.agent_id
+
+    @property
+    def adapter_id(self) -> str:
+        return BARN_ROS2_ADAPTER_ID
+
+    @property
+    def implementation_sha256(self) -> str:
+        return _sha256(Path(barn_ros2_adapter_module.__file__))
+
+    @property
+    def config_id(self) -> str | None:
+        return self.underlying.config_id
+
+    @property
+    def config_sha256(self) -> str | None:
+        return self.underlying.config_sha256
+
+    @property
+    def model_id(self) -> str:
+        return self.underlying.model_id
+
+    @property
+    def model_artifact_sha256(self) -> str | None:
+        return self.underlying.model_artifact_sha256
+
     def ensure_enabled(self, *, allow_experimental: bool = False) -> None:
         self.underlying.ensure_enabled(allow_experimental=allow_experimental)
 
@@ -240,7 +295,9 @@ class CalibratedPolicySpec:
             raise TypeError("calibrated policies must also implement close()")
         return policy
 
-    def require_process_descriptor(self) -> ProcessPolicyDescriptor:
+    def require_process_descriptor(
+        self,
+    ) -> ProcessPolicyDescriptor | IsolatedPolicyDescriptor:
         return self.underlying.require_process_descriptor()
 
     def report_metadata(self) -> dict[str, Any]:
@@ -325,6 +382,7 @@ class SensorTransportDiagnostics:
     policy_observation_sha256: tuple[str, ...]
     published_action_steps: tuple[int, ...]
     published_action_sha256: tuple[str, ...]
+    published_action_note_sha256: tuple[str, ...]
     published_action_values: tuple[tuple[int, float, float, bool], ...]
     latency: dict[str, float]
 
@@ -340,6 +398,7 @@ class ShieldStallDiagnostics:
     reverse_command_steps: int
     turn_only_command_steps: int
     obstacle_stop_steps: int
+    obstacle_stop_command_steps: tuple[int, ...]
     max_consecutive_obstacle_stop_steps: int
     controller_phase_counts: dict[str, int]
     safety_phase_counts: dict[str, int]
@@ -356,8 +415,12 @@ class SensorFaithfulEpisodeResult:
     success: bool
     collided: bool
     timed_out: bool
+    startup_timed_out: bool
     stopped: bool
     status: str
+    trial_started: bool
+    startup_time_s: float | None
+    simulation_elapsed_time_s: float
     elapsed_time_s: float
     navigation_metric: float
     optimal_path_length_m: float
@@ -370,6 +433,43 @@ class SensorFaithfulEpisodeResult:
     evaluator_diagnostics: BarnEvaluatorDiagnostics
     sensor_diagnostics: SensorTransportDiagnostics
     shield_stall_diagnostics: ShieldStallDiagnostics
+
+
+@dataclass(frozen=True, slots=True)
+class V8EpisodeEvidenceCaptureSpec:
+    """Pickle-safe identity for one optional per-action evidence stream."""
+
+    arm: Literal["reference", "candidate"]
+    execution_order: int
+    world_id: int
+    trial_id: int
+    seed: int
+
+    def __post_init__(self) -> None:
+        if self.arm not in {"reference", "candidate"}:
+            raise ValueError("evidence arm must be 'reference' or 'candidate'")
+        if (
+            isinstance(self.execution_order, bool)
+            or not isinstance(self.execution_order, int)
+            or self.execution_order not in (0, 1)
+        ):
+            raise ValueError("evidence execution_order must be 0 or 1")
+        for name in ("world_id", "trial_id", "seed"):
+            value = getattr(self, name)
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, int)
+                or not 0 <= value < 2**64
+            ):
+                raise ValueError(f"evidence {name} must be an unsigned 64-bit integer")
+
+
+@dataclass(frozen=True, slots=True)
+class SensorFaithfulEpisodeWithEvidence:
+    """A legacy episode result plus its unwritten evaluator-owned builder."""
+
+    result: SensorFaithfulEpisodeResult
+    action_evidence: V8ActionEvidenceBuilder
 
 
 def _wrap_angle(angle: float) -> float:
@@ -388,11 +488,11 @@ def world_pose_to_odom(
         raise ValueError("heading_rad must be finite")
     delta_x = float(position_xy[0]) - OFFICIAL_START_XY[0]
     delta_y = float(position_xy[1]) - OFFICIAL_START_XY[1]
-    cosine = math.cos(OFFICIAL_START_HEADING_RAD)
-    sine = math.sin(OFFICIAL_START_HEADING_RAD)
+    cosine = math.cos(CALIBRATED_START_HEADING_RAD)
+    sine = math.sin(CALIBRATED_START_HEADING_RAD)
     return (
         (cosine * delta_x + sine * delta_y, -sine * delta_x + cosine * delta_y),
-        _wrap_angle(heading_rad - OFFICIAL_START_HEADING_RAD),
+        _wrap_angle(heading_rad - CALIBRATED_START_HEADING_RAD),
     )
 
 
@@ -474,12 +574,23 @@ def _scan_sha256(ranges: Sequence[float]) -> str:
     return digest.hexdigest()
 
 
+def _laser_scan_float32(value: float) -> float:
+    """Round one value through sensor_msgs/LaserScan's float32 wire type."""
+
+    return float(np.float32(value))
+
+
 def _published_action_sha256(command: BarnRos2VelocityCommand) -> str:
     digest = hashlib.sha256()
     values = np.asarray((command.forward_mps, command.yaw_rate_rps), dtype="<f8")
-    note = command.note.encode("utf-8")
     digest.update(values.tobytes(order="C"))
     digest.update(b"\x01" if command.stop else b"\x00")
+    return digest.hexdigest()
+
+
+def _action_note_sha256(command: BarnRos2VelocityCommand) -> str:
+    digest = hashlib.sha256()
+    note = command.note.encode("utf-8")
     digest.update(len(note).to_bytes(8, byteorder="little", signed=False))
     digest.update(note)
     return digest.hexdigest()
@@ -491,6 +602,7 @@ class _InstrumentedPolicy:
     def __init__(self, policy: BarnRos2Policy) -> None:
         self.policy = policy
         self.observation_hashes: list[str] = []
+        self.last_observation: BarnObservation | None = None
         self.closed = False
 
     def reset(
@@ -502,6 +614,7 @@ class _InstrumentedPolicy:
         self.policy.reset(start_xy, heading_rad, goal_xy)
 
     def act(self, observation: BarnObservation) -> BarnAction:
+        self.last_observation = observation
         self.observation_hashes.append(_policy_observation_sha256(observation))
         return self.policy.act(observation)
 
@@ -538,15 +651,61 @@ def _unicycle_step(
     )
 
 
-def _segment_collides(
+def _first_translation_threshold_crossing_s(
+    *,
+    initial_position: tuple[float, float],
+    step_position: tuple[float, float],
+    step_heading: float,
+    velocity: float,
+    yaw_rate: float,
+    dt_s: float,
+    threshold_m: float,
+) -> float | None:
+    """Find the first within-tick crossing of the scorer's startup radius."""
+
+    threshold_with_tolerance = threshold_m - 1e-12
+    if math.dist(step_position, initial_position) >= threshold_with_tolerance:
+        return 0.0
+    sample_count = 64
+    lower_t = 0.0
+    for sample in range(1, sample_count + 1):
+        upper_t = dt_s * sample / sample_count
+        upper_position, _ = _unicycle_step(
+            step_position,
+            step_heading,
+            velocity,
+            yaw_rate,
+            upper_t,
+        )
+        if math.dist(upper_position, initial_position) >= threshold_with_tolerance:
+            for _ in range(52):
+                middle_t = (lower_t + upper_t) / 2.0
+                middle_position, _ = _unicycle_step(
+                    step_position,
+                    step_heading,
+                    velocity,
+                    yaw_rate,
+                    middle_t,
+                )
+                if math.dist(middle_position, initial_position) >= threshold_with_tolerance:
+                    upper_t = middle_t
+                else:
+                    lower_t = middle_t
+            return upper_t
+        lower_t = upper_t
+    return None
+
+
+def _segment_minimum_signed_clearance(
     start: tuple[float, float],
     end: tuple[float, float],
     cylinders: Sequence[CylinderObstacle],
     robot_radius_m: float,
-) -> bool:
+) -> float | None:
     delta_x = end[0] - start[0]
     delta_y = end[1] - start[1]
     length_squared = delta_x * delta_x + delta_y * delta_y
+    minimum: float | None = None
     for cylinder in cylinders:
         if length_squared <= 1e-18:
             distance = math.dist(start, cylinder.center_xy)
@@ -558,9 +717,9 @@ def _segment_collides(
             projection = min(max(projection, 0.0), 1.0)
             closest = (start[0] + projection * delta_x, start[1] + projection * delta_y)
             distance = math.dist(closest, cylinder.center_xy)
-        if distance <= robot_radius_m + cylinder.radius_m:
-            return True
-    return False
+        clearance = distance - robot_radius_m - cylinder.radius_m
+        minimum = clearance if minimum is None else min(minimum, clearance)
+    return minimum
 
 
 def _integrate_collision_terminal(
@@ -571,7 +730,7 @@ def _integrate_collision_terminal(
     dt_s: float,
     cylinders: Sequence[CylinderObstacle],
     robot_radius_m: float,
-) -> tuple[tuple[float, float], float, bool]:
+) -> tuple[tuple[float, float], float, bool, float | None]:
     """Integrate exact unicycle arcs with conservative swept collision checks."""
 
     substeps = max(
@@ -582,6 +741,7 @@ def _integrate_collision_terminal(
     sub_dt = dt_s / substeps
     cursor = position
     cursor_heading = heading
+    minimum_clearance = _minimum_signed_clearance(position, cylinders, robot_radius_m)
     for _ in range(substeps):
         next_position, next_heading = _unicycle_step(
             cursor,
@@ -590,11 +750,23 @@ def _integrate_collision_terminal(
             yaw_rate,
             sub_dt,
         )
-        if _segment_collides(cursor, next_position, cylinders, robot_radius_m):
-            return position, heading, True
+        segment_clearance = _segment_minimum_signed_clearance(
+            cursor,
+            next_position,
+            cylinders,
+            robot_radius_m,
+        )
+        if segment_clearance is not None:
+            minimum_clearance = (
+                segment_clearance
+                if minimum_clearance is None
+                else min(minimum_clearance, segment_clearance)
+            )
+        if segment_clearance is not None and segment_clearance <= 0.0:
+            return position, heading, True, minimum_clearance
         cursor = next_position
         cursor_heading = next_heading
-    return cursor, cursor_heading, False
+    return cursor, cursor_heading, False, minimum_clearance
 
 
 def _point_collides(
@@ -677,10 +849,44 @@ class SensorFaithfulBarnRunner:
         self._config = config or CalibratedBarnConfig()
 
     def run(self, policy: BarnRos2Policy) -> SensorFaithfulEpisodeResult:
+        """Run without action evidence, preserving the established API."""
+
+        result, evidence = self._run(policy, evidence_capture=None)
+        assert evidence is None
+        return result
+
+    def run_with_action_evidence(
+        self,
+        policy: BarnRos2Policy,
+        evidence_capture: V8EpisodeEvidenceCaptureSpec,
+    ) -> SensorFaithfulEpisodeWithEvidence:
+        """Run with exact post-normalization/final-command evidence capture."""
+
+        if not isinstance(evidence_capture, V8EpisodeEvidenceCaptureSpec):
+            raise TypeError("evidence_capture must be a V8EpisodeEvidenceCaptureSpec")
+        if evidence_capture.world_id != self._world.world_index:
+            raise ValueError("evidence world_id does not match the calibrated world")
+        if not math.isclose(
+            self._config.dt_s,
+            FROZEN_V8_BARN_EVALUATOR_PROFILE.control_period_s,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("v8 action evidence requires the frozen 0.1 s control period")
+        result, evidence = self._run(policy, evidence_capture=evidence_capture)
+        assert evidence is not None
+        return SensorFaithfulEpisodeWithEvidence(result=result, action_evidence=evidence)
+
+    def _run(
+        self,
+        policy: BarnRos2Policy,
+        *,
+        evidence_capture: V8EpisodeEvidenceCaptureSpec | None,
+    ) -> tuple[SensorFaithfulEpisodeResult, V8ActionEvidenceBuilder | None]:
         if not isinstance(policy, BarnRos2Policy):
             raise TypeError("policy must implement reset(), act(), and close()")
-        config = self._config
         instrumented = _InstrumentedPolicy(policy)
+        action_evidence = V8ActionEvidenceBuilder() if evidence_capture is not None else None
         core: BarnRos2AdapterCore | None = None
         try:
             core = BarnRos2AdapterCore(
@@ -688,9 +894,15 @@ class SensorFaithfulBarnRunner:
                 goal_xy=BARN_ROS2_STATIC_GOAL_ODOM_XY,
                 lidar_calibration=BARN_ROS2_LIDAR_CALIBRATION,
                 require_lidar_calibration=True,
-                max_sensor_skew_s=config.max_sensor_skew_s,
+                max_sensor_skew_s=self._config.max_sensor_skew_s,
             )
-            return self._run_with_core(core, instrumented)
+            result = self._run_with_core(
+                core,
+                instrumented,
+                action_evidence=action_evidence,
+                evidence_capture=evidence_capture,
+            )
+            return result, action_evidence
         finally:
             if core is not None:
                 core.close()
@@ -701,18 +913,26 @@ class SensorFaithfulBarnRunner:
         self,
         core: BarnRos2AdapterCore,
         instrumented: _InstrumentedPolicy,
+        *,
+        action_evidence: V8ActionEvidenceBuilder | None = None,
+        evidence_capture: V8EpisodeEvidenceCaptureSpec | None = None,
     ) -> SensorFaithfulEpisodeResult:
+        if (action_evidence is None) != (evidence_capture is None):
+            raise ValueError("action evidence builder and capture identity must be supplied together")
         config = self._config
         position = OFFICIAL_START_XY
-        heading = OFFICIAL_START_HEADING_RAD
+        heading = config.start_heading_rad
+        simulation_elapsed = 0.0
         elapsed = 0.0
+        trial_started = False
+        startup_time: float | None = None
         traveled = 0.0
         steps = 0
         collided = _point_collides(position, self._world.cylinders, config.robot_radius_m)
         stopped = False
         stop_latch_step: int | None = None
         last_note = ""
-        max_steps = math.ceil(config.timeout_s / config.dt_s)
+        max_steps = math.ceil((config.startup_timeout_s + config.timeout_s) / config.dt_s)
 
         initial_goal_distance = math.dist(position, OFFICIAL_GOAL_XY)
         closest_goal_distance = initial_goal_distance
@@ -731,6 +951,7 @@ class SensorFaithfulBarnRunner:
         observation_steps: list[int] = []
         action_steps: list[int] = []
         action_hashes: list[str] = []
+        action_note_hashes: list[str] = []
         action_values: list[tuple[int, float, float, bool]] = []
         latency_samples: dict[str, list[float]] = {
             "raw_lidar_cast": [],
@@ -742,14 +963,51 @@ class SensorFaithfulBarnRunner:
         reverse_steps = 0
         turn_only_steps = 0
         obstacle_stop_steps = 0
+        obstacle_stop_command_steps: list[int] = []
         consecutive_obstacle_stop = 0
         maximum_consecutive_obstacle_stop = 0
         previous_phase: tuple[str, str] | None = None
+        last_evidence_observation: BarnObservation | None = None
+        previous_interval: (
+            tuple[
+                tuple[float, float],
+                float,
+                float,
+                float,
+                float,
+            ]
+            | None
+        ) = None
         trace: list[dict[str, Any]] = []
 
         while not collided and steps < max_steps:
             if math.dist(position, OFFICIAL_GOAL_XY) <= config.success_radius_m:
                 break
+            if trial_started and elapsed >= config.timeout_s - 1e-12:
+                elapsed = config.timeout_s
+                break
+            if not trial_started and simulation_elapsed >= config.startup_timeout_s - 1e-12:
+                simulation_elapsed = config.startup_timeout_s
+                break
+
+            odom_world_position = position
+            odom_world_heading = heading
+            if previous_interval is not None:
+                prior_position, prior_heading, prior_velocity, prior_yaw_rate, prior_dt = (
+                    previous_interval
+                )
+                odom_dt = max(0.0, prior_dt - config.odometry_lag_s)
+                odom_world_position, odom_world_heading = _unicycle_step(
+                    prior_position,
+                    prior_heading,
+                    prior_velocity,
+                    prior_yaw_rate,
+                    odom_dt,
+                )
+            odom_position, odom_heading = world_pose_to_odom(
+                odom_world_position,
+                odom_world_heading,
+            )
 
             if stop_latch_step is None:
                 scan_started = time.perf_counter_ns()
@@ -762,21 +1020,21 @@ class SensorFaithfulBarnRunner:
                 latency_samples["raw_lidar_cast"].append(
                     (time.perf_counter_ns() - scan_started) / 1e6
                 )
+                raw_ranges = tuple(_laser_scan_float32(value) for value in raw_ranges)
                 raw_scan_hashes.append(_scan_sha256(raw_ranges))
-                odom_position, odom_heading = world_pose_to_odom(position, heading)
-                stamp = config.sensor_stamp_origin_s + elapsed
+                stamp = config.sensor_stamp_origin_s + simulation_elapsed
                 frame = BarnRos2SensorFrame(
                     stamp_s=stamp,
                     position_xy=odom_position,
                     heading_rad=odom_heading,
                     lidar_ranges_m=raw_ranges,
-                    lidar_angle_min_rad=config.lidar_angle_min_rad,
-                    lidar_angle_increment_rad=(
+                    lidar_angle_min_rad=_laser_scan_float32(config.lidar_angle_min_rad),
+                    lidar_angle_increment_rad=_laser_scan_float32(
                         (config.lidar_angle_max_rad - config.lidar_angle_min_rad)
                         / (config.lidar_ray_count - 1)
                     ),
-                    lidar_range_min_m=config.lidar_range_min_m,
-                    lidar_range_max_m=config.lidar_range_max_m,
+                    lidar_range_min_m=_laser_scan_float32(config.lidar_range_min_m),
+                    lidar_range_max_m=_laser_scan_float32(config.lidar_range_max_m),
                     odometry_stamp_s=stamp - config.odometry_lag_s,
                     lidar_frame_id=BARN_ROS2_LIDAR_FRAME_ID,
                     odometry_child_frame_id=BARN_ROS2_BASE_FRAME_ID,
@@ -786,6 +1044,9 @@ class SensorFaithfulBarnRunner:
                 latency_samples["calibrated_adapter_core_step"].append(
                     (time.perf_counter_ns() - adapter_started) / 1e6
                 )
+                last_evidence_observation = instrumented.last_observation
+                if last_evidence_observation is None:
+                    raise RuntimeError("calibrated adapter omitted the policy observation")
                 observation_steps.append(steps)
                 normalization = core.last_normalization_diagnostics
                 if normalization is None:
@@ -807,6 +1068,7 @@ class SensorFaithfulBarnRunner:
 
             action_steps.append(steps)
             action_hashes.append(_published_action_sha256(command))
+            action_note_hashes.append(_action_note_sha256(command))
             action_values.append(
                 (steps, float(command.forward_mps), float(command.yaw_rate_rps), command.stop)
             )
@@ -814,6 +1076,28 @@ class SensorFaithfulBarnRunner:
             controller_phases[controller_phase] += 1
             safety_phases[safety_phase] += 1
             issued_by_policy = stop_latch_step is None or steps == stop_latch_step
+            if action_evidence is not None:
+                assert evidence_capture is not None
+                if last_evidence_observation is None:
+                    raise RuntimeError("action evidence has no normalized observation to bind")
+                action_evidence.append(
+                    step_index=steps,
+                    execution_order=evidence_capture.execution_order,
+                    arm=evidence_capture.arm,
+                    world_id=evidence_capture.world_id,
+                    trial_id=evidence_capture.trial_id,
+                    seed=evidence_capture.seed,
+                    issued_by_policy=issued_by_policy,
+                    observation_reused=not issued_by_policy,
+                    normalized_scan_m=last_evidence_observation.lidar_ranges_m,
+                    angle_min_rad=last_evidence_observation.lidar_angle_min_rad,
+                    angle_increment_rad=last_evidence_observation.lidar_angle_increment_rad,
+                    published_vx_mps=command.forward_mps,
+                    published_vy_mps=0.0,
+                    published_yaw_rate_rps=command.yaw_rate_rps,
+                    published_stop=command.stop,
+                    note=command.note,
+                )
             if issued_by_policy:
                 if command.forward_mps >= 0.005:
                     positive_steps += 1
@@ -829,6 +1113,7 @@ class SensorFaithfulBarnRunner:
             )
             if is_obstacle_stop:
                 obstacle_stop_steps += 1
+                obstacle_stop_command_steps.append(steps)
                 consecutive_obstacle_stop += 1
                 maximum_consecutive_obstacle_stop = max(
                     maximum_consecutive_obstacle_stop,
@@ -845,12 +1130,13 @@ class SensorFaithfulBarnRunner:
                 max(command.yaw_rate_rps, -config.max_yaw_rate_rps),
                 config.max_yaw_rate_rps,
             )
-            odom_position, odom_heading = world_pose_to_odom(position, heading)
             phase = (controller_phase, safety_phase)
             should_trace = steps % config.trace_stride_steps == 0 or phase != previous_phase
             trace_item = {
                 "step": steps,
-                "time_s": elapsed,
+                "time_s": simulation_elapsed,
+                "trial_elapsed_time_s": elapsed,
+                "trial_started": trial_started,
                 "world_position_xy": position,
                 "world_heading_rad": heading,
                 "odom_position_xy": odom_position,
@@ -874,8 +1160,28 @@ class SensorFaithfulBarnRunner:
                 )
             previous_phase = phase
 
-            step_dt = min(config.dt_s, config.timeout_s - elapsed)
-            next_position, next_heading, collided = _integrate_collision_terminal(
+            remaining = (
+                config.timeout_s - elapsed
+                if trial_started
+                else config.startup_timeout_s - simulation_elapsed
+            )
+            step_dt = min(config.dt_s, remaining)
+            step_start_position = position
+            step_start_heading = heading
+            startup_crossing_dt = (
+                None
+                if trial_started
+                else _first_translation_threshold_crossing_s(
+                    initial_position=OFFICIAL_START_XY,
+                    step_position=step_start_position,
+                    step_heading=step_start_heading,
+                    velocity=velocity,
+                    yaw_rate=yaw_rate,
+                    dt_s=step_dt,
+                    threshold_m=config.trial_start_translation_m,
+                )
+            )
+            next_position, next_heading, collided, swept_clearance = _integrate_collision_terminal(
                 position,
                 heading,
                 velocity,
@@ -884,12 +1190,39 @@ class SensorFaithfulBarnRunner:
                 self._world.cylinders,
                 config.robot_radius_m,
             )
+            previous_interval = (
+                step_start_position,
+                step_start_heading,
+                velocity,
+                yaw_rate,
+                step_dt,
+            )
+            if swept_clearance is not None:
+                minimum_clearance = (
+                    swept_clearance
+                    if minimum_clearance is None
+                    else min(minimum_clearance, swept_clearance)
+                )
             if not collided:
                 traveled += math.dist(position, next_position)
                 position = next_position
                 heading = next_heading
             steps += 1
-            elapsed = min(config.timeout_s, steps * config.dt_s)
+            simulation_elapsed = min(
+                config.startup_timeout_s + config.timeout_s,
+                simulation_elapsed + step_dt,
+            )
+            if trial_started:
+                elapsed = min(config.timeout_s, elapsed + step_dt)
+            elif not collided and startup_crossing_dt is not None:
+                # The official scorer polls Gazebo continuously enough to begin
+                # within a 100 ms policy tick. Interpolate that first crossing
+                # so only the pre-crossing portion is unscored.
+                trial_started = True
+                startup_time = simulation_elapsed - step_dt + startup_crossing_dt
+                elapsed = min(config.timeout_s, step_dt - startup_crossing_dt)
+            if elapsed >= config.timeout_s - 1e-12:
+                elapsed = config.timeout_s
             if collided:
                 minimum_clearance = (
                     0.0 if minimum_clearance is None else min(minimum_clearance, 0.0)
@@ -916,13 +1249,29 @@ class SensorFaithfulBarnRunner:
                     clearance_count += 1
 
         success = not collided and math.dist(position, OFFICIAL_GOAL_XY) <= config.success_radius_m
-        timed_out = not collided and not success and elapsed >= config.timeout_s
-        status = "collided" if collided else ("succeeded" if success else "timeout")
+        startup_timed_out = (
+            not collided
+            and not success
+            and not trial_started
+            and simulation_elapsed >= config.startup_timeout_s
+        )
+        timed_out = startup_timed_out or (
+            not collided and not success and trial_started and elapsed >= config.timeout_s
+        )
+        status = (
+            "collided"
+            if collided
+            else (
+                "succeeded" if success else ("startup_timeout" if startup_timed_out else "timeout")
+            )
+        )
         if action_steps:
             final_odom_position, final_odom_heading = world_pose_to_odom(position, heading)
             final_trace = {
                 "step": steps,
-                "time_s": elapsed,
+                "time_s": simulation_elapsed,
+                "trial_elapsed_time_s": elapsed,
+                "trial_started": trial_started,
                 "world_position_xy": position,
                 "world_heading_rad": heading,
                 "odom_position_xy": final_odom_position,
@@ -965,6 +1314,7 @@ class SensorFaithfulBarnRunner:
             policy_observation_sha256=tuple(instrumented.observation_hashes),
             published_action_steps=tuple(action_steps),
             published_action_sha256=tuple(action_hashes),
+            published_action_note_sha256=tuple(action_note_hashes),
             published_action_values=tuple(action_values),
             latency=_latency_summary(latency_samples),
         )
@@ -976,6 +1326,7 @@ class SensorFaithfulBarnRunner:
             reverse_command_steps=reverse_steps,
             turn_only_command_steps=turn_only_steps,
             obstacle_stop_steps=obstacle_stop_steps,
+            obstacle_stop_command_steps=tuple(obstacle_stop_command_steps),
             max_consecutive_obstacle_stop_steps=maximum_consecutive_obstacle_stop,
             controller_phase_counts=dict(sorted(controller_phases.items())),
             safety_phase_counts=dict(sorted(safety_phases.items())),
@@ -985,8 +1336,12 @@ class SensorFaithfulBarnRunner:
             success=success,
             collided=collided,
             timed_out=timed_out,
+            startup_timed_out=startup_timed_out,
             stopped=stopped,
             status=status,
+            trial_started=trial_started,
+            startup_time=startup_time,
+            simulation_elapsed=simulation_elapsed,
             elapsed=elapsed,
             traveled=traveled,
             position=position,
@@ -1009,8 +1364,12 @@ class SensorFaithfulBarnRunner:
         success: bool,
         collided: bool,
         timed_out: bool,
+        startup_timed_out: bool,
         stopped: bool,
         status: str,
+        trial_started: bool,
+        startup_time: float | None,
+        simulation_elapsed: float,
         elapsed: float,
         traveled: float,
         position: tuple[float, float],
@@ -1049,7 +1408,9 @@ class SensorFaithfulBarnRunner:
             successful_reference_route_efficiency=(
                 length / traveled if success and traveled > 0.0 else None
             ),
-            mean_translational_speed_mps=traveled / elapsed if elapsed > 0.0 else 0.0,
+            mean_translational_speed_mps=(
+                traveled / simulation_elapsed if simulation_elapsed > 0.0 else 0.0
+            ),
         )
         return SensorFaithfulEpisodeResult(
             evaluation_kind=BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
@@ -1058,8 +1419,12 @@ class SensorFaithfulBarnRunner:
             success=success,
             collided=collided,
             timed_out=timed_out,
+            startup_timed_out=startup_timed_out,
             stopped=stopped,
             status=status,
+            trial_started=trial_started,
+            startup_time_s=startup_time,
+            simulation_elapsed_time_s=simulation_elapsed,
             elapsed_time_s=elapsed,
             navigation_metric=barn_navigation_metric(success, elapsed, length),
             optimal_path_length_m=length,
@@ -1081,7 +1446,8 @@ class _EpisodeRequest:
     config: CalibratedBarnConfig
     trial: int
     episode_seed: int
-    process_policy: ProcessPolicyDescriptor
+    process_policy: ProcessPolicyDescriptor | IsolatedPolicyDescriptor
+    action_evidence: V8EpisodeEvidenceCaptureSpec | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1089,6 +1455,73 @@ class _EpisodeExecution:
     detail: dict[str, Any]
     latency_samples_ms: dict[str, tuple[float, ...]]
     policy_diagnostics: dict[str, Any]
+    action_evidence: V8ActionEvidenceBuilder | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _PairedEpisodeRequest:
+    """Pickle-safe recipe for one sequential, counterbalanced A/B pair."""
+
+    world: BarnWorld
+    config: CalibratedBarnConfig
+    trial: int
+    episode_seed: int
+    reference_policy: ProcessPolicyDescriptor | IsolatedPolicyDescriptor
+    candidate_policy: ProcessPolicyDescriptor | IsolatedPolicyDescriptor
+    arm_order: PairedArmOrder
+    reference_action_evidence: V8EpisodeEvidenceCaptureSpec | None = None
+    candidate_action_evidence: V8EpisodeEvidenceCaptureSpec | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _PairedEpisodeExecution:
+    """Role-stable results from two arms that were never run concurrently."""
+
+    world_index: int
+    trial: int
+    episode_seed: int
+    arm_order: PairedArmOrder
+    reference: _EpisodeExecution
+    candidate: _EpisodeExecution
+
+
+def alternating_paired_arm_order_schedule(
+    pair_count: int,
+) -> tuple[PairedArmOrder, ...]:
+    """Return the deterministic reference-first/candidate-first alternation."""
+
+    if isinstance(pair_count, bool) or not isinstance(pair_count, int) or pair_count < 1:
+        raise ValueError("pair_count must be a positive integer")
+    return tuple(
+        REFERENCE_THEN_CANDIDATE if index % 2 == 0 else CANDIDATE_THEN_REFERENCE
+        for index in range(pair_count)
+    )
+
+
+def validate_paired_arm_order_schedule(
+    schedule: Sequence[str],
+    *,
+    pair_count: int,
+) -> tuple[PairedArmOrder, ...]:
+    """Validate exact membership, length, and first-position counterbalancing."""
+
+    if isinstance(pair_count, bool) or not isinstance(pair_count, int) or pair_count < 1:
+        raise ValueError("pair_count must be a positive integer")
+    if isinstance(schedule, (str, bytes)):
+        raise TypeError("arm_order_schedule must be a sequence of order labels")
+    raw_orders = tuple(schedule)
+    if len(raw_orders) != pair_count:
+        raise ValueError(
+            "arm_order_schedule must contain exactly one order for every world/trial pair"
+        )
+    allowed = {REFERENCE_THEN_CANDIDATE, CANDIDATE_THEN_REFERENCE}
+    if any(not isinstance(order, str) or order not in allowed for order in raw_orders):
+        raise ValueError("arm_order_schedule contains an unsupported order label")
+    reference_first = raw_orders.count(REFERENCE_THEN_CANDIDATE)
+    candidate_first = raw_orders.count(CANDIDATE_THEN_REFERENCE)
+    if abs(reference_first - candidate_first) > 1:
+        raise ValueError("arm_order_schedule must counterbalance first position")
+    return tuple(cast(PairedArmOrder, order) for order in raw_orders)
 
 
 def _execute_episode(
@@ -1098,8 +1531,16 @@ def _execute_episode(
     policy: BarnRos2Policy,
     trial: int,
     episode_seed: int,
+    action_evidence: V8EpisodeEvidenceCaptureSpec | None = None,
 ) -> _EpisodeExecution:
-    result = SensorFaithfulBarnRunner(world, config).run(policy)
+    runner = SensorFaithfulBarnRunner(world, config)
+    if action_evidence is None:
+        result = runner.run(policy)
+        evidence_builder = None
+    else:
+        evidence_run = runner.run_with_action_evidence(policy, action_evidence)
+        result = evidence_run.result
+        evidence_builder = evidence_run.action_evidence
     latency_samples_fn = getattr(policy, "latency_samples_ms", None)
     policy_diagnostics_fn = getattr(policy, "policy_diagnostics", None)
     raw_latency = latency_samples_fn() if callable(latency_samples_fn) else {}
@@ -1123,19 +1564,165 @@ def _execute_episode(
             for name, values in raw_latency.items()
         },
         policy_diagnostics=policy_diagnostics,
+        action_evidence=evidence_builder,
+    )
+
+
+def _execute_descriptor_episode(
+    descriptor: ProcessPolicyDescriptor | IsolatedPolicyDescriptor,
+    *,
+    world: BarnWorld,
+    config: CalibratedBarnConfig,
+    trial: int,
+    episode_seed: int,
+    action_evidence: V8EpisodeEvidenceCaptureSpec | None = None,
+) -> _EpisodeExecution:
+    policy = descriptor.create(episode_seed=episode_seed)
+    if not isinstance(policy, BarnRos2Policy):
+        raise TypeError("process descriptor policy must implement the calibrated policy API")
+    return _execute_episode(
+        world=world,
+        config=config,
+        policy=policy,
+        trial=trial,
+        episode_seed=episode_seed,
+        action_evidence=action_evidence,
     )
 
 
 def _run_process_episode(request: _EpisodeRequest) -> _EpisodeExecution:
-    policy = request.process_policy.create(episode_seed=request.episode_seed)
-    if not isinstance(policy, BarnRos2Policy):
-        raise TypeError("process descriptor policy must implement the calibrated policy API")
-    return _execute_episode(
+    return _execute_descriptor_episode(
+        request.process_policy,
         world=request.world,
         config=request.config,
-        policy=policy,
         trial=request.trial,
         episode_seed=request.episode_seed,
+        action_evidence=request.action_evidence,
+    )
+
+
+def _run_paired_process_episode(request: _PairedEpisodeRequest) -> _PairedEpisodeExecution:
+    """Run one arm to completion and close it before constructing the other."""
+
+    common = {
+        "world": request.world,
+        "config": request.config,
+        "trial": request.trial,
+        "episode_seed": request.episode_seed,
+    }
+    if request.arm_order == REFERENCE_THEN_CANDIDATE:
+        reference = _execute_descriptor_episode(
+            request.reference_policy,
+            action_evidence=request.reference_action_evidence,
+            **common,
+        )
+        candidate = _execute_descriptor_episode(
+            request.candidate_policy,
+            action_evidence=request.candidate_action_evidence,
+            **common,
+        )
+    elif request.arm_order == CANDIDATE_THEN_REFERENCE:
+        candidate = _execute_descriptor_episode(
+            request.candidate_policy,
+            action_evidence=request.candidate_action_evidence,
+            **common,
+        )
+        reference = _execute_descriptor_episode(
+            request.reference_policy,
+            action_evidence=request.reference_action_evidence,
+            **common,
+        )
+    else:  # pragma: no cover - requests are validated before process submission.
+        raise ValueError(f"unsupported paired arm order: {request.arm_order!r}")
+    return _PairedEpisodeExecution(
+        world_index=request.world.world_index,
+        trial=request.trial,
+        episode_seed=request.episode_seed,
+        arm_order=request.arm_order,
+        reference=reference,
+        candidate=candidate,
+    )
+
+
+def _execute_spec_episode(
+    spec: CalibratedPolicySpec,
+    *,
+    world: BarnWorld,
+    config: CalibratedBarnConfig,
+    trial: int,
+    episode_seed: int,
+    allow_experimental: bool,
+    action_evidence: V8EpisodeEvidenceCaptureSpec | None = None,
+) -> _EpisodeExecution:
+    policy = spec.create(
+        episode_seed=episode_seed,
+        allow_experimental=allow_experimental,
+    )
+    return _execute_episode(
+        world=world,
+        config=config,
+        policy=policy,
+        trial=trial,
+        episode_seed=episode_seed,
+        action_evidence=action_evidence,
+    )
+
+
+def _run_paired_local_episode(
+    *,
+    world: BarnWorld,
+    config: CalibratedBarnConfig,
+    trial: int,
+    episode_seed: int,
+    reference: CalibratedPolicySpec,
+    candidate: CalibratedPolicySpec,
+    arm_order: PairedArmOrder,
+    reference_action_evidence: V8EpisodeEvidenceCaptureSpec | None = None,
+    candidate_action_evidence: V8EpisodeEvidenceCaptureSpec | None = None,
+) -> _PairedEpisodeExecution:
+    """Local equivalent of the spawned pair with the same serial lifecycle."""
+
+    common = {
+        "world": world,
+        "config": config,
+        "trial": trial,
+        "episode_seed": episode_seed,
+    }
+    if arm_order == REFERENCE_THEN_CANDIDATE:
+        reference_execution = _execute_spec_episode(
+            reference,
+            allow_experimental=False,
+            action_evidence=reference_action_evidence,
+            **common,
+        )
+        candidate_execution = _execute_spec_episode(
+            candidate,
+            allow_experimental=True,
+            action_evidence=candidate_action_evidence,
+            **common,
+        )
+    elif arm_order == CANDIDATE_THEN_REFERENCE:
+        candidate_execution = _execute_spec_episode(
+            candidate,
+            allow_experimental=True,
+            action_evidence=candidate_action_evidence,
+            **common,
+        )
+        reference_execution = _execute_spec_episode(
+            reference,
+            allow_experimental=False,
+            action_evidence=reference_action_evidence,
+            **common,
+        )
+    else:  # pragma: no cover - schedules are validated before execution.
+        raise ValueError(f"unsupported paired arm order: {arm_order!r}")
+    return _PairedEpisodeExecution(
+        world_index=world.world_index,
+        trial=trial,
+        episode_seed=episode_seed,
+        arm_order=arm_order,
+        reference=reference_execution,
+        candidate=candidate_execution,
     )
 
 
@@ -1250,7 +1837,9 @@ def _aggregate_executions(
         "success_rate": sum(bool(episode["success"]) for episode in episodes) / count,
         "navigation_metric": fmean(float(episode["navigation_metric"]) for episode in episodes),
         "collision_rate": sum(bool(episode["collided"]) for episode in episodes) / count,
-        "timeout_rate": sum(bool(episode["timed_out"]) for episode in episodes) / count,
+        "timeout_rate": sum(str(episode["status"]) == "timeout" for episode in episodes) / count,
+        "startup_failure_rate": sum(bool(episode["startup_timed_out"]) for episode in episodes)
+        / count,
         # A policy stop is a timeout-latched zero command in this evaluator.
         "stopped_outside_goal_rate": 0.0,
         "policy_stop_latch_rate": sum(bool(episode["stopped"]) for episode in episodes) / count,
@@ -1320,6 +1909,102 @@ def _aggregate_executions(
             "safety_phase_counts": dict(sorted(policy_safety_phases.items())),
             "note": "Policy-provided notes are diagnostics, not evaluator failure labels.",
         },
+    }
+
+
+def _build_sensor_faithful_report(
+    *,
+    world_indices: Sequence[int],
+    worlds: Sequence[BarnWorld],
+    spec: CalibratedPolicySpec,
+    executions: Sequence[_EpisodeExecution],
+    trials: int,
+    suite_seed: int,
+    workers: int,
+    effective_workers: int,
+    process_start_method: str | None,
+    config: CalibratedBarnConfig,
+    generated_corpus: bool,
+    manifest_hash: str | None,
+    long_shield_stall_steps: int,
+) -> dict[str, Any]:
+    """Build the established suite schema from already completed episodes."""
+
+    aggregate = _aggregate_executions(
+        executions,
+        world_count=len(worlds),
+        trials=trials,
+        long_shield_stall_steps=long_shield_stall_steps,
+    )
+    harness_path = Path(__file__).resolve()
+    native_path = Path(barn_native_module.__file__).resolve()
+    adapter_path = Path(barn_ros2_adapter_module.__file__).resolve()
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "evaluation_kind": BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
+        "official_gazebo_score": False,
+        "benchmark": {
+            "id": BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
+            "source": BARN_SOURCE,
+            "source_commit": BARN_EVALUATOR_COMMIT,
+            "public_world_indices": [int(index) for index in world_indices],
+            "official_gazebo_score": False,
+            "asset_scope": (
+                "generated-public-style-development" if generated_corpus else "public-barn-static"
+            ),
+            "asset_manifest_sha256": manifest_hash,
+            "native_reference_source_commits": {
+                "jackal_melodic": JACKAL_MELODIC_REFERENCE_COMMIT,
+                "jackal_simulator_melodic": JACKAL_SIMULATOR_MELODIC_REFERENCE_COMMIT,
+            },
+            "ros2_sensor_source": {
+                "id": BARN_ROS2_SOURCE_ID,
+                "commit": BARN_ROS2_SOURCE_COMMIT,
+            },
+        },
+        "policy": spec.report_metadata(),
+        "execution": {
+            "evaluator_device": "cpu",
+            "lidar_raycast_device": "cpu",
+            "kinematics_device": "cpu",
+            "policy_declared_device": spec.execution_device,
+            "episode_workers_requested": workers,
+            "episode_workers_effective": effective_workers,
+            "process_start_method": process_start_method,
+            "durable_report_writer": "caller_or_parent_process_only",
+        },
+        "suite_seed": suite_seed,
+        # Keep this key compatible with compare_barn_reports.
+        "native_config": asdict(config),
+        "provenance": {
+            "config_sha256": _config_sha256(config),
+            "harness": {"id": _relative_source_id(harness_path), "sha256": _sha256(harness_path)},
+            "native_geometry": {
+                "id": _relative_source_id(native_path),
+                "sha256": _sha256(native_path),
+            },
+            "calibrated_adapter": {
+                "id": _relative_source_id(adapter_path),
+                "sha256": _sha256(adapter_path),
+            },
+            "assets": [_world_provenance(world) for world in worlds],
+        },
+        "aggregate": aggregate,
+        "top_decile_target": {
+            "official_protocol": False,
+            "pass": False,
+            "note": "This calibrated native proxy cannot establish an official percentile.",
+        },
+        "episodes": [execution.detail for execution in executions],
+        "notes": [
+            "Non-official calibrated native approximation; not a Gazebo or leaderboard score.",
+            "The policy receives only start-relative odometry, a normalized 360-degree LiDAR scan, clock, and odom-frame goal.",
+            "Raw SDF geometry, collision truth, reference path, and optimal path length remain evaluator-private.",
+            "A policy stop latches zero velocity until success or the 100 s evaluator timeout.",
+            "LiDAR normalization is the exact BarnRos2AdapterCore path used by the ROS 2 submission.",
+            "Observation/action hashes are post-run causal diagnostics and never enter policy observations.",
+        ],
     }
 
 
@@ -1410,82 +2095,21 @@ def run_sensor_faithful_suite(
                 )
             )
 
-    aggregate = _aggregate_executions(
-        executions,
-        world_count=len(worlds),
+    return _build_sensor_faithful_report(
+        world_indices=world_indices,
+        worlds=worlds,
+        spec=spec,
+        executions=executions,
         trials=trials,
+        suite_seed=suite_seed,
+        workers=workers,
+        effective_workers=effective_workers,
+        process_start_method="spawn" if effective_workers > 1 else None,
+        config=calibrated_config,
+        generated_corpus=generated_corpus,
+        manifest_hash=manifest_hash,
         long_shield_stall_steps=long_shield_stall_steps,
     )
-    harness_path = Path(__file__).resolve()
-    native_path = Path(barn_native_module.__file__).resolve()
-    adapter_path = Path(barn_ros2_adapter_module.__file__).resolve()
-    return {
-        "schema_version": 1,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "evaluation_kind": BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
-        "official_gazebo_score": False,
-        "benchmark": {
-            "id": BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
-            "source": BARN_SOURCE,
-            "source_commit": BARN_EVALUATOR_COMMIT,
-            "public_world_indices": [int(index) for index in world_indices],
-            "official_gazebo_score": False,
-            "asset_scope": (
-                "generated-public-style-development" if generated_corpus else "public-barn-static"
-            ),
-            "asset_manifest_sha256": manifest_hash,
-            "native_reference_source_commits": {
-                "jackal_melodic": JACKAL_MELODIC_REFERENCE_COMMIT,
-                "jackal_simulator_melodic": JACKAL_SIMULATOR_MELODIC_REFERENCE_COMMIT,
-            },
-            "ros2_sensor_source": {
-                "id": BARN_ROS2_SOURCE_ID,
-                "commit": BARN_ROS2_SOURCE_COMMIT,
-            },
-        },
-        "policy": spec.report_metadata(),
-        "execution": {
-            "evaluator_device": "cpu",
-            "lidar_raycast_device": "cpu",
-            "kinematics_device": "cpu",
-            "policy_declared_device": spec.execution_device,
-            "episode_workers_requested": workers,
-            "episode_workers_effective": effective_workers,
-            "process_start_method": "spawn" if effective_workers > 1 else None,
-            "durable_report_writer": "caller_or_parent_process_only",
-        },
-        "suite_seed": suite_seed,
-        # Keep this key compatible with compare_barn_reports.
-        "native_config": asdict(calibrated_config),
-        "provenance": {
-            "config_sha256": _config_sha256(calibrated_config),
-            "harness": {"id": _relative_source_id(harness_path), "sha256": _sha256(harness_path)},
-            "native_geometry": {
-                "id": _relative_source_id(native_path),
-                "sha256": _sha256(native_path),
-            },
-            "calibrated_adapter": {
-                "id": _relative_source_id(adapter_path),
-                "sha256": _sha256(adapter_path),
-            },
-            "assets": [_world_provenance(world) for world in worlds],
-        },
-        "aggregate": aggregate,
-        "top_decile_target": {
-            "official_protocol": False,
-            "pass": False,
-            "note": "This calibrated native proxy cannot establish an official percentile.",
-        },
-        "episodes": [execution.detail for execution in executions],
-        "notes": [
-            "Non-official calibrated native approximation; not a Gazebo or leaderboard score.",
-            "The policy receives only start-relative odometry, a normalized 360-degree LiDAR scan, clock, and odom-frame goal.",
-            "Raw SDF geometry, collision truth, reference path, and optimal path length remain evaluator-private.",
-            "A policy stop latches zero velocity until success or the 100 s evaluator timeout.",
-            "LiDAR normalization is the exact BarnRos2AdapterCore path used by the ROS 2 submission.",
-            "Observation/action hashes are post-run causal diagnostics and never enter policy observations.",
-        ],
-    }
 
 
 def _causal_pair_fields(
@@ -1546,6 +2170,558 @@ def _causal_pair_fields(
             for step in prior_observation_steps
         ),
         "mode_affected": identical_observation,
+    }
+
+
+def _annotate_paired_arm_execution(
+    execution: _EpisodeExecution,
+    *,
+    role: str,
+    arm_order: PairedArmOrder,
+    position: str,
+) -> _EpisodeExecution:
+    detail = dict(execution.detail)
+    detail["paired_execution"] = {
+        "role": role,
+        "arm_order": arm_order,
+        "position": position,
+        "concurrent_with_other_arm": False,
+    }
+    return _EpisodeExecution(
+        detail=detail,
+        latency_samples_ms=execution.latency_samples_ms,
+        policy_diagnostics=execution.policy_diagnostics,
+        action_evidence=execution.action_evidence,
+    )
+
+
+def _paired_arm_stratum(executions: Sequence[_EpisodeExecution]) -> dict[str, Any]:
+    outcomes = Counter(str(execution.detail["status"]) for execution in executions)
+    latency_samples: dict[str, list[float]] = {}
+    for execution in executions:
+        for name, values in execution.latency_samples_ms.items():
+            latency_samples.setdefault(name, []).extend(values)
+    count = len(executions)
+    successes = sum(bool(execution.detail["success"]) for execution in executions)
+    return {
+        "episode_count": count,
+        "success_count": successes,
+        "success_rate": successes / count if count else None,
+        "outcome_counts": dict(sorted(outcomes.items())),
+        "latency": _latency_summary(latency_samples),
+    }
+
+
+def _paired_execution_metadata(
+    executions: Sequence[_PairedEpisodeExecution],
+) -> dict[str, Any]:
+    reference_first = [
+        execution.reference
+        for execution in executions
+        if execution.arm_order == REFERENCE_THEN_CANDIDATE
+    ]
+    reference_second = [
+        execution.reference
+        for execution in executions
+        if execution.arm_order == CANDIDATE_THEN_REFERENCE
+    ]
+    candidate_first = [
+        execution.candidate
+        for execution in executions
+        if execution.arm_order == CANDIDATE_THEN_REFERENCE
+    ]
+    candidate_second = [
+        execution.candidate
+        for execution in executions
+        if execution.arm_order == REFERENCE_THEN_CANDIDATE
+    ]
+    order_counts = Counter(execution.arm_order for execution in executions)
+    paired_outcomes = Counter(
+        f"{execution.reference.detail['status']}->{execution.candidate.detail['status']}"
+        for execution in executions
+    )
+    return {
+        "pair_count": len(executions),
+        "arms_never_concurrent_within_pair": True,
+        "same_world_config_trial_and_seed_within_pair": True,
+        "lifecycle": (
+            "construct_run_and_close_first_arm_before_constructing_second_arm"
+        ),
+        "order_counts": {
+            REFERENCE_THEN_CANDIDATE: order_counts[REFERENCE_THEN_CANDIDATE],
+            CANDIDATE_THEN_REFERENCE: order_counts[CANDIDATE_THEN_REFERENCE],
+        },
+        "schedule": [
+            {
+                "world_index": execution.world_index,
+                "trial": execution.trial,
+                "episode_seed": execution.episode_seed,
+                "arm_order": execution.arm_order,
+            }
+            for execution in executions
+        ],
+        "order_stratified": {
+            "reference": {
+                "first": _paired_arm_stratum(reference_first),
+                "second": _paired_arm_stratum(reference_second),
+            },
+            "candidate": {
+                "first": _paired_arm_stratum(candidate_first),
+                "second": _paired_arm_stratum(candidate_second),
+            },
+        },
+        "paired_outcome_counts": dict(sorted(paired_outcomes.items())),
+    }
+
+
+def _paired_action_evidence_specs(
+    *,
+    world_id: int,
+    trial: int,
+    episode_seed: int,
+    arm_order: PairedArmOrder,
+    enabled: bool,
+) -> tuple[V8EpisodeEvidenceCaptureSpec | None, V8EpisodeEvidenceCaptureSpec | None]:
+    if not enabled:
+        return None, None
+    reference_order = 0 if arm_order == REFERENCE_THEN_CANDIDATE else 1
+    candidate_order = 1 - reference_order
+    return (
+        V8EpisodeEvidenceCaptureSpec(
+            arm="reference",
+            execution_order=reference_order,
+            world_id=world_id,
+            trial_id=trial,
+            seed=episode_seed,
+        ),
+        V8EpisodeEvidenceCaptureSpec(
+            arm="candidate",
+            execution_order=candidate_order,
+            world_id=world_id,
+            trial_id=trial,
+            seed=episode_seed,
+        ),
+    )
+
+
+def _validate_action_evidence_paths(
+    paths: Mapping[tuple[int, int, str], str | Path] | None,
+    *,
+    episode_inputs: Sequence[tuple[BarnWorld, int, int]],
+) -> dict[tuple[int, int, str], Path] | None:
+    if paths is None:
+        return None
+    if not isinstance(paths, Mapping):
+        raise TypeError("action_evidence_paths must be a mapping when provided")
+    expected = {
+        (int(world.world_index), int(trial), arm)
+        for world, trial, _episode_seed in episode_inputs
+        for arm in ("reference", "candidate")
+    }
+    actual = set(paths)
+    if actual != expected:
+        missing = sorted(expected - actual)
+        extra = sorted(actual - expected, key=repr)
+        raise ValueError(
+            "action_evidence_paths must predeclare exactly every arm/world/trial artifact; "
+            f"missing={missing!r}, extra={extra!r}"
+        )
+    resolved: dict[tuple[int, int, str], Path] = {}
+    for key in sorted(expected):
+        value = paths[key]
+        if not isinstance(value, (str, Path)):
+            raise TypeError("action evidence output paths must be strings or Paths")
+        requested = Path(value).expanduser()
+        target = requested.parent.resolve() / requested.name
+        if target.is_symlink() or target.exists():
+            raise FileExistsError(f"action evidence output already exists or is unsafe: {target}")
+        resolved[key] = target
+    if len(set(resolved.values())) != len(resolved):
+        raise ValueError("action_evidence_paths must resolve to unique output files")
+    return resolved
+
+
+def _write_execution_action_evidence(
+    execution: _EpisodeExecution,
+    *,
+    output_path: Path,
+) -> tuple[_EpisodeExecution, dict[str, Any]]:
+    builder = execution.action_evidence
+    if builder is None:
+        raise RuntimeError("paired episode omitted its requested action evidence")
+    sensor = execution.detail.get("sensor_diagnostics")
+    if not isinstance(sensor, Mapping):
+        raise TypeError("paired episode sensor diagnostics are malformed")
+    raw_steps = sensor.get("published_action_steps")
+    if not isinstance(raw_steps, (tuple, list)):
+        raise TypeError("paired episode published-action steps are malformed")
+    published_steps = tuple(int(value) for value in raw_steps)
+    captured_steps = tuple(record.step_index for record in builder.records)
+    if captured_steps != published_steps:
+        raise RuntimeError("action evidence steps do not match the published-action trace")
+
+    write_result = builder.write_exclusive(output_path)
+    verified = read_v8_action_evidence(
+        output_path,
+        expected_artifact_sha256=write_result.identity.artifact_sha256,
+    )
+    if verified.identity != write_result.identity:
+        raise RuntimeError("written and independently read action-evidence identities differ")
+    if tuple(record.step_index for record in verified.records) != published_steps:
+        raise RuntimeError("verified action evidence lost published-action step parity")
+
+    violating_actions = sum(
+        not record.certificate.observed_return_boundary_satisfied
+        for record in verified.records
+    )
+    incomplete_actions = sum(
+        not record.certificate.perception_complete for record in verified.records
+    )
+    metadata = {
+        "identity": write_result.identity.as_dict(),
+        "write_overhead": write_result.overhead.as_dict(),
+        "read_verification_overhead": verified.overhead.as_dict(),
+        "action_count_matches_published_trace": True,
+        "all_records_format_read_and_recertified": True,
+        "observed_return_boundary_satisfied_action_count": (
+            len(verified.records) - violating_actions
+        ),
+        "observed_return_boundary_violating_action_count": violating_actions,
+        "perception_incomplete_action_count": incomplete_actions,
+        "evaluator_evidence_overhead_included_in_controller_latency": False,
+    }
+    detail = dict(execution.detail)
+    detail["action_evidence"] = metadata
+    return (
+        _EpisodeExecution(
+            detail=detail,
+            latency_samples_ms=execution.latency_samples_ms,
+            policy_diagnostics=execution.policy_diagnostics,
+            action_evidence=None,
+        ),
+        metadata,
+    )
+
+
+def run_sensor_faithful_paired_comparison(
+    *,
+    assets_root: str | Path,
+    world_indices: Sequence[int],
+    candidate_spec: BarnPolicySpec | CalibratedPolicySpec,
+    reference_spec: BarnPolicySpec | CalibratedPolicySpec | None = None,
+    trials: int = 1,
+    suite_seed: int = 20260803,
+    workers: int = 1,
+    allow_experimental: bool = False,
+    config: CalibratedBarnConfig | None = None,
+    generated_corpus: bool = False,
+    asset_manifest_sha256: str | None = None,
+    long_shield_stall_steps: int = 50,
+    arm_order_schedule: Sequence[str] | None = None,
+    action_evidence_paths: Mapping[tuple[int, int, str], str | Path] | None = None,
+) -> dict[str, Any]:
+    """Run a counterbalanced A/B where each pair's arms are strictly serial.
+
+    The returned reference report uses the legacy ``baseline`` key so the
+    established scalar comparison contract remains reusable.
+    """
+
+    if not world_indices or len({int(value) for value in world_indices}) != len(world_indices):
+        raise ValueError("world_indices must be non-empty and contain no duplicates")
+    if not 1 <= trials <= 100:
+        raise ValueError("trials must be in [1, 100]")
+    if not 0 <= suite_seed < 2**63:
+        raise ValueError("suite_seed must be in [0, 2**63)")
+    if isinstance(workers, bool) or not isinstance(workers, int) or not 1 <= workers <= 128:
+        raise ValueError("workers must be an integer in [1, 128]")
+    if (
+        isinstance(long_shield_stall_steps, bool)
+        or not isinstance(long_shield_stall_steps, int)
+        or long_shield_stall_steps < 1
+    ):
+        raise ValueError("long_shield_stall_steps must be a positive integer")
+
+    candidate = calibrated_policy_spec(candidate_spec)
+    reference = calibrated_policy_spec(reference_spec or parcel_baseline_policy_spec())
+    if not candidate.experimental:
+        raise ValueError("candidate_spec must be explicitly marked experimental")
+    if reference.experimental:
+        raise ValueError("reference_spec must not be experimental")
+    reference.ensure_enabled()
+    candidate.ensure_enabled(allow_experimental=allow_experimental)
+    if isinstance(reference.underlying.process_descriptor, IsolatedPolicyDescriptor) and isinstance(
+        candidate.underlying.process_descriptor,
+        IsolatedPolicyDescriptor,
+    ):
+        validate_isolated_policy_pair(reference.underlying, candidate.underlying)
+    if workers > 1 and {
+        reference.execution_device.strip().lower(),
+        candidate.execution_device.strip().lower(),
+    } != {"cpu"}:
+        raise ValueError("workers > 1 is supported only when both policies declare CPU")
+
+    pair_count = len(world_indices) * trials
+    raw_schedule = (
+        alternating_paired_arm_order_schedule(pair_count)
+        if arm_order_schedule is None
+        else arm_order_schedule
+    )
+    schedule = validate_paired_arm_order_schedule(raw_schedule, pair_count=pair_count)
+    calibrated_config = config or CalibratedBarnConfig()
+    reference_descriptor = reference.require_process_descriptor() if workers > 1 else None
+    candidate_descriptor = candidate.require_process_descriptor() if workers > 1 else None
+
+    if generated_corpus:
+        manifest_hash = _validate_manifest_hash(asset_manifest_sha256)
+        loader = load_generated_barn_world
+    else:
+        if asset_manifest_sha256 is not None:
+            raise ValueError("asset_manifest_sha256 is valid only for a generated corpus")
+        manifest_hash = None
+        loader = load_barn_world
+    worlds = [loader(assets_root, int(index)) for index in world_indices]
+    episode_inputs = [
+        (world, trial, suite_seed + int(world.world_index) * 1_009 + trial)
+        for world in worlds
+        for trial in range(trials)
+    ]
+    if any(not 0 <= episode_seed < 2**63 for _, _, episode_seed in episode_inputs):
+        raise ValueError("derived episode seed must be in [0, 2**63)")
+    resolved_evidence_paths = _validate_action_evidence_paths(
+        action_evidence_paths,
+        episode_inputs=episode_inputs,
+    )
+    capture_action_evidence = resolved_evidence_paths is not None
+    scheduled_inputs = [
+        (
+            world,
+            trial,
+            episode_seed,
+            arm_order,
+            *_paired_action_evidence_specs(
+                world_id=world.world_index,
+                trial=trial,
+                episode_seed=episode_seed,
+                arm_order=arm_order,
+                enabled=capture_action_evidence,
+            ),
+        )
+        for (world, trial, episode_seed), arm_order in zip(
+            episode_inputs,
+            schedule,
+            strict=True,
+        )
+    ]
+    effective_workers = min(workers, len(episode_inputs))
+
+    if workers > 1:
+        assert reference_descriptor is not None
+        assert candidate_descriptor is not None
+        requests = [
+            _PairedEpisodeRequest(
+                world=world,
+                config=calibrated_config,
+                trial=trial,
+                episode_seed=episode_seed,
+                reference_policy=reference_descriptor,
+                candidate_policy=candidate_descriptor,
+                arm_order=arm_order,
+                reference_action_evidence=reference_action_evidence,
+                candidate_action_evidence=candidate_action_evidence,
+            )
+            for (
+                world,
+                trial,
+                episode_seed,
+                arm_order,
+                reference_action_evidence,
+                candidate_action_evidence,
+            ) in scheduled_inputs
+        ]
+        context = multiprocessing.get_context("spawn")
+        with ProcessPoolExecutor(
+            max_workers=effective_workers,
+            mp_context=context,
+        ) as executor:
+            paired_executions = list(
+                executor.map(_run_paired_process_episode, requests, chunksize=1)
+            )
+        process_start_method = "spawn"
+    else:
+        paired_executions = [
+            _run_paired_local_episode(
+                world=world,
+                config=calibrated_config,
+                trial=trial,
+                episode_seed=episode_seed,
+                reference=reference,
+                candidate=candidate,
+                arm_order=arm_order,
+                reference_action_evidence=reference_action_evidence,
+                candidate_action_evidence=candidate_action_evidence,
+            )
+            for (
+                world,
+                trial,
+                episode_seed,
+                arm_order,
+                reference_action_evidence,
+                candidate_action_evidence,
+            ) in scheduled_inputs
+        ]
+        process_start_method = None
+
+    action_evidence_items: list[dict[str, Any]] = []
+    if resolved_evidence_paths is not None:
+        prepared_pairs: list[_PairedEpisodeExecution] = []
+        for paired in paired_executions:
+            executions_by_arm = {
+                "reference": paired.reference,
+                "candidate": paired.candidate,
+            }
+            actual_order = (
+                ("reference", "candidate")
+                if paired.arm_order == REFERENCE_THEN_CANDIDATE
+                else ("candidate", "reference")
+            )
+            prepared: dict[str, _EpisodeExecution] = {}
+            for arm in actual_order:
+                execution, metadata = _write_execution_action_evidence(
+                    executions_by_arm[arm],
+                    output_path=resolved_evidence_paths[
+                        (paired.world_index, paired.trial, arm)
+                    ],
+                )
+                prepared[arm] = execution
+                action_evidence_items.append(metadata)
+            prepared_pairs.append(
+                _PairedEpisodeExecution(
+                    world_index=paired.world_index,
+                    trial=paired.trial,
+                    episode_seed=paired.episode_seed,
+                    arm_order=paired.arm_order,
+                    reference=prepared["reference"],
+                    candidate=prepared["candidate"],
+                )
+            )
+        paired_executions = prepared_pairs
+
+    reference_executions: list[_EpisodeExecution] = []
+    candidate_executions: list[_EpisodeExecution] = []
+    order_by_key: dict[tuple[int, int], PairedArmOrder] = {}
+    for paired in paired_executions:
+        reference_first = paired.arm_order == REFERENCE_THEN_CANDIDATE
+        reference_executions.append(
+            _annotate_paired_arm_execution(
+                paired.reference,
+                role="reference",
+                arm_order=paired.arm_order,
+                position="first" if reference_first else "second",
+            )
+        )
+        candidate_executions.append(
+            _annotate_paired_arm_execution(
+                paired.candidate,
+                role="candidate",
+                arm_order=paired.arm_order,
+                position="second" if reference_first else "first",
+            )
+        )
+        order_by_key[(paired.world_index, paired.trial)] = paired.arm_order
+
+    report_common = {
+        "world_indices": world_indices,
+        "worlds": worlds,
+        "trials": trials,
+        "suite_seed": suite_seed,
+        "workers": workers,
+        "effective_workers": effective_workers,
+        "process_start_method": process_start_method,
+        "config": calibrated_config,
+        "generated_corpus": generated_corpus,
+        "manifest_hash": manifest_hash,
+        "long_shield_stall_steps": long_shield_stall_steps,
+    }
+    reference_report = _build_sensor_faithful_report(
+        spec=reference,
+        executions=reference_executions,
+        **report_common,
+    )
+    candidate_report = _build_sensor_faithful_report(
+        spec=candidate,
+        executions=candidate_executions,
+        **report_common,
+    )
+    for arm_report in (reference_report, candidate_report):
+        arm_report["execution"].update(
+            {
+                "paired_episode_execution": True,
+                "arms_concurrent_within_pair": False,
+            }
+        )
+        if resolved_evidence_paths is not None:
+            arm_report["execution"]["action_evidence"] = {
+                "enabled": True,
+                "immutable_artifact_count": len(arm_report["episodes"]),
+                "evaluator_overhead_included_in_controller_latency": False,
+            }
+
+    from .compare_barn import compare_barn_reports
+
+    comparison = compare_barn_reports(reference_report, candidate_report)
+    reference_by_key = {
+        (int(item["world_index"]), int(item["trial"])): item
+        for item in reference_report["episodes"]
+    }
+    candidate_by_key = {
+        (int(item["world_index"]), int(item["trial"])): item
+        for item in candidate_report["episodes"]
+    }
+    mode_affected = 0
+    for pair in comparison["paired_episodes"]:
+        key = (int(pair["world_index"]), int(pair["trial"]))
+        causal = _causal_pair_fields(reference_by_key[key], candidate_by_key[key])
+        pair.update(causal)
+        pair["arm_order"] = order_by_key[key]
+        mode_affected += int(bool(causal["mode_affected"]))
+    comparison["mode_affected_episode_count"] = mode_affected
+    comparison["causal_hash_contract"] = {
+        "policy_observation": "exact normalized BarnObservation including full scan bytes",
+        "published_action": "BarnRos2VelocityCommand forward/yaw values and stop flag",
+        "published_action_note": "separate UTF-8 command-note digest excluded from motor action",
+    }
+    comparison["paired_execution"] = _paired_execution_metadata(paired_executions)
+    if resolved_evidence_paths is not None:
+        comparison["action_evidence"] = {
+            "enabled": True,
+            "format_id": action_evidence_items[0]["identity"]["format_id"],
+            "immutable_artifact_count": len(action_evidence_items),
+            "expected_immutable_artifact_count": 2 * len(paired_executions),
+            "all_action_counts_match_published_traces": all(
+                bool(item["action_count_matches_published_trace"])
+                for item in action_evidence_items
+            ),
+            "all_records_format_read_and_recertified": all(
+                bool(item["all_records_format_read_and_recertified"])
+                for item in action_evidence_items
+            ),
+            "evaluator_overhead_included_in_controller_latency": False,
+            "artifacts": [item["identity"] for item in action_evidence_items],
+        }
+    return {
+        "schema_version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "evaluation_kind": (
+            f"{BARN_SENSOR_FAITHFUL_EVALUATION_KIND}-counterbalanced-paired-comparison"
+        ),
+        "official_gazebo_score": False,
+        "baseline": reference_report,
+        "candidate": candidate_report,
+        "comparison": comparison,
+        "target_status": {
+            "official_gate_pass": False,
+            "note": "A paired calibrated native proxy cannot establish official rank.",
+        },
     }
 
 
@@ -1610,7 +2786,8 @@ def run_sensor_faithful_comparison(
     comparison["mode_affected_episode_count"] = mode_affected
     comparison["causal_hash_contract"] = {
         "policy_observation": "exact normalized BarnObservation including full scan bytes",
-        "published_action": "BarnRos2VelocityCommand values, stop flag, and note",
+        "published_action": "BarnRos2VelocityCommand forward/yaw values and stop flag",
+        "published_action_note": "separate UTF-8 command-note digest excluded from motor action",
     }
     return {
         "schema_version": 1,
@@ -1638,18 +2815,27 @@ __all__ = [
     "CALIBRATED_LIDAR_RANGE_MIN_M",
     "CALIBRATED_LIDAR_RAY_COUNT",
     "CALIBRATED_POLICY_INPUTS",
+    "CALIBRATED_START_HEADING_RAD",
+    "CALIBRATED_TRIAL_START_TRANSLATION_M",
+    "CANDIDATE_THEN_REFERENCE",
+    "REFERENCE_THEN_CANDIDATE",
     "CalibratedBarnConfig",
     "CalibratedPolicySpec",
     "SensorFaithfulBarnRunner",
     "SensorFaithfulConfig",
     "SensorFaithfulEpisodeResult",
+    "SensorFaithfulEpisodeWithEvidence",
     "SensorTransportDiagnostics",
     "ShieldStallDiagnostics",
+    "V8EpisodeEvidenceCaptureSpec",
+    "alternating_paired_arm_order_schedule",
     "calibrated_experimental_config_spec",
     "calibrated_policy_spec",
     "calibrated_reference_config_spec",
     "cast_sensor_faithful_lidar",
     "run_sensor_faithful_comparison",
+    "run_sensor_faithful_paired_comparison",
     "run_sensor_faithful_suite",
+    "validate_paired_arm_order_schedule",
     "world_pose_to_odom",
 ]

@@ -1,0 +1,105 @@
+[
+  {
+    "case_id": "sidewalk_then_hold",
+    "transcript": "Go to the sidewalk and then wait there.",
+    "snapshot": {
+      "entities": [
+        {"kind": "semantic_region", "label": "sidewalk", "confidence": 0.96}
+      ]
+    },
+    "expected": {
+      "route": "deliberative_plan",
+      "skill_sequences": [["NavigateTo", "Hold"]],
+      "navigate_targets": ["sidewalk"],
+      "goal": {"relation": "inside", "kind": "semantic_region", "query": "sidewalk"}
+    }
+  },
+  {
+    "case_id": "sidewalk_then_lamppost",
+    "transcript": "Walk to the sidewalk, then wait by the lamppost.",
+    "snapshot": {
+      "entities": [
+        {"kind": "semantic_region", "label": "sidewalk", "confidence": 0.96},
+        {"kind": "semantic_object", "label": "lamppost", "confidence": 0.94}
+      ]
+    },
+    "expected": {
+      "route": "deliberative_plan",
+      "skill_sequences": [
+        ["NavigateTo", "NavigateTo"],
+        ["NavigateTo", "NavigateTo", "Hold"]
+      ],
+      "navigate_targets": ["sidewalk", "lamppost"],
+      "goal": {"relation": "near", "kind": "semantic_object", "query": "lamppost"}
+    }
+  },
+  {
+    "case_id": "five_steps_away_then_hold",
+    "transcript": "Move away from me five steps and then hold position.",
+    "snapshot": {
+      "entities": [
+        {"kind": "owner", "label": "owner", "confidence": 0.98}
+      ]
+    },
+    "expected": {
+      "route": "deliberative_plan",
+      "skill_sequences": [["MoveRelative", "Hold"]],
+      "goal": {"relation": "relative", "kind": "owner", "query": "owner"},
+      "step_arguments": {
+        "MoveRelative": {"direction": "away_from_owner", "steps": 5}
+      }
+    }
+  },
+  {
+    "case_id": "orbit_then_follow_behind",
+    "transcript": "Walk around me once and then follow behind me.",
+    "snapshot": {
+      "entities": [
+        {
+          "kind": "owner",
+          "label": "owner",
+          "confidence": 0.98,
+          "attributes": {"motion_heading_available": true}
+        }
+      ]
+    },
+    "expected": {
+      "route": "deliberative_plan",
+      "skill_sequences": [["OrbitOwner", "FollowFormation"]],
+      "goal": {"relation": "behind", "kind": "owner", "query": "owner"},
+      "step_arguments": {
+        "OrbitOwner": {"revolutions": 1.0},
+        "FollowFormation": {"relation": "behind"}
+      }
+    }
+  },
+  {
+    "case_id": "correct_active_task_to_lamppost",
+    "transcript": "Actually, wait by the lamppost instead.",
+    "snapshot": {
+      "task": {
+        "state": "running",
+        "task_id": "active-navigation",
+        "plan_revision": 1,
+        "step_id": "old-navigation",
+        "at_checkpoint": true
+      },
+      "entities": [
+        {"kind": "semantic_object", "label": "lamppost", "confidence": 0.94}
+      ]
+    },
+    "expected": {
+      "route": "deliberative_plan",
+      "speech_act": "correction",
+      "skill_sequences": [
+        ["NavigateTo"],
+        ["NavigateTo", "Hold"]
+      ],
+      "navigate_targets": ["lamppost"],
+      "goal": {"relation": "near", "kind": "semantic_object", "query": "lamppost"},
+      "task_id": "active-navigation",
+      "minimum_plan_revision": 2,
+      "requested_interrupt": "at_checkpoint"
+    }
+  }
+]

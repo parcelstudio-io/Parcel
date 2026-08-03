@@ -40,6 +40,7 @@ class PromptLibrary:
         self._personality_cache: dict[str, PersonalityProfile] = {}
         self._function_cache: dict[str, FunctionProfile] = {}
         self._text_cache: dict[tuple[str, str], str] = {}
+        self._schema_cache: dict[str, dict[str, Any]] = {}
         self._personality_id_cache: tuple[str, ...] | None = None
 
     def list_personalities(self) -> list[PersonalityProfile]:
@@ -138,6 +139,39 @@ class PromptLibrary:
                 dynamic,
             )
         ).strip()
+
+    def schema(self, filename: str) -> dict[str, Any]:
+        """Load one trusted prompt schema by its exact repository filename."""
+
+        if not isinstance(filename, str) or not re.fullmatch(
+            r"[a-z][a-z0-9_]{0,63}\.schema\.json", filename
+        ):
+            raise ValueError(f"invalid prompt schema filename: {filename!r}")
+        with self._cache_lock:
+            cached = self._schema_cache.get(filename)
+            if cached is not None:
+                # The provider only serializes this value. A fresh JSON object
+                # prevents one caller from mutating the trusted cache.
+                return json.loads(json.dumps(cached))
+        raw = json.loads(self._read(self._dir("schemas") / filename))
+        if not isinstance(raw, dict):
+            raise TypeError(f"prompt schema must be a JSON object: {filename}")
+        with self._cache_lock:
+            self._schema_cache[filename] = raw
+        return json.loads(json.dumps(raw))
+
+    def planner_system(self, output_contract: str = "plan_ir_v1") -> str:
+        """Return the trusted instruction for one supported planner contract."""
+
+        filenames = {
+            "plan_ir_v1": "planner.md",
+            "plan_sketch_v1": "planner_sketch.md",
+        }
+        try:
+            filename = filenames[output_contract]
+        except KeyError as error:
+            raise ValueError(f"unsupported planner output contract: {output_contract!r}") from error
+        return self._text("system", filename)
 
     def _yaml(self, section: str, profile_id: str) -> dict[str, Any]:
         self._validate_id(profile_id)

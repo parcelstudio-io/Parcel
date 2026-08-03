@@ -1,0 +1,51 @@
+{
+  "aggregate_metrics": {
+    "collision_rate": 0.0,
+    "elapsed_time_s": 37.715,
+    "episode_count": 1,
+    "gpu_used": false,
+    "navigation_metric": 0.1802,
+    "official_protocol": false,
+    "organizer_attested": false,
+    "parcel_adapter_exercised": false,
+    "parcel_navigation_score": false,
+    "success_rate": 1.0,
+    "timeout_rate": 0.0,
+    "top_decile_evidence": false,
+    "trials_per_world": 1,
+    "world_indices": [
+      0
+    ]
+  },
+  "benchmark": {
+    "id": "barn-ros2-2026-upstream-mppi-rootless-smoke",
+    "source": "https://github.com/Saadmaghani/The-Barn-Challenge-Ros2.git",
+    "source_commit": "d6c575b51e477bd524d634e12cffeb34036fcd1e"
+  },
+  "change_description": "Untouched upstream Nav2 MPPI single-world rootless-runtime compatibility smoke; no Parcel adapter, controller, reasoning model, or policy change was exercised.",
+  "components": {
+    "adapter": {
+      "id": "not-exercised"
+    },
+    "agent": {
+      "hash": "sha256:de82e458e199051858c9c8ba42a7813217a23fc47c14e5b53defb55ba0cac901",
+      "id": "upstream-default-nav2-mppi"
+    },
+    "config": {
+      "hash": "sha256:de82e458e199051858c9c8ba42a7813217a23fc47c14e5b53defb55ba0cac901",
+      "id": "upstream-jackal-helper-nav2.yaml"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/barn_ros2/upstream-mppi-world0-20260803.raw.txt",
+    "sha256": "9f144d85d2914745c6af72464987adc8074d62e10705da4f599e7563d28ea4b6",
+    "size_bytes": 23
+  },
+  "run_id": "barn-ros2-upstream-mppi-20260803T133200Z-world0-01",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T13:33:04.717759Z"
+}

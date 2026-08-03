@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-companion-brain-v1",
+  "frozen_at_utc": "2026-08-03T00:00:00Z",
+  "frozen": true,
+  "runner_version": "brain-contract-integration-v1",
+  "router_cases_sha256": "dfc0aea80c20aeac5b0ab64878f00d1876a94e09eaba1762bfa3053529ad29f8",
+  "case_count": 12,
+  "integration_cases_sha256": "2e136eb13a07780442c766dabc3ae619d8466eba95c097ea4efd1846054e912a",
+  "integration_case_count": 15,
+  "report_schema_sha256": "9787e58b2c9bc2cefd26de5907bc35981bafa90f6d03f47e3316c65a15ca021e",
+  "required_behaviors": [
+    "exact transcript provenance",
+    "partial ASR abstention",
+    "negation and hypothetical suppression",
+    "semantic navigation routing",
+    "owner-relative spatial routing",
+    "correction routing",
+    "explicit affect evidence only",
+    "snapshot-bound plan admission",
+    "semantic runtime dispatch without raw motion",
+    "verified terminal success facts",
+    "checkpoint correction and stale-result rejection",
+    "system interrupt precedence",
+    "fail-closed ungrounded, stale, and emergency states"
+  ]
+}

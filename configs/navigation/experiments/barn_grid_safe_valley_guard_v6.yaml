@@ -1,0 +1,34 @@
+# EXPERIMENTAL, deployment-disabled v6 clearance-guard ablation.
+#
+# Relative to safe-valley v5, this changes one value only: raw valley admission
+# and the swept body envelope add half the diagonal of the 0.10 m occupancy
+# cell. Camera/LiDAR/odometry/clock remain the only environment inputs; every
+# recovery still rotates first, requires fresh synchronized scans, and emits no
+# reverse or lateral velocity. Production defaults and all prior/confirmation
+# corpora remain unchanged.
+active_model: grid_safe_valley_guard_v6
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+progress_watchdog:
+  timeout_steps: 800
+  max_semantic_replans: 2
+
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  max_vx: 0.60
+  max_vy: 0.40
+  max_vyaw: 1.0
+  stop_distance_m: 0.38
+  obstacle_slow_m: 0.75
+  slow_scale: 0.45
+  reaction_time_s: 0.12
+  predictive_mode: projected_speed_cap
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

@@ -3,7 +3,7 @@ type: citywalker
 version: "1.0.0"
 description: CVPR 2025 CityWalker urban visual navigation (open pretrained weights).
 homepage: https://github.com/ai4ce/CityWalker
-checkpoint: models/nav/citywalker_v1.pt
+checkpoint: models/nav/citywalker/CityWalker_2000hr.ckpt
 device: cuda
 rl:
   enabled: true

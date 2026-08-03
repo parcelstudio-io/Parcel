@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "evaluation_kind": "barn-native-headless-non-official-development",
+  "split_id": "barn-frontier-detour-v4-hash30-20",
+  "development_world_count": 30,
+  "sealed_confirmation_world_count": 20,
+  "sealed_confirmation_opened": false,
+  "suite_seed": 20260803,
+  "trials_per_world": 1,
+  "lidar_rays": 720,
+  "reference": {
+    "run_id": "barn-v4-dev-reference-frontier-v3-20260803-run02",
+    "policy": "grid_frontier_cached_v3",
+    "report_sha256": "1d619ee6ec190bebb84699d222a881d4ebaa35cd767e2711f75332401f3533dd",
+    "success_rate": 0.4666666666666667,
+    "navigation_metric": 0.11192757399934702,
+    "collision_rate": 0.0,
+    "timeout_rate": 0.0,
+    "minimum_signed_clearance_m": 0.09426590376146617,
+    "controller_step_mean_ms": 10.518664799525023,
+    "controller_step_p99_ms": 84.373741
+  },
+  "candidate": {
+    "run_id": "barn-v4-dev-candidate-frontier-detour-v4-1-20260803-run02",
+    "policy": "grid_frontier_detour_v4",
+    "model_version": "4.1.0-experimental",
+    "report_sha256": "f0e446c9279b544d6956e7dc884c59be4bff2f7dbb51f51a146cb9f86552db09",
+    "success_rate": 0.4666666666666667,
+    "navigation_metric": 0.11192757399934702,
+    "collision_rate": 0.0,
+    "timeout_rate": 0.03333333333333333,
+    "minimum_signed_clearance_m": 0.09426590376146617,
+    "controller_step_mean_ms": 10.460064324485467,
+    "controller_step_p99_ms": 84.966547,
+    "detour_align_steps": 185,
+    "detour_track_steps": 75
+  },
+  "paired": {
+    "same_world_trial_seed_and_native_config": true,
+    "episode_count": 30,
+    "success_gains": 0,
+    "success_regressions": 0,
+    "metric_improvements": 0,
+    "metric_regressions": 0,
+    "metric_ties": 30,
+    "success_rate_delta": 0.0,
+    "navigation_metric_delta": 0.0,
+    "collision_rate_delta": 0.0,
+    "timeout_rate_delta": 0.03333333333333333,
+    "mean_final_goal_distance_delta_m": 0.03939661236475178,
+    "mean_maximum_goal_progress_delta_m": 0.00603406305463583,
+    "mean_episode_minimum_clearance_delta_m": -0.03215079185461482,
+    "controller_step_mean_latency_ratio": 0.9944289055544195,
+    "controller_step_p99_latency_ratio": 1.0070259537265274
+  },
+  "promotion_gate": {
+    "paired_success_gain": false,
+    "no_paired_success_regression": true,
+    "positive_navigation_metric_delta": false,
+    "zero_collision_rate": true,
+    "global_clearance_floor": true,
+    "maximum_clearance_regression": true,
+    "controller_mean_latency": true,
+    "controller_p99_latency": true,
+    "detour_phase_exercised": true,
+    "all_conditions_passed": false
+  },
+  "decision": {
+    "selected_for_sealed_confirmation": false,
+    "deployment_enabled": false,
+    "reason": "No development success gain or navigation-metric gain; one stopped episode became a timeout and mean episode clearance decreased.",
+    "confirmation_command_authorized": false
+  },
+  "limitations": [
+    "This is a deterministic native CPU proxy, not the official Gazebo evaluator or a leaderboard score.",
+    "Detailed development reports remain local; immutable ledger entries pin their hashes and sizes.",
+    "The sealed 20-world confirmation partition was neither run nor inspected."
+  ]
+}

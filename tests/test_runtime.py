@@ -13,10 +13,16 @@ from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, Sim
 from parcel_robot.control import build_backend_control_manager
 from parcel_robot.core import CommandArbiter, MotionIntent
 from parcel_robot.models import AgentDecision, Pose, SpatialIntent, ToolCall, VelocityCommand
+from parcel_robot.navigation import GoalPose, MidLevelCommand, Mission, SemanticGoal
 from parcel_robot.navigation.follow import FollowOwnerController
+from parcel_robot.navigation.reactive_safety import (
+    ReactiveSafetyPolicy,
+    apply_reactive_safety,
+)
 from parcel_robot.navigation.spatial import SpatialDecision
 from parcel_robot.runtime import RobotRuntime
 from parcel_robot.safety import SafetyLimits
+from parcel_robot.voice_pipeline import VoiceStage
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -522,6 +528,28 @@ def test_follow_controller_stops_before_obstacle() -> None:
     assert decision.command == VelocityCommand()
 
 
+def test_runtime_exposes_bounded_semantic_follow_formation(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    try:
+        message = runtime.start_follow_formation("behind", distance_m=2.2)
+
+        assert "Behind-owner formation enabled" in message
+        assert runtime.follow.mode == "behind"
+        detail = runtime.follow.snapshot()
+        assert detail["desired_distance_m"] == pytest.approx(2.2)
+        assert detail["perception_basis"] == "camera_owner_track+robot_odometry+lidar"
+
+        runtime.set_behavior("follow")
+        assert runtime.follow.mode == "direct"
+        assert runtime.follow.snapshot()["desired_distance_m"] == pytest.approx(1.6)
+    finally:
+        runtime.close()
+
+
 def test_runtime_dispatches_manual_stop_and_latched_estop(
     runtime_config: Path,
     audio_status: AudioDeviceStatus,
@@ -640,6 +668,92 @@ def test_runtime_streaming_text_executes_only_final_transcript(
         runtime.close()
 
 
+def test_plan_latency_uses_the_independent_planner_provider(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    class MetricsProvider:
+        def __init__(self, lane: str, *, model_mode: str):
+            self.last_metrics = {
+                "provider_lane": lane,
+                "model_mode": model_mode,
+                "model_http_ms": 12.5,
+            }
+
+    conversation = MetricsProvider("conversation", model_mode="conversation")
+    planner = MetricsProvider("planner", model_mode="plan")
+    runtime = RobotRuntime(
+        runtime_config,
+        FakeSimulatorBackend(_observation(0.0)),
+        language_model=conversation,
+        planner_model=planner,
+        audio_status=audio_status,
+    )
+    try:
+        runtime.agent.last_reasoning_source = "plan_model"
+        runtime._voice_stage(
+            VoiceStage(
+                turn_id=1,
+                name="query_end",
+                timestamp=10.0,
+                transcript="Walk to the sidewalk.",
+            )
+        )
+        runtime._voice_stage(
+            VoiceStage(
+                turn_id=1,
+                name="reasoning_response",
+                timestamp=10.1,
+                reply="Safe plan accepted.",
+            )
+        )
+        runtime._voice_stage(VoiceStage(turn_id=1, name="turn_complete", timestamp=10.2))
+
+        trace = runtime.latency_snapshot()["turns"][0]
+        assert trace["reasoning_source"] == "plan_model"
+        assert trace["details"]["provider_lane"] == "planner"
+        assert trace["details"]["model_mode"] == "plan"
+        assert runtime.latency_snapshot()["components"]["PlanModel"]["latest_ms"] == 12.5
+    finally:
+        runtime.close()
+
+
+def test_runtime_reports_conversation_and_planner_health_independently(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+    monkeypatch,
+) -> None:
+    class Provider:
+        def __init__(self, base_url: str):
+            self.base_url = base_url
+
+    runtime = RobotRuntime(
+        runtime_config,
+        FakeSimulatorBackend(_observation(0.0)),
+        language_model=Provider("http://127.0.0.1:8080"),
+        planner_model=Provider("http://127.0.0.1:8082"),
+        audio_status=audio_status,
+    )
+    try:
+        monkeypatch.setattr(
+            "parcel_robot.runtime.http_service_health",
+            lambda url: url == "http://127.0.0.1:8080/health",
+        )
+        runtime._refresh_model_health()
+
+        model = runtime.snapshot()["model"]
+        assert model["status"] == "offline"
+        assert model["roles"] == {"conversation": "ready", "planner": "offline"}
+
+        monkeypatch.setattr("parcel_robot.runtime.http_service_health", lambda url: True)
+        runtime._refresh_model_health()
+        model = runtime.snapshot()["model"]
+        assert model["status"] == "ready"
+        assert model["roles"] == {"conversation": "ready", "planner": "ready"}
+    finally:
+        runtime.close()
+
+
 def test_streamed_emergency_stop_preempts_slow_reasoning(
     runtime_config: Path,
     audio_status: AudioDeviceStatus,
@@ -750,6 +864,78 @@ def test_runtime_navigation_persists_and_manual_control_preempts_it(
         runtime.close()
 
 
+def test_runtime_keeps_semantic_mission_active_until_stop_is_verified(
+    navigation_runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+    monkeypatch,
+) -> None:
+    observation = _observation(time.monotonic())
+    runtime = RobotRuntime(
+        navigation_runtime_config,
+        FakeSimulatorBackend(observation),
+        audio_status=audio_status,
+    )
+    mission = Mission(
+        directive="walk to the sidewalk",
+        goal=GoalPose(1.0, 0.0, label="sidewalk"),
+        status="verifying",
+        semantic_goal=SemanticGoal("sidewalk", kind="region", terminal_relation="inside"),
+    )
+    runtime._navigation_directive = mission.directive
+    responses = iter(
+        (
+            (mission, MidLevelCommand(stop=True, note="semantic_stop_requested")),
+            (mission, MidLevelCommand(stop=True, note="arrived_verified")),
+        )
+    )
+    monkeypatch.setattr(runtime.dog, "navigate", lambda *args, **kwargs: next(responses))
+    try:
+        runtime._step_navigation(observation)
+
+        assert runtime._navigation_directive == mission.directive
+        assert runtime.snapshot()["navigation"]["state"] == "verifying"
+
+        mission.status = "arrived"
+        runtime._step_navigation(observation)
+
+        assert runtime._navigation_directive is None
+        assert runtime.snapshot()["navigation"]["state"] == "arrived"
+    finally:
+        runtime.close()
+
+
+def test_runtime_does_not_advance_navigation_with_stale_perception(
+    navigation_runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+    monkeypatch,
+) -> None:
+    runtime = RobotRuntime(
+        navigation_runtime_config,
+        FakeSimulatorBackend(_observation(time.monotonic())),
+        audio_status=audio_status,
+    )
+    runtime._navigation_directive = "walk to the sidewalk"
+    navigate_called = False
+
+    def navigate(*args, **kwargs):
+        nonlocal navigate_called
+        navigate_called = True
+        raise AssertionError("stale perception must not reach the navigator")
+
+    monkeypatch.setattr(runtime.dog, "navigate", navigate)
+    stale = _observation(time.monotonic() - runtime.telemetry_stale_s - 0.1)
+    try:
+        runtime._step_navigation(stale)
+
+        assert not navigate_called
+        assert runtime._navigation_directive == "walk to the sidewalk"
+        navigation = runtime.snapshot()["navigation"]
+        assert navigation["state"] == "waiting"
+        assert navigation["reason"] == "stale_perception"
+    finally:
+        runtime.close()
+
+
 def test_runtime_final_proximity_gate_preserves_escape_turn(
     runtime_config: Path,
     audio_status: AudioDeviceStatus,
@@ -794,6 +980,44 @@ def test_runtime_proximity_gate_fails_closed_for_reverse_without_bearing(
         assert state == "stopped"
     finally:
         runtime.close()
+
+
+def test_owner_orbit_inward_gate_includes_obstacle_stop_clearance() -> None:
+    policy = ReactiveSafetyPolicy(
+        obstacle_stop_m=0.65,
+        obstacle_slow_m=1.2,
+        owner_collision_envelope_m=0.55,
+        orbit_clearance_margin_m=0.10,
+    )
+    minimum_center_distance = (
+        policy.obstacle_stop_m + policy.owner_collision_envelope_m + policy.orbit_clearance_margin_m
+    )
+    observation = _observation(
+        10.0,
+        owner_x=minimum_center_distance - 0.01,
+    )
+
+    inward, inward_state = apply_reactive_safety(
+        VelocityCommand(vx=0.2),
+        observation,
+        policy=policy,
+        owner_orbit=True,
+        orbit_radius_m=minimum_center_distance,
+        now=10.0,
+    )
+    outward, outward_state = apply_reactive_safety(
+        VelocityCommand(vx=-0.2),
+        observation,
+        policy=policy,
+        owner_orbit=True,
+        orbit_radius_m=minimum_center_distance,
+        now=10.0,
+    )
+
+    assert inward == VelocityCommand()
+    assert inward_state == "stopped"
+    assert outward == VelocityCommand(vx=-0.2)
+    assert outward_state == "clear"
 
 
 def test_runtime_first_command_uses_directional_person_distance_without_ttc(

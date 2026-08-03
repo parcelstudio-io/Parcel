@@ -5,9 +5,11 @@ import re
 import threading
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 import pytest
 
+from parcel_robot import web_panel
 from parcel_robot.web_panel import RuntimeHTTPServer
 
 
@@ -86,7 +88,95 @@ def test_latency_dashboard_and_api_are_separate_read_only_views(panel_server):
         page = response.read().decode()
     assert "Parcel latency traces" in page
     assert "textContent" in page
+    assert 'aria-label="Per-turn latency traces"' in page
+    assert "UserQueryEndToFirstPlanOutput" in page
+    assert "UserQueryEndToAcceptedPlan" in page
+    assert 'colspan="15"' in page
+    assert "row.firstChild.colSpan = 15" in page
 
     with urllib.request.urlopen(f"{base}/api/latency", timeout=2) as response:
         payload = json.load(response)
     assert payload == {"aggregate": {}, "turns": []}
+
+
+def test_build_runtime_can_configure_an_independent_planner_provider(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    config = tmp_path / "robot.yaml"
+    config.write_text(
+        """
+language_model:
+  enabled: true
+  base_url: http://127.0.0.1:8080
+  model: conversation
+planner_model:
+  enabled: true
+  base_url: http://127.0.0.1:8082
+  model: planner
+""",
+        encoding="utf-8",
+    )
+    providers = []
+    captured = {}
+
+    def provider_from_config(model_config):
+        provider = {"model": model_config["model"], "base_url": model_config["base_url"]}
+        providers.append(provider)
+        return provider
+
+    def runtime_from_models(config_path, backend, **kwargs):
+        captured.update(kwargs)
+        return {"config_path": config_path, "backend": backend, **kwargs}
+
+    monkeypatch.setattr(
+        web_panel.LlamaCppProvider,
+        "from_config",
+        staticmethod(provider_from_config),
+    )
+    monkeypatch.setattr(web_panel, "MujocoSocketBackend", lambda path: ("backend", path))
+    monkeypatch.setattr(web_panel, "RobotRuntime", runtime_from_models)
+
+    result = web_panel.build_runtime(config, tmp_path / "sim.sock")
+
+    assert result["language_model"] is providers[0]
+    assert result["planner_model"] is providers[1]
+    assert providers == [
+        {"model": "conversation", "base_url": "http://127.0.0.1:8080"},
+        {"model": "planner", "base_url": "http://127.0.0.1:8082"},
+    ]
+
+
+def test_no_llm_override_disables_both_configured_model_lanes(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    config = tmp_path / "robot.yaml"
+    config.write_text(
+        """
+language_model:
+  enabled: true
+planner_model:
+  enabled: true
+""",
+        encoding="utf-8",
+    )
+    captured = {}
+
+    monkeypatch.setattr(
+        web_panel.LlamaCppProvider,
+        "from_config",
+        staticmethod(lambda config: pytest.fail("disabled providers must not be constructed")),
+    )
+    monkeypatch.setattr(web_panel, "MujocoSocketBackend", lambda path: ("backend", path))
+
+    def runtime_from_models(config_path, backend, **kwargs):
+        captured.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(web_panel, "RobotRuntime", runtime_from_models)
+
+    web_panel.build_runtime(config, tmp_path / "sim.sock", use_llm=False)
+
+    assert captured["language_model"] is None
+    assert captured["planner_model"] is None

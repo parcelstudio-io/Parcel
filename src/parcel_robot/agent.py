@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import re
+import time
 from collections.abc import Callable
 from typing import Any
 
+from .brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
+from .brain.router import DeterministicIntentRouter
+from .brain.runtime_adapter import bind_plan_context, contextual_planner_schema
 from .memory import ConversationMemory
 from .models import (
     ActionProposal,
@@ -15,6 +19,7 @@ from .models import (
     VelocityCommand,
 )
 from .motion import MotionRouter
+from .navigation.goals import navigation_directive_from_text
 from .navigation.spatial import parse_spatial_intent, spatial_intent_from_arguments
 from .providers import LanguageModel
 from .safety import SafetyLimits, SafetySupervisor
@@ -32,6 +37,8 @@ MOTION_TOOLS = frozenset(
     }
 )
 CommitGuard = Callable[[Callable[[], str]], str]
+PlanPublisher = Callable[[PlanIR, IntentFrame, str], str]
+PlannerOutputAdapter = Callable[[object, IntentFrame, ObservationSnapshot], PlanIR]
 
 
 class VoiceAgent:
@@ -48,6 +55,7 @@ class VoiceAgent:
         pose_publisher: Callable[[Pose], None],
         *,
         language_model: LanguageModel | None = None,
+        planner_model: LanguageModel | None = None,
         stop_publisher: Callable[[], None] | None = None,
         memory: ConversationMemory | None = None,
         motion: MotionRouter | None = None,
@@ -60,6 +68,13 @@ class VoiceAgent:
         affect_minimum_confidence: float = 0.75,
         affect_actions: dict[str, str] | None = None,
         conversation_history_messages: int = 16,
+        intent_router: DeterministicIntentRouter | None = None,
+        planning_context_provider: Callable[[], ObservationSnapshot] | None = None,
+        plan_publisher: PlanPublisher | None = None,
+        planner_system_prompt_provider: Callable[[], str] | None = None,
+        planner_schema_provider: Callable[[], dict[str, Any]] | None = None,
+        planner_skill_contracts_provider: Callable[[], dict[str, object]] | None = None,
+        planner_output_adapter: PlannerOutputAdapter | None = None,
         dog=None,
     ):
         if not 1 <= conversation_history_messages <= 64:
@@ -68,6 +83,11 @@ class VoiceAgent:
         self.modules = modules
         self.pose_publisher = pose_publisher
         self.language_model = language_model
+        # Keep independent provider boundaries without forcing a two-model
+        # deployment. The default shares the proven resident model; a
+        # challenger can replace only planning while both lanes still receive
+        # the exact transcript rather than another model's paraphrase.
+        self.planner_model = planner_model if planner_model is not None else language_model
         self.stop_publisher = stop_publisher or (lambda: None)
         self.memory = memory or ConversationMemory()
         self.motion = motion
@@ -80,6 +100,16 @@ class VoiceAgent:
         self.affect_actions = dict(affect_actions or {"sad": "play_bow", "happy": "paw_wave"})
         self.conversation_history_messages = conversation_history_messages
         self.dog = dog
+        self.intent_router = intent_router or DeterministicIntentRouter(self._skill_ids())
+        self.planning_context_provider = planning_context_provider
+        self.plan_publisher = plan_publisher
+        self.planner_system_prompt_provider = planner_system_prompt_provider
+        self.planner_schema_provider = planner_schema_provider
+        self.planner_skill_contracts_provider = planner_skill_contracts_provider
+        self.planner_output_adapter = planner_output_adapter
+        self._turn_sequence = 0
+        self.last_intent_frame: IntentFrame | None = None
+        self.last_brain_metrics: dict[str, object] = {}
         self.last_reasoning_source = "deterministic"
         self.last_reasoning_error: str | None = None
         self.last_reasoning_guard: str | None = None
@@ -119,17 +149,47 @@ class VoiceAgent:
     def cancel_reasoning(self) -> None:
         """Cooperatively stop an optional provider stream after barge-in."""
 
-        cancel = getattr(self.language_model, "cancel_current", None)
-        if callable(cancel):
-            cancel()
+        cancelled: set[int] = set()
+        for model in (self.language_model, self.planner_model):
+            if model is None or id(model) in cancelled:
+                continue
+            cancelled.add(id(model))
+            cancel = getattr(model, "cancel_current", None)
+            if callable(cancel):
+                cancel()
 
     def _handle_text(self, transcript: str, commit: CommitGuard | None) -> str:
-        text = re.sub(r"\s+", " ", transcript.strip().lower())
+        original = re.sub(r"\s+", " ", transcript.strip())
+        text = original.lower()
         self.last_reasoning_source = "deterministic"
         self.last_reasoning_error = None
         self.last_reasoning_guard = None
+        self.last_brain_metrics = {}
+        self._turn_sequence += 1
+        route_started = time.monotonic()
+        frame = self.intent_router.route(
+            original,
+            turn_id=f"turn-local-{self._turn_sequence}",
+            original_transcript_ref=f"voice-agent:{self._turn_sequence}:final",
+        )
+        routed_at = time.monotonic()
+        self.last_intent_frame = frame
+        self.last_brain_metrics = {
+            "intent_route": frame.route,
+            "intent_rule": frame.matched_rule,
+            "intent_confidence": frame.confidence,
+            "intent_router_ms": round((routed_at - route_started) * 1000.0, 3),
+            "_intent_routed_monotonic": routed_at,
+        }
         if text in EMERGENCY_STOP_PHRASES:
             return self._execute(AgentDecision("Stopping.", (ToolCall("stop_motion"),)))
+
+        # Compound/correction turns must not be truncated by a permissive
+        # single-skill grammar (for example, treating "sidewalk and then sit"
+        # as a destination label). The router remains metadata-only; this
+        # branch merely selects the separate constrained PlanIR call.
+        if frame.route == "deliberative_plan" and self._planning_ready():
+            return self._handle_plan(original, frame, commit)
 
         if text in {"follow", "follow me", "come with me", "heel"}:
             return self._commit(
@@ -139,7 +199,23 @@ class VoiceAgent:
                         "I will follow you.",
                         (ToolCall("set_behavior", {"mode": "follow"}),),
                     ),
-                    transcript=text,
+                    transcript=original,
+                ),
+            )
+        if text in {
+            "follow behind me",
+            "walk behind me",
+            "stay behind me",
+            "heel behind me",
+        }:
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision(
+                        "I will follow behind you once I can estimate your direction.",
+                        (ToolCall("set_behavior", {"mode": "follow_behind"}),),
+                    ),
+                    transcript=original,
                 ),
             )
         if text in {"stay", "wait", "wait here", "hold position"}:
@@ -150,7 +226,7 @@ class VoiceAgent:
                         "I will stay here.",
                         (ToolCall("set_behavior", {"mode": "stay"}),),
                     ),
-                    transcript=text,
+                    transcript=original,
                 ),
             )
 
@@ -159,7 +235,7 @@ class VoiceAgent:
             return self._commit(
                 commit,
                 lambda: self._remember(
-                    text, lambda: self.spatial_behavior_publisher(spatial_intent)
+                    original, lambda: self.spatial_behavior_publisher(spatial_intent)
                 ),
             )
 
@@ -173,7 +249,7 @@ class VoiceAgent:
                     skill = "turn_left" if walk.vyaw > 0 else "turn_right"
                 return self._commit(
                     commit,
-                    lambda: self._remember(text, lambda: self._execute_walk_skill(skill, walk)),
+                    lambda: self._remember(original, lambda: self._execute_walk_skill(skill, walk)),
                 )
             if self.motion is None:
                 return "Locomotion is not configured"
@@ -185,7 +261,7 @@ class VoiceAgent:
                 commit,
                 lambda: self._execute(
                     AgentDecision(self._walk_reply(walk), (call,)),
-                    transcript=text,
+                    transcript=original,
                 ),
             )
 
@@ -193,7 +269,7 @@ class VoiceAgent:
         if nav_directive is not None and self.dog is not None:
             return self._commit(
                 commit,
-                lambda: self._remember(text, lambda: self._execute_navigation(nav_directive)),
+                lambda: self._remember(original, lambda: self._execute_navigation(nav_directive)),
             )
 
         if self.language_model is not None:
@@ -202,7 +278,7 @@ class VoiceAgent:
                 if callable(set_prompt) and self.system_prompt_provider is not None:
                     set_prompt(self.system_prompt_provider())
                 decision = self.language_model.decide(
-                    text,
+                    original,
                     self.tool_definitions(),
                     self.memory.recent(self.conversation_history_messages),
                 )
@@ -210,7 +286,7 @@ class VoiceAgent:
                 decision = self._guard_model_motion(text, decision)
                 return self._commit(
                     commit,
-                    lambda: self._execute(decision, transcript=text),
+                    lambda: self._execute(decision, transcript=original),
                 )
             except (RuntimeError, TypeError, ValueError) as error:
                 self.last_reasoning_source = "fallback"
@@ -243,7 +319,7 @@ class VoiceAgent:
                         affect=AffectEstimate(label, 1.0),
                         next_action=proposal,
                     ),
-                    transcript=text,
+                    transcript=original,
                 ),
             )
 
@@ -255,7 +331,7 @@ class VoiceAgent:
                 commit,
                 lambda: self._execute(
                     AgentDecision(f"Switching to the {name} backend.", (call,)),
-                    transcript=text,
+                    transcript=original,
                 ),
             )
 
@@ -269,7 +345,7 @@ class VoiceAgent:
                 return f"Unknown pose: {skill_name}"
             return self._commit(
                 commit,
-                lambda: self._remember(text, lambda: self._execute_named_skill(skill_name)),
+                lambda: self._remember(original, lambda: self._execute_named_skill(skill_name)),
             )
 
         if self.dog is not None:
@@ -277,7 +353,7 @@ class VoiceAgent:
             if bare in self.dog.catalog.ids():
                 return self._commit(
                     commit,
-                    lambda: self._remember(text, lambda: self._execute_named_skill(bare)),
+                    lambda: self._remember(original, lambda: self._execute_named_skill(bare)),
                 )
 
         command, _, argument = text.partition(" ")
@@ -286,13 +362,101 @@ class VoiceAgent:
                 return self._commit(
                     commit,
                     lambda module=module: self._remember(
-                        text,
+                        original,
                         lambda: (
                             module.handle(command, argument) or "I did not understand that command"
                         ),
                     ),
                 )
         return "I did not understand that command"
+
+    def _planning_ready(self) -> bool:
+        return bool(
+            self.planner_model is not None
+            and callable(getattr(self.planner_model, "plan", None))
+            and self.planning_context_provider is not None
+            and self.plan_publisher is not None
+            and self.planner_system_prompt_provider is not None
+            and self.planner_schema_provider is not None
+            and self.planner_skill_contracts_provider is not None
+        )
+
+    def _handle_plan(
+        self,
+        transcript: str,
+        frame: IntentFrame,
+        commit: CommitGuard | None,
+    ) -> str:
+        assert self.planner_model is not None
+        assert self.planning_context_provider is not None
+        assert self.plan_publisher is not None
+        assert self.planner_system_prompt_provider is not None
+        assert self.planner_schema_provider is not None
+        assert self.planner_skill_contracts_provider is not None
+        try:
+            snapshot_started = time.monotonic()
+            snapshot = self.planning_context_provider()
+            snapshot_at = time.monotonic()
+            self.last_brain_metrics["observation_snapshot_ms"] = round(
+                (snapshot_at - snapshot_started) * 1000.0,
+                3,
+            )
+            self.last_brain_metrics["_observation_snapshot_monotonic"] = snapshot_at
+            plan_started = time.monotonic()
+            response_schema = contextual_planner_schema(
+                self.planner_schema_provider(),
+                frame,
+                snapshot,
+            )
+            proposed_output = self.planner_model.plan(
+                transcript,
+                intent_frame=frame,
+                observation=snapshot,
+                skill_contracts=self.planner_skill_contracts_provider(),
+                response_schema=response_schema,
+                system_prompt=self.planner_system_prompt_provider(),
+            )
+            if self.planner_output_adapter is not None:
+                plan = self.planner_output_adapter(proposed_output, frame, snapshot)
+            else:
+                if not isinstance(proposed_output, PlanIR):
+                    raise TypeError("PlanSketch requires a runtime planner-output adapter")
+                plan = bind_plan_context(proposed_output, frame, snapshot)
+            plan_response_at = time.monotonic()
+            self.last_brain_metrics["plan_decode_ms"] = round(
+                (plan_response_at - plan_started) * 1000.0,
+                3,
+            )
+            self.last_brain_metrics["_plan_response_monotonic"] = plan_response_at
+            if plan.source_turn_id != frame.turn_id:
+                raise ValueError("PlanIR source_turn_id does not match its routed turn")
+            self.last_reasoning_source = "plan_model"
+
+            def accept_plan() -> str:
+                accepted_started = time.monotonic()
+                reply = self.plan_publisher(plan, frame, transcript)
+                accepted_at = time.monotonic()
+                self.last_brain_metrics["plan_accept_ms"] = round(
+                    (accepted_at - accepted_started) * 1000.0,
+                    3,
+                )
+                self.last_brain_metrics.setdefault("_plan_accepted_monotonic", accepted_at)
+                return self._remember(transcript, lambda: reply)
+
+            return self._commit(commit, accept_plan)
+        except (RuntimeError, TypeError, ValueError) as error:
+            self.last_reasoning_source = "plan_fallback"
+            self.last_reasoning_error = str(error)[:500]
+            return self._commit(
+                commit,
+                lambda: self._remember(
+                    transcript,
+                    lambda: (
+                        "I couldn't form a safe, grounded plan yet. "
+                        "Please clarify the task or let me inspect the scene again."
+                    ),
+                ),
+            )
 
     @staticmethod
     def _commit(commit: CommitGuard | None, action: Callable[[], str]) -> str:
@@ -341,9 +505,13 @@ class VoiceAgent:
             mission, cmd = self.dog.navigate(directive)
         except (LookupError, RuntimeError, ValueError) as error:
             return f"I couldn't navigate there. {error}"
-        place = mission.goal.label or mission.goal.poi_id
+        place = _mission_place(mission, directive)
         if cmd.stop:
-            return f"Arrived at {place}."
+            if mission.status == "arrived":
+                return f"Arrived at {place}."
+            if mission.status == "verifying":
+                return f"Stopping at {place} and verifying that I am safely settled."
+            return f"I couldn't navigate to {place}. {cmd.note or mission.status}"
         return f"Navigating to {place} (vx={cmd.vx:.2f}, vyaw={cmd.vyaw:.2f}; {cmd.note})."
 
     def _execute_named_skill(self, skill_name: str) -> str:
@@ -392,18 +560,9 @@ class VoiceAgent:
 
     @staticmethod
     def _parse_navigate(text: str) -> str | None:
-        """Extract destination phrases like 'go to the coffee shop at 42nd street'."""
-        patterns = [
-            r"(?:i want you to |please )?(?:go|navigate|walk|take me) to (.+)",
-            r"(?:head|drive) to (.+)",
-        ]
-        for pattern in patterns:
-            match = re.fullmatch(pattern, text)
-            if match:
-                dest = match.group(1).strip(" .!")
-                if dest and dest not in {"forward", "backward", "back", "left", "right"}:
-                    return dest
-        return None
+        """Extract explicit destination and relational navigation requests."""
+
+        return navigation_directive_from_text(text)
 
     @staticmethod
     def _walk_reply(command: VelocityCommand) -> str:
@@ -539,12 +698,15 @@ class VoiceAgent:
                     except (LookupError, RuntimeError, ValueError) as error:
                         failures.append(str(error))
                         continue
-                    place = mission.goal.label or mission.goal.poi_id
-                    detail = (
-                        f"Arrived at {place}."
-                        if cmd.stop
-                        else f"Navigating to {place} (vx={cmd.vx:.2f})."
-                    )
+                    place = _mission_place(mission, directive)
+                    if cmd.stop and mission.status == "arrived":
+                        detail = f"Arrived at {place}."
+                    elif cmd.stop and mission.status == "verifying":
+                        detail = f"Stopping at {place} and verifying that I am safely settled."
+                    elif cmd.stop:
+                        detail = f"Navigation failed for {place}: {cmd.note or mission.status}."
+                    else:
+                        detail = f"Navigating to {place} (vx={cmd.vx:.2f})."
             elif call.name == "set_behavior":
                 if self.behavior_publisher is None:
                     failures.append("Behavior control is not configured")
@@ -680,8 +842,9 @@ class VoiceAgent:
             {
                 "name": "navigate",
                 "description": (
-                    "Navigate to a place from a natural-language directive "
-                    "(e.g. coffee shop at 42nd street)."
+                    "Navigate to or hold near a perceived place/object from a natural-language "
+                    "directive (for example: go onto the sidewalk, wait by the lamppost, or "
+                    "go to the coffee shop). Runtime verifies the spatial relationship."
                 ),
                 "parameters": {
                     "type": "object",
@@ -692,11 +855,17 @@ class VoiceAgent:
             },
             {
                 "name": "set_behavior",
-                "description": "Start owner following or hold the current position.",
+                "description": (
+                    "Start direct owner following, explicitly form behind a moving owner "
+                    "from camera tracks, or hold the current position."
+                ),
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "mode": {"type": "string", "enum": ["follow", "stay"]},
+                        "mode": {
+                            "type": "string",
+                            "enum": ["follow", "follow_behind", "stay"],
+                        },
                     },
                     "required": ["mode"],
                     "additionalProperties": False,
@@ -763,7 +932,21 @@ class VoiceAgent:
 
 
 def _model_motion_is_explicit(text: str) -> bool:
-    raw = " ".join(str(text).lower().split())
+    raw = " ".join(
+        str(text)
+        .translate(
+            str.maketrans(
+                {
+                    "\N{LEFT SINGLE QUOTATION MARK}": "'",
+                    "\N{RIGHT SINGLE QUOTATION MARK}": "'",
+                    "\N{MODIFIER LETTER APOSTROPHE}": "'",
+                    "`": "'",
+                }
+            )
+        )
+        .lower()
+        .split()
+    )
     if re.search(
         r"\b(?:do\s+not|don[' ]?t|never|not|should\s+not|shouldn[' ]?t|"
         r"must\s+not|mustn[' ]?t|cannot|can[' ]?t)\b",
@@ -778,3 +961,11 @@ def _model_motion_is_explicit(text: str) -> bool:
             clean,
         )
     )
+
+
+def _mission_place(mission: object, fallback: str) -> str:
+    goal = getattr(mission, "goal", None)
+    if goal is not None:
+        return str(getattr(goal, "label", "") or getattr(goal, "poi_id", "") or fallback)
+    semantic_goal = getattr(mission, "semantic_goal", None)
+    return str(getattr(semantic_goal, "query", "") or fallback)

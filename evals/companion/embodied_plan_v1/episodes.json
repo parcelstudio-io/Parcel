@@ -1,0 +1,42 @@
+[
+  {
+    "case_id": "sidewalk_then_hold",
+    "seed": 41001,
+    "robot_start": [0.0, 0.0, 0.0],
+    "owner_start": [2.0, -0.5],
+    "max_steps_per_skill": 500,
+    "evaluator": "sidewalk_inside_off_road"
+  },
+  {
+    "case_id": "sidewalk_then_lamppost",
+    "seed": 41002,
+    "robot_start": [0.0, 0.0, 0.0],
+    "owner_start": [2.0, -0.5],
+    "max_steps_per_skill": 500,
+    "evaluator": "sidewalk_then_lamppost_vicinity"
+  },
+  {
+    "case_id": "five_steps_away_then_hold",
+    "seed": 41003,
+    "robot_start": [0.0, 0.0, 0.0],
+    "owner_start": [2.0, -0.5],
+    "max_steps_per_skill": 300,
+    "evaluator": "away_five_steps"
+  },
+  {
+    "case_id": "orbit_then_follow_behind",
+    "seed": 41004,
+    "robot_start": [0.0, 0.0, 0.0],
+    "owner_start": [2.0, -0.5],
+    "max_steps_per_skill": 700,
+    "evaluator": "orbit_then_follow_behind"
+  },
+  {
+    "case_id": "correct_active_task_to_lamppost",
+    "seed": 41005,
+    "robot_start": [2.7, 1.0, 2.431243],
+    "owner_start": [2.0, -0.5],
+    "max_steps_per_skill": 400,
+    "evaluator": "checkpoint_correction_to_lamppost"
+  }
+]

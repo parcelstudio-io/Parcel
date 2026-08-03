@@ -1,0 +1,172 @@
+{
+  "capture_method": "manual_capture_from_live_session",
+  "change_description": "Run 5 after system-compiled invariants. Output and metrics were manually captured; process-local absolute snapshot times are normalized while preserving sensor ages. The utterance routes direct_skill in normal runtime, so this explicit provider-to-schema-to-validator probe did not pass runtime plan admission.",
+  "claims": {
+    "does_not_prove": [
+      "normal runtime planner routing (the frozen utterance routes through direct_skill)",
+      "runtime-restricted skill-registry or response-schema admission",
+      "physical or simulated sidewalk arrival",
+      "collision avoidance or trajectory quality",
+      "camera or LiDAR perception accuracy",
+      "planner generalization beyond the frozen request",
+      "conversation quality or speech latency"
+    ],
+    "evaluation_scope": "standalone semantic PlanIR generation and validation only",
+    "physical_navigation_episode_count": 0,
+    "physical_navigation_success_rate": null
+  },
+  "corpus": {
+    "case_id": "live-sidewalk-plan-v1",
+    "case_sha256": "67d90bbf9a22fa71c439a7f04c151e6177e210a43653980eb0ed77620903f3ba",
+    "plan_schema_sha256": "a4bb6d64cbf92716d3590e46e385a518f815eda0c3a3a121fd98e1a00b1218ba",
+    "planner_prompt_sha256": "9144e227115c16419e4208debae74939b23dac57e6b5db62a17ddef25be6ca21",
+    "snapshot_id": "live-sidewalk-snapshot-v5",
+    "transcript": "Can you go to the sidewalk so that you are not on the road. It's dangerous.",
+    "turn_id": "live-sidewalk-v5"
+  },
+  "inference": {
+    "device": {
+      "available_gpu": "NVIDIA RTX 5000 Ada Generation, 32760 MiB",
+      "generation_threads": 32,
+      "gpu_available_but_unused": true,
+      "gpu_layers": 0,
+      "host_cpu": "AMD Ryzen Threadripper PRO 7995WX 96-Cores",
+      "profile": "cpu_only"
+    },
+    "generation_config": {
+      "plan_enable_thinking": false,
+      "plan_max_tokens": 1024,
+      "plan_temperature": 0.0,
+      "plan_timeout_s": 90.0,
+      "streaming": true,
+      "top_p": 0.9
+    },
+    "model": {
+      "artifact": "models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf",
+      "artifact_sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+      "artifact_size_bytes": 14439363584,
+      "id": "gemma-4-26b-a4b",
+      "quantization": "Q4_0 QAT",
+      "source": "google/gemma-4-26B-A4B-it-qat-q4_0-gguf"
+    },
+    "routing_context": {
+      "deterministic_route": "direct_skill",
+      "planner_invocation": "explicit_provider_boundary_probe"
+    },
+    "server": {
+      "backend": "llama.cpp",
+      "base_url": "http://127.0.0.1:8080",
+      "health": {
+        "status": "ok"
+      },
+      "version": "b10235"
+    }
+  },
+  "output": {
+    "parse_status": "parsed",
+    "provider_error": null,
+    "raw_plan": {
+      "goal": {
+        "relation": "inside",
+        "target": {
+          "kind": "semantic_region",
+          "query": "sidewalk"
+        },
+        "tolerance_m": 0.0
+      },
+      "invariants": [
+        "avoid_road_when_not_crossing"
+      ],
+      "plan_revision": 1,
+      "requested_interrupt": "at_checkpoint",
+      "schema_version": 1,
+      "source_turn_id": "live-sidewalk-v5",
+      "steps": [
+        {
+          "arguments": {
+            "directive": "sidewalk"
+          },
+          "id": "step_1",
+          "interruptibility": "checkpoint",
+          "max_attempts": 1,
+          "preconditions": [
+            "base_available",
+            "camera_fresh",
+            "lidar_fresh",
+            "target_grounded"
+          ],
+          "recovery": [
+            "safe_stop"
+          ],
+          "resources": [
+            "base",
+            "attention"
+          ],
+          "skill": "NavigateTo",
+          "success": {
+            "confidence_min": 0.9,
+            "fact": "inside",
+            "target": "sidewalk",
+            "tolerance_m": null
+          },
+          "timeout_s": 120.0
+        },
+        {
+          "arguments": {},
+          "id": "step_2",
+          "interruptibility": "immediate",
+          "max_attempts": 1,
+          "preconditions": [
+            "base_available"
+          ],
+          "recovery": [
+            "safe_stop"
+          ],
+          "resources": [
+            "base"
+          ],
+          "skill": "Hold",
+          "success": {
+            "confidence_min": 1.0,
+            "fact": "motion_stopped",
+            "target": null,
+            "tolerance_m": null
+          },
+          "timeout_s": 10.0
+        }
+      ],
+      "task_id": "move_to_sidewalk_safety"
+    },
+    "validation": {
+      "code": null,
+      "effective_invariants": [
+        "keep_collision_margin",
+        "avoid_road_when_not_crossing",
+        "stop_on_stale_perception",
+        "yield_to_people",
+        "do_not_interrupt_critical_task"
+      ],
+      "message": null,
+      "plan_sha256": "8ab455dfd03a9316a0007987abcccc1655129839e40876025186ac41a4f248fc",
+      "status": "accepted",
+      "validated_against_snapshot_id": "live-sidewalk-snapshot-v5"
+    }
+  },
+  "provider_metrics": {
+    "completion_tokens": 537,
+    "model_http_ms": 24824.538,
+    "model_json_validation_ms": 0.222,
+    "model_mode": "plan",
+    "model_streaming": true,
+    "model_ttft_ms": 5791.517,
+    "overall_elapsed_ms": 24825.232,
+    "prompt_tokens": 2272,
+    "reasoning_first_output_estimated": false,
+    "total_tokens": 2809
+  },
+  "recorded_at_utc": "2026-08-03T00:00:00Z",
+  "run_id": "live-planner-20260803-gemma4-run05",
+  "runner_version": "live-planir-boundary-v1",
+  "schema_version": 1,
+  "suite_id": "parcel-live-planner-v1"
+}

@@ -1,0 +1,229 @@
+{
+  "aggregate_metrics": {
+    "baseline": {
+      "adapter_act_count": 24222.0,
+      "adapter_act_max_ms": 1.034884,
+      "adapter_act_mean_ms": 0.20844830360828998,
+      "adapter_act_p50_ms": 0.201735,
+      "adapter_act_p95_ms": 0.26442,
+      "adapter_act_p99_ms": 0.321295,
+      "collision_rate": 0.0,
+      "controller_step_count": 24222.0,
+      "controller_step_max_ms": 0.237839,
+      "controller_step_mean_ms": 0.0288527260341838,
+      "controller_step_p50_ms": 0.026971,
+      "controller_step_p95_ms": 0.042094,
+      "controller_step_p99_ms": 0.053301,
+      "episodes": 50.0,
+      "evaluator_diagnostics": {
+        "failure_counts": {
+          "stopped_outside_goal": 49
+        },
+        "mean_closest_goal_distance_m": 8.113947538654164,
+        "mean_episode_minimum_signed_obstacle_clearance_m": 0.5033217852013643,
+        "mean_goal_progress_efficiency": 0.6028568353330566,
+        "mean_maximum_goal_progress_fraction": 0.18860524613458357,
+        "mean_maximum_goal_progress_m": 1.8860524613458358,
+        "mean_net_goal_progress_m": 1.6765702711917678,
+        "mean_successful_reference_route_efficiency": 1.260411634875017,
+        "mean_translational_speed_mps": 0.06417050488528833,
+        "mean_traveled_to_reference_path_ratio": 0.25815228966290166,
+        "minimum_signed_obstacle_clearance_m": 0.45745459099890423,
+        "outcome_counts": {
+          "stopped_outside_goal": 49,
+          "succeeded": 1
+        },
+        "private_state_not_exposed_to_policy": true
+      },
+      "mean_elapsed_time_s": 48.346000000000004,
+      "mean_final_distance_to_goal_m": 8.323429728808232,
+      "mean_success_time_s": 24.900000000000002,
+      "mean_traveled_distance_m": 2.955887067164495,
+      "navigation_metric": 0.004555772302033728,
+      "policy_diagnostics": {
+        "controller_phase_counts": {
+          "align_avoid": 1265,
+          "align_goal": 24,
+          "navigation_no_progress": 49,
+          "track_avoid": 20850,
+          "track_goal": 2034
+        },
+        "note": "Policy-provided notes are not evaluator failure labels.",
+        "safety_phase_counts": {
+          "<none>": 49,
+          "clear": 4156,
+          "obstacle_slow": 3776,
+          "obstacle_stop": 16241
+        },
+        "terminal_action_note_counts": {
+          "navigation_no_progress": 49,
+          "track_goal err=0.0 dist=1.0|clear": 1
+        }
+      },
+      "stopped_outside_goal_rate": 0.98,
+      "success_rate": 0.02,
+      "timeout_rate": 0.0,
+      "trials_per_world": 1.0,
+      "worlds": 50.0
+    },
+    "candidate": {
+      "adapter_act_count": 29501.0,
+      "adapter_act_max_ms": 341.622251,
+      "adapter_act_mean_ms": 36.47907776027932,
+      "adapter_act_p50_ms": 18.748271,
+      "adapter_act_p95_ms": 126.141338,
+      "adapter_act_p99_ms": 129.660816,
+      "collision_rate": 0.0,
+      "controller_step_count": 29501.0,
+      "controller_step_max_ms": 341.434318,
+      "controller_step_mean_ms": 36.288018620962006,
+      "controller_step_p50_ms": 18.553136,
+      "controller_step_p95_ms": 125.93771,
+      "controller_step_p99_ms": 129.433844,
+      "episodes": 50.0,
+      "evaluator_diagnostics": {
+        "failure_counts": {
+          "stopped_outside_goal": 26,
+          "timeout": 2
+        },
+        "mean_closest_goal_distance_m": 5.1214082713555635,
+        "mean_episode_minimum_signed_obstacle_clearance_m": 0.4714328660201646,
+        "mean_goal_progress_efficiency": 0.8120035768061161,
+        "mean_maximum_goal_progress_fraction": 0.4878591728644436,
+        "mean_maximum_goal_progress_m": 4.878591728644436,
+        "mean_net_goal_progress_m": 4.8716784161166835,
+        "mean_successful_reference_route_efficiency": 1.2090719789373547,
+        "mean_translational_speed_mps": 0.18389794709443458,
+        "mean_traveled_to_reference_path_ratio": 0.4626279219507367,
+        "minimum_signed_obstacle_clearance_m": 0.08067643186533903,
+        "outcome_counts": {
+          "stopped_outside_goal": 26,
+          "succeeded": 22,
+          "timeout": 2
+        },
+        "private_state_not_exposed_to_policy": true
+      },
+      "mean_elapsed_time_s": 58.95,
+      "mean_final_distance_to_goal_m": 5.1283215838833165,
+      "mean_success_time_s": 25.222727272727273,
+      "mean_traveled_distance_m": 5.282520671650262,
+      "navigation_metric": 0.10369789463625331,
+      "policy_diagnostics": {
+        "controller_phase_counts": {
+          "grid_align": 1606,
+          "grid_recover_scan": 21709,
+          "grid_track": 6160,
+          "navigation_no_progress": 26
+        },
+        "note": "Policy-provided notes are not evaluator failure labels.",
+        "safety_phase_counts": {
+          "<none>": 26,
+          "clear": 16431,
+          "obstacle_slow": 13044
+        },
+        "terminal_action_note_counts": {
+          "grid_recover_scan status=no_path|clear": 1,
+          "grid_recover_scan status=no_path|obstacle_slow": 1,
+          "grid_track err=-0.0 goal=1.0 route=2 status=planned|clear": 12,
+          "grid_track err=0.0 goal=1.0 route=2 status=planned|clear": 10,
+          "navigation_no_progress": 26
+        }
+      },
+      "stopped_outside_goal_rate": 0.52,
+      "success_rate": 0.44,
+      "timeout_rate": 0.04,
+      "trials_per_world": 1.0,
+      "worlds": 50.0
+    },
+    "comparison": {
+      "candidate_minus_baseline": {
+        "collision_rate": 0.0,
+        "mean_episode_minimum_signed_obstacle_clearance_m": -0.03188891918119968,
+        "mean_final_distance_to_goal_m": -3.195108144924916,
+        "mean_goal_progress_efficiency": 0.20914674147305956,
+        "mean_maximum_goal_progress_m": 2.9925392672986,
+        "navigation_metric": 0.09914212233421958,
+        "stopped_outside_goal_rate": -0.45999999999999996,
+        "success_rate": 0.42,
+        "timeout_rate": 0.04
+      },
+      "paired_episode_count": 50,
+      "paired_outcomes": {
+        "collision_gains": 0,
+        "collision_regressions": 0,
+        "metric_improvements": 22,
+        "metric_regressions": 0,
+        "metric_ties": 28,
+        "success_gains": 21,
+        "success_regressions": 0
+      },
+      "safety_regression": false,
+      "same_worlds_trials_config_and_seeds": true
+    },
+    "target_status": {
+      "baseline": {
+        "leaderboard_claim_allowed": false,
+        "minimum_official_score": 0.488,
+        "note": "Native proxy scores are not official or leaderboard-comparable.",
+        "numeric_reference_met": false,
+        "official_gate_eligible": false,
+        "official_gate_pass": false,
+        "score": 0.004555772302033728,
+        "score_gap": -0.48344422769796624,
+        "source": "https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf",
+        "status": "native_proxy_reference_only",
+        "target_id": "barn-2026-simulation-official-top-decile-v1"
+      },
+      "candidate": {
+        "leaderboard_claim_allowed": false,
+        "minimum_official_score": 0.488,
+        "note": "Native proxy scores are not official or leaderboard-comparable.",
+        "numeric_reference_met": false,
+        "official_gate_eligible": false,
+        "official_gate_pass": false,
+        "score": 0.10369789463625331,
+        "score_gap": -0.38430210536374665,
+        "source": "https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf",
+        "status": "native_proxy_reference_only",
+        "target_id": "barn-2026-simulation-official-top-decile-v1"
+      },
+      "note": "A paired native proxy comparison cannot pass the official target gate.",
+      "official_gate_pass": false
+    }
+  },
+  "benchmark": {
+    "id": "barn-native-paired-comparison-headless-non-official",
+    "source": "https://github.com/Daffan/the-barn-challenge",
+    "source_commit": "bf5a226f6088ec96bf0d2dbee3253a8ea6119b83"
+  },
+  "change_description": "All-50 public validation of the development-selected candidate: semantics-preserving vectorized LiDAR map integration plus the start-cell egress fix, cached A*, no public tuning, Go2-compatible 0.6 m/s profile, and production defaults unchanged.",
+  "components": {
+    "adapter": {
+      "hash": "34e8f48cd0333d8beaf5b08b16f66493297b3550f7d29a9151ec9fe676ceb838",
+      "id": "parcel-directive-navigator-barn-sensor-adapter-v1"
+    },
+    "agent": {
+      "id": "DirectiveNavigator"
+    },
+    "config": {
+      "hash": "d376f85c7ee912125d1b68a8887f0c96c73780ec66effc1e5833afcd2afd3e91",
+      "id": "configs/navigation/experiments/barn_grid_jackal_clearance_v2.yaml"
+    },
+    "model": {
+      "hash": "0d0700f8568d62f17d8b8c707ba2ec46e9c8539c626fb95d3eda201fa08f297b",
+      "id": "grid_v1"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/results/runs/barn-ab-20260803T093224170877Z-6b24e34f.json",
+    "sha256": "38b26adaeb1b09f1caeafaa4f26e9f63c1384c264a2088ea2751e3423b7883b4",
+    "size_bytes": 314696
+  },
+  "run_id": "barn-ab-20260803T093224170877Z-6b24e34f",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T09:32:24.175807Z"
+}

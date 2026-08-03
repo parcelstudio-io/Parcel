@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "experiment_id": "barn-predictive-shield-v7-generated-20260803-dev30-sealed20",
+  "status": "invalidated_pre_execution",
+  "recorded_at": "2026-08-03T17:51:19Z",
+  "score": null,
+  "corpus_generated": false,
+  "policy_execution_started": false,
+  "reason": "The projected-speed-cap treatment consumes only the globally nearest clustered obstacle. A nearer tangential return can therefore mask a slightly farther positive-closing return, falsifying the predeclared all-positive-closing hard-boundary hypothesis before execution.",
+  "counterexample": {
+    "requested_forward_mps": 0.45,
+    "reaction_time_s": 0.12,
+    "configured_obstacle_stop_m": 0.8,
+    "globally_nearest_return": {
+      "distance_m": 0.81,
+      "bearing_rad": 1.5707963267948966,
+      "closing_fraction": 0.0
+    },
+    "masked_forward_return": {
+      "distance_m": 0.83,
+      "bearing_rad": 0.0,
+      "closing_fraction": 1.0,
+      "distance_after_one_0p1s_control_tick_m": 0.785
+    },
+    "violated_claim": "Every positive-closing return retains one reaction horizon of room above the configured 0.8 m sensor-distance boundary."
+  },
+  "affected_input_sha256_at_invalidation": {
+    "candidate_config": "e74ac6711b756edd6b3f97a554be0b95707cc9a90b1152f8b683312025633c9c",
+    "parcel_barn_adapter": "9b2e2ad76542567ba009774e1e16f2703cf00a8801ec5a81e01f787d3547104c",
+    "collision_module": "ec7f9460d6ae35cedf64201c6d1844baebd7075887ea1a2d45cf2dd27e5d66a5",
+    "navigation_pipeline": "02a58be393e51659dc4a919bf87c2be9d09a079f9ce959186ae9b8f836f7bf40"
+  },
+  "absence_evidence_at_invalidation": {
+    "development_assets": {
+      "path": ".cache/external-evals/generated/barn_predictive_shield_v7/development/test_data",
+      "absent": true
+    },
+    "confirmation_assets": {
+      "path": ".cache/external-evals/generated/barn_predictive_shield_v7/confirmation/test_data",
+      "absent": true
+    },
+    "manifest": {
+      "path": "evals/external/development/barn_predictive_shield_v7/split.json",
+      "absent": true
+    },
+    "results_root": {
+      "path": "evals/external/development/barn_predictive_shield_v7/results",
+      "absent": true
+    },
+    "single_use_claim": {
+      "path": "evals/external/development/barn_predictive_shield_v7/results/claims/barn-predictive-shield-v7-generated-20260803-dev30-sealed20.json",
+      "absent": true
+    },
+    "terminal_outcome": {
+      "path": "evals/external/development/barn_predictive_shield_v7/results/terminal-outcomes/barn-predictive-shield-v7-generated-20260803-dev30-sealed20.json",
+      "absent": true
+    }
+  },
+  "successor_requirement": "Use an isolated byte-exact historical baseline and an explicitly different all-ray final collision shield; certify every published action against all 720 normalized LiDAR rays and use a new corpus namespace.",
+  "official_barn_score": false,
+  "leaderboard_claim": false,
+  "deployment_enabled": false
+}

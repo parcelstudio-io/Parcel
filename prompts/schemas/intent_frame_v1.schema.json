@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parcel.local/schemas/intent_frame_v1.schema.json",
+  "title": "Parcel IntentFrame v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "turn_id",
+    "route",
+    "confidence",
+    "speech_act",
+    "affect_evidence",
+    "spatial_references",
+    "urgency_cues",
+    "requires_fresh_scene",
+    "original_transcript_ref",
+    "transcript_sha256",
+    "router_version",
+    "matched_rule"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "turn_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"},
+    "route": {
+      "enum": [
+        "conversation_only",
+        "direct_skill",
+        "deliberative_plan",
+        "clarify_or_abstain"
+      ]
+    },
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "speech_act": {
+      "enum": ["request", "question", "statement", "correction", "cancel", "unknown"]
+    },
+    "affect_evidence": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["label", "confidence", "source"],
+          "properties": {
+            "label": {"enum": ["happy", "sad", "neutral", "unknown"]},
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+            "source": {
+              "enum": ["explicit_transcript", "prosody", "multimodal", "unknown"]
+            }
+          }
+        }
+      ]
+    },
+    "spatial_references": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 160}
+    },
+    "urgency_cues": {
+      "type": "array",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 160}
+    },
+    "requires_fresh_scene": {"type": "boolean"},
+    "original_transcript_ref": {"type": "string", "minLength": 1, "maxLength": 200},
+    "transcript_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "router_version": {"type": "string", "minLength": 1, "maxLength": 80},
+    "matched_rule": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "minLength": 1, "maxLength": 80}
+      ]
+    }
+  }
+}

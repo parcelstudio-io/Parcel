@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from .base import NavObservation
 from .goals import SemanticGoal
+
+if TYPE_CHECKING:
+    from parcel_robot.backends.base import SimObservation
 
 
 @dataclass(frozen=True)
@@ -33,6 +37,14 @@ class SemanticCandidate:
             raise ValueError("semantic candidate id is invalid")
         if not self.label or len(self.label) > 160:
             raise ValueError("semantic candidate label is invalid")
+        if self.kind not in {"object", "region"}:
+            raise ValueError("semantic candidate kind is invalid")
+        if not isinstance(self.reachable, bool):
+            raise TypeError("semantic candidate reachable must be a boolean")
+        if self.observed_at is not None and not math.isfinite(self.observed_at):
+            raise ValueError("semantic candidate observation time must be finite")
+        if any(not math.isfinite(axis) for point in self.polygon for axis in point):
+            raise ValueError("semantic candidate polygon must be finite")
 
 
 class SemanticMap(Protocol):
@@ -52,9 +64,62 @@ class ObservationSemanticMap:
                 candidate = _candidate(item, index)
             except (KeyError, TypeError, ValueError):
                 continue
-            if _matches(goal.query, candidate.label, candidate.metadata.get("aliases")):
+            if candidate.kind == goal.kind and _matches(
+                goal.query, candidate.label, candidate.metadata.get("aliases")
+            ):
                 candidates.append(candidate)
-        return sorted(candidates, key=lambda item: item.confidence, reverse=True)
+        robot_x, robot_y = observation.position[:2]
+        return sorted(
+            candidates,
+            key=lambda item: (
+                -item.confidence,
+                math.hypot(item.x - robot_x, item.y - robot_y),
+                item.candidate_id,
+            ),
+        )
+
+
+def semantic_candidates_from_observation(observation: SimObservation) -> list[dict[str, Any]]:
+    """Convert validated camera/depth tracks into the navigator's typed payload."""
+
+    candidates: list[dict[str, Any]] = [
+        {
+            "id": region.region_id,
+            "label": region.label,
+            "polygon": [list(point) for point in region.polygon],
+            "confidence": region.confidence,
+            "kind": "region",
+            "source": region.source,
+            "reachable": region.reachable,
+            "metadata": dict(region.metadata or {}),
+        }
+        for region in observation.semantic_regions
+    ]
+    candidates.extend(
+        {
+            "id": item.object_id,
+            "label": item.label,
+            "position": list(item.position),
+            "confidence": item.confidence,
+            "kind": "object",
+            "source": item.source,
+            "reachable": item.reachable,
+            "metadata": dict(item.metadata or {}),
+        }
+        for item in observation.semantic_objects
+    )
+    return candidates
+
+
+def lidar_payload_from_observation(observation: SimObservation) -> list[dict[str, Any]]:
+    return [
+        {
+            "id": item.obstacle_id,
+            "distance_m": item.distance_m,
+            "bearing_rad": item.bearing_rad,
+        }
+        for item in observation.lidar_obstacles
+    ]
 
 
 def _candidate(item: Any, index: int) -> SemanticCandidate:
@@ -78,6 +143,12 @@ def _candidate(item: Any, index: int) -> SemanticCandidate:
     metadata = item.get("metadata") or {}
     if not isinstance(metadata, dict):
         raise TypeError("candidate metadata must be a mapping")
+    reachable = item.get("reachable", True)
+    if not isinstance(reachable, bool):
+        raise TypeError("candidate reachable must be a boolean")
+    kind = item.get("kind", "object")
+    if kind not in {"object", "region"}:
+        raise ValueError("candidate kind is invalid")
     return SemanticCandidate(
         candidate_id=str(item.get("id") or f"candidate-{index}"),
         label=str(item["label"]),
@@ -85,21 +156,30 @@ def _candidate(item: Any, index: int) -> SemanticCandidate:
         y=float(center[1]),
         z=float(center[2]) if len(center) > 2 else 0.0,
         confidence=float(item.get("confidence", 0.0)),
-        kind=str(item.get("kind", "object")),
+        kind=kind,
         polygon=polygon,
         source=str(item.get("source", "perception")),
         observed_at=(float(item["observed_at"]) if item.get("observed_at") is not None else None),
-        reachable=bool(item.get("reachable", True)),
+        reachable=reachable,
         metadata=dict(metadata),
     )
 
 
 def _matches(query: str, label: str, aliases: Any) -> bool:
-    query_words = set(query.lower().split())
+    normalized_query = _normalized(query)
+    if not normalized_query:
+        return False
     texts = [label]
     if isinstance(aliases, (list, tuple)):
         texts.extend(str(alias) for alias in aliases[:16])
-    return any(
-        query.lower() in text.lower() or bool(query_words & set(text.lower().split()))
-        for text in texts
-    )
+    for text in texts:
+        normalized_text = _normalized(text)
+        if normalized_text and (
+            normalized_query in normalized_text or normalized_text in normalized_query
+        ):
+            return True
+    return False
+
+
+def _normalized(value: object) -> str:
+    return "".join(re.findall(r"[a-z0-9]+", str(value).lower()))

@@ -66,6 +66,7 @@ class ControlManager:
         self._emergency_reassert_requested = False
         self._updates_in_flight = 0
         self._controller_calls_in_flight = 0
+        self._stop_delivery_generation = 0
         self._controller_activated = False
         self._starting = False
         self._closing = False
@@ -927,22 +928,24 @@ class ControlManager:
             )
             self._stop_settled_samples = 0
             self._stop_last_settled_sequence = None
+        delivery_generation = self._begin_stop_delivery_locked()
         try:
             self._call_controller_unlocked(lambda: self.controller.stop(reason))
         except Exception as error:
-            self._fault = f"controller_stop_failed: {error}"
-            self._stop_delivered = False
-            if (
-                not self._emergency_stopped
-                and not self._closing
-                and self._lifecycle != ControlLifecycle.CLOSED
-            ):
-                self._lifecycle = ControlLifecycle.FAULTED
+            failure_is_current = delivery_generation == self._stop_delivery_generation
+            if failure_is_current:
+                self._fault = f"controller_stop_failed: {error}"
+                self._stop_delivered = False
+                if (
+                    not self._emergency_stopped
+                    and not self._closing
+                    and self._lifecycle != ControlLifecycle.CLOSED
+                ):
+                    self._lifecycle = ControlLifecycle.FAULTED
             if raise_on_error:
                 raise
-            return False
-        self._stop_delivered = True
-        self._mark_stop_completed_locked()
+            return not failure_is_current
+        self._complete_stop_delivery_locked(delivery_generation, reason=reason)
         return True
 
     def _fault_locked(self, reason: str) -> None:
@@ -1014,10 +1017,12 @@ class ControlManager:
         self._stop_delivered = False
         self._emergency_in_flight = True
         self._controller_calls_in_flight += 1
+        delivery_generation = self._begin_stop_delivery_locked()
         if not self._closing:
             self._lifecycle = ControlLifecycle.EMERGENCY_STOPPED
         self._emergency_thread = threading.Thread(
             target=self._deliver_emergency_stop,
+            args=(delivery_generation,),
             name=f"parcel-{self.controller.name}-emergency-stop",
             daemon=True,
         )
@@ -1037,7 +1042,7 @@ class ControlManager:
             if not isinstance(error, RuntimeError):
                 raise
 
-    def _deliver_emergency_stop(self) -> None:
+    def _deliver_emergency_stop(self, delivery_generation: int) -> None:
         error: Exception | None = None
         try:
             self.controller.emergency_stop()
@@ -1047,13 +1052,37 @@ class ControlManager:
             self._emergency_in_flight = False
             self._controller_calls_in_flight -= 1
             self._condition.notify_all()
+            if delivery_generation != self._stop_delivery_generation:
+                # A later StopMove superseded this call after it physically
+                # returned but before this worker reacquired the lifecycle
+                # lock. Its delayed bookkeeping must not move the feedback
+                # boundary forward or invalidate the newer successful stop.
+                return
             if error is None:
-                self._last_stop_reason = "emergency_stop"
-                self._stop_delivered = True
-                self._mark_stop_completed_locked()
+                self._complete_stop_delivery_locked(
+                    delivery_generation,
+                    reason="emergency_stop",
+                )
             else:
                 self._fault = f"emergency_stop_failed: {error}"
                 self._stop_delivered = False
+
+    def _begin_stop_delivery_locked(self) -> int:
+        self._stop_delivery_generation += 1
+        return self._stop_delivery_generation
+
+    def _complete_stop_delivery_locked(
+        self,
+        delivery_generation: int,
+        *,
+        reason: str,
+    ) -> bool:
+        if delivery_generation != self._stop_delivery_generation:
+            return False
+        self._last_stop_reason = reason
+        self._stop_delivered = True
+        self._mark_stop_completed_locked()
+        return True
 
     def _mark_stop_completed_locked(self) -> None:
         self._stop_completed_at = self._clock()

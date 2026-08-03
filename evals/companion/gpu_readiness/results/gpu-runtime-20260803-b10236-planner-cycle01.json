@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "audit_kind": "parcel-llama-cpp-cuda-runtime-evidence",
+  "run_id": "gpu-runtime-20260803-b10236-planner-cycle01",
+  "recorded_at_utc": "2026-08-03T12:55:12.879Z",
+  "profile": {
+    "id": "llama-b10236-cuda12-oci-gemma4-26b-a4b-q4",
+    "readiness_result": "evals/companion/gpu_readiness/results/gpu-readiness-20260803-b10236-oci-cuda.json",
+    "server_build": 10236,
+    "server_commit": "1464c62d88f699ec9700c8010bbfdbc603a9efd6",
+    "device": "NVIDIA RTX 5000 Ada Generation",
+    "device_uuid": "GPU-97535feb-2b93-d984-921f-885dda608bb1",
+    "requested_gpu_layers": 999,
+    "context_size": 8192
+  },
+  "placement": {
+    "actual_gpu_layers_offloaded": 31,
+    "total_model_layers_reported": 31,
+    "full_layer_offload": true,
+    "cuda_model_buffer_mib": 13755.42,
+    "cuda_kv_buffer_mib": 1060.0,
+    "cuda_compute_buffer_mib": 108.52
+  },
+  "memory_snapshots_mib": {
+    "pre_load_host_total": {
+      "used": 1143,
+      "free": 31086
+    },
+    "post_load_idle_host_total": {
+      "used": 16432,
+      "free": 15797
+    },
+    "post_load_idle_server_process": 15280,
+    "pre_shutdown_after_evaluations_host_total": {
+      "used": 16455,
+      "free": 15774
+    },
+    "pre_shutdown_server_process": 15304,
+    "post_shutdown_host_total": {
+      "used": 1144,
+      "free": 31085
+    },
+    "measured_peak": null,
+    "note": "These are point-in-time nvidia-smi observations, not a sampled peak trace."
+  },
+  "server_metrics_after_evaluations": {
+    "prompt_tokens_total": 15148,
+    "prompt_seconds_total": 4.458,
+    "tokens_predicted_total": 4452,
+    "tokens_predicted_seconds_total": 40.095,
+    "prompt_tokens_per_second": 3397.94,
+    "predicted_tokens_per_second": 111.036,
+    "decode_calls_total": 4482,
+    "largest_observed_token_count": 3068,
+    "requests_processing_at_capture": 0,
+    "requests_deferred_at_capture": 0
+  },
+  "evaluations": [
+    {
+      "suite": "parcel-planner-quality-v2",
+      "role": "paired_full_planir_gpu_baseline",
+      "result": "evals/companion/planner_quality_v2/results/planner-v2-20260803-gemma4-gpu-run06.json",
+      "run_id": "planner-v2-20260803124255Z-75a84bba"
+    },
+    {
+      "suite": "parcel-planner-quality-sketch-v1",
+      "role": "compact_contract_gpu_challenger",
+      "result": "evals/companion/planner_quality_sketch_v1/results/planner-sketch-v1-20260803-gemma4-gpu-run01.json",
+      "run_id": "planner-sketch-v1-20260803125337Z-899f5494"
+    }
+  ],
+  "server_log": {
+    "repository_path": ".cache/reasoner/llama-b10236-cuda-planner-run06-v4.log",
+    "gitignored": true,
+    "size_bytes": 86757,
+    "sha256": "0d3a68c599e214989b36a7506c040d07d8645db5a07be02c21323ef4d121849f",
+    "verified_events": [
+      "offloaded 31/31 layers to GPU",
+      "CUDA0 model buffer size = 13755.42 MiB",
+      "CUDA0 KV buffer sizes = 160.00 MiB and 900.00 MiB",
+      "CUDA0 compute buffer size = 108.52 MiB",
+      "model loaded and listened on 127.0.0.1:8081",
+      "clean shutdown after SIGINT"
+    ]
+  },
+  "classification": {
+    "model_loaded": true,
+    "full_cuda_layer_offload_measured": true,
+    "planner_evaluations_performed": true,
+    "clean_shutdown_verified": true,
+    "vram_returned_near_baseline": true
+  },
+  "claims": {
+    "proves": [
+      "full-layer CUDA placement for the pinned b10236 server and Gemma artifact",
+      "point-in-time loaded and restored VRAM observations",
+      "GPU execution of the linked semantic planner evaluations"
+    ],
+    "does_not_prove": [
+      "peak VRAM across every request",
+      "physical navigation, collision avoidance, perception, conversation, or Unitree quality",
+      "top-percentile performance on an external benchmark"
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "audit_kind": "parcel-llama-cpp-cuda-readiness",
+  "run_id": "gpu-readiness-20260803-b10235-current",
+  "recorded_at_utc": "2026-08-03T11:34:54.349093Z",
+  "capture_method": "parcel_robot.reasoner_gpu with model hashing plus same-session binary hash; repository paths normalized",
+  "profile": {
+    "id": "llama-b10235-cuda-sm89-gemma4-26b-a4b-q4",
+    "source_commit": "221f0f6356efe2260023208365705ec5d5a7c8f5",
+    "release_build": 10235,
+    "requested_gpu_layers_if_admitted": 999
+  },
+  "host": {
+    "gpu": {
+      "name": "NVIDIA RTX 5000 Ada Generation",
+      "uuid": "GPU-97535feb-2b93-d984-921f-885dda608bb1",
+      "driver_version": "595.84",
+      "compute_capability": "8.9",
+      "memory_total_mib": 32760,
+      "memory_used_mib": 1170,
+      "memory_free_mib": 31059
+    },
+    "nvidia_smi_succeeded": true
+  },
+  "inference_binary": {
+    "path": "third_party/llama.cpp-bin/llama-b10235/llama-server",
+    "size_bytes": 17896,
+    "sha256": "a8270ee0097fec419f706926fbfd654b954d361bcc92eea7cf84212b44f5f4d8",
+    "version_output": "version: 10235 (221f0f635)\nbuilt with GNU 11.4.0 for Linux x86_64",
+    "version_matches_profile": true,
+    "list_devices_output": "Available devices:\n  (none)",
+    "reported_devices": [],
+    "cuda_backend_artifacts": [],
+    "cuda_linkage_detected": false,
+    "cuda_capable": false
+  },
+  "model": {
+    "path": "models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf",
+    "magic": "GGUF",
+    "size_bytes": 14439363584,
+    "sha256": "3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d",
+    "hash_verified": true,
+    "ready": true
+  },
+  "memory_admission": {
+    "weight_file_mib": 13770.45,
+    "weights_only_free_headroom_mib": 17288.55,
+    "minimum_total_vram_mib": 24576,
+    "minimum_free_vram_mib": 18432,
+    "minimum_runtime_reserve_over_weight_file_mib": 4096,
+    "ready": true,
+    "measured_peak_vram_mib": null,
+    "note": "weights-only arithmetic is not a measured model/KV/runtime peak"
+  },
+  "build": {
+    "source_checkout_present": false,
+    "source_path": "third_party/llama.cpp-src/llama-b10235",
+    "git_present": true,
+    "cmake_present": false,
+    "ninja_present": false,
+    "nvcc_present": false,
+    "c_compiler_present": false,
+    "cxx_compiler_present": false,
+    "ready": false
+  },
+  "classification": {
+    "nvidia_driver_ready": true,
+    "binary_cuda_ready": false,
+    "model_ready": true,
+    "memory_admission_ready": true,
+    "ready_for_gpu_inference": false,
+    "ready_to_build_pinned_cuda_binary": false,
+    "gpu_planner_run_authorized": false
+  },
+  "blocker_ids": [
+    "llama_cpp_reports_no_cuda_device",
+    "llama_cpp_cuda_backend_missing",
+    "pinned_llama_cpp_source_missing",
+    "build_tool_cmake_missing",
+    "build_tool_ninja_missing",
+    "build_tool_cuda_compiler_missing",
+    "build_tool_c_compiler_missing",
+    "build_tool_cxx_compiler_missing"
+  ],
+  "claims": {
+    "model_loaded": false,
+    "planner_run_performed": false,
+    "planner_result_created": false,
+    "ttft_ms": null,
+    "total_latency_ms": null,
+    "token_counts": null,
+    "measured_gpu_layers_offloaded": null,
+    "navigation_or_planning_behavior_changed": false,
+    "reason_not_run": "installed llama.cpp binary has no admitted CUDA backend or device"
+  }
+}

@@ -1,0 +1,32 @@
+# Eval-only BARN embodiment profile for the shared grid_v1 planner.
+#
+# BARN evaluates a 0.32 m-radius Jackal approximation, not the physical Go2.
+# The 0.38 m hard boundary reserves 0.06 m beyond that evaluator footprint;
+# the predictive brake adds speed * 0.12 s. Production Go2 safety remains in
+# configs/navigation/default.yaml and configs/robot.yaml and is not weakened.
+active_model: grid_v1
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+progress_watchdog:
+  timeout_steps: 800
+  max_semantic_replans: 2
+
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  # Go2-compatible speed cap retained for this embodiment-preserving stage.
+  max_vx: 0.60
+  max_vy: 0.40
+  max_vyaw: 1.0
+  stop_distance_m: 0.38
+  obstacle_slow_m: 0.75
+  slow_scale: 0.45
+  reaction_time_s: 0.12
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0
