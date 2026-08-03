@@ -22,13 +22,16 @@ from parcel_robot.core import (
     VelocitySmoother,
 )
 from parcel_robot.memory import ConversationMemory
-from parcel_robot.models import ActionProposal, Pose, VelocityCommand
+from parcel_robot.models import ActionProposal, Pose, SpatialIntent, VelocityCommand
 from parcel_robot.motion import build_motion_router
 from parcel_robot.navigation.follow import FollowOwnerController
+from parcel_robot.navigation.spatial import SpatialBehaviorConfig, SpatialBehaviorController
+from parcel_robot.observability import ComponentMetrics, LatencyTracker
+from parcel_robot.perception import NullMapProvider, PerceptionContract
 from parcel_robot.prompting import PromptLibrary
 from parcel_robot.providers import LanguageModel
 from parcel_robot.skills.api import Dog
-from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceTurn
+from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage, VoiceTurn
 
 
 class RobotRuntime:
@@ -58,15 +61,46 @@ class RobotRuntime:
             yaw_accel=float(smoother_config.get("yaw_accel", 1.8)),
         )
         self.follow = FollowOwnerController()
-        self.audio_status = audio_status or detect_audio_devices()
+        self.perception = PerceptionContract.from_config(self.store.section("perception"))
+        self.maps = NullMapProvider()
         safety_config = self.store.section("safety")
         self.obstacle_stop_m = float(safety_config.get("obstacle_stop_m", 0.65))
         self.obstacle_slow_m = float(safety_config.get("obstacle_slow_m", 1.2))
+        self.person_stop_m = float(safety_config.get("person_stop_m", 1.0))
+        self.person_slow_m = float(safety_config.get("person_slow_m", 2.0))
         self.telemetry_stale_s = float(safety_config.get("telemetry_stale_s", 0.6))
         if not 0 < self.obstacle_stop_m < self.obstacle_slow_m:
             raise ValueError("safety obstacle distances must satisfy 0 < stop < slow")
+        if not 0 < self.person_stop_m < self.person_slow_m:
+            raise ValueError("safety person distances must satisfy 0 < stop < slow")
         if not math.isfinite(self.telemetry_stale_s) or self.telemetry_stale_s <= 0:
             raise ValueError("safety telemetry_stale_s must be positive and finite")
+        spatial_config = self.store.section("spatial_behaviors")
+        spatial_limits = SpatialBehaviorConfig(
+            step_length_m=float(spatial_config.get("step_length_m", 0.25)),
+            max_steps=int(spatial_config.get("max_steps", 12)),
+            default_orbit_radius_m=float(spatial_config.get("default_orbit_radius_m", 1.6)),
+            min_orbit_radius_m=float(spatial_config.get("min_orbit_radius_m", 1.3)),
+            max_orbit_radius_m=float(spatial_config.get("max_orbit_radius_m", 2.0)),
+            max_revolutions=float(spatial_config.get("max_revolutions", 1.0)),
+            owner_collision_envelope_m=float(
+                spatial_config.get("owner_collision_envelope_m", 0.55)
+            ),
+            orbit_clearance_margin_m=float(spatial_config.get("orbit_clearance_margin_m", 0.10)),
+            owner_anchor_tolerance_m=float(spatial_config.get("owner_anchor_tolerance_m", 0.60)),
+            stall_timeout_s=float(spatial_config.get("stall_timeout_s", 20.0)),
+            timeout_s=float(spatial_config.get("timeout_s", 120.0)),
+        )
+        minimum_safe_orbit = spatial_limits.minimum_safe_orbit_radius(self.obstacle_stop_m)
+        if spatial_limits.min_orbit_radius_m + 1e-9 < minimum_safe_orbit:
+            raise ValueError(
+                "spatial min_orbit_radius_m must clear the owner collision envelope "
+                f"and safety stop distance (minimum {minimum_safe_orbit:.2f} m)"
+            )
+        self.spatial = SpatialBehaviorController(spatial_limits)
+        self._spatial_detail: dict[str, object] = self.spatial.snapshot()
+        self._monitor_audio = audio_status is None
+        self.audio_status = audio_status or detect_audio_devices()
         self._observation: SimObservation | None = None
         self._follow_detail: dict[str, object] = self.follow.snapshot()
         self._navigation_directive: str | None = None
@@ -83,10 +117,14 @@ class RobotRuntime:
         self._model_detail = type(language_model).__name__ if language_model else "LLM optional"
         model_base = getattr(language_model, "base_url", "") if language_model is not None else ""
         self._model_health_url = f"{str(model_base).rstrip('/')}/health" if model_base else ""
-        self._next_model_probe = 0.0
         self._events: deque[dict[str, object]] = deque(maxlen=100)
         self._chat: deque[dict[str, object]] = deque(maxlen=80)
         self._event_id = 0
+        metrics_config = self.store.section("metrics")
+        self.latency = LatencyTracker(max_turns=int(metrics_config.get("max_turns", 200)))
+        self.component_metrics = ComponentMetrics(
+            samples_per_component=int(metrics_config.get("component_samples", 512))
+        )
         self._lock = threading.RLock()
         self._agent_lock = threading.Lock()
         self._navigation_lock = threading.RLock()
@@ -95,6 +133,7 @@ class RobotRuntime:
         self._closed = False
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
+        self._health_thread: threading.Thread | None = None
         self._last_sent = VelocityCommand()
         self._last_send_at = 0.0
         self._was_moving = False
@@ -135,7 +174,7 @@ class RobotRuntime:
 
         motion = build_motion_router(
             self.store.motion_config(),
-            on_command=lambda command: self.submit_motion("voice", command, ttl=1.0),
+            on_command=self._voice_motion,
             on_stop=self.stop_motion,
         )
         self.dog = Dog.from_config(
@@ -156,10 +195,14 @@ class RobotRuntime:
             safety_limits=self.store.safety_limits(),
             behavior_publisher=self.set_behavior,
             navigation_publisher=self.start_navigation,
+            spatial_behavior_publisher=self.start_spatial_behavior,
             action_proposal_publisher=self.propose_action,
             system_prompt_provider=self._render_system_prompt,
             affect_minimum_confidence=self._affect_minimum_confidence,
             affect_actions=personality.affect_actions,
+            conversation_history_messages=int(
+                agent_config.get("conversation_history_messages", 16)
+            ),
             dog=self.dog,
         )
         # Feed the duplex coordinator through ``handle_text`` so streamed ASR
@@ -171,6 +214,7 @@ class RobotRuntime:
             on_turn=self._voice_turn_completed,
             on_partial=self._voice_partial_received,
             on_error=self._voice_error,
+            on_stage=self._voice_stage,
         )
         self._emit("runtime", "Runtime initialized", "success")
 
@@ -186,6 +230,12 @@ class RobotRuntime:
             daemon=True,
         )
         self._thread.start()
+        self._health_thread = threading.Thread(
+            target=self._service_health_loop,
+            name="parcel-service-health",
+            daemon=True,
+        )
+        self._health_thread.start()
 
     def close(self) -> None:
         if self._closed:
@@ -195,6 +245,7 @@ class RobotRuntime:
         with self._command_lock:
             self.follow.stop()
             self.stop_navigation()
+            self._stop_spatial_locked("runtime_closed")
             self.agent.safety.engage_emergency_stop()
             self.activities.clear("runtime_closed")
             self._activity_complete_at = 0.0
@@ -213,6 +264,8 @@ class RobotRuntime:
         self.voice_session.close(timeout=2.0)
         if self._thread is not None:
             self._thread.join(timeout=2.0)
+        if self._health_thread is not None:
+            self._health_thread.join(timeout=3.0)
 
     def submit_motion(
         self,
@@ -242,14 +295,33 @@ class RobotRuntime:
         # already crossed the dispatch boundary this waits for it, then manual
         # control becomes authoritative before returning to the operator.
         with self._command_lock:
+            with self._lock:
+                self._behavior_generation += 1
+            self._stop_spatial_locked("manual_control")
             return self.submit_motion(
                 "manual",
                 VelocityCommand(vx=values[0], vy=values[1], vyaw=values[2]),
                 ttl=0.45,
             )
 
+    def _voice_motion(self, command: VelocityCommand) -> None:
+        """Give an explicit locomotion command clean ownership of the body."""
+
+        with self._command_lock:
+            self.follow.stop()
+            self.stop_navigation()
+            with self._lock:
+                self._behavior_generation += 1
+            self._stop_spatial_locked("voice_motion_started")
+            self.activities.clear("voice_motion_started")
+            self._activity_complete_at = 0.0
+            self.submit_motion("voice", command, ttl=1.0)
+
     def stop_motion(self) -> None:
         with self._command_lock:
+            with self._lock:
+                self._behavior_generation += 1
+            self._stop_spatial_locked("motion_stopped")
             self.arbiter.stop()
             try:
                 self.backend.stop()
@@ -263,6 +335,7 @@ class RobotRuntime:
         with self._command_lock:
             self.follow.stop()
             self.stop_navigation()
+            self._stop_spatial_locked("emergency_stop")
             self.activities.clear("emergency_stop")
             self._activity_complete_at = 0.0
             self.arbiter.engage_emergency_stop()
@@ -304,6 +377,7 @@ class RobotRuntime:
                     raise RuntimeError("runtime is closed")
                 if self.arbiter.emergency_stopped:
                     raise RuntimeError("motion is disabled by emergency stop")
+                self._stop_spatial_locked("owner_follow_started")
                 self.stop_navigation()
                 self.follow.start()
                 with self._lock:
@@ -317,6 +391,7 @@ class RobotRuntime:
                 with self._lock:
                     self._behavior_generation += 1
                 self.stop_navigation()
+                self._stop_spatial_locked("owner_requested_stay")
                 self.activities.clear("owner_requested_stay")
                 self._activity_complete_at = 0.0
                 self.stop_motion()
@@ -347,6 +422,7 @@ class RobotRuntime:
             raise RuntimeError("runtime is closed")
         if self.arbiter.emergency_stopped:
             raise RuntimeError("motion is disabled by emergency stop")
+        self._stop_spatial_locked("navigation_started")
         self.follow.stop()
         with self._lock:
             self._behavior_generation += 1
@@ -412,6 +488,95 @@ class RobotRuntime:
         if was_enabled:
             with self._navigation_lock:
                 self.dog.stop()
+
+    def start_spatial_behavior(self, intent: SpatialIntent) -> str:
+        """Start one bounded local trajectory under the normal motion arbiter."""
+
+        if self._closed:
+            raise RuntimeError("runtime is closed")
+        owner_relative = intent.direction == "away_from_owner" or intent.behavior == "orbit_owner"
+        observation: SimObservation | None = None
+        with self._command_lock:
+            if self.arbiter.emergency_stopped:
+                raise RuntimeError("motion is disabled by emergency stop")
+            with self._lock:
+                observed_generation = self._behavior_generation
+                if not owner_relative:
+                    observation = self._observation
+
+        if owner_relative:
+            # Device I/O stays outside the command lock so Stop/E-stop and
+            # barge-in never wait for a simulator/network timeout. The captured
+            # generation is revalidated atomically below before any action starts.
+            observe_started = time.monotonic()
+            try:
+                observation = self.backend.observe()
+            except (ConnectionError, OSError, RuntimeError, TypeError, ValueError) as error:
+                raise RuntimeError(
+                    f"fresh camera/LiDAR perception is unavailable: {error}"
+                ) from error
+            finally:
+                self.component_metrics.elapsed("SpatialCommandObserve", observe_started)
+
+        with self._command_lock:
+            if self._closed:
+                raise RuntimeError("runtime is closed")
+            if self.arbiter.emergency_stopped:
+                raise RuntimeError("motion is disabled by emergency stop")
+            with self._lock:
+                if observed_generation != self._behavior_generation:
+                    raise RuntimeError("spatial request was canceled by a newer operator action")
+            active = self.arbiter.current()
+            if active is not None and active.source == "manual":
+                raise RuntimeError("manual control currently owns motion")
+            if owner_relative:
+                with self._lock:
+                    self._observation = observation
+            if observation is None:
+                raise RuntimeError("fresh camera/LiDAR perception is unavailable")
+            if time.monotonic() - observation.timestamp > self.telemetry_stale_s:
+                raise RuntimeError("camera/LiDAR perception is stale")
+            self.follow.stop()
+            self.stop_navigation()
+            self._stop_spatial_locked("replaced_by_new_spatial_behavior")
+            self.activities.clear("spatial_behavior_started")
+            with self._lock:
+                self._behavior_generation += 1
+            detail = self.spatial.start(intent, observation)
+            with self._lock:
+                self._spatial_detail = detail
+
+        if intent.behavior == "move_steps":
+            if intent.direction == "away_from_owner":
+                message = f"I'll back away {intent.steps} small steps while keeping you in view."
+            else:
+                message = f"I'll move {intent.direction} {intent.steps} small steps."
+        else:
+            if math.isclose(intent.revolutions, 1.0):
+                amount = "one"
+            elif math.isclose(intent.revolutions, 0.5):
+                amount = "a half"
+            elif math.isclose(intent.revolutions, 0.25):
+                amount = "a quarter"
+            else:
+                amount = f"{intent.revolutions:g} of a"
+            message = f"I'll make {amount} {intent.size} {intent.direction} circle around you."
+        self._emit("spatial", message, "success")
+        return message
+
+    def _stop_spatial_locked(self, reason: str) -> None:
+        if not self.spatial.active:
+            return
+        previous = self.spatial.snapshot()
+        self.spatial.stop()
+        self.arbiter.cancel("spatial")
+        with self._lock:
+            self._spatial_detail = {
+                **previous,
+                "enabled": False,
+                "state": "cancelled",
+                "reason": reason,
+            }
 
     def action(self, name: str) -> str:
         if name == "follow":
@@ -587,6 +752,10 @@ class RobotRuntime:
             active_kind = "navigate"
             active_phase = str(navigation.get("state", "navigating"))
             interruptibility = "never"
+        elif self.spatial.active:
+            active_kind = "spatial_behavior"
+            active_phase = str(self._spatial_detail.get("state", "moving"))
+            interruptibility = "immediate"
         elif self.follow.enabled:
             active_kind = "follow"
             active_phase = self.follow.state
@@ -630,6 +799,7 @@ class RobotRuntime:
                 ),
             },
             "available_social_skills": available_social,
+            "perception": self.perception.snapshot(self.maps),
             "personality": personality,
         }
 
@@ -648,6 +818,8 @@ class RobotRuntime:
         if self.arbiter.emergency_stopped:
             raise RuntimeError("motion is disabled by emergency stop")
         self.follow.stop()
+        with self._command_lock:
+            self._stop_spatial_locked("pose_started")
         with self._lock:
             self._behavior_generation += 1
         self.stop_navigation()
@@ -661,6 +833,8 @@ class RobotRuntime:
         if self.arbiter.emergency_stopped:
             raise RuntimeError("motion is disabled by emergency stop")
         self.follow.stop()
+        with self._command_lock:
+            self._stop_spatial_locked("trajectory_started")
         with self._lock:
             self._behavior_generation += 1
         self.stop_navigation()
@@ -733,8 +907,15 @@ class RobotRuntime:
         if len(clean) > 2000:
             raise ValueError("voice text is too long")
         if is_final and clean.lower() in EMERGENCY_STOP_PHRASES:
+            # Latch the safety boundary before touching the voice coordinator;
+            # a committed slow action must not delay an emergency request on
+            # the voice session lock.
+            self.agent.safety.engage_emergency_stop()
+            self.emergency_stop()
             self.voice_session.barge_in()
-            reply = self.handle_text(clean)
+            self._chat_item("user", clean)
+            reply = "Stopping."
+            self._chat_item("assistant", reply)
             with self._lock:
                 self._voice_detail = {
                     **self._voice_detail,
@@ -758,6 +939,9 @@ class RobotRuntime:
                     }
         return turn_id
 
+    def cancel_reasoning(self) -> None:
+        self.agent.cancel_reasoning()
+
     def interrupt_voice(self) -> str:
         self.voice_session.barge_in()
         with self._lock:
@@ -779,6 +963,7 @@ class RobotRuntime:
             sim_status = self._sim_status
             sim_error = self._sim_error
             personality = self._personality
+            spatial = dict(self._spatial_detail)
         if not self.follow.enabled:
             follow = self.follow.snapshot()
         robot: dict[str, object] = {"x": 0.0, "y": 0.0, "z": 0.0, "heading": 0.0}
@@ -844,7 +1029,9 @@ class RobotRuntime:
             },
             "follow": follow,
             "navigation": navigation,
+            "spatial_behavior": spatial,
             "audio": self.audio_status.as_dict(),
+            "perception": self.perception.snapshot(self.maps),
             "voice": voice,
             "model": {"status": self._model_status, "detail": self._model_detail},
             "robot": robot,
@@ -860,16 +1047,44 @@ class RobotRuntime:
             "chat": chat,
         }
 
+    def latency_snapshot(self) -> dict[str, object]:
+        snapshot = self.latency.snapshot()
+        snapshot["components"] = self.component_metrics.snapshot()
+        snapshot["audio"] = self.audio_status.as_dict()
+        asr_detail = (
+            "capture endpoint connected, but continuous VAD/ASR endpointer timing is not wired"
+            if self.audio_status.connected_input
+            else "text input mode; no connected capture endpoint"
+        )
+        acoustic_detail = (
+            "headset connected; exact presentation still requires PipeWire timing feedback"
+            if self.audio_status.bluetooth_connected
+            else "requires a connected headset and PipeWire presentation timestamps"
+        )
+        snapshot["unavailable"] = {
+            "ASREndpointer": asr_detail,
+            "BluetoothAcousticPresentation": acoustic_detail,
+        }
+        return snapshot
+
+    @property
+    def last_reasoning_source(self) -> str:
+        return str(getattr(self.agent, "last_reasoning_source", "unknown"))
+
     def _control_loop(self) -> None:
         last_follow_state = ""
         while not self._stop_event.is_set():
             started = time.monotonic()
-            if self._model_health_url and started >= self._next_model_probe:
-                ready = http_service_health(self._model_health_url)
-                self._model_status = "ready" if ready else "offline"
-                self._next_model_probe = started + 5.0
+            observe_recorded = False
             try:
+                observe_started = time.monotonic()
                 observation = self.backend.observe()
+                self.component_metrics.elapsed("SimulatorObserve", observe_started)
+                observe_recorded = True
+                self.component_metrics.observe_ms(
+                    "PerceptionAge",
+                    max(0.0, (time.monotonic() - observation.timestamp) * 1000.0),
+                )
                 with self._lock:
                     self._observation = observation
                     self._sim_status = "connected"
@@ -887,18 +1102,23 @@ class RobotRuntime:
                                 "reason": "simulator_emergency_stop",
                             }
                         self.activities.clear("simulator_emergency_stop")
+                        self._stop_spatial_locked("simulator_emergency_stop")
                         self._activity_complete_at = 0.0
                         self.agent.safety.engage_emergency_stop()
                         self.arbiter.engage_emergency_stop()
                     self._emit("safety", "Simulator emergency stop adopted", "error")
             except (OSError, RuntimeError, TypeError, ValueError) as error:
+                if not observe_recorded:
+                    self.component_metrics.elapsed("SimulatorObserve", observe_started)
                 observation = None
                 self._record_sim_error(error)
 
             with self._lock:
                 follow_generation = self._behavior_generation
             if self.follow.enabled:
+                follow_started = time.monotonic()
                 decision = self.follow.step(observation, now=time.monotonic())
+                self.component_metrics.elapsed("FollowController", follow_started)
                 with self._lock:
                     still_following = (
                         follow_generation == self._behavior_generation
@@ -933,13 +1153,39 @@ class RobotRuntime:
                     self._follow_detail = self.follow.snapshot()
                 last_follow_state = "idle"
 
+            spatial_started = time.monotonic()
+            self._step_spatial(observation)
+            self.component_metrics.elapsed("SpatialController", spatial_started)
+
+            navigation_started = time.monotonic()
             self._step_navigation(observation)
+            self.component_metrics.elapsed("NavigationController", navigation_started)
 
+            activity_started = time.monotonic()
             self._step_activities()
+            self.component_metrics.elapsed("ActivityCoordinator", activity_started)
 
+            dispatch_started = time.monotonic()
             self._dispatch_active()
+            self.component_metrics.elapsed("MotionDispatch", dispatch_started)
             elapsed = time.monotonic() - started
+            self.component_metrics.observe_ms("ControlLoopWork", elapsed * 1000.0)
+            self.component_metrics.observe_ms(
+                "ControlLoopOverrun",
+                max(0.0, elapsed - self.loop_period) * 1000.0,
+            )
             self._stop_event.wait(max(0.0, self.loop_period - elapsed))
+
+    def _service_health_loop(self) -> None:
+        """Keep slow service/device probes off the 10 Hz motion loop."""
+
+        while not self._stop_event.is_set():
+            if self._model_health_url:
+                ready = http_service_health(self._model_health_url)
+                self._model_status = "ready" if ready else "offline"
+            if self._monitor_audio:
+                self.audio_status = detect_audio_devices()
+            self._stop_event.wait(10.0)
 
     def _dispatch_active(self) -> None:
         with self._command_lock:
@@ -955,14 +1201,16 @@ class RobotRuntime:
                 and math.hypot(active.command.vx, active.command.vy) <= 1e-9
                 and abs(active.command.vyaw) > 1e-9
             ):
-                # A rotate-in-place target is a discrete nonholonomic mode
+                # A rotate-in-place target is a discrete forward-preferred mode
                 # transition. Brake translation immediately while retaining
                 # angular smoothing, otherwise residual forward velocity makes
                 # the robot arc/slide during the first alignment ticks.
                 command = VelocityCommand(vyaw=command.vyaw)
             with self._lock:
                 observation = self._observation
+            collision_started = time.monotonic()
             command, proximity_state = self._collision_safe(command, observation)
+            self.component_metrics.elapsed("CollisionGate", collision_started)
             self.velocity_smoother.force(command, now=now)
             if proximity_state != self._proximity_state:
                 if proximity_state == "stopped":
@@ -975,7 +1223,9 @@ class RobotRuntime:
             should_refresh = now - self._last_send_at >= 0.2
             if active is not None and (command != self._last_sent or should_refresh):
                 try:
+                    send_started = time.monotonic()
                     self.backend.move(command)
+                    self.component_metrics.elapsed("BackendCommandSend", send_started)
                     self._last_sent = command
                     self._last_send_at = now
                     self._was_moving = any(
@@ -1082,6 +1332,52 @@ class RobotRuntime:
             self._emit("navigation", f"Arrived at {place}", "success")
             return
 
+    def _step_spatial(self, observation: SimObservation | None) -> None:
+        event: tuple[str, str] | None = None
+        with self._command_lock:
+            if not self.spatial.active:
+                return
+            if (
+                observation is None
+                or time.monotonic() - observation.timestamp > self.telemetry_stale_s
+            ):
+                self._stop_spatial_locked("perception_unavailable")
+                event = ("Spatial behavior stopped: perception unavailable", "warning")
+            else:
+                decision = self.spatial.step(observation)
+                if decision.done:
+                    previous = self.spatial.snapshot()
+                    self.spatial.stop()
+                    self.arbiter.cancel("spatial")
+                    with self._lock:
+                        self._spatial_detail = {
+                            **previous,
+                            "enabled": False,
+                            "state": decision.state,
+                            "reason": decision.reason,
+                            "progress": decision.progress,
+                        }
+                    level = "success" if decision.state == "completed" else "warning"
+                    event = (decision.reason.replace("_", " "), level)
+                else:
+                    with self._lock:
+                        self._spatial_detail = {
+                            **self.spatial.snapshot(),
+                            "state": decision.state,
+                            "reason": decision.reason,
+                            "progress": decision.progress,
+                        }
+                    try:
+                        self.submit_motion(
+                            "spatial",
+                            decision.command,
+                            ttl=self.loop_period * 3.0,
+                        )
+                    except RuntimeError:
+                        pass
+        if event is not None:
+            self._emit("spatial", event[0], event[1])
+
     def _collision_safe(
         self,
         command: VelocityCommand,
@@ -1099,6 +1395,26 @@ class RobotRuntime:
         translating = math.hypot(command.vx, command.vy) > 1e-6
         person_ttc = observation.nearest_person_ttc_s
         predictive_state = "clear"
+        person_distance = observation.nearest_person_m
+        if translating and person_distance is not None:
+            person_bearing = observation.nearest_person_bearing_rad
+            if person_bearing is None:
+                toward_person = True
+            else:
+                travel_angle = math.atan2(command.vy, command.vx)
+                person_error = (person_bearing - travel_angle + math.pi) % (2.0 * math.pi) - math.pi
+                toward_person = abs(person_error) < 1.15
+            if toward_person and person_distance <= self.person_stop_m:
+                return VelocityCommand(vyaw=command.vyaw), "stopped"
+            if toward_person and person_distance < self.person_slow_m:
+                span = self.person_slow_m - self.person_stop_m
+                scale = max(0.15, (person_distance - self.person_stop_m) / span)
+                command = VelocityCommand(
+                    vx=command.vx * scale,
+                    vy=command.vy * scale,
+                    vyaw=command.vyaw,
+                )
+                predictive_state = "slowing"
         if translating and person_ttc is not None:
             if person_ttc <= 0.8:
                 return VelocityCommand(vyaw=command.vyaw), "stopped"
@@ -1110,16 +1426,33 @@ class RobotRuntime:
                     vyaw=command.vyaw,
                 )
                 predictive_state = "slowing"
-        distance = observation.nearest_obstacle_m
         if not translating:
             return command, "clear"
-        bearing = observation.nearest_obstacle_bearing_rad
-        if bearing is None:
-            toward_obstacle = command.vx > 0.0 or abs(command.vy) > 1e-6
-        else:
+        if observation.lidar_obstacles:
             travel_angle = math.atan2(command.vy, command.vx)
-            angle_error = (bearing - travel_angle + math.pi) % (2.0 * math.pi) - math.pi
-            toward_obstacle = abs(angle_error) < 1.15
+            directional = [
+                item
+                for item in observation.lidar_obstacles
+                if abs((item.bearing_rad - travel_angle + math.pi) % (2.0 * math.pi) - math.pi)
+                < 1.15
+            ]
+            if not directional:
+                return command, predictive_state
+            relevant = min(directional, key=lambda item: item.distance_m)
+            distance = relevant.distance_m
+            toward_obstacle = True
+        else:
+            distance = observation.nearest_obstacle_m
+            bearing = observation.nearest_obstacle_bearing_rad
+            if bearing is None:
+                # Legacy/sparse LiDAR reports without a bearing are not
+                # directional. Fail closed for every translation, including
+                # reverse motion.
+                toward_obstacle = True
+            else:
+                travel_angle = math.atan2(command.vy, command.vx)
+                angle_error = (bearing - travel_angle + math.pi) % (2.0 * math.pi) - math.pi
+                toward_obstacle = abs(angle_error) < 1.15
         if observation.collision and toward_obstacle:
             return VelocityCommand(vyaw=command.vyaw), "stopped"
         if not toward_obstacle:
@@ -1195,6 +1528,61 @@ class RobotRuntime:
                 "last_reply": turn.reply,
                 "superseded": turn.superseded,
             }
+
+    def _voice_stage(self, stage: VoiceStage) -> None:
+        if stage.name == "query_end":
+            self.latency.start(
+                stage.turn_id,
+                stage.transcript,
+                source="text",
+                now=stage.timestamp,
+            )
+            self.latency.mark(
+                stage.turn_id,
+                "query_end",
+                now=stage.timestamp,
+                details={
+                    "input_source": "text",
+                    "audio_transport": self.audio_status.transport,
+                    "bluetooth_duplex_ready": self.audio_status.bluetooth_duplex_ready,
+                },
+            )
+            return
+        details: dict[str, object] | None = None
+        if stage.name == "reasoning_response":
+            provider_metrics = getattr(self.agent.language_model, "last_metrics", None)
+            details = (
+                dict(provider_metrics)
+                if self.last_reasoning_source == "model" and isinstance(provider_metrics, dict)
+                else None
+            )
+            reasoning_error = getattr(self.agent, "last_reasoning_error", None)
+            if reasoning_error:
+                details = {**(details or {}), "reasoning_error": str(reasoning_error)[:500]}
+            reasoning_guard = getattr(self.agent, "last_reasoning_guard", None)
+            if reasoning_guard:
+                details = {**(details or {}), "reasoning_guard": str(reasoning_guard)[:500]}
+            first_output = details.pop("_first_output_monotonic", None) if details else None
+            if isinstance(first_output, (int, float)) and math.isfinite(float(first_output)):
+                self.latency.mark(
+                    stage.turn_id,
+                    "reasoning_first_output",
+                    now=float(first_output),
+                )
+            self.latency.set_result(
+                stage.turn_id,
+                stage.reply,
+                reasoning_source=self.last_reasoning_source,
+                details=details,
+            )
+        self.latency.mark(
+            stage.turn_id,
+            stage.name,
+            now=stage.timestamp,
+            details=details,
+        )
+        if stage.name == "turn_complete":
+            self.latency.finalize(stage.turn_id, now=stage.timestamp)
 
     def _voice_error(self, error: Exception) -> None:
         with self._lock:

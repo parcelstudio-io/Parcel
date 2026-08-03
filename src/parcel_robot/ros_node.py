@@ -36,11 +36,7 @@ class ParcelAgentNode(Node):
         model_config = store.section("language_model")
         language_model = None
         if model_config.get("enabled", False):
-            language_model = LlamaCppProvider(
-                base_url=str(model_config.get("base_url", "http://127.0.0.1:8080")),
-                model=str(model_config.get("model", "gemma")),
-                timeout=float(model_config.get("timeout", 30)),
-            )
+            language_model = LlamaCppProvider.from_config(model_config)
         memory_config = store.section("memory")
         motion = build_motion_router(
             store.motion_config(),
@@ -58,8 +54,7 @@ class ParcelAgentNode(Node):
                     "name": skill.id,
                     "kind": skill.kind,
                     "keyframes": [
-                        {"t": frame.t, "joints": dict(frame.joints)}
-                        for frame in skill.keyframes
+                        {"t": frame.t, "joints": dict(frame.joints)} for frame in skill.keyframes
                     ],
                 }
             )
@@ -95,9 +90,7 @@ class ParcelAgentNode(Node):
 
     def publish_walk(self, command: VelocityCommand) -> None:
         message = String()
-        message.data = json.dumps(
-            {"vx": command.vx, "vy": command.vy, "vyaw": command.vyaw}
-        )
+        message.data = json.dumps({"vx": command.vx, "vy": command.vy, "vyaw": command.vyaw})
         self.walk_pub.publish(message)
 
     def publish_stop(self) -> None:

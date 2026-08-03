@@ -24,6 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = REPO_ROOT / "configs" / "robot.yaml"
 FALLBACK_CONFIG = Path(__file__).with_name("config") / "robot.yaml"
 UI_PATH = Path(__file__).with_name("ui") / "index.html"
+LATENCY_UI_PATH = Path(__file__).with_name("ui") / "latency.html"
 MAX_REQUEST_BYTES = 65_536
 
 
@@ -51,8 +52,17 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
             )
             self._send_bytes(body.encode(), "text/html; charset=utf-8")
             return
+        if path in {"/latency", "/latency.html"}:
+            self._send_bytes(
+                LATENCY_UI_PATH.read_bytes(),
+                "text/html; charset=utf-8",
+            )
+            return
         if path == "/api/state":
             self._send_json(self.server.runtime.snapshot())
+            return
+        if path == "/api/latency":
+            self._send_json(self.server.runtime.latency_snapshot())
             return
         if path == "/api/health":
             self._send_json({"status": "ok"})
@@ -224,11 +234,7 @@ def build_runtime(
     enabled = bool(model_config.get("enabled", False)) if use_llm is None else use_llm
     language_model = None
     if enabled:
-        language_model = LlamaCppProvider(
-            base_url=str(model_config.get("base_url", "http://127.0.0.1:8080")),
-            model=str(model_config.get("model", "gemma")),
-            timeout=float(model_config.get("timeout", 30)),
-        )
+        language_model = LlamaCppProvider.from_config(model_config)
     return RobotRuntime(
         config_path,
         MujocoSocketBackend(socket_path),

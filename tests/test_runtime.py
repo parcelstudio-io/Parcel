@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import threading
 import time
 from dataclasses import replace
@@ -8,10 +9,11 @@ from pathlib import Path
 import pytest
 
 from parcel_robot.audio_io import AudioDeviceStatus
-from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
+from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, SimObservation
 from parcel_robot.core import CommandArbiter, MotionIntent
-from parcel_robot.models import AgentDecision, ToolCall, VelocityCommand
+from parcel_robot.models import AgentDecision, SpatialIntent, ToolCall, VelocityCommand
 from parcel_robot.navigation.follow import FollowOwnerController
+from parcel_robot.navigation.spatial import SpatialDecision
 from parcel_robot.runtime import RobotRuntime
 from parcel_robot.safety import SafetyLimits
 
@@ -27,6 +29,10 @@ def _observation(
     confidence: float = 1.0,
     obstacle_m: float | None = None,
     obstacle_bearing_rad: float | None = None,
+    person_m: float | None = None,
+    person_bearing_rad: float | None = None,
+    person_ttc_s: float | None = None,
+    lidar_obstacles: tuple[LidarObstacle, ...] = (),
     collision: bool = False,
 ) -> SimObservation:
     return SimObservation(
@@ -41,6 +47,11 @@ def _observation(
         ),
         nearest_obstacle_m=obstacle_m,
         nearest_obstacle_bearing_rad=obstacle_bearing_rad,
+        lidar_obstacles=lidar_obstacles,
+        nearest_person_m=person_m,
+        nearest_person_bearing_rad=person_bearing_rad,
+        nearest_person_id="ped-test" if person_m is not None else None,
+        nearest_person_ttc_s=person_ttc_s,
         collision=collision,
         backend="fake",
     )
@@ -216,6 +227,144 @@ def test_arbiter_honors_priority_and_expires_leases() -> None:
     assert arbiter.current(now=10.349) == manual
     assert arbiter.current(now=10.35) is None
     assert arbiter.submit(follow, now=10.35).accepted
+
+
+def test_runtime_executes_bounded_owner_relative_steps_and_manual_preempts(
+    runtime_config,
+    audio_status,
+):
+    backend = FakeSimulatorBackend(_observation(time.monotonic(), owner_x=2.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status, loop_hz=30)
+    runtime.start()
+    try:
+        reply = runtime.handle_text("Can you walk away from the owner 5 steps?")
+        assert "5 small steps" in reply
+        assert backend.wait_for_moves(1)
+        assert any(command.vx < 0.0 for command in backend.move_history())
+        spatial = runtime.snapshot()["spatial_behavior"]
+        assert spatial["intent"] == {
+            "behavior": "move_steps",
+            "direction": "away_from_owner",
+            "steps": 5,
+            "size": "normal",
+            "revolutions": 1.0,
+        }
+
+        runtime.manual_motion(0.0, 0.2, 0.0)
+        assert runtime.snapshot()["spatial_behavior"]["state"] == "cancelled"
+        assert runtime.snapshot()["motion"]["active_source"] == "manual"
+    finally:
+        runtime.close()
+
+
+def test_explicit_voice_locomotion_preempts_active_spatial_behavior(
+    runtime_config,
+    audio_status,
+):
+    observation = _observation(time.monotonic(), owner_x=2.0)
+    runtime = RobotRuntime(
+        runtime_config,
+        FakeSimulatorBackend(observation),
+        audio_status=audio_status,
+    )
+    runtime._observation = observation
+    try:
+        runtime.start_spatial_behavior(SpatialIntent("move_steps", "forward", steps=3))
+        assert runtime.snapshot()["spatial_behavior"]["enabled"] is True
+
+        assert runtime.handle_text("run walk_forward") == "Running walk_forward"
+
+        snapshot = runtime.snapshot()
+        assert snapshot["spatial_behavior"]["state"] == "cancelled"
+        assert snapshot["motion"]["active_source"] == "voice"
+        assert runtime.agent.memory.recent(2) == [
+            {"role": "user", "content": "run walk_forward"},
+            {"role": "assistant", "content": "Running walk_forward"},
+        ]
+    finally:
+        runtime.close()
+
+
+def test_runtime_rejects_owner_orbit_when_camera_track_is_missing(
+    runtime_config,
+    audio_status,
+):
+    backend = FakeSimulatorBackend(_observation(time.monotonic(), visible=False, confidence=0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    runtime._observation = backend.observe()
+    try:
+        with pytest.raises(RuntimeError, match="owner_not_visible_to_camera"):
+            runtime.start_spatial_behavior(SpatialIntent("orbit_owner", "counterclockwise"))
+    finally:
+        runtime.close()
+
+
+def test_owner_orbit_refreshes_perception_at_action_commit(runtime_config, audio_status):
+    backend = FakeSimulatorBackend(_observation(time.monotonic(), owner_x=3.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    runtime._observation = backend.observe()
+    backend.move_owner(-1.0, 0.0)
+    backend.move_owner(-0.7, 0.0)
+    try:
+        reply = runtime.start_spatial_behavior(
+            SpatialIntent(
+                "orbit_owner",
+                "counterclockwise",
+                size="small",
+                revolutions=0.5,
+            )
+        )
+        assert "a half small counterclockwise circle" in reply
+        assert runtime.snapshot()["spatial_behavior"]["state"] == "orbit"
+        assert "SpatialCommandObserve" in runtime.latency_snapshot()["components"]
+    finally:
+        runtime.close()
+
+
+def test_manual_input_invalidates_spatial_request_during_fresh_observe(
+    runtime_config,
+    audio_status,
+):
+    observation = _observation(time.monotonic(), owner_x=3.0)
+    observe_started = threading.Event()
+    release_observe = threading.Event()
+
+    class BlockingObserveBackend(FakeSimulatorBackend):
+        def observe(self) -> SimObservation:
+            observe_started.set()
+            assert release_observe.wait(2.0)
+            return super().observe()
+
+    runtime = RobotRuntime(
+        runtime_config,
+        BlockingObserveBackend(observation),
+        audio_status=audio_status,
+    )
+    failures = []
+
+    def start_spatial() -> None:
+        try:
+            runtime.start_spatial_behavior(
+                SpatialIntent("orbit_owner", "counterclockwise", size="small")
+            )
+        except RuntimeError as error:
+            failures.append(str(error))
+
+    request = threading.Thread(target=start_spatial)
+    try:
+        request.start()
+        assert observe_started.wait(1.0)
+        runtime.manual_motion(0.2, 0.0, 0.0)
+        release_observe.set()
+        request.join(2.0)
+
+        assert not request.is_alive()
+        assert failures == ["spatial request was canceled by a newer operator action"]
+        assert runtime.snapshot()["spatial_behavior"]["enabled"] is False
+        assert runtime.snapshot()["motion"]["active_source"] == "manual"
+    finally:
+        release_observe.set()
+        runtime.close()
 
 
 def test_arbiter_estop_latches_until_explicitly_cleared() -> None:
@@ -426,6 +575,12 @@ def test_runtime_streaming_text_executes_only_final_transcript(
         assert snapshot["voice"]["last_transcript"] == "follow me"
         assert [item["role"] for item in snapshot["chat"]] == ["user", "assistant"]
         assert runtime.follow.enabled
+        trace = runtime.latency_snapshot()["turns"][0]
+        assert trace["user_query"] == "follow me"
+        assert trace["model_response"] == "I will follow you."
+        assert trace["reasoning_source"] == "deterministic"
+        assert trace["latency_ms"]["UserQueryEndToFirstResponse"] is not None
+        assert trace["latency_ms"]["UserQueryEndToFirstReasoningResponse"] is not None
     finally:
         runtime.close()
 
@@ -560,6 +715,133 @@ def test_runtime_final_proximity_gate_preserves_escape_turn(
         assert command.vy == 0.0
         assert 0.0 < command.vyaw <= 0.4
     finally:
+        runtime.close()
+
+
+def test_runtime_proximity_gate_fails_closed_for_reverse_without_bearing(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    observation = _observation(
+        time.monotonic(),
+        obstacle_m=0.1,
+        obstacle_bearing_rad=None,
+        collision=True,
+    )
+    runtime = RobotRuntime(
+        runtime_config,
+        FakeSimulatorBackend(observation),
+        audio_status=audio_status,
+    )
+    try:
+        command, state = runtime._collision_safe(VelocityCommand(vx=-0.2), observation)
+        assert command == VelocityCommand()
+        assert state == "stopped"
+    finally:
+        runtime.close()
+
+
+def test_runtime_first_command_uses_directional_person_distance_without_ttc(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    observation = _observation(
+        time.monotonic(),
+        person_m=0.7,
+        person_bearing_rad=0.0,
+        person_ttc_s=None,
+    )
+    runtime = RobotRuntime(
+        runtime_config,
+        FakeSimulatorBackend(observation),
+        audio_status=audio_status,
+    )
+    try:
+        forward, forward_state = runtime._collision_safe(VelocityCommand(vx=0.2), observation)
+        retreat, retreat_state = runtime._collision_safe(VelocityCommand(vx=-0.2), observation)
+        tangent, tangent_state = runtime._collision_safe(VelocityCommand(vy=0.2), observation)
+
+        assert forward == VelocityCommand()
+        assert forward_state == "stopped"
+        assert retreat == VelocityCommand(vx=-0.2)
+        assert retreat_state == "clear"
+        assert tangent == VelocityCommand(vy=0.2)
+        assert tangent_state == "clear"
+    finally:
+        runtime.close()
+
+
+def test_runtime_uses_current_motion_against_all_bounded_lidar_candidates(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    observation = _observation(
+        time.monotonic(),
+        # Legacy nearest is behind and would be ignored for forward motion.
+        obstacle_m=0.1,
+        obstacle_bearing_rad=math.pi,
+        lidar_obstacles=(
+            LidarObstacle(0.1, math.pi, "rear"),
+            LidarObstacle(0.3, 0.0, "front"),
+        ),
+    )
+    runtime = RobotRuntime(
+        runtime_config,
+        FakeSimulatorBackend(observation),
+        audio_status=audio_status,
+    )
+    try:
+        command, state = runtime._collision_safe(VelocityCommand(vx=0.2), observation)
+
+        assert command == VelocityCommand()
+        assert state == "stopped"
+    finally:
+        runtime.close()
+
+
+def test_spatial_step_cannot_reacquire_motion_after_operator_stop(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+    monkeypatch,
+) -> None:
+    observation = _observation(time.monotonic(), owner_x=2.0)
+    runtime = RobotRuntime(
+        runtime_config,
+        FakeSimulatorBackend(observation),
+        audio_status=audio_status,
+    )
+    runtime._observation = observation
+    runtime.start_spatial_behavior(SpatialIntent("move_steps", "forward", steps=2))
+    entered_step = threading.Event()
+    release_step = threading.Event()
+
+    def blocked_step(_observation):
+        entered_step.set()
+        assert release_step.wait(2.0)
+        return SpatialDecision(
+            VelocityCommand(vx=0.2),
+            False,
+            "moving",
+            "bounded_step_motion",
+            0.1,
+        )
+
+    monkeypatch.setattr(runtime.spatial, "step", blocked_step)
+    stepping = threading.Thread(target=lambda: runtime._step_spatial(observation))
+    stopping = threading.Thread(target=lambda: runtime.action("stop"))
+    try:
+        stepping.start()
+        assert entered_step.wait(1.0)
+        stopping.start()
+        release_step.set()
+        stepping.join(2.0)
+        stopping.join(2.0)
+        assert not stepping.is_alive()
+        assert not stopping.is_alive()
+        assert runtime.snapshot()["motion"]["active_source"] is None
+        assert runtime.snapshot()["spatial_behavior"]["state"] == "cancelled"
+    finally:
+        release_step.set()
         runtime.close()
 
 

@@ -37,6 +37,15 @@ class DynamicAgentTrack:
 
 
 @dataclass(frozen=True)
+class LidarObstacle:
+    """One bounded polar obstacle return from the local LiDAR adapter."""
+
+    distance_m: float
+    bearing_rad: float
+    obstacle_id: str | None = None
+
+
+@dataclass(frozen=True)
 class SimObservation:
     timestamp: float
     robot: RobotPose
@@ -44,6 +53,7 @@ class SimObservation:
     nearest_obstacle_m: float | None = None
     nearest_obstacle_bearing_rad: float | None = None
     nearest_obstacle_id: str | None = None
+    lidar_obstacles: tuple[LidarObstacle, ...] = ()
     nearest_person_m: float | None = None
     nearest_person_bearing_rad: float | None = None
     nearest_person_id: str | None = None

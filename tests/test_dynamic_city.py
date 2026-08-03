@@ -12,7 +12,11 @@ from parcel_robot.dynamic_city import (
     select_social_collision_candidate,
 )
 from parcel_robot.models import VelocityCommand
-from parcel_robot.sim import is_logical_obstacle_name, select_relevant_obstacle
+from parcel_robot.sim import (
+    is_logical_obstacle_name,
+    lidar_obstacle_payload,
+    select_relevant_obstacle,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 CITY_SCENE = REPO / "src" / "parcel_robot" / "scenes" / "city_block.xml"
@@ -165,6 +169,20 @@ def test_obstacle_ahead_is_not_masked_by_closer_obstacle_behind():
 
     assert selected is not None
     assert selected["id"] == "ahead"
+
+
+def test_lidar_payload_strips_simulator_world_coordinates():
+    payload = lidar_obstacle_payload(
+        {
+            "id": "bench",
+            "distance_m": 0.7,
+            "bearing_rad": 0.1,
+            "x": 12.0,
+            "y": -4.0,
+        }
+    )
+
+    assert payload == {"id": "bench", "distance_m": 0.7, "bearing_rad": 0.1}
 
 
 @pytest.mark.skipif(not CITY_SCENE.exists(), reason="city scene is unavailable")

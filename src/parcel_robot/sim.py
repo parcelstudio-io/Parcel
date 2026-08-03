@@ -34,6 +34,7 @@ LOGICAL_OBSTACLE_PREFIXES = (
     "signal_",
 )
 ROBOT_OBSTACLE_HEIGHT_M = 0.9
+MAX_LIDAR_OBSTACLES = 64
 
 
 def is_logical_obstacle_name(name: str) -> bool:
@@ -66,6 +67,16 @@ def select_relevant_obstacle(
         if directional:
             return min(directional, key=lambda item: float(item["distance_m"]))
     return min(candidates, key=lambda item: float(item["distance_m"]))
+
+
+def lidar_obstacle_payload(item: dict[str, float | str]) -> dict[str, float | str]:
+    """Strip simulator coordinates from the LiDAR-facing observation boundary."""
+
+    return {
+        "id": str(item["id"]),
+        "distance_m": float(item["distance_m"]),
+        "bearing_rad": float(item["bearing_rad"]),
+    }
 
 
 def resolve_scene(config_path: Path, override: str | None) -> Path:
@@ -196,9 +207,9 @@ def run_simulator(
         data.qpos[3:7] = (math.cos(half_yaw), 0.0, 0.0, math.sin(half_yaw))
         data.qvel[:6] = 0.0
 
-    def nearest_obstacle() -> dict[str, float | str] | None:
+    def lidar_obstacles() -> list[dict[str, float | str]]:
         if model.nq < 2 or not obstacle_geom_ids:
-            return None
+            return []
         px, py = float(data.qpos[0]), float(data.qpos[1])
         heading = robot_yaw()
         candidates: list[dict[str, float | str]] = []
@@ -245,10 +256,15 @@ def run_simulator(
                     "y": gy,
                 }
             )
-        return select_relevant_obstacle(candidates, walk_command)
+        return sorted(candidates, key=lambda item: float(item["distance_m"]))[:MAX_LIDAR_OBSTACLES]
+
+    def nearest_obstacle() -> dict[str, float | str] | None:
+        return select_relevant_obstacle(lidar_obstacles(), walk_command)
 
     def state_snapshot() -> dict:
-        obstacle = nearest_obstacle()
+        lidar_candidates = lidar_obstacles()
+        raw_obstacle = select_relevant_obstacle(lidar_candidates, walk_command)
+        obstacle = lidar_obstacle_payload(raw_obstacle) if raw_obstacle is not None else None
         obstacle_distance = float(obstacle["distance_m"]) if obstacle is not None else None
         if owner_mocap_id >= 0:
             owner_x, owner_y = (
@@ -306,6 +322,7 @@ def run_simulator(
             },
             "nearest_obstacle_m": obstacle_distance,
             "nearest_obstacle": obstacle,
+            "lidar_obstacles": [lidar_obstacle_payload(item) for item in lidar_candidates],
             "nearest_person_m": float(person["distance_m"]) if person else None,
             "nearest_person": person,
             "dynamic_agents": active_tracks,

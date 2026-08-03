@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -35,14 +36,28 @@ class PromptLibrary:
         self.root = Path(root).expanduser().resolve()
         if not self.root.is_dir():
             raise FileNotFoundError(f"prompt directory not found: {self.root}")
+        self._cache_lock = threading.RLock()
+        self._personality_cache: dict[str, PersonalityProfile] = {}
+        self._function_cache: dict[str, FunctionProfile] = {}
+        self._text_cache: dict[tuple[str, str], str] = {}
+        self._personality_id_cache: tuple[str, ...] | None = None
 
     def list_personalities(self) -> list[PersonalityProfile]:
-        return [
-            self.personality(path.stem)
-            for path in sorted(self._dir("personalities").glob("*.yaml"))
-        ]
+        return [self.personality(profile_id) for profile_id in self._personality_ids()]
+
+    def _personality_ids(self) -> tuple[str, ...]:
+        with self._cache_lock:
+            if self._personality_id_cache is None:
+                self._personality_id_cache = tuple(
+                    path.stem for path in sorted(self._dir("personalities").glob("*.yaml"))
+                )
+            return self._personality_id_cache
 
     def personality(self, profile_id: str) -> PersonalityProfile:
+        with self._cache_lock:
+            cached = self._personality_cache.get(profile_id)
+            if cached is not None:
+                return cached
         data = self._yaml("personalities", profile_id)
         identity = self._identity(data, profile_id)
         instruction = self._required_text(data, "instruction")
@@ -57,22 +72,32 @@ class PromptLibrary:
             for key, value in affect_actions.items()
         ):
             raise TypeError("personality affect_actions contains an invalid mapping")
-        return PersonalityProfile(
+        profile = PersonalityProfile(
             id=identity,
             name=str(data.get("name", identity)),
             instruction=instruction,
             reply_style=tuple(item.strip() for item in reply_style),
             affect_actions=dict(affect_actions),
         )
+        with self._cache_lock:
+            self._personality_cache[profile_id] = profile
+        return profile
 
     def function(self, profile_id: str) -> FunctionProfile:
+        with self._cache_lock:
+            cached = self._function_cache.get(profile_id)
+            if cached is not None:
+                return cached
         data = self._yaml("functions", profile_id)
         identity = self._identity(data, profile_id)
-        return FunctionProfile(
+        profile = FunctionProfile(
             id=identity,
             name=str(data.get("name", identity)),
             instruction=self._required_text(data, "instruction"),
         )
+        with self._cache_lock:
+            self._function_cache[profile_id] = profile
+        return profile
 
     def render_system(
         self,
@@ -124,7 +149,15 @@ class PromptLibrary:
         return value
 
     def _text(self, section: str, filename: str) -> str:
-        return self._read(self._dir(section) / filename).strip()
+        key = (section, filename)
+        with self._cache_lock:
+            cached = self._text_cache.get(key)
+            if cached is not None:
+                return cached
+        value = self._read(self._dir(section) / filename).strip()
+        with self._cache_lock:
+            self._text_cache[key] = value
+        return value
 
     def _dir(self, section: str) -> Path:
         path = (self.root / section).resolve()

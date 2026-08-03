@@ -51,6 +51,8 @@ class SafetySupervisor:
             return self._validate_navigate(call)
         if call.name == "set_behavior":
             return self._validate_behavior(call)
+        if call.name == "run_spatial_behavior":
+            return self._validate_spatial_behavior(call)
         if call.name != "run_pose":
             return ToolResult(call.name, False, f"Tool is not allowed: {call.name}")
         if self.emergency_stopped:
@@ -104,9 +106,7 @@ class SafetySupervisor:
     def _validate_behavior(self, call: ToolCall) -> ToolResult:
         if self.emergency_stopped:
             return ToolResult(call.name, False, "Motion is disabled by emergency stop")
-        if set(call.arguments) != {"mode"} or not isinstance(
-            call.arguments.get("mode"), str
-        ):
+        if set(call.arguments) != {"mode"} or not isinstance(call.arguments.get("mode"), str):
             return ToolResult(call.name, False, "set_behavior requires only a string mode")
         mode = call.arguments["mode"]
         if mode not in {"follow", "stay"}:
@@ -119,10 +119,7 @@ class SafetySupervisor:
         allowed = {"vx", "vy", "vyaw"}
         if not set(call.arguments).issubset(allowed):
             return ToolResult(call.name, False, "set_velocity only accepts vx, vy, vyaw")
-        values = {
-            key: float(call.arguments.get(key, 0.0))
-            for key in ("vx", "vy", "vyaw")
-        }
+        values = {key: float(call.arguments.get(key, 0.0)) for key in ("vx", "vy", "vyaw")}
         if any(not math.isfinite(value) for value in values.values()):
             return ToolResult(call.name, False, "set_velocity values must be finite")
         if abs(values["vx"]) > self.limits.max_vx:
@@ -137,6 +134,54 @@ class SafetySupervisor:
             f"Velocity approved: vx={values['vx']:.2f} vy={values['vy']:.2f} "
             f"vyaw={values['vyaw']:.2f}",
         )
+
+    def _validate_spatial_behavior(self, call: ToolCall) -> ToolResult:
+        if self.emergency_stopped:
+            return ToolResult(call.name, False, "Motion is disabled by emergency stop")
+        behavior = call.arguments.get("behavior")
+        if behavior == "move_steps":
+            if set(call.arguments) != {"behavior", "direction", "steps"}:
+                return ToolResult(
+                    call.name,
+                    False,
+                    "move_steps requires only behavior, direction, and steps",
+                )
+            if call.arguments.get("direction") not in {
+                "forward",
+                "backward",
+                "away_from_owner",
+            }:
+                return ToolResult(call.name, False, "move_steps direction is not allowed")
+            steps = call.arguments.get("steps")
+            if isinstance(steps, bool) or not isinstance(steps, int) or not 1 <= steps <= 12:
+                return ToolResult(call.name, False, "steps must be an integer between 1 and 12")
+            return ToolResult(call.name, True, "Bounded step behavior approved")
+        if behavior == "orbit_owner":
+            allowed = {"behavior", "direction", "size", "revolutions"}
+            if set(call.arguments) != allowed:
+                return ToolResult(
+                    call.name,
+                    False,
+                    "orbit_owner requires behavior, direction, size, and revolutions",
+                )
+            if call.arguments.get("direction") not in {"clockwise", "counterclockwise"}:
+                return ToolResult(call.name, False, "orbit direction is not allowed")
+            if call.arguments.get("size") not in {"small", "normal", "wide"}:
+                return ToolResult(call.name, False, "orbit size is not allowed")
+            revolutions = call.arguments.get("revolutions")
+            if (
+                isinstance(revolutions, bool)
+                or not isinstance(revolutions, (int, float))
+                or not math.isfinite(float(revolutions))
+                or not 0.25 <= float(revolutions) <= 1.0
+            ):
+                return ToolResult(
+                    call.name,
+                    False,
+                    "orbit revolutions must be between 0.25 and 1.0",
+                )
+            return ToolResult(call.name, True, "Bounded owner orbit approved")
+        return ToolResult(call.name, False, "Unknown spatial behavior")
 
     def engage_emergency_stop(self) -> None:
         self.emergency_stopped = True

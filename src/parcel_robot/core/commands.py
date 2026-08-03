@@ -9,6 +9,7 @@ from parcel_robot.models import VelocityCommand
 SOURCE_PRIORITIES: dict[str, int] = {
     "navigation": 30,
     "follow": 40,
+    "spatial": 50,
     "voice": 60,
     "manual": 80,
     "safety": 100,

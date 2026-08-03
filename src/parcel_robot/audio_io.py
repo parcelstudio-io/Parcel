@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import re
 import shutil
 import subprocess
 import time
@@ -18,9 +19,23 @@ class AudioDeviceStatus:
     connected_input: bool
     connected_output: bool
     detail: str
+    bluetooth_controller: bool = False
+    bluetooth_powered: bool = False
+    bluetooth_connected: bool = False
+    bluetooth_duplex_ready: bool = False
+    transport: str = "none"
 
     def as_dict(self) -> dict[str, object]:
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class _PipeWireEndpoint:
+    node_id: str | None = None
+    device_id: str | None = None
+    bluetooth: bool = False
+    headset_profile: bool = False
+    a2dp_profile: bool = False
 
 
 def detect_audio_devices() -> AudioDeviceStatus:
@@ -41,48 +56,89 @@ def detect_audio_devices() -> AudioDeviceStatus:
         except (OSError, subprocess.TimeoutExpired):
             capture_hardware = False
 
+    bluetooth_controller = False
+    bluetooth_powered = False
+    bluetooth_connected = False
+    bluetoothctl = shutil.which("bluetoothctl")
+    if bluetoothctl:
+        controller_status = _command_output([bluetoothctl, "show"])
+        bluetooth_controller = "Controller " in controller_status
+        bluetooth_powered = "Powered: yes" in controller_status
+        connected_status = _command_output([bluetoothctl, "devices", "Connected"])
+        # Do not retain device addresses or names in telemetry.
+        bluetooth_connected = any(
+            line.strip().startswith("Device ") for line in connected_status.splitlines()
+        )
+
     connected_input = False
     connected_output = False
+    default_input = _PipeWireEndpoint()
+    default_output = _PipeWireEndpoint()
     wpctl = shutil.which("wpctl")
     if wpctl:
-        try:
-            result = subprocess.run(
-                [wpctl, "status"],
-                capture_output=True,
-                text=True,
-                timeout=2,
-                check=False,
-            )
-            status = result.stdout
+        status = _command_output([wpctl, "status"])
+        if status:
             source_block = (
                 status.split("Sources:", 1)[1].split("Filters:", 1)[0]
                 if "Sources:" in status
                 else ""
             )
             sink_block = (
-                status.split("Sinks:", 1)[1].split("Sources:", 1)[0]
-                if "Sinks:" in status
-                else ""
+                status.split("Sinks:", 1)[1].split("Sources:", 1)[0] if "Sinks:" in status else ""
             )
-            connected_input = any(
-                line.strip().startswith(("*", "│  *"))
-                for line in source_block.splitlines()
+            input_id = _default_node_id(source_block)
+            output_id = _default_node_id(sink_block)
+            connected_input = input_id is not None
+            connected_output = output_id is not None and not _node_is_dummy_output(
+                sink_block, output_id
             )
-            connected_output = "Dummy Output" not in sink_block and any(
-                line.strip().startswith(("*", "│  *"))
-                for line in sink_block.splitlines()
+            default_input, default_output = _inspect_pipewire_endpoints(
+                wpctl,
+                input_id if connected_input else None,
+                output_id if connected_output else None,
             )
-        except (OSError, subprocess.TimeoutExpired):
-            connected_input = connected_output = False
 
+    bluetooth_connected = bluetooth_connected or default_input.bluetooth or default_output.bluetooth
+    bluetooth_duplex = (
+        connected_input
+        and connected_output
+        and default_input.bluetooth
+        and default_output.bluetooth
+        and default_input.device_id is not None
+        and default_input.device_id == default_output.device_id
+        and default_input.headset_profile
+        and default_output.headset_profile
+    )
+    transport = (
+        "bluetooth_hfp"
+        if bluetooth_duplex
+        else "bluetooth_a2dp"
+        if connected_output and default_output.bluetooth and default_output.a2dp_profile
+        else "bluetooth"
+        if default_input.bluetooth or default_output.bluetooth
+        else "pipewire"
+        if connected_input or connected_output
+        else "none"
+    )
     if connected_input and connected_output:
+        endpoint_detail = (
+            "A Bluetooth headset is connected for duplex input/output. Microphone use may "
+            "switch playback from A2DP to the lower-bandwidth HFP/HSP profile."
+            if bluetooth_duplex
+            else "Audio input and output endpoints are connected."
+        )
         return AudioDeviceStatus(
             "available",
             "PipeWire/ALSA",
             capture_hardware,
             True,
             True,
-            "Audio input and output endpoints are connected.",
+            endpoint_detail,
+            bluetooth_controller,
+            bluetooth_powered,
+            bluetooth_connected,
+            bluetooth_duplex,
+            transport,
         )
     detail = (
         "ALSA hardware and drivers are installed, but no microphone/speaker endpoint "
@@ -97,7 +153,119 @@ def detect_audio_devices() -> AudioDeviceStatus:
         connected_input,
         connected_output,
         detail,
+        bluetooth_controller,
+        bluetooth_powered,
+        bluetooth_connected,
+        bluetooth_duplex,
+        transport,
     )
+
+
+def _command_output(command: list[str], *, max_chars: int = 16_384) -> str:
+    """Run one fixed, read-only probe with bounded time and retained output."""
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return result.stdout[:max_chars]
+
+
+def _default_node_id(status_block: str) -> str | None:
+    """Return the numeric ID of a starred PipeWire default node."""
+    for line in status_block.splitlines():
+        match = re.search(r"\*\s+(\d+)\.", line)
+        if match:
+            return match.group(1)
+    return None
+
+
+def _node_is_dummy_output(status_block: str, node_id: str) -> bool:
+    for line in status_block.splitlines():
+        match = re.search(r"\*\s+(\d+)\.", line)
+        if match and match.group(1) == node_id:
+            return "dummy output" in line.casefold()
+    return False
+
+
+def _inspect_pipewire_endpoints(
+    wpctl: str,
+    input_id: str | None,
+    output_id: str | None,
+) -> tuple[_PipeWireEndpoint, _PipeWireEndpoint]:
+    """Resolve default nodes to their parent devices without exposing identifiers."""
+    cache: dict[str, str] = {}
+
+    def inspect(object_id: str) -> str:
+        if not object_id.isdecimal():
+            return ""
+        if object_id not in cache:
+            cache[object_id] = _command_output([wpctl, "inspect", object_id])
+        return cache[object_id]
+
+    def endpoint(node_id: str | None) -> _PipeWireEndpoint:
+        if node_id is None or not node_id.isdecimal():
+            return _PipeWireEndpoint()
+        node = inspect(node_id)
+        device_id = _inspect_property(node, "device.id")
+        if device_id is None or not device_id.isdecimal():
+            return _PipeWireEndpoint(node_id=node_id)
+        device = inspect(device_id)
+        combined = f"{node}\n{device}"
+        device_api = _inspect_property(device, "device.api") or _inspect_property(
+            node, "device.api"
+        )
+        bluetooth = device_api.casefold() == "bluez5" if device_api else False
+        profiles = " ".join(
+            value
+            for key in (
+                "api.bluez5.profile",
+                "bluez5.profile",
+                "device.profile.name",
+                "device.profile.description",
+                "node.name",
+            )
+            if (value := _inspect_property(combined, key)) is not None
+        ).casefold()
+        normalized_profiles = profiles.replace("_", "-").replace("/", "-")
+        headset_profile = bluetooth and any(
+            token in normalized_profiles
+            for token in (
+                "headset-head-unit",
+                "handsfree-head-unit",
+                "headset-audio-gateway",
+                "handsfree-audio-gateway",
+                "hfp-hf",
+                "hfp-ag",
+                "hsp-hs",
+                "hsp-ag",
+            )
+        )
+        return _PipeWireEndpoint(
+            node_id=node_id,
+            device_id=device_id,
+            bluetooth=bluetooth,
+            headset_profile=headset_profile,
+            a2dp_profile=bluetooth and "a2dp" in normalized_profiles,
+        )
+
+    return endpoint(input_id), endpoint(output_id)
+
+
+def _inspect_property(inspection: str, key: str) -> str | None:
+    match = re.search(
+        rf"^\s*\*?\s*{re.escape(key)}\s*=\s*(?:\"([^\"]*)\"|(\S+))\s*$",
+        inspection,
+        flags=re.MULTILINE,
+    )
+    if match is None:
+        return None
+    return match.group(1) if match.group(1) is not None else match.group(2)
 
 
 class AlsaAudioIO:
@@ -169,3 +337,78 @@ class AlsaAudioIO:
             timeout=60,
             check=True,
         )
+
+
+class PipeWireAudioIO:
+    """Default-node capture/playback suitable for USB and Bluetooth headsets.
+
+    Device selection remains with PipeWire/WirePlumber, so an AirPods connection
+    or HFP profile switch does not require a MAC-address-derived device name in
+    Parcel configuration. This adapter captures one bounded utterance; continuous
+    VAD/AEC transport remains a higher-level service concern.
+    """
+
+    def __init__(self, capture_target: str | None = None, playback_target: str | None = None):
+        self.capture_target = capture_target
+        self.playback_target = playback_target
+
+    def capture_wav(self, duration_s: float = 4.0) -> bytes:
+        if not 0.1 <= duration_s <= 30.0:
+            raise ValueError("capture duration must be between 0.1 and 30 seconds")
+        recorder = shutil.which("pw-record")
+        if recorder is None:
+            raise RuntimeError("pw-record is not installed")
+        sample_count = max(1, round(duration_s * 16_000))
+        command = [
+            recorder,
+            "--raw",
+            "--format",
+            "s16",
+            "--rate",
+            "16000",
+            "--channels",
+            "1",
+            "--sample-count",
+            str(sample_count),
+        ]
+        if self.capture_target:
+            command.extend(("--target", self.capture_target))
+        command.append("-")
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                timeout=duration_s + 5.0,
+                check=True,
+            )
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+            raise RuntimeError(f"PipeWire capture failed: {error}") from error
+        if not result.stdout:
+            raise RuntimeError("PipeWire capture returned no samples")
+        output = io.BytesIO()
+        with wave.open(output, "wb") as wav:
+            wav.setnchannels(1)
+            wav.setsampwidth(2)
+            wav.setframerate(16_000)
+            wav.writeframes(result.stdout)
+        return output.getvalue()
+
+    def play_wav(self, wav_audio: bytes) -> None:
+        if not wav_audio:
+            raise ValueError("playback audio must not be empty")
+        player = shutil.which("pw-play")
+        if player is None:
+            raise RuntimeError("pw-play is not installed")
+        command = [player]
+        if self.playback_target:
+            command.extend(("--target", self.playback_target))
+        command.append("-")
+        try:
+            subprocess.run(
+                command,
+                input=wav_audio,
+                timeout=60,
+                check=True,
+            )
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+            raise RuntimeError(f"PipeWire playback failed: {error}") from error

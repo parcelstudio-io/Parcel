@@ -26,6 +26,7 @@ class FakeModel:
             "set_motion_backend",
             "navigate",
             "set_behavior",
+            "run_spatial_behavior",
             "stop_motion",
             "get_status",
         }
@@ -83,6 +84,46 @@ def test_invalid_multi_action_plan_is_rejected_atomically():
 
     assert "couldn't do that safely" in agent.handle_text("Sit and then sprint")
     assert sent == []
+
+
+@pytest.mark.parametrize(
+    "transcript",
+    [
+        "Don't walk in a circle around me.",
+        "What would happen if you walked in a circle around me?",
+        "Imagine walking five steps away from me.",
+    ],
+)
+def test_model_motion_is_suppressed_for_negated_or_hypothetical_text(transcript: str):
+    spatial = []
+    agent = VoiceAgent(
+        {},
+        [],
+        lambda pose: None,
+        language_model=FakeModel(
+            AgentDecision(
+                "I can explain that without moving.",
+                (
+                    ToolCall(
+                        "run_spatial_behavior",
+                        {
+                            "behavior": "orbit_owner",
+                            "direction": "counterclockwise",
+                            "size": "small",
+                            "revolutions": 1.0,
+                        },
+                    ),
+                ),
+            )
+        ),
+        spatial_behavior_publisher=lambda intent: spatial.append(intent) or "started",
+    )
+
+    assert agent.handle_text(transcript) == (
+        "I won't move from that request, but I can explain what I would do."
+    )
+    assert spatial == []
+    assert agent.last_reasoning_guard is not None
 
 
 @pytest.mark.parametrize(

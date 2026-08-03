@@ -15,7 +15,7 @@ Parcel uses this trust boundary:
 microphone (future device transport; text stream is active now)
   → whisper.cpp
   → finalized transcript
-  → Gemma 4 / llama.cpp
+  → Gemma 4 now / Qwen3.6 evaluation profile / llama.cpp
   → structured tool call and optional semantic action proposal
   → deterministic SafetySupervisor + ActivityCoordinator
   → priority arbiter + TTL + proximity brake
@@ -32,15 +32,23 @@ preconfigured actions can cross it. A semantic proposal can be executed,
 deferred, expired, or rejected after fresh task state is checked; see
 [Dynamic city and behavior architecture](DYNAMIC_CITY_AND_BEHAVIOR.md).
 
-## Why Gemma 4 26B-A4B
+## Current Gemma baseline and recommended Qwen evaluation
 
-This workstation runs Google's official instruction-tuned **Gemma 4 26B-A4B
-QAT Q4 GGUF**. It is a mixture-of-experts model with 25.2B total and about 3.8B
-active parameters. That gives substantially stronger reasoning than the former
-Gemma 3 4B plan while retaining responsive CPU inference. The 14.4 GB GGUF is
-served from system RAM on 48 of the machine's 96 CPU cores so Fish Speech can
-reserve the 32 GB GPU. The model is Apache-2.0 and supports configurable
-thinking plus native function calling.
+This workstation is configured with Google's official instruction-tuned **Gemma
+4 26B-A4B QAT Q4 GGUF** as its installed baseline. It is a
+mixture-of-experts model with 25.2B total and about 3.8B active parameters. That
+gives substantially stronger reasoning than the former Gemma 3 4B plan while
+retaining responsive CPU inference. When the reasoner service is launched, the
+14.4 GB GGUF is served from system RAM on 48 of the machine's 96 CPU cores so
+Fish Speech can reserve the 32 GB GPU. The model is Apache-2.0 and supports
+configurable thinking plus native function calling.
+
+The next A/B candidate is **Qwen3.6-35B-A3B Q4_K_M**, a 35B-total/3B-active
+Apache-2.0 multimodal MoE with tool use and switchable thinking. The 20.4 GB
+llama.cpp conversion fits system RAM and is the stronger candidate for nuanced
+conversation plus semantic planning. Keep Gemma as the tested rollback until
+Parcel's conversation/action benchmark confirms the replacement. See [Audio,
+latency, and spatial intelligence](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md).
 
 Kimi K2.5 was evaluated but rejected for this device: its one-trillion-parameter
 checkpoint is designed for multi-GPU serving and is hundreds of gigabytes even
@@ -78,6 +86,14 @@ The response is parsed strictly:
 - force overrides, model priorities, and unknown action fields are rejected;
 - an invalid response falls back to deterministic command parsing.
 
+Ordinary turns explicitly disable thinking and cap output at 256 tokens. On the
+installed Gemma server, a one-line structured greeting improved from 35.24 s
+and 1,059 completion tokens to 1.88 s and 49 tokens. A complete runtime prompt
+with personality, tool policy, and dynamic context answered an empathetic test
+in 6.79 s with first output at 1.47 s; a subsequent conversational dashboard
+turn completed in 5.68 s with first output at 0.75 s. Thinking remains an
+explicit future planning tier, not a default tax on conversation.
+
 Gemma may still hallucinate facts. Robot manuals and operational information
 should therefore be supplied through a later retrieval layer with citations,
 not assumed to exist in the model.
@@ -85,6 +101,7 @@ not assumed to exist in the model.
 Official references:
 
 - [Gemma 4 26B-A4B QAT GGUF](https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf)
+- [Qwen3.6-35B-A3B](https://huggingface.co/Qwen/Qwen3.6-35B-A3B)
 - [Kimi K2.5 model card](https://huggingface.co/moonshotai/Kimi-K2.5)
 
 ## Why whisper.cpp
@@ -169,8 +186,9 @@ The official whisper.cpp server and `base.en` weights are installed:
 
 Parcel expects WAV input at `/inference`.
 
-This starts the ASR service only. Browser/ALSA capture is not wired to it on the
-current no-endpoint desktop.
+This starts the ASR service only. The desktop has Bluetooth/PipeWire capability,
+but no headset was paired during the audit. Parcel remains in text mode until an
+endpoint and continuous VAD/AEC transport are connected.
 
 ### Fish service
 
@@ -202,9 +220,10 @@ PY
 `stop`, `stop now`, and `emergency stop` bypass Gemma entirely. A stop engages
 the in-process safety latch and publishes `/parcel/stop_request`.
 
-For streamed text, a newer partial/final turn invalidates an older model turn
-before its tools can commit. Multiple tools in one model response are validated
-up front, but Parcel does not yet schedule pose/velocity choreography over time;
+For streamed text, a newer partial/final turn cancels an older streamed model
+request and invalidates it before its tools can commit. Only the newest pending
+final is retained. Multiple tools in one model response are validated up front,
+but Parcel does not yet schedule pose/velocity choreography over time;
 do not treat consecutive tool calls as choreography—represent timed motion as
 an authored trajectory until a cancellable sequence scheduler is added.
 
@@ -231,7 +250,11 @@ raw audio. A production deployment should:
 - never store voice-reference audio without explicit consent;
 - keep operational logs separate from personal conversation memory.
 
-## Performance targets
+## Performance targets and implemented measurement
+
+Open `/latency` for the implemented per-turn and component dashboard. llama.cpp
+responses are accumulated as a stream to measure true model TTFT, but the full
+JSON still validates before action commit.
 
 Measure each stage independently:
 

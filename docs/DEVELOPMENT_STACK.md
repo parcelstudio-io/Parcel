@@ -15,13 +15,13 @@ browser partial/final text / future VAD+ASR
        | partial: interrupt only
        | final
        v
-  Gemma structured action plan ---- reply text ---> Fish S2 ---> speaker
+  Gemma/Qwen structured plan ----- reply text ---> Fish S2 ---> speaker
               |
               v
   allowlist + limits + E-stop
               |
               v
- follow / navigation / manual / voice
+ follow / navigation / bounded spatial / manual / voice
               |
               v
  priority arbiter + TTL + proximity brake
@@ -68,13 +68,12 @@ and is not the right dependency for the first reliable quadruped-control slice.
 | Speech recognition | whisper.cpp `base.en` | `models/whisper/`, port 8178 | 142 MB; CPU profile |
 | Voice activity detection | Silero VAD v6.2 | `models/whisper/` | 885 KB; enabled by default |
 
-Gemma 4 26B-A4B is the best fit among the compared open-weight reasoners for
-this machine: it has 25.2B total but only about 3.8B active parameters, native
-reasoning/function-calling support, an official Apache-2.0 QAT GGUF, and runs
-comfortably from the 246 GB system RAM. Serving it on the 96-core CPU leaves the
-RTX 5000 Ada's 32 GB VRAM available for Fish S2 and the simulator. Kimi K2.5 is
-not a sensible local target: its one-trillion-parameter checkpoint is several
-hundred gigabytes even when quantized and is meant for multi-GPU serving.
+Gemma 4 26B-A4B is the installed, tested baseline. Qwen3.6-35B-A3B Q4_K_M is
+the recommended next A/B candidate for stronger conversation and semantic
+planning; it should also run from system RAM so Fish S2 can retain the RTX 5000
+Ada. Kimi K2.5 is not a sensible local target: its one-trillion-parameter
+checkpoint is meant for multi-GPU serving. Exact tradeoffs are in [Audio,
+latency, and spatial intelligence](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md).
 
 Fish S2 Pro was selected over the existing Sesame CSM placeholder because it
 has an official streaming server, long-context/multilingual speech, and
@@ -109,14 +108,12 @@ That is intentional on this desktop because no endpoint is connected. A future
 device adapter should stream VAD-segmented audio into `WhisperCppProvider` and
 Fish WAV chunks into an AEC-capable output sink.
 
-The desktop has an ALSA Realtek ALC1220 capture device and a working kernel
-driver. A direct 48 kHz stereo capture probe succeeded, and `AlsaAudioIO`
-provides a 16 kHz mono WAV fallback. PipeWire currently reports no source and
-only Dummy Output, however, which means no microphone/speaker endpoint is
-connected. Parcel consequently starts in **streaming text mode**. Attach and
-enable an audio endpoint before turning on capture/playback. Production duplex
-audio also needs acoustic echo cancellation; the direct ALSA fallback does not
-pretend to provide it.
+The desktop has an ALSA Realtek ALC1220 driver plus a powered MediaTek Bluetooth
+5.2 controller with BlueZ/PipeWire headset support. No headset is currently
+paired, so PipeWire reports no source and only Dummy Output and Parcel starts in
+**streaming text mode**. `PipeWireAudioIO` follows default nodes for a later
+AirPods/USB-headset connection; `AlsaAudioIO` remains a direct fallback.
+Production duplex audio also needs acoustic echo cancellation.
 
 ## Run it
 
@@ -130,8 +127,9 @@ cd /home/jaewoo-jang/Desktop/Projects/Parcel
 Open <http://127.0.0.1:8765> if the browser does not open automatically. The
 panel supports hold-to-drive controls, keyboard dead-man control, owner movement,
 follow/stay/stop/E-stop, telemetry, and natural-language text commands. Useful
-commands include `follow me`, `stay`, `navigate to the crosswalk`, `sit`, and
-`stop`.
+commands include `follow me`, `stay`, `navigate to the crosswalk`, `walk away
+from the owner 5 steps`, `walk in a circle around me`, `sit`, and `stop`. Open
+`/latency` for the separate response/component latency dashboard.
 
 Optional services:
 
@@ -174,11 +172,12 @@ locations explicit.
 
 ## What is not production-ready
 
-The current owner position and obstacle range are simulator ground truth, not a
-camera perception stack. The stub point navigator is useful for integration and
-reactive-safety testing, not outdoor autonomy. Before physical deployment, add
-authenticated enrollment and owner re-identification, RGB-D/LiDAR/UWB sensor
-fusion, localization and map planning, an AEC-capable audio transport, a
+The current MuJoCo camera/LiDAR adapter derives idealized detections from
+simulator truth; the reasoning contract does not expose privileged truth, but
+this is not yet a physical perception stack. The stub point navigator is useful
+for integration and reactive-safety testing, not outdoor autonomy. Before
+physical deployment, add authenticated enrollment and owner re-identification,
+camera/LiDAR perception and localization, an AEC-capable audio transport, a
 hardware emergency stop, fall recovery validation, geofencing, and a separately
 verified Unitree low-level controller. Never connect the LLM directly to joint
 or torque commands.

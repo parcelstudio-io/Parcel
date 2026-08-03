@@ -17,9 +17,10 @@ from parcel_robot.sim_ipc import (
     send_message,
 )
 
-from .base import DynamicAgentTrack, OwnerTrack, RobotPose, SimObservation
+from .base import DynamicAgentTrack, LidarObstacle, OwnerTrack, RobotPose, SimObservation
 
 MAX_DYNAMIC_AGENTS = 64
+MAX_LIDAR_OBSTACLES = 64
 
 
 def _finite_float(value: object, field: str) -> float:
@@ -59,6 +60,14 @@ class MujocoSocketBackend:
         bearing = obstacle_detail.get("bearing_rad")
         if bearing is not None:
             bearing = _finite_float(bearing, "nearest_obstacle.bearing_rad")
+        raw_lidar = data.get("lidar_obstacles", [])
+        if not isinstance(raw_lidar, list):
+            raise TypeError("simulator lidar_obstacles must be a list")
+        if len(raw_lidar) > MAX_LIDAR_OBSTACLES:
+            raise ValueError("simulator reported too many LiDAR obstacles")
+        lidar_obstacles = tuple(
+            _parse_lidar_obstacle(item, index) for index, item in enumerate(raw_lidar)
+        )
         person_distance = data.get("nearest_person_m")
         if person_distance is not None:
             person_distance = _finite_float(person_distance, "nearest_person_m")
@@ -122,6 +131,7 @@ class MujocoSocketBackend:
             nearest_obstacle_m=obstacle,
             nearest_obstacle_bearing_rad=bearing,
             nearest_obstacle_id=(str(obstacle_detail["id"]) if obstacle_detail.get("id") else None),
+            lidar_obstacles=lidar_obstacles,
             nearest_person_m=person_distance,
             nearest_person_bearing_rad=person_bearing,
             nearest_person_id=(str(person_detail["id"]) if person_detail.get("id") else None),
@@ -185,3 +195,22 @@ def _parse_dynamic_agent(item: object, index: int) -> DynamicAgentTrack:
         yaw=_finite_float(item.get("yaw", 0.0), f"dynamic_agents[{index}].yaw"),
         confidence=1.0,
     )
+
+
+def _parse_lidar_obstacle(item: object, index: int) -> LidarObstacle:
+    if not isinstance(item, dict):
+        raise TypeError(f"simulator lidar_obstacles[{index}] must be an object")
+    if not set(item).issubset({"id", "distance_m", "bearing_rad"}):
+        raise ValueError(f"simulator lidar_obstacles[{index}] contains unsupported fields")
+    distance = _finite_float(item.get("distance_m"), f"lidar_obstacles[{index}].distance_m")
+    bearing = _finite_float(item.get("bearing_rad"), f"lidar_obstacles[{index}].bearing_rad")
+    if not 0.0 <= distance <= 1000.0:
+        raise ValueError(f"simulator lidar_obstacles[{index}].distance_m is outside the range")
+    if not -math.pi <= bearing <= math.pi:
+        raise ValueError(f"simulator lidar_obstacles[{index}].bearing_rad is outside the range")
+    obstacle_id = item.get("id")
+    if obstacle_id is not None and (
+        not isinstance(obstacle_id, str) or not obstacle_id.strip() or len(obstacle_id) > 128
+    ):
+        raise TypeError(f"simulator lidar_obstacles[{index}].id must be a short string or null")
+    return LidarObstacle(distance, bearing, obstacle_id)

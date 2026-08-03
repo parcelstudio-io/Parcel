@@ -15,6 +15,28 @@ navigation:
   enabled: true
   config: configs/navigation/default.yaml
 
+perception:
+  spatial_sensors: [camera, lidar]
+  maps:
+    provider: google_maps
+    enabled: false  # placeholder only; no key, network request, or route authority
+
+spatial_behaviors:
+  step_length_m: 0.25
+  max_steps: 12
+  default_orbit_radius_m: 1.6
+  min_orbit_radius_m: 1.3
+  max_orbit_radius_m: 2.0
+  max_revolutions: 1.0
+  owner_collision_envelope_m: 0.55
+  orbit_clearance_margin_m: 0.10
+  owner_anchor_tolerance_m: 0.60
+  stall_timeout_s: 20
+  timeout_s: 120
+
+metrics:
+  max_turns: 200
+
 motion:
   backend: rl
   max_vx: 0.6
@@ -39,11 +61,21 @@ language_model:
   base_url: http://127.0.0.1:8080
   model: gemma-4-26b-a4b
   timeout: 90
+  streaming: true
+  temperature: 0.25
+  top_p: 0.9
+  context_messages: 16
+  context_char_budget: 12000
+  max_tokens: 256
+  enable_thinking: false
+  max_stream_events: 4096
+  max_response_bytes: 131072
 
 agent:
   prompts_root: prompts
   personality: gentle_companion
-  functions: [companion, navigator, manual_assistant]
+  conversation_history_messages: 16
+  functions: [companion, navigator, spatial_reasoner, manual_assistant]
   affect:
     minimum_confidence: 0.75
     social_action_cooldown_s: 8
@@ -62,6 +94,8 @@ speech:
 safety:
   obstacle_stop_m: 0.65
   obstacle_slow_m: 1.2
+  person_stop_m: 1.0
+  person_slow_m: 2.0
   telemetry_stale_s: 0.6
 
 memory:

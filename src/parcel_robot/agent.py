@@ -10,14 +10,27 @@ from .models import (
     AffectEstimate,
     AgentDecision,
     Pose,
+    SpatialIntent,
     ToolCall,
     VelocityCommand,
 )
 from .motion import MotionRouter
+from .navigation.spatial import parse_spatial_intent, spatial_intent_from_arguments
 from .providers import LanguageModel
 from .safety import SafetyLimits, SafetySupervisor
 
 EMERGENCY_STOP_PHRASES = frozenset({"stop", "emergency stop", "stop now"})
+MOTION_TOOLS = frozenset(
+    {
+        "run_pose",
+        "run_skill",
+        "set_velocity",
+        "navigate",
+        "set_behavior",
+        "run_spatial_behavior",
+        "stop_motion",
+    }
+)
 CommitGuard = Callable[[Callable[[], str]], str]
 
 
@@ -41,12 +54,16 @@ class VoiceAgent:
         safety_limits: SafetyLimits | None = None,
         behavior_publisher: Callable[[str], str] | None = None,
         navigation_publisher: Callable[[str], str] | None = None,
+        spatial_behavior_publisher: Callable[[SpatialIntent], str] | None = None,
         action_proposal_publisher: Callable[[ActionProposal], str] | None = None,
         system_prompt_provider: Callable[[], str] | None = None,
         affect_minimum_confidence: float = 0.75,
         affect_actions: dict[str, str] | None = None,
+        conversation_history_messages: int = 16,
         dog=None,
     ):
+        if not 1 <= conversation_history_messages <= 64:
+            raise ValueError("conversation history messages must be between 1 and 64")
         self.poses = poses
         self.modules = modules
         self.pose_publisher = pose_publisher
@@ -56,11 +73,16 @@ class VoiceAgent:
         self.motion = motion
         self.behavior_publisher = behavior_publisher
         self.navigation_publisher = navigation_publisher
+        self.spatial_behavior_publisher = spatial_behavior_publisher
         self.action_proposal_publisher = action_proposal_publisher
         self.system_prompt_provider = system_prompt_provider
         self.affect_minimum_confidence = affect_minimum_confidence
         self.affect_actions = dict(affect_actions or {"sad": "play_bow", "happy": "paw_wave"})
+        self.conversation_history_messages = conversation_history_messages
         self.dog = dog
+        self.last_reasoning_source = "deterministic"
+        self.last_reasoning_error: str | None = None
+        self.last_reasoning_guard: str | None = None
         self.safety = SafetySupervisor(poses, safety_limits, skill_ids=self._skill_ids())
 
     def _skill_ids(self) -> list[str]:
@@ -94,8 +116,18 @@ class VoiceAgent:
 
         return self._handle_text(transcript, commit)
 
+    def cancel_reasoning(self) -> None:
+        """Cooperatively stop an optional provider stream after barge-in."""
+
+        cancel = getattr(self.language_model, "cancel_current", None)
+        if callable(cancel):
+            cancel()
+
     def _handle_text(self, transcript: str, commit: CommitGuard | None) -> str:
         text = re.sub(r"\s+", " ", transcript.strip().lower())
+        self.last_reasoning_source = "deterministic"
+        self.last_reasoning_error = None
+        self.last_reasoning_guard = None
         if text in EMERGENCY_STOP_PHRASES:
             return self._execute(AgentDecision("Stopping.", (ToolCall("stop_motion"),)))
 
@@ -122,20 +154,67 @@ class VoiceAgent:
                 ),
             )
 
+        spatial_intent = parse_spatial_intent(text)
+        if spatial_intent is not None and self.spatial_behavior_publisher is not None:
+            return self._commit(
+                commit,
+                lambda: self._remember(
+                    text, lambda: self.spatial_behavior_publisher(spatial_intent)
+                ),
+            )
+
+        walk = self._parse_walk(text)
+        if walk is not None:
+            if self.dog is not None:
+                skill = "walk_forward"
+                if walk.vx < 0:
+                    skill = "walk_backward"
+                elif abs(walk.vyaw) > abs(walk.vx):
+                    skill = "turn_left" if walk.vyaw > 0 else "turn_right"
+                return self._commit(
+                    commit,
+                    lambda: self._remember(text, lambda: self._execute_walk_skill(skill, walk)),
+                )
+            if self.motion is None:
+                return "Locomotion is not configured"
+            call = ToolCall(
+                "set_velocity",
+                {"vx": walk.vx, "vy": walk.vy, "vyaw": walk.vyaw},
+            )
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision(self._walk_reply(walk), (call,)),
+                    transcript=text,
+                ),
+            )
+
+        nav_directive = self._parse_navigate(text)
+        if nav_directive is not None and self.dog is not None:
+            return self._commit(
+                commit,
+                lambda: self._remember(text, lambda: self._execute_navigation(nav_directive)),
+            )
+
         if self.language_model is not None:
             try:
                 set_prompt = getattr(self.language_model, "set_system_prompt", None)
                 if callable(set_prompt) and self.system_prompt_provider is not None:
                     set_prompt(self.system_prompt_provider())
                 decision = self.language_model.decide(
-                    text, self.tool_definitions(), self.memory.recent()
+                    text,
+                    self.tool_definitions(),
+                    self.memory.recent(self.conversation_history_messages),
                 )
+                self.last_reasoning_source = "model"
+                decision = self._guard_model_motion(text, decision)
                 return self._commit(
                     commit,
                     lambda: self._execute(decision, transcript=text),
                 )
-            except (RuntimeError, TypeError, ValueError):
-                pass
+            except (RuntimeError, TypeError, ValueError) as error:
+                self.last_reasoning_source = "fallback"
+                self.last_reasoning_error = str(error)[:500]
 
         affect = self._detect_explicit_affect(text)
         if affect is not None:
@@ -180,39 +259,6 @@ class VoiceAgent:
                 ),
             )
 
-        walk = self._parse_walk(text)
-        if walk is not None:
-            if self.dog is not None:
-                skill = "walk_forward"
-                if walk.vx < 0:
-                    skill = "walk_backward"
-                elif abs(walk.vyaw) > abs(walk.vx):
-                    skill = "turn_left" if walk.vyaw > 0 else "turn_right"
-                return self._commit(
-                    commit,
-                    lambda: self._execute_walk_skill(skill, walk),
-                )
-            if self.motion is None:
-                return "Locomotion is not configured"
-            call = ToolCall(
-                "set_velocity",
-                {"vx": walk.vx, "vy": walk.vy, "vyaw": walk.vyaw},
-            )
-            return self._commit(
-                commit,
-                lambda: self._execute(
-                    AgentDecision(self._walk_reply(walk), (call,)),
-                    transcript=text,
-                ),
-            )
-
-        nav_directive = self._parse_navigate(text)
-        if nav_directive is not None and self.dog is not None:
-            return self._commit(
-                commit,
-                lambda: self._execute_navigation(nav_directive),
-            )
-
         skill_match = re.fullmatch(
             r"(?:do|pose|show|run|perform) (?:the )?(.+?)(?: pose| skill| action)?",
             text,
@@ -223,7 +269,7 @@ class VoiceAgent:
                 return f"Unknown pose: {skill_name}"
             return self._commit(
                 commit,
-                lambda: self._execute_named_skill(skill_name),
+                lambda: self._remember(text, lambda: self._execute_named_skill(skill_name)),
             )
 
         if self.dog is not None:
@@ -231,7 +277,7 @@ class VoiceAgent:
             if bare in self.dog.catalog.ids():
                 return self._commit(
                     commit,
-                    lambda: self._execute_named_skill(bare),
+                    lambda: self._remember(text, lambda: self._execute_named_skill(bare)),
                 )
 
         command, _, argument = text.partition(" ")
@@ -239,8 +285,11 @@ class VoiceAgent:
             if command in module.commands():
                 return self._commit(
                     commit,
-                    lambda module=module: (
-                        module.handle(command, argument) or "I did not understand that command"
+                    lambda module=module: self._remember(
+                        text,
+                        lambda: (
+                            module.handle(command, argument) or "I did not understand that command"
+                        ),
                     ),
                 )
         return "I did not understand that command"
@@ -248,6 +297,33 @@ class VoiceAgent:
     @staticmethod
     def _commit(commit: CommitGuard | None, action: Callable[[], str]) -> str:
         return action() if commit is None else commit(action)
+
+    def _remember(self, transcript: str, action: Callable[[], str]) -> str:
+        """Record every deterministic committed path with the same semantics."""
+
+        self.memory.add("user", transcript)
+        reply = action()
+        self.memory.add("assistant", reply)
+        return reply
+
+    def _guard_model_motion(self, transcript: str, decision: AgentDecision) -> AgentDecision:
+        """Fail closed when a non-command utterance elicits a physical model action."""
+
+        has_motion = any(call.name in MOTION_TOOLS for call in decision.tool_calls)
+        has_motion = has_motion or decision.next_action is not None
+        if not has_motion or _model_motion_is_explicit(transcript):
+            return decision
+        self.last_reasoning_guard = (
+            "suppressed physical model output for a negated, hypothetical, or "
+            "information-seeking utterance"
+        )
+        return AgentDecision(
+            reply="I won't move from that request, but I can explain what I would do.",
+            tool_calls=tuple(call for call in decision.tool_calls if call.name not in MOTION_TOOLS),
+            intent=decision.intent,
+            affect=decision.affect,
+            next_action=None,
+        )
 
     def _execute_walk_skill(self, skill: str, walk: VelocityCommand) -> str:
         assert self.dog is not None
@@ -377,15 +453,7 @@ class VoiceAgent:
                     failures.append(
                         "Activity-coordinated skills require a bounded pose or trajectory"
                     )
-        physical_tools = {
-            "run_pose",
-            "run_skill",
-            "set_velocity",
-            "navigate",
-            "set_behavior",
-            "stop_motion",
-        }
-        physical_count = sum(call.name in physical_tools for call in decision.tool_calls)
+        physical_count = sum(call.name in MOTION_TOOLS for call in decision.tool_calls)
         physical_count += decision.next_action is not None
         if physical_count > 1:
             failures.append("A decision can contain only one motion-producing action")
@@ -482,6 +550,16 @@ class VoiceAgent:
                     failures.append("Behavior control is not configured")
                     continue
                 detail = self.behavior_publisher(str(call.arguments["mode"]))
+            elif call.name == "run_spatial_behavior":
+                if self.spatial_behavior_publisher is None:
+                    failures.append("Spatial behavior control is not configured")
+                    continue
+                try:
+                    detail = self.spatial_behavior_publisher(
+                        spatial_intent_from_arguments(call.arguments)
+                    )
+                except (RuntimeError, TypeError, ValueError) as error:
+                    failures.append(str(error))
             elif call.name == "stop_motion":
                 self.safety.engage_emergency_stop()
                 if self.dog is not None:
@@ -625,6 +703,52 @@ class VoiceAgent:
                 },
             },
             {
+                "name": "run_spatial_behavior",
+                "description": (
+                    "Run one bounded local movement. Use move_steps for a small number of "
+                    "body/owner-relative steps, or orbit_owner for one small local circle. "
+                    "Never use this for destination navigation."
+                ),
+                "parameters": {
+                    "oneOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "behavior": {"const": "move_steps"},
+                                "direction": {
+                                    "type": "string",
+                                    "enum": ["forward", "backward", "away_from_owner"],
+                                },
+                                "steps": {"type": "integer", "minimum": 1, "maximum": 12},
+                            },
+                            "required": ["behavior", "direction", "steps"],
+                            "additionalProperties": False,
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "behavior": {"const": "orbit_owner"},
+                                "direction": {
+                                    "type": "string",
+                                    "enum": ["clockwise", "counterclockwise"],
+                                },
+                                "size": {
+                                    "type": "string",
+                                    "enum": ["small", "normal", "wide"],
+                                },
+                                "revolutions": {
+                                    "type": "number",
+                                    "minimum": 0.25,
+                                    "maximum": 1.0,
+                                },
+                            },
+                            "required": ["behavior", "direction", "size", "revolutions"],
+                            "additionalProperties": False,
+                        },
+                    ]
+                },
+            },
+            {
                 "name": "stop_motion",
                 "description": "Immediately request that robot motion stop.",
                 "parameters": {"type": "object", "additionalProperties": False},
@@ -636,3 +760,21 @@ class VoiceAgent:
             },
         ]
         return tools
+
+
+def _model_motion_is_explicit(text: str) -> bool:
+    raw = " ".join(str(text).lower().split())
+    if re.search(
+        r"\b(?:do\s+not|don[' ]?t|never|not|should\s+not|shouldn[' ]?t|"
+        r"must\s+not|mustn[' ]?t|cannot|can[' ]?t)\b",
+        raw,
+    ):
+        return False
+    clean = re.sub(r"[^a-z0-9]+", " ", raw).strip()
+    return not bool(
+        re.match(
+            r"^(?:what|why|how|when|where|if|suppose|imagine|pretend|describe|"
+            r"tell me)\b",
+            clean,
+        )
+    )

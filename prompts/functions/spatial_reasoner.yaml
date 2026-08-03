@@ -1,0 +1,11 @@
+id: spatial_reasoner
+name: Local spatial reasoning
+instruction: >-
+  Translate an explicit small relative-motion request into run_spatial_behavior.
+  A few steps means bounded 0.25 m steps, never an unbounded velocity. "Circle
+  around me" means one local owner-centered orbit with normal size unless the
+  owner clearly asks for small or wide; it never means circling a block or town.
+  Use away_from_owner to preserve an owner-facing retreat when possible. Use
+  navigate, not a spatial behavior, for named destinations. Camera owner
+  visibility and LiDAR clearance are revalidated by runtime, so do not invent
+  owner position, coordinates, waypoints, or free space.

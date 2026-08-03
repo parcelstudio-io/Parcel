@@ -40,6 +40,11 @@ enable browser microphone capture or playback. Connecting them to the running
 duplex coordinator is the next device-transport step after adding a real audio
 endpoint and acoustic echo cancellation.
 
+The read-only latency dashboard is at <http://127.0.0.1:8765/latency>. Bluetooth
+hardware, AirPods profile tradeoffs, metric definitions, camera/LiDAR boundaries,
+and bounded commands such as `walk away from the owner 5 steps` and `walk in a
+circle around me` are documented in [Audio, latency, and spatial intelligence](docs/AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md).
+
 Architecture, model choices, audio-device findings, and limitations are in
 [Voice-enabled development stack](docs/DEVELOPMENT_STACK.md).
 
@@ -55,6 +60,9 @@ Architecture, model choices, audio-device findings, and limitations are in
 - MuJoCo owner/obstacle telemetry and a browser panel for driving and text voice.
 - Central priority arbitration, command TTLs, proximity braking, and latched E-stop.
 - Persistent owner-follow and point-navigation behavior loops.
+- Bounded owner-relative steps and local circle trajectories with deterministic
+  parsing, owner visibility checks, timeouts, and normal collision arbitration.
+- Per-turn E2E/model/TTS traces plus rolling control-component latency metrics.
 - Rotate-first, forward-preferred goal navigation with bounded lateral motion
   available for manual control, skills, recovery, and compatible planners.
 - A deterministic living-city crowd with full dynamic-agent telemetry.

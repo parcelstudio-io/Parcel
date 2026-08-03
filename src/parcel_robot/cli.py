@@ -47,11 +47,7 @@ def main() -> None:
     model_config = store.section("language_model")
     language_model = None
     if args.llm:
-        language_model = LlamaCppProvider(
-            base_url=str(model_config.get("base_url", "http://127.0.0.1:8080")),
-            model=str(model_config.get("model", "gemma")),
-            timeout=float(model_config.get("timeout", 30)),
-        )
+        language_model = LlamaCppProvider.from_config(model_config)
 
     def publish(pose: Pose) -> None:
         published.append(pose)
@@ -84,6 +80,9 @@ def main() -> None:
         memory=ConversationMemory(),
         motion=motion,
         safety_limits=store.safety_limits(),
+        conversation_history_messages=int(
+            store.agent_config().get("conversation_history_messages", 16)
+        ),
         dog=dog,
     )
     if args.text:

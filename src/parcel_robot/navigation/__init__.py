@@ -6,6 +6,13 @@ from .follow import FollowConfig, FollowDecision, FollowOwnerController
 from .grounder import PlaceGrounder
 from .pipeline import DirectiveNavigator
 from .registry import ModelRegistry
+from .spatial import (
+    SpatialBehaviorConfig,
+    SpatialBehaviorController,
+    SpatialDecision,
+    parse_spatial_intent,
+    spatial_intent_from_arguments,
+)
 
 __all__ = [
     "DirectiveNavigator",
@@ -20,4 +27,9 @@ __all__ = [
     "ModelSpec",
     "NavObservation",
     "PlaceGrounder",
+    "SpatialBehaviorConfig",
+    "SpatialBehaviorController",
+    "SpatialDecision",
+    "parse_spatial_intent",
+    "spatial_intent_from_arguments",
 ]

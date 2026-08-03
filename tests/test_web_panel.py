@@ -18,6 +18,9 @@ class FakeRuntime:
     def snapshot(self):
         return {"status": "test"}
 
+    def latency_snapshot(self):
+        return {"aggregate": {}, "turns": []}
+
     def manual_motion(self, vx, vy, vyaw):
         self.motions.append((vx, vy, vyaw))
         return "accepted"
@@ -73,3 +76,17 @@ def test_control_api_requires_embedded_token_and_same_origin(panel_server):
     with _post(f"{base}/api/motion", token, origin=base) as response:
         assert response.status == 200
     assert runtime.motions == [(0.1, 0.0, 0.0)]
+
+
+def test_latency_dashboard_and_api_are_separate_read_only_views(panel_server):
+    server, _ = panel_server
+    base = f"http://127.0.0.1:{server.server_address[1]}"
+
+    with urllib.request.urlopen(f"{base}/latency", timeout=2) as response:
+        page = response.read().decode()
+    assert "Parcel latency traces" in page
+    assert "textContent" in page
+
+    with urllib.request.urlopen(f"{base}/api/latency", timeout=2) as response:
+        payload = json.load(response)
+    assert payload == {"aggregate": {}, "turns": []}

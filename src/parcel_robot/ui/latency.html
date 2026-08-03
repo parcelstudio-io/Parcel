@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Parcel latency</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    body { margin: 0; background: #0b1016; color: #dce7ef; }
+    main { max-width: 1500px; margin: auto; padding: 24px; }
+    header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+    h1 { font: 600 24px system-ui, sans-serif; margin: 0 0 8px; }
+    h2 { font: 600 17px system-ui, sans-serif; margin: 26px 0 8px; }
+    p { color: #8fa2b2; margin: 0 0 20px; }
+    a { color: #56e6c2; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin: 18px 0; }
+    .metric { border: 1px solid #263746; background: #101923; border-radius: 8px; padding: 12px; }
+    .metric span { display: block; color: #8fa2b2; font-size: 12px; }
+    .metric strong { display: block; color: #56e6c2; font-size: 22px; margin: 5px 0; }
+    .table-wrap { overflow: auto; border: 1px solid #263746; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; background: #101923; }
+    th, td { padding: 10px; border-bottom: 1px solid #263746; text-align: left; vertical-align: top; }
+    th { position: sticky; top: 0; background: #16222e; font-size: 12px; color: #9fb2c0; }
+    td { font-size: 12px; }
+    td.query, td.response { min-width: 260px; max-width: 440px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    td.number { white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .empty { padding: 28px; text-align: center; color: #8fa2b2; }
+    .error { color: #ff8a8a; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Parcel latency traces</h1>
+        <p>User query, returned response, and component latency in milliseconds.</p>
+      </div>
+      <a href="/">Control deck</a>
+    </header>
+    <section id="metrics" class="metrics" aria-label="Latency summaries"></section>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Turn</th>
+            <th>Status</th>
+            <th>User query</th>
+            <th>Model/final response</th>
+            <th>UserQueryEndToFirstResponse</th>
+            <th>UserQueryEndToFirstReasoningResponse</th>
+            <th>Queue</th>
+            <th>Reasoning</th>
+            <th>Action commit</th>
+            <th>First audio handoff</th>
+            <th>TTS first chunk</th>
+            <th>Total</th>
+            <th>All metrics/provider detail</th>
+          </tr>
+        </thead>
+        <tbody id="turns"><tr><td colspan="13" class="empty">No completed turns yet.</td></tr></tbody>
+      </table>
+    </div>
+    <h2>Real-time component latency</h2>
+    <p>Rolling p50/p95 measurements from the simulator and control loop.</p>
+    <section id="components" class="metrics" aria-label="Component latency"></section>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+  <script>
+    const metricNames = [
+      "UserQueryEndToFirstResponse",
+      "UserQueryEndToFirstReasoningResponse",
+      "Reasoning",
+      "TurnTotal"
+    ];
+
+    function formatMs(value) {
+      return Number.isFinite(value) ? `${value.toFixed(1)} ms` : "—";
+    }
+
+    function cell(row, text, className = "") {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (className) td.className = className;
+      row.appendChild(td);
+    }
+
+    function render(data) {
+      const metrics = document.getElementById("metrics");
+      metrics.replaceChildren();
+      for (const name of metricNames) {
+        const aggregate = data.aggregate?.[name];
+        const card = document.createElement("article");
+        card.className = "metric";
+        const label = document.createElement("span");
+        label.textContent = name;
+        const value = document.createElement("strong");
+        value.textContent = aggregate ? formatMs(aggregate.p50_ms) : "—";
+        const detail = document.createElement("span");
+        detail.textContent = aggregate
+          ? `p95 ${formatMs(aggregate.p95_ms)} · n=${aggregate.count}`
+          : "No samples";
+        card.append(label, value, detail);
+        metrics.appendChild(card);
+      }
+
+      const components = document.getElementById("components");
+      components.replaceChildren();
+      for (const [name, aggregate] of Object.entries(data.components || {})) {
+        const card = document.createElement("article");
+        card.className = "metric";
+        const label = document.createElement("span");
+        label.textContent = name;
+        const value = document.createElement("strong");
+        value.textContent = formatMs(aggregate.latest_ms);
+        const detail = document.createElement("span");
+        detail.textContent = `p50 ${formatMs(aggregate.p50_ms)} · p95 ${formatMs(aggregate.p95_ms)}`;
+        card.append(label, value, detail);
+        components.appendChild(card);
+      }
+
+      const tbody = document.getElementById("turns");
+      tbody.replaceChildren();
+      const turns = Array.isArray(data.turns) ? data.turns : [];
+      if (!turns.length) {
+        const row = document.createElement("tr");
+        cell(row, "No completed turns yet.", "empty");
+        row.firstChild.colSpan = 13;
+        tbody.appendChild(row);
+        return;
+      }
+      for (const turn of turns) {
+        const latency = turn.latency_ms || {};
+        const row = document.createElement("tr");
+        cell(row, String(turn.turn_id), "number");
+        cell(row, `${turn.status} · ${turn.reasoning_source}`);
+        cell(row, turn.user_query || "", "query");
+        cell(row, turn.model_response || "", "response");
+        cell(row, formatMs(latency.UserQueryEndToFirstResponse), "number");
+        cell(row, formatMs(latency.UserQueryEndToFirstReasoningResponse), "number");
+        cell(row, formatMs(latency.QueueWait), "number");
+        cell(row, formatMs(latency.Reasoning), "number");
+        cell(row, formatMs(latency.ActionCommit), "number");
+        cell(row, formatMs(latency.QueryEndToFirstSpokenAudio), "number");
+        cell(row, formatMs(latency.TTSTimeToFirstChunk), "number");
+        cell(row, formatMs(latency.TurnTotal), "number");
+        cell(row, JSON.stringify({ latency_ms: latency, details: turn.details || {} }));
+        tbody.appendChild(row);
+      }
+    }
+
+    async function refresh() {
+      const status = document.getElementById("status");
+      try {
+        const response = await fetch("/api/latency", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        render(await response.json());
+        status.className = "";
+        status.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+      } catch (error) {
+        status.className = "error";
+        status.textContent = `Latency endpoint unavailable: ${error.message}`;
+      }
+    }
+    refresh();
+    setInterval(refresh, 750);
+  </script>
+</body>
+</html>

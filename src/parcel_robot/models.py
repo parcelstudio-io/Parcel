@@ -61,6 +61,17 @@ class ActionProposal:
 
 
 @dataclass(frozen=True)
+class SpatialIntent:
+    """Bounded semantic motion compiled by a deterministic local planner."""
+
+    behavior: str
+    direction: str
+    steps: int = 0
+    size: str = "normal"
+    revolutions: float = 1.0
+
+
+@dataclass(frozen=True)
 class AgentDecision:
     reply: str
     tool_calls: tuple[ToolCall, ...] = ()
