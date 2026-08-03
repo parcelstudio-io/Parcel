@@ -67,6 +67,12 @@ velocity. That is only a visual/control-stack preview—not Unitree Sport gait,
 contact-faithful locomotion, or a trained RL policy. Replace it by
 loading a real policy via `motion.rl.policy_path` or enabling Sport Move.
 
+The preview gait is contact-phase-aware: it uses explicit stance/swing phases,
+smooth swing-foot trajectories, per-leg inverse kinematics, crawl/trot phase
+patterns, and gradual cadence/stride/clearance changes without resetting phase
+on style updates. These changes reduce animation discontinuities but do not turn
+the kinematically translated preview into a hardware balance controller.
+
 ## Sport Move backend
 
 Uses Unitree Go2 SportClient `Move(vx, vy, vyaw)` when:

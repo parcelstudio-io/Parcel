@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
+
+if TYPE_CHECKING:
+    from .goals import SemanticGoal
 
 
 @dataclass(frozen=True)
@@ -28,8 +31,9 @@ class GoalPose:
 @dataclass
 class Mission:
     directive: str
-    goal: GoalPose
-    status: str = "idle"  # idle | running | arrived | failed
+    goal: GoalPose | None
+    status: str = "idle"  # idle | unresolved | searching | running | verifying | arrived | failed
+    semantic_goal: SemanticGoal | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 

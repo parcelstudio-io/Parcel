@@ -20,14 +20,14 @@ _STAND = {
     "RR_calf_joint": -1.8,
 }
 
-_PAIR_A = ("FL", "RR")
-_PAIR_B = ("FR", "RL")
-
 _STYLE = {
-    "trot": {"frequency_hz": 1.6, "step_amplitude": 0.35, "lift_amplitude": 0.45},
-    "run": {"frequency_hz": 2.4, "step_amplitude": 0.45, "lift_amplitude": 0.55},
-    "crawl": {"frequency_hz": 1.0, "step_amplitude": 0.18, "lift_amplitude": 0.2},
+    "trot": {"frequency_hz": 1.6, "stride_m": 0.13, "clearance_m": 0.055, "duty": 0.58},
+    "run": {"frequency_hz": 2.4, "stride_m": 0.17, "clearance_m": 0.075, "duty": 0.48},
+    "crawl": {"frequency_hz": 1.0, "stride_m": 0.075, "clearance_m": 0.035, "duty": 0.72},
 }
+
+_TROT_PHASE = {"FL": 0.0, "RR": 0.0, "FR": 0.5, "RL": 0.5}
+_CRAWL_PHASE = {"FL": 0.0, "RR": 0.25, "FR": 0.5, "RL": 0.75}
 
 
 @dataclass
@@ -35,68 +35,106 @@ class ScriptedTrotGait:
     """Open-loop kinematic gait preview (trot / run / crawl)."""
 
     frequency_hz: float = 1.6
-    step_amplitude: float = 0.35
-    lift_amplitude: float = 0.45
+    stride_m: float = 0.13
+    clearance_m: float = 0.055
+    duty_factor: float = 0.58
     phase: float = 0.0
     style: str = "trot"
     _stand: dict[str, float] = field(default_factory=lambda: dict(_STAND))
+    _target_frequency_hz: float = 1.6
+    _target_stride_m: float = 0.13
+    _target_clearance_m: float = 0.055
+    _target_duty_factor: float = 0.58
+    _motion_scale: float = 0.0
 
     def set_style(self, style: str, frequency_hz: float | None = None) -> None:
         if style not in _STYLE:
             raise ValueError(f"unsupported gait style: {style!r}")
         params = _STYLE[style]
-        frequency = float(
-            frequency_hz if frequency_hz is not None else params["frequency_hz"]
-        )
+        frequency = float(frequency_hz if frequency_hz is not None else params["frequency_hz"])
         if not math.isfinite(frequency) or not 0.2 <= frequency <= 5.0:
             raise ValueError("gait frequency must be finite and between 0.2 and 5 Hz")
         self.style = style
-        self.frequency_hz = frequency
-        self.step_amplitude = float(params["step_amplitude"])
-        self.lift_amplitude = float(params["lift_amplitude"])
+        self._target_frequency_hz = frequency
+        self._target_stride_m = float(params["stride_m"])
+        self._target_clearance_m = float(params["clearance_m"])
+        self._target_duty_factor = float(params["duty"])
 
     def reset(self) -> None:
         self.phase = 0.0
+        self._motion_scale = 0.0
 
     def standing_joints(self) -> dict[str, float]:
         return dict(self._stand)
 
     def joints_for(self, command: VelocityCommand, dt: float) -> dict[str, float]:
+        dt = max(0.0, float(dt))
         speed = abs(command.vx) + abs(command.vy) + 0.35 * abs(command.vyaw)
-        if speed < 1e-3:
+        response = min(1.0, dt * 6.0)
+        self.frequency_hz += (self._target_frequency_hz - self.frequency_hz) * response
+        self.stride_m += (self._target_stride_m - self.stride_m) * response
+        self.clearance_m += (self._target_clearance_m - self.clearance_m) * response
+        self.duty_factor += (self._target_duty_factor - self.duty_factor) * response
+        target_scale = min(1.0, speed / 0.35) if speed >= 1e-3 else 0.0
+        self._motion_scale += (target_scale - self._motion_scale) * min(1.0, dt * 8.0)
+        if self._motion_scale < 1e-3:
             return self.standing_joints()
 
-        direction = 1.0 if command.vx >= 0.0 else -1.0
-        cadence = self.frequency_hz * (0.6 + min(speed, 0.8))
-        self.phase = (self.phase + 2.0 * math.pi * cadence * float(dt) * direction) % (
-            2.0 * math.pi
-        )
+        cadence = self.frequency_hz * (0.7 + min(speed, 0.7))
+        self.phase = (self.phase + cadence * dt) % 1.0
         joints = self.standing_joints()
-        self._apply_pair(joints, _PAIR_A, self.phase, command)
-        self._apply_pair(joints, _PAIR_B, self.phase + math.pi, command)
+        phases = _CRAWL_PHASE if self.style == "crawl" else _TROT_PHASE
+        for leg, offset in phases.items():
+            self._apply_leg(joints, leg, (self.phase + offset) % 1.0, command)
         if self.style == "crawl":
             for leg in ("FL", "FR", "RL", "RR"):
-                joints[f"{leg}_thigh_joint"] += 0.25
-                joints[f"{leg}_calf_joint"] -= 0.25
+                joints[f"{leg}_thigh_joint"] += 0.12
+                joints[f"{leg}_calf_joint"] -= 0.20
         return joints
 
-    def _apply_pair(
+    def _apply_leg(
         self,
         joints: dict[str, float],
-        legs: tuple[str, str],
+        leg: str,
         phase: float,
         command: VelocityCommand,
     ) -> None:
-        swing = math.sin(phase)
-        step = self.step_amplitude * swing
-        lift = max(0.0, swing) * self.lift_amplitude
-        yaw_lean = 0.12 * command.vyaw
-        side = 0.08 * command.vy
-        for leg in legs:
-            sign = 1.0 if leg.startswith("F") else -1.0
-            joints[f"{leg}_hip_joint"] = side + (yaw_lean if leg.endswith("L") else -yaw_lean)
-            joints[f"{leg}_thigh_joint"] = self._stand[f"{leg}_thigh_joint"] - sign * step + 0.55 * lift
-            joints[f"{leg}_calf_joint"] = self._stand[f"{leg}_calf_joint"] + sign * 0.55 * step - 0.85 * lift
+        stride = self.stride_m * self._motion_scale
+        if command.vx < -1e-3:
+            stride = -stride
+        duty = max(0.35, min(0.8, self.duty_factor))
+        if phase < duty:
+            # Stance foot travels backward relative to the body at constant
+            # velocity, approximating a world-fixed planted paw.
+            progress = phase / duty
+            foot_x = stride * (0.5 - progress)
+            lift = 0.0
+        else:
+            progress = (phase - duty) / (1.0 - duty)
+            blend = progress * progress * (3.0 - 2.0 * progress)
+            foot_x = stride * (-0.5 + blend)
+            lift = self.clearance_m * math.sin(math.pi * progress) * self._motion_scale
+        thigh, calf = self._leg_ik(foot_x, -0.265 + lift)
+        turn_sign = 1.0 if leg.endswith("L") else -1.0
+        lateral_sign = 1.0 if leg.endswith("L") else -1.0
+        joints[f"{leg}_hip_joint"] = (
+            lateral_sign * 0.10 * command.vy + turn_sign * 0.08 * command.vyaw
+        )
+        joints[f"{leg}_thigh_joint"] = thigh
+        joints[f"{leg}_calf_joint"] = calf
+
+    @staticmethod
+    def _leg_ik(x: float, z: float) -> tuple[float, float]:
+        upper = lower = 0.213
+        radius_sq = max(0.06**2, min((upper + lower - 1e-4) ** 2, x * x + z * z))
+        cosine = max(
+            -1.0, min(1.0, (radius_sq - upper * upper - lower * lower) / (2 * upper * lower))
+        )
+        calf = -math.acos(cosine)
+        thigh = math.atan2(x, -z) - math.atan2(
+            lower * math.sin(calf), upper + lower * math.cos(calf)
+        )
+        return thigh, calf
 
 
 @dataclass

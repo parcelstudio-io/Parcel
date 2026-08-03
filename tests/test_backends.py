@@ -47,6 +47,17 @@ def _status() -> dict:
                 "radius_m": 0.24,
             }
         ],
+        "semantic_regions": [
+            {
+                "id": "sidewalk-north",
+                "label": "sidewalk",
+                "polygon": [[-2.0, 2.0], [2.0, 2.0], [2.0, 4.0], [-2.0, 4.0]],
+                "confidence": 0.98,
+                "source": "simulator_semantic_camera",
+                "reachable": True,
+                "metadata": {"diagnostics_only": True},
+            }
+        ],
         "collision": False,
         "emergency_stopped": False,
     }
@@ -64,6 +75,8 @@ def test_mujoco_backend_accepts_complete_finite_observation(monkeypatch):
     assert observation.nearest_person_id == "ped-1"
     assert observation.nearest_person_ttc_s == 2.0
     assert observation.dynamic_agents[0].vx == -0.4
+    assert observation.semantic_regions[0].label == "sidewalk"
+    assert observation.semantic_regions[0].metadata == {"diagnostics_only": True}
 
 
 @pytest.mark.parametrize(
@@ -77,6 +90,10 @@ def test_mujoco_backend_accepts_complete_finite_observation(monkeypatch):
         (
             lambda status: status["dynamic_agents"][0].update(vx=math.nan),
             r"dynamic_agents\[0\].vx",
+        ),
+        (
+            lambda status: status["semantic_regions"][0].update(confidence=1.5),
+            r"semantic_regions\[0\].confidence",
         ),
     ],
 )

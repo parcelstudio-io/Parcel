@@ -169,10 +169,31 @@ def run_simulator(
     owner_body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "owner")
     owner_mocap_id = int(model.body_mocapid[owner_body_id]) if owner_body_id >= 0 else -1
     obstacle_geom_ids: list[int] = []
+    semantic_region_specs: list[dict[str, object]] = []
     for geom_id in range(model.ngeom):
         name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id) or ""
         if is_logical_obstacle_name(name):
             obstacle_geom_ids.append(geom_id)
+        label = (
+            "sidewalk"
+            if name.startswith("sidewalk")
+            else ("crosswalk" if name.startswith("xw") else "")
+        )
+        if label and int(model.geom_type[geom_id]) == int(mujoco.mjtGeom.mjGEOM_BOX):
+            x, y = float(model.geom_pos[geom_id, 0]), float(model.geom_pos[geom_id, 1])
+            sx, sy = float(model.geom_size[geom_id, 0]), float(model.geom_size[geom_id, 1])
+            semantic_region_specs.append(
+                {
+                    "id": name,
+                    "label": label,
+                    "polygon": [
+                        [x - sx, y - sy],
+                        [x + sx, y - sy],
+                        [x + sx, y + sy],
+                        [x - sx, y + sy],
+                    ],
+                }
+            )
 
     def robot_yaw() -> float:
         if model.nq < 7:
@@ -302,6 +323,28 @@ def run_simulator(
             robot_vx=robot_vx,
             robot_vy=robot_vy,
         )
+        visible_regions = []
+        for spec in semantic_region_specs:
+            polygon = spec["polygon"]
+            assert isinstance(polygon, list)
+            cx = sum(float(point[0]) for point in polygon) / len(polygon)
+            cy = sum(float(point[1]) for point in polygon) / len(polygon)
+            distance = math.hypot(cx - robot_x, cy - robot_y)
+            bearing = (math.atan2(cy - robot_y, cx - robot_x) - heading + math.pi) % (
+                2.0 * math.pi
+            ) - math.pi
+            # This is an explicitly labelled simulator test adapter, standing in
+            # for a production semantic camera + depth fusion process.
+            if distance <= 12.0 and abs(bearing) <= math.radians(70.0):
+                visible_regions.append(
+                    {
+                        **spec,
+                        "confidence": 0.98,
+                        "source": "simulator_semantic_camera",
+                        "reachable": True,
+                        "metadata": {"diagnostics_only": True},
+                    }
+                )
         return {
             "type": "status",
             "backend": "mujoco",
@@ -326,6 +369,7 @@ def run_simulator(
             "nearest_person_m": float(person["distance_m"]) if person else None,
             "nearest_person": person,
             "dynamic_agents": active_tracks,
+            "semantic_regions": visible_regions,
             "dynamic_city": {
                 "enabled": dynamic_city.enabled,
                 "seed": dynamic_city.seed,
@@ -375,8 +419,6 @@ def run_simulator(
                 raise ValueError("simulator motion is disabled by emergency stop")
             was_walking = walk_command is not None
             was_in_trajectory = trajectory.active
-            previous_style = gait.style
-            previous_frequency = gait.frequency_hz
             trajectory.stop()
             requested = message_to_velocity(message)
             walk_command = VelocityCommand(
@@ -388,12 +430,7 @@ def run_simulator(
             style = str(message.get("gait_style", "trot"))
             freq = message.get("frequency_hz")
             gait.set_style(style, float(freq) if freq is not None else None)
-            if (
-                not was_walking
-                or was_in_trajectory
-                or previous_style != gait.style
-                or abs(previous_frequency - gait.frequency_hz) > 1e-9
-            ):
+            if not was_walking or was_in_trajectory:
                 gait.reset()
             now = time.monotonic()
             change = (

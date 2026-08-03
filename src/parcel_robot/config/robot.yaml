@@ -17,6 +17,18 @@ perception:
     provider: google_maps
     enabled: false
 
+# Locally assembled context. Every provider and prompt field is opt-in.
+query_context:
+  enabled: false
+  timeout_ms: 150
+  max_age_s: 2.0
+  timezone: America/New_York
+  enable_location_context: false
+  enable_time_context: false
+  enable_map_context: false
+  enable_scene_context: false
+  include_precise_coordinates_in_prompt: false
+
 spatial_behaviors:
   step_length_m: 0.25
   max_steps: 12

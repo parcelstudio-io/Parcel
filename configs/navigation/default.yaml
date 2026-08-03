@@ -12,6 +12,12 @@ metaurban:
   density_obj: 0.4
   mode: social_nav   # point_nav | social_nav
 
+# Unknown semantic targets rotate in place and must be observed repeatedly
+# before any translation is authorized.
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
 safety:
   max_vx: 0.45
   max_vy: 0.25

@@ -14,6 +14,13 @@ from parcel_robot.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
 from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
 from parcel_robot.backends.base import SimObservation, SimulatorBackend
 from parcel_robot.config import ConfigStore
+from parcel_robot.context import (
+    CallableContextProvider,
+    ClockContextProvider,
+    ContextBuildConfig,
+    ContextBuilder,
+    ContextField,
+)
 from parcel_robot.core import (
     ActivityContext,
     ActivityCoordinator,
@@ -139,6 +146,17 @@ class RobotRuntime:
         self._was_moving = False
         self._proximity_state = "clear"
         agent_config = self.store.agent_config()
+        context_config = ContextBuildConfig.from_mapping(self.store.section("query_context"))
+        self.context_builder = ContextBuilder(
+            context_config,
+            {
+                "time": ClockContextProvider(
+                    str(self.store.section("query_context").get("timezone", "America/New_York"))
+                ),
+                "location": CallableContextProvider("location", self._location_context),
+                "scene": CallableContextProvider("scene", self._scene_context),
+            },
+        )
         self.prompt_library = PromptLibrary(self.store.prompts_root())
         self._personality = str(agent_config.get("personality", "gentle_companion"))
         self._function_profiles = agent_config.get(
@@ -446,30 +464,59 @@ class RobotRuntime:
                 ),
                 publish=False,
                 extras=(
-                    {"obstacle_bearing_rad": observation.nearest_obstacle_bearing_rad}
+                    {
+                        "obstacle_bearing_rad": observation.nearest_obstacle_bearing_rad,
+                        "semantic_candidates": [
+                            {
+                                "id": region.region_id,
+                                "label": region.label,
+                                "polygon": [list(point) for point in region.polygon],
+                                "confidence": region.confidence,
+                                "kind": "region",
+                                "source": region.source,
+                                "reachable": region.reachable,
+                                "metadata": dict(region.metadata or {}),
+                            }
+                            for region in observation.semantic_regions
+                        ],
+                        "query_context": self.context_builder.build().navigation_data(),
+                    }
                     if observation is not None
                     else None
                 ),
             )
-        place = mission.goal.label or mission.goal.poi_id
+        place = (
+            mission.goal.label or mission.goal.poi_id
+            if mission.goal is not None
+            else str(mission.metadata.get("semantic_query", clean))
+        )
         with self._lock:
             if generation != self._behavior_generation or self.arbiter.emergency_stopped:
                 raise RuntimeError("navigation request was canceled")
             self._navigation_directive = clean
             self._navigation_detail = {
                 "enabled": not command.stop,
-                "state": "arrived" if command.stop else "navigating",
+                "state": mission.status,
                 "directive": clean,
                 "goal": place,
                 "reason": command.note,
             }
-        if command.stop:
+        if command.stop and mission.status == "arrived":
             with self._lock:
                 self._navigation_directive = None
             message = f"Already at {place}."
+        elif command.stop:
+            with self._lock:
+                self._navigation_directive = None
+                self._navigation_detail["enabled"] = False
+            message = f"I couldn't find or safely reach {place}."
         else:
             message = f"Navigating to {place}."
-        self._emit("navigation", message, "success")
+        self._emit(
+            "navigation",
+            message,
+            "error" if command.stop and mission.status != "arrived" else "success",
+        )
         return message
 
     def stop_navigation(self) -> None:
@@ -775,7 +822,7 @@ class RobotRuntime:
             for skill in self.dog.list_skills(tag="social")
             if skill.kind in {"pose", "trajectory"}
         ]
-        return {
+        result: dict[str, object] = {
             "active_activity": {
                 "kind": active_kind,
                 "phase": active_phase,
@@ -802,6 +849,50 @@ class RobotRuntime:
             "perception": self.perception.snapshot(self.maps),
             "personality": personality,
         }
+        context = self.context_builder.build()
+        if context.fields or context.errors:
+            result["query_context"] = context.prompt_data(
+                include_precise_coordinates=(
+                    self.context_builder.config.include_precise_coordinates_in_prompt
+                )
+            )
+        return result
+
+    def _location_context(self, now: datetime) -> ContextField:
+        with self._lock:
+            observation = self._observation
+        if observation is None:
+            raise RuntimeError("localization unavailable")
+        return ContextField(
+            kind="location",
+            source=f"{observation.backend}_localization",
+            observed_at=now,
+            value={
+                "frame": "map",
+                "area": "local robot operating area",
+                "x": observation.robot.x,
+                "y": observation.robot.y,
+                "z": observation.robot.z,
+                "heading_deg": math.degrees(observation.robot.yaw),
+            },
+            accuracy_m=0.05 if observation.backend == "mujoco" else None,
+        )
+
+    def _scene_context(self, now: datetime) -> ContextField:
+        with self._lock:
+            observation = self._observation
+        if observation is None:
+            raise RuntimeError("scene perception unavailable")
+        labels = sorted({region.label for region in observation.semantic_regions})
+        return ContextField(
+            kind="scene",
+            source=f"{observation.backend}_semantic_perception",
+            observed_at=now,
+            value={
+                "visible_semantic_labels": labels,
+                "candidate_count": len(observation.semantic_regions),
+            },
+        )
 
     def move_owner(self, dx: float, dy: float) -> str:
         if self._closed:
@@ -1278,6 +1369,20 @@ class RobotRuntime:
                         "person_bearing_rad": observation.nearest_person_bearing_rad,
                         "person_id": observation.nearest_person_id,
                         "person_ttc_s": observation.nearest_person_ttc_s,
+                        "semantic_candidates": [
+                            {
+                                "id": region.region_id,
+                                "label": region.label,
+                                "polygon": [list(point) for point in region.polygon],
+                                "confidence": region.confidence,
+                                "kind": "region",
+                                "source": region.source,
+                                "reachable": region.reachable,
+                                "metadata": dict(region.metadata or {}),
+                            }
+                            for region in observation.semantic_regions
+                        ],
+                        "query_context": self.context_builder.build().navigation_data(),
                     },
                 )
         except (LookupError, RuntimeError, TypeError, ValueError) as error:
@@ -1290,7 +1395,11 @@ class RobotRuntime:
                 self.stop_navigation()
                 self._emit("navigation", f"Navigation failed: {error}", "error")
             return
-        place = mission.goal.label or mission.goal.poi_id
+        place = (
+            mission.goal.label or mission.goal.poi_id
+            if mission.goal is not None
+            else str(mission.metadata.get("semantic_query", directive))
+        )
         with self._lock:
             still_current = (
                 generation == self._behavior_generation
@@ -1305,14 +1414,18 @@ class RobotRuntime:
                 self._navigation_directive = None
                 self._navigation_detail = {
                     "enabled": False,
-                    "state": "arrived",
+                    "state": mission.status,
                     "directive": directive,
                     "goal": place,
                     "reason": command.note or "arrived",
                 }
                 self.arbiter.cancel("navigation")
             else:
-                state = "blocked" if "stop" in command.note else "navigating"
+                state = (
+                    "searching"
+                    if mission.status == "searching"
+                    else ("blocked" if "stop" in command.note else "navigating")
+                )
                 self._navigation_detail = {
                     "enabled": True,
                     "state": state,

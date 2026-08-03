@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
 from parcel_robot.models import Pose, VelocityCommand
 
@@ -46,6 +46,17 @@ class LidarObstacle:
 
 
 @dataclass(frozen=True)
+class SemanticRegionTrack:
+    region_id: str
+    label: str
+    polygon: tuple[tuple[float, float], ...]
+    confidence: float
+    source: str = "perception"
+    reachable: bool = True
+    metadata: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
 class SimObservation:
     timestamp: float
     robot: RobotPose
@@ -59,6 +70,7 @@ class SimObservation:
     nearest_person_id: str | None = None
     nearest_person_ttc_s: float | None = None
     dynamic_agents: tuple[DynamicAgentTrack, ...] = ()
+    semantic_regions: tuple[SemanticRegionTrack, ...] = ()
     collision: bool = False
     emergency_stopped: bool = False
     backend: str = "unknown"

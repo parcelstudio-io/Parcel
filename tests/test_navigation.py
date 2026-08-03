@@ -189,3 +189,80 @@ def test_stub_turns_in_place_for_goal_behind_robot():
     assert command.vyaw != 0.0
     assert "align_goal" in command.note
     nav.close()
+
+
+def _semantic_nav() -> DirectiveNavigator:
+    return DirectiveNavigator(
+        registry=ModelRegistry.load(MODELS),
+        grounder=PlaceGrounder([]),
+        model_id="stub_v0",
+        arrive_radius_m=0.25,
+    )
+
+
+def _sidewalk_observation(position=(0.0, 0.0, 0.0)) -> NavObservation:
+    return NavObservation(
+        position=position,
+        heading_deg=0.0,
+        extras={
+            "semantic_candidates": [
+                {
+                    "id": "observed-sidewalk-1",
+                    "label": "sidewalk",
+                    "kind": "region",
+                    "polygon": [[1.0, -1.0], [4.0, -1.0], [4.0, 1.0], [1.0, 1.0]],
+                    "confidence": 0.92,
+                    "source": "test_semantic_camera",
+                    "reachable": True,
+                }
+            ]
+        },
+    )
+
+
+def test_unknown_sidewalk_uses_bounded_multiview_semantic_search():
+    nav = _semantic_nav()
+    mission = nav.start("go to the sidewalk")
+
+    first = nav.step(_sidewalk_observation())
+    second = nav.step(_sidewalk_observation())
+
+    assert mission.goal is not None
+    assert first.vx == first.vy == 0.0
+    assert first.vyaw > 0.0
+    assert first.note == "semantic_search_scan"
+    assert second == MidLevelCommand(note="semantic_target_resolved")
+    assert mission.status == "running"
+    assert mission.metadata["candidate_source"] == "test_semantic_camera"
+    assert mission.goal.poi_id == "observed-sidewalk-1"
+    nav.close()
+
+
+def test_semantic_region_arrival_requires_robot_inside_region():
+    nav = _semantic_nav()
+    mission = nav.start("move to the sidewalk")
+    nav.step(_sidewalk_observation())
+    nav.step(_sidewalk_observation())
+    assert mission.goal is not None
+
+    arrived = nav.step(_sidewalk_observation((mission.goal.x, mission.goal.y, 0.0)))
+
+    assert arrived.stop
+    assert mission.status == "arrived"
+    assert mission.metadata["resolution_state"] == "verified"
+    nav.close()
+
+
+def test_unreachable_semantic_candidate_never_authorizes_translation():
+    nav = _semantic_nav()
+    nav.start("go to the sidewalk")
+    observation = _sidewalk_observation()
+    raw = dict(observation.extras["semantic_candidates"][0])
+    raw["reachable"] = False
+    blocked = NavObservation(extras={"semantic_candidates": [raw]})
+
+    commands = [nav.step(blocked) for _ in range(3)]
+
+    assert all(command.vx == command.vy == 0.0 for command in commands)
+    assert all(command.note == "semantic_search_scan" for command in commands)
+    nav.close()

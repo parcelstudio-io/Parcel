@@ -253,9 +253,11 @@ sidewalks commonly use `highway=footway` plus `footway=sidewalk`
 Map data is a prior and routing aid; camera/geometry still verifies the local
 surface and temporary hazards.
 
-### Query Context Service and feature-gated prompt context
+### Local ContextBuilder and feature-gated prompt context
 
-Create a `QueryContextService` that returns a typed `ContextSnapshot`, not prose:
+Create an in-process `ContextBuilder` library that returns a typed
+`ContextSnapshot`, not prose. Provider interfaces preserve the option to add a
+remote implementation later without making today's context path a service:
 
 ```json
 {
@@ -377,7 +379,7 @@ return guessed coordinates.
 
 1. **Make the contracts honest:** add semantic goal/candidate/search types and a
    fake semantic-map provider; remove POI-only assumptions without adding a VLM.
-2. **Add context safely:** implement `QueryContextService`, all flags default-off,
+2. **Add context safely:** implement the local `ContextBuilder`, all flags default-off,
    prompt projection, provider timeouts/provenance, and absence/privacy tests.
 3. **Prove sidewalk behavior in simulation:** use simulator semantic ground
    truth only as a test provider, exercise scan/resolution/approach/verification,

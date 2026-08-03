@@ -58,7 +58,7 @@ Language directive → mid-level motion needs **two layers**:
 
 ```text
 directive
-  → SemanticGrounder (POI / map / optional VLM)
+  → Goal resolver (known POI → semantic map → bounded active visual search)
   → NavigatorModel (citywalker | navila | nomad | vint | stub)
   → MidLevelCommand (vx, vy, vyaw) or waypoints
   → Dog / MotionRouter / MuJoCo backend (implemented)
@@ -117,6 +117,32 @@ scaffold. `use_metaurban=True` deliberately raises `NotImplementedError`: merely
 importing/resetting the vendor environment is not a working Parcel backend.
 
 Also exposed on `Dog.navigate(directive: str)` when `navigation.config` is set in `robot.yaml`.
+
+### Open-world semantic goals
+
+Unknown destination text no longer fails solely because it is absent from the
+POI YAML. It becomes a typed semantic object/region goal. The active search
+controller rotates in place, queries perception-provided candidates, requires
+repeated confidence-qualified observations, constructs a footprint-cleared
+interior or stand-off pose, and only then hands the mission to the point-goal
+controller. Region goals such as `sidewalk` are verified geometrically at
+arrival. Searches are bounded by `semantic_search.max_steps` and fail without
+translating when no reachable target is confirmed.
+
+MuJoCo publishes visible sidewalk/crosswalk polygons as a diagnostics-only
+semantic-camera adapter for deterministic tests. Production deployments must
+replace it with camera segmentation/open-vocabulary features fused with depth or
+LiDAR; simulator semantic truth is never presented as a production sensor.
+
+### Local dynamic context
+
+`parcel_robot.context.ContextBuilder` assembles typed location, time, map, and
+scene fields in process. `query_context` flags gate both provider invocation and
+prompt serialization and default off. Exact local coordinates are withheld from
+the voice prompt unless `include_precise_coordinates_in_prompt` is enabled, while
+authorized structured context remains available to deterministic navigation.
+Provider interfaces can gain remote implementations later without making the
+current context path a network service.
 
 ## RL organization
 

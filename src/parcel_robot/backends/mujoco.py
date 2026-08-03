@@ -17,10 +17,18 @@ from parcel_robot.sim_ipc import (
     send_message,
 )
 
-from .base import DynamicAgentTrack, LidarObstacle, OwnerTrack, RobotPose, SimObservation
+from .base import (
+    DynamicAgentTrack,
+    LidarObstacle,
+    OwnerTrack,
+    RobotPose,
+    SemanticRegionTrack,
+    SimObservation,
+)
 
 MAX_DYNAMIC_AGENTS = 64
 MAX_LIDAR_OBSTACLES = 64
+MAX_SEMANTIC_REGIONS = 64
 
 
 def _finite_float(value: object, field: str) -> float:
@@ -92,6 +100,14 @@ class MujocoSocketBackend:
         dynamic_agents = tuple(
             _parse_dynamic_agent(item, index) for index, item in enumerate(raw_agents)
         )
+        raw_regions = data.get("semantic_regions", [])
+        if not isinstance(raw_regions, list):
+            raise TypeError("simulator semantic_regions must be a list")
+        if len(raw_regions) > MAX_SEMANTIC_REGIONS:
+            raise ValueError("simulator reported too many semantic regions")
+        semantic_regions = tuple(
+            _parse_semantic_region(item, index) for index, item in enumerate(raw_regions)
+        )
         timestamp = _finite_float(data.get("timestamp"), "timestamp")
         if timestamp <= 0.0 or timestamp > time.monotonic() + 5.0:
             raise ValueError("simulator timestamp is outside the valid monotonic range")
@@ -137,6 +153,7 @@ class MujocoSocketBackend:
             nearest_person_id=(str(person_detail["id"]) if person_detail.get("id") else None),
             nearest_person_ttc_s=person_ttc,
             dynamic_agents=dynamic_agents,
+            semantic_regions=semantic_regions,
             collision=collision,
             emergency_stopped=emergency_stopped,
             backend=backend,
@@ -214,3 +231,44 @@ def _parse_lidar_obstacle(item: object, index: int) -> LidarObstacle:
     ):
         raise TypeError(f"simulator lidar_obstacles[{index}].id must be a short string or null")
     return LidarObstacle(distance, bearing, obstacle_id)
+
+
+def _parse_semantic_region(item: object, index: int) -> SemanticRegionTrack:
+    if not isinstance(item, dict):
+        raise TypeError(f"simulator semantic_regions[{index}] must be an object")
+    allowed = {"id", "label", "polygon", "confidence", "source", "reachable", "metadata"}
+    if not set(item).issubset(allowed):
+        raise ValueError(f"simulator semantic_regions[{index}] contains unsupported fields")
+    region_id, label = item.get("id"), item.get("label")
+    if not isinstance(region_id, str) or not region_id.strip() or len(region_id) > 128:
+        raise TypeError(f"simulator semantic_regions[{index}].id is invalid")
+    if not isinstance(label, str) or not label.strip() or len(label) > 160:
+        raise TypeError(f"simulator semantic_regions[{index}].label is invalid")
+    raw_polygon = item.get("polygon")
+    if not isinstance(raw_polygon, list) or not 3 <= len(raw_polygon) <= 256:
+        raise TypeError(f"simulator semantic_regions[{index}].polygon is invalid")
+    polygon = tuple(
+        (
+            _finite_float(point[0], f"semantic_regions[{index}].polygon.x"),
+            _finite_float(point[1], f"semantic_regions[{index}].polygon.y"),
+        )
+        for point in raw_polygon
+        if isinstance(point, list) and len(point) == 2
+    )
+    if len(polygon) != len(raw_polygon):
+        raise TypeError(f"simulator semantic_regions[{index}].polygon points are invalid")
+    confidence = _finite_float(item.get("confidence"), f"semantic_regions[{index}].confidence")
+    if not 0.0 <= confidence <= 1.0:
+        raise ValueError(f"simulator semantic_regions[{index}].confidence is invalid")
+    metadata = item.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        raise TypeError(f"simulator semantic_regions[{index}].metadata must be an object")
+    return SemanticRegionTrack(
+        region_id=region_id,
+        label=label,
+        polygon=polygon,
+        confidence=confidence,
+        source=str(item.get("source", "simulator_semantic_camera")),
+        reachable=bool(item.get("reachable", True)),
+        metadata=dict(metadata),
+    )

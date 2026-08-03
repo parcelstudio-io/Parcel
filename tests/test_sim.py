@@ -128,6 +128,21 @@ def test_scripted_trot_cycles_legs():
     assert later["FR_thigh_joint"] != pytest.approx(later["FL_thigh_joint"], abs=1e-6)
 
 
+def test_gait_preserves_phase_and_smoothly_changes_style():
+    gait = ScriptedTrotGait()
+    command = VelocityCommand(vx=0.3)
+    for _ in range(10):
+        before = gait.joints_for(command, 0.02)
+    phase = gait.phase
+
+    gait.set_style("crawl")
+    after = gait.joints_for(command, 0.02)
+
+    assert gait.phase != 0.0
+    assert gait.phase > phase
+    assert max(abs(after[key] - before[key]) for key in before) < 0.5
+
+
 def test_socket_publish_and_poll(tmp_path):
     socket_path = tmp_path / "parcel_sim.sock"
     server = PoseSocketServer(socket_path)
