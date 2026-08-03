@@ -21,6 +21,12 @@ from parcel_robot.context import (
     ContextBuilder,
     ContextField,
 )
+from parcel_robot.control import (
+    BufferedRobotStateSource,
+    ControlManager,
+    ControlNotReadyError,
+    build_backend_control_manager,
+)
 from parcel_robot.core import (
     ActivityContext,
     ActivityCoordinator,
@@ -52,6 +58,7 @@ class RobotRuntime:
         language_model: LanguageModel | None = None,
         audio_status: AudioDeviceStatus | None = None,
         loop_hz: float = 10.0,
+        control_manager: ControlManager | None = None,
     ):
         if loop_hz <= 0:
             raise ValueError("loop_hz must be positive")
@@ -59,6 +66,28 @@ class RobotRuntime:
         self.backend = backend
         self.loop_period = 1.0 / loop_hz
         self.arbiter = CommandArbiter(self.store.safety_limits())
+        self._synchronous_control_dispatch = control_manager is None
+        if control_manager is None:
+            control_config = self.store.section("control")
+            configured_controller = str(control_config.get("controller", "simulator"))
+            if configured_controller != "simulator":
+                raise ValueError(
+                    "RobotRuntime requires an explicit control_manager for physical "
+                    "controllers; configuration alone cannot arm hardware"
+                )
+            control_manager, state_source = build_backend_control_manager(
+                backend,
+                control_config,
+                self.store.safety_limits(),
+            )
+            self._control_state_source: BufferedRobotStateSource | None = state_source
+        else:
+            self._control_state_source = (
+                control_manager.state_source
+                if isinstance(control_manager.state_source, BufferedRobotStateSource)
+                else None
+            )
+        self.control_manager = control_manager
         smoother_config = self.store.motion_config().get("smoothing") or {}
         if not isinstance(smoother_config, dict):
             raise TypeError("motion.smoothing must be a mapping")
@@ -136,8 +165,10 @@ class RobotRuntime:
         self._agent_lock = threading.Lock()
         self._navigation_lock = threading.RLock()
         self._command_lock = threading.RLock()
+        self._close_lock = threading.Lock()
         self._behavior_generation = 0
         self._closed = False
+        self._close_complete = False
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._health_thread: threading.Thread | None = None
@@ -242,48 +273,83 @@ class RobotRuntime:
         if self._thread is not None and self._thread.is_alive():
             return
         self._stop_event.clear()
-        self._thread = threading.Thread(
-            target=self._control_loop,
-            name="parcel-control-loop",
-            daemon=True,
-        )
-        self._thread.start()
-        self._health_thread = threading.Thread(
-            target=self._service_health_loop,
-            name="parcel-service-health",
-            daemon=True,
-        )
-        self._health_thread.start()
+        try:
+            self.control_manager.start(threaded=not self._synchronous_control_dispatch)
+            self._thread = threading.Thread(
+                target=self._control_loop,
+                name="parcel-control-loop",
+                daemon=True,
+            )
+            self._thread.start()
+            self._health_thread = threading.Thread(
+                target=self._service_health_loop,
+                name="parcel-service-health",
+                daemon=True,
+            )
+            self._health_thread.start()
+        except BaseException as start_error:
+            # A reported startup failure must never leave a physical manager or
+            # a successfully started sibling thread alive. close() also knows
+            # how to skip Thread objects whose start() never assigned an ident.
+            self._stop_event.set()
+            try:
+                self.close()
+            except BaseException as cleanup_error:
+                raise RuntimeError(
+                    f"runtime startup failed ({start_error!r}) and cleanup did not complete"
+                ) from cleanup_error
+            raise
 
     def close(self) -> None:
-        if self._closed:
-            return
-        self._closed = True
-        self._stop_event.set()
-        with self._command_lock:
-            self.follow.stop()
-            self.stop_navigation()
-            self._stop_spatial_locked("runtime_closed")
-            self.agent.safety.engage_emergency_stop()
-            self.activities.clear("runtime_closed")
-            self._activity_complete_at = 0.0
-            self.arbiter.engage_emergency_stop()
+        with self._close_lock:
+            if self._close_complete:
+                return
+            if not self._closed:
+                # `_closed` is the irreversible command/API latch. Teardown is
+                # tracked separately so a bounded controller close that asks
+                # for a retry remains reachable on the next close() call.
+                self._closed = True
+                self._stop_event.set()
+                with self._command_lock:
+                    self.follow.stop()
+                    self.stop_navigation()
+                    self._stop_spatial_locked("runtime_closed")
+                    self.agent.safety.engage_emergency_stop()
+                    self.activities.clear("runtime_closed")
+                    self._activity_complete_at = 0.0
+                    self.arbiter.engage_emergency_stop()
+                    try:
+                        self.control_manager.emergency_stop()
+                    except (OSError, RuntimeError):
+                        pass
+                    self._last_sent = VelocityCommand()
+                    self._was_moving = False
+                    self.velocity_smoother.reset()
+            auxiliary_error: BaseException | None = None
             try:
-                emergency = getattr(self.backend, "emergency_stop", None)
-                if callable(emergency):
-                    emergency()
-                else:
-                    self.backend.stop()
-            except OSError:
-                pass
-            self._last_sent = VelocityCommand()
-            self._was_moving = False
-            self.velocity_smoother.reset()
-        self.voice_session.close(timeout=2.0)
-        if self._thread is not None:
-            self._thread.join(timeout=2.0)
-        if self._health_thread is not None:
-            self._health_thread.join(timeout=3.0)
+                self.voice_session.close(timeout=2.0)
+            except BaseException as error:  # noqa: BLE001 - hardware teardown must continue
+                auxiliary_error = error
+            for thread, timeout in (
+                (self._thread, 2.0),
+                (self._health_thread, 3.0),
+            ):
+                if (
+                    thread is None
+                    or thread is threading.current_thread()
+                    or thread.ident is None
+                ):
+                    continue
+                try:
+                    thread.join(timeout=timeout)
+                except RuntimeError as error:
+                    auxiliary_error = auxiliary_error or error
+            # A bounded manager close can intentionally raise and require a
+            # retry; assignment below is deliberately after the call.
+            self.control_manager.close()
+            self._close_complete = True
+            if auxiliary_error is not None:
+                raise auxiliary_error
 
     def submit_motion(
         self,
@@ -341,10 +407,14 @@ class RobotRuntime:
                 self._behavior_generation += 1
             self._stop_spatial_locked("motion_stopped")
             self.arbiter.stop()
-            try:
-                self.backend.stop()
-            except OSError as error:
-                self._record_sim_error(error)
+            with self._lock:
+                simulator_feedback_available = self._observation is not None
+            if not self._synchronous_control_dispatch or simulator_feedback_available:
+                try:
+                    self._ensure_compatibility_control_started()
+                    self.control_manager.stop("runtime_stop")
+                except (OSError, RuntimeError) as error:
+                    self._record_sim_error(error)
             self._last_sent = VelocityCommand()
             self._was_moving = False
             self.velocity_smoother.reset()
@@ -358,12 +428,8 @@ class RobotRuntime:
             self._activity_complete_at = 0.0
             self.arbiter.engage_emergency_stop()
             try:
-                emergency = getattr(self.backend, "emergency_stop", None)
-                if callable(emergency):
-                    emergency()
-                else:
-                    self.backend.stop()
-            except OSError as error:
+                self.control_manager.emergency_stop()
+            except (OSError, RuntimeError) as error:
                 self._record_sim_error(error)
             self._last_sent = VelocityCommand()
             self._was_moving = False
@@ -374,13 +440,22 @@ class RobotRuntime:
         if self._closed:
             raise RuntimeError("runtime is closed")
         with self._command_lock:
-            clear_backend = getattr(self.backend, "clear_emergency_stop", None)
-            if callable(clear_backend):
+            deadline = time.monotonic() + self.control_manager.timing.stop_timeout_s
+            while True:
                 try:
-                    clear_backend()
-                except OSError as error:
+                    self.control_manager.clear_emergency_stop()
+                    break
+                except ControlNotReadyError as error:
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0.0:
+                        self._record_sim_error(error)
+                        raise RuntimeError(
+                            "controller emergency stop could not be cleared"
+                        ) from error
+                    time.sleep(min(0.01, remaining))
+                except (OSError, RuntimeError) as error:
                     self._record_sim_error(error)
-                    raise RuntimeError("simulator emergency stop could not be cleared") from error
+                    raise RuntimeError("controller emergency stop could not be cleared") from error
             self.arbiter.clear_emergency_stop()
             self.agent.safety.clear_emergency_stop()
         self._emit("safety", "Emergency stop cleared by operator", "warning")
@@ -918,6 +993,12 @@ class RobotRuntime:
             if self.arbiter.emergency_stopped:
                 raise RuntimeError("motion is disabled by emergency stop")
             self.arbiter.stop()
+            self.control_manager.stop("pose_started")
+            if not self._synchronous_control_dispatch:
+                raise RuntimeError(
+                    "physical poses must be implemented by the selected locomotion "
+                    "controller; direct backend actuation is disabled"
+                )
             self.backend.pose(pose)
 
     def _run_trajectory(self, skill: object) -> None:
@@ -933,6 +1014,12 @@ class RobotRuntime:
             if self.arbiter.emergency_stopped:
                 raise RuntimeError("motion is disabled by emergency stop")
             self.arbiter.stop()
+            self.control_manager.stop("trajectory_started")
+            if not self._synchronous_control_dispatch:
+                raise RuntimeError(
+                    "physical trajectories must be implemented by the selected locomotion "
+                    "controller; direct backend actuation is disabled"
+                )
             self.backend.trajectory(skill)
 
     def handle_text(self, text: str) -> str:
@@ -1133,6 +1220,7 @@ class RobotRuntime:
             "collision": collision,
             "emergency_stopped": arbitration["emergency_stopped"],
             "motion": arbitration,
+            "control": self.control_manager.snapshot().as_dict(),
             "activities": self.activities.snapshot(),
             "events": events,
             "chat": chat,
@@ -1170,6 +1258,8 @@ class RobotRuntime:
             try:
                 observe_started = time.monotonic()
                 observation = self.backend.observe()
+                if self._control_state_source is not None:
+                    self._control_state_source.update_observation(observation)
                 self.component_metrics.elapsed("SimulatorObserve", observe_started)
                 observe_recorded = True
                 self.component_metrics.observe_ms(
@@ -1197,6 +1287,7 @@ class RobotRuntime:
                         self._activity_complete_at = 0.0
                         self.agent.safety.engage_emergency_stop()
                         self.arbiter.engage_emergency_stop()
+                        self.control_manager.emergency_stop()
                     self._emit("safety", "Simulator emergency stop adopted", "error")
             except (OSError, RuntimeError, TypeError, ValueError) as error:
                 if not observe_recorded:
@@ -1299,6 +1390,12 @@ class RobotRuntime:
                 command = VelocityCommand(vyaw=command.vyaw)
             with self._lock:
                 observation = self._observation
+            if self._synchronous_control_dispatch:
+                self._ensure_compatibility_control_started()
+                if observation is not None and self._control_state_source is not None:
+                    state = self._control_state_source.latest()
+                    if state is None or state.received_at < observation.timestamp:
+                        self._control_state_source.update_observation(observation)
             collision_started = time.monotonic()
             command, proximity_state = self._collision_safe(command, observation)
             self.component_metrics.elapsed("CollisionGate", collision_started)
@@ -1312,26 +1409,65 @@ class RobotRuntime:
                     self._emit("safety", "Obstacle clearance restored", "success")
                 self._proximity_state = proximity_state
             should_refresh = now - self._last_send_at >= 0.2
-            if active is not None and (command != self._last_sent or should_refresh):
+            # The optional simulator socket may not exist at UI startup. Until
+            # one observation proves that transport is present, retain intent
+            # locally and perform no actuator I/O. Physical managers use their
+            # own feedback thread and are never gated by simulator telemetry.
+            controller_delivery_available = (
+                not self._synchronous_control_dispatch or observation is not None
+            )
+            if (
+                controller_delivery_available
+                and active is not None
+                and (command != self._last_sent or should_refresh)
+            ):
                 try:
                     send_started = time.monotonic()
-                    self.backend.move(command)
+                    self.control_manager.set_target(
+                        command,
+                        source=active.source,
+                        ttl=self.control_manager.timing.command_timeout_s,
+                        now=now,
+                    )
                     self.component_metrics.elapsed("BackendCommandSend", send_started)
                     self._last_sent = command
                     self._last_send_at = now
                     self._was_moving = any(
                         abs(value) > 1e-6 for value in (command.vx, command.vy, command.vyaw)
                     )
-                except OSError as error:
+                except (ControlNotReadyError, OSError, RuntimeError, ValueError) as error:
                     self._record_sim_error(error)
-            elif active is None and self._was_moving:
+            elif controller_delivery_available and active is None and self._was_moving:
                 try:
-                    self.backend.stop()
-                except OSError as error:
+                    self.control_manager.stop("intent_expired")
+                except (OSError, RuntimeError) as error:
                     self._record_sim_error(error)
                 self._last_sent = VelocityCommand()
                 self._was_moving = False
                 self.velocity_smoother.reset(now=now)
+            if self._synchronous_control_dispatch:
+                # The simulator socket is optional at process startup. Do not
+                # turn "no sample has ever arrived" into a latched controller
+                # fault; once any sample exists, idle ticks continue so later
+                # telemetry loss and physical motion are still supervised.
+                state_available = (
+                    self._control_state_source is not None
+                    and self._control_state_source.latest() is not None
+                )
+                if observation is not None or state_available:
+                    try:
+                        self.control_manager.tick(now=now)
+                    except (OSError, RuntimeError, TypeError, ValueError) as error:
+                        self._record_sim_error(error)
+
+    def _ensure_compatibility_control_started(self) -> None:
+        """Lazily activate only the local backend adapter used by tests/sim."""
+
+        if (
+            self._synchronous_control_dispatch
+            and self.control_manager.snapshot().lifecycle.value == "disarmed"
+        ):
+            self.control_manager.start(threaded=False)
 
     def _step_navigation(self, observation: SimObservation | None) -> None:
         with self._lock:

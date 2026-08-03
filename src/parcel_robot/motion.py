@@ -9,7 +9,7 @@ from .models import VelocityCommand
 
 
 class MotionBackend(Protocol):
-    """Exclusive locomotion driver. Only one backend should command motion."""
+    """Compatibility facade for selecting a skill/voice motion strategy."""
 
     name: str
 
@@ -22,10 +22,11 @@ class MotionBackend(Protocol):
 
 @dataclass
 class SportMoveBackend:
-    """Unitree SportClient high-level Move adapter.
+    """Compatibility facade for selecting Unitree Sport body-velocity intent.
 
-    Uses ``unitree_sdk2py`` when installed and ``enabled`` is true. Otherwise it
-    records commands so the voice/agent path can be developed offline.
+    Physical delivery is intentionally owned by ``ControlManager``. This class
+    records voice/skill intent only, preventing raw commands from bypassing the
+    runtime smoother and collision gate.
     """
 
     interface: str = "lo"
@@ -34,25 +35,6 @@ class SportMoveBackend:
     name: str = "sport"
     history: list[VelocityCommand] = field(default_factory=list)
     _active: VelocityCommand | None = None
-    _client: Any = None
-
-    def _ensure_client(self) -> Any:
-        if self._client is not None:
-            return self._client
-        try:
-            from unitree_sdk2py.core.channel import ChannelFactoryInitialize
-            from unitree_sdk2py.go2.sport.sport_client import SportClient
-        except ImportError as error:
-            raise RuntimeError(
-                "unitree_sdk2py is not installed; keep motion.backend=rl for "
-                "local MuJoCo work, or install CycloneDDS + unitree_sdk2_python"
-            ) from error
-        ChannelFactoryInitialize(self.domain_id, self.interface)
-        client = SportClient()
-        client.SetTimeout(5.0)
-        client.Init()
-        self._client = client
-        return client
 
     def start(self, command: VelocityCommand) -> str:
         self.history.append(command)
@@ -62,23 +44,17 @@ class SportMoveBackend:
                 f"Sport Move armed (stub): vx={command.vx:.2f} "
                 f"vy={command.vy:.2f} vyaw={command.vyaw:.2f}"
             )
-        client = self._ensure_client()
-        code = client.Move(float(command.vx), float(command.vy), float(command.vyaw))
-        return f"Sport Move sent (code={code}): vx={command.vx:.2f}"
+        return f"Sport intent accepted: vx={command.vx:.2f} (delivery owned by ControlManager)"
 
     def stop(self) -> str:
         self._active = VelocityCommand()
-        if not self.enabled:
-            return "Sport Move stopped (stub)"
-        client = self._ensure_client()
-        client.StopMove()
-        return "Sport Move stopped"
+        return "Sport Move stopped (intent)"
 
     def status(self) -> str:
         if self._active is None:
             return "sport: idle"
         cmd = self._active
-        mode = "live" if self.enabled else "stub"
+        mode = "configured" if self.enabled else "stub"
         return f"sport[{mode}]: vx={cmd.vx:.2f} vy={cmd.vy:.2f} vyaw={cmd.vyaw:.2f}"
 
 
@@ -178,8 +154,7 @@ class MotionRouter:
     def __post_init__(self) -> None:
         if self.active not in self.backends:
             raise ValueError(
-                f"unknown motion backend {self.active!r}; "
-                f"expected one of {sorted(self.backends)}"
+                f"unknown motion backend {self.active!r}; expected one of {sorted(self.backends)}"
             )
 
     @property

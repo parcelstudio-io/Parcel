@@ -54,7 +54,8 @@ Architecture, model choices, audio-device findings, and limitations are in
 - A Gemma/llama.cpp structured-tool adapter with deterministic validation.
 - whisper.cpp recognition plus cancellable Fish S2 and Sesame CSM adapters.
 - YAML-defined poses and Wi-Fi/network-card profiles.
-- A motion router with exclusive **Sport Move** and **RL locomotion** backends.
+- A single-writer, feedback-supervised locomotion manager with replaceable
+  **Unitree Sport**, simulator, and future custom-controller implementations.
 - A Python extension interface for custom sensors, behaviors, or hardware.
 - ROS topics for transcript input, pose/walk requests, and spoken replies.
 - MuJoCo owner/obstacle telemetry and a browser panel for driving and text voice.
@@ -84,6 +85,22 @@ Pose and walk requests are not sent directly to motors. A controller/bridge must
 validate limits, implement an emergency stop, and translate the request into
 Unitree commands or RL joint targets. Only one locomotion backend should be
 active at a time—see [Motion backends](docs/MOTION.md).
+
+The implemented Unitree Sport path subscribes to physical motion feedback,
+expires stale commands, refreshes active velocity targets, and stops on stale
+state or controller faults. It also requires a Unitree lease, commissioned
+mode/frame/axis settings, and post-`StopMove` settled feedback. Physical
+commissioning is explicit and bounded:
+
+```bash
+.parcel/bin/python -m parcel_robot.unitree_control --vx 0.05 --duration 1 --arm
+```
+
+Read and follow [Closed-loop locomotion and Unitree Sport](docs/MOTION.md)
+before connecting hardware. The Python supervisor and software E-stop are not
+substitutes for an independent hardware E-stop. The Unitree Python SDK is not
+installed on this workstation, and the configured placeholder NIC `enp3s0`
+does not exist here, so the physical path has not been hardware-validated.
 
 ## Installed Python environment
 
@@ -284,10 +301,11 @@ ros2 topic echo /parcel/pose_request
 ros2 topic echo /parcel/voice_reply
 ```
 
-The next integration step is a `pose_controller` node that subscribes to
-`/parcel/pose_request` and publishes Unitree `LowCmd` messages. Begin with the
-official `stand_go2` ROS 2 example and keep its simulation settings:
-loopback interface `lo` and `ROS_DOMAIN_ID=1`.
+The next integration step is a controller-owned whole-body action adapter that
+subscribes to `/parcel/pose_request`, first confirms locomotion has stopped, and
+then performs the pose. Never publish Unitree `LowCmd` while the onboard Sport
+service is active. Develop a low-level replacement only in isolated simulation;
+the official Unitree MuJoCo settings use loopback `lo` and DDS domain `1`.
 
 ## Add a custom pose
 

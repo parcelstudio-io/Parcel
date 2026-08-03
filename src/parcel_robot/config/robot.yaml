@@ -45,6 +45,39 @@ spatial_behaviors:
 metrics:
   max_turns: 200
 
+# One process owns locomotion. The simulator adapter is used by the normal
+# browser stack; parcel-unitree-control explicitly constructs unitree_sport.
+control:
+  controller: simulator
+  control_hz: 50
+  command_timeout_s: 0.35
+  state_timeout_s: 0.25
+  startup_timeout_s: 2.0
+  stop_timeout_s: 1.0
+  stop_retry_s: 0.2
+  io_quiesce_timeout_s: 2.5
+  stop_settled_samples: 2
+  settled_linear_speed_mps: 0.08
+  settled_yaw_speed_rad_s: 0.12
+  max_tilt_rad: 0.75
+  command_refresh_s: 0.2
+  unitree_sport:
+    interface: enp3s0  # replace with the dedicated robot Ethernet NIC on this host
+    domain_id: 0
+    state_topic: rt/sportmodestate
+    rpc_timeout_s: 0.2
+    command_refresh_s: 0.1
+    enable_lease: true
+    lease_acquire_timeout_s: 2.0
+    axes_commissioned: false
+    state_velocity_frame: odom  # verify against the connected firmware
+    state_frame_commissioned: false
+    lateral_sign: 1  # verify on a supported robot during commissioning
+    yaw_sign: 1      # verify on a supported robot during commissioning
+    # Empty fails closed. Populate only after checking this robot's firmware;
+    # common Go2 candidates to verify are 0 (idle), 1 (stand), and 3 (move).
+    allowed_modes: []
+
 motion:
   backend: rl
   max_vx: 0.6

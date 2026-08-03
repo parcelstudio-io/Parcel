@@ -10,8 +10,9 @@ import pytest
 
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, SimObservation
+from parcel_robot.control import build_backend_control_manager
 from parcel_robot.core import CommandArbiter, MotionIntent
-from parcel_robot.models import AgentDecision, SpatialIntent, ToolCall, VelocityCommand
+from parcel_robot.models import AgentDecision, Pose, SpatialIntent, ToolCall, VelocityCommand
 from parcel_robot.navigation.follow import FollowOwnerController
 from parcel_robot.navigation.spatial import SpatialDecision
 from parcel_robot.runtime import RobotRuntime
@@ -227,6 +228,59 @@ def test_arbiter_honors_priority_and_expires_leases() -> None:
     assert arbiter.current(now=10.349) == manual
     assert arbiter.current(now=10.35) is None
     assert arbiter.submit(follow, now=10.35).accepted
+
+
+def test_physical_controller_config_cannot_implicitly_arm_runtime(
+    tmp_path: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    config = tmp_path / "physical.yaml"
+    config.write_text(
+        f"""
+skills:
+  root: {REPO / "configs" / "skills"}
+navigation:
+  enabled: false
+control:
+  controller: unitree_sport
+motion:
+  max_vx: 0.6
+  max_vy: 0.4
+  max_vyaw: 1.0
+memory:
+  path: ":memory:"
+poses: {{}}
+modules: []
+""",
+        encoding="utf-8",
+    )
+    backend = FakeSimulatorBackend(_observation(time.monotonic()))
+
+    with pytest.raises(ValueError, match="explicit control_manager"):
+        RobotRuntime(config, backend, audio_status=audio_status)
+
+
+def test_external_controller_blocks_direct_pose_and_trajectory_actuation(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(time.monotonic()))
+    manager, _ = build_backend_control_manager(backend, {}, SafetyLimits())
+    runtime = RobotRuntime(
+        runtime_config,
+        backend,
+        audio_status=audio_status,
+        control_manager=manager,
+    )
+    try:
+        with pytest.raises(RuntimeError, match="physical poses must be implemented"):
+            runtime._run_pose(Pose("test", {}, 0.1))
+        with pytest.raises(RuntimeError, match="physical trajectories must be implemented"):
+            runtime._run_trajectory(object())
+        assert backend.poses == []
+        assert backend.trajectories == []
+    finally:
+        runtime.close()
 
 
 def test_runtime_executes_bounded_owner_relative_steps_and_manual_preempts(
@@ -543,6 +597,7 @@ def test_runtime_text_commands_switch_follow_and_stay(
 ) -> None:
     backend = FakeSimulatorBackend(_observation(0.0))
     runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    runtime._observation = backend.observe()
     try:
         assert runtime.handle_text("follow me") == "I will follow you."
         assert runtime.follow.enabled
@@ -882,7 +937,7 @@ def test_runtime_serializes_dispatch_with_operator_stop(
         stopper.join(1.0)
 
         assert stop_returned.is_set()
-        assert order[:2] == ["move", "stop"]
+        assert order[-2:] == ["move", "stop"]
         move_count = backend.move_count()
         runtime._dispatch_active()
         assert backend.move_count() == move_count
@@ -958,14 +1013,145 @@ def test_runtime_telemetry_loss_blocks_translation(
     runtime.start()
     try:
         runtime.manual_motion(0.2, 0.0, 0.2)
-        assert backend.wait_for_moves(1)
-        command = backend.move_history()[-1]
-        assert command.vx == 0.0
-        assert command.vy == 0.0
-        assert 0.0 < command.vyaw <= 0.2
+        deadline = time.monotonic() + 0.5
+        while runtime.snapshot()["simulator"]["status"] != "disconnected":
+            assert time.monotonic() < deadline
+            time.sleep(0.005)
+        time.sleep(0.05)
+        assert not backend.move_history()
+        control = runtime.snapshot()["control"]
+        assert control["lifecycle"] == "idle"
+        assert control["fault"] is None
         assert runtime.snapshot()["simulator"]["status"] == "disconnected"
     finally:
         runtime.close()
+
+
+def test_runtime_recovers_after_simulator_connects_and_stops_before_first_move(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    class RecoveringBackend(FakeSimulatorBackend):
+        def __init__(self, observation: SimObservation) -> None:
+            super().__init__(observation)
+            self.online = False
+            self.actions: list[object] = []
+
+        def observe(self) -> SimObservation:
+            if not self.online:
+                raise OSError("telemetry offline")
+            return super().observe()
+
+        def move(self, command: VelocityCommand) -> None:
+            if not self.online:
+                raise OSError("actuator transport offline")
+            self.actions.append(command)
+            super().move(command)
+
+        def stop(self) -> None:
+            if not self.online:
+                raise OSError("actuator transport offline")
+            self.actions.append("stop")
+            super().stop()
+
+    backend = RecoveringBackend(_observation(time.monotonic()))
+    runtime = RobotRuntime(
+        runtime_config,
+        backend,
+        audio_status=audio_status,
+        loop_hz=50.0,
+    )
+    runtime.start()
+    try:
+        deadline = time.monotonic() + 0.5
+        while runtime.snapshot()["simulator"]["status"] != "disconnected":
+            assert time.monotonic() < deadline
+            time.sleep(0.005)
+        runtime.manual_motion(0.2, 0.0, 0.0)
+        time.sleep(0.05)
+        assert backend.actions == []
+        assert runtime.snapshot()["control"]["lifecycle"] == "idle"
+
+        # The UI's ordinary Stop is also local while this optional transport
+        # has never produced telemetry; it must not poison later reconnect.
+        runtime.stop_motion()
+        assert backend.actions == []
+        assert runtime.snapshot()["control"]["fault"] is None
+        runtime.manual_motion(0.2, 0.0, 0.0)
+        time.sleep(0.05)
+        assert backend.actions == []
+        backend.online = True
+
+        assert backend.wait_for_moves(1)
+        assert backend.actions[0] == "stop"
+        assert isinstance(backend.actions[1], VelocityCommand)
+        assert runtime.snapshot()["control"]["lifecycle"] != "faulted"
+    finally:
+        runtime.close()
+
+
+def test_runtime_close_can_retry_controller_teardown(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(time.monotonic()))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    original_close = runtime.control_manager.close
+    attempts = 0
+
+    def close_with_one_retryable_failure() -> None:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise RuntimeError("controller I/O is still quiescing")
+        original_close()
+
+    runtime.control_manager.close = close_with_one_retryable_failure  # type: ignore[method-assign]
+    try:
+        with pytest.raises(RuntimeError, match="still quiescing"):
+            runtime.close()
+
+        assert runtime._closed is True
+        assert runtime._close_complete is False
+        runtime.close()
+        assert attempts == 2
+        assert runtime._close_complete is True
+    finally:
+        if not runtime._close_complete:
+            runtime.control_manager.close = original_close  # type: ignore[method-assign]
+            runtime.close()
+
+
+@pytest.mark.parametrize(
+    "failing_thread_name",
+    ["parcel-control-loop", "parcel-service-health"],
+)
+def test_runtime_thread_start_failure_closes_controller_owner(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+    monkeypatch,
+    failing_thread_name: str,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(time.monotonic()))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    original_start = threading.Thread.start
+
+    def start_or_fail(thread: threading.Thread) -> None:
+        if thread.name == failing_thread_name:
+            raise RuntimeError(f"cannot start {failing_thread_name}")
+        original_start(thread)
+
+    monkeypatch.setattr(threading.Thread, "start", start_or_fail)
+
+    with pytest.raises(RuntimeError, match=failing_thread_name):
+        runtime.start()
+
+    assert runtime._closed is True
+    assert runtime._close_complete is True
+    assert runtime.control_manager.snapshot().lifecycle.value == "closed"
+    assert runtime._thread is None or not runtime._thread.is_alive()
+    assert runtime._health_thread is None or not runtime._health_thread.is_alive()
+    runtime.close()
 
 
 def test_social_affect_action_runs_from_idle_without_model(
