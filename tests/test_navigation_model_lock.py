@@ -16,14 +16,31 @@ def _fetch_module():
     return module
 
 
-def test_citywalker_artifact_is_immutable_and_licensed() -> None:
+def test_citywalker_artifact_is_immutable_and_license_scope_is_explicit() -> None:
     module = _fetch_module()
     model = module.load_lock()["citywalker_2000hr"]
 
     assert len(model["sha256"]) == 64
     assert model["size_bytes"] == 1_752_028_242
-    assert len(model["source_commit"]) == 40
-    assert model["license"] == "Apache-2.0"
+    assert model["url"] == (
+        "https://github.com/ai4ce/CityWalker/releases/download/v1.0/"
+        "CityWalker_2000hr.ckpt"
+    )
+    assert model["sha256"] == (
+        "a42326778e5e318c6222575dc5e02f1794d9a60cce4dc8f8a2ee5df7dc6d1c29"
+    )
+    assert model["source_commit"] == "6fdae3809f66304e4a0f8bb077aaf7f93c1a3227"
+    assert model["repository_review_commit"] == (
+        "ab0ef60b17dc4d1d16c7d95dd143e6dac91abed1"
+    )
+    assert model["repository_code_license"] == "Apache-2.0"
+    assert model["checkpoint_license"] == "NOASSERTION"
+    evidence = model["checkpoint_license_evidence"]
+    assert evidence["release_asset_specific_notice"] is False
+    assert evidence["official_converted_model_license"] == "Apache-2.0"
+    assert evidence["official_converted_model_url"] == (
+        "https://huggingface.co/ai4ce/citywalker"
+    )
     assert model["activation"].startswith("research_only")
 
 

@@ -132,9 +132,7 @@ def test_farther_head_on_return_cannot_hide_behind_nearer_tangential_return() ->
     assert certificate.finite_return_count == 2
     assert certificate.limiting_ray_index == forward_index
     assert certificate.limiting_ray_index != tangent_index
-    assert certificate.limiting_maximum_closing_speed_mps == pytest.approx(
-        expected_closing_speed
-    )
+    assert certificate.limiting_maximum_closing_speed_mps == pytest.approx(expected_closing_speed)
     assert certificate.minimum_projected_margin_m == pytest.approx(expected_margin)
     assert certificate.minimum_projected_margin_m < 0.0
     assert certificate.violating_return_count == 1
@@ -159,9 +157,7 @@ def test_signed_yaw_toward_near_tangent_return_is_not_treated_as_yaw_away(
         0.0,
     )
     assert toward.heading_sweep_rad == pytest.approx(toward_sweep)
-    assert toward.maximum_observed_closing_speed_mps == pytest.approx(
-        expected_toward_speed
-    )
+    assert toward.maximum_observed_closing_speed_mps == pytest.approx(expected_toward_speed)
     assert toward.maximum_observed_closing_speed_mps > (
         20.0 * away.maximum_observed_closing_speed_mps
     )

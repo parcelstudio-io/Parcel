@@ -19,9 +19,7 @@ from evals.external.barn_sensor_faithful import (
 from evals.external.barn_v8_action_evidence import read_v8_action_evidence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-BARN_GRID_CONFIG = (
-    REPO_ROOT / "configs" / "navigation" / "experiments" / "barn_grid_v1.yaml"
-)
+BARN_GRID_CONFIG = REPO_ROOT / "configs" / "navigation" / "experiments" / "barn_grid_v1.yaml"
 
 
 class _FixedPolicy:
@@ -125,6 +123,10 @@ def test_direct_runner_binds_exact_normalized_observation_and_stop_latch() -> No
     )
     assert first.angle_min_rad == policy.observations[0].lidar_angle_min_rad
     assert first.angle_increment_rad == policy.observations[0].lidar_angle_increment_rad
+    assert (
+        first.policy_observation_sha256
+        == captured.result.sensor_diagnostics.policy_observation_sha256[0]
+    )
     assert first.certificate.unavailable_ray_count == 201
     for step, latched in enumerate(records[1:], start=1):
         assert latched.step_index == step
@@ -134,6 +136,7 @@ def test_direct_runner_binds_exact_normalized_observation_and_stop_latch() -> No
         assert latched.published_vx_mps == 0.0
         assert latched.published_yaw_rate_rps == 0.0
         assert latched.normalized_scan_float64_le == first.normalized_scan_float64_le
+        assert latched.policy_observation_sha256 == first.policy_observation_sha256
     assert "action_evidence" not in captured.result.sensor_diagnostics.latency
     assert "certificate" not in captured.result.sensor_diagnostics.latency
 
@@ -172,6 +175,7 @@ def test_local_paired_parent_writes_and_recetrifies_predeclared_artifacts(
     assert summary["immutable_artifact_count"] == 2
     assert summary["expected_immutable_artifact_count"] == 2
     assert summary["all_action_counts_match_published_traces"] is True
+    assert summary["all_policy_observation_hashes_match_published_traces"] is True
     assert summary["all_records_format_read_and_recertified"] is True
     assert summary["evaluator_overhead_included_in_controller_latency"] is False
     for arm, expected_order in (("candidate", 0), ("reference", 1)):
@@ -188,11 +192,23 @@ def test_local_paired_parent_writes_and_recetrifies_predeclared_artifacts(
         assert metadata["identity"]["trial_id"] == 0
         assert metadata["identity"]["seed"] == 811
         assert metadata["evaluator_evidence_overhead_included_in_controller_latency"] is False
+        assert metadata["policy_observation_hashes_match_published_trace"] is True
         assert artifact.identity.record_count == len(
             episode["sensor_diagnostics"]["published_action_steps"]
         )
         assert tuple(record.step_index for record in artifact.records) == tuple(
             episode["sensor_diagnostics"]["published_action_steps"]
+        )
+        assert tuple(
+            (record.step_index, record.policy_observation_sha256)
+            for record in artifact.records
+            if record.issued_by_policy
+        ) == tuple(
+            zip(
+                episode["sensor_diagnostics"]["policy_observation_steps"],
+                episode["sensor_diagnostics"]["policy_observation_sha256"],
+                strict=True,
+            )
         )
 
 
@@ -236,9 +252,7 @@ def test_spawned_paired_builders_return_to_parent_for_exclusive_evidence_write(
         episode = report[episode_key]["episodes"][key[1]]
         artifact = read_v8_action_evidence(
             path,
-            expected_artifact_sha256=episode["action_evidence"]["identity"][
-                "artifact_sha256"
-            ],
+            expected_artifact_sha256=episode["action_evidence"]["identity"]["artifact_sha256"],
         )
         assert artifact.identity.arm == arm
         assert artifact.identity.trial_id == key[1]

@@ -396,48 +396,6 @@ class StubNavigator:
         self._last_vyaw = 0.0
 
 
-class CheckpointNavigator:
-    """Lazy weight loader — raises until checkpoint + optional deps are present."""
-
-    def __init__(self, spec: ModelSpec, **_: Any):
-        self.spec = spec
-        self._loaded = False
-        self._impl: Navigator | None = None
-
-    def _ensure_loaded(self) -> None:
-        if self._loaded:
-            return
-        from pathlib import Path
-
-        ckpt = Path(self.spec.checkpoint).expanduser() if self.spec.checkpoint else None
-        if ckpt is None or not ckpt.exists():
-            raise FileNotFoundError(
-                f"checkpoint missing for {self.spec.id}: {self.spec.checkpoint}. "
-                f"See {self.spec.homepage or 'docs/NAVIGATION_CITY.md'}"
-            )
-        # Real backends (CityWalker / NaVILA / NoMaD / ViNT) plug in here once
-        # third_party wheels + weights are installed on a CUDA host.
-        raise NotImplementedError(
-            f"weights found for {self.spec.id} but runtime adapter is not wired yet. "
-            f"Install vendor package from {self.spec.homepage} and extend "
-            f"parcel_robot.navigation.models.{self.spec.type}"
-        )
-
-    def reset(self, mission: Mission) -> None:
-        self._ensure_loaded()
-        assert self._impl is not None
-        self._impl.reset(mission)
-
-    def act(self, observation: NavObservation, mission: Mission) -> MidLevelCommand:
-        self._ensure_loaded()
-        assert self._impl is not None
-        return self._impl.act(observation, mission)
-
-    def close(self) -> None:
-        if self._impl is not None:
-            self._impl.close()
-
-
 def build_navigator(spec: ModelSpec, **kwargs: Any) -> Navigator:
     kind = spec.type.lower()
     if kind == "stub":
@@ -446,6 +404,8 @@ def build_navigator(spec: ModelSpec, **kwargs: Any) -> Navigator:
         from ..grid_navigator import GridNavigator
 
         return GridNavigator(spec, **kwargs)
-    if kind in {"citywalker", "navila", "nomad", "vint"}:
-        return CheckpointNavigator(spec, **kwargs)
+    # Learned-navigator adapters (CityWalker / NaVILA / NoMaD / ViNT) were
+    # registry metadata that unconditionally raised NotImplementedError. They
+    # were removed rather than left implying a live model; re-add a type here
+    # only together with a working inference adapter and tests.
     raise ValueError(f"unsupported navigator type: {spec.type}")

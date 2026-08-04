@@ -53,6 +53,14 @@ def test_partial_asr_can_never_become_actionable() -> None:
         assert frame.matched_rule == "non_final_transcript"
 
 
+@pytest.mark.parametrize("transcript", ["use sport", "Use RL backend"])
+def test_backend_selection_is_a_reviewed_direct_command(transcript: str) -> None:
+    frame = DeterministicIntentRouter().route(transcript, turn_id="turn-backend")
+
+    assert frame.route == "direct_skill"
+    assert frame.matched_rule == "motion_backend_selection"
+
+
 @pytest.mark.parametrize(
     ("transcript", "references"),
     [

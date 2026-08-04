@@ -1,0 +1,4024 @@
+{
+  "benchmark_scope": {
+    "evaluation_kind": "barn-native-headless-v9-training-non-official",
+    "generator_inputs": {
+      "difficulty_quant.py": {
+        "sha256": "380ebd69aaece4301ec53a1ec255bb70ba91af76a19ccac24c82cbb41a25ae04",
+        "size_bytes": 8449
+      },
+      "gen_world_ca.py": {
+        "sha256": "626d7a10d0a9117ae5d5a06e3475e4ae5c7538486d2bddd9d009b4331b681616",
+        "size_bytes": 23548
+      },
+      "world-boilerplate/cylinder_define.txt": {
+        "sha256": "bf1fd3451e4549103dee21a5a2a7b30fee4f4f6495814e359b1d445a29851312",
+        "size_bytes": 1582
+      },
+      "world-boilerplate/cylinder_place.txt": {
+        "sha256": "d7f09a54a8d6adc32dca89ad23d15bbb0e718f828b7fc439ea1e45b312f7eb23",
+        "size_bytes": 364
+      },
+      "world-boilerplate/world_boiler_end.txt": {
+        "sha256": "bd0d8774039cf6ade2d96e9f97aeef7d6ce0ae3865e90fdd3d425ccca899a6b4",
+        "size_bytes": 360
+      },
+      "world-boilerplate/world_boiler_mid.txt": {
+        "sha256": "09e18c57191fa89299b0ee991b546cb05646fb360713c33637fb519f77f71293",
+        "size_bytes": 542
+      },
+      "world-boilerplate/world_boiler_start.txt": {
+        "sha256": "4558a3752fd9e0acb4f2a8ed7736a766ec1b27f08b33f999f02f0549c41ad1ae",
+        "size_bytes": 2461
+      },
+      "world_writer.py": {
+        "sha256": "2ccf2abfa3853330846e8c6ec7ee7547c1d9c2ca513d062dfe43e199e9335b98",
+        "size_bytes": 4349
+      }
+    },
+    "leaderboard_claim": false,
+    "official_score": false,
+    "policy_runs_rerunnable": true,
+    "promotion_evidence_eligible": false,
+    "source_generator": "https://github.com/dperille/jackal-map-creation.git",
+    "source_generator_commit": "295ca5cc7b9b0ecea93013f0c49c5a1ca4352151"
+  },
+  "candidate_freeze": {
+    "manifest_sha256": "540658cee91c2bdb058f54ab19b9838d731f49c7be4df6ef7332aaea631b8b08",
+    "package_sha256": "c68bb69c247404d0deee28f26d8000200f73aeb336fb9bb0cafd0f0c3b510833",
+    "path": "evals/external/experiments/barn_sampled_predictive_tracker_v9/CANDIDATE_FREEZE.json",
+    "sha256": "8c875e0b3a08c1fe08965a3ce6bf6a8c07acf2b9595a34b0c3e8f0400bfc52cf"
+  },
+  "corpus_id": "barn-sampled-predictive-tracker-v9-training-20260803-100",
+  "created_at": "2026-08-03T21:26:06Z",
+  "development_or_holdout_materialized": false,
+  "identity_partition": {
+    "all_v9_world_ids_retired_after_experiment": [
+      5000,
+      5001,
+      5002,
+      5003,
+      5004,
+      5005,
+      5006,
+      5007,
+      5008,
+      5009,
+      5010,
+      5011,
+      5012,
+      5013,
+      5014,
+      5015,
+      5016,
+      5017,
+      5018,
+      5019,
+      5020,
+      5021,
+      5022,
+      5023,
+      5024,
+      5025,
+      5026,
+      5027,
+      5028,
+      5029,
+      5030,
+      5031,
+      5032,
+      5033,
+      5034,
+      5035,
+      5036,
+      5037,
+      5038,
+      5039,
+      5040,
+      5041,
+      5042,
+      5043,
+      5044,
+      5045,
+      5046,
+      5047,
+      5048,
+      5049,
+      5050,
+      5051,
+      5052,
+      5053,
+      5054,
+      5055,
+      5056,
+      5057,
+      5058,
+      5059,
+      5060,
+      5061,
+      5062,
+      5063,
+      5064,
+      5065,
+      5066,
+      5067,
+      5068,
+      5069,
+      5070,
+      5071,
+      5072,
+      5073,
+      5074,
+      5075,
+      5076,
+      5077,
+      5078,
+      5079,
+      5080,
+      5081,
+      5082,
+      5083,
+      5084,
+      5085,
+      5086,
+      5087,
+      5088,
+      5089,
+      5090,
+      5091,
+      5092,
+      5093,
+      5094,
+      5095,
+      5096,
+      5097,
+      5098,
+      5099,
+      5100,
+      5101,
+      5102,
+      5103,
+      5104,
+      5105,
+      5106,
+      5107,
+      5108,
+      5109,
+      5110,
+      5111,
+      5112,
+      5113,
+      5114,
+      5115,
+      5116,
+      5117,
+      5118,
+      5119,
+      5120,
+      5121,
+      5122,
+      5123,
+      5124,
+      5125,
+      5126,
+      5127,
+      5128,
+      5129,
+      5130,
+      5131,
+      5132,
+      5133,
+      5134,
+      5135,
+      5136,
+      5137,
+      5138,
+      5139,
+      5140,
+      5141,
+      5142,
+      5143,
+      5144,
+      5145,
+      5146,
+      5147,
+      5148,
+      5149
+    ],
+    "pairwise_disjoint": true,
+    "single_use_development_world_ids_sha256": "ae25a4e10bb1527416b045a73e5e2740f5dbd8370fd57be4f11ff748e59a0b7a",
+    "training_world_ids": [
+      5000,
+      5001,
+      5002,
+      5003,
+      5004,
+      5005,
+      5006,
+      5007,
+      5008,
+      5009,
+      5010,
+      5011,
+      5012,
+      5013,
+      5014,
+      5015,
+      5016,
+      5017,
+      5018,
+      5019,
+      5020,
+      5021,
+      5022,
+      5023,
+      5024,
+      5025,
+      5026,
+      5027,
+      5028,
+      5029,
+      5030,
+      5031,
+      5032,
+      5033,
+      5034,
+      5035,
+      5036,
+      5037,
+      5038,
+      5039,
+      5040,
+      5041,
+      5042,
+      5043,
+      5044,
+      5045,
+      5046,
+      5047,
+      5048,
+      5049,
+      5050,
+      5051,
+      5052,
+      5053,
+      5054,
+      5055,
+      5056,
+      5057,
+      5058,
+      5059,
+      5060,
+      5061,
+      5062,
+      5063,
+      5064,
+      5065,
+      5066,
+      5067,
+      5068,
+      5069,
+      5070,
+      5071,
+      5072,
+      5073,
+      5074,
+      5075,
+      5076,
+      5077,
+      5078,
+      5079,
+      5080,
+      5081,
+      5082,
+      5083,
+      5084,
+      5085,
+      5086,
+      5087,
+      5088,
+      5089,
+      5090,
+      5091,
+      5092,
+      5093,
+      5094,
+      5095,
+      5096,
+      5097,
+      5098,
+      5099
+    ],
+    "training_world_ids_sha256": "61b8b2769406e8f4e030fdd0a6c221f0023f2d5a1d9fe871c5bb39dcaaf2ea3e",
+    "unopened_holdout_world_ids_sha256": "7834ee138d61e040abd91fe560642be49dfcea86f7b7a69cd13dede3250f85ae"
+  },
+  "manifest_id": "barn-sampled-predictive-tracker-v9-training-split-v1",
+  "schema_version": 1,
+  "training_corpus": {
+    "assets_root": "/home/jaewoo-jang/Desktop/Projects/Parcel/.cache/external-evals/generated/barn_sampled_predictive_tracker_v9/training/test_data",
+    "corpus_sha256": "40c260e32985123d648e4634f0c087ec3de8309494581b2a64ca1fd289d9907f",
+    "episodes": [
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5000",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5000.npy",
+            "sha256": "75dbe25f423c5dd66a6b715a80a2b2f8ef0283ff241a3d1e03ead18d503e6ae8",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5000.npy",
+            "sha256": "b645cabac6f1908b67c1219135824fbb61926c751e957cb458982c436bfc33d4",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5000.npy",
+            "sha256": "680cbde060388d67f8c37f8c969db4b6e0f259423d25b1c1d41010dc0e996561",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5000.npy",
+            "sha256": "fce872da4ee3d134d95dbc3d8d888736950167f5dd16225c3917c3174aa100a9",
+            "size_bytes": 656
+          },
+          "world": {
+            "path": "world_files/world_5000.world",
+            "sha256": "7de65d81c82e2e5b8f6c6de8fe3b31ed0c73b2dfa914615da8d74f72506f9503",
+            "size_bytes": 462905
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 556403905,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5000
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5001",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5001.npy",
+            "sha256": "351c35ca7ec4bd5ba40827b087b5b4b45671872995f0fef3593ab875c5929d48",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5001.npy",
+            "sha256": "0e7b5bb5c4eeeca61d44fafcdf9ca134e3d87aa39c603cdbbc75452daee07943",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5001.npy",
+            "sha256": "c9bff0e62070da69eae54265b85fd78ad6f195b1b2f8af77735b0001a15ef939",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5001.npy",
+            "sha256": "01c4ad583d3c32d2e4ba80636d67de0540c92865ce9062c65c8c99ef5aeebabb",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5001.world",
+            "sha256": "2e10e6534c4137dfad673b21d9931e0f7cf4fcaf6f0fc2e5f20e55984d74edfc",
+            "size_bytes": 488213
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1876869805,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5001
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5002",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5002.npy",
+            "sha256": "b88ff80bf767c544c7962549f195746011fa94d759d73bcb3465e6dab39cdf74",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5002.npy",
+            "sha256": "ab593e5e253cca302891300839f7e6dfe2ef328dc1c9a46b511de4a3d9a52d0c",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5002.npy",
+            "sha256": "d60fb7e0d7849d72f45885a4b266970eb2a0b8fcfee9ae1f57b08cc49d9c35bf",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5002.npy",
+            "sha256": "ab3fb0c16b985227d2e3f9a21edd8c617d9790086d4f965b61a32f25581df0f3",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5002.world",
+            "sha256": "f05c0c07b1e95bd5024df4aae2a8c0e285c93ad9a70639627290be5d1a34bce9",
+            "size_bytes": 452360
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 585212594,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5002
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5003",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5003.npy",
+            "sha256": "5b2597e1615935525bef92a4c48fb6a4d499bf14f4c02cbf008674dfcda89e76",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5003.npy",
+            "sha256": "4856d7ce04eb428761e52b1ac85413af65b8feb8f7601969639a52b29401e935",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5003.npy",
+            "sha256": "d1b9da4330557ceaf7448b7517d4fe009efb2779b5d4751163b679eb31770eeb",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5003.npy",
+            "sha256": "058b11291f984e09b6a0e19335efdadbd543fa68f006a83c69906e27d02846da",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5003.world",
+            "sha256": "354e28815b315575d6944e42de1d3d865c82713c8d194a461caf1b23f830bc16",
+            "size_bytes": 553592
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 533499284,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5003
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5004",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5004.npy",
+            "sha256": "72032a7d56cb467b2e99086fa20fe1ae28d3f5d49d07ce7334d7efa5587d0e91",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5004.npy",
+            "sha256": "dd8a6a1ce82af43643280462d6d15c2cdb2b6eba74ee222887a709bea43d5f86",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5004.npy",
+            "sha256": "1989d368b6463ee11e575e0a46b005f456bd7c53b952a74ee55b8c72ec45e6c2",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5004.npy",
+            "sha256": "3c5aadfa00b0cbe0622c36586216e3e8d7e23903fdf70f5196ada4b197d4ad9f",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5004.world",
+            "sha256": "a2ecd5f6ec324f61802d13c37a16e2022376761b3901aebe8b7fe0bb0cfae45a",
+            "size_bytes": 515630
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1300440746,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5004
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5005",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5005.npy",
+            "sha256": "3e61114d3088027ea6ea7a30569d63f5f2626a3dc31dc97ed46c14bebd52084c",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5005.npy",
+            "sha256": "aff4369e1312035276dfa08cb6e07121c00a7ac8b404db8458e768373394d58a",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5005.npy",
+            "sha256": "5a1cba89a5795637fc6374c03674c8f2e819b3cd3ba63905496f27ee12136e21",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5005.npy",
+            "sha256": "434fcdee234cb6dc67b3bda1bd95c63bf16b3f20c297e0b679d1abc65ff09581",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5005.world",
+            "sha256": "18be0a3a63ad756d6db683e11ea62cb7570772834d7adbcb3fff6b0d3320b5e7",
+            "size_bytes": 496649
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1660109483,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5005
+      },
+      {
+        "accepted_attempt": 20,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5006",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5006.npy",
+            "sha256": "ad0bc7a95735ac2f07bce9031b463e5b515419c27da5c53e4a6750c55b56422f",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5006.npy",
+            "sha256": "2ea524d4947da6814421c5d98cb5d503c583f7cef52bfd9778bf7ef86cbda55e",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5006.npy",
+            "sha256": "1b5d5a7be447f25f1e3eb93e7b2dac775d2998d7f57b74d0b4dbefe182bdbd56",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5006.npy",
+            "sha256": "ca07cca4b8fcb619400227e95eb1ddbb5b30d3b26489151c5d49b3f798080dbb",
+            "size_bytes": 784
+          },
+          "world": {
+            "path": "world_files/world_5006.world",
+            "sha256": "ff23eddf2cdd36bf55b1746f39dcad1e053f97a040f0c9d2520ea24ee52e368a",
+            "size_bytes": 597881
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 2043849527,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5006
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5007",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5007.npy",
+            "sha256": "3b82fb86740a8b5e9361ba9c1bbadb85fbbcd226b2f789d3da6315ec274afeea",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5007.npy",
+            "sha256": "23420768dc39c3fb8a1524c7a8a3ff0ed62bc4bf517113d8fc6cab88fdb72bc3",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5007.npy",
+            "sha256": "35f7d8430934871c592d6653405e91734e05c5bb639300afdb45a7f3fc78c681",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5007.npy",
+            "sha256": "c606dae4adedb590fd2ec5cfe9a2f248b262cbafca98032fadcb54da84dd807b",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5007.world",
+            "sha256": "722a6f470e18c85750fbabc9c15ed38f4c49ff18d0b60f3885fba8204efc888f",
+            "size_bytes": 496649
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1222264294,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5007
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5008",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5008.npy",
+            "sha256": "8fb7f08b57773c267a7c92dbf48945ab18ce5d82c2d0ce80f1b8bdfc1e863df9",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5008.npy",
+            "sha256": "5ddfb9a57fe38cecf685f492e9ced8bde7b6812f1cbd7ad9dcf9c57a551dae2e",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5008.npy",
+            "sha256": "3166054e8790d7631d16eeabdcbb486aa82566deb95a0c526a292c18c1e7f862",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5008.npy",
+            "sha256": "bf66eda451b64227fd2f0554e9eb8e7d1f4751131bd8d3889675f0e85c34c13a",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5008.world",
+            "sha256": "3bb9a457ffadfa06a0fc0d59561027e282e71f3bb0eff54b7ba43fe79295b1ec",
+            "size_bytes": 576791
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 902876232,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5008
+      },
+      {
+        "accepted_attempt": 968,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5009",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5009.npy",
+            "sha256": "719f04c5d8feb22aefc616ca0c994947ee15089dae0fe962d565b87b8019d478",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5009.npy",
+            "sha256": "e32707e8b06e04204cd357d1beb61a12d22b3e866ac8c091ec131b1b31c2f7da",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5009.npy",
+            "sha256": "dc8c02011b2f58c74587e769e5138f081b9b986d1c5af5f486c863fbeee46251",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5009.npy",
+            "sha256": "8cc6566e54aa6924e50c86f5390f720ec098312d1ff4f99e14a1c1ba5bb248cd",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5009.world",
+            "sha256": "17ec62347fdebb64b3657c1df9c782ea4bf801d4a0daf3842effe62724fb527a",
+            "size_bytes": 753947
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 486033830,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5009
+      },
+      {
+        "accepted_attempt": 701,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5010",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5010.npy",
+            "sha256": "d1c18abdfb9ecd6fc266c313fe6688e4db6b2621a2935e67a68e4b97f71dd9d8",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5010.npy",
+            "sha256": "e60c58b460a71f1cbfc7c9f5bbd6938be58fa229459334ffba5eb57d90eef0df",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5010.npy",
+            "sha256": "0c148976b69375ff11924b8035d7e538be0e50d0a5757671c54940044e52bacd",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5010.npy",
+            "sha256": "eb6fe97e4398ab19d4c1b4bc9a14dab74d85b6518cfb3d0150638fab075ae2be",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5010.world",
+            "sha256": "3c1433d7f8c0e2c34e3ba491f40feb569b6d14ac66f96a00a50b16e03d22368f",
+            "size_bytes": 756056
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 635876410,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5010
+      },
+      {
+        "accepted_attempt": 326,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5011",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5011.npy",
+            "sha256": "e6b889efba04f80fbdb104eb72b1c9376c8482cc6b3e9c864f790bbe79725bbf",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5011.npy",
+            "sha256": "89615b3631fa572fc9efa452fda01584ddc349990f7b60031b3b543dd994c084",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5011.npy",
+            "sha256": "ea249b456ea6c66d04e72a91f0230687dd2db58c24b97b35838af45e8d146096",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5011.npy",
+            "sha256": "1a3e5c5db76131eb0fcd690ed870e4b7fd66f90a847e1c359f47f0f6c3feb7bb",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_5011.world",
+            "sha256": "8083af2b10d8191e94b702b4fe0e20b34516a5cda47f38a01deaa54439e9516e",
+            "size_bytes": 741293
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1436249983,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5011
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5012",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5012.npy",
+            "sha256": "ff9b879f293bdce069507ea40539f49762832616c8abcdb7ef067d2c749922b7",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5012.npy",
+            "sha256": "626aef1439c82e9b35e28f06a155b251cf78f65cc7772b6d0e30eacab8d703e2",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5012.npy",
+            "sha256": "4d8f987fb87ea4ea23ab422fcf8459fbd9da28984a96686602571b3a5209e163",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5012.npy",
+            "sha256": "9ab067f4ccca3a3695ba736767b7a314d618bc0cc5bf9e790dd7d952328109d8",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5012.world",
+            "sha256": "02c8f373b380b7431a94af9bb2c0512e9f1faee58109971e53e9ec48af9255de",
+            "size_bytes": 422834
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 188124364,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5012
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5013",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5013.npy",
+            "sha256": "cbc37bcd8c2c558ef22d1a5aefed0a2d6a095b7682b78cada4ceba6d9fd11deb",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5013.npy",
+            "sha256": "e272afb29f5a2cf8dcb05f59275f55f29f5df77271b75cf7c0b103898b03e0a4",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5013.npy",
+            "sha256": "65c64d3a7bed926476b6b0189572e0adbea08adb429ccb79cbb652e559000804",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5013.npy",
+            "sha256": "4b906abd29bfb45c520ee3212121d4b279652be3fa82469268b76e52338bdeb3",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5013.world",
+            "sha256": "4b250c441bdf52789edab915e0ef63872a4e97d3e4a98a885622d782a5088e00",
+            "size_bytes": 418616
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1522443725,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5013
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5014",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5014.npy",
+            "sha256": "99b5e9f67fb954e863b81c1946a95ce43e0ed6432539dd3fd58b248c37bcf84e",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5014.npy",
+            "sha256": "5ba89f942e0347b5e504541f3375a291959260249a8e625ebceae910fd776122",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5014.npy",
+            "sha256": "e7d59cad52046abd5d3da30eaebf7b45622f89f87d793fcf03101211b3c5b237",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5014.npy",
+            "sha256": "5dc34a65dfeac5d3216eb8e2308b78a3702c18b06699333444dbccf8ce2d7413",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5014.world",
+            "sha256": "4f9c12e2540cf98867a464d7a3cc8cbd76a92175dca00f7b7a88446725a85386",
+            "size_bytes": 414398
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 2086861567,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5014
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5015",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5015.npy",
+            "sha256": "dffa6c39b77de65de2a612f4756cef070c1ccd37ea3a94074fbd961cd6e1ea09",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5015.npy",
+            "sha256": "6fddf534c06914db461ff387ba1908ae531ecb7cf6d5b5b21ff6df2703654bbc",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5015.npy",
+            "sha256": "e4c6926d4b1ef8f0df3990f12be57e1dc4403a10ff2a2aebed8cebf7877a5fba",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5015.npy",
+            "sha256": "5cf59ba88a6a7e01981fdff78cb884a96e20b63a10ab325705e8fd755c49ce3e",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5015.world",
+            "sha256": "5256be8c100f46e7ad02a8a613fe700415b8d28f6849a2e4ad0b1fc4b6a2eb4a",
+            "size_bytes": 540938
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1679458452,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5015
+      },
+      {
+        "accepted_attempt": 5,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5016",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5016.npy",
+            "sha256": "add89d52420ef9eb4514551714c7adf4872c162923bdae96e2a8fb98936f6a22",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5016.npy",
+            "sha256": "60e51b473bd0f8170959b16e511f5968a2af5091f5443d2d7ea06b96e4fef51a",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5016.npy",
+            "sha256": "7ddc1e85f1c455f604460693500ea559f8b7a85e87db1d42722d9d1bb26e25f6",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5016.npy",
+            "sha256": "a3151434355678d75b6092193e13b2e5aaf29284c5b9b6153ab41326de19da29",
+            "size_bytes": 848
+          },
+          "world": {
+            "path": "world_files/world_5016.world",
+            "sha256": "279b21006d16a7f95816517352ca0e671786517207eb016335cd88ebd09edd19",
+            "size_bytes": 505085
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1776912854,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5016
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5017",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5017.npy",
+            "sha256": "a2fcd7eebd488cf66b34bf4ed2624a1eb370f6dbd0eddcc69bb73248d8ed09f9",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5017.npy",
+            "sha256": "2423bb667a07135232a7f84246596b1b1f06ef0d2ec673c6296d9197bc549b1b",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5017.npy",
+            "sha256": "ca95a72344885f161c6726b66ec4dd314a100a8b158ee46825e524bbac56c134",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5017.npy",
+            "sha256": "9f5f1aade1af9cee9b18e3abe1659d040c474955e333ba2ca40e75569291b1c8",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5017.world",
+            "sha256": "918335f4b8ba52278b3eb353592a67093b5db4c06098eab275e98942ec54dec4",
+            "size_bytes": 481886
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1773097483,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5017
+      },
+      {
+        "accepted_attempt": 14,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5018",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5018.npy",
+            "sha256": "943a0202879e15cfb107fd109ddb0af570cbc67a0337419da408d73c35b73946",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5018.npy",
+            "sha256": "8a8f508e3ecebfc49aca664138956e1e329461f82d4d94c8590386a9a06b69bc",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5018.npy",
+            "sha256": "a7bd4920254acb423b91265168db5ac7d8ec5a4e59d771c6fc8a2cb7ff748503",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5018.npy",
+            "sha256": "2bde2f5c324b0fd83395a2706cb51be5d2f19b13f08bb527d10792b73544c7d1",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_5018.world",
+            "sha256": "21ab8f25481f470adc94c615e0252dfb4bd1906b0f8f84cd95fe3f89ff1f9047",
+            "size_bytes": 559919
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1557854995,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5018
+      },
+      {
+        "accepted_attempt": 12,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5019",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5019.npy",
+            "sha256": "cae538c2a65efdac735e9c0e467703b112922c07cbf63e958edccbd44f4a4898",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5019.npy",
+            "sha256": "6370f0fba95fccb451816357191edfdce94f87f3dadbc80f7ac16eeee2925810",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5019.npy",
+            "sha256": "84ecebd8fb8d0843433dc0bb049b6dc0478dfea4c4163bc7bad22ca0175c01ea",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5019.npy",
+            "sha256": "e75bf4ff5d59e13b3794a43efcdb00c6583e355dad2abf6123048ba7c8516284",
+            "size_bytes": 800
+          },
+          "world": {
+            "path": "world_files/world_5019.world",
+            "sha256": "f0a2e8fbae1c9b0aa0ba0c0cfa1b4bfac265a31b003ce775ddcb8e03aa26f443",
+            "size_bytes": 557810
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1125293980,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5019
+      },
+      {
+        "accepted_attempt": 6,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5020",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5020.npy",
+            "sha256": "921ae988ea95430dfadeedfbb16cb7103441dac8e1f996af10fae53f04fdd3f1",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5020.npy",
+            "sha256": "ae0ffb0025b64833cfa8177eaed3696a852233393b70ab259e3c298db6828cf0",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5020.npy",
+            "sha256": "a35b153a3313d864dc37602ca9597bbaed56cc4ef5474480117179cbd66d5e1d",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5020.npy",
+            "sha256": "401d4d2c1e30e167fc9c6e44cc244f1f7e112194562205decf4ada4e9fa7925f",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5020.world",
+            "sha256": "0596e95b027b28d769de9182ecad0825b6a7b36a31fdd7aadbbd12277797cc54",
+            "size_bytes": 555701
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 866069666,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5020
+      },
+      {
+        "accepted_attempt": 376,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5021",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5021.npy",
+            "sha256": "78111052eaa691cae4bc762d1e523ec34b9ad7ef5a3f493c35948ae71f5fc282",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5021.npy",
+            "sha256": "c9debecb0ce73030fa226cca062341ffa31cc7b3b17aab8be6f5dab1253122c2",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5021.npy",
+            "sha256": "41079e26d93573a00ea14fb212d34ec075ef5ebb30d7b7eb6dc3a587f6c8b093",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5021.npy",
+            "sha256": "a439305867203e9b8b9678b2563d197b1dba0cf692d392b71b8355e6dd95c7b7",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5021.world",
+            "sha256": "ce1dde9d645fdeee5e08cb5fff8189b727c388bf01da74126529f8f07b5f9e94",
+            "size_bytes": 739184
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1425200384,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5021
+      },
+      {
+        "accepted_attempt": 866,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5022",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5022.npy",
+            "sha256": "6bc4754d627660a82b9a0d819d23cc701bf73bd83a3fa2313958fc9b7d59fafa",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5022.npy",
+            "sha256": "422f1e8c973a7e221fd41ed3b8f4e068675b2d0d252d9736a7eef91a47436b65",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5022.npy",
+            "sha256": "31d23917889c51d9c671abb526d218b85cad70bb95f1170ed3d497c1dd0dfce3",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5022.npy",
+            "sha256": "8f9c31cb61ea8188041ccaa3c1aaa5bbc42707f1352e3ba1509deaed0150468c",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5022.world",
+            "sha256": "967bbaaad36e90fb6abb2967cc46902e66997bfcc722ce671cbefff91cd1a522",
+            "size_bytes": 732857
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1053415450,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5022
+      },
+      {
+        "accepted_attempt": 1041,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5023",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5023.npy",
+            "sha256": "8ba88b75964d355617fec2c4fb446dcbc674f5ae2c4e9422169d00c20c284a9f",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5023.npy",
+            "sha256": "c38a018134f7763495ae03157b22d2c98875a00de14395f08b430ad7c6db5797",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5023.npy",
+            "sha256": "d2d31a6b2e28a8101ce55cace7a9ef6f99451eeb129b2cbe808ee3630818681a",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5023.npy",
+            "sha256": "0bdd2f6848d0f9c4d25f6b12667d93c5f7e5f96ebe1cf65aa654cfc69486879d",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5023.world",
+            "sha256": "a0d3a58f69f7ebe88d752618a415206522c8406876e3e9a215e75126f71dd4aa",
+            "size_bytes": 682241
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1534638240,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5023
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5024",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5024.npy",
+            "sha256": "6dda90b532807af16078880a6c1238c39fbd5fe6ca83e52fb39c3c87664be5e6",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5024.npy",
+            "sha256": "fa8bd4507899e05b1452c7392ff3d347fa162a1aa12a4b757710efdc3b6b1949",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5024.npy",
+            "sha256": "69a6076f3880d92088cdde55feb678edc8c258f346ef6e22739a17249f1b82a8",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5024.npy",
+            "sha256": "ea43b5b10e04cc0d8412aa00a20ed8eedf449ea437d670a4733f370c436683e2",
+            "size_bytes": 720
+          },
+          "world": {
+            "path": "world_files/world_5024.world",
+            "sha256": "e42b4edae9c2c23d6ea36237fee07be884f320d3b4b37e926aa505c2f2c76858",
+            "size_bytes": 448142
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1469826043,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5024
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5025",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5025.npy",
+            "sha256": "d91d5efef791be5b62bf721b5d1d7ba4dc313e524a2f8486304a7a72cec99968",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5025.npy",
+            "sha256": "e4ab752153942f5e41e0c77cc4e1efdff1d0596eb288fcc73de0641658925163",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5025.npy",
+            "sha256": "cd1a4740342ff41ab1d8da62ad889f368b8a2dffbcb102338e193b6132a8122b",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5025.npy",
+            "sha256": "4079af8dcadc7875da2a2eb926c846ed579a92a502d6ace2712f1e26a29a33d3",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5025.world",
+            "sha256": "b99bbce8171d6e25f0f15069a98c31d81f472d1a7c481339439b873279b0f0fe",
+            "size_bytes": 448142
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1354435793,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5025
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5026",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5026.npy",
+            "sha256": "879d0c9bcc91fac59d9c58cf2ea75f3a87f3db635cefe9ba5da47695eabc225b",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5026.npy",
+            "sha256": "fd8fe45c0babf567549169e6494aeac8e2ebaa48eea688a17377b3681204a512",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5026.npy",
+            "sha256": "126e70c19975c6e492f6820157ee747df543943171c2047a3c45c4df5c74163e",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5026.npy",
+            "sha256": "f55837959c13a57932ccf509e8b03b3723af4289d26b2eed69383ba8dd585272",
+            "size_bytes": 688
+          },
+          "world": {
+            "path": "world_files/world_5026.world",
+            "sha256": "8406b2ef66c4e6a38d9350b2ce18e09adf102b35dda292ed7db2b0dce6279785",
+            "size_bytes": 439706
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1109298674,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5026
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5027",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5027.npy",
+            "sha256": "4b35189fe727144897a79a7370c5334df30560c0191c1d8c868f1ca1a7267139",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5027.npy",
+            "sha256": "39abc607a25cb8d16bf0438ecc2cab0b09810b6444f01f299126c9a1e6821004",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5027.npy",
+            "sha256": "04bbf3e81e3040c744fc8921944e1000f906ff29e29f4f65e7b84cfd1ff62757",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5027.npy",
+            "sha256": "6f088f437bd208b262742644fedb3499e99269850c2c0fcdda569eb78894c862",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5027.world",
+            "sha256": "ce320abe69563a22590f1c13426ef5a9da7f2e6063eea47ff77b6ecc989e1d07",
+            "size_bytes": 526175
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1960736776,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5027
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5028",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5028.npy",
+            "sha256": "e5d697888ff4996fa9a828e0a2c9550ee028433ba4098be359a505a40d6ea600",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5028.npy",
+            "sha256": "3a2224d458c188df3cad63d0d16d9454c5b21990654ee61edbd033dca52b55e2",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5028.npy",
+            "sha256": "4a1347349cf6267c02380f8a91c278455a347d818bbe124b05a504d65489e4a8",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5028.npy",
+            "sha256": "df4f4720d165be636593347a30fc47b09ab43d08064ac56780d9cef71b019aac",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_5028.world",
+            "sha256": "e7f4a8a0f66545d52ada900c555a666c698f2b4f3a446b60db26b43e25c10843",
+            "size_bytes": 450251
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1641835668,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5028
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5029",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5029.npy",
+            "sha256": "73a072af19bf824c19f68b10a42527e26be3882c49a9c690fb8be904dd0a0ec3",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5029.npy",
+            "sha256": "c65be32eccb943fc25874540be3b2639691fa0c11bd4fb84c2af7a488aa09ad0",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5029.npy",
+            "sha256": "165f982f1411cfede366b7b8eb65394cab9b599dc05dcdf24a24897fa6babb38",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5029.npy",
+            "sha256": "d05fdc435648db4bcc64c75759406cab290a607871ddc706b4c669b2bf5d5e09",
+            "size_bytes": 784
+          },
+          "world": {
+            "path": "world_files/world_5029.world",
+            "sha256": "913613a14e5a6a9f7f26d05534dec2a8ebd1f8784b2e1b3cfa39866adcef08d6",
+            "size_bytes": 557810
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1512219094,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5029
+      },
+      {
+        "accepted_attempt": 9,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5030",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5030.npy",
+            "sha256": "a1f75c60320ac5800d5b04f44faddca65e10e4467c959c82bf92e7b5d127cff1",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5030.npy",
+            "sha256": "57131db466c84e4d060c216cbf0fa3e4fcf326f6eefedc88edac946d09755643",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5030.npy",
+            "sha256": "66e906f5bce2661ff11d9adfb8f66ed1aa2bd687c737049fbc77476b23af9b27",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5030.npy",
+            "sha256": "9ee2555e26687d6150a2954b1d6409cb4c36aac03e197c6ae6baeb2f5d962cf1",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5030.world",
+            "sha256": "070d3185d3f8ba7e60132569d6a4d2d849d3b9a22b9a744c0d511951f90ad6fa",
+            "size_bytes": 606317
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1523253603,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5030
+      },
+      {
+        "accepted_attempt": 14,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5031",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5031.npy",
+            "sha256": "6f9b5d9a7cad62fe0c007b7a10273b1a19c29c0b2593ff9626c2c4669a6e7a64",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5031.npy",
+            "sha256": "1394fc686f7f1eef2318ae23193156498914dda9933943b174d2bf6a5d889ab2",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5031.npy",
+            "sha256": "8c99d57c971c6aa190623bc44343843f92933f21cafb3e84794cd3ad17885cdb",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5031.npy",
+            "sha256": "98074441440a2cbb20de0346ee28dd8e54e0a9915e44ae3611441270c337d8ec",
+            "size_bytes": 688
+          },
+          "world": {
+            "path": "world_files/world_5031.world",
+            "sha256": "d2d7a674591c5be9d7783c18f40b363950f553d571203602f1caeb7f9dc1fa49",
+            "size_bytes": 602099
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 385920178,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5031
+      },
+      {
+        "accepted_attempt": 8,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5032",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5032.npy",
+            "sha256": "797c59948fd596a0de450b83fa82fa0611c83cc4251ee6441111765ed1fba28a",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5032.npy",
+            "sha256": "54b8e91ac8b80c3d1897093e04457aed77283b52e8d0029a60d74e21dc84e233",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5032.npy",
+            "sha256": "c88204b8e3af53ed95e61f8a72e7b4929507d8457f25e6c98059154974615a1c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5032.npy",
+            "sha256": "bf221ad03541ba10d389fd09f328d1db9bc6286ffc00fbed7a53a3c024c5b23f",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_5032.world",
+            "sha256": "34c470b84c8939070ea4a6720ba84928cacf704b6b1b0b7b9eab7e78e9dccb51",
+            "size_bytes": 612644
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1049872717,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5032
+      },
+      {
+        "accepted_attempt": 1551,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5033",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5033.npy",
+            "sha256": "2761c8a38fe89c017d615ddfbbdd88f82d6b1e107bd297c0238f1cf176ab9776",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5033.npy",
+            "sha256": "e877469c18d273342764563bfd1837485c6d61d08f7c1aa9850af78432100d41",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5033.npy",
+            "sha256": "35f04d1ff59becaf1c44cf4c7d236970083627e8de0118e53ca853de2042d5f6",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5033.npy",
+            "sha256": "b4a2637f2344290fc369b88f5ef2dc011b6def6269a6adc6106680a69d1fdad2",
+            "size_bytes": 656
+          },
+          "world": {
+            "path": "world_files/world_5033.world",
+            "sha256": "bb3b5486cc12a2bfeb04820863bb99dc89c1e18bea70f39f8c1520a77b115ce1",
+            "size_bytes": 734966
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 384106717,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5033
+      },
+      {
+        "accepted_attempt": 552,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5034",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5034.npy",
+            "sha256": "253d56975ac9da1e1e5a2d633aa1a059c8f1e3ee6dd663a538ae8897a4f44306",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5034.npy",
+            "sha256": "9aaff585b9af1c8ff8f2999014b00e0053a74a5fe40a6345685ee183bf47c4c4",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5034.npy",
+            "sha256": "a229d4c0e782cac339adecd2667107d177ccb2dbe6e85c7c4f9de1370ad7a45f",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5034.npy",
+            "sha256": "9d70730208747828dfcd7f0a8994e3864d1d41bee223a3a312bbe53841936f0d",
+            "size_bytes": 736
+          },
+          "world": {
+            "path": "world_files/world_5034.world",
+            "sha256": "dc8f889b928c81d31bd05b5d24a33b034a51ebb20fabe239d213c7f7def9622a",
+            "size_bytes": 724421
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1516082744,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5034
+      },
+      {
+        "accepted_attempt": 400,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5035",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5035.npy",
+            "sha256": "7ca5067a1ca874b7082b61f518118c55e4bd4ae139577fce71bdf81f5e31fcb4",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5035.npy",
+            "sha256": "8f28f9bafb71ebaab7db327a55b03c26411509a7c50ad3f49c3416fa2e3617c8",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5035.npy",
+            "sha256": "05d581d317989fb309deed1ad53f00e39f727dc4de0c16477579cca6a1eb20ea",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5035.npy",
+            "sha256": "9694688aa58232f87133b782fa2cb302a3b6eea6504df3d7ab30a878a698231f",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5035.world",
+            "sha256": "eb3da7468ae5a2fb8bf140a9d374d0fb8d08490d4bd2221c103f121012fc2c5d",
+            "size_bytes": 623189
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1159252699,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5035
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5036",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5036.npy",
+            "sha256": "0821075a90ea40182a47b12929a5628d9b66425b824900876fd858fb0cadba84",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5036.npy",
+            "sha256": "f24d43e05183fe66154ea5f7f97c5d73f034b32a3566ddd10fcec26e1a085db6",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5036.npy",
+            "sha256": "9693cbfbf73553fd0dc4c40f7fa20789058fbe10f8e06bf6c68b8c6c78048d75",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5036.npy",
+            "sha256": "f4281baed3b609193a483d42fbcd04ad50f21b989e93433c6b6bb4c662ef0502",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5036.world",
+            "sha256": "90970d7b1ee74c913f76df56d791f1dfb53541e0039f4f10e78b0f875ec0b887",
+            "size_bytes": 452360
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 138448898,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5036
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5037",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5037.npy",
+            "sha256": "af208f8704fc1b3c01dfcce995e68c03f4ae9e012ba3ca4159d124724ae23222",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5037.npy",
+            "sha256": "629cb2f8c483a1e9f4ec78110b4a7124a6768ed85a89bc9eea2d7976312fb584",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5037.npy",
+            "sha256": "99f7affa52629c93fbdcfda8c5553cb8906a2dc293cd53eab2a36f4977d897e0",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5037.npy",
+            "sha256": "62daf52b79aec13825eb67c66e9ae02f49d21ec763849ac7df85263ef4f04916",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5037.world",
+            "sha256": "e752d093efc26880b8efb842276fce9fc9e82bb951da386bba4f8b1f8c7c9ce3",
+            "size_bytes": 414398
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 2140848174,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5037
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5038",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5038.npy",
+            "sha256": "55f76c848ff1169f28ced04e87c1d70d929aa9b12a92e6467642c99e6b4d1bcc",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5038.npy",
+            "sha256": "dc22f1d3e7eada94fd3a7b0e0771ee5d8cfbcc14ab86c8e698139c45ae755a87",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5038.npy",
+            "sha256": "31058c541e912a4b39d6faf286c8ca07f1fbc9e35ce14ffb015f5b946ea7b8fe",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5038.npy",
+            "sha256": "7432b5f3c1b6cedaedaa10e4dc2e2555f10432f4e3e099fb9037ef9dc5b7e1a5",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5038.world",
+            "sha256": "f35b2fb6b8b189efe3c136a6c5dc1ea96452ab3b11cd1fee2321bbd5f0388f5c",
+            "size_bytes": 431270
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 450882304,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5038
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5039",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5039.npy",
+            "sha256": "e6bf272859e740e4e8aaaf00e36fb7ebe1b637600a743953106a9f273eb42b75",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5039.npy",
+            "sha256": "b3078360b389c40f082a270c8e998cbfbd6a7e6cd896eb3003ebf69609b79ed8",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5039.npy",
+            "sha256": "1ad640f3e54afed360db008fe4aeb8797103c80c0d2c0a4b169029269bc8a821",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5039.npy",
+            "sha256": "3111a33ba6392bf589ee28f2c7d5f282ae97b8da6f0b54d097e6c910df51b3b2",
+            "size_bytes": 688
+          },
+          "world": {
+            "path": "world_files/world_5039.world",
+            "sha256": "e65de1ec04a6c4636c1bce7c4c0e970b844a6c496f66df72150ca4030e1c47ae",
+            "size_bytes": 534611
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 593441015,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5039
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5040",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5040.npy",
+            "sha256": "7c3e46b1a63824ac2820b3ffc6c6ab84e9416b00e859b5e42ed2a82c3884dca0",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5040.npy",
+            "sha256": "df889b2151026807b2284a127fba4b10f96c7510dce14e76fa414a6058fe24a1",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5040.npy",
+            "sha256": "89204013b1b9f8b6f54d6246ea3da4186e1e836f8bb4b0aa05f9e0a9fc6a04fc",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5040.npy",
+            "sha256": "73d353dc076b3c40ae05704ebf7359cfd7f005f884bdf041d4f98cf60f201787",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_5040.world",
+            "sha256": "066beb63843b3a0e9e8ced6a5aca38f0149e3d90aa2e049fd0825eced05647ff",
+            "size_bytes": 494540
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1043347924,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5040
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5041",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5041.npy",
+            "sha256": "a511f63023b7c0523e10b661f17f1b226028631d022c533bf2f3a9557e5bb33f",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5041.npy",
+            "sha256": "9fb913fd835cc62a91cc0f1eb7e69a9878a8b4d26fd2f422e92d837f2b3bfac4",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5041.npy",
+            "sha256": "99d19b39a58913de3b3038649d1dc7987148b084b935e60bfa999708e6775d52",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5041.npy",
+            "sha256": "cf78b45ad278983048bd39d69b53aa044c038dd30e4359a6bbd0f677aaff3432",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5041.world",
+            "sha256": "63e7c77d5a69614025fb986a34084ec03eeddc0dfc13f0a76a8515456de389fb",
+            "size_bytes": 486104
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1944620759,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5041
+      },
+      {
+        "accepted_attempt": 64,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5042",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5042.npy",
+            "sha256": "c7a62d045276cffd69ba0edc4bef59f8cfa558a7ce0d71448b9e4cae1f3fee9a",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5042.npy",
+            "sha256": "48a089b2606bc38d944dbfa62de11831884148f3b66e582360f51658d496d1f6",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5042.npy",
+            "sha256": "cf2825d48bda6a3a3f7d41c0824a612c15abd56d6c0c1861969814c373351acf",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5042.npy",
+            "sha256": "de149066be517af9f50ca78d949f386c616f2abfb2839bae2945af1e40b470bf",
+            "size_bytes": 944
+          },
+          "world": {
+            "path": "world_files/world_5042.world",
+            "sha256": "f29456f3fd4b5d66865ca66cd59b507a9fc53d03653f963a2eb8e4bbf0e1c7ca",
+            "size_bytes": 566246
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 180339312,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5042
+      },
+      {
+        "accepted_attempt": 31,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5043",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5043.npy",
+            "sha256": "80f3e414bfa4f8b73217754c852fbd61f3e07cc700f3110b5afa8dd18bbf6a39",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5043.npy",
+            "sha256": "29ceb1619238be75e918d2147ea486b4bc55fb763d98ea6c012d1795c4a14bcf",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5043.npy",
+            "sha256": "b800583eeb61e5b890cdf2ab59e57c11cf1b3e569935535f97dac7d9bbecec16",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5043.npy",
+            "sha256": "8f418f38b3d364df2457c0750919d5981826a7cbe5fd8d0da543d20e45bb96c9",
+            "size_bytes": 736
+          },
+          "world": {
+            "path": "world_files/world_5043.world",
+            "sha256": "a1e43b3ec41fd8a2f5c44304209f92fc839a567d010baa1712a089ec266dd6dd",
+            "size_bytes": 534611
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 2121308862,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5043
+      },
+      {
+        "accepted_attempt": 4,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5044",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5044.npy",
+            "sha256": "b787263a0af03a3a3924fd775d566bc28b6b2e28de35bbb86fec9debeabacafa",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5044.npy",
+            "sha256": "fbb2d9674a21553272e87d21986389db4dcd1b599f04286c9b56771faa8fa09b",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5044.npy",
+            "sha256": "2fba90d90978dfe69ffc4cdc04686cb2ee0df7f0079c7b0eebffb85dde177638",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5044.npy",
+            "sha256": "db6d77c4c93088791fee8ba6ecc9744d65d9813048fc36a5894aa5b06038e270",
+            "size_bytes": 752
+          },
+          "world": {
+            "path": "world_files/world_5044.world",
+            "sha256": "ccca2b3c9508e8431bab4b4e05bff38074bbec7a23d099370563c932b279bfff",
+            "size_bytes": 627407
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 651696109,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5044
+      },
+      {
+        "accepted_attempt": 596,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5045",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5045.npy",
+            "sha256": "73fc325e471f3a3151c1957f7f80b337c3f9f6b0bde328973d7ffc5075e41c52",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5045.npy",
+            "sha256": "aa476f93486389dd300c1c679c4c56904de9e54eee76ef7d86d1c47202570f78",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5045.npy",
+            "sha256": "6a097361198fcfa62acce43ea57c7aa189b84bc421dcdbc5eb918c178554573c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5045.npy",
+            "sha256": "bf517795f57458e670bd9d363e3f69b05256a88117b4ccf3fe2b2d6b3e42244a",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5045.world",
+            "sha256": "970e5307d3611e29faa00fd824fe99debe6dc5381ee491055cf1f294fd27c2f2",
+            "size_bytes": 654824
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 785958253,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5045
+      },
+      {
+        "accepted_attempt": 1291,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5046",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5046.npy",
+            "sha256": "2c3a4ed0dcf3dfee75c7f73181462f258010ceb1bd61b2a517483e29267b9ad4",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5046.npy",
+            "sha256": "1736840e0a596572530db2445d034e7da4c7b9b4c43f9884443fed9a7c9c8d08",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5046.npy",
+            "sha256": "88cb00965b6dba48f721eb4bac773716c83aa527665b881a3ca13d6eff6ea26a",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5046.npy",
+            "sha256": "239b8f43b36020c6191c5a2c34d3e52ccf4ce881d860b62b7a7b178085c93c6a",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5046.world",
+            "sha256": "2ee0ca92bdc4688f1b7508ff6ad997d69ff603dd9edaef13b2a593635c4f8762",
+            "size_bytes": 688568
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1768125053,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5046
+      },
+      {
+        "accepted_attempt": 213,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5047",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5047.npy",
+            "sha256": "f7b163589a60f0730e9fffdf7f91b5a310d36761c00b1a6e580ceab7a7956385",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5047.npy",
+            "sha256": "935ec1f96b5e02be4a3dfd5c01a1e2b32113aec69d954c8b9894f1da2252be6a",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5047.npy",
+            "sha256": "fc1974fdd0037a076301898921146344455d273d0bf9f85c04d8a981329b135a",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5047.npy",
+            "sha256": "8860946eecfd83c1cc048ef58951ee251b46cdd92b065b2f94521e49e4dc93b5",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5047.world",
+            "sha256": "eae6d11c5c6b870e1971bbe1345e099c67deac4cff311f9c825f7d6145f140df",
+            "size_bytes": 709658
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 2082147982,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5047
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5048",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5048.npy",
+            "sha256": "838ca10bbec03be0c43dd14690aad66a86a9759e3259df84a779be841d3125be",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5048.npy",
+            "sha256": "a5ca241b3a290b91c5dcdbf95621be552add36dc934753cf160749871bc91685",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5048.npy",
+            "sha256": "3c6b94a0287116cab15f4969772d9c91a179255f6149339fc86956f542cf3861",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5048.npy",
+            "sha256": "42f45d97d1ab42a4870f920c9a8d63b8c9629d28f344655a8bb7ba47fc8aba9b",
+            "size_bytes": 752
+          },
+          "world": {
+            "path": "world_files/world_5048.world",
+            "sha256": "c913691f3b131deaacd70901fa56fcb1c327401a1c47c61bef71316cb29d7ebc",
+            "size_bytes": 418616
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 384301163,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5048
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5049",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5049.npy",
+            "sha256": "db8b4367e79512c3b0dbf1075e39239e9b4786ea25e4ee63750370546cb8c252",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5049.npy",
+            "sha256": "3b255a2afa3f4ae16bae70aba3ddc42cafe0cb39e7b71f4b80ad1946c5cb8e52",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5049.npy",
+            "sha256": "8819aee219580930cb7f9820009152708b9f6418ed08685682556dec47781d01",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5049.npy",
+            "sha256": "20eaf01cbd10505ced770c96c2f4965a01defc7a3c4a412d351129dee9868f03",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5049.world",
+            "sha256": "c54934abcd334f5d59c7032f39d90390b29103fc61b97a7e67e31037bb1f1e9a",
+            "size_bytes": 401744
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1734587801,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5049
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5050",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5050.npy",
+            "sha256": "ac86b78f9b5477acebef5a1ece3a85cc4032ae2c0e4228e24b05ae03dfb9870c",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5050.npy",
+            "sha256": "b689798315b7ab766bd94742d09f38c593cd0ca93d90116aab8e63c92fb681d4",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5050.npy",
+            "sha256": "8c0295d6ac54383038580c2179272027c97ef67b9918eabd077265c50d6bb0df",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5050.npy",
+            "sha256": "8f120936e5586b528f76abf65d265052700674e69eb557eb0dfcbea4d96d1a49",
+            "size_bytes": 752
+          },
+          "world": {
+            "path": "world_files/world_5050.world",
+            "sha256": "a51502d10f5f3e1fd86e59778d93a72787ec0a9ebcc2893f1b669ac7fb28978e",
+            "size_bytes": 435488
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1184282805,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5050
+      },
+      {
+        "accepted_attempt": 5,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5051",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5051.npy",
+            "sha256": "608fc5925694a55639b16c82b08ac3a4231df29d2bbb7cabca602ee32df2bc07",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5051.npy",
+            "sha256": "e04237b698c70bdfeb6d8f70bd5d35332a5fdcc3238f3f585ad212082985a4fc",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5051.npy",
+            "sha256": "11873331f7f388a768c007aed27992b62413ee4f1fce16c923b26d5f5e48efe2",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5051.npy",
+            "sha256": "6eb47ca36379fe1d0fd1029da07cee92cfae05bf0e4d837d8f6893a40b9661f0",
+            "size_bytes": 752
+          },
+          "world": {
+            "path": "world_files/world_5051.world",
+            "sha256": "187ed3f83b51840b6d1b9aff893664d1b338714b12dd41bf2154886a5053aa20",
+            "size_bytes": 524066
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1494871522,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5051
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5052",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5052.npy",
+            "sha256": "ec90691aa3c7e339505447b892de52a4236948a1324f521c4248f2de6942a310",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5052.npy",
+            "sha256": "44db545fb14c9eb8a0200d310edeb8ad410b9a73b90b8706ec8768f9365f8994",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5052.npy",
+            "sha256": "91e1b06a0b3895fddbb23c0ffdc846ea2c259a631d313ad4abe74e7f17f52ecc",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5052.npy",
+            "sha256": "12b107d50c96445cc64352196343099ee4558832e56940f099a01c30ec306b0d",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5052.world",
+            "sha256": "9da3c8ee3ae3820fdea9b0715012ecb7b00af9c03e117975970feb7f4b21faec",
+            "size_bytes": 498758
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1415954766,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5052
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5053",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5053.npy",
+            "sha256": "2d812664c0e45caa34e1536a27dc40445168f5c91e7d5ad14d6335965375a003",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5053.npy",
+            "sha256": "13e3dd9dd33ebfd06c8135553dddef980b35b0b4e3ac2eab83d4f286772acdff",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5053.npy",
+            "sha256": "6ce448d658204891af24bb6912fb17d670d2d21c8571f2e4dc4db3b0a3cee6d4",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5053.npy",
+            "sha256": "2c6523e2c0f867424fa5f979dee03e8e610b81bcf12b1528a9593874d14b6ee9",
+            "size_bytes": 832
+          },
+          "world": {
+            "path": "world_files/world_5053.world",
+            "sha256": "1f12f18e6ceb7c9d2d7155e1de4142f91f38067e5e10380d9fad8a475260b5f1",
+            "size_bytes": 599990
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 2079998484,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5053
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5054",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5054.npy",
+            "sha256": "e8ca3d17a5f168e02d092aad8d2d2eb032a7e6789a95c11bb0337324dd2d3ae8",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5054.npy",
+            "sha256": "fa31d9c927f75352081eb5567b39a8901b1b861d4c900c863f56817256a6f9e8",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5054.npy",
+            "sha256": "1577c7269a57895c4cac9fdc036c14a8ec84b7a2aaddbb5b7fa457d7e7b640b2",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5054.npy",
+            "sha256": "3acea6028858374d7f2014b7ef7236636b6a7ae753dfc319107e2e43a9747c92",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5054.world",
+            "sha256": "419d70273acef332d2e3daad635ce36a200d9a7add438ac66807418f359058ba",
+            "size_bytes": 549374
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1007762970,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5054
+      },
+      {
+        "accepted_attempt": 27,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5055",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5055.npy",
+            "sha256": "be5db4e22bf92b814934111097dcffa52e0df23bf316614aa3425d1d44594799",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5055.npy",
+            "sha256": "60521fb7596ad58f6ce1ba08f3c89663e7c7e80c78d3c86fd91830de7009a2d1",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5055.npy",
+            "sha256": "de0403ffe6f479941399d928353eac2776502292412bed6a6501fc58a8d2da9b",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5055.npy",
+            "sha256": "0d23702ecbfb5996b561f33ef6983677bcf7b6f333d4f0fdcd7f211c382de549",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_5055.world",
+            "sha256": "caec19c662265e35795f5e855f249d40f9e978f45009b5fca0255133dd8b7509",
+            "size_bytes": 532502
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1290533140,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5055
+      },
+      {
+        "accepted_attempt": 11,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5056",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5056.npy",
+            "sha256": "58c1b13a672d928fc64f8638721f59926ed674735cde4b99b5256b8a44c8fa7e",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5056.npy",
+            "sha256": "7da885017447ff28507c10f93701c0c006c8cebb35dec53c9e91fe5933bb74a7",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5056.npy",
+            "sha256": "3fde2117afd4ac6b4a375a07fe005454762aecd54b3ef8ba7051adfdb4c1914c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5056.npy",
+            "sha256": "ead199be989237e5dff94e72f096c0227e471b7fa3998f48df6b1dd9060b1a71",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5056.world",
+            "sha256": "b90355e7a3cdbf0393985f5fa76fd119ebefb08f3da411665060f5cbb7febb5e",
+            "size_bytes": 576791
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 197665037,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5056
+      },
+      {
+        "accepted_attempt": 679,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5057",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5057.npy",
+            "sha256": "86cba4dc0750e7cf418419b54849b01498854c2b27da2e78b5ffc7d6d2042684",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5057.npy",
+            "sha256": "03c52fabffe7f84ac452752e44f053121d094c0da85c9e039a14fb25f4960286",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5057.npy",
+            "sha256": "084ffce434fbc26cfc1468c109148e005ee27671c316a30713b2c60d18d9370c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5057.npy",
+            "sha256": "dbfd4e2ef431c0f60b09655264def408f32dc2a3056d985f800aa4903174c7d7",
+            "size_bytes": 688
+          },
+          "world": {
+            "path": "world_files/world_5057.world",
+            "sha256": "4f6c65e6771db1b2696baa9b35232378c9bbc59ba9351d187bec06bccad0cf1c",
+            "size_bytes": 648497
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 568760792,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5057
+      },
+      {
+        "accepted_attempt": 348,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5058",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5058.npy",
+            "sha256": "81a15f9b07f6043ae7a72ec424e8f545419585e2f0b89c3cdc350de1ec3e9942",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5058.npy",
+            "sha256": "3d94819ee9f871fef26d963347f056b95b2658b7a71fdb92f2361103767f9750",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5058.npy",
+            "sha256": "f5e2b5ac0740d11f6251d2270f52342d142ba67b4101b962450cd0c1214328e6",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5058.npy",
+            "sha256": "9d198cc5854712a40fa7f3eeb224558d981fc78b8ccfa2044715baca0e76bd04",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5058.world",
+            "sha256": "74807ecf3ec53ca9905e64e4d0b8ef1495d1af77b4949722343dc1ae0624c54c",
+            "size_bytes": 650606
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 462051134,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5058
+      },
+      {
+        "accepted_attempt": 152,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5059",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5059.npy",
+            "sha256": "ba65e9aa346dbb67734cc513acc0ad6d929364b2803c73ed62e8ada16aee1736",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5059.npy",
+            "sha256": "ba806d601afda74c79230d69e6707a76460297af7f6fd564c324ae067f14f71d",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5059.npy",
+            "sha256": "bb2217d329b98fc47ad9c768e8ff02ccdcc13fee980d6e5ee40001aae374fa3b",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5059.npy",
+            "sha256": "236f8a8ad2fd564b78a42c6a8abd890ca6b55111a521266775e6350a50059027",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5059.world",
+            "sha256": "71002935e8c6ad47b821ed4279ecb541bc891792b5b91d701de8afb3ee89c805",
+            "size_bytes": 741293
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 551567813,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5059
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5060",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5060.npy",
+            "sha256": "3c161db4a23c5459a35f6f2a81da3d4b434e1e986d4aca97ab238d5004dfbf33",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5060.npy",
+            "sha256": "93ba25549e453e339e6d5a83a8ad1af85bf1546a76e134acde63a5c474c5a8e1",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5060.npy",
+            "sha256": "f82ddcc22fd39523e30fde4436271a0d47aa549b850b70384848713e0cd493ff",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5060.npy",
+            "sha256": "468a354cff5d54eff8511d248cad12cb28de842fcae604455dddac393a136a86",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5060.world",
+            "sha256": "272ead6087cb00bd720430be9746ed1bedd6b9f3e80654718d2292507a3c660b",
+            "size_bytes": 418616
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1770608628,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5060
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5061",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5061.npy",
+            "sha256": "eb72150b3679ff9b9621544c7eccf1eb5010b174d78262a198c59852bc304c86",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5061.npy",
+            "sha256": "10d3e7dc72f7284a2caec0d66c53849b6866cbbbe9a78bec2ef4c012bc51851d",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5061.npy",
+            "sha256": "5a94682a351a7c3a74616e8f6195cb729e2223fecea9e350f9047c49c056c392",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5061.npy",
+            "sha256": "ec5191dc05967fb6c44e2483ddff8cc23e9410e50b722946d261637c44cff9a7",
+            "size_bytes": 656
+          },
+          "world": {
+            "path": "world_files/world_5061.world",
+            "sha256": "080ec20740ad0eb2c364589a95b958d779018330a6d3d2b89260162fd8c91e78",
+            "size_bytes": 401744
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 139735265,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5061
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5062",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5062.npy",
+            "sha256": "7f660eb792cf440d08d66c645199819dcdf8919de4f6cb30404d0b8a2e892f47",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5062.npy",
+            "sha256": "7c072e6d66a71f15b7e9dbdd8cc0b2cda230fad641fe7176b46044173c3ea186",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5062.npy",
+            "sha256": "6243b47b077ed37e16e2a8a8c5d2c466cf9c246bb0b285842436f7e14cf3a20c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5062.npy",
+            "sha256": "ad4d16f6fde91dd513378b577dc85a95fca5266a64134232207814d91a7a0187",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5062.world",
+            "sha256": "0ed9487d4e82921dcfe4c0c33386aca5358c9a602909bd39717298ec8df15bbc",
+            "size_bytes": 431270
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 272381796,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5062
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5063",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5063.npy",
+            "sha256": "e04335478383650a2b2be88ccd7b62b0c0ab5a3cc85a2539057748ab0a3bc531",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5063.npy",
+            "sha256": "74fec455f0dc881415c3ada5812529c019d6dc4c77af398220c2df94aa7a3c23",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5063.npy",
+            "sha256": "2b062c7726207c0c12baed328f41866b17fdef433ad5ade05e4f39dcd19aa908",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5063.npy",
+            "sha256": "b3c53a22325f4fabf1437d2660e65d493d95c98cff38299b4c0f0c97aa8954b8",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5063.world",
+            "sha256": "92e4c67328076a3ce6fb291f44700c4964f08a7ae39690216f1bfc99f882811f",
+            "size_bytes": 566246
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1286577925,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5063
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5064",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5064.npy",
+            "sha256": "88ecc33a78ae4a34898313ed2de26d65b47acd1ffb49fbf07605d34ed7519189",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5064.npy",
+            "sha256": "73b420cf3a9d42c9420b4065a9578b5a6659edf361cb8f3fd0e3f85167f449f0",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5064.npy",
+            "sha256": "2dcc454af450c38295c863a335b65e20702258f856ad59a6768dcaebac85b422",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5064.npy",
+            "sha256": "c4a9c36b35f9734d14630b3dcef9405f17fbd7722c18f01e3f7d2bb4c23296c3",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5064.world",
+            "sha256": "ec5734898d12f174c635e1db58f41900ffc8561813988bc5643f1e475cd44e7d",
+            "size_bytes": 530393
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1998488636,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5064
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5065",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5065.npy",
+            "sha256": "095c93f391767d78317c3c96b3d37a7f86a09265f3a18aab9330234cf8cc32c5",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5065.npy",
+            "sha256": "e01d2f794a9329560bfd6d557fa1e0bde8c55a50cc59be550a7ca361505607fb",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5065.npy",
+            "sha256": "c4b9a62518b4dd79cea650069448300937e0600f4c0c54e4bc146a0f9bd51539",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5065.npy",
+            "sha256": "fb899de5f77ebe63e573a919193cc81cafd70a0ddfa8c1366633a5e89695a9b1",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5065.world",
+            "sha256": "dbad419c83544cefca25da8fc09f3f681baeec875ad3c801b88cc77fbda31f2a",
+            "size_bytes": 593663
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 679031174,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5065
+      },
+      {
+        "accepted_attempt": 9,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5066",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5066.npy",
+            "sha256": "2cf721fedea0d6cb1f2ff8780f09071baf2ab8b182c1cb3204ca817f19f63693",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5066.npy",
+            "sha256": "954980e2b6a56e359b46a773457bd7172a5077ecfd8682d27e535f6606032290",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5066.npy",
+            "sha256": "59931033f21d01bad62492c4e9623e70b63beecf91d5f66b838bc1ac2f34d902",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5066.npy",
+            "sha256": "aec3e520f83bc307632461a698f20a302e2593f756944cda0986325ccc2e0a46",
+            "size_bytes": 656
+          },
+          "world": {
+            "path": "world_files/world_5066.world",
+            "sha256": "a2ce47821715622989a9afb8a994afcc7f05535b3abe37d9a4d1b2ebd6975d67",
+            "size_bytes": 627407
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1091578156,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5066
+      },
+      {
+        "accepted_attempt": 22,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5067",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5067.npy",
+            "sha256": "1310b961ba8575758582538fc3ad7631b2756d86c687c17b93b4131c8d2dc9e8",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5067.npy",
+            "sha256": "f2e9321326af02428bc1e46c7952de46e43ac01ff8014427b3303473dbadc910",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5067.npy",
+            "sha256": "3f2ea12d1c893f1783fcfbe2be1343702d45d1a7ce412a09ca17439faded55d1",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5067.npy",
+            "sha256": "04b4f745c81fafb4e4225829ff3fbc51f5e4e564ddf2c4c55f2136df3b4f7ebb",
+            "size_bytes": 656
+          },
+          "world": {
+            "path": "world_files/world_5067.world",
+            "sha256": "de76be8080795132e55bede273fdea01f100345b870b0df325d17adc7a5fe8ed",
+            "size_bytes": 568355
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1113383750,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5067
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5068",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5068.npy",
+            "sha256": "41014da0f0ac66fbc84f77df59f11af28c69b67b09e10e612607c4a2e5cc0384",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5068.npy",
+            "sha256": "512f37a02eb9a970c20d3e76941b7223949f88ab4fd2466a8b19a41b1e030de4",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5068.npy",
+            "sha256": "d93b2292619392abe96a141bb321101df5dc5c091fb610b6947608eba2160014",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5068.npy",
+            "sha256": "f8d5105562afbc82cd3374ca6106612ca9e6609b470d738411d61657f5357b3f",
+            "size_bytes": 720
+          },
+          "world": {
+            "path": "world_files/world_5068.world",
+            "sha256": "3772a8389b7b1979b374797e38b28481a5fee31b660b991bcb2d0b646f65c923",
+            "size_bytes": 597881
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1142200473,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5068
+      },
+      {
+        "accepted_attempt": 4364,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5069",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5069.npy",
+            "sha256": "f8f29c052121b5187efa337bfea3afa3f246e7b45d270f6f475717bbb415cb37",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5069.npy",
+            "sha256": "bef1668f88c368d288fe95d82d9b0a74766342c8aed9a8ceaba6e815a8d9ad98",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5069.npy",
+            "sha256": "7fbce703b67b3712f906f0aad9d98529a718ae44ff533acce1ed253e5ba11ecb",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5069.npy",
+            "sha256": "a51a7f54797e3d85e9797b5ed657a0ea58f06a8754eb1519bec38cbcc45d4062",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5069.world",
+            "sha256": "7c6cbc27e86f06748f9b0eebc3a350058409352865128b09a1a16d805f80345b",
+            "size_bytes": 667478
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1037084597,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5069
+      },
+      {
+        "accepted_attempt": 126,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5070",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5070.npy",
+            "sha256": "95ca85110977ff0f9d4431844898a289ef1d74aed168d62c1fb18ec75de8a272",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5070.npy",
+            "sha256": "dd2c391f721a7adbf473080d28d72bde49a94577a22d9eded5dd79d09266a840",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5070.npy",
+            "sha256": "a4b815d8da3ac92512e728953ad5907927a101510a764795e76d61b782f451b7",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5070.npy",
+            "sha256": "5d0977ca647519d62f7be11e1d1382ea841ee1cd6cdec990584b0a2fd6c2fcf0",
+            "size_bytes": 656
+          },
+          "world": {
+            "path": "world_files/world_5070.world",
+            "sha256": "a4440e2b9100bd4f656c42ea26896c29472bc44de34174b64f4d02643754150b",
+            "size_bytes": 715985
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1278997819,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5070
+      },
+      {
+        "accepted_attempt": 324,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5071",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5071.npy",
+            "sha256": "1d84be7b75766dc9b1daa3e04a9706384161ad31b4a5138f7dec10ec29274ded",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5071.npy",
+            "sha256": "de0899425d86ec46e22aca669fea6b0ea116eced5102a482a8a08de222c2f467",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5071.npy",
+            "sha256": "b91bcf51f70127ce1d66550a50777f2c6960e5bfe4338331f1ef6416b2fb9ade",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5071.npy",
+            "sha256": "f9973fa1e14e9230cb311f0a2c70d9a80ed993962a7be070d7a8572eea46fd38",
+            "size_bytes": 720
+          },
+          "world": {
+            "path": "world_files/world_5071.world",
+            "sha256": "3a348948df983195ea425a60338c755115854efa6284d5c30f966d4144e16b76",
+            "size_bytes": 722312
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1916647565,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5071
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5072",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5072.npy",
+            "sha256": "bcdb16366160bcebfee790f742f1c0f17e097c2509674cc49a0ff99c0970681a",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5072.npy",
+            "sha256": "14b4234dc91e7fa5a5be4e38fa5cf81aa1cf58662a8b10c5a0c901367a5e9d0e",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5072.npy",
+            "sha256": "0e21c672d890cd2a952b4b092d571c1880f668372e67554dadec1e7879085636",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5072.npy",
+            "sha256": "f090fb231a15028bb6599ecf0068e6aa051292d0239598d7604e91813381111c",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5072.world",
+            "sha256": "f0084506e84d950b2a5eb896c66a0f28417d1b3df882058ae66eb9a860088704",
+            "size_bytes": 452360
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1333972818,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5072
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5073",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5073.npy",
+            "sha256": "2dbd8635d64c55546abe6bab1403df6c8ed1e33a1f685af2c5a59c7f9d35ce3c",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5073.npy",
+            "sha256": "00552dcf72633de0808eabc90449294a66f6462c2967951867992580b042aa3b",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5073.npy",
+            "sha256": "2862153ce3e4885618412dfeffc2209f67ae6b7131a3d85f51be7c9bde7a1db9",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5073.npy",
+            "sha256": "0f7dd145e485b6492d22b4f82d41de6589e4dda7809df00bf7fcb8b8b388756b",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5073.world",
+            "sha256": "f8502c315fadec102408b52ad9aa4f9f5a81ba4f9b8a3482da47f90786f4997c",
+            "size_bytes": 384872
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1057404894,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5073
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5074",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5074.npy",
+            "sha256": "9f58515ac8675710c84d972b6b2efee07de6b266c06a85df0adb9f3891df517c",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5074.npy",
+            "sha256": "ab75a7380a7b19bc9c4737c29e2ce2a3a26e60d5e727648ce833c0ff5d839b2a",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5074.npy",
+            "sha256": "9d49573b7759e88206a6569688de007bc56967aed7bbcdda3e549225d966836e",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5074.npy",
+            "sha256": "fc3e0b3f0ac2c5c0c0b97f062fdfbdfd8b843327214e23d326512675bbca8786",
+            "size_bytes": 656
+          },
+          "world": {
+            "path": "world_files/world_5074.world",
+            "sha256": "829904ee8d24388ae3fc7497753aa41fa0cb1f993cc4b7d6274833b249db6970",
+            "size_bytes": 435488
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1028371963,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5074
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5075",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5075.npy",
+            "sha256": "387bf5100f36583b33fb28e8cd1be0db627ad9b7fcff9b7823df4d0aad64039f",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5075.npy",
+            "sha256": "207886cdee173fdcc37027f9657d54b378702dd8908e685ca318c94c571fd52c",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5075.npy",
+            "sha256": "f587d9d29f4e79889ea1293e7010acb545f31e0c2665604953b629f4b29f2924",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5075.npy",
+            "sha256": "4d3048606e72dfcc48e0643950d716d4bd20615f8f2680d51c8908219ff1a9c1",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5075.world",
+            "sha256": "a3d2423c54b70ffa274ddd9680758219edd8079236deffba47830e59d7976495",
+            "size_bytes": 513521
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1533793529,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5075
+      },
+      {
+        "accepted_attempt": 3,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5076",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5076.npy",
+            "sha256": "e898d3a7eb72fba0126fae6643af7743f6cb707bc1e6e7ddce7cc424d9e1136d",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5076.npy",
+            "sha256": "d2cff63f6ea5165d69e453b2e21d7b9e69f47cd55abf542836ec87393cbc03ac",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5076.npy",
+            "sha256": "3624a0af6487fecbbc7a7abbb4e1e5903814f9384e3dae6ee000c9549c9adc4c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5076.npy",
+            "sha256": "1f35bf2b98bd9d680393ad86f81a864d28e781ccad820a30f3b1d67333aa22f5",
+            "size_bytes": 720
+          },
+          "world": {
+            "path": "world_files/world_5076.world",
+            "sha256": "e924c3334d10ea21e98b60d34ab4f20d22fb84e40b7ba62c4427a32a40e620bb",
+            "size_bytes": 515630
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 2011053607,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5076
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5077",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5077.npy",
+            "sha256": "a3d2a50d28ff61ffb490de7e62f4fb421d8f752a8774afb75b336e8136fa1167",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5077.npy",
+            "sha256": "628d72f41de9548eef42fb1370ebd9648f72661345e75f5be90b7a9af7769f18",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5077.npy",
+            "sha256": "c2f97f2c232da957cad98e6d81cb0eb30712e1885d3fe549453559f124b4652c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5077.npy",
+            "sha256": "bbf550610e84178c12219702a8013a33f265d860544174708cae5aaa70455834",
+            "size_bytes": 816
+          },
+          "world": {
+            "path": "world_files/world_5077.world",
+            "sha256": "5df38cb418d7f279316961969aece85d5a62a8a7694f5f78acda6cf744acedc3",
+            "size_bytes": 483995
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 155327312,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5077
+      },
+      {
+        "accepted_attempt": 10,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5078",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5078.npy",
+            "sha256": "4289d833d4b60cfe95b507f7b3ffe57a2bd68fd3c3dcb7d30841dfaab556f380",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5078.npy",
+            "sha256": "131513fad5583f6ae0f4bb0565f9e476c663606b0bac66b2aede30006a98516c",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5078.npy",
+            "sha256": "3a0b311d723362920ae81fbd80b0cb95df8d883c25af3e6197177363fef8700e",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5078.npy",
+            "sha256": "a38315ec81ae92e43139589e9dfe224ab36887f9167a961eba2862be0b181997",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5078.world",
+            "sha256": "edc1cd5ef1d99f92234c9a6b6625470d6470b68540bcc9f3776fd56c02e5e05f",
+            "size_bytes": 597881
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1505852430,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5078
+      },
+      {
+        "accepted_attempt": 12,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5079",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5079.npy",
+            "sha256": "19cb1db282a1ed7a126dd3efc4b6f9ae6362163f037307e7d82b3f00edd96566",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5079.npy",
+            "sha256": "b31d7b741358844ebe0d3b0867947807f43db65ac4a2375856bf7191baaa34fe",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5079.npy",
+            "sha256": "55a4522a38d01f9c7d1943341ea68c1725ea02698f2c8854fd3a515312a79af2",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5079.npy",
+            "sha256": "89c75a96ecea987aa980740862029f7aeb837b769aaecae1c28262c98a4d0cb9",
+            "size_bytes": 752
+          },
+          "world": {
+            "path": "world_files/world_5079.world",
+            "sha256": "d89683ec557aafc899edd8a6a2be2d0f4fa11c1c828ca83ea25d53b51493c844",
+            "size_bytes": 604208
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 541751778,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5079
+      },
+      {
+        "accepted_attempt": 3,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5080",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5080.npy",
+            "sha256": "e6b587fe0385969936a55b6e76482a929a12213440163909e91a215c1f2a4347",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5080.npy",
+            "sha256": "b2a51709f4b53f85b9e73d674d3d2fcaf5e758f9a5188a4cd247f6120974dd19",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5080.npy",
+            "sha256": "51fc9ef066fe2486901a67165066dd8638ec0fbc7d085b19702157340f37b7cc",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5080.npy",
+            "sha256": "2a5ffac2f87e3119f943f43326d36a99f35bb3007a45bb0f9569b4b87d68d6ec",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5080.world",
+            "sha256": "d698aae9f4870bc81543ce357840577d9c03aa069032fb9d5246399a1f3b8007",
+            "size_bytes": 540938
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 732424649,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5080
+      },
+      {
+        "accepted_attempt": 1034,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5081",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5081.npy",
+            "sha256": "56b0efcc425ffcce89c7a4ecaed2f6b2de046e53d95775adeee28067d2e67f7c",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5081.npy",
+            "sha256": "d33d53b70c5e43a313dda06db4d8ba576c70be65dd10a2987002c7396a4ab5ab",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5081.npy",
+            "sha256": "a9b346b32316ca57d8eddd8996ceb9c0689546e1394333e2df677877a285498c",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5081.npy",
+            "sha256": "4fb493f76e687be4a5f3f01ed1be5a7b843cd93f7d38b2c809f3088751486cc2",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5081.world",
+            "sha256": "17726cf71845ab3c1b0fdeeaecbe07c3282486e273683869b9305ef439e76448",
+            "size_bytes": 722312
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1295053442,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5081
+      },
+      {
+        "accepted_attempt": 176,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5082",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5082.npy",
+            "sha256": "1f3337fd62a57f44fbf1e05571779dc705c716c918af92062744ed44912cc657",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5082.npy",
+            "sha256": "65f29991c489a4f5dcd7baa169260ad0b225a76f9f1e767ced2ab15fe55c5366",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5082.npy",
+            "sha256": "f764e71ab408df1655a33701423c061acc13faa5666041886f9fa996cc706f18",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5082.npy",
+            "sha256": "18dafa0684bcc569ef954f3998281eb4e76c12f1ca4e486f75930e966db3d655",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5082.world",
+            "sha256": "8dec763b54664bae86b2f2c60a24e900759394d387f1542720fd62fc3337beda",
+            "size_bytes": 741293
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 682919874,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5082
+      },
+      {
+        "accepted_attempt": 42,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5083",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5083.npy",
+            "sha256": "304e73ef608115e2c072fa9f76ebd586cebe51ef8b083155f005c98cf6d7a556",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5083.npy",
+            "sha256": "8d97a43a10f03cbca883cbce00042afd257357ee87c9193edd8f54fbad1b5080",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5083.npy",
+            "sha256": "87c45cc9c4a39b236696c6621f4c070220d4a01c4635e37c44d8ffa9be01ca2a",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5083.npy",
+            "sha256": "e8b387dc49d007649dd8a03b30d5211261747d8e8af83e03b4b23407cc9dbd8d",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5083.world",
+            "sha256": "68bd12520a85c904a6bd09d453214a463b4dd0f3bcfeb5a5ad770c43d55d154d",
+            "size_bytes": 654824
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1099631258,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5083
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5084",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5084.npy",
+            "sha256": "1e4b07da7a2c23d75b87cde86e4a567f0e9430234aa8ad0c30092656c73248d5",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5084.npy",
+            "sha256": "fd53be8acead54cba4cce516bc23796d17d8f55a04d896eee95af2f4b529b730",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5084.npy",
+            "sha256": "2c6cf2a88d9b36ad5dcfa4aeb4e6745c87a81ce63bab2e7a860320294fb2debe",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5084.npy",
+            "sha256": "f879d4bbad7be3fff35f9c13700fa728c003a1d013c6d94a586c3f06834f5a4a",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5084.world",
+            "sha256": "7ed8c805f2f49a481f863f25915a55cb104b138a6d0e8902fa425d6152d2a6e5",
+            "size_bytes": 374327
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 374376871,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5084
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5085",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5085.npy",
+            "sha256": "7691e0bdb26e9ef5d461ad69d7aa9a54b1c6f56f1b7e52832909261c36df906f",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5085.npy",
+            "sha256": "7f10c27bc17ecdc745f98b07b271729b0c704568c3fc45686953d1b89e49dbe7",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5085.npy",
+            "sha256": "f3e03269476731d7ffd99f8b54108c7b2b6748544b686992b7e3d5badce65ae0",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5085.npy",
+            "sha256": "9495f6a75132a481f54daf405396ed94285604d8d1c81103dd5c4557b41f0633",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5085.world",
+            "sha256": "e3ee6bc985168edc616013e80ea1b370fd850e35fc8be394c840d7949605d3d2",
+            "size_bytes": 414398
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1460267997,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5085
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5086",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5086.npy",
+            "sha256": "db90da2b221b5f7cccb97e71abdd3c57998e6394e7307417ff21fbb4e48842d7",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5086.npy",
+            "sha256": "116202bc8f6a9ebf8b2e53e1be15c17f7f0a3d43e021da7aa4064574e4d289c4",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5086.npy",
+            "sha256": "3bd68a59cfdc5341e6ff61a713db897383fc28a29da846dd3bf47f726777a691",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5086.npy",
+            "sha256": "c3bd0de27c0b980ebbc8648bfcbd1313ffbfd80ad8d388c6ce9d051aeaaa1c60",
+            "size_bytes": 672
+          },
+          "world": {
+            "path": "world_files/world_5086.world",
+            "sha256": "376a76fcb1cf3af4de0da9ff814af9ed595f7b085f37d13065ea9a83c066487b",
+            "size_bytes": 431270
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1187608065,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5086
+      },
+      {
+        "accepted_attempt": 2,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5087",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5087.npy",
+            "sha256": "df1bbd9fc9b05c939c037365c518dad3b06f94bda5b358cc4856ebc33e2a9957",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5087.npy",
+            "sha256": "a216fab2d7f35696a6cbd3d5f5e4f2ffcc0a0e187da2a3b521c1c62866a309d5",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5087.npy",
+            "sha256": "b9b96a5eae65bee509ce42c41c116dd8ab1d15eeb33818134bc54b2ce1584c5a",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5087.npy",
+            "sha256": "c997b6cd650f713de23db99bda0b34fb198db7a2a768ee39fd706c07bf0123f3",
+            "size_bytes": 704
+          },
+          "world": {
+            "path": "world_files/world_5087.world",
+            "sha256": "629c570167b9ec7f92267d5bf75d2437a73f050ac0e2a93624138aef64ff3c20",
+            "size_bytes": 513521
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 2119011737,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5087
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5088",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5088.npy",
+            "sha256": "d2a68e9bdf188373019fe20ce2f65b581d43382b4964424c2849e4bbb3460130",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5088.npy",
+            "sha256": "2d07bad1eb163b32642bcdad2952cb1c4421e8bfbfebd650bba45fcf5eb42f25",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5088.npy",
+            "sha256": "3aa97a14b9aec36dbf9f724e2ebfbdc1336f97d051577aaf40af710378185bff",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5088.npy",
+            "sha256": "e4d4d30a7ceb50cdaaea9996b59ad7aba8d75400a8e6f4dbbde4c4269ae2140b",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5088.world",
+            "sha256": "f5a0fd8089bc793f6a4f3adb6c86299405bedf8f3f4c057a81859af9e142c36a",
+            "size_bytes": 517739
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1829040494,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5088
+      },
+      {
+        "accepted_attempt": 3,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5089",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5089.npy",
+            "sha256": "6d5d3ca7bd691c4d2931314d740dd4c91be039348afae9f3e0a564084add0f0a",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5089.npy",
+            "sha256": "acc36b5879ae109297052c7c24128ebe46f896b4be1f6f2105b19dbc80139d42",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5089.npy",
+            "sha256": "549e3b785de72003dd910ee8d6cfc68845e4e534db3df963950c4c46eb5a1d76",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5089.npy",
+            "sha256": "0e0d1f37320facdaa5bca237323574991ce47cf03f9e282d721df7d3a94e1ae9",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5089.world",
+            "sha256": "ef54eb0572665da0a40ca1cf8a0b1e9fce461a8c135b2f90f34b371334b52540",
+            "size_bytes": 505085
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 1420670690,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5089
+      },
+      {
+        "accepted_attempt": 15,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5090",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5090.npy",
+            "sha256": "fde34105a47b5924bbb54fe0bb1f3095898f1bf237714ecfa0c12797bb5aa0cf",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5090.npy",
+            "sha256": "11cac143c980f2f758be3cf2cfa5eef557e09a14a384dfdad55e9ce13e3239d2",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5090.npy",
+            "sha256": "49b91b7acbe4d6c5ade723e3f8b9a0c52543113f83eaa9818c5ef248ed5e3939",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5090.npy",
+            "sha256": "eef83387d1eab6c785d1cf3d05d0ccfea39b2cabf3a9d74c6675744e5da68f3a",
+            "size_bytes": 896
+          },
+          "world": {
+            "path": "world_files/world_5090.world",
+            "sha256": "b31f980f066614d92df8c985c63920e41bc2d08acec9244af7de8cedf90ab06a",
+            "size_bytes": 686459
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 756199137,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5090
+      },
+      {
+        "accepted_attempt": 25,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5091",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5091.npy",
+            "sha256": "0d69652b332c6b5a38a84ad317faf9ecb1697ebf13e629290cb923a43a91ebac",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5091.npy",
+            "sha256": "0eccf6f91db4dadc0d2dbad8135d30a589edef7092de8e196e22b5b01a6e64b2",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5091.npy",
+            "sha256": "eb205a8459ca5d64b4ebfdfe082a64fb0e7dd32d0f18c2f78495b234399f4778",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5091.npy",
+            "sha256": "42da07a51c64f46a67a429042fa0909964e9a5aac5e94801c9ec44cb49f1488e",
+            "size_bytes": 720
+          },
+          "world": {
+            "path": "world_files/world_5091.world",
+            "sha256": "25ed84871590da7b8708237e9ceeb748efa60b4478613751721a4bc4c34c8419",
+            "size_bytes": 663260
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 47040167,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5091
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5092",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5092.npy",
+            "sha256": "7a20db85535c021fd7006d5f3ea4c9d18aa9857abe13bf57bc959b5d38bf5030",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5092.npy",
+            "sha256": "691a8b9b22570598dad4f172bad4c6136910718f126e86911c7362333741902e",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5092.npy",
+            "sha256": "1d4533ef035b9bbc96f84b4d0de33d6f26f435f85b0db807db18e632b75e28ab",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5092.npy",
+            "sha256": "84705c6e458c6bb30ba885c6df0b22a1493c1311fbcdda7df951b781ea96dc55",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5092.world",
+            "sha256": "a73f25657d6d6402c2b68a003dcf43f6f8501176649f3d23a4f4b92b658e8da2",
+            "size_bytes": 597881
+          }
+        },
+        "fill_percent": 0.25,
+        "generator_seed": 1717037133,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5092
+      },
+      {
+        "accepted_attempt": 985,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5093",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5093.npy",
+            "sha256": "56a504adabd87026491dc41bb39c2d3e720dd04ea7a75c8138333affa30f456a",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5093.npy",
+            "sha256": "79e7200df8da24581f89b57a9029dad873795f56b67a5438fad2d5a39a43b0b7",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5093.npy",
+            "sha256": "b47ede3ae8d3692adc85a01c32a2461bf9d3f8c705609dcba080605ad81afcc4",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5093.npy",
+            "sha256": "4434a20dbbb2f230f20ae5e15165c054b22c2171b00b41d3155d8c5f27e5e5ef",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5093.world",
+            "sha256": "01d96e7148bd212fd9bb7a3cbcbca6dee547098e0436eed9b8be1e5c4686fda3",
+            "size_bytes": 711767
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 4042553,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5093
+      },
+      {
+        "accepted_attempt": 1555,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5094",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5094.npy",
+            "sha256": "615e0bc18839fc027cc21c12fe10064d6fbec6025688b80226e3f59c55446d90",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5094.npy",
+            "sha256": "a9dd110dfdfd58b4e63185cb431fa5e959f2cb737504188fa7ec5d802c9d915f",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5094.npy",
+            "sha256": "0b568bd87dc4fef1e96c4cceb326a232e38e6d8c858db17c270655efff07b931",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5094.npy",
+            "sha256": "c7d9c6e9d43cdfa765ba520ef600690b3aab4396602b6d92b1aa73c0476aaa24",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5094.world",
+            "sha256": "1b489bb337df848c8969081b144e7797aec0e1cf9ed949f59b3e79a8693d10e8",
+            "size_bytes": 701222
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 102237787,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5094
+      },
+      {
+        "accepted_attempt": 468,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5095",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5095.npy",
+            "sha256": "6341289c51ae2944100c52d57ebf801c2b155f77589b6911d5332343ede387c7",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5095.npy",
+            "sha256": "bcf470293dc7ca185c49fa9ca910680b4749095937824951daea46709d72655a",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5095.npy",
+            "sha256": "b2919c62ef9f74151d00e39cac5ae322e55124ccc677c2b1c2cd1362bcdef4b8",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5095.npy",
+            "sha256": "77615bfa6df73240549d59aa075d8c51953f05a2b46aa9611baed1d5455b8501",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5095.world",
+            "sha256": "5dd028a379c23b698c92a6d705df9e0af7718a12fc701e0b63c8af22f867168c",
+            "size_bytes": 707549
+          }
+        },
+        "fill_percent": 0.3,
+        "generator_seed": 1135215283,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5095
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5096",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5096.npy",
+            "sha256": "042364ce2502bef1ca9776dd11441f9ea206ff7a17df912cdc41fad2e68e653e",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5096.npy",
+            "sha256": "28f7304d86f0c3f87cafecf8453bc7654d9ceb2c5a43d1d6983a368030f7f970",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5096.npy",
+            "sha256": "4e67e698a288f62d4b85e01157c2d77787345737dbf4cf83d8f360419b149984",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5096.npy",
+            "sha256": "5476d39e4f584ac82a4c0c05c5d6733e79f3639dfaf53d17053e3dc27714fe30",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5096.world",
+            "sha256": "a234b0f7d1aafa6068e657ad63eb6cff1e50adf9257863f91cbb6c54e2c7e79d",
+            "size_bytes": 414398
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 859621810,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5096
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5097",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5097.npy",
+            "sha256": "24341fd45173f2100ad4b4a226abc344ec6ca2bfe7d214814cced71f7ac0e8b0",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5097.npy",
+            "sha256": "b35b4b0c06373e25b84ada153f15e7aaabf641e75a114ececfd8145f63644a11",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5097.npy",
+            "sha256": "1f966171b874e81ee8c57daeadb903e5a01346783664c2c750e1db99ee0bbe0d",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5097.npy",
+            "sha256": "e90c70ad2d00f6275ee1df4be7161d93a1402ef5491ebe84621ebbe2d1926de8",
+            "size_bytes": 688
+          },
+          "world": {
+            "path": "world_files/world_5097.world",
+            "sha256": "f5bcd67403cf5111d16b03aad800974a5d22db90e14ec108162b1aa0548b59f1",
+            "size_bytes": 454469
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1787308989,
+        "rows": 30,
+        "smooth_iterations": 3,
+        "world_id": 5097
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5098",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5098.npy",
+            "sha256": "63bea58a015e8686d108933511a37708d81a59a16794a2131b37401eed456ccc",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5098.npy",
+            "sha256": "bdb73da089bd89992b1afef7907eadedc03ac5910b5c845bf51e1106647e578e",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5098.npy",
+            "sha256": "77ceed8fc74cf046a578b80cc75891ef6e7394a25c72215c5dd4b882f75445e5",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5098.npy",
+            "sha256": "56bb089818002c838d425d33529635983fae652ee6087b9a8b2908ba153a1100",
+            "size_bytes": 624
+          },
+          "world": {
+            "path": "world_files/world_5098.world",
+            "sha256": "07632909cb33d79577bcb34dab802b9637680fc3e424920771c3faf3b3c8d45e",
+            "size_bytes": 450251
+          }
+        },
+        "fill_percent": 0.15,
+        "generator_seed": 1382277200,
+        "rows": 30,
+        "smooth_iterations": 4,
+        "world_id": 5098
+      },
+      {
+        "accepted_attempt": 1,
+        "columns": 30,
+        "corpus_episode_id": "barn-sampled-predictive-tracker-v9-training-20260803-100/training/5099",
+        "files": {
+          "cspace": {
+            "path": "cspace_files/cspace_5099.npy",
+            "sha256": "5e1e33b7c8fa6a26cddd1723164dbf861c8599d370cb76db7a7c921ad853e861",
+            "size_bytes": 7328
+          },
+          "grid": {
+            "path": "grid_files/grid_5099.npy",
+            "sha256": "69629b3f283cdec2ef31416d85b0b93d6647df3a320578d3134fb3f4df1dce06",
+            "size_bytes": 7328
+          },
+          "metrics": {
+            "path": "metrics_files/metrics_5099.npy",
+            "sha256": "8bd280ce72e5babcd50678467812e905399f1df4350e23c747720e372390e878",
+            "size_bytes": 168
+          },
+          "path": {
+            "path": "path_files/path_5099.npy",
+            "sha256": "af18e39f3b10ac7d576127e11d97af47265258d34b06ba7a605877756ea87b84",
+            "size_bytes": 640
+          },
+          "world": {
+            "path": "world_files/world_5099.world",
+            "sha256": "a288d1314f87538887ad3f40d42072a8311e88a266d6a1ced5250594fdcde642",
+            "size_bytes": 507194
+          }
+        },
+        "fill_percent": 0.2,
+        "generator_seed": 2063385528,
+        "rows": 30,
+        "smooth_iterations": 2,
+        "world_id": 5099
+      }
+    ],
+    "generation_log_sha256": "20a3ed98a4011ab03aa12a2d34dcd29f93cc3c7d8cc68fb13021ff2544e28b06",
+    "world_count": 100
+  }
+}

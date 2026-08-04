@@ -197,6 +197,77 @@ def test_v8_transaction_rejects_json_writer_for_binary_artifact(tmp_path: Path) 
     )
 
 
+@pytest.mark.parametrize("tampered_kind", ["json", "binary"])
+def test_v8_completion_rejects_artifacts_changed_after_registration(
+    tmp_path: Path,
+    tampered_kind: str,
+) -> None:
+    identity, base_paths = _contract(tmp_path)
+    binary_path = base_paths.transaction_dir / "candidate.v8ae"
+    paths = replace(
+        base_paths,
+        binary_artifact_paths={"candidate_evidence": binary_path},
+    )
+
+    def execute(transaction: Any) -> None:
+        transaction.write_json_artifact("report", {"registered": True})
+        transaction.write_json_artifact("ledger_record", {"registered": True})
+        binary_path.write_bytes(b"registered binary evidence\n")
+        binary_path.chmod(0o444)
+        first = transaction.verify_binary_artifact("candidate_evidence")
+        assert transaction.verify_binary_artifact("candidate_evidence") == first
+
+        target = paths.artifact_paths["report"] if tampered_kind == "json" else binary_path
+        target.chmod(0o644)
+        if tampered_kind == "json":
+            target.write_bytes(canonical_json_bytes({"registered": False}))
+        else:
+            target.write_bytes(b"mutated binary evidence\n")
+        target.chmod(0o444)
+
+    with pytest.raises(V8TransactionError, match="changed before transaction completion"):
+        preflight_v8_transaction(identity=identity, paths=paths).run(execute)
+
+    outcome = _json(paths.outcome_path)
+    artifact_name = "report" if tampered_kind == "json" else "candidate_evidence"
+    assert outcome["status"] == "aborted"
+    assert outcome["artifacts"][artifact_name] is None
+    inspection = inspect_v8_transaction(identity=identity, paths=paths)
+    assert inspection.state is V8TransactionState.ABORTED
+    assert inspection.consumed is True
+
+
+def test_v8_completion_rejects_unregistered_external_artifact_without_blessing_it(
+    tmp_path: Path,
+) -> None:
+    identity, base_paths = _contract(tmp_path)
+    binary_path = base_paths.transaction_dir / "candidate.v8ae"
+    paths = replace(
+        base_paths,
+        binary_artifact_paths={"candidate_evidence": binary_path},
+    )
+
+    def execute(transaction: Any) -> None:
+        transaction.write_json_artifact("report", {"registered": True})
+        transaction.write_json_artifact("ledger_record", {"registered": True})
+        binary_path.write_bytes(b"never registered\n")
+        binary_path.chmod(0o444)
+
+    with pytest.raises(
+        V8TransactionError,
+        match="requires result artifact candidate_evidence to be registered",
+    ):
+        preflight_v8_transaction(identity=identity, paths=paths).run(execute)
+
+    outcome = _json(paths.outcome_path)
+    assert outcome["status"] == "aborted"
+    assert outcome["artifacts"]["candidate_evidence"] is None
+    assert binary_path.read_bytes() == b"never registered\n"
+    inspection = inspect_v8_transaction(identity=identity, paths=paths)
+    assert inspection.state is V8TransactionState.ABORTED
+    assert inspection.consumed is True
+
+
 def test_v8_transaction_records_abort_and_preserves_partial_evidence(tmp_path: Path) -> None:
     identity, paths = _contract(tmp_path)
     prepared = preflight_v8_transaction(identity=identity, paths=paths)
@@ -433,6 +504,30 @@ def test_v8_preflight_rejects_symlinked_artifact_parent(tmp_path: Path) -> None:
     ledger_parent.symlink_to(elsewhere, target_is_directory=True)
 
     with pytest.raises(V8UnsafePathError, match="symlink"):
+        preflight_v8_transaction(identity=identity, paths=paths)
+    assert paths.transaction_dir.exists() is False
+
+
+def test_v8_preflight_rejects_distinct_output_parents_with_one_inode(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    identity, paths = _contract(tmp_path)
+    real_snapshot = v8_transaction._snapshot_directory
+    aliased_parents = {
+        paths.transaction_dir.parent.absolute(),
+        paths.artifact_paths["ledger_record"].parent.absolute(),
+    }
+
+    def snapshot_with_alias(path: Path) -> Any:
+        snapshot = real_snapshot(path)
+        if path in aliased_parents:
+            return replace(snapshot, device=1234, inode=5678)
+        return snapshot
+
+    monkeypatch.setattr(v8_transaction, "_snapshot_directory", snapshot_with_alias)
+
+    with pytest.raises(V8UnsafePathError, match="distinct lexical output directories alias"):
         preflight_v8_transaction(identity=identity, paths=paths)
     assert paths.transaction_dir.exists() is False
 

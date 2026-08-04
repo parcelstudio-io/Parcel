@@ -212,9 +212,7 @@ def _prepare_normalized_scan(
             normalized.append(value)
             continue
         if not math.isfinite(value) or value < 0.0:
-            raise ValueError(
-                f"range {index} must be non-negative, NaN, or positive infinity"
-            )
+            raise ValueError(f"range {index} must be non-negative, NaN, or positive infinity")
         normalized.append(value)
     return tuple(normalized), angle_min, angle_increment
 
@@ -242,12 +240,8 @@ def _maximum_swept_closing_speed(
     # cos(phase) reaches one exactly when the swept interval contains any 2pi
     # multiple.  Checking integer bounds preserves the sign of the yaw sweep
     # without sampling or discretizing it.
-    first_alignment = math.ceil(
-        (lower_phase - _ALIGNMENT_EPSILON_RAD) / _TWO_PI
-    )
-    last_alignment = math.floor(
-        (upper_phase + _ALIGNMENT_EPSILON_RAD) / _TWO_PI
-    )
+    first_alignment = math.ceil((lower_phase - _ALIGNMENT_EPSILON_RAD) / _TWO_PI)
+    last_alignment = math.floor((upper_phase + _ALIGNMENT_EPSILON_RAD) / _TWO_PI)
     if first_alignment <= last_alignment:
         maximum_projection = 1.0
     else:

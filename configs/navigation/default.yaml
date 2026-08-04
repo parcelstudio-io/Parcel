@@ -2,7 +2,10 @@
 # Full MetaUrban city + pedestrians require a Conda Python 3.9 + GPU host.
 # See docs/NAVIGATION_CITY.md.
 
-active_model: stub_v0
+# grid_v1: rolling occupancy grid + A* over the calibrated raycast scan.
+# Degrades loudly (scan_missing_fallback note + warning log) to the point-goal
+# stub if the scan contract is absent.
+active_model: grid_v1
 models_root: configs/navigation/models
 pois_path: configs/navigation/cities/demo_pois.yaml
 

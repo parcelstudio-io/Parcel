@@ -1,9 +1,12 @@
 # Parcel AI brain and navigation research
 
-Research date and evidence cut-off: 2026-08-03
+Research date: 2026-08-03. Evidence cut-off: 2026-08-03T22:45:45Z.
 
-Repository status in this report was audited against the working tree on that
-date. “Implemented” means code is connected to the normal Parcel runtime;
+Repository status in this report was audited at committed revision
+`ce3814a0534d54c983f16614bd1ddb20dc1974b4` plus the explicitly dirty working
+tree and the immutable V8 and V9 training artifacts identified below. This is
+not a claim about a clean committed snapshot. “Implemented” means code is
+connected to the normal Parcel runtime;
 “tested” means a deterministic or fake-provider test exercised the contract;
 “measured” means a run artifact records the result. None of those labels, by
 itself, means that a live open-weight model has passed the complete companion
@@ -24,9 +27,11 @@ The recommended near-term design is:
 2. Keep the implemented, bounded `IntentFrame` router. It decides only whether a turn is
    conversation, a direct skill, a deliberative task, or a clarification. It
    never controls motion, and it never replaces the original transcript.
-3. Keep one resident conversational/reasoning backbone, initially the installed
-   Gemma 4 26B-A4B, but invoke it in two constrained modes: a low-latency
-   conversation/direct-skill mode and a deliberate typed-plan mode.
+3. Keep one admitted shared conversational/reasoning model profile, initially
+   the installed Gemma 4 26B-A4B, loaded when that profile is active and invoked
+   in two constrained generative modes: a short-budget conversation/social
+   `AgentDecision` mode and a deliberate typed `PlanIR` mode. Reviewed direct
+   skills bind deterministically before either LLM.
 4. Keep the separate `PlanIR` contract and deterministic task executive for
    multi-step work. The executive validates preconditions, arbitrates
    interrupts, locks robot resources, observes progress, and decides whether a
@@ -45,11 +50,11 @@ navigation, execution, safety, and voice have distinct contracts and
 timescales. It is not two uncoordinated LLMs competing to decide what the dog
 does.
 
-The strongest public systems support this layered direction. Google's current
+The publicly documented systems reviewed here support this layered direction. Google's current
 robotics stack explicitly separates embodied reasoning from a
 vision-language-action executor; Figure describes slow semantic reasoning above
 faster visuomotor and whole-body layers; InternVLA-N1 runs asynchronous System 2
-reasoning above a fast navigation policy; and the best documented BARN systems
+reasoning above a fast navigation policy; and BARN 2026's documented physical finalists
 still combine global search, local planning, and a safety mechanism. None of the
 cited systems delegates the entire robot to a conversational model. They
 establish the value of hierarchy, not that one shared conversation/planning
@@ -66,6 +71,19 @@ Helix 02 and InternVLA-N1 separate semantic and embodied timescales. They are
 evidence for contracts, authority, and asynchronous execution—not evidence for
 how many text-model weight sets Parcel should load for conversation and
 planning.
+
+Two omitted counterexamples make that conclusion stronger rather than weaker.
+[Robix](https://robix-seed.github.io/robix/) uses one high-level vision-language
+model for interaction, reasoning, and planning while a separate controller
+executes atomic commands. [OneTwoVLA](https://arxiv.org/abs/2505.11917) goes
+further in a manipulation setting: one model adaptively chooses whether to
+reason or emit an action chunk, retaining its latest reasoning between critical
+events. Both show that distinct cognitive roles do not inherently require
+distinct weight sets. Neither shows that a conversational model should own a
+Go2 controller: Robix has no public checkpoint linked by its official page,
+and OneTwoVLA's public code/data target manipulation rather than Parcel's
+camera/LiDAR navigation contract. Their transferable lesson is event-triggered
+deliberation inside a hierarchy, not end-to-end motor authority.
 
 ## Scope and evidence standard
 
@@ -94,8 +112,9 @@ The principal candidates used later in the report are classified as follows:
 | --- | --- | --- |
 | Installed Gemma 4 26B-A4B | Reproducible candidate | Official Apache-2.0 Q4 weights are installed. It passed the five-case frozen semantic-plan gate on CPU and full CUDA, and the accepted plans passed the supported deterministic headless gate; neither result proves real sensors or Go2 hardware. |
 | Ministral 3 8B Instruct/Reasoning GGUF | Reproducible rejected controls | Both official Apache-2.0 Q4_K_M artifacts are installed, exact-hash verified, and measured at 35/35 CUDA layers. Instruct was rejected as both PlanIR and conversation incumbent. Reasoning failed a predeclared one-case frozen PlanSketch compatibility gate before semantic scoring; it is not a five-case baseline. |
-| CityWalker | Research candidate | Code and a locally hashed checkpoint exist, but RGB trajectory adaptation and release-artifact terms still need validation. |
-| FunctionGemma, `gpt-oss-20b`, Qwen3.6, Kimi-VL | Research candidates | Public weights exist; `gpt-oss-20b` is the first hardware-plausible general-reasoning challenger for a planner-only replacement experiment, not an admitted robotics specialist. Every candidate still needs Parcel-specific tuning or quality, runtime, peak-memory, and license/usage-policy review. |
+| CityWalker | Research candidate | Code and a locally hashed original checkpoint exist, but RGB trajectory adaptation remains absent. Repository code is Apache-2.0; the exact GitHub v1.0 checkpoint is now conservatively locked as `NOASSERTION`, while a later official converted model is explicitly Apache-2.0. |
+| FunctionGemma, `gpt-oss-20b`, Qwen3.6, Kimi-VL | Research candidates | Public weights exist; `gpt-oss-20b` is the first prioritized hardware-plausible general-reasoning challenger for a planner-only replacement experiment, not an admitted robotics specialist. Every candidate still needs Parcel-specific tuning or quality, runtime, peak-memory, and license/usage-policy review. |
+| RoboBrain 2.5 4B | Research candidate | Official Apache-2.0 code and a 9.67 GB BF16 checkpoint are public. The model card exposes visual grounding, image-pointing navigation examples, 3D trace prediction, and progress estimation, but no Parcel adapter, desktop latency, dynamic-Go2, or collision-avoidance result exists. It is a semantic-grounding/monitoring shadow candidate, not a controller. |
 | InternVLA-N1 and NaVILA | Research candidates | Relevant Go2/navigation code and weights exist, but checkpoint/data terms and dependency isolation are unresolved. |
 | CE-Nav and S2E | Research candidates | Public controller code/checkpoints are unusually relevant to Go2 waypoint execution, but each needs isolated dependency, license/artifact, sensor-contract, and held-out safety validation. |
 | VLFM, ConceptGraphs, ViNT/NoMaD | Research candidates | Reproducible components exist, but their sensor/goal contracts do not directly implement Parcel's companion task. |
@@ -106,6 +125,7 @@ The principal candidates used later in the report are classified as follows:
 | BARN competition systems | Architecture evidence only | Their planner structure is informative; their standardized Jackal embodiment and contest protocol are not a Parcel checkpoint. |
 | FSR-VLN and Nav-R1 | Architecture/research evidence only | Both report fast/slow navigation designs. FSR-VLN depends on a prebuilt RGB-D/LiDAR map and proprietary reasoning components; Nav-R1 publishes a sparse research release whose model card has no documentation and whose repository does not state code terms. Neither is an admitted Parcel dependency. |
 | Qwen-VLA | Architecture evidence only | The paper reports a unified 4B-backbone/1.15B-action-decoder generalist, but the official repository currently publishes project information rather than runnable code or weights. Its broad action results do not establish a Go2 controller. |
+| Robix and OneTwoVLA | Architecture/research evidence only | Robix is direct evidence for a shared high-level interaction/planning model above a separate executor, but its official page links no code or weights. OneTwoVLA publishes MIT code and training data, but no official pretrained checkpoint is linked and its evaluated action space is manipulation. Both inform model-role and trigger design rather than a deployable Parcel policy. |
 
 Vendor demonstrations are cited as vendor-reported results, not independent
 validation. Benchmark scores are not directly comparable across different
@@ -123,15 +143,15 @@ those plans, and preserve the contracts while challengers are evaluated.
 | --- | --- | --- |
 | Sensor trust | **Implemented and tested** | Camera and LiDAR are the only admitted environment sensors. The LLM receives sensor freshness, bounded semantic entities, safety/task state, and capability flags; simulator coordinates and evaluator truth are deliberately omitted. Google Maps is disabled and has no trusted runtime path. |
 | Intent routing | **Implemented and frozen at contract level** | `DeterministicIntentRouter` preserves an exact transcript reference and SHA-256, acts only on final ASR, suppresses negated/hypothetical motion, and routes conversation, reviewed direct skills, deliberate plans, or abstention. The 15-case `parcel-companion-brain-v1` suite is a regression floor, not a broad natural-language benchmark. |
-| Conversation/planning model | **Provider and contract split implemented; CPU/full-CUDA plan gates and a live conversation calibration measured; concurrent scheduling not implemented** | Gemma 4 26B-A4B is the incumbent behind separate fast-conversation and PlanIR calls. Its frozen full-CUDA PlanIR run passed 5/5 with 855.379 ms median TTFT and 5,657.459 ms median usable-plan latency. On the new ten-case conversation calibration it parsed 10/10, passed 6/10 machine cases and 9/10 structured-safety checks, with 348.843/1,236.951 ms median TTFT/full-call latency; no human review exists. The runtime exposes separate provider objects, role health, and latency attribution, but one `_agent_lock` serializes every non-E-stop model turn and the pinned server launcher does not explicitly admit multiple inference slots. A plan can therefore queue conversation for multiple seconds even with separate endpoints; E-stop and lower control loops remain independent. Ministral 3 8B Instruct reached 101.944 ms TTFT but only 5/10 conversation cases and 3/5 PlanIR, with no full-call latency win. Ministral Reasoning failed its first frozen PlanSketch compatibility case after exhausting 1,024 tokens in 12,262.204 ms; the remaining cases were not run. Neither is promoted. The plan/conversation samples are only five/ten warm sequential cases—too small for stable p95 claims—and omit cold load, concurrent queueing, ASR/TTS/audio, simulator load, sampled peak VRAM, human companion review, and physical episodes. |
-| Plan contract and admission | **Implemented, compiled, and tested; compact challenger rejected for now** | Strict `IntentFrame`, `PlanIR`, `PlanSketch`, `ObservationSnapshot`, and `ExecutionResult` schemas reject unknown fields. A contextual schema is a decode hint; after decode, the trusted envelope is authoritative over source turn/task/revision/interrupt. The compiler owns step IDs, resources, required/conditional preconditions, non-navigation success policy, contract timeouts, one safe-stop attempt, and minimum interruptibility. The model still owns skill order, bounded arguments, and `NavigateTo` grounding, so invalid semantics fail closed. Raw velocities, joints, coordinates, and model-authored priority remain forbidden. PlanSketch reduced canonical JSON bytes 73.2126% offline and, live on full CUDA, reached 2,037.060 ms median full-call latency, 153 median completion tokens, and 417 median output bytes—but accepted only 3/5 versus PlanIR's 5/5, so it remains opt-in and unpromoted. |
+| Conversation/planning model | **Provider and contract split implemented; CPU/full-CUDA plan gates and a live conversation calibration measured; concurrent scheduling not implemented** | Gemma 4 26B-A4B is the incumbent behind separate short-budget conversation and PlanIR calls. Its frozen full-CUDA PlanIR run passed 5/5 with 855.379 ms median TTFT and 5,657.459 ms median usable-plan latency. On the new ten-case conversation calibration it parsed 10/10, passed 6/10 machine cases and 9/10 structured-safety checks, with 348.843/1,236.951 ms median TTFT/full-call latency; no human review exists. The runtime exposes separate provider objects, role health, and latency attribution, but one `_agent_lock` serializes every non-E-stop model turn and the pinned server launcher does not explicitly admit multiple inference slots. A plan can therefore queue conversation for multiple seconds even with separate endpoints; E-stop and lower control loops remain independent. Ministral 3 8B Instruct reached 101.944 ms TTFT but only 5/10 conversation cases and 3/5 PlanIR, with no full-call latency win. Ministral Reasoning failed its first frozen PlanSketch compatibility case after exhausting 1,024 tokens in 12,262.204 ms; the remaining cases were not run. Neither is promoted. The plan/conversation samples are only five/ten warm sequential cases—too small for stable p95 claims—and omit cold load, concurrent queueing, ASR/TTS/audio, simulator load, sampled peak VRAM, human companion review, and physical episodes. |
+| Plan contract and admission | **Implemented, compiled, and tested; compact challenger rejected for now** | Strict `IntentFrame`, `PlanIR`, `PlanSketch`, `ObservationSnapshot`, and `ExecutionResult` schemas reject unknown fields. A contextual schema is a decode hint; after decode, the trusted envelope is authoritative over source turn/task/revision/interrupt. The compiler owns step IDs, resources, required/conditional preconditions, non-navigation success policy, contract timeouts, one safe-stop attempt, and minimum interruptibility. The model still owns skill order, bounded arguments, and `NavigateTo` grounding, so invalid semantics fail closed. Raw velocities, joints, coordinates, locomotion-backend selection, and model-authored priority are absent from model-facing tools and fail closed if emitted. PlanSketch reduced canonical JSON bytes 73.2126% offline and, live on full CUDA, reached 2,037.060 ms median full-call latency, 153 median completion tokens, and 417 median output bytes—but accepted only 3/5 versus PlanIR's 5/5, so it remains opt-in and unpromoted. |
 | Long-lived execution | **Implemented and integrated** | `TaskExecutive` owns task revision, checkpoints, resource leases, interruption, retries, and typed results. `SemanticTaskRuntimeAdapter` currently admits `NavigateTo`, `FollowFormation`, `OrbitOwner`, `MoveRelative`, `Hold`, `Vocalize`, and `AskClarification`, and verifies completion from controller state instead of trusting model narration. Pose/gesture and battery-safe-pose contracts exist in the registry but are not admitted by the current runtime adapter. |
-| Embodied PlanIR execution | **Measured in deterministic headless simulation** | The frozen accepted plans passed all 4/4 supported cases. One compound case is explicitly unsupported because the fixed-owner world cannot exercise moving-owner `FollowFormation`; its orbit prefix still executes but cannot be laundered into a pass. Across five cases the gate ran six physical skills and 1,137 simulator steps with zero collisions, zero timeouts, and 0.883147 m minimum clearance. This is kinematic MuJoCo-geometry evidence, not contact physics, sensor accuracy, or Go2 hardware evidence. |
+| Embodied PlanIR execution | **Measured in deterministic headless simulation with idealized semantic perception** | The frozen accepted plans passed all 4/4 supported cases. One compound case is explicitly unsupported because the fixed-owner world cannot exercise moving-owner `FollowFormation`; its orbit prefix still executes but cannot be laundered into a pass. Across five cases the gate ran six physical skills and 1,137 simulator steps with zero collisions, zero timeouts, and 0.883147 m minimum clearance. The controller receives geometry-derived oracle semantic tracks constrained by camera-like range/FOV, so this is kinematic planning/controller evidence—not rendered-camera detection, association, sensor accuracy, contact physics, or Go2 hardware evidence. |
 | Owner-follow formation | **Implemented and tested at controller level** | Passive camera tracks estimate the owner's direction of travel, filter outliers, require minimum displacement/speed and multiple updates, reset on owner-ID change, expire stale evidence, stage around the owner keep-out, and stop on LiDAR/person risk. This estimates motion heading, not a stationary person's body orientation; behind formation must fail closed while that evidence is absent. |
 | Control and safety | **Implemented below the brain; physical commissioning pending** | Manual/E-stop arbitration, collision limits, watchdogs, and controller feedback remain authoritative. Stop deliveries are generation-ordered so delayed bookkeeping from an older asynchronous E-stop cannot overwrite a newer compensating StopMove feedback boundary; the reproduced close race passed 300/300 stress iterations after the fix. The Unitree adapter is designed to send bounded body-velocity setpoints to the closed-loop onboard Sport gait/balance controller, but axis/state-frame commissioning flags and allowed modes are intentionally unset, so the physical path currently fails closed. Parcel does not implement or claim Unitree's internal balance loop. |
 | Dynamic simulation | **Implemented baseline; procedural integration pending** | The MuJoCo/headless city has seeded pedestrians/cyclists, camera/LiDAR-derived proximity and time-to-collision signals, and deterministic task tests. `MetaUrbanNavEnv` is explicitly a kinematic scaffold: `use_metaurban=True` raises until a real isolated observation/action adapter exists. |
 | Voice and audio | **Text path implemented; full-duplex model is research-only** | Final transcript reasoning, cancellation, text logging, and latency stages exist. The host has a powered Bluetooth controller and an ALSA-visible analog capture device, but PipeWire exposes no active source and only a dummy sink; no Bluetooth headset is paired. Native duplex speech still must not authorize motion. |
-| External evaluation | **Proxy and local runtime-compatibility paths measured; no official protocol or rank evidence** | BARN's fixed-50 native proxy remains 44%/0.106267 and unpromoted. Safe-valley v5 failed its gate; fresh-corpus v6 tied its reference at 50% success/0.120294 with zero collisions but retained 4/30 timeouts, so it was also rejected without opening confirmation data. Upstream MPPI alone completed ROS/Gazebo world 0 at 0.1802. Parcel's calibrated-v2 hook removed the earlier `policy_no_translation` startup failure, entered a real evaluator trial, and produced one terminal public-world-0 row: timeout at 100.007 s, no collision, metric 0. A sensor-faithful offline replay matched the terminal pose within 0.059 m and strongly localized the later deadlock to the packaged legacy 0.8 m collision-brake profile suppressing 800 consecutive otherwise-forward commands, not to the LLM or trial-start calibration. The proposed v7 projected-cap follow-up was invalidated before corpus generation or policy execution when audit found that its globally nearest cluster could hide a farther positive-closing ray; its score is permanently null. This is a valid local Parcel baseline and post-run diagnosis, not a gain. Habitat's exact runtime now passes CUDA/EGL, simulator construction, public test-scene/navmesh load, four RGB-D renders, and three collision-free actions, but executed no PointNav goal, Parcel policy, evaluator, or metric. A 13-blocker source audit quarantines the current 3WE revision. None substantiates an official score or rank. |
+| External evaluation | **Proxy and local runtime-compatibility paths measured; no official protocol or rank evidence** | BARN's fixed-50 native proxy remains 44%/0.106267 and unpromoted. Safe-valley v5 and guard v6 failed their frozen gates. The v7 score is permanently null because its nearest-cluster invariant failed before execution. The single-use V8 development run then authenticated all 49,744 actions across 60 evidence files and passed all safety, provenance, and latency gates, but failed all three efficacy gates: reference and candidate were both 0/30 success, metric 0, and 80% timeout. V8 is rejected. V9 supervisory-gap S2 produced the first training-only gain—1/10 success and one fewer label-independent liveness failure—but failed seven frozen scratch-gate checks. S3 was rejected by static review without execution, and S4 remained 1/10 while increasing yaw churn and reducing efficiency; both are rejected. No 100-world training screen, development run, or holdout access is authorized. Upstream MPPI alone completed ROS/Gazebo world 0 at 0.1802; Parcel's one calibrated public-world-0 row remained a timeout/metric-zero compatibility baseline. Habitat's exact runtime passes a CUDA/EGL public-test-scene action smoke but no PointNav task or metric. A 13-blocker source audit quarantines the current 3WE revision. None substantiates an official score, rank, or top-decile claim. |
 
 ### Implemented end-to-end brain path
 
@@ -141,10 +161,10 @@ For a final transcript, the normal runtime now performs this sequence:
 exact final transcript
   -> deterministic route and provenance
   -> initial camera/LiDAR-only snapshot + runtime/context-filtered schema
-  -> direct reviewed skill, fast conversation, or Gemma PlanIR/opt-in PlanSketch mode
-  -> strict schema decode
-  -> trusted context binding
-  -> deterministic PlanIR binding or PlanSketch-to-PlanIR compilation
+  -> direct skill: deterministic argument binding; or
+     conversation: short-budget AgentDecision schema decode; or
+     task: deliberate Gemma PlanIR/opt-in PlanSketch decode and trusted binding
+  -> deterministic PlanIR binding or PlanSketch-to-PlanIR compilation when planning
   -> fresh camera/LiDAR-only snapshot for admission
   -> fail-closed PlanValidator
   -> TaskExecutive acceptance/revision/interrupt policy
@@ -338,22 +358,386 @@ records `invalidated_pre_execution`, and both its generator and runner now fail
 before writes. IDs 3000--3049 and the v7 seed namespace remain retired rather
 than being silently reused.
 
-The successor must be labeled a final-shield replacement rather than a
-one-YAML-leaf ablation. It needs two isolated source identities: the baseline
-must execute from the byte-exact historical bundle `75f7ff4d...7813`, while the
-candidate may apply an allowlisted all-ray shield patch. The cap must inspect
-all 720 normalized rays. For each ray it must bound the maximum positive
-closing component while the body velocity rotates through the commanded yaw
-over `tau >= max(reaction horizon, control period)`, then choose the most
-restrictive scale. The evaluator must independently certify every published
-candidate action against the same mathematical invariant, require zero
-certificate violations and zero proxy collisions, and exercise at least one
-case where the limiting ray is not globally nearest. This is an observed-ray,
-circular-proxy contract—not proof for the Unitree's noncircular body or unseen
-obstacles. A new corpus may be frozen only after the policy-isolation test,
-tangential-nearest/forward-farther regression, tangent-plus-turn regression,
-ray-permutation and ray-monotonicity properties, malformed-scan fail-closed
-tests, and metric/counter recomputation all pass.
+V8 implemented that successor as a final-shield replacement, not a YAML-only
+ablation. The reference is the byte-exact historical package
+`75f7ff4dfbf45d36f67cdf3eb3eac6a7e9d05abf48350db449ca23d93b597813`;
+the candidate is isolated package
+`189ac31f0f6a461da9e10fad2ac21b2bc3a485a4d5245c517b1492b2a16eb7d9`.
+Its allowlisted source delta examines all 720 normalized rays, accounts for the
+commanded yaw sweep over the reaction/control horizon, and chooses the most
+restrictive positive-closing component. An evaluator-owned certifier checks the
+published action independently. Before corpus freeze, the complete repository
+suite passed 919 tests; the focused V8 suite passed 193 tests and covered the
+tangential-nearest/forward-farther, tangent-plus-turn, ray permutation,
+monotonicity, malformed-scan, transaction, and evidence mutations.
+
+The single-use, paired development run
+[`barn-v8-development-20260803-run01`](../evals/external/development/barn_all_ray_shield_v8/results/single-use-development-transaction/report.json)
+completed at 2026-08-03T19:57:07Z. The frozen 30-world corpus SHA-256 is
+`4b80e48fd19db59b372cd98aa002dcfe6a32387e2810e79cc58a102f91a40597`;
+the read-only [manifest](../evals/external/development/barn_all_ray_shield_v8/split.json)
+SHA-256 is
+`09985b61d6964da01056931647b7ebe69db726b5ae7a7a4356bbdf60534a9550`.
+Evaluator, adapter, model, Python/NumPy runtime, calibration, seeds, worlds, and
+counterbalanced pair order were held fixed. The outcome was a completed
+`development_gate_failed`, not an abort:
+
+| V8 development measure | Historical reference | All-ray candidate |
+| --- | ---: | ---: |
+| Success | 0/30 | 0/30 |
+| Navigation metric | 0.000000 | 0.000000 |
+| Collision rate | 0% | 0% |
+| Timeout rate | 80% | 80% |
+| Controller-step p99 | 30.981539 ms | 31.685694 ms |
+| Minimum signed body clearance | 0.466801 m | 0.479924 m |
+| Mean final goal distance | 8.576011 m | 8.523303 m |
+| Mean traveled distance | 1.493660 m | 1.555203 m |
+
+V8 passed 16/19 frozen gates: zero collisions, zero observed-return certificate
+violations, zero translation when perception was unavailable, the 0.475 m
+candidate clearance floor, both latency limits, exact one-factor/runtime
+identity, counterbalanced pairing, and complete immutable evidence. It changed
+the first action under an identical observation in 20 paired episodes and
+recorded 333 actions where the globally nearest ray was not the limiting ray.
+All 49,744 issued actions in 60 binary artifacts were verified. It failed only
+the three efficacy gates: at least three success gains, at least +0.10 success
+rate, and at least +0.01 navigation metric.
+
+The negative result is diagnostically sharper than the aggregate score. The
+candidate finished closer to the goal in 19 pairs, farther away in one, and
+identically in ten, but both policies had the same six startup timeouts and 23
+`navigation_no_progress` terminal decisions. A later read-only audit of the
+immutable final-action evidence corrected an important instrumentation claim:
+V8 did **not** remove the reference's 20 physical translation stalls. It
+removed the literal legacy `obstacle_stop` label used by the harness's stall
+counter. Because every normalized scan contained unavailable bins, the shield
+reported `all_ray_observed_returns_only_incomplete_scan` before reporting its
+hard-boundary state; the note parser therefore counted zero candidate long
+shield stalls even while final `vx` remained zero for hundreds of ticks.
+
+The 30 candidate failures partition exactly as follows:
+
+| V8 candidate failure mode | Count | Evidence-backed mechanism |
+| --- | ---: | --- |
+| Startup route loss | 6 | `partial` becomes `no_path`; rotate-only recovery never crosses the evaluator's 0.1 m startup threshold despite 1.781 m private initial clearance |
+| Post-start route loss | 4 | after 0.5--1.4 m of progress, a replan flips the route heading by roughly 155--180 degrees and then becomes `no_path`; recovery rotates for an 800-tick stationary tail |
+| Hidden all-ray boundary stall while tracking | 20 | a valid route remains, but one off-axis positive-closing return at approximately 0.8 m forces the all-ray translation scale to zero while the tracker continues proposing the same incompatible path direction |
+
+In the dominant 20 worlds, the limiting return was 37.3--60.8 degrees off the
+forward axis. This is not evidence that the all-ray invariant is wrong: the
+invariant correctly vetoed its proposed vector and produced zero certificate
+violations. It is evidence that a scalar final shield cannot create a new
+trajectory. The global grid treats approximately 0.42 m as hard inflation,
+while the downstream translation boundary is 0.8 m in the normalized LiDAR
+frame. A point-waypoint tracker can therefore pursue a globally valid route
+that its final safety layer will never admit.
+
+V9 consequently retains the V8 shield and independent certifier but changes
+one tracker subsystem above them. Plain Regulated Pure Pursuit is not enough:
+its curvature, approach, and collision-horizon regulation can slow or reject
+one reference-path arc, but it does not search a neighboring corridor. Rotation
+Shim, Graceful convergence, and velocity smoothing likewise cannot repair an
+infeasible route geometry. The selected hypothesis uses an RPP-style nominal
+sequence only as a warm start, seeds additional candidates from scan-visible
+gaps, rolls bounded forward/yaw trajectories, hard-rejects candidates that
+violate the same observed-return boundary, and scores the survivors for route
+progress, path agreement, clearance, smoothness, and commitment continuity.
+The BARN profile remains forward-only (`vx >= 0`, `vy = 0`); Parcel retains
+`vy` in its Go2/manual interface but does not use strafing as nominal
+destination motion.
+
+V9 must use fresh identities rather than rerun V8: IDs 5000--5099 are
+rerunnable, evidence-ineligible training worlds; 5100--5129 are single-use
+development; and 5130--5149 are an unmaterialized operational holdout recipe.
+The exact rejected V8 candidate bundle is the experimental control, not a
+promoted policy. A new candidate is derived from that content-addressed bundle
+with only the tracker hook and implementation allowlisted; configuration,
+global planner, pipeline, collision logic, final shield, adapter, evaluator,
+and runtime remain byte-identical. The gate adds label-independent stationary
+runs, structured shield-veto counts, no-progress reductions, and a required
+safe 0.5 m escape witness to the prior safety, efficacy, provenance, and p99
+limits. A three-of-30 paired-gain development threshold is only a hill-climb
+screen—under zero regressions it is not independently significant at 0.05—and
+cannot support an official or top-decile claim.
+
+The immutable artifacts are bound by SHA-256: report
+`048335b68d4fdd954fa1896a7f6d115ab97d1bb35a4993702fe8ac193b41bbba`,
+[evidence index](../evals/external/development/barn_all_ray_shield_v8/results/single-use-development-transaction/evidence-index.json)
+`f37da368cc46a6f62fa47f197e3826449e27a7e5182a02f5228005d30f5fd92c`,
+[ledger](../evals/external/development/barn_all_ray_shield_v8/results/ledger/single-use-development-ledger-record.json)
+`b74339c683a0c0351bf868cc49600cb492f24fa98f4787188a1bd66b1920dd80`,
+claim `a4f695b12179de643fb5540912298c2b531709afc346512be1ab14f5376591c3`,
+and outcome
+`40757530d6ad22a232781cc4c6b61dd28f9f5bb70b361bcc32a1321a4554472c`.
+The result explicitly records `official_score=false`,
+`leaderboard_claim=false`, `holdout_authorized=false`, and
+`holdout_evaluated=false`. Holdout IDs 4030--4049 remain only an
+unmaterialized, non-cryptographically-sealed operational recipe; they are not a
+secret holdout and were not generated or inspected.
+
+### V9 training screens: one success is not yet a promotable policy
+
+Four V9 challengers have now completed the same counterbalanced ten-world
+screen on training IDs 5000--5009. These IDs are a rerunnable,
+evidence-ineligible slice of the frozen 100-world V9 training corpus; none of
+the runs is promotion evidence, an official score, or a leaderboard result.
+All four used one trial per world and compared a content-addressed tracker-only
+challenger against the exact rejected V8 all-ray bundle. The global planner,
+sensor normalization, final V8 shield, independent action certifier, adapter,
+evaluator, configurations, seeds, and alternating arm order remained fixed.
+V9 development IDs 5100--5129 and operational-holdout IDs 5130--5149 remain
+unmaterialized and unrun.
+
+The first challenger was package
+`c68bb69c247404d0deee28f26d8000200f73aeb336fb9bb0cafd0f0c3b510833`.
+Its immutable [training report](../evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v9-training-c68bb-screen10-20260803-run01/report.json)
+has SHA-256
+`ec76ac5895a8a4f3afb75447a2a1c60e0eac77fba25f731829caa3d4492193ed`;
+the [label-independent analysis](../evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v9-training-c68bb-screen10-20260803-run01/analysis/label-independent-liveness-v1.json)
+has SHA-256
+`89f4ed164a5532f09ed6989e634424e24085b98f5cb0cb73f1b693e3f52f7047`.
+The second was the more conservative supervisory-gap S1 package
+`841597cdb34920506f1c41fd1989faeea04416e616548361868a9f1d3bfd0172`.
+Its immutable [training report](../evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v9-training-supervisory-gap-s1-841597-screen10-20260803-run01/report.json)
+has SHA-256
+`c70e2a8d42c1c6890a1b657e620142b308a36d270b7bafab281a8be8cd8f9e28`;
+the corresponding [label-independent analysis](../evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v9-training-supervisory-gap-s1-841597-screen10-20260803-run01/analysis/label-independent-liveness-v1.json)
+has SHA-256
+`d17e1dcefd7503889007d5570cc05e7221097e341644385746bab517f7b0d4c3`.
+The third was supervisory-gap S2 package
+`68e3e66638aea3549bb26618c6b29e02a8e2a309726dddc55c4ef53ad5a0159c`
+with manifest
+`04867ea70a7c4f7f0d9f6383815e2d592df635eafb2d8833e193f70d4de4dad7`.
+Its immutable [training report](../evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v9-training-supervisory-gap-s2-68e3e6-screen10-20260803-run01/report.json)
+has SHA-256
+`3ccce81f675a7556fa9618cb8c14dfea1ff5f0d35cd17732699dcaa49157962d`;
+the [label-independent analysis](../evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v9-training-supervisory-gap-s2-68e3e6-screen10-20260803-run01/analysis/label-independent-liveness-v1.json)
+has SHA-256
+`1cc259ed55ee96ccfae9d784d9734924a7537f0e9da9b80418c05cc645a6ff9f`.
+
+S3 was a deliberately frozen but **unexecuted** preflight candidate. Static
+review found that a non-emergency hold could publish a yaw state inconsistent
+with its slew state, an exhausted search could restart on unchanged route
+evidence, and raw-route fallback could select a point behind the robot. Its
+package `258e9a33e706babe236dd8bd517839c6ddc085ccbfc750532f1a0ce7baeec1a6`
+and freeze
+`88b18be078b042966b4e7c02ea2ba84dc93c750a37fd526e77a4e9ec795088ca`
+are retained as negative design evidence; no simulator metric exists and none
+is inferred.
+
+S4 corrected those three defects before execution. Its package is
+`3c7396633e5b5df611e343d6ca8c5cf253e1bc975019a524394c48ffb7f3fec9`
+with manifest
+`a80c074cb3a23148c24b4a5b217c7e9fd744ef863d635f01e9e9b112a43e6b29`
+and freeze
+`a26c32c92f85bd4e3d63f042578d8a5c9b3d66ef8c6690dde91a00797a140b9c`.
+The immutable [training report](../evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v9-training-supervisory-gap-s4-3c7396-screen10-20260803-run01/report.json)
+has SHA-256
+`67723082d577ec8384788faa1d8e71d498ce9c84d7aafc992bacddf5d24b54bf`;
+its [label-independent analysis](../evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v9-training-supervisory-gap-s4-3c7396-screen10-20260803-run01/analysis/label-independent-liveness-v1.json)
+has SHA-256
+`6909ad2e20ada833a0835aa2492bcf2ef4f6d5847e282ccded3ac3ee5e7e22d7`.
+
+| Ten-world training measure | V8 experimental control | Initial sampled tracker c68 | Supervisory-gap S1 | Supervisory-gap S2 | Supervisory-gap S4 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Success / navigation metric | 0/10 / 0.000000 | 0/10 / 0.000000 | 0/10 / 0.000000 | **1/10 / 0.018911** | 1/10 / 0.012500 |
+| Terminal mix | 2 startup timeouts, 8 timeouts | 10 timeouts | 10 timeouts | **1 success, 9 timeouts** | 1 success, 9 timeouts |
+| Mean maximum goal progress | 1.759759 m | 1.534954 m | 2.094683 m | **2.828198 m** | 2.751902 m |
+| Mean net goal progress | 1.759759 m | 1.513701 m | 1.993268 m | **2.642302 m** | 2.476663 m |
+| Mean final goal distance, lower is better | 8.240241 m | 8.486299 m | 8.006732 m | **7.357698 m** | 7.523337 m |
+| Mean traveled distance | 1.833977 m | 1.844547 m | 4.409941 m | 6.034672 m | 6.407573 m |
+| Mean goal-progress efficiency | 0.855972 | **0.871212** | 0.536889 | 0.504140 | 0.395631 |
+| Minimum signed obstacle clearance | 0.479921 m | 0.480072 m | **0.511160 m** | 0.480056 m | 0.480067 m |
+| Controller-step p99 | 24.490--24.496 ms | 32.134731 ms | 24.223484 ms | **23.513026 ms** | 26.629506 ms |
+| Policy stop latches / rate | 8 / 0.8 | 5 / 0.5 | **1 / 0.1** | 5 / 0.5 | 6 / 0.6 |
+| Label-independent liveness failures | 10/10 | 10/10 | 10/10 | **9/10** | 9/10 |
+| Moving-translation / yaw-only actions | 561 / 2,007 | 1,523 / 7,021 | **3,325 / 4,549** | 3,049 / **4,123** | 3,533 / 5,691 |
+| Longest stationary run | 799 steps | 800 steps | 771 steps | 800 steps | 74 steps |
+
+The c68 result rejects the idea that a larger amount of sampled turning is by
+itself useful recovery. It issued 7,021 yaw-only actions, made less maximum and
+net progress than the control, finished farther from the goal, and converted
+the two control startup failures into ordinary timeouts without producing a
+single success or liveness gain. Its six physical safe-escape witnesses show
+that it could sometimes move at least 0.5 m while retaining the configured
+clearance and action certificates; they do not show that those escapes caused
+better terminal navigation.
+
+S1 is a real subsystem improvement but still a rejected policy. It eliminated
+candidate startup failures on the screen, more than doubled c68's
+moving-translation action count, reduced yaw-only churn, improved maximum and
+net progress, ended closer to the goal than the control, raised the observed
+clearance floor, and kept controller p99 below one 100 ms navigation period.
+It also produced seven physical safe-escape witnesses. Yet all ten episodes
+still failed: the label-independent taxonomy contains nine other long
+stationary stalls and one timeout without a long stall, exactly the same ten
+liveness failures as the control. Its 4.409941 m mean travel yielded only
+1.993268 m mean net goal progress. That gap is evidence of detour/commitment
+inefficiency, not successful navigation. Lower policy stop-latch rate cannot be
+treated as a win when physical trajectories still stall or wander.
+
+S2 supplies the first terminal and label-independent liveness gain in V9
+training, but it is not a promotion candidate. The table rounds for comparison;
+the exact S2 aggregate is 1/10 success, navigation metric
+0.01891066856766036, zero collisions, zero startup failures,
+0.4800559279141429 m minimum clearance, 2.828198355130386 m mean maximum
+progress, 7.357697889581092 m mean final distance, 6.03467178147187 m mean
+travel, 0.5041404783887322 mean goal-progress efficiency, 23.513026 ms
+controller p99, five policy stop latches, 4,123 yaw-only actions, and nine
+liveness failures—a reduction of one from the control. It succeeded in world 5002,
+finishing 0.996811 m from the goal after 9.003189 m maximum progress and
+9.099867 m of travel, with 0.989376 goal-progress efficiency and only 18
+maximum consecutive stationary steps. Those are real improvements, but the
+aggregate cost was long, inefficient motion and five policy stop latches. The
+derived scratch-gate decision, SHA-256
+`254d53ac946c19a5c73dcfc6651f7e2f9c6b25911c2d8d4c43d8ea34f0e3`,
+failed seven checks: the stop-latch ceiling, aggregate mean-efficiency floor,
+world 5009 final-distance ceiling, and the per-world travel and efficiency
+limits for both worlds 5007 and 5009. S2 is therefore rejected at the
+ten-world training screen. The 100-world training screen is not authorized;
+development IDs 5100--5129 and holdout IDs 5130--5149 remain unmaterialized and
+unrun. This result is not promotion evidence, an official result, or evidence
+of top-decile performance.
+
+S4 is also rejected. It retained S2's one success and zero collisions, removed
+S2's long holds in world 5000 (642 steps) and world 5005 (800 steps), and reduced its longest
+single stationary run to 74 steps. Those facts do not amount to better
+navigation. Compared with S2, nominal grid phases fell from 2,907 to 1,142,
+escape rotations rose from 2,339 to 5,073, yaw-only actions rose from 4,123 to
+5,691, mean efficiency fell from 0.504140 to 0.395631, and stop-latched worlds
+rose from five to six. Its locally recomputed scratch-gate decision, canonical SHA-256
+`e31ccf1704d12ff910c9b14d5fc7272755715f82e1784a8fc3b7371ccfa264d1`,
+failed 15 checks. Among them were the two-success and two-liveness-gain floors,
+the zero-stop-latch and yaw ceilings, aggregate progress/efficiency conditions,
+and per-world stationary/efficiency invariants. No larger training or
+development execution is authorized.
+
+World 5002 is a paired mechanistic trace witness rather than an aggregate guess. S2
+completed it in 281 actions, 27.68 seconds, and 9.10 m of travel at 0.98938
+goal-progress efficiency. S4 first interrupted an escape when its current
+direction fell to 0.795389 m against the immutable 0.8 m threshold. A small
+0.182054 m reduction in direct goal distance exceeded S4's 0.025 m
+"productive" threshold, so it immediately recommitted on the same detour side
+instead of handing control back to the still-live route. The resulting chain
+lasted through step 728, contained a 74-step translation-free interval, and
+finished successfully only after 874 actions, 86.98 seconds, and 11.67 m of
+travel at 0.77147 efficiency. Similar search-plus-rotation chains produced
+four liveness stalls in world 5007. S4 therefore converted holds into motion,
+but much of that motion was tangential churn rather than task progress.
+
+An unfrozen `supervisory_gap_s5` causal control now implements the narrow trace
+repair: a productive interrupted escape publishes one yaw-slew-safe braking
+frame, preserves its detour memory, resets the blocked-positive counter, and
+returns authority to ordinary route admission on the next frame; only a
+nonproductive interruption may flip side and restart search. Thirty-two focused
+tests cover that handoff, latch release, state consistency, and unchanged
+nonproductive behavior. It has no source contract, freeze, package identity,
+simulator run, metric, or promotion status. It is retained separately from the
+planner-profile experiment so their effects cannot be conflated.
+
+This conclusion does not depend on policy-authored diagnostic labels. For all
+four executed runs, the analysis fully reread and hash-chain checked every action
+artifact, independently recertified the published actions, recomputed every
+post-integration trace hash, and verified the one-to-one action/trace join. It
+classified liveness from odometry and issued actions and explicitly did not use
+policy notes. The retained evidence lacks pre-shield requested velocity and
+shield-scale fields, so null values were not counted as structured shield
+vetoes and the analysis does not manufacture a shield-causality claim. The
+physically observed liveness outcomes—ten failures for c68 and S1 and nine for
+both S2 and S4—therefore outrank more optimistic internal phase labels.
+
+#### What V9 changes about the split-brain decision
+
+These results strengthen the existing architecture recommendation while saying
+nothing in favor of a second serial text model. A conversation model can infer
+that “go to the sidewalk” is a navigation request, and a planner can bind it to
+`NavigateTo(sidewalk)` plus a semantic success relation. Neither operation
+selects a safe corridor around the obstacle currently visible in LiDAR. c68,
+S1, S2, and S4 received the same already-grounded metric goal; their different
+outcomes came from per-tick geometry, observation coverage, trajectory
+commitment, and progress recovery below PlanIR. Replacing the conversational backbone, or
+having Gemma paraphrase the request for another LLM, would not target the
+measured failure.
+
+The timing boundary is equally concrete. Parcel's navigation lane refreshes at
+10 Hz, so each decision is useful for approximately 100 ms. The retained Gemma
+PlanIR baseline needs 855.379 ms to first output and 5,657.459 ms to a complete
+usable plan at warm median—roughly nine and 57 navigation periods,
+respectively. S1's 24.223484 ms, S2's 23.513026 ms, and S4's 26.629506 ms
+measured controller p99s
+fit inside one period, but all three still need fresh camera/LiDAR and odometry again
+on the next period. A language decode therefore cannot be placed in the
+synchronous local-navigation loop even when it is semantically excellent.
+Variable queueing, token length,
+parse failure, and stale world state would otherwise pause obstacle reaction;
+fluency supplies no bounded stopping-distance or action-certificate guarantee.
+
+The correct split is consequently:
+
+1. conversation produces user-facing language and bounded social proposals;
+2. deliberate planning receives the **original transcript**, trusted task
+   state, and bounded semantic observations and emits a long-lived PlanIR goal;
+3. the executive owns task revision, interrupt policy, progress, and verified
+   completion;
+4. a classical or separately evaluated fast navigation policy refreshes a
+   timestamped local trajectory at navigation cadence; and
+5. an independent collision shield (the frozen V8 shield in these V9
+   experiments), controller watchdogs, and Unitree Sport remain authoritative
+   over every body command.
+
+A learned navigation model can still be valuable, but it belongs in the fourth
+lane as an asynchronous waypoint or short-trajectory proposer with stale-result
+rejection—not as the conversational LLM emitting the “next move.” The language
+planner may choose the next **semantic skill** at a task event or checkpoint;
+it must not choose the next 100 ms body command. Likewise, RL should optimize
+the training-only local-policy lane under the unchanged sensor/action/safety
+contract. S1 shows why progress-only reward is insufficient: it can buy more
+travel without terminal success. S2 sharpens the lesson: one real success and
+one fewer liveness failure still do not compensate for aggregate efficiency,
+stop-latch, and per-world wandering regressions. S4 adds that "more motion" is
+not a useful reward unless route progress, terminal success, and efficiency
+improve together. Any learned challenger needs
+terminal success, path efficiency, label-independent liveness, collision,
+clearance, deadline, and action-certificate gates together.
+
+For model-count ablations, keep the current deterministic router and shared
+Gemma modes as the language incumbent until a specialist wins its own frozen
+quality/latency gate. FunctionGemma remains a route-selector experiment and
+`gpt-oss-20b` remains a planner-only challenger; neither is a remedy for this
+local-control failure. The next executable navigation hypothesis should move
+one layer upward while retaining the same sensor/action/safety boundary. In the
+V8 control, eight training worlds efficiently approach almost exactly the
+0.48 m signed-clearance boundary and then latch, while worlds 5007 and 5009
+start with `no_path`. The grid planner's hard exclusion keeps the base center
+approximately 0.42 m from occupied LiDAR return cells, versus the shield's
+approximately 0.80 m normalized base-frame return boundary (approximately
+0.48 m signed body clearance).
+
+The pre-execution recommendation is a new content-addressed, config-only
+planner/shield-alignment profile derived from the exact V8 package. It keeps a
+0.10 m hard map margin so genuinely narrow but hard-safe routes remain
+representable, adds a non-lethal 0.48 m comfort margin with weight 8.0, and
+enables the already implemented sensor-only `observed_first` reachable-frontier
+mode. The comfort band targets shield-incompatible route preference; the
+frontier mode is required because a finite soft cost cannot change the hard
+connectivity that produces the two startup `no_path` cases. This combined
+profile is one predeclared planner contract, not a claim that either subsetting
+has independently won. All controller source, final shield, adapter,
+evaluator, kinematics, and velocity limits remain byte-identical. It must pass
+the same threshold contract used for S2/S4, with V10's exact candidate identity
+pinned, plus a synthetic latency preflight before its one training screen;
+until then it is an unexecuted hypothesis, not a result.
+
+If that profile fails, the next controller candidate should be a compact,
+clean-room version of the repeated BARN-winning classical pattern: global A*,
+corner-aware lookahead, footprint-width VFH* valleys scored by route/goal,
+clearance and heading history, explicit rotate-settle-translate hysteresis,
+clearance/curvature-aware speed scheduling, and bounded Bug-style progress
+recovery. Full TEB or MPPI integration has much greater dependency and
+reproducibility cost and does not first repair the measured planner/shield
+contract. Only a candidate that passes every efficiency, stop-latch,
+per-world, safety, provenance, and latency condition should advance to a larger
+training screen or be frozen for the single-use development run.
 
 These are deliberately called **native proxies**, never official BARN scores.
 The runner uses deterministic planar kinematics, one trial per public world,
@@ -386,6 +770,8 @@ developed systems.
 | [NaVILA](https://github.com/AnjieCheng/NaVILA) | Author-reported 88% overall success on a custom real-Go2 suite | A language/vision model may emit bounded high-level commands while a real-time locomotion policy executes | Custom results do not establish BARN, Habitat, safety, or license suitability |
 | [FSR-VLN](https://arxiv.org/abs/2509.13733) | Author-reported 80/87 target-retrieval success; 1.5 s fast retrieval and 5.5 s when slow VLM verification is invoked | Escalate to expensive spatial reasoning only when retrieval confidence or consistency requires it | Its mapped RGB-D/LiDAR office pipeline, GPT-4o use, and retrieval metric do not transfer directly to Parcel |
 | [Qwen-RobotNav](https://github.com/QwenLM/Qwen-RobotNav) | Author-reported R2R validation-unseen SR/SPL 72.1/66.6 and a 196 ms Go2 demo call | Keep a compact waypoint contract, task-specific context budget, trajectory summaries, and persistent evidence outside the model | The official repository explicitly says weights will not be released; the demo is not reproducible Parcel evidence |
+| [Robix](https://robix-seed.github.io/robix/) | Author-reported 92.5% average task progress with its in-house GR-3 controller across five internal real-robot task families | A shared high-level model can coordinate dialogue, planning, interruption, and progress while a distinct executor owns physical actions | Internal task progress and an unreleased model do not establish Go2, navigation, latency, or safety performance |
+| [OneTwoVLA](https://arxiv.org/abs/2505.11917) | Author-reported 87% average success across three long-horizon manipulation tasks, 20 trials per task, versus flat and fixed-interval dual-system baselines | Invoke slow reasoning at subtask completion, failure, ambiguity, or human intervention and reuse the latest admitted plan between events | Its manipulation comparison is not a test of two local text specialists, Parcel's contracts, or quadruped navigation |
 | [Gemini Robotics](https://deepmind.google/models/gemini-robotics/) and [Helix 02](https://www.figure.ai/news/helix-02) | Vendor-described reasoning/VLA and semantic/visuomotor/whole-body hierarchies | Give semantic planning, embodied execution, and balance different deadlines and authority | Proprietary demonstrations do not select an open-weight Parcel model |
 | [BARN 2026](https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf) | The organizer reports all top-three physical finalists used classical non-ML navigation stacks | Retain global search, local collision avoidance, speed control, and a final safety mechanism below learned semantics | Jackal parameters, footprints, and scores do not transfer to a Go2 |
 
@@ -395,6 +781,42 @@ completion, and a controller-owned safety envelope. Model count is secondary.
 This also explains why a planning specialist can be useful without making it a
 preprocessor for conversation, and why a conversational model can reply while
 having no authority to modify an active trajectory.
+
+### The strongest unified-model evidence still supports split authority
+
+Robix is the closest published answer to the user's exact question. ByteDance
+Seed describes a single high-level VLM that consumes camera observations and
+utterances, produces both verbal responses and atomic action requests, monitors
+task status, handles interruptions, and replans. The official project page
+reports 92.5% average task progress when paired with the in-house GR-3
+low-level controller across five internal real-robot task families. This is
+credible architecture evidence that conversation and planning can share a
+cognitive model and context. It is not a reproducible model-selection result:
+the official page links a paper and demonstrations but no checkpoint or code,
+the tasks are manipulation/transport rather than Go2 navigation, and task
+progress is not Parcel's task-success or safety metric.
+
+OneTwoVLA supplies a narrower controlled comparison. It trains one model to
+emit a beginning-of-reasoning or beginning-of-action token. Reasoning is
+refreshed at events such as subtask completion, detected error, or human input;
+otherwise the action lane conditions on the most recent reasoning. The authors
+report 87% average success over three long-horizon manipulation tasks, with 20
+trials per task, and report improvements over both a flat policy and a
+Gemini-2.5-Pro-plus-policy baseline that reasoned at fixed intervals. This is
+evidence against **always** invoking a remote slow planner and for keeping
+reasoning synchronized with execution. It is not evidence against Parcel's
+separate schemas, executive, shield, or Unitree controller: the comparison did
+not hold Parcel's models, local serving, quadruped embodiment, sensors, or
+safety contract constant.
+
+Parcel should copy the trigger pattern without copying the actuator topology.
+Request or refresh PlanIR when a new deliberative task arrives, an admitted
+step completes, a target or scene materially changes, progress reports
+`blocked`/`target_lost`, or the owner corrects the task. Reuse the admitted plan
+between those events. Do not call a language planner on every 100 ms navigation
+tick, and do not let a model decide that a safety-critical action succeeded.
+This is compatible with either shared Gemma weights or a later specialist:
+the executive owns the trigger and the trust boundary in both cases.
 
 ### Language models should choose skills, not impersonate a controller
 
@@ -595,7 +1017,7 @@ the repository
 says there are no plans to release weights, so Parcel can learn from its
 waypoint contract and memory design but cannot download the reported policy.
 
-### Winning metric navigation remains hybrid and classical
+### BARN 2026's top physical systems were hybrid/classical
 
 The [2026 BARN challenge](https://people.cs.gmu.edu/~xiao/Research/BARN_Challenge/BARN_Challenge26.html)
 tests tight-space, collision-free navigation rather than language
@@ -611,11 +1033,13 @@ route/waypoint proposals, and recovery selection. LiDAR mapping, global search,
 local collision avoidance, and hard velocity limits remain the dependable
 execution substrate.
 
-#### Reproducibility audit of the 2026 top-three stacks
+#### Reproducibility audit of the 2026 physical top-three stacks
 
-The official result was unusually strong but embodiment-specific: IN2BOT,
-EW-Glab, and Team Robo scored 0.4975, 0.4880, and 0.4515 in simulation and then
-completed 7/9, 5/9, and 3/9 counted physical trials, respectively. The
+The official physical result was unusually strong but embodiment-specific:
+IN2BOT, EW-Glab, and Team Robo entered hardware evaluation with simulation
+scores of 0.4975, 0.4880, and 0.4515, then completed 7/9, 5/9, and 3/9 counted
+physical trials, respectively. Team Robo was not third in the simulation
+ranking; KKato held that position. The
 [organizer report](https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf)
 also says all three used classical, non-ML stacks. These results were obtained
 on a differential-drive Jackal with a 270-degree planar LiDAR, not a Go2, and
@@ -632,6 +1056,33 @@ which supports a CPU-first classical navigation strategy. It does **not** prove
 that any audited implementation meets Parcel's 100 ms control deadline, and the
 report notes that almost every cold physical trial failed. Robustness still
 requires disjoint validation rather than winner-parameter imitation.
+
+The cross-year pattern is more informative than one winner. The official
+[BARN 2025 report](https://people.cs.gmu.edu/~xxiao2/papers/barn25_report.pdf)
+describes the physical winner's S3-FISVFH controller as another VFH-plus-fuzzy
+speed stack. The [BARN 2023 report](https://cs.gmu.edu/~xiao/papers/barn23_report_w_references.pdf)
+describes KUL+FM's 9/9 physical result using adaptive constant-curvature
+free-space motion tubes; its [MIT-licensed implementation](https://github.com/romulortr/barn-kul-fm)
+is a better reproducibility reference for bounded free-space geometry than the
+broken organizer-linked 2026 snapshot. These systems differ in details, but
+both first construct feasible local motion from LiDAR and only then choose
+speed. That ordering directly addresses Parcel's current failure, where the
+tracker repeatedly proposes a direction that the downstream shield cannot
+admit.
+
+The learned counterexample does not overturn that lesson. The 2024 LiCS-KI
+[paper](https://arxiv.org/abs/2406.14947) and
+[repository](https://github.com/damanikjosh/the-barn-challenge) publish a small
+Transformer policy trained by behavior cloning a successful free-space
+expert. Its interface—720 LiDAR rays plus a local goal to linear/angular
+velocity—is adapter-plausible and CPU-oriented. It is a credible **shadow**
+candidate after a deterministic expert exists, not the first production
+choice: checkpoint provenance and safe deserialization still require review,
+its Jackal action distribution is not a Go2 body-twist contract, and imitation
+does not provide the independent clearance certificate. Parcel should first
+build and validate the deterministic planner/VFH or motion-tube expert, then
+train a small local proposer on randomized Parcel trajectories and keep the
+unchanged shield and deterministic fallback authoritative.
 
 #### Predeclared v5 hypothesis: safe-valley micro-advance
 
@@ -832,12 +1283,22 @@ license, latency, and evaluation task match Parcel.
 | One unconstrained LLM for talk and action | Simple prototype; one semantic context | Slow action loop, hallucinated control, conversation can interrupt safety-critical work | Reject |
 | Intent LLM summarizes, planning LLM sees only summary | Specialized prompts and independent upgrades | Information loss, serial latency, compounded errors, conflicting personalities | Reject |
 | Small router preserves transcript, one backbone has fast and deliberate modes | Low memory duplication, one model-family baseline, measurable routing, graceful fallback | Shared model may be weaker than a specialist on hard plans; persona consistency is unverified | Adopt now |
-| Small router plus specialized conversation and planning models | Best model per task; independent tuning | More VRAM/RAM, scheduling and consistency complexity | A/B after baseline |
+| Small router plus specialized conversation and planning models | Task-specific model selection; independent tuning | More VRAM/RAM, scheduling and consistency complexity | A/B after baseline |
 | One VLA from camera directly to body or joints | Potential end-to-end learning | Weak inspectability, embodiment mismatch, large data need, bypassed LiDAR/safety | Research only |
 
 The subtle but important distinction is that “intent” is not a lossy rewrite.
 The router produces metadata alongside the exact transcript. A later planner
 receives both.
+
+Robix and OneTwoVLA prevent an equally simplistic reading in the other
+direction: a role split is not automatically a weight split. Robix joins
+conversation and planning in one high-level model but preserves a separate
+physical executor. OneTwoVLA shares reasoning and action weights and adaptively
+predicts when to reason from heuristically labeled critical intervals. Those results make the current
+shared-Gemma baseline more defensible, while leaving the specialist ablation
+necessary. They do not validate a single unconstrained model, and OneTwoVLA's
+fixed-interval cloud baseline is not equivalent to two admitted local Parcel
+services.
 
 For the user's concrete proposal, the answer is therefore **not** “Gemma
 extracts intent, then another LLM plans from Gemma's text.” The recommended
@@ -866,19 +1327,40 @@ code still owns final-ASR gating, the immutable turn ID, transcript reference
 and hash, router version, emergency/safety overrides, and direct-skill argument
 binding. A model-authored confidence field is not evidence of calibration.
 
-For low latency, routing should remove work rather than add a mandatory model
+To reduce latency, routing should remove work rather than add a mandatory model
 hop. Conversation-only turns never call the planner. Reviewed direct skills
 never call either large planning mode. A deliberative turn enqueues the planner
 immediately after routing; if an early response is needed, the voice lane may
 emit a deterministic non-committal acknowledgment such as “Let me check,” while
 the accepted-action acknowledgment waits for validation. On one GPU, this
-avoids competing long decodes. Two independently admitted model processes could
-run conversation and planning concurrently only after Parcel implements
+avoids invoking two long decodes for the same routed turn; it does not prevent
+inter-turn queueing under the current global lock. Two independently admitted
+model processes could run conversation and planning concurrently only after Parcel implements
 priority scheduling, cancellation, and bounded queues and admits both exact
 processes together under the GPU reserve. Both results must remain joined by
 the immutable turn ID and only the executive may commit the action. Measure
 first log/audio separately from first valid reasoning and first accepted plan;
 otherwise a quick acknowledgment can hide a multi-second planning regression.
+
+This is a serving-topology decision, not a model-count decision. The 2026
+[Speculative Interaction Agents](https://arxiv.org/abs/2605.13360) paper
+decouples an agent from streaming user and environment I/O and reports
+1.3--1.7x speedups for cloud APIs and 1.6--2.2x for two fine-tuned 3B edge
+models on tool-calling evaluations. Importantly, it withholds sensitive tools
+until confirmation. The authors did not evaluate a physical robot, so those
+speedups are not Parcel forecasts. The transferable rule is to speculate on
+**compute**, never on motor commitment: partial ASR may warm routing or prepare
+a cancellable proposal, but only final ASR, fresh observations, validation,
+and executive acceptance may authorize a physical task.
+
+A production preprint from Baidu, [DuCCAE](https://arxiv.org/abs/2603.19248),
+reports the complementary architecture at scale: real-time conversation and
+long-horizon agentic execution run on separate tracks joined by shared session
+state and execution traces. Its deployment and retention/task-completion
+figures are vendor-authored digital-assistant evidence, not robotics evidence.
+For Parcel it supports replacing the single model-turn lock with priority
+queues, task-revision cancellation, and typed shared state; it says nothing
+about whether one or two weight files should service those queues.
 
 The evidence does not justify a claim that two serial text LLMs are inherently
 better. No reviewed primary source here holds the companion tasks, transcript,
@@ -938,8 +1420,9 @@ still decide whether anything can execute.
 ### Implication of the shared-backbone decision
 
 “One shared backbone” does not mean one prompt, one memory, or one trust level.
-It means the same loaded weights service mutually exclusive requests through
-two APIs. Fast dialogue cannot emit PlanIR; plan mode cannot emit motor
+It means one admitted model profile/artifact services mutually exclusive
+requests through two APIs when that profile is active. Short-budget dialogue
+cannot emit PlanIR; plan mode cannot emit motor
 commands or conversational prose. This yields four near-term advantages:
 
 - one 14.4 GB Q4 weight image rather than co-resident large dialogue and planner
@@ -981,7 +1464,7 @@ latency, or isolates dialogue availability from long planner calls. There are
 also three non-reasons: a better generic leaderboard score, a faster first token
 with a slower or invalid complete plan, or a model card that advertises tool
 calling without passing Parcel's schemas and embodied tasks. `gpt-oss-20b` is
-the first hardware-plausible planner-only challenger because its official
+the first prioritized hardware-plausible planner-only challenger because its official
 release supports function calling and Structured Outputs and reports that the
 native MXFP4 checkpoint can run within 16 GB. It is a general-purpose text
 reasoning model, not a robotics or PlanIR specialist. Its exact Parcel runtime,
@@ -1003,9 +1486,10 @@ partial ASR -> turn end -> reflex / IntentFrame router <--- task + safety state
                          /         |          \
                  conversation  direct skill  deliberate task
                        |            |              |
-                 fast LLM mode  schema decode   PlanIR LLM mode
-                       |            |              |
-                       +------ accepted response --+
+             short-budget LLM  deterministic    PlanIR LLM mode
+              AgentDecision    argument binding       |
+                       |       + fresh admission       |
+                       +------ accepted response -----+
                                       |
                             validator + executive
                              /       |        \
@@ -1067,17 +1551,25 @@ failure behavior.
 
 ### 2. Shared conversation and planning backbone
 
-Parcel currently defaults to one loaded model with separate system prompts,
-output schemas, token budgets, and deadlines. `VoiceAgent` and `RobotRuntime`
-also accept an independent planner provider, so a specialist can replace only
-the plan lane without first passing through conversational paraphrasing:
+Parcel currently defaults to one admitted shared model profile/artifact, loaded
+when that profile is active, with separate system prompts, output schemas,
+token budgets, and deadlines. `VoiceAgent` and `RobotRuntime` also accept an
+independent planner provider, so a specialist can replace only the plan lane
+without first passing through conversational paraphrasing:
 
-- **Fast mode** answers conversation or proposes one allow-listed direct skill.
-  It should default to non-thinking constrained decoding and short streaming
-  responses.
+- **Short-budget conversation/social mode** answers conversation and may propose
+  at most one low-priority allow-listed social action. Reviewed direct skills do
+  not use this model. It should default to non-thinking constrained decoding and
+  short streaming responses.
 - **Plan mode** receives the original transcript, an explicit task-state
   snapshot, timestamped semantic observations, and the skill catalog. It emits
   only `PlanIR`, not user-facing prose or velocity.
+
+Raw velocity and locomotion-backend tools are absent from the model-facing
+schema. If a provider emits either name anyway, `VoiceAgent` suppresses the
+entire physical proposal and fails closed. Direct catalog skills, status, and
+reviewed backend-selection commands bind deterministically before either LLM
+and still pass fresh-state and safety admission before execution.
 
 For a simple turn, keeping reply and direct action in one constrained decision
 helps semantic consistency. For a complex turn, Parcel derives the spoken
@@ -1283,17 +1775,20 @@ their own rates.
 ## Dynamic-city simulation strategy
 
 No single simulator should be allowed to redefine Parcel's production sensor or
-action contract. Each simulator gets an adapter that emits camera/LiDAR and
-controller feedback and consumes the same bounded body command. Semantic labels,
-actor routes, collision truth, and shortest paths stay evaluator-only.
+action contract. Each production-faithful simulator adapter should emit camera,
+LiDAR, and controller feedback and consume the same bounded body command.
+Semantic labels, actor routes, collision truth, and shortest paths should stay
+evaluator-only. The current headless PlanIR gate is a deliberately weaker
+exception: it exposes idealized geometry-derived semantic tracks to isolate the
+planner/controller integration and labels that limitation explicitly.
 
-| Environment | Best use for Parcel | Current decision |
+| Environment | Parcel use | Current decision |
 | --- | --- | --- |
 | Parcel MuJoCo/headless city | Fast deterministic PR tests for sidewalk/road semantics, lamppost vicinity, owner orbit/follow, scripted pedestrians/cyclists, TTC stops, and failure injection | **Keep as tier 1.** It is implemented and reproducible, but its compact scripted crowd is not evidence of urban generalization. |
-| [MetaUrban](https://metadriverse.github.io/metaurban/) | Procedurally composed streets, sidewalks, static objects, pedestrians, vulnerable road users, PointNav, and SocialNav | **Best lightweight procedural/social-city integration tier.** Run it out of process in its supported Python/GPU environment, pin assets/code, and implement a real adapter. The current `MetaUrbanNavEnv` is only a scaffold. |
+| [MetaUrban](https://metadriverse.github.io/metaurban/) | Procedurally composed streets, sidewalks, static objects, pedestrians, vulnerable road users, PointNav, and SocialNav | **Recommended first procedural/social-city integration tier.** Run it out of process in its supported Python/GPU environment, pin assets/code, and implement a real adapter. The current `MetaUrbanNavEnv` is only a scaffold. |
 | [URBAN-SIM](https://github.com/metadriverse/urban-sim) | GPU-parallel clean/static/dynamic urban navigation built on procedural MetaUrban layouts | **Separate GPU-RL candidate.** Its repository recommends at least 12 GB VRAM, which this desktop exceeds, but reactive pedestrian agents remain on the project TODO. “Dynamic” therefore does not yet prove sophisticated interactive-human behavior. |
 | [S2E / NavBench-GS](https://github.com/VAIL-UCLA/S2E) | Closed-loop visual navigation, released web-pretrained behavior-cloning waypoint model, and a Go2 waypoint-to-action path | **Separate visual-policy candidate.** The released checkpoint is the behavior-cloning prior rather than the paper's RL-refined policy; measure it against CityWalker and CE-Nav instead of assuming paper-level performance. |
-| [Arena-Rosnav](https://github.com/Arena-Rosnav/arena-rosnav) | ROS-oriented social-navigation stress tests across multiple simulators, crowd/social-force models, planners, and standardized metrics | **Best social-controller bridge after MetaUrban.** Use it to test dynamic avoidance and Nav2 challengers, not as the primary city renderer. |
+| [Arena-Rosnav](https://github.com/Arena-Rosnav/arena-rosnav) | ROS-oriented social-navigation stress tests across multiple simulators, crowd/social-force models, planners, and standardized metrics | **Recommended social-controller bridge after MetaUrban.** Use it to test dynamic avoidance and Nav2 challengers, not as the primary city renderer. |
 | [iGibson](https://svl.stanford.edu/igibson/) | Interactive indoor homes/offices, movable objects, Bullet physics, and its historical pedestrian SocialNav tasks | **Secondary indoor tier.** It is a strong answer for household interaction but is not the best match for streets, curbs, sidewalks, and town-scale scenes. |
 | [Habitat 3.0](https://aihabitat.org/habitat3/) | Human avatars, household collaboration, human-in-the-loop data, and indoor embodied learning | **Later companion-interaction research.** Keep separate from the frozen Habitat 2020 navigation protocol. |
 | BARN and Habitat 2020 official code | Narrow, versioned external protocol checks | **Evaluation tiers, not product simulators.** Never tune away Go2 behavior merely to mimic Jackal/LoCoBot embodiment. |
@@ -1433,7 +1928,7 @@ strong candidate gate for sidewalks, POI entrances, road avoidance, and social
 compliance; adding it to the frozen top-decile portfolio requires an explicit
 portfolio version.
 
-**CE-Nav: strongest newly reviewed Go2 local-policy candidate.** The
+**CE-Nav: highest-priority Go2 local-policy candidate among those reviewed.** The
 [CE-Nav repository](https://github.com/amap-cvlab/CE-Nav) publishes MIT-licensed
 code plus general-expert and Unitree Go2 checkpoints. It separates geometric
 reasoning learned by imitation from embodiment-specific dynamics adaptation
@@ -1481,14 +1976,21 @@ it isolated and research-only.
 
 **CityWalker: first learned challenger.** The
 [CityWalker repository](https://github.com/ai4ce/CityWalker) publishes Apache
-2.0 code and a pretrained model for body-relative trajectory prediction from
-urban video. Its [CVPR 2025
+2.0 code and a public pretrained model for body-relative trajectory prediction
+from urban video. Its [CVPR 2025
 paper](https://openaccess.thecvf.com/content/CVPR2025/papers/Liu_CityWalker_Learning_Embodied_Urban_Navigation_from_Web-Scale_Videos_CVPR_2025_paper.pdf)
 is close to Parcel's dynamic-city goal. Parcel already has the checkpoint. It
 should first run in shadow mode against timestamped RGB, with its candidate
 trajectory projected through LiDAR and compared against the current planner.
-The release artifact's applicable terms should be recorded independently from
-the repository code license before product use.
+The original GitHub v1.0 checkpoint release has no artifact-specific license
+notice, so Parcel now records the exact locked bytes as `NOASSERTION` rather
+than inheriting the repository's code license. A later official
+[ai4ce converted model](https://huggingface.co/ai4ce/citywalker) is explicitly
+Apache-2.0 and says it contains converted weights derived from that checkpoint;
+that strong maintainer-intent evidence applies directly to the converted model,
+not unambiguously to the byte-distinct original `.ckpt`. Prefer a separately
+pinned compatibility review of the licensed conversion or obtain maintainer
+clarification before product redistribution.
 
 **InternVLA-N1: a well-documented Go2-relevant dual-system comparison.** InternNav includes Go2
 deployment material and separates slow semantic reasoning from fast trajectory
@@ -1539,7 +2041,7 @@ runtime state, it is not a Go2 policy, and a separately reviewed quantization
 would be required. It therefore ranks behind the already-installed Gemma;
 Qwen remains an unmeasured challenger.
 
-| Candidate | Best Parcel role | Public status and terms | 32 GB desktop assessment | Decision |
+| Candidate | Suggested Parcel role | Public status and terms | 32 GB desktop assessment | Decision |
 | --- | --- | --- | --- | --- |
 | Installed Gemma 4 26B-A4B Q4 | Conversation plus constrained PlanIR | [Official Q4 card](https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf) lists Apache 2.0; 25.2B total, 3.8B active | 14,439,363,584-byte artifact; measured with all 31/31 layers on the RTX 5000 Ada through official `llama.cpp` b10236 CUDA12 OCI | Baseline and shared-backbone design |
 | FunctionGemma 270M | Fine-tuned bounded route-function selector | [Official page](https://ai.google.dev/gemma/docs/functiongemma); Gemma terms, not Apache; not a dialogue model | Official phone evidence supports edge feasibility but not Parcel latency or calibrated safety; the base results make task-specific tuning mandatory | Train and A/B against deterministic routing; deterministic code authors trusted `IntentFrame` provenance and direct-skill binding |
@@ -1547,6 +2049,7 @@ Qwen remains an unmeasured challenger.
 | Ministral 3 8B Reasoning Q4_K_M | Deliberative PlanSketch specialist | [Official GGUF](https://huggingface.co/mistralai/Ministral-3-8B-Reasoning-2512-GGUF) lists Apache 2.0, reasoning, JSON/function calling, and a 256K context | Exact 5,198,910,368-byte artifact is installed at SHA-256 `894aa364…38c6`; b10236 measured 35/35 CUDA layers and 6,220 MiB idle process VRAM | **Measured and rejected at the current boundary:** a predeclared 0/1 frozen PlanSketch compatibility gate exhausted 1,024 tokens with invalid JSON in 12,262.204 ms; no five-case, conversation, or physical claim |
 | `gpt-oss-20b` | General-purpose reasoning model in a planner-only experimental lane | [Official repository](https://github.com/openai/gpt-oss) and [model card](https://huggingface.co/openai/gpt-oss-20b) list Apache 2.0; applicable OpenAI usage policy still applies; 21B total and 3.6B active parameters; Harmony is required | OpenAI reports native MXFP4 can run within 16 GB, but Parcel runtime/template compatibility, KV and sampled peak, co-residency, latency, and task quality are unmeasured | First test as a replacement profile with Gemma unloaded; not an admitted robotics planner or automatic replacement |
 | Qwen3.6-35B-A3B Q4 | Plan and conversation challenger | [Official model card](https://huggingface.co/Qwen/Qwen3.6-35B-A3B) lists Apache 2.0; a [ggml-org community Q4 conversion](https://huggingface.co/ggml-org/Qwen3.6-35B-A3B-GGUF/blob/main/Qwen3.6-35B-A3B-Q4_K_M.gguf) is 20.4 GB | Fits host RAM, but GPU placement is unproven; projector, KV cache, backend support, and co-resident workloads must be measured | Download only after the evaluation harness can compare it |
+| RoboBrain 2.5 4B BF16 | Camera semantic-grounding and execution-progress shadow lane | [Official checkpoint](https://huggingface.co/BAAI/RoboBrain2.5-4B) and [code](https://github.com/FlagOpen/RoboBrain2.5) list Apache 2.0; the official tree is 9.67 GB and the card labels 5B parameters | Static weights fit the RTX 5000 Ada in isolation; end-to-end VRAM, camera preprocessing, output validity, latency, and coexistence with Gemma/simulation/voice are unmeasured | High-value multimodal shadow experiment after a frozen sidewalk/lamppost grounding gate; never send its point/trace output directly to motion |
 | Kimi-VL-A3B-Thinking-2506 | Optional visual reasoning challenger | Official repository lists MIT; 16B total/3B active | BF16 nearly fills VRAM; a licensed quantization must be measured | Lower priority; no current Go2 advantage |
 | InternVLA-N1 8B | Navigation System 2 / waypoint research | Latest System2/DualVLN cards omit license metadata; older wo-dagger checkpoint is CC BY-NC-SA 4.0 | Paper reports about 20 GB on RTX 4090; isolate and measure | Research-only pending explicit commercial terms |
 | NaVILA Llama3 8B | Go2 visual-language navigation comparison | Code Apache 2.0; checkpoint card lacks declared terms | Plausible isolated inference; legacy stack raises integration cost | Research-only |
@@ -1776,9 +2279,13 @@ The separate [embodied gate result](../evals/companion/embodied_plan_v1/results/
 starts from the exact admitted frozen Gemma plans, revalidates them, submits
 them through `TaskExecutive` and `SemanticTaskRuntimeAdapter`, and executes the
 production semantic navigation/spatial controllers in `HeadlessCityWorld`.
-Policy observations are limited to camera, LiDAR, the camera-derived owner
-track, and odometry; simulator polygons, object centers, collision geometry,
-winding, and clearance are evaluator-only and are scored after execution.
+The gate uses synthetic LiDAR plus oracle semantic tracks constrained by
+camera-like range/FOV. Region polygons, object positions, approach metadata,
+and the owner track are derived directly from simulator geometry rather than
+rendered-camera perception. Evaluator scoring remains separate, but this gate
+tests planning/controller integration given idealized semantic perception; it
+does not test detection, camera–LiDAR association, owner tracking, or real-sensor
+accuracy.
 
 The deterministic frozen result is 4/4 supported cases passed, zero supported
 failures, and one explicit unsupported case. Across all five cases it executes
@@ -1938,7 +2445,7 @@ run against both.
 ## Voice, audio tokens, and the motor boundary
 
 The current cascaded design—ASR, transcript reasoning, then TTS—is still the
-best production baseline because each stage is inspectable, cancellable, and
+recommended initial Parcel baseline because each stage is inspectable, cancellable, and
 independently measurable.
 
 The installed 26B Gemma variant does not accept native audio input. Gemma's
@@ -2029,16 +2536,20 @@ microphone session yet. The 2026-08-03 audit found:
   audio-sink profiles;
 - active PipeWire and WirePlumber services;
 - an ALSA `ALC1220 Analog` capture device and analog/HDMI playback hardware;
+- the controller currently reporting `Pairable: no`;
 - no paired Bluetooth device; and
 - no active PipeWire source and only a dummy PipeWire sink.
 
-AirPods or another headset can therefore be used after pairing and selecting a
-bidirectional HFP/HSP-style profile for microphone plus playback. An A2DP-only
-profile is high-quality playback, not duplex capture. Before enabling voice,
-the startup doctor should require a selected source and sink, open each stream,
-perform a short loopback/VAD probe, record sample rates and buffer sizes, and
-leave the existing streaming-text UI available on failure. This is a device
-configuration task, not a reason to couple audio to the motion controller.
+The host has the prerequisite Bluetooth and ALSA hardware, but duplex headset
+operation has not been demonstrated. AirPods or another headset are a
+commissioning candidate only after enabling pairability, pairing, selecting a
+bidirectional HFP/HSP-style microphone profile, and passing real capture,
+playback, latency, and barge-in probes. An A2DP-only profile is high-quality
+playback, not duplex capture. Before enabling voice, the startup doctor should
+require a selected source and sink, open each stream, perform a short
+loopback/VAD probe, record sample rates and buffer sizes, and leave the existing
+streaming-text UI available on failure. This is a device configuration task,
+not a reason to couple audio to the motion controller.
 
 ### GPU admission profiles
 
@@ -2052,6 +2563,11 @@ profiles rather than hopeful dynamic co-residency:
   no large learned navigator.
 - **Offline navigation evaluation**: simulator/evaluator and one navigation
   model on GPU; speech disabled.
+- **Embodied-grounding shadow**: RoboBrain 2.5 4B plus the rendered-camera
+  grounding/progress harness; Gemma, speech, and learned navigation disabled;
+  classical navigation remains the replay authority. Its 9.67 GB file size is
+  only a static-weight fact, so admit the complete process from measured peak
+  VRAM rather than assuming co-residency.
 - **Classical production baseline**: reasoner plus classical navigation;
   optional smaller TTS selected from a license-reviewed deployment profile.
 
@@ -2069,15 +2585,15 @@ Run the same frozen instruction suite under:
 | ID | Router | Conversation | Complex planner | Status and isolated question |
 | --- | --- | --- | --- | --- |
 | B0 | Legacy reviewed grammar | Gemma one-turn decision | Immediate tool limit | Historical compatibility baseline only; do not restore its weaker long-task semantics |
-| B1 | Deterministic `IntentFrame` | Gemma fast mode | Same Gemma in PlanIR mode | **Implemented incumbent.** Full CUDA passed 5/5 with 5,657.459 ms warm median usable-plan latency; 4/4 supported plans passed the deterministic headless gate. Conversation calibration parsed 10/10 and passed 6/10 machine cases/9/10 structured safety, but human quality, moving-owner follow, and hardware remain unscored. |
-| B1-S | Deterministic `IntentFrame` | Gemma fast mode | Same Gemma in PlanSketch mode | **Measured and rejected for now.** Median full call fell to 2,037.060 ms with 153 completion tokens and 417 output bytes, but semantic acceptance regressed to 3/5. Develop on a disjoint corpus before any new frozen confirmation. |
-| B1-MTP | Deterministic `IntentFrame` | Gemma fast mode | Same Gemma target plus matching MTP assistant | Runtime-only hypothesis: does verified speculative decoding improve full-plan latency with output/quality parity and acceptable VRAM? |
-| B2 | Fine-tuned FunctionGemma route selector plus deterministic `IntentFrame` binder | Gemma fast mode | Gemma PlanIR mode | Router-only change: does one bounded learned route proposal improve recall without worse unsafe-route false positives, abstention, calibration, or tail latency? The model receives no motor tools and authors no trusted provenance. |
-| B3-I | Deterministic `IntentFrame` | Ministral 3 8B Instruct fast mode (dialogue-only subtest) | Ministral 3 8B Instruct PlanIR mode (planner-only subtest) | **Measured and rejected as incumbent.** 35/35 CUDA layers and 101.944 ms conversation TTFT were real, but conversation fell to 5/10 machine cases and PlanIR to 3/5; complete response/plan latency did not beat Gemma. No combined activation. |
-| B3-R | Deterministic `IntentFrame` | Gemma fast mode | Ministral 3 8B Reasoning PlanSketch mode | **Compatibility gate failed; rejected at this boundary.** Exact 35/35 CUDA placement was valid, but the predeclared first frozen case produced malformed JSON, exhausted 1,024 tokens, and took 12,262.204 ms. No full-suite replay or post-hoc contract tuning. |
-| B3 | Deterministic `IntentFrame` | Gemma fast mode in a separate dialogue-only subtest | `gpt-oss-20b` PlanSketch/PlanIR replacement profile, with Gemma unloaded | First hardware-plausible general-reasoning challenger: after exact Harmony/runtime/GPU admission, does it improve held-out semantics or accepted-plan latency? This row does not assume co-residency or robotics specialization. |
-| B4 | Deterministic `IntentFrame` | Gemma fast mode | Qwen3.6 PlanSketch/PlanIR mode | Secondary planner-only challenger: does a larger multimodal MoE materially improve grounded plans enough to justify its memory cost? |
-| B5 | Deterministic `IntentFrame` | conversation challenger | Gemma PlanIR mode | Dialogue-only change: does blinded companion quality improve without action-promise/capability inconsistency or GPU contention? Ministral Instruct's first calibration did not clear the machine gate. |
+| B1 | Deterministic `IntentFrame` | Gemma short-budget mode | Same Gemma in PlanIR mode | **Implemented incumbent.** Full CUDA passed 5/5 with 5,657.459 ms warm median usable-plan latency; 4/4 supported plans passed the deterministic headless gate. Conversation calibration parsed 10/10 and passed 6/10 machine cases/9/10 structured safety, but human quality, moving-owner follow, and hardware remain unscored. |
+| B1-S | Deterministic `IntentFrame` | Gemma short-budget mode | Same Gemma in PlanSketch mode | **Measured and rejected for now.** Median full call fell to 2,037.060 ms with 153 completion tokens and 417 output bytes, but semantic acceptance regressed to 3/5. Develop on a disjoint corpus before any new frozen confirmation. |
+| B1-MTP | Deterministic `IntentFrame` | Gemma short-budget mode | Same Gemma target plus matching MTP assistant | Runtime-only hypothesis: does verified speculative decoding improve full-plan latency with output/quality parity and acceptable VRAM? |
+| B2 | Fine-tuned FunctionGemma route selector plus deterministic `IntentFrame` binder | Gemma short-budget mode | Gemma PlanIR mode | Router-only change: does one bounded learned route proposal improve recall without worse unsafe-route false positives, abstention, calibration, or tail latency? The model receives no motor tools and authors no trusted provenance. |
+| B3-I | Deterministic `IntentFrame` | Ministral 3 8B Instruct short-budget mode (dialogue-only subtest) | Ministral 3 8B Instruct PlanIR mode (planner-only subtest) | **Measured and rejected as incumbent.** 35/35 CUDA layers and 101.944 ms conversation TTFT were real, but conversation fell to 5/10 machine cases and PlanIR to 3/5; complete response/plan latency did not beat Gemma. No combined activation. |
+| B3-R | Deterministic `IntentFrame` | Gemma short-budget mode | Ministral 3 8B Reasoning PlanSketch mode | **Compatibility gate failed; rejected at this boundary.** Exact 35/35 CUDA placement was valid, but the predeclared first frozen case produced malformed JSON, exhausted 1,024 tokens, and took 12,262.204 ms. No full-suite replay or post-hoc contract tuning. |
+| B3 | Deterministic `IntentFrame` | Gemma short-budget mode in a separate dialogue-only subtest | `gpt-oss-20b` PlanSketch/PlanIR replacement profile, with Gemma unloaded | First prioritized hardware-plausible general-reasoning challenger: after exact Harmony/runtime/GPU admission, does it improve held-out semantics or accepted-plan latency? This row does not assume co-residency or robotics specialization. |
+| B4 | Deterministic `IntentFrame` | Gemma short-budget mode | Qwen3.6 PlanSketch/PlanIR mode | Secondary planner-only challenger: does a larger multimodal MoE materially improve grounded plans enough to justify its memory cost? |
+| B5 | Deterministic `IntentFrame` | deferred dialogue challenger; Qwen3.6 is the first named candidate after conversation-v2 is frozen | Gemma PlanIR mode | Dialogue-only change with the planner fixed: does blinded human companion quality, interruption/turn-taking, persona consistency, false-action-promise rate, TTFA/full-call tails, and concurrent-queue behavior improve? Ministral Instruct's first calibration did not clear the machine gate. Qwen3.6 receives no admission or download priority until the disjoint rubric and isolated memory/runtime profile exist. |
 | B6 | Winning router | winning conversation model | winning planner | Combined confirmation only after every selected single-component row has isolated its causal gain |
 
 Changing router and planner in the same challenger run would make any gain
@@ -2147,6 +2663,7 @@ frozen confirmation set; the current five-case semantic pass is not enough.
 | N6 | InternVLA-N1 adapter | Same N1 safety envelope | Strong offline research comparison |
 | N7 | NaVILA adapter | Same N1 safety envelope | Go2 research comparison |
 | N8 | VAMOS high-level planner plus a newly trained Go2 affordance model, shadow-only | Same N1 camera/LiDAR projection and safety envelope | Test semantic proposals and embodiment rejection without reusing Spot/Hound affordance weights or imitating Jackal behavior |
+| N9 | RoboBrain 2.5 4B image-point/grounding and progress proposals, shadow-only | Existing semantic resolver and N1 remain authoritative; LiDAR projection and freshness checks reject every unsafe/stale point | Test whether an open embodied VLM improves sidewalk/lamppost grounding or task-progress detection without confusing a static image point with a navigable trajectory |
 
 Do not modify a benchmark's behavior or reveal evaluator-only state to Parcel.
 Adapters translate sensors, goals, and actions; the production dog behavior and
@@ -2264,11 +2781,22 @@ benchmarks. Current status is:
 | --- | --- | --- | --- |
 | [Habitat 2020 PointNav](https://aihabitat.org/challenge/2020/) test-challenge | 6 published entries; Parcel operational rule requires rank 1 and displayed SPL at least 0.21 | The exact 23-layer runtime is materialized at 87,944 entries. Import baseline02 passed one-device CUDA, EGL 1.5, and Habitat-Sim 0.1.4. The next immutable public non-gated test-asset smoke constructed the simulator, loaded the Skokloster scene/navmesh, rendered four distinct 128x128 RGB-D frames, and executed forward/left/right with zero collisions and 0.250088 m displacement in 1,318.900083 ms. It read only episode 0's start transform—no goal, Parcel policy, STOP, task, evaluator, or metric. | Historical challenge is closed. Public `val_mini`/`val` can be official-code public validation only, never rank evidence. Licensed `Pablo.glb` remains absent. The scene/action smoke is deliberately non-Habitat-2020 and provides no SR, SPL, soft-SPL, score, rank, or top-decile evidence; Docker Engine and NVIDIA Container Toolkit were not required for the cache-only Bubblewrap path. |
 | [Habitat 2020 ObjectNav](https://aihabitat.org/challenge/2020/) test-challenge | 6 published entries; rank 1; displayed SPL at least 0.10, tied at displayed precision | No eligible Parcel run; a real RGB-D category perception policy and licensed Matterport3D data are still required | Historical challenge is closed, and the displayed tie would require official rank confirmation. Simulator semantic truth may not replace perception. |
-| [BARN 2026](https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf) simulation qualifier | 17-entry registered/participating cohort with 12 published numeric scores; Parcel's operational derivation requires rank at most 2 and official mean score at least 0.4880 | Parcel native proxy: cached v3 at 44%/0.106267, zero collisions, one trial on fixed public 50, unpromoted. Independent runtime smoke: untouched upstream MPPI succeeded on public world 0 at 0.1802 with no collision/timeout. The earlier Parcel hook classified `policy_no_translation`; calibrated transport v2 then removed 100 self returns on its first frame, passed liveness, entered `Trial running`, translated several metres, and produced evaluator row `0 0 0 1 100.0070 0.0000`. | None is eligible: the native run is a Go2-oriented planar proxy; upstream MPPI is not Parcel; and Parcel's only terminal row is a one-world failed compatibility baseline through a diagnostic Bubblewrap/PRoot rootfs, not the tested Singularity/SIF path or 50 worlds × 10 trials. No eligible public-protocol mean or hidden organizer score exists. The event deadline passed; official attestation remains external. Official simulation promised CPU and the physical final no GPU, so Parcel must stay CPU-capable. |
+| [BARN 2026](https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf) simulation qualifier | 17-entry registered/participating cohort with 12 published numeric scores; Parcel's operational derivation requires rank at most 2 and official mean score at least 0.4880 | Parcel native proxy: cached v3 at 44%/0.106267, zero collisions, one trial on fixed public 50, unpromoted. The disjoint single-use V8 development proxy passed 16/19 gates but both arms were 0/30 success/metric zero, so V8 was rejected without authorizing or evaluating its holdout. Independent runtime smoke: untouched upstream MPPI succeeded on public world 0 at 0.1802 with no collision/timeout. The earlier Parcel hook classified `policy_no_translation`; calibrated transport v2 then removed 100 self returns on its first frame, passed liveness, entered `Trial running`, translated several metres, and produced evaluator row `0 0 0 1 100.0070 0.0000`. | None is eligible: both native runs are Go2-oriented planar proxies; upstream MPPI is not Parcel; and Parcel's only terminal row is a one-world failed compatibility baseline through a diagnostic Bubblewrap/PRoot rootfs, not the tested Singularity/SIF path or 50 worlds × 10 trials. No eligible public-protocol mean or hidden organizer score exists. The event deadline passed; official attestation remains external. Official simulation promised CPU and the physical final no GPU, so Parcel must stay CPU-capable. |
 | [3WE](https://3we.org/benchmarks) PointNav/ObjectNav/Exploration | No defensible backend-specific top-decile cohort: the pinned snapshot has two Gazebo PointNav rows and one row for each other task/backend cohort | The source-only audit is bound to commit `6073a1bd0a30b6ca1348027ac35b05832b97bfe9` and found 13 critical contract blockers. It imported no upstream Python, started no simulator, ran no Parcel policy, and emitted no score. | All three targets remain claim-blocking and `not_admitted`. The runner owns wheeled Nav2; seed/reset/timeouts and PointNav success/SPL are invalid; ObjectNav leaks hidden coordinates; Exploration and Isaac are stubs; office assets disagree; schemas/results diverge; and no neutral policy hook or rankable cohort exists. Building an adapter now would preserve invalid semantics or change the evaluator/embodiment. |
 
 These are Parcel's operational rank cutoffs on displayed historical cohorts,
 not estimates of a population percentile or current state-of-the-art standing.
+
+The GPU answer is therefore benchmark-specific. Parcel's Gemma/Ministral brain
+evaluations run on the RTX 5000 Ada, and Habitat's exact CUDA/EGL simulator and
+render/action boundary has passed. BARN V8 intentionally ran on CPU: the official
+simulation environment was CPU-oriented and the physical final specified no
+GPU, so GPU dependence would reduce protocol relevance rather than improve it.
+The current 3WE snapshot has no admitted evaluator at all, and its advertised
+Isaac path is a stub; calling it “GPU-capable” would not create a valid metric.
+Future MetaUrban/URBAN-SIM training and simulation can use the GPU, but each
+result must record whether acceleration belongs to the simulator, the learned
+policy, or both.
 
 ### Why the current 3WE revision is quarantined rather than adapted
 
@@ -2279,7 +2807,8 @@ separate backend tracking. The GitHub `main` head rechecked on 2026-08-03 is
 still the Parcel-pinned commit. That makes the source stable enough to audit,
 but not correct enough to score.
 
-The fail-closed report
+The fail-closed
+[report](../evals/external/results/threewe/threewe-contract-audit-20260803-baseline01.json)
 `threewe-contract-audit-20260803-baseline01` found 13 independent admission
 blockers:
 
@@ -2651,6 +3180,14 @@ compatibility gate failed before semantic scoring after 1,024 tokens and
    Pose/Gesture/critical-battery skills only after their runtime adapters,
    feedback verifiers, hardware safety rules, and tests exist. A schema entry is
    not an implemented behavior.
+6. Before adding a second large model or duplex voice lane, replace the global
+   non-E-stop model-turn lock with a per-turn cancellable request broker. Give
+   E-stop, manual control, and system safety events strict priority; bound every
+   queue; cancel stale plans on task revision; start with single-GPU serial
+   admission; and admit multiple server slots only after explicit KV-cache,
+   peak-VRAM, and GPU-reserve checks. Measure concurrent p50/p95/p99 plus first
+   audio, first valid reasoning, and first accepted plan so a fast acknowledgment
+   cannot hide planning queue delay.
 
 ### Phase 2: strengthen and confirm the navigation floor
 
@@ -2688,16 +3225,28 @@ compatibility gate failed before semantic scoring after 1,024 tokens and
    The v7 nearest-cluster `projected_speed_cap` experiment is retired
    unexecuted because a nearer tangential cluster can mask a farther
    positive-closing return. Do not generate it, reuse IDs 3000--3049, or report
-   a v7 score. Build the successor around a byte-isolated historical baseline
-   and an explicitly different all-720-ray, yaw-swept final shield. Require an
-   independent per-action invariant certificate, zero certificate violations,
-   zero collisions, an absolute and no-regression clearance floor, and at
-   least one exercised non-nearest limiting ray. Test a 0.38 m Jackal-scale
-   profile only as a separately predeclared treatment on another fresh split.
-   Add bounded sampled logs for pre/post-shield commands, limiting ray,
-   range/bearing/maximum closing component, cap scale, planner/map phase,
-   watchdog count, sensor freshness, and measured response, and require a
-   disjoint safety-preserving gain before any new compatibility episode.
+   a v7 score. V8 then implemented the byte-isolated all-720-ray, yaw-swept
+   shield and independent action certifier. Its one-shot development run passed
+   all safety/provenance/latency gates but tied 0/30 success and metric zero, so
+   it failed the three efficacy gates and is rejected. Do not rerun IDs
+   4000--4029 or materialize its unauthorized 4030--4049 operational holdout.
+   Retain the certifier design, but keep fresh hypotheses above the final
+   shield. V9's initial c68 and supervisory-gap S1/S2 tracker challengers have
+   now completed the paired training screen on IDs 5000--5009. S2 produced the
+   first V9 training success and reduced label-independent liveness failures
+   from ten to nine, but its immutable scratch gate failed seven checks: five
+   policy stop latches, insufficient aggregate efficiency, excessive world
+   5009 final distance, and excessive travel plus insufficient efficiency in
+   worlds 5007 and 5009. All three challengers are rejected. Do not run S2 on
+   the 100-world training corpus, expose development IDs 5100--5129, or
+   materialize holdout IDs 5130--5149. Build any successor as a fresh
+   content-addressed, one-factor training challenger against the exact V8
+   experimental control under the
+   same body-command, final-shield, and evidence contracts. RPP alone remains
+   insufficient because it cannot choose a different corridor when its single
+   path arc reaches the 0.8 m boundary. Test a 0.38 m Jackal-scale profile only
+   as a separate one-factor treatment rather than combining it with the
+   tracker change.
    Continue to require both a valid terminal
    evaluator row and the Parcel startup marker before writing result evidence
    or a ledger entry. Only after a successful, independently justified adapter
@@ -2727,14 +3276,20 @@ compatibility gate failed before semantic scoring after 1,024 tokens and
 Adapt the already-downloaded CityWalker checkpoint to timestamped RGB and log
 its waypoint proposals beside the authoritative planner. Validate/repair every
 proposal through LiDAR and reject stale trajectories. Only after CityWalker has
-a positive held-out result and release terms are recorded should CE-Nav's Go2
+a positive held-out result and checkpoint terms are resolved should CE-Nav's Go2
 checkpoint and S2E's released behavior-cloning policy receive isolated shadow
 adapters. InternVLA-N1 and NaVILA follow as research-only comparisons because
 their terms/stacks are less production-ready. VAMOS can follow only as a
 noncommercial shadow experiment with a newly trained Go2-specific affordance
 model; released Spot/Hound weights and BARN Jackal behavior are not Go2
-controllers. Robostral remains architecture-only until a public checkpoint is
-linked. Never change evaluator rules or expose privileged state.
+controllers. In a separate semantic-only experiment, run the official
+Apache-2.0 RoboBrain 2.5 4B checkpoint against a frozen rendered-camera
+sidewalk/lamppost/owner-grounding and task-progress suite. Its 9.67 GB BF16
+artifact is plausible on this 32 GB GPU in isolation, but the model's
+image-point and trace outputs remain shadow proposals projected through LiDAR;
+they are neither paths nor body commands. Robostral remains architecture-only
+until a public checkpoint is linked. Never change evaluator rules or expose
+privileged state.
 
 ### Phase 5: train or replace language specialists
 
@@ -2784,6 +3339,9 @@ sensor boundary.
   behavior are stable.
 - Gemma, Ministral, `gpt-oss-20b`, and Qwen can compete behind one
   `PlannerProvider` interface.
+- RoboBrain 2.5 or a later embodied VLM can compete behind a timestamped
+  camera-grounding/progress-proposal interface without becoming the dialogue
+  model, task executive, or local controller.
 - CityWalker, CE-Nav, S2E, InternVLA-N1, NaVILA, and a Go2-adapted VAMOS can
   compete behind one timestamped waypoint-proposal interface.
 - classical local planners can change behind the same bounded trajectory and
@@ -2822,15 +3380,20 @@ independent. Claiming a complete deadline/memory split requires priority
 queues, cancellation, slot and KV admission, concurrent p95/p99 tests, and an
 explicit GPU reserve.
 
-Keep the implemented bounded router plus one shared Gemma backbone in fast and
-PlanIR modes while the broader B1 baseline is measured. The frozen full-CUDA
+Keep the implemented bounded router plus one admitted shared Gemma model
+profile in short-budget conversation/social and deliberate PlanIR modes while
+the broader B1 baseline is measured. Reviewed direct skills bind before both
+generative modes; raw velocity and backend control are absent from the model
+schema and fail closed if emitted. The frozen full-CUDA
 run proves that trusted binding plus deterministic contract compilation can
 admit Gemma's semantic skill choices for all five selected cases. Its warm
 median usable-plan latency is 5,657.459 ms—71.23% below CPU but still slow. The
 separate deterministic headless gate passed 4/4 supported cases with six
 physical skills, 1,137 steps, zero collision/timeouts, and 0.883147 m minimum
-clearance; moving-owner follow is explicitly unsupported. Neither gate supplies
-a real-sensor, contact-physics, or commissioned-Go2 score. Conversation now has
+clearance; moving-owner follow is explicitly unsupported. That gate used
+geometry-derived oracle semantic tracks constrained by camera-like range/FOV,
+not rendered-camera perception. Neither gate supplies a real-sensor,
+contact-physics, or commissioned-Go2 score. Conversation now has
 a separate machine calibration, not a human-quality score: Gemma parsed 10/10,
 passed 6/10 whole cases and 9/10 structured-safety checks, and both Gemma and
 Ministral exposed a raw hypothetical-gesture failure that the deterministic
@@ -2854,7 +3417,7 @@ PlanIR, with slower complete responses/plans. Its Reasoning sibling was
 separately loaded at 35/35 CUDA layers but failed the predeclared first
 PlanSketch case after exhausting 1,024 tokens in 12,262.204 ms; this 0/1
 compatibility gate is not a five-case score. `gpt-oss-20b` is the first
-hardware-plausible general-reasoning challenger in a planner-only replacement
+prioritized hardware-plausible general-reasoning challenger in a planner-only replacement
 lane, not a proven robotics specialist and not a presumed co-resident service;
 Qwen follows. Every planner receives the raw transcript plus bounded metadata,
 never another model's lossy paraphrase. Split navigation from both language
@@ -2863,11 +3426,16 @@ may run, the classical camera/LiDAR stack decides how to move safely, and
 Unitree Sport closes the locomotion loop after the physical adapter is
 commissioned.
 
-The one-backbone choice is the first controlled implementation hypothesis, not
-a conclusion established by Gemini, Helix, InternVLA, Robostral, VAMOS, or any
-reviewed direct comparison of serial text LLMs. Parcel should retain it only if
-the brain ablation matrix shows acceptable plan quality, conversational
-quality, tail latency, and GPU admission relative to specialist APIs.
+The one-backbone choice is the first controlled implementation hypothesis.
+Robix supplies positive architecture evidence for one shared high-level
+interaction/planning model, and OneTwoVLA supplies positive manipulation
+evidence for event-triggered reasoning and acting in shared weights. Neither is
+a comparison of two serial text LLMs under Parcel's tasks, transcript,
+hardware, and safety contract. Gemini, Helix, InternVLA, Robostral, and VAMOS
+likewise do not settle the weight-count question. Parcel should retain the
+shared backbone only if the brain ablation matrix shows acceptable plan
+quality, conversational quality, tail latency, and GPU admission relative to
+specialist APIs.
 
 The resulting decision is: keep deterministic routing plus shared Gemma as the
 measured incumbent; test a fine-tuned FunctionGemma route selector as an
@@ -2876,13 +3444,17 @@ planner replacement before attempting co-residency. Preserve the original
 transcript and deterministic binder, validator, executive, sensor, and motor
 boundaries in every condition. Split weights only after paired Parcel
 measurements clear quality, safety, tail-latency, and GPU-admission gates.
+Separately test RoboBrain 2.5 4B on frozen camera grounding/progress cases in
+shadow mode; its open 9.67 GB BF16 artifact is a plausible multimodal helper on
+this desktop, not a replacement for conversation, collision avoidance, or
+Unitree Sport.
 
 That design creates the boundary through which conversation latency can be
 optimized independently once scheduling is admitted, makes complex behavior
 inspectable, admits better models incrementally, and prevents the most capable
 text generator from becoming the least accountable motor controller.
 
-## Annotated primary-source bibliography
+## Selected annotated primary-source bibliography
 
 All links below were reviewed or rechecked on 2026-08-03. Project pages,
 authors' papers, official repositories, model cards, documentation, and
@@ -2891,7 +3463,8 @@ vendor-reported; local Parcel evidence is identified by run ID above.
 
 - Google: [SayCan](https://say-can.github.io/), [Inner
   Monologue](https://innermonologue.github.io/),
-  [SayTap](https://research.google/blog/saytap-language-to-quadrupedal-locomotion/),
+  [SayTap announcement](https://research.google/blog/saytap-language-to-quadrupedal-locomotion/)
+  and [paper](https://arxiv.org/abs/2306.07580),
   [PaLM-E](https://palm-e.github.io/), [RT-2](https://robotics-transformer2.github.io/),
   [Gemini Robotics](https://deepmind.google/blog/gemini-robotics-brings-ai-into-the-physical-world/),
   [Gemini Robotics 1.5](https://deepmind.google/blog/gemini-robotics-15-brings-ai-agents-into-the-physical-world/),
@@ -2907,6 +3480,12 @@ vendor-reported; local Parcel evidence is identified by run ID above.
 - Physical Intelligence: [openpi](https://github.com/Physical-Intelligence/openpi),
   [π0.5](https://www.physicalintelligence.company/download/pi05.pdf), and
   [FAST](https://www.physicalintelligence.company/download/fast.pdf).
+- Unified interaction/reasoning systems: ByteDance Seed's
+  [Robix project](https://robix-seed.github.io/robix/) and
+  [paper](https://arxiv.org/abs/2509.01106), plus the
+  [OneTwoVLA project](https://one-two-vla.github.io/),
+  [paper](https://arxiv.org/abs/2505.11917), and
+  [official code](https://github.com/Fanqi-Lin/OneTwoVLA).
 - Navigation: [InternNav](https://github.com/InternRobotics/InternNav),
   [InternVLA-N1](https://internrobotics.github.io/internvla-n1.github.io/),
   [LM-Nav](https://proceedings.mlr.press/v205/shah23b/shah23b.pdf),
@@ -2922,10 +3501,18 @@ vendor-reported; local Parcel evidence is identified by run ID above.
   [Qwen-VLA](https://github.com/QwenLM/Qwen-VLA),
   [FSR-VLN](https://arxiv.org/abs/2509.13733),
   [Nav-R1](https://github.com/AIGeeksGroup/Nav-R1),
+  [ABot-N1 paper](https://arxiv.org/abs/2607.10383),
+  [ABot-Navigation](https://github.com/amap-cvlab/ABot-Navigation),
+  [PointBench](https://huggingface.co/acvlab/ABotN-PointBench),
+  [POIBench](https://huggingface.co/acvlab/ABotN-POIBench),
   [CE-Nav](https://github.com/amap-cvlab/CE-Nav),
+  [S2E/NavBench-GS](https://github.com/VAIL-UCLA/S2E),
+  [OmniNav](https://github.com/amap-cvlab/OmniNav),
   [LeLaN](https://learning-language-navigation.github.io/),
   [SACSoN](https://arxiv.org/pdf/2306.01874),
-  [CityWalker](https://github.com/ai4ce/CityWalker),
+  [CityWalker repository](https://github.com/ai4ce/CityWalker),
+  [paper](https://openaccess.thecvf.com/content/CVPR2025/papers/Liu_CityWalker_Learning_Embodied_Urban_Navigation_from_Web-Scale_Videos_CVPR_2025_paper.pdf),
+  [official converted model](https://huggingface.co/ai4ce/citywalker),
   [VLFM](https://github.com/bdaiinstitute/vlfm),
   [Grounding DINO](https://github.com/IDEA-Research/GroundingDINO),
   [SAM 2](https://github.com/facebookresearch/sam2),
@@ -2933,20 +3520,27 @@ vendor-reported; local Parcel evidence is identified by run ID above.
   [ReMEmbR](https://arxiv.org/abs/2409.13682), and
   [ViNT/NoMaD](https://github.com/robodhruv/visualnav-transformer).
 - Classical navigation: official [Nav2 plugin
-  index](https://docs.nav2.org/plugins/index.html), [Rotation Shim
-  tutorial](https://docs.nav2.org/tutorials/docs/using_shim_controller.html),
+  index](https://docs.nav2.org/plugins/index.html), [Regulated Pure Pursuit
+  configuration](https://docs.nav2.org/configuration/packages/configuring-regulated-pp.html),
+  [Rotation Shim
+  configuration](https://docs.nav2.org/configuration/packages/configuring-rotation-shim-controller.html),
   [MPPI configuration](https://docs.nav2.org/configuration/packages/configuring-mppic.html),
+  [Graceful Controller
+  configuration](https://docs.nav2.org/configuration/packages/configuring-graceful-motion-controller.html),
   and [Velocity Smoother
   configuration](https://docs.nav2.org/configuration/packages/configuring-velocity-smoother.html).
 - Simulation and social navigation: [MetaUrban project and
   paper](https://metadriverse.github.io/metaurban/), [Arena-Rosnav official
   organization/repository](https://github.com/Arena-Rosnav/arena-rosnav),
+  [URBAN-SIM](https://github.com/metadriverse/urban-sim),
   [iGibson official project](https://svl.stanford.edu/igibson/), [iGibson 2021
   Social Navigation challenge](https://svl.stanford.edu/igibson/challenge2021.html),
   and [Habitat 3.0](https://aihabitat.org/habitat3/).
 - Open VLAs: [OpenVLA](https://github.com/openvla/openvla),
   [MiniVLA](https://github.com/Stanford-ILIAD/openvla-mini),
-  [SmolVLA](https://huggingface.co/blog/smolvla), and
+  [SmolVLA paper](https://arxiv.org/abs/2506.01844),
+  [official model card](https://huggingface.co/lerobot/smolvla_base),
+  [LeRobot repository](https://github.com/huggingface/lerobot), and
   [X-VLA](https://github.com/2toinf/X-VLA).
 - Speech: [Sesame CSM](https://github.com/SesameAILabs/csm),
   [Fish Speech](https://github.com/fishaudio/fish-speech),
@@ -2959,7 +3553,9 @@ vendor-reported; local Parcel evidence is identified by run ID above.
 - Situated interaction and cognitive-agent evidence: [A Modern System Recipe
   for Situated Embodied Human-Robot
   Conversation](https://arxiv.org/abs/2602.04157) and [From Language to
-  Action](https://arxiv.org/abs/2603.03148).
+  Action](https://arxiv.org/abs/2603.03148), plus
+  [Speculative Interaction Agents](https://arxiv.org/abs/2605.13360) and
+  [DuCCAE](https://arxiv.org/abs/2603.19248) for asynchronous serving evidence.
 - Models: [Gemma 4 overview](https://ai.google.dev/gemma/docs/core),
   [Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4),
   [Gemma thinking guide](https://ai.google.dev/gemma/docs/capabilities/thinking),
@@ -2979,11 +3575,15 @@ vendor-reported; local Parcel evidence is identified by run ID above.
   [Ministral 3 8B Instruct GGUF](https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512-GGUF),
   [Ministral 3 8B Reasoning GGUF](https://huggingface.co/mistralai/Ministral-3-8B-Reasoning-2512-GGUF),
   [Ministral 3 8B model card](https://docs.mistral.ai/models/model-cards/ministral-3-8b-25-12),
-  [Qwen3.6-35B-A3B](https://huggingface.co/Qwen/Qwen3.6-35B-A3B), and
+  [Qwen3.6-35B-A3B](https://huggingface.co/Qwen/Qwen3.6-35B-A3B),
   [Qwen3.6 announcement](https://qwen.ai/blog?id=qwen3.6-35b-a3b),
-  [Kimi K2.5](https://github.com/MoonshotAI/Kimi-K2.5),
+  [Kimi K2.5 repository](https://github.com/MoonshotAI/Kimi-K2.5),
+  [official weight listing](https://huggingface.co/moonshotai/Kimi-K2.5/tree/main),
   [Kimi K3](https://github.com/MoonshotAI/Kimi-K3), and
-  [Kimi-VL](https://github.com/MoonshotAI/Kimi-VL).
+  [Kimi-VL](https://github.com/MoonshotAI/Kimi-VL), plus
+  [RoboBrain 2.5 code](https://github.com/FlagOpen/RoboBrain2.5),
+  [paper](https://arxiv.org/abs/2601.14352), and
+  [official 4B checkpoint](https://huggingface.co/BAAI/RoboBrain2.5-4B).
 - Local inference runtime: pinned [`llama.cpp` b10236 CUDA build
   documentation](https://github.com/ggml-org/llama.cpp/blob/1464c62d88f699ec9700c8010bbfdbc603a9efd6/docs/build.md)
   and [source commit](https://github.com/ggml-org/llama.cpp/commit/1464c62d88f699ec9700c8010bbfdbc603a9efd6).
@@ -2992,6 +3592,8 @@ vendor-reported; local Parcel evidence is identified by run ID above.
   repository](https://github.com/facebookresearch/habitat-challenge/tree/challenge-2020),
   [BARN 2026 organizer page](https://people.cs.gmu.edu/~xiao/Research/BARN_Challenge/BARN_Challenge26.html),
   the [BARN 2026 official
-  report](https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf), and the
+  report](https://people.cs.gmu.edu/~xiao/papers/barn26_report.pdf), the
   [official ROS 2 evaluator
-  repository](https://github.com/Saadmaghani/The-Barn-Challenge-Ros2).
+  repository](https://github.com/Saadmaghani/The-Barn-Challenge-Ros2), the
+  [3WE benchmark](https://3we.org/benchmarks), [pinned audited source](https://github.com/telleroutlook/3we-robot-platform/tree/6073a1bd0a30b6ca1348027ac35b05832b97bfe9),
+  and [local contract audit](../evals/external/results/threewe/threewe-contract-audit-20260803-baseline01.json).

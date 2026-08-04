@@ -9,12 +9,15 @@ feature can be deployed incrementally across simulator and Go2 sensor bridges.
 
 from __future__ import annotations
 
+import logging
 import math
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from .base import MidLevelCommand, Mission, ModelSpec, NavObservation
+
+logger = logging.getLogger(__name__)
 from .grid_planner import (
     GridPlannerConfig,
     LidarScan,
@@ -248,6 +251,10 @@ class GridNavigator:
         self._safe_valley_previous_heading_rad: float | None = None
         self._safe_valley_attempts = 0
         self._last_sensor_timestamp_s: float | None = None
+        # Loud degraded-mode telemetry: silently substituting the mapless
+        # point-goal controller previously hid a broken sensor contract.
+        self.scan_fallback_count = 0
+        self._scan_fallback_active = False
 
     def reset(self, mission: Mission) -> None:
         self._planner.reset()
@@ -296,7 +303,25 @@ class GridNavigator:
                 # never substitute the open-loop point-goal fallback when that
                 # sensor contract is missing or malformed.
                 return self._safe_valley_hold("calibrated_lidar_unavailable")
-            return self._fallback.act(observation, mission)
+            # Degraded mode must be loud: count every degraded tick, log once
+            # per transition, and stamp the command note so telemetry and the
+            # panel can surface that the mapped planner is NOT running.
+            self.scan_fallback_count += 1
+            if not self._scan_fallback_active:
+                self._scan_fallback_active = True
+                logger.warning(
+                    "grid navigator degraded to point-goal fallback: observation "
+                    "carries no calibrated lidar scan (ranges/angle_min/"
+                    "angle_increment/range_max). Occupancy mapping is OFF."
+                )
+            command = self._fallback.act(observation, mission)
+            fallback_note = "scan_missing_fallback"
+            if command.note:
+                fallback_note = f"{fallback_note};{command.note}"
+            return replace(command, note=fallback_note)
+        if self._scan_fallback_active:
+            self._scan_fallback_active = False
+            logger.info("grid navigator scan restored; occupancy mapping resumed")
 
         sensor_frame_fresh = self._sensor_frame_is_fresh(observation)
         if self.safe_valley_micro_advance and not sensor_frame_fresh:
@@ -328,7 +353,7 @@ class GridNavigator:
         )
         self._control_step += 1
         if should_replan:
-            self._last_plan = self._planner.plan(pose, goal)
+            self._last_plan = self._planner.plan(pose, goal, goal_tolerance_m=arrival_radius)
             self._remember_detour_target(self._last_plan)
         assert self._last_plan is not None
         plan = self._last_plan
@@ -338,7 +363,7 @@ class GridNavigator:
             # global replans. Replan immediately rather than tracking stale
             # geometry or waiting for the recovery timer.
             self._committed_detour_target = None
-            plan = self._planner.plan(pose, goal)
+            plan = self._planner.plan(pose, goal, goal_tolerance_m=arrival_radius)
             self._last_plan = plan
             self._remember_detour_target(plan)
             waypoint = self._planner.next_waypoint(pose, plan)

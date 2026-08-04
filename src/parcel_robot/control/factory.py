@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from parcel_robot.safety import SafetyLimits
@@ -8,11 +9,52 @@ from .adapters import BackendVelocityController
 from .manager import ControlManager
 from .models import ControlLimits, ControlTiming
 from .state import BufferedRobotStateSource
-from .unitree_sport import (
-    UnitreeChannelContext,
-    UnitreeSportController,
-    UnitreeSportStateSource,
-)
+
+# A controller factory builds a fully configured ControlManager for one vendor.
+# Registering through this table is the only supported way to add a robot:
+# generic code never imports a vendor module, and a new vendor is one new file
+# plus one registration call — never an edit to this package.
+ControllerFactory = Callable[[dict[str, Any], SafetyLimits], ControlManager]
+
+_CONTROLLER_FACTORIES: dict[str, ControllerFactory] = {}
+
+
+def register_controller_factory(
+    name: str,
+    factory: ControllerFactory,
+    *,
+    replace: bool = False,
+) -> None:
+    """Register a vendor locomotion factory under a stable name."""
+
+    key = name.strip().lower()
+    if not key:
+        raise ValueError("controller factory name cannot be empty")
+    if not replace and key in _CONTROLLER_FACTORIES:
+        raise ValueError(f"controller factory already registered: {key}")
+    _CONTROLLER_FACTORIES[key] = factory
+
+
+def controller_factory_names() -> tuple[str, ...]:
+    return tuple(sorted(_CONTROLLER_FACTORIES))
+
+
+def create_control_manager(
+    name: str,
+    config: dict[str, Any],
+    safety_limits: SafetyLimits,
+) -> ControlManager:
+    """Build the named vendor's ControlManager through the registry."""
+
+    key = name.strip().lower()
+    try:
+        factory = _CONTROLLER_FACTORIES[key]
+    except KeyError as error:
+        raise KeyError(
+            f"unknown locomotion controller {name!r}; "
+            f"registered: {', '.join(controller_factory_names()) or '(none)'}"
+        ) from error
+    return factory(config, safety_limits)
 
 
 def build_backend_control_manager(
@@ -20,6 +62,8 @@ def build_backend_control_manager(
     config: dict[str, Any],
     safety_limits: SafetyLimits,
 ) -> tuple[ControlManager, BufferedRobotStateSource]:
+    """Vendor-neutral simulator/backends path used by the normal runtime."""
+
     timing = _timing(config)
     source = BufferedRobotStateSource()
     controller = BackendVelocityController(
@@ -39,7 +83,17 @@ def build_unitree_sport_control_manager(
     config: dict[str, Any],
     safety_limits: SafetyLimits,
 ) -> ControlManager:
-    """Build a hardware manager without importing Unitree SDK until start()."""
+    """Build a hardware manager without importing Unitree SDK until start().
+
+    The Unitree module is imported lazily inside this function so that
+    ``import parcel_robot.control`` never references vendor code.
+    """
+
+    from .unitree_sport import (
+        UnitreeChannelContext,
+        UnitreeSportController,
+        UnitreeSportStateSource,
+    )
 
     timing = _timing(config)
     sport = config.get("unitree_sport") or {}
@@ -98,6 +152,9 @@ def build_unitree_sport_control_manager(
         limits=_limits(config, safety_limits),
         timing=timing,
     )
+
+
+register_controller_factory("unitree_sport", build_unitree_sport_control_manager)
 
 
 def _timing(config: dict[str, Any]) -> ControlTiming:

@@ -1,0 +1,32 @@
+{
+  "candidate": {
+    "controller_id": "parcel-directive-navigator-grid-v1-v9-sampled-predictive-tracker",
+    "manifest_sha256": "540658cee91c2bdb058f54ab19b9838d731f49c7be4df6ef7332aaea631b8b08",
+    "package_sha256": "c68bb69c247404d0deee28f26d8000200f73aeb336fb9bb0cafd0f0c3b510833"
+  },
+  "candidate_source_contract_sha256": "72062cc73753efa6d290ab020b1f89e00269314ab2854b7a58bf946b8d0be87c",
+  "deployment_enabled": false,
+  "development_execution_authorized": false,
+  "experimental": true,
+  "freeze_id": "parcel-v9-sampled-predictive-tracker-candidate-freeze-v1",
+  "frozen_before_canonical_materialization": true,
+  "holdout_execution_authorized": false,
+  "one_factor_delta": {
+    "additions": [
+      "src/parcel_robot/navigation/experimental_sampled_predictive_tracker.py"
+    ],
+    "all_other_reference_payload_bytes_identical": true,
+    "replacements": [
+      "src/parcel_robot/navigation/grid_navigator.py"
+    ],
+    "unchanged_reference_file_count": 116
+  },
+  "reference": {
+    "development_gate_passed": false,
+    "deployment_enabled": false,
+    "manifest_sha256": "d3bca126041d69afb5553ac29656a0152242c00f29a7b987803e9dc536914115",
+    "package_sha256": "189ac31f0f6a461da9e10fad2ac21b2bc3a485a4d5245c517b1492b2a16eb7d9",
+    "role": "experimental_control_only"
+  },
+  "schema_version": 1
+}

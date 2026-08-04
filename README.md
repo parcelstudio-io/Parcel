@@ -48,6 +48,16 @@ circle around me` are documented in [Audio, latency, and spatial intelligence](d
 Architecture, model choices, audio-device findings, and limitations are in
 [Voice-enabled development stack](docs/DEVELOPMENT_STACK.md).
 
+**2026 redesign:** the full assessment, adjudicated decisions, and the
+seven-layer portable architecture (registry-based vendor HAL, occlusion-true
+raycast LiDAR feeding the grid planner as the production default, real
+STT/TTS/VAD voice transport, live brain safety wiring, second-vendor
+portability proof) are documented for the team in
+[REDESIGN_2026_ASSESSMENT.md](docs/REDESIGN_2026_ASSESSMENT.md) and
+[REDESIGN_2026_ARCHITECTURE.md](docs/REDESIGN_2026_ARCHITECTURE.md).
+The city simulator has a live 2.5D viewer at <http://127.0.0.1:8765/viewer>,
+and the companion-navigation integration eval lives in `evals/companion_nav/`.
+
 ## What is included
 
 - A transcript-to-command agent with a safe, explicit command grammar.
@@ -203,8 +213,9 @@ See also [Dynamic city and behavior architecture](docs/DYNAMIC_CITY_AND_BEHAVIOR
 # On a Conda Python 3.9 + GPU host (not this Python 3.14 venv):
 ./scripts/setup_metaurban.sh
 
-# Keep active_model: stub_v0 for the implemented adapter. The other registry
-# entries are research metadata and fail closed until vendor inference is wired.
+# active_model: grid_v1 is the production default: the occupancy-grid A*
+# planner consumes the occlusion-true raycast LiDAR scan and degrades loudly
+# (scan_missing_fallback) to the point-goal stub if the scan is absent.
 
 python - <<'PY'
 from parcel_robot.skills import Dog
@@ -445,9 +456,12 @@ The implemented adapters are:
 - `WhisperCppProvider`: WAV audio to whisper.cpp `/inference`
 - `LlamaCppProvider`: transcript to strict Gemma JSON/tool calls
 - `SafetySupervisor`: allowlist and pose-limit validation
-- `FishSpeechProvider`: local Fish S2 MessagePack/WAV streaming with cancellation
+- `PiperSpeechProvider`: on-device low-latency TTS (the onboard default)
+- `FishSpeechProvider`: local Fish S2 streaming with cancellation (opt-in docked mode)
+- `SentenceChunkedSynthesizer`: any blocking TTS becomes a cancellable stream
 - `DuplexVoiceSession`: partial/final text, stale-turn suppression, and barge-in
-- `CsmSpeechProvider`: optional legacy Sesame CSM WAV adapter
+- `MicrophoneVoiceLoop` / `SpeakerSink` (`voice_audio.py`): VAD-segmented
+  capture, acoustic barge-in behind an echo guard, interruptible playback
 - `VoicePipeline`: composes a single STT/reasoning/TTS utterance
 
 See [Voice intelligence and model design](docs/VOICE_AI_MODELS.md) for model

@@ -144,6 +144,7 @@ class Dog:
         *,
         nearest_person_m: float | None = None,
         nearest_obstacle_m: float | None = None,
+        lidar: Any = None,
         model_id: str | None = None,
         publish: bool = True,
         extras: dict[str, Any] | None = None,
@@ -168,6 +169,7 @@ class Dog:
             heading_deg=self._nav_heading_deg,
             nearest_person_m=nearest_person_m,
             nearest_obstacle_m=nearest_obstacle_m,
+            lidar=lidar,
             extras=dict(extras or {}),
         )
         cmd = nav.step(obs)

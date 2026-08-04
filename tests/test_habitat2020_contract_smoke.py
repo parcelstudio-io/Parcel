@@ -69,7 +69,7 @@ def test_full_public_contract_smoke_records_no_fake_navigation_metric() -> None:
     assert report["result"]["action_counts"] == {"MOVE_FORWARD": 30}
     assert report["fixture"]["privileged_simulator_state_used"] is False
     assert report["execution"]["gpu_used"] is False
-    assert report["provenance"]["active_model"]["active_model"] == "stub_v0"
+    assert report["provenance"]["active_model"]["active_model"] == "grid_v1"
     assert report["provenance"]["parcel_python_tree"]["file_count"] > 0
     assert transports[0].closed is True
     assert all(

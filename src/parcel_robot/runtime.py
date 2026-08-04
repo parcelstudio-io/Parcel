@@ -30,6 +30,7 @@ from parcel_robot.brain import (
     compile_plan_contracts,
     materialize_planner_output,
 )
+from parcel_robot.brain.contracts import BatteryStateSnapshot
 from parcel_robot.brain.observations import (
     build_observation_snapshot,
     task_state_from_executive,
@@ -71,8 +72,14 @@ from parcel_robot.navigation.spatial import SpatialBehaviorConfig, SpatialBehavi
 from parcel_robot.observability import ComponentMetrics, LatencyTracker
 from parcel_robot.perception import NullMapProvider, PerceptionContract
 from parcel_robot.prompting import PromptLibrary
-from parcel_robot.providers import LanguageModel
+from parcel_robot.providers import (
+    LanguageModel,
+    SentenceChunkedSynthesizer,
+    build_speech_stack,
+)
+from parcel_robot.robot_profile import RobotProfile
 from parcel_robot.skills.api import Dog
+from parcel_robot.voice_audio import MicrophoneVoiceLoop, SpeakerSink
 from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage, VoiceTurn
 
 
@@ -94,6 +101,9 @@ class RobotRuntime:
             raise ValueError("loop_hz must be positive")
         self.store = ConfigStore(config_path)
         self.backend = backend
+        # The robot: config section is live morphology, not a label: gait,
+        # animation retargeting, and future consumers read this profile.
+        self.robot_profile = RobotProfile.from_config(self.store.section("robot"))
         self.loop_period = 1.0 / loop_hz
         self.arbiter = CommandArbiter(self.store.safety_limits())
         self._synchronous_control_dispatch = control_manager is None
@@ -356,9 +366,26 @@ class RobotRuntime:
             spatial_behavior=self._start_brain_spatial_behavior,
             hold=self.stop_motion,
             vocalize=self._brain_vocalize,
+            return_to_safe_pose=self._brain_return_to_safe_pose,
         )
         self._brain_snapshot_sequence = 0
         self._last_brain_plan: dict[str, object] | None = None
+        # Battery telemetry (simulated until a hardware source exists) keeps
+        # battery_critical procedures reachable instead of permanently dead.
+        battery_config = self.store.section("battery")
+        self._battery_percent = float(battery_config.get("simulated_percent", 90.0))
+        self._battery_low_threshold = float(battery_config.get("low_threshold_percent", 20.0))
+        self._battery_critical_threshold = float(
+            battery_config.get("critical_threshold_percent", 8.0)
+        )
+        if not 0.0 <= self._battery_critical_threshold <= self._battery_low_threshold <= 100.0:
+            raise ValueError("battery thresholds must satisfy 0 <= critical <= low <= 100")
+        # Last posture applied through the pose path; verifies ReturnToSafePose.
+        self._last_posture = "unknown"
+        # System-compiled invariants of the currently active plan; enforced by
+        # the control loop, not merely reported.
+        self._active_invariants: tuple[str, ...] = ()
+        self._stale_perception_invariant_engaged = False
         memory_cfg = self.store.section("memory")
         self.agent = VoiceAgent(
             self.dog.poses() or self.store.poses(),
@@ -398,14 +425,48 @@ class RobotRuntime:
         )
         # Feed the duplex coordinator through ``handle_text`` so streamed ASR
         # finals and ordinary HTTP commands share logging, serialization, and
-        # the same deterministic safety boundary. Audio output is intentionally
-        # absent while this host has no connected playback endpoint.
+        # the same deterministic safety boundary. Speech services are resolved
+        # from config and fail soft: an unavailable STT/TTS service leaves the
+        # session in the historical text-only mode with an explicit status.
+        speech_config = self.store.section("speech")
+        self.speech_stack = build_speech_stack(speech_config)
+        self._speaker_sink: SpeakerSink | None = None
+        self._microphone_loop: MicrophoneVoiceLoop | None = None
+        synthesizer = None
+        audio_chunk_player = None
+        audio_interrupt = None
+        if self.speech_stack.synthesizer is not None:
+            self._speaker_sink = SpeakerSink()
+            synthesizer = SentenceChunkedSynthesizer(self.speech_stack.synthesizer)
+            audio_chunk_player = self._speaker_sink.enqueue
+            audio_interrupt = self._speaker_sink.interrupt
         self.voice_session = DuplexVoiceSession(
             self,
+            synthesizer=synthesizer,
+            audio_chunk_player=audio_chunk_player,
+            audio_interrupt=audio_interrupt,
             on_turn=self._voice_turn_completed,
             on_partial=self._voice_partial_received,
             on_error=self._voice_error,
             on_stage=self._voice_stage,
+        )
+        if self.speech_stack.recognizer is not None:
+            self._microphone_loop = MicrophoneVoiceLoop(
+                recognizer=self.speech_stack.recognizer,
+                submit_text=self.voice_session.submit_text,
+                barge_in=self.voice_session.barge_in,
+                playback_active=(
+                    (lambda: self._speaker_sink.playback_active)
+                    if self._speaker_sink is not None
+                    else (lambda: False)
+                ),
+                echo_guard_scale=float(speech_config.get("echo_guard_scale", 2.5)),
+            )
+        self._voice_query_end_by_turn: dict[int, float] = {}
+        self._emit(
+            "voice",
+            f"Speech: stt={self.speech_stack.stt_detail}; tts={self.speech_stack.tts_detail}",
+            "info",
         )
         self._emit("runtime", "Runtime initialized", "success")
 
@@ -470,6 +531,7 @@ class RobotRuntime:
             task=task_state_from_executive(active_row),
             resource_leases=self.task_executive.resources.leases(),
             owner_heading_available=self.owner_heading_available(now=timestamp),
+            battery=self._battery_snapshot(),
         )
 
     def _accept_plan(
@@ -559,6 +621,9 @@ class RobotRuntime:
                 "disposition": submission.disposition,
                 "validated_snapshot_id": snapshot.snapshot_id,
             }
+            # Invariants become live enforcement state, not just a report line.
+            self._active_invariants = validated.effective_invariants
+            self._stale_perception_invariant_engaged = False
         self._reconcile_semantic_tasks()
         self._emit(
             "brain",
@@ -584,6 +649,41 @@ class RobotRuntime:
         if goal.relation == "safe_pose":
             return "Okay—I'll move to a safe place and settle there."
         return "Okay—I accepted the task and will carry it out safely."
+
+    def _brain_return_to_safe_pose(self, pose_name: str) -> str:
+        """Battery-critical procedure: stop all motion, then assume the pose.
+
+        On a physical controller without direct pose actuation the pose step
+        raises and the executive's recovery policy takes over — the robot is
+        still left stopped, which is the safe half of the contract.
+        """
+
+        clean = pose_name.strip().lower()
+        poses = self.dog.poses() or self.store.poses()
+        if clean not in poses:
+            raise ValueError(f"unknown safe pose: {pose_name!r}")
+        self.stop_motion()
+        self._run_pose(poses[clean])
+        return f"safe pose {clean} requested"
+
+    def _battery_snapshot(self) -> BatteryStateSnapshot:
+        percent = self._battery_percent
+        if percent <= self._battery_critical_threshold:
+            state = "critical"
+        elif percent <= self._battery_low_threshold:
+            state = "low"
+        else:
+            state = "normal"
+        return BatteryStateSnapshot(state=state, percent=percent, source="simulated")
+
+    def set_battery_percent(self, percent: float) -> None:
+        """Adjust the simulated battery level (testing / panel drain control)."""
+
+        value = float(percent)
+        if not math.isfinite(value) or not 0.0 <= value <= 100.0:
+            raise ValueError("battery percent must be between 0 and 100")
+        with self._lock:
+            self._battery_percent = value
 
     def _brain_vocalize(self, text: str) -> None:
         clean = " ".join(str(text).split())
@@ -618,7 +718,44 @@ class RobotRuntime:
                 and control.feedback_age_ms <= self.control_manager.timing.state_timeout_s * 1000.0
             ),
             robot_moving=snapshot.robot.moving,
+            posture=self._last_posture,
         )
+
+    def _enforce_perception_invariant(self, observation: SimObservation | None) -> None:
+        """Enforce the compiled ``stop_on_stale_perception`` plan invariant.
+
+        Plans that admitted perception-dependent steps compiled this invariant;
+        it previously informed nothing. Now stale or missing perception while
+        such a plan runs stops every active semantic dispatch immediately.
+        """
+
+        with self._lock:
+            invariants = self._active_invariants
+            engaged = self._stale_perception_invariant_engaged
+        if "stop_on_stale_perception" not in invariants:
+            return
+        perception_ok = observation is not None and self._observation_is_fresh(observation)
+        if perception_ok:
+            if engaged:
+                with self._lock:
+                    self._stale_perception_invariant_engaged = False
+                self._emit("brain", "Perception restored; invariant stop released", "info")
+            return
+        active = self.semantic_tasks.active()
+        if not active:
+            return
+        self._stop_semantic_dispatches(active, "stop_on_stale_perception")
+        with self._command_lock:
+            self.arbiter.stop()
+            self.control_manager.stop("stop_on_stale_perception")
+        if not engaged:
+            with self._lock:
+                self._stale_perception_invariant_engaged = True
+            self._emit(
+                "safety",
+                "stop_on_stale_perception invariant engaged: perception stale during plan",
+                "warning",
+            )
 
     def _step_brain(self) -> None:
         """Advance the bounded executive at control rate; never call an LLM."""
@@ -640,6 +777,17 @@ class RobotRuntime:
 
         requests = self.task_executive.tick(snapshot, now=started)
         self._reconcile_semantic_tasks()
+        # Once no task remains active, its compiled invariants stop binding.
+        executive_rows = self.task_executive.snapshot().get("tasks", [])
+        any_active = any(
+            isinstance(row, dict)
+            and row.get("state") not in {"succeeded", "failed", "cancelled"}
+            for row in executive_rows
+        )
+        if not any_active and self._active_invariants:
+            with self._lock:
+                self._active_invariants = ()
+                self._stale_perception_invariant_engaged = False
         for request in requests:
             try:
                 immediate = self.semantic_tasks.dispatch(request, now=started)
@@ -727,6 +875,15 @@ class RobotRuntime:
                 daemon=True,
             )
             self._health_thread.start()
+            if self._microphone_loop is not None:
+                try:
+                    self._microphone_loop.start()
+                    self._emit("voice", "Microphone loop started (VAD-segmented)", "info")
+                except (OSError, RuntimeError) as error:
+                    # Missing capture hardware degrades to text mode; motion
+                    # control must never depend on an audio device.
+                    self._microphone_loop = None
+                    self._emit("voice", f"Microphone unavailable: {error}", "warning")
         except BaseException as start_error:
             # A reported startup failure must never leave a physical manager or
             # a successfully started sibling thread alive. close() also knows
@@ -767,10 +924,20 @@ class RobotRuntime:
                     self._was_moving = False
                     self.velocity_smoother.reset()
             auxiliary_error: BaseException | None = None
+            if self._microphone_loop is not None:
+                try:
+                    self._microphone_loop.close()
+                except BaseException as error:  # noqa: BLE001 - device teardown
+                    auxiliary_error = error
             try:
                 self.voice_session.close(timeout=2.0)
             except BaseException as error:  # noqa: BLE001 - hardware teardown must continue
                 auxiliary_error = error
+            if self._speaker_sink is not None:
+                try:
+                    self._speaker_sink.close()
+                except BaseException as error:  # noqa: BLE001 - device teardown
+                    auxiliary_error = auxiliary_error or error
             for thread, timeout in (
                 (self._thread, 2.0),
                 (self._health_thread, 3.0),
@@ -1500,6 +1667,8 @@ class RobotRuntime:
                     "controller; direct backend actuation is disabled"
                 )
             self.backend.pose(pose)
+        with self._lock:
+            self._last_posture = pose.name
 
     def _run_trajectory(self, skill: object) -> None:
         if self.arbiter.emergency_stopped:
@@ -1659,6 +1828,7 @@ class RobotRuntime:
         collision = False
         dynamic_agents: list[dict[str, object]] = []
         nearest_person: dict[str, object] | None = None
+        lidar_scan: dict[str, object] | None = None
         if observation is not None:
             robot = {
                 "x": observation.robot.x,
@@ -1695,6 +1865,17 @@ class RobotRuntime:
                     "bearing_rad": observation.nearest_person_bearing_rad,
                     "time_to_collision_s": observation.nearest_person_ttc_s,
                 }
+            if observation.lidar_ranges:
+                lidar_scan = {
+                    "ranges": [
+                        None if math.isnan(value) else round(value, 3)
+                        for value in observation.lidar_ranges
+                    ],
+                    "angle_min_rad": observation.lidar_angle_min_rad,
+                    "angle_increment_rad": observation.lidar_angle_increment_rad,
+                    "range_min_m": observation.lidar_range_min_m,
+                    "range_max_m": observation.lidar_range_max_m,
+                }
         arbitration = self.arbiter.snapshot()
         brain_tasks = self.task_executive.snapshot()
         return {
@@ -1715,12 +1896,25 @@ class RobotRuntime:
                 "planner_output_contract": self._planner_output_contract,
                 "admitted_skills": list(self.brain_registry.names()),
                 "last_plan": last_brain_plan,
+                "active_invariants": list(self._active_invariants),
+                "battery": self._battery_snapshot().as_dict(),
                 **brain_tasks,
             },
             "follow": follow,
             "navigation": navigation,
             "spatial_behavior": spatial,
             "audio": self.audio_status.as_dict(),
+            "speech": {
+                "mode": self.speech_stack.mode,
+                "stt": self.speech_stack.stt_detail,
+                "tts": self.speech_stack.tts_detail,
+                "microphone_active": self._microphone_loop is not None,
+                "playback_active": (
+                    self._speaker_sink.playback_active
+                    if self._speaker_sink is not None
+                    else False
+                ),
+            },
             "perception": self.perception.snapshot(self.maps),
             "voice": voice,
             "model": {
@@ -1729,9 +1923,15 @@ class RobotRuntime:
                 "roles": dict(self._model_role_status),
             },
             "robot": robot,
+            "robot_profile": {
+                "name": self.robot_profile.name,
+                "dof": self.robot_profile.dof,
+                "footprint_radius_m": self.robot_profile.footprint_radius_m,
+            },
             "owner": owner,
             "dynamic_agents": dynamic_agents,
             "nearest_person": nearest_person,
+            "lidar_scan": lidar_scan,
             "obstacle_distance_m": obstacle,
             "collision": collision,
             "emergency_stopped": arbitration["emergency_stopped"],
@@ -1873,6 +2073,7 @@ class RobotRuntime:
             self._step_navigation(observation)
             self.component_metrics.elapsed("NavigationController", navigation_started)
 
+            self._enforce_perception_invariant(observation)
             self._step_brain()
 
             activity_started = time.monotonic()
@@ -2065,6 +2266,7 @@ class RobotRuntime:
                     directive,
                     nearest_person_m=observation.nearest_person_m,
                     nearest_obstacle_m=observation.nearest_obstacle_m,
+                    lidar=observation.lidar_ranges or None,
                     publish=False,
                     extras=self._navigation_extras(observation),
                 )
@@ -2163,6 +2365,10 @@ class RobotRuntime:
         return {
             "collision": observation.collision,
             "perception_fresh": self._observation_is_fresh(observation),
+            "lidar_angle_min_rad": observation.lidar_angle_min_rad,
+            "lidar_angle_increment_rad": observation.lidar_angle_increment_rad,
+            "lidar_range_min_m": observation.lidar_range_min_m,
+            "lidar_range_max_m": observation.lidar_range_max_m,
             "obstacle_bearing_rad": observation.nearest_obstacle_bearing_rad,
             "obstacle_id": observation.nearest_obstacle_id,
             "person_bearing_rad": observation.nearest_person_bearing_rad,
@@ -2329,6 +2535,11 @@ class RobotRuntime:
 
     def _voice_stage(self, stage: VoiceStage) -> None:
         if stage.name == "query_end":
+            with self._lock:
+                self._voice_query_end_by_turn[stage.turn_id] = stage.timestamp
+                if len(self._voice_query_end_by_turn) > 64:
+                    oldest = min(self._voice_query_end_by_turn)
+                    self._voice_query_end_by_turn.pop(oldest, None)
             self.latency.start(
                 stage.turn_id,
                 stage.transcript,
@@ -2346,6 +2557,16 @@ class RobotRuntime:
                 },
             )
             return
+        if stage.name == "audio_first_playback":
+            # The single most important companion-voice number: end of the
+            # owner's speech to the first audible robot audio.
+            with self._lock:
+                query_end = self._voice_query_end_by_turn.get(stage.turn_id)
+            if query_end is not None and stage.timestamp >= query_end:
+                self.component_metrics.observe_ms(
+                    "VoiceEndOfSpeechToFirstAudio",
+                    (stage.timestamp - query_end) * 1000.0,
+                )
         details: dict[str, object] | None = None
         if stage.name == "reasoning_response":
             reasoning_source = self.last_reasoning_source

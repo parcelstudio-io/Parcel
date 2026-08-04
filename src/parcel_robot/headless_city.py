@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import mujoco
+import numpy as np
 
 from parcel_robot.backends.base import (
     LidarObstacle,
@@ -23,6 +24,7 @@ from parcel_robot.mujoco_lidar import (
     ROBOT_FOOTPRINT_RADIUS_M,
     ROBOT_OBSTACLE_HEIGHT_M,
     planar_geom_surface_hit,
+    raycast_planar_scan,
     scan_mujoco_lidar,
 )
 from parcel_robot.navigation.approach import point_in_polygon_with_clearance
@@ -131,6 +133,15 @@ class HeadlessCityWorld:
         self.robot_radius_m = robot_radius_m
         self._region_specs, self._object_specs = extract_city_semantics(self.model)
         self._obstacle_geom_ids = self._extract_obstacle_geom_ids()
+        # Occlusion-true raycast scan state: robot root body for self-return
+        # filtering plus a seeded RNG so headless runs stay deterministic.
+        free_joints = [
+            j
+            for j in range(self.model.njnt)
+            if self.model.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE
+        ]
+        self._robot_body_id = int(self.model.jnt_bodyid[free_joints[0]]) if free_joints else 0
+        self._scan_rng = np.random.default_rng(7)
         owner_body_id = mujoco.mj_name2id(
             self.model, mujoco.mjtObj.mjOBJ_BODY, "owner"
         )
@@ -226,6 +237,15 @@ class HeadlessCityWorld:
         )
         owner_x, owner_y = self.owner_position()
         clearance = self.truth_minimum_clearance(self._x, self._y)
+        scan = raycast_planar_scan(
+            self.model,
+            self.data,
+            robot_x=self._x,
+            robot_y=self._y,
+            robot_heading=self._yaw,
+            robot_body_id=self._robot_body_id,
+            rng=self._scan_rng,
+        )
         return SimObservation(
             timestamp=float(self.data.time),
             robot=RobotPose(x=self._x, y=self._y, z=self._z, yaw=self._yaw),
@@ -240,6 +260,11 @@ class HeadlessCityWorld:
             nearest_obstacle_bearing_rad=(relevant.bearing_rad if relevant else None),
             nearest_obstacle_id=(relevant.obstacle_id if relevant else None),
             lidar_obstacles=tuple(lidar),
+            lidar_ranges=scan.ranges_m,
+            lidar_angle_min_rad=scan.angle_min_rad,
+            lidar_angle_increment_rad=scan.angle_increment_rad,
+            lidar_range_min_m=scan.range_min_m,
+            lidar_range_max_m=scan.range_max_m,
             semantic_regions=tuple(self._region_track(item) for item in regions),
             semantic_objects=tuple(self._object_track(item) for item in objects),
             collision=clearance <= 0.0,
@@ -663,9 +688,14 @@ def _nav_observation(
         heading_deg=math.degrees(observation.robot.yaw),
         nearest_person_m=observation.nearest_person_m,
         nearest_obstacle_m=observation.nearest_obstacle_m,
+        lidar=observation.lidar_ranges or None,
         extras={
             "collision": observation.collision,
             "perception_fresh": True,
+            "lidar_angle_min_rad": observation.lidar_angle_min_rad,
+            "lidar_angle_increment_rad": observation.lidar_angle_increment_rad,
+            "lidar_range_min_m": observation.lidar_range_min_m,
+            "lidar_range_max_m": observation.lidar_range_max_m,
             "obstacle_bearing_rad": observation.nearest_obstacle_bearing_rad,
             "obstacle_id": observation.nearest_obstacle_id,
             "person_bearing_rad": observation.nearest_person_bearing_rad,

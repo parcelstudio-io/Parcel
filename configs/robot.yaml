@@ -66,6 +66,14 @@ owner_follow:
 metrics:
   max_turns: 200
 
+# Battery telemetry. The simulator has no battery, so a simulated percentage
+# keeps the brain's battery_critical procedures (ReturnToSafePose) reachable
+# and testable; a hardware state source replaces this on a real robot.
+battery:
+  simulated_percent: 90.0
+  low_threshold_percent: 20.0
+  critical_threshold_percent: 8.0
+
 # One process owns locomotion. The simulator adapter is used by the normal
 # browser stack; parcel-unitree-control explicitly constructs unitree_sport.
 control:
@@ -149,7 +157,8 @@ agent:
   brain:
     enabled: true
     # Only semantic skills with runtime adapters and verified success checks.
-    skills: [NavigateTo, FollowFormation, OrbitOwner, MoveRelative, Hold, Vocalize, AskClarification]
+    skills: [NavigateTo, FollowFormation, OrbitOwner, MoveRelative, Hold, Vocalize,
+             AskClarification, ReturnToSafePose]
     maximum_total_timeout_s: 600
     max_task_records: 256
   affect:
@@ -157,12 +166,22 @@ agent:
     social_action_cooldown_s: 8
     proposal_ttl_s: 20
 
+# Speech services. `auto` uses whichever services are healthy and degrades to
+# text mode otherwise; `audio` fails closed at startup if either role is
+# unavailable. Piper is the on-device default per the 2026 research decision;
+# Fish S2 (~24 GiB VRAM) remains an opt-in docked-mode upgrade.
 speech:
-  mode: auto  # falls back to streaming text when no audio endpoint is connected
+  mode: auto
   stt_provider: whisper_cpp
   whisper_url: http://127.0.0.1:8178
-  tts_provider: fish_s2
+  tts_provider: piper
+  piper_binary: third_party/piper/piper
+  piper_voice: models/piper/voice.onnx
   fish_url: http://127.0.0.1:8091
+  # Without acoustic echo cancellation, barge-in during robot speech requires
+  # the microphone to hear the owner this many times louder than the VAD
+  # threshold. Hardware AEC (XVF3800-class mic array) is the planned fix.
+  echo_guard_scale: 2.5
   fish_reference_id: null
   fish_streaming: true
   barge_in: true

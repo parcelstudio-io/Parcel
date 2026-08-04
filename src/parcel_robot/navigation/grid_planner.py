@@ -734,13 +734,32 @@ class RollingGridPlanner:
         self.update(pose, scan)
         return self.plan(pose, goal_world)
 
-    def plan(self, pose: Pose2D, goal_world: WorldPoint) -> RoutePlan:
-        """Plan to a goal region or a deterministic rolling-horizon subgoal."""
+    def plan(
+        self,
+        pose: Pose2D,
+        goal_world: WorldPoint,
+        *,
+        goal_tolerance_m: float | None = None,
+    ) -> RoutePlan:
+        """Plan to a goal region or a deterministic rolling-horizon subgoal.
+
+        ``goal_tolerance_m`` overrides the configured goal tolerance for this
+        call. Missions carry per-goal arrival radii (semantic targets are much
+        tighter than mapped landmarks); planning must agree with the caller's
+        arrival contract or a start cell inside a stale, wider goal region is
+        misread as unreachable. The override is clamped to one grid cell.
+        """
 
         goal = _finite_point(goal_world, "goal_world")
+        if goal_tolerance_m is None:
+            tolerance_m = self.config.goal_tolerance_m
+        else:
+            if not math.isfinite(goal_tolerance_m) or goal_tolerance_m <= 0.0:
+                raise ValueError("goal_tolerance_m override must be positive and finite")
+            tolerance_m = max(self.config.resolution_m, float(goal_tolerance_m))
         if not self.grid.initialized:
             raise RuntimeError("planner needs at least one LiDAR update before planning")
-        if math.dist(pose.xy, goal) <= self.config.goal_tolerance_m:
+        if math.dist(pose.xy, goal) <= tolerance_m:
             return RoutePlan(
                 status="at_goal",
                 waypoints_world=(pose.xy,),
@@ -759,9 +778,7 @@ class RollingGridPlanner:
             raise RuntimeError("robot pose lies outside its rolling map")
         goal_is_inside = self.grid.bounds.contains(goal)
         target_world = goal if goal_is_inside else self._clip_goal_to_window(pose.xy, goal)
-        tolerance = (
-            self.config.goal_tolerance_m if goal_is_inside else self.config.partial_goal_search_m
-        )
+        tolerance = tolerance_m if goal_is_inside else self.config.partial_goal_search_m
         goal_cells = self._candidate_goal_cells(target_world, tolerance)
         if not goal_cells:
             return self._failed_plan(
@@ -804,6 +821,22 @@ class RollingGridPlanner:
                 target_world,
                 expanded_nodes=expanded,
                 note="astar_exhausted_or_expansion_limit",
+            )
+        if len(raw_path) == 1 and raw_path[0] in goal_cells:
+            # The start cell itself satisfies the goal region: this is arrival,
+            # not an unreachable goal. Reporting it as no_path deadlocked the
+            # navigator in a permanent recovery scan one cell from the target.
+            return RoutePlan(
+                status="at_goal",
+                waypoints_world=(pose.xy,),
+                requested_goal_world=goal,
+                planning_target_world=target_world,
+                reaches_goal_region=True,
+                expanded_nodes=expanded,
+                path_length_m=0.0,
+                unknown_cells_on_grid_path=0,
+                map_generation=self.grid.generation,
+                note="start_cell_inside_goal_region",
             )
 
         clipped_to_observed_frontier = False

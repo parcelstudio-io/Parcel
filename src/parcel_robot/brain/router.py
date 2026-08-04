@@ -22,6 +22,7 @@ _FOLLOW = frozenset({"follow", "follow me", "come with me", "heel"})
 _HOLD = frozenset({"stay", "wait", "wait here", "hold position"})
 _STATUS = frozenset({"status", "get status", "how are your systems"})
 _WALK = re.compile(r"^(?:(?:walk|go|move)\s+(?:forward|backward|back)|turn\s+(?:left|right)|walk)$")
+_BACKEND = re.compile(r"^use\s+(?:vendor|sport|rl)(?:\s+backend)?$")
 _CORRECTION = re.compile(
     r"^(?:actually|instead|no[, ]|change\s+(?:that|course)|correction\b|rather\b)"
 )
@@ -217,6 +218,19 @@ class DeterministicIntentRouter:
                 affect=affect,
                 urgency=urgency,
                 rule="reviewed_walk_grammar",
+            )
+
+        if _BACKEND.fullmatch(clean):
+            return self._frame(
+                turn_id,
+                transcript_ref,
+                digest,
+                route="direct_skill",
+                confidence=1.0,
+                speech_act="request",
+                affect=affect,
+                urgency=urgency,
+                rule="motion_backend_selection",
             )
 
         directive = navigation_directive_from_text(clean)

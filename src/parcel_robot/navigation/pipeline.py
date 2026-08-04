@@ -111,8 +111,7 @@ class DirectiveNavigator:
             raw_all_ray_profile = safety.get("all_ray_yaw_swept_cap")
             if not isinstance(raw_all_ray_profile, dict):
                 raise ValueError(
-                    "all-ray predictive mode requires an exact "
-                    "safety.all_ray_yaw_swept_cap mapping"
+                    "all-ray predictive mode requires an exact safety.all_ray_yaw_swept_cap mapping"
                 )
             all_ray_shield = V8AllRayShieldConfig.from_mapping(raw_all_ray_profile)
             if not math.isclose(
@@ -121,9 +120,7 @@ class DirectiveNavigator:
                 rel_tol=0.0,
                 abs_tol=1e-12,
             ):
-                raise ValueError(
-                    "all-ray and collision stop distances must match exactly"
-                )
+                raise ValueError("all-ray and collision stop distances must match exactly")
         return cls(
             registry=registry,
             grounder=grounder,
@@ -149,9 +146,7 @@ class DirectiveNavigator:
                 obstacle_slow_m=float(
                     overrides.get("obstacle_slow_m", safety.get("obstacle_slow_m", 1.2))
                 ),
-                slow_scale=float(
-                    overrides.get("slow_scale", safety.get("slow_scale", 0.35))
-                ),
+                slow_scale=float(overrides.get("slow_scale", safety.get("slow_scale", 0.35))),
                 reaction_time_s=float(
                     overrides.get("reaction_time_s", safety.get("reaction_time_s", 0.12))
                 ),
@@ -160,7 +155,9 @@ class DirectiveNavigator:
             safety=safety,
             all_ray_shield=all_ray_shield,
             search=ActiveSemanticSearch(
-                max_steps=int(overrides.get("search_max_steps", search_config.get("max_steps", 80))),
+                max_steps=int(
+                    overrides.get("search_max_steps", search_config.get("max_steps", 80))
+                ),
                 yaw_rate=min(
                     max_vyaw,
                     float(overrides.get("search_yaw_rate", search_config.get("yaw_rate", 0.35))),
@@ -294,9 +291,7 @@ class DirectiveNavigator:
                     vyaw,
                     control_observation.lidar,
                     angle_min_rad=control_observation.extras.get("lidar_angle_min_rad"),
-                    angle_increment_rad=control_observation.extras.get(
-                        "lidar_angle_increment_rad"
-                    ),
+                    angle_increment_rad=control_observation.extras.get("lidar_angle_increment_rad"),
                     config=self.all_ray_shield,
                 )
             except (TypeError, ValueError, RuntimeError):
@@ -364,9 +359,7 @@ class DirectiveNavigator:
                 continue
             if obstacle_id in target_ids:
                 target_clearance = (
-                    distance
-                    if target_clearance is None
-                    else min(target_clearance, distance)
+                    distance if target_clearance is None else min(target_clearance, distance)
                 )
             else:
                 alternatives.append((distance, bearing, obstacle_id))
@@ -568,9 +561,7 @@ class DirectiveNavigator:
         return MidLevelCommand(
             stop=True,
             note=(
-                "semantic_stop_requested"
-                if entering
-                else "semantic_waiting_for_stop_confirmation"
+                "semantic_stop_requested" if entering else "semantic_waiting_for_stop_confirmation"
             ),
         )
 
@@ -594,9 +585,7 @@ class DirectiveNavigator:
         if relation == "inside":
             polygon = _polygon(candidate.get("polygon"))
             clearance = float(self.mission.metadata.get("terminal_clearance_m", 0.32))
-            return bool(polygon) and point_in_polygon_with_clearance(
-                position, polygon, clearance
-            )
+            return bool(polygon) and point_in_polygon_with_clearance(position, polygon, clearance)
         if relation == "near":
             candidate_position = _position(candidate.get("position"))
             if candidate_position is None:
@@ -622,9 +611,7 @@ class DirectiveNavigator:
             if (
                 target_clearance is None
                 or maximum_surface < minimum_surface
-                or not minimum_surface - 1e-6
-                <= target_clearance
-                <= maximum_surface + 1e-6
+                or not minimum_surface - 1e-6 <= target_clearance <= maximum_surface + 1e-6
             ):
                 return False
             support = _polygon(self.mission.metadata.get("support_polygon"))
@@ -814,9 +801,7 @@ def _candidate_obstacle_ids(candidate: object) -> frozenset[str]:
     values = metadata.get("associated_lidar_ids") if isinstance(metadata, dict) else None
     if isinstance(values, (list, tuple)):
         ids.update(
-            value
-            for value in values[:16]
-            if isinstance(value, str) and 0 < len(value) <= 128
+            value for value in values[:16] if isinstance(value, str) and 0 < len(value) <= 128
         )
     return frozenset(ids)
 
@@ -829,8 +814,6 @@ def _obstacle_ids(metadata: dict[str, Any]) -> frozenset[str]:
     values = metadata.get("associated_lidar_ids")
     if isinstance(values, (list, tuple)):
         ids.update(
-            value
-            for value in values[:16]
-            if isinstance(value, str) and 0 < len(value) <= 128
+            value for value in values[:16] if isinstance(value, str) and 0 < len(value) <= 128
         )
     return frozenset(ids)

@@ -78,6 +78,7 @@ class MujocoSocketBackend:
         lidar_obstacles = tuple(
             _parse_lidar_obstacle(item, index) for index, item in enumerate(raw_lidar)
         )
+        scan = _parse_lidar_scan(data.get("lidar_scan"))
         person_distance = data.get("nearest_person_m")
         if person_distance is not None:
             person_distance = _finite_float(person_distance, "nearest_person_m")
@@ -158,6 +159,11 @@ class MujocoSocketBackend:
             nearest_obstacle_bearing_rad=bearing,
             nearest_obstacle_id=(str(obstacle_detail["id"]) if obstacle_detail.get("id") else None),
             lidar_obstacles=lidar_obstacles,
+            lidar_ranges=scan[0],
+            lidar_angle_min_rad=scan[1],
+            lidar_angle_increment_rad=scan[2],
+            lidar_range_min_m=scan[3],
+            lidar_range_max_m=scan[4],
             nearest_person_m=person_distance,
             nearest_person_bearing_rad=person_bearing,
             nearest_person_id=(str(person_detail["id"]) if person_detail.get("id") else None),
@@ -198,6 +204,41 @@ class MujocoSocketBackend:
             {"version": 1, "type": "owner_visibility", "visible": bool(visible)},
             self.socket_path,
         )
+
+
+_EMPTY_SCAN: tuple[tuple[float, ...], None, None, None, None] = ((), None, None, None, None)
+
+
+def _parse_lidar_scan(
+    raw: object,
+) -> tuple[tuple[float, ...], float | None, float | None, float | None, float | None]:
+    """Parse the calibrated planar scan; ``None`` entries decode to NaN."""
+
+    if raw is None:
+        return _EMPTY_SCAN
+    if not isinstance(raw, dict):
+        raise TypeError("simulator lidar_scan must be an object or null")
+    raw_ranges = raw.get("ranges")
+    if not isinstance(raw_ranges, list) or not 2 <= len(raw_ranges) <= 16_384:
+        raise TypeError("simulator lidar_scan.ranges must be a list of 2..16384 entries")
+    angle_min = _finite_float(raw.get("angle_min_rad"), "lidar_scan.angle_min_rad")
+    increment = _finite_float(raw.get("angle_increment_rad"), "lidar_scan.angle_increment_rad")
+    range_min = _finite_float(raw.get("range_min_m"), "lidar_scan.range_min_m")
+    range_max = _finite_float(raw.get("range_max_m"), "lidar_scan.range_max_m")
+    if increment == 0.0:
+        raise ValueError("simulator lidar_scan.angle_increment_rad cannot be zero")
+    if range_max <= range_min or range_min < 0.0:
+        raise ValueError("simulator lidar_scan range bounds are invalid")
+    ranges: list[float] = []
+    for index, value in enumerate(raw_ranges):
+        if value is None:
+            ranges.append(float("nan"))
+            continue
+        distance = _finite_float(value, f"lidar_scan.ranges[{index}]")
+        if not 0.0 <= distance <= range_max * 1.001:
+            raise ValueError(f"simulator lidar_scan.ranges[{index}] is outside the range")
+        ranges.append(min(distance, range_max))
+    return tuple(ranges), angle_min, increment, range_min, range_max
 
 
 def _parse_dynamic_agent(item: object, index: int) -> DynamicAgentTrack:

@@ -1,0 +1,89 @@
+--- a/src/parcel_robot/navigation/grid_navigator.py
++++ b/src/parcel_robot/navigation/grid_navigator.py
+@@ -15,6 +15,7 @@
+ from typing import Any
+ 
+ from .base import MidLevelCommand, Mission, ModelSpec, NavObservation
++from .experimental_sampled_predictive_tracker import SampledPredictiveTracker
+ from .grid_planner import (
+     GridPlannerConfig,
+     LidarScan,
+@@ -236,6 +237,15 @@
+             max_linear_accel=self.max_linear_accel,
+             max_yaw_accel=self.max_yaw_accel,
+         )
++        self._sampled_predictive_tracker = SampledPredictiveTracker(
++            align_enter_deg=self.align_enter_deg,
++            align_exit_deg=self.align_exit_deg,
++            min_align_yaw_rate=self.min_align_yaw_rate,
++            yaw_gain=self.yaw_gain,
++            control_dt_s=self.control_dt_s,
++            max_linear_accel=self.max_linear_accel,
++            max_yaw_accel=self.max_yaw_accel,
++        )
+         self._aligning = True
+         self._last_vx = 0.0
+         self._last_vyaw = 0.0
+@@ -252,6 +262,7 @@
+     def reset(self, mission: Mission) -> None:
+         self._planner.reset()
+         self._fallback.reset(mission)
++        self._sampled_predictive_tracker.reset()
+         self._aligning = True
+         self._last_vx = 0.0
+         self._last_vyaw = 0.0
+@@ -345,6 +356,19 @@
+         if waypoint is None:
+             if plan.status == "at_goal":
+                 return self._fallback.act(observation, mission)
++            sampled = self._sampled_predictive_tracker.select(
++                pose=pose,
++                scan=scan,
++                goal_world=goal,
++                route_waypoints_world=plan.waypoints_world,
++                nominal=MidLevelCommand(note=f"grid_recover_pending status={plan.status}"),
++                waypoint=None,
++                route_available=False,
++            )
++            if sampled is not None:
++                self._last_vx = sampled.vx
++                self._last_vyaw = sampled.vyaw
++                return sampled
+             if self.safe_valley_micro_advance:
+                 return self._safe_valley_command(
+                     observation=observation,
+@@ -408,12 +432,23 @@
+                 f"route={len(plan.waypoints_world)} status={plan.status}"
+             )
+ 
+-        self._last_vx = vx
+-        self._last_vyaw = vyaw
+         # Nominal point-to-point progress is forward preferred.  Keeping the
+         # full MidLevelCommand (including vy) preserves the Unitree-compatible
+         # interface for a later holonomic recovery/local planner.
+-        return MidLevelCommand(vx=vx, vy=0.0, vyaw=vyaw, note=note)
++        nominal = MidLevelCommand(vx=vx, vy=0.0, vyaw=vyaw, note=note)
++        sampled = self._sampled_predictive_tracker.select(
++            pose=pose,
++            scan=scan,
++            goal_world=goal,
++            route_waypoints_world=plan.waypoints_world,
++            nominal=nominal,
++            waypoint=waypoint,
++            route_available=plan.usable,
++        )
++        command = nominal if sampled is None else sampled
++        self._last_vx = command.vx
++        self._last_vyaw = command.vyaw
++        return command
+ 
+     def _recovery_command(self, status: str) -> MidLevelCommand:
+         phase = self._recovery_step % self.recovery_scan_steps
+@@ -890,6 +925,7 @@
+         return current + max(-maximum_delta, min(maximum_delta, target - current))
+ 
+     def close(self) -> None:
++        self._sampled_predictive_tracker.close()
+         self._fallback.close()
+         self._planner.reset()
+         self._last_vx = 0.0

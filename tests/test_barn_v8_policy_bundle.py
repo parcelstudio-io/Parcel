@@ -166,8 +166,9 @@ def test_real_historical_bundle_derives_only_the_reviewed_v8_delta(tmp_path: Pat
         "evals/external/parcel_barn_adapter.py",
         "overlay/BARN_runner.launch.py",
     ):
-        assert built.bundle.files_sha256[unchanged_boundary] == (
-            built.reference.files_sha256[unchanged_boundary]
+        assert (
+            built.bundle.files_sha256[unchanged_boundary]
+            == (built.reference.files_sha256[unchanged_boundary])
         )
     frozen_sources = built.report_metadata()["allowlisted_delta"]["reviewed_sources"]
     assert (

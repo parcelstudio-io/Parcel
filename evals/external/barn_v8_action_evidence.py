@@ -1,10 +1,11 @@
 """Deterministic, tamper-evident per-action artifacts for the BARN v8 trial.
 
-The artifact contains only evaluator-visible inputs and outputs: the exact
-normalized float64 scan bins, their geometry, and the final command published
-to the BARN boundary.  Every record embeds a certificate recomputed by the
-independent evaluator checker.  Policy notes are reduced to SHA-256 digests;
-policy-provided certificates or private policy state are never accepted.
+The artifact contains only evaluator-visible inputs and outputs: a SHA-256
+binding to the complete normalized policy observation, the exact normalized
+float64 scan bins and geometry used by the independent safety certificate, and
+the final command published to the BARN boundary. Policy notes are reduced to
+SHA-256 digests; policy-provided certificates or private policy state are never
+accepted.
 
 Files use a versioned little-endian frame format wrapped in zlib with frozen
 parameters.  Per-record SHA-256 chaining and duplicated stream/file metadata
@@ -35,14 +36,14 @@ from .barn_v8_action_certifier import (
     certify_v8_published_barn_action,
 )
 
-V8_ACTION_EVIDENCE_FORMAT_ID = "parcel-barn-v8-action-evidence-v1"
-V8_ACTION_EVIDENCE_VERSION = 1
+V8_ACTION_EVIDENCE_FORMAT_ID = "parcel-barn-v8-action-evidence-v2"
+V8_ACTION_EVIDENCE_VERSION = 2
 V8_ACTION_EVIDENCE_ARMS = ("reference", "candidate")
 
-_FILE_MAGIC = b"PV8AEZ01"
-_STREAM_MAGIC = b"PV8AES01"
+_FILE_MAGIC = b"PV8AEZ02"
+_STREAM_MAGIC = b"PV8AES02"
 _FRAME_MAGIC = b"V8RF"
-_TRAILER_MAGIC = b"PV8AET01"
+_TRAILER_MAGIC = b"PV8AET02"
 _COMPRESSION_ID_ZLIB = 1
 _ZLIB_LEVEL = 9
 _ZLIB_WBITS = 15
@@ -68,10 +69,11 @@ _FRAME_HEADER = struct.Struct("<4sI32s32s")
 _TRAILER = struct.Struct("<8sQ32s")
 
 # step, paired execution order, world, trial, seed, three flags + reserved,
-# scan geometry, vx/vy/yaw, arm length, note digest, certificate length.
-_RECORD_PREFIX = struct.Struct("<QQQQQBBBBdddddH32sI")
-_RECORD_CHAIN_DOMAIN = b"parcel-barn-v8-action-evidence-record-chain-v1\x00"
-_RECORD_GENESIS_DOMAIN = b"parcel-barn-v8-action-evidence-genesis-v1\x00"
+# scan geometry, vx/vy/yaw, arm length, note digest, complete policy-observation
+# digest, and certificate length.
+_RECORD_PREFIX = struct.Struct("<QQQQQBBBBdddddH32s32sI")
+_RECORD_CHAIN_DOMAIN = b"parcel-barn-v8-action-evidence-record-chain-v2\x00"
+_RECORD_GENESIS_DOMAIN = b"parcel-barn-v8-action-evidence-genesis-v2\x00"
 
 
 class V8ActionEvidenceError(ValueError):
@@ -131,6 +133,12 @@ def _note_digest(note: object) -> bytes:
     if not isinstance(note, str):
         raise TypeError("note must be a string")
     return hashlib.sha256(note.encode("utf-8")).digest()
+
+
+def _policy_observation_digest(value: object) -> bytes:
+    if not isinstance(value, str) or _SHA256.fullmatch(value) is None:
+        raise ValueError("policy_observation_sha256 must be a lowercase SHA-256 digest")
+    return bytes.fromhex(value)
 
 
 def _profile_digest() -> bytes:
@@ -203,6 +211,7 @@ class V8ActionEvidenceRecord:
     published_yaw_rate_rps: float
     published_stop: bool
     note_sha256: str
+    policy_observation_sha256: str
     certificate: V8BarnActionCertificate
     previous_record_sha256: str
     record_sha256: str
@@ -235,6 +244,7 @@ class V8ActionEvidenceRecord:
             "published_yaw_rate_rps": self.published_yaw_rate_rps,
             "published_stop": self.published_stop,
             "note_sha256": self.note_sha256,
+            "policy_observation_sha256": self.policy_observation_sha256,
             "certificate": self.certificate.as_dict(),
             "previous_record_sha256": self.previous_record_sha256,
             "record_sha256": self.record_sha256,
@@ -315,6 +325,7 @@ def _validate_record_sequence(
         raise V8ActionEvidenceError(
             "records must be either a fresh policy action or a reused stop latch"
         )
+    _policy_observation_digest(record.policy_observation_sha256)
 
     if previous is None:
         if record.observation_reused:
@@ -337,11 +348,15 @@ def _validate_record_sequence(
             raise V8ActionEvidenceError("a stop-latched record must publish zero action")
         if record.normalized_scan_float64_le != previous.normalized_scan_float64_le:
             raise V8ActionEvidenceError("a reused observation must repeat the exact prior scan")
-        if struct.pack(
-            "<dd", record.angle_min_rad, record.angle_increment_rad
-        ) != struct.pack("<dd", previous.angle_min_rad, previous.angle_increment_rad):
+        if struct.pack("<dd", record.angle_min_rad, record.angle_increment_rad) != struct.pack(
+            "<dd", previous.angle_min_rad, previous.angle_increment_rad
+        ):
             raise V8ActionEvidenceError(
                 "a reused observation must repeat the exact prior scan geometry"
+            )
+        if record.policy_observation_sha256 != previous.policy_observation_sha256:
+            raise V8ActionEvidenceError(
+                "a reused observation must repeat the complete prior observation digest"
             )
 
 
@@ -378,6 +393,7 @@ class V8ActionEvidenceBuilder:
         published_yaw_rate_rps: float,
         published_stop: bool,
         note: str,
+        policy_observation_sha256: str,
     ) -> V8ActionEvidenceRecord:
         if self._written:
             raise RuntimeError("cannot append after evidence has been written")
@@ -418,9 +434,14 @@ class V8ActionEvidenceBuilder:
             raise ValueError("a published stop must have zero velocity")
         try:
             scan_bytes = _SCAN_STRUCT.pack(*(float(value) for value in scan_values))
-        except (TypeError, ValueError, struct.error) as exc:  # pragma: no cover - certifier owns it.
+        except (
+            TypeError,
+            ValueError,
+            struct.error,
+        ) as exc:  # pragma: no cover - certifier owns it.
             raise V8ActionEvidenceError("normalized scan cannot be encoded as float64") from exc
         note_digest = _note_digest(note)
+        observation_digest = _policy_observation_digest(policy_observation_sha256)
         certificate_bytes = _canonical_certificate(certificate)
         if len(certificate_bytes) > _MAX_CERTIFICATE_BYTES:
             raise V8ActionEvidenceError("certificate exceeds the evidence format limit")
@@ -442,15 +463,14 @@ class V8ActionEvidenceBuilder:
             yaw_rate,
             len(arm_encoded),
             note_digest,
+            observation_digest,
             len(certificate_bytes),
         )
         payload = prefix + arm_encoded + scan_bytes + certificate_bytes
         if len(payload) > _MAX_RECORD_BYTES:
             raise V8ActionEvidenceError("record exceeds the evidence format limit")
         previous_digest = (
-            bytes.fromhex(self._records[-1].record_sha256)
-            if self._records
-            else _genesis_digest()
+            bytes.fromhex(self._records[-1].record_sha256) if self._records else _genesis_digest()
         )
         record_digest = _record_digest(previous_digest, payload)
         record = V8ActionEvidenceRecord(
@@ -470,18 +490,22 @@ class V8ActionEvidenceBuilder:
             published_yaw_rate_rps=yaw_rate,
             published_stop=stopped,
             note_sha256=note_digest.hex(),
+            policy_observation_sha256=observation_digest.hex(),
             certificate=certificate,
             previous_record_sha256=previous_digest.hex(),
             record_sha256=record_digest.hex(),
         )
         previous_record = self._records[-1] if self._records else None
         _validate_record_sequence(record, previous_record)
-        frame = _FRAME_HEADER.pack(
-            _FRAME_MAGIC,
-            len(payload),
-            previous_digest,
-            record_digest,
-        ) + payload
+        frame = (
+            _FRAME_HEADER.pack(
+                _FRAME_MAGIC,
+                len(payload),
+                previous_digest,
+                record_digest,
+            )
+            + payload
+        )
         self._records.append(record)
         self._frames.append(frame)
         self._encoding_ns += time.perf_counter_ns() - started - certificate_elapsed
@@ -544,8 +568,11 @@ class V8ActionEvidenceBuilder:
         parent = requested.parent.resolve()
         target = parent / requested.name
         temporary = parent / f".{target.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+        temporary_created = False
         try:
-            with temporary.open("xb") as stream:
+            stream = temporary.open("xb")
+            temporary_created = True
+            with stream:
                 stream.write(artifact)
                 stream.flush()
                 os.fsync(stream.fileno())
@@ -559,7 +586,8 @@ class V8ActionEvidenceBuilder:
                 ) from exc
             _fsync_directory(parent)
         finally:
-            temporary.unlink(missing_ok=True)
+            if temporary_created:
+                temporary.unlink(missing_ok=True)
 
         self._written = True
         finished = time.perf_counter_ns()
@@ -671,6 +699,7 @@ def _decode_record_payload(
         yaw_rate,
         arm_length,
         note_digest,
+        observation_digest,
         certificate_length,
     ) = _RECORD_PREFIX.unpack_from(payload)
     if reserved != 0:
@@ -746,6 +775,7 @@ def _decode_record_payload(
         published_yaw_rate_rps=yaw_rate,
         published_stop=stopped,
         note_sha256=note_digest.hex(),
+        policy_observation_sha256=observation_digest.hex(),
         certificate=certificate,
         previous_record_sha256=previous_digest.hex(),
         record_sha256=record_digest.hex(),
@@ -840,8 +870,8 @@ def read_v8_action_evidence(
 
     if len(uncompressed) < _STREAM_HEADER.size + _TRAILER.size:
         raise V8ActionEvidenceError("uncompressed evidence stream is truncated")
-    stream_magic, stream_version, stream_profile_digest, stream_count = (
-        _STREAM_HEADER.unpack_from(uncompressed)
+    stream_magic, stream_version, stream_profile_digest, stream_count = _STREAM_HEADER.unpack_from(
+        uncompressed
     )
     if stream_magic != _STREAM_MAGIC or stream_version != V8_ACTION_EVIDENCE_VERSION:
         raise V8ActionEvidenceError("uncompressed evidence stream identity mismatch")
@@ -857,8 +887,8 @@ def read_v8_action_evidence(
     for _record_number in range(declared_count):
         if offset + _FRAME_HEADER.size > len(uncompressed):
             raise V8ActionEvidenceError("evidence record frame is truncated")
-        frame_magic, payload_length, previous_digest, record_digest = (
-            _FRAME_HEADER.unpack_from(uncompressed, offset)
+        frame_magic, payload_length, previous_digest, record_digest = _FRAME_HEADER.unpack_from(
+            uncompressed, offset
         )
         offset += _FRAME_HEADER.size
         if frame_magic != _FRAME_MAGIC:

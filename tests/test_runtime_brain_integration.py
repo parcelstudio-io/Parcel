@@ -191,7 +191,18 @@ def test_runtime_executes_one_deliberative_call_through_verified_semantic_hold(
     schema = model.plan_calls[0][1]["response_schema"]
     admitted = schema["$defs"]["step"]["properties"]["skill"]["enum"]
     assert "Pose" not in admitted
-    assert set(admitted) == runtime.semantic_tasks.SUPPORTED_SKILLS
+    # The schema admits exactly this deployment's configured skill list, which
+    # must itself be a subset of the adapter-supported skills.
+    assert set(admitted) == {
+        "NavigateTo",
+        "FollowFormation",
+        "OrbitOwner",
+        "MoveRelative",
+        "Hold",
+        "Vocalize",
+        "AskClarification",
+    }
+    assert set(admitted) <= runtime.semantic_tasks.SUPPORTED_SKILLS
     assert schema["properties"]["source_turn_id"]["const"] == "turn-local-1"
     trusted_task_id = schema["properties"]["task_id"]["const"]
     assert trusted_task_id.startswith("parcel-task-")

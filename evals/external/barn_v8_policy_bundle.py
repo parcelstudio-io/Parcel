@@ -33,9 +33,7 @@ from .barn_policy_sidecar import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DESTINATION_ROOT = (
-    REPO_ROOT / ".cache/external-evals/runtime/barn-parcel-bundles"
-)
+DEFAULT_DESTINATION_ROOT = REPO_ROOT / ".cache/external-evals/runtime/barn-parcel-bundles"
 V8_DERIVATION_ID = "parcel-v8-all-ray-candidate-from-historical-75f7ff4d-v1"
 V8_CONFIG_SOURCE = Path(
     "configs/navigation/experiments/barn_grid_v1_all_ray_yaw_swept_cap_0p8_v8.yaml"
@@ -45,12 +43,8 @@ V8_CONFIG_SOURCE = Path(
 # reviewed source inputs. No directory glob can expand this authority.
 V8_REPLACEMENTS: dict[str, str] = {
     HISTORICAL_CONFIG: V8_CONFIG_SOURCE.as_posix(),
-    "src/parcel_robot/navigation/collision.py": (
-        "src/parcel_robot/navigation/collision.py"
-    ),
-    "src/parcel_robot/navigation/pipeline.py": (
-        "src/parcel_robot/navigation/pipeline.py"
-    ),
+    "src/parcel_robot/navigation/collision.py": ("src/parcel_robot/navigation/collision.py"),
+    "src/parcel_robot/navigation/pipeline.py": ("src/parcel_robot/navigation/pipeline.py"),
 }
 V8_ADDITIONS: dict[str, str] = {
     "src/parcel_robot/navigation/experimental_all_ray_shield.py": (
@@ -178,9 +172,7 @@ def verify_v8_candidate_delta(
         if candidate_files[relative] != reference_files[relative]
     }
     if changed != expected_replacements:
-        raise ValueError(
-            "v8 candidate changed historical files outside the exact replacement set"
-        )
+        raise ValueError("v8 candidate changed historical files outside the exact replacement set")
     for relative in expected_replacements | expected_additions:
         if candidate_files[relative] != reviewed[relative]["sha256"]:
             raise ValueError(f"v8 candidate source digest mismatch: {relative}")

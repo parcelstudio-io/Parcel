@@ -1,0 +1,144 @@
+{
+  "candidate": {
+    "active_model": "grid_v1",
+    "controller_id": "parcel-directive-navigator-grid-v1-v8-all-ray",
+    "manifest_sha256": "c7b08d55637602940c444314e9b702dd8b4da5ea966950bcdd82efdaaf116f61",
+    "package_sha256": "f0b3c15763887d2023e42a4515073227d51d8c11e3c527b5f7bf1f90bac7a655",
+    "profile_sha256": "c9f14b5bb50a3139ccb30a853fd1f5b321ac78d9632ec8b78a49831d9ab4926a"
+  },
+  "deployment_enabled": false,
+  "development_execution_authorized": false,
+  "experimental": true,
+  "freeze_id": "parcel-v10-planner-profile-training-candidate-freeze-v1",
+  "frozen_before_materialization": true,
+  "holdout_execution_authorized": false,
+  "one_factor_delta": {
+    "additions": [],
+    "all_other_reference_payload_bytes_identical": true,
+    "replacement": "configs/navigation/models/grid.yaml",
+    "unchanged_reference_file_count": 116
+  },
+  "profile_semantics": {
+    "active_model": "grid_v1",
+    "added_controller_values": {
+      "comfort_cost_weight": 8.0,
+      "frontier_band_m": 0.6,
+      "frontier_min_progress_m": 0.1,
+      "frontier_search_mode": "observed_first",
+      "map_comfort_safety_margin_m": 0.48,
+      "reachable_frontier_fallback": true
+    },
+    "candidate_label": "frontier-comfort-grid-v1",
+    "replaced_controller_values": [],
+    "retained_controller_values": {
+      "map_safety_margin_m": 0.1
+    }
+  },
+  "reference": {
+    "development_gate_passed": false,
+    "deployment_enabled": false,
+    "manifest_sha256": "d3bca126041d69afb5553ac29656a0152242c00f29a7b987803e9dc536914115",
+    "package_sha256": "189ac31f0f6a461da9e10fad2ac21b2bc3a485a4d5245c517b1492b2a16eb7d9",
+    "role": "rejected_v8_experimental_control_only"
+  },
+  "schema_version": 1,
+  "scratch_gate_lineage": {
+    "numeric_thresholds_copied_exactly_from_s4": true,
+    "s2_incumbent": {
+      "analysis_sha256": "1cc259ed55ee96ccfae9d784d9734924a7537f0e9da9b80418c05cc645a6ff9f",
+      "manifest_sha256": "04867ea70a7c4f7f0d9f6383815e2d592df635eafb2d8833e193f70d4de4dad7",
+      "package_sha256": "68e3e66638aea3549bb26618c6b29e02a8e2a309726dddc55c4ef53ad5a0159c",
+      "report_sha256": "3ccce81f675a7556fa9618cb8c14dfea1ff5f0d35cd17732699dcaa49157962d",
+      "training_gate_sha256": "254d53ac946c19a5c73dcfc6651f7e2f9c6b25911c2d8d4c43d8ea34f0e3"
+    },
+    "s4_freeze_sha256": "a26c32c92f85bd4e3d63f042578d8a5c9b3d66ef8c6690dde91a00797a140b9c",
+    "s4_gate_id": "parcel-v9-supervisory-gap-s4-training-screen10-gate-v1",
+    "screen_substitutions": [
+      "candidate_package_sha256",
+      "gate_id"
+    ]
+  },
+  "scratch_screen": {
+    "accepted_for_next_training_stage_only_if_all_conditions_pass": true,
+    "candidate_package_sha256": "f0b3c15763887d2023e42a4515073227d51d8c11e3c527b5f7bf1f90bac7a655",
+    "gate_id": "parcel-v10-planner-profile-training-screen10-gate-v1",
+    "maximum_candidate_collisions": 0,
+    "maximum_candidate_mean_final_distance_to_goal_m_exclusive": 7.357697889581092,
+    "maximum_candidate_observed_return_certificate_violations": 0,
+    "maximum_candidate_policy_stop_latch_count": 0,
+    "maximum_candidate_reverse_action_count": 0,
+    "maximum_candidate_startup_failure_count": 0,
+    "maximum_controller_p99_latency_ms": 100,
+    "maximum_controller_p99_latency_ratio": 1.2,
+    "maximum_yaw_only_action_count": 4123,
+    "minimum_candidate_mean_goal_progress_efficiency": 0.5368889887889732,
+    "minimum_candidate_signed_body_clearance_m": 0.475,
+    "minimum_label_independent_liveness_failure_count_reduction": 2,
+    "minimum_mean_maximum_goal_progress_m_exclusive": 2.828198355130386,
+    "minimum_success_count": 2,
+    "required_per_world_maximum_final_distance_to_goal_m": {
+      "5002": 0.9968111229839094
+    },
+    "required_per_world_maximum_final_distance_to_goal_m_exclusive": {
+      "5007": 8.705581484474855,
+      "5009": 8.465700362202803
+    },
+    "required_per_world_maximum_stationary_steps": {
+      "5000": 49,
+      "5001": 49,
+      "5002": 18,
+      "5003": 49,
+      "5004": 49,
+      "5005": 49,
+      "5006": 49,
+      "5007": 49,
+      "5008": 49,
+      "5009": 49
+    },
+    "required_per_world_minimum_goal_progress_efficiency": {
+      "5000": 0.3,
+      "5001": 0.3,
+      "5002": 0.9893758567346785,
+      "5003": 0.3,
+      "5004": 0.3,
+      "5005": 0.3,
+      "5006": 0.3,
+      "5007": 0.3,
+      "5008": 0.3,
+      "5009": 0.3
+    },
+    "required_per_world_minimum_maximum_goal_progress_m": {
+      "5002": 9.00318887701609
+    },
+    "screen_world_ids": [
+      5000,
+      5001,
+      5002,
+      5003,
+      5004,
+      5005,
+      5006,
+      5007,
+      5008,
+      5009
+    ],
+    "screening_can_never_authorize_development_holdout_or_deployment": true,
+    "training_only": true
+  },
+  "training_execution_authorization": {
+    "all_other_worlds_authorized": false,
+    "rerunnable": true,
+    "world_ids": [
+      5000,
+      5001,
+      5002,
+      5003,
+      5004,
+      5005,
+      5006,
+      5007,
+      5008,
+      5009
+    ]
+  }
+}

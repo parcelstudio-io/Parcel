@@ -57,6 +57,7 @@ from .barn_native import (
 from .barn_policy_sidecar import IsolatedPolicyDescriptor
 from .barn_policy_specs import (
     BarnPolicySpec,
+    IsolatedPlannerProfileAuthorization,
     ProcessPolicyDescriptor,
     parcel_baseline_policy_spec,
     parcel_experimental_config_spec,
@@ -456,11 +457,7 @@ class V8EpisodeEvidenceCaptureSpec:
             raise ValueError("evidence execution_order must be 0 or 1")
         for name in ("world_id", "trial_id", "seed"):
             value = getattr(self, name)
-            if (
-                isinstance(value, bool)
-                or not isinstance(value, int)
-                or not 0 <= value < 2**64
-            ):
+            if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < 2**64:
                 raise ValueError(f"evidence {name} must be an unsigned 64-bit integer")
 
 
@@ -918,7 +915,9 @@ class SensorFaithfulBarnRunner:
         evidence_capture: V8EpisodeEvidenceCaptureSpec | None = None,
     ) -> SensorFaithfulEpisodeResult:
         if (action_evidence is None) != (evidence_capture is None):
-            raise ValueError("action evidence builder and capture identity must be supplied together")
+            raise ValueError(
+                "action evidence builder and capture identity must be supplied together"
+            )
         config = self._config
         position = OFFICIAL_START_XY
         heading = config.start_heading_rad
@@ -968,6 +967,7 @@ class SensorFaithfulBarnRunner:
         maximum_consecutive_obstacle_stop = 0
         previous_phase: tuple[str, str] | None = None
         last_evidence_observation: BarnObservation | None = None
+        last_evidence_observation_sha256: str | None = None
         previous_interval: (
             tuple[
                 tuple[float, float],
@@ -1047,6 +1047,7 @@ class SensorFaithfulBarnRunner:
                 last_evidence_observation = instrumented.last_observation
                 if last_evidence_observation is None:
                     raise RuntimeError("calibrated adapter omitted the policy observation")
+                last_evidence_observation_sha256 = instrumented.observation_hashes[-1]
                 observation_steps.append(steps)
                 normalization = core.last_normalization_diagnostics
                 if normalization is None:
@@ -1080,6 +1081,8 @@ class SensorFaithfulBarnRunner:
                 assert evidence_capture is not None
                 if last_evidence_observation is None:
                     raise RuntimeError("action evidence has no normalized observation to bind")
+                if last_evidence_observation_sha256 is None:
+                    raise RuntimeError("action evidence has no complete observation hash to bind")
                 action_evidence.append(
                     step_index=steps,
                     execution_order=evidence_capture.execution_order,
@@ -1097,6 +1100,7 @@ class SensorFaithfulBarnRunner:
                     published_yaw_rate_rps=command.yaw_rate_rps,
                     published_stop=command.stop,
                     note=command.note,
+                    policy_observation_sha256=last_evidence_observation_sha256,
                 )
             if issued_by_policy:
                 if command.forward_mps >= 0.005:
@@ -1547,6 +1551,18 @@ def _execute_episode(
     policy_diagnostics = policy_diagnostics_fn() if callable(policy_diagnostics_fn) else {}
     if not isinstance(policy_diagnostics, dict):
         policy_diagnostics = {}
+    normalized_latency: dict[str, tuple[float, ...]] = {}
+    if not isinstance(raw_latency, Mapping):
+        raise TypeError("policy latency samples must be a mapping")
+    for name, values in raw_latency.items():
+        if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+            raise TypeError("policy latency sample groups must be numeric sequences")
+        if any(isinstance(value, bool) or not isinstance(value, (int, float)) for value in values):
+            raise TypeError("policy latency samples must be numeric and not boolean")
+        samples = tuple(float(value) for value in values)
+        if any(not math.isfinite(value) or value < 0.0 for value in samples):
+            raise ValueError("policy latency samples must be finite and non-negative")
+        normalized_latency[str(name)] = samples
     detail = asdict(result)
     detail["trial"] = int(trial)
     detail["episode_seed"] = int(episode_seed)
@@ -1557,12 +1573,12 @@ def _execute_episode(
         **(latency_metrics_fn() if callable(latency_metrics_fn) else {}),
     }
     detail["policy_diagnostics"] = policy_diagnostics
+    detail["evaluator_controller_step_latency_samples_ms"] = normalized_latency.get(
+        "controller_step", ()
+    )
     return _EpisodeExecution(
         detail=detail,
-        latency_samples_ms={
-            str(name): tuple(float(value) for value in values)
-            for name, values in raw_latency.items()
-        },
+        latency_samples_ms=normalized_latency,
         policy_diagnostics=policy_diagnostics,
         action_evidence=evidence_builder,
     )
@@ -2244,9 +2260,7 @@ def _paired_execution_metadata(
         "pair_count": len(executions),
         "arms_never_concurrent_within_pair": True,
         "same_world_config_trial_and_seed_within_pair": True,
-        "lifecycle": (
-            "construct_run_and_close_first_arm_before_constructing_second_arm"
-        ),
+        "lifecycle": ("construct_run_and_close_first_arm_before_constructing_second_arm"),
         "order_counts": {
             REFERENCE_THEN_CANDIDATE: order_counts[REFERENCE_THEN_CANDIDATE],
             CANDIDATE_THEN_REFERENCE: order_counts[CANDIDATE_THEN_REFERENCE],
@@ -2359,6 +2373,29 @@ def _write_execution_action_evidence(
     captured_steps = tuple(record.step_index for record in builder.records)
     if captured_steps != published_steps:
         raise RuntimeError("action evidence steps do not match the published-action trace")
+    raw_observation_steps = sensor.get("policy_observation_steps")
+    raw_observation_hashes = sensor.get("policy_observation_sha256")
+    if not isinstance(raw_observation_steps, (tuple, list)) or not isinstance(
+        raw_observation_hashes, (tuple, list)
+    ):
+        raise TypeError("paired episode policy-observation hashes are malformed")
+    observation_bindings = tuple(
+        (int(step), str(digest))
+        for step, digest in zip(
+            raw_observation_steps,
+            raw_observation_hashes,
+            strict=True,
+        )
+    )
+    captured_bindings = tuple(
+        (record.step_index, record.policy_observation_sha256)
+        for record in builder.records
+        if record.issued_by_policy
+    )
+    if captured_bindings != observation_bindings:
+        raise RuntimeError(
+            "action evidence full-observation hashes do not match the published trace"
+        )
 
     write_result = builder.write_exclusive(output_path)
     verified = read_v8_action_evidence(
@@ -2369,10 +2406,18 @@ def _write_execution_action_evidence(
         raise RuntimeError("written and independently read action-evidence identities differ")
     if tuple(record.step_index for record in verified.records) != published_steps:
         raise RuntimeError("verified action evidence lost published-action step parity")
+    verified_bindings = tuple(
+        (record.step_index, record.policy_observation_sha256)
+        for record in verified.records
+        if record.issued_by_policy
+    )
+    if verified_bindings != observation_bindings:
+        raise RuntimeError(
+            "verified action-evidence full-observation hashes differ from the published trace"
+        )
 
     violating_actions = sum(
-        not record.certificate.observed_return_boundary_satisfied
-        for record in verified.records
+        not record.certificate.observed_return_boundary_satisfied for record in verified.records
     )
     incomplete_actions = sum(
         not record.certificate.perception_complete for record in verified.records
@@ -2382,6 +2427,7 @@ def _write_execution_action_evidence(
         "write_overhead": write_result.overhead.as_dict(),
         "read_verification_overhead": verified.overhead.as_dict(),
         "action_count_matches_published_trace": True,
+        "policy_observation_hashes_match_published_trace": True,
         "all_records_format_read_and_recertified": True,
         "observed_return_boundary_satisfied_action_count": (
             len(verified.records) - violating_actions
@@ -2419,6 +2465,9 @@ def run_sensor_faithful_paired_comparison(
     long_shield_stall_steps: int = 50,
     arm_order_schedule: Sequence[str] | None = None,
     action_evidence_paths: Mapping[tuple[int, int, str], str | Path] | None = None,
+    isolated_planner_profile_authorization: (
+        IsolatedPlannerProfileAuthorization | None
+    ) = None,
 ) -> dict[str, Any]:
     """Run a counterbalanced A/B where each pair's arms are strictly serial.
 
@@ -2449,10 +2498,32 @@ def run_sensor_faithful_paired_comparison(
         raise ValueError("reference_spec must not be experimental")
     reference.ensure_enabled()
     candidate.ensure_enabled(allow_experimental=allow_experimental)
-    if isinstance(reference.underlying.process_descriptor, IsolatedPolicyDescriptor) and isinstance(
+    isolated_reference = isinstance(
+        reference.underlying.process_descriptor,
+        IsolatedPolicyDescriptor,
+    )
+    isolated_candidate = isinstance(
         candidate.underlying.process_descriptor,
         IsolatedPolicyDescriptor,
-    ):
+    )
+    if isolated_planner_profile_authorization is not None:
+        if not isinstance(
+            isolated_planner_profile_authorization,
+            IsolatedPlannerProfileAuthorization,
+        ):
+            raise TypeError(
+                "isolated_planner_profile_authorization must be an "
+                "IsolatedPlannerProfileAuthorization"
+            )
+        if not isolated_reference or not isolated_candidate:
+            raise ValueError(
+                "planner-profile authorization requires two isolated policy arms"
+            )
+        isolated_planner_profile_authorization.validate_pair(
+            reference.underlying,
+            candidate.underlying,
+        )
+    elif isolated_reference and isolated_candidate:
         validate_isolated_policy_pair(reference.underlying, candidate.underlying)
     if workers > 1 and {
         reference.execution_device.strip().lower(),
@@ -2588,9 +2659,7 @@ def run_sensor_faithful_paired_comparison(
             for arm in actual_order:
                 execution, metadata = _write_execution_action_evidence(
                     executions_by_arm[arm],
-                    output_path=resolved_evidence_paths[
-                        (paired.world_index, paired.trial, arm)
-                    ],
+                    output_path=resolved_evidence_paths[(paired.world_index, paired.trial, arm)],
                 )
                 prepared[arm] = execution
                 action_evidence_items.append(metadata)
@@ -2698,7 +2767,10 @@ def run_sensor_faithful_paired_comparison(
             "immutable_artifact_count": len(action_evidence_items),
             "expected_immutable_artifact_count": 2 * len(paired_executions),
             "all_action_counts_match_published_traces": all(
-                bool(item["action_count_matches_published_trace"])
+                bool(item["action_count_matches_published_trace"]) for item in action_evidence_items
+            ),
+            "all_policy_observation_hashes_match_published_traces": all(
+                bool(item["policy_observation_hashes_match_published_trace"])
                 for item in action_evidence_items
             ),
             "all_records_format_read_and_recertified": all(

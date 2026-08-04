@@ -15,7 +15,10 @@ class SafetyLimits:
     max_vyaw: float = 1.0
 
 
-ALLOWED_BACKENDS = frozenset({"sport", "rl"})
+# Neutral backend names; "sport" is a deprecated vendor-branded alias for
+# "vendor" kept so existing voice habits keep working.
+ALLOWED_BACKENDS = frozenset({"vendor", "rl"})
+_BACKEND_ALIASES = {"sport": "vendor"}
 
 
 class SafetySupervisor:
@@ -99,6 +102,7 @@ class SafetySupervisor:
         if set(call.arguments) != {"name"} or not isinstance(call.arguments["name"], str):
             return ToolResult(call.name, False, "set_motion_backend requires only a string name")
         name = call.arguments["name"]
+        name = _BACKEND_ALIASES.get(name, name)
         if name not in ALLOWED_BACKENDS:
             return ToolResult(call.name, False, f"Unknown motion backend: {name}")
         return ToolResult(call.name, True, f"Motion backend approved: {name}")

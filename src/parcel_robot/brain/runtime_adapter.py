@@ -51,6 +51,9 @@ class SemanticRuntimeState:
     stop_confirmed: bool = False
     control_feedback_fresh: bool = False
     robot_moving: bool = False
+    # Last successfully applied posture name ("unknown" when never applied);
+    # ReturnToSafePose completion verifies against this, never the request.
+    posture: str = "unknown"
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,6 +83,7 @@ class SemanticTaskRuntimeAdapter:
             "Hold",
             "Vocalize",
             "AskClarification",
+            "ReturnToSafePose",
         }
     )
 
@@ -91,12 +95,14 @@ class SemanticTaskRuntimeAdapter:
         spatial_behavior: Callable[[SpatialIntent], object],
         hold: Callable[[], object],
         vocalize: Callable[[str], object],
+        return_to_safe_pose: Callable[[str], object] | None = None,
     ):
         self._navigate = navigate
         self._follow_formation = follow_formation
         self._spatial_behavior = spatial_behavior
         self._hold = hold
         self._vocalize = vocalize
+        self._return_to_safe_pose = return_to_safe_pose
         self._active: dict[DispatchKey, ActiveSemanticDispatch] = {}
         self._lock = threading.RLock()
 
@@ -151,6 +157,12 @@ class SemanticTaskRuntimeAdapter:
             )
         elif request.skill == "Hold":
             self._hold()
+        elif request.skill == "ReturnToSafePose":
+            if self._return_to_safe_pose is None:
+                raise RuntimeError(
+                    "ReturnToSafePose has no runtime callback on this deployment"
+                )
+            self._return_to_safe_pose(str(args["pose"]))
         else:
             field = "text" if request.skill == "Vocalize" else "question"
             self._vocalize(str(args[field]))
@@ -318,6 +330,29 @@ class SemanticTaskRuntimeAdapter:
             # safe checkpoints. The controller remains fail-closed and the
             # executive's timeout/recovery policy decides how long to wait.
             detail = state.follow_state
+        elif request.skill == "ReturnToSafePose":
+            requested_pose = str(request.arguments.get("pose", ""))
+            posture_applied = state.posture == requested_pose and bool(requested_pose)
+            if (
+                posture_applied
+                and state.stop_confirmed
+                and state.control_feedback_fresh
+                and not state.robot_moving
+            ):
+                return _terminal_result(
+                    request,
+                    started=item.started_at_monotonic_s,
+                    snapshot_id=state.snapshot_id,
+                    source="controller_feedback",
+                    detail="safe_pose_stop_verified",
+                    finished=now,
+                    verified_target=requested_pose,
+                )
+            detail = (
+                "waiting_for_posture_confirmation"
+                if not posture_applied
+                else "waiting_for_fresh_stop_confirmation"
+            )
         else:  # Hold
             if state.stop_confirmed and state.control_feedback_fresh and not state.robot_moving:
                 return _terminal_result(

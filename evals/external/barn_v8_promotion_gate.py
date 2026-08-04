@@ -20,7 +20,10 @@ from pathlib import Path, PurePosixPath
 from types import MappingProxyType
 from typing import Any
 
+from .barn_native import BARN_EVALUATOR_COMMIT
 from .barn_sensor_faithful import (
+    BARN_SENSOR_FAITHFUL_EVALUATION_KIND,
+    BARN_SOURCE,
     CANDIDATE_THEN_REFERENCE,
     REFERENCE_THEN_CANDIDATE,
 )
@@ -81,11 +84,7 @@ def canonical_json_sha256(value: Any) -> str:
 
 
 def _valid_sha256(value: object) -> bool:
-    return (
-        isinstance(value, str)
-        and len(value) == 64
-        and set(value) <= _SHA256
-    )
+    return isinstance(value, str) and len(value) == 64 and set(value) <= _SHA256
 
 
 def _require_sha256(value: object, name: str) -> str:
@@ -101,9 +100,12 @@ def _mapping(value: object, name: str) -> Mapping[str, Any]:
 
 
 def _list(value: object, name: str) -> list[Any]:
-    if not isinstance(value, list):
-        raise V8PromotionGateError(f"{name} must be a JSON array")
-    return value
+    # The live harness uses dataclass ``asdict`` and therefore retains tuples;
+    # the immutable canonical-JSON artifact round-trip represents them as
+    # arrays.  Both carry the same ordered values and are accepted here.
+    if not isinstance(value, (list, tuple)):
+        raise V8PromotionGateError(f"{name} must be an ordered array/tuple")
+    return list(value)
 
 
 def _integer(value: object, name: str) -> int:
@@ -121,10 +123,49 @@ def _finite(value: object, name: str) -> float:
     return result
 
 
+def _boolean(value: object, name: str) -> bool:
+    if type(value) is not bool:
+        raise V8PromotionGateError(f"{name} must be a JSON boolean")
+    return value
+
+
+_OUTCOME_STATUSES = frozenset({"succeeded", "collided", "timeout", "startup_timeout"})
+
+
+def _episode_outcome(episode: Mapping[str, Any], *, name: str) -> tuple[bool, bool, str]:
+    """Validate the evaluator-owned outcome tuple without truthiness coercion."""
+
+    success = _boolean(episode.get("success"), f"{name}.success")
+    collided = _boolean(episode.get("collided"), f"{name}.collided")
+    status_value = episode.get("status")
+    if not isinstance(status_value, str) or status_value not in _OUTCOME_STATUSES:
+        raise V8PromotionGateError(f"{name}.status is not an allowed evaluator status")
+    status = status_value
+    expected = {
+        "succeeded": (True, False),
+        "collided": (False, True),
+        "timeout": (False, False),
+        "startup_timeout": (False, False),
+    }[status]
+    if (success, collided) != expected:
+        raise V8PromotionGateError(f"{name} success/collision/status fields are inconsistent")
+
+    timed_out = _boolean(episode.get("timed_out"), f"{name}.timed_out")
+    startup_timed_out = _boolean(episode.get("startup_timed_out"), f"{name}.startup_timed_out")
+    if timed_out is not (status in {"timeout", "startup_timeout"}) or (
+        startup_timed_out is not (status == "startup_timeout")
+    ):
+        raise V8PromotionGateError(f"{name} timeout/status fields are inconsistent")
+    return success, collided, status
+
+
+def _nearest_rank(values: Sequence[float], quantile: float) -> float:
+    ordered = sorted(values)
+    return ordered[max(0, min(len(ordered) - 1, math.ceil(quantile * len(ordered)) - 1))]
+
+
 def _same_float(left: object, right: object, *, name: str) -> bool:
-    return struct.pack("<d", _finite(left, name)) == struct.pack(
-        "<d", _finite(right, name)
-    )
+    return struct.pack("<d", _finite(left, name)) == struct.pack("<d", _finite(right, name))
 
 
 def _promotion_number(*keys: str) -> float:
@@ -246,9 +287,7 @@ def build_v8_evidence_index(
     """Build the canonical index payload from 60 exclusive evidence writes."""
 
     root = Path(evidence_root).expanduser().resolve()
-    expected_keys = {
-        (arm, world_id, 0) for world_id in contract.world_ids for arm in _ARMS
-    }
+    expected_keys = {(arm, world_id, 0) for world_id in contract.world_ids for arm in _ARMS}
     if set(write_results) != expected_keys:
         raise V8PromotionGateError("action-evidence write result membership is not exact")
     entries: list[dict[str, Any]] = []
@@ -313,6 +352,41 @@ def build_v8_evidence_index_from_report(
     """
 
     root = Path(evidence_root).expanduser().resolve()
+    entries, seen = extract_v8_harness_evidence_entries(
+        report,
+        evidence_root=root,
+    )
+    expected = {(arm, world_id, 0) for world_id in contract.world_ids for arm in _ARMS}
+    if seen != expected:
+        raise V8PromotionGateError("harness action-evidence metadata membership is incomplete")
+    return {
+        "schema_version": V8_EVIDENCE_INDEX_SCHEMA_VERSION,
+        "kind": V8_EVIDENCE_INDEX_KIND,
+        "run_id": contract.run_id,
+        "corpus_id": contract.corpus_id,
+        "corpus_sha256": contract.corpus_sha256,
+        "manifest_sha256": contract.manifest_sha256,
+        "profile_id": FROZEN_V8_BARN_EVALUATOR_PROFILE.profile_id,
+        "profile_sha256": FROZEN_V8_BARN_EVALUATOR_PROFILE.identity_sha256,
+        "entry_count": len(entries),
+        "entries": entries,
+        "evidence_overhead_included_in_controller_latency": False,
+    }
+
+
+def extract_v8_harness_evidence_entries(
+    report: Mapping[str, Any],
+    *,
+    evidence_root: str | Path,
+) -> tuple[list[dict[str, Any]], set[tuple[str, int, int]]]:
+    """Parse live or JSON-round-tripped paired-harness evidence metadata.
+
+    This schema adapter is intentionally cardinality-neutral so a tiny real
+    harness smoke can exercise it.  The canonical index builder above applies
+    the exact 30-world/60-artifact V8 membership contract.
+    """
+
+    root = Path(evidence_root).expanduser().resolve()
     entries: list[dict[str, Any]] = []
     seen: set[tuple[str, int, int]] = set()
     for report_key, arm in (("baseline", "reference"), ("candidate", "candidate")):
@@ -327,6 +401,7 @@ def build_v8_evidence_index_from_report(
                 "write_overhead",
                 "read_verification_overhead",
                 "action_count_matches_published_trace",
+                "policy_observation_hashes_match_published_trace",
                 "all_records_format_read_and_recertified",
                 "observed_return_boundary_satisfied_action_count",
                 "observed_return_boundary_violating_action_count",
@@ -337,6 +412,7 @@ def build_v8_evidence_index_from_report(
                 raise V8PromotionGateError("harness action-evidence metadata schema changed")
             if (
                 metadata.get("action_count_matches_published_trace") is not True
+                or metadata.get("policy_observation_hashes_match_published_trace") is not True
                 or metadata.get("all_records_format_read_and_recertified") is not True
                 or metadata.get("evaluator_evidence_overhead_included_in_controller_latency")
                 is not False
@@ -365,28 +441,13 @@ def build_v8_evidence_index_from_report(
                     ),
                 }
             )
-    expected = {(arm, world_id, 0) for world_id in contract.world_ids for arm in _ARMS}
-    if seen != expected:
-        raise V8PromotionGateError("harness action-evidence metadata membership is incomplete")
     entries.sort(
         key=lambda item: (
             int(_mapping(item["identity"], "identity")["world_id"]),
             str(_mapping(item["identity"], "identity")["arm"]),
         )
     )
-    return {
-        "schema_version": V8_EVIDENCE_INDEX_SCHEMA_VERSION,
-        "kind": V8_EVIDENCE_INDEX_KIND,
-        "run_id": contract.run_id,
-        "corpus_id": contract.corpus_id,
-        "corpus_sha256": contract.corpus_sha256,
-        "manifest_sha256": contract.manifest_sha256,
-        "profile_id": FROZEN_V8_BARN_EVALUATOR_PROFILE.profile_id,
-        "profile_sha256": FROZEN_V8_BARN_EVALUATOR_PROFILE.identity_sha256,
-        "entry_count": len(entries),
-        "entries": entries,
-        "evidence_overhead_included_in_controller_latency": False,
-    }
+    return entries, seen
 
 
 def _episode_map(report: Mapping[str, Any], *, arm: str, contract: V8DevelopmentGateContract):
@@ -410,21 +471,44 @@ def _episode_map(report: Mapping[str, Any], *, arm: str, contract: V8Development
         expected_seed = contract.suite_seed + world_id * 1_009 + trial_id
         if _integer(episode.get("episode_seed"), "episode_seed") != expected_seed:
             raise V8PromotionGateError(f"{arm} episode seed mismatch for world {world_id}")
+        _episode_outcome(episode, name=f"{arm} episode {world_id}/{trial_id}")
     return result
 
 
 def _validate_report_protocol(
     report: Mapping[str, Any],
     contract: V8DevelopmentGateContract,
-) -> tuple[Mapping[str, Any], Mapping[str, Any], dict[tuple[int, int], Mapping[str, Any]], dict[tuple[int, int], Mapping[str, Any]]]:
+) -> tuple[
+    Mapping[str, Any],
+    Mapping[str, Any],
+    dict[tuple[int, int], Mapping[str, Any]],
+    dict[tuple[int, int], Mapping[str, Any]],
+]:
+    if _integer(report.get("schema_version"), "report.schema_version") != 1:
+        raise V8PromotionGateError("V8 paired report schema version changed")
+    expected_evaluation_kind = (
+        f"{BARN_SENSOR_FAITHFUL_EVALUATION_KIND}-counterbalanced-paired-comparison"
+    )
+    if report.get("evaluation_kind") != expected_evaluation_kind:
+        raise V8PromotionGateError("V8 paired report evaluation kind changed")
     if report.get("official_gazebo_score") is not False:
         raise V8PromotionGateError("V8 development output must be explicitly non-official")
+    target_status = _mapping(report.get("target_status"), "target_status")
+    if target_status.get("official_gate_pass") is not False:
+        raise V8PromotionGateError("V8 target status must deny an official gate pass")
+    for name in ("leaderboard_claim", "holdout_authorized", "holdout_evaluated"):
+        if name in target_status and target_status.get(name) is not False:
+            raise V8PromotionGateError(f"V8 target status {name} must be false")
     baseline = _mapping(report.get("baseline"), "baseline")
     candidate = _mapping(report.get("candidate"), "candidate")
     for arm, arm_report, expected_policy_sha in (
         ("reference", baseline, contract.reference_policy_metadata_sha256),
         ("candidate", candidate, contract.candidate_policy_metadata_sha256),
     ):
+        if _integer(arm_report.get("schema_version"), f"{arm}.schema_version") != 1:
+            raise V8PromotionGateError(f"{arm} report schema version changed")
+        if arm_report.get("evaluation_kind") != BARN_SENSOR_FAITHFUL_EVALUATION_KIND:
+            raise V8PromotionGateError(f"{arm} report evaluation kind changed")
         if arm_report.get("official_gazebo_score") is not False:
             raise V8PromotionGateError(f"{arm} report must be explicitly non-official")
         if arm_report.get("suite_seed") != contract.suite_seed:
@@ -432,19 +516,45 @@ def _validate_report_protocol(
         if canonical_json_sha256(arm_report.get("native_config")) != contract.native_config_sha256:
             raise V8PromotionGateError(f"{arm} calibrated native config changed")
         benchmark = _mapping(arm_report.get("benchmark"), f"{arm}.benchmark")
-        if benchmark.get("asset_manifest_sha256") != contract.manifest_sha256:
-            raise V8PromotionGateError(f"{arm} asset manifest identity changed")
+        if (
+            benchmark.get("id") != BARN_SENSOR_FAITHFUL_EVALUATION_KIND
+            or benchmark.get("source") != BARN_SOURCE
+            or benchmark.get("source_commit") != BARN_EVALUATOR_COMMIT
+            or benchmark.get("official_gazebo_score") is not False
+            or benchmark.get("asset_scope") != "generated-public-style-development"
+            or benchmark.get("asset_manifest_sha256") != contract.manifest_sha256
+        ):
+            raise V8PromotionGateError(f"{arm} benchmark identity/scope changed")
         if benchmark.get("public_world_indices") != list(contract.world_ids):
             raise V8PromotionGateError(f"{arm} world order changed")
         execution = _mapping(arm_report.get("execution"), f"{arm}.execution")
+        policy = _mapping(arm_report.get("policy"), f"{arm}.policy")
         if (
-            execution.get("episode_workers_requested") != contract.workers
+            execution.get("evaluator_device") != "cpu"
+            or execution.get("lidar_raycast_device") != "cpu"
+            or execution.get("kinematics_device") != "cpu"
+            or execution.get("policy_declared_device") != policy.get("execution_device")
+            or execution.get("policy_declared_device") != "cpu"
+            or execution.get("episode_workers_requested") != contract.workers
             or execution.get("episode_workers_effective") != contract.workers
             or execution.get("process_start_method") != "spawn"
+            or execution.get("durable_report_writer") != "caller_or_parent_process_only"
             or execution.get("paired_episode_execution") is not True
             or execution.get("arms_concurrent_within_pair") is not False
         ):
             raise V8PromotionGateError(f"{arm} isolated paired execution protocol changed")
+        action_evidence = _mapping(
+            execution.get("action_evidence"), f"{arm}.execution.action_evidence"
+        )
+        if dict(action_evidence) != {
+            "enabled": True,
+            "immutable_artifact_count": V8_DEVELOPMENT_PAIR_COUNT,
+            "evaluator_overhead_included_in_controller_latency": False,
+        }:
+            raise V8PromotionGateError(f"{arm} action-evidence execution contract changed")
+        target = _mapping(arm_report.get("top_decile_target"), f"{arm}.top_decile_target")
+        if target.get("official_protocol") is not False or target.get("pass") is not False:
+            raise V8PromotionGateError(f"{arm} target must remain explicitly non-official")
         if canonical_json_sha256(arm_report.get("policy")) != expected_policy_sha:
             raise V8PromotionGateError(f"{arm} policy/runtime identity changed")
 
@@ -461,6 +571,36 @@ def _validate_report_protocol(
         raise V8PromotionGateError("one-factor/runtime preflight identity changed")
 
     paired = _mapping(report.get("comparison"), "comparison")
+    comparison_evidence = _mapping(paired.get("action_evidence"), "comparison.action_evidence")
+    if set(comparison_evidence) != {
+        "enabled",
+        "format_id",
+        "immutable_artifact_count",
+        "expected_immutable_artifact_count",
+        "all_action_counts_match_published_traces",
+        "all_policy_observation_hashes_match_published_traces",
+        "all_records_format_read_and_recertified",
+        "evaluator_overhead_included_in_controller_latency",
+        "artifacts",
+    }:
+        raise V8PromotionGateError("paired action-evidence report schema changed")
+    comparison_artifacts = _list(
+        comparison_evidence.get("artifacts"), "comparison evidence artifacts"
+    )
+    if (
+        comparison_evidence.get("enabled") is not True
+        or comparison_evidence.get("format_id") != V8_ACTION_EVIDENCE_FORMAT_ID
+        or comparison_evidence.get("immutable_artifact_count") != 2 * V8_DEVELOPMENT_PAIR_COUNT
+        or comparison_evidence.get("expected_immutable_artifact_count")
+        != 2 * V8_DEVELOPMENT_PAIR_COUNT
+        or comparison_evidence.get("all_action_counts_match_published_traces") is not True
+        or comparison_evidence.get("all_policy_observation_hashes_match_published_traces")
+        is not True
+        or comparison_evidence.get("all_records_format_read_and_recertified") is not True
+        or comparison_evidence.get("evaluator_overhead_included_in_controller_latency") is not False
+        or len(comparison_artifacts) != 2 * V8_DEVELOPMENT_PAIR_COUNT
+    ):
+        raise V8PromotionGateError("paired action-evidence report identity changed")
     paired_execution = _mapping(paired.get("paired_execution"), "paired_execution")
     if (
         paired_execution.get("pair_count") != V8_DEVELOPMENT_PAIR_COUNT
@@ -493,6 +633,24 @@ def _validate_report_protocol(
 
     reference_episodes = _episode_map(baseline, arm="reference", contract=contract)
     candidate_episodes = _episode_map(candidate, arm="candidate", contract=contract)
+    episode_artifacts = [
+        dict(
+            _mapping(
+                _mapping(episode.get("action_evidence"), "episode action evidence").get("identity"),
+                "episode action-evidence identity",
+            )
+        )
+        for episodes in (reference_episodes, candidate_episodes)
+        for episode in episodes.values()
+    ]
+    comparison_artifact_hashes = sorted(
+        canonical_json_sha256(_mapping(value, "comparison action-evidence identity"))
+        for value in comparison_artifacts
+    )
+    if comparison_artifact_hashes != sorted(map(canonical_json_sha256, episode_artifacts)):
+        raise V8PromotionGateError(
+            "paired action-evidence artifact identities differ from episode reports"
+        )
     return baseline, candidate, reference_episodes, candidate_episodes
 
 
@@ -500,8 +658,10 @@ def _safe_evidence_path(root: Path, relative_value: object) -> Path:
     if not isinstance(relative_value, str):
         raise V8PromotionGateError("evidence relative_path must be a string")
     relative = PurePosixPath(relative_value)
-    if relative.is_absolute() or not relative.parts or any(
-        part in {"", ".", ".."} for part in relative.parts
+    if (
+        relative.is_absolute()
+        or not relative.parts
+        or any(part in {"", ".", ".."} for part in relative.parts)
     ):
         raise V8PromotionGateError("evidence relative_path is unsafe")
     target = root.joinpath(*relative.parts)
@@ -577,10 +737,8 @@ def _verify_action_evidence(
         or evidence_index.get("corpus_id") != contract.corpus_id
         or evidence_index.get("corpus_sha256") != contract.corpus_sha256
         or evidence_index.get("manifest_sha256") != contract.manifest_sha256
-        or evidence_index.get("profile_id")
-        != FROZEN_V8_BARN_EVALUATOR_PROFILE.profile_id
-        or evidence_index.get("profile_sha256")
-        != FROZEN_V8_BARN_EVALUATOR_PROFILE.identity_sha256
+        or evidence_index.get("profile_id") != FROZEN_V8_BARN_EVALUATOR_PROFILE.profile_id
+        or evidence_index.get("profile_sha256") != FROZEN_V8_BARN_EVALUATOR_PROFILE.identity_sha256
         or evidence_index.get("entry_count") != 2 * V8_DEVELOPMENT_PAIR_COUNT
         or evidence_index.get("evidence_overhead_included_in_controller_latency") is not False
     ):
@@ -590,12 +748,12 @@ def _verify_action_evidence(
         raise V8PromotionGateError("action-evidence index must contain exactly 60 entries")
 
     unresolved_root = Path(evidence_root).expanduser().absolute()
-    if unresolved_root.is_symlink() or not unresolved_root.is_dir():
+    for component in (unresolved_root, *unresolved_root.parents):
+        if os.path.lexists(component) and component.is_symlink():
+            raise V8PromotionGateError("action-evidence root contains a symbolic-link component")
+    if not unresolved_root.is_dir():
         raise V8PromotionGateError("action-evidence root is missing or unsafe")
     root = unresolved_root.resolve()
-    for parent in (root, *root.parents):
-        if parent.is_symlink():
-            raise V8PromotionGateError("action-evidence root contains a symbolic-link component")
     expected_paths = expected_v8_evidence_paths(root, world_ids=contract.world_ids)
     actual_files: set[Path] = set()
     for candidate in root.iterdir():
@@ -651,8 +809,14 @@ def _verify_action_evidence(
             raise V8PromotionGateError("action-evidence path naming changed")
         path = _safe_evidence_path(root, entry.get("relative_path"))
         metadata = os.lstat(path)
-        if not stat.S_ISREG(metadata.st_mode) or metadata.st_mode & _WRITE_BITS:
-            raise V8PromotionGateError("action evidence must be an immutable regular file")
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_mode & _WRITE_BITS
+            or metadata.st_nlink != 1
+        ):
+            raise V8PromotionGateError(
+                "action evidence must be an immutable single-link regular file"
+            )
         expected_artifact_sha = _require_sha256(
             identity.get("artifact_sha256"), "evidence artifact_sha256"
         )
@@ -675,11 +839,57 @@ def _verify_action_evidence(
             if arm == "reference"
             else candidate_episodes[(world_id, trial_id)]
         )
+        episode_evidence = _mapping(
+            episode.get("action_evidence"), "episode action-evidence metadata"
+        )
+        required_episode_evidence = {
+            "identity",
+            "write_overhead",
+            "read_verification_overhead",
+            "action_count_matches_published_trace",
+            "policy_observation_hashes_match_published_trace",
+            "all_records_format_read_and_recertified",
+            "observed_return_boundary_satisfied_action_count",
+            "observed_return_boundary_violating_action_count",
+            "perception_incomplete_action_count",
+            "evaluator_evidence_overhead_included_in_controller_latency",
+        }
+        if set(episode_evidence) != required_episode_evidence:
+            raise V8PromotionGateError("episode action-evidence metadata schema changed")
+        if (
+            episode_evidence.get("action_count_matches_published_trace") is not True
+            or episode_evidence.get("policy_observation_hashes_match_published_trace") is not True
+            or episode_evidence.get("all_records_format_read_and_recertified") is not True
+            or episode_evidence.get("evaluator_evidence_overhead_included_in_controller_latency")
+            is not False
+            or dict(_mapping(episode_evidence.get("identity"), "episode evidence identity"))
+            != read_result.identity.as_dict()
+            or dict(_mapping(episode_evidence.get("write_overhead"), "episode write overhead"))
+            != dict(_mapping(entry.get("write_overhead"), "index write overhead"))
+            or dict(
+                _mapping(
+                    episode_evidence.get("read_verification_overhead"),
+                    "episode read-verification overhead",
+                )
+            )
+            != dict(
+                _mapping(
+                    entry.get("initial_read_verification_overhead"),
+                    "index initial read-verification overhead",
+                )
+            )
+        ):
+            raise V8PromotionGateError(
+                "episode action-evidence metadata differs from independently verified evidence"
+            )
         sensor = _mapping(episode.get("sensor_diagnostics"), "episode sensor diagnostics")
         shield = _mapping(episode.get("shield_stall_diagnostics"), "episode shield diagnostics")
         action_steps = _list(sensor.get("published_action_steps"), "published action steps")
         action_values = _list(sensor.get("published_action_values"), "published actions")
         observation_steps = _list(sensor.get("policy_observation_steps"), "observation steps")
+        observation_hashes = _list(
+            sensor.get("policy_observation_sha256"), "policy observation hashes"
+        )
         if (
             read_result.identity.record_count != len(action_steps)
             or len(read_result.records) != len(action_steps)
@@ -691,12 +901,19 @@ def _verify_action_evidence(
             observation_steps
         ):
             raise V8PromotionGateError("policy observation/issued-action count changed")
-        if _integer(sensor.get("frame_count"), "normalized frame count") != len(
-            observation_steps
-        ):
+        if len(observation_hashes) != len(observation_steps):
+            raise V8PromotionGateError("policy observation hash/step count changed")
+        expected_observation_bindings = [
+            (
+                _integer(step, "observation step"),
+                _require_sha256(digest, "policy observation digest"),
+            )
+            for step, digest in zip(observation_steps, observation_hashes, strict=True)
+        ]
+        if _integer(sensor.get("frame_count"), "normalized frame count") != len(observation_steps):
             raise V8PromotionGateError("normalization frame count changed")
 
-        issued_steps: list[int] = []
+        issued_bindings: list[tuple[int, str]] = []
         for index, record in enumerate(read_result.records):
             step = _integer(action_steps[index], "published action step")
             if record.step_index != step:
@@ -715,7 +932,7 @@ def _verify_action_evidence(
             ):
                 raise V8PromotionGateError("evidence action differs from published action")
             if record.issued_by_policy:
-                issued_steps.append(step)
+                issued_bindings.append((step, record.policy_observation_sha256))
             certificate = record.certificate
             classified = (
                 certificate.ray_count == V8_REQUIRED_RAYS
@@ -747,8 +964,37 @@ def _verify_action_evidence(
                     }
                     if certificate.limiting_ray_index not in nearest_indices:
                         global_nearest_not_limiting_count += 1
-        if issued_steps != [_integer(value, "observation step") for value in observation_steps]:
-            raise V8PromotionGateError("evidence issued-action steps differ from observations")
+        if issued_bindings != expected_observation_bindings:
+            raise V8PromotionGateError(
+                "evidence issued-action full-observation hashes differ from the report"
+            )
+        episode_violations = sum(
+            not record.certificate.observed_return_boundary_satisfied
+            for record in read_result.records
+        )
+        episode_incomplete = sum(
+            not record.certificate.perception_complete for record in read_result.records
+        )
+        if (
+            _integer(
+                episode_evidence.get("observed_return_boundary_satisfied_action_count"),
+                "episode satisfied certificate count",
+            )
+            != len(read_result.records) - episode_violations
+            or _integer(
+                episode_evidence.get("observed_return_boundary_violating_action_count"),
+                "episode violating certificate count",
+            )
+            != episode_violations
+            or _integer(
+                episode_evidence.get("perception_incomplete_action_count"),
+                "episode incomplete perception count",
+            )
+            != episode_incomplete
+        ):
+            raise V8PromotionGateError(
+                "episode action-evidence counters differ from independently verified evidence"
+            )
 
         write_overhead = _mapping(entry["write_overhead"], "write overhead")
         total_write_overhead_ns += sum(
@@ -779,9 +1025,7 @@ def _verify_action_evidence(
         )
         results[key] = read_result
 
-    expected_keys = {
-        (arm, world_id, 0) for world_id in contract.world_ids for arm in _ARMS
-    }
+    expected_keys = {(arm, world_id, 0) for world_id in contract.world_ids for arm in _ARMS}
     if set(results) != expected_keys:
         raise V8PromotionGateError("action-evidence episode membership is incomplete")
     return results, {
@@ -797,33 +1041,47 @@ def _verify_action_evidence(
         "evidence_initial_read_verify_overhead_ns": total_initial_read_overhead_ns,
         "evidence_read_verify_overhead_ns": total_read_overhead_ns,
         "evidence_overhead_included_in_controller_latency": False,
+        "all_policy_observation_hashes_match_published_traces": True,
     }
 
 
 def _independent_mode_affected_count(
     evidence: Mapping[tuple[str, int, int], V8ActionEvidenceReadResult],
     contract: V8DevelopmentGateContract,
-) -> tuple[int, list[dict[str, Any]]]:
+) -> tuple[int, int, int, list[dict[str, Any]]]:
     affected: list[dict[str, Any]] = []
+    divergent_pair_count = 0
+    invalid_first_divergence_count = 0
     for world_id in contract.world_ids:
-        reference = {record.step_index: record for record in evidence[("reference", world_id, 0)].records}
-        candidate = {record.step_index: record for record in evidence[("candidate", world_id, 0)].records}
-        common_steps = sorted(reference.keys() & candidate.keys())
+        reference = {
+            record.step_index: record for record in evidence[("reference", world_id, 0)].records
+        }
+        candidate = {
+            record.step_index: record for record in evidence[("candidate", world_id, 0)].records
+        }
+        all_steps = sorted(reference.keys() | candidate.keys())
         first_divergence = next(
             (
                 step
-                for step in common_steps
-                if _action_signature(reference[step]) != _action_signature(candidate[step])
+                for step in all_steps
+                if step not in reference
+                or step not in candidate
+                or _action_signature(reference[step]) != _action_signature(candidate[step])
             ),
             None,
         )
         if first_divergence is None:
+            continue
+        divergent_pair_count += 1
+        if first_divergence not in reference or first_divergence not in candidate:
+            invalid_first_divergence_count += 1
             continue
         left = reference[first_divergence]
         right = candidate[first_divergence]
         exact_observation = (
             left.issued_by_policy
             and right.issued_by_policy
+            and left.policy_observation_sha256 == right.policy_observation_sha256
             and left.normalized_scan_float64_le == right.normalized_scan_float64_le
             and struct.pack("<dd", left.angle_min_rad, left.angle_increment_rad)
             == struct.pack("<dd", right.angle_min_rad, right.angle_increment_rad)
@@ -834,10 +1092,18 @@ def _independent_mode_affected_count(
                     "world_index": world_id,
                     "trial": 0,
                     "first_divergence_step": first_divergence,
+                    "policy_observation_sha256": left.policy_observation_sha256,
                     "normalized_scan_float64_sha256": left.normalized_scan_float64_sha256,
                 }
             )
-    return len(affected), affected
+        else:
+            invalid_first_divergence_count += 1
+    return (
+        divergent_pair_count,
+        len(affected),
+        invalid_first_divergence_count,
+        affected,
+    )
 
 
 def _crosscheck_aggregates(
@@ -848,10 +1114,14 @@ def _crosscheck_aggregates(
 ) -> Mapping[str, Any]:
     aggregate = _mapping(arm_report.get("aggregate"), f"{arm}.aggregate")
     count = len(episodes)
+    outcomes = [
+        _episode_outcome(episode, name=f"{arm} episode {world_id}/{trial_id}")
+        for (world_id, trial_id), episode in episodes.items()
+    ]
     expected = {
-        "success_rate": sum(bool(item.get("success")) for item in episodes.values()) / count,
-        "collision_rate": sum(bool(item.get("collided")) for item in episodes.values()) / count,
-        "timeout_rate": sum(str(item.get("status")) == "timeout" for item in episodes.values())
+        "success_rate": sum(success for success, _collided, _status in outcomes) / count,
+        "collision_rate": sum(collided for _success, collided, _status in outcomes) / count,
+        "timeout_rate": sum(status == "timeout" for _success, _collided, status in outcomes)
         / count,
         "navigation_metric": sum(
             _finite(item.get("navigation_metric"), f"{arm}.navigation_metric")
@@ -867,6 +1137,55 @@ def _crosscheck_aggregates(
             abs_tol=1e-12,
         ):
             raise V8PromotionGateError(f"{arm} aggregate {name} is inconsistent with episodes")
+
+    controller_samples: list[float] = []
+    for (world_id, trial_id), episode in episodes.items():
+        raw_samples = _list(
+            episode.get("evaluator_controller_step_latency_samples_ms"),
+            f"{arm} episode {world_id}/{trial_id} controller latency samples",
+        )
+        samples = [
+            _finite(
+                value,
+                f"{arm} episode {world_id}/{trial_id} controller latency sample",
+            )
+            for value in raw_samples
+        ]
+        if any(value < 0.0 for value in samples):
+            raise V8PromotionGateError(f"{arm} controller latency samples must be non-negative")
+        shield = _mapping(
+            episode.get("shield_stall_diagnostics"),
+            f"{arm} episode {world_id}/{trial_id} shield diagnostics",
+        )
+        issued_count = _integer(
+            shield.get("issued_policy_command_steps"),
+            f"{arm} episode {world_id}/{trial_id} issued policy steps",
+        )
+        if len(samples) != issued_count:
+            raise V8PromotionGateError(
+                f"{arm} controller latency sample count differs from policy-issued steps"
+            )
+        controller_samples.extend(samples)
+    if not controller_samples:
+        raise V8PromotionGateError(f"{arm} controller latency samples are empty")
+    latency_expected = {
+        "controller_step_count": float(len(controller_samples)),
+        "controller_step_mean_ms": math.fsum(controller_samples) / len(controller_samples),
+        "controller_step_p50_ms": _nearest_rank(controller_samples, 0.50),
+        "controller_step_p95_ms": _nearest_rank(controller_samples, 0.95),
+        "controller_step_p99_ms": _nearest_rank(controller_samples, 0.99),
+        "controller_step_max_ms": max(controller_samples),
+    }
+    for name, value in latency_expected.items():
+        if not math.isclose(
+            _finite(aggregate.get(name), f"{arm}.aggregate.{name}"),
+            value,
+            rel_tol=0.0,
+            abs_tol=1e-12,
+        ):
+            raise V8PromotionGateError(
+                f"{arm} aggregate {name} is inconsistent with raw controller samples"
+            )
     return aggregate
 
 
@@ -882,12 +1201,8 @@ def evaluate_v8_promotion_gate(
     baseline, candidate, reference_episodes, candidate_episodes = _validate_report_protocol(
         report, contract
     )
-    reference_aggregate = _crosscheck_aggregates(
-        baseline, reference_episodes, arm="reference"
-    )
-    candidate_aggregate = _crosscheck_aggregates(
-        candidate, candidate_episodes, arm="candidate"
-    )
+    reference_aggregate = _crosscheck_aggregates(baseline, reference_episodes, arm="reference")
+    candidate_aggregate = _crosscheck_aggregates(candidate, candidate_episodes, arm="candidate")
     evidence, evidence_diagnostics = _verify_action_evidence(
         evidence_index=evidence_index,
         evidence_root=evidence_root,
@@ -895,7 +1210,12 @@ def evaluate_v8_promotion_gate(
         reference_episodes=reference_episodes,
         candidate_episodes=candidate_episodes,
     )
-    mode_affected_count, affected_pairs = _independent_mode_affected_count(evidence, contract)
+    (
+        divergent_pair_count,
+        mode_affected_count,
+        invalid_first_divergence_count,
+        affected_pairs,
+    ) = _independent_mode_affected_count(evidence, contract)
 
     comparison = _mapping(report.get("comparison"), "comparison")
     paired_episodes = _list(comparison.get("paired_episodes"), "paired episodes")
@@ -917,13 +1237,22 @@ def evaluate_v8_promotion_gate(
     success_gains = 0
     success_regressions = 0
     for key in reference_episodes:
-        reference_success = bool(reference_episodes[key].get("success"))
-        candidate_success = bool(candidate_episodes[key].get("success"))
+        reference_success, _reference_collided, reference_status = _episode_outcome(
+            reference_episodes[key], name=f"reference episode {key[0]}/{key[1]}"
+        )
+        candidate_success, _candidate_collided, candidate_status = _episode_outcome(
+            candidate_episodes[key], name=f"candidate episode {key[0]}/{key[1]}"
+        )
         success_gains += int(candidate_success and not reference_success)
         success_regressions += int(reference_success and not candidate_success)
         expected_delta = int(candidate_success) - int(reference_success)
-        if _integer(paired_by_key[key].get("success_delta"), "paired success_delta") != expected_delta:
-            raise V8PromotionGateError("paired success delta is inconsistent with episodes")
+        if (
+            _integer(paired_by_key[key].get("success_delta"), "paired success_delta")
+            != expected_delta
+            or paired_by_key[key].get("baseline_status") != reference_status
+            or paired_by_key[key].get("candidate_status") != candidate_status
+        ):
+            raise V8PromotionGateError("paired outcome diagnostics are inconsistent with episodes")
 
     comparison_affected = _integer(
         comparison.get("mode_affected_episode_count"), "mode affected episode count"
@@ -944,15 +1273,17 @@ def evaluate_v8_promotion_gate(
 
     reference_timeout_rate = _finite(reference_aggregate.get("timeout_rate"), "reference timeout")
     candidate_timeout_rate = _finite(candidate_aggregate.get("timeout_rate"), "candidate timeout")
-    success_rate_delta = _finite(candidate_aggregate.get("success_rate"), "candidate success") - _finite(
-        reference_aggregate.get("success_rate"), "reference success"
-    )
+    success_rate_delta = _finite(
+        candidate_aggregate.get("success_rate"), "candidate success"
+    ) - _finite(reference_aggregate.get("success_rate"), "reference success")
     navigation_metric_delta = _finite(
         candidate_aggregate.get("navigation_metric"), "candidate navigation metric"
     ) - _finite(reference_aggregate.get("navigation_metric"), "reference navigation metric")
     candidate_clearances = []
     for episode in candidate_episodes.values():
-        evaluator = _mapping(episode.get("evaluator_diagnostics"), "candidate evaluator diagnostics")
+        evaluator = _mapping(
+            episode.get("evaluator_diagnostics"), "candidate evaluator diagnostics"
+        )
         candidate_clearances.append(
             _finite(
                 evaluator.get("minimum_signed_obstacle_clearance_m"),
@@ -993,6 +1324,18 @@ def evaluate_v8_promotion_gate(
         "maximum_controller_p99_latency_ratio",
         "maximum_candidate_to_reference_controller_p99_ratio",
     )
+    maximum_candidate_violations = int(
+        _promotion_number("maximum_candidate_observed_return_certificate_violations")
+    )
+    required_classified_rays = int(
+        _promotion_number("required_classified_rays_per_policy_issued_action")
+    )
+    maximum_candidate_collisions = int(_promotion_number("maximum_candidate_collisions"))
+    maximum_success_regressions = int(_promotion_number("maximum_paired_success_regressions"))
+    minimum_mode_affected = int(_promotion_number("minimum_mode_affected_paired_episodes"))
+    minimum_global_nearest_cases = int(
+        _promotion_number("minimum_global_nearest_not_limiting_cases")
+    )
     if not math.isclose(
         minimum_clearance,
         V8_MINIMUM_SIGNED_BODY_CLEARANCE_M,
@@ -1000,44 +1343,62 @@ def evaluate_v8_promotion_gate(
         abs_tol=1e-12,
     ):
         raise V8PromotionGateError("frozen V8 signed-clearance threshold changed")
+    if required_classified_rays != V8_REQUIRED_RAYS:
+        raise V8PromotionGateError("frozen V8 classified-ray requirement changed")
+    required_true_flags = (
+        "exact_one_factor_source_delta",
+        "same_world_trial_seed_calibration_runtime_and_schedule",
+        "no_perception_requires_zero_translation",
+        "candidate_timeout_rate_must_not_exceed_reference",
+        "all_first_divergences_must_share_identical_observation",
+        "evidence_and_certification_latency_excluded_from_controller_latency",
+        "all_conditions_required_before_any_holdout_authorization",
+    )
+    if any(PROMOTION_GATE.get(name) is not True for name in required_true_flags):
+        raise V8PromotionGateError("a required declarative V8 gate flag changed")
+
+    candidate_collision_count = sum(
+        _episode_outcome(episode, name=f"candidate episode {key[0]}/{key[1]}")[1]
+        for key, episode in candidate_episodes.items()
+    )
 
     gates = {
         "exact_one_factor_policy_delta_and_isolated_runtime_parity": True,
         "identical_world_trial_seed_config_and_counterbalanced_schedule": True,
-        "fully_verified_immutable_action_evidence": evidence_diagnostics[
-            "verified_artifact_count"
-        ]
+        "fully_verified_immutable_action_evidence": evidence_diagnostics["verified_artifact_count"]
         == 60,
         "all_actions_classify_exactly_720_rays": bool(
             evidence_diagnostics["all_720_rays_classified"]
         ),
         "zero_candidate_observed_return_certificate_violations": bool(
             evidence_diagnostics["candidate_observed_return_boundary_satisfied"]
-            and evidence_diagnostics["candidate_observed_return_violation_count"] == 0
+            and evidence_diagnostics["candidate_observed_return_violation_count"]
+            <= maximum_candidate_violations
         ),
         "zero_candidate_translation_when_perception_unavailable": (
             evidence_diagnostics["candidate_perception_unavailable_translation_count"] == 0
         ),
-        "zero_candidate_collisions": all(
-            not bool(episode.get("collided")) for episode in candidate_episodes.values()
-        ),
+        "zero_candidate_collisions": candidate_collision_count <= maximum_candidate_collisions,
         "candidate_minimum_signed_body_clearance": candidate_minimum_clearance
         >= minimum_clearance - 1e-12,
         "candidate_timeout_rate_not_above_reference": candidate_timeout_rate
         <= reference_timeout_rate + 1e-12,
-        "zero_paired_success_regressions": success_regressions == 0,
+        "zero_paired_success_regressions": success_regressions <= maximum_success_regressions,
         "minimum_success_gains": success_gains >= minimum_success_gains,
         "minimum_success_rate_delta": success_rate_delta >= minimum_success_delta - 1e-12,
         "minimum_navigation_metric_delta": navigation_metric_delta
         >= minimum_navigation_delta - 1e-12,
-        "mode_affected_identical_first_divergence_observation": mode_affected_count >= 1,
+        "mode_affected_identical_first_divergence_observation": mode_affected_count
+        >= minimum_mode_affected,
+        "all_first_divergences_share_identical_exact_observation": (
+            invalid_first_divergence_count == 0
+        ),
         "global_nearest_not_limiting_case_exercised": evidence_diagnostics[
             "global_nearest_not_limiting_action_count"
         ]
-        >= 1,
+        >= minimum_global_nearest_cases,
         "candidate_controller_p99_latency": candidate_p99 <= maximum_controller_p99,
-        "candidate_to_reference_controller_p99_ratio": latency_ratio
-        <= maximum_controller_ratio,
+        "candidate_to_reference_controller_p99_ratio": latency_ratio <= maximum_controller_ratio,
         "evidence_overhead_separate_from_controller_latency": (
             evidence_diagnostics["evidence_overhead_included_in_controller_latency"] is False
             and not any("evidence" in str(key).lower() for key in candidate_aggregate)
@@ -1058,10 +1419,13 @@ def evaluate_v8_promotion_gate(
         "reference_timeout_rate": reference_timeout_rate,
         "candidate_timeout_rate": candidate_timeout_rate,
         "candidate_minimum_signed_body_clearance_m": candidate_minimum_clearance,
+        "candidate_collision_count": candidate_collision_count,
         "reference_controller_p99_ms": reference_p99,
         "candidate_controller_p99_ms": candidate_p99,
         "candidate_to_reference_controller_p99_ratio": latency_ratio,
         "mode_affected_identical_observation_pair_count": mode_affected_count,
+        "divergent_pair_count": divergent_pair_count,
+        "invalid_first_divergence_observation_pair_count": invalid_first_divergence_count,
         "mode_affected_pairs": affected_pairs,
         **evidence_diagnostics,
         "all_conditions_passed": all(gates.values()),
@@ -1092,6 +1456,7 @@ __all__ = [
     "canonical_json_sha256",
     "evaluate_v8_promotion_gate",
     "expected_v8_evidence_paths",
+    "extract_v8_harness_evidence_entries",
     "v8_evidence_artifact_name",
     "v8_evidence_relative_path",
 ]

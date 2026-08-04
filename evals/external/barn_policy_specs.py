@@ -990,11 +990,259 @@ def validate_isolated_policy_pair(
     }
 
 
+def validate_isolated_planner_profile_pair(
+    reference: BarnPolicySpec,
+    candidate: BarnPolicySpec,
+    *,
+    expected_reference_model_artifact_sha256: str,
+    expected_candidate_model_artifact_sha256: str,
+) -> dict[str, dict[str, Any]]:
+    """Validate an isolated pair whose sole policy-input delta is its model YAML.
+
+    Unlike :func:`validate_isolated_policy_pair`, this contract deliberately
+    permits the active model artifact digest to differ.  Both digests must be
+    supplied explicitly and must match their respective arms.  The active
+    model ID, navigation config, adapter, policy source, worker, interpreter,
+    environment, and every other policy-boundary field remain equal.
+    """
+
+    for name, value in (
+        (
+            "expected_reference_model_artifact_sha256",
+            expected_reference_model_artifact_sha256,
+        ),
+        (
+            "expected_candidate_model_artifact_sha256",
+            expected_candidate_model_artifact_sha256,
+        ),
+    ):
+        if not isinstance(value, str) or _SHA256.fullmatch(value) is None:
+            raise ValueError(f"{name} must be a lowercase SHA-256 digest")
+    if expected_reference_model_artifact_sha256 == (
+        expected_candidate_model_artifact_sha256
+    ):
+        raise ValueError("planner-profile model artifact identities must differ")
+
+    reference_descriptor = reference.process_descriptor
+    candidate_descriptor = candidate.process_descriptor
+    if not isinstance(reference_descriptor, IsolatedPolicyDescriptor) or not isinstance(
+        candidate_descriptor,
+        IsolatedPolicyDescriptor,
+    ):
+        raise TypeError("both planner-profile arms must use isolated policy descriptors")
+    if reference.experimental or not candidate.experimental:
+        raise ValueError(
+            "planner-profile pair must contain one reference and one opt-in candidate"
+        )
+    if reference_descriptor.package_sha256 == candidate_descriptor.package_sha256:
+        raise ValueError("planner-profile reference and candidate packages must differ")
+    if reference_descriptor.worker_sha256 != candidate_descriptor.worker_sha256:
+        raise ValueError("planner-profile arms must use the byte-exact same sidecar worker")
+    runtime_fields = (
+        "worker_path",
+        "navigation_config_relative",
+        "python_executable",
+        "python_realpath",
+        "python_binary_sha256",
+        "python_implementation",
+        "python_version",
+        "environment",
+        "request_timeout_s",
+    )
+    if any(
+        getattr(reference_descriptor, name) != getattr(candidate_descriptor, name)
+        for name in runtime_fields
+    ):
+        raise ValueError("planner-profile arms must use the exact same execution environment")
+
+    required_hash_fields = (
+        "implementation_sha256",
+        "policy_source_sha256",
+        "config_sha256",
+        "model_artifact_sha256",
+    )
+    if any(
+        not isinstance(getattr(arm, name), str)
+        or _SHA256.fullmatch(getattr(arm, name)) is None
+        for arm in (reference, candidate)
+        for name in required_hash_fields
+    ):
+        raise ValueError("planner-profile arms must expose complete SHA-256 provenance")
+    equal_policy_fields = (
+        "agent_id",
+        "adapter_id",
+        "model_id",
+        "execution_device",
+        "policy_inputs",
+        "implementation_sha256",
+        "policy_source_sha256",
+        "config_sha256",
+        "deployment_enabled",
+        "production_files_modified",
+    )
+    if any(
+        getattr(reference, name) != getattr(candidate, name)
+        for name in equal_policy_fields
+    ):
+        raise ValueError(
+            "planner-profile arms differ outside the exact active model artifact"
+        )
+    if reference.model_artifact_sha256 != expected_reference_model_artifact_sha256:
+        raise ValueError("reference model artifact differs from its pinned identity")
+    if candidate.model_artifact_sha256 != expected_candidate_model_artifact_sha256:
+        raise ValueError("candidate model artifact differs from its pinned identity")
+    if reference.deployment_enabled or candidate.deployment_enabled:
+        raise ValueError("planner-profile experiment arms must remain disabled for deployment")
+
+    reference_descriptor.verify()
+    candidate_descriptor.verify()
+    return {
+        "reference": reference_descriptor.report_metadata(),
+        "candidate": candidate_descriptor.report_metadata(),
+        "allowed_planner_profile_factor": {
+            "kind": "active_navigation_model_artifact_sha256",
+            "model_id": reference.model_id,
+            "config_sha256": reference.config_sha256,
+            "reference_model_artifact_sha256": (
+                expected_reference_model_artifact_sha256
+            ),
+            "candidate_model_artifact_sha256": (
+                expected_candidate_model_artifact_sha256
+            ),
+            "all_other_runtime_and_policy_boundary_fields_equal": True,
+        },
+    }
+
+
+@dataclass(frozen=True, slots=True)
+class IsolatedPlannerProfileAuthorization:
+    """Explicit authority for one pinned active-model-profile experiment."""
+
+    reference_package_sha256: str
+    reference_manifest_sha256: str
+    candidate_package_sha256: str
+    candidate_manifest_sha256: str
+    reference_model_artifact_sha256: str
+    candidate_model_artifact_sha256: str
+    navigation_config_sha256: str
+    model_id: str
+    reference_policy_id: str
+    candidate_policy_id: str
+
+    def __post_init__(self) -> None:
+        for name in (
+            "reference_package_sha256",
+            "reference_manifest_sha256",
+            "candidate_package_sha256",
+            "candidate_manifest_sha256",
+            "reference_model_artifact_sha256",
+            "candidate_model_artifact_sha256",
+            "navigation_config_sha256",
+        ):
+            value = getattr(self, name)
+            if not isinstance(value, str) or _SHA256.fullmatch(value) is None:
+                raise ValueError(f"{name} must be a lowercase SHA-256 digest")
+        if self.reference_package_sha256 == self.candidate_package_sha256:
+            raise ValueError("authorized reference and candidate packages must differ")
+        if self.reference_model_artifact_sha256 == self.candidate_model_artifact_sha256:
+            raise ValueError("authorized planner-profile artifacts must differ")
+        for name in ("reference_policy_id", "candidate_policy_id"):
+            if not _SAFE_ID.fullmatch(getattr(self, name)):
+                raise ValueError(f"{name} must be a safe non-empty identifier")
+        if not isinstance(self.model_id, str) or not self.model_id.strip():
+            raise ValueError("model_id must be non-empty")
+
+    def report_metadata(self) -> dict[str, Any]:
+        return {
+            "kind": "isolated_planner_profile_artifact_delta_v1",
+            "reference_package_sha256": self.reference_package_sha256,
+            "reference_manifest_sha256": self.reference_manifest_sha256,
+            "candidate_package_sha256": self.candidate_package_sha256,
+            "candidate_manifest_sha256": self.candidate_manifest_sha256,
+            "reference_model_artifact_sha256": (
+                self.reference_model_artifact_sha256
+            ),
+            "candidate_model_artifact_sha256": (
+                self.candidate_model_artifact_sha256
+            ),
+            "navigation_config_sha256": self.navigation_config_sha256,
+            "model_id": self.model_id,
+            "reference_policy_id": self.reference_policy_id,
+            "candidate_policy_id": self.candidate_policy_id,
+            "strict_default_validation_preserved": True,
+            "exact_profile_validator_required": True,
+        }
+
+    def validate_candidate_report_identity(
+        self,
+        *,
+        package_sha256: str,
+        manifest_sha256: str,
+        experiment_id: str,
+    ) -> None:
+        """Bind separately supplied report identity to the authorized candidate."""
+
+        if (
+            package_sha256 != self.candidate_package_sha256
+            or manifest_sha256 != self.candidate_manifest_sha256
+            or experiment_id != self.candidate_policy_id
+        ):
+            raise ValueError(
+                "reported candidate identity differs from the authorized candidate spec"
+            )
+
+    def validate_pair(
+        self,
+        reference: BarnPolicySpec,
+        candidate: BarnPolicySpec,
+    ) -> dict[str, dict[str, Any]]:
+        """Authenticate package/config identities, then run the exact validator."""
+
+        reference_descriptor = reference.process_descriptor
+        candidate_descriptor = candidate.process_descriptor
+        if not isinstance(reference_descriptor, IsolatedPolicyDescriptor) or not isinstance(
+            candidate_descriptor,
+            IsolatedPolicyDescriptor,
+        ):
+            raise TypeError("authorized planner-profile arms must use isolated descriptors")
+        if (
+            reference_descriptor.package_sha256 != self.reference_package_sha256
+            or reference_descriptor.manifest_sha256 != self.reference_manifest_sha256
+            or candidate_descriptor.package_sha256 != self.candidate_package_sha256
+            or candidate_descriptor.manifest_sha256 != self.candidate_manifest_sha256
+        ):
+            raise ValueError("isolated planner-profile bundle differs from authorization")
+        if (
+            reference.policy_id != self.reference_policy_id
+            or candidate.policy_id != self.candidate_policy_id
+            or reference.model_id != self.model_id
+            or candidate.model_id != self.model_id
+            or reference.config_sha256 != self.navigation_config_sha256
+            or candidate.config_sha256 != self.navigation_config_sha256
+        ):
+            raise ValueError("isolated planner-profile policy identity differs from authorization")
+        validated = validate_isolated_planner_profile_pair(
+            reference,
+            candidate,
+            expected_reference_model_artifact_sha256=(
+                self.reference_model_artifact_sha256
+            ),
+            expected_candidate_model_artifact_sha256=(
+                self.candidate_model_artifact_sha256
+            ),
+        )
+        return {
+            **validated,
+            "planner_profile_authorization": self.report_metadata(),
+        }
+
+
 __all__ = [
     "POLICY_INPUTS",
     "BarnPolicySpec",
     "ExperimentalPolicyDisabledError",
     "FrozenPolicyFile",
+    "IsolatedPlannerProfileAuthorization",
     "PolicyRuntimeDependencies",
     "ProcessPolicyDescriptor",
     "parcel_baseline_policy_spec",
@@ -1003,5 +1251,6 @@ __all__ = [
     "parcel_isolated_bundle_candidate_spec",
     "parcel_isolated_bundle_reference_spec",
     "parcel_reference_config_spec",
+    "validate_isolated_planner_profile_pair",
     "validate_isolated_policy_pair",
 ]

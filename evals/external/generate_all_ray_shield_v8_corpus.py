@@ -5,12 +5,14 @@ IDs 4000--4029.  IDs 4030--4049 are an operational holdout recipe only; there
 is deliberately no function or command-line option that creates those assets.
 
 World geometry still comes from the pinned upstream BARN generator.  The
-development split adds an evaluator-private, policy-free geometry audit over
-the generated reference paths.  It requires examples where the globally
-nearest normalized LiDAR return is not the closing-speed limit and examples
-where the reaction-horizon yaw sweep tightens that limit.  This targets the V8
-hypothesis without executing either robot policy or exposing map geometry to a
-policy.
+development split adds an evaluator-private, policy-free geometry coverage
+audit over the generated reference paths.  It requires examples where the
+globally nearest normalized LiDAR return is not the closing-speed limit and
+examples where the reaction-horizon yaw sweep tightens that limit.  This
+targets the V8 hypothesis without executing either robot policy or exposing
+map geometry to a policy.  Coverage does not attest that an evaluated policy
+will diverge or that the candidate cap will activate; the separate promotion
+gate must prove that.
 
 Generation is single use and fail closed.  Inputs are snapshotted before and
 after staging, an exclusive development directory claim precedes publication,
@@ -30,6 +32,7 @@ import math
 import os
 import platform
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -92,6 +95,10 @@ SCHEMA_VERSION = 2
 PROTOCOL_ID = "parcel-barn-v8-all-ray-paired-development-v1"
 CORPUS_ID = "barn-all-ray-shield-v8-generated-20260803-dev30-holdout20"
 MANIFEST_ID = "barn-all-ray-shield-v8-development-split-v1"
+MANIFEST_PURPOSE = (
+    "Single-use, paired, calibrated-sensor BARN proxy development corpus for "
+    "the deployment-disabled V8 all-ray yaw-swept projected-speed shield"
+)
 
 DEVELOPMENT_WORLD_IDS = tuple(range(4000, 4030))
 OPERATIONAL_HOLDOUT_WORLD_IDS = tuple(range(4030, 4050))
@@ -101,15 +108,14 @@ OPERATIONAL_HOLDOUT_WORLD_IDS = tuple(range(4030, 4050))
 SEALED_CONFIRMATION_WORLD_IDS = OPERATIONAL_HOLDOUT_WORLD_IDS
 FORBIDDEN_WORLD_ID_RANGES = ((0, 299), (1000, 1049), (2000, 2049), (3000, 3049))
 FORBIDDEN_WORLD_IDS = tuple(
-    world_id
-    for lower, upper in FORBIDDEN_WORLD_ID_RANGES
-    for world_id in range(lower, upper + 1)
+    world_id for lower, upper in FORBIDDEN_WORLD_ID_RANGES for world_id in range(lower, upper + 1)
 )
 
 SEED_NAMESPACE = "parcel-barn-all-ray-shield-v8-generated-corpus-20260803"
 SUITE_SEED = 20260803
 TRIALS_PER_WORLD = 1
 EPISODE_WORKERS = 4
+MAXIMUM_GENERATOR_ATTEMPTS_PER_WORLD = 10_000
 
 PAIRED_ARM_ORDER_SCHEDULE = tuple(
     REFERENCE_THEN_CANDIDATE if index % 2 == 0 else CANDIDATE_THEN_REFERENCE
@@ -118,20 +124,13 @@ PAIRED_ARM_ORDER_SCHEDULE = tuple(
 
 DEFAULT_GENERATOR_ROOT = REPO_ROOT / ".cache/external-evals/repos/barn_generator"
 DEFAULT_ASSETS_ROOT = (
-    REPO_ROOT
-    / ".cache/external-evals/generated/barn_all_ray_shield_v8/development/test_data"
+    REPO_ROOT / ".cache/external-evals/generated/barn_all_ray_shield_v8/development/test_data"
 )
 DEFAULT_HOLDOUT_ASSETS_ROOT = (
     REPO_ROOT / ".cache/external-evals/generated/barn_all_ray_shield_v8/holdout/test_data"
 )
-DEFAULT_MANIFEST = (
-    REPO_ROOT
-    / "evals/external/development/barn_all_ray_shield_v8/split.json"
-)
-PROTOCOL_PATH = (
-    REPO_ROOT
-    / "evals/external/development/barn_all_ray_shield_v8/PROTOCOL.json"
-)
+DEFAULT_MANIFEST = REPO_ROOT / "evals/external/development/barn_all_ray_shield_v8/split.json"
+PROTOCOL_PATH = REPO_ROOT / "evals/external/development/barn_all_ray_shield_v8/PROTOCOL.json"
 
 _PROBE_FORWARD_MPS = 0.45
 _PROBE_YAW_RATE_RPS = 0.8
@@ -205,6 +204,7 @@ SOURCE_FILES: dict[str, Path] = {
     "evals_package": REPO_ROOT / "evals/__init__.py",
     "external_package": REPO_ROOT / "evals/external/__init__.py",
     "barn_native": REPO_ROOT / "evals/external/barn_native.py",
+    "barn_targets": REPO_ROOT / "evals/external/barn_targets.py",
     "barn_ros2_adapter": REPO_ROOT / "evals/external/barn_ros2_adapter.py",
     "parcel_barn_adapter": REPO_ROOT / "evals/external/parcel_barn_adapter.py",
     "paired_sensor_faithful_harness": REPO_ROOT / "evals/external/barn_sensor_faithful.py",
@@ -279,8 +279,8 @@ PAIR_EXECUTION_SCHEDULE_SHA256 = _canonical_sha256(list(PAIR_EXECUTION_SCHEDULE)
 def _holdout_recipe() -> dict[str, Any]:
     return {
         "acceptance": (
-            "first connected upstream BARN map; no policy execution; post-generation "
-            "evaluator-private geometric targeting audit must pass"
+            "first connected upstream BARN map; no policy execution; any evaluator-private "
+            "geometry analysis is descriptive and never an admission filter"
         ),
         "generator_commit": GENERATOR_COMMIT,
         "parameter_algorithm": (
@@ -328,9 +328,24 @@ def protocol_document() -> dict[str, Any]:
         },
         "promotion_gate": PROMOTION_GATE,
         "targeting_contract": {
+            "acceptance": (
+                "accept first generated=True upstream BARN map satisfying the assigned "
+                "geometry predicate"
+            ),
             "assignment": {str(key): value for key, value in TARGET_ASSIGNMENTS.items()},
             "control_period_s": _PROBE_CONTROL_PERIOD_S,
+            "does_not_attest_policy_divergence_or_cap_activation": True,
+            "generator_parameter_algorithm": (
+                "offset=world_id-4000; fill=(0.15,0.20,0.25,0.30)[(offset//3)%4]; "
+                "smooth=(2,3,4)[offset%3]; rows=30; columns=30"
+            ),
+            "generator_seed_algorithm": (
+                "uint64_be(sha256(namespace + ':' + world_id + ':' + attempt)[0:8]) "
+                "bitwise-and 0x7fffffff"
+            ),
+            "generator_seed_namespace": SEED_NAMESPACE,
             "forward_mps": _PROBE_FORWARD_MPS,
+            "maximum_attempts_per_world": MAXIMUM_GENERATOR_ATTEMPTS_PER_WORLD,
             "policy_executed_during_targeting": False,
             "reaction_horizon_s": _PROBE_REACTION_HORIZON_S,
             "strict_epsilon": _PROBE_STRICT_EPSILON,
@@ -477,9 +492,7 @@ def validate_frozen_schedule() -> tuple[dict[str, Any], ...]:
         raise ValueError("V8 schedule must contain 15 reference-first pairs")
     if PAIRED_ARM_ORDER_SCHEDULE.count(CANDIDATE_THEN_REFERENCE) != 15:
         raise ValueError("V8 schedule must contain 15 candidate-first pairs")
-    if _canonical_sha256(list(PAIRED_ARM_ORDER_SCHEDULE)) != (
-        PAIRED_ARM_ORDER_SCHEDULE_SHA256
-    ):
+    if _canonical_sha256(list(PAIRED_ARM_ORDER_SCHEDULE)) != (PAIRED_ARM_ORDER_SCHEDULE_SHA256):
         raise ValueError("V8 arm-order schedule commitment changed")
     schedule = _pair_execution_schedule()
     if schedule != PAIR_EXECUTION_SCHEDULE:
@@ -519,6 +532,8 @@ def _assert_output_namespace_pristine(
         raise ValueError("V8 assets and manifest may not contain one another")
     if holdout in assets.parents or assets in holdout.parents:
         raise ValueError("V8 development and holdout paths may not contain one another")
+    if holdout in manifest.parents or manifest in holdout.parents:
+        raise ValueError("V8 manifest and holdout paths may not contain one another")
     if os.path.lexists(holdout):
         raise FileExistsError(
             f"operational V8 holdout assets already exist; refusing development: {holdout}"
@@ -576,6 +591,9 @@ def _strict_policy_source_tree(root: Path = PARCEL_POLICY_SOURCE_ROOT) -> dict[s
 
 
 def _strict_generator_state(generator_root: Path) -> dict[str, Any]:
+    _reject_symlink_ancestors(generator_root)
+    if generator_root.is_symlink() or not generator_root.is_dir():
+        raise ValueError("BARN generator checkout root is missing or unsafe")
     _verify_generator(generator_root)
     dirty = subprocess.run(
         [
@@ -606,6 +624,26 @@ def _strict_generator_state(generator_root: Path) -> dict[str, Any]:
         "root": str(generator_root.resolve()),
         "tracked_and_untracked_status_clean": True,
     }
+
+
+def _verify_loaded_generator_modules(generator: Any, generator_root: Path) -> None:
+    expected = {
+        "gen_world_ca": generator_root / "gen_world_ca.py",
+        "world_writer": generator_root / "world_writer.py",
+        "difficulty_quant": generator_root / "difficulty_quant.py",
+    }
+    observed_modules = {
+        "gen_world_ca": generator,
+        "world_writer": sys.modules.get("world_writer"),
+        "difficulty_quant": sys.modules.get("difficulty_quant"),
+    }
+    for name, expected_path in expected.items():
+        module = observed_modules[name]
+        raw_path = getattr(module, "__file__", None)
+        if not isinstance(raw_path, str) or Path(raw_path).resolve() != expected_path.resolve():
+            raise ValueError(
+                f"loaded BARN generator module {name!r} does not come from the verified checkout"
+            )
 
 
 def _execution_environment() -> dict[str, Any]:
@@ -716,8 +754,7 @@ def _normalized_probe_scan(
     )
     angle_min = _float32(config.lidar_angle_min_rad)
     angle_increment = _float32(
-        (config.lidar_angle_max_rad - config.lidar_angle_min_rad)
-        / (config.lidar_ray_count - 1)
+        (config.lidar_angle_max_rad - config.lidar_angle_min_rad) / (config.lidar_ray_count - 1)
     )
     normalized = normalize_planar_lidar_frame(
         BarnRos2SensorFrame(
@@ -847,9 +884,7 @@ def _classify_normalized_probe(
                     "limiting_closing_speed_without_yaw_mps": translation_closing,
                     "limiting_closing_speed_with_yaw_mps": swept_closing,
                     "zero_yaw_limiting_ray_index": zero_yaw.limiting_ray_index,
-                    "zero_yaw_minimum_projected_margin_m": (
-                        zero_yaw.minimum_projected_margin_m
-                    ),
+                    "zero_yaw_minimum_projected_margin_m": (zero_yaw.minimum_projected_margin_m),
                     "yaw_sweep_strictly_tightens_limit": True,
                 }
     return {
@@ -918,6 +953,7 @@ def _validate_target_assignments(
         raise ValueError("V8 corpus does not contain enough examples of both target geometries")
     return {
         "assignment_satisfied_for_every_world": True,
+        "does_not_attest_policy_divergence_or_cap_activation": True,
         "global_nearest_not_limiting_world_count": counts[_TARGET_GLOBAL_NEAREST],
         "policy_executed_during_targeting": False,
         "yaw_sweep_rotation_limited_world_count": counts[_TARGET_ROTATION_LIMITED],
@@ -1009,9 +1045,7 @@ def validate_generated_development_corpus(
             raise ValueError(f"V8 world {world_id} has an invalid reference path")
         if metrics.shape != (5,) or not np.isfinite(metrics).all():
             raise ValueError(f"V8 world {world_id} has invalid difficulty metrics")
-        analysis = analyze_world_v8_targeting(
-            load_generated_barn_world(assets_root, world_id)
-        )
+        analysis = analyze_world_v8_targeting(load_generated_barn_world(assets_root, world_id))
         if analysis != episode.get("targeting_analysis"):
             raise ValueError(f"V8 targeting witness changed for world {world_id}")
         analyses[world_id] = analysis
@@ -1041,15 +1075,20 @@ def validate_generated_development_corpus(
 def _write_exclusive_manifest(path: Path, payload: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     _reject_symlink_ancestors(path.parent)
-    encoded = json.dumps(
-        payload,
-        allow_nan=False,
-        indent=2,
-        sort_keys=True,
-    ).encode("utf-8") + b"\n"
+    encoded = (
+        json.dumps(
+            payload,
+            allow_nan=False,
+            indent=2,
+            sort_keys=True,
+        ).encode("utf-8")
+        + b"\n"
+    )
     temporary = path.parent / f".{path.name}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+    temporary_created = False
     try:
         with temporary.open("xb") as stream:
+            temporary_created = True
             stream.write(encoded)
             stream.flush()
             os.fsync(stream.fileno())
@@ -1064,7 +1103,35 @@ def _write_exclusive_manifest(path: Path, payload: Mapping[str, Any]) -> None:
         finally:
             os.close(directory_fd)
     finally:
-        temporary.unlink(missing_ok=True)
+        if temporary_created:
+            temporary.unlink(missing_ok=True)
+
+
+def _fsync_tree(root: Path) -> None:
+    """Flush a symlink-free staged or published tree before manifest durability."""
+
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError(f"cannot fsync a missing or unsafe V8 asset tree: {root}")
+    directories = [root]
+    for path in sorted(root.rglob("*")):
+        if path.is_symlink():
+            raise ValueError(f"cannot fsync a V8 asset symbolic link: {path}")
+        if path.is_dir():
+            directories.append(path)
+            continue
+        if not path.is_file():
+            raise ValueError(f"cannot fsync a non-regular V8 asset: {path}")
+        descriptor = os.open(path, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    for directory in sorted(directories, key=lambda value: len(value.parts), reverse=True):
+        descriptor = os.open(directory, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
 
 
 def _commit_staged_assets(staged_assets: Path, assets_root: Path) -> None:
@@ -1078,6 +1145,7 @@ def _commit_staged_assets(staged_assets: Path, assets_root: Path) -> None:
 
     if staged_assets.is_symlink() or not staged_assets.is_dir():
         raise ValueError("staged V8 assets root is missing or unsafe")
+    _fsync_tree(staged_assets)
     assets_root.parent.mkdir(parents=True, exist_ok=True)
     _reject_symlink_ancestors(assets_root.parent)
     try:
@@ -1093,6 +1161,7 @@ def _commit_staged_assets(staged_assets: Path, assets_root: Path) -> None:
             raise ValueError(f"published V8 assets contain a symbolic link: {path}")
         path.chmod(0o555 if path.is_dir() else 0o444)
     assets_root.chmod(0o555)
+    _fsync_tree(assets_root)
     directory_fd = os.open(assets_root.parent, os.O_RDONLY)
     try:
         os.fsync(directory_fd)
@@ -1117,13 +1186,46 @@ def _known_upstream_disconnected_index_error(exc: IndexError) -> bool:
     return False
 
 
+def _clear_staged_world_artifacts(assets_root: Path, world_id: int) -> None:
+    """Remove only the five exact same-ID files inside private staging.
+
+    This prevents a truthy-but-incomplete upstream attempt from being combined
+    with bytes left by a rejected connected attempt.  The function has no
+    authority over a final development root or the operational holdout.
+    """
+
+    if world_id not in DEVELOPMENT_WORLD_IDS:
+        raise ValueError("staged cleanup is restricted to V8 development IDs")
+    root = _lexical_absolute(assets_root)
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError("V8 staging root is missing or unsafe")
+    relative_paths = (
+        Path("world_files") / f"world_{world_id}.world",
+        Path("path_files") / f"path_{world_id}.npy",
+        Path("grid_files") / f"grid_{world_id}.npy",
+        Path("cspace_files") / f"cspace_{world_id}.npy",
+        Path("metrics_files") / f"metrics_{world_id}.npy",
+    )
+    for relative in relative_paths:
+        path = root / relative
+        if path.parent.is_symlink() or not path.parent.is_dir():
+            raise ValueError(f"V8 staging asset directory is missing or unsafe: {path.parent}")
+        if path.is_symlink():
+            raise ValueError(f"V8 staging artifact is a symbolic link: {path}")
+        path.resolve(strict=False).relative_to(root.resolve())
+        if os.path.lexists(path):
+            if not path.is_file():
+                raise ValueError(f"V8 staging artifact is not a regular file: {path}")
+            path.unlink()
+
+
 def _generate_one_targeted_world(
     *,
     generator: Any,
     assets_root: Path,
     world_id: int,
     log: io.StringIO,
-    maximum_attempts: int = 10_000,
+    maximum_attempts: int = MAXIMUM_GENERATOR_ATTEMPTS_PER_WORLD,
     world_loader: Callable[[Path, int], BarnWorld] = load_generated_barn_world,
     analyzer: Callable[[BarnWorld], Mapping[str, Any]] = analyze_world_v8_targeting,
 ) -> tuple[int, int, dict[str, Any]]:
@@ -1136,11 +1238,12 @@ def _generate_one_targeted_world(
 
     if isinstance(maximum_attempts, bool) or not isinstance(maximum_attempts, int):
         raise TypeError("maximum_attempts must be an integer")
-    if maximum_attempts < 1 or maximum_attempts > 10_000:
-        raise ValueError("maximum_attempts must be in [1, 10000]")
+    if maximum_attempts < 1 or maximum_attempts > MAXIMUM_GENERATOR_ATTEMPTS_PER_WORLD:
+        raise ValueError(f"maximum_attempts must be in [1, {MAXIMUM_GENERATOR_ATTEMPTS_PER_WORLD}]")
     fill_percent, smooth_iterations = _parameters(world_id)
     for attempt in range(1, maximum_attempts + 1):
         seed = _seed(world_id, attempt)
+        _clear_staged_world_artifacts(assets_root, world_id)
         try:
             with contextlib.redirect_stdout(log):
                 generated = generator.main(
@@ -1162,8 +1265,7 @@ def _generate_one_targeted_world(
             continue
         if not generated:
             log.write(
-                f"rejected world={world_id} seed={seed} attempt={attempt} "
-                "reason=disconnected\n"
+                f"rejected world={world_id} seed={seed} attempt={attempt} reason=disconnected\n"
             )
             continue
         analysis = dict(analyzer(world_loader(assets_root, world_id)))
@@ -1213,7 +1315,16 @@ def _generate_staged_assets(
     try:
         staged_assets.mkdir()
         _asset_directories(staged_assets)
-        generator = _load_upstream_generator(generator_root)
+        original_dont_write_bytecode = sys.dont_write_bytecode
+        try:
+            # Loading the verified checkout must not create an untracked
+            # ``__pycache__`` that would invalidate the post-generation source
+            # snapshot.
+            sys.dont_write_bytecode = True
+            generator = _load_upstream_generator(generator_root)
+            _verify_loaded_generator_modules(generator, generator_root)
+        finally:
+            sys.dont_write_bytecode = original_dont_write_bytecode
         log = io.StringIO()
         accepted: dict[int, tuple[int, int, dict[str, Any]]] = {}
         original_cwd = Path.cwd()
@@ -1289,6 +1400,29 @@ def _verify_policy_identity(policy_identity: Mapping[str, Any]) -> None:
         repo_root=None,
         expected_reviewed_sources=reviewed,
     )
+    reconstructed = _freeze_policy_pair(
+        V8CandidateBundle(
+            bundle=verified_candidate,
+            reference=verified_reference,
+            delta=dict(delta),
+        )
+    )
+    if reconstructed != dict(policy_identity):
+        raise ValueError("V8 policy-pair descriptor or runtime identity changed")
+
+
+def _verify_generation_log(assets_root: Path, expected_sha256: object) -> None:
+    if (
+        not isinstance(expected_sha256, str)
+        or len(expected_sha256) != 64
+        or any(character not in "0123456789abcdef" for character in expected_sha256)
+    ):
+        raise ValueError("frozen V8 generation-log digest is malformed")
+    generation_log = assets_root / "generation.log"
+    if generation_log.is_symlink() or not generation_log.is_file():
+        raise ValueError("frozen V8 generation log is missing or unsafe")
+    if sha256_file(generation_log) != expected_sha256:
+        raise ValueError("frozen V8 generation log identity changed")
 
 
 def generate_corpus(
@@ -1335,18 +1469,13 @@ def generate_corpus(
             raise ValueError("the exact V8 reference/candidate policy pair changed during staging")
         _verify_policy_identity(policy_identity)
         state_sha256 = _canonical_sha256(pre_generation_state)
-        created_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace(
-            "+00:00", "Z"
-        )
+        created_at = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
         manifest: dict[str, Any] = {
             "schema_version": SCHEMA_VERSION,
             "manifest_id": MANIFEST_ID,
             "corpus_id": CORPUS_ID,
             "created_at": created_at,
-            "purpose": (
-                "Single-use, paired, calibrated-sensor BARN proxy development corpus for "
-                "the deployment-disabled V8 all-ray yaw-swept projected-speed shield"
-            ),
+            "purpose": MANIFEST_PURPOSE,
             "benchmark_scope": _benchmark_scope_manifest(),
             "identity_partition": _identity_partition_manifest(),
             "development_corpus": {
@@ -1369,6 +1498,14 @@ def generate_corpus(
             "promotion_gate_frozen_before_development": PROMOTION_GATE,
             "status_at_freeze": _status_at_freeze_manifest(),
         }
+        # Staging can take a long time.  Recheck the operational holdout and
+        # both single-use outputs immediately before the irreversible
+        # development-directory claim.
+        _assert_output_namespace_pristine(
+            assets_root=assets_root,
+            manifest_path=manifest_path,
+            holdout_assets_root=holdout_assets_root,
+        )
         _commit_staged_assets(staged_assets, assets_root)
         _write_exclusive_manifest(manifest_path, manifest)
         return manifest
@@ -1383,18 +1520,51 @@ def verify_frozen_corpus(manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, An
     _reject_symlink_ancestors(manifest_path)
     if manifest_path.is_symlink() or not manifest_path.is_file():
         raise FileNotFoundError(f"frozen V8 manifest is missing or unsafe: {manifest_path}")
+    if manifest_path.stat().st_mode & (stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH):
+        raise ValueError("frozen V8 manifest must be read-only")
     try:
         manifest = json.loads(manifest_path.read_bytes())
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("frozen V8 manifest is not valid JSON") from exc
     if not isinstance(manifest, dict):
         raise TypeError("frozen V8 manifest must contain an object")
+    expected_top_level = {
+        "benchmark_scope",
+        "corpus_id",
+        "created_at",
+        "development_corpus",
+        "frozen_generation_state",
+        "identity_partition",
+        "manifest_id",
+        "operational_holdout_recipe",
+        "paired_protocol_frozen_before_execution",
+        "policy_pair_identity",
+        "promotion_gate_frozen_before_development",
+        "purpose",
+        "schema_version",
+        "status_at_freeze",
+    }
+    if set(manifest) != expected_top_level:
+        raise ValueError("frozen V8 manifest field membership changed")
     if (
         manifest.get("schema_version") != SCHEMA_VERSION
         or manifest.get("manifest_id") != MANIFEST_ID
         or manifest.get("corpus_id") != CORPUS_ID
+        or manifest.get("purpose") != MANIFEST_PURPOSE
     ):
         raise ValueError("frozen V8 manifest identity changed")
+    created_at = manifest.get("created_at")
+    if not isinstance(created_at, str):
+        raise TypeError("frozen V8 created_at must be a UTC timestamp")
+    try:
+        parsed_created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("frozen V8 created_at is malformed") from exc
+    if (
+        parsed_created_at.utcoffset() != timezone.utc.utcoffset(parsed_created_at)
+        or parsed_created_at.isoformat(timespec="seconds").replace("+00:00", "Z") != created_at
+    ):
+        raise ValueError("frozen V8 created_at must use second-resolution UTC Z form")
     if manifest.get("benchmark_scope") != _benchmark_scope_manifest():
         raise ValueError("frozen V8 non-official benchmark scope changed")
     if manifest.get("promotion_gate_frozen_before_development") != PROMOTION_GATE:
@@ -1421,15 +1591,38 @@ def verify_frozen_corpus(manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, An
     development = manifest.get("development_corpus")
     if not isinstance(development, Mapping) or not isinstance(development.get("episodes"), list):
         raise TypeError("frozen V8 development corpus metadata is malformed")
+    if set(development) != {
+        "assets_root",
+        "corpus_sha256",
+        "episodes",
+        "generation_log_sha256",
+        "independent_validation",
+        "world_count",
+    }:
+        raise ValueError("frozen V8 development corpus field membership changed")
+    if development.get("world_count") != 30 or len(development["episodes"]) != 30:
+        raise ValueError("frozen V8 development corpus must contain exactly 30 worlds")
     assets_root = _lexical_absolute(Path(str(development["assets_root"])))
     validation = validate_generated_development_corpus(development["episodes"], assets_root)
     if validation != development.get("independent_validation"):
         raise ValueError("frozen V8 independent validation evidence changed")
     if _corpus_sha256(development["episodes"]) != development.get("corpus_sha256"):
         raise ValueError("frozen V8 corpus identity changed")
+    _verify_generation_log(assets_root, development.get("generation_log_sha256"))
     state = manifest.get("frozen_generation_state")
     if not isinstance(state, Mapping) or not isinstance(state.get("content"), Mapping):
         raise TypeError("frozen V8 generation-state identity is malformed")
+    if (
+        set(state)
+        != {
+            "content",
+            "post_generation_sha256",
+            "pre_and_post_identical",
+            "pre_generation_sha256",
+        }
+        or state.get("pre_and_post_identical") is not True
+    ):
+        raise ValueError("frozen V8 generation-state attestation changed")
     frozen_state = dict(state["content"])
     generator_state = frozen_state.get("generator")
     if not isinstance(generator_state, Mapping):
@@ -1438,7 +1631,10 @@ def verify_frozen_corpus(manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, An
     current_state = _frozen_generation_state(generator_root)
     if current_state != frozen_state:
         raise ValueError("frozen V8 source or runtime identity changed")
-    if _canonical_sha256(frozen_state) != state.get("pre_generation_sha256"):
+    frozen_state_sha256 = _canonical_sha256(frozen_state)
+    if frozen_state_sha256 != state.get(
+        "pre_generation_sha256"
+    ) or frozen_state_sha256 != state.get("post_generation_sha256"):
         raise ValueError("frozen V8 generation-state commitment changed")
     policy_identity = manifest.get("policy_pair_identity")
     if not isinstance(policy_identity, Mapping):
@@ -1506,6 +1702,8 @@ __all__ = [
     "HOLDOUT_RECIPE",
     "HOLDOUT_RECIPE_COMMITMENT_SHA256",
     "MANIFEST_ID",
+    "MANIFEST_PURPOSE",
+    "MAXIMUM_GENERATOR_ATTEMPTS_PER_WORLD",
     "OPERATIONAL_HOLDOUT_WORLD_IDS",
     "PAIRED_ARM_ORDER_SCHEDULE",
     "PAIRED_ARM_ORDER_SCHEDULE_SHA256",

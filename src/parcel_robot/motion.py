@@ -21,18 +21,19 @@ class MotionBackend(Protocol):
 
 
 @dataclass
-class SportMoveBackend:
-    """Compatibility facade for selecting Unitree Sport body-velocity intent.
+class VendorVelocityBackend:
+    """Vendor-neutral high-level body-velocity intent recorder.
 
-    Physical delivery is intentionally owned by ``ControlManager``. This class
-    records voice/skill intent only, preventing raw commands from bypassing the
-    runtime smoother and collision gate.
+    Selecting this backend means "use the platform's own onboard balance and
+    gait controller" (Unitree Sport, Spot mobility, Deep Robotics motion),
+    whichever vendor adapter the control registry has active. Physical delivery
+    is intentionally owned by ``ControlManager``; this class records voice and
+    skill intent only, preventing raw commands from bypassing the runtime
+    smoother and collision gate.
     """
 
-    interface: str = "lo"
-    domain_id: int = 1
     enabled: bool = False
-    name: str = "sport"
+    name: str = "vendor"
     history: list[VelocityCommand] = field(default_factory=list)
     _active: VelocityCommand | None = None
 
@@ -41,21 +42,24 @@ class SportMoveBackend:
         self._active = command
         if not self.enabled:
             return (
-                f"Sport Move armed (stub): vx={command.vx:.2f} "
+                f"Vendor velocity armed (stub): vx={command.vx:.2f} "
                 f"vy={command.vy:.2f} vyaw={command.vyaw:.2f}"
             )
-        return f"Sport intent accepted: vx={command.vx:.2f} (delivery owned by ControlManager)"
+        return (
+            f"Vendor velocity intent accepted: vx={command.vx:.2f} "
+            "(delivery owned by ControlManager)"
+        )
 
     def stop(self) -> str:
         self._active = VelocityCommand()
-        return "Sport Move stopped (intent)"
+        return "Vendor velocity stopped (intent)"
 
     def status(self) -> str:
         if self._active is None:
-            return "sport: idle"
+            return "vendor: idle"
         cmd = self._active
         mode = "configured" if self.enabled else "stub"
-        return f"sport[{mode}]: vx={cmd.vx:.2f} vy={cmd.vy:.2f} vyaw={cmd.vyaw:.2f}"
+        return f"vendor[{mode}]: vx={cmd.vx:.2f} vy={cmd.vy:.2f} vyaw={cmd.vyaw:.2f}"
 
 
 @dataclass
@@ -162,6 +166,7 @@ class MotionRouter:
         return self.backends[self.active]
 
     def set_backend(self, name: str) -> str:
+        name = normalize_backend_name(name)
         if name not in self.backends:
             raise ValueError(f"unknown motion backend: {name}")
         self.backend.stop()
@@ -187,14 +192,21 @@ class MotionRouter:
         return self.backend.status()
 
 
+def normalize_backend_name(name: str) -> str:
+    """Map legacy vendor-branded backend names onto neutral ones."""
+
+    key = name.strip().lower()
+    return "vendor" if key == "sport" else key
+
+
 def build_motion_router(config: dict[str, Any], **hooks: Any) -> MotionRouter:
-    sport_cfg = dict(config.get("sport", {}))
+    # "vendor" is the neutral key; the legacy "sport" config section and
+    # backend name remain accepted as deprecated aliases.
+    vendor_cfg = dict(config.get("vendor", config.get("sport", {})))
     rl_cfg = dict(config.get("rl", {}))
     backends: dict[str, MotionBackend] = {
-        "sport": SportMoveBackend(
-            interface=str(sport_cfg.get("interface", "lo")),
-            domain_id=int(sport_cfg.get("domain_id", 1)),
-            enabled=bool(sport_cfg.get("enabled", False)),
+        "vendor": VendorVelocityBackend(
+            enabled=bool(vendor_cfg.get("enabled", False)),
         ),
         "rl": RLPolicyBackend(
             policy_path=str(rl_cfg.get("policy_path", "")),
@@ -202,7 +214,7 @@ def build_motion_router(config: dict[str, Any], **hooks: Any) -> MotionRouter:
             enabled=bool(rl_cfg.get("enabled", True)),
         ),
     }
-    active = str(config.get("backend", "rl"))
+    active = normalize_backend_name(str(config.get("backend", "rl")))
     return MotionRouter(
         backends=backends,
         active=active,

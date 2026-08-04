@@ -1,0 +1,1 @@
+{"follow_success": "6/6", "hard_collision_total": 0, "mean_band_fraction": 0.85475, "navigate_success": "2/2", "report": "follow-bench-v1-20260804034118Z-048d6b22.json", "scenarios": ["straight_follow", "follow_turn_corner", "owner_stops", "pedestrian_group", "doorway_gap", "pedestrian_cut_in", "navigate_crossing_ped", "navigate_near_wall"], "utc": "2026-08-04T03:41:18"}

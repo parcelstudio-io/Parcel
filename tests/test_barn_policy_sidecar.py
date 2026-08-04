@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from evals.external import barn_policy_specs as policy_specs_module
 from evals.external.barn_native import BarnObservation
 from evals.external.barn_policy_sidecar import (
     HISTORICAL_BUNDLE,
@@ -20,11 +21,14 @@ from evals.external.barn_policy_sidecar import (
 )
 from evals.external.barn_policy_specs import (
     ExperimentalPolicyDisabledError,
+    IsolatedPlannerProfileAuthorization,
     parcel_historical_isolated_reference_spec,
     parcel_isolated_bundle_candidate_spec,
     parcel_isolated_bundle_reference_spec,
+    validate_isolated_planner_profile_pair,
     validate_isolated_policy_pair,
 )
+from evals.external.barn_sensor_faithful import run_sensor_faithful_paired_comparison
 
 
 def _canonical(document: dict[str, object]) -> bytes:
@@ -39,6 +43,7 @@ def _fake_bundle(
     velocity: float,
     note: str,
     classify_lidar: bool = False,
+    model_extra: str = "",
 ) -> tuple[str, str]:
     files = {
         "configs/navigation/experiments/policy.yaml": (
@@ -48,7 +53,9 @@ def _fake_bundle(
             f"note: {note}\n"
             f"classify_lidar: {str(classify_lidar).lower()}\n"
         ),
-        "configs/navigation/models/fake.yaml": "id: fake_v1\ndevice: cpu\n",
+        "configs/navigation/models/fake.yaml": (
+            "id: fake_v1\ndevice: cpu\n" + model_extra
+        ),
         "evals/__init__.py": "",
         "evals/external/__init__.py": "",
         "evals/external/parcel_barn_adapter.py": '''import math
@@ -280,6 +287,187 @@ def test_reference_and_candidate_use_same_ipc_but_distinct_sources(tmp_path: Pat
             experiment_id="invalid-same-source",
             description="invalid",
         )
+
+
+def test_planner_profile_pair_allows_only_exact_pinned_model_yaml_delta(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reference_root = tmp_path / "profile-reference"
+    candidate_root = tmp_path / "profile-candidate"
+    reference_package, reference_manifest = _fake_bundle(
+        reference_root,
+        velocity=0.2,
+        note="same-config",
+        model_extra="planner_mode: baseline\n",
+    )
+    candidate_package, candidate_manifest = _fake_bundle(
+        candidate_root,
+        velocity=0.2,
+        note="same-config",
+        model_extra="planner_mode: observed_first_frontier\n",
+    )
+    reference = parcel_isolated_bundle_reference_spec(
+        reference_root,
+        package_sha256=reference_package,
+        manifest_sha256=reference_manifest,
+        navigation_config_relative="configs/navigation/experiments/policy.yaml",
+        reference_id="profile-reference",
+        description="profile reference",
+    )
+    candidate = parcel_isolated_bundle_candidate_spec(
+        candidate_root,
+        package_sha256=candidate_package,
+        reference_package_sha256=reference_package,
+        manifest_sha256=candidate_manifest,
+        navigation_config_relative="configs/navigation/experiments/policy.yaml",
+        experiment_id="profile-candidate",
+        description="profile candidate",
+    )
+    reference_model = reference.model_artifact_sha256
+    candidate_model = candidate.model_artifact_sha256
+    assert reference_model is not None
+    assert candidate_model is not None
+    assert reference_model != candidate_model
+    assert reference.config_sha256 == candidate.config_sha256
+    assert reference.model_id == candidate.model_id
+
+    paired = validate_isolated_planner_profile_pair(
+        reference,
+        candidate,
+        expected_reference_model_artifact_sha256=reference_model,
+        expected_candidate_model_artifact_sha256=candidate_model,
+    )
+
+    assert paired["reference"] == reference.report_metadata()["execution_isolation"]
+    assert paired["candidate"] == candidate.report_metadata()["execution_isolation"]
+    assert paired["allowed_planner_profile_factor"] == {
+        "kind": "active_navigation_model_artifact_sha256",
+        "model_id": "fake_v1",
+        "config_sha256": reference.config_sha256,
+        "reference_model_artifact_sha256": reference_model,
+        "candidate_model_artifact_sha256": candidate_model,
+        "all_other_runtime_and_policy_boundary_fields_equal": True,
+    }
+    authorization = IsolatedPlannerProfileAuthorization(
+        reference_package_sha256=reference_package,
+        reference_manifest_sha256=reference_manifest,
+        candidate_package_sha256=candidate_package,
+        candidate_manifest_sha256=candidate_manifest,
+        reference_model_artifact_sha256=reference_model,
+        candidate_model_artifact_sha256=candidate_model,
+        navigation_config_sha256=str(reference.config_sha256),
+        model_id="fake_v1",
+        reference_policy_id="profile-reference",
+        candidate_policy_id="profile-candidate",
+    )
+    authorized = authorization.validate_pair(reference, candidate)
+    assert authorized["allowed_planner_profile_factor"] == paired[
+        "allowed_planner_profile_factor"
+    ]
+    assert authorized["planner_profile_authorization"] == (
+        authorization.report_metadata()
+    )
+    authorization.validate_candidate_report_identity(
+        package_sha256=candidate_package,
+        manifest_sha256=candidate_manifest,
+        experiment_id="profile-candidate",
+    )
+    with pytest.raises(ValueError, match="reported candidate identity"):
+        authorization.validate_candidate_report_identity(
+            package_sha256=reference_package,
+            manifest_sha256=candidate_manifest,
+            experiment_id="profile-candidate",
+        )
+    with pytest.raises(ValueError, match="same policy boundary and model contract"):
+        validate_isolated_policy_pair(reference, candidate)
+
+    with pytest.raises(ValueError, match="reference model artifact"):
+        validate_isolated_planner_profile_pair(
+            reference,
+            candidate,
+            expected_reference_model_artifact_sha256="0" * 64,
+            expected_candidate_model_artifact_sha256=candidate_model,
+        )
+    with pytest.raises(ValueError, match="candidate model artifact"):
+        validate_isolated_planner_profile_pair(
+            reference,
+            candidate,
+            expected_reference_model_artifact_sha256=reference_model,
+            expected_candidate_model_artifact_sha256="0" * 64,
+        )
+    with pytest.raises(ValueError, match="identities must differ"):
+        validate_isolated_planner_profile_pair(
+            reference,
+            candidate,
+            expected_reference_model_artifact_sha256=reference_model,
+            expected_candidate_model_artifact_sha256=reference_model,
+        )
+
+    for changed in (
+        replace(candidate, config_sha256="0" * 64),
+        replace(candidate, model_id="different-model"),
+        replace(candidate, policy_source_sha256="0" * 64),
+        replace(candidate, implementation_sha256="0" * 64),
+    ):
+        with pytest.raises(ValueError, match="outside the exact active model artifact"):
+            validate_isolated_planner_profile_pair(
+                reference,
+                changed,
+                expected_reference_model_artifact_sha256=reference_model,
+                expected_candidate_model_artifact_sha256=candidate_model,
+            )
+
+    unequal_runtime = replace(
+        candidate,
+        process_descriptor=replace(
+            candidate.process_descriptor,
+            request_timeout_s=candidate.process_descriptor.request_timeout_s + 1.0,
+        ),
+    )
+    with pytest.raises(ValueError, match="same execution environment"):
+        validate_isolated_planner_profile_pair(
+            reference,
+            unequal_runtime,
+            expected_reference_model_artifact_sha256=reference_model,
+            expected_candidate_model_artifact_sha256=candidate_model,
+        )
+
+    original_validator = policy_specs_module.validate_isolated_planner_profile_pair
+    validator_calls: list[tuple[object, object]] = []
+
+    def exact_validator_spy(
+        first: object,
+        second: object,
+        **kwargs: object,
+    ) -> dict[str, dict[str, object]]:
+        validator_calls.append((first, second))
+        return original_validator(first, second, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(
+        policy_specs_module,
+        "validate_isolated_planner_profile_pair",
+        exact_validator_spy,
+    )
+    with pytest.raises(ValueError, match="same policy boundary and model contract"):
+        run_sensor_faithful_paired_comparison(
+            assets_root=tmp_path / "missing-assets",
+            world_indices=(1,),
+            candidate_spec=candidate,
+            reference_spec=reference,
+            allow_experimental=True,
+        )
+    assert validator_calls == []
+    with pytest.raises(FileNotFoundError):
+        run_sensor_faithful_paired_comparison(
+            assets_root=tmp_path / "missing-assets",
+            world_indices=(1,),
+            candidate_spec=candidate,
+            reference_spec=reference,
+            allow_experimental=True,
+            isolated_planner_profile_authorization=authorization,
+        )
+    assert validator_calls == [(reference, candidate)]
 
 
 @pytest.mark.skipif(not HISTORICAL_BUNDLE.is_dir(), reason="historical bundle cache is absent")

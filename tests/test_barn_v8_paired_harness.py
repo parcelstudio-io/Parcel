@@ -118,7 +118,7 @@ def _isolated_candidate_bundle(root: Path) -> tuple[str, str]:
         "configs/navigation/models/fake.yaml": "id: fake_v1\ndevice: cpu\n",
         "evals/__init__.py": "",
         "evals/external/__init__.py": "",
-        "evals/external/parcel_barn_adapter.py": '''from types import SimpleNamespace
+        "evals/external/parcel_barn_adapter.py": """from types import SimpleNamespace
 
 class ParcelBarnAdapter:
     def __init__(self, *, navigation_config):
@@ -134,7 +134,7 @@ class ParcelBarnAdapter:
         )
     def close(self):
         return None
-''',
+""",
         "src/parcel_robot/__init__.py": "BUNDLE_ONLY = True\n",
     }
     hashes: dict[str, str] = {}

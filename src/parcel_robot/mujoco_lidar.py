@@ -378,3 +378,147 @@ def _world_vertical_half_extent(
 
 def _wrap(angle: float) -> float:
     return (angle + math.pi) % (2.0 * math.pi) - math.pi
+
+
+# ---------------------------------------------------------------------------
+# Occlusion-correct planar raycast scan
+# ---------------------------------------------------------------------------
+#
+# Unlike the analytic closest-point helpers above (which read ground-truth geom
+# poses and are kept for diagnostics/telemetry), this scan uses MuJoCo's ray
+# engine. It sees exactly what a planar LiDAR would see: the first surface
+# along each ray, with occlusion, bounded noise, and dropout. It is the sensor
+# contract consumed by the occupancy-grid navigator.
+
+DEFAULT_SCAN_RAYS = 360
+DEFAULT_SCAN_RANGE_MIN_M = 0.05
+DEFAULT_SCAN_RANGE_MAX_M = 30.0
+DEFAULT_SCAN_NOISE_STD_M = 0.008
+DEFAULT_SCAN_DROPOUT_RATE = 0.002
+# Above the standing torso top (a ray that starts inside the robot's own
+# geometry would first hit that geometry in every direction).
+DEFAULT_SCAN_HEIGHT_M = 0.45
+
+
+@dataclass(frozen=True)
+class PlanarScan:
+    """A body-relative, counter-clockwise planar LiDAR scan.
+
+    ``float("nan")`` marks an ignored ray (dropout or robot self-return);
+    a value equal to ``range_max_m`` marks a no-return that clears free space.
+    This mirrors the semantics of the navigation ``LidarScan`` contract.
+    """
+
+    ranges_m: tuple[float, ...]
+    angle_min_rad: float
+    angle_increment_rad: float
+    range_min_m: float
+    range_max_m: float
+
+
+def raycast_planar_scan(
+    model: mujoco.MjModel,
+    data: mujoco.MjData,
+    *,
+    robot_x: float,
+    robot_y: float,
+    robot_heading: float,
+    robot_body_id: int,
+    sensor_z_m: float = DEFAULT_SCAN_HEIGHT_M,
+    num_rays: int = DEFAULT_SCAN_RAYS,
+    range_min_m: float = DEFAULT_SCAN_RANGE_MIN_M,
+    range_max_m: float = DEFAULT_SCAN_RANGE_MAX_M,
+    noise_std_m: float = DEFAULT_SCAN_NOISE_STD_M,
+    dropout_rate: float = DEFAULT_SCAN_DROPOUT_RATE,
+    rng=None,
+) -> PlanarScan:
+    """Cast ``num_rays`` horizontal rays and return an occlusion-true scan.
+
+    Robot self-returns are identified by kinematic-tree root and marked as
+    ignored (NaN) rather than free, so a leg crossing the scan plane can never
+    clear space through an occluded obstacle behind it.
+    """
+
+    import numpy as np
+
+    if num_rays < 2 or num_rays > 16_384:
+        raise ValueError("planar scan must use between 2 and 16384 rays")
+    if not math.isfinite(range_max_m) or range_max_m <= range_min_m:
+        raise ValueError("planar scan range_max_m must exceed range_min_m")
+    if not 0.0 <= dropout_rate < 1.0:
+        raise ValueError("planar scan dropout_rate must be in [0, 1)")
+    if noise_std_m < 0.0 or not math.isfinite(noise_std_m):
+        raise ValueError("planar scan noise_std_m must be finite and non-negative")
+
+    angle_increment = 2.0 * math.pi / num_rays
+    angle_min = -math.pi
+    body_angles = angle_min + angle_increment * np.arange(num_rays)
+    world_angles = robot_heading + body_angles
+
+    origin = np.array([robot_x, robot_y, sensor_z_m], dtype=np.float64)
+    directions = np.zeros((num_rays, 3), dtype=np.float64)
+    directions[:, 0] = np.cos(world_angles)
+    directions[:, 1] = np.sin(world_angles)
+
+    geom_ids = np.full(num_rays, -1, dtype=np.int32)
+    distances = np.zeros(num_rays, dtype=np.float64)
+    mujoco.mj_multiRay(
+        model,
+        data,
+        origin,
+        directions.reshape(-1),
+        None,  # geomgroup: consider every group
+        True,  # include static geoms
+        -1,  # no single-body exclusion; self-hits filtered by root below
+        geom_ids,
+        distances,
+        None,  # surface normals are not needed
+        num_rays,
+        float(range_max_m) * 1.05,
+    )
+
+    robot_root = int(model.body_rootid[robot_body_id])
+    ranges = np.full(num_rays, float(range_max_m), dtype=np.float64)
+    hit_mask = geom_ids >= 0
+    if hit_mask.any():
+        hit_bodies = model.geom_bodyid[geom_ids[hit_mask]]
+        hit_roots = model.body_rootid[hit_bodies]
+        self_hit = hit_roots == robot_root
+        hit_indices = np.flatnonzero(hit_mask)
+        ranges[hit_indices[self_hit]] = float("nan")
+        real_indices = hit_indices[~self_hit]
+        real_distances = distances[hit_mask][~self_hit]
+        ranges[real_indices] = np.clip(real_distances, 0.0, range_max_m)
+
+    if rng is not None and (noise_std_m > 0.0 or dropout_rate > 0.0):
+        finite_hits = np.isfinite(ranges) & (ranges < range_max_m)
+        if noise_std_m > 0.0 and finite_hits.any():
+            noise = rng.normal(0.0, noise_std_m, size=int(finite_hits.sum()))
+            noisy = ranges[finite_hits] + noise
+            ranges[finite_hits] = np.clip(noisy, range_min_m, range_max_m)
+        if dropout_rate > 0.0:
+            dropped = rng.uniform(size=num_rays) < dropout_rate
+            ranges[dropped] = float("nan")
+
+    return PlanarScan(
+        ranges_m=tuple(float(value) for value in ranges),
+        angle_min_rad=float(angle_min),
+        angle_increment_rad=float(angle_increment),
+        range_min_m=float(range_min_m),
+        range_max_m=float(range_max_m),
+    )
+
+
+def planar_scan_payload(scan: PlanarScan) -> dict:
+    """JSON-safe scan payload; NaN (ignored ray) is encoded as ``None``."""
+
+    return {
+        "ranges": [
+            None if math.isnan(value) else round(min(value, scan.range_max_m), 3)
+            for value in scan.ranges_m
+        ],
+        "angle_min_rad": scan.angle_min_rad,
+        "angle_increment_rad": scan.angle_increment_rad,
+        "range_min_m": scan.range_min_m,
+        "range_max_m": scan.range_max_m,
+    }

@@ -25,15 +25,164 @@ DEFAULT_CONFIG = REPO_ROOT / "configs" / "robot.yaml"
 FALLBACK_CONFIG = Path(__file__).with_name("config") / "robot.yaml"
 UI_PATH = Path(__file__).with_name("ui") / "index.html"
 LATENCY_UI_PATH = Path(__file__).with_name("ui") / "latency.html"
+VIEWER_UI_PATH = Path(__file__).with_name("ui") / "viewer.html"
 MAX_REQUEST_BYTES = 65_536
+
+#: Ordered (prefix, class) pairs; the first matching prefix wins, so longer
+#: prefixes ("tree_top_") must appear before their shorter siblings ("tree_").
+SEMANTIC_GEOM_PREFIXES: tuple[tuple[str, str], ...] = (
+    ("bldg_", "building"),
+    ("window_", "window"),
+    ("sidewalk", "sidewalk"),
+    ("curb", "curb"),
+    ("road", "road"),
+    ("asphalt", "road"),
+    ("lane_", "lane_marking"),
+    ("xw", "crosswalk"),
+    ("crosswalk", "crosswalk"),
+    ("bench_", "bench"),
+    ("tree_top_", "tree_canopy"),
+    ("tree_", "tree"),
+    ("lamp_head_", "lamp_head"),
+    ("lamp_", "lamp"),
+    ("planter_", "planter"),
+    ("signal_", "signal"),
+    ("obstacle_", "obstacle"),
+    ("pedestrian_", "pedestrian"),
+    ("cyclist_", "cyclist"),
+    ("owner", "owner"),
+)
+
+_SCENE_CACHE: dict[str, dict[str, Any]] = {}
+_SCENE_CACHE_LOCK = threading.Lock()
+
+
+def semantic_geom_class(name: str) -> str:
+    """Map a scene geom name to a coarse semantic class for the viewer."""
+    for prefix, label in SEMANTIC_GEOM_PREFIXES:
+        if name.startswith(prefix):
+            return label
+    return "misc"
+
+
+def resolve_viewer_scene(config_path: Path | None = None) -> Path:
+    """Resolve the MuJoCo scene path the same way the simulator does."""
+    from parcel_robot.sim import resolve_scene
+
+    if config_path is None:
+        config_path = DEFAULT_CONFIG if DEFAULT_CONFIG.is_file() else FALLBACK_CONFIG
+    return resolve_scene(config_path, None)
+
+
+def scene_geometry(scene_path: Path | None = None) -> dict[str, Any]:
+    """Load the static city geometry once and serve a cached JSON-safe dict.
+
+    The MuJoCo model is loaded server-side exactly once per scene path; repeat
+    calls return the identical cached object. Robot geoms (the free-jointed
+    kinematic tree) are excluded; mocap actor geoms are flagged ``dynamic`` so
+    the viewer can style them from live ``/api/state`` tracks instead.
+    """
+    resolved = (scene_path or resolve_viewer_scene()).expanduser().resolve()
+    key = str(resolved)
+    with _SCENE_CACHE_LOCK:
+        cached = _SCENE_CACHE.get(key)
+        if cached is not None:
+            return cached
+        if not resolved.is_file():
+            raise FileNotFoundError(f"MuJoCo scene not found: {resolved}")
+        payload = _extract_scene_geometry(resolved)
+        _SCENE_CACHE[key] = payload
+        return payload
+
+
+def _extract_scene_geometry(scene_path: Path) -> dict[str, Any]:
+    import mujoco
+
+    model = mujoco.MjModel.from_xml_path(str(scene_path))
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    type_names = {
+        int(mujoco.mjtGeom.mjGEOM_PLANE): "plane",
+        int(mujoco.mjtGeom.mjGEOM_SPHERE): "sphere",
+        int(mujoco.mjtGeom.mjGEOM_CAPSULE): "capsule",
+        int(mujoco.mjtGeom.mjGEOM_CYLINDER): "cylinder",
+        int(mujoco.mjtGeom.mjGEOM_BOX): "box",
+    }
+    default_rgba = (0.5, 0.5, 0.5, 1.0)
+    geoms: list[dict[str, Any]] = []
+    bounds: list[tuple[float, float]] = []
+    for geom_id in range(model.ngeom):
+        body_id = int(model.geom_bodyid[geom_id])
+        root_id = int(model.body_rootid[body_id])
+        is_mocap = int(model.body_mocapid[root_id]) >= 0
+        if root_id != 0 and not is_mocap:
+            continue  # part of the robot's free-jointed tree
+        type_name = type_names.get(int(model.geom_type[geom_id]))
+        if type_name is None:
+            continue  # meshes / heightfields are not renderable primitives here
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id) or ""
+        rgba = tuple(round(float(value), 4) for value in model.geom_rgba[geom_id])
+        material_id = int(model.geom_matid[geom_id])
+        if material_id >= 0 and rgba == default_rgba:
+            rgba = tuple(round(float(value), 4) for value in model.mat_rgba[material_id])
+        matrix = data.geom_xmat[geom_id]
+        position = tuple(round(float(value), 4) for value in data.geom_xpos[geom_id])
+        size = tuple(round(float(value), 4) for value in model.geom_size[geom_id])
+        geoms.append(
+            {
+                "name": name,
+                "class": semantic_geom_class(name),
+                "type": type_name,
+                "pos": list(position),
+                "zrot_rad": round(math.atan2(float(matrix[3]), float(matrix[0])), 4),
+                "size": list(size),
+                "rgba": list(rgba),
+                "dynamic": is_mocap,
+            }
+        )
+        if not is_mocap and type_name != "plane":
+            reach = math.hypot(size[0], size[1] if len(size) > 1 else size[0])
+            bounds.append((position[0] - reach, position[0] + reach))
+            bounds.append((position[1] - reach, position[1] + reach))
+    if not geoms:
+        raise ValueError(f"scene contains no renderable static geoms: {scene_path}")
+    xs = [edge for low, high in bounds[0::2] for edge in (low, high)]
+    ys = [edge for low, high in bounds[1::2] for edge in (low, high)]
+    extent = {
+        "xmin": round(min(xs), 3) if xs else -10.0,
+        "xmax": round(max(xs), 3) if xs else 10.0,
+        "ymin": round(min(ys), 3) if ys else -10.0,
+        "ymax": round(max(ys), 3) if ys else 10.0,
+    }
+    regions: list[dict[str, Any]] = []
+    objects: list[dict[str, Any]] = []
+    try:
+        from parcel_robot.city_semantics import extract_city_semantics
+
+        regions, objects = extract_city_semantics(model)
+    except (ImportError, AttributeError, KeyError, TypeError, ValueError):
+        pass  # semantics are an optional enrichment for the viewer
+    return {
+        "scene": str(scene_path),
+        "geom_count": len(geoms),
+        "geoms": geoms,
+        "extent": extent,
+        "semantics": {"regions": regions, "objects": objects},
+    }
 
 
 class RuntimeHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, address: tuple[str, int], runtime: RobotRuntime):
+    def __init__(
+        self,
+        address: tuple[str, int],
+        runtime: RobotRuntime,
+        scene_path: Path | None = None,
+    ):
         self.runtime = runtime
+        self.scene_path = scene_path
         self.csrf_token = secrets.token_urlsafe(32)
         super().__init__(address, RuntimeRequestHandler)
 
@@ -57,6 +206,18 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
                 LATENCY_UI_PATH.read_bytes(),
                 "text/html; charset=utf-8",
             )
+            return
+        if path in {"/viewer", "/viewer.html"}:
+            self._send_bytes(
+                VIEWER_UI_PATH.read_bytes(),
+                "text/html; charset=utf-8",
+            )
+            return
+        if path == "/api/scene":
+            try:
+                self._send_json(scene_geometry(self.server.scene_path))
+            except (FileNotFoundError, OSError, RuntimeError, ValueError) as error:
+                self._send_json({"detail": str(error)}, HTTPStatus.SERVICE_UNAVAILABLE)
             return
         if path == "/api/state":
             self._send_json(self.server.runtime.snapshot())
@@ -279,7 +440,11 @@ def main() -> None:
 
     use_llm = True if args.llm else False if args.no_llm else None
     runtime = build_runtime(Path(args.config), Path(args.socket), use_llm=use_llm)
-    server = RuntimeHTTPServer((args.host, args.port), runtime)
+    server = RuntimeHTTPServer(
+        (args.host, args.port),
+        runtime,
+        scene_path=resolve_viewer_scene(Path(args.config)),
+    )
     runtime.start()
     url = f"http://{args.host}:{args.port}"
     print(f"Parcel control deck: {url}", flush=True)

@@ -5,6 +5,7 @@ import math
 import os
 import struct
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -55,6 +56,7 @@ def _append(
     world_id: int = 4000,
     trial_id: int = 3,
     seed: int = 0xFEDCBA9876543210,
+    observation_sha256: str = "a" * 64,
 ):
     return builder.append(
         step_index=step,
@@ -73,6 +75,7 @@ def _append(
         published_yaw_rate_rps=yaw,
         published_stop=stop,
         note=note,
+        policy_observation_sha256=observation_sha256,
     )
 
 
@@ -168,9 +171,10 @@ def _rebuild_from_payloads(payloads: list[bytes]) -> bytes:
 def _replace_header_field(raw_artifact: bytes, index: int, value: object) -> bytes:
     fields = list(evidence_module._FILE_HEADER.unpack_from(raw_artifact))
     fields[index] = value
-    return evidence_module._FILE_HEADER.pack(*fields) + raw_artifact[
-        evidence_module._FILE_HEADER.size :
-    ]
+    return (
+        evidence_module._FILE_HEADER.pack(*fields)
+        + raw_artifact[evidence_module._FILE_HEADER.size :]
+    )
 
 
 def _write_tampered(path: Path, payload: bytes) -> Path:
@@ -224,9 +228,8 @@ def test_round_trip_preserves_exact_float64_scan_action_and_episode_identity(
     assert record.seed == (1 << 64) - 1
     assert record.certificate.profile_sha256 == write_result.identity.profile_sha256
     assert record.certificate.examined_ray_count == 720
-    assert record.note_sha256 == hashlib.sha256(
-        b"secret-policy-note-not-stored"
-    ).hexdigest()
+    assert record.note_sha256 == hashlib.sha256(b"secret-policy-note-not-stored").hexdigest()
+    assert record.policy_observation_sha256 == "a" * 64
     assert b"secret-policy-note-not-stored" not in _uncompressed(target.read_bytes())
 
 
@@ -244,12 +247,11 @@ def test_artifact_is_deterministic_and_returns_hash_size_count_and_root_metadata
     assert first.identity.artifact_sha256 == second.identity.artifact_sha256
     assert first.identity.artifact_size_bytes == len(first_bytes)
     assert first.identity.record_count == 3
-    assert first.identity.root_record_sha256 == read_v8_action_evidence(
-        tmp_path / "first.v8e"
-    ).records[-1].record_sha256
-    assert first.identity.profile_sha256 == (
-        FROZEN_V8_BARN_EVALUATOR_PROFILE.identity_sha256
+    assert (
+        first.identity.root_record_sha256
+        == read_v8_action_evidence(tmp_path / "first.v8e").records[-1].record_sha256
     )
+    assert first.identity.profile_sha256 == (FROZEN_V8_BARN_EVALUATOR_PROFILE.identity_sha256)
     assert first.identity.arm == "candidate"
     assert first.identity.execution_order == 1
     assert first.identity.world_id == 4000
@@ -287,6 +289,30 @@ def test_artifact_write_is_exclusive_read_only_and_builder_is_single_use(
         competing.write_exclusive(target)
 
 
+def test_forced_temporary_name_collision_preserves_foreign_bytes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "collision.v8e"
+    collision_hex = "forced-collision"
+    temporary = tmp_path / f".{target.name}.{os.getpid()}.{collision_hex}.tmp"
+    foreign = b"foreign-file-owned-by-another-writer\n"
+    temporary.write_bytes(foreign)
+    monkeypatch.setattr(
+        evidence_module.uuid,
+        "uuid4",
+        lambda: SimpleNamespace(hex=collision_hex),
+    )
+    builder = V8ActionEvidenceBuilder()
+    _append(builder, step=0)
+
+    with pytest.raises(FileExistsError):
+        builder.write_exclusive(target)
+
+    assert temporary.read_bytes() == foreign
+    assert target.exists() is False
+
+
 def test_evaluator_overhead_is_separate_metadata_not_controller_latency(
     tmp_path: Path,
 ) -> None:
@@ -321,6 +347,7 @@ def test_stop_latch_repeats_exact_last_scan_and_zero_action(tmp_path: Path) -> N
     assert latch.published_vy_mps == 0.0
     assert latch.published_yaw_rate_rps == 0.0
     assert latch.normalized_scan_float64_le == policy_stop.normalized_scan_float64_le
+    assert latch.policy_observation_sha256 == policy_stop.policy_observation_sha256
     assert result.identity.root_record_sha256 == latch.record_sha256
 
 
@@ -367,6 +394,19 @@ def test_builder_rejects_changed_scan_or_geometry_on_reuse() -> None:
             stop=True,
         )
 
+    changed_observation = V8ActionEvidenceBuilder()
+    _append(changed_observation, step=0, vx=0.0, stop=True)
+    with pytest.raises(V8ActionEvidenceError, match="complete prior observation digest"):
+        _append(
+            changed_observation,
+            step=1,
+            issued_by_policy=False,
+            observation_reused=True,
+            vx=0.0,
+            stop=True,
+            observation_sha256="b" * 64,
+        )
+
     changed_geometry = V8ActionEvidenceBuilder()
     _append(changed_geometry, step=0, vx=0.0, stop=True)
     with pytest.raises(V8ActionEvidenceError, match="exact prior scan geometry"):
@@ -406,6 +446,7 @@ def test_builder_rejects_policy_resume_after_latch() -> None:
         ({"trial_id": True}, TypeError, "must be an integer"),
         ({"seed": 1 << 64}, ValueError, "unsigned 64-bit"),
         ({"stop": True}, ValueError, "published stop must have zero velocity"),
+        ({"observation_sha256": "not-a-digest"}, ValueError, "lowercase SHA-256"),
         (
             {"issued_by_policy": False, "observation_reused": False},
             V8ActionEvidenceError,
@@ -466,7 +507,7 @@ def test_reader_rejects_bad_header_truncation_trailing_count_and_hashes(
         changed = b"BADMAGIC" + raw[8:]
     elif mutation == "version":
         changed = bytearray(raw)
-        struct.pack_into("<H", changed, 8, 2)
+        struct.pack_into("<H", changed, 8, 1)
         changed = bytes(changed)
     elif mutation == "truncated":
         changed = raw[:-1]
@@ -567,7 +608,7 @@ def test_reader_recomputes_certificate_and_rejects_semantic_tampering(
     payload = bytearray(payloads[0])
     prefix = evidence_module._RECORD_PREFIX.unpack_from(payload)
     arm_length = prefix[14]
-    certificate_length = prefix[16]
+    certificate_length = prefix[17]
     scan_offset = evidence_module._RECORD_PREFIX.size + arm_length
     certificate_offset = scan_offset + evidence_module._SCAN_SIZE_BYTES
     if field == "action":

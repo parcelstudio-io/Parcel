@@ -12,6 +12,7 @@ from .models import (
     ControlLifecycle,
     ControlLimits,
     ControlTiming,
+    FaultReason,
     RobotMotionState,
     TimedVelocitySetpoint,
 )
@@ -178,6 +179,24 @@ class ControlManager:
             if threaded and not self._closing:
                 self._start_thread_locked()
 
+    def _validate_capabilities(self, command: VelocityCommand) -> None:
+        """Reject motion the active controller declares itself unable to do.
+
+        These flags were previously decorative; a declared capability limit now
+        fails closed at the dispatch boundary instead of silently commanding a
+        robot that cannot comply (e.g. strafing a non-holonomic platform).
+        """
+
+        capabilities = self.controller.capabilities
+        if not capabilities.body_velocity and not _is_zero(command):
+            raise ControlNotReadyError(
+                f"controller {self.controller.name!r} does not accept body-velocity commands"
+            )
+        if not capabilities.lateral_velocity and abs(command.vy) > 1e-9:
+            raise ControlNotReadyError(
+                f"controller {self.controller.name!r} cannot strafe; vy must be zero"
+            )
+
     def set_target(
         self,
         command: VelocityCommand,
@@ -193,6 +212,7 @@ class ControlManager:
         if not math.isfinite(lease) or lease <= 0.0:
             raise ValueError("control target TTL must be positive and finite")
         self.limits.validate(command)
+        self._validate_capabilities(command)
         if _is_zero(command):
             self.stop("zero_target")
             with self._lock:
@@ -312,8 +332,13 @@ class ControlManager:
                 self._fault_locked(reason)
                 return
             assert state is not None
-            if state.error_code:
-                self._fault_locked(f"robot_error_code_{state.error_code}")
+            if state.fault_reason is not FaultReason.NONE:
+                # Preserve the historical fault string when a raw vendor code
+                # exists; otherwise report the generic classification.
+                if state.error_code:
+                    self._fault_locked(f"robot_error_code_{state.error_code}")
+                else:
+                    self._fault_locked(f"robot_fault_{state.fault_reason.value}")
                 return
             if (
                 abs(state.roll) > self.limits.max_tilt_rad
@@ -605,7 +630,7 @@ class ControlManager:
                 raise ControlNotReadyError("cannot clear controller fault without fresh feedback")
             assert state is not None
             self._last_state = state
-            if state.error_code:
+            if state.fault_reason is not FaultReason.NONE:
                 raise ControlNotReadyError(
                     "cannot clear controller fault while robot reports an error"
                 )

@@ -83,9 +83,9 @@ def apply_collision_brake(
     closing_fraction = 1.0
     if nearest_obstacle_bearing_rad is not None and speed > 1e-6:
         travel_bearing = math.atan2(vy, vx)
-        angle_error = (
-            nearest_obstacle_bearing_rad - travel_bearing + math.pi
-        ) % (2.0 * math.pi) - math.pi
+        angle_error = (nearest_obstacle_bearing_rad - travel_bearing + math.pi) % (
+            2.0 * math.pi
+        ) - math.pi
         closing_fraction = max(0.0, math.cos(angle_error))
         if policy.predictive_mode in _TRANSLATIONAL_CAP_MODES:
             # A hard-boundary cap must cover every obstacle with a positive
@@ -109,8 +109,7 @@ def apply_collision_brake(
             if nearest_obstacle_m <= predictive_stop_m:
                 return 0.0, 0.0, "obstacle_stop"
         elif (
-            policy.predictive_mode != _ALL_RAY_MODE
-            and nearest_obstacle_m <= policy.obstacle_stop_m
+            policy.predictive_mode != _ALL_RAY_MODE and nearest_obstacle_m <= policy.obstacle_stop_m
         ):
             return 0.0, 0.0, "obstacle_stop"
 
@@ -129,8 +128,7 @@ def apply_collision_brake(
             # Direction is preserved; only translational magnitude is capped.
             allowed_closing_speed = max(
                 0.0,
-                (nearest_obstacle_m - policy.obstacle_stop_m)
-                / policy.reaction_time_s,
+                (nearest_obstacle_m - policy.obstacle_stop_m) / policy.reaction_time_s,
             )
             speed_limit = (
                 allowed_closing_speed

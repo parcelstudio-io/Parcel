@@ -18,6 +18,8 @@ from .mujoco_lidar import (
     MAX_LIDAR_OBSTACLES,
     ROBOT_FOOTPRINT_RADIUS_M,
     ROBOT_OBSTACLE_HEIGHT_M,
+    planar_scan_payload,
+    raycast_planar_scan,
     scan_mujoco_lidar,
 )
 from .sim_control import PoseController
@@ -140,6 +142,14 @@ def run_simulator(
     pose_hotkeys = {ord("1"): "sit", ord("2"): "bow"}
     base_position = np.array(data.qpos[:3], dtype=np.float64)
     base_yaw = 0.0
+
+    # The robot root body (first free joint) anchors the raycast scan and its
+    # self-return filtering; the seeded RNG keeps sensor noise reproducible.
+    _free_joints = [
+        j for j in range(model.njnt) if model.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE
+    ]
+    robot_body_id = int(model.jnt_bodyid[_free_joints[0]]) if _free_joints else 0
+    scan_rng = np.random.default_rng(dynamic_city_seed)
 
     dynamic_city = DynamicCity.default(
         enabled=dynamic_city_enabled,
@@ -279,11 +289,21 @@ def run_simulator(
             robot_y=robot_y,
             robot_heading=heading,
         )
+        scan = raycast_planar_scan(
+            model,
+            data,
+            robot_x=robot_x,
+            robot_y=robot_y,
+            robot_heading=heading,
+            robot_body_id=robot_body_id,
+            rng=scan_rng,
+        )
         return {
             "type": "status",
             "backend": "mujoco",
             "timestamp": time.monotonic(),
             "sim_time": float(data.time),
+            "lidar_scan": planar_scan_payload(scan),
             "robot": {
                 "x": float(data.qpos[0]) if model.nq > 0 else 0.0,
                 "y": float(data.qpos[1]) if model.nq > 1 else 0.0,

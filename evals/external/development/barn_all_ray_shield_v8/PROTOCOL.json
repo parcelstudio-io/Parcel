@@ -54,7 +54,7 @@
     "assets_materialized": false,
     "cryptographically_sealed": false,
     "recipe": {
-      "acceptance": "first connected upstream BARN map; no policy execution; post-generation evaluator-private geometric targeting audit must pass",
+      "acceptance": "first connected upstream BARN map; no policy execution; any evaluator-private geometry analysis is descriptive and never an admission filter",
       "generator_commit": "295ca5cc7b9b0ecea93013f0c49c5a1ca4352151",
       "parameter_algorithm": "offset=world_id-4000; fill=(0.15,0.20,0.25,0.30)[(offset//3)%4]; smooth=(2,3,4)[offset%3]; rows=30; columns=30",
       "seed_algorithm": "uint64_be(sha256(namespace + ':' + world_id + ':' + attempt)[0:8]) bitwise-and 0x7fffffff",
@@ -82,7 +82,7 @@
         4049
       ]
     },
-    "recipe_commitment_sha256": "fe962d642e20ce5bc594f407340c9ad45cb29ad464d58f6ab9ac349d127ca773"
+    "recipe_commitment_sha256": "31eb5659693812bda2eee18629d591c9576ab150fb98335e0a486c57d120bc9c"
   },
   "paired_protocol": {
     "episode_workers": 4,
@@ -331,6 +331,7 @@
   "protocol_id": "parcel-barn-v8-all-ray-paired-development-v1",
   "schema_version": 1,
   "targeting_contract": {
+    "acceptance": "accept first generated=True upstream BARN map satisfying the assigned geometry predicate",
     "assignment": {
       "4000": "global_nearest_not_limiting",
       "4001": "global_nearest_not_limiting",
@@ -364,7 +365,12 @@
       "4029": "yaw_sweep_rotation_limited"
     },
     "control_period_s": 0.1,
+    "does_not_attest_policy_divergence_or_cap_activation": true,
+    "generator_parameter_algorithm": "offset=world_id-4000; fill=(0.15,0.20,0.25,0.30)[(offset//3)%4]; smooth=(2,3,4)[offset%3]; rows=30; columns=30",
+    "generator_seed_algorithm": "uint64_be(sha256(namespace + ':' + world_id + ':' + attempt)[0:8]) bitwise-and 0x7fffffff",
+    "generator_seed_namespace": "parcel-barn-all-ray-shield-v8-generated-corpus-20260803",
     "forward_mps": 0.45,
+    "maximum_attempts_per_world": 10000,
     "policy_executed_during_targeting": false,
     "reaction_horizon_s": 0.12,
     "strict_epsilon": 0.0001,

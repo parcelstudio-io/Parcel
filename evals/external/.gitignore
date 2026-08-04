@@ -5,6 +5,13 @@ results/*
 !results/habitat2020/
 !results/habitat2020/README.md
 !results/habitat2020/*.json
+
+# Bulky local training / development evidence (keep sources + ledgers tracked)
+training/**/results/runs/
+development/**/results/single-use-development-action-evidence/
+development/**/results/single-use-development-transaction/
+*.v8e
+*.v8ae
 __pycache__/
 *.pyc
 .pytest_cache/

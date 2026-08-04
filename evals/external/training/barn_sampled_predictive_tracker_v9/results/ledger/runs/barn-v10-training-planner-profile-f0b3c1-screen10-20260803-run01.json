@@ -1,0 +1,269 @@
+{
+  "aggregate_metrics": {
+    "candidate": {
+      "adapter_act_count": 7219.0,
+      "adapter_act_max_ms": 35.274674,
+      "adapter_act_mean_ms": 6.66206965258346,
+      "adapter_act_p50_ms": 3.164625,
+      "adapter_act_p95_ms": 23.465979,
+      "adapter_act_p99_ms": 30.895152,
+      "collision_rate": 0.0,
+      "controller_step_count": 7219.0,
+      "controller_step_max_ms": 34.870272,
+      "controller_step_mean_ms": 6.255834113866187,
+      "controller_step_p50_ms": 2.750158,
+      "controller_step_p95_ms": 23.038773,
+      "controller_step_p99_ms": 30.395597,
+      "episodes": 10.0,
+      "evaluator_diagnostics": {
+        "failure_counts": {
+          "startup_timeout": 2,
+          "timeout": 8
+        },
+        "mean_closest_goal_distance_m": 8.168577838683479,
+        "mean_episode_minimum_signed_obstacle_clearance_m": 0.7402022972141216,
+        "mean_goal_progress_efficiency": 0.7534964715230669,
+        "mean_maximum_goal_progress_fraction": 0.183142216131652,
+        "mean_maximum_goal_progress_m": 1.8314221613165198,
+        "mean_net_goal_progress_m": 1.8314221613165198,
+        "mean_successful_reference_route_efficiency": null,
+        "mean_translational_speed_mps": 0.019250909816880584,
+        "mean_traveled_to_reference_path_ratio": 0.1737939972252969,
+        "minimum_signed_obstacle_clearance_m": 0.47992582700697745,
+        "outcome_counts": {
+          "startup_timeout": 2,
+          "timeout": 8
+        },
+        "private_state_not_exposed_to_policy": true
+      },
+      "mean_elapsed_time_s": 80.0,
+      "mean_final_distance_to_goal_m": 8.168577838683479,
+      "mean_success_time_s": 0.0,
+      "mean_traveled_distance_m": 1.9433847334509877,
+      "navigation_metric": 0.0,
+      "policy_diagnostics": {
+        "controller_phase_counts": {
+          "grid_align": 761,
+          "grid_recover_scan": 160,
+          "grid_track": 6290,
+          "navigation_no_progress": 8
+        },
+        "note": "Policy-provided notes are diagnostics, not evaluator failure labels.",
+        "safety_phase_counts": {
+          "<none>": 8,
+          "all_ray_observed_returns_only_incomplete_scan": 7211
+        }
+      },
+      "policy_stop_latch_rate": 0.8,
+      "sensor_diagnostics": {
+        "long_shield_stall_episode_count": 0,
+        "long_shield_stall_threshold_steps": 50,
+        "max_consecutive_obstacle_stop_steps": 0,
+        "normalized_frame_count": 7219,
+        "obstacle_stop_steps": 0,
+        "reverse_command_steps": 0,
+        "self_return_count": 721900,
+        "sensor_normalization_failures": 0
+      },
+      "sidecar_act_round_trip_count": 7219.0,
+      "sidecar_act_round_trip_max_ms": 35.897966,
+      "sidecar_act_round_trip_mean_ms": 7.3778348624463215,
+      "sidecar_act_round_trip_p50_ms": 3.93484,
+      "sidecar_act_round_trip_p95_ms": 24.230545,
+      "sidecar_act_round_trip_p99_ms": 31.642211,
+      "sidecar_close_round_trip_count": 10.0,
+      "sidecar_close_round_trip_max_ms": 13.236643,
+      "sidecar_close_round_trip_mean_ms": 12.6185387,
+      "sidecar_close_round_trip_p50_ms": 12.64568,
+      "sidecar_close_round_trip_p95_ms": 13.236643,
+      "sidecar_close_round_trip_p99_ms": 13.236643,
+      "sidecar_process_start_count": 10.0,
+      "sidecar_process_start_max_ms": 212.597279,
+      "sidecar_process_start_mean_ms": 173.06701560000002,
+      "sidecar_process_start_p50_ms": 166.005073,
+      "sidecar_process_start_p95_ms": 212.597279,
+      "sidecar_process_start_p99_ms": 212.597279,
+      "sidecar_reset_round_trip_count": 10.0,
+      "sidecar_reset_round_trip_max_ms": 0.248346,
+      "sidecar_reset_round_trip_mean_ms": 0.1690779,
+      "sidecar_reset_round_trip_p50_ms": 0.167143,
+      "sidecar_reset_round_trip_p95_ms": 0.248346,
+      "sidecar_reset_round_trip_p99_ms": 0.248346,
+      "startup_failure_rate": 0.2,
+      "stopped_outside_goal_rate": 0.0,
+      "success_rate": 0.0,
+      "timeout_rate": 0.8,
+      "trials_per_world": 1.0,
+      "worlds": 10.0
+    },
+    "candidate_minus_reference": {
+      "collision_rate": 0.0,
+      "mean_episode_minimum_signed_obstacle_clearance_m": 0.0034980173352877177,
+      "mean_final_distance_to_goal_m": -0.07166288316745728,
+      "mean_goal_progress_efficiency": -0.10247521289191996,
+      "mean_maximum_goal_progress_m": 0.07166288316745728,
+      "navigation_metric": 0.0,
+      "stopped_outside_goal_rate": 0.0,
+      "success_rate": 0.0,
+      "timeout_rate": 0.0
+    },
+    "leaderboard": false,
+    "official_score": false,
+    "paired_outcomes": {
+      "collision_gains": 0,
+      "collision_regressions": 0,
+      "metric_improvements": 0,
+      "metric_regressions": 0,
+      "metric_ties": 10,
+      "success_gains": 0,
+      "success_regressions": 0
+    },
+    "promotion_evidence": false,
+    "reference": {
+      "adapter_act_count": 7195.0,
+      "adapter_act_max_ms": 190.324643,
+      "adapter_act_mean_ms": 5.786541740931201,
+      "adapter_act_p50_ms": 3.167188,
+      "adapter_act_p95_ms": 18.107448,
+      "adapter_act_p99_ms": 24.495066,
+      "collision_rate": 0.0,
+      "controller_step_count": 7195.0,
+      "controller_step_max_ms": 190.044409,
+      "controller_step_mean_ms": 5.371167306323836,
+      "controller_step_p50_ms": 2.742356,
+      "controller_step_p95_ms": 17.579059,
+      "controller_step_p99_ms": 24.074169,
+      "episodes": 10.0,
+      "evaluator_diagnostics": {
+        "failure_counts": {
+          "startup_timeout": 2,
+          "timeout": 8
+        },
+        "mean_closest_goal_distance_m": 8.240240721850936,
+        "mean_episode_minimum_signed_obstacle_clearance_m": 0.7367042798788339,
+        "mean_goal_progress_efficiency": 0.8559716844149868,
+        "mean_maximum_goal_progress_fraction": 0.17597592781490629,
+        "mean_maximum_goal_progress_m": 1.7597592781490625,
+        "mean_net_goal_progress_m": 1.7597592781490625,
+        "mean_successful_reference_route_efficiency": null,
+        "mean_translational_speed_mps": 0.018698123658984232,
+        "mean_traveled_to_reference_path_ratio": 0.16337447696211016,
+        "minimum_signed_obstacle_clearance_m": 0.4799207260080615,
+        "outcome_counts": {
+          "startup_timeout": 2,
+          "timeout": 8
+        },
+        "private_state_not_exposed_to_policy": true
+      },
+      "mean_elapsed_time_s": 80.0,
+      "mean_final_distance_to_goal_m": 8.240240721850936,
+      "mean_success_time_s": 0.0,
+      "mean_traveled_distance_m": 1.8339774317140667,
+      "navigation_metric": 0.0,
+      "policy_diagnostics": {
+        "controller_phase_counts": {
+          "grid_align": 108,
+          "grid_recover_scan": 133,
+          "grid_track": 6946,
+          "navigation_no_progress": 8
+        },
+        "note": "Policy-provided notes are diagnostics, not evaluator failure labels.",
+        "safety_phase_counts": {
+          "<none>": 8,
+          "all_ray_observed_returns_only_incomplete_scan": 7187
+        }
+      },
+      "policy_stop_latch_rate": 0.8,
+      "sensor_diagnostics": {
+        "long_shield_stall_episode_count": 0,
+        "long_shield_stall_threshold_steps": 50,
+        "max_consecutive_obstacle_stop_steps": 0,
+        "normalized_frame_count": 7195,
+        "obstacle_stop_steps": 0,
+        "reverse_command_steps": 0,
+        "self_return_count": 719500,
+        "sensor_normalization_failures": 0
+      },
+      "sidecar_act_round_trip_count": 7195.0,
+      "sidecar_act_round_trip_max_ms": 191.24159,
+      "sidecar_act_round_trip_mean_ms": 6.5438128683808205,
+      "sidecar_act_round_trip_p50_ms": 3.940749,
+      "sidecar_act_round_trip_p95_ms": 18.867597,
+      "sidecar_act_round_trip_p99_ms": 25.230167,
+      "sidecar_close_round_trip_count": 10.0,
+      "sidecar_close_round_trip_max_ms": 13.580032,
+      "sidecar_close_round_trip_mean_ms": 12.5644901,
+      "sidecar_close_round_trip_p50_ms": 12.533521,
+      "sidecar_close_round_trip_p95_ms": 13.580032,
+      "sidecar_close_round_trip_p99_ms": 13.580032,
+      "sidecar_process_start_count": 10.0,
+      "sidecar_process_start_max_ms": 233.737792,
+      "sidecar_process_start_mean_ms": 180.3097912,
+      "sidecar_process_start_p50_ms": 171.269923,
+      "sidecar_process_start_p95_ms": 233.737792,
+      "sidecar_process_start_p99_ms": 233.737792,
+      "sidecar_reset_round_trip_count": 10.0,
+      "sidecar_reset_round_trip_max_ms": 0.24489,
+      "sidecar_reset_round_trip_mean_ms": 0.18520419999999999,
+      "sidecar_reset_round_trip_p50_ms": 0.18506,
+      "sidecar_reset_round_trip_p95_ms": 0.24489,
+      "sidecar_reset_round_trip_p99_ms": 0.24489,
+      "startup_failure_rate": 0.2,
+      "stopped_outside_goal_rate": 0.0,
+      "success_rate": 0.0,
+      "timeout_rate": 0.8,
+      "trials_per_world": 1.0,
+      "worlds": 10.0
+    },
+    "suite_seed": 20260803,
+    "trials_per_world": 1,
+    "world_count": 10,
+    "world_ids": [
+      5000,
+      5001,
+      5002,
+      5003,
+      5004,
+      5005,
+      5006,
+      5007,
+      5008,
+      5009
+    ]
+  },
+  "benchmark": {
+    "id": "barn-v9-sampled-predictive-tracker-training-paired-non-official",
+    "source": "https://github.com/Daffan/the-barn-challenge",
+    "source_commit": "bf5a226f6088ec96bf0d2dbee3253a8ea6119b83"
+  },
+  "change_description": "Training-only 10-world screen of frozen V10 planner-profile f0b3c157 against exact rejected V8 control 189ac31f; the grid_v1 comfort-cost and observed-first reachable-frontier profile is the sole candidate payload factor; no development, holdout, or deployment access.",
+  "components": {
+    "adapter": {
+      "hash": "9b2e2ad76542567ba009774e1e16f2703cf00a8801ec5a81e01f787d3547104c",
+      "id": "parcel-directive-navigator-barn-sensor-adapter-v1"
+    },
+    "agent": {
+      "id": "DirectiveNavigator"
+    },
+    "config": {
+      "hash": "22fa34207e85eb8ece4e019900738dff13cc2fce17244ddb8c8074b3fba3f794",
+      "id": "bundle:f0b3c15763887d2023e42a4515073227d51d8c11e3c527b5f7bf1f90bac7a655/configs/navigation/experiments/barn_grid_v1.yaml"
+    },
+    "model": {
+      "hash": "c9f14b5bb50a3139ccb30a853fd1f5b321ac78d9632ec8b78a49831d9ab4926a",
+      "id": "grid_v1"
+    }
+  },
+  "parcel": {
+    "git_commit": "ce3814a0534d54c983f16614bd1ddb20dc1974b4",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/training/barn_sampled_predictive_tracker_v9/results/runs/barn-v10-training-planner-profile-f0b3c1-screen10-20260803-run01/report.json",
+    "sha256": "57b2830d5e7e81e50304cb90ba172f2d740a1d525ad1ae57ce05d528ee9ded71",
+    "size_bytes": 20672701
+  },
+  "run_id": "barn-v10-training-planner-profile-f0b3c1-screen10-20260803-run01",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-04T00:12:30.632521Z"
+}

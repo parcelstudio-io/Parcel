@@ -88,6 +88,16 @@ class SimObservation:
     emergency_stopped: bool = False
     backend: str = "unknown"
     semantic_objects: tuple[SemanticObjectTrack, ...] = ()
+    # Occlusion-true planar scan (body-relative CCW rays), appended after the
+    # legacy positional tail to preserve positional-argument compatibility.
+    # NaN entries are ignored rays (dropout / self-return); range_max means no
+    # return. When empty, no calibrated scan is available and mapped
+    # navigation degrades loudly to the point-goal fallback.
+    lidar_ranges: tuple[float, ...] = ()
+    lidar_angle_min_rad: float | None = None
+    lidar_angle_increment_rad: float | None = None
+    lidar_range_min_m: float | None = None
+    lidar_range_max_m: float | None = None
 
 
 class SimulatorBackend(Protocol):

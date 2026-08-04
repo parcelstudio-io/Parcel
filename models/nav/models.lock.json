@@ -7,9 +7,17 @@
       "size_bytes": 1752028242,
       "sha256": "a42326778e5e318c6222575dc5e02f1794d9a60cce4dc8f8a2ee5df7dc6d1c29",
       "source": "https://github.com/ai4ce/CityWalker",
-      "source_commit": "ab0ef60b17dc4d1d16c7d95dd143e6dac91abed1",
+      "source_commit": "6fdae3809f66304e4a0f8bb077aaf7f93c1a3227",
+      "repository_review_commit": "ab0ef60b17dc4d1d16c7d95dd143e6dac91abed1",
       "release": "v1.0",
-      "license": "Apache-2.0",
+      "repository_code_license": "Apache-2.0",
+      "checkpoint_license": "NOASSERTION",
+      "checkpoint_license_evidence": {
+        "release_asset_specific_notice": false,
+        "official_converted_model_license": "Apache-2.0",
+        "official_converted_model_url": "https://huggingface.co/ai4ce/citywalker",
+        "scope_note": "The official ai4ce card covers converted weights derived from the checkpoint; the original GitHub v1.0 checkpoint has no separate artifact-specific notice."
+      },
       "activation": "research_only_until_rgb_trajectory_adapter_exists"
     }
   }

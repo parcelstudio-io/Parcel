@@ -80,7 +80,10 @@ def test_grid_navigator_falls_back_when_scan_calibration_is_missing() -> None:
     )
 
     assert command.vy == 0.0
-    assert command.note.startswith("track_goal")
+    # Degraded mode is loud: the note names the fallback and the counter ticks.
+    assert command.note.startswith("scan_missing_fallback")
+    assert "track_goal" in command.note
+    assert navigator.scan_fallback_count == 1
     navigator.close()
 
 

@@ -24,8 +24,6 @@ class FakeModel:
         assert {tool["name"] for tool in tools} == {
             "run_pose",
             "run_skill",
-            "set_velocity",
-            "set_motion_backend",
             "navigate",
             "set_behavior",
             "run_spatial_behavior",
@@ -491,6 +489,47 @@ def test_stop_bypasses_language_model():
 
     assert agent.handle_text("STOP") == "Stopping."
     assert stopped == [True]
+
+
+def test_catalog_skill_and_status_bypass_language_model():
+    class ForbiddenModel:
+        def decide(self, transcript, tools, context):
+            raise AssertionError(f"direct skill reached the language model: {transcript}")
+
+    from parcel_robot.modules import StatusModule
+
+    pose = Pose("sit", {"hip": 0.5})
+    sent = []
+    agent = VoiceAgent(
+        {"sit": pose},
+        [StatusModule({"label": "parcel"})],
+        sent.append,
+        language_model=ForbiddenModel(),
+    )
+
+    assert agent.handle_text("do the sit pose") == "Running sit pose"
+    assert agent.handle_text("how are your systems") == "parcel is ready"
+    assert sent == [pose]
+    assert agent.last_reasoning_source == "deterministic"
+
+
+@pytest.mark.parametrize("tool_name", ["set_velocity", "set_motion_backend"])
+def test_conversation_model_cannot_request_raw_motion_authority(tool_name: str):
+    arguments = (
+        {"vx": 0.2, "vy": 0.0, "vyaw": 0.0} if tool_name == "set_velocity" else {"name": "sport"}
+    )
+    agent = VoiceAgent(
+        {},
+        [],
+        lambda pose: None,
+        language_model=FakeModel(AgentDecision("I am moving.", (ToolCall(tool_name, arguments),))),
+    )
+
+    reply = agent.handle_text("do something unusual")
+
+    assert "couldn't do that safely" in reply
+    assert agent.last_reasoning_guard is not None
+    assert tool_name in agent.last_reasoning_guard
 
 
 def test_model_json_is_strict():

@@ -30,12 +30,14 @@ MOTION_TOOLS = frozenset(
         "run_pose",
         "run_skill",
         "set_velocity",
+        "set_motion_backend",
         "navigate",
         "set_behavior",
         "run_spatial_behavior",
         "stop_motion",
     }
 )
+MODEL_FORBIDDEN_TOOLS = frozenset({"set_velocity", "set_motion_backend"})
 CommitGuard = Callable[[Callable[[], str]], str]
 PlanPublisher = Callable[[PlanIR, IntentFrame, str], str]
 PlannerOutputAdapter = Callable[[object, IntentFrame, ObservationSnapshot], PlanIR]
@@ -272,6 +274,43 @@ class VoiceAgent:
                 lambda: self._remember(original, lambda: self._execute_navigation(nav_directive)),
             )
 
+        # Direct catalog/status/backend commands are bound deterministically.
+        # They must not queue behind conversation inference or let a language
+        # model author raw velocity/backend-control arguments.
+        backend_match = re.fullmatch(r"use (vendor|sport|rl)(?: backend)?", text)
+        if backend_match and self.motion is not None:
+            name = backend_match.group(1)
+            if name == "sport":  # deprecated vendor-branded alias
+                name = "vendor"
+            call = ToolCall("set_motion_backend", {"name": name})
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision(f"Switching to the {name} backend.", (call,)),
+                    transcript=original,
+                ),
+            )
+
+        catalog_rule = frame.matched_rule or ""
+        if catalog_rule.startswith("catalog_skill:"):
+            skill_name = catalog_rule.partition(":")[2]
+            return self._commit(
+                commit,
+                lambda: self._remember(original, lambda: self._execute_named_skill(skill_name)),
+            )
+
+        has_status_source = self.motion is not None or any(
+            "status" in module.commands() for module in self.modules
+        )
+        if frame.matched_rule == "status_query" and has_status_source:
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision("Done.", (ToolCall("get_status"),)),
+                    transcript=original,
+                ),
+            )
+
         if self.language_model is not None:
             try:
                 set_prompt = getattr(self.language_model, "set_system_prompt", None)
@@ -319,18 +358,6 @@ class VoiceAgent:
                         affect=AffectEstimate(label, 1.0),
                         next_action=proposal,
                     ),
-                    transcript=original,
-                ),
-            )
-
-        backend_match = re.fullmatch(r"use (sport|rl)(?: backend)?", text)
-        if backend_match and self.motion is not None:
-            name = backend_match.group(1)
-            call = ToolCall("set_motion_backend", {"name": name})
-            return self._commit(
-                commit,
-                lambda: self._execute(
-                    AgentDecision(f"Switching to the {name} backend.", (call,)),
                     transcript=original,
                 ),
             )
@@ -472,6 +499,23 @@ class VoiceAgent:
 
     def _guard_model_motion(self, transcript: str, decision: AgentDecision) -> AgentDecision:
         """Fail closed when a non-command utterance elicits a physical model action."""
+
+        forbidden = tuple(
+            call.name for call in decision.tool_calls if call.name in MODEL_FORBIDDEN_TOOLS
+        )
+        if forbidden:
+            self.last_reasoning_guard = (
+                "suppressed raw motion or backend authority requested by the conversation model: "
+                + ", ".join(sorted(set(forbidden)))
+            )
+            return AgentDecision(
+                reply=(
+                    "I couldn't do that safely. Please use a reviewed movement command "
+                    "or manual control."
+                ),
+                intent=decision.intent,
+                affect=decision.affect,
+            )
 
         has_motion = any(call.name in MOTION_TOOLS for call in decision.tool_calls)
         has_motion = has_motion or decision.next_action is not None
@@ -810,31 +854,6 @@ class VoiceAgent:
                 "parameters": {
                     "type": "object",
                     "properties": {"name": {"type": "string", "enum": skill_enum}},
-                    "required": ["name"],
-                    "additionalProperties": False,
-                },
-            },
-            {
-                "name": "set_velocity",
-                "description": "Request body-frame walking velocity via the active motion backend.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "vx": {"type": "number"},
-                        "vy": {"type": "number"},
-                        "vyaw": {"type": "number"},
-                    },
-                    "additionalProperties": False,
-                },
-            },
-            {
-                "name": "set_motion_backend",
-                "description": "Switch the exclusive locomotion backend.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "name": {"type": "string", "enum": ["sport", "rl"]},
-                    },
                     "required": ["name"],
                     "additionalProperties": False,
                 },

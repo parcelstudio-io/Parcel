@@ -316,7 +316,7 @@ controller. Separate them so each can be measured and replaced.
 | --- | --- | --- |
 | installed Gemma 4 26B-A4B Q4 | conversation, intent, typed PlanIR | Keep as the tested orchestration baseline; use non-thinking mode for normal turns and deliberate mode only for ambiguous plans. |
 | Qwen3.6-35B-A3B Q4 | stronger conversation/planning A/B candidate | Evaluate on an offline instruction/plan suite before swapping the baseline. Never use its text as motor commands. |
-| [CityWalker](https://github.com/ai4ce/CityWalker) | urban visual local-trajectory proposal | Official 2,000-hour checkpoint is downloaded and checksum-locked. Keep inactive until Parcel transports timestamped RGB and has a trajectory/safety adapter. |
+| [CityWalker](https://github.com/ai4ce/CityWalker) | urban visual local-trajectory proposal | The public 2,000-hour checkpoint is downloaded and checksum-locked. Its exact artifact terms are `NOASSERTION`; keep inactive until licensing is resolved and Parcel transports timestamped RGB through a trajectory/safety adapter. |
 | [ViNT / NoMaD](https://github.com/robodhruv/visualnav-transformer) | compact visual goal navigation / exploration | Strong lightweight research candidates after RGB exists; evaluate behind the same local-waypoint interface. |
 | [InternVLA-N1 DualVLN](https://github.com/InternRobotics/InternNav) | slow/fast language-conditioned visual navigation challenger | Best architectural research candidate for a later RGB(-D) A/B; it has documented Go2 deployment, but needs roughly 20 GB GPU memory and its checkpoint license must be resolved before product use. |
 | [NaVILA](https://github.com/AnjieCheng/NaVILA) | Go2 vision-language navigation research | Exact embodiment fit, but checkpoint licensing/provenance is insufficient for production adoption. Treat as research only. |
@@ -326,6 +326,10 @@ controller. Separate them so each can be measured and replaced.
 The downloaded CityWalker artifact is
 `models/nav/citywalker/CityWalker_2000hr.ckpt`, 1,752,028,242 bytes, SHA-256
 `a42326778e5e318c6222575dc5e02f1794d9a60cce4dc8f8a2ee5df7dc6d1c29`.
+The source repository is Apache-2.0, but its original v1.0 release page gives
+that binary no separate artifact-specific notice, so the lock records
+`NOASSERTION`. The official ai4ce Hugging Face conversion is explicitly
+Apache-2.0 and may be assessed later as a distinct pinned artifact.
 The download is deliberately not activation. This workstation currently has no
 camera device and Parcel's `NavObservation.rgb` is not populated. Running a
 vision checkpoint without pixels would create a false capability claim.

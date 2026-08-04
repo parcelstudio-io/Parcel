@@ -1,6 +1,19 @@
+"""Vendor-neutral locomotion control.
+
+This package intentionally contains no vendor imports at module scope.
+Vendor adapters (Unitree Sport, future robots) live in their own modules and
+are reached exclusively through the controller registry in ``factory``.
+"""
+
 from .adapters import BackendVelocityController
 from .base import LocomotionController, RobotStateSource
-from .factory import build_backend_control_manager, build_unitree_sport_control_manager
+from .factory import (
+    build_backend_control_manager,
+    build_unitree_sport_control_manager,
+    controller_factory_names,
+    create_control_manager,
+    register_controller_factory,
+)
 from .manager import ControlManager, ControlNotReadyError
 from .models import (
     ControllerCapabilities,
@@ -8,15 +21,11 @@ from .models import (
     ControlLifecycle,
     ControlLimits,
     ControlTiming,
+    FaultReason,
     RobotMotionState,
     TimedVelocitySetpoint,
 )
 from .state import BufferedRobotStateSource
-from .unitree_sport import (
-    UnitreeChannelContext,
-    UnitreeSportController,
-    UnitreeSportStateSource,
-)
 
 __all__ = [
     "BackendVelocityController",
@@ -28,13 +37,14 @@ __all__ = [
     "ControlTiming",
     "ControllerCapabilities",
     "ControllerStatus",
+    "FaultReason",
     "LocomotionController",
     "RobotMotionState",
     "RobotStateSource",
     "TimedVelocitySetpoint",
-    "UnitreeChannelContext",
-    "UnitreeSportController",
-    "UnitreeSportStateSource",
     "build_backend_control_manager",
     "build_unitree_sport_control_manager",
+    "controller_factory_names",
+    "create_control_manager",
+    "register_controller_factory",
 ]

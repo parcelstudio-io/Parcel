@@ -1,0 +1,72 @@
+{
+  "candidate": {
+    "controller_id": "parcel-directive-navigator-grid-v1-v9-sampled-predictive-tracker",
+    "manifest_sha256": "465842ec8f61886626f4f3e5e6b77fcb321fa18832e77d07e5fabf4e83500e74",
+    "package_sha256": "841597cdb34920506f1c41fd1989faeea04416e616548361868a9f1d3bfd0172"
+  },
+  "candidate_source_contract_sha256": "f979734ebb52d0f47742b14f237cc4ec8766f5445a9cc47b5bbccd55faa33417",
+  "deployment_enabled": false,
+  "development_execution_authorized": false,
+  "experimental": true,
+  "freeze_id": "parcel-v9-supervisory-gap-s1-scratch-candidate-freeze-v1",
+  "frozen_before_materialization": true,
+  "holdout_execution_authorized": false,
+  "hypothesis": {
+    "bounded_forward_dropout_uses_two_sided_observed_support": true,
+    "deliberate_nominal_alignment_never_counts_as_blockage": true,
+    "escape_commitment_ends_after_0_30m_measured_displacement": true,
+    "gap_recovery_uses_a_stable_contiguous_observed_interval": true,
+    "nominal_positive_translation_requires_three_failed_gates_before_escape": true,
+    "nominal_safe_motion_is_passed_through": true,
+    "yaw_is_settled_once_per_escape_commitment": true
+  },
+  "one_factor_delta": {
+    "additions": [
+      "src/parcel_robot/navigation/experimental_sampled_predictive_tracker.py"
+    ],
+    "all_other_reference_payload_bytes_identical": true,
+    "replacements": [
+      "src/parcel_robot/navigation/grid_navigator.py"
+    ],
+    "unchanged_reference_file_count": 116
+  },
+  "reference": {
+    "development_gate_passed": false,
+    "deployment_enabled": false,
+    "manifest_sha256": "d3bca126041d69afb5553ac29656a0152242c00f29a7b987803e9dc536914115",
+    "package_sha256": "189ac31f0f6a461da9e10fad2ac21b2bc3a485a4d5245c517b1492b2a16eb7d9",
+    "role": "rejected_v8_experimental_control_only"
+  },
+  "schema_version": 1,
+  "scratch_screen": {
+    "accepted_for_next_training_stage_only_if_all_conditions_pass": true,
+    "maximum_candidate_collisions": 0,
+    "maximum_candidate_observed_return_certificate_violations": 0,
+    "maximum_controller_p99_latency_ms": 100.0,
+    "maximum_controller_p99_latency_ratio": 1.2,
+    "maximum_yaw_only_action_count": 7020,
+    "minimum_candidate_signed_body_clearance_m": 0.475,
+    "minimum_label_independent_liveness_failure_count_reduction": 1,
+    "minimum_mean_maximum_goal_progress_m_exclusive": 1.5349537273274934,
+    "minimum_success_count": 1,
+    "required_per_world_maximum_goal_progress_m_exclusive": {
+      "5002": 0.18672098949679672,
+      "5004": 0.2681272769073644,
+      "5005": 0.9880781901035522
+    },
+    "screen_world_ids": [
+      5000,
+      5001,
+      5002,
+      5003,
+      5004,
+      5005,
+      5006,
+      5007,
+      5008,
+      5009
+    ],
+    "screening_can_never_authorize_development_holdout_or_deployment": true,
+    "training_only": true
+  }
+}

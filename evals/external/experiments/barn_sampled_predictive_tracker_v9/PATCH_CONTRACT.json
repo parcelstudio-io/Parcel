@@ -1,0 +1,10 @@
+{
+  "candidate_grid_navigator_sha256": "ba15f8e68d15195b43369e38911a3c08e8400cef23de4009bbfad5e337276f0c",
+  "contract_id": "parcel-v9-sampled-predictive-tracker-source-contract-v1",
+  "grid_navigator_patch_sha256": "d161af69a99f802c615c00a961f5a4c2ab3ead7b05bd3248f86b7b096859dff8",
+  "reference_grid_navigator_sha256": "90d05f9994c69d20fc1f05fd80771362b3cb54a01a034f35a138787ba5b44bcb",
+  "reference_manifest_sha256": "d3bca126041d69afb5553ac29656a0152242c00f29a7b987803e9dc536914115",
+  "reference_package_sha256": "189ac31f0f6a461da9e10fad2ac21b2bc3a485a4d5245c517b1492b2a16eb7d9",
+  "schema_version": 1,
+  "tracker_source_sha256": "3d0b31c6112ef20398a0a5d931480c5c8dda610625d84eed7b945f665bda6b4f"
+}

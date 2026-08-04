@@ -130,10 +130,13 @@ pedestrian prediction layer is still needed for time-indexed crowd motion.
 
 ## Where learned navigation belongs
 
-[CityWalker](https://github.com/ai4ce/CityWalker) is the best next learned
-adapter. Its Apache-2.0 release predicts five future Euclidean waypoints from
+[CityWalker](https://github.com/ai4ce/CityWalker) is the next prioritized learned
+adapter. Its public checkpoint predicts five future Euclidean waypoints from
 five observation frames plus recent pose and target coordinates. Run it in
 shadow mode first and pass approved waypoints into the deterministic controller.
+The repository code is Apache-2.0, but Parcel records the exact original v1.0
+checkpoint's artifact terms as `NOASSERTION`; a later official converted model
+has an explicit Apache-2.0 card and should be reviewed as a separate artifact.
 Parcel currently has no simulator RGB frame/history adapter, so simply selecting
 `citywalker_v1` still fails closed.
 

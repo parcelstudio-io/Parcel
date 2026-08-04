@@ -71,15 +71,19 @@ def test_full_gate_executes_physics_and_separates_unsupported(report) -> None:
         "supported_case_count": 4,
         "supported_case_success_rate": 1.0,
         "physical_skill_episode_count": 6,
-        "simulator_step_count": 1137,
+        # Baseline re-frozen 2026-08-03 after the default navigator switched
+        # from stub_v0 to grid_v1 on the calibrated raycast scan: success,
+        # collisions, and minimum clearance are unchanged; the occupancy-grid
+        # planner spends more steps mapping before it commits.
+        "simulator_step_count": 1303,
         "collision_count": 0,
         "timeout_count": 0,
         "minimum_clearance_m": pytest.approx(0.883147),
         "simulator_steps_per_case": {
             "count": 5,
             "minimum": 64.0,
-            "median": 227.0,
-            "mean": 227.4,
+            "median": 251.0,
+            "mean": 260.6,
             "maximum": 389.0,
         },
     }
@@ -157,7 +161,8 @@ def test_correction_waits_for_checkpoint_then_executes_replacement(report) -> No
         "incumbent_simulator_steps": 0,
     }
     assert case["executive"]["final_task"]["plan_revision"] == 2
-    assert case["physical"]["simulator_step_count"] == 194
+    # Re-frozen with the grid_v1 default navigator (was 194 under stub_v0).
+    assert case["physical"]["simulator_step_count"] == 236
     assert case["semantic"]["checks"]["near_surface_le_1m"] is True
     assert case["semantic"]["checks"]["off_road"] is True
 

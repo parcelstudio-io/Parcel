@@ -17,10 +17,12 @@ from parcel_robot.control import (
     ControlTiming,
     RobotMotionState,
     TimedVelocitySetpoint,
+    build_unitree_sport_control_manager,
+)
+from parcel_robot.control.unitree_sport import (
     UnitreeChannelContext,
     UnitreeSportController,
     UnitreeSportStateSource,
-    build_unitree_sport_control_manager,
 )
 from parcel_robot.models import VelocityCommand
 from parcel_robot.safety import SafetyLimits

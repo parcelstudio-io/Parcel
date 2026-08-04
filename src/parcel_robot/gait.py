@@ -4,21 +4,11 @@ import math
 from dataclasses import dataclass, field
 
 from .models import VelocityCommand
+from .robot_profile import RobotProfile
 
-_STAND = {
-    "FL_hip_joint": 0.0,
-    "FL_thigh_joint": 0.9,
-    "FL_calf_joint": -1.8,
-    "FR_hip_joint": 0.0,
-    "FR_thigh_joint": 0.9,
-    "FR_calf_joint": -1.8,
-    "RL_hip_joint": 0.0,
-    "RL_thigh_joint": 0.9,
-    "RL_calf_joint": -1.8,
-    "RR_hip_joint": 0.0,
-    "RR_thigh_joint": 0.9,
-    "RR_calf_joint": -1.8,
-}
+# Backwards-compatible module constant, now derived from the default profile
+# instead of a second hand-maintained copy of the Go2 joint table.
+_STAND = RobotProfile.go2().stand_joints()
 
 _STYLE = {
     "trot": {"frequency_hz": 1.6, "stride_m": 0.13, "clearance_m": 0.055, "duty": 0.58},
@@ -40,12 +30,17 @@ class ScriptedTrotGait:
     duty_factor: float = 0.58
     phase: float = 0.0
     style: str = "trot"
-    _stand: dict[str, float] = field(default_factory=lambda: dict(_STAND))
+    profile: RobotProfile = field(default_factory=RobotProfile.go2)
+    _stand: dict[str, float] = field(default_factory=dict)
     _target_frequency_hz: float = 1.6
     _target_stride_m: float = 0.13
     _target_clearance_m: float = 0.055
     _target_duty_factor: float = 0.58
     _motion_scale: float = 0.0
+
+    def __post_init__(self) -> None:
+        if not self._stand:
+            self._stand = self.profile.stand_joints()
 
     def set_style(self, style: str, frequency_hz: float | None = None) -> None:
         if style not in _STYLE:
@@ -87,9 +82,9 @@ class ScriptedTrotGait:
         for leg, offset in phases.items():
             self._apply_leg(joints, leg, (self.phase + offset) % 1.0, command)
         if self.style == "crawl":
-            for leg in ("FL", "FR", "RL", "RR"):
-                joints[f"{leg}_thigh_joint"] += 0.12
-                joints[f"{leg}_calf_joint"] -= 0.20
+            for leg in self.profile.leg_prefixes:
+                joints[self.profile.joint_name(leg, 1)] += 0.12
+                joints[self.profile.joint_name(leg, 2)] -= 0.20
         return joints
 
     def _apply_leg(
@@ -114,18 +109,18 @@ class ScriptedTrotGait:
             blend = progress * progress * (3.0 - 2.0 * progress)
             foot_x = stride * (-0.5 + blend)
             lift = self.clearance_m * math.sin(math.pi * progress) * self._motion_scale
-        thigh, calf = self._leg_ik(foot_x, -0.265 + lift)
+        thigh, calf = self._leg_ik(foot_x, self.profile.stance_z_m + lift)
         turn_sign = 1.0 if leg.endswith("L") else -1.0
         lateral_sign = 1.0 if leg.endswith("L") else -1.0
-        joints[f"{leg}_hip_joint"] = (
+        joints[self.profile.joint_name(leg, 0)] = (
             lateral_sign * 0.10 * command.vy + turn_sign * 0.08 * command.vyaw
         )
-        joints[f"{leg}_thigh_joint"] = thigh
-        joints[f"{leg}_calf_joint"] = calf
+        joints[self.profile.joint_name(leg, 1)] = thigh
+        joints[self.profile.joint_name(leg, 2)] = calf
 
-    @staticmethod
-    def _leg_ik(x: float, z: float) -> tuple[float, float]:
-        upper = lower = 0.213
+    def _leg_ik(self, x: float, z: float) -> tuple[float, float]:
+        upper = self.profile.upper_link_m
+        lower = self.profile.lower_link_m
         radius_sq = max(0.06**2, min((upper + lower - 1e-4) ** 2, x * x + z * z))
         cosine = max(
             -1.0, min(1.0, (radius_sq - upper * upper - lower * lower) / (2 * upper * lower))

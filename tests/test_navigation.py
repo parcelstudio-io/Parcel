@@ -22,7 +22,7 @@ from parcel_robot.navigation.goals import (
     navigation_directive_from_text,
     semantic_goal_from_directive,
 )
-from parcel_robot.navigation.models import StubNavigator
+from parcel_robot.navigation.models import StubNavigator, build_navigator
 from parcel_robot.skills import Dog
 
 REPO = Path(__file__).resolve().parents[1]
@@ -91,15 +91,11 @@ def test_non_navigation_text_is_not_forced_into_a_semantic_mission(transcript: s
     assert navigation_directive_from_text(transcript) is None
 
 
-def test_registry_lists_multiple_model_types():
+def test_registry_lists_supported_model_types():
     reg = ModelRegistry.load(MODELS)
     ids = set(reg.ids())
     assert "stub_v0" in ids
-    assert "citywalker_v1" in ids
-    assert "navila_v1" in ids
-    assert "nomad_v1" in ids
-    assert "vint_v1" in ids
-    assert any(s.type == "navila" for s in reg.list())
+    assert "grid_v1" in ids
 
 
 def test_ground_coffee_42nd():
@@ -173,7 +169,9 @@ def test_stub_exits_avoidance_without_a_bearing_when_obstacle_clears(clearance):
 
 
 def test_stub_latches_obstacle_identity_and_world_tangent_until_corridor_is_clear():
-    nav = DirectiveNavigator.from_config(NAV_CFG)
+    # This test exercises the point-goal stub specifically; the production
+    # default is now grid_v1, so select the stub explicitly.
+    nav = DirectiveNavigator.from_config(NAV_CFG, model_id="stub_v0")
     nav.start("go to the crosswalk")
     first = nav.step(
         NavObservation(
@@ -546,11 +544,10 @@ def test_navigation_config_applies_complete_collision_profile(tmp_path):
     nav.close()
 
 
-def test_checkpoint_model_missing_weights():
-    nav = DirectiveNavigator.from_config(NAV_CFG, model_id="citywalker_v1")
-    with pytest.raises((FileNotFoundError, NotImplementedError)):
-        nav.start("go to the park")
-    nav.close()
+def test_unsupported_navigator_type_fails_closed():
+    spec = ModelSpec(id="fake_v1", type="not_a_real_type", version="1")
+    with pytest.raises(ValueError, match="unsupported navigator type"):
+        build_navigator(spec)
 
 
 def test_metaurban_env_stub_episode():

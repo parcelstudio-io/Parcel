@@ -21,6 +21,20 @@ class ControlLifecycle(str, Enum):
     CLOSED = "closed"
 
 
+class FaultReason(str, Enum):
+    """Vendor-neutral fault classification reported by a state source.
+
+    Generic code branches only on this enum. Raw vendor codes belong in
+    ``RobotMotionState.vendor_extra`` where nothing generic reads them.
+    """
+
+    NONE = "none"
+    VENDOR_FAULT = "vendor_fault"
+    TILT = "tilt"
+    COMMS = "comms"
+    POWER = "power"
+
+
 @dataclass(frozen=True)
 class ControlLimits:
     """Last-line limits at the physical controller boundary."""
@@ -141,12 +155,21 @@ class RobotMotionState:
     joint_positions: tuple[float, ...] = ()
     joint_velocities: tuple[float, ...] = ()
     foot_forces: tuple[float, ...] = ()
+    fault_reason: FaultReason = FaultReason.NONE
+    vendor_extra: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
         if not math.isfinite(self.received_at):
             raise ValueError("robot state receipt timestamp must be finite")
         if isinstance(self.sequence, bool) or self.sequence < 1:
             raise ValueError("robot state sequence must be a positive integer")
+        if not isinstance(self.fault_reason, FaultReason):
+            raise TypeError("robot state fault_reason must be a FaultReason")
+        # Back-compat derivation: adapters that only set a vendor error code
+        # still surface a generic fault so ControlManager never reads the raw
+        # integer for its decision.
+        if self.fault_reason is FaultReason.NONE and self.error_code:
+            object.__setattr__(self, "fault_reason", FaultReason.VENDOR_FAULT)
         values = (
             *self.position,
             self.roll,

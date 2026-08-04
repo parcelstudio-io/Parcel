@@ -657,7 +657,17 @@ def _directory_snapshots(
     parents.add(contract.root)
     if include_transaction_dir:
         parents.add(contract.transaction_dir)
-    return tuple(_snapshot_directory(path) for path in sorted(parents, key=str))
+    snapshots = tuple(_snapshot_directory(path) for path in sorted(parents, key=str))
+    paths_by_identity: dict[tuple[int, int], Path] = {}
+    for snapshot in snapshots:
+        identity = (snapshot.device, snapshot.inode)
+        aliased_path = paths_by_identity.setdefault(identity, snapshot.path)
+        if aliased_path != snapshot.path:
+            raise V8UnsafePathError(
+                "distinct lexical output directories alias the same filesystem directory: "
+                f"{aliased_path} and {snapshot.path}"
+            )
+    return snapshots
 
 
 def _assert_directories_unchanged(snapshots: tuple[_DirectorySnapshot, ...]) -> None:
@@ -802,6 +812,7 @@ class ClaimedV8Transaction:
     """Callback/context API for one irrevocably consumed transaction."""
 
     __slots__ = (
+        "_artifacts",
         "_claim_evidence",
         "_closed",
         "_contract",
@@ -824,6 +835,7 @@ class ClaimedV8Transaction:
     ) -> None:
         self.identity = identity
         self.paths = paths
+        self._artifacts: dict[str, V8ArtifactEvidence] = {}
         self._contract = contract
         self._directories = directories
         self._ownership_nonce = ownership_nonce
@@ -870,8 +882,12 @@ class ClaimedV8Transaction:
             raise V8TransactionError(
                 f"artifact {name} is declared opaque_binary, not canonical_json"
             )
+        if name in self._artifacts:
+            raise V8ArtifactExistsError(f"refusing to replace immutable evidence: {path}")
         _assert_directories_unchanged(self._directories)
-        return _write_exclusive_json(path, value)
+        evidence = _write_exclusive_json(path, value)
+        self._artifacts[name] = evidence
+        return evidence
 
     def verify_binary_artifact(
         self,
@@ -899,22 +915,51 @@ class ClaimedV8Transaction:
         evidence = _artifact_evidence(path, canonical_json=False)
         if expected_sha256 is not None and evidence.sha256 != expected_sha256:
             raise V8TransactionError(f"binary artifact {name} does not match expected_sha256")
+        registered = self._artifacts.get(name)
+        if registered is not None:
+            if evidence != registered:
+                raise V8TransactionError(
+                    f"binary artifact {name} changed after its first registration"
+                )
+            return evidence
+        self._artifacts[name] = evidence
         return evidence
 
     def _collect_artifacts(self, *, require_all: bool) -> dict[str, dict[str, Any] | None]:
+        if require_all and set(self._artifacts) != set(self._contract.artifacts):
+            missing = sorted(set(self._contract.artifacts) - set(self._artifacts))
+            if len(missing) == 1:
+                raise V8TransactionError(
+                    f"completed outcome requires result artifact {missing[0]} to be registered"
+                )
+            raise V8TransactionError(
+                "completed outcome requires every result artifact to be registered; "
+                f"missing: {', '.join(missing)}"
+            )
         evidence: dict[str, dict[str, Any] | None] = {}
         for name, path in self._contract.artifacts.items():
-            if not _lexists(path):
+            registered = self._artifacts.get(name)
+            if registered is None:
+                evidence[name] = None
+                continue
+            try:
+                actual = _artifact_evidence(
+                    path,
+                    canonical_json=name not in self._contract.binary_artifact_names,
+                )
+            except (OSError, V8TransactionError):
+                if require_all:
+                    raise
+                evidence[name] = None
+                continue
+            if actual != registered:
                 if require_all:
                     raise V8TransactionError(
-                        f"completed outcome requires result artifact {name}: {path}"
+                        f"registered artifact {name} changed before transaction completion"
                     )
                 evidence[name] = None
                 continue
-            evidence[name] = _artifact_evidence(
-                path,
-                canonical_json=name not in self._contract.binary_artifact_names,
-            ).as_dict()
+            evidence[name] = registered.as_dict()
         return evidence
 
     def _assert_claim_owned(self) -> None:
@@ -1225,18 +1270,6 @@ def inspect_v8_transaction(
         raw_artifacts = outcome.get("artifacts")
         if not isinstance(raw_artifacts, Mapping) or set(raw_artifacts) != set(contract.artifacts):
             raise V8TransactionError("terminal outcome artifact membership changed")
-        actual_artifacts: dict[str, dict[str, Any] | None] = {}
-        for name, path in contract.artifacts.items():
-            actual_artifacts[name] = (
-                _artifact_evidence(
-                    path,
-                    canonical_json=name not in contract.binary_artifact_names,
-                ).as_dict()
-                if _lexists(path)
-                else None
-            )
-        if dict(raw_artifacts) != actual_artifacts:
-            raise V8TransactionError("terminal outcome artifact digests do not match disk")
 
         status_value = outcome.get("status")
         exception = outcome.get("exception")
@@ -1244,7 +1277,7 @@ def inspect_v8_transaction(
             if (
                 outcome.get("stage") != "all_required_artifacts_written"
                 or exception is not None
-                or any(value is None for value in actual_artifacts.values())
+                or any(value is None for value in raw_artifacts.values())
             ):
                 raise V8TransactionError("completed terminal outcome is incomplete")
             state = V8TransactionState.COMPLETED
@@ -1258,6 +1291,18 @@ def inspect_v8_transaction(
             state = V8TransactionState.ABORTED
         else:
             raise V8TransactionError("terminal outcome has an unsupported status")
+
+        actual_artifacts: dict[str, dict[str, Any] | None] = {}
+        for name, path in contract.artifacts.items():
+            if raw_artifacts[name] is None:
+                actual_artifacts[name] = None
+                continue
+            actual_artifacts[name] = _artifact_evidence(
+                path,
+                canonical_json=name not in contract.binary_artifact_names,
+            ).as_dict()
+        if dict(raw_artifacts) != actual_artifacts:
+            raise V8TransactionError("terminal outcome artifact digests do not match disk")
     except (OSError, V8TransactionError) as exc:
         return V8TransactionInspection(
             state=V8TransactionState.INVALID,

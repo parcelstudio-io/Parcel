@@ -46,7 +46,7 @@ Language directive → mid-level motion needs **two layers**:
 
 1. **Language / urban navigator (high level)**  
    - **Primary (legged + language):** [NaVILA](https://navila-bot.github.io/) — VLA for quadrupeds; mid-level language actions + locomotion; Unitree Go2 demos.  
-   - **Primary (urban visual nav):** [CityWalker](https://github.com/ai4ce/CityWalker) (CVPR 2025) — trained on web-scale city walking/driving video; open pretrained weights.  
+   - **Primary (urban visual nav):** [CityWalker](https://github.com/ai4ce/CityWalker) (CVPR 2025) — trained on web-scale city walking/driving video; publicly downloadable checkpoint whose exact artifact terms remain `NOASSERTION` in Parcel's lock.
    - **Foundation / RL fine-tune:** [ViNT](https://visualnav-transformer.github.io/) / [NoMaD](https://github.com/robodhruv/visualnav-transformer) — cross-embodiment visual nav; good RL/IL adaptation base.
 
 2. **Obstacle-aware locomotion (low level)**  

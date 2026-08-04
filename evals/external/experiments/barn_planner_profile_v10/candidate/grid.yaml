@@ -1,0 +1,42 @@
+id: grid_v1
+type: grid
+version: "1.0.0"
+description: Sensor-only rolling LiDAR occupancy map, A* route, and smooth waypoint controller.
+checkpoint: ""
+device: cpu
+controller:
+  cruise_vx: 0.60
+  align_enter_deg: 28.0
+  align_exit_deg: 7.0
+  max_yaw_rate: 0.90
+  min_align_yaw_rate: 0.20
+  yaw_gain: 1.40
+  slowdown_radius_m: 2.0
+  control_dt_s: 0.1
+  max_linear_accel: 0.9
+  max_yaw_accel: 1.8
+  grid_resolution_m: 0.10
+  grid_size_cells: 161
+  map_safety_margin_m: 0.10
+  map_comfort_safety_margin_m: 0.48
+  comfort_cost_weight: 8.0
+  lidar_range_cap_m: 12.0
+  unknown_cost: 2.5
+  lookahead_m: 0.90
+  reachable_frontier_fallback: true
+  frontier_search_mode: observed_first
+  frontier_band_m: 0.60
+  frontier_min_progress_m: 0.10
+  recovery_yaw_rate: 0.35
+  recovery_reverse_vx: -0.12
+  recovery_scan_steps: 30
+  # The standard 270-degree LiDAR has a rear blind wedge, so autonomous
+  # recovery scans in place and does not reverse into unobserved space.
+  recovery_reverse_steps: 0
+  replan_interval_steps: 5
+  lidar_stride: 2
+rl:
+  enabled: false
+  trainable: false
+  obs_keys: [goal_delta, odometry, lidar]
+  action_space: mid_level_velocity

@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parcel · City Viewer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --surface-1: #fcfcfb;
+      --page: #f9f9f7;
+      --panel: #ffffff;
+      --ink: #0b0b0b;
+      --ink-2: #52514e;
+      --muted: #898781;
+      --hairline: #e1e0d9;
+      --baseline: #c3c2b7;
+      --robot: #2a78d6;
+      --owner: #eb6834;
+      --ped: #1baf7a;
+      --cyc: #eda100;
+      --goal: #4a3aa7;
+      --good: #0ca30c;
+      --warning: #fab219;
+      --critical: #d03b3b;
+      --banner-warning-ink: #4b3403;
+      --banner-critical-ink: #ffffff;
+      --shadow: 0 10px 30px rgba(10, 12, 16, 0.12);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:where(:not([data-theme="light"])) {
+        color-scheme: dark;
+        --surface-1: #1a1a19;
+        --page: #0d0d0d;
+        --panel: #21211f;
+        --ink: #ffffff;
+        --ink-2: #c3c2b7;
+        --muted: #898781;
+        --hairline: #2c2c2a;
+        --baseline: #383835;
+        --robot: #3987e5;
+        --owner: #d95926;
+        --ped: #199e70;
+        --cyc: #c98500;
+        --goal: #9085e9;
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      }
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --panel: #21211f;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --hairline: #2c2c2a;
+      --baseline: #383835;
+      --robot: #3987e5;
+      --owner: #d95926;
+      --ped: #199e70;
+      --cyc: #c98500;
+      --goal: #9085e9;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--hairline);
+      background: var(--panel);
+      flex: 0 0 auto;
+    }
+    header h1 { font-size: 15px; font-weight: 650; margin: 0; letter-spacing: 0.01em; }
+    header .sub { color: var(--muted); font-size: 12px; }
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--hairline);
+      color: var(--ink-2);
+      background: var(--surface-1);
+      white-space: nowrap;
+    }
+    .pill .dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-right: 6px;
+      background: var(--muted);
+      vertical-align: 1px;
+    }
+    .pill.ok .dot { background: var(--good); }
+    .pill.bad .dot { background: var(--critical); }
+    header .spacer { flex: 1; }
+    button.ctl {
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      background: var(--surface-1);
+      border: 1px solid var(--baseline);
+      border-radius: 8px;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+    button.ctl:hover { border-color: var(--muted); }
+    main { flex: 1; display: flex; min-height: 0; }
+    #stage { position: relative; flex: 1; min-width: 0; background: var(--surface-1); }
+    #cityCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+    #cityCanvas.dragging { cursor: grabbing; }
+    #banners {
+      position: absolute;
+      top: 12px; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .banner {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 7px 14px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+    .banner.show { display: flex; }
+    .banner .icon { font-size: 13px; }
+    #bannerCollision { background: var(--critical); color: var(--banner-critical-ink); }
+    #bannerEstop { background: var(--warning); color: var(--banner-warning-ink); }
+    #bannerFollow {
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--hairline);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    #bannerFollow .icon { color: var(--owner); }
+    #fitBtn { position: absolute; right: 14px; bottom: 14px; z-index: 4; box-shadow: var(--shadow); }
+    #sceneError {
+      position: absolute; inset: 0;
+      display: none;
+      align-items: center; justify-content: center;
+      color: var(--muted);
+      font-size: 13px;
+      z-index: 3;
+      text-align: center;
+      padding: 24px;
+    }
+    aside {
+      width: 292px;
+      flex: 0 0 292px;
+      border-left: 1px solid var(--hairline);
+      background: var(--panel);
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card {
+      border: 1px solid var(--hairline);
+      border-radius: 10px;
+      background: var(--surface-1);
+      padding: 10px 12px;
+    }
+    .card h2 {
+      margin: 0 0 7px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 12.5px; }
+    .kv dt { color: var(--ink-2); }
+    .kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .kv dd.state { font-weight: 700; }
+    dl { margin: 0; }
+    #eventList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+    #eventList li {
+      font-size: 11.5px;
+      line-height: 1.35;
+      color: var(--ink-2);
+      border-left: 3px solid var(--baseline);
+      padding-left: 8px;
+    }
+    #eventList li .who { font-weight: 700; color: var(--ink); margin-right: 4px; }
+    #eventList li.level-error { border-left-color: var(--critical); }
+    #eventList li.level-success { border-left-color: var(--good); }
+    #eventList li.level-warning { border-left-color: var(--warning); }
+    #legend { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--ink-2); }
+    #legend .row { display: flex; align-items: center; gap: 8px; }
+    #legend .chip { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; border: 1px solid rgba(0,0,0,0.15); }
+    #legend .chip.sq { border-radius: 3px; }
+    #legend .chip.dia { border-radius: 2px; transform: rotate(45deg) scale(0.9); }
+    @media (max-width: 760px) {
+      main { flex-direction: column; }
+      aside { width: 100%; flex: 0 0 40%; border-left: none; border-top: 1px solid var(--hairline); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Parcel City Viewer</h1>
+    <span class="sub">live 2.5D simulator map</span>
+    <span class="pill" id="simPill"><span class="dot"></span><span id="simPillText">connecting…</span></span>
+    <span class="pill" id="modePill"><span class="dot"></span><span id="modePillText">idle</span></span>
+    <span class="spacer"></span>
+    <button class="ctl" id="fitTop" type="button">Fit scene</button>
+  </header>
+  <main>
+    <div id="stage" role="img" aria-label="Live isometric map of the simulated city block">
+      <canvas id="cityCanvas"></canvas>
+      <div id="banners">
+        <div class="banner" id="bannerCollision"><span class="icon">&#9888;</span><span>COLLISION DETECTED</span></div>
+        <div class="banner" id="bannerEstop"><span class="icon">&#9209;</span><span>EMERGENCY STOP ACTIVE</span></div>
+        <div class="banner" id="bannerFollow"><span class="icon">&#9679;</span><span id="bannerFollowText">Following owner</span></div>
+      </div>
+      <div id="sceneError">Waiting for scene geometry…</div>
+      <button class="ctl" id="fitBtn" type="button">&#8853; Fit</button>
+    </div>
+    <aside aria-label="Robot heads-up display">
+      <div class="card">
+        <h2>Robot</h2>
+        <dl class="kv">
+          <dt>Position</dt><dd id="hudPos">—</dd>
+          <dt>Heading</dt><dd id="hudHeading">—</dd>
+          <dt>Speed</dt><dd id="hudSpeed">—</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h2>Mission</h2>
+        <dl class="kv">
+          <dt>State</dt><dd class="state" id="hudNavState">idle</dd>
+          <dt>Goal</dt><dd id="hudNavGoal">—</dd>
+          <dt>Note</dt><dd id="hudNavReason">—</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h2>Follow</h2>
+        <dl class="kv">
+          <dt>State</dt><dd class="state" id="hudFollowState">off</dd>
+          <dt>Mode</dt><dd id="hudFollowMode">—</dd>
+          <dt>Distance</dt><dd id="hudFollowDist">—</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h2>Perception</h2>
+        <dl class="kv">
+          <dt>Nearest person</dt><dd id="hudPerson">—</dd>
+          <dt>Nearest obstacle</dt><dd id="hudObstacle">—</dd>
+          <dt>Scan health</dt><dd id="hudScan">—</dd>
+          <dt>Owner</dt><dd id="hudOwner">—</dd>
+        </dl>
+      </div>
+      <div class="card">
+        <h2>Legend</h2>
+        <div id="legend">
+          <div class="row"><span class="chip" data-chip="robot"></span><span>Robot (heading wedge + trail)</span></div>
+          <div class="row"><span class="chip" data-chip="owner"></span><span>Owner (labeled)</span></div>
+          <div class="row"><span class="chip" data-chip="ped"></span><span>Pedestrian + velocity</span></div>
+          <div class="row"><span class="chip sq" data-chip="cyc"></span><span>Cyclist + velocity</span></div>
+          <div class="row"><span class="chip dia" data-chip="goal"></span><span>Navigation goal</span></div>
+          <div class="row"><span class="chip" data-chip="lidar"></span><span>LiDAR returns</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Events</h2>
+        <ul id="eventList"><li><span class="who">viewer</span>waiting for telemetry…</li></ul>
+      </div>
+    </aside>
+  </main>
+  <script>
+  "use strict";
+  (function () {
+    /* ------------------------------------------------------------------ *
+     * Parcel City Viewer: 2.5D isometric renderer over /api/scene (static,
+     * cached) + /api/state (10 Hz dynamics). Vanilla JS, no dependencies.
+     * ------------------------------------------------------------------ */
+    var canvas = document.getElementById("cityCanvas");
+    var ctx = canvas.getContext("2d");
+    var staticLayer = document.createElement("canvas");
+    var staticCtx = staticLayer.getContext("2d");
+
+    // Isometric projection constants: world (x east, y north, z up) -> screen.
+    var ISO_CX = 0.8660;   // horizontal spread per meter of (x - y)
+    var ISO_CY = 0.5;      // vertical spread per meter of (x + y)
+    var ISO_Z = 0.85;      // vertical rise per meter of height
+
+    var cam = { zoom: 34, panX: 0, panY: 0 };
+    var dpr = Math.max(1, window.devicePixelRatio || 1);
+    var staticDirty = true;
+    var fitted = false;
+
+    var scene = null;          // /api/scene payload
+    var state = null;          // latest /api/state payload
+    var prevRobot = null;      // {x, y, t} for speed estimation
+    var speedMps = 0;
+    var trail = [];            // recent robot ground positions
+    var TRAIL_MAX = 200;
+
+    function themeDark() {
+      var forced = document.documentElement.getAttribute("data-theme");
+      if (forced === "dark") return true;
+      if (forced === "light") return false;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    function cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    // Canvas palette (chrome from ink tokens; entity hues from the categorical
+    // slots defined in :root so CSS and canvas always agree).
+    function buildTheme() {
+      var dark = themeDark();
+      return {
+        dark: dark,
+        surface: cssVar("--surface-1"),
+        grid: cssVar("--hairline"),
+        ink: cssVar("--ink"),
+        ink2: cssVar("--ink-2"),
+        muted: cssVar("--muted"),
+        baseline: cssVar("--baseline"),
+        robot: cssVar("--robot"),
+        owner: cssVar("--owner"),
+        ped: cssVar("--ped"),
+        cyc: cssVar("--cyc"),
+        goal: cssVar("--goal"),
+        good: cssVar("--good"),
+        warning: cssVar("--warning"),
+        critical: cssVar("--critical"),
+        lidarFill: dark ? "rgba(57, 135, 229, 0.10)" : "rgba(42, 120, 214, 0.10)",
+        lidarEdge: dark ? "rgba(109, 167, 236, 0.55)" : "rgba(42, 120, 214, 0.45)",
+        road: dark ? "#232526" : "#d8d7d2",
+        roadEdge: dark ? "#2c2e30" : "#c9c8c2",
+        sidewalk: dark ? "#33342f" : "#e9e7df",
+        curb: dark ? "#3d3e39" : "#cfcec6",
+        crosswalk: dark ? "#8f9296" : "#fbfbf8",
+        lane: dark ? "#8a7420" : "#d9b93c",
+        shadow: dark ? "rgba(0, 0, 0, 0.42)" : "rgba(30, 34, 44, 0.16)",
+        outline: dark ? "rgba(255, 255, 255, 0.10)" : "rgba(11, 11, 11, 0.14)",
+        halo: dark ? "#1a1a19" : "#fcfcfb"
+      };
+    }
+    var THEME = buildTheme();
+
+    /* ------------------------------- math ------------------------------ */
+
+    function project(x, y, z) {
+      return [
+        (x - y) * ISO_CX * cam.zoom + cam.panX,
+        (-(x + y) * ISO_CY - (z || 0) * ISO_Z) * cam.zoom + cam.panY
+      ];
+    }
+
+    // Inverse of project() on the ground plane (z = 0).
+    function unprojectGround(sx, sy) {
+      var u = (sx - cam.panX) / cam.zoom / ISO_CX;
+      var v = -(sy - cam.panY) / cam.zoom / ISO_CY;
+      return [(u + v) / 2, (v - u) / 2];
+    }
+
+    function shade(hex, amount) {
+      // amount > 0 mixes toward white, < 0 toward black.
+      var n = parseInt(hex.slice(1), 16);
+      var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+      var target = amount >= 0 ? 255 : 0;
+      var f = Math.min(1, Math.abs(amount));
+      r = Math.round(r + (target - r) * f);
+      g = Math.round(g + (target - g) * f);
+      b = Math.round(b + (target - b) * f);
+      return "rgb(" + r + "," + g + "," + b + ")";
+    }
+
+    function rgbaCss(rgba, alpha) {
+      var r = Math.round(rgba[0] * 255), g = Math.round(rgba[1] * 255), b = Math.round(rgba[2] * 255);
+      return "rgba(" + r + "," + g + "," + b + "," + (alpha == null ? rgba[3] : alpha) + ")";
+    }
+
+    function rgbaHex(rgba) {
+      function h(v) { return ("0" + Math.round(v * 255).toString(16)).slice(-2); }
+      return "#" + h(rgba[0]) + h(rgba[1]) + h(rgba[2]);
+    }
+
+    // Corners of a yaw-rotated box footprint (world frame, CCW).
+    function footprint(g) {
+      var c = Math.cos(g.zrot_rad || 0), s = Math.sin(g.zrot_rad || 0);
+      var sx = g.size[0], sy = g.size[1];
+      var pts = [[-sx, -sy], [sx, -sy], [sx, sy], [-sx, sy]];
+      return pts.map(function (p) {
+        return [g.pos[0] + p[0] * c - p[1] * s, g.pos[1] + p[0] * s + p[1] * c];
+      });
+    }
+
+    function pathFromWorld(c, pts, z) {
+      c.beginPath();
+      for (var i = 0; i < pts.length; i++) {
+        var p = project(pts[i][0], pts[i][1], z);
+        if (i === 0) c.moveTo(p[0], p[1]); else c.lineTo(p[0], p[1]);
+      }
+      c.closePath();
+    }
+
+    /* --------------------------- static layer -------------------------- */
+
+    var GROUND_ORDER = { road: 0, sidewalk: 1, curb: 2, lane_marking: 3, crosswalk: 4 };
+
+    function isGroundClass(cls) { return GROUND_ORDER[cls] !== undefined; }
+
+    function groundFill(cls) {
+      if (cls === "road") return THEME.road;
+      if (cls === "sidewalk") return THEME.sidewalk;
+      if (cls === "curb") return THEME.curb;
+      if (cls === "crosswalk") return THEME.crosswalk;
+      if (cls === "lane_marking") return THEME.lane;
+      return THEME.road;
+    }
+
+    function drawGrid(c, extent) {
+      var step = 2;
+      c.save();
+      c.strokeStyle = THEME.grid;
+      c.lineWidth = 1;
+      c.globalAlpha = 0.55;
+      var x, y, a, b;
+      for (x = Math.ceil(extent.xmin); x <= extent.xmax; x += step) {
+        a = project(x, extent.ymin, 0); b = project(x, extent.ymax, 0);
+        c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+      }
+      for (y = Math.ceil(extent.ymin); y <= extent.ymax; y += step) {
+        a = project(extent.xmin, y, 0); b = project(extent.xmax, y, 0);
+        c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+      }
+      c.restore();
+    }
+
+    function drawShadow(c, g) {
+      var h = g.type === "box" ? g.size[2] * 2
+        : g.type === "sphere" ? g.size[0] * 2
+        : g.size[1] * 2; // cylinder / capsule half-height lives in size[1]
+      var off = Math.min(0.55, 0.10 + h * 0.06);
+      c.save();
+      c.fillStyle = THEME.shadow;
+      if (g.type === "box") {
+        var pts = footprint(g).map(function (p) { return [p[0] + off, p[1] - off * 0.6]; });
+        pathFromWorld(c, pts, 0);
+        c.fill();
+      } else {
+        var p = project(g.pos[0] + off, g.pos[1] - off * 0.6, 0);
+        var r = g.size[0] * cam.zoom;
+        c.beginPath();
+        c.ellipse(p[0], p[1], r * 1.22, r * 0.71, 0, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+    }
+
+    // Extruded prism for a box geom: visible side faces + lit top face.
+    function drawBox(c, g, baseColor) {
+      var z0 = Math.max(0, g.pos[2] - g.size[2]);
+      var z1 = g.pos[2] + g.size[2];
+      var pts = footprint(g);
+      var top = shade(baseColor, THEME.dark ? -0.05 : 0.16);
+      var faceA = shade(baseColor, THEME.dark ? -0.32 : -0.14);
+      var faceB = shade(baseColor, THEME.dark ? -0.48 : -0.30);
+      // Camera sits to the south-west: faces whose outward normal has
+      // nx + ny < 0 are visible.
+      for (var i = 0; i < 4; i++) {
+        var p0 = pts[i], p1 = pts[(i + 1) % 4];
+        var nx = p1[1] - p0[1], ny = -(p1[0] - p0[0]); // outward for CCW footprint
+        if (nx + ny >= 0) continue;
+        var a = project(p0[0], p0[1], z0), b = project(p1[0], p1[1], z0);
+        var b2 = project(p1[0], p1[1], z1), a2 = project(p0[0], p0[1], z1);
+        c.beginPath();
+        c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]);
+        c.lineTo(b2[0], b2[1]); c.lineTo(a2[0], a2[1]);
+        c.closePath();
+        c.fillStyle = nx < ny ? faceA : faceB;
+        c.fill();
+      }
+      pathFromWorld(c, pts, z1);
+      c.fillStyle = top;
+      c.fill();
+      c.strokeStyle = THEME.outline;
+      c.lineWidth = 1;
+      c.stroke();
+    }
+
+    function drawCylinder(c, g, baseColor) {
+      var r = g.size[0];
+      var z0 = Math.max(0, g.pos[2] - g.size[1]);
+      var z1 = g.pos[2] + g.size[1];
+      var pB = project(g.pos[0], g.pos[1], z0);
+      var pT = project(g.pos[0], g.pos[1], z1);
+      var rx = r * 1.22 * cam.zoom, ry = r * 0.71 * cam.zoom;
+      c.fillStyle = shade(baseColor, THEME.dark ? -0.38 : -0.20);
+      c.beginPath();
+      c.moveTo(pB[0] - rx, pB[1]);
+      c.lineTo(pT[0] - rx, pT[1]);
+      c.ellipse(pT[0], pT[1], rx, ry, 0, Math.PI, 0, true);
+      c.lineTo(pB[0] + rx, pB[1]);
+      c.ellipse(pB[0], pB[1], rx, ry, 0, 0, Math.PI, false);
+      c.closePath();
+      c.fill();
+      c.beginPath();
+      c.ellipse(pT[0], pT[1], rx, ry, 0, 0, Math.PI * 2);
+      c.fillStyle = shade(baseColor, THEME.dark ? -0.08 : 0.14);
+      c.fill();
+      c.strokeStyle = THEME.outline;
+      c.lineWidth = 1;
+      c.stroke();
+    }
+
+    function drawSphere(c, g, baseColor) {
+      var p = project(g.pos[0], g.pos[1], g.pos[2]);
+      var r = Math.max(2, g.size[0] * cam.zoom);
+      var grad = c.createRadialGradient(p[0] - r * 0.35, p[1] - r * 0.35, r * 0.15, p[0], p[1], r);
+      grad.addColorStop(0, shade(baseColor, THEME.dark ? 0.08 : 0.30));
+      grad.addColorStop(1, shade(baseColor, THEME.dark ? -0.35 : -0.18));
+      c.fillStyle = grad;
+      c.beginPath();
+      c.arc(p[0], p[1], r, 0, Math.PI * 2);
+      c.fill();
+    }
+
+    function staticGeomColor(g) {
+      // Scene rgba as hex; drawBox/drawCylinder/drawSphere apply the
+      // theme-dependent lighting steps themselves.
+      return rgbaHex(g.rgba);
+    }
+
+    function renderStatic() {
+      var w = canvas.clientWidth, h = canvas.clientHeight;
+      staticLayer.width = Math.max(1, Math.round(w * dpr));
+      staticLayer.height = Math.max(1, Math.round(h * dpr));
+      var c = staticCtx;
+      c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      c.clearRect(0, 0, w, h);
+      c.fillStyle = THEME.surface;
+      c.fillRect(0, 0, w, h);
+      if (!scene) return;
+      var ext = scene.extent;
+      // Ground wash: the whole navigable diamond, slightly inset from surface.
+      c.save();
+      pathFromWorld(c, [
+        [ext.xmin - 1.5, ext.ymin - 1.5], [ext.xmax + 1.5, ext.ymin - 1.5],
+        [ext.xmax + 1.5, ext.ymax + 1.5], [ext.xmin - 1.5, ext.ymax + 1.5]
+      ], 0);
+      c.fillStyle = THEME.road;
+      c.globalAlpha = THEME.dark ? 0.5 : 0.6;
+      c.fill();
+      c.restore();
+      drawGrid(c, ext);
+
+      var statics = scene.geoms.filter(function (g) { return !g.dynamic; });
+      // Flat ground classes first, in paint order.
+      statics.filter(function (g) { return isGroundClass(g.class) && g.type !== "plane"; })
+        .sort(function (a, b) { return GROUND_ORDER[a.class] - GROUND_ORDER[b.class]; })
+        .forEach(function (g) {
+          pathFromWorld(c, footprint(g), 0);
+          c.fillStyle = groundFill(g.class);
+          c.fill();
+          if (g.class === "sidewalk") {
+            c.strokeStyle = THEME.roadEdge;
+            c.lineWidth = 1;
+            c.stroke();
+          }
+        });
+
+      // Upright objects: painter's order, far (high x+y) before near.
+      statics.filter(function (g) { return !isGroundClass(g.class) && g.type !== "plane"; })
+        .sort(function (a, b) { return (b.pos[0] + b.pos[1]) - (a.pos[0] + a.pos[1]); })
+        .forEach(function (g) {
+          var color = staticGeomColor(g);
+          if (g.class !== "window") drawShadow(c, g);
+          if (g.type === "box") drawBox(c, g, color);
+          else if (g.type === "cylinder" || g.type === "capsule") drawCylinder(c, g, color);
+          else if (g.type === "sphere") drawSphere(c, g, color);
+        });
+      staticDirty = false;
+    }
+
+    /* -------------------------- dynamic layer -------------------------- */
+
+    function drawTrail(c) {
+      if (trail.length < 2) return;
+      c.save();
+      c.lineCap = "round";
+      c.lineJoin = "round";
+      for (var i = 1; i < trail.length; i++) {
+        var a = project(trail[i - 1][0], trail[i - 1][1], 0.02);
+        var b = project(trail[i][0], trail[i][1], 0.02);
+        c.globalAlpha = 0.05 + 0.4 * (i / trail.length);
+        c.strokeStyle = THEME.robot;
+        c.lineWidth = 2;
+        c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+      }
+      c.restore();
+    }
+
+    function drawLidar(c, robot, scan) {
+      if (!scan || !scan.ranges || !scan.ranges.length) return;
+      var heading = robot.heading * Math.PI / 180;
+      var origin = project(robot.x, robot.y, 0.08);
+      var fan = new Path2D();
+      fan.moveTo(origin[0], origin[1]);
+      var dots = [];
+      for (var i = 0; i < scan.ranges.length; i++) {
+        var range = scan.ranges[i];
+        if (range === null || range === undefined || !isFinite(range)) continue;
+        var angle = heading + scan.angle_min_rad + i * scan.angle_increment_rad;
+        var wx = robot.x + range * Math.cos(angle);
+        var wy = robot.y + range * Math.sin(angle);
+        var p = project(wx, wy, 0.08);
+        fan.lineTo(p[0], p[1]);
+        dots.push(p);
+      }
+      fan.closePath();
+      c.save();
+      c.fillStyle = THEME.lidarFill;
+      c.fill(fan);
+      c.fillStyle = THEME.lidarEdge;
+      for (var j = 0; j < dots.length; j++) {
+        c.beginPath();
+        c.arc(dots[j][0], dots[j][1], 1.6, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+    }
+
+    function groundEllipsePath(c, x, y, rx, ry, yaw) {
+      // An ellipse in the ground plane (world-frame semi-axes rx forward,
+      // ry lateral, rotated by yaw), projected point-by-point.
+      c.beginPath();
+      var STEPS = 22;
+      for (var i = 0; i <= STEPS; i++) {
+        var t = (i / STEPS) * Math.PI * 2;
+        var fx = Math.cos(t) * rx, fy = Math.sin(t) * ry;
+        var wx = x + fx * Math.cos(yaw) - fy * Math.sin(yaw);
+        var wy = y + fx * Math.sin(yaw) + fy * Math.cos(yaw);
+        var p = project(wx, wy, 0.05);
+        if (i === 0) c.moveTo(p[0], p[1]); else c.lineTo(p[0], p[1]);
+      }
+      c.closePath();
+    }
+
+    function drawRobot(c, robot) {
+      var yaw = robot.heading * Math.PI / 180;
+      // Heading wedge.
+      c.save();
+      c.beginPath();
+      var origin = project(robot.x, robot.y, 0.05);
+      c.moveTo(origin[0], origin[1]);
+      for (var i = 0; i <= 12; i++) {
+        var a = yaw - 0.42 + (0.84 * i) / 12;
+        var p = project(robot.x + Math.cos(a) * 1.0, robot.y + Math.sin(a) * 1.0, 0.05);
+        c.lineTo(p[0], p[1]);
+      }
+      c.closePath();
+      c.fillStyle = THEME.robot;
+      c.globalAlpha = 0.16;
+      c.fill();
+      c.restore();
+      // Body: dog-like glyph (torso ellipse + head + ears + tail).
+      c.save();
+      groundEllipsePath(c, robot.x, robot.y, 0.42, 0.24, yaw);
+      c.fillStyle = THEME.robot;
+      c.fill();
+      c.strokeStyle = THEME.halo;
+      c.lineWidth = 2;
+      c.stroke();
+      var nose = [robot.x + Math.cos(yaw) * 0.40, robot.y + Math.sin(yaw) * 0.40];
+      var head = project(nose[0], nose[1], 0.05);
+      c.beginPath();
+      c.arc(head[0], head[1], Math.max(3.5, 0.15 * cam.zoom), 0, Math.PI * 2);
+      c.fillStyle = shade(THEME.robot, THEME.dark ? 0.18 : -0.18);
+      c.fill();
+      c.strokeStyle = THEME.halo;
+      c.lineWidth = 1.5;
+      c.stroke();
+      var earOffsets = [0.62, -0.62];
+      for (var e = 0; e < 2; e++) {
+        var ea = yaw + earOffsets[e];
+        var ep = project(nose[0] + Math.cos(ea) * 0.13, nose[1] + Math.sin(ea) * 0.13, 0.14);
+        c.beginPath();
+        c.arc(ep[0], ep[1], Math.max(1.6, 0.05 * cam.zoom), 0, Math.PI * 2);
+        c.fillStyle = THEME.robot;
+        c.fill();
+      }
+      var tail = project(robot.x - Math.cos(yaw) * 0.48, robot.y - Math.sin(yaw) * 0.48, 0.07);
+      c.beginPath();
+      c.arc(tail[0], tail[1], Math.max(1.8, 0.055 * cam.zoom), 0, Math.PI * 2);
+      c.fillStyle = THEME.robot;
+      c.fill();
+      c.restore();
+    }
+
+    function drawLabel(c, text, sx, sy, color) {
+      c.save();
+      c.font = "700 10px ui-sans-serif, system-ui, sans-serif";
+      c.textAlign = "center";
+      c.textBaseline = "top";
+      var w = c.measureText(text).width;
+      c.fillStyle = THEME.halo;
+      c.globalAlpha = 0.82;
+      c.fillRect(sx - w / 2 - 4, sy - 1, w + 8, 13);
+      c.globalAlpha = 1;
+      c.fillStyle = color;
+      c.fillText(text, sx, sy);
+      c.restore();
+    }
+
+    function drawOwner(c, owner) {
+      if (!owner) return;
+      var p = project(owner.x, owner.y, 0.05);
+      var r = Math.max(5, 0.24 * cam.zoom);
+      c.save();
+      if (!owner.visible) c.setLineDash([4, 3]);
+      c.globalAlpha = owner.visible ? 1 : 0.55;
+      c.beginPath();
+      c.arc(p[0], p[1], r, 0, Math.PI * 2);
+      c.fillStyle = THEME.owner;
+      c.fill();
+      c.strokeStyle = THEME.halo;
+      c.lineWidth = 2;
+      c.stroke();
+      c.beginPath();
+      c.arc(p[0], p[1], r + 4, 0, Math.PI * 2);
+      c.strokeStyle = THEME.owner;
+      c.lineWidth = 1.5;
+      c.stroke();
+      c.restore();
+      drawLabel(c, owner.visible ? "OWNER" : "OWNER (lost)", p[0], p[1] + r + 7, THEME.owner);
+    }
+
+    function drawAgentVelocity(c, agent, color) {
+      var speed = Math.hypot(agent.vx || 0, agent.vy || 0);
+      if (speed < 0.05) return;
+      var scale = 0.8; // seconds of lookahead
+      var tipW = [agent.x + agent.vx * scale, agent.y + agent.vy * scale];
+      var from = project(agent.x, agent.y, 0.06);
+      var tip = project(tipW[0], tipW[1], 0.06);
+      c.save();
+      c.strokeStyle = color;
+      c.fillStyle = color;
+      c.lineWidth = 2;
+      c.beginPath(); c.moveTo(from[0], from[1]); c.lineTo(tip[0], tip[1]); c.stroke();
+      var ang = Math.atan2(tip[1] - from[1], tip[0] - from[0]);
+      c.beginPath();
+      c.moveTo(tip[0], tip[1]);
+      c.lineTo(tip[0] - 6 * Math.cos(ang - 0.5), tip[1] - 6 * Math.sin(ang - 0.5));
+      c.lineTo(tip[0] - 6 * Math.cos(ang + 0.5), tip[1] - 6 * Math.sin(ang + 0.5));
+      c.closePath();
+      c.fill();
+      c.restore();
+    }
+
+    function drawAgents(c, agents) {
+      (agents || [])
+        .slice()
+        .sort(function (a, b) { return (b.x + b.y) - (a.x + a.y); })
+        .forEach(function (agent) {
+          var cyclist = agent.kind === "cyclist";
+          var color = cyclist ? THEME.cyc : THEME.ped;
+          var p = project(agent.x, agent.y, 0.05);
+          var r = Math.max(4, (agent.radius_m || 0.2) * cam.zoom);
+          c.save();
+          if (cyclist) {
+            // Elongated glyph along yaw distinguishes cyclists by shape.
+            groundEllipsePath(c, agent.x, agent.y, 0.5, 0.16, agent.yaw || 0);
+            c.fillStyle = color;
+            c.fill();
+            c.strokeStyle = THEME.halo;
+            c.lineWidth = 1.5;
+            c.stroke();
+          } else {
+            c.beginPath();
+            c.arc(p[0], p[1], r, 0, Math.PI * 2);
+            c.fillStyle = color;
+            c.fill();
+            c.strokeStyle = THEME.halo;
+            c.lineWidth = 1.5;
+            c.stroke();
+          }
+          c.restore();
+          drawAgentVelocity(c, agent, color);
+        });
+    }
+
+    function navigationGoal(nav) {
+      if (!nav) return null;
+      var goal = nav.goal;
+      if (goal && typeof goal === "object" &&
+          isFinite(goal.x) && isFinite(goal.y)) {
+        return [Number(goal.x), Number(goal.y)];
+      }
+      if (isFinite(nav.goal_x) && isFinite(nav.goal_y)) {
+        return [Number(nav.goal_x), Number(nav.goal_y)];
+      }
+      return null;
+    }
+
+    function drawGoal(c, nav) {
+      var goal = navigationGoal(nav);
+      if (!goal) return;
+      var p = project(goal[0], goal[1], 0.05);
+      var r = 7;
+      c.save();
+      c.translate(p[0], p[1]);
+      c.rotate(Math.PI / 4);
+      c.fillStyle = THEME.goal;
+      c.strokeStyle = THEME.halo;
+      c.lineWidth = 2;
+      c.fillRect(-r / 2, -r / 2, r, r);
+      c.strokeRect(-r / 2, -r / 2, r, r);
+      c.restore();
+      var pulse = 8 + 3 * Math.sin(performance.now() / 280);
+      c.save();
+      c.beginPath();
+      c.arc(p[0], p[1], pulse, 0, Math.PI * 2);
+      c.strokeStyle = THEME.goal;
+      c.globalAlpha = 0.6;
+      c.lineWidth = 1.5;
+      c.stroke();
+      c.restore();
+      var label = typeof nav.goal === "string" ? nav.goal : "goal";
+      drawLabel(c, label, p[0], p[1] + 12, THEME.goal);
+    }
+
+    function drawCompassAndScale(c) {
+      var w = canvas.clientWidth, h = canvas.clientHeight;
+      // North indicator: projected world +y direction.
+      var cx = 34, cy = h - 40;
+      var nx = -ISO_CX, ny = -ISO_CY; // screen direction of world +y (north)
+      var len = Math.hypot(nx, ny);
+      nx /= len; ny /= len;
+      c.save();
+      c.beginPath();
+      c.arc(cx, cy, 14, 0, Math.PI * 2);
+      c.fillStyle = THEME.halo;
+      c.globalAlpha = 0.85;
+      c.fill();
+      c.globalAlpha = 1;
+      c.strokeStyle = THEME.baseline;
+      c.lineWidth = 1;
+      c.stroke();
+      c.beginPath();
+      c.moveTo(cx - nx * 9, cy - ny * 9);
+      c.lineTo(cx + nx * 9, cy + ny * 9);
+      c.strokeStyle = THEME.ink2;
+      c.lineWidth = 1.5;
+      c.stroke();
+      c.beginPath();
+      c.moveTo(cx + nx * 11, cy + ny * 11);
+      c.lineTo(cx + nx * 3 - ny * 4, cy + ny * 3 + nx * 4);
+      c.lineTo(cx + nx * 3 + ny * 4, cy + ny * 3 - nx * 4);
+      c.closePath();
+      c.fillStyle = THEME.critical;
+      c.fill();
+      c.font = "700 9px ui-sans-serif, system-ui, sans-serif";
+      c.fillStyle = THEME.ink2;
+      c.textAlign = "center";
+      c.fillText("N", cx + nx * 22, cy + ny * 22 + 3);
+      // Scale bar: nice round meters along the screen-horizontal east axis.
+      var pxPerMeter = 2 * ISO_CX * cam.zoom * 0.7071; // along (1,-1) screen-horizontal
+      var candidates = [0.5, 1, 2, 5, 10, 20, 50];
+      var meters = candidates[0];
+      for (var i = 0; i < candidates.length; i++) {
+        if (candidates[i] * pxPerMeter <= 120) meters = candidates[i];
+      }
+      var barPx = meters * pxPerMeter;
+      var bx = 64, by = h - 18;
+      c.strokeStyle = THEME.ink2;
+      c.lineWidth = 2;
+      c.beginPath();
+      c.moveTo(bx, by); c.lineTo(bx + barPx, by);
+      c.moveTo(bx, by - 4); c.lineTo(bx, by + 4);
+      c.moveTo(bx + barPx, by - 4); c.lineTo(bx + barPx, by + 4);
+      c.stroke();
+      c.font = "600 10px ui-sans-serif, system-ui, sans-serif";
+      c.fillStyle = THEME.ink2;
+      c.textAlign = "center";
+      c.fillText(meters + " m", bx + barPx / 2, by - 7);
+      c.restore();
+    }
+
+    function renderFrame() {
+      var w = canvas.clientWidth, h = canvas.clientHeight;
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        staticDirty = true;
+      }
+      if (staticDirty) renderStatic();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(staticLayer, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (state && state.robot) {
+        drawTrail(ctx);
+        drawLidar(ctx, state.robot, state.lidar_scan);
+        drawGoal(ctx, state.navigation);
+        drawAgents(ctx, state.dynamic_agents);
+        drawOwner(ctx, state.owner);
+        drawRobot(ctx, state.robot);
+      }
+      drawCompassAndScale(ctx);
+      requestAnimationFrame(renderFrame);
+    }
+
+    /* ------------------------------ HUD -------------------------------- */
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value;
+    }
+
+    function fmt(value, digits, suffix) {
+      if (value === null || value === undefined || !isFinite(value)) return "—";
+      return Number(value).toFixed(digits) + (suffix || "");
+    }
+
+    function updateHud(s) {
+      var robot = s.robot || {};
+      setText("hudPos", fmt(robot.x, 2) + ", " + fmt(robot.y, 2) + " m");
+      setText("hudHeading", fmt(robot.heading, 0, "°"));
+      setText("hudSpeed", fmt(speedMps, 2, " m/s"));
+      var nav = s.navigation || {};
+      setText("hudNavState", String(nav.state || (nav.enabled ? "active" : "idle")));
+      setText("hudNavGoal", typeof nav.goal === "string" ? nav.goal : nav.goal ? "coordinates" : "—");
+      setText("hudNavReason", nav.reason ? String(nav.reason) : "—");
+      var follow = s.follow || {};
+      setText("hudFollowState", follow.enabled ? String(follow.state || "active") : "off");
+      setText("hudFollowMode", follow.mode ? String(follow.mode) : "—");
+      setText("hudFollowDist", fmt(follow.desired_distance_m, 1, " m"));
+      var person = s.nearest_person;
+      setText("hudPerson", person ? fmt(person.distance_m, 2, " m") : "—");
+      setText("hudObstacle", fmt(s.obstacle_distance_m, 2, " m"));
+      var scan = s.lidar_scan;
+      if (scan && scan.ranges) {
+        var finite = scan.ranges.filter(function (r) { return r !== null && isFinite(r); }).length;
+        setText("hudScan", finite + " / " + scan.ranges.length + " rays");
+      } else {
+        setText("hudScan", "no scan");
+      }
+      var owner = s.owner || {};
+      setText("hudOwner", owner.visible ? "visible" : "not visible");
+
+      var simPill = document.getElementById("simPill");
+      var sim = s.simulator || {};
+      setText("simPillText", "sim " + String(sim.status || "unknown"));
+      simPill.className = "pill " + (sim.status === "connected" || sim.status === "running" ? "ok" : "bad");
+      var mode = follow.enabled ? "follow" : nav.enabled ? "navigate" : "idle";
+      setText("modePillText", mode);
+      document.getElementById("modePill").className = "pill" + (mode === "idle" ? "" : " ok");
+
+      document.getElementById("bannerCollision").classList.toggle("show", !!s.collision);
+      document.getElementById("bannerEstop").classList.toggle("show", !!s.emergency_stopped);
+      var followBanner = document.getElementById("bannerFollow");
+      followBanner.classList.toggle("show", !!follow.enabled);
+      if (follow.enabled) {
+        setText("bannerFollowText",
+          "Following owner · " + String(follow.state || "active") +
+          (follow.mode ? " (" + String(follow.mode) + ")" : ""));
+      }
+
+      var list = document.getElementById("eventList");
+      var events = (s.events || []).slice(-8).reverse();
+      list.textContent = "";
+      if (!events.length) {
+        var empty = document.createElement("li");
+        empty.textContent = "no events yet";
+        list.appendChild(empty);
+      }
+      events.forEach(function (event) {
+        var item = document.createElement("li");
+        item.className = "level-" + String(event.level || "info");
+        var who = document.createElement("span");
+        who.className = "who";
+        who.textContent = String(event.role || "sys");
+        item.appendChild(who);
+        item.appendChild(document.createTextNode(String(event.text || "")));
+        list.appendChild(item);
+      });
+    }
+
+    /* ---------------------------- data feed ---------------------------- */
+
+    function pollState() {
+      fetch("/api/state", { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (s) {
+          state = s;
+          var now = performance.now() / 1000;
+          if (s.robot) {
+            if (prevRobot) {
+              var dt = now - prevRobot.t;
+              if (dt > 0.02) {
+                var v = Math.hypot(s.robot.x - prevRobot.x, s.robot.y - prevRobot.y) / dt;
+                speedMps = speedMps * 0.6 + v * 0.4;
+              }
+            }
+            prevRobot = { x: s.robot.x, y: s.robot.y, t: now };
+            var last = trail[trail.length - 1];
+            if (!last || Math.hypot(s.robot.x - last[0], s.robot.y - last[1]) > 0.02) {
+              trail.push([s.robot.x, s.robot.y]);
+              if (trail.length > TRAIL_MAX) trail.shift();
+            }
+          }
+          updateHud(s);
+        })
+        .catch(function () {
+          setText("simPillText", "sim offline");
+          document.getElementById("simPill").className = "pill bad";
+        });
+    }
+
+    function loadScene() {
+      fetch("/api/scene", { cache: "no-store" })
+        .then(function (r) {
+          if (!r.ok) throw new Error("scene unavailable");
+          return r.json();
+        })
+        .then(function (payload) {
+          scene = payload;
+          document.getElementById("sceneError").style.display = "none";
+          if (!fitted) fitToScene();
+          staticDirty = true;
+        })
+        .catch(function () {
+          var el = document.getElementById("sceneError");
+          el.style.display = "flex";
+          el.textContent = "Scene geometry unavailable — retrying…";
+          setTimeout(loadScene, 2000);
+        });
+    }
+
+    /* --------------------------- interaction --------------------------- */
+
+    function fitToScene() {
+      if (!scene) return;
+      var ext = scene.extent;
+      var corners = [
+        [ext.xmin, ext.ymin], [ext.xmax, ext.ymin],
+        [ext.xmax, ext.ymax], [ext.xmin, ext.ymax]
+      ];
+      var minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+      corners.forEach(function (p) {
+        var u = (p[0] - p[1]) * ISO_CX;
+        var vLow = -(p[0] + p[1]) * ISO_CY - 6.0 * ISO_Z; // headroom for building tops
+        var vHigh = -(p[0] + p[1]) * ISO_CY;
+        minU = Math.min(minU, u); maxU = Math.max(maxU, u);
+        minV = Math.min(minV, vLow); maxV = Math.max(maxV, vHigh);
+      });
+      var w = canvas.clientWidth, h = canvas.clientHeight;
+      if (w < 10 || h < 10) return;
+      cam.zoom = Math.max(6, Math.min((w * 0.92) / (maxU - minU), (h * 0.9) / (maxV - minV)));
+      cam.panX = w / 2 - ((minU + maxU) / 2) * cam.zoom;
+      cam.panY = h / 2 - ((minV + maxV) / 2) * cam.zoom;
+      staticDirty = true;
+      fitted = true;
+    }
+
+    function zoomAt(sx, sy, factor) {
+      var before = unprojectGround(sx, sy);
+      cam.zoom = Math.min(240, Math.max(5, cam.zoom * factor));
+      var after = project(before[0], before[1], 0);
+      cam.panX += sx - after[0];
+      cam.panY += sy - after[1];
+      staticDirty = true;
+    }
+
+    canvas.addEventListener("wheel", function (event) {
+      event.preventDefault();
+      var rect = canvas.getBoundingClientRect();
+      zoomAt(event.clientX - rect.left, event.clientY - rect.top,
+        Math.pow(1.0015, -event.deltaY));
+    }, { passive: false });
+
+    var pointers = new Map();
+    var pinchDist = 0;
+    canvas.addEventListener("pointerdown", function (event) {
+      canvas.setPointerCapture(event.pointerId);
+      pointers.set(event.pointerId, [event.clientX, event.clientY]);
+      canvas.classList.add("dragging");
+      if (pointers.size === 2) {
+        var pts = Array.from(pointers.values());
+        pinchDist = Math.hypot(pts[0][0] - pts[1][0], pts[0][1] - pts[1][1]);
+      }
+    });
+    canvas.addEventListener("pointermove", function (event) {
+      if (!pointers.has(event.pointerId)) return;
+      var prev = pointers.get(event.pointerId);
+      pointers.set(event.pointerId, [event.clientX, event.clientY]);
+      if (pointers.size === 1) {
+        cam.panX += event.clientX - prev[0];
+        cam.panY += event.clientY - prev[1];
+        staticDirty = true;
+      } else if (pointers.size === 2) {
+        var pts = Array.from(pointers.values());
+        var dist = Math.hypot(pts[0][0] - pts[1][0], pts[0][1] - pts[1][1]);
+        if (pinchDist > 0) {
+          var rect = canvas.getBoundingClientRect();
+          var cx = (pts[0][0] + pts[1][0]) / 2 - rect.left;
+          var cy = (pts[0][1] + pts[1][1]) / 2 - rect.top;
+          zoomAt(cx, cy, dist / pinchDist);
+        }
+        pinchDist = dist;
+      }
+    });
+    function releasePointer(event) {
+      pointers.delete(event.pointerId);
+      if (pointers.size < 2) pinchDist = 0;
+      if (!pointers.size) canvas.classList.remove("dragging");
+    }
+    canvas.addEventListener("pointerup", releasePointer);
+    canvas.addEventListener("pointercancel", releasePointer);
+
+    document.getElementById("fitBtn").addEventListener("click", fitToScene);
+    document.getElementById("fitTop").addEventListener("click", fitToScene);
+    window.addEventListener("resize", function () {
+      dpr = Math.max(1, window.devicePixelRatio || 1);
+      staticDirty = true;
+      if (!fitted) fitToScene();
+    });
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
+      THEME = buildTheme();
+      syncLegend();
+      staticDirty = true;
+    });
+
+    function syncLegend() {
+      var chips = { robot: THEME.robot, owner: THEME.owner, ped: THEME.ped, cyc: THEME.cyc, goal: THEME.goal, lidar: THEME.lidarEdge };
+      document.querySelectorAll("#legend .chip").forEach(function (el) {
+        el.style.background = chips[el.getAttribute("data-chip")] || THEME.muted;
+      });
+    }
+
+    syncLegend();
+    loadScene();
+    pollState();
+    setInterval(pollState, 100);
+    requestAnimationFrame(renderFrame);
+  })();
+  </script>
+</body>
+</html>

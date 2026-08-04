@@ -491,29 +491,6 @@ def _decision_response_schema(tools: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 @dataclass
-class CsmSpeechProvider:
-    """Adapter for an isolated CSM HTTP service returning WAV bytes."""
-
-    base_url: str = "http://127.0.0.1:8090"
-    speaker: int = 0
-    timeout: float = 60.0
-
-    def synthesize(self, text: str) -> bytes:
-        payload = json.dumps({"text": text, "speaker": self.speaker}).encode()
-        request = Request(
-            f"{self.base_url.rstrip('/')}/synthesize",
-            data=payload,
-            headers={"Content-Type": "application/json", "Accept": "audio/wav"},
-            method="POST",
-        )
-        try:
-            with urlopen(request, timeout=self.timeout) as response:
-                return response.read()
-        except (HTTPError, URLError, TimeoutError) as error:
-            raise RuntimeError(f"CSM service request failed: {error}") from error
-
-
-@dataclass
 class FishSpeechProvider:
     """Client for a local Fish Speech S2 `/v1/tts` service.
 
@@ -957,3 +934,220 @@ def _multipart_field(boundary: str, name: str, value: str) -> bytes:
     return (
         f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'
     ).encode()
+
+
+# ---------------------------------------------------------------------------
+# On-device TTS (Piper) and sentence-chunked streaming
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PiperSpeechProvider:
+    """Local Piper TTS via subprocess: text in, 16-bit mono PCM WAV out.
+
+    Piper is the low-latency CPU default recommended for onboard companion
+    speech; heavier providers (Fish S2) remain opt-in docked modes. The binary
+    and voice model are configured paths; ``available()`` fails closed instead
+    of raising so the runtime can degrade to text mode.
+    """
+
+    binary_path: str = "third_party/piper/piper"
+    voice_path: str = "models/piper/voice.onnx"
+    sample_rate_hz: int = 22050
+    timeout_s: float = 30.0
+
+    def available(self) -> bool:
+        from pathlib import Path
+
+        return Path(self.binary_path).is_file() and Path(self.voice_path).is_file()
+
+    def synthesize(self, text: str) -> bytes:
+        import subprocess
+
+        clean = text.strip()
+        if not clean:
+            return b""
+        if not self.available():
+            raise SpeechServiceError(
+                f"Piper is not installed (binary={self.binary_path!r}, "
+                f"voice={self.voice_path!r})"
+            )
+        command = [
+            self.binary_path,
+            "--model",
+            self.voice_path,
+            "--output-raw",
+        ]
+        try:
+            completed = subprocess.run(
+                command,
+                input=clean.encode("utf-8"),
+                capture_output=True,
+                timeout=self.timeout_s,
+                check=True,
+            )
+        except (OSError, subprocess.SubprocessError) as error:
+            raise SpeechServiceError(f"Piper synthesis failed: {error}") from error
+        pcm = completed.stdout
+        if not pcm:
+            raise SpeechServiceError("Piper produced no audio")
+        return _pcm16_to_wav(pcm, self.sample_rate_hz)
+
+
+def _pcm16_to_wav(pcm: bytes, sample_rate_hz: int, channels: int = 1) -> bytes:
+    import io
+    import wave
+
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as writer:
+        writer.setnchannels(channels)
+        writer.setsampwidth(2)
+        writer.setframerate(sample_rate_hz)
+        writer.writeframes(pcm)
+    return buffer.getvalue()
+
+
+_SENTENCE_BOUNDARY = (".", "!", "?", ";", ":", "\n")
+
+
+def split_speech_sentences(text: str, *, max_chars: int = 220) -> list[str]:
+    """Split a reply into speakable sentence/clause chunks.
+
+    Long unpunctuated runs are split at word boundaries near ``max_chars`` so
+    a single chunk can never stall barge-in for the whole reply.
+    """
+
+    clean = " ".join(text.split())
+    if not clean:
+        return []
+    sentences: list[str] = []
+    current: list[str] = []
+    for word in clean.split(" "):
+        current.append(word)
+        if word.endswith(_SENTENCE_BOUNDARY) or sum(len(w) + 1 for w in current) >= max_chars:
+            sentences.append(" ".join(current))
+            current = []
+    if current:
+        sentences.append(" ".join(current))
+    return sentences
+
+
+class SentenceChunkedSynthesizer:
+    """Adapt any blocking synthesizer into a cancellable streaming one.
+
+    ``DuplexVoiceSession`` prefers ``synthesize_stream`` when present. Chunking
+    on sentence boundaries means the first audio arrives after the first
+    sentence is synthesized — not after the whole reply — and barge-in takes
+    effect at the next sentence boundary at the latest.
+    """
+
+    def __init__(self, synthesizer: SpeechSynthesizer, *, max_chars: int = 220):
+        if not 40 <= max_chars <= 2000:
+            raise ValueError("sentence chunk size must be between 40 and 2000 characters")
+        self._synthesizer = synthesizer
+        self._max_chars = max_chars
+
+    def synthesize(self, text: str) -> bytes:
+        return self._synthesizer.synthesize(text)
+
+    def synthesize_stream(
+        self,
+        text: str,
+        *,
+        cancel_event: threading.Event | None = None,
+    ) -> Iterator[bytes]:
+        sentences = split_speech_sentences(text, max_chars=self._max_chars)
+        for sentence in sentences:
+            if cancel_event is not None and cancel_event.is_set():
+                return
+            chunk = self._synthesizer.synthesize(sentence)
+            if cancel_event is not None and cancel_event.is_set():
+                return
+            if chunk:
+                yield chunk
+
+
+@dataclass(frozen=True)
+class SpeechStack:
+    """Resolved speech services plus a human-readable status per role."""
+
+    recognizer: SpeechRecognizer | None
+    synthesizer: SpeechSynthesizer | None
+    mode: str
+    stt_detail: str
+    tts_detail: str
+
+
+def build_speech_stack(config: Mapping[str, object]) -> SpeechStack:
+    """Construct STT/TTS providers from the ``speech:`` config section.
+
+    Fails soft by design: an unreachable or uninstalled provider yields a
+    ``None`` role plus a status string, and the runtime keeps operating in
+    text mode. ``mode: text`` disables audio explicitly; ``audio`` demands it;
+    ``auto`` uses whatever is healthy.
+    """
+
+    mode = str(config.get("mode", "auto")).strip().lower()
+    if mode not in {"auto", "text", "audio"}:
+        raise ValueError("speech.mode must be auto, text, or audio")
+    if mode == "text":
+        return SpeechStack(None, None, mode, "disabled (speech.mode=text)", "disabled")
+
+    recognizer: SpeechRecognizer | None = None
+    stt_provider = str(config.get("stt_provider", "whisper_cpp")).strip().lower()
+    if stt_provider == "whisper_cpp":
+        candidate = WhisperCppProvider(
+            base_url=str(config.get("whisper_url", "http://127.0.0.1:8178")),
+            timeout=float(config.get("stt_timeout_s", 30.0)),
+        )
+        health = _http_health(candidate.base_url)
+        if health:
+            recognizer = candidate
+            stt_detail = f"whisper.cpp at {candidate.base_url}"
+        else:
+            stt_detail = f"whisper.cpp unreachable at {candidate.base_url}"
+    elif stt_provider == "none":
+        stt_detail = "disabled"
+    else:
+        raise ValueError(f"unsupported speech.stt_provider: {stt_provider}")
+
+    synthesizer: SpeechSynthesizer | None = None
+    tts_provider = str(config.get("tts_provider", "piper")).strip().lower()
+    if tts_provider == "piper":
+        piper = PiperSpeechProvider(
+            binary_path=str(config.get("piper_binary", "third_party/piper/piper")),
+            voice_path=str(config.get("piper_voice", "models/piper/voice.onnx")),
+        )
+        if piper.available():
+            synthesizer = piper
+            tts_detail = f"piper ({piper.voice_path})"
+        else:
+            tts_detail = "piper not installed (binary/voice missing)"
+    elif tts_provider == "fish_s2":
+        fish = FishSpeechProvider(base_url=str(config.get("fish_url", "http://127.0.0.1:8091")))
+        if fish.is_healthy():
+            synthesizer = fish
+            tts_detail = f"fish_s2 at {fish.base_url}"
+        else:
+            tts_detail = f"fish_s2 unreachable at {fish.base_url}"
+    elif tts_provider == "none":
+        tts_detail = "disabled"
+    else:
+        raise ValueError(f"unsupported speech.tts_provider: {tts_provider}")
+
+    if mode == "audio" and (recognizer is None or synthesizer is None):
+        raise SpeechServiceError(
+            "speech.mode=audio requires healthy STT and TTS services "
+            f"(stt: {stt_detail}; tts: {tts_detail})"
+        )
+    return SpeechStack(recognizer, synthesizer, mode, stt_detail, tts_detail)
+
+
+def _http_health(base_url: str, timeout: float = 0.5) -> bool:
+    try:
+        with urlopen(f"{base_url.rstrip('/')}/health", timeout=timeout) as response:
+            return 200 <= response.status < 500
+    except HTTPError:
+        return True  # the server answered; an HTTP error still proves liveness
+    except (URLError, TimeoutError, OSError):
+        return False
