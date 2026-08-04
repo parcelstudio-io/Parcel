@@ -16,8 +16,9 @@ Checkpoints are intentionally ignored by Git.
 
 Downloaded does not mean active. CityWalker requires an isolated Python 3.11 /
 PyTorch environment and timestamped RGB plus trajectory history. Parcel does
-not yet provide pixels through `NavObservation`, so `citywalker_v1` remains an
-explicit research checkpoint and the active navigator stays `stub_v0`.
+not yet provide pixels through `NavObservation`, and `build_navigator` rejects
+learned types. The production navigator is `grid_v1`; keep learned checkpoints
+offline until an adapter and tests exist.
 
 Never route a learned trajectory directly to joints. A future adapter must
 convert it into bounded local waypoints, then pass them through LiDAR collision

@@ -22,10 +22,13 @@ microphone (future device transport; text stream is active now)
   → simulator or ROS controller
 
 spoken reply
-  → isolated Fish S2 Pro service
-  → cancellable WAV stream
-  → speaker
+  → Piper (onboard default) or Fish S2 (opt-in docked)
+  → SentenceChunkedSynthesizer / cancellable WAV stream
+  → SpeakerSink
 ```
+
+Also: [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) for the
+live `build_speech_stack` / VAD path.
 
 The probabilistic components are outside the motor-control boundary. Only named,
 preconfigured actions can cross it. A semantic proposal can be executed,
@@ -118,22 +121,23 @@ Recommended initial model:
 - use a multilingual model only when required.
 
 Voice activity detection should segment 16 kHz mono input before transcription.
-The installed launcher enables the official Silero VAD v6.2 model by default;
-set `PARCEL_WHISPER_VAD=0` only for diagnostics. Do not retain raw microphone
-audio by default.
+In-process capture uses `EnergyVad` in `voice_audio.py` (adaptive noise floor,
+hangover). The whisper.cpp launcher can still enable Silero VAD for the ASR
+service (`PARCEL_WHISPER_VAD=0` only for diagnostics). Do not retain raw
+microphone audio by default.
 
 Official reference:
 
 - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
 - [whisper.cpp Silero VAD weights](https://huggingface.co/ggml-org/whisper-vad)
 
-## Why Fish Audio S2 Pro
+## TTS: Piper default, Fish S2 opt-in
 
-Fish S2 Pro provides the expressive side of the conversation while Gemma
-generates reply text and action plans. It has an official streaming API,
-multilingual generation, long-context/multi-speaker support, and fine prosody
-control. It runs in an isolated Python 3.12 + Torch CUDA 12.9 environment and
-uses most of the RTX 5000 Ada's VRAM, so it is opt-in during development.
+Onboard default TTS is **Piper** (CPU, low first-audio latency). **Fish S2 Pro**
+is the expressive docked/GPU option: official streaming API, multilingual
+generation, long-context/multi-speaker support, and fine prosody control. It
+runs in an isolated Python 3.12 + Torch CUDA environment and uses most of a
+32 GB Ada card's VRAM, so it is opt-in.
 
 Fish's RVQ audio tokens remain private to the speech server. Parcel sends text
 and receives ordered WAV/PCM chunks; audio tokens never cross into robot action

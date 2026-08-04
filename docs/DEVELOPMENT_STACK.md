@@ -8,27 +8,30 @@ urban training or a physical Go2.
 ## Architecture
 
 ```text
-browser partial/final text / future VAD+ASR
+browser text  and/or  MicrophoneVoiceLoop (VAD → STT)
               |
               v
        DuplexVoiceSession
        | partial: interrupt only
-       | final
+       | final transcript
        v
-  Gemma/Qwen structured plan ----- reply text ---> Fish S2 ---> speaker
-              |
-              v
-  allowlist + limits + E-stop
-              |
-              v
- follow / navigation / bounded spatial / manual / voice
+  Gemma structured plan ----- reply text ---> Piper (default) / Fish S2
+              |                                    |
+              v                                    v
+  allowlist + limits + E-stop              SentenceChunkedSynthesizer
+              |                                    |
+              v                                    v
+ follow / grid_v1 nav / spatial / manual      SpeakerSink (barge-in)
               |
               v
  priority arbiter + TTL + proximity brake
               |
               v
-  SimulatorBackend -> MuJoCo now, ROS/SimWorld/Isaac adapter later
+  ControlManager → SimulatorBackend (MuJoCo) / Unitree Sport
 ```
+
+See [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) for the
+speech-stack wiring (`build_speech_stack`, VAD, echo-guard barge-in).
 
 Every velocity command has a short lease. Manual control has priority over
 voice, owner-follow, and autonomous navigation; the persistent emergency-stop
@@ -64,9 +67,10 @@ and is not the right dependency for the first reliable quadruped-control slice.
 | Role | Selection | Location / endpoint | Resource profile |
 | --- | --- | --- | --- |
 | Action reasoning | Gemma 4 26B-A4B IT QAT Q4 GGUF | `models/gemma-4-26b-a4b/`, port 8080 | 14.4 GB file; CPU profile |
-| Speech synthesis | Fish Audio S2 Pro | `third_party/fish-speech/checkpoints/s2-pro/`, port 8091 | about 11 GB weights; 24+ GB VRAM |
+| Speech synthesis (default) | Piper | local ONNX / configured binary | CPU, onboard-friendly |
+| Speech synthesis (opt-in) | Fish Audio S2 Pro | `third_party/fish-speech/...`, port 8091 | ~11 GB weights; 24+ GB VRAM |
 | Speech recognition | whisper.cpp `base.en` | `models/whisper/`, port 8178 | 142 MB; CPU profile |
-| Voice activity detection | Silero VAD v6.2 | `models/whisper/` | 885 KB; enabled by default |
+| Voice activity detection | `EnergyVad` in `voice_audio.py` (Silero later) | in-process | CPU; adaptive noise floor |
 
 Gemma 4 26B-A4B is the installed, tested baseline. Qwen3.6-35B-A3B Q4_K_M is
 the recommended next A/B candidate for stronger conversation and semantic
@@ -75,13 +79,11 @@ Ada. Kimi K2.5 is not a sensible local target: its one-trillion-parameter
 checkpoint is meant for multi-GPU serving. Exact tradeoffs are in [Audio,
 latency, and spatial intelligence](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md).
 
-Fish S2 Pro was selected over the existing Sesame CSM placeholder because it
-has an official streaming server, long-context/multilingual speech, and
-fine-grained prosody controls. Its weights use the Fish Audio Research License:
-research and non-commercial use are allowed, while commercial use requires a
-separate agreement. The Fish checkout has its own Python 3.12 + CUDA 12.9 uv
-environment so its large Torch stack cannot destabilize Parcel's Python 3.14
-environment.
+Piper is the onboard TTS default (low first-audio latency, CPU). Fish S2 Pro is
+an opt-in docked/GPU mode with an official streaming server and the Fish Audio
+Research License (research/non-commercial by default). The Fish checkout uses
+its own Python 3.12 + CUDA uv environment so Torch cannot destabilize Parcel's
+Python 3.14 `.parcel` venv.
 
 ## Audio boundary and full duplex
 
@@ -101,12 +103,11 @@ partials and asynchronous finals to `/api/voice/text`; partial text is observabl
 but never executed. `FishSpeechProvider` exposes text-in/audio-out only, keeping
 Fish's audio tokens inside the speech process.
 
-The speech launch flags currently start and health-check Whisper/Fish as isolated
-services. They are not automatically connected to browser capture or speaker
-playback, and the `speech` YAML section is reserved for that transport factory.
-That is intentional on this desktop because no endpoint is connected. A future
-device adapter should stream VAD-segmented audio into `WhisperCppProvider` and
-Fish WAV chunks into an AEC-capable output sink.
+`build_speech_stack` resolves the `speech:` config: whisper.cpp STT + Piper by
+default, Fish S2 opt-in; `auto` degrades loudly to text mode. `MicrophoneVoiceLoop`
+and `SpeakerSink` exist for VAD-segmented capture and interruptible playback;
+without a paired mic/speaker this desktop still starts in **streaming text
+mode**. Hardware AEC is still required before reliable duplex demos.
 
 The desktop has an ALSA Realtek ALC1220 driver plus a powered MediaTek Bluetooth
 5.2 controller with BlueZ/PipeWire headset support. No headset is currently
@@ -172,21 +173,19 @@ locations explicit.
 
 ## What is not production-ready
 
-The current MuJoCo camera/LiDAR adapter derives idealized detections from
-simulator truth; the reasoning contract does not expose privileged truth, but
-this is not yet a physical perception stack. The stub point navigator is useful
-for integration and reactive-safety testing, not outdoor autonomy. Before
-physical deployment, add authenticated enrollment and owner re-identification,
-camera/LiDAR perception and localization, an AEC-capable audio transport, a
-hardware emergency stop, fall recovery validation, geofencing, and a separately
-verified Unitree low-level controller. Never connect the LLM directly to joint
-or torque commands.
+The current MuJoCo camera/LiDAR path includes an occlusion-true raycast scan
+feeding `grid_v1`, but detections can still derive from simulator geometry;
+this is not yet a physical perception stack. Before physical deployment, add
+authenticated enrollment and owner re-identification, real camera/LiDAR
+localization, hardware AEC, a hardware emergency stop, fall recovery
+validation, geofencing, and a separately verified Unitree controller. Never
+connect the LLM directly to joint or torque commands.
 
 Multi-tool model output is validated as one allowlisted plan, but there is not
 yet a duration-aware action-sequence scheduler; do not use consecutive pose or
-velocity tools as choreography. CityWalker/NaVILA registry entries and the
-MetaUrban dependency setup are also scaffolding: vendor inference and a real
-MetaUrban step/observation adapter remain explicit research tasks.
+velocity tools as choreography. CityWalker/NaVILA YAML entries and MetaUrban
+setup remain research scaffolding until vendor inference and a real step
+adapter exist.
 
 ## Primary references
 

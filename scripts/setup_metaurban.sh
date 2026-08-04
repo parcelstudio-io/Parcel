@@ -59,5 +59,5 @@ echo "  PYTHONPATH=src python examples/nav_city_smoke.py"
 echo "Parcel's live MetaUrban step/observation adapter is not implemented yet."
 echo "The install above prepares vendor research; use the offline scaffold meanwhile."
 echo
-echo "Keep active_model: stub_v0 until a vendor navigator adapter is implemented."
+echo "Keep active_model: grid_v1 until a vendor navigator adapter is implemented and tested."
 echo "See docs/NAVIGATION_CITY.md for the CityWalker / NaVILA research path."

@@ -1,12 +1,16 @@
 # Dynamic city, smooth navigation, and social actions
 
-This document records the architecture and simulator research behind Parcel's
-living-city mode. The short version is:
+Living-city simulator and social-action policy for Parcel. Architecture context:
+[REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) and
+[NAVIGATION_CITY.md](NAVIGATION_CITY.md).
+
+Short version:
 
 1. Keep MuJoCo as the fast, deterministic Go2 development backend.
-2. Add MetaUrban as the first procedural SocialNav service.
-3. Add URBAN-SIM/Isaac Lab when articulated Go2 training is the priority.
-4. Treat the reasoning model as a semantic action proposer, never a motor
+2. Production navigation is `grid_v1` over the raycast scan (not the stub).
+3. Add MetaUrban as the first procedural SocialNav service (separate process).
+4. Add URBAN-SIM/Isaac Lab when articulated Go2 training is the priority.
+5. Treat the reasoning model as a semantic action proposer, never a motor
    controller.
 
 ## What now works in the default MuJoCo launch
@@ -70,11 +74,11 @@ The engine boundary should remain:
 ```text
 semantic mission / personality
           ↓
-global route or learned waypoint proposer
+grid_v1 (rolling occupancy + A*) or stub fallback
           ↓
-social local planner + forward-preferred turn-first controller
+forward-preferred track / recovery + independent safety veto
           ↓
-bounded vx/vy/vyaw + independent safety veto
+bounded vx/vy/vyaw → ControlManager
           ↓
 SimulatorBackend
   ├── MuJoCo (working)
@@ -130,24 +134,13 @@ pedestrian prediction layer is still needed for time-indexed crowd motion.
 
 ## Where learned navigation belongs
 
-[CityWalker](https://github.com/ai4ce/CityWalker) is the next prioritized learned
-adapter. Its public checkpoint predicts five future Euclidean waypoints from
-five observation frames plus recent pose and target coordinates. Run it in
-shadow mode first and pass approved waypoints into the deterministic controller.
-The repository code is Apache-2.0, but Parcel records the exact original v1.0
-checkpoint's artifact terms as `NOASSERTION`; a later official converted model
-has an explicit Apache-2.0 card and should be reviewed as a separate artifact.
-Parcel currently has no simulator RGB frame/history adapter, so simply selecting
-`citywalker_v1` still fails closed.
-
-[NoMaD/ViNT](https://github.com/robodhruv/visualnav-transformer) are useful
-cross-embodiment waypoint baselines. [NaVILA](https://github.com/AnjieCheng/NaVILA)
-is the most relevant later Go2 VLA hierarchy: it emits mid-level spatial actions
-to a separate real-time locomotion policy. Its older Isaac/Habitat pins and
-24 GB-class evaluation footprint make it a separate experimental profile.
-
-Learned models may propose waypoints or semantic motion. They do not replace
-heading alignment, collision monitoring, the velocity arbiter, or leg control.
+Production path is classical geometry (`grid_v1`) under an independent collision
+gate. CityWalker / NoMaD / ViNT / NaVILA remain research checkpoints: YAML
+metadata and downloads may exist, but `build_navigator` fails closed until a
+tested inference adapter lands. Any future learned proposer may emit waypoints
+or mid-level motion only; it must not replace heading alignment, collision
+monitoring, the velocity arbiter, or leg control. See
+[NAVIGATION_CITY.md](NAVIGATION_CITY.md).
 
 ## Reasoning model and next-action policy
 

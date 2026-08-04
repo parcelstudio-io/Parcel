@@ -153,12 +153,14 @@ python -m pip install -e ".[dev,voice]"
 
 See [Skills / city / RL implementation](docs/IMPLEMENTATION_SKILLS_CITY_RL.md).
 
-The measured BARN baseline, hierarchical instruction-following design,
-open-weight navigation model decisions, and MetaUrban/Isaac evaluation roadmap
-are in [Companion navigation and instruction-following architecture](docs/COMPANION_NAVIGATION_ARCHITECTURE.md).
-The evidence behind the split conversation/planning/navigation brain, current
-open-weight model candidates, GPU admission profiles, and experiment matrix is
-in [AI brain and navigation research](docs/AI_BRAIN_AND_NAVIGATION_RESEARCH.md).
+Hierarchical companion navigation (PlanIR → grid_v1 → safety → ControlManager),
+product eval policy, and the offline BARN/Habitat research boundary are in
+[Companion navigation architecture](docs/COMPANION_NAVIGATION_ARCHITECTURE.md).
+The redesign rationale and seven-layer map are in
+[REDESIGN_2026_ASSESSMENT.md](docs/REDESIGN_2026_ASSESSMENT.md) and
+[REDESIGN_2026_ARCHITECTURE.md](docs/REDESIGN_2026_ARCHITECTURE.md).
+Doc index: [docs/README.md](docs/README.md).
+
 The frozen live semantic-planning gate and its append-only run history are in
 [planner quality v2](evals/companion/planner_quality_v2/README.md) and its
 [result ledger](evals/companion/planner_quality_v2/results/README.md). The
@@ -172,13 +174,9 @@ The separate frozen conversation calibration records Gemma at 6/10 machine
 cases and 9/10 structured-safety checks; human review is still absent. A fully
 GPU-admitted Ministral 3 8B Instruct challenger started much faster but
 regressed to 5/10 conversation cases and 3/5 PlanIR, so it remains
-deployment-disabled. Exact artifacts, raw failures, latency, and promotion
-decisions are in the research report and append-only ledgers.
-The pinned external evaluators, sensor-only adapter, run commands, and immutable
-result ledger are documented in [Offline external navigation evals](evals/external/README.md).
-An unchanged upstream Nav2 MPPI stack now completes one public BARN world in a
-cache-only ROS/Gazebo rootfs, but that is runtime compatibility—not a Parcel,
-500-episode, official, or top-decile score.
+deployment-disabled. Exact artifacts live in the companion eval ledgers.
+Product companion scenarios: `evals/companion_nav/`. Offline BARN/Habitat
+proxies: [evals/external/README.md](evals/external/README.md).
 
 ```bash
 source .parcel/bin/activate
@@ -482,7 +480,9 @@ src/parcel_robot/
 ├── voice_pipeline.py # text-first duplex voice coordination
 └── ros_node.py       # ROS topic boundary
 tests/                # non-ROS unit tests
+docs/README.md        # documentation index
 docs/MOTION.md        # Sport vs RL setup guide
+docs/REDESIGN_2026_ARCHITECTURE.md
 configs/robot.yaml    # canonical runtime configuration
 ```
 

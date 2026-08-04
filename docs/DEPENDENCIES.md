@@ -217,21 +217,15 @@ metaurban:
   mode: social_nav
 ```
 
-### Open-weight navigators (optional, GPU)
-
-The following models are registered as research targets:
+### Navigators
 
 | Model id | Type | Notes |
 | --- | --- | --- |
-| `stub_v0` | stub | Default; no weights |
-| `citywalker_v1` | citywalker | Urban visual nav |
-| `navila_v1` | navila | Legged + language |
-| `nomad_v1` / `vint_v1` | foundation | Fine-tune / IL base |
+| `grid_v1` | grid | **Production default**; raycast occupancy + A* |
+| `stub_v0` | stub | Loud fallback / tests; no weights |
+| `citywalker_v1` / `navila_v1` / … | learned metadata | Fail closed until an inference adapter exists |
 
-These adapters are not inference implementations: they raise even if a
-checkpoint exists until vendor preprocessing, inference, and output conversion
-are wired and tested. Keep `active_model: stub_v0`; see
-[`NAVIGATION_CITY.md`](NAVIGATION_CITY.md).
+Keep `active_model: grid_v1`; see [`NAVIGATION_CITY.md`](NAVIGATION_CITY.md).
 
 ---
 

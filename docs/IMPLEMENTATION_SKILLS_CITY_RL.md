@@ -119,13 +119,15 @@ fail-closed for unknown skills, unsafe joints, and velocity limits.
 
 Configured via `simulation.scene` in `configs/robot.yaml`.
 
-## RL contract
+## RL contract (honest stub)
 
 - **Action:** 12 joint position targets (rad), applied with PD in sim / low-level.
 - **Observation (v1, length 48):** base quat (4) + gyro (3) + joint q (12) +
-  joint dq (12) + last action (12) + velocity command (3) + skill one-hot truncated /
-  padded id embedding (2 reserved floats for skill index + progress).
-- **Env:** `parcel_robot.rl.env.Go2Env` with Gymnasium-like `reset` / `step`.
+  joint dq (12) + last action (12) + velocity command (3) + skill embedding.
+- **Env:** `parcel_robot.rl.env.Go2Env` exposes a Gymnasium-like `reset` / `step`
+  shape for experiments, but it is **not** a training-ready locomotion stack
+  (rewards / termination are still incomplete). Prefer the redesign deferred
+  path (`unitree_rl_*` lineage → ONNX) when RL locomotion is funded.
 - Training loops stay outside the voice process.
 
 ## Migration

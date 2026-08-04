@@ -125,24 +125,27 @@ is marked ✓✓.
     middle layer for stairs/curbs/rugs — flagged as the next perception
     investment after flat-ground navigation is validated on hardware.
 
-## 6. What was deliberately deleted (or scheduled for deletion)
+## 6. What was deliberately removed from the production path
 
-- `navigation/experimental_all_ray_shield.py` — 665 lines, deployment-
-  disabled, evaluated 0/30.
-- The BARN v5–v10 certification machinery (promotion gates, transaction
-  managers, evidence formats) and its tests — zero success-rate improvement
-  across six versions.
-- `rl/env.py` + `rl/spaces.py` — non-functional stub (constant rewards, a
-  quaternion component read as height). Deleted rather than labeled, so the
-  repo stops implying a training capability it does not have.
-- `SportMoveBackend` (vendor-branded no-op in generic code) → neutral
-  `VendorVelocityBackend` with a deprecated `sport` alias.
+These items are severed from the default runtime or marked research-only. Some
+trees may still exist under `evals/external/` or as experiment configs until an
+operator deletes them — presence in the tree is not a production claim.
+
+- `navigation/experimental_all_ray_shield.py` — deployment-disabled research
+  shield (evaluated 0/30); not on the product path.
+- BARN v5–v10 certification machinery — research harnesses only; **product**
+  navigation eval is `evals/companion_nav/`.
+- `rl/env.py` reward/termination stubs — not a training capability; redesign
+  prefers the Unitree RL lineage when funded rather than polishing the stub.
+- `SportMoveBackend` (vendor-branded no-op) → neutral `VendorVelocityBackend`
+  with a deprecated `sport` alias.
 - `CsmSpeechProvider` (legacy, no production caller).
-- The learned-navigator registry entries (CityWalker/NaVILA/NoMaD/ViNT) that
-  unconditionally raised `NotImplementedError`; re-add only together with a
-  working inference adapter.
-- The 25-file navigation config graveyard, collapsed to `grid_v1` + `stub` +
-  the one experiment profile the surviving BARN harness needs.
+- Learned-navigator registry entries that unconditionally raised
+  `NotImplementedError`; `build_navigator` accepts only `stub` and `grid`.
+  Re-add a type only with a working inference adapter.
+- Navigation config graveyard collapsed toward `grid_v1` + `stub` for
+  production; experiment YAMLs under `configs/navigation/experiments/` remain
+  for offline planner work.
 
 ## 7. Honest limitations that remain
 
