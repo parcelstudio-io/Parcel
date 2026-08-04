@@ -17,6 +17,7 @@ import hashlib
 import json
 import subprocess
 import time
+from dataclasses import fields
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -25,12 +26,21 @@ from evals.companion_nav.runner import (
     CONTROL_DT_S,
     GRID_MODEL_ID,
     RUNNER_VERSION,
+    BenchFeatures,
     FollowBenchRunner,
 )
 from evals.companion_nav.scenarios import FOLLOW_BENCH_V1, scenario_by_id
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_RESULTS_DIR = Path(__file__).resolve().parent / "results"
+
+# Only the two ends of the range are exposed. Intermediate combinations exist
+# in `BenchFeatures` for tests that need to isolate one path, but a ledger row
+# should be a whole before or a whole after, not an unrepeatable mixture.
+FEATURE_SETS = {
+    "shipped": BenchFeatures(),
+    "baseline": BenchFeatures.baseline(),
+}
 
 DOES_NOT_PROVE = (
     (
@@ -59,12 +69,47 @@ DOES_NOT_PROVE = (
         "navigation speed competitiveness (BARN-style speed scoring is "
         "deliberately excluded)"
     ),
+    # --- card W9 -----------------------------------------------------------
+    (
+        "owner re-identification (owner_corner_loss reacquires an "
+        "identity-perfect scripted track through a geometric visibility ray; "
+        "nothing here exercises a camera re-ID pipeline, and a real search "
+        "would have to decide whether the person it found is the right person)"
+    ),
+    (
+        "the owner-search plan path (the bench drives SearchOwnerController "
+        "directly from the same deterministic lost-timeout trigger the runtime "
+        "uses; plan compilation, validation, the executive, and verified "
+        "completion are covered by unit tests, not by these episodes)"
+    ),
+    (
+        "gesture kinematics (a scripted emote is modelled only by its "
+        "arbitration consequence — the activity owns the base and the follower "
+        "is preempted — so the interruption-correctness metric is a claim "
+        "about the arbiter, not about the joint trajectory of the gesture)"
+    ),
+    (
+        "conversational timing realism (speech onsets and emote windows are "
+        "fixed script times; there is no ASR, no synthesis, and no playback "
+        "clock, so the acknowledgment latency measures the expression stack's "
+        "reaction to an event and not end-to-end responsiveness)"
+    ),
+    (
+        "production dispatch in full (the bench reproduces the smoother, the "
+        "collision gate, the predictive brake and the actuator shaper, but not "
+        "the arbiter, the control manager, or the SE2 HAL, so jerk numbers are "
+        "the shaper's contribution and not the robot's)"
+    ),
 )
 
 
 def build_report(
-    metrics: list[EpisodeMetrics], *, robot_config: str
+    metrics: list[EpisodeMetrics],
+    *,
+    robot_config: str,
+    features: BenchFeatures | None = None,
 ) -> dict[str, object]:
+    features = features or BenchFeatures()
     follow = [item for item in metrics if item.directive_kind == "follow"]
     navigate = [item for item in metrics if item.directive_kind == "navigate"]
     band_fractions = [
@@ -74,6 +119,15 @@ def build_report(
         item.min_pedestrian_surface_m
         for item in metrics
         if item.min_pedestrian_surface_m is not None
+    ]
+    jerks = [item.rms_commanded_jerk_mps3 for item in metrics]
+    duty_cycles = [
+        item.emote_duty_cycle for item in metrics if item.emote_duty_cycle is not None
+    ]
+    latencies = [
+        item.acknowledgment_latency_s
+        for item in metrics
+        if item.acknowledgment_latency_s is not None
     ]
     aggregate = {
         "episode_count": len(metrics),
@@ -95,6 +149,23 @@ def build_report(
         "intimate_space_time_total_s": round(
             sum(item.intimate_space_time_s for item in metrics), 3
         ),
+        # Card W9. Mean rather than total so a run of a single scenario stays
+        # comparable with a full-suite run.
+        "mean_rms_commanded_jerk_mps3": (
+            round(sum(jerks) / len(jerks), 4) if jerks else None
+        ),
+        "reactive_gate_stop_total": sum(
+            item.reactive_gate_stop_count for item in metrics
+        ),
+        "emote_hard_collision_total": sum(
+            item.emote_hard_collision_count for item in metrics
+        ),
+        "mean_emote_duty_cycle": (
+            round(sum(duty_cycles) / len(duty_cycles), 4) if duty_cycles else None
+        ),
+        "mean_acknowledgment_latency_s": (
+            round(sum(latencies) / len(latencies), 4) if latencies else None
+        ),
     }
     return {
         "suite": "follow-bench-v1",
@@ -104,6 +175,10 @@ def build_report(
         "generated_at_utc": _utc_timestamp(),
         "git_describe": _git_describe(),
         "robot_config": robot_config,
+        # Which sprint features were live. A report without this cannot be
+        # compared with any other report.
+        "features": {item.name: getattr(features, item.name) for item in fields(features)},
+        "features_label": features.label,
         "scenario_ids": [item.scenario_id for item in metrics],
         "episodes": [item.payload() for item in metrics],
         "aggregate": aggregate,
@@ -131,6 +206,7 @@ def write_report(report: dict[str, object], results_dir: Path) -> Path:
     ledger_line = {
         "utc": report["generated_at_utc"],
         "report": path.name,
+        "features": report["features_label"],
         "scenarios": report["scenario_ids"],
         "hard_collision_total": aggregate["hard_collision_total"],
         "follow_success": (
@@ -140,6 +216,7 @@ def write_report(report: dict[str, object], results_dir: Path) -> Path:
             f"{aggregate['navigate_success_count']}/{aggregate['navigate_episode_count']}"
         ),
         "mean_band_fraction": aggregate["mean_band_fraction"],
+        "mean_rms_commanded_jerk_mps3": aggregate["mean_rms_commanded_jerk_mps3"],
     }
     ledger = results_dir / "ledger.jsonl"
     with ledger.open("a", encoding="utf-8") as stream:
@@ -166,6 +243,16 @@ def main(argv: list[str] | None = None) -> int:
         default=REPO_ROOT / "configs" / "robot.yaml",
         help="production robot configuration used to build the controllers",
     )
+    parser.add_argument(
+        "--features",
+        default="shipped",
+        choices=sorted(FEATURE_SETS),
+        help=(
+            "which sprint features to run with: 'shipped' is configs/robot.yaml "
+            "as it stands, 'baseline' switches the W2/W4/W6/W7 paths off so a "
+            "before/after pair can be measured on identical geometry"
+        ),
+    )
     args = parser.parse_args(argv)
 
     if args.scenario == "all":
@@ -173,7 +260,8 @@ def main(argv: list[str] | None = None) -> int:
     else:
         scenarios = [scenario_by_id(args.scenario)]
 
-    runner = FollowBenchRunner(robot_config=args.robot_config)
+    features = FEATURE_SETS[args.features]
+    runner = FollowBenchRunner(robot_config=args.robot_config, features=features)
     metrics: list[EpisodeMetrics] = []
     for scenario in scenarios:
         result = runner.run(scenario)
@@ -186,7 +274,9 @@ def main(argv: list[str] | None = None) -> int:
             f"navigate_success={episode.navigate_success}"
         )
 
-    report = build_report(metrics, robot_config=str(args.robot_config))
+    report = build_report(
+        metrics, robot_config=str(args.robot_config), features=features
+    )
     path = write_report(report, args.out)
     print(f"report: {path}")
     aggregate = report["aggregate"]

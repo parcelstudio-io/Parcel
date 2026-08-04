@@ -31,6 +31,7 @@ from parcel_robot.brain.validator import (
 from parcel_robot.dynamic_prompting import EmotePolicySource
 from parcel_robot.providers import SentenceChunkedSynthesizer, strip_emote_tags
 from parcel_robot.runtime import RobotRuntime
+from parcel_robot.voice_pipeline import VoiceTurn
 
 REPO = Path(__file__).resolve().parents[1]
 EMOTES = ("bow", "paw_wave", "play_bow")
@@ -155,18 +156,29 @@ def test_gesture_completion_requires_the_coordinator_to_confirm() -> None:
     adapter.dispatch(_request("paw_wave"), now=1.0)
 
     running = SemanticRuntimeState(
-        snapshot_id="s", activity_name="paw_wave", activity_status="running"
+        snapshot_id="s", activity_name="paw_wave", activity_status="running",
+        activity_created_at=1.05,
     )
     assert adapter.poll(running, now=1.1)[0].status == "in_progress"
 
     # A *different* activity completing must not satisfy this gesture.
     other = SemanticRuntimeState(
-        snapshot_id="s", activity_name="bow", activity_status="completed"
+        snapshot_id="s", activity_name="bow", activity_status="completed",
+        activity_created_at=1.05,
     )
     assert adapter.poll(other, now=1.2)[0].status == "in_progress"
 
+    # 2026-08-04 review fix: a terminal record from an EARLIER same-name
+    # emote (created before this dispatch) must not complete it.
+    stale = SemanticRuntimeState(
+        snapshot_id="s", activity_name="paw_wave", activity_status="completed",
+        activity_created_at=0.4,
+    )
+    assert adapter.poll(stale, now=1.25)[0].status == "in_progress"
+
     done = SemanticRuntimeState(
-        snapshot_id="s", activity_name="paw_wave", activity_status="completed"
+        snapshot_id="s", activity_name="paw_wave", activity_status="completed",
+        activity_created_at=1.05,
     )
     result = adapter.poll(done, now=1.3)[0]
     assert result.status == "succeeded"
@@ -186,6 +198,7 @@ def test_gesture_terminal_failures_are_reported(status: str) -> None:
         activity_name="bow",
         activity_status=status,
         activity_detail=f"preempted_by_{status}",
+        activity_created_at=1.05,
     )
     assert adapter.poll(state, now=1.1)[0].status == "failed"
 
@@ -225,13 +238,11 @@ class _EchoSynth:
         return text.encode()
 
 
-def test_streaming_fires_each_emote_with_its_own_sentence() -> None:
-    fired: list[tuple[str, float, int]] = []
+def test_streaming_attaches_each_emote_to_its_own_chunk() -> None:
+    """Card W8: the tag travels with its sentence's audio, it does not fire."""
+
     synth = _EchoSynth()
-    chunked = SentenceChunkedSynthesizer(
-        synth,
-        on_emote=lambda name, intensity: fired.append((name, intensity, len(synth.spoken))),
-    )
+    chunked = SentenceChunkedSynthesizer(synth)
     chunks = list(
         chunked.synthesize_stream(
             "Hello there. [emote:play_bow] I missed you. See you soon."
@@ -240,25 +251,17 @@ def test_streaming_fires_each_emote_with_its_own_sentence() -> None:
     assert len(chunks) == 3
     # Nothing spoken contains a tag.
     assert all("[emote:" not in text for text in synth.spoken)
-    # The emote fired before its own sentence was synthesized (index 1).
-    assert fired == [("play_bow", 1.0, 1)]
+    # The emote rides the sentence it was authored in, and no other.
+    assert [chunk.emotes for chunk in chunks] == [(), (("play_bow", 1.0),), ()]
+    # Still ordinary audio bytes for every downstream consumer.
+    assert chunks[1] == b"I missed you."
 
 
-def test_speech_never_fails_because_an_emote_failed() -> None:
+def test_blocking_synthesize_strips_tags_and_keeps_their_emotes() -> None:
     synth = _EchoSynth()
-
-    def explode(name: str, intensity: float) -> None:
-        raise RuntimeError("gesture rejected")
-
-    chunked = SentenceChunkedSynthesizer(synth, on_emote=explode)
-    chunks = list(chunked.synthesize_stream("[emote:bow] Still speaking fine."))
-    assert chunks and synth.spoken == ["Still speaking fine."]
-
-
-def test_blocking_synthesize_also_strips_tags() -> None:
-    synth = _EchoSynth()
-    SentenceChunkedSynthesizer(synth).synthesize("[emote:bow] Hi there.")
+    chunk = SentenceChunkedSynthesizer(synth).synthesize("[emote:bow] Hi there.")
     assert synth.spoken == ["Hi there."]
+    assert chunk.emotes == (("bow", 1.0),)
 
 
 # --- prompt policy ----------------------------------------------------------
@@ -389,6 +392,114 @@ def test_runtime_gesture_dispatch_goes_through_the_proposal_arbiter(
             runtime._brain_gesture("backflip", 1.0)
         with pytest.raises(ValueError, match="intensity"):
             runtime._brain_gesture("paw_wave", 9.0)
+    finally:
+        runtime.close()
+
+
+# --- card W8: emotes ride the playback clock --------------------------------
+
+
+class _CapturingSink:
+    """Stands in for ``SpeakerSink`` without opening an audio device."""
+
+    def __init__(self) -> None:
+        self.queued: list[tuple[bytes, object]] = []
+
+    def enqueue(self, chunk: bytes, token: object = None) -> None:
+        self.queued.append((chunk, token))
+
+    def close(self, timeout: float = 3.0) -> None:
+        pass
+
+
+def _pending_activities(runtime: RobotRuntime) -> list[str]:
+    snapshot = runtime.activities.snapshot()
+    running = [snapshot["running"]] if snapshot["running"] else []
+    return [str(record["name"]) for record in running + list(snapshot["pending"])]
+
+
+def test_emote_fires_at_playback_start_not_at_synthesis(tmp_path: Path) -> None:
+    """U6: with a deep queue, synthesis time is seconds ahead of the words."""
+
+    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    try:
+        sink = _CapturingSink()
+        runtime._speaker_sink = sink
+        chunked = SentenceChunkedSynthesizer(_EchoSynth())
+        for chunk in chunked.synthesize_stream("[emote:paw_wave] Hello there."):
+            runtime._enqueue_speech_chunk(chunk)
+
+        assert sink.queued, "chunk was never queued"
+        assert _pending_activities(runtime) == [], "emote fired at synthesis time"
+        token = sink.queued[0][1]
+        assert token == (None, runtime.expression.speech_epoch, (("paw_wave", 1.0),))
+
+        runtime._audio_chunk_started(token)
+        assert "paw_wave" in _pending_activities(runtime)
+    finally:
+        runtime.close()
+
+
+def test_superseded_sentence_fires_no_emote(tmp_path: Path) -> None:
+    """Barge-in supersedes the epoch, so pending gestures die with their audio."""
+
+    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    try:
+        sink = _CapturingSink()
+        runtime._speaker_sink = sink
+        chunked = SentenceChunkedSynthesizer(_EchoSynth())
+        for chunk in chunked.synthesize_stream("Sure. [emote:play_bow] Here you go."):
+            runtime._enqueue_speech_chunk(chunk)
+        token = next(item for _chunk, item in sink.queued if item is not None)
+
+        runtime.expression.supersede_speech()
+        runtime._audio_chunk_started(token)
+        assert _pending_activities(runtime) == []
+    finally:
+        runtime.close()
+
+
+def test_text_only_path_fires_emotes_immediately(tmp_path: Path) -> None:
+    """No synthesizer means no playback clock to anchor to — documented in
+    ``_fire_text_mode_emotes``."""
+
+    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    try:
+        assert runtime._speaker_sink is None
+        runtime._voice_turn_completed(
+            VoiceTurn(1, "hello", "Hello! [emote:paw_wave]", False)
+        )
+        assert "paw_wave" in _pending_activities(runtime)
+    finally:
+        runtime.close()
+
+
+def test_a_superseded_text_reply_fires_no_emote(tmp_path: Path) -> None:
+    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    try:
+        runtime._voice_turn_completed(
+            VoiceTurn(1, "hello", "Hello! [emote:paw_wave]", True)
+        )
+        assert _pending_activities(runtime) == []
+    finally:
+        runtime.close()
+
+
+def test_playback_start_survives_an_inadmissible_emote(tmp_path: Path) -> None:
+    """Speech and nods must never fail because a gesture could not run."""
+
+    runtime = RobotRuntime(_config(tmp_path), _Backend(), audio_status=_audio())
+    try:
+        runtime._audio_chunk_started(
+            (None, runtime.expression.speech_epoch, (("backflip", 1.0),))
+        )
+        warnings = [
+            event
+            for event in runtime.snapshot()["events"]
+            if "backflip" in str(event.get("text", ""))
+        ]
+        assert warnings, "an unknown emote was dropped silently"
+        assert _pending_activities(runtime) == []
     finally:
         runtime.close()
 

@@ -18,7 +18,9 @@ AFFECT_SOURCES = frozenset({"explicit_transcript", "prosody", "multimodal", "unk
 TARGET_KINDS = frozenset(
     {"semantic_region", "semantic_object", "owner", "current_pose", "safe_region"}
 )
-GOAL_RELATIONS = frozenset({"inside", "near", "behind", "orbit", "hold", "safe_pose", "relative"})
+GOAL_RELATIONS = frozenset(
+    {"inside", "near", "behind", "orbit", "hold", "safe_pose", "relative", "reacquire"}
+)
 RESOURCES = ("base", "posture", "voice", "attention")
 INTERRUPTIBILITIES = frozenset({"immediate", "checkpoint", "when_idle", "never"})
 SENSOR_NAMES = frozenset({"camera", "lidar"})
@@ -32,6 +34,7 @@ TASK_STATES = frozenset(
         "running",
         "recovering",
         "waiting_checkpoint",
+        "suspended",  # status, not an outcome — must not trigger replan/abandon
         "succeeded",
         "failed",
         "cancelled",

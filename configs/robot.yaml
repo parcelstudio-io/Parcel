@@ -62,6 +62,33 @@ owner_follow:
   heading_stale_after_s: 0.8
   prediction_horizon_s: 0.25
   prediction_max_m: 0.25
+  # Anticipatory following. The controller aims at where the Kalman filter
+  # expects the owner to be in `lead_s`, and brakes translation as the
+  # filter's windowed-NIS confidence falls: full speed at
+  # `brake_full_confidence`, standstill at `brake_stop_confidence`. Unknown
+  # keys in this block fail closed at startup.
+  prediction:
+    enabled: true
+    lead_s: 0.6
+    min_confidence: 0.45
+    brake_full_confidence: 0.5
+    brake_stop_confidence: 0.1
+
+# Owner reacquisition (SearchOwner). The runtime proposes the skill after the
+# follow controller has reported a lost owner for `lost_timeout_s`; the three
+# states run under the same arbiter, reactive policy, and collision gate as
+# every other behavior. Unknown keys here fail closed at startup.
+owner_search:
+  lost_timeout_s: 3.0
+  max_search_s: 45.0
+  arrival_radius_m: 0.5
+  sweep_amplitude_rad: 2.0943951023931953  # +/-120 degrees
+  sweep_rate_rad_s: 0.6
+  # RPF-search reachability prune: the owner cannot have travelled further
+  # than this from the loss point in the elapsed search time.
+  owner_max_speed_mps: 1.6
+  max_search_radius_m: 12.0
+  sensor_radius_m: 3.0
 
 metrics:
   max_turns: 200
@@ -116,6 +143,20 @@ motion:
     linear_accel: 0.9
     linear_decel: 1.4
     yaw_accel: 1.8
+  # Jerk-limited actuator hand-off. This runs after the arbiter and the
+  # collision gate, so safety sees the intent and the actuator sees the smooth
+  # version; every stop path takes the shaper's emergency bypass and is never
+  # smoothed. `calm_scale` is applied when measured vocal arousal is low.
+  # Unknown keys fail closed at startup.
+  shaping:
+    enabled: true
+    linear_max_accel: 1.2
+    linear_max_jerk: 3.0
+    yaw_max_accel: 2.4
+    yaw_max_jerk: 6.0
+    calm_scale: 0.6
+    calm_below_arousal: 0.35
+    arousal_valid_s: 20.0
   sport:
     enabled: false
     interface: lo
@@ -185,8 +226,6 @@ speech:
   # piper_sample_rate_hz: 22050  # optional; auto-detected from <voice>.onnx.json
   fish_url: http://127.0.0.1:8091
   fish_reference_id: null
-  fish_streaming: true
-  barge_in: true
   # Physical audio devices. Unset uses the system default; set to a PortAudio
   # index or a case-insensitive substring of the device name (preferred for a
   # USB array whose index moves between reboots, e.g. "ReSpeaker").
@@ -244,6 +283,15 @@ safety:
   person_stop_m: 1.0
   person_slow_m: 2.0
   telemetry_stale_s: 0.6
+  # Predictive brake that *supplements* the geometric proximity gate. It runs
+  # after the gate on the outgoing command and can only scale it down, so the
+  # unconditional last line of defence is unchanged. Unknown keys fail closed.
+  time_to_collision:
+    enabled: true
+    brake_s: 2.0
+    stop_s: 0.8
+    robot_radius_m: 0.35
+    min_scale: 0.0
 
 memory:
   path: parcel_memory.sqlite3

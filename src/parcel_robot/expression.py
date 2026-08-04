@@ -30,6 +30,8 @@ from __future__ import annotations
 
 import math
 import random
+import threading
+from collections import deque
 from dataclasses import dataclass, replace
 
 from parcel_robot.gait import leg_ik
@@ -42,6 +44,12 @@ MAX_BODY_HEIGHT_M = 0.02
 MAX_BODY_PITCH_RAD = math.radians(6.0)
 MAX_HEAD_YAW_RAD = math.radians(40.0)
 MAX_HEAD_PITCH_RAD = math.radians(12.0)
+# Per-joint bound on the additive overlay, matching (and never exceeding)
+# sim_ipc.MAX_EXPRESSION_OFFSET_RAD. Some morphologies (short links, deep
+# stance) turn a legal body offset into a large joint delta; clamping at the
+# source keeps the IPC boundary from rejecting every frame — which previously
+# killed the whole expression channel in silence (2026-08-04 sprint review).
+MAX_JOINT_OFFSET_RAD = 0.5
 
 MODE_OFF = "off"
 MODE_HEAD_ONLY = "head_only"
@@ -135,6 +143,11 @@ class ExpressionGate:
     navigation_active: bool = False
     follow_active: bool = False
     spatial_active: bool = False
+    # Direct velocity motion (manual teleop / voice walk commands): the body
+    # is committed to a gait the same as during navigation, so full-body
+    # expression must yield (ELEGNT rule — sprint review found this source
+    # class was the one gap in the matrix).
+    teleop_active: bool = False
 
     @property
     def mode(self) -> str:
@@ -145,7 +158,12 @@ class ExpressionGate:
             or not self.proximity_clear
         ):
             return MODE_OFF
-        if self.navigation_active or self.follow_active or self.spatial_active:
+        if (
+            self.navigation_active
+            or self.follow_active
+            or self.spatial_active
+            or self.teleop_active
+        ):
             return MODE_HEAD_ONLY
         return MODE_FULL
 
@@ -406,13 +424,20 @@ class BeatLayer:
         self.fall_s = fall_s
         self.lag_compensation_s = lag_compensation_s
         self.max_pending = max_pending
+        # arm() runs on the speaker-sink worker, step() on the expression
+        # thread, clear()/supersede on voice threads, stats on HTTP readers.
+        # Without the lock, an arm() racing step()'s list rebuild loses nods
+        # (2026-08-04 sprint review).
+        self._lock = threading.Lock()
         self._nods: list[ScheduledNod] = []
         self._epoch = 0
         self._pending_apexes: list[float] = []
         self._last_step_s: float | None = None
         self.nods_scheduled = 0
         self.nods_delivered = 0
-        self.apex_errors_s: list[float] = []
+        # Bounded: one entry per delivered nod would otherwise grow for the
+        # lifetime of the process; recent history is all the stats need.
+        self.apex_errors_s: deque[float] = deque(maxlen=512)
 
     @property
     def active(self) -> bool:
@@ -425,83 +450,90 @@ class BeatLayer:
         read, so the DSP module stays an unimported implementation detail.
         """
 
-        if epoch != self._epoch:
-            self._nods.clear()
-            self._pending_apexes.clear()
-            self._epoch = epoch
-        accents = getattr(track, "accents", ())
-        if not accents:
-            return 0
-        arousal = float(getattr(track, "arousal", 0.0))
-        # Quiet speech still nods, loud speech nods harder, but never past the
-        # single amplitude authority.
-        gain = 0.6 + 0.6 * max(0.0, min(1.0, arousal))
-        scheduled = 0
-        for accent in accents:
-            if len(self._nods) >= self.max_pending:
-                break
-            apex = playback_start_s + float(accent.time_s) - self.lag_compensation_s
-            amplitude = self.base_amplitude_rad * gain * float(accent.strength)
-            self._nods.append(
-                ScheduledNod(
-                    apex_s=apex,
-                    amplitude_rad=min(amplitude, MAX_HEAD_PITCH_RAD),
-                    rise_s=self.rise_s,
-                    fall_s=self.fall_s,
+        with self._lock:
+            if epoch != self._epoch:
+                self._nods.clear()
+                self._pending_apexes.clear()
+                self._epoch = epoch
+            accents = getattr(track, "accents", ())
+            if not accents:
+                return 0
+            arousal = float(getattr(track, "arousal", 0.0))
+            # Quiet speech still nods, loud speech nods harder, but never past
+            # the single amplitude authority.
+            gain = 0.6 + 0.6 * max(0.0, min(1.0, arousal))
+            scheduled = 0
+            for accent in accents:
+                if len(self._nods) >= self.max_pending:
+                    break
+                apex = playback_start_s + float(accent.time_s) - self.lag_compensation_s
+                amplitude = self.base_amplitude_rad * gain * float(accent.strength)
+                self._nods.append(
+                    ScheduledNod(
+                        apex_s=apex,
+                        amplitude_rad=min(amplitude, MAX_HEAD_PITCH_RAD),
+                        rise_s=self.rise_s,
+                        fall_s=self.fall_s,
+                    )
                 )
-            )
-            self._pending_apexes.append(apex)
-            scheduled += 1
-        self.nods_scheduled += scheduled
-        return scheduled
+                self._pending_apexes.append(apex)
+                scheduled += 1
+            self.nods_scheduled += scheduled
+            return scheduled
 
     def clear(self) -> None:
-        self._nods.clear()
-        self._pending_apexes.clear()
+        with self._lock:
+            self._nods.clear()
+            self._pending_apexes.clear()
 
     def step(self, now: float, *, epoch: int) -> ExpressiveOffsets:
-        if epoch != self._epoch:
-            # The audio these nods belonged to was superseded.
-            self.clear()
-            self._epoch = epoch
-            self._last_step_s = now
-            return ZERO_OFFSETS
-        if not self._nods:
-            self._last_step_s = now
-            return ZERO_OFFSETS
+        with self._lock:
+            if epoch != self._epoch:
+                # The audio these nods belonged to was superseded.
+                self._nods.clear()
+                self._pending_apexes.clear()
+                self._epoch = epoch
+                self._last_step_s = now
+                return ZERO_OFFSETS
+            if not self._nods:
+                self._last_step_s = now
+                return ZERO_OFFSETS
 
-        # Apex-delivery error: the sampling grid cannot land exactly on an
-        # apex, so record the nearest sample's distance from it.
-        previous = self._last_step_s
-        remaining_apexes: list[float] = []
-        for apex in self._pending_apexes:
-            if now >= apex:
-                here = now - apex
-                there = abs(apex - previous) if previous is not None else here
-                self.apex_errors_s.append(min(here, there))
-                self.nods_delivered += 1
-            else:
-                remaining_apexes.append(apex)
-        self._pending_apexes = remaining_apexes
+            # Apex-delivery error: the sampling grid cannot land exactly on
+            # an apex, so record the nearest sample's distance from it.
+            previous = self._last_step_s
+            remaining_apexes: list[float] = []
+            for apex in self._pending_apexes:
+                if now >= apex:
+                    here = now - apex
+                    there = abs(apex - previous) if previous is not None else here
+                    self.apex_errors_s.append(min(here, there))
+                    self.nods_delivered += 1
+                else:
+                    remaining_apexes.append(apex)
+            self._pending_apexes = remaining_apexes
 
-        pitch = 0.0
-        live: list[ScheduledNod] = []
-        for nod in self._nods:
-            if now >= nod.apex_s + nod.fall_s:
-                continue
-            live.append(nod)
-            pitch += nod.value(now)
-        self._nods = live
-        self._last_step_s = now
-        return ExpressiveOffsets(head_pitch_rad=pitch)
+            pitch = 0.0
+            live: list[ScheduledNod] = []
+            for nod in self._nods:
+                if now >= nod.apex_s + nod.fall_s:
+                    continue
+                live.append(nod)
+                pitch += nod.value(now)
+            self._nods = live
+            self._last_step_s = now
+            return ExpressiveOffsets(head_pitch_rad=pitch)
 
     def apex_error_stats(self) -> dict[str, float]:
-        if not self.apex_errors_s:
+        with self._lock:
+            ordered = sorted(self.apex_errors_s)
+        if not ordered:
             return {"count": 0, "p50_ms": 0.0, "p95_ms": 0.0}
-        ordered = sorted(self.apex_errors_s)
+
         def percentile(fraction: float) -> float:
             index = min(len(ordered) - 1, int(fraction * len(ordered)))
             return ordered[index] * 1000.0
+
         return {
             "count": len(ordered),
             "p50_ms": round(percentile(0.5), 2),
@@ -536,8 +568,12 @@ def stance_joint_offsets(
         lift = offsets.body_height_m + (pitch_height if leg in front else -pitch_height)
         # A taller body means the foot sits farther below the hip.
         thigh, calf = leg_ik(profile, 0.0, profile.stance_z_m - lift)
-        joint_offsets[profile.joint_name(leg, 1)] = thigh - base_thigh
-        joint_offsets[profile.joint_name(leg, 2)] = calf - base_calf
+        joint_offsets[profile.joint_name(leg, 1)] = _clamp(
+            thigh - base_thigh, MAX_JOINT_OFFSET_RAD
+        )
+        joint_offsets[profile.joint_name(leg, 2)] = _clamp(
+            calf - base_calf, MAX_JOINT_OFFSET_RAD
+        )
     return joint_offsets
 
 

@@ -1,10 +1,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
     from .goals import SemanticGoal
+
+
+class MissionStatus(str, Enum):
+    """Navigator mission lifecycle; ``PAUSED`` is a status, not a terminal outcome."""
+
+    IDLE = "idle"
+    UNRESOLVED = "unresolved"
+    SEARCHING = "searching"
+    RUNNING = "running"
+    VERIFYING = "verifying"
+    PAUSED = "paused"
+    ARRIVED = "arrived"
+    FAILED = "failed"
 
 
 @dataclass(frozen=True)
@@ -35,9 +49,13 @@ class GoalPose:
 class Mission:
     directive: str
     goal: GoalPose | None
-    status: str = "idle"  # idle | unresolved | searching | running | verifying | arrived | failed
+    status: MissionStatus | str = MissionStatus.IDLE
     semantic_goal: SemanticGoal | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    def status_value(self) -> str:
+        status = self.status
+        return status.value if isinstance(status, MissionStatus) else str(status)
 
 
 @dataclass(frozen=True)

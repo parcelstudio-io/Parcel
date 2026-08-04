@@ -342,11 +342,14 @@ class EmotePolicySource:
         del query
         if not self.emotes:
             return None
+        # Intensity syntax exists in the parser but does not yet scale the
+        # clip (backlog N7). Do not advertise a knob that does nothing — a
+        # model told intensity works will reason about a lever that is not
+        # connected (2026-08-04 sprint review).
         return (
             "Body language: you can move while you speak. Write "
             "[emote:<name>] inline in your reply, right where the gesture "
-            "belongs, and optionally [emote:<name>:<intensity>] with "
-            "intensity 0.5-1.5. The tag is removed before speaking. Use at "
+            "belongs. The tag is removed before speaking. Use at "
             "most one per reply, only when it genuinely matches the moment, "
             "and never while you are walking or carrying out a task. "
             "Available: " + ", ".join(self.emotes)

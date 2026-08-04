@@ -29,6 +29,19 @@ controller:
   recovery_reverse_steps: 0
   replan_interval_steps: 5
   lidar_stride: 2
+  # Predicted-occupancy penalty for tracked pedestrians/cyclists/vehicles.
+  # Repeated A* at 10 Hz rebuilds this every tick, so no incremental replanner
+  # is needed. The owner keeps a reduced weight: a follower that reads its own
+  # owner as an obstacle wall cannot follow. Unknown keys fail closed.
+  dynamic_agents:
+    enabled: true
+    weight: 2.5
+    owner_weight: 0.6
+    horizon_s: 2.0
+    step_s: 0.2
+    decay_half_life_s: 0.8
+    sigma_m: 0.45
+    window_radius_m: 6.0
 rl:
   enabled: false
   trainable: false

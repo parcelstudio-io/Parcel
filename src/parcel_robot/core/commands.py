@@ -8,6 +8,9 @@ from parcel_robot.models import VelocityCommand
 
 SOURCE_PRIORITIES: dict[str, int] = {
     "navigation": 30,
+    # Owner reacquisition replaces follow while it runs, so it sits just under
+    # it: any explicit owner behavior still preempts the search.
+    "search": 35,
     "follow": 40,
     "spatial": 50,
     "voice": 60,

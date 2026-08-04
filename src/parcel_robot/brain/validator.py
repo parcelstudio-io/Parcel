@@ -86,6 +86,10 @@ _FORBIDDEN_ARGUMENT_KEYS = frozenset(
     }
 )
 _NAME = re.compile(r"^[a-z][a-z0-9_]{0,79}$")
+# Skills the runtime proposes deterministically. They are validated, dispatched,
+# and verified exactly like any other semantic skill, but they never appear in a
+# planner prompt or response schema, so no model can author one.
+SYSTEM_SKILL_NAMES = frozenset({"SearchOwner"})
 
 
 class PlanValidationError(ValueError):
@@ -144,7 +148,15 @@ class SkillContractRegistry:
         pose_names: Iterable[str] = (),
         gesture_names: Iterable[str] = (),
         owner_heading_supported: bool = False,
+        include_system_skills: bool = False,
     ) -> SkillContractRegistry:
+        """Build the admitted registry.
+
+        System skills are withheld unless asked for: the planner's response
+        schema is derived from these names, and a skill only the runtime may
+        propose must not widen the surface a model can author into.
+        """
+
         def contract(
             name: str,
             profile: str,
@@ -171,145 +183,167 @@ class SkillContractRegistry:
                 minimum_interruptibility=interruptibility,
             )
 
+        contracts = (
+            contract(
+                "NavigateTo",
+                "navigate",
+                ("directive",),
+                (),
+                ("base", "attention"),
+                (
+                    "camera_fresh",
+                    "lidar_fresh",
+                    "base_available",
+                    "target_grounded",
+                ),
+                ("inside", "near"),
+                ("replan", "alternate_candidate", "rescan", "ask_user", "safe_stop"),
+                120.0,
+                "checkpoint",
+            ),
+            contract(
+                "FollowFormation",
+                "follow",
+                ("relation", "distance_m"),
+                (),
+                ("base", "attention"),
+                (
+                    "camera_fresh",
+                    "lidar_fresh",
+                    "base_available",
+                    "owner_visible",
+                    "owner_heading_available",
+                ),
+                ("behind",),
+                ("reacquire_owner", "replan", "wait", "safe_stop"),
+                300.0,
+                "checkpoint",
+            ),
+            contract(
+                "OrbitOwner",
+                "orbit",
+                ("direction", "size", "revolutions"),
+                (),
+                ("base", "attention"),
+                ("camera_fresh", "lidar_fresh", "base_available", "owner_visible"),
+                ("orbit_complete",),
+                ("reacquire_owner", "replan", "safe_stop"),
+                180.0,
+                "checkpoint",
+            ),
+            contract(
+                "MoveRelative",
+                "relative",
+                ("direction", "steps"),
+                (),
+                ("base",),
+                ("lidar_fresh", "base_available"),
+                ("distance_travelled",),
+                ("wait", "safe_stop"),
+                60.0,
+                "checkpoint",
+            ),
+            contract(
+                "Hold",
+                "empty",
+                (),
+                (),
+                ("base",),
+                ("base_available",),
+                ("motion_stopped",),
+                ("safe_stop",),
+                10.0,
+                "immediate",
+            ),
+            contract(
+                "Pose",
+                "pose",
+                ("name",),
+                (),
+                ("base", "posture"),
+                ("base_available", "posture_available", "robot_stopped"),
+                ("skill_completed",),
+                ("wait", "safe_stop"),
+                30.0,
+                "checkpoint",
+            ),
+            contract(
+                "Gesture",
+                "gesture",
+                ("name",),
+                ("intensity",),
+                ("base", "posture"),
+                ("base_available", "posture_available", "robot_stopped"),
+                ("skill_completed",),
+                ("wait", "safe_stop"),
+                30.0,
+                "checkpoint",
+            ),
+            contract(
+                "Vocalize",
+                "utterance",
+                ("text",),
+                (),
+                ("voice",),
+                ("voice_available",),
+                ("utterance_sent",),
+                ("wait",),
+                30.0,
+                "immediate",
+            ),
+            contract(
+                "AskClarification",
+                "question",
+                ("question",),
+                (),
+                ("voice",),
+                ("voice_available",),
+                ("utterance_sent",),
+                ("wait",),
+                30.0,
+                "immediate",
+            ),
+            contract(
+                "SearchOwner",
+                "empty",
+                (),
+                (),
+                ("base", "attention"),
+                # Deliberately no owner_visible: this skill exists precisely
+                # because the owner is not visible.
+                ("camera_fresh", "lidar_fresh", "base_available"),
+                ("owner_reacquired",),
+                ("replan", "alternate_candidate", "safe_stop"),
+                # Comfortably above the controller's own 45 s give-up so the
+                # skill's Vocalize+Hold path is what fires, not the
+                # executive's blunt step timeout.
+                60.0,
+                "checkpoint",
+            ),
+            contract(
+                "ReturnToSafePose",
+                "safe_pose",
+                ("pose",),
+                (),
+                ("base", "posture", "attention"),
+                (
+                    "camera_fresh",
+                    "lidar_fresh",
+                    "base_available",
+                    "posture_available",
+                    "battery_critical",
+                ),
+                ("safe_pose",),
+                ("replan", "alternate_candidate", "safe_stop"),
+                120.0,
+                "never",
+            ),
+        )
         return cls(
             (
-                contract(
-                    "NavigateTo",
-                    "navigate",
-                    ("directive",),
-                    (),
-                    ("base", "attention"),
-                    (
-                        "camera_fresh",
-                        "lidar_fresh",
-                        "base_available",
-                        "target_grounded",
-                    ),
-                    ("inside", "near"),
-                    ("replan", "alternate_candidate", "rescan", "ask_user", "safe_stop"),
-                    120.0,
-                    "checkpoint",
-                ),
-                contract(
-                    "FollowFormation",
-                    "follow",
-                    ("relation", "distance_m"),
-                    (),
-                    ("base", "attention"),
-                    (
-                        "camera_fresh",
-                        "lidar_fresh",
-                        "base_available",
-                        "owner_visible",
-                        "owner_heading_available",
-                    ),
-                    ("behind",),
-                    ("reacquire_owner", "replan", "wait", "safe_stop"),
-                    300.0,
-                    "checkpoint",
-                ),
-                contract(
-                    "OrbitOwner",
-                    "orbit",
-                    ("direction", "size", "revolutions"),
-                    (),
-                    ("base", "attention"),
-                    ("camera_fresh", "lidar_fresh", "base_available", "owner_visible"),
-                    ("orbit_complete",),
-                    ("reacquire_owner", "replan", "safe_stop"),
-                    180.0,
-                    "checkpoint",
-                ),
-                contract(
-                    "MoveRelative",
-                    "relative",
-                    ("direction", "steps"),
-                    (),
-                    ("base",),
-                    ("lidar_fresh", "base_available"),
-                    ("distance_travelled",),
-                    ("wait", "safe_stop"),
-                    60.0,
-                    "checkpoint",
-                ),
-                contract(
-                    "Hold",
-                    "empty",
-                    (),
-                    (),
-                    ("base",),
-                    ("base_available",),
-                    ("motion_stopped",),
-                    ("safe_stop",),
-                    10.0,
-                    "immediate",
-                ),
-                contract(
-                    "Pose",
-                    "pose",
-                    ("name",),
-                    (),
-                    ("base", "posture"),
-                    ("base_available", "posture_available", "robot_stopped"),
-                    ("skill_completed",),
-                    ("wait", "safe_stop"),
-                    30.0,
-                    "checkpoint",
-                ),
-                contract(
-                    "Gesture",
-                    "gesture",
-                    ("name",),
-                    ("intensity",),
-                    ("base", "posture"),
-                    ("base_available", "posture_available", "robot_stopped"),
-                    ("skill_completed",),
-                    ("wait", "safe_stop"),
-                    30.0,
-                    "checkpoint",
-                ),
-                contract(
-                    "Vocalize",
-                    "utterance",
-                    ("text",),
-                    (),
-                    ("voice",),
-                    ("voice_available",),
-                    ("utterance_sent",),
-                    ("wait",),
-                    30.0,
-                    "immediate",
-                ),
-                contract(
-                    "AskClarification",
-                    "question",
-                    ("question",),
-                    (),
-                    ("voice",),
-                    ("voice_available",),
-                    ("utterance_sent",),
-                    ("wait",),
-                    30.0,
-                    "immediate",
-                ),
-                contract(
-                    "ReturnToSafePose",
-                    "safe_pose",
-                    ("pose",),
-                    (),
-                    ("base", "posture", "attention"),
-                    (
-                        "camera_fresh",
-                        "lidar_fresh",
-                        "base_available",
-                        "posture_available",
-                        "battery_critical",
-                    ),
-                    ("safe_pose",),
-                    ("replan", "alternate_candidate", "safe_stop"),
-                    120.0,
-                    "never",
-                ),
+                item
+                for item in contracts
+                if include_system_skills or item.name not in SYSTEM_SKILL_NAMES
             ),
             pose_names=pose_names,
             gesture_names=gesture_names,
@@ -482,7 +516,7 @@ class PlanValidator:
         allowed_goal_relations = {
             "semantic_region": {"inside"},
             "semantic_object": {"near"},
-            "owner": {"behind", "orbit", "relative"},
+            "owner": {"behind", "orbit", "relative", "reacquire"},
             "current_pose": {"hold", "relative"},
             "safe_region": {"safe_pose"},
         }
@@ -507,6 +541,7 @@ class PlanValidator:
                 "OrbitOwner",
                 "MoveRelative",
                 "ReturnToSafePose",
+                "SearchOwner",
             }
         )
         perception = any(
@@ -626,6 +661,7 @@ class PlanValidator:
         expected_target = {
             "FollowFormation": "owner",
             "OrbitOwner": "owner",
+            "SearchOwner": "owner",
         }.get(step.skill)
         if expected_target is not None:
             if _normalize(success.target) != expected_target:
@@ -741,6 +777,7 @@ class PlanValidator:
             "hold": "motion_stopped",
             "safe_pose": "safe_pose",
             "relative": "distance_travelled",
+            "reacquire": "owner_reacquired",
         }[plan.goal.relation]
         if final.success.fact != expected:
             raise PlanValidationError(

@@ -452,11 +452,18 @@ class DuplexVoiceSession:
                 self._idle.notify_all()
 
     def _interrupt_output(self, output: _OutputState | None) -> None:
-        if output is None:
-            return
-        output.cancel_event.set()
-        if output.stream is not None:
-            self._cancel_stream(output.stream)
+        # The audio interrupt must fire even with no live output state: the
+        # output worker exits as soon as it finishes ENQUEUEING, while the
+        # speaker sink can still hold seconds of queued audio (the drain
+        # window). Skipping the callback there let a barge-in — including a
+        # spoken emergency stop — leave the robot talking to the end of its
+        # queue, with stale beat nods still arming (2026-08-04 sprint review).
+        # An interrupt with nothing queued is a no-op: the sink only re-arms
+        # via begin_utterance at the start of the next non-cancelled reply.
+        if output is not None:
+            output.cancel_event.set()
+            if output.stream is not None:
+                self._cancel_stream(output.stream)
         if self.audio_interrupt is not None:
             try:
                 self.audio_interrupt()

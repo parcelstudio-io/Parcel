@@ -1,0 +1,1049 @@
+{
+  "aggregate": {
+    "case_count": 5,
+    "collision_count": 0,
+    "failed_case_count": 0,
+    "minimum_clearance_m": 0.883147,
+    "passed_case_count": 4,
+    "physical_skill_episode_count": 6,
+    "simulator_step_count": 1137,
+    "simulator_steps_per_case": {
+      "count": 5,
+      "maximum": 389.0,
+      "mean": 227.4,
+      "median": 227.0,
+      "minimum": 64.0
+    },
+    "supported_case_count": 4,
+    "supported_case_success_rate": 1.0,
+    "timeout_count": 0,
+    "unsupported_case_count": 1
+  },
+  "cases": [
+    {
+      "case_id": "sidewalk_then_hold",
+      "executive": {
+        "checkpoint_correction": null,
+        "events": [
+          {
+            "accepted": true,
+            "disposition": "queued",
+            "event": "submit",
+            "plan_revision": 1,
+            "reason": "validated task queued",
+            "task_id": "parcel-task-2b2be1ca3cc652a391904083"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "NavigateTo",
+            "step_id": "step_1"
+          },
+          {
+            "detail_code": "navigation_goal_verified",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "step_succeeded",
+            "result_status": "succeeded",
+            "skill": "NavigateTo",
+            "step_id": "step_1"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "Hold",
+            "step_id": "step_2"
+          },
+          {
+            "detail_code": "motion_stop_verified",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "task_succeeded",
+            "result_status": "succeeded",
+            "skill": "Hold",
+            "step_id": "step_2"
+          }
+        ],
+        "final_task": {
+          "at_checkpoint": true,
+          "attempt": 1,
+          "last_detail": "motion_stop_verified",
+          "pending_recovery": null,
+          "pending_replacement_revision": null,
+          "plan_revision": 1,
+          "plan_sha256": "b3ef4019a9cdb989383307f24cf17cf5df5491f381569f8c5af0f2a125bd1fd4",
+          "resource_conflicts": [],
+          "state": "succeeded",
+          "step_id": null,
+          "step_index": 2,
+          "task_class": "active_task",
+          "task_id": "parcel-task-2b2be1ca3cc652a391904083"
+        },
+        "submission": {
+          "accepted": true,
+          "disposition": "queued",
+          "event": "submit",
+          "plan_revision": 1,
+          "reason": "validated task queued",
+          "task_id": "parcel-task-2b2be1ca3cc652a391904083"
+        }
+      },
+      "physical": {
+        "backend": "headless_mujoco_city",
+        "base_motion": "deterministic_kinematic_mujoco_geometry",
+        "collision_count": 0,
+        "evaluator_truth_available_to_policy": false,
+        "executions": [
+          {
+            "collision_count": 0,
+            "controller_reason": "arrived_verified",
+            "controller_status": "arrived",
+            "minimum_clearance_m": 1.115895,
+            "required_clearance_m": 0.65,
+            "simulator_step_count": 227,
+            "skill": "NavigateTo",
+            "supported": true,
+            "target": "sidewalk",
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          },
+          {
+            "collision_count": 0,
+            "controller_reason": null,
+            "controller_status": null,
+            "minimum_clearance_m": null,
+            "required_clearance_m": null,
+            "simulator_step_count": 0,
+            "skill": "Hold",
+            "supported": true,
+            "target": null,
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          }
+        ],
+        "final_pose": {
+          "x": 1.580468,
+          "y": 2.541718,
+          "yaw_rad": 2.694439
+        },
+        "initial_pose": {
+          "x": 0.0,
+          "y": 0.0,
+          "yaw_rad": 0.0
+        },
+        "minimum_clearance_m": 1.115895,
+        "physical_skill_episode_count": 1,
+        "policy_observation_contract": [
+          "camera",
+          "lidar",
+          "owner_track",
+          "odometry"
+        ],
+        "simulator_step_count": 227,
+        "terminal_stopped": true,
+        "timeout_count": 0
+      },
+      "plan": {
+        "plan_revision": 1,
+        "skills": [
+          "NavigateTo",
+          "Hold"
+        ],
+        "source_turn_id": "planner-v2-sidewalk_then_hold",
+        "task_id": "parcel-task-2b2be1ca3cc652a391904083",
+        "validated_against_snapshot_id": "embodied-admission-sidewalk_then_hold",
+        "validated_plan_sha256": "b3ef4019a9cdb989383307f24cf17cf5df5491f381569f8c5af0f2a125bd1fd4"
+      },
+      "reason": "executive_and_evaluator_semantics_satisfied",
+      "seed": 41001,
+      "semantic": {
+        "checks": {
+          "clearance_respected": true,
+          "collision_free": true,
+          "controller_arrived": true,
+          "final_stop_confirmed": true,
+          "inside": true,
+          "no_timeout": true,
+          "off_road": true,
+          "simulator_steps_executed": true,
+          "terminal_stopped": true
+        },
+        "evaluator": "sidewalk_inside_off_road",
+        "metrics": {
+          "final_xy": [
+            1.580468,
+            2.541718
+          ],
+          "region_id": "sidewalk",
+          "required_interior_clearance_m": 0.32
+        },
+        "passed": true
+      },
+      "status": "passed",
+      "support": {
+        "status": "supported",
+        "supported_physical_skills": [
+          "Hold",
+          "MoveRelative",
+          "NavigateTo",
+          "OrbitOwner"
+        ],
+        "unsupported_skills": []
+      }
+    },
+    {
+      "case_id": "sidewalk_then_lamppost",
+      "executive": {
+        "checkpoint_correction": null,
+        "events": [
+          {
+            "accepted": true,
+            "disposition": "queued",
+            "event": "submit",
+            "plan_revision": 1,
+            "reason": "validated task queued",
+            "task_id": "parcel-task-a7044ea956a51a694c7d4388"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "NavigateTo",
+            "step_id": "step_1"
+          },
+          {
+            "detail_code": "navigation_goal_verified",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "step_succeeded",
+            "result_status": "succeeded",
+            "skill": "NavigateTo",
+            "step_id": "step_1"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "NavigateTo",
+            "step_id": "step_2"
+          },
+          {
+            "detail_code": "navigation_goal_verified",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "step_succeeded",
+            "result_status": "succeeded",
+            "skill": "NavigateTo",
+            "step_id": "step_2"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "Hold",
+            "step_id": "step_3"
+          },
+          {
+            "detail_code": "motion_stop_verified",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "task_succeeded",
+            "result_status": "succeeded",
+            "skill": "Hold",
+            "step_id": "step_3"
+          }
+        ],
+        "final_task": {
+          "at_checkpoint": true,
+          "attempt": 1,
+          "last_detail": "motion_stop_verified",
+          "pending_recovery": null,
+          "pending_replacement_revision": null,
+          "plan_revision": 1,
+          "plan_sha256": "ed20dd7cf45e9b68998b4cf1c506d46bbb3956656dabfae1fb59ac3d5f40586a",
+          "resource_conflicts": [],
+          "state": "succeeded",
+          "step_id": null,
+          "step_index": 3,
+          "task_class": "active_task",
+          "task_id": "parcel-task-a7044ea956a51a694c7d4388"
+        },
+        "submission": {
+          "accepted": true,
+          "disposition": "queued",
+          "event": "submit",
+          "plan_revision": 1,
+          "reason": "validated task queued",
+          "task_id": "parcel-task-a7044ea956a51a694c7d4388"
+        }
+      },
+      "physical": {
+        "backend": "headless_mujoco_city",
+        "base_motion": "deterministic_kinematic_mujoco_geometry",
+        "collision_count": 0,
+        "evaluator_truth_available_to_policy": false,
+        "executions": [
+          {
+            "collision_count": 0,
+            "controller_reason": "arrived_verified",
+            "controller_status": "arrived",
+            "minimum_clearance_m": 1.115895,
+            "required_clearance_m": 0.65,
+            "simulator_step_count": 227,
+            "skill": "NavigateTo",
+            "supported": true,
+            "target": "sidewalk",
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          },
+          {
+            "collision_count": 0,
+            "controller_reason": "arrived_verified",
+            "controller_status": "arrived",
+            "minimum_clearance_m": 0.998978,
+            "required_clearance_m": 0.65,
+            "simulator_step_count": 36,
+            "skill": "NavigateTo",
+            "supported": true,
+            "target": "lamppost",
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          },
+          {
+            "collision_count": 0,
+            "controller_reason": null,
+            "controller_status": null,
+            "minimum_clearance_m": null,
+            "required_clearance_m": null,
+            "simulator_step_count": 0,
+            "skill": "Hold",
+            "supported": true,
+            "target": null,
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          }
+        ],
+        "final_pose": {
+          "x": 1.461885,
+          "y": 2.593917,
+          "yaw_rad": 2.725871
+        },
+        "initial_pose": {
+          "x": 0.0,
+          "y": 0.0,
+          "yaw_rad": 0.0
+        },
+        "minimum_clearance_m": 0.998978,
+        "physical_skill_episode_count": 2,
+        "policy_observation_contract": [
+          "camera",
+          "lidar",
+          "owner_track",
+          "odometry"
+        ],
+        "simulator_step_count": 263,
+        "terminal_stopped": true,
+        "timeout_count": 0
+      },
+      "plan": {
+        "plan_revision": 1,
+        "skills": [
+          "NavigateTo",
+          "NavigateTo",
+          "Hold"
+        ],
+        "source_turn_id": "planner-v2-sidewalk_then_lamppost",
+        "task_id": "parcel-task-a7044ea956a51a694c7d4388",
+        "validated_against_snapshot_id": "embodied-admission-sidewalk_then_lamppost",
+        "validated_plan_sha256": "ed20dd7cf45e9b68998b4cf1c506d46bbb3956656dabfae1fb59ac3d5f40586a"
+      },
+      "reason": "executive_and_evaluator_semantics_satisfied",
+      "seed": 41002,
+      "semantic": {
+        "checks": {
+          "clearance_respected": true,
+          "collision_free": true,
+          "final_stop_confirmed": true,
+          "lamppost_common_sense_center_vicinity": true,
+          "lamppost_controller_arrived": true,
+          "lamppost_near_surface_le_1m": true,
+          "lamppost_off_road": true,
+          "lamppost_on_sidewalk": true,
+          "lamppost_terminal_stopped": true,
+          "no_timeout": true,
+          "sidewalk_controller_arrived": true,
+          "sidewalk_inside": true,
+          "sidewalk_off_road": true,
+          "sidewalk_terminal_stopped": true,
+          "simulator_steps_executed": true
+        },
+        "evaluator": "sidewalk_then_lamppost_vicinity",
+        "metrics": {
+          "lamppost": {
+            "center_distance_m": 1.378978,
+            "final_xy": [
+              1.461885,
+              2.593917
+            ],
+            "maximum_surface_distance_m": 1.0,
+            "object_id": "lamp_post_1",
+            "support_clearance_m": 0.32,
+            "support_region_id": "sidewalk",
+            "surface_distance_m": 0.998978
+          },
+          "sidewalk": {
+            "final_xy": [
+              1.580468,
+              2.541718
+            ],
+            "region_id": "sidewalk",
+            "required_interior_clearance_m": 0.32
+          }
+        },
+        "passed": true
+      },
+      "status": "passed",
+      "support": {
+        "status": "supported",
+        "supported_physical_skills": [
+          "Hold",
+          "MoveRelative",
+          "NavigateTo",
+          "OrbitOwner"
+        ],
+        "unsupported_skills": []
+      }
+    },
+    {
+      "case_id": "five_steps_away_then_hold",
+      "executive": {
+        "checkpoint_correction": null,
+        "events": [
+          {
+            "accepted": true,
+            "disposition": "queued",
+            "event": "submit",
+            "plan_revision": 1,
+            "reason": "validated task queued",
+            "task_id": "parcel-task-ada06901f9b3af5d73d004d7"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "MoveRelative",
+            "step_id": "step_1"
+          },
+          {
+            "detail_code": "distance_reached",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "step_succeeded",
+            "result_status": "succeeded",
+            "skill": "MoveRelative",
+            "step_id": "step_1"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "Hold",
+            "step_id": "step_2"
+          },
+          {
+            "detail_code": "motion_stop_verified",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "task_succeeded",
+            "result_status": "succeeded",
+            "skill": "Hold",
+            "step_id": "step_2"
+          }
+        ],
+        "final_task": {
+          "at_checkpoint": true,
+          "attempt": 1,
+          "last_detail": "motion_stop_verified",
+          "pending_recovery": null,
+          "pending_replacement_revision": null,
+          "plan_revision": 1,
+          "plan_sha256": "c0dd9e0f179c0932c817ce100a9d14e97b3cb4f64093f3a17d15a7114dd8d52d",
+          "resource_conflicts": [],
+          "state": "succeeded",
+          "step_id": null,
+          "step_index": 2,
+          "task_class": "active_task",
+          "task_id": "parcel-task-ada06901f9b3af5d73d004d7"
+        },
+        "submission": {
+          "accepted": true,
+          "disposition": "queued",
+          "event": "submit",
+          "plan_revision": 1,
+          "reason": "validated task queued",
+          "task_id": "parcel-task-ada06901f9b3af5d73d004d7"
+        }
+      },
+      "physical": {
+        "backend": "headless_mujoco_city",
+        "base_motion": "deterministic_kinematic_mujoco_geometry",
+        "collision_count": 0,
+        "evaluator_truth_available_to_policy": false,
+        "executions": [
+          {
+            "collision_count": 0,
+            "controller_reason": "distance_reached",
+            "controller_status": "completed",
+            "minimum_clearance_m": 0.883147,
+            "required_clearance_m": 0.65,
+            "simulator_step_count": 64,
+            "skill": "MoveRelative",
+            "supported": true,
+            "target": null,
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          },
+          {
+            "collision_count": 0,
+            "controller_reason": null,
+            "controller_status": null,
+            "minimum_clearance_m": null,
+            "required_clearance_m": null,
+            "simulator_step_count": 0,
+            "skill": "Hold",
+            "supported": true,
+            "target": null,
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          }
+        ],
+        "final_pose": {
+          "x": -1.188659,
+          "y": 0.272873,
+          "yaw_rad": -0.24496
+        },
+        "initial_pose": {
+          "x": 0.0,
+          "y": 0.0,
+          "yaw_rad": 0.0
+        },
+        "minimum_clearance_m": 0.883147,
+        "physical_skill_episode_count": 1,
+        "policy_observation_contract": [
+          "camera",
+          "lidar",
+          "owner_track",
+          "odometry"
+        ],
+        "simulator_step_count": 64,
+        "terminal_stopped": true,
+        "timeout_count": 0
+      },
+      "plan": {
+        "plan_revision": 1,
+        "skills": [
+          "MoveRelative",
+          "Hold"
+        ],
+        "source_turn_id": "planner-v2-five_steps_away_then_hold",
+        "task_id": "parcel-task-ada06901f9b3af5d73d004d7",
+        "validated_against_snapshot_id": "embodied-admission-five_steps_away_then_hold",
+        "validated_plan_sha256": "c0dd9e0f179c0932c817ce100a9d14e97b3cb4f64093f3a17d15a7114dd8d52d"
+      },
+      "reason": "executive_and_evaluator_semantics_satisfied",
+      "seed": 41003,
+      "semantic": {
+        "checks": {
+          "clearance_respected": true,
+          "collision_free": true,
+          "controller_completed": true,
+          "final_stop_confirmed": true,
+          "five_step_distance": true,
+          "no_timeout": true,
+          "owner_distance_increased": true,
+          "simulator_steps_executed": true,
+          "terminal_stopped": true
+        },
+        "evaluator": "away_five_steps",
+        "metrics": {
+          "accepted_projected_range_m": [
+            1.19,
+            1.4
+          ],
+          "owner_distance_after_m": 3.280988,
+          "owner_distance_before_m": 2.061553,
+          "projected_away_distance_m": 1.21935,
+          "step_length_m": 0.25,
+          "target_distance_m": 1.25
+        },
+        "passed": true
+      },
+      "status": "passed",
+      "support": {
+        "status": "supported",
+        "supported_physical_skills": [
+          "Hold",
+          "MoveRelative",
+          "NavigateTo",
+          "OrbitOwner"
+        ],
+        "unsupported_skills": []
+      }
+    },
+    {
+      "case_id": "orbit_then_follow_behind",
+      "executive": {
+        "checkpoint_correction": null,
+        "events": [
+          {
+            "accepted": true,
+            "disposition": "queued",
+            "event": "submit",
+            "plan_revision": 1,
+            "reason": "validated task queued",
+            "task_id": "parcel-task-84aff9ccae34c12b36e455d1"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "OrbitOwner",
+            "step_id": "step_1"
+          },
+          {
+            "detail_code": "orbit_complete",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "step_succeeded",
+            "result_status": "succeeded",
+            "skill": "OrbitOwner",
+            "step_id": "step_1"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "FollowFormation",
+            "step_id": "step_2"
+          },
+          {
+            "detail_code": "formation_no_longer_active",
+            "event": "result",
+            "feedback_code": "failed",
+            "report_action": "task_failed",
+            "result_status": "failed",
+            "skill": "FollowFormation",
+            "step_id": "step_2"
+          }
+        ],
+        "final_task": {
+          "at_checkpoint": true,
+          "attempt": 1,
+          "last_detail": "failed",
+          "pending_recovery": null,
+          "pending_replacement_revision": null,
+          "plan_revision": 1,
+          "plan_sha256": "f8e4046cd7b1cef7496582d48c5676a034dbb57580ece12078a8c208b05ea89c",
+          "resource_conflicts": [],
+          "state": "failed",
+          "step_id": "step_2",
+          "step_index": 1,
+          "task_class": "active_task",
+          "task_id": "parcel-task-84aff9ccae34c12b36e455d1"
+        },
+        "submission": {
+          "accepted": true,
+          "disposition": "queued",
+          "event": "submit",
+          "plan_revision": 1,
+          "reason": "validated task queued",
+          "task_id": "parcel-task-84aff9ccae34c12b36e455d1"
+        }
+      },
+      "physical": {
+        "backend": "headless_mujoco_city",
+        "base_motion": "deterministic_kinematic_mujoco_geometry",
+        "collision_count": 0,
+        "evaluator_truth_available_to_policy": false,
+        "executions": [
+          {
+            "collision_count": 0,
+            "controller_reason": "orbit_complete",
+            "controller_status": "completed",
+            "minimum_clearance_m": 1.23902,
+            "required_clearance_m": 0.65,
+            "simulator_step_count": 389,
+            "skill": "OrbitOwner",
+            "supported": true,
+            "target": "owner",
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          },
+          {
+            "collision_count": 0,
+            "controller_reason": null,
+            "controller_status": null,
+            "minimum_clearance_m": null,
+            "required_clearance_m": null,
+            "simulator_step_count": 0,
+            "skill": "FollowFormation",
+            "supported": false,
+            "target": "owner",
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": "fixed-owner HeadlessCityWorld has no moving-owner heading stream or formation controller integration"
+          }
+        ],
+        "final_pose": {
+          "x": 0.446038,
+          "y": -0.231852,
+          "yaw_rad": 1.399034
+        },
+        "initial_pose": {
+          "x": 0.0,
+          "y": 0.0,
+          "yaw_rad": 0.0
+        },
+        "minimum_clearance_m": 1.23902,
+        "physical_skill_episode_count": 1,
+        "policy_observation_contract": [
+          "camera",
+          "lidar",
+          "owner_track",
+          "odometry"
+        ],
+        "simulator_step_count": 389,
+        "terminal_stopped": true,
+        "timeout_count": 0
+      },
+      "plan": {
+        "plan_revision": 1,
+        "skills": [
+          "OrbitOwner",
+          "FollowFormation"
+        ],
+        "source_turn_id": "planner-v2-orbit_then_follow_behind",
+        "task_id": "parcel-task-84aff9ccae34c12b36e455d1",
+        "validated_against_snapshot_id": "embodied-admission-orbit_then_follow_behind",
+        "validated_plan_sha256": "f8e4046cd7b1cef7496582d48c5676a034dbb57580ece12078a8c208b05ea89c"
+      },
+      "reason": "unsupported_skills:FollowFormation",
+      "seed": 41004,
+      "semantic": {
+        "checks": {
+          "clearance_respected": true,
+          "clockwise_winding": true,
+          "collision_free": true,
+          "controller_completed": true,
+          "endpoint_closed": true,
+          "final_stop_confirmed": true,
+          "follow_behind_supported": false,
+          "full_angular_coverage": true,
+          "no_timeout": true,
+          "radial_corridor": true,
+          "simulator_steps_executed": true,
+          "terminal_stopped": true
+        },
+        "evaluator": "orbit_then_follow_behind",
+        "metrics": {
+          "endpoint_error_m": 0.222104,
+          "maximum_radius_m": 1.751947,
+          "minimum_radius_m": 1.569795,
+          "occupied_angular_bins": 12,
+          "required_clockwise_winding_rad": -6.183144,
+          "signed_winding_rad": -6.200892
+        },
+        "passed": null
+      },
+      "status": "unsupported",
+      "support": {
+        "status": "unsupported",
+        "supported_physical_skills": [
+          "Hold",
+          "MoveRelative",
+          "NavigateTo",
+          "OrbitOwner"
+        ],
+        "unsupported_skills": [
+          {
+            "reason": "fixed-owner HeadlessCityWorld has no moving-owner heading stream or formation controller integration",
+            "skill": "FollowFormation"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "correct_active_task_to_lamppost",
+      "executive": {
+        "checkpoint_correction": {
+          "incumbent_simulator_steps": 0,
+          "replacement_activated_at_checkpoint": true,
+          "replacement_deferred": true,
+          "stale_incumbent_dispatch_reconciled": true
+        },
+        "events": [
+          {
+            "accepted": true,
+            "disposition": "queued",
+            "event": "submit_incumbent",
+            "plan_revision": 1,
+            "reason": "validated task queued",
+            "task_id": "active-navigation"
+          },
+          {
+            "event": "dispatch_incumbent",
+            "skill": "NavigateTo",
+            "step_id": "old-navigation"
+          },
+          {
+            "accepted": true,
+            "disposition": "defer",
+            "event": "replace_requested",
+            "plan_revision": 2,
+            "reason": "replacement deferred to the next task checkpoint",
+            "task_id": "active-navigation"
+          },
+          {
+            "accepted": true,
+            "action": "replacement_activated_at_checkpoint",
+            "event": "checkpoint_report",
+            "state": "queued",
+            "task_id": "active-navigation"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "NavigateTo",
+            "step_id": "step_1"
+          },
+          {
+            "detail_code": "navigation_goal_verified",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "step_succeeded",
+            "result_status": "succeeded",
+            "skill": "NavigateTo",
+            "step_id": "step_1"
+          },
+          {
+            "attempt": 1,
+            "event": "dispatch",
+            "skill": "Hold",
+            "step_id": "step_2"
+          },
+          {
+            "detail_code": "motion_stop_verified",
+            "event": "result",
+            "feedback_code": "succeeded",
+            "report_action": "task_succeeded",
+            "result_status": "succeeded",
+            "skill": "Hold",
+            "step_id": "step_2"
+          }
+        ],
+        "final_task": {
+          "at_checkpoint": true,
+          "attempt": 1,
+          "last_detail": "motion_stop_verified",
+          "pending_recovery": null,
+          "pending_replacement_revision": null,
+          "plan_revision": 2,
+          "plan_sha256": "d1bfa4b42c76152f3424f7d3c2488de86af1397922c6c2eecb238c440ffa609b",
+          "resource_conflicts": [],
+          "state": "succeeded",
+          "step_id": null,
+          "step_index": 2,
+          "task_class": "active_task",
+          "task_id": "active-navigation"
+        },
+        "submission": {
+          "accepted": true,
+          "disposition": "queued",
+          "event": "submit_incumbent",
+          "plan_revision": 1,
+          "reason": "validated task queued",
+          "task_id": "active-navigation"
+        }
+      },
+      "physical": {
+        "backend": "headless_mujoco_city",
+        "base_motion": "deterministic_kinematic_mujoco_geometry",
+        "collision_count": 0,
+        "evaluator_truth_available_to_policy": false,
+        "executions": [
+          {
+            "collision_count": 0,
+            "controller_reason": "arrived_verified",
+            "controller_status": "arrived",
+            "minimum_clearance_m": 0.987779,
+            "required_clearance_m": 0.65,
+            "simulator_step_count": 194,
+            "skill": "NavigateTo",
+            "supported": true,
+            "target": "lamppost",
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          },
+          {
+            "collision_count": 0,
+            "controller_reason": null,
+            "controller_status": null,
+            "minimum_clearance_m": null,
+            "required_clearance_m": null,
+            "simulator_step_count": 0,
+            "skill": "Hold",
+            "supported": true,
+            "target": null,
+            "terminal_stopped": true,
+            "timed_out": false,
+            "unsupported_reason": null
+          }
+        ],
+        "final_pose": {
+          "x": 1.487782,
+          "y": 2.689093,
+          "yaw_rad": 2.711939
+        },
+        "initial_pose": {
+          "x": 2.7,
+          "y": 1.0,
+          "yaw_rad": 2.431243
+        },
+        "minimum_clearance_m": 0.987779,
+        "physical_skill_episode_count": 1,
+        "policy_observation_contract": [
+          "camera",
+          "lidar",
+          "owner_track",
+          "odometry"
+        ],
+        "simulator_step_count": 194,
+        "terminal_stopped": true,
+        "timeout_count": 0
+      },
+      "plan": {
+        "plan_revision": 2,
+        "skills": [
+          "NavigateTo",
+          "Hold"
+        ],
+        "source_turn_id": "planner-v2-correct_active_task_to_lamppost",
+        "task_id": "active-navigation",
+        "validated_against_snapshot_id": "embodied-admission-correct_active_task_to_lamppost",
+        "validated_plan_sha256": "d1bfa4b42c76152f3424f7d3c2488de86af1397922c6c2eecb238c440ffa609b"
+      },
+      "reason": "executive_and_evaluator_semantics_satisfied",
+      "seed": 41005,
+      "semantic": {
+        "checks": {
+          "clearance_respected": true,
+          "collision_free": true,
+          "common_sense_center_vicinity": true,
+          "controller_arrived": true,
+          "final_stop_confirmed": true,
+          "incumbent_did_not_move_before_checkpoint": true,
+          "near_surface_le_1m": true,
+          "no_timeout": true,
+          "off_road": true,
+          "on_sidewalk": true,
+          "replacement_activated_at_checkpoint": true,
+          "replacement_deferred": true,
+          "simulator_steps_executed": true,
+          "stale_incumbent_dispatch_reconciled": true,
+          "terminal_stopped": true
+        },
+        "evaluator": "checkpoint_correction_to_lamppost",
+        "metrics": {
+          "center_distance_m": 1.367779,
+          "final_xy": [
+            1.487782,
+            2.689093
+          ],
+          "maximum_surface_distance_m": 1.0,
+          "object_id": "lamp_post_1",
+          "support_clearance_m": 0.32,
+          "support_region_id": "sidewalk",
+          "surface_distance_m": 0.987779
+        },
+        "passed": true
+      },
+      "status": "passed",
+      "support": {
+        "status": "supported",
+        "supported_physical_skills": [
+          "Hold",
+          "MoveRelative",
+          "NavigateTo",
+          "OrbitOwner"
+        ],
+        "unsupported_skills": []
+      }
+    }
+  ],
+  "change_description": "First frozen headless execution baseline for the admitted Gemma run05 plans.",
+  "claims": {
+    "does_not_prove": [
+      "Unitree contact dynamics, hardware locomotion, actuator safety, or real sensor accuracy",
+      "moving-owner FollowFormation, which is explicitly unsupported in v1",
+      "planner generalization beyond the five frozen cases",
+      "top-percentile performance on any external navigation benchmark"
+    ],
+    "proves": [
+      "accepted PlanIR dispatch through TaskExecutive and SemanticTaskRuntimeAdapter",
+      "deterministic kinematic execution by production semantic navigation and spatial controllers",
+      "evaluator-truth sidewalk, lamppost, away-distance, orbit, collision, clearance, timeout, and stop scoring",
+      "checkpoint-gated correction activation for the frozen correction case"
+    ]
+  },
+  "corpus": {
+    "frozen": true,
+    "locked_inputs": {
+      "accepted_plans": {
+        "path": "evals/companion/planner_quality_v2/results/planner-v2-20260803-gemma4-cpu-run05.json",
+        "sha256": "e38fc6394fd6344fa3f223ecc753e40f9663951f0acafe8580f27656f064f3b4"
+      },
+      "city_scene": {
+        "path": "src/parcel_robot/scenes/city_block.xml",
+        "sha256": "bbb4d6e75d92294fa5bc59db0b6b0810482bb475a5e3b6afd489596338184426"
+      },
+      "episodes": {
+        "path": "evals/companion/embodied_plan_v1/episodes.json",
+        "sha256": "54215a96b403d7c8e15203941916af60a400a4b21b9a9d9e31502aa8d3661954"
+      },
+      "planner_cases": {
+        "path": "evals/companion/planner_quality_v2/cases.json",
+        "sha256": "6717f2fbda80920133f20f4584630f78748b6146c17222600bf71471e9272d1a"
+      },
+      "result_schema": {
+        "path": "evals/companion/embodied_plan_v1/result.schema.json",
+        "sha256": "f851421f793294cb759fe0e4e897dcf684e5c2ca8a1af156abaf64b49e3eb195"
+      },
+      "robot_config": {
+        "path": "configs/robot.yaml",
+        "sha256": "2e4eb8f3f9dd844191051a35527ae59971dd62032769525b26ed6179f3f48511"
+      }
+    },
+    "manifest_sha256": "62f7472e5e8f71b2cb3a2dca276d06af19d7da9e3d5b8186135883b282da9854",
+    "seeds": [
+      41001,
+      41002,
+      41003,
+      41004,
+      41005
+    ],
+    "selected_case_ids": [
+      "sidewalk_then_hold",
+      "sidewalk_then_lamppost",
+      "five_steps_away_then_hold",
+      "orbit_then_follow_behind",
+      "correct_active_task_to_lamppost"
+    ]
+  },
+  "recorded_at_utc": "2026-08-03T12:51:21.954575Z",
+  "run_id": "embodied-plan-v1-20260803125121Z-e4678ced",
+  "runner_version": "headless-executive-adapter-v1",
+  "schema_version": 1,
+  "suite_id": "parcel-embodied-plan-v1"
+}

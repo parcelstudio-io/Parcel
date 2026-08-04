@@ -27,6 +27,7 @@ this checkout from target architecture and research proposals.
 | [REASONER_GPU_PROFILE.md](REASONER_GPU_PROFILE.md) | Gemma / CUDA admission profiles |
 | [GRID_UPDATE_PERFORMANCE.md](GRID_UPDATE_PERFORMANCE.md) | Occupancy-grid update microbenchmark |
 | [RESEARCH_2026_ROADMAPS.md](RESEARCH_2026_ROADMAPS.md) | Research conclusions, implemented slices, and explicitly future work |
+| [ATTENTION_STEERING_DESIGN.md](ATTENTION_STEERING_DESIGN.md) | Voice-steered attention design: audits, architecture, trainable-core staging, open decisions |
 
 ## Reading rules
 

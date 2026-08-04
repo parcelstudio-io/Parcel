@@ -4,11 +4,12 @@ import math
 import threading
 import time
 from collections.abc import Mapping
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, replace
 from typing import Any, ClassVar
 
 from parcel_robot.backends.base import SimObservation
 from parcel_robot.models import VelocityCommand
+from parcel_robot.navigation.owner_prediction import PredictedPath
 from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
     apply_reactive_safety,
@@ -17,6 +18,74 @@ from parcel_robot.navigation.reactive_safety import (
 
 def _wrap_angle(angle: float) -> float:
     return (angle + math.pi) % (2.0 * math.pi) - math.pi
+
+
+@dataclass(frozen=True)
+class FollowPredictionConfig:
+    """Anticipatory following and the uncertainty brake that pays for it.
+
+    Aiming at where the owner will be is only safe while the prediction is
+    trustworthy, so the two halves ship together: ``min_confidence`` decides
+    whether the lead point is used at all, and the brake scales translation
+    down as confidence falls, reaching a standstill at ``brake_stop_confidence``.
+    Both are evaluated against the predictor's windowed-NIS confidence.
+    """
+
+    enabled: bool = False
+    lead_s: float = 0.6
+    min_confidence: float = 0.45
+    # Linear ramp: full speed at or above ``brake_full_confidence``, standstill
+    # at or below ``brake_stop_confidence``. The defaults put the card's worked
+    # example (x0.5 at confidence 0.3) exactly on the ramp.
+    brake_full_confidence: float = 0.5
+    brake_stop_confidence: float = 0.1
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.enabled, bool):
+            raise TypeError("owner_follow.prediction.enabled must be a boolean")
+        if not math.isfinite(self.lead_s) or self.lead_s <= 0.0:
+            raise ValueError("owner_follow.prediction.lead_s must be positive and finite")
+        confidences = {
+            "min_confidence": self.min_confidence,
+            "brake_full_confidence": self.brake_full_confidence,
+            "brake_stop_confidence": self.brake_stop_confidence,
+        }
+        for name, value in confidences.items():
+            if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+                raise ValueError(f"owner_follow.prediction.{name} must be within [0, 1]")
+        if self.brake_stop_confidence >= self.brake_full_confidence:
+            raise ValueError(
+                "owner_follow.prediction.brake_stop_confidence must be below "
+                "brake_full_confidence"
+            )
+
+    @classmethod
+    def from_mapping(cls, raw: Mapping[str, Any]) -> FollowPredictionConfig:
+        allowed = {item.name for item in fields(cls)}
+        unknown = set(raw) - allowed
+        if unknown:
+            raise ValueError(f"unknown owner_follow.prediction settings: {sorted(unknown)}")
+        values: dict[str, Any] = {}
+        for key, value in raw.items():
+            if key == "enabled":
+                if not isinstance(value, bool):
+                    raise TypeError("owner_follow.prediction.enabled must be a boolean")
+                values[key] = value
+            else:
+                values[key] = float(value)
+        return cls(**values)
+
+    def speed_scale(self, confidence: float) -> float:
+        """Return the uncertainty brake factor for one prediction confidence."""
+
+        if not math.isfinite(confidence):
+            return 0.0
+        if confidence >= self.brake_full_confidence:
+            return 1.0
+        if confidence <= self.brake_stop_confidence:
+            return 0.0
+        span = self.brake_full_confidence - self.brake_stop_confidence
+        return (confidence - self.brake_stop_confidence) / span
 
 
 @dataclass(frozen=True)
@@ -134,12 +203,41 @@ class FollowDecision:
     target_x_m: float | None = None
     target_y_m: float | None = None
     stage_side: str | None = None
+    # Anticipatory following (card W2). ``prediction_active`` says the command
+    # was aimed at a lead point rather than the measured owner position;
+    # ``speed_scale`` is the uncertainty brake actually applied.
+    prediction_active: bool = False
+    prediction_confidence: float | None = None
+    lead_x_m: float | None = None
+    lead_y_m: float | None = None
+    speed_scale: float = 1.0
 
 
 @dataclass(frozen=True)
 class _MotionEstimate:
     heading_rad: float
     speed_mps: float
+
+
+@dataclass(frozen=True)
+class _LeadPoint:
+    """Where the owner is expected to be, and how much that is trusted."""
+
+    x: float
+    y: float
+    heading_rad: float
+    confidence: float
+
+
+_IDLE_PREDICTION_STATE: dict[str, object] = {
+    "enabled": False,
+    "active": False,
+    "reason": "idle",
+    "confidence": None,
+    "lead_x_m": None,
+    "lead_y_m": None,
+    "speed_scale": 1.0,
+}
 
 
 class FollowOwnerController:
@@ -156,8 +254,11 @@ class FollowOwnerController:
         config: FollowConfig | None = None,
         *,
         safety_policy: ReactiveSafetyPolicy | None = None,
+        prediction: FollowPredictionConfig | None = None,
     ):
         self.config = config or FollowConfig()
+        self.prediction = prediction or FollowPredictionConfig()
+        self._prediction_state: dict[str, object] = _IDLE_PREDICTION_STATE
         self._lock = threading.RLock()
         self._enabled = False
         self._mode = "direct"
@@ -215,6 +316,7 @@ class FollowOwnerController:
             self._active_behind_distance_m = self.config.behind_distance_m
             self._last_seen_at = None
             self._state = "acquiring" if mode == "direct" else "acquiring_heading"
+            self._prediction_state = _IDLE_PREDICTION_STATE
             # Passive camera history deliberately survives activation. A plan
             # admitted on a fresh heading must not throw that evidence away at
             # the exact moment it acquires the base resource.
@@ -249,6 +351,7 @@ class FollowOwnerController:
             # reused by a later, separately admitted formation request.
             self._stage_side = None
             self._active_behind_distance_m = self.config.behind_distance_m
+            self._prediction_state = _IDLE_PREDICTION_STATE
 
     def observe_owner(
         self,
@@ -294,18 +397,30 @@ class FollowOwnerController:
         self,
         observation: SimObservation | None,
         now: float | None = None,
+        *,
+        prediction: PredictedPath | None = None,
     ) -> FollowDecision:
+        """Advance one tick, optionally anticipating the owner's motion.
+
+        ``prediction`` comes from the runtime-owned ``OwnerMotionPredictor``
+        fed by this same owner track. Passing ``None`` — or a path the
+        configuration does not trust — reproduces the unpredicted behavior
+        exactly, which is what makes the fallback safe to rely on.
+        """
+
         with self._lock:
-            return self._step_locked(observation, now)
+            return self._step_locked(observation, now, prediction)
 
     def _step_locked(
         self,
         observation: SimObservation | None,
         now: float | None,
+        prediction: PredictedPath | None = None,
     ) -> FollowDecision:
         current = time.monotonic() if now is None else now
         zero = VelocityCommand()
         motion_status = self._observe_owner_locked(observation, current)
+        lead = self._resolve_lead(prediction)
         if not self._enabled:
             self._state = "idle"
             return self._decision(zero, "follow_disabled")
@@ -334,13 +449,152 @@ class FollowOwnerController:
 
         self._last_seen_at = current
         if self._mode == "behind":
-            return self._step_behind(observation, current, motion_status)
-        return self._step_direct(observation)
+            decision = self._step_behind(observation, current, motion_status, lead)
+        else:
+            decision = self._step_direct(observation, lead)
+        return self._braked(decision)
 
-    def _step_direct(self, observation: SimObservation) -> FollowDecision:
+    def _resolve_lead(self, prediction: PredictedPath | None) -> _LeadPoint | None:
+        """Turn a predicted path into a trusted lead point, or refuse it.
+
+        The refusal reasons are recorded rather than swallowed: a deployment
+        that thinks it is anticipating and is silently falling back every tick
+        is the failure mode this block exists to make visible.
+        """
+
+        config = self.prediction
+        state: dict[str, object] = {
+            "enabled": config.enabled,
+            "active": False,
+            "reason": "disabled" if not config.enabled else "no_prediction",
+            "confidence": None,
+            "lead_x_m": None,
+            "lead_y_m": None,
+            "speed_scale": 1.0,
+        }
+        if not config.enabled or prediction is None:
+            self._prediction_state = state
+            return None
+
+        confidence = float(prediction.confidence)
+        state["confidence"] = confidence
+        state["speed_scale"] = config.speed_scale(confidence)
+        if confidence < config.min_confidence:
+            # Still braked: an untrusted prediction is itself evidence that the
+            # owner is doing something we cannot anticipate.
+            state["reason"] = "confidence_below_threshold"
+            self._prediction_state = state
+            return None
+
+        index = max(1, round(config.lead_s / prediction.step_s)) - 1
+        if index >= len(prediction.points):
+            state["reason"] = "lead_beyond_horizon"
+            self._prediction_state = state
+            return None
+        x, y = prediction.points[index]
+        if not (math.isfinite(x) and math.isfinite(y)):
+            state["reason"] = "non_finite_prediction"
+            self._prediction_state = state
+            return None
+
+        state["active"] = True
+        state["reason"] = "predicted_lead_point"
+        state["lead_x_m"] = x
+        state["lead_y_m"] = y
+        self._prediction_state = state
+        return _LeadPoint(x, y, float(prediction.heading_rad), confidence)
+
+    def _clamped_lead(
+        self,
+        lead: _LeadPoint | None,
+        observation: SimObservation,
+        standoff_m: float,
+    ) -> _LeadPoint | None:
+        """Limit how far ahead of the *measured* owner the aim point may sit.
+
+        Holding ``standoff_m`` from a lead point is holding
+        ``standoff_m - lead_distance`` from the owner we can actually see. Left
+        uncapped that quietly trades owner clearance for anticipation, so the
+        lead is clamped to whatever the mode's declared owner keepout leaves
+        over. When the clamp bites it is reported, not absorbed.
+        """
+
+        if lead is None:
+            return None
         owner = observation.owner
-        dx = owner.x - observation.robot.x
-        dy = owner.y - observation.robot.y
+        offset_x = lead.x - owner.x
+        offset_y = lead.y - owner.y
+        distance = math.hypot(offset_x, offset_y)
+        budget = max(0.0, standoff_m - self.config.owner_keepout_m)
+        if distance <= budget + 1e-9:
+            return lead
+        state = dict(self._prediction_state)
+        if distance <= 1e-9:
+            state["reason"] = "lead_clamped_to_owner_keepout"
+            state["lead_x_m"] = owner.x
+            state["lead_y_m"] = owner.y
+            self._prediction_state = state
+            return _LeadPoint(owner.x, owner.y, lead.heading_rad, lead.confidence)
+        scale = budget / distance
+        clamped = _LeadPoint(
+            owner.x + offset_x * scale,
+            owner.y + offset_y * scale,
+            lead.heading_rad,
+            lead.confidence,
+        )
+        state["reason"] = "lead_clamped_to_owner_keepout"
+        state["lead_x_m"] = clamped.x
+        state["lead_y_m"] = clamped.y
+        self._prediction_state = state
+        return clamped
+
+    def _braked(self, decision: FollowDecision) -> FollowDecision:
+        """Apply the uncertainty brake to translation, never to the yaw.
+
+        Scaling translation strictly reduces the command, so the brake composes
+        under the reactive policy and the final collision gate rather than
+        competing with them. Yaw is left alone: keeping the owner in frame is
+        exactly what an uncertain follower should still be allowed to do.
+        """
+
+        scale = float(self._prediction_state.get("speed_scale", 1.0))
+        state = dict(self._prediction_state)
+        if scale >= 1.0 - 1e-9:
+            state["speed_scale"] = 1.0
+            self._prediction_state = state
+            return decision
+        command = decision.command
+        braked = VelocityCommand(
+            vx=command.vx * scale,
+            vy=command.vy * scale,
+            vyaw=command.vyaw,
+        )
+        self._prediction_state = state
+        return replace(
+            decision,
+            command=braked,
+            reason=(
+                decision.reason
+                if braked == command
+                else f"{decision.reason}_uncertainty_braked"
+            ),
+            speed_scale=scale,
+        )
+
+    def _step_direct(
+        self,
+        observation: SimObservation,
+        lead: _LeadPoint | None = None,
+    ) -> FollowDecision:
+        owner = observation.owner
+        # The lead point *is* the owner as far as the distance law is
+        # concerned: holding ``desired_distance_m`` from where the owner will
+        # be in ``lead_s`` is the same control law aimed one step ahead.
+        lead = self._clamped_lead(lead, observation, self.config.desired_distance_m)
+        owner_x = owner.x if lead is None else lead.x
+        owner_y = owner.y if lead is None else lead.y
+        dx = owner_x - observation.robot.x
+        dy = owner_y - observation.robot.y
         distance = math.hypot(dx, dy)
         obstacle = observation.nearest_obstacle_m
         obstacle_bearing = observation.nearest_obstacle_bearing_rad
@@ -396,6 +650,7 @@ class FollowOwnerController:
         observation: SimObservation,
         current: float,
         motion_status: str,
+        lead: _LeadPoint | None = None,
     ) -> FollowDecision:
         owner = observation.owner
         owner_distance = math.hypot(
@@ -432,18 +687,32 @@ class FollowOwnerController:
                 VelocityCommand(), reason, owner_distance, owner.owner_id
             )
 
-        heading_x = math.cos(estimate.heading_rad)
-        heading_y = math.sin(estimate.heading_rad)
-        prediction = min(
-            self.config.prediction_max_m,
-            estimate.speed_mps * self.config.prediction_horizon_s,
+        # The formation anchor moves to the predicted owner; the keepout
+        # geometry below deliberately does not. A prediction may say where to
+        # aim, but it may never license driving through where the owner has
+        # actually been measured.
+        lead = self._clamped_lead(lead, observation, self._active_behind_distance_m)
+        anchor_heading_rad = estimate.heading_rad if lead is None else lead.heading_rad
+        anchor_x = owner.x if lead is None else lead.x
+        anchor_y = owner.y if lead is None else lead.y
+        heading_x = math.cos(anchor_heading_rad)
+        heading_y = math.sin(anchor_heading_rad)
+        prediction = (
+            min(
+                self.config.prediction_max_m,
+                estimate.speed_mps * self.config.prediction_horizon_s,
+            )
+            # The lead point already carries the lookahead; adding the legacy
+            # short-horizon extrapolation on top would double-count it.
+            if lead is None
+            else 0.0
         )
         effective_rear_distance = max(
             self.config.owner_keepout_m + 0.05,
             self._active_behind_distance_m - prediction,
         )
-        target_x = owner.x - heading_x * effective_rear_distance
-        target_y = owner.y - heading_y * effective_rear_distance
+        target_x = anchor_x - heading_x * effective_rear_distance
+        target_y = anchor_y - heading_y * effective_rear_distance
         robot_rel = (
             observation.robot.x - owner.x,
             observation.robot.y - owner.y,
@@ -467,7 +736,7 @@ class FollowOwnerController:
             target_y - observation.robot.y,
         )
         if state == "tracking_behind" and target_distance <= self.config.formation_deadband_m:
-            yaw_error = _wrap_angle(estimate.heading_rad - observation.robot.yaw)
+            yaw_error = _wrap_angle(anchor_heading_rad - observation.robot.yaw)
             turn = (
                 _clamp(yaw_error * self.config.yaw_gain, self.config.max_vyaw)
                 if abs(yaw_error) > 0.25
@@ -479,7 +748,7 @@ class FollowOwnerController:
                 "behind_formation_reached",
                 owner_distance,
                 owner.owner_id,
-                owner_heading=estimate.heading_rad,
+                owner_heading=anchor_heading_rad,
                 target=(target_x, target_y),
             )
 
@@ -502,7 +771,7 @@ class FollowOwnerController:
             reason,
             owner_distance,
             owner.owner_id,
-            owner_heading=estimate.heading_rad,
+            owner_heading=anchor_heading_rad,
             target=(target_x, target_y),
         )
 
@@ -734,6 +1003,22 @@ class FollowOwnerController:
             stage_side=(
                 "left" if self._stage_side == 1 else "right" if self._stage_side == -1 else None
             ),
+            prediction_active=bool(self._prediction_state.get("active", False)),
+            prediction_confidence=(
+                None
+                if self._prediction_state.get("confidence") is None
+                else float(self._prediction_state["confidence"])  # type: ignore[arg-type]
+            ),
+            lead_x_m=(
+                None
+                if self._prediction_state.get("lead_x_m") is None
+                else float(self._prediction_state["lead_x_m"])  # type: ignore[arg-type]
+            ),
+            lead_y_m=(
+                None
+                if self._prediction_state.get("lead_y_m") is None
+                else float(self._prediction_state["lead_y_m"])  # type: ignore[arg-type]
+            ),
         )
 
     def _reset_motion_history(self) -> None:
@@ -772,6 +1057,7 @@ class FollowOwnerController:
                     else None
                 ),
                 "perception_basis": "camera_owner_track+robot_odometry+lidar",
+                "prediction": dict(self._prediction_state),
             }
 
 

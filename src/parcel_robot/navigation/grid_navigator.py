@@ -11,13 +11,18 @@ from __future__ import annotations
 
 import logging
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
 from .base import MidLevelCommand, Mission, ModelSpec, NavObservation
 
 logger = logging.getLogger(__name__)
+from .dynamic_layer import (
+    DynamicAgentCostConfig,
+    merged_cost_mask,
+    tracks_from_payload,
+)
 from .grid_planner import (
     GridPlannerConfig,
     LidarScan,
@@ -101,6 +106,7 @@ class GridNavigator:
         safe_valley_discretization_guard_m: float = 0.0,
         replan_interval_steps: int = 5,
         lidar_stride: int = 2,
+        dynamic_agents: Mapping[str, Any] | None = None,
         **_: Any,
     ) -> None:
         if not 0.0 < arrive_radius_m < slowdown_radius_m:
@@ -225,6 +231,13 @@ class GridNavigator:
                 frontier_detour_min_travel_m=float(frontier_detour_min_travel_m),
             )
         )
+        # Card W4. Unlike the rest of this constructor's tolerant `**_`
+        # signature, the dynamic-agent block is validated strictly: a typo in a
+        # safety-relevant weight must not be silently ignored.
+        if dynamic_agents is not None and not isinstance(dynamic_agents, Mapping):
+            raise TypeError("grid_v1 dynamic_agents must be a mapping")
+        self.dynamic_agents = DynamicAgentCostConfig.from_mapping(dynamic_agents or {})
+        self.dynamic_cost_active = False
         self._fallback = StubNavigator(
             spec,
             arrive_radius_m=self.arrive_radius_m,
@@ -258,6 +271,7 @@ class GridNavigator:
 
     def reset(self, mission: Mission) -> None:
         self._planner.reset()
+        self.dynamic_cost_active = False
         self._fallback.reset(mission)
         self._aligning = True
         self._last_vx = 0.0
@@ -332,6 +346,7 @@ class GridNavigator:
             return self._safe_valley_hold("sensor_frame_stale_or_unsynchronised")
 
         self._planner.update(pose, scan)
+        self._refresh_dynamic_costs(observation, pose)
         if self._safe_valley_maneuver is not None:
             return self._safe_valley_command(
                 observation=observation,
@@ -347,7 +362,10 @@ class GridNavigator:
         ):
             self._committed_detour_target = None
             self._last_plan = None
-        should_replan = self._last_plan is None or (
+        # Dynamic costs rebuild every tick; a cached route would otherwise be
+        # up to replan_interval_steps stale while pedestrians move. When the
+        # layer is active, replan every tick (arbitration 2026-08-04).
+        should_replan = self._last_plan is None or self.dynamic_cost_active or (
             self._committed_detour_target is None
             and self._control_step % self.replan_interval_steps == 0
         )
@@ -439,6 +457,45 @@ class GridNavigator:
         # full MidLevelCommand (including vy) preserves the Unitree-compatible
         # interface for a later holonomic recovery/local planner.
         return MidLevelCommand(vx=vx, vy=0.0, vyaw=vyaw, note=note)
+
+    def _refresh_dynamic_costs(self, observation: NavObservation, pose: Pose2D) -> None:
+        """Install this tick's predicted-agent penalty on the planner.
+
+        The layer is rebuilt every tick rather than cached: the whole point is
+        that the tracks moved. Repeated A* at 10 Hz is what makes that
+        affordable, which is why this stayed a cost layer instead of becoming
+        an incremental D* Lite.
+        """
+
+        if not self.dynamic_agents.enabled:
+            self.dynamic_cost_active = False
+            self._planner.set_dynamic_cost_layer(None)
+            return
+        try:
+            agent_tracks = tracks_from_payload(observation.extras.get("dynamic_agents") or ())
+            owner_tracks = tracks_from_payload(observation.extras.get("owner_track") or ())
+        except (TypeError, ValueError) as error:
+            # Loud, then plan on the static map: a malformed track list must not
+            # take the navigator down mid-mission.
+            logger.warning("dynamic agent costs disabled this tick: %s", error)
+            self.dynamic_cost_active = False
+            self._planner.set_dynamic_cost_layer(None)
+            return
+        if not agent_tracks and not owner_tracks:
+            self.dynamic_cost_active = False
+            self._planner.set_dynamic_cost_layer(None)
+            return
+
+        costs = merged_cost_mask(
+            config=self.dynamic_agents,
+            agent_tracks=agent_tracks,
+            owner_tracks=owner_tracks,
+            cell_centers_xy=self._planner.grid.cell_centers_xy(),
+            robot_xy=pose.xy,
+        )
+        size = self._planner.config.grid_size_cells
+        self._planner.set_dynamic_cost_layer(costs.reshape(size, size))
+        self.dynamic_cost_active = True
 
     def _recovery_command(self, status: str) -> MidLevelCommand:
         phase = self._recovery_step % self.recovery_scan_steps

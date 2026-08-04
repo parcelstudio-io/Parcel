@@ -3,7 +3,7 @@
 Goal: the dog visibly *lives* in the MuJoCo viewer — breathing at idle,
 orienting to speech, nodding on the beats of its own voice — with every motion
 additive, clamped, and subordinate to safety. Design source:
-[../../docs/RESEARCH_2026_ROADMAPS.md](../../docs/RESEARCH_2026_ROADMAPS.md) §1
+[../../../docs/RESEARCH_2026_ROADMAPS.md](../../../docs/RESEARCH_2026_ROADMAPS.md) §1
 (speech-synced motion) and §2 (steps 1–2).
 
 ---

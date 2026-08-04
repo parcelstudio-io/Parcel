@@ -8,7 +8,7 @@ item from the register.
 
 ## W8 — Emote triggers onto the playback clock · **Owner: Opus** · independent
 
-Closes [../../backlog/UNVERIFIED.md](../../backlog/UNVERIFIED.md) **U6** /
+Closes [../../../backlog/UNVERIFIED.md](../../../backlog/UNVERIFIED.md) **U6** /
 NEXT **N1**. Today `[emote:...]` tags fire when their sentence is
 *synthesized*; with a deep audio queue the bow lands seconds before the words.
 A4 already built the anchor.
@@ -68,7 +68,7 @@ re-identification — the sim track is identity-perfect).
 
 ## Operator items (nobody else can do these)
 
-Unchanged from [../../backlog/BLOCKED.md](../../backlog/BLOCKED.md):
+Unchanged from [../../../backlog/BLOCKED.md](../../../backlog/BLOCKED.md):
 
 1. **B1:** `sudo apt install -y libportaudio2 cmake build-essential dfu-util`
    → then `scripts/install_speech_services.sh` → spoken conversation closes
@@ -77,4 +77,4 @@ Unchanged from [../../backlog/BLOCKED.md](../../backlog/BLOCKED.md):
    and the MuJoCo viewer (breathing) — two minutes each, closes two register
    entries.
 3. **B3:** when the XVF3800 + speaker arrive, follow the arrival checklist in
-   [../20260804/B-audio-io.md](../20260804/B-audio-io.md).
+   [../task_1/B-audio-io.md](../task_1/B-audio-io.md).

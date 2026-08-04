@@ -603,6 +603,22 @@ class RollingOccupancyGrid:
             (self._origin_global_cell[1] + y + 0.5) * resolution,
         )
 
+    def cell_centers_xy(self) -> np.ndarray:
+        """Return every local cell centre as ``(size*size, 2)`` in row-major order.
+
+        The ordering matches ``ndarray.ravel()`` on any grid-shaped mask, so a
+        cost vector computed here can be reshaped straight back onto the map.
+        """
+
+        if self._origin_global_cell is None:
+            raise RuntimeError("grid has not received a pose")
+        size = self.config.grid_size_cells
+        resolution = self.config.resolution_m
+        xs = (self._origin_global_cell[0] + np.arange(size) + 0.5) * resolution
+        ys = (self._origin_global_cell[1] + np.arange(size) + 0.5) * resolution
+        grid_x, grid_y = np.meshgrid(xs, ys, indexing="xy")
+        return np.column_stack((grid_x.ravel(), grid_y.ravel()))
+
     def inflated_occupied_mask(self) -> np.ndarray:
         """Return the read-only hard footprint-inflated obstacle mask."""
 
@@ -718,9 +734,40 @@ class RollingGridPlanner:
     def __init__(self, config: GridPlannerConfig | None = None) -> None:
         self.config = config or GridPlannerConfig()
         self.grid = RollingOccupancyGrid(self.config)
+        # Card W4. An additive, caller-supplied per-cell penalty for where
+        # tracked agents are predicted to be. It is a *cost*, never a mask:
+        # it can only make a cell more expensive, so it cannot open a route
+        # that hard inflation closed.
+        self._dynamic_cost: np.ndarray | None = None
+
+    def set_dynamic_cost_layer(self, costs: np.ndarray | None) -> None:
+        """Install this tick's dynamic-agent penalty, or clear it."""
+
+        if costs is None:
+            self._dynamic_cost = None
+            return
+        expected = (self.config.grid_size_cells, self.config.grid_size_cells)
+        if costs.shape != expected:
+            raise ValueError(f"dynamic cost layer must have shape {expected}")
+        if not np.all(np.isfinite(costs)):
+            raise ValueError("dynamic cost layer must be finite")
+        if np.any(costs < 0.0):
+            raise ValueError("dynamic cost layer must be non-negative")
+        layer = np.asarray(costs, dtype=np.float32).copy()
+        layer.setflags(write=False)
+        self._dynamic_cost = layer
+
+    @property
+    def dynamic_cost_layer(self) -> np.ndarray | None:
+        return self._dynamic_cost
+
+    def _dynamic_penalty(self, cell: GridCell) -> float:
+        layer = self._dynamic_cost
+        return 0.0 if layer is None else float(layer[cell[1], cell[0]])
 
     def reset(self) -> None:
         self.grid.reset()
+        self._dynamic_cost = None
 
     def update(self, pose: Pose2D, scan: LidarScan) -> MappingUpdate:
         return self.grid.update(pose, scan)
@@ -1010,7 +1057,9 @@ class RollingGridPlanner:
                     ):
                         continue
                 tentative = queued_g + geometric_cost * (
-                    1.0 + float(comfort_cost[neighbor[1], neighbor[0]])
+                    1.0
+                    + float(comfort_cost[neighbor[1], neighbor[0]])
+                    + self._dynamic_penalty(neighbor)
                 )
                 if tentative + 1e-12 >= g_cost.get(neighbor, math.inf):
                     continue
@@ -1152,7 +1201,9 @@ class RollingGridPlanner:
                     ):
                         continue
                 tentative = queued_g + geometric_cost * (
-                    1.0 + float(comfort_cost[neighbor[1], neighbor[0]])
+                    1.0
+                    + float(comfort_cost[neighbor[1], neighbor[0]])
+                    + self._dynamic_penalty(neighbor)
                 )
                 if tentative + 1e-12 >= g_cost.get(neighbor, math.inf):
                     continue
@@ -1363,8 +1414,10 @@ class RollingGridPlanner:
                 is_observed = bool(observed[neighbor[1], neighbor[0]])
                 if not self.config.allow_unknown and not is_observed:
                     continue
-                terrain_cost = (1.0 if is_observed else self.config.unknown_cost) + float(
-                    comfort_cost[neighbor[1], neighbor[0]]
+                terrain_cost = (
+                    (1.0 if is_observed else self.config.unknown_cost)
+                    + float(comfort_cost[neighbor[1], neighbor[0]])
+                    + self._dynamic_penalty(neighbor)
                 )
                 tentative = g_cost[current] + geometric_cost * terrain_cost
                 if tentative + 1e-12 >= g_cost.get(neighbor, math.inf):
@@ -1450,6 +1503,7 @@ class RollingGridPlanner:
         observed = self.grid._observed
         blocked = self.grid.inflated_occupied_mask()
         comfort = self.grid.comfort_cost_mask()
+        dynamic = self._dynamic_cost
         result = [path[0]]
         anchor = 0
         while anchor < len(path) - 1:
@@ -1474,6 +1528,20 @@ class RollingGridPlanner:
                     )
                     if shortcut_peak > route_peak + 1e-6:
                         continue
+                # Preserve dynamic-agent exposure the same way comfort is
+                # preserved: a shortcut that re-enters a predicted corridor
+                # must not erase an A* detour (arbitration 2026-08-04).
+                if dynamic is not None:
+                    shortcut_peak = _cells_maximum(dynamic, line)
+                    route_peak = max(
+                        _cells_maximum(
+                            dynamic,
+                            _supercover_cells(first, second),
+                        )
+                        for first, second in pairwise(path[anchor : candidate + 1])
+                    )
+                    if shortcut_peak > route_peak + 1e-6:
+                        continue
                 selected = candidate
                 break
             result.append(path[selected])
@@ -1487,8 +1555,6 @@ class RollingGridPlanner:
         first_ahead: int,
         candidate: int,
     ) -> bool:
-        if not self.config.comfort_cost_enabled:
-            return True
         start_cell = self.grid.world_to_local_cell(start)
         route_cells = tuple(
             self.grid.world_to_local_cell(route[index])
@@ -1497,21 +1563,41 @@ class RollingGridPlanner:
         if start_cell is None or any(cell is None for cell in route_cells):
             return False
         cells = tuple(cell for cell in route_cells if cell is not None)
-        comfort = self.grid.comfort_cost_mask()
-        shortcut_peak = _cells_maximum(
-            comfort,
-            _supercover_cells(start_cell, cells[-1]),
-        )
-        existing_peak = _cells_maximum(
-            comfort,
-            _supercover_cells(start_cell, cells[0]),
-        )
-        for first, second in pairwise(cells):
-            existing_peak = max(
-                existing_peak,
-                _cells_maximum(comfort, _supercover_cells(first, second)),
+        if self.config.comfort_cost_enabled:
+            comfort = self.grid.comfort_cost_mask()
+            shortcut_peak = _cells_maximum(
+                comfort,
+                _supercover_cells(start_cell, cells[-1]),
             )
-        return shortcut_peak <= existing_peak + 1e-6
+            existing_peak = _cells_maximum(
+                comfort,
+                _supercover_cells(start_cell, cells[0]),
+            )
+            for first, second in pairwise(cells):
+                existing_peak = max(
+                    existing_peak,
+                    _cells_maximum(comfort, _supercover_cells(first, second)),
+                )
+            if shortcut_peak > existing_peak + 1e-6:
+                return False
+        dynamic = self._dynamic_cost
+        if dynamic is not None:
+            shortcut_peak = _cells_maximum(
+                dynamic,
+                _supercover_cells(start_cell, cells[-1]),
+            )
+            existing_peak = _cells_maximum(
+                dynamic,
+                _supercover_cells(start_cell, cells[0]),
+            )
+            for first, second in pairwise(cells):
+                existing_peak = max(
+                    existing_peak,
+                    _cells_maximum(dynamic, _supercover_cells(first, second)),
+                )
+            if shortcut_peak > existing_peak + 1e-6:
+                return False
+        return True
 
     def _world_segment_is_clear(self, start: WorldPoint, end: WorldPoint) -> bool:
         start_cell = self.grid.world_to_local_cell(start)

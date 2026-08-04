@@ -18,6 +18,8 @@ from .contracts import (
 from .validator import ValidatedPlan, ValidatedStep
 
 TERMINAL_TASK_STATES = frozenset({"succeeded", "failed", "cancelled"})
+# Suspended is a status, never an outcome — must not replan/abandon.
+NON_OUTCOME_TASK_STATES = frozenset({"suspended"})
 TASK_CLASSES = frozenset({"system", "active_task", "explicit_action", "voice", "social"})
 TASK_CLASS_PRIORITY = {
     "social": 10,
@@ -38,6 +40,15 @@ INTERRUPT_SOURCES = frozenset(
         "voice",
     }
 )
+# Declared voice interrupt policy (was a hardcoded no-op / overlap).
+# Keys are reason prefixes or exact reasons; default is overlap.
+VOICE_INTERRUPT_POLICY: dict[str, str] = {
+    "default": "overlap",
+    "ambient": "overlap",
+    "summons": "suspend",
+    "recall": "suspend",
+    "explicit_directive": "cancel_now",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -314,7 +325,13 @@ class TaskExecutive:
                         self._fail_or_retry(record, "step_timeout")
 
             for record in self._ordered_records():
-                if record.state in TERMINAL_TASK_STATES | {"running", "waiting_checkpoint"}:
+                # suspended is a status (not an outcome): skip like running so
+                # tick does not re-dispatch until resume_task re-queues it.
+                if record.state in (
+                    TERMINAL_TASK_STATES
+                    | NON_OUTCOME_TASK_STATES
+                    | {"running", "waiting_checkpoint"}
+                ):
                     continue
                 step = record.current_step
                 if step is None:
@@ -485,6 +502,19 @@ class TaskExecutive:
                     self._cancel(record, request.reason)
                 return InterruptDecision("cancel_now", affected, request.reason)
             if request.source == "voice":
+                policy = _voice_interrupt_action(request.reason)
+                if policy == "overlap":
+                    return InterruptDecision("overlap", (), request.reason)
+                if policy == "suspend":
+                    affected = tuple(record.task_id for record in records)
+                    for record in records:
+                        self._suspend(record, request.reason)
+                    return InterruptDecision("suspend", affected, request.reason)
+                if policy == "cancel_now":
+                    affected = tuple(record.task_id for record in records)
+                    for record in records:
+                        self._cancel(record, request.reason)
+                    return InterruptDecision("cancel_now", affected, request.reason)
                 return InterruptDecision("overlap", (), request.reason)
             if request.source in {"social", "explicit_gesture"}:
                 return InterruptDecision(
@@ -598,6 +628,48 @@ class TaskExecutive:
         record.pending_recovery = None
         record.last_detail = reason[:160]
 
+    def _suspend(self, record: _TaskRecord, reason: str) -> None:
+        """Park a task without succeeding or failing it."""
+
+        if record.state in TERMINAL_TASK_STATES | NON_OUTCOME_TASK_STATES:
+            return
+        self.resources.release(record.task_id)
+        record.state = "suspended"
+        record.at_checkpoint = True
+        record.step_started_at = None
+        record.pending_interrupt = None
+        record.pending_recovery = None
+        record.last_detail = f"suspended:{reason[:140]}"
+
+    def resume_task(self, task_id: str, *, reason: str = "resume") -> ReportDisposition:
+        """Re-queue a suspended task for fresh dispatch (not an outcome transition)."""
+
+        with self._lock:
+            record = self._tasks.get(task_id)
+            if record is None:
+                return ReportDisposition(False, "ignored_unknown_task", task_id, "idle")
+            if record.state != "suspended":
+                return ReportDisposition(
+                    False, "ignored_not_suspended", task_id, record.state
+                )
+            record.state = "queued"
+            record.at_checkpoint = True
+            record.step_started_at = None
+            record.last_detail = f"resumed:{reason[:140]}"
+            return ReportDisposition(True, "task_resumed", task_id, record.state)
+
+    def suspend_task(self, task_id: str, *, reason: str) -> ReportDisposition:
+        with self._lock:
+            record = self._tasks.get(task_id)
+            if record is None:
+                return ReportDisposition(False, "ignored_unknown_task", task_id, "idle")
+            if record.state in TERMINAL_TASK_STATES:
+                return ReportDisposition(
+                    False, "ignored_terminal_task", task_id, record.state
+                )
+            self._suspend(record, reason)
+            return ReportDisposition(True, "task_suspended", task_id, record.state)
+
     def _activate_replacement(
         self,
         record: _TaskRecord,
@@ -683,3 +755,15 @@ def _result_satisfies_success(result: ExecutionResult, step: ValidatedStep) -> b
 
 def _normalized(value: str) -> str:
     return "".join(character for character in value.lower() if character.isalnum())
+
+
+def _voice_interrupt_action(reason: str) -> str:
+    """Resolve the declared voice suspend-vs-overlap policy for a reason string."""
+
+    clean = reason.strip().lower()
+    if clean in VOICE_INTERRUPT_POLICY:
+        return VOICE_INTERRUPT_POLICY[clean]
+    for key, action in VOICE_INTERRUPT_POLICY.items():
+        if key != "default" and key in clean:
+            return action
+    return VOICE_INTERRUPT_POLICY["default"]

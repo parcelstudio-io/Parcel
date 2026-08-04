@@ -3,7 +3,7 @@
 Goal: a spoken conversation with the sim dog through a real microphone and
 speaker on this desktop **today** (echo-guard mode), and a plug-in-ready path
 for the ReSpeaker XVF3800 when it arrives. Design source:
-[../../docs/RESEARCH_2026_ROADMAPS.md](../../docs/RESEARCH_2026_ROADMAPS.md) §1.
+[../../../docs/RESEARCH_2026_ROADMAPS.md](../../../docs/RESEARCH_2026_ROADMAPS.md) §1.
 
 ## Operator install runbook (this machine — run once)
 

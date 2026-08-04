@@ -387,3 +387,24 @@ def test_resource_locks_release_only_the_exact_owner() -> None:
     assert locks.leases()[0].owner_task_id == "one"
     locks.release("one", "step")
     assert locks.leases() == ()
+
+
+def test_suspend_tick_does_not_redispatch() -> None:
+    """suspend → tick → still suspended, no new DispatchRequest."""
+
+    executive = TaskExecutive()
+    executive.submit(_validated(_hold_plan("nav-hold")))
+    request = executive.tick(_snapshot(), now=10.0)[0]
+    assert request.skill == "Hold"
+    disposition = executive.suspend_task(request.task_id, reason="owner summons")
+    assert disposition.accepted is True
+    assert disposition.state == "suspended"
+    assert executive.tick(_snapshot(), now=10.5) == ()
+    assert executive.snapshot()["tasks"][0]["state"] == "suspended"
+    resumed = executive.resume_task(request.task_id, reason="summons_done")
+    assert resumed.accepted is True
+    assert resumed.state == "queued"
+    again = executive.tick(_snapshot(), now=11.0)
+    assert len(again) == 1
+    assert again[0].task_id == request.task_id
+    assert again[0].skill == "Hold"

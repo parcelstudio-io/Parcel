@@ -291,7 +291,9 @@ def test_canonical_config_keeps_audio_settings_in_the_speech_section() -> None:
 
     store = ConfigStore(REPO / "configs" / "robot.yaml")
     speech = store.section("speech")
-    for key in ("endpointing", "echo_guard_scale", "fish_url", "barge_in"):
+    # (barge_in/fish_streaming were removed entirely 2026-08-04: they were
+    # accepted-but-unread, the same bug class this test exists to prevent.)
+    for key in ("endpointing", "echo_guard_scale", "fish_url"):
         assert key in speech, f"{key} must live under speech:"
     # And the canonical config must still build a prompting stack at all.
     assert build_prompting_stack(store.section("prompting")).composer is not None

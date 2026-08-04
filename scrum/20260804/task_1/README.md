@@ -3,7 +3,7 @@
 **Author:** Fable 5 (plan + integration + adversarial review).
 **Executors:** Claude Opus and ChatGPT Sol 5.6 Ultra, working in parallel
 through the day. Task cards live in the workstream files; each card names its
-owner. Background: [../../docs/RESEARCH_2026_ROADMAPS.md](../../docs/RESEARCH_2026_ROADMAPS.md)
+owner. Background: [../../../docs/RESEARCH_2026_ROADMAPS.md](../../../docs/RESEARCH_2026_ROADMAPS.md)
 (§1 duplex voice, §2 expressive behavior) — read the relevant section before
 starting a card.
 
@@ -69,7 +69,7 @@ conflict with Opus's edits.
    verify. Append to this file under "Handoffs".
 7. **Every "not verified" line becomes a backlog entry.** Sprint folders go
    quiet; the register does not. Add it to
-   [../../backlog/UNVERIFIED.md](../../backlog/UNVERIFIED.md) with a concrete
+   [../../../backlog/UNVERIFIED.md](../../../backlog/UNVERIFIED.md) with a concrete
    "to verify" step, or to `BLOCKED.md` if it waits on something external.
 
 ## Integration order (Fable)
@@ -345,3 +345,53 @@ lag is measurable — bias early per the ITU asymmetry.
 **Housekeeping.** `configs/robot.yaml` changed again, so `robot_config`
 sha256 was re-frozen to
 `08df194bbea0aa1f628272c54fa37c7b80b715e254bbb7effa4001c3589e0040`.
+
+### Sprint review round 2 · Fable · 19 confirmed findings, all fixed
+
+A 24-agent find→verify workflow over the task_1 diff confirmed 19 defects
+(1 candidate rejected). All fixed same-session; my surfaces re-verified green
+(162 tests across expression/voice/prosody/endpointing/prompting/control plus
+the previously-failing integration files once concurrent edits settled).
+
+**Majors, with the lesson each carries:**
+
+- **Barge-in died in the audio drain window** (`voice_pipeline._interrupt_output`
+  early-returned when no output state existed — but the output worker exits at
+  end of *enqueueing*, while the sink still holds seconds of audio). A spoken
+  "stop" latched the E-stop yet the robot kept talking to the end of its
+  queue, with stale beat nods still arming. Interrupt now fires
+  unconditionally; regression test covers the drain window specifically.
+- **The semantic endpointing path regressed two prior review fixes**: it
+  bypassed `EnergyVad.process`, freezing the adaptive noise floor (echo guard
+  mis-calibrated for the whole session) and dropping the max-utterance bound
+  (unbounded buffer, never committing under sustained noise). Floor
+  adaptation is now a public `update_floor` both paths share; the byte bound
+  mirrors `max_utterance_frames` with the same re-seed escape; an endpointer
+  fault mid-turn commits the captured turn instead of stranding it.
+- **Gesture completion matched stale records by name**: re-dispatching the
+  same clip could be "completed" by the previous run's terminal record.
+  Verification now requires `activity_created_at >= dispatch start`. A
+  `Rejected:` proposal disposition also raises now instead of leaving the
+  step waiting for an activity that will never run.
+
+**Minors:** BeatLayer got a lock (armed from the sink worker, stepped at
+50 Hz, cleared from voice threads — a lost-nod interleaving was reproduced);
+apex-error history is a bounded deque; teleop/voice velocity now gates
+expression to head-only (the one gap in the ELEGNT matrix); joint offsets are
+clamped at the source so large-morphology profiles cannot silently kill the
+channel at the IPC bound (publish failures also log once per transition);
+the emote→sentence mapping is now a single-pass word-stream walk (the
+dual-split dropped trailing tags and could misalign near max_chars);
+`build_speech_stack` fails closed on unknown keys and `fish_reference_id` is
+actually wired (unread `fish_streaming`/`barge_in` removed); the emote policy
+prompt no longer advertises the intensity knob (validated but not yet scaling
+anything — noted under backlog N7); the eval manifest's `frozen_at_utc` now
+moves when the freeze does, and hashes are recomputed per named entry from
+disk.
+
+**Verification note:** the full suite oscillated during this round because
+task_2 executors were editing `runtime.py`/`providers.py`/brain files
+concurrently; every file re-ran green in isolation once their saves settled.
+Remaining suite reds at time of writing belong to the in-flight W7
+(`SearchOwner` schema surface + manifest re-freeze) and close with that
+card's own acceptance.

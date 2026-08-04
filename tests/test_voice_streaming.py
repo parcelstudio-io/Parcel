@@ -432,7 +432,11 @@ def test_duplex_session_barge_in_cancels_active_stream():
 
     assert played == [b"RIFF-header"]
     assert cancelled.is_set()
-    assert interrupted == [True]
+    # 2026-08-04 review fix: the interrupt now also fires with no live output
+    # state (the sink can still hold queued audio in the drain window), so a
+    # supersede sequence may flush more than once. Flushing is idempotent —
+    # what matters is that it fired.
+    assert interrupted and all(interrupted)
 
 
 def test_new_turn_suppresses_stale_reply_audio():
@@ -535,3 +539,55 @@ def test_audio_handoff_is_not_reported_when_sink_rejects_chunk():
     assert "audio_first_playback" not in names
     assert "error" in names
     assert isinstance(errors[0], OSError)
+
+
+def test_barge_in_flushes_queued_audio_after_output_worker_exits() -> None:
+    """2026-08-04 sprint review, drain window: with faster-than-realtime TTS
+    the output worker exits while the SpeakerSink still holds queued chunks.
+    A barge-in in that window must still flush the sink — previously it was
+    skipped entirely and the robot talked to the end of its queue."""
+
+    import time as _time
+
+    from parcel_robot.providers import SentenceChunkedSynthesizer
+    from parcel_robot.voice_audio import SpeakerSink, pcm16_wav
+
+    class _InstantSynth:
+        def synthesize(self, text: str) -> bytes:
+            return pcm16_wav(b"\x01\x00" * 1600)  # 0.1 s of audio per sentence
+
+    class _SixSentenceAgent:
+        def handle_text(self, text: str) -> str:
+            return "One. Two. Three. Four. Five. Six."
+
+    played: list[int] = []
+    release = threading.Event()
+
+    def slow_player(pcm: bytes, rate: int) -> None:
+        played.append(len(pcm))
+        release.wait(0.4)  # each chunk takes ~0.4 s to "play"
+
+    sink = SpeakerSink(player=slow_player)
+    session = DuplexVoiceSession(
+        _SixSentenceAgent(),
+        synthesizer=SentenceChunkedSynthesizer(_InstantSynth()),
+        audio_chunk_player=sink.enqueue,
+        audio_interrupt=sink.interrupt,
+        audio_turn_start=sink.begin_utterance,
+    )
+    try:
+        session.submit_text("hello", is_final=True)
+        # All six chunks synthesize near-instantly; the output worker goes
+        # idle while most are still queued behind the slow player.
+        assert session.wait_until_idle(timeout=5.0)
+        assert len(played) < 6, "player outran the test; slow it down"
+
+        session.barge_in()
+        _time.sleep(1.0)
+        # The queue was flushed: at most one in-flight chunk finished after
+        # the barge-in, the rest never played.
+        assert len(played) <= 3, f"queued chunks kept playing: {len(played)}"
+    finally:
+        release.set()
+        session.close()
+        sink.close()

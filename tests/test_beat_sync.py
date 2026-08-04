@@ -379,8 +379,9 @@ def test_runtime_analyzes_a_chunk_and_arms_nods_on_playback(tmp_path: Path) -> N
         assert captured, "chunk was never queued"
         _chunk, token = captured[0]
         assert token is not None, "no prosody token attached"
-        track, epoch = token
+        track, epoch, emotes = token
         assert track.accents and epoch == runtime.expression.speech_epoch
+        assert emotes == ()
 
         runtime._audio_chunk_started(token)
         assert runtime.expression.beats.nods_scheduled == len(track.accents)

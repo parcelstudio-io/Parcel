@@ -105,13 +105,7 @@ class EnergyVad:
         voiced = rms > threshold
         events: list[VadEvent] = []
 
-        if voiced and rms > self._noise_rms:
-            # Upward-only slow leak: a genuinely shifted ambient level (fan,
-            # traffic) eventually re-baselines the floor even though every
-            # frame reads as voiced, while a short real utterance barely
-            # moves it. Without this, sustained noise above threshold locks
-            # the VAD into back-to-back max-length flushes forever.
-            self._noise_rms += (rms - self._noise_rms) * (self.noise_adapt_rate / 50.0)
+        self.update_floor(rms, voiced=voiced, segmenting=True)
 
         if not self._active:
             if voiced:
@@ -124,10 +118,6 @@ class EnergyVad:
             else:
                 self._voiced_run = 0
                 self._speech_frames.clear()
-                # Only quiet frames adapt the floor; otherwise speech would
-                # raise its own detection threshold.
-                self._noise_rms += (rms - self._noise_rms) * self.noise_adapt_rate
-                self._noise_rms = max(20.0, self._noise_rms)
         else:
             self._speech_frames.append(frame.tobytes())
             if voiced:
@@ -142,13 +132,39 @@ class EnergyVad:
                     # almost certainly ambient noise, not speech. Re-seed the
                     # floor toward it so the next segment cannot start
                     # immediately (stuck-floor escape found in review).
-                    segment = np.frombuffer(utterance, dtype=np.int16)
-                    self._noise_rms = max(
-                        self._noise_rms, self.frame_rms(segment) * 0.8
+                    self.reseed_floor(
+                        self.frame_rms(np.frombuffer(utterance, dtype=np.int16))
                     )
                 self._reset_segment()
                 events.append(VadEvent("speech_end", utterance))
         return events
+
+    def update_floor(self, rms: float, *, voiced: bool, segmenting: bool = False) -> None:
+        """Adapt the noise floor for one frame.
+
+        Quiet inactive frames adapt fast; voiced frames leak upward ~50x
+        slower so a shifted ambient level (fan, traffic) eventually
+        re-baselines while a short utterance barely moves the threshold.
+        Public so external segmenters (the semantic endpointing path) keep the
+        floor — and therefore the playback echo guard — calibrated instead of
+        freezing it at the initial value (2026-08-04 sprint review).
+        """
+
+        if voiced:
+            if rms > self._noise_rms:
+                self._noise_rms += (rms - self._noise_rms) * (self.noise_adapt_rate / 50.0)
+        elif not (segmenting and self._active):
+            # During internal segmentation, hangover silence inside an active
+            # utterance does not adapt (unchanged historical behavior).
+            self._noise_rms += (rms - self._noise_rms) * self.noise_adapt_rate
+            self._noise_rms = max(20.0, self._noise_rms)
+
+    def reseed_floor(self, segment_rms: float) -> None:
+        """Escape hatch after a max-length flush: pull the floor toward the
+        flushed segment so ambient noise cannot restart immediately."""
+
+        if math.isfinite(segment_rms) and segment_rms > 0.0:
+            self._noise_rms = max(self._noise_rms, segment_rms * 0.8)
 
     def _reset_segment(self) -> None:
         self._active = False
@@ -417,7 +433,12 @@ class MicrophoneVoiceLoop:
                 self._finish_utterance(event.utterance)
 
     def _frame_is_speech(self, frame: np.ndarray) -> bool:
-        """Raw per-frame speech decision: Silero when usable, energy else."""
+        """Raw per-frame speech decision: Silero when usable, energy else.
+
+        Either way the EnergyVad noise floor keeps adapting — the playback
+        echo guard compares against it, so freezing it at the initial value
+        would mis-calibrate barge-in for the whole session (sprint review).
+        """
 
         vad = self.neural_vad
         if vad is not None and getattr(vad, "available", False):
@@ -435,15 +456,17 @@ class MicrophoneVoiceLoop:
                     return self._energy_is_speech(frame)
                 self._last_is_speech = probability >= getattr(vad, "threshold", 0.5)
                 decided = True
-            if not decided:
-                # No complete window this frame: hold the previous decision.
-                return self._last_is_speech
+            del decided  # incomplete window: hold the previous decision
+            self.vad.update_floor(
+                EnergyVad.frame_rms(frame), voiced=self._last_is_speech
+            )
             return self._last_is_speech
         return self._energy_is_speech(frame)
 
     def _energy_is_speech(self, frame: np.ndarray) -> bool:
         rms = EnergyVad.frame_rms(frame)
         self._last_is_speech = rms > self.vad.noise_rms * self.vad.threshold_scale
+        self.vad.update_floor(rms, voiced=self._last_is_speech)
         return self._last_is_speech
 
     def _handle_frame_semantic(self, frame: np.ndarray, *, playback: bool) -> None:
@@ -466,6 +489,17 @@ class MicrophoneVoiceLoop:
                     logger.warning("barge-in failed: %s", error)
         if self._turn_active:
             self._utterance.extend(frame.tobytes())
+            # Same bound the energy path enforces via max_utterance_frames:
+            # without it, unbroken "speech" (sustained noise, a stuck VAD)
+            # grows the buffer without limit and never commits (sprint
+            # review regression). Re-seed the floor exactly like the energy
+            # path's too-long flush so noise cannot restart immediately.
+            limit_bytes = self.vad.max_utterance_frames * FRAME_SAMPLES * 2
+            if len(self._utterance) >= limit_bytes:
+                segment = np.frombuffer(bytes(self._utterance), dtype=np.int16)
+                self.vad.reseed_floor(EnergyVad.frame_rms(segment))
+                self._commit_turn()
+                return
 
         tail = (
             np.frombuffer(bytes(self._utterance), dtype=np.int16)
@@ -479,23 +513,30 @@ class MicrophoneVoiceLoop:
         except Exception as error:  # noqa: BLE001 - endpointer boundary
             logger.warning("endpointer failed; reverting to energy VAD: %s", error)
             self.endpointer = None
+            if self._turn_active:
+                # Do not strand the turn: commit what was captured so the
+                # orient reaction releases and the owner is not ignored.
+                self._commit_turn()
             return
         if decision == "commit" and self._turn_active:
-            utterance = bytes(self._utterance)
-            latency_s = 0.0
-            if self._speech_started_at is not None:
-                latency_s = max(0.0, self._elapsed_s - self._speech_started_at)
-            self._turn_active = False
-            self._utterance.clear()
-            self._speech_started_at = None
-            self.turn_commits += 1
-            self._notify(self.on_speech_end)
-            if self.on_turn_commit is not None:
-                try:
-                    self.on_turn_commit(latency_s)
-                except Exception as error:  # noqa: BLE001 - metric boundary
-                    logger.warning("turn-commit observer failed: %s", error)
-            self._finish_utterance(utterance)
+            self._commit_turn()
+
+    def _commit_turn(self) -> None:
+        utterance = bytes(self._utterance)
+        latency_s = 0.0
+        if self._speech_started_at is not None:
+            latency_s = max(0.0, self._elapsed_s - self._speech_started_at)
+        self._turn_active = False
+        self._utterance.clear()
+        self._speech_started_at = None
+        self.turn_commits += 1
+        self._notify(self.on_speech_end)
+        if self.on_turn_commit is not None:
+            try:
+                self.on_turn_commit(latency_s)
+            except Exception as error:  # noqa: BLE001 - metric boundary
+                logger.warning("turn-commit observer failed: %s", error)
+        self._finish_utterance(utterance)
 
     @staticmethod
     def _notify(observer: Callable[[], None] | None) -> None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -12,16 +12,14 @@ from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
 from .approach import point_in_polygon_with_clearance, safe_approach_pose
 from .base import MidLevelCommand, Mission, NavObservation
 from .collision import CollisionPolicy, apply_collision_brake
-from .experimental_all_ray_shield import (
-    V8_ALL_RAY_MODE,
-    V8AllRayShieldConfig,
-    apply_v8_all_ray_shield,
-)
 from .goals import navigation_directive_is_blocked, semantic_goal_from_directive
 from .grounder import PlaceGrounder
 from .registry import ModelRegistry
 from .search import ActiveSemanticSearch
 from .semantic_map import ObservationSemanticMap, SemanticMap
+
+if TYPE_CHECKING:
+    from .experimental_all_ray_shield import V8AllRayShieldConfig
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -68,6 +66,10 @@ class DirectiveNavigator:
         self._best_goal_distance_m: float | None = None
         self._steps_without_progress = 0
         self._terminal_verification_steps = 0
+        self._paused = False
+        self._status_before_pause: str | None = None
+        self._frozen_steps_without_progress = 0
+        self._frozen_terminal_verification_steps = 0
 
     @classmethod
     def from_config(cls, path: str | Path | None = None, **overrides: Any) -> DirectiveNavigator:
@@ -106,6 +108,9 @@ class DirectiveNavigator:
         predictive_mode = str(
             overrides.get("predictive_mode", safety.get("predictive_mode", "stop"))
         )
+        # Lazy: keep BARN v8 shield off the default import/grep surface.
+        from .experimental_all_ray_shield import V8_ALL_RAY_MODE, V8AllRayShieldConfig
+
         all_ray_shield: V8AllRayShieldConfig | None = None
         if predictive_mode == V8_ALL_RAY_MODE:
             raw_all_ray_profile = safety.get("all_ray_yaw_swept_cap")
@@ -192,6 +197,12 @@ class DirectiveNavigator:
     def list_models(self):
         return self.registry.list()
 
+    @property
+    def dynamic_cost_active(self) -> bool:
+        """Whether the active model planned against dynamic-agent costs last tick."""
+
+        return bool(getattr(self._navigator, "dynamic_cost_active", False))
+
     def parse(self, directive: str) -> Mission:
         if navigation_directive_is_blocked(directive):
             raise ValueError("negated or hypothetical navigation directive")
@@ -229,6 +240,12 @@ class DirectiveNavigator:
         self._best_goal_distance_m = None
         self._steps_without_progress = 0
         self._terminal_verification_steps = 0
+        # Fresh start clears any prior pause (resume-as-fresh-dispatch).
+        self._paused = False
+        self._status_before_pause = None
+        self._frozen_steps_without_progress = 0
+        self._frozen_terminal_verification_steps = 0
+        mission.metadata.pop("paused", None)
         mission.metadata.setdefault("replan_count", 0)
         if mission.goal is not None:
             self._navigator.reset(mission)
@@ -238,9 +255,52 @@ class DirectiveNavigator:
     def done(self) -> bool:
         return self.mission is None or self.mission.status in {"arrived", "failed", "idle"}
 
+    @property
+    def paused(self) -> bool:
+        return self._paused
+
+    def pause(self) -> None:
+        """Freeze tick budgets and retain the Mission (≠ ``stop()``)."""
+
+        if self.mission is None or self._paused:
+            return
+        if self.mission.status in {"arrived", "failed", "idle"}:
+            return
+        self._status_before_pause = self.mission.status_value()
+        self._frozen_steps_without_progress = self._steps_without_progress
+        self._frozen_terminal_verification_steps = self._terminal_verification_steps
+        # String literal keeps BARN historical-bundle base.py import-compatible.
+        self.mission.status = "paused"
+        self.mission.metadata["paused"] = True
+        self._paused = True
+
+    def resume(self) -> None:
+        if not self._paused or self.mission is None:
+            return
+        restored = self._status_before_pause or "running"
+        self.mission.status = restored
+        self.mission.metadata.pop("paused", None)
+        self._steps_without_progress = self._frozen_steps_without_progress
+        self._terminal_verification_steps = self._frozen_terminal_verification_steps
+        self._status_before_pause = None
+        self._paused = False
+
+    def snapshot(self) -> dict[str, object]:
+        mission = self.mission
+        return {
+            "paused": self._paused,
+            "steps_without_progress": self._steps_without_progress,
+            "terminal_verification_steps": self._terminal_verification_steps,
+            "mission_status": None if mission is None else mission.status_value(),
+            "has_mission": mission is not None,
+        }
+
     def step(self, observation: NavObservation) -> MidLevelCommand:
         if self.mission is None:
             return MidLevelCommand(stop=True, note="no_mission")
+        if self._paused:
+            # Budgets stay frozen; do not advance watchdog counters.
+            return MidLevelCommand(stop=True, note="mission_paused")
         if self.mission.goal is None:
             return self._step_semantic_resolution(observation)
         if self.mission.status == "verifying":
@@ -284,6 +344,8 @@ class DirectiveNavigator:
         vy = max(-max_vy, min(max_vy, vy))
         vyaw = max(-max_vyaw, min(max_vyaw, cmd.vyaw))
         if self.all_ray_shield is not None:
+            from .experimental_all_ray_shield import apply_v8_all_ray_shield
+
             try:
                 shield = apply_v8_all_ray_shield(
                     vx,
@@ -671,6 +733,10 @@ class DirectiveNavigator:
         self._best_goal_distance_m = None
         self._steps_without_progress = 0
         self._terminal_verification_steps = 0
+        self._paused = False
+        self._status_before_pause = None
+        self._frozen_steps_without_progress = 0
+        self._frozen_terminal_verification_steps = 0
 
     def close(self) -> None:
         self.stop()

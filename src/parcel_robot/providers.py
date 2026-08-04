@@ -5,9 +5,9 @@ import logging
 import re
 import threading
 import time
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Any, Protocol, Self
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -1067,6 +1067,83 @@ def strip_emote_tags(text: str) -> tuple[str, list[tuple[str, float]]]:
     return spoken, emotes
 
 
+class SpeechChunk(bytes):
+    """Synthesized audio that remembers the emotes authored in its sentence.
+
+    A plain ``bytes`` cannot carry the association, and the session's audio
+    path is deliberately byte-oriented, so the chunk itself is the carrier:
+    every consumer keeps treating it as PCM/WAV while the runtime reads
+    ``emotes`` when it hands the chunk to the speaker sink.
+    """
+
+    emotes: tuple[tuple[str, float], ...]
+
+    def __new__(
+        cls,
+        data: bytes,
+        emotes: Iterable[tuple[str, float]] = (),
+    ) -> Self:
+        chunk = super().__new__(cls, data)
+        chunk.emotes = tuple((str(name), float(intensity)) for name, intensity in emotes)
+        return chunk
+
+
+def _sentences_with_emotes(
+    text: str, *, max_chars: int
+) -> list[tuple[str, list[tuple[str, float]]]]:
+    """Sentence chunks plus the emotes anchored inside each one.
+
+    One pass over the word stream, applying the exact chunking rule of
+    ``split_speech_sentences`` after tags are stripped per word — so tag
+    characters can never skew the max-length word splits, and a trailing tag
+    after the final sentence anchors to that sentence instead of being
+    silently dropped (both found in the 2026-08-04 sprint review's
+    dual-split mapping).
+    """
+
+    words: list[str] = []
+    emotes_by_word: dict[int, list[tuple[str, float]]] = {}
+    pending: list[tuple[str, float]] = []
+    for raw_word in text.split():
+        found: list[tuple[str, float]] = []
+
+        def capture(match: re.Match[str], _found: list[tuple[str, float]] = found) -> str:
+            name = match.group(1).lower()
+            raw_intensity = match.group(2)
+            try:
+                intensity = 1.0 if raw_intensity is None else float(raw_intensity)
+            except ValueError:
+                intensity = 1.0
+            _found.append((name, intensity))
+            return ""
+
+        spoken_word = _EMOTE_TAG.sub(capture, raw_word).strip()
+        pending.extend(found)
+        if spoken_word:
+            index = len(words)
+            words.append(spoken_word)
+            if pending:
+                emotes_by_word.setdefault(index, []).extend(pending)
+                pending = []
+    if pending and words:
+        emotes_by_word.setdefault(len(words) - 1, []).extend(pending)
+
+    sentences: list[tuple[str, list[tuple[str, float]]]] = []
+    current: list[str] = []
+    current_emotes: list[tuple[str, float]] = []
+    for index, word in enumerate(words):
+        current.append(word)
+        current_emotes.extend(emotes_by_word.get(index, ()))
+        if word.endswith(_SENTENCE_BOUNDARY) or sum(len(w) + 1 for w in current) >= max_chars:
+            sentences.append((" ".join(current), current_emotes))
+            current, current_emotes = [], []
+    if current:
+        sentences.append((" ".join(current), current_emotes))
+    elif current_emotes and sentences:
+        sentences[-1][1].extend(current_emotes)
+    return sentences
+
+
 class SentenceChunkedSynthesizer:
     """Adapt any blocking synthesizer into a cancellable streaming one.
 
@@ -1081,48 +1158,34 @@ class SentenceChunkedSynthesizer:
         synthesizer: SpeechSynthesizer,
         *,
         max_chars: int = 220,
-        on_emote: Callable[[str, float], None] | None = None,
     ):
         if not 40 <= max_chars <= 2000:
             raise ValueError("sentence chunk size must be between 40 and 2000 characters")
         self._synthesizer = synthesizer
         self._max_chars = max_chars
-        # Fired as the sentence carrying the tag begins synthesis, so the
-        # gesture lands with the words rather than after the whole reply.
-        self._on_emote = on_emote
 
-    def synthesize(self, text: str) -> bytes:
-        return self._synthesizer.synthesize(strip_emote_tags(text)[0])
+    def synthesize(self, text: str) -> SpeechChunk:
+        spoken, emotes = strip_emote_tags(text)
+        return SpeechChunk(self._synthesizer.synthesize(spoken), emotes)
 
     def synthesize_stream(
         self,
         text: str,
         *,
         cancel_event: threading.Event | None = None,
-    ) -> Iterator[bytes]:
-        spoken, _ = strip_emote_tags(text)
-        sentences = split_speech_sentences(spoken, max_chars=self._max_chars)
-        # Re-derive tags per sentence so an emote fires with its own sentence.
-        tagged = split_speech_sentences(text, max_chars=self._max_chars + 80)
-        emotes_by_index: dict[int, list[tuple[str, float]]] = {}
-        for index, raw in enumerate(tagged):
-            _, found = strip_emote_tags(raw)
-            if found:
-                emotes_by_index[index] = found
-        for index, sentence in enumerate(sentences):
+    ) -> Iterator[SpeechChunk]:
+        for sentence, emotes in _sentences_with_emotes(text, max_chars=self._max_chars):
             if cancel_event is not None and cancel_event.is_set():
                 return
-            for name, intensity in emotes_by_index.get(index, ()):
-                if self._on_emote is not None:
-                    try:
-                        self._on_emote(name, intensity)
-                    except Exception as error:  # noqa: BLE001 - decorative boundary
-                        logger.warning("emote tag %s failed: %s", name, error)
             chunk = self._synthesizer.synthesize(sentence)
             if cancel_event is not None and cancel_event.is_set():
                 return
             if chunk:
-                yield chunk
+                # Synthesis time is not playback time: with a deep audio queue
+                # a tag fired here would land seconds before its words. The
+                # emotes ride the chunk and fire from the sink's playback-start
+                # callback instead (card W8).
+                yield SpeechChunk(chunk, emotes)
 
 
 @dataclass(frozen=True)
@@ -1136,15 +1199,47 @@ class SpeechStack:
     tts_detail: str
 
 
+# Every key the speech: section may carry — read either here or by the
+# runtime (devices, endpointing, echo guard). Anything else fails closed:
+# an accepted-but-unread key is indistinguishable from a working one
+# (the mis-indented-YAML incident, 2026-08-04).
+_ALLOWED_SPEECH_KEYS = frozenset(
+    {
+        "mode",
+        "stt_provider",
+        "whisper_url",
+        "stt_timeout_s",
+        "tts_provider",
+        "piper_binary",
+        "piper_voice",
+        "piper_sample_rate_hz",
+        "fish_url",
+        "fish_reference_id",
+        "echo_guard_scale",
+        "input_device",
+        "output_device",
+        "endpointing",
+        "vad_model",
+        "turn_model",
+        "complete_silence_s",
+        "incomplete_silence_s",
+    }
+)
+
+
 def build_speech_stack(config: Mapping[str, object]) -> SpeechStack:
     """Construct STT/TTS providers from the ``speech:`` config section.
 
     Fails soft by design: an unreachable or uninstalled provider yields a
     ``None`` role plus a status string, and the runtime keeps operating in
     text mode. ``mode: text`` disables audio explicitly; ``audio`` demands it;
-    ``auto`` uses whatever is healthy.
+    ``auto`` uses whatever is healthy. Unknown keys fail closed (loud), not
+    soft — a key that parses but does nothing is a configuration lie.
     """
 
+    unknown = set(config) - _ALLOWED_SPEECH_KEYS
+    if unknown:
+        raise ValueError(f"unsupported speech config keys: {sorted(unknown)}")
     mode = str(config.get("mode", "auto")).strip().lower()
     if mode not in {"auto", "text", "audio"}:
         raise ValueError("speech.mode must be auto, text, or audio")
@@ -1191,7 +1286,11 @@ def build_speech_stack(config: Mapping[str, object]) -> SpeechStack:
         else:
             tts_detail = "piper not installed (binary/voice missing)"
     elif tts_provider == "fish_s2":
-        fish = FishSpeechProvider(base_url=str(config.get("fish_url", "http://127.0.0.1:8091")))
+        fish_reference = config.get("fish_reference_id")
+        fish = FishSpeechProvider(
+            base_url=str(config.get("fish_url", "http://127.0.0.1:8091")),
+            reference_id=str(fish_reference) if fish_reference else None,
+        )
         if fish.is_healthy():
             synthesizer = fish
             tts_detail = f"fish_s2 at {fish.base_url}"

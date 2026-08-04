@@ -18,6 +18,20 @@ from dataclasses import dataclass, replace
 
 from parcel_robot.models import SpatialIntent
 
+# Terminal-state constants owned by the navigator (MissionStatus values).
+# Kept as string literals so historical BARN bundles that pin an older
+# navigation.base remain import-compatible with this adapter.
+NAVIGATION_SUCCESS_STATES = frozenset({"arrived"})
+NAVIGATION_FAILURE_STATES = frozenset({"failed", "unresolved"})
+NAVIGATION_IN_PROGRESS_STATES = frozenset(
+    {"running", "searching", "verifying", "paused", "waiting"}
+)
+SPATIAL_SUCCESS_STATES = frozenset({"completed"})
+SPATIAL_FAILURE_STATES = frozenset({"failed", "cancelled"})
+FOLLOW_SUCCESS_STATES = frozenset({"holding_behind"})
+SEARCH_SUCCESS_STATES = frozenset({"reacquired"})
+SEARCH_FAILURE_STATES = frozenset({"gave_up"})
+
 from .contracts import (
     ExecutionResult,
     IntentFrame,
@@ -26,8 +40,12 @@ from .contracts import (
     VerifiedFact,
 )
 from .executive import DispatchRequest
+from .validator import SYSTEM_SKILL_NAMES
 
 DispatchKey = tuple[str, int, str, int]
+# The camera-grounding threshold the validator and executive already use for
+# ``owner_visible``; reacquisition is held to the same bar.
+OWNER_TRACK_CONFIDENCE_MIN = 0.6
 PLAN_IR_OUTPUT_CONTRACT = "plan_ir_v1"
 PLAN_SKETCH_OUTPUT_CONTRACT = "plan_sketch_v1"
 PLANNER_OUTPUT_CONTRACTS = frozenset({PLAN_IR_OUTPUT_CONTRACT, PLAN_SKETCH_OUTPUT_CONTRACT})
@@ -48,6 +66,14 @@ class SemanticRuntimeState:
     follow_enabled: bool = False
     follow_state: str = "idle"
     follow_mode: str = "direct"
+    # Owner reacquisition (card W7). ``owner_track_confidence`` is the passive
+    # camera owner track the follow controller consumes, reported separately so
+    # SearchOwner completion is verified against perception as well as against
+    # the search controller's own terminal state.
+    search_enabled: bool = False
+    search_state: str = "idle"
+    search_reason: str = ""
+    owner_track_confidence: float = 0.0
     stop_confirmed: bool = False
     control_feedback_fresh: bool = False
     robot_moving: bool = False
@@ -57,10 +83,14 @@ class SemanticRuntimeState:
     # Activity-coordinator view used to verify Gesture completion: the name of
     # the most recent physical activity and its terminal status. A gesture is
     # complete only when the coordinator reports it finished, never because
-    # the dispatch returned.
+    # the dispatch returned. ``activity_created_at`` (the record's monotonic
+    # creation time) lets the verifier reject stale same-name records from an
+    # EARLIER emote — matching by name alone falsely completed a re-dispatch
+    # of the same clip (2026-08-04 sprint review).
     activity_name: str = ""
     activity_status: str = "idle"
     activity_detail: str = ""
+    activity_created_at: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +124,13 @@ class SemanticTaskRuntimeAdapter:
             "Gesture",
         }
     )
+    # Skills the runtime proposes deterministically and a language model may
+    # never author. They are executed, validated, and verified exactly like any
+    # other semantic skill; they are simply absent from the planner's surface,
+    # so they stay out of ``SUPPORTED_SKILLS`` and out of every schema and
+    # registry derived from it.
+    SYSTEM_SKILLS = SYSTEM_SKILL_NAMES
+    EXECUTABLE_SKILLS = SUPPORTED_SKILLS | SYSTEM_SKILLS
 
     def __init__(
         self,
@@ -105,6 +142,7 @@ class SemanticTaskRuntimeAdapter:
         vocalize: Callable[[str], object],
         return_to_safe_pose: Callable[[str], object] | None = None,
         gesture: Callable[[str, float], object] | None = None,
+        search_owner: Callable[[], object] | None = None,
     ):
         self._navigate = navigate
         self._follow_formation = follow_formation
@@ -113,6 +151,7 @@ class SemanticTaskRuntimeAdapter:
         self._vocalize = vocalize
         self._return_to_safe_pose = return_to_safe_pose
         self._gesture = gesture
+        self._search_owner = search_owner
         self._active: dict[DispatchKey, ActiveSemanticDispatch] = {}
         self._lock = threading.RLock()
 
@@ -124,7 +163,7 @@ class SemanticTaskRuntimeAdapter:
     ) -> ExecutionResult | None:
         """Start one semantic skill; speech-only skills finish synchronously."""
 
-        if request.skill not in self.SUPPORTED_SKILLS:
+        if request.skill not in self.EXECUTABLE_SKILLS:
             raise ValueError(f"runtime adapter does not support {request.skill}")
         timestamp = time.monotonic() if now is None else float(now)
         if not math.isfinite(timestamp) or timestamp < 0.0:
@@ -177,6 +216,10 @@ class SemanticTaskRuntimeAdapter:
             if self._gesture is None:
                 raise RuntimeError("Gesture has no runtime callback on this deployment")
             self._gesture(str(args["name"]), float(args.get("intensity", 1.0)))
+        elif request.skill == "SearchOwner":
+            if self._search_owner is None:
+                raise RuntimeError("SearchOwner has no runtime callback on this deployment")
+            self._search_owner()
         else:
             field = "text" if request.skill == "Vocalize" else "question"
             self._vocalize(str(args[field]))
@@ -253,6 +296,21 @@ class SemanticTaskRuntimeAdapter:
         with self._lock:
             return tuple(self._active.values())
 
+    @classmethod
+    def _verifier_table(cls) -> dict[str, str]:
+        """Skill → verifier branch name over frozen controller sub-views."""
+
+        return {
+            "NavigateTo": "navigation",
+            "OrbitOwner": "spatial",
+            "MoveRelative": "spatial",
+            "FollowFormation": "follow",
+            "SearchOwner": "search",
+            "ReturnToSafePose": "posture",
+            "Gesture": "activity",
+            "Hold": "hold",
+        }
+
     @staticmethod
     def _result_for(
         item: ActiveSemanticDispatch,
@@ -260,8 +318,10 @@ class SemanticTaskRuntimeAdapter:
         now: float,
     ) -> ExecutionResult:
         request = item.request
-        if request.skill == "NavigateTo":
-            if state.navigation_state == "arrived" and not state.navigation_enabled:
+        # Table lookup keeps paused/terminal literals from drifting per skill.
+        branch = SemanticTaskRuntimeAdapter._verifier_table().get(request.skill, "hold")
+        if branch == "navigation":
+            if state.navigation_state in NAVIGATION_SUCCESS_STATES and not state.navigation_enabled:
                 expected = request.success.target
                 if (
                     expected is None
@@ -284,7 +344,7 @@ class SemanticTaskRuntimeAdapter:
                     finished=now,
                     verified_target=expected,
                 )
-            if state.navigation_state in {"failed", "unresolved"} or (
+            if state.navigation_state in NAVIGATION_FAILURE_STATES or (
                 state.navigation_state == "idle" and not state.navigation_enabled
             ):
                 return _failed_result(
@@ -295,8 +355,8 @@ class SemanticTaskRuntimeAdapter:
                     finished=now,
                 )
             detail = state.navigation_reason or state.navigation_state
-        elif request.skill in {"OrbitOwner", "MoveRelative"}:
-            if state.spatial_state == "completed" and not state.spatial_enabled:
+        elif branch == "spatial":
+            if state.spatial_state in SPATIAL_SUCCESS_STATES and not state.spatial_enabled:
                 return _terminal_result(
                     request,
                     started=item.started_at_monotonic_s,
@@ -306,7 +366,7 @@ class SemanticTaskRuntimeAdapter:
                     finished=now,
                     verified_target=("owner" if request.skill == "OrbitOwner" else None),
                 )
-            if state.spatial_state in {"failed", "cancelled"} or (
+            if state.spatial_state in SPATIAL_FAILURE_STATES or (
                 state.spatial_state == "idle" and not state.spatial_enabled
             ):
                 return _failed_result(
@@ -317,11 +377,11 @@ class SemanticTaskRuntimeAdapter:
                     finished=now,
                 )
             detail = state.spatial_reason or state.spatial_state
-        elif request.skill == "FollowFormation":
+        elif branch == "follow":
             if (
                 state.follow_enabled
                 and state.follow_mode == "behind"
-                and state.follow_state == "holding_behind"
+                and state.follow_state in FOLLOW_SUCCESS_STATES
             ):
                 return _terminal_result(
                     request,
@@ -344,7 +404,40 @@ class SemanticTaskRuntimeAdapter:
             # safe checkpoints. The controller remains fail-closed and the
             # executive's timeout/recovery policy decides how long to wait.
             detail = state.follow_state
-        elif request.skill == "ReturnToSafePose":
+        elif branch == "search":
+            if state.search_state in SEARCH_SUCCESS_STATES and not state.search_enabled:
+                # Two independent witnesses: the controller says it reacquired,
+                # and the owner track it reacquired against is still confident
+                # enough to ground ``owner_visible``. Either alone would be an
+                # assertion rather than a verification.
+                if state.owner_track_confidence >= OWNER_TRACK_CONFIDENCE_MIN:
+                    return _terminal_result(
+                        request,
+                        started=item.started_at_monotonic_s,
+                        snapshot_id=state.snapshot_id,
+                        source="camera_owner_track_search_controller",
+                        detail="owner_reacquired_verified",
+                        finished=now,
+                        verified_target="owner",
+                        confidence=min(1.0, state.owner_track_confidence),
+                    )
+                return _failed_result(
+                    request,
+                    started=item.started_at_monotonic_s,
+                    snapshot_id=state.snapshot_id,
+                    detail="owner_reacquisition_not_confirmed_by_track",
+                    finished=now,
+                )
+            if state.search_state in SEARCH_FAILURE_STATES or not state.search_enabled:
+                return _failed_result(
+                    request,
+                    started=item.started_at_monotonic_s,
+                    snapshot_id=state.snapshot_id,
+                    detail=state.search_reason or "owner_search_ended_without_reacquisition",
+                    finished=now,
+                )
+            detail = state.search_reason or state.search_state
+        elif branch == "posture":
             requested_pose = str(request.arguments.get("pose", ""))
             posture_applied = state.posture == requested_pose and bool(requested_pose)
             if (
@@ -367,9 +460,16 @@ class SemanticTaskRuntimeAdapter:
                 if not posture_applied
                 else "waiting_for_fresh_stop_confirmation"
             )
-        elif request.skill == "Gesture":
+        elif branch == "activity":
             requested = str(request.arguments.get("name", ""))
-            matches = bool(requested) and state.activity_name == requested
+            matches = (
+                bool(requested)
+                and state.activity_name == requested
+                # Identity check: only a record created at/after this dispatch
+                # can prove it. A terminal record from an earlier same-name
+                # emote must neither complete nor fail this one.
+                and state.activity_created_at >= item.started_at_monotonic_s
+            )
             if matches and state.activity_status in {"completed", "succeeded"}:
                 return _terminal_result(
                     request,
@@ -395,7 +495,7 @@ class SemanticTaskRuntimeAdapter:
                     finished=now,
                 )
             detail = state.activity_detail or "waiting_for_gesture_completion"
-        else:  # Hold
+        else:  # hold
             if state.stop_confirmed and state.control_feedback_fresh and not state.robot_moving:
                 return _terminal_result(
                     request,
@@ -615,12 +715,13 @@ def _terminal_result(
     detail: str,
     verified_target: str | None,
     finished: float | None = None,
+    confidence: float = 1.0,
 ) -> ExecutionResult:
     fact = VerifiedFact(
         fact=request.success.fact,
         target=verified_target,
         source=source,
-        confidence=1.0,
+        confidence=confidence,
     )
     return ExecutionResult(
         schema_version=1,
@@ -674,6 +775,7 @@ def _normalized(value: str) -> str:
 
 
 __all__ = [
+    "OWNER_TRACK_CONFIDENCE_MIN",
     "PLANNER_OUTPUT_CONTRACTS",
     "PLAN_IR_OUTPUT_CONTRACT",
     "PLAN_SKETCH_OUTPUT_CONTRACT",

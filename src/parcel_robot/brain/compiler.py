@@ -13,6 +13,7 @@ _CANONICAL_SUCCESS = {
     "FollowFormation": ("behind", "owner"),
     "OrbitOwner": ("orbit_complete", "owner"),
     "MoveRelative": ("distance_travelled", None),
+    "SearchOwner": ("owner_reacquired", "owner"),
     "Hold": ("motion_stopped", None),
     "Pose": ("skill_completed", None),
     "Gesture": ("skill_completed", None),

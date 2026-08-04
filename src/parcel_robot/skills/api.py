@@ -124,6 +124,17 @@ class Dog:
         self._navigator = DirectiveNavigator.from_config(self.navigation_config)
         return self._navigator
 
+    @property
+    def navigator(self):
+        """Expose the directive navigator for pause/preempt wiring."""
+
+        return self._ensure_navigator()
+
+    def nav_dynamic_cost_active(self) -> bool:
+        """Report the dynamic-cost layer without forcing navigator construction."""
+
+        return bool(getattr(self._navigator, "dynamic_cost_active", False))
+
     def list_nav_models(self):
         return self._ensure_navigator().list_models()
 

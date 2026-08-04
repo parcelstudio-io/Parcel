@@ -1,7 +1,7 @@
 # Parcel backlog
 
 The durable home for work that is **not done** — kept outside any one sprint so
-it survives when `scrum/<date>/` folders go quiet.
+it survives when `scrum/<date>/task_<n>/` folders go quiet.
 
 | File | Holds |
 |---|---|
@@ -50,5 +50,5 @@ of a real dependency.
   this backlog is the work queue that drains it.
 - [../docs/RESEARCH_2026_ROADMAPS.md](../docs/RESEARCH_2026_ROADMAPS.md) —
   where the larger roadmap items come from.
-- `../scrum/<date>/README.md` — per-sprint handoffs, the usual source of new
+- `../scrum/<date>/task_<n>/README.md` — per-sprint handoffs, the usual source of new
   UNVERIFIED entries.

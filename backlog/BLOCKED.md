@@ -50,7 +50,7 @@ needs a live microphone, so in practice do B1 first.
 
 Ordered 2026-08-04 with a CQRobot 4 Ω 3 W JST-PH2.0 enclosed speaker. Full
 arrival checklist, wiring constraint, and the speaker-specific cautions are in
-[../scrum/20260804/B-audio-io.md](../scrum/20260804/B-audio-io.md) card B3.
+[../scrum/20260804/task_1/B-audio-io.md](../scrum/20260804/task_1/B-audio-io.md) card B3.
 
 The one thing worth repeating here: **the speaker must be wired to the array's
 own JST amp output**. The AEC reference is the array's DAC path; a separate
@@ -66,11 +66,29 @@ playback, and DoA-driven head orientation.
 ## B4 — Operator file deletion · *classifier-blocked for agents*
 
 The 2026 redesign severed all code paths to the removed research trees, but
-the files themselves are still on disk. Every candidate is archived at the
-session scratchpad `deleted-archive/`. The prepared command (git rm from
-`delete_list.txt`, then `rm -rf` of `src/parcel_robot/rl` and the BARN v5–v10
-experiment trees) is in the earlier session transcript.
+the files themselves are still on disk. Presence is not a production claim
+([../docs/REDESIGN_2026_ASSESSMENT.md](../docs/REDESIGN_2026_ASSESSMENT.md) §6).
 
-Low urgency: presence in the tree is not a production claim, and
-[../docs/REDESIGN_2026_ASSESSMENT.md](../docs/REDESIGN_2026_ASSESSMENT.md) §6
-says so explicitly. Do it when convenient; nothing depends on it.
+**Refreshed 2026-08-04 (task_4 O1):** candidate list staged at
+[`scrum/20260804/task_4/freeze/b4_delete_list.txt`](../scrum/20260804/task_4/freeze/b4_delete_list.txt)
+(8 roots: `src/parcel_robot/rl`, BARN development v4–v8 trees, experiments
+v9–v10). `navigation/pipeline.py` now lazy-imports the v8 shield so importing
+the navigator no longer pulls `experimental_all_ray_shield` into the default
+grep/import surface O2 is refactoring.
+
+**Operator command (run locally; agents must not):**
+
+```bash
+# From repo root, after reviewing the staged list:
+LIST=scrum/20260804/task_4/freeze/b4_delete_list.txt
+# Optional: archive first
+mkdir -p deleted-archive && tar -czf "deleted-archive/b4-$(date -u +%Y%m%dT%H%M%SZ).tgz" -T "$LIST"
+xargs -a "$LIST" git rm -r --ignore-unmatch
+# Any still-untracked trees:
+xargs -a "$LIST" rm -rf
+.parcel/bin/python -m pytest -q
+```
+
+Low urgency: do it when convenient; nothing production-critical depends on it.
+Keep `experimental_all_ray_shield.py` until BARN v8 tests are retired — only
+the eager import was removed.

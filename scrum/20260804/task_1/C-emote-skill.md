@@ -6,7 +6,7 @@ Goal: the LLM can make the dog shrug, paw-scrape, bow, stretch — keyed to what
 it is saying — through the same validated dispatch path as every other skill.
 Selection, not generation: the model picks from an authored catalog; the
 system owns safety. Design source:
-[../../docs/RESEARCH_2026_ROADMAPS.md](../../docs/RESEARCH_2026_ROADMAPS.md) §2
+[../../../docs/RESEARCH_2026_ROADMAPS.md](../../../docs/RESEARCH_2026_ROADMAPS.md) §2
 steps 2–3 (do step 2 now; step 3's schema upgrade is a later sprint).
 
 **Scope (deliberately v1-small):**
