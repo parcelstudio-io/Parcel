@@ -75,6 +75,11 @@ class ControlManager:
         self._tearing_down = False
         self._teardown_committed = False
         self._intent_epoch = 0
+        # Bumped only by paths that must guarantee a physical stop boundary
+        # (stop/E-stop/close/fault/watchdog). Ordinary target replacement bumps
+        # _intent_epoch alone, so a command update crossing an in-flight
+        # delivery does not force a compensating stop.
+        self._stop_epoch = 0
 
     def start(self, *, threaded: bool = True) -> None:
         with self._lock:
@@ -174,6 +179,7 @@ class ControlManager:
             else:
                 self._lifecycle = ControlLifecycle.IDLE
             self._intent_epoch += 1
+            self._stop_epoch += 1
             self._starting = False
             self._condition.notify_all()
             if threaded and not self._closing:
@@ -371,6 +377,7 @@ class ControlManager:
             if target.expired(current):
                 self._target = None
                 self._intent_epoch += 1
+                self._stop_epoch += 1
                 self._watchdog_stops += 1
                 self._stop_delivered = False
                 self._stop_locked("command_watchdog_expired", raise_on_error=False)
@@ -383,6 +390,7 @@ class ControlManager:
                     )
                 return
             delivery_epoch = self._intent_epoch
+            delivery_stop_epoch = self._stop_epoch
             self._updates_in_flight += 1
             try:
                 self._call_controller_unlocked(
@@ -394,7 +402,7 @@ class ControlManager:
                 return
             self._updates_in_flight -= 1
             if (
-                delivery_epoch != self._intent_epoch
+                delivery_stop_epoch != self._stop_epoch
                 or self._closing
                 or self._emergency_stopped
                 or self._lifecycle
@@ -426,10 +434,16 @@ class ControlManager:
                         else ControlLifecycle.IDLE
                     )
                 return
+            if delivery_epoch != self._intent_epoch:
+                # Only the motion target was replaced while this delivery was
+                # in flight (no stop boundary crossed). Skip the stale
+                # bookkeeping; the next tick delivers the new target.
+                return
             completed_at = self._clock()
             if target.expired(completed_at):
                 self._target = None
                 self._intent_epoch += 1
+                self._stop_epoch += 1
                 self._watchdog_stops += 1
                 self._stop_delivered = False
                 self._stop_locked(
@@ -460,6 +474,7 @@ class ControlManager:
         with self._lock:
             self._target = None
             self._intent_epoch += 1
+            self._stop_epoch += 1
             if self._starting:
                 self._stop_delivered = False
                 self._last_stop_reason = reason
@@ -512,6 +527,7 @@ class ControlManager:
                 return
             self._target = None
             self._intent_epoch += 1
+            self._stop_epoch += 1
             if self._emergency_clear_in_flight:
                 # A newer E-stop always wins over a clear whose vendor call is
                 # currently outside the lifecycle lock.
@@ -602,6 +618,7 @@ class ControlManager:
                 raise RuntimeError("control manager began closing while clearing emergency stop")
             self._target = None
             self._intent_epoch += 1
+            self._stop_epoch += 1
             self._emergency_stopped = False
             self._fault = None
             self._stop_delivered = True
@@ -643,6 +660,7 @@ class ControlManager:
                 )
             self._target = None
             self._intent_epoch += 1
+            self._stop_epoch += 1
             self._fault = None
             self._stop_delivered = True
             self._awaiting_stop_confirmation = False
@@ -715,6 +733,7 @@ class ControlManager:
             self._lifecycle = ControlLifecycle.CLOSING
             self._target = None
             self._intent_epoch += 1
+            self._stop_epoch += 1
             if self._emergency_clear_in_flight:
                 self._stop_delivered = False
             self._condition.notify_all()
@@ -976,6 +995,7 @@ class ControlManager:
     def _fault_locked(self, reason: str) -> None:
         self._target = None
         self._intent_epoch += 1
+        self._stop_epoch += 1
         self._fault = reason
         self._last_stop_reason = reason
         self._stop_delivered = False

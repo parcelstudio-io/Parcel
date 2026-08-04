@@ -56,6 +56,11 @@ from parcel_robot.core import (
     MotionIntent,
     VelocitySmoother,
 )
+from parcel_robot.dynamic_prompting import (
+    CallableContextSource,
+    RecentToolResultsSource,
+    build_prompting_stack,
+)
 from parcel_robot.memory import ConversationMemory
 from parcel_robot.models import ActionProposal, Pose, SpatialIntent, VelocityCommand
 from parcel_robot.motion import build_motion_router
@@ -268,6 +273,7 @@ class RobotRuntime:
         self._last_send_at = 0.0
         self._was_moving = False
         self._proximity_state = "clear"
+        self._control_not_ready_reason: str | None = None
         agent_config = self.store.agent_config()
         context_config = ContextBuildConfig.from_mapping(self.store.section("query_context"))
         self.context_builder = ContextBuilder(
@@ -350,8 +356,12 @@ class RobotRuntime:
                 "agent.brain contains skills without runtime adapters: "
                 f"{sorted(unsupported_brain_skills)}"
             )
+        # The validator and ReturnToSafePose dispatch must share one pose
+        # vocabulary: an empty catalog here rejects every safe-pose plan.
+        self._brain_pose_catalog = dict(self.dog.poses() or self.store.poses())
         self.brain_registry = SkillContractRegistry.default(
             owner_heading_supported=True,
+            pose_names=tuple(sorted(self._brain_pose_catalog)),
         ).restricted(configured_brain_skills)
         self.plan_validator = PlanValidator(
             self.brain_registry,
@@ -385,8 +395,24 @@ class RobotRuntime:
         # System-compiled invariants of the currently active plan; enforced by
         # the control loop, not merely reported.
         self._active_invariants: tuple[str, ...] = ()
+        self._active_invariants_owner: str | None = None
         self._stale_perception_invariant_engaged = False
         memory_cfg = self.store.section("memory")
+        # Dynamic prompting: sectioned context assembly (owner profile,
+        # information-tool policy, volatile turn context) + the read-only
+        # tool registry the conversation model may call. Inspect and iterate
+        # at /api/prompt.
+        self.prompting = build_prompting_stack(self.store.section("prompting"))
+        if self.prompting.composer is not None:
+            self.prompting.composer.register(
+                CallableContextSource(
+                    source_id="current_situation",
+                    provider=self._prompt_current_situation,
+                    placement="turn",
+                    priority=10,
+                    budget_chars=400,
+                )
+            )
         self.agent = VoiceAgent(
             self.dog.poses() or self.store.poses(),
             self.store.load_modules(),
@@ -422,7 +448,14 @@ class RobotRuntime:
                 self._materialize_brain_planner_output if self._brain_enabled else None
             ),
             dog=self.dog,
+            info_tools=self.prompting.tools if self.prompting.tools.names() else None,
         )
+        if self.prompting.composer is not None:
+            # Fresh tool output stays visible to the next turn without
+            # permanently bloating conversation history.
+            self.prompting.composer.register(
+                RecentToolResultsSource(lambda: self.agent.memory.recent(16))
+            )
         # Feed the duplex coordinator through ``handle_text`` so streamed ASR
         # finals and ordinary HTTP commands share logging, serialization, and
         # the same deterministic safety boundary. Speech services are resolved
@@ -435,16 +468,19 @@ class RobotRuntime:
         synthesizer = None
         audio_chunk_player = None
         audio_interrupt = None
+        audio_turn_start = None
         if self.speech_stack.synthesizer is not None:
             self._speaker_sink = SpeakerSink()
             synthesizer = SentenceChunkedSynthesizer(self.speech_stack.synthesizer)
             audio_chunk_player = self._speaker_sink.enqueue
             audio_interrupt = self._speaker_sink.interrupt
+            audio_turn_start = self._speaker_sink.begin_utterance
         self.voice_session = DuplexVoiceSession(
             self,
             synthesizer=synthesizer,
             audio_chunk_player=audio_chunk_player,
             audio_interrupt=audio_interrupt,
+            audio_turn_start=audio_turn_start,
             on_turn=self._voice_turn_completed,
             on_partial=self._voice_partial_received,
             on_error=self._voice_error,
@@ -453,7 +489,10 @@ class RobotRuntime:
         if self.speech_stack.recognizer is not None:
             self._microphone_loop = MicrophoneVoiceLoop(
                 recognizer=self.speech_stack.recognizer,
-                submit_text=self.voice_session.submit_text,
+                # The guarded entry point, not the raw session: spoken
+                # emergency phrases must latch the E-stop synchronously
+                # instead of queueing behind a committed slow action.
+                submit_text=self.submit_voice_text,
                 barge_in=self.voice_session.barge_in,
                 playback_active=(
                     (lambda: self._speaker_sink.playback_active)
@@ -461,6 +500,7 @@ class RobotRuntime:
                     else (lambda: False)
                 ),
                 echo_guard_scale=float(speech_config.get("echo_guard_scale", 2.5)),
+                on_failure=self._microphone_failed,
             )
         self._voice_query_end_by_turn: dict[int, float] = {}
         self._emit(
@@ -623,6 +663,7 @@ class RobotRuntime:
             }
             # Invariants become live enforcement state, not just a report line.
             self._active_invariants = validated.effective_invariants
+            self._active_invariants_owner = plan.task_id
             self._stale_perception_invariant_engaged = False
         self._reconcile_semantic_tasks()
         self._emit(
@@ -659,10 +700,12 @@ class RobotRuntime:
         """
 
         clean = pose_name.strip().lower()
-        poses = self.dog.poses() or self.store.poses()
+        poses = self._brain_pose_catalog
+        # Stop first: a pose-vocabulary miss must still leave the robot
+        # stationary (the safe half of the contract).
+        self.stop_motion()
         if clean not in poses:
             raise ValueError(f"unknown safe pose: {pose_name!r}")
-        self.stop_motion()
         self._run_pose(poses[clean])
         return f"safe pose {clean} requested"
 
@@ -777,17 +820,24 @@ class RobotRuntime:
 
         requests = self.task_executive.tick(snapshot, now=started)
         self._reconcile_semantic_tasks()
-        # Once no task remains active, its compiled invariants stop binding.
-        executive_rows = self.task_executive.snapshot().get("tasks", [])
-        any_active = any(
-            isinstance(row, dict)
-            and row.get("state") not in {"succeeded", "failed", "cancelled"}
-            for row in executive_rows
-        )
-        if not any_active and self._active_invariants:
-            with self._lock:
-                self._active_invariants = ()
-                self._stale_perception_invariant_engaged = False
+        # Once the owning task is terminal, its compiled invariants stop
+        # binding. The executive is re-read under self._lock: _accept_plan
+        # submits the task before assigning _active_invariants under the same
+        # lock, so a stale pre-submit snapshot can never wipe a newly
+        # accepted plan's invariants (TOCTOU found in review).
+        with self._lock:
+            if self._active_invariants:
+                owner = self._active_invariants_owner
+                owner_active = any(
+                    isinstance(row, dict)
+                    and row.get("task_id") == owner
+                    and row.get("state") not in {"succeeded", "failed", "cancelled"}
+                    for row in self.task_executive.snapshot().get("tasks", [])
+                )
+                if not owner_active:
+                    self._active_invariants = ()
+                    self._active_invariants_owner = None
+                    self._stale_perception_invariant_engaged = False
         for request in requests:
             try:
                 immediate = self.semantic_tasks.dispatch(request, now=started)
@@ -1020,6 +1070,8 @@ class RobotRuntime:
                 try:
                     self._ensure_compatibility_control_started()
                     self.control_manager.stop("runtime_stop")
+                except ControlNotReadyError as error:
+                    self._record_control_not_ready(error)
                 except (OSError, RuntimeError) as error:
                     self._record_sim_error(error)
             self._last_sent = VelocityCommand()
@@ -1207,6 +1259,11 @@ class RobotRuntime:
                 ),
                 nearest_obstacle_m=(
                     observation.nearest_obstacle_m if observation is not None else None
+                ),
+                # Same scan pass as _step_navigation: omitting it made every
+                # mission's first tick a spurious degraded-mode fallback.
+                lidar=(
+                    (observation.lidar_ranges or None) if observation is not None else None
                 ),
                 publish=False,
                 extras=self._navigation_extras(observation) if observation is not None else None,
@@ -1520,11 +1577,58 @@ class RobotRuntime:
         with self._lock:
             personality = self._personality
             functions = list(self._function_profiles)
-        return self.prompt_library.render_system(
+        base = self.prompt_library.render_system(
             personality_id=personality,
             function_ids=functions,
             runtime_context=self._prompt_runtime_context(),
         )
+        if self.prompting.composer is None:
+            return base
+        composed = self.prompting.composer.compose()
+        if not composed.text:
+            return base
+        return f"{base}\n\n{composed.text}"
+
+    def _prompt_current_situation(self) -> str | None:
+        """Compact volatile turn-context line (never blocks: reads state only)."""
+
+        battery = self._battery_snapshot()
+        with self._lock:
+            sim_status = self._sim_status
+            navigation = dict(self._navigation_detail)
+        parts = [f"battery {battery.percent:.0f}% ({battery.state})", f"sim {sim_status}"]
+        if navigation.get("enabled"):
+            parts.append(f"navigating: {navigation.get('state', 'moving')}")
+        elif self.follow.enabled:
+            parts.append("following the owner")
+        return "Current situation: " + "; ".join(parts) + "."
+
+    def set_user_fact(self, key: str, value: str) -> None:
+        """Add/update one owner-profile fact; live on the next composed prompt."""
+
+        if self.prompting.profile is None:
+            raise RuntimeError("dynamic prompting is disabled (prompting.enabled: false)")
+        self.prompting.profile.set_fact(key, value)
+
+    def prompt_inspection(self) -> dict[str, object]:
+        """The hillclimb view: full prompt, section breakdown, tools, facts."""
+
+        composer = self.prompting.composer
+        if composer is None:
+            return {"enabled": False, "detail": self.prompting.detail}
+        composed = composer.compose()
+        return {
+            "enabled": True,
+            "detail": self.prompting.detail,
+            "system_prompt": self._render_system_prompt(),
+            "composed": composed.as_dict(),
+            "registered_sources": list(composer.sources()),
+            "turn_budget_chars": composer.turn_budget_chars,
+            "tools": self.prompting.tools.definitions(),
+            "profile_facts": (
+                self.prompting.profile.facts() if self.prompting.profile else {}
+            ),
+        }
 
     def _prompt_runtime_context(self) -> dict[str, object]:
         arbitration = self.arbiter.snapshot()
@@ -1908,7 +2012,9 @@ class RobotRuntime:
                 "mode": self.speech_stack.mode,
                 "stt": self.speech_stack.stt_detail,
                 "tts": self.speech_stack.tts_detail,
-                "microphone_active": self._microphone_loop is not None,
+                "microphone_active": (
+                    self._microphone_loop is not None and self._microphone_loop.running
+                ),
                 "playback_active": (
                     self._speaker_sink.playback_active
                     if self._speaker_sink is not None
@@ -2190,11 +2296,16 @@ class RobotRuntime:
                     self._was_moving = any(
                         abs(value) > 1e-6 for value in (command.vx, command.vy, command.vyaw)
                     )
-                except (ControlNotReadyError, OSError, RuntimeError, ValueError) as error:
+                    self._control_not_ready_reason = None
+                except ControlNotReadyError as error:
+                    self._record_control_not_ready(error)
+                except (OSError, RuntimeError, ValueError) as error:
                     self._record_sim_error(error)
             elif controller_delivery_available and active is None and self._was_moving:
                 try:
                     self.control_manager.stop("intent_expired")
+                except ControlNotReadyError as error:
+                    self._record_control_not_ready(error)
                 except (OSError, RuntimeError) as error:
                     self._record_sim_error(error)
                 self._last_sent = VelocityCommand()
@@ -2212,6 +2323,8 @@ class RobotRuntime:
                 if observation is not None or state_available:
                     try:
                         self.control_manager.tick(now=now)
+                    except ControlNotReadyError as error:
+                        self._record_control_not_ready(error)
                     except (OSError, RuntimeError, TypeError, ValueError) as error:
                         self._record_sim_error(error)
 
@@ -2478,6 +2591,17 @@ class RobotRuntime:
             now=time.monotonic(),
         )
 
+    def _record_control_not_ready(self, error: BaseException) -> None:
+        """Controller readiness rejections are control conditions, not
+        simulator transport failures: perception/telemetry stay valid, so the
+        observation and sim status must not be touched. Logged once per
+        transition to avoid loop-rate event spam."""
+
+        message = str(error)
+        if message != self._control_not_ready_reason:
+            self._control_not_ready_reason = message
+            self._emit("control", f"Command rejected: {message}", "warning")
+
     def _record_sim_error(self, error: BaseException) -> None:
         message = str(error)
         with self._lock:
@@ -2658,6 +2782,20 @@ class RobotRuntime:
                 "error": str(error),
             }
         self._emit("voice", str(error), "error")
+
+    def _microphone_failed(self, error: Exception) -> None:
+        """Mid-session capture death degrades loudly to text mode.
+
+        Invoked from the microphone worker thread; without this the loop dies
+        silently while status keeps reporting an active microphone.
+        """
+
+        self._microphone_loop = None
+        self._emit(
+            "voice",
+            f"Microphone unavailable: {error}; degrading to text mode",
+            "warning",
+        )
 
 
 def http_service_health(url: str, timeout: float = 0.5) -> bool:

@@ -304,3 +304,80 @@ def test_manual_control_cancels_dispatched_plan_and_releases_base(
     assert runtime.semantic_tasks.active() == ()
     assert runtime.task_executive.resources.leases() == ()
     runtime.close()
+
+
+def test_production_registry_admits_safe_pose_catalog(tmp_path: Path) -> None:
+    """2026-08-04 review fix: the runtime built its registry without
+    pose_names, so PlanValidator rejected every ReturnToSafePose plan and the
+    battery-critical safe-pose procedure was unreachable in production. The
+    registry must share the runtime's actual pose vocabulary."""
+
+    from parcel_robot.brain.compiler import compile_plan_contracts
+    from parcel_robot.brain.contracts import (
+        FrozenDict,
+        GoalSpec,
+        GoalTarget,
+        PlanStep,
+        SuccessCondition,
+    )
+
+    path = tmp_path / "brain-safe-pose.yaml"
+    path.write_text(
+        f"""
+skills:
+  root: {REPO / "configs" / "skills"}
+navigation:
+  enabled: false
+motion:
+  backend: rl
+  max_vx: 0.6
+  max_vy: 0.4
+  max_vyaw: 1.0
+  rl:
+    enabled: true
+    policy_path: ""
+agent:
+  prompts_root: {REPO / "prompts"}
+  brain:
+    enabled: true
+memory:
+  path: ":memory:"
+poses: {{}}
+modules: []
+""",
+        encoding="utf-8",
+    )
+    runtime = RobotRuntime(
+        path,
+        _Backend(),
+        language_model=_PlanningModel(),
+        audio_status=_audio(),
+    )
+    try:
+        assert "sit" in runtime.brain_registry.pose_names
+        plan = compile_plan_contracts(
+            PlanIR(
+                schema_version=1,
+                task_id="task-safe-pose-prod",
+                plan_revision=1,
+                source_turn_id="turn-safe-pose",
+                goal=GoalSpec(
+                    relation="safe_pose",
+                    target=GoalTarget(kind="safe_region"),
+                ),
+                invariants=(),
+                steps=(
+                    PlanStep(
+                        step_id="s1",
+                        skill="ReturnToSafePose",
+                        arguments=FrozenDict({"pose": "sit"}),
+                        success=SuccessCondition(fact="safe_pose", target="sit"),
+                    ),
+                ),
+            ),
+            runtime.brain_registry,
+        )
+        validated = runtime.plan_validator.validate(plan)
+        assert validated.steps[0].step.skill == "ReturnToSafePose"
+    finally:
+        runtime.close()

@@ -1376,3 +1376,54 @@ def test_unitree_nonzero_transport_code_faults_manager_and_stops() -> None:
     assert status.lifecycle == ControlLifecycle.FAULTED
     assert "code 9" in str(status.fault)
     assert client.stop_count >= 1
+
+
+def test_target_replacement_during_inflight_update_does_not_force_stop() -> None:
+    """2026-08-04 review fix: set_target bumping the shared intent epoch made
+    every command change that crossed an in-flight update deliver a
+    compensating physical stop and latch a stop-confirmation lockout --
+    constant stop-start juddering during follow/navigation on hardware. Only
+    genuine stop boundaries (stop/E-stop/close/fault/watchdog) compensate."""
+
+    clock = FakeClock()
+    source = FakeStateSource(_state(clock()))
+    controller = BlockingUpdateController()
+    manager = ControlManager(
+        controller,
+        source,
+        timing=ControlTiming(stop_settled_samples=1),
+        clock=clock,
+    )
+    manager.start(threaded=False)
+    clock.advance(0.001)
+    source.state = _state(clock(), sequence=2)
+    manager.tick(now=clock())
+    manager.set_target(VelocityCommand(vx=0.1), source="manual")
+    controller.actions.clear()
+    worker = threading.Thread(target=lambda: manager.tick(now=clock()))
+    worker.start()
+    assert controller.update_started.wait(0.5)
+
+    # Ordinary target replacement while the update RPC is in flight.
+    manager.set_target(VelocityCommand(vx=0.2), source="manual")
+    controller.release_update.set()
+    worker.join(0.5)
+    assert not worker.is_alive()
+
+    # No compensating stop, no stop-confirmation lockout.
+    assert "stop" not in controller.actions
+    assert manager.snapshot(now=clock()).lifecycle != ControlLifecycle.STOPPING
+
+    # The next tick simply delivers the replacement target.
+    clock.advance(0.001)
+    source.state = _state(clock(), sequence=3)
+    manager.tick(now=clock())
+    assert controller.actions[-1] == "move"
+    assert manager.snapshot(now=clock()).lifecycle == ControlLifecycle.ACTIVE
+
+    # Clean shutdown: confirm a stop with fresh feedback before close.
+    manager.stop("test_cleanup")
+    clock.advance(0.001)
+    source.state = _state(clock(), sequence=4)
+    manager.tick(now=clock())
+    manager.close()

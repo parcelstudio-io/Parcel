@@ -29,10 +29,14 @@ class SafetySupervisor:
         poses: dict[str, Pose],
         limits: SafetyLimits | None = None,
         skill_ids: list[str] | None = None,
+        information_tools: tuple[str, ...] = (),
     ):
         self.poses = poses
         self.limits = limits or SafetyLimits()
         self.skill_ids = set(skill_ids or poses)
+        # Read-only conversation tools admitted by exact name. They must
+        # never produce motion; everything not listed stays fail-closed.
+        self.information_tools = frozenset(information_tools)
         self.emergency_stopped = False
 
     def validate(self, call: ToolCall) -> ToolResult:
@@ -56,6 +60,8 @@ class SafetySupervisor:
             return self._validate_behavior(call)
         if call.name == "run_spatial_behavior":
             return self._validate_spatial_behavior(call)
+        if call.name in self.information_tools:
+            return ToolResult(call.name, True, f"Information tool approved: {call.name}")
         if call.name != "run_pose":
             return ToolResult(call.name, False, f"Tool is not allowed: {call.name}")
         if self.emergency_stopped:

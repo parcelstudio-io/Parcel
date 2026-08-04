@@ -102,6 +102,14 @@ class EnergyVad:
         voiced = rms > threshold
         events: list[VadEvent] = []
 
+        if voiced and rms > self._noise_rms:
+            # Upward-only slow leak: a genuinely shifted ambient level (fan,
+            # traffic) eventually re-baselines the floor even though every
+            # frame reads as voiced, while a short real utterance barely
+            # moves it. Without this, sustained noise above threshold locks
+            # the VAD into back-to-back max-length flushes forever.
+            self._noise_rms += (rms - self._noise_rms) * (self.noise_adapt_rate / 50.0)
+
         if not self._active:
             if voiced:
                 self._voiced_run += 1
@@ -126,6 +134,15 @@ class EnergyVad:
             too_long = len(self._speech_frames) >= self.max_utterance_frames
             if self._silence_run >= self.hangover_frames or too_long:
                 utterance = b"".join(self._speech_frames)
+                if too_long:
+                    # A segment that never went quiet for a full hangover is
+                    # almost certainly ambient noise, not speech. Re-seed the
+                    # floor toward it so the next segment cannot start
+                    # immediately (stuck-floor escape found in review).
+                    segment = np.frombuffer(utterance, dtype=np.int16)
+                    self._noise_rms = max(
+                        self._noise_rms, self.frame_rms(segment) * 0.8
+                    )
                 self._reset_segment()
                 events.append(VadEvent("speech_end", utterance))
         return events
@@ -161,6 +178,7 @@ class MicrophoneVoiceLoop:
         frames: Iterable[np.ndarray] | None = None,
         echo_guard_scale: float = 2.5,
         min_utterance_s: float = 0.25,
+        on_failure: Callable[[Exception], None] | None = None,
     ):
         if echo_guard_scale < 1.0 or not math.isfinite(echo_guard_scale):
             raise ValueError("echo guard scale must be at least 1.0")
@@ -176,13 +194,39 @@ class MicrophoneVoiceLoop:
         self._frames = frames
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
+        self._failure: Exception | None = None
+        self.on_failure = on_failure
         self.utterances_submitted = 0
         self.barge_ins_triggered = 0
         self.echo_guard_suppressions = 0
 
+    @property
+    def running(self) -> bool:
+        """True only while the capture thread is alive and has not failed."""
+
+        thread = self._thread
+        return thread is not None and thread.is_alive() and self._failure is None
+
+    @property
+    def failure(self) -> Exception | None:
+        return self._failure
+
     def start(self) -> None:
         if self._thread is not None:
             raise RuntimeError("microphone loop is already running")
+        if self._frames is None:
+            # Preflight on the caller's thread so a missing PortAudio or
+            # capture device raises into the runtime's degrade-to-text branch
+            # instead of silently killing the worker thread after start()
+            # already reported success.
+            try:
+                import sounddevice
+
+                sounddevice.check_input_settings(
+                    samplerate=SAMPLE_RATE_HZ, channels=1, dtype="int16"
+                )
+            except Exception as error:
+                raise OSError(f"audio capture unavailable: {error}") from error
         self._thread = threading.Thread(
             target=self._run,
             name="parcel-voice-microphone",
@@ -211,6 +255,12 @@ class MicrophoneVoiceLoop:
                 self._handle_frame(frame)
         except Exception as error:  # noqa: BLE001 - device thread boundary
             logger.warning("microphone loop stopped: %s", error)
+            self._failure = error
+            if self.on_failure is not None:
+                try:
+                    self.on_failure(error)
+                except Exception:  # noqa: BLE001, S110 - observer must not mask the fault
+                    pass
 
     def _sounddevice_frames(self) -> Iterator[np.ndarray]:
         import sounddevice
@@ -287,8 +337,11 @@ class SpeakerSink:
 
     Receives WAV (first chunk carries the header) or raw PCM16 chunks from the
     session's synthesizer stream and plays them through ``sounddevice``. A
-    dedicated worker owns the output stream so ``interrupt()`` can abort
-    playback between chunks without blocking the caller.
+    dedicated worker owns the output stream; ``interrupt()`` flushes queued
+    chunks and aborts the default player's in-flight chunk at the next ~50 ms
+    block boundary without blocking the caller. Injected test players are
+    only abortable between chunks. ``playback_active`` stays true until the
+    in-flight player call actually returns.
     """
 
     def __init__(self, *, player: Callable[[bytes, int], None] | None = None):
@@ -309,19 +362,35 @@ class SpeakerSink:
     def playback_active(self) -> bool:
         return self._playing.is_set()
 
+    def begin_utterance(self) -> None:
+        """Re-arm playback at the start of a NEW (non-cancelled) reply.
+
+        Clearing the interrupt latch here instead of on every ``enqueue``
+        closes the barge-in race found in review: a stale chunk enqueued by
+        an output thread that lost the race against ``interrupt()`` stays
+        suppressed instead of un-interrupting the flush.
+        """
+
+        self._interrupted.clear()
+
     def enqueue(self, chunk: bytes) -> None:
         """Session-facing ``audio_chunk_player`` callback."""
 
         if not chunk:
             return
-        self._interrupted.clear()
         try:
             self._queue.put_nowait(chunk)
         except queue.Full:
             logger.warning("speaker queue overflow; dropping audio chunk")
 
     def interrupt(self) -> None:
-        """Session-facing ``audio_interrupt`` callback: flush and stop now."""
+        """Session-facing ``audio_interrupt`` callback: flush and stop now.
+
+        ``_playing`` is deliberately NOT cleared here — the in-flight chunk
+        keeps the flag (and therefore the microphone echo guard) up until the
+        player actually returns, so the robot's own audible tail can never be
+        transcribed as an owner command.
+        """
 
         self._interrupted.set()
         while True:
@@ -329,7 +398,6 @@ class SpeakerSink:
                 self._queue.get_nowait()
             except queue.Empty:
                 break
-        self._playing.clear()
 
     def close(self, timeout: float = 3.0) -> None:
         self.interrupt()
@@ -370,4 +438,14 @@ class SpeakerSink:
         import sounddevice
 
         data = np.frombuffer(pcm, dtype=np.int16)
-        sounddevice.play(data, samplerate=sample_rate, blocking=True)
+        # Stream in ~50 ms blocks and poll the interrupt latch between them:
+        # a mid-sentence barge-in aborts the in-flight chunk within one block
+        # instead of letting a whole sentence play to completion.
+        block = max(1, sample_rate // 20)
+        with sounddevice.OutputStream(
+            samplerate=sample_rate, channels=1, dtype="int16"
+        ) as stream:
+            for start in range(0, len(data), block):
+                if self._interrupted.is_set():
+                    return
+                stream.write(data[start : start + block])

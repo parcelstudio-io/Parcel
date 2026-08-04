@@ -177,6 +177,20 @@ speech:
   tts_provider: piper
   piper_binary: third_party/piper/piper
   piper_voice: models/piper/voice.onnx
+  # piper_sample_rate_hz: 22050  # optional; auto-detected from <voice>.onnx.json
+
+# Dynamic prompting: sectioned context assembly + read-only information
+# tools for the conversation model. Inspect/iterate at /api/prompt; add
+# facts live via POST /api/prompt/fact {key, value} or runtime.set_user_fact.
+prompting:
+  enabled: true
+  turn_budget_chars: 2000
+  user_profile:
+    location: New York
+    home: Manhattan
+    occupation: software engineer
+  tools:
+    weather: true
   fish_url: http://127.0.0.1:8091
   # Without acoustic echo cancellation, barge-in during robot speech requires
   # the microphone to hear the owner this many times louder than the VAD

@@ -123,17 +123,43 @@ def test_battery_snapshot_states() -> None:
 
 
 def test_return_to_safe_pose_plan_requires_critical_battery() -> None:
-    """The contract's battery_critical precondition is enforced by validation."""
+    """The contract's battery_critical precondition is enforced by validation.
+
+    2026-08-04 review fix: the original test validated with no snapshot, so
+    _validate_snapshot_admission (the only place the battery gate lives) never
+    ran — deleting the gate left the test green. Both directions are now
+    exercised through the snapshot admission path.
+    """
 
     from parcel_robot.brain.compiler import compile_plan_contracts
     from parcel_robot.brain.contracts import (
         FrozenDict,
         GoalSpec,
         GoalTarget,
+        ObservationSnapshot,
         PlanIR,
         PlanStep,
+        RobotStateSnapshot,
+        SafetyStateSnapshot,
+        SensorSnapshot,
         SuccessCondition,
+        TaskStateSnapshot,
     )
+    from parcel_robot.brain.validator import PlanValidationError
+
+    def _snapshot(battery_state: str, percent: float) -> ObservationSnapshot:
+        return ObservationSnapshot(
+            schema_version=1,
+            snapshot_id=f"snapshot-battery-{battery_state}",
+            captured_at_monotonic_s=10.0,
+            camera=SensorSnapshot("camera", True, True, "camera", 9.9, 100.0),
+            lidar=SensorSnapshot("lidar", True, True, "lidar", 9.95, 50.0),
+            robot=RobotStateSnapshot(False, "stand"),
+            safety=SafetyStateSnapshot(False, False, True),
+            battery=BatteryStateSnapshot(battery_state, percent, "simulated"),
+            task=TaskStateSnapshot(),
+            entities=(),
+        )
 
     registry = SkillContractRegistry.default(
         owner_heading_supported=True,
@@ -162,6 +188,10 @@ def test_return_to_safe_pose_plan_requires_critical_battery() -> None:
         ),
         registry,
     )
-    validated = validator.validate(plan)
+    with pytest.raises(PlanValidationError) as excinfo:
+        validator.validate(plan, _snapshot("normal", 80.0))
+    assert excinfo.value.code == "battery_not_critical"
+
+    validated = validator.validate(plan, _snapshot("critical", 5.0))
     assert "keep_collision_margin" in validated.effective_invariants
     assert "avoid_road_when_not_crossing" in validated.effective_invariants

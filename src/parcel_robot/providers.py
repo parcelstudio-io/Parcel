@@ -1114,9 +1114,18 @@ def build_speech_stack(config: Mapping[str, object]) -> SpeechStack:
     synthesizer: SpeechSynthesizer | None = None
     tts_provider = str(config.get("tts_provider", "piper")).strip().lower()
     if tts_provider == "piper":
+        piper_voice = str(config.get("piper_voice", "models/piper/voice.onnx"))
+        configured_rate = config.get("piper_sample_rate_hz")
         piper = PiperSpeechProvider(
             binary_path=str(config.get("piper_binary", "third_party/piper/piper")),
-            voice_path=str(config.get("piper_voice", "models/piper/voice.onnx")),
+            voice_path=piper_voice,
+            # The voice's companion JSON is authoritative: a 16 kHz voice
+            # wrapped in a 22050 Hz header plays ~1.38x too fast.
+            sample_rate_hz=int(
+                configured_rate
+                if configured_rate is not None
+                else (_piper_voice_sample_rate(piper_voice) or 22050)
+            ),
         )
         if piper.available():
             synthesizer = piper
@@ -1143,11 +1152,30 @@ def build_speech_stack(config: Mapping[str, object]) -> SpeechStack:
     return SpeechStack(recognizer, synthesizer, mode, stt_detail, tts_detail)
 
 
+def _piper_voice_sample_rate(voice_path: str) -> int | None:
+    """Read the native rate from the companion JSON every Piper voice ships."""
+
+    import json
+    from pathlib import Path
+
+    try:
+        metadata = json.loads(Path(f"{voice_path}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    audio = metadata.get("audio") if isinstance(metadata, dict) else None
+    rate = audio.get("sample_rate") if isinstance(audio, dict) else None
+    if isinstance(rate, (int, float)) and 8000 <= rate <= 96000:
+        return int(rate)
+    return None
+
+
 def _http_health(base_url: str, timeout: float = 0.5) -> bool:
     try:
-        with urlopen(f"{base_url.rstrip('/')}/health", timeout=timeout) as response:
-            return 200 <= response.status < 500
-    except HTTPError:
-        return True  # the server answered; an HTTP error still proves liveness
+        with urlopen(f"{base_url.rstrip('/')}/health", timeout=timeout):
+            return True
+    except HTTPError as error:
+        # A 4xx (e.g. no /health route) still proves a live server; a 5xx is
+        # a dead backend behind a reverse proxy and must read as unhealthy.
+        return 200 <= error.code < 500
     except (URLError, TimeoutError, OSError):
         return False

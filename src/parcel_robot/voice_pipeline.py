@@ -107,6 +107,7 @@ class DuplexVoiceSession:
         synthesizer: SpeechSynthesizer | None = None,
         audio_chunk_player: Callable[[bytes], None] | None = None,
         audio_interrupt: Callable[[], None] | None = None,
+        audio_turn_start: Callable[[], None] | None = None,
         on_turn: Callable[[VoiceTurn], None] | None = None,
         on_partial: Callable[[str], None] | None = None,
         on_error: Callable[[Exception], None] | None = None,
@@ -118,6 +119,7 @@ class DuplexVoiceSession:
         self.synthesizer = synthesizer
         self.audio_chunk_player = audio_chunk_player
         self.audio_interrupt = audio_interrupt
+        self.audio_turn_start = audio_turn_start
         self.on_turn = on_turn
         self.on_partial = on_partial
         self.on_error = on_error
@@ -377,6 +379,14 @@ class DuplexVoiceSession:
         failed = False
         try:
             self._call_stage(VoiceStage(state.turn_id, "tts_start", time.monotonic()))
+            if self.audio_turn_start is not None and not state.cancel_event.is_set():
+                # Re-arm the audio sink for this turn. The sink deliberately
+                # never re-arms on enqueue, so a stale chunk racing a barge-in
+                # flush stays suppressed.
+                try:
+                    self.audio_turn_start()
+                except Exception as error:  # noqa: BLE001 - external audio callback
+                    self._report_error(error)
             stream_method = getattr(self.synthesizer, "synthesize_stream", None)
             if callable(stream_method):
                 stream = stream_method(reply, cancel_event=state.cancel_event)

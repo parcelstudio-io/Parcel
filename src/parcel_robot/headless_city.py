@@ -154,6 +154,7 @@ class HeadlessCityWorld:
         self._z = 0.445
         self._yaw = 0.0
         self._collision_count = 0
+        self._in_static_contact = False
         self._minimum_clearance_m = math.inf
         self._path: list[tuple[float, float]] = []
         self.reset()
@@ -196,6 +197,7 @@ class HeadlessCityWorld:
         self._z = float(self.data.qpos[2]) if self.model.nq >= 3 else 0.445
         self._command = VelocityCommand()
         self._collision_count = 0
+        self._in_static_contact = False
         self._minimum_clearance_m = math.inf
         if self._owner_mocap_id >= 0 and owner is not None:
             self.data.mocap_pos[self._owner_mocap_id, :2] = owner
@@ -355,8 +357,15 @@ class HeadlessCityWorld:
         translating = math.hypot(proposed_x - self._x, proposed_y - self._y) > 1e-12
         proposed_clearance = self.truth_minimum_clearance(proposed_x, proposed_y)
         if translating and proposed_clearance <= 0.0:
-            self._collision_count += 1
+            # Edge-detected: one continuous press against an obstacle is one
+            # collision event, matching how pedestrian contacts are counted.
+            # Counting every blocked 0.01 s substep inflated the eval's
+            # hard-collision totals by two orders of magnitude.
+            if not self._in_static_contact:
+                self._collision_count += 1
+                self._in_static_contact = True
         else:
+            self._in_static_contact = False
             self._x, self._y = proposed_x, proposed_y
         self._yaw = _wrap(self._yaw + self._command.vyaw * dt)
         self._place_robot()

@@ -63,7 +63,12 @@ def test_vad_segments_one_utterance() -> None:
     assert len(utterance) >= 6 * FRAME_SAMPLES * 2  # speech plus hangover tail
 
 
-def test_vad_noise_floor_adapts_only_when_quiet() -> None:
+def test_vad_noise_floor_quiet_adaptation_dominates_slow_upward_leak() -> None:
+    # 2026-08-04 review fix: a strictly quiet-only floor locked the VAD into
+    # endless 30 s max-length flushes under sustained ambient noise. The floor
+    # now leaks upward ~50x slower on voiced frames than it settles downward
+    # on quiet ones, so a short utterance barely moves the threshold while a
+    # shifted ambient level eventually re-baselines.
     vad = EnergyVad()
     initial = vad.noise_rms
     for _ in range(50):
@@ -72,7 +77,32 @@ def test_vad_noise_floor_adapts_only_when_quiet() -> None:
     assert adapted < initial  # settled toward the true quiet floor
     for _ in range(30):
         vad.process(_speech_frame())
-    assert vad.noise_rms == pytest.approx(adapted)  # speech never raises the floor
+    after_speech = vad.noise_rms
+    assert after_speech > adapted  # upward-only slow leak exists
+    # A short utterance must not raise the detection threshold anywhere near
+    # actual speech level: speech stays detectable.
+    assert after_speech * vad.threshold_scale < EnergyVad.frame_rms(_speech_frame())
+
+
+def test_vad_sustained_noise_cannot_flush_forever() -> None:
+    # The review's failure loop: ambient noise above threshold made every
+    # frame voiced, the floor froze, and 30 s noise "utterances" shipped to
+    # STT back-to-back until the noise stopped. The max-length flush now
+    # re-seeds the floor toward the segment RMS, breaking the loop.
+    vad = EnergyVad(max_utterance_frames=50)
+    for _ in range(50):
+        vad.process(_silence())
+    rng = np.random.default_rng(7)
+
+    def _noise() -> np.ndarray:
+        return rng.integers(-900, 900, size=FRAME_SAMPLES, dtype=np.int16)
+
+    flushes = 0
+    for _ in range(1000):
+        for event in vad.process(_noise()):
+            if event.kind == "speech_end":
+                flushes += 1
+    assert flushes <= 2  # first flush re-seeds the floor; the loop dies
 
 
 def test_microphone_loop_submits_final_transcript() -> None:
@@ -249,3 +279,76 @@ def test_build_speech_stack_audio_mode_fails_closed() -> None:
                 "piper_voice": "/nonexistent/voice.onnx",
             }
         )
+
+
+def test_speaker_sink_stale_enqueue_after_interrupt_stays_suppressed() -> None:
+    # 2026-08-04 review fix: enqueue() cleared the interrupt latch, so a
+    # chunk enqueued by an output thread that lost the race against a
+    # barge-in flush un-interrupted the sink and played cancelled speech.
+    played: list[tuple[bytes, int]] = []
+    sink = SpeakerSink(player=lambda pcm, rate: played.append((pcm, rate)))
+    sink.interrupt()
+    sink.enqueue(pcm16_wav(b"\x01\x00" * 1600))
+    time.sleep(0.15)
+    assert played == []
+
+    sink.begin_utterance()  # only a NEW turn re-arms playback
+    sink.enqueue(pcm16_wav(b"\x01\x00" * 1600))
+    deadline = time.time() + 1.0
+    while not played and time.time() < deadline:
+        time.sleep(0.01)
+    assert played
+    sink.close()
+
+
+def test_speaker_sink_playback_active_survives_interrupt_until_player_returns() -> None:
+    # 2026-08-04 review fix: interrupt() cleared _playing while the in-flight
+    # chunk was still audible, disabling the echo guard so the robot could
+    # transcribe its own speech as an owner command.
+    release = threading.Event()
+    started = threading.Event()
+
+    def blocking_player(pcm: bytes, rate: int) -> None:
+        del pcm, rate
+        started.set()
+        assert release.wait(1.0)
+
+    sink = SpeakerSink(player=blocking_player)
+    sink.begin_utterance()
+    sink.enqueue(pcm16_wav(b"\x01\x00" * 1600))
+    assert started.wait(1.0)
+    assert sink.playback_active
+    sink.interrupt()
+    assert sink.playback_active  # robot still audibly speaking
+    release.set()
+    deadline = time.time() + 1.0
+    while sink.playback_active and time.time() < deadline:
+        time.sleep(0.01)
+    assert not sink.playback_active
+    sink.close()
+
+
+def test_microphone_loop_surfaces_capture_failure() -> None:
+    # 2026-08-04 review fix: a capture failure inside the worker thread was
+    # swallowed as a log line while status kept reporting an active mic.
+    failures: list[Exception] = []
+
+    def frames():
+        yield _silence()
+        raise RuntimeError("device unplugged")
+
+    loop = MicrophoneVoiceLoop(
+        recognizer=_FakeRecognizer(),
+        submit_text=lambda text, is_final: None,
+        barge_in=lambda: None,
+        playback_active=lambda: False,
+        frames=frames(),
+        on_failure=failures.append,
+    )
+    loop.start()
+    deadline = time.time() + 1.0
+    while not failures and time.time() < deadline:
+        time.sleep(0.01)
+    assert failures and "unplugged" in str(failures[0])
+    assert not loop.running
+    loop.close()

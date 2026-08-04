@@ -228,6 +228,9 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/health":
             self._send_json({"status": "ok"})
             return
+        if path == "/api/prompt":
+            self._send_json(self.server.runtime.prompt_inspection())
+            return
         self._send_json({"detail": "not found"}, HTTPStatus.NOT_FOUND)
 
     def do_POST(self) -> None:
@@ -284,6 +287,12 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
             if path == "/api/personality":
                 message = self.server.runtime.set_personality(self._string(payload, "personality"))
                 self._send_json({"message": message, "state": self.server.runtime.snapshot()})
+                return
+            if path == "/api/prompt/fact":
+                self.server.runtime.set_user_fact(
+                    self._string(payload, "key"), self._string(payload, "value")
+                )
+                self._send_json(self.server.runtime.prompt_inspection())
                 return
             self._send_json({"detail": "not found"}, HTTPStatus.NOT_FOUND)
         except PermissionError as error:

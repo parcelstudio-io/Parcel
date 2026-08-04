@@ -78,6 +78,7 @@ class VoiceAgent:
         planner_skill_contracts_provider: Callable[[], dict[str, object]] | None = None,
         planner_output_adapter: PlannerOutputAdapter | None = None,
         dog=None,
+        info_tools=None,
     ):
         if not 1 <= conversation_history_messages <= 64:
             raise ValueError("conversation history messages must be between 1 and 64")
@@ -115,7 +116,17 @@ class VoiceAgent:
         self.last_reasoning_source = "deterministic"
         self.last_reasoning_error: str | None = None
         self.last_reasoning_guard: str | None = None
-        self.safety = SafetySupervisor(poses, safety_limits, skill_ids=self._skill_ids())
+        # Read-only information tools (dynamic_prompting.ConversationToolRegistry).
+        # The safety supervisor admits them by exact name; anything else
+        # stays fail-closed.
+        self.info_tools = info_tools
+        info_tool_names = tuple(info_tools.names()) if info_tools is not None else ()
+        self.safety = SafetySupervisor(
+            poses,
+            safety_limits,
+            skill_ids=self._skill_ids(),
+            information_tools=info_tool_names,
+        )
 
     def _skill_ids(self) -> list[str]:
         if self.dog is None:
@@ -670,6 +681,7 @@ class VoiceAgent:
             return reply
 
         detail = None
+        info_result: str | None = None
         for call, _ in validations:
             if call.name == "run_pose":
                 name = call.arguments["name"]
@@ -781,6 +793,15 @@ class VoiceAgent:
                 if status:
                     self.memory.add("tool", status)
                     detail = status
+            elif self.info_tools is not None and self.info_tools.has(call.name):
+                try:
+                    result = self.info_tools.invoke(call.name, dict(call.arguments))
+                except (LookupError, RuntimeError, TypeError, ValueError) as error:
+                    failures.append(str(error))
+                    continue
+                self.memory.add("tool", f"{call.name}: {result}")
+                detail = result
+                info_result = result
         if decision.next_action is not None and not failures:
             assert self.action_proposal_publisher is not None
             detail = self.action_proposal_publisher(decision.next_action)
@@ -793,6 +814,9 @@ class VoiceAgent:
             reply = f"{reply} I won't perform that gesture right now."
         elif detail and decision.reply in {None, "", "Done."}:
             reply = detail
+        elif info_result is not None:
+            # The model narrated ("let me check...") AND fetched: speak both.
+            reply = f"{reply} {info_result}"
         self.memory.add("assistant", reply)
         return reply
 
@@ -947,6 +971,8 @@ class VoiceAgent:
                 "parameters": {"type": "object", "additionalProperties": False},
             },
         ]
+        if self.info_tools is not None:
+            tools.extend(self.info_tools.definitions())
         return tools
 
 

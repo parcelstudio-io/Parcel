@@ -123,6 +123,51 @@ rate with zero LLM calls; LLM planning asynchronous per turn.
   `/api/scene`, 10 Hz dynamics from `/api/state`: robot, owner, pedestrians,
   LiDAR fan, navigation goal/status, collision/E-stop banners).
 
+## 2026-08-04 adversarial review round
+
+A 23-agent find→verify review of the Phase 0–4 changes confirmed 18 real
+defects (2 critical, 8 major, 8 minor), all fixed same-day with regression
+tests (suite 1293→1304 passing). The load-bearing ones, recorded so the
+patterns are not reintroduced:
+
+- **Spoken "stop" now latches the E-stop synchronously** — the mic loop is
+  wired to `runtime.submit_voice_text` (the guarded fast path), never the raw
+  voice session.
+- **The production brain registry is built with the runtime's pose catalog** —
+  an empty `pose_names` silently rejected every ReturnToSafePose plan while
+  all tests passed (they built their own registries). Dispatch also stops
+  motion *before* validating the pose name.
+- **`ControlManager` distinguishes stop boundaries from target replacement**
+  (`_stop_epoch` vs `_intent_epoch`): a command update crossing an in-flight
+  vendor RPC no longer forces a compensating physical stop + confirmation
+  lockout (hardware-only stop-start judder, invisible to the sim path).
+- **Invariant lifetime is owner-task-keyed and cleared under the lock** —
+  fixes a TOCTOU where a stale executive snapshot could permanently strip a
+  new plan's `stop_on_stale_perception` invariant.
+- **SpeakerSink is barge-in-race-free**: `enqueue` never re-arms an
+  interrupted sink (the session re-arms per turn via `audio_turn_start`);
+  `playback_active` stays true until audio actually stops (echo guard holds
+  through the tail); the default player aborts in ~50 ms blocks.
+- **Mic-thread death is loud**: capture preflight raises into the
+  degrade-to-text branch; mid-session death fires `on_failure` and
+  `microphone_active` reports thread liveness, not object existence.
+- **RobotProfile actually reaches the simulator** (gait IK, scan height,
+  footprint) — previously validated, reported, and ignored.
+- Plus: mission-start `navigate()` passes the scan; `ControlNotReadyError` is
+  a control condition, not a fake simulator disconnect; `_http_health` treats
+  5xx as dead; Piper sample rate auto-detected from the voice JSON; the VAD
+  noise floor can re-baseline under sustained noise; eval static collisions
+  are edge-counted events; the battery-gate test actually exercises the gate.
+
+## Dynamic prompting (2026-08-04)
+
+`dynamic_prompting.py` adds sectioned, budgeted, two-plane prompt composition
+(stable-cached prefix / volatile turn tail), an owner-profile personalization
+source, and a fail-closed read-only information-tool registry (weather
+example) the conversation LLM can invoke per its rendered when-to-use policy.
+Inspect live at `GET /api/prompt`; add facts via `POST /api/prompt/fact`.
+Design rationale and growth path: [RESEARCH_2026_ROADMAPS.md](RESEARCH_2026_ROADMAPS.md) §5.
+
 ## Deferred (with the chosen path, so nobody re-researches)
 
 | Item | Trigger | Chosen path |

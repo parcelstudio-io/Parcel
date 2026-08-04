@@ -16,12 +16,12 @@ from .gait import ScriptedTrotGait, TrajectoryPlayer
 from .models import Pose, VelocityCommand
 from .mujoco_lidar import (
     MAX_LIDAR_OBSTACLES,
-    ROBOT_FOOTPRINT_RADIUS_M,
     ROBOT_OBSTACLE_HEIGHT_M,
     planar_scan_payload,
     raycast_planar_scan,
     scan_mujoco_lidar,
 )
+from .robot_profile import RobotProfile
 from .sim_control import PoseController
 from .sim_ipc import DEFAULT_SOCKET, PoseSocketServer, message_to_pose, message_to_velocity
 
@@ -114,6 +114,7 @@ def run_simulator(
     dynamic_city_enabled: bool = True,
     dynamic_city_seed: int = 7,
     dynamic_city_speed_scale: float = 1.0,
+    profile: RobotProfile | None = None,
 ) -> None:
     if not scene.exists():
         raise FileNotFoundError(
@@ -130,7 +131,11 @@ def run_simulator(
 
     controller = PoseController(model, kp=kp, kd=kd)
     controller.sync_from_state(data)
-    gait = ScriptedTrotGait()
+    # The configured morphology drives gait IK/joint naming, the scan height,
+    # and the footprint everywhere — a validated-but-ignored profile would
+    # silently simulate the wrong body.
+    robot_profile = profile if profile is not None else RobotProfile.go2()
+    gait = ScriptedTrotGait(profile=robot_profile)
     trajectory = TrajectoryPlayer()
     walk_command: VelocityCommand | None = None
     last_motion_at = time.monotonic()
@@ -241,7 +246,7 @@ def run_simulator(
                 robot_x=px,
                 robot_y=py,
                 robot_heading=heading,
-                robot_radius_m=ROBOT_FOOTPRINT_RADIUS_M,
+                robot_radius_m=robot_profile.footprint_radius_m,
                 obstacle_height_m=ROBOT_OBSTACLE_HEIGHT_M,
                 limit=MAX_LIDAR_OBSTACLES,
             )
@@ -296,6 +301,7 @@ def run_simulator(
             robot_y=robot_y,
             robot_heading=heading,
             robot_body_id=robot_body_id,
+            sensor_z_m=robot_profile.scan_height_m,
             rng=scan_rng,
         )
         return {
@@ -534,6 +540,9 @@ def main() -> None:
     config_path = Path(args.config)
     store = ConfigStore(config_path)
     limits = store.safety_limits()
+    robot_profile = RobotProfile.from_config(
+        store.section("robot") if "robot" in store.data else None
+    )
     simulation = store.section("simulation") if "simulation" in store.data else {}
     dynamic_config = simulation.get("dynamic_city") or {}
     if not isinstance(dynamic_config, dict):
@@ -553,6 +562,7 @@ def main() -> None:
             ),
             dynamic_city_seed=int(dynamic_config.get("seed", 7)),
             dynamic_city_speed_scale=float(dynamic_config.get("speed_scale", 1.0)),
+            profile=robot_profile,
         )
     except KeyboardInterrupt:
         # The server/viewer context managers have already released their

@@ -875,7 +875,9 @@ class RollingGridPlanner:
         if (
             not used_frontier
             and goal_is_inside
-            and math.dist(chosen_target, goal) <= self.config.goal_tolerance_m
+            # Classify against the same per-call tolerance that built the goal
+            # region: the caller's arrival contract, not the config default.
+            and math.dist(chosen_target, goal) <= tolerance_m
         ):
             # The exact metric goal is safe when it occupies the selected cell;
             # otherwise the cell-center endpoint remains the safe goal-region pose.
