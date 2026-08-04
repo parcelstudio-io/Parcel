@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import mujoco
@@ -56,6 +57,10 @@ class PoseController:
         self._targets = np.zeros(model.nu, dtype=np.float64)
         self._start = np.zeros(model.nu, dtype=np.float64)
         self._goal = np.zeros(model.nu, dtype=np.float64)
+        # Expression is a pure overlay added at the write boundary: it never
+        # enters _targets, so it cannot disturb pose interpolation, a gait
+        # hold, or a trajectory, and it cancels nothing.
+        self._expression = np.zeros(model.nu, dtype=np.float64)
         self._elapsed = 0.0
         self._duration = 0.0
         self._active = False
@@ -111,6 +116,26 @@ class PoseController:
         self._active = False
         self._hold = True
 
+    def set_expression(self, joint_offsets: dict[str, float]) -> None:
+        """Hold additive expressive offsets (breathing, posture shifts).
+
+        Unknown joints are ignored rather than raising: the expression layer
+        is decorative and must never be able to fault the simulator. Passing
+        an empty mapping clears the overlay.
+        """
+
+        self._expression[:] = 0.0
+        if not joint_offsets:
+            return
+        by_name = {binding.joint_name: binding.actuator_id for binding in self.bindings}
+        for joint_name, value in joint_offsets.items():
+            actuator_id = by_name.get(joint_name)
+            if actuator_id is None:
+                continue
+            offset = float(value)
+            if math.isfinite(offset):
+                self._expression[actuator_id] = offset
+
     def step(self, data: mujoco.MjData, dt: float) -> None:
         if self._active:
             self._elapsed += float(dt)
@@ -125,7 +150,7 @@ class PoseController:
             return
 
         for binding in self.bindings:
-            target = self._targets[binding.actuator_id]
+            target = self._targets[binding.actuator_id] + self._expression[binding.actuator_id]
             data.qpos[binding.qpos_adr] = target
             data.qvel[binding.qvel_adr] = 0.0
             lo, hi = self.model.actuator_ctrlrange[binding.actuator_id]

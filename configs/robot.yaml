@@ -158,7 +158,12 @@ agent:
     enabled: true
     # Only semantic skills with runtime adapters and verified success checks.
     skills: [NavigateTo, FollowFormation, OrbitOwner, MoveRelative, Hold, Vocalize,
-             AskClarification, ReturnToSafePose]
+             AskClarification, ReturnToSafePose, Gesture]
+    # Curated emote allowlist for the Gesture skill (bounded pose/trajectory
+    # skills only; postural settling belongs to ReturnToSafePose). Unset uses
+    # RobotRuntime.DEFAULT_EMOTES.
+    emotes: [bow, hello_pose, hop, look_left, look_right, paw_wave, play_bow,
+             shake, stretch]
     maximum_total_timeout_s: 600
     max_task_records: 256
   affect:
@@ -178,6 +183,47 @@ speech:
   piper_binary: third_party/piper/piper
   piper_voice: models/piper/voice.onnx
   # piper_sample_rate_hz: 22050  # optional; auto-detected from <voice>.onnx.json
+  fish_url: http://127.0.0.1:8091
+  fish_reference_id: null
+  fish_streaming: true
+  barge_in: true
+  # Physical audio devices. Unset uses the system default; set to a PortAudio
+  # index or a case-insensitive substring of the device name (preferred for a
+  # USB array whose index moves between reboots, e.g. "ReSpeaker").
+  # List candidates: .parcel/bin/python -c "import sounddevice;
+  #   print(sounddevice.query_devices())"
+  # input_device: ReSpeaker
+  # output_device: ReSpeaker
+  # Turn segmentation. "energy" is the VAD-hangover default; "semantic" adds
+  # Silero v6 framing + Smart Turn commit decisions and needs onnxruntime
+  # plus the weights below (it degrades loudly to energy without them).
+  endpointing: energy
+  # vad_model: models/endpointing/silero_vad_v6.onnx
+  # turn_model: models/endpointing/smart_turn_v3.onnx
+  # Without acoustic echo cancellation, barge-in during robot speech requires
+  # the microphone to hear the owner this many times louder than the VAD
+  # threshold. Hardware AEC (XVF3800-class mic array) is the planned fix.
+  echo_guard_scale: 2.5
+
+# Expressive liveness: idle breathing/weight shifts plus conversation
+# reactions (orient to the speaker, hold a thinking pose). Purely additive
+# joint offsets, clamped in expression.py and gated off during skills,
+# proximity events, critical battery, or a latched E-stop.
+expression:
+  enabled: true
+  seed: 20260804
+  # Expression runs on its own channel: beat-synced nods are judged against
+  # the pitch accent they land on (<30 ms), which a 10 Hz control tick
+  # cannot resolve. It decides nothing, so a faster rate costs no arbitration.
+  rate_hz: 50
+  idle:
+    breathing_hz: 0.25
+    breathing_amplitude_m: 0.004
+  beats:
+    # Raise lag_compensation_s on hardware once actuation lag is measured;
+    # bias early, since motion-lead reads as anticipation and lag reads as
+    # broken (ITU asymmetry: +45 ms undetectable, -125 ms detectable).
+    lag_compensation_s: 0.0
 
 # Dynamic prompting: sectioned context assembly + read-only information
 # tools for the conversation model. Inspect/iterate at /api/prompt; add
@@ -191,14 +237,6 @@ prompting:
     occupation: software engineer
   tools:
     weather: true
-  fish_url: http://127.0.0.1:8091
-  # Without acoustic echo cancellation, barge-in during robot speech requires
-  # the microphone to hear the owner this many times louder than the VAD
-  # threshold. Hardware AEC (XVF3800-class mic array) is the planned fix.
-  echo_guard_scale: 2.5
-  fish_reference_id: null
-  fish_streaming: true
-  barge_in: true
 
 safety:
   obstacle_stop_m: 0.65

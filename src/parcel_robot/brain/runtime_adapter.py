@@ -54,6 +54,13 @@ class SemanticRuntimeState:
     # Last successfully applied posture name ("unknown" when never applied);
     # ReturnToSafePose completion verifies against this, never the request.
     posture: str = "unknown"
+    # Activity-coordinator view used to verify Gesture completion: the name of
+    # the most recent physical activity and its terminal status. A gesture is
+    # complete only when the coordinator reports it finished, never because
+    # the dispatch returned.
+    activity_name: str = ""
+    activity_status: str = "idle"
+    activity_detail: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +91,7 @@ class SemanticTaskRuntimeAdapter:
             "Vocalize",
             "AskClarification",
             "ReturnToSafePose",
+            "Gesture",
         }
     )
 
@@ -96,6 +104,7 @@ class SemanticTaskRuntimeAdapter:
         hold: Callable[[], object],
         vocalize: Callable[[str], object],
         return_to_safe_pose: Callable[[str], object] | None = None,
+        gesture: Callable[[str, float], object] | None = None,
     ):
         self._navigate = navigate
         self._follow_formation = follow_formation
@@ -103,6 +112,7 @@ class SemanticTaskRuntimeAdapter:
         self._hold = hold
         self._vocalize = vocalize
         self._return_to_safe_pose = return_to_safe_pose
+        self._gesture = gesture
         self._active: dict[DispatchKey, ActiveSemanticDispatch] = {}
         self._lock = threading.RLock()
 
@@ -163,6 +173,10 @@ class SemanticTaskRuntimeAdapter:
                     "ReturnToSafePose has no runtime callback on this deployment"
                 )
             self._return_to_safe_pose(str(args["pose"]))
+        elif request.skill == "Gesture":
+            if self._gesture is None:
+                raise RuntimeError("Gesture has no runtime callback on this deployment")
+            self._gesture(str(args["name"]), float(args.get("intensity", 1.0)))
         else:
             field = "text" if request.skill == "Vocalize" else "question"
             self._vocalize(str(args[field]))
@@ -353,6 +367,34 @@ class SemanticTaskRuntimeAdapter:
                 if not posture_applied
                 else "waiting_for_fresh_stop_confirmation"
             )
+        elif request.skill == "Gesture":
+            requested = str(request.arguments.get("name", ""))
+            matches = bool(requested) and state.activity_name == requested
+            if matches and state.activity_status in {"completed", "succeeded"}:
+                return _terminal_result(
+                    request,
+                    started=item.started_at_monotonic_s,
+                    snapshot_id=state.snapshot_id,
+                    source="activity_coordinator",
+                    detail=state.activity_detail or "gesture_completed",
+                    finished=now,
+                    verified_target=requested,
+                )
+            if matches and state.activity_status in {
+                "failed",
+                "rejected",
+                "expired",
+                "cancelled",
+                "preempted",
+            }:
+                return _failed_result(
+                    request,
+                    started=item.started_at_monotonic_s,
+                    snapshot_id=state.snapshot_id,
+                    detail=state.activity_detail or f"gesture_{state.activity_status}",
+                    finished=now,
+                )
+            detail = state.activity_detail or "waiting_for_gesture_completion"
         else:  # Hold
             if state.stop_confirmed and state.control_feedback_fresh and not state.robot_moving:
                 return _terminal_result(

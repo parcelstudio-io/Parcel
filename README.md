@@ -7,6 +7,10 @@ open-weight reasoning, and a browser control deck. Engine-neutral backend and
 ROS boundaries keep the same intent layer usable for richer simulators and a
 later physical dog.
 
+Start with [current implementation status](docs/CURRENT_STATUS.md) for verified
+desktop capabilities and blockers, then [crucial design decisions](docs/DESIGN_DECISIONS.md)
+for the advantages, limitations, and revisit criteria behind the architecture.
+
 > Current host note: this machine is Ubuntu 26.04 with Python 3.14 and does not
 > currently have ROS 2 installed. Unitree documents Ubuntu 22.04 + ROS 2 Humble
 > as its recommended ROS environment. The `.parcel` environment on this machine
@@ -15,8 +19,8 @@ later physical dog.
 
 ## Quick start
 
-The models and native servers are installed in ignored local directories. Start
-the CPU Gemma reasoner, MuJoCo window, and browser panel together:
+The Gemma weights and reasoner runtime are installed in ignored local
+directories. Start the CPU reasoner, MuJoCo window, and browser panel together:
 
 ```bash
 cd /home/jaewoo-jang/Desktop/Projects/Parcel
@@ -26,19 +30,23 @@ cd /home/jaewoo-jang/Desktop/Projects/Parcel
 The panel opens at <http://127.0.0.1:8765>. The city now includes seeded moving
 pedestrians and a cyclist. Try manual hold-to-drive controls, move the simulated
 owner, then send `follow me`, `navigate to the crosswalk`, `I am feeling sad`,
-or `I am very happy`. The text box streams partial hypotheses to `/api/voice/text` but
-executes only the final submission. Fish S2 and whisper.cpp servers are optional
-while this desktop has no connected microphone/speaker endpoint:
+or `I am very happy`. The text box sends partial hypotheses to
+`/api/voice/text` but executes only the final submission. Fish S2 and
+whisper.cpp services are optional. This desktop currently has no connected
+microphone/speaker endpoint, no native PortAudio runtime, and no Piper
+installation:
 
 ```bash
-./scripts/launch_stack.sh --fish       # GPU TTS; review Fish's model license
+./scripts/launch_stack.sh --fish       # start Fish service only; does not select it
 ./scripts/launch_stack.sh --whisper    # local ASR service
 ```
 
-Those flags start and health-check the isolated speech services; they do not
-enable browser microphone capture or playback. Connecting them to the running
-duplex coordinator is the next device-transport step after adding a real audio
-endpoint and acoustic echo cancellation.
+Those flags only start and health-check their named services. They do not select
+Fish as `speech.tts_provider`, install Piper, or create an audio device. The
+duplex coordinator, mic loop, and speaker sink are already wired, but audio
+becomes active only when STT + TTS + PortAudio + input/output endpoints are all
+healthy. Reliable overlap additionally requires AEC. Run
+`./scripts/run_speech_services.sh --check` for the current readiness report.
 
 The read-only latency dashboard is at <http://127.0.0.1:8765/latency>. Bluetooth
 hardware, AirPods profile tradeoffs, metric definitions, camera/LiDAR boundaries,
@@ -62,7 +70,8 @@ and the companion-navigation integration eval lives in `evals/companion_nav/`.
 
 - A transcript-to-command agent with a safe, explicit command grammar.
 - A Gemma/llama.cpp structured-tool adapter with deterministic validation.
-- whisper.cpp recognition plus cancellable Fish S2 and Sesame CSM adapters.
+- whisper.cpp recognition plus Piper and cancellable Fish S2 adapters (the
+  Sesame CSM adapter is legacy and has no production caller).
 - YAML-defined poses and Wi-Fi/network-card profiles.
 - A single-writer, feedback-supervised locomotion manager with replaceable
   **Unitree Sport**, simulator, and future custom-controller implementations.
@@ -77,8 +86,11 @@ and the companion-navigation integration eval lives in `evals/companion_nav/`.
 - Rotate-first, forward-preferred goal navigation with bounded lateral motion
   available for manual control, skills, recovery, and compatible planners.
 - A deterministic living-city crowd with full dynamic-agent telemetry.
-- Trusted personality/function prompt templates and deferred social gestures.
-- MuJoCo, audio capture, linting, and test packages installed in `.parcel`.
+- Trusted personality/function prompt templates, bounded Gesture emotes, and a
+  subordinate 50 Hz expression channel. Idle body offsets actuate in MuJoCo;
+  beat-scheduled head nods are telemetry-only because Go2 has no neck.
+- MuJoCo, Python audio bindings, linting, and test packages in `.parcel`;
+  native PortAudio and real endpoints are still absent.
 
 The first ROS boundary is intentionally simple:
 
@@ -127,14 +139,18 @@ currently contains the editable project plus:
 - `pytest`
 - `ruff`
 
+The `sounddevice` Python distribution is present, but importing it currently
+fails until the missing OS package `libportaudio2` is installed. Package
+presence alone is not audio readiness.
+
 Activate and verify it:
 
 ```bash
 cd /home/jaewoo-jang/Desktop/Projects/Parcel
 source .parcel/bin/activate
 python -c "import mujoco; print(mujoco.__version__)"
-python -m pytest
-ruff check src/parcel_robot tests
+.parcel/bin/python -m pytest -q
+.parcel/bin/python -m ruff check .
 ```
 
 To reproduce the Python install in a compatible environment:
@@ -148,6 +164,9 @@ python -m pip install -e ".[dev,voice]"
 ```
 
 `COLCON_IGNORE` prevents colcon from searching the virtual environment.
+This is currently a source-checkout/editable deployment: prompt, skill, and
+navigation assets are not all packaged into a relocatable wheel. See the
+[packaging boundary](docs/CURRENT_STATUS.md#packaging-boundary).
 
 ## Skills catalog, city scene, and Dog API
 
@@ -243,13 +262,16 @@ separately:
 
 ```bash
 # terminal 1
-parcel-sim
+python -m parcel_robot.sim
 
 # terminal 2 — browser panel
-parcel-panel --llm
+python -m parcel_robot.web_panel --llm
 ```
 
-`language_model` remains the shared conversation/PlanIR default. To run a
+The current editable environment predates the `parcel-panel` console-script
+entry point, so the module form above is the verified command; reinstalling
+`-e ".[dev,voice]"` regenerates entry points. `language_model` remains the
+shared conversation/PlanIR default. To run a
 separately evaluated planning specialist, configure and enable the optional
 `planner_model` section on a different local endpoint. The browser runtime sends
 the original transcript directly to that lane, reports conversation/planner
@@ -369,21 +391,29 @@ the official Unitree MuJoCo settings use loopback `lo` and DDS domain `1`.
 
 ## Add a custom pose
 
-Edit the canonical [`configs/robot.yaml`](configs/robot.yaml):
+Create `configs/skills/poses/wave.yaml`:
 
 ```yaml
-poses:
-  wave:
-    duration: 1.5
-    joints:
-      FL_hip_joint: 0.0
-      FL_thigh_joint: 0.4
-      FL_calf_joint: -0.8
-      # Include all joints expected by your controller.
+id: wave
+name: Wave
+kind: pose
+enabled: true
+tags: [pose, social]
+duration: 1.5
+joints:
+  FL_hip_joint: 0.0
+  FL_thigh_joint: 0.4
+  FL_calf_joint: -0.8
+  # Include and validate all joints expected by the target controller.
 ```
 
-Then say or publish `do the wave pose`. The included sit and bow values are
-development placeholders; tune and validate them in simulation before use.
+Add `wave` to `configs/skills/catalog.yaml`, restart the runtime, then say or
+publish `do the wave pose`. The catalog parser does not establish physical
+stability or joint safety; tune and validate the complete pose in simulation
+and through a commissioned whole-body controller before hardware use.
+
+The inline `poses:` mapping in `configs/robot.yaml` is retained only as a legacy
+compatibility shim. New skills belong under `configs/skills/`.
 
 ## Add Wi-Fi/network cards
 
@@ -438,15 +468,15 @@ modules:
 ## Voice pipeline
 
 The browser runtime accepts partial and final text at `/api/voice/text`; partials
-can interrupt output but never execute actions. It emits reply text, so speech
-providers remain replaceable. Add two ROS nodes for physical audio:
+can interrupt output but never execute actions. The application also has a
+direct `MicrophoneVoiceLoop` → STT → committed text path and an interruptible
+`SpeakerSink`, so external ROS audio nodes are optional rather than required.
+Keeping audio providers behind text/PCM contracts prevents their failures from
+becoming motor authority. A ROS deployment may still isolate microphone/STT and
+reply/TTS in separate nodes.
 
-1. microphone + voice activity detection + speech-to-text → `/parcel/transcript`
-2. `/parcel/voice_reply` → text-to-speech + speaker
-
-Keeping those nodes separate prevents microphone or cloud failures from touching
-motor control. Before physical deployment, also add authentication for remote
-commands, a hardware emergency stop, command timeouts, joint/velocity/torque
+Before physical deployment, add authenticated remote commands, hardware AEC, an
+independent hardware emergency stop, command timeouts, joint/velocity/torque
 limits, and a watchdog that returns the robot to a stable state.
 
 The implemented adapters are:
@@ -454,12 +484,17 @@ The implemented adapters are:
 - `WhisperCppProvider`: WAV audio to whisper.cpp `/inference`
 - `LlamaCppProvider`: transcript to strict Gemma JSON/tool calls
 - `SafetySupervisor`: allowlist and pose-limit validation
-- `PiperSpeechProvider`: on-device low-latency TTS (the onboard default)
-- `FishSpeechProvider`: local Fish S2 streaming with cancellation (opt-in docked mode)
+- `PiperSpeechProvider`: configured on-device TTS target (not installed here)
+- `FishSpeechProvider`: local Fish S2 request adapter (opt-in docked mode); the
+  current sentence wrapper does not expose Fish's native audio chunk stream
 - `SentenceChunkedSynthesizer`: any blocking TTS becomes a cancellable stream
 - `DuplexVoiceSession`: partial/final text, stale-turn suppression, and barge-in
 - `MicrophoneVoiceLoop` / `SpeakerSink` (`voice_audio.py`): VAD-segmented
   capture, acoustic barge-in behind an echo guard, interruptible playback
+- `SileroVad` / `TurnEndpointer`: optional semantic endpointing with loud energy
+  fallback; code exists but ONNX dependencies/weights are absent here
+- `ProsodyTap` / `ExpressionEngine`: pre-playback accents, idle body offsets,
+  and epoch-scoped timing-only Go2 nod metrics
 - `VoicePipeline`: composes a single STT/reasoning/TTS utterance
 
 See [Voice intelligence and model design](docs/VOICE_AI_MODELS.md) for model
@@ -469,21 +504,26 @@ selection, deployment commands, trust boundaries, privacy, and latency targets.
 
 ```text
 src/parcel_robot/
-├── agent.py          # transcript command routing
-├── runtime.py        # arbitration, behavior loops, telemetry, final safety gate
-├── backends/         # replaceable simulator / robot transport boundary
-├── config.py         # YAML loaders and dynamic modules
-├── motion.py         # Sport Move + RL locomotion router
-├── modules.py        # extension protocol and example
-├── sim.py            # MuJoCo city/owner/obstacle simulation
-├── web_panel.py      # local HTTP API and browser control deck
-├── voice_pipeline.py # text-first duplex voice coordination
-└── ros_node.py       # ROS topic boundary
-tests/                # non-ROS unit tests
-docs/README.md        # documentation index
-docs/MOTION.md        # Sport vs RL setup guide
-docs/REDESIGN_2026_ARCHITECTURE.md
-configs/robot.yaml    # canonical runtime configuration
+├── agent.py             # transcript routing, deterministic safety grammar
+├── brain/               # typed PlanIR, validator, executive, runtime adapter
+├── control/             # controller HAL, single-writer manager, Unitree Sport
+├── navigation/          # semantic grounding, follow/spatial, grid + safety
+├── skills/              # catalog, schema, executor, public Dog API
+├── backends/            # replaceable simulator transport boundary
+├── runtime.py           # arbitration, behavior loops, telemetry, final safety gate
+├── voice_audio.py       # device capture, endpointing integration, playback
+├── voice_pipeline.py    # text-first duplex voice coordination
+├── endpointing.py       # optional Silero / semantic turn completion
+├── prosody.py           # pre-playback accent/arousal analysis
+├── expression.py        # subordinate idle/reaction/beat motion channel
+├── sim.py               # MuJoCo city/owner/obstacle simulation
+├── web_panel.py         # local HTTP API and browser control deck
+└── ros_node.py          # optional ROS topic boundary
+configs/                 # canonical runtime, navigation, and skill configuration
+prompts/                 # trusted system/personality/function/schema templates
+evals/                   # product gates and isolated external proxies
+tests/                   # non-ROS regression suite
+docs/README.md           # documentation index
 ```
 
 Official references:

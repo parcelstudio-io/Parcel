@@ -266,6 +266,15 @@
         </dl>
       </div>
       <div class="card">
+        <h2>Expression</h2>
+        <dl class="kv">
+          <dt>Mode</dt><dd class="state" id="hudExprMode">off</dd>
+          <dt>Producer</dt><dd id="hudExprProducer">—</dd>
+          <dt>Gaze</dt><dd id="hudExprGaze">—</dd>
+          <dt>Breath</dt><dd id="hudExprBreath">—</dd>
+        </dl>
+      </div>
+      <div class="card">
         <h2>Perception</h2>
         <dl class="kv">
           <dt>Nearest person</dt><dd id="hudPerson">—</dd>
@@ -666,8 +675,16 @@
       c.closePath();
     }
 
-    function drawRobot(c, robot) {
+    function drawRobot(c, robot, expression) {
       var yaw = robot.heading * Math.PI / 180;
+      // Gaze: the expression layer's head yaw is an offset from body heading.
+      // Body height/pitch actuate as real joint motion and are visible in the
+      // MuJoCo viewer; at this scale they would be sub-pixel, so the HUD
+      // reports them numerically instead of faking a visual.
+      var gaze = yaw;
+      if (expression && expression.offsets && expression.mode !== "off") {
+        gaze = yaw + (expression.offsets.head_yaw_rad || 0);
+      }
       // Heading wedge.
       c.save();
       c.beginPath();
@@ -691,7 +708,7 @@
       c.strokeStyle = THEME.halo;
       c.lineWidth = 2;
       c.stroke();
-      var nose = [robot.x + Math.cos(yaw) * 0.40, robot.y + Math.sin(yaw) * 0.40];
+      var nose = [robot.x + Math.cos(gaze) * 0.40, robot.y + Math.sin(gaze) * 0.40];
       var head = project(nose[0], nose[1], 0.05);
       c.beginPath();
       c.arc(head[0], head[1], Math.max(3.5, 0.15 * cam.zoom), 0, Math.PI * 2);
@@ -702,7 +719,7 @@
       c.stroke();
       var earOffsets = [0.62, -0.62];
       for (var e = 0; e < 2; e++) {
-        var ea = yaw + earOffsets[e];
+        var ea = gaze + earOffsets[e];
         var ep = project(nose[0] + Math.cos(ea) * 0.13, nose[1] + Math.sin(ea) * 0.13, 0.14);
         c.beginPath();
         c.arc(ep[0], ep[1], Math.max(1.6, 0.05 * cam.zoom), 0, Math.PI * 2);
@@ -924,7 +941,7 @@
         drawGoal(ctx, state.navigation);
         drawAgents(ctx, state.dynamic_agents);
         drawOwner(ctx, state.owner);
-        drawRobot(ctx, state.robot);
+        drawRobot(ctx, state.robot, state.expression);
       }
       drawCompassAndScale(ctx);
       requestAnimationFrame(renderFrame);
@@ -954,6 +971,22 @@
       setText("hudFollowState", follow.enabled ? String(follow.state || "active") : "off");
       setText("hudFollowMode", follow.mode ? String(follow.mode) : "—");
       setText("hudFollowDist", fmt(follow.desired_distance_m, 1, " m"));
+      var expr = s.expression || {};
+      var exprOffsets = expr.offsets || {};
+      setText("hudExprMode", expr.enabled === false ? "disabled" : String(expr.mode || "off"));
+      setText("hudExprProducer", expr.producer ? String(expr.producer) : "—");
+      setText(
+        "hudExprGaze",
+        exprOffsets.head_yaw_rad === undefined
+          ? "—"
+          : fmt(exprOffsets.head_yaw_rad * 180 / Math.PI, 0, "°")
+      );
+      setText(
+        "hudExprBreath",
+        exprOffsets.body_height_m === undefined
+          ? "—"
+          : fmt(exprOffsets.body_height_m * 1000, 1, " mm")
+      );
       var person = s.nearest_person;
       setText("hudPerson", person ? fmt(person.distance_m, 2, " m") : "—");
       setText("hudObstacle", fmt(s.obstacle_distance_m, 2, " m"));

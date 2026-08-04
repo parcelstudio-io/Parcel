@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
@@ -316,6 +316,43 @@ class ToolPolicySource:
         return "\n".join(lines)
 
 
+class EmotePolicySource:
+    """Renders the admitted emote catalog + when to use one (stable plane).
+
+    The catalog changes only when the skills config does, so this belongs in
+    the cached prefix rather than the per-turn tail.
+    """
+
+    def __init__(
+        self,
+        emotes: Iterable[str],
+        *,
+        source_id: str = "emote_policy",
+        priority: int = 35,
+        budget_chars: int = 900,
+    ):
+        self.emotes = tuple(sorted({str(name) for name in emotes}))
+        self.source_id = source_id
+        self.placement = PLACEMENT_STABLE
+        self.priority = priority
+        self.budget_chars = budget_chars
+        _validate_section_params(self.source_id, self.placement, self.priority, self.budget_chars)
+
+    def snapshot(self, query: str | None) -> str | None:
+        del query
+        if not self.emotes:
+            return None
+        return (
+            "Body language: you can move while you speak. Write "
+            "[emote:<name>] inline in your reply, right where the gesture "
+            "belongs, and optionally [emote:<name>:<intensity>] with "
+            "intensity 0.5-1.5. The tag is removed before speaking. Use at "
+            "most one per reply, only when it genuinely matches the moment, "
+            "and never while you are walking or carrying out a task. "
+            "Available: " + ", ".join(self.emotes)
+        )
+
+
 class RecentToolResultsSource:
     """Last N tool results, re-rendered every turn (turn plane).
 
@@ -510,6 +547,19 @@ def build_prompting_stack(config: Mapping[str, Any] | None) -> PromptingStack:
     """
 
     config = dict(config or {})
+    # Fail closed on unknown keys. A mis-indented YAML block silently adopted
+    # another section's keys once (audio device/endpointing settings landed
+    # here and were ignored for a whole sprint); an accepted-but-unread key is
+    # indistinguishable from a working one.
+    unknown = set(config) - {
+        "enabled",
+        "turn_budget_chars",
+        "persona",
+        "user_profile",
+        "tools",
+    }
+    if unknown:
+        raise ValueError(f"unsupported prompting config keys: {sorted(unknown)}")
     tools = ConversationToolRegistry()
     if not bool(config.get("enabled", True)):
         return PromptingStack(composer=None, profile=None, tools=tools, detail="disabled")

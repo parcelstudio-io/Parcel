@@ -260,7 +260,7 @@ class SkillContractRegistry:
                     "Gesture",
                     "gesture",
                     ("name",),
-                    (),
+                    ("intensity",),
                     ("base", "posture"),
                     ("base_available", "posture_available", "robot_stopped"),
                     ("skill_completed",),
@@ -685,6 +685,11 @@ class PlanValidator:
                     raise ValueError(f"no {profile} catalog was supplied to the validator")
                 if name not in admitted:
                     raise ValueError(f"{name!r} is not in the admitted {profile} catalog")
+                if profile == "gesture" and "intensity" in args:
+                    # Expressive scale only; the clip's own joint limits still
+                    # bound the motion, so this can never widen a gesture past
+                    # what the catalog authorized.
+                    _numeric(args["intensity"], minimum=0.5, maximum=1.5)
             elif profile == "utterance":
                 _text(args["text"], minimum=1, maximum=500)
             elif profile == "question":

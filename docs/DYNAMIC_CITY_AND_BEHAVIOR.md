@@ -38,6 +38,16 @@ still translated kinematically. The scripted gait is
 now continuous across command refreshes, but physically credible foot contact
 still requires a learned locomotion policy or Isaac/URBAN-SIM.
 
+The expression layer is now also live in this backend. A separate 50 Hz channel
+publishes bounded body-height/pitch offsets for idle breathing and weight shift;
+voice-stage head/gaze state is exposed for UI/metrics. Prosody schedules
+speech-accent head-pitch nods, but Go2 has no neck joint, so those nods are
+timing/telemetry only and do not visibly or physically move the current
+embodiment. Expression is suppressed or reduced during locomotion, skills,
+hazards, critical battery, and E-stop. This remains a behavioral preview: no
+physical support-polygon, torque, thermal, or vendor-Sport interaction has been
+validated.
+
 ## Simulator research conclusion
 
 ### iGibson: use its ideas, not its city backend
@@ -182,8 +192,29 @@ navigation, follow, and E-stop authority changes.
 The spoken empathetic reply does not wait for the gesture. Inferred transcript
 affect must meet the configured confidence threshold. Whisper transcription
 does not preserve prosody; if vocal affect matters later, add a separate audio
-affect classifier that emits only a bounded label/confidence. Fish/Sesame audio
-codec tokens remain inside speech services and never become robot instructions.
+affect classifier that emits only a bounded label/confidence. Speech-provider
+codec tokens remain inside speech services and never become robot instructions;
+Fish is implemented, while Sesame artifacts are a legacy experiment with no
+active provider.
+
+There are now two intentionally compatible entry paths:
+
+- ordinary conversation uses `AgentDecision.next_action`, then the
+  `ActivityCoordinator` may execute, defer, expire, or reject it; and
+- a deliberative physical plan uses the allowlisted PlanIR `Gesture` skill,
+  which reaches the same coordinator/runtime checks and verifies completion.
+
+Inline `[emote:name:intensity]` reply tags provide sentence-local timing for
+curated emotes. They are stripped before TTS, never become joint instructions,
+and cannot make speech fail if the emote is inadmissible. The current intensity
+is an admitted semantic parameter and log signal; it is not yet a physically
+validated amplitude/tempo transform for every skill.
+
+This dual path keeps chat latency low while preserving complex-plan semantics.
+Its cost is duplicated policy surface: the affect-to-action map, PlanIR
+contracts, prompt catalog, and runtime allowlist must be changed together. The
+tests protect that alignment, but a future unified semantic event envelope
+would reduce drift.
 
 ## Prompt templates and configuration
 
@@ -193,10 +224,12 @@ Trusted templates live under `prompts/`:
 prompts/
 ├── system/core.md
 ├── system/action_policy.md
+├── system/{planner,planner_sketch,planner_v1,planner_v2}.md
 ├── dynamic/runtime_context.md.tmpl
 ├── personalities/{gentle_companion,playful_companion,calm_guardian}.yaml
-├── functions/{companion,navigator,manual_assistant,patrol}.yaml
-└── schemas/agent_decision.schema.json
+├── functions/{companion,navigator,spatial_reasoner,manual_assistant,patrol}.yaml
+└── schemas/{agent_decision,intent_frame_v1,observation_snapshot_v1,plan_ir_v1,
+             plan_sketch_v1,execution_result_v1}.schema.json
 ```
 
 The UI selects profile IDs only; it never accepts arbitrary system prompt text.

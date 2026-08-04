@@ -7,6 +7,13 @@ max-effort synthesis), adjudicated against each other and against the codebase.
 **Companions:** [REDESIGN_2026_ASSESSMENT.md](REDESIGN_2026_ASSESSMENT.md),
 [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md).
 
+> This is a research record and roadmap, not the operational source of truth.
+> Since the original synthesis, Parcel has wired the ProsodyTap, 50 Hz
+> expression/BeatLayer, epoch cancellation, bounded Gesture emotes, and an
+> optional semantic-endpointing seam. Hardware AEC, streaming STT, speculative
+> generation, an overlap classifier, expressive neural TTS, and physical timing
+> calibration remain future work. See [CURRENT_STATUS.md](CURRENT_STATUS.md).
+
 ---
 
 ## 1. Full-duplex voice: the verdict
@@ -43,6 +50,10 @@ brain owning cognition and tools.
 | Atomic cancellation | Speech epochs spanning audio AND scheduled motion (epoch-tag every gesture event) |
 
 ### Component choices (primary / fallback)
+
+“Primary” below means the selected target, not necessarily installed or active.
+The current desktop still runs the energy endpointing fallback and has no usable
+audio endpoints or Piper installation.
 
 | Role | Primary | Fallback |
 |---|---|---|
@@ -114,24 +125,33 @@ MuJoCo before hardware.
 Barge-in → audible+visible yield: TTS duck within ~100 ms of post-AEC VAD hit;
 full supersession (audio + epoch-tagged motion) on commit.
 
-### Build order (16 steps; sim first, hardware gated)
+### Build order and current status (sim first, hardware gated)
 
-Days: (1) order XVF3800 + speaker (~$120, starts the lead-time clock);
-(2) Silero v6 behind the energy floor; (3) Smart Turn v3 dual timeouts;
-(4) stage-level latency decomposition + ApexToAccentError + false-interrupt
-metrics. Week each: (5) ProsodyTap + head-nod-only BeatLayer in MuJoCo;
-(6) epoch-tagged motion + interruption classifier; (7) streaming STT partials;
-(8) speculative generation with plan gating; (10) Chatterbox behind
-SentenceChunkedSynthesizer. Weeks: (9) SFU library + backchannel predictor;
-(11) 50 Hz ExpressivePoseChannel + IdleLayer + EmoteSequencer. Hardware phase:
-(12) JetPack 6.x reflash + XVF3800 integration; (13) Orin benchmark gates;
-(14) ego-noise hardening (per-skill noise templates keyed to commanded
-velocity); (15) lag calibration + amplitude ramp from 25%. Parallel research:
-(16) PersonaPlex/Moshi offboard proposal channel.
+| Step | Slice | Status on 2026-08-04 |
+| --- | --- | --- |
+| 1 | Order XVF3800 + speaker | Purchased by the developer; not connected or verified by Parcel |
+| 2–3 | Silero v6 + Smart Turn dual-timeout seam | **Implemented/tested**, but inactive: ONNX Runtime/weights are absent and canonical mode remains `energy` |
+| 4 | Stage latency, turn-commit, apex error, interrupt metrics | **Partially implemented**; software metrics exist, physical-device timestamps do not |
+| 5 | ProsodyTap + head-nod BeatLayer | Timing, epochs, and metrics are **implemented/tested**; Go2 has no neck, so the scheduled nod is not actuated or visible |
+| 6 | Epoch-tagged motion + interruption classifier | Epoch cancellation **implemented**; semantic backchannel/interruption classifier remains planned |
+| 7 | True streaming STT partials | Planned; browser text partials are not streaming acoustic ASR |
+| 8 | Speculative generation with plan gating | Planned |
+| 9 | SFU library + backchannel predictor | Planned |
+| 10 | Chatterbox behind the synthesizer interface | Planned; Piper/Fish adapters remain current choices |
+| 11 | 50 Hz expression + idle + bounded emotes | **Implemented as a conservative additive v1**; full clip mixer/transitions remain planned |
+| 12–15 | XVF3800/Jetson integration, target benchmarks, ego-noise hardening, lag calibration | Hardware-gated and not started |
+| 16 | PersonaPlex/Moshi proposal-channel experiment | Research only |
 
 ---
 
 ## 2. Expressive conversation-driven behavior (7-step roadmap)
+
+Implementation overlay: step 1 and the stationary, bounded core of step 2 are
+now wired. The engine has idle/reaction/beat layers, a 50 Hz backend overlay,
+curated `Gesture` admission, sentence-local emote tags, activity gating, and
+epoch cancellation. It does **not** yet have the richer stance-transition
+schema, blending graph, Laban variation, authored physical clips, or RL style
+tracking described in steps 3–7.
 
 1. **(days)** Procedural micro-expression layer + deterministic reaction hooks:
    additive head/body channel over the SE2 stream; VAD-onset head-orient
@@ -179,8 +199,9 @@ velocity); (15) lag calibration + amplitude ramp from 25%. Parallel research:
    runs at its own faster inner rate while the brain stays at 10 Hz.
 5. **(week)** `SearchOwner` skill (RPF-Search-lite): tracking →
    last-observed-position → yaw-sweep scan → frontier search scored by info
-   gain, pruned by a max-owner-velocity reachability disk. Parcel currently has
-   NO reacquisition behavior — a guaranteed real-world failure.
+   gain, pruned by a max-owner-velocity reachability disk. Parcel currently
+   holds/stops through short occlusion and measures reacquisition, but has no
+   active frontier-search behavior — still a guaranteed real-world gap.
 6. **(week)** Occlusion-aware behind-formation (Adap-RPF): sample 30–50
    candidate follow points per tick around the predicted owner pose, published
    weights (occlusion 10, distance 10, social 1, travel 1, stickiness 0.5).

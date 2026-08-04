@@ -18,6 +18,9 @@ MAX_CLIENTS_PER_POLL = 4
 MAX_TRAJECTORY_FRAMES = 500
 MAX_TRAJECTORY_SECONDS = 30.0
 ALLOWED_GAIT_STYLES = frozenset({"trot", "run", "crawl"})
+# Expressive overlays are decorative: bound them far below the joint limit so
+# a malformed offset can never become a real motion command.
+MAX_EXPRESSION_OFFSET_RAD = 0.5
 _LIMITS = SafetyLimits()
 
 
@@ -44,6 +47,38 @@ def _safe_joints(value: object, field: str = "joints") -> dict[str, float]:
             raise ValueError(f"{field}.{raw_name} exceeds the safe joint limit")
         joints[raw_name] = position
     return joints
+
+
+def _safe_expression_offsets(value: object) -> dict[str, float]:
+    """Validate an expressive joint overlay; an empty mapping clears it."""
+
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise TypeError("expression joints must be a mapping")
+    if len(value) > 64:
+        raise ValueError("expression joints has too many entries")
+    offsets: dict[str, float] = {}
+    for raw_name, raw_value in value.items():
+        if not isinstance(raw_name, str) or not raw_name or len(raw_name) > 128:
+            raise TypeError("expression joint names must be non-empty strings")
+        offset = _finite_float(raw_value, f"expression.{raw_name}")
+        if abs(offset) > MAX_EXPRESSION_OFFSET_RAD:
+            raise ValueError(f"expression.{raw_name} exceeds the expressive overlay limit")
+        offsets[raw_name] = offset
+    return offsets
+
+
+def expression_to_message(joint_offsets: dict[str, float]) -> dict:
+    return {
+        "version": PROTOCOL_VERSION,
+        "type": "expression",
+        "joints": _safe_expression_offsets(joint_offsets),
+    }
+
+
+def message_to_expression(message: dict) -> dict[str, float]:
+    return _safe_expression_offsets(message.get("joints"))
 
 
 def pose_to_message(pose: Pose) -> dict:
@@ -171,6 +206,9 @@ def validate_simulator_message(message: dict) -> None:
             _safe_joints(frame.get("joints"), f"keyframes[{index}].joints")
             previous = timestamp
         return
+    if kind == "expression":
+        message_to_expression(message)
+        return
     if kind == "owner_move":
         dx = _finite_float(message.get("dx", 0.0), "owner dx")
         dy = _finite_float(message.get("dy", 0.0), "owner dy")
@@ -223,6 +261,12 @@ def publish_velocity(
 
 def publish_trajectory(skill, socket_path: Path | str = DEFAULT_SOCKET) -> None:
     send_message(trajectory_to_message(skill), socket_path)
+
+
+def publish_expression(
+    joint_offsets: dict[str, float], socket_path: Path | str = DEFAULT_SOCKET
+) -> None:
+    send_message(expression_to_message(joint_offsets), socket_path)
 
 
 def publish_stop(socket_path: Path | str = DEFAULT_SOCKET) -> None:

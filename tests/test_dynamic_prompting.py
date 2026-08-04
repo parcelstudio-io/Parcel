@@ -270,3 +270,28 @@ modules: []
         assert "Central Park" in runtime._render_system_prompt()
     finally:
         runtime.close()
+
+
+def test_prompting_rejects_keys_that_belong_to_another_section() -> None:
+    """2026-08-04: a mis-indented YAML block put the speech section's audio
+    keys under `prompting:` for a whole sprint. They were silently accepted
+    and never read, so device selection and endpointing config did nothing.
+    An accepted-but-unread key must now fail loudly."""
+
+    with pytest.raises(ValueError, match="unsupported prompting config keys"):
+        build_prompting_stack({"user_profile": {}, "endpointing": "semantic"})
+    with pytest.raises(ValueError, match="echo_guard_scale"):
+        build_prompting_stack({"echo_guard_scale": 2.5})
+
+
+def test_canonical_config_keeps_audio_settings_in_the_speech_section() -> None:
+    """Pins the section boundary the regression above crossed."""
+
+    from parcel_robot.config import ConfigStore
+
+    store = ConfigStore(REPO / "configs" / "robot.yaml")
+    speech = store.section("speech")
+    for key in ("endpointing", "echo_guard_scale", "fish_url", "barge_in"):
+        assert key in speech, f"{key} must live under speech:"
+    # And the canonical config must still build a prompting stack at all.
+    assert build_prompting_stack(store.section("prompting")).composer is not None

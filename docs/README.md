@@ -1,9 +1,13 @@
 # Parcel documentation
 
-Start with the redesign pair for current architecture and decisions:
+Start with the status and decision records. They distinguish what is working in
+this checkout from target architecture and research proposals.
 
 | Doc | Role |
 | --- | --- |
+| [CURRENT_STATUS.md](CURRENT_STATUS.md) | **Operational source of truth:** implemented vs wired vs verified, current blockers, and inert configuration surface |
+| [../backlog/](../backlog/) | **The work queue that drains it:** unverified claims, blocked work, and what to pick up next |
+| [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) | Crucial choices, advantages, limitations, and evidence required to revisit them |
 | [REDESIGN_2026_ASSESSMENT.md](REDESIGN_2026_ASSESSMENT.md) | Why the 2026 redesign happened and what was adjudicated |
 | [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) | Seven-layer portable architecture and what is wired today |
 
@@ -22,6 +26,16 @@ Start with the redesign pair for current architecture and decisions:
 | [DEPENDENCIES.md](DEPENDENCIES.md) | Host GPU / dependency inventory |
 | [REASONER_GPU_PROFILE.md](REASONER_GPU_PROFILE.md) | Gemma / CUDA admission profiles |
 | [GRID_UPDATE_PERFORMANCE.md](GRID_UPDATE_PERFORMANCE.md) | Occupancy-grid update microbenchmark |
+| [RESEARCH_2026_ROADMAPS.md](RESEARCH_2026_ROADMAPS.md) | Research conclusions, implemented slices, and explicitly future work |
+
+## Reading rules
+
+- A roadmap is not an implementation claim. Look for its implementation-status
+  note, then confirm against [CURRENT_STATUS.md](CURRENT_STATUS.md).
+- A simulator success is not physical hardware evidence.
+- A BARN/Habitat result is an external proxy, not a companion-product score.
+- Paths and commands are relative to the repository root unless stated
+  otherwise.
 
 ## Eval entry points (outside `docs/`)
 

@@ -12,6 +12,7 @@ from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, SimObservation
 from parcel_robot.control import build_backend_control_manager
 from parcel_robot.core import CommandArbiter, MotionIntent
+from parcel_robot.expression import ReactionHooks
 from parcel_robot.models import AgentDecision, Pose, SpatialIntent, ToolCall, VelocityCommand
 from parcel_robot.navigation import GoalPose, MidLevelCommand, Mission, SemanticGoal
 from parcel_robot.navigation.follow import FollowOwnerController
@@ -1451,5 +1452,106 @@ def test_simulator_estop_clears_deferred_social_actions(
         runtime.clear_emergency_stop()
         time.sleep(0.1)
         assert backend.trajectories == []
+    finally:
+        runtime.close()
+
+
+def test_expression_layer_publishes_a_clamped_overlay(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    """Card A1: the runtime steps expression and sends an additive overlay."""
+
+    class ExpressiveBackend(FakeSimulatorBackend):
+        def __init__(self, observation: SimObservation):
+            super().__init__(observation)
+            self.expressions: list[dict[str, float]] = []
+
+        def expression(self, joint_offsets: dict[str, float]) -> None:
+            self.expressions.append(dict(joint_offsets))
+
+    backend = ExpressiveBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    try:
+        # Idle and unobstructed: breathing actuates the body.
+        for tick in range(30):
+            runtime._step_expression()
+            time.sleep(0.005)
+            del tick
+        assert backend.expressions, "expression overlay was never published"
+        moving = [entry for entry in backend.expressions if entry]
+        assert moving, "overlay stayed empty while idle"
+        for entry in moving:
+            assert set(entry) <= set(runtime.robot_profile.stand_joints())
+            assert all(abs(value) < 0.5 for value in entry.values())
+
+        snapshot = runtime.snapshot()["expression"]
+        assert snapshot["enabled"] is True
+        assert snapshot["mode"] == "full"
+        assert set(snapshot["offsets"]) == {
+            "body_height_m",
+            "body_pitch_rad",
+            "head_yaw_rad",
+            "head_pitch_rad",
+        }
+
+        # A latched emergency stop clears the overlay and keeps it cleared.
+        runtime.emergency_stop()
+        backend.expressions.clear()
+        for tick in range(5):
+            runtime._step_expression()
+            del tick
+        assert all(entry == {} for entry in backend.expressions)
+        assert runtime.snapshot()["expression"]["mode"] == "off"
+    finally:
+        runtime.close()
+
+
+def test_expression_survives_a_backend_without_the_channel(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    """Backends predating the overlay must still run (snapshot-only)."""
+
+    backend = FakeSimulatorBackend(_observation(0.0))
+    assert not hasattr(backend, "expression")
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    try:
+        for tick in range(5):
+            runtime._step_expression()
+            del tick
+        assert runtime.snapshot()["expression"]["mode"] == "full"
+    finally:
+        runtime.close()
+
+
+def test_expression_reacts_to_voice_stages(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    """End-of-query holds a thinking pose; the reply releases it."""
+
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    try:
+        reactions = runtime.expression.reactions
+        runtime._voice_stage(
+            VoiceStage(1, "query_end", time.monotonic(), transcript="how are you?")
+        )
+        assert reactions.thinking_holds == 1
+        assert reactions.active
+        held = reactions.step(time.monotonic()).head_pitch_rad
+        assert held > 0.0
+        # The reply releases the pose; it eases out rather than snapping, so
+        # it is fully gone only after the release window.
+        runtime._voice_stage(VoiceStage(1, "turn_complete", time.monotonic()))
+        settled = time.monotonic() + ReactionHooks.RELEASE_S + 0.05
+        assert reactions.step(settled).head_pitch_rad == pytest.approx(0.0, abs=1e-9)
+        assert not reactions.active
+
+        # Owner speech onset orients the head toward their bearing.
+        runtime._owner_speech_started()
+        assert reactions.orients_triggered == 1
+        runtime._owner_speech_ended()
     finally:
         runtime.close()

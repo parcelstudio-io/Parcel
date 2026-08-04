@@ -127,14 +127,25 @@ checkpoint is not activated for planning or conversation.
 
 ## Launch and shutdown
 
-Start the admitted profile on port 8081 with:
+The GPU launcher defaults to port 8081 so it cannot overwrite/collide with the
+CPU rollback service. The canonical runtime, however, targets port 8080. To use
+the admitted GPU profile with the normal stack, start it explicitly on 8080;
+the stack will detect and reuse it:
 
 ```bash
+mkdir -p .cache/reasoner
+PARCEL_REASONER_PORT=8080 \
 PARCEL_REASONER_LOG_FILE=.cache/reasoner/<new-log>.log \
   scripts/launch_reasoner_gpu.sh -- --verbosity 4
+
+# In another terminal after /health is ready:
+./scripts/launch_stack.sh
 ```
 
-The log directory must already exist. The launcher re-hashes the model,
+Alternatively, retain the launcher's 8081 default and use an experimental
+runtime config whose `language_model.base_url` is `http://127.0.0.1:8081`;
+starting a server on 8081 alone does not connect the canonical runtime. The
+launcher re-hashes the model,
 repeats admission, exports only the pinned application/CUDA libraries plus the
 verified NCCL preload, and then requests all layers. Retain the log line with
 the actual offload count; `--n-gpu-layers 999` is only a request.

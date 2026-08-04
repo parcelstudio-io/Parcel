@@ -161,3 +161,69 @@ def test_socket_publish_and_poll(tmp_path):
         assert messages[0]["joints"]["FL_hip_joint"] == 0.2
     finally:
         server.close()
+
+
+def test_expression_message_round_trip_and_validation() -> None:
+    """Card A1: the expressive overlay is a validated transport message."""
+
+    from parcel_robot.sim_ipc import (
+        MAX_EXPRESSION_OFFSET_RAD,
+        expression_to_message,
+        message_to_expression,
+    )
+
+    message = expression_to_message({"FL_thigh_joint": 0.012, "FL_calf_joint": -0.024})
+    assert message["type"] == "expression"
+    validate_simulator_message(message)
+    assert message_to_expression(message) == {
+        "FL_thigh_joint": 0.012,
+        "FL_calf_joint": -0.024,
+    }
+    # An empty overlay is the documented "clear it" request.
+    cleared = expression_to_message({})
+    validate_simulator_message(cleared)
+    assert message_to_expression(cleared) == {}
+    # Offsets are bounded far below the joint limit: a decorative channel can
+    # never smuggle a real motion command through.
+    with pytest.raises(ValueError, match="expressive overlay limit"):
+        expression_to_message({"FL_thigh_joint": MAX_EXPRESSION_OFFSET_RAD + 0.1})
+    with pytest.raises(ValueError, match="expression.FL_thigh_joint"):
+        expression_to_message({"FL_thigh_joint": float("nan")})
+
+
+@pytest.mark.skipif(not SCENE.exists(), reason="unitree_mujoco Go2 scene not checked out")
+def test_expression_overlay_is_additive_and_never_disturbs_targets() -> None:
+    """The overlay rides on top of held targets and can be cleared."""
+
+    model = mujoco.MjModel.from_xml_path(str(SCENE))
+    data = mujoco.MjData(model)
+    if model.nkey > 0:
+        mujoco.mj_resetDataKeyframe(model, data, 0)
+    mujoco.mj_forward(model, data)
+
+    controller = PoseController(model)
+    stand = ScriptedTrotGait().standing_joints()
+    controller.hold_joints(stand)
+    controller.step(data, 0.01)
+    adr = {
+        binding.joint_name: binding.qpos_adr for binding in controller.bindings
+    }
+    baseline = float(data.qpos[adr["FL_thigh_joint"]])
+
+    controller.set_expression({"FL_thigh_joint": 0.02})
+    controller.step(data, 0.01)
+    assert float(data.qpos[adr["FL_thigh_joint"]]) == pytest.approx(
+        baseline + 0.02, abs=1e-9
+    )
+    # The held target itself is untouched, so clearing restores exactly.
+    controller.set_expression({})
+    controller.step(data, 0.01)
+    assert float(data.qpos[adr["FL_thigh_joint"]]) == pytest.approx(baseline, abs=1e-9)
+
+    # Unknown joints are ignored rather than raising: decoration must never
+    # be able to fault the simulator.
+    controller.set_expression({"NO_SUCH_joint": 0.01, "FL_thigh_joint": -0.01})
+    controller.step(data, 0.01)
+    assert float(data.qpos[adr["FL_thigh_joint"]]) == pytest.approx(
+        baseline - 0.01, abs=1e-9
+    )

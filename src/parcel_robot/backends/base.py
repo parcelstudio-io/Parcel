@@ -113,4 +113,11 @@ class SimulatorBackend(Protocol):
 
     def trajectory(self, skill: object) -> None: ...
 
+    def expression(self, joint_offsets: dict[str, float]) -> None:
+        """Hold a decorative additive joint overlay (optional capability).
+
+        Backends without an expression channel inherit this no-op: expressive
+        liveness must degrade to snapshot-only rendering, never fail a run.
+        """
+
     def move_owner(self, dx: float, dy: float) -> None: ...

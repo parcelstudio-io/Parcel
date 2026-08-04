@@ -9,6 +9,7 @@ __pycache__/
 .ruff_cache/
 .cache/external-evals/
 .cache/reasoner/
+.cache/speech/
 parcel_memory.sqlite3
 
 # Local model downloads (fetch from Hugging Face; do not commit weights)
@@ -19,6 +20,8 @@ models/**/*.ckpt
 models/**/*.safetensors
 models/**/*.gguf
 models/**/*.bin
+models/**/*.onnx
+models/**/*.onnx.json
 models/**/*.incomplete
 *.incomplete
 MUJOCO_LOG.TXT

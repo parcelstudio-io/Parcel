@@ -20,6 +20,25 @@ _TROT_PHASE = {"FL": 0.0, "RR": 0.0, "FR": 0.5, "RL": 0.5}
 _CRAWL_PHASE = {"FL": 0.0, "RR": 0.25, "FR": 0.5, "RL": 0.75}
 
 
+def leg_ik(profile: RobotProfile, x: float, z: float) -> tuple[float, float]:
+    """Planar two-link leg IK in the profile's morphology (thigh, calf).
+
+    Module level so every kinematic consumer (gait, expression offsets)
+    solves the same geometry from the same profile instead of keeping its
+    own copy of the trig.
+    """
+
+    upper = profile.upper_link_m
+    lower = profile.lower_link_m
+    radius_sq = max(0.06**2, min((upper + lower - 1e-4) ** 2, x * x + z * z))
+    cosine = max(-1.0, min(1.0, (radius_sq - upper * upper - lower * lower) / (2 * upper * lower)))
+    calf = -math.acos(cosine)
+    thigh = math.atan2(x, -z) - math.atan2(
+        lower * math.sin(calf), upper + lower * math.cos(calf)
+    )
+    return thigh, calf
+
+
 @dataclass
 class ScriptedTrotGait:
     """Open-loop kinematic gait preview (trot / run / crawl)."""
@@ -119,17 +138,7 @@ class ScriptedTrotGait:
         joints[self.profile.joint_name(leg, 2)] = calf
 
     def _leg_ik(self, x: float, z: float) -> tuple[float, float]:
-        upper = self.profile.upper_link_m
-        lower = self.profile.lower_link_m
-        radius_sq = max(0.06**2, min((upper + lower - 1e-4) ** 2, x * x + z * z))
-        cosine = max(
-            -1.0, min(1.0, (radius_sq - upper * upper - lower * lower) / (2 * upper * lower))
-        )
-        calf = -math.acos(cosine)
-        thigh = math.atan2(x, -z) - math.atan2(
-            lower * math.sin(calf), upper + lower * math.cos(calf)
-        )
-        return thigh, calf
+        return leg_ik(self.profile, x, z)
 
 
 @dataclass

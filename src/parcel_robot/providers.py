@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import re
 import threading
 import time
 from collections.abc import Callable, Iterator, Mapping
@@ -10,6 +12,8 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .models import ActionProposal, AffectEstimate, AgentDecision, ToolCall
+
+logger = logging.getLogger(__name__)
 
 if False:  # pragma: no cover - type-only imports without a runtime dependency cycle
     from .brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
@@ -1032,6 +1036,37 @@ def split_speech_sentences(text: str, *, max_chars: int = 220) -> list[str]:
     return sentences
 
 
+_EMOTE_TAG = re.compile(r"\[emote:([a-z0-9_]{1,40})(?::([0-9]*\.?[0-9]+))?\]", re.IGNORECASE)
+
+
+def strip_emote_tags(text: str) -> tuple[str, list[tuple[str, float]]]:
+    """Split ``[emote:name]`` / ``[emote:name:0.8]`` markers out of a reply.
+
+    Returns the speakable text (tags removed, spacing tidied) and the ordered
+    emotes found. The conversation model writes tags inline so a gesture is
+    anchored to the words it belongs with; nothing here validates the name —
+    dispatch does that against the admitted catalog.
+    """
+
+    emotes: list[tuple[str, float]] = []
+
+    def capture(match: re.Match[str]) -> str:
+        name = match.group(1).lower()
+        raw_intensity = match.group(2)
+        try:
+            intensity = 1.0 if raw_intensity is None else float(raw_intensity)
+        except ValueError:
+            intensity = 1.0
+        emotes.append((name, intensity))
+        return " "
+
+    spoken = _EMOTE_TAG.sub(capture, text)
+    # Tidy the seams the removed tags leave behind.
+    spoken = re.sub(r"\s+([,.;:!?])", r"\1", spoken)
+    spoken = " ".join(spoken.split())
+    return spoken, emotes
+
+
 class SentenceChunkedSynthesizer:
     """Adapt any blocking synthesizer into a cancellable streaming one.
 
@@ -1041,14 +1076,23 @@ class SentenceChunkedSynthesizer:
     effect at the next sentence boundary at the latest.
     """
 
-    def __init__(self, synthesizer: SpeechSynthesizer, *, max_chars: int = 220):
+    def __init__(
+        self,
+        synthesizer: SpeechSynthesizer,
+        *,
+        max_chars: int = 220,
+        on_emote: Callable[[str, float], None] | None = None,
+    ):
         if not 40 <= max_chars <= 2000:
             raise ValueError("sentence chunk size must be between 40 and 2000 characters")
         self._synthesizer = synthesizer
         self._max_chars = max_chars
+        # Fired as the sentence carrying the tag begins synthesis, so the
+        # gesture lands with the words rather than after the whole reply.
+        self._on_emote = on_emote
 
     def synthesize(self, text: str) -> bytes:
-        return self._synthesizer.synthesize(text)
+        return self._synthesizer.synthesize(strip_emote_tags(text)[0])
 
     def synthesize_stream(
         self,
@@ -1056,10 +1100,24 @@ class SentenceChunkedSynthesizer:
         *,
         cancel_event: threading.Event | None = None,
     ) -> Iterator[bytes]:
-        sentences = split_speech_sentences(text, max_chars=self._max_chars)
-        for sentence in sentences:
+        spoken, _ = strip_emote_tags(text)
+        sentences = split_speech_sentences(spoken, max_chars=self._max_chars)
+        # Re-derive tags per sentence so an emote fires with its own sentence.
+        tagged = split_speech_sentences(text, max_chars=self._max_chars + 80)
+        emotes_by_index: dict[int, list[tuple[str, float]]] = {}
+        for index, raw in enumerate(tagged):
+            _, found = strip_emote_tags(raw)
+            if found:
+                emotes_by_index[index] = found
+        for index, sentence in enumerate(sentences):
             if cancel_event is not None and cancel_event.is_set():
                 return
+            for name, intensity in emotes_by_index.get(index, ()):
+                if self._on_emote is not None:
+                    try:
+                        self._on_emote(name, intensity)
+                    except Exception as error:  # noqa: BLE001 - decorative boundary
+                        logger.warning("emote tag %s failed: %s", name, error)
             chunk = self._synthesizer.synthesize(sentence)
             if cancel_event is not None and cancel_event.is_set():
                 return

@@ -4,6 +4,11 @@
 (the why). This doc is the what: the seven-layer portable architecture, what
 was implemented, and the contracts that must survive any vendor swap.
 
+Operational caveat: implementation is not the same as deployment readiness.
+The current desktop/service/device state and configuration bindings are tracked in
+[CURRENT_STATUS.md](CURRENT_STATUS.md); the benefits and costs of the decisions
+below are centralized in [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md).
+
 ## The portability contract (non-negotiable)
 
 Any future robot must be reachable by implementing exactly this surface:
@@ -27,7 +32,7 @@ run a second, non-Unitree adapter through the full manager lifecycle
 ```
 L6  Deliberative brain     brain/            PlanIR → validator → executive → adapter
 L5  Voice                  voice_pipeline.py, voice_audio.py, providers.py
-L4  RL / animation         configs/skills/, gait.py (RobotProfile-driven); RL deferred
+L4  Skills / expression    configs/skills/, gait.py, expression.py, prosody.py; RL deferred
 L3  Motion & skills        skills/, motion.py (vendor-neutral backends)
 L2  Navigation & collision navigation/       grid planner + unconditional reactive gate
 L1  Perception             mujoco_lidar.py raycaster (sim) → hardware sensors (next)
@@ -89,8 +94,11 @@ rate with zero LLM calls; LLM planning asynchronous per turn.
   `submit_text`; acoustic barge-in during playback behind an echo-guard
   multiplier — the documented no-AEC stopgap), `SpeakerSink` (ordered chunks,
   immediate interruption).
-- **`VoiceEndOfSpeechToFirstAudio`** metric recorded per turn; targets P50
-  <500 ms / P95 <800 ms once real services run.
+- The legacy-named **`VoiceEndOfSpeechToFirstAudio`** metric is recorded per
+  turn, but its current clocks are final-text submission → first speaker-sink
+  handoff. It excludes microphone endpointing and blocking STT, and the endpoint
+  is not acoustic presentation. True EOS/ASR/device-start/presentation markers
+  remain required before applying the P50 <500 ms / P95 <800 ms product target.
 
 ### Phase 3 — the brain's dead surface made live
 - **Battery telemetry** (simulated percent + thresholds in `robot.yaml`) flows
@@ -122,6 +130,28 @@ rate with zero LLM calls; LLM planning asynchronous per turn.
 - `/viewer` — self-contained 2.5D city viewer (static geometry from
   `/api/scene`, 10 Hz dynamics from `/api/state`: robot, owner, pedestrians,
   LiDAR fan, navigation goal/status, collision/E-stop banners).
+
+### Expressive voice slice — implemented after Phase 4
+
+- **Semantic endpointing seam** (`endpointing.py`): optional Silero VAD framing
+  and Smart Turn completion decisions behind the existing energy-VAD contract,
+  with an explicit energy fallback and `TurnCommitLatency` metric.
+- **ProsodyTap** (`prosody.py`): pure-DSP pre-playback envelope, pitch, accent,
+  and arousal analysis. It emits timing metadata, never commands.
+- **50 Hz expression channel** (`expression.py`): additive/clamped idle,
+  reaction, and beat layers; speech epochs atomically suppress stale nod timing
+  after barge-in. The simulator backend accepts body-height/pitch joint-offset
+  overlays without making them locomotion authority. Go2 has no neck, so the
+  scheduled head nod itself is telemetry-only today.
+- **Conversation emotes**: curated bounded pose/trajectory skills are admitted
+  through the validated `Gesture` contract. Inline `[emote:...]` speech tags
+  are stripped before synthesis and dispatched only when the activity
+  coordinator admits them; speech continues if a gesture is rejected.
+
+These pieces are wired and test-covered, but physical audio and expressive
+motion are not operationally validated. The canonical YAML now places the live
+endpointing/device keys under `speech:`; several reserved Fish/barge-in keys
+remain inert, as recorded in [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
 ## 2026-08-04 adversarial review round
 
@@ -176,7 +206,7 @@ Design rationale and growth path: [RESEARCH_2026_ROADMAPS.md](RESEARCH_2026_ROAD
 | Real sensors | after hardware bring-up | Mid-360/L2 + Orbbec Gemini 335; same scan contract |
 | Terrain (stairs/curbs) | after flat-ground validation | elevation_mapping_cupy |
 | AEC / far-field mic | before real duplex demos | XVF3800-class hardware AEC + WebRTC residual |
-| Silero VAD / Smart Turn | when onnxruntime ships onboard | drop-in behind the `EnergyVad` interface |
+| Activate Silero VAD / Smart Turn | when ONNX Runtime + weights ship and an audio endpoint is available | implemented seam in `endpointing.py`; keep loud energy fallback |
 | RL locomotion | priority 4 funded | unitree_rl_gym→lab→mjlab lineage; ONNX; damping kill switch |
 | ros2_control spike | hardware phase | evaluate against the registry using `quadruped_ros2_control` as reference |
 | VLN ("next to the bed") | after eval baseline | NaVILA-shaped: VLM emits mid-level commands into the existing PlanIR executive |

@@ -23,6 +23,7 @@ from parcel_robot.voice_audio import (
     MicrophoneVoiceLoop,
     SpeakerSink,
     pcm16_wav,
+    resolve_audio_device,
 )
 from parcel_robot.voice_pipeline import DuplexVoiceSession
 
@@ -352,3 +353,96 @@ def test_microphone_loop_surfaces_capture_failure() -> None:
     assert failures and "unplugged" in str(failures[0])
     assert not loop.running
     loop.close()
+
+
+# --- card B1: physical audio device selection -------------------------------
+
+_DEVICES = [
+    {"name": "HDA Intel PCH", "max_input_channels": 2, "max_output_channels": 2},
+    {"name": "ReSpeaker XVF3800 4-Mic Array", "max_input_channels": 4,
+     "max_output_channels": 2},
+    {"name": "HDMI Output", "max_input_channels": 0, "max_output_channels": 2},
+    {"name": "Loopback capture", "max_input_channels": 2, "max_output_channels": 0},
+]
+
+
+def _query() -> list[dict[str, object]]:
+    return list(_DEVICES)
+
+
+def test_unset_device_uses_the_system_default_without_querying() -> None:
+    def explode() -> list[dict[str, object]]:
+        raise AssertionError("must not enumerate devices when none is configured")
+
+    assert resolve_audio_device(None, kind="input", query=explode) == (None, "system default")
+    assert resolve_audio_device("  ", kind="output", query=explode) == (
+        None,
+        "system default",
+    )
+
+
+def test_device_resolves_by_name_substring_case_insensitively() -> None:
+    index, detail = resolve_audio_device("respeaker", kind="input", query=_query)
+    assert index == 1
+    assert "ReSpeaker" in detail and "index 1" in detail
+
+
+def test_device_resolves_by_index() -> None:
+    index, detail = resolve_audio_device(1, kind="output", query=_query)
+    assert index == 1
+    assert "index 1" in detail
+
+
+def test_device_kind_filters_by_channel_direction() -> None:
+    # HDMI has no input channels; Loopback has no output channels.
+    with pytest.raises(OSError, match="no input device matches"):
+        resolve_audio_device("HDMI", kind="input", query=_query)
+    with pytest.raises(OSError, match="no output device matches"):
+        resolve_audio_device("Loopback", kind="output", query=_query)
+
+
+def test_unknown_ambiguous_and_out_of_range_devices_fail_loudly() -> None:
+    with pytest.raises(OSError, match="no input device matches"):
+        resolve_audio_device("nonexistent", kind="input", query=_query)
+    with pytest.raises(OSError, match="ambiguous"):
+        resolve_audio_device("h", kind="output", query=_query)
+    with pytest.raises(OSError, match="out of range"):
+        resolve_audio_device(99, kind="input", query=_query)
+    with pytest.raises(OSError, match="no input channels"):
+        resolve_audio_device(2, kind="input", query=_query)
+
+
+def test_missing_portaudio_only_fails_when_a_device_was_requested() -> None:
+    def unavailable() -> list[dict[str, object]]:
+        raise OSError("PortAudio library not found")
+
+    assert resolve_audio_device(None, kind="input", query=unavailable) == (
+        None,
+        "system default",
+    )
+    with pytest.raises(OSError, match="cannot enumerate audio devices"):
+        resolve_audio_device("ReSpeaker", kind="input", query=unavailable)
+
+
+def test_bad_device_kind_and_boolean_spec_are_rejected() -> None:
+    with pytest.raises(ValueError, match="device kind"):
+        resolve_audio_device(None, kind="sideways")
+    with pytest.raises(OSError, match="not a boolean"):
+        resolve_audio_device(True, kind="input", query=_query)
+
+
+def test_sinks_and_loops_carry_the_resolved_device() -> None:
+    sink = SpeakerSink(player=lambda pcm, rate: None, device=3)
+    try:
+        assert sink.device == 3
+    finally:
+        sink.close()
+    loop = MicrophoneVoiceLoop(
+        recognizer=_FakeRecognizer(),
+        submit_text=lambda text, is_final: None,
+        barge_in=lambda: None,
+        playback_active=lambda: False,
+        frames=iter(()),
+        device=1,
+    )
+    assert loop.device == 1

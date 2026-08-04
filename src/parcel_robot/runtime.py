@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import math
+import random
 import threading
 import time
 from collections import deque
@@ -58,8 +60,17 @@ from parcel_robot.core import (
 )
 from parcel_robot.dynamic_prompting import (
     CallableContextSource,
+    EmotePolicySource,
     RecentToolResultsSource,
     build_prompting_stack,
+)
+from parcel_robot.endpointing import SileroVad, TurnEndpointer
+from parcel_robot.expression import (
+    BeatLayer,
+    ExpressionEngine,
+    ExpressionGate,
+    IdleLayer,
+    ReactionHooks,
 )
 from parcel_robot.memory import ConversationMemory
 from parcel_robot.models import ActionProposal, Pose, SpatialIntent, VelocityCommand
@@ -77,6 +88,7 @@ from parcel_robot.navigation.spatial import SpatialBehaviorConfig, SpatialBehavi
 from parcel_robot.observability import ComponentMetrics, LatencyTracker
 from parcel_robot.perception import NullMapProvider, PerceptionContract
 from parcel_robot.prompting import PromptLibrary
+from parcel_robot.prosody import analyze_wav_chunk
 from parcel_robot.providers import (
     LanguageModel,
     SentenceChunkedSynthesizer,
@@ -84,8 +96,14 @@ from parcel_robot.providers import (
 )
 from parcel_robot.robot_profile import RobotProfile
 from parcel_robot.skills.api import Dog
-from parcel_robot.voice_audio import MicrophoneVoiceLoop, SpeakerSink
+from parcel_robot.voice_audio import (
+    MicrophoneVoiceLoop,
+    SpeakerSink,
+    resolve_audio_device,
+)
 from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage, VoiceTurn
+
+logger = logging.getLogger(__name__)
 
 
 class RobotRuntime:
@@ -109,6 +127,13 @@ class RobotRuntime:
         # The robot: config section is live morphology, not a label: gait,
         # animation retargeting, and future consumers read this profile.
         self.robot_profile = RobotProfile.from_config(self.store.section("robot"))
+        self.expression = self._build_expression_engine()
+        self.expression_hz = float(
+            (self.store.section("expression") or {}).get("rate_hz", 50.0)
+        )
+        if not 5.0 <= self.expression_hz <= 200.0:
+            raise ValueError("expression.rate_hz must be between 5 and 200")
+        self._expression_sent: dict[str, float] | None = None
         self.loop_period = 1.0 / loop_hz
         self.arbiter = CommandArbiter(self.store.safety_limits())
         self._synchronous_control_dispatch = control_manager is None
@@ -269,6 +294,7 @@ class RobotRuntime:
         self._stop_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._health_thread: threading.Thread | None = None
+        self._expression_thread: threading.Thread | None = None
         self._last_sent = VelocityCommand()
         self._last_send_at = 0.0
         self._was_moving = False
@@ -359,9 +385,11 @@ class RobotRuntime:
         # The validator and ReturnToSafePose dispatch must share one pose
         # vocabulary: an empty catalog here rejects every safe-pose plan.
         self._brain_pose_catalog = dict(self.dog.poses() or self.store.poses())
+        self._emote_catalog = self._resolve_emote_catalog(brain_config)
         self.brain_registry = SkillContractRegistry.default(
             owner_heading_supported=True,
             pose_names=tuple(sorted(self._brain_pose_catalog)),
+            gesture_names=self._emote_catalog,
         ).restricted(configured_brain_skills)
         self.plan_validator = PlanValidator(
             self.brain_registry,
@@ -377,6 +405,7 @@ class RobotRuntime:
             hold=self.stop_motion,
             vocalize=self._brain_vocalize,
             return_to_safe_pose=self._brain_return_to_safe_pose,
+            gesture=self._brain_gesture,
         )
         self._brain_snapshot_sequence = 0
         self._last_brain_plan: dict[str, object] | None = None
@@ -456,6 +485,8 @@ class RobotRuntime:
             self.prompting.composer.register(
                 RecentToolResultsSource(lambda: self.agent.memory.recent(16))
             )
+            if self._emote_catalog:
+                self.prompting.composer.register(EmotePolicySource(self._emote_catalog))
         # Feed the duplex coordinator through ``handle_text`` so streamed ASR
         # finals and ordinary HTTP commands share logging, serialization, and
         # the same deterministic safety boundary. Speech services are resolved
@@ -463,6 +494,15 @@ class RobotRuntime:
         # session in the historical text-only mode with an explicit status.
         speech_config = self.store.section("speech")
         self.speech_stack = build_speech_stack(speech_config)
+        # Physical device selection. An unresolvable *requested* device is a
+        # configuration error the operator must see, so it degrades the audio
+        # path loudly instead of silently opening the wrong hardware.
+        input_index, self._input_device_detail = self._resolve_speech_device(
+            speech_config.get("input_device"), kind="input"
+        )
+        output_index, self._output_device_detail = self._resolve_speech_device(
+            speech_config.get("output_device"), kind="output"
+        )
         self._speaker_sink: SpeakerSink | None = None
         self._microphone_loop: MicrophoneVoiceLoop | None = None
         synthesizer = None
@@ -470,10 +510,18 @@ class RobotRuntime:
         audio_interrupt = None
         audio_turn_start = None
         if self.speech_stack.synthesizer is not None:
-            self._speaker_sink = SpeakerSink()
-            synthesizer = SentenceChunkedSynthesizer(self.speech_stack.synthesizer)
-            audio_chunk_player = self._speaker_sink.enqueue
-            audio_interrupt = self._speaker_sink.interrupt
+            self._speaker_sink = SpeakerSink(
+                device=output_index, on_chunk_start=self._audio_chunk_started
+            )
+            synthesizer = SentenceChunkedSynthesizer(
+                self.speech_stack.synthesizer, on_emote=self._speech_emote
+            )
+            # Analyze each chunk before it is queued, then let the sink tell
+            # us when it actually starts playing: prosody is known ahead of
+            # playback, which is the lookahead a live-reactive system cannot
+            # have.
+            audio_chunk_player = self._enqueue_speech_chunk
+            audio_interrupt = self._interrupt_speech_audio
             audio_turn_start = self._speaker_sink.begin_utterance
         self.voice_session = DuplexVoiceSession(
             self,
@@ -485,6 +533,9 @@ class RobotRuntime:
             on_partial=self._voice_partial_received,
             on_error=self._voice_error,
             on_stage=self._voice_stage,
+        )
+        neural_vad, endpointer, self._endpointing_detail = self._build_endpointing(
+            speech_config
         )
         if self.speech_stack.recognizer is not None:
             self._microphone_loop = MicrophoneVoiceLoop(
@@ -501,6 +552,12 @@ class RobotRuntime:
                 ),
                 echo_guard_scale=float(speech_config.get("echo_guard_scale", 2.5)),
                 on_failure=self._microphone_failed,
+                on_speech_start=self._owner_speech_started,
+                on_speech_end=self._owner_speech_ended,
+                device=input_index,
+                neural_vad=neural_vad,
+                endpointer=endpointer,
+                on_turn_commit=self._record_turn_commit,
             )
         self._voice_query_end_by_turn: dict[int, float] = {}
         self._emit(
@@ -691,6 +748,129 @@ class RobotRuntime:
             return "Okay—I'll move to a safe place and settle there."
         return "Okay—I accepted the task and will carry it out safely."
 
+    DEFAULT_EMOTES = (
+        "bow",
+        "hello_pose",
+        "hop",
+        "look_left",
+        "look_right",
+        "paw_wave",
+        "play_bow",
+        "shake",
+        "stretch",
+    )
+
+    def _resolve_emote_catalog(self, brain_config: dict) -> tuple[str, ...]:
+        """The curated allowlist of catalog skills admissible as emotes.
+
+        Deliberately narrower than the full catalog: postural skills belong to
+        ReturnToSafePose, and gaits/velocity skills are locomotion, not
+        expression. Every entry must exist in the skill catalog and be a
+        bounded pose/trajectory, so an unknown or unbounded name fails at
+        startup instead of at dispatch.
+        """
+
+        configured = brain_config.get("emotes", self.DEFAULT_EMOTES)
+        if not isinstance(configured, (list, tuple)) or not all(
+            isinstance(item, str) for item in configured
+        ):
+            raise TypeError("agent.brain.emotes must be a list of skill names")
+        catalog = self.dog.catalog
+        admitted: list[str] = []
+        for name in configured:
+            try:
+                skill = catalog.get(name)
+            except KeyError:
+                # A default entry simply may not exist in a trimmed catalog;
+                # an explicitly configured one is an operator error.
+                if "emotes" in brain_config:
+                    raise ValueError(f"unknown emote skill: {name}") from None
+                continue
+            if skill.kind not in {"pose", "trajectory"}:
+                raise ValueError(
+                    f"emote {name!r} is a {skill.kind} skill; emotes must be bounded "
+                    "pose or trajectory skills"
+                )
+            admitted.append(name)
+        return tuple(sorted(admitted))
+
+    def _brain_gesture(self, name: str, intensity: float = 1.0) -> str:
+        """Expressive gesture dispatch: proposal → cooldown arbiter → skill.
+
+        Routed through the same activity coordinator as social gestures so an
+        emote can never preempt navigation, stack on another activity, or
+        bypass the proposal cooldowns.
+        """
+
+        clean = name.strip()
+        if clean not in self._emote_catalog:
+            raise ValueError(f"unknown emote: {name!r}")
+        if not math.isfinite(intensity) or not 0.5 <= intensity <= 1.5:
+            raise ValueError("emote intensity must be between 0.5 and 1.5")
+        return self.propose_action(
+            ActionProposal(
+                kind="skill",
+                name=clean,
+                trigger="explicit_command",
+                timing_preference="now",
+                interruption_request="safe_checkpoint",
+                reason=f"conversation emote (intensity {intensity:.2f})",
+            )
+        )
+
+    def _enqueue_speech_chunk(self, chunk: bytes) -> None:
+        """Analyze one synthesized chunk for beats, then queue it for playback."""
+
+        track = None
+        if self.expression.enabled:
+            analyze_started = time.monotonic()
+            try:
+                track = analyze_wav_chunk(chunk)
+            except (TypeError, ValueError) as error:
+                # Prosody is decorative: a chunk we cannot analyze still gets
+                # spoken, it just carries no nods.
+                logger.warning("prosody analysis skipped: %s", error)
+                track = None
+            else:
+                self.component_metrics.elapsed("ProsodyAnalysis", analyze_started)
+        assert self._speaker_sink is not None
+        self._speaker_sink.enqueue(
+            chunk, (track, self.expression.speech_epoch) if track is not None else None
+        )
+
+    def _audio_chunk_started(self, token: object) -> None:
+        """Playback of a chunk began: arm its nods against the real clock."""
+
+        if token is None:
+            return
+        track, epoch = token
+        if epoch != self.expression.speech_epoch:
+            return  # the audio this belonged to was superseded
+        self.expression.beats.arm(
+            track, playback_start_s=time.monotonic(), epoch=epoch
+        )
+
+    def _interrupt_speech_audio(self) -> None:
+        """Barge-in: cancel queued audio and every nod scheduled for it."""
+
+        self.expression.supersede_speech()
+        assert self._speaker_sink is not None
+        self._speaker_sink.interrupt()
+
+    def _speech_emote(self, name: str, intensity: float) -> None:
+        """An inline ``[emote:...]`` tag reached its sentence in the stream.
+
+        Unknown or currently-inadmissible emotes are reported and dropped:
+        speech must never fail because a gesture could not run.
+        """
+
+        try:
+            detail = self._brain_gesture(name, intensity)
+        except (LookupError, RuntimeError, TypeError, ValueError) as error:
+            self._emit("activity", f"Emote tag {name!r} ignored: {error}", "warning")
+            return
+        self._emit("activity", f"Emote {name}: {detail}", "info")
+
     def _brain_return_to_safe_pose(self, pose_name: str) -> str:
         """Battery-critical procedure: stop all motion, then assume the pose.
 
@@ -762,7 +942,32 @@ class RobotRuntime:
             ),
             robot_moving=snapshot.robot.moving,
             posture=self._last_posture,
+            **self._activity_verification_state(),
         )
+
+    def _activity_verification_state(self) -> dict[str, str]:
+        """Coordinator view a Gesture dispatch is verified against.
+
+        A running activity reports its live status; otherwise the most recent
+        terminal record is used, which is what lets a short gesture that both
+        started and finished between two polls still be verified.
+        """
+
+        snapshot = self.activities.snapshot()
+        running = snapshot.get("running")
+        record = running if isinstance(running, dict) else None
+        if record is None:
+            recent = snapshot.get("recent")
+            if isinstance(recent, list) and recent:
+                candidate = recent[-1]
+                record = candidate if isinstance(candidate, dict) else None
+        if record is None:
+            return {"activity_name": "", "activity_status": "idle", "activity_detail": ""}
+        return {
+            "activity_name": str(record.get("name", "")),
+            "activity_status": str(record.get("status", "idle")),
+            "activity_detail": str(record.get("detail", "") or ""),
+        }
 
     def _enforce_perception_invariant(self, observation: SimObservation | None) -> None:
         """Enforce the compiled ``stop_on_stale_perception`` plan invariant.
@@ -925,6 +1130,12 @@ class RobotRuntime:
                 daemon=True,
             )
             self._health_thread.start()
+            self._expression_thread = threading.Thread(
+                target=self._expression_loop,
+                name="parcel-expression",
+                daemon=True,
+            )
+            self._expression_thread.start()
             if self._microphone_loop is not None:
                 try:
                     self._microphone_loop.start()
@@ -991,6 +1202,7 @@ class RobotRuntime:
             for thread, timeout in (
                 (self._thread, 2.0),
                 (self._health_thread, 3.0),
+                (self._expression_thread, 2.0),
             ):
                 if thread is None or thread is threading.current_thread() or thread.ident is None:
                     continue
@@ -1589,6 +1801,92 @@ class RobotRuntime:
             return base
         return f"{base}\n\n{composed.text}"
 
+    def _build_expression_engine(self) -> ExpressionEngine:
+        """Resolve the ``expression:`` config section into a live engine."""
+
+        config = dict(self.store.section("expression") or {})
+        enabled = bool(config.pop("enabled", True))
+        seed = int(config.pop("seed", 20260804))
+        config.pop("rate_hz", None)
+        beat_config = config.pop("beats", {}) or {}
+        if not isinstance(beat_config, dict):
+            raise TypeError("expression.beats must be a mapping")
+        allowed_beats = {"base_amplitude_rad", "rise_s", "fall_s", "lag_compensation_s"}
+        unknown_beats = set(beat_config) - allowed_beats
+        if unknown_beats:
+            raise ValueError(f"unsupported expression.beats keys: {sorted(unknown_beats)}")
+        idle_config = config.pop("idle", {}) or {}
+        if not isinstance(idle_config, dict):
+            raise TypeError("expression.idle must be a mapping")
+        if config:
+            raise ValueError(f"unsupported expression config keys: {sorted(config)}")
+        allowed = {"breathing_hz", "breathing_amplitude_m", "gesture_duration_s"}
+        unknown = set(idle_config) - allowed
+        if unknown:
+            raise ValueError(f"unsupported expression.idle keys: {sorted(unknown)}")
+        idle = IdleLayer(
+            rng=random.Random(seed),
+            **{key: float(value) for key, value in idle_config.items()},
+        )
+        return ExpressionEngine(
+            self.robot_profile,
+            idle=idle,
+            reactions=ReactionHooks(),
+            beats=BeatLayer(**{key: float(value) for key, value in beat_config.items()}),
+            enabled=enabled,
+        )
+
+    def _expression_gate(self) -> ExpressionGate:
+        arbitration = self.arbiter.snapshot()
+        with self._lock:
+            navigation_active = self._navigation_directive is not None
+            proximity_state = self._proximity_state
+        battery = self._battery_snapshot()
+        return ExpressionGate(
+            emergency_stopped=bool(arbitration["emergency_stopped"]),
+            proximity_clear=proximity_state == "clear",
+            battery_critical=battery.state == "critical",
+            skill_active=self.activities.running() is not None,
+            navigation_active=navigation_active,
+            follow_active=self.follow.enabled,
+            spatial_active=self.spatial.active,
+        )
+
+    def _owner_bearing_rad(self) -> float:
+        """Bearing to the owner in the robot's body frame (0 when unknown)."""
+
+        with self._lock:
+            observation = self._observation
+        if observation is None or not observation.owner.visible:
+            return 0.0
+        dx = observation.owner.x - observation.robot.x
+        dy = observation.owner.y - observation.robot.y
+        if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+            return 0.0
+        bearing = math.atan2(dy, dx) - observation.robot.yaw
+        return math.atan2(math.sin(bearing), math.cos(bearing))
+
+    def _step_expression(self) -> None:
+        """Advance the expressive layer and publish its additive overlay."""
+
+        offsets = self.expression.step(time.monotonic(), self._expression_gate())
+        joint_offsets = self.expression.joint_offsets() if not offsets.is_zero else {}
+        if joint_offsets == self._expression_sent:
+            return
+        publish = getattr(self.backend, "expression", None)
+        if publish is None:
+            # Backend without an expression channel: snapshot-only rendering.
+            self._expression_sent = joint_offsets
+            return
+        try:
+            publish(joint_offsets)
+        except (OSError, RuntimeError, TypeError, ValueError):
+            # Decorative motion must never disturb the control loop or latch
+            # a simulator fault; retry naturally on the next changed frame.
+            self._expression_sent = None
+            return
+        self._expression_sent = joint_offsets
+
     def _prompt_current_situation(self) -> str | None:
         """Compact volatile turn-context line (never blocks: reads state only)."""
 
@@ -2012,6 +2310,19 @@ class RobotRuntime:
                 "mode": self.speech_stack.mode,
                 "stt": self.speech_stack.stt_detail,
                 "tts": self.speech_stack.tts_detail,
+                "input_device_detail": self._input_device_detail,
+                "output_device_detail": self._output_device_detail,
+                "endpointing": self._endpointing_detail,
+                "turn_commits": (
+                    self._microphone_loop.turn_commits
+                    if self._microphone_loop is not None
+                    else 0
+                ),
+                "barge_ins": (
+                    self._microphone_loop.barge_ins_triggered
+                    if self._microphone_loop is not None
+                    else 0
+                ),
                 "microphone_active": (
                     self._microphone_loop is not None and self._microphone_loop.running
                 ),
@@ -2034,6 +2345,7 @@ class RobotRuntime:
                 "dof": self.robot_profile.dof,
                 "footprint_radius_m": self.robot_profile.footprint_radius_m,
             },
+            "expression": self.expression.snapshot(),
             "owner": owner,
             "dynamic_agents": dynamic_agents,
             "nearest_person": nearest_person,
@@ -2196,6 +2508,25 @@ class RobotRuntime:
                 max(0.0, elapsed - self.loop_period) * 1000.0,
             )
             self._stop_event.wait(max(0.0, self.loop_period - elapsed))
+
+    def _expression_loop(self) -> None:
+        """Run expression on its own faster channel.
+
+        Beat-synced nods are judged against the pitch accent they land on
+        (target P50 < 30 ms), and a 10 Hz control tick can only ever resolve
+        ~50 ms. Expression is a pure additive overlay that decides nothing,
+        so giving it its own 50 Hz channel costs no arbitration risk.
+        """
+
+        period = 1.0 / self.expression_hz
+        while not self._stop_event.is_set():
+            started = time.monotonic()
+            try:
+                self._step_expression()
+            except Exception as error:  # noqa: BLE001 - decorative thread boundary
+                logger.warning("expression loop error: %s", error)
+            self.component_metrics.elapsed("ExpressionLayer", started)
+            self._stop_event.wait(max(0.0, period - (time.monotonic() - started)))
 
     def _service_health_loop(self) -> None:
         """Keep slow service/device probes off the 10 Hz motion loop."""
@@ -2658,6 +2989,12 @@ class RobotRuntime:
             }
 
     def _voice_stage(self, stage: VoiceStage) -> None:
+        # Expressive reactions ride the same stage events the latency ledger
+        # uses: think visibly from end-of-query until the reply is audible.
+        if stage.name == "query_end":
+            self.expression.reactions.on_turn_pending(time.monotonic())
+        elif stage.name in {"audio_first_playback", "turn_complete", "error"}:
+            self.expression.reactions.on_reply_started(time.monotonic())
         if stage.name == "query_end":
             with self._lock:
                 self._voice_query_end_by_turn[stage.turn_id] = stage.timestamp
@@ -2782,6 +3119,76 @@ class RobotRuntime:
                 "error": str(error),
             }
         self._emit("voice", str(error), "error")
+
+    def _build_endpointing(
+        self, speech_config: dict
+    ) -> tuple[object | None, object | None, str]:
+        """Resolve ``speech.endpointing`` into a VAD + turn endpointer.
+
+        ``energy`` (default) keeps the historical hangover segmentation.
+        ``semantic`` adds Silero v6 framing and Smart Turn commit decisions;
+        both degrade loudly to the energy path when their weights or
+        onnxruntime are missing, and the resolved detail is reported in the
+        snapshot so nobody has to guess which path is live.
+        """
+
+        mode = str(speech_config.get("endpointing", "energy")).strip().lower()
+        if mode not in {"energy", "semantic"}:
+            raise ValueError("speech.endpointing must be 'energy' or 'semantic'")
+        if mode == "energy":
+            return None, None, "energy (VAD hangover)"
+
+        vad_model = speech_config.get("vad_model")
+        neural_vad = None
+        vad_detail = "energy VAD"
+        if vad_model:
+            candidate = SileroVad(str(vad_model))
+            if candidate.available:
+                neural_vad = candidate
+                vad_detail = f"silero ({vad_model})"
+            else:
+                vad_detail = f"silero unavailable ({vad_model})"
+                self._emit(
+                    "voice",
+                    f"Silero VAD weights unusable at {vad_model}; using the energy VAD",
+                    "warning",
+                )
+        endpointer = TurnEndpointer(
+            str(speech_config["turn_model"]) if speech_config.get("turn_model") else None,
+            complete_silence_s=float(speech_config.get("complete_silence_s", 0.20)),
+            incomplete_silence_s=float(speech_config.get("incomplete_silence_s", 2.5)),
+        )
+        detail = f"semantic: {endpointer.detail} + {vad_detail}"
+        self._emit("voice", f"Endpointing: {detail}", "info")
+        return neural_vad, endpointer, detail
+
+    def _record_turn_commit(self, latency_s: float) -> None:
+        self.component_metrics.observe_ms("TurnCommitLatency", latency_s * 1000.0)
+
+    def _resolve_speech_device(self, spec: object, *, kind: str) -> tuple[int | None, str]:
+        """Resolve one configured audio device, degrading loudly on failure."""
+
+        try:
+            return resolve_audio_device(spec, kind=kind)
+        except (OSError, TypeError, ValueError) as error:
+            detail = f"unavailable ({error})"
+            self._emit(
+                "voice",
+                f"Configured {kind} audio device {spec!r} is unusable: {error}; "
+                "falling back to the system default",
+                "warning",
+            )
+            return None, detail
+
+    def _owner_speech_started(self) -> None:
+        """Owner began speaking: look at them (expressive reaction only)."""
+
+        self.expression.reactions.on_speech_start(
+            time.monotonic(), self._owner_bearing_rad()
+        )
+
+    def _owner_speech_ended(self) -> None:
+        self.expression.reactions.on_speech_end(time.monotonic())
 
     def _microphone_failed(self, error: Exception) -> None:
         """Mid-session capture death degrades loudly to text mode.

@@ -1,17 +1,24 @@
 # Closed-loop locomotion and Unitree Sport
 
-Parcel has one actuator owner: `ControlManager`. Voice, navigation, follow,
-spatial behavior, and manual control may propose motion, but only the manager's
-selected `LocomotionController` can deliver a command.
+Implementation snapshot: 2026-08-04. Parcel has one **body-velocity actuator
+owner**: `ControlManager`. Voice, navigation, follow, spatial behavior, and
+manual control may propose motion, but only the manager's selected
+`LocomotionController` can deliver a body-velocity command.
+
+That qualification matters. Simulator-only pose and trajectory skills use a
+separate backend channel after the runtime serializes ownership and confirms a
+velocity stop. The physical runtime rejects those calls because no
+controller-owned whole-body handoff exists yet. The current architecture does
+not claim that `ControlManager` arbitrates arbitrary joint or torque writes.
 
 ```text
 voice / navigation / follow / manual
                  |
                  v
-       arbiter + command TTL
+       arbiter + source TTL
                  |
                  v
-     smoothing + collision gate
+     smoothing + final camera/LiDAR gate
                  |
                  v
  leased body-velocity target (base_link)
@@ -31,6 +38,32 @@ voice / navigation / follow / manual
 This fixes the previous split path in which a voice request could call
 `SportClient.Move` before runtime smoothing and collision checks while
 follow/navigation commands went only to the simulator.
+
+## Where authority lives
+
+The body-velocity path has intentionally separate policy and transport
+boundaries:
+
+| Layer | Owns | Does not own |
+| --- | --- | --- |
+| Behavior producers | A short-lived desired `VelocityCommand` | Priority, final collision decision, vendor I/O |
+| `CommandArbiter` | One active source by priority and TTL | Acceleration, perception, physical feedback |
+| `VelocitySmoother` | Bounded acceleration/deceleration | Safety authority; a safety stop bypasses gradual braking |
+| Runtime reactive gate | Directional person/owner/obstacle slowdown or translation stop using fresh camera/LiDAR observations | Vendor state, balance, RPC delivery |
+| `ControlManager` | Exclusive velocity writer, body limits, feedback freshness, controller faults/tilt, lease expiry, stop/E-stop lifecycle | Environmental collision perception or route planning |
+| Unitree Sport | Fast balance, gait, foot placement, and motor control for the requested body velocity | Semantic goals and external obstacle avoidance |
+
+The arbiter's current priority order is navigation (30), follow (40), spatial
+(50), voice (60), manual (80), and safety (100). A software E-stop is not a
+priority-100 command; it is a separate persistent latch in both the runtime
+arbiter and `ControlManager`.
+
+`ControlManager` is safe to use as a vendor-neutral locomotion boundary, but it
+is not by itself an autonomous-navigation safety system. The standalone
+commissioning CLI deliberately calls it without camera/LiDAR navigation and
+therefore uses much lower speed/duration limits and an operator-held physical
+E-stop. A production caller that bypasses `RobotRuntime` also bypasses the
+environmental reactive gate.
 
 ## Nested closed loops
 
@@ -58,11 +91,39 @@ onboard closed-loop locomotion. A successful Python return indicates transport
 delivery, not proof of physical movement. Parcel therefore subscribes to
 `rt/sportmodestate` and supervises locally timestamped feedback.
 
+This is a **nested closed-loop design**, not open-loop control:
+
+- Unitree closes the hard real-time balance/gait loop around IMU, joint, and
+  contact feedback.
+- `ControlManager` closes a supervisory loop around feedback freshness, mode,
+  tilt/fault state, command leases, and measured stop confirmation.
+- Navigation/follow/spatial controllers close the task loop around odometry and
+  camera/LiDAR observations.
+
+The outer loops do not make `Move` a precision trajectory servo. Parcel does
+not currently compare commanded and measured velocity to regulate away a
+tracking error, estimate slip, or prove that a requested displacement occurred.
+Task controllers infer progress from fresh pose/perception, and the manager
+uses measured velocity primarily for readiness and stopping. Exact path
+tracking therefore still depends on correctly framed odometry and the opaque
+onboard Sport response.
+
 The public message definition does not document whether planar velocity is in
 odometry or body coordinates. Parcel therefore makes that choice explicit with
 `state_velocity_frame`, rotates only when it is configured as `odom`, and
 refuses to construct the physical controller until
 `state_frame_commissioned: true` is set after a real low-speed test.
+
+## Why use Sport first
+
+| Design choice | Advantage | Limitation / consequence |
+| --- | --- | --- |
+| Reuse Unitree Sport balance/gait | A proven onboard high-rate controller absorbs the hardest contact-control problem; Parcel can iterate on companion behavior safely at body-velocity level | Opaque firmware behavior, modes, tracking quality, foothold choices, and stop semantics remain vendor-specific |
+| Supervise Sport from Python | Python is appropriate for the current 10 Hz behavior loop and 50 Hz watchdog because hard real-time balance stays onboard | Python, DDS, and the host OS are not an independent real-time crash-stop layer; an onboard/native watchdog and physical E-stop remain required |
+| One leased `base_link` velocity contract | Simulator, Unitree, and a future vendor/custom controller share the same upper stack | A lowest-common-denominator SE(2) command cannot expose terrain-aware footsteps or whole-body maneuvers |
+| Feedback-confirm every physical stop | Prevents a transport acknowledgment from being mistaken for a stationary robot | Adds latency and rejects new motion if timestamps, sequence numbers, frame calibration, or feedback delivery are wrong |
+| Lazy vendor imports and registered factories | Normal simulation/test imports remain independent of Unitree SDK and a second vendor needs no generic-code edit | Process-global DDS and Unitree's non-releasable Python lease still require a dedicated physical driver process |
+| Fail-closed commissioning flags | Wrong mode/frame/axis assumptions cannot silently move hardware | Physical construction is intentionally impossible with the repository defaults until a human completes commissioning |
 
 ## Replaceable controller contract
 
@@ -189,6 +250,42 @@ The older `motion.backend: sport|rl` section remains a compatibility facade for
 skill and voice intent selection. It no longer initializes DDS or sends
 physical commands. Hardware delivery belongs only to `ControlManager`.
 
+## Forward-preferred motion and lateral velocity
+
+Parcel's body contract is holonomic: positive `vx` is forward, positive `vy`
+is left, and positive `vyaw` is counter-clockwise after commissioned sign
+mapping. Unitree Sport declares lateral-velocity support, and manual control or
+a future local planner may strafe.
+
+Ordinary point-goal, grid, follow, and owner-orbit controllers currently prefer
+turn-then-forward motion and normally emit `vy=0`. When a controller requests a
+pure turn, the runtime immediately clears residual translation instead of
+letting the acceleration smoother create an arc. Lateral motion is therefore a
+supported capability, not the preferred way to make sustained progress toward
+a place.
+
+This choice makes the dog's body orientation legible, avoids the simulator's
+diagonal-slide appearance, and permits a future non-strafing controller to
+reuse most of the stack. It also gives up some holonomic efficiency and can be
+slower around moving people. Capability enforcement is at the dispatch
+boundary: a controller that declares `lateral_velocity=False` rejects nonzero
+`vy` rather than silently discarding it. Every lateral command still passes
+the same acceleration, directional collision, TTL, and physical-limit checks
+as forward motion.
+
+## Implemented versus commissioned
+
+| Capability | Repository status | Evidence boundary |
+| --- | --- | --- |
+| Simulator body-velocity path through `ControlManager` | Implemented and used by `RobotRuntime` | Unit/integration tests and MuJoCo behavior only |
+| Vendor-neutral lifecycle and portability | Implemented; mock second-vendor adapter covers arming, motion, watchdog, stop, and E-stop | No second physical robot |
+| Unitree Sport DDS/RPC/state adapter | Implemented and tested with injected SDK doubles | Not run against a physical Go2 from this workstation |
+| Frame, axis, and allowed-mode gates | Implemented and defaulted closed | Values remain uncommissioned in `configs/robot.yaml` |
+| Physical camera/LiDAR runtime backend | Contract documented | Not implemented |
+| Physical poses/trajectories | Rejected by runtime after a stop | No whole-body controller/handoff implemented |
+| Custom low-level gait/balance controller | Interface sketch only | No `LowCmd` controller, estimator, or policy integrated |
+| Independent hardware E-stop / robot-side watchdog | Required production hardware | Outside this repository today |
+
 ## Safe commissioning command
 
 Install Unitree's official `unitree_sdk2_python` and CycloneDDS in a supported
@@ -311,13 +408,23 @@ This implementation is a functional Python supervisory loop around Unitree's
 closed-loop Sport controller, but it has not been run against a physical robot
 from this workstation. Before unsupervised operation, add:
 
-- A native C++ control/safety process with the same typed contract.
+- A native C++ (or equivalently bounded native) control/safety driver process
+  with the same typed contract; the conversation, planning, and product logic
+  do not need a whole-codebase rewrite.
 - A process-independent command watchdog on the robot side.
 - Hardware E-stop and safe arming circuitry/procedures.
 - Verified firmware-specific mode and stop-settling checks.
 - Physical camera/LiDAR perception and localization.
 - Fault-injection, hardware-in-the-loop, load, and soak testing.
 - Typed ROS 2 messages/actions instead of JSON `std_msgs/String` topics.
+
+Keeping Python above this boundary is a deliberate productionization choice:
+language, semantic planning, UI, and orchestration benefit from Python's model
+ecosystem and do not run a hard real-time motor loop. Moving the bounded
+hardware writer/watchdog first reduces crash-stop and scheduling risk without
+duplicating the well-tested semantic stack. A future custom low-level balance
+controller is a separate project and must move estimator/joint/torque work into
+that native real-time process before Sport mode is disabled.
 
 ## Official references
 

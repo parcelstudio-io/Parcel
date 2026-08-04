@@ -3,7 +3,7 @@
 Host inventory and install paths for running Parcel simulation, city navigation,
 and (optionally) MetaUrban on this machine.
 
-## Host snapshot (2026-08-02)
+## Host snapshot (checked 2026-08-04)
 
 | Item | Value |
 | --- | --- |
@@ -25,11 +25,12 @@ nvidia-smi
 
 ## Isolated environments (do not mix)
 
-Parcel uses **two** Python stacks on purpose:
+Parcel uses **three isolated Python environments** on purpose (the third is a
+planned environment until Conda/MetaUrban is installed):
 
 | Environment | Python | Purpose | Where |
 | --- | --- | --- | --- |
-| **`.parcel`** | 3.14 | App, MuJoCo preview, skills, stub city nav, tests | This repo |
+| **`.parcel`** | 3.14 | App, MuJoCo preview, skills, `grid_v1` navigation, offline scaffolds, tests | This repo |
 | **Fish `.venv`** | 3.12 | Fish S2 Pro, Torch 2.8 + CUDA 12.9 | `third_party/fish-speech/` |
 | **`parcel-metaurban`** (Conda) | ~3.9 | Living city + SMPL pedestrians (MetaUrban) | Separate Conda env |
 
@@ -90,7 +91,11 @@ source .parcel/bin/activate
 | sounddevice | `>=0.5,<1` |
 | msgpack | `>=1.1,<2` |
 
-**Native OS note:** `sounddevice` needs `libportaudio2` (`sudo apt install libportaudio2`).
+**Native OS note:** the Python `sounddevice` package is installed, but its
+import currently fails because `libportaudio2` is absent. Install the native
+runtime (`sudo apt install libportaudio2`) before treating capture/playback as
+available. Hardware enumeration performed by Parcel is a separate check and
+does not prove the Python PortAudio binding can open a stream.
 
 ### Locked freeze (installed in `.parcel`)
 
@@ -118,8 +123,10 @@ pytest tests/test_navigation.py -q
 python examples/nav_city_smoke.py
 ```
 
-City navigation smoke works **offline** with the kinematic stub city and
-stub pedestrians (no MetaUrban required).
+The city-navigation smoke works **offline** with `grid_v1` in its loud
+missing-scan fallback inside a kinematic scaffold with synthetic pedestrians
+(no MetaUrban required). Use the headless/MuJoCo tests for the real raycast-grid
+path; this small smoke is an API check, not planner-quality evidence.
 
 ## 2. Local model services installed on this host
 
@@ -133,6 +140,24 @@ stub pedestrians (no MetaUrban required).
 | whisper.cpp `base.en` | official CPU binary | 142 MB | `scripts/launch_whisper.sh` |
 | Silero VAD v6.2 | whisper.cpp VAD model | 885 KB | enabled by `scripts/launch_whisper.sh` |
 
+Piper is the configured TTS design choice, but it is **not currently installed**
+at `third_party/piper/piper`; its configured voice and companion JSON are also
+absent. The optional semantic-endpointing code exists, but `.parcel` has neither
+ONNX Runtime nor the configured Silero/Smart Turn endpointing weights. Do not
+confuse whisper.cpp's own Silero file with Parcel's in-process ONNX endpointing
+models.
+
+Check the exact speech state without starting anything:
+
+```bash
+./scripts/run_speech_services.sh --check
+```
+
+At this snapshot it exits nonzero because whisper.cpp is not running and all
+three Piper artifacts are missing. `scripts/install_speech_services.sh` is the
+tracked installer for those artifacts; review its download sources and options
+before running it.
+
 Fish was installed with
 `uv sync --python 3.12 --extra cu129 --no-install-package pyaudio`. The API
 server does not use PyAudio; omitting it
@@ -140,9 +165,10 @@ avoids a false dependency on missing PortAudio development headers. The Fish
 model requires roughly 24 GB of VRAM and has a research/non-commercial model
 license, so it is opt-in in `launch_stack.sh`.
 
-ALSA detects the Realtek ALC1220 and direct capture works, but PipeWire has no
-connected source and only Dummy Output. Parcel therefore selects text mode.
-Connecting a microphone/speaker is still required before enabling audio I/O.
+ALSA detects the Realtek ALC1220 hardware, but PipeWire has no connected source
+or output endpoint and the native PortAudio runtime is missing. Parcel therefore
+selects text mode. Connecting a microphone/speaker and installing
+`libportaudio2` are both required before enabling audio I/O.
 
 The b10235 CPU fallback is not CUDA-capable, but Parcel now stages the exact
 official b10236 CUDA 12 OCI runtime separately. Its 13/13 image layers, 7/7
@@ -236,7 +262,7 @@ Keep `active_model: grid_v1`; see [`NAVIGATION_CITY.md`](NAVIGATION_CITY.md).
 | Miniconda + Python 3.9 | MetaUrban | `parcel-metaurban` |
 | torch (CUDA) | CityWalker / NaVILA / NoMaD | `parcel-metaurban` |
 | gymnasium | Already in MetaUrban script; optional in `.parcel` for Gym typing | either |
-| stable-baselines3 | PPO fine-tune on `MetaUrbanNavEnv` | `parcel-metaurban` |
+| stable-baselines3 | Future PPO experiments only **after** a real MetaUrban observation/action/reward adapter and Gymnasium compliance exist | `parcel-metaurban` |
 | `portaudio19-dev` | Optional Python/PyAudio client; Fish API does not need it | OS |
 | `python3-tk` | `parcel-control` GUI | OS |
 | CUDA toolkit (`nvcc`) | llama.cpp CUDA build and optional CUDA extensions; absent now | isolated toolchain or OS (optional) |
@@ -250,11 +276,13 @@ Keep `active_model: grid_v1`; see [`NAVIGATION_CITY.md`](NAVIGATION_CITY.md).
 | --- | --- |
 | GPU compute / CUDA driver | Yes (RTX 5000 Ada) |
 | `.parcel` MuJoCo + skills + tests | Yes |
-| Stub city nav + pedestrian braking | Yes (`MetaUrbanNavEnv` kinematic stub) |
+| MuJoCo `grid_v1` raycast navigation | Yes in runtime/headless regression paths; kinematic simulation only |
+| MetaUrban API scaffold + synthetic pedestrians | Yes (`MetaUrbanNavEnv(use_metaurban=False)`); missing-scan fallback, not the real vendor backend |
 | Gemma structured action reasoning | Yes (CPU fallback or admitted CUDA llama.cpp profile) |
 | Gemma GPU offload | Yes: verified official b10236 CUDA 12 OCI runtime; 31/31 layers measured. Source compilation remains optional/unavailable. |
 | Fish S2 Pro server | Yes, opt-in (uses most GPU VRAM) |
-| Microphone/speaker duplex | Text prerequisite only; no connected endpoints |
+| Microphone/speaker duplex | **Blocked:** no connected endpoints, no PortAudio runtime, Piper missing, and no hardware AEC |
+| Semantic endpointing | Code/tests only; ONNX Runtime + weights absent and canonical selection remains `energy` |
 | BARN ROS/Gazebo runtime smoke | Yes, cache-only Bubblewrap/PRoot: unchanged upstream MPPI completed one public world; no Parcel/SIF/score claim |
 | BARN Parcel 50×10 public protocol | **Blocked**: the corrected single-world hook started but never translated enough to begin the evaluator trial, so no row exists; first-sensor/command telemetry must localize the liveness stall, and upstream-tested Singularity/SIF execution is still unavailable |
 | Living MetaUrban city + SMPL humans | **Blocked** on a real Parcel backend adapter (and Conda 3.9) |
@@ -263,6 +291,11 @@ Keep `active_model: grid_v1`; see [`NAVIGATION_CITY.md`](NAVIGATION_CITY.md).
 ---
 
 ## 6. Reproduce from lockfile
+
+These commands reproduce the environment **from a Parcel source checkout**.
+The wheel is not relocatable yet: prompts, skill YAML, and navigation YAML are
+repository assets rather than package data, and the packaged fallback config is
+not synchronized with `configs/robot.yaml`.
 
 ```bash
 source .parcel/bin/activate

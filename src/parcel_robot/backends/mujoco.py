@@ -9,6 +9,7 @@ from parcel_robot.sim_ipc import (
     DEFAULT_SOCKET,
     publish_clear_emergency_stop,
     publish_emergency_stop,
+    publish_expression,
     publish_pose,
     publish_stop,
     publish_trajectory,
@@ -193,6 +194,9 @@ class MujocoSocketBackend:
 
     def trajectory(self, skill: object) -> None:
         publish_trajectory(skill, self.socket_path)
+
+    def expression(self, joint_offsets: dict[str, float]) -> None:
+        publish_expression(joint_offsets, self.socket_path)
 
     def move_owner(self, dx: float, dy: float) -> None:
         if not math.isfinite(dx) or not math.isfinite(dy):

@@ -1,195 +1,305 @@
-# Bluetooth audio, latency, and local spatial intelligence
+# Audio, latency, expression, and local spatial intelligence
 
-## Desktop Bluetooth/audio audit
+Last checked against the repository and this desktop on **2026-08-04**. In this
+document, **active** means selected by `configs/robot.yaml` and usable on this
+host, **wired** means connected through `RobotRuntime` but dependent on optional
+artifacts or hardware, **fallback** means deliberately degraded behavior, and
+**planned** means no runtime path exists yet.
 
-The August 2026 read-only device audit found:
+## Current status at a glance
+
+| Capability | Status | What is true today |
+| --- | --- | --- |
+| Browser partial/final text | **Active** | Partials interrupt but never execute; finals enter the same guarded turn path as ASR text. |
+| Microphone capture and speaker playback | **Wired, inactive on this host** | `MicrophoneVoiceLoop` and `SpeakerSink` use `sounddevice`/PortAudio. Native `libportaudio2` is absent and no default PipeWire input or output endpoint was connected in the audit. |
+| Default endpointing | **Active when a microphone runs** | Adaptive `EnergyVad`, using 30 ms frames and a 12-frame (about 360 ms) silence hangover. |
+| Silero v6 + Smart Turn v3 | **Wired, not active** | The semantic path is selectable, but the required ONNX files and `onnxruntime` are not installed. The installed whisper.cpp Silero `.bin` is a different format and cannot be used by `SileroVad`. |
+| whisper.cpp STT | **Adapter and weights installed; service stopped** | The runtime submits a completed WAV to `/inference`. This is utterance-level, not streaming ASR. |
+| Piper TTS | **Configured, not installed** | The configured binary and voice files are absent. `speech.mode: auto` therefore degrades without failing the simulator. |
+| Fish S2 TTS | **Optional service/adapter installed** | The provider exposes streaming, but the runtime's sentence wrapper currently calls blocking `synthesize()` once per sentence, so cancellation and first audio are sentence-granular. |
+| Acoustic echo cancellation | **Planned hardware integration** | The software path has only an energy echo guard. An XVF3800-class array must provide the real speaker reference. |
+| Idle/reaction expression | **Active in the runtime** | A separate 50 Hz layer drives bounded body offsets in MuJoCo and reports head/gaze state. |
+| ProsodyTap + beat scheduling | **Wired** | Synthesized WAV chunks are analyzed before playback and nod timing is anchored when the sink starts a chunk. Go2 has no neck actuator, so the current head-pitch nod is state/metric output, not physical Go2 motion. |
+| Latency dashboard | **Active** | `/latency` shows bounded per-turn traces and rolling component distributions. Audio input and acoustic output boundaries remain incomplete; details are below. |
+
+## Desktop Bluetooth and audio audit
+
+The read-only audit found:
 
 - a powered, unblocked MediaTek USB Bluetooth 5.2 controller (`hci0`);
 - BlueZ 5.85, PipeWire, PipeWire Pulse, and WirePlumber running;
-- Bluetooth audio codec support installed, including AAC/SBC and HFP codecs;
-- headset, hands-free, audio-source, and audio-sink roles advertised; and
-- `pw-record`, `pw-play`, and PipeWire's automatic headset-profile switching
-  available.
+- Bluetooth AAC/SBC and hands-free codec support; and
+- ALSA capture hardware and drivers.
 
-No Bluetooth device was paired or connected during the audit. PipeWire therefore
-reported no source and only Dummy Output, and Parcel correctly selected streaming
-text mode. `AudioDeviceStatus` now distinguishes controller availability,
-controller power, device connection, duplex readiness, and the likely transport
-without storing a headset address. A background monitor refreshes this status
-every ten seconds, outside the real-time control loop.
+No Bluetooth or USB audio endpoint was connected. PipeWire reported no default
+source and no real default sink, so `detect_audio_devices()` returned `text
+mode`, `connected_input: false`, `connected_output: false`, and `transport:
+none`. This is not a missing Bluetooth driver. It is compounded by a separate
+software prerequisite: the installed Python `sounddevice` distribution cannot
+import until the missing `libportaudio2` runtime is installed.
 
-AirPods or another Bluetooth headset can be used after pairing in the desktop's
-Bluetooth settings. A2DP gives high-quality playback but normally no headset
-microphone. Opening the microphone makes WirePlumber switch to HFP/HSP duplex,
-which supplies input and output at lower/mono call quality. This is expected
-Bluetooth behavior; WirePlumber documents the A2DP and headset profiles and its
-automatic switching hooks in its [Bluetooth configuration](https://pipewire.pages.freedesktop.org/wireplumber/daemon/configuration/bluetooth.html)
-and [release documentation](https://pipewire.pages.freedesktop.org/wireplumber/resources/releases.html).
+AirPods and similar headsets can be used after pairing. A2DP normally gives
+good playback without the headset microphone; opening the microphone switches
+to HFP/HSP duplex with lower, typically mono call quality. This is normal
+Bluetooth behavior; see WirePlumber's [Bluetooth
+configuration](https://pipewire.pages.freedesktop.org/wireplumber/daemon/configuration/bluetooth.html).
 
-For the best spoken reply quality, prefer A2DP AirPods output plus a separate USB
-or robot microphone. For one-device convenience, use the AirPods HFP microphone
-and accept reduced playback fidelity.
+The live runtime does **not** use `PipeWireAudioIO`. It uses PortAudio through
+`sounddevice`, with an optional device index or case-insensitive name resolved
+by `resolve_audio_device()`. `detect_audio_devices()` is an advisory health
+monitor, while capture still performs a PortAudio preflight and degrades loudly
+if the selected stream cannot open. `PipeWireAudioIO` and `AlsaAudioIO` remain
+standalone bounded-utterance adapters.
 
-`PipeWireAudioIO` now captures 16 kHz mono WAV from the current default source
-and plays WAV to the current default sink, without hard-coded ALSA card numbers
-or Bluetooth MAC-derived node names. It is a bounded utterance adapter, not an
-acoustic echo canceller. The live browser path still accepts streaming text until
-a paired headset is present and a continuous VAD/AEC capture service is enabled.
-
-After pairing, validate without changing Parcel configuration:
+Inspect the host without changing configuration:
 
 ```bash
 bluetoothctl devices Connected
 wpctl status
-python - <<'PY'
+.parcel/bin/python - <<'PY'
 from parcel_robot.audio_io import detect_audio_devices
-print(detect_audio_devices())
+print(detect_audio_devices().as_dict())
 PY
+
+.parcel/bin/python -c "import sounddevice; print(sounddevice.query_devices())"
 ```
 
-## Latency definitions and dashboard
+The final command is expected to fail on the audited host until
+`libportaudio2` is installed.
 
-Open <http://127.0.0.1:8765/latency> while the control deck is running. The page
-is a separate, read-only dashboard backed by `/api/latency`; it does not add
-transcripts or responses to metric labels.
+### Current configuration semantics
 
-The two primary metrics are:
+The audio group in `configs/robot.yaml` is now under `speech:`, matching the
+runtime. Supported keys that reach their consumers are `fish_url`, device
+selectors, `endpointing`, `vad_model`, `turn_model`, and `echo_guard_scale`.
+The canonical config chooses energy endpointing, leaves devices on the system
+default, and selects Piper rather than Fish.
 
-- `UserQueryEndToFirstResponse`: final query submission to the first response
-  made observable through logging or audio playback, whichever is first.
-- `UserQueryEndToFirstReasoningResponse`: final query submission to the first
-  streamed model output token. Deterministic and non-streaming paths use the
-  completed validated reasoning result and label the provider detail accordingly.
+`fish_reference_id`, `fish_streaming`, and `barge_in` are present but not
+consumed by runtime/provider construction. Barge-in is currently enabled by the
+existence of a microphone loop rather than by the YAML boolean. These keys are
+reserved/inert, not working toggles.
 
-Each bounded turn trace also contains:
+## Audio path and endpointing choices
 
-- queue wait;
-- reasoning duration;
-- action-commit duration;
-- reasoning-to-log delay;
-- query-end-to-TTS-start;
-- TTS time to first chunk and total synthesis time;
-- query-end-to-first audio-sink handoff;
-- total turn duration;
-- model HTTP time, JSON validation time, token counts, and model TTFT when
-  supplied by llama.cpp;
-- completion, superseded, or error state; and
-- the user query and final returned response.
+The implemented microphone path is:
 
-Rolling component distributions include simulator observation RTT, perception
-age, follow controller, spatial controller, navigation controller, activity
-coordinator, collision gate, backend command send, motion dispatch, control-loop
-work, and control-loop overrun. Every distribution reports latest, mean, p50,
-p95, maximum, and sample count.
+```text
+PortAudio 16 kHz mono int16 frames
+  -> echo-energy guard while the robot is speaking
+  -> EnergyVad, or optional Silero raw speech decisions
+  -> fixed hangover, or optional Smart Turn dual-timeout decision
+  -> complete buffered WAV
+  -> blocking whisper.cpp /inference request
+  -> final text
+  -> DuplexVoiceSession
+```
 
-Headline p50/p95 cards include completed turns only. Superseded and failed
-turns remain visible and receive separate status-stratified aggregates, so
-barge-in experiments do not distort normal response latency.
+`EnergyVad` is small, deterministic, dependency-free, and can adapt its noise
+floor. Its limitations are equally important: energy is not speech semantics,
+the default 360 ms hangover is paid on every turn, machinery or music can look
+like speech, and it has no echo estimate.
 
-The llama.cpp provider now accumulates bounded streamed JSON so model TTFT is
-real while the complete JSON object still must validate before a tool can
-commit. Non-thinking mode and a 256-token generation budget prevent ordinary
-chat from spending tens of seconds on hidden reasoning. Conversation history is
-also bounded by both message and character budgets. New partial/final input
-cooperatively cancels the active llama.cpp stream, and pending finals are
-compacted to the newest turn rather than growing an unbounded FIFO. TTS already
-runs on an independent output worker. Model/audio health probes were moved off
-the 10 Hz control loop, and trusted prompt files/profile lists are cached after
-validation.
+The optional semantic path re-buffers the 480-sample capture blocks into the
+512-sample windows Silero v6 expects. Smart Turn sees at most the last eight
+seconds, left-padded for short turns, and classifies once at the first silence:
 
-ASR endpointer and acoustic-presentation latency remain explicitly unavailable
-in text mode. A first audio-sink handoff is only a software lower bound, not the
-same as sound reaching a Bluetooth earpiece; exact acoustic presentation requires
-PipeWire/Bluetooth presentation timestamps after a headset is connected.
+- probability at least 0.5: commit after 0.20 s of silence;
+- incomplete/uncertain: wait up to 2.5 s; and
+- missing/broken Smart Turn: warn and use the fixed 2.5 s timeout.
+
+This avoids clipping natural mid-sentence pauses while making obviously
+complete turns faster. It also costs an optional ONNX runtime, can inherit
+domain/language bias from its training data, and currently buffers the entire
+utterance in memory. If `SileroVad.process()` fails, raw speech detection falls
+back to energy. If the turn endpointer itself raises in the microphone loop,
+the loop switches to the historical energy segmenter; the in-progress semantic
+utterance is not migrated and may need to be repeated.
+
+The whisper.cpp launcher's own Silero model can trim a submitted utterance, but
+it does not determine when Parcel commits the live microphone turn. The local
+Smart Turn/Silero path and the server-side whisper VAD are separate boundaries.
+
+The biggest remaining latency limitation is STT: `MicrophoneVoiceLoop` sends no
+ASR partials. `DuplexVoiceSession` supports partial text, but today those
+partials come from the browser or another future streaming recognizer, not from
+whisper.cpp capture. Speculative reasoning on stable ASR partials is therefore
+still planned.
+
+## AEC, barge-in, and device implications
+
+The current echo guard requires microphone energy during playback to exceed
+`noise_rms * threshold_scale * echo_guard_scale`. This reduces self-triggering
+but can suppress a quiet owner, especially when the speaker is close to the
+microphone. It is not acoustic echo cancellation and does not make hands-free
+duplex production-ready.
+
+For the planned XVF3800 path, the speaker must be connected to the array's own
+amplifier/DAC reference path. A separate USB or Bluetooth speaker prevents the
+array from seeing the exact reference signal and defeats its hardware AEC.
+Software still needs to select the array's capture/playback endpoints and test
+barge-in under robot motor noise. Bluetooth headphones can validate ordinary
+I/O, but HFP latency/quality and the absent shared AEC reference make them a
+weaker robot integration target.
+
+Barge-in itself is implemented:
+
+- speech onset above the guard cancels the active model stream and output;
+- `SpeakerSink` flushes queued audio and checks cancellation at about 50 ms
+  blocks for its built-in player;
+- stale TTS chunks cannot re-arm an interrupted sink; and
+- the same speech epoch clears scheduled beat motion.
+
+The current policy interrupts on detected speech immediately. Backchannel
+classification (letting “mm-hmm” pass without killing a reply), provisional
+ducking, and post-AEC confirmation are planned.
+
+## Latency definitions and what they actually measure
+
+Open <http://127.0.0.1:8765/latency>. It is a read-only dashboard backed by
+`GET /api/latency`, with the user query and returned response kept in trace
+rows rather than metric labels.
+
+The headline metrics are:
+
+- `UserQueryEndToFirstResponse`: final-text submission to the first response
+  observable in the application log or audio queue, whichever occurs first.
+- `UserQueryEndToFirstReasoningResponse`: final-text submission to the first
+  streamed provider output. Deterministic and non-streaming paths use their
+  complete validated result.
+- `QueryEndToFirstSpokenAudio`: final-text submission to first audio-sink
+  enqueue. Despite the name, this is not an acoustic timestamp.
+- `UserQueryEndToFirstPlanOutput` and `UserQueryEndToAcceptedPlan`: planning
+  TTFT and validated task-executive admission for deliberative turns.
+
+Per-turn decomposition also includes queue wait, reasoning, action commit,
+TTS start/first chunk/total, turn total, planner route/snapshot/decode/
+validation/admission, model HTTP and JSON validation time, provider token
+usage, completion status, and bounded provider details. Completed-turn p50,
+p95, and p99 aggregates exclude errored and superseded turns; separate
+status-stratified aggregates retain those cases.
+
+Rolling component metrics include the control/simulator path plus
+`TurnCommitLatency`, `ProsodyAnalysis`, `ExpressionLayer`, and
+`VoiceEndOfSpeechToFirstAudio`. Every component reports latest, mean, p50,
+p95, p99, maximum, and sample count where applicable.
+
+### Measurement gaps
+
+For typed input, “query end” is the final HTTP submission. For microphone
+input it is currently recorded **after** endpointing and blocking STT, when the
+recognized final text is submitted. Therefore the headline metrics omit the
+silence tail and ASR request and cannot yet be called acoustic
+end-of-speech-to-response latency. The trace source is also currently labeled
+`text` for both typed and recognized finals.
+
+`TurnCommitLatency` currently measures speech-onset-to-commit duration, not the
+silence-tail decision alone. `audio_first_playback` is emitted after the chunk
+is enqueued; `SpeakerSink` has the real worker-side chunk-start callback, but
+that callback currently anchors only beat motion, not the latency ledger.
+PipeWire/Bluetooth presentation timestamps are not collected. The dashboard's
+audio values are thus software lower bounds.
+
+Production measurement needs four additional clocks:
+
+1. capture/VAD speech-end and semantic-commit timestamps;
+2. STT request start, first partial, and final transcript;
+3. speaker-worker first-sample start; and
+4. device/acoustic presentation feedback where the platform exposes it.
+
+Until those are wired, do not claim the roadmap's P50 end-of-speech-to-audio
+target from `/latency` alone.
+
+## Expressive speech and motion
+
+The current design deliberately separates **what** from **when**:
+
+- the text brain may select one validated semantic gesture or emit one
+  `[emote:name:intensity]` marker from an admitted catalog;
+- `SentenceChunkedSynthesizer` strips the marker from speech and dispatches
+  the gesture through the activity/proposal coordinator; and
+- `ProsodyTap` analyzes synthesized PCM with a 10 ms RMS envelope,
+  pitch/onset-gated accents, and a bounded arousal score. `BeatLayer` schedules
+  those accents against the actual chunk-start callback.
+
+The advantage is that no language model invents joint values, while generated
+audio supplies precise timing with pre-playback lookahead. Prosody analysis is
+NumPy-only, optional, and failure-isolated: an invalid audio chunk is still
+spoken without beat motion. Speech epochs make audio and pending nods cancel
+together.
+
+The `ExpressionEngine` runs independently at 50 Hz. It composes deterministic
+breathing/weight shifts, VAD-driven owner orientation, a query-pending thinking
+pose, and beat timing. One clamp owns all amplitudes. Expression is off during
+E-stop, critical battery, proximity events, and authored skills; navigation,
+following, or spatial motion permits only the logical head channels.
+
+Current embodiment limitations:
+
+- Go2 has no articulated head/neck. Head yaw/pitch appear in runtime state and
+  the 2.5D viewer can show gaze, but `stance_joint_offsets()` maps only body
+  height/pitch to leg joints. Beat nods therefore do not physically move Go2.
+- Head-only mode during navigation is effectively snapshot-only on Go2.
+- Idle body offsets work in MuJoCo, but a physical Unitree expression channel
+  and hardware validation are not implemented.
+- Inline emotes fire when their sentence starts synthesis, before confirmed
+  acoustic playback, and are constrained to stationary bounded skills.
+- Arousal currently changes nod amplitude only. It is not an input to the
+  reasoning model or the TTS provider, and no user-voice affect classifier is
+  implemented.
+- Body bounce, entry/exit blending, backchannel gestures, DoA-based orientation,
+  and calibrated hardware actuation lag remain planned.
 
 ## Camera/LiDAR knowledge boundary
 
-The reasoning layer has an enforced spatial capability allowlist of `camera` and
-`lidar`. Its dynamic prompt says that it may use only:
+The reasoning layer's spatial allowlist is `camera` and `lidar`. It must not
+claim GPS, privileged simulator state, unseen objects, or map access. The
+Google Maps integration remains a fail-closed `NullMapProvider` placeholder.
 
-- camera-derived owner, object, and scene observations; and
-- LiDAR-derived range, free-space, and collision observations.
+MuJoCo still derives some idealized detections from simulator truth for
+repeatable development. They are test-oracle/adapter data, not evidence that a
+production detector exists. Hardware must replace them with camera tracking, a
+LiDAR costmap, and state estimation while preserving the observation contract.
+The microphone is a communication channel, not another spatial sensor.
 
-It must not claim GPS, unseen objects, privileged simulator state, or map access.
-The Google Maps provider is a `NullMapProvider` placeholder with `available:
-false`; enabling it in configuration fails closed and never performs a network
-request.
+The language model does not publish waypoints, repeated velocity commands, or
+joint targets. Canonical local commands and bounded model proposals compile to
+deterministic spatial behaviors under fresh camera/LiDAR checks. Manual input,
+Stop, E-stop, navigation, and follow can cancel or preempt them; smoothing,
+collision braking, command TTL, and the backend boundary still apply every
+tick. See [Companion navigation architecture](COMPANION_NAVIGATION_ARCHITECTURE.md)
+for the full navigation design.
 
-The MuJoCo backend still derives idealized detections from simulator truth for
-repeatable development. Those values remain diagnostics/test-oracle data, not a
-claim that a production detector exists. A physical backend must replace the
-adapter with camera tracking, a LiDAR local costmap, and state estimation while
-preserving this same observation contract. The microphone is a communication
-transport, not an additional spatial perception source.
+## Model decision summary
 
-## Common-sense local motion
+The installed and evaluated language-model decision is maintained in [Voice
+intelligence and model design](VOICE_AI_MODELS.md). In short: Gemma 4 remains
+the admitted shared conversation/planning backbone; installed Ministral 8B
+challengers were not promoted; Qwen is a research candidate, not an installed
+or evaluated runtime profile. Model quality does not remove the deterministic
+router, schema validation, task executive, or motor-safety boundary.
 
-The language model never emits coordinates, waypoints, repeated raw velocity, or
-town-scale paths. It may propose one strict semantic `run_spatial_behavior`, and
-the deterministic controller compiles it under fresh camera/LiDAR checks:
+## Local runbook
 
-```json
-{"behavior":"move_steps","direction":"away_from_owner","steps":5}
+The current host has whisper weights and a prebuilt whisper server, but Piper's
+binary/voice are missing. The reproducible installation and service scripts
+are:
+
+```bash
+# Inspect requirements and pinned destinations.
+scripts/install_speech_services.sh --help
+
+# Install/verify whisper.cpp and Piper under ignored repo directories.
+scripts/install_speech_services.sh
+
+# Start whisper and verify both whisper and Piper.
+scripts/run_speech_services.sh
+scripts/run_speech_services.sh --check
+
+# Start the simulator/control deck after attaching input and output devices.
+scripts/launch_sim.sh --llm
 ```
 
-```json
-{"behavior":"orbit_owner","direction":"counterclockwise","size":"normal","revolutions":1}
-```
-
-Canonical wording is parsed before the LLM, so these work offline as well:
-
-- `walk away from the owner 5 steps` — five 0.25 m steps, first face the owner,
-  then reverse while keeping that heading;
-- `take three steps backward`;
-- `walk forward 2 steps`; and
-- `walk in a small clockwise circle around me` — one local orbit with a radius
-  selected from the bounded small/normal/wide profiles.
-
-The hard limits are twelve steps, a 1.3–2.0 m orbit radius, one revolution, and a
-120 second task timeout. The small radius includes enough owner clearance to
-remain compatible with the final collision gate; configuration validation
-rejects an orbit radius inside that safety envelope. Camera owner visibility is
-required for owner-relative motion, a fresh observation is taken at commit time,
-and the behavior cancels if the owner moves materially from the captured anchor.
-Manual control, Stop, E-stop, navigation, and follow can cancel or preempt the
-plan, and every control tick still passes through smoothing, LiDAR collision
-braking, command TTL, and the backend safety boundary.
-
-The simulator/backend observation now carries up to 64 bounded polar LiDAR
-obstacle candidates, with simulator coordinates stripped at the IPC boundary.
-The final brake selects the relevant return using the command being considered,
-so a close obstacle behind the robot cannot hide a slightly farther obstacle in
-front. Camera-derived person distance and bearing are checked against that same
-candidate motion even when time-to-collision is unavailable on the first tick;
-tangential orbit and retreat motion remain possible.
-
-If LiDAR braking or another obstruction prevents any translational or rotational
-progress for twenty seconds, the plan fails as `spatial_stalled` instead of
-pushing indefinitely or waiting for the full task timeout.
-
-## Conversational model recommendation
-
-The installed Gemma 4 26B-A4B Q4 remains the tested rollback model. The best next
-single-model A/B candidate is **Qwen3.6-35B-A3B Q4_K_M**: the official model is a
-35B-total/3B-active multimodal MoE with a 256K context, tool use, switchable
-thinking, and Apache-2.0 licensing. Its 20.4 GB llama.cpp Q4_K_M conversion fits
-comfortably in this workstation's system RAM. See the [official Qwen model card](https://huggingface.co/Qwen/Qwen3.6-35B-A3B)
-and [llama.cpp GGUF conversion](https://huggingface.co/ggml-org/Qwen3.6-35B-A3B-GGUF).
-
-Run the reasoner on CPU while Fish S2 occupies the GPU. Use non-thinking mode for
-ordinary conversation and canonical commands; reserve thinking for ambiguous
-planning. Keep strict grammar/schema validation and the deterministic spatial
-compiler regardless of model quality.
-
-For an optional low-latency conversational front end, **Ministral 3 8B Instruct
-Q4_K_M** is an Apache-2.0, instruction/chat-oriented edge model with official
-GGUF support. It can produce a short noncommittal acknowledgement while the
-larger planner works, but it must never promise an action before the coordinator
-accepts it. See the [official model card](https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512)
-and [official GGUF repository](https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512-GGUF).
-
-Kimi K2.5 remains impractical on this single workstation because of its one
-trillion total parameters. The model swap alone is not the intelligence system:
-conversation memory, compact current context, semantic tools, deterministic
-trajectory compilation, and safety revalidation are what turn better language
-understanding into reliable robot behavior.
+Keep `speech.mode: auto` during development so an unavailable optional service
+falls back to text. Use `speech.mode: audio` only for a fail-closed integration
+test that intentionally requires healthy STT and TTS roles.

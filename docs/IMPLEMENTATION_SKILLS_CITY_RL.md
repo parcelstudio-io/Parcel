@@ -1,7 +1,8 @@
 # Implementation: Skills catalog, city scene, and RL-ready Dog API
 
-This document is the source of truth for Parcel’s skill system, stylized city
-simulation scene, public `Dog` API, and Gymnasium-oriented RL hooks.
+This document describes Parcel’s skill system, stylized city simulation scene,
+public `Dog` API, and Gymnasium-oriented RL hooks. For operational status and
+deployment boundaries, also read [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
 ## Goals
 
@@ -24,6 +25,11 @@ simulation scene, public `Dog` API, and Gymnasium-oriented RL hooks.
 Dynamic skills (jump / run / kick) ship as authored previews first. Each file may
 include an `rl:` block so a trained policy can replace the preview later without
 changing the public API.
+
+“Preview” is load-bearing: the YAML proves catalog/dispatch/simulator plumbing,
+not that a motion is dynamically stable or safe on a physical Go2. A skill with
+`rl.policy_path` is only recognized as armed today; no general ONNX/TorchScript
+inference runner is connected to `SkillExecutor`.
 
 ## Directory layout
 
@@ -94,8 +100,16 @@ obs = dog.obs()
 dog.step_policy(action)
 ```
 
-Callers (voice agent, ROS, `parcel-control`) must go through `Dog`. Safety remains
-fail-closed for unknown skills, unsafe joints, and velocity limits.
+`Dog` fails closed for unknown/disabled skill IDs and malformed skill
+definitions. It does **not** validate arbitrary velocity overrides against the
+runtime's limits or provide a general joint-safety boundary.
+
+`Dog` is the reusable catalog/execution API, not the complete product safety
+boundary. Direct `Dog.execute()` and simulator IPC calls do not provide
+`RobotRuntime`'s activity priorities, fresh perception checks, collision veto,
+or centralized E-stop semantics. Use the browser/runtime path for end-to-end
+behavior and safety work; use direct `Dog` calls for bounded development and
+tests.
 
 ## Simulation IPC
 
@@ -104,30 +118,40 @@ fail-closed for unknown skills, unsafe joints, and velocity limits.
 | `pose` | name, duration, joints |
 | `walk` | vx, vy, vyaw (+ optional gait style) |
 | `trajectory` | name, keyframes |
+| `expression` | additive joint offsets from the subordinate 50 Hz expression channel |
 | `stop` | — |
 
 ## City scene
 
-`src/parcel_robot/scenes/city_block.xml` includes the Unitree Go2 model and adds:
+`src/parcel_robot/scenes/city_block.xml` includes the Unitree Go2 model and a
+compact semantic city block: road/sidewalk/crosswalk regions, buildings,
+storefront/POI and street-furniture geometry, owner, pedestrians, and cyclist
+proxies. `DynamicCity` advances seeded actor routes; the simulator publishes
+their tracks plus LiDAR and semantic regions/objects through versioned IPC.
 
-- asphalt-like ground plane
-- sidewalk strip + curb
-- several building boxes
-- bench
-- crosswalk stripe geoms
-- spawn near the sidewalk
+This is deliberately a deterministic regression world. Actor trajectories are
+scripted rather than mutually responsive ORCA behavior, semantic labels are
+simulator-generated, and base motion remains kinematic. See
+[DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md) for the richer
+backend plan.
 
 Configured via `simulation.scene` in `configs/robot.yaml`.
 
 ## RL contract (honest stub)
 
-- **Action:** 12 joint position targets (rad), applied with PD in sim / low-level.
-- **Observation (v1, length 48):** base quat (4) + gyro (3) + joint q (12) +
-  joint dq (12) + last action (12) + velocity command (3) + skill embedding.
+- **Action:** 12 joint position targets (rad). With `use_mujoco=True`, the
+  experimental env applies approximate PD in local MuJoCo. Otherwise the stub
+  records the action in its observation only. No physical low-level policy
+  runner is implemented.
+- **Observation (v1, length 48):** base quaternion (4) + angular velocity (3) +
+  joint q (12) + joint dq (12) + last action (12) + velocity command (3) +
+  scalar skill index (1) + episode progress (1). The current simulator mapping
+  is intentionally approximate and is not a stable learned-policy ABI yet.
 - **Env:** `parcel_robot.rl.env.Go2Env` exposes a Gymnasium-like `reset` / `step`
   shape for experiments, but it is **not** a training-ready locomotion stack
-  (rewards / termination are still incomplete). Prefer the redesign deferred
-  path (`unitree_rl_*` lineage → ONNX) when RL locomotion is funded.
+  (rewards / termination, terrain, randomization, actuator/sensor delay, and
+  sim-to-real validation are incomplete). Prefer the redesign deferred path
+  (`unitree_rl_*` lineage → ONNX) when RL locomotion is funded.
 - Training loops stay outside the voice process.
 
 ## Migration

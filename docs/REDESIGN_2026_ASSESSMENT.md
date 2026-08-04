@@ -6,6 +6,11 @@
 research agents across two model families) + 3 adversarial architecture
 proposals, adjudicated, with every load-bearing claim verified against source.
 
+This is the redesign record, not a live readiness claim. Subsequent features,
+operational blockers, configuration bindings, and inert reserved keys are tracked in
+[CURRENT_STATUS.md](CURRENT_STATUS.md); decision tradeoffs are in
+[DESIGN_DECISIONS.md](DESIGN_DECISIONS.md).
+
 ## 1. The question
 
 > How good is our current setup, and should we redesign the whole thing?
@@ -88,11 +93,16 @@ is marked ✓✓.
 1. ✓✓ **No shipping quadruped gives a learned model final collision
    authority** (Unitree, Spot, Deep Robotics, ANYbotics). Deterministic
    geometry is the last line of defense; learned components propose, never
-   dispose. Parcel's unconditional `collision.py`/`reactive_safety.py` gate
-   under every dispatch source is the correct architecture — keep it forever.
-2. ✓✓ **The five-primitive vendor contract** (SE2 velocity, stand/sit,
-   gait/mode, state feedback, separate e-stop) recurs across every vendor SDK.
-   `ControlManager` already implements exactly this boundary.
+   dispose. Parcel's runtime-wide `reactive_safety.py` gate under every runtime
+   velocity source is the correct architecture — keep an independent final
+   safety veto forever. `navigation/collision.py` is an additional
+   navigation-local defense, not the universal boundary; direct simulator debug
+   paths remain outside `RobotRuntime`.
+2. ✓✓ **A small vendor contract** (leased SE2 velocity, state feedback, and a
+   separate E-stop) recurs across vendor SDKs. `ControlManager` implements that
+   locomotion boundary today. Pose/trajectory execution is a separately
+   serialized simulator skill path and is rejected by the physical Unitree
+   adapter until a commissioned whole-body action contract exists.
 3. ✓✓ **Voice barge-in requires one tightly-coupled real-time process**, not
    glued microservices — `DuplexVoiceSession`'s design was right; it needed
    ears and a mouth, not a rearchitecture.
@@ -144,8 +154,8 @@ operator deletes them — presence in the tree is not a production claim.
   `NotImplementedError`; `build_navigator` accepts only `stub` and `grid`.
   Re-add a type only with a working inference adapter.
 - Navigation config graveyard collapsed toward `grid_v1` + `stub` for
-  production; experiment YAMLs under `configs/navigation/experiments/` remain
-  for offline planner work.
+  production; research profiles under `configs/navigation/models/` remain for
+  offline planner/eval work and are not runtime admission.
 
 ## 7. Honest limitations that remain
 
@@ -157,7 +167,10 @@ operator deletes them — presence in the tree is not a production claim.
 - **The simulator is kinematic** — locomotion dynamics, slip, and contact are
   not modeled; RL/animation execution on hardware remains future work.
 - **Piper/whisper.cpp must actually be installed/launched** for audio mode;
-  the stack degrades loudly to text mode otherwise.
-- Scenario pedestrians in the integration eval are visible to social-distance
-  metrics and controllers but not to the raycast scan (v1 limitation, noted in
-  the eval's `does_not_prove`).
+  at the 2026-08-04 desktop snapshot Piper is missing, whisper is not running,
+  PortAudio is absent, and no endpoint is connected. The stack degrades loudly
+  to text mode otherwise.
+- Scenario pedestrians in the integration eval are visible to raycast LiDAR,
+  owner line-of-sight, and injected person telemetry. They are absent from the
+  analytic nearest-obstacle telemetry and static-collision oracle; that split is
+  a v1 limitation recorded in the eval contract.

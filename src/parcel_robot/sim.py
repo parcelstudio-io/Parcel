@@ -23,7 +23,13 @@ from .mujoco_lidar import (
 )
 from .robot_profile import RobotProfile
 from .sim_control import PoseController
-from .sim_ipc import DEFAULT_SOCKET, PoseSocketServer, message_to_pose, message_to_velocity
+from .sim_ipc import (
+    DEFAULT_SOCKET,
+    PoseSocketServer,
+    message_to_expression,
+    message_to_pose,
+    message_to_velocity,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = REPO_ROOT / "configs" / "robot.yaml"
@@ -349,6 +355,7 @@ def run_simulator(
         trajectory.stop()
         gait.reset()
         controller.hold_joints(gait.standing_joints())
+        controller.set_expression({})
         data.qvel[:] = 0.0
 
     def apply_local(message: dict) -> None:
@@ -375,6 +382,13 @@ def run_simulator(
             pose = message_to_pose(message)
             controller.apply_pose(pose, data)
             print(f"applying pose: {pose.name}", flush=True)
+        elif kind == "expression":
+            # Decorative overlay only: it cancels nothing, logs nothing (this
+            # arrives at control rate), and is dropped while E-stopped.
+            if emergency_stopped:
+                controller.set_expression({})
+            else:
+                controller.set_expression(message_to_expression(message))
         elif kind == "walk":
             if emergency_stopped:
                 raise ValueError("simulator motion is disabled by emergency stop")

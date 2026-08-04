@@ -6,9 +6,16 @@
   "frozen_at_utc": "2026-08-03T16:45:00Z",
   "case_count": 5,
   "base_motion": "deterministic_kinematic_mujoco_geometry",
-  "policy_observation_contract": ["camera", "lidar", "owner_track", "odometry"],
+  "policy_observation_contract": [
+    "camera",
+    "lidar",
+    "owner_track",
+    "odometry"
+  ],
   "evaluator_truth_available_to_policy": false,
-  "unsupported_skills": ["FollowFormation"],
+  "unsupported_skills": [
+    "FollowFormation"
+  ],
   "locked_inputs": {
     "episodes": {
       "path": "evals/companion/embodied_plan_v1/episodes.json",
@@ -28,7 +35,7 @@
     },
     "robot_config": {
       "path": "configs/robot.yaml",
-      "sha256": "bebab2c9c73699a78b0d97b358df3bca500b6229c23cd6186ea063cadd2b75d9"
+      "sha256": "9e8fe896ad2ede7256fea094c4b65da2ee3ba2b7d12efab1e18c30dd3a524266"
     },
     "result_schema": {
       "path": "evals/companion/embodied_plan_v1/result.schema.json",

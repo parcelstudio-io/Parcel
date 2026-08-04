@@ -1,276 +1,400 @@
 # Voice intelligence and model design
 
-This document explains why Parcel separates speech recognition, intelligence,
-safety, and speech generation, and how the selected open models fit together.
+Last checked against the repository, installed artifacts, and retained
+evaluation records on **2026-08-04**. This document separates implemented code
+from the active host profile and from research proposals.
 
-## Design principle
-
-A language model is useful for interpreting flexible language, conversation, and
-selecting tools. It is not a real-time controller and must never publish motor
-commands or arbitrary joint targets.
-
-Parcel uses this trust boundary:
+## The implemented architecture
 
 ```text
-microphone (future device transport; text stream is active now)
-  → whisper.cpp
-  → finalized transcript
-  → Gemma 4 now / Qwen3.6 evaluation profile / llama.cpp
-  → structured tool call and optional semantic action proposal
-  → deterministic SafetySupervisor + ActivityCoordinator
-  → priority arbiter + TTL + proximity brake
-  → simulator or ROS controller
+browser partial/final text       16 kHz microphone frames
+          |                     -> VAD/optional semantic endpoint
+          |                     -> utterance WAV -> whisper.cpp
+          +-----------------------------+
+                                        v
+                            finalized transcript only
+                                        |
+                         deterministic intent router
+                         /          |             \
+                direct command   conversation   deliberative task
+                      |           JSON model      PlanIR model lane
+                      |              |             |
+                      +------ validation / task executive ------+
+                                        |
+                         deterministic controllers + safety
+                                        |
+                                  simulator / Go2
 
-spoken reply
-  → Piper (onboard default) or Fish S2 (opt-in docked)
-  → SentenceChunkedSynthesizer / cancellable WAV stream
-  → SpeakerSink
+reply text -> sentence/emote adapter -> Piper or Fish -> SpeakerSink
+                              `-> ProsodyTap -> expression scheduler
 ```
 
-Also: [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) for the
-live `build_speech_stack` / VAD path.
+The control boundary is intentionally text and typed semantics. Raw audio,
+Whisper features, Fish codec tokens, and prosody never become motor commands.
+The model may propose only allowlisted tools, a strict plan contract, or one
+bounded next action. Deterministic code owns joint values, trajectory
+compilation, task admission, collision response, and E-stop.
 
-The probabilistic components are outside the motor-control boundary. Only named,
-preconfigured actions can cross it. A semantic proposal can be executed,
-deferred, expired, or rejected after fresh task state is checked; see
-[Dynamic city and behavior architecture](DYNAMIC_CITY_AND_BEHAVIOR.md).
+## Effective status
 
-## Current Gemma baseline and recommended Qwen evaluation
+| Part | Repository status | Effective desktop status |
+| --- | --- | --- |
+| Deterministic intent router | Implemented and active | Active for every final transcript |
+| Conversation model lane | Implemented through llama.cpp | Gemma artifact installed; server must be launched |
+| Deliberative planner lane | Implemented as an independent provider boundary | Uses the same Gemma provider by default; no separate planner model is configured |
+| Structured model output | Implemented | JSON-schema constrained, parsed, then safety-validated |
+| Dynamic prompt composition | Implemented and active | Owner profile, current situation, emote policy, and stub weather tool are composed under character budgets |
+| whisper.cpp | Provider, server binary, and `base.en` weights installed | Server was not running in this audit; no microphone endpoint connected |
+| Energy endpointing | Implemented and default | Becomes active only when STT is healthy and capture starts |
+| Silero v6 + Smart Turn v3 | Implemented and runtime-wired | ONNX artifacts and `onnxruntime` absent; not active |
+| Piper | Provider and install/run scripts implemented | Configured default, but binary and voice absent |
+| Fish S2 | Provider and isolated service implemented | Optional; not the configured default and not running |
+| Duplex cancellation | Implemented | Browser-tested; acoustic barge-in awaits a device/AEC integration |
+| Native speech-to-speech model | Research only | No native-audio model has dispatch authority |
 
-This workstation is configured with Google's official instruction-tuned **Gemma
-4 26B-A4B QAT Q4 GGUF** as its installed baseline. It is a
-mixture-of-experts model with 25.2B total and about 3.8B active parameters. That
-gives substantially stronger reasoning than the former Gemma 3 4B plan while
-retaining responsive CPU inference. When the reasoner service is launched, the
-14.4 GB GGUF is served from system RAM on 48 of the machine's 96 CPU cores so
-Fish Speech can reserve the 32 GB GPU. The model is Apache-2.0 and supports
-configurable thinking plus native function calling.
+## Crucial design choice: engineered cascade, not native speech-to-speech
 
-The next A/B candidate is **Qwen3.6-35B-A3B Q4_K_M**, a 35B-total/3B-active
-Apache-2.0 multimodal MoE with tool use and switchable thinking. The 20.4 GB
-llama.cpp conversion fits system RAM and is the stronger candidate for nuanced
-conversation plus semantic planning. Keep Gemma as the tested rollback until
-Parcel's conversation/action benchmark confirms the replacement. See [Audio,
-latency, and spatial intelligence](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md).
+Parcel uses an engineered speech cascade with a text reasoning boundary:
 
-Kimi K2.5 was evaluated but rejected for this device: its one-trillion-parameter
-checkpoint is designed for multi-GPU serving and is hundreds of gigabytes even
-when quantized. The application talks to llama.cpp's OpenAI-compatible
-`/v1/chat/completions` endpoint and does not depend on a hosted service.
-
-Parcel gives the model a dynamically generated list of allowable pose names and
-a bounded snapshot of current task state. A response may include one semantic
-next action:
-
-```json
-{
-  "reply": "I'm here with you.",
-  "tool_calls": [],
-  "intent": "conversation",
-  "affect": {"label": "sad", "confidence": 0.86},
-  "next_action": {
-    "kind": "skill",
-    "name": "play_bow",
-    "trigger": "inferred_affect",
-    "timing_preference": "when_safe",
-    "interruption_request": "none",
-    "reason": "gentle acknowledgement"
-  }
-}
+```text
+audio -> endpoint -> ASR final -> text brain -> validated semantics -> TTS
 ```
 
-The response is parsed strictly:
+Advantages:
 
-- it must be JSON;
-- at most four tool calls are accepted;
-- tool names and arguments are validated again by `SafetySupervisor`;
-- unknown poses and tools are rejected;
-- joint values never come from the language model;
-- force overrides, model priorities, and unknown action fields are rejected;
-- an invalid response falls back to deterministic command parsing.
+- the exact transcript, model decision, and accepted action can be logged and
+  replayed independently;
+- ASR, reasoning, TTS, and endpointing can be replaced and benchmarked one at
+  a time;
+- strict JSON schemas and deterministic validators sit between probability
+  and physical motion;
+- audio codec tokens cannot be mistaken for robot-action tokens; and
+- the same safe path works from a browser when audio hardware is absent.
 
-Ordinary turns explicitly disable thinking and cap output at 256 tokens. On the
-installed Gemma server, a one-line structured greeting improved from 35.24 s
-and 1,059 completion tokens to 1.88 s and 49 tokens. A complete runtime prompt
-with personality, tool policy, and dynamic context answered an empathetic test
-in 6.79 s with first output at 1.47 s; a subsequent conversational dashboard
-turn completed in 5.68 s with first output at 0.75 s. Thinking remains an
-explicit future planning tier, not a default tax on conversation.
+Limitations:
 
-Gemma may still hallucinate facts. Robot manuals and operational information
-should therefore be supplied through a later retrieval layer with citations,
-not assumed to exist in the model.
+- endpointing, complete-utterance STT, model generation, and first-sentence TTS
+  are serial today, so natural conversational latency is higher than a native
+  duplex model;
+- finalized text discards tone, hesitation, laughter, speaker overlap, and
+  other paralinguistic evidence;
+- an ASR error becomes the model's semantic input unless a later layer notices
+  inconsistency;
+- microphone ASR emits no partials, so speculative conversation cannot yet
+  hide model latency; and
+- interruption is energy/speech driven rather than content aware, so a brief
+  backchannel can cancel a reply.
 
-Official references:
+A native speech-to-speech model may later supply expressive audio or an
+inner-monologue proposal, but it should not gain direct PlanIR or actuator
+authority until it demonstrates typed tool reliability at the robot's safety
+bar. The cascade boundary remains the production default.
+
+## Crucial design choice: router, conversation, and planning lanes
+
+Parcel does not run “Gemma to extract intent, then another LLM to plan.” Every
+final transcript first passes through `DeterministicIntentRouter`, which emits
+a versioned `IntentFrame` and selects one of three paths:
+
+1. reviewed direct commands (stop, follow, bounded spatial movement, catalog
+   skills, navigation grammar) bypass model inference;
+2. ordinary language goes to the fast conversation contract; and
+3. compound/corrective physical tasks go to the deliberative PlanIR contract.
+
+The conversation and planner provider interfaces are independent, but
+`VoiceAgent` defaults `planner_model` to `language_model`. Thus the active
+design is **split contracts and routing over one resident Gemma backbone**, not
+two deployed brains. Both lanes receive the original transcript; one model's
+paraphrase never becomes another model's instruction.
+
+This choice saves memory, avoids another lossy intent-extraction hop, and lets
+deterministic commands stay fast. Independent interfaces still permit a later
+small conversational model or specialist planner. The trade-offs are resource
+contention and correlated failure: a slow, unavailable, or systematically
+wrong shared model affects both lanes. Before splitting models, a challenger
+must beat the incumbent on conversation quality, semantic planning, latency,
+memory, and recovery behavior—not merely TTFT.
+
+The planner is not a controller. It produces schema-constrained PlanIR (or the
+experimental PlanSketch contract), which is context-bound, validated against
+fresh camera/LiDAR state and a skill registry, and admitted by the task
+executive. Control-rate execution makes no LLM call.
+
+## Structured conversation and action authority
+
+The fast model returns one JSON object containing `reply`, up to four tool
+calls, `intent`, optional bounded affect, and at most one `next_action`.
+llama.cpp converts the response schema to a generation grammar; Parcel then
+parses and validates the result again.
+
+Important guards include:
+
+- the conversation model cannot call raw `set_velocity` or switch a motion
+  backend;
+- a negated, hypothetical, or information-seeking utterance cannot trigger
+  model-produced physical motion;
+- only one motion-producing action is admitted per decision;
+- affect-driven actions require confidence at or above 0.75, must match the
+  active personality mapping, and must be a cataloged social trajectory;
+- unknown tools, poses, skills, fields, and joint values fail closed; and
+- a newer partial/final turn can supersede a model result before its action
+  crosses the commit guard.
+
+Emergency phrases (`stop`, `stop now`, `emergency stop`) bypass model
+generation and latch the safety path synchronously. The model-facing safety
+layer is still not a hardware safety controller; Unitree velocity, torque,
+temperature, heartbeat, stale-command, and physical E-stop enforcement remain
+separate obligations.
+
+## Dynamic prompts, personality, and memory
+
+The system prompt comes from versioned personality/function templates plus
+`DynamicPromptComposer`. The composer renders stable sections first and a
+bounded volatile turn tail, exposes its last assembly at `GET /api/prompt`, and
+contains source failures rather than failing the voice turn.
+
+Implemented sources are:
+
+- short owner-profile facts;
+- current battery/simulator/task state;
+- the admitted emote catalog and use policy;
+- recent information-tool results; and
+- a read-only weather tool with a clearly labeled deterministic stub.
+
+This is inspectable and prevents unbounded context growth. It is not a full
+retrieval system: budgets are character counts rather than token counts,
+overflowing turn sections are dropped whole, the weather result is not live,
+and the “stable” plane is ordering for prefix reuse rather than an explicit
+application-managed KV cache. Operational/manual facts still need a cited,
+permissioned retrieval layer.
+
+`ConversationMemory` stores bounded text roles/messages in SQLite and never raw
+microphone audio. Persistence is not yet opt-in or encrypted, and no user-facing
+erase workflow is implemented; those are production requirements.
+
+## Model selection: evidence before promotion
+
+### Admitted incumbent: Gemma 4 26B-A4B Q4
+
+The installed 14.4 GB Gemma GGUF is Parcel's tested shared backbone. The CPU
+launcher remains the rollback path. A provenance-pinned llama.cpp b10236 CUDA
+profile was separately admitted with 31/31 layers offloaded and about 15.3 GB
+attributed idle GPU memory.
+
+Retained evidence is deliberately scoped:
+
+- frozen PlanIR generation: 5/5 cases; warm median TTFT 855.379 ms and median
+  complete usable plan 5,657.459 ms on the admitted GPU profile;
+- machine conversation suite: 10/10 parsed, 6/10 machine-case acceptance,
+  10/10 affect checks, 9/10 structured-safety checks, and 7/10 semantic
+  heuristics, with no human quality score; and
+- embodied frozen-plan execution is tested separately, so the language-model
+  result alone proves no navigation or Unitree behavior.
+
+Ordinary conversation disables thinking and caps generation at 256 tokens.
+Deliberative mode has a separate 1,024-token budget but also defaults to no
+thinking because prior hidden reasoning could exhaust the budget before valid
+JSON. See [the admitted GPU profile](REASONER_GPU_PROFILE.md) and the
+[conversation ledger](../evals/companion/conversation_quality_v1/results/README.md).
+
+### Installed but rejected: Ministral 3 8B challengers
+
+The Instruct Q4_K_M artifact is installed and achieved much faster median TTFT
+(101.944 ms), but it scored 5/10 machine conversation acceptance and 3/5
+PlanIR cases, with no complete-call latency win over Gemma. It was not
+promoted. The separate Reasoning checkpoint failed its predeclared one-case
+PlanSketch compatibility gate after malformed/repeated output exhausted 1,024
+tokens. It is also not active.
+
+This is the key model-selection lesson: fewer active parameters and faster
+first tokens do not guarantee faster valid structured output or safer task
+semantics.
+
+### Research candidates, not runtime claims
+
+Qwen3.6-35B-A3B Q4_K_M remains a plausible A/B candidate for nuanced
+conversation and tool use, but it is **not downloaded, profiled, or evaluated
+in this repository**. It must pass the same frozen conversation, PlanIR, and
+embodied gates before documentation calls it better. Kimi K2.5 remains
+impractical for this single workstation because its checkpoint targets a much
+larger serving footprint.
+
+Official model references:
 
 - [Gemma 4 26B-A4B QAT GGUF](https://huggingface.co/google/gemma-4-26B-A4B-it-qat-q4_0-gguf)
 - [Qwen3.6-35B-A3B](https://huggingface.co/Qwen/Qwen3.6-35B-A3B)
-- [Kimi K2.5 model card](https://huggingface.co/moonshotai/Kimi-K2.5)
+- [Ministral 3 8B Instruct](https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512)
+- [Kimi K2.5](https://huggingface.co/moonshotai/Kimi-K2.5)
 
-## Why whisper.cpp
+Check each model card's current license before distribution; the runtime
+architecture does not imply that all model artifacts share one software
+license.
 
-`whisper.cpp` provides local Whisper inference, quantized models, CPU/GPU
-backends, and an HTTP server. Parcel's `WhisperCppProvider` sends a WAV utterance
-to its `/inference` endpoint. This keeps speech recognition replaceable and
-avoids putting a large Python ML stack inside ROS.
+## ASR, VAD, and turn endpointing
 
-Recommended initial model:
+`WhisperCppProvider` sends a completed WAV utterance to the local
+`/inference` endpoint. `base.en` is the installed English prototype model. It
+is modular and local, but the call re-decodes the utterance after endpointing;
+it is not incremental streaming ASR.
 
-- `base.en` for a responsive English prototype;
-- move to `small.en` if command recognition is not accurate enough;
-- use a multilingual model only when required.
+The default runtime segmenter is dependency-free `EnergyVad`. The optional
+semantic mode is already implemented and wired:
 
-Voice activity detection should segment 16 kHz mono input before transcription.
-In-process capture uses `EnergyVad` in `voice_audio.py` (adaptive noise floor,
-hangover). The whisper.cpp launcher can still enable Silero VAD for the ASR
-service (`PARCEL_WHISPER_VAD=0` only for diagnostics). Do not retain raw
-microphone audio by default.
+- stateful Silero v6 probability on exact 512-sample/16 kHz frames;
+- Smart Turn v3 over the last eight seconds with Whisper-Tiny-compatible
+  80-bin log-mel features;
+- 0.20 s silence for a predicted-complete turn and 2.5 s for an incomplete
+  turn; and
+- explicit warnings and fixed-timeout/energy fallbacks when models fail.
 
-Official reference:
+It is not active on this desktop: the runtime ONNX weights and `onnxruntime`
+are missing, and the effective config remains energy endpointing. See [Audio,
+latency, expression, and spatial intelligence](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md)
+for the precise fallback and configuration behavior.
+
+Official references:
 
 - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
-- [whisper.cpp Silero VAD weights](https://huggingface.co/ggml-org/whisper-vad)
+- [Silero VAD](https://github.com/snakers4/silero-vad)
+- [Pipecat Smart Turn](https://github.com/pipecat-ai/pipecat/tree/main/src/pipecat/audio/turn/smart_turn)
 
-## TTS: Piper default, Fish S2 opt-in
+## TTS and audio tokens
 
-Onboard default TTS is **Piper** (CPU, low first-audio latency). **Fish S2 Pro**
-is the expressive docked/GPU option: official streaming API, multilingual
-generation, long-context/multi-speaker support, and fine prosody control. It
-runs in an isolated Python 3.12 + Torch CUDA environment and uses most of a
-32 GB Ada card's VRAM, so it is opt-in.
+Piper is the intended onboard default: CPU-resident, simple, and suitable for
+short first-sentence synthesis. Parcel spawns its binary for each sentence and
+wraps raw PCM in WAV using the voice metadata's native sample rate. Missing
+binary or voice files fail closed at provider resolution; they are currently
+missing on this host.
 
-Fish's RVQ audio tokens remain private to the speech server. Parcel sends text
-and receives ordered WAV/PCM chunks; audio tokens never cross into robot action
-reasoning. `DuplexVoiceSession` cancels active output on barge-in and only sends
-finalized transcripts to `VoiceAgent`. Partial ASR hypotheses are never actions.
+Fish S2 Pro remains the expressive docked/GPU option in an isolated Python
+3.12/Torch environment. `FishSpeechProvider` keeps Fish's semantic/RVQ audio
+tokens inside the service and exposes only text-in/audio-bytes-out. This is the
+right safety boundary: the action brain gains nothing from codec tokens and
+would become harder to validate if they entered its vocabulary.
 
-Fish S2 Pro uses the Fish Audio Research License. Research and non-commercial
-use are permitted, but production/commercial use needs a separate Fish license.
-Sesame CSM remains only as a legacy adapter and was not selected for this host.
+Although the Fish adapter implements its native streaming endpoint,
+`RobotRuntime` currently wraps all synthesizers in
+`SentenceChunkedSynthesizer`, whose stream calls the inner blocking
+`synthesize()` once per sentence. Effective Fish playback is therefore
+sentence-chunked, not token/chunk streamed, and in-flight synthesis cannot be
+cancelled until that blocking request returns. This should be corrected or
+explicitly benchmarked before calling the Fish path low-latency streaming.
+
+Inline `[emote:name:intensity]` tags are removed before TTS and routed through
+the validated Gesture proposal path. They are useful sentence-level body
+language, but they fire at sentence synthesis start rather than confirmed
+speaker playback and are ignored/rejected when activity gates do not admit the
+gesture.
+
+Fish S2 Pro's model has a research-oriented license; commercial deployment
+requires a separate license review. Sesame CSM artifacts exist locally as a
+legacy experiment, but no Sesame provider is selected by `build_speech_stack`.
 
 Official references:
 
 - [Fish Audio S2 Pro](https://huggingface.co/fishaudio/s2-pro)
-- [Fish installation guide](https://speech.fish.audio/install/)
 - [Fish Speech source](https://github.com/fishaudio/fish-speech)
+- [Piper source](https://github.com/rhasspy/piper)
 
-## Runtime layout
+## Duplex behavior and expressive output
 
-### Parcel/ROS environment
+`DuplexVoiceSession` serializes final turns while TTS runs on an independent
+worker. A newer partial or final:
 
-The `.parcel` environment contains the lightweight orchestration code, MuJoCo
-Python bindings, YAML support, tests, and audio adapter. On a ROS 2 Humble
-machine, recreate `.parcel` using its system Python 3.10 so `rclpy` remains ABI
-compatible.
+- cancels the active llama.cpp stream cooperatively;
+- keeps only the newest queued final;
+- invalidates stale actions before the commit point;
+- interrupts and flushes speech output; and
+- increments a shared speech epoch so queued prosody motion is discarded.
 
-### Gemma server
+This is genuine concurrency and cancellation at the application boundary, but
+not yet robust acoustic full duplex. There is no AEC, microphone ASR does not
+emit partials, and the energy guard can suppress quiet barge-in. Hardware AEC
+through the XVF3800 speaker-reference path is the intended next integration.
 
-The official llama.cpp binary and Gemma GGUF are installed locally. Run:
+Expression is intentionally subordinate to task motion. The 50 Hz layer adds
+bounded idle body offsets, owner-orient/thinking state, and prosody-timed head
+nod state. It turns off for E-stop, critical battery, proximity hazards, and
+skills, and becomes head-only during locomotion. That priority design is safe
+and composable, but Go2's lack of a neck means beat nods and head-only motion
+are not physically embodied yet; only body height/pitch offsets actuate in the
+MuJoCo stance.
 
-```bash
-./scripts/launch_reasoner.sh
-```
+## Runtime and installation
 
-Then enable `language_model.enabled` in `robot.yaml`, or test directly with:
+The app environment stays lightweight. Fish keeps its Torch/CUDA stack in its
+own Python 3.12 environment; llama.cpp and whisper.cpp are separate native
+servers. This avoids ROS/MuJoCo/Python ABI conflicts and lets each heavy service
+restart independently.
 
-```bash
-parcel-agent --llm --text "Could you bow and tell me when you are done?"
-```
-
-Keep the server on loopback unless authentication and network encryption are
-added.
-
-### Whisper server
-
-The official whisper.cpp server and `base.en` weights are installed:
-
-```bash
-./scripts/launch_whisper.sh
-```
-
-Parcel expects WAV input at `/inference`.
-
-This starts the ASR service only. The desktop has Bluetooth/PipeWire capability,
-but no headset was paired during the audit. Parcel remains in text mode until an
-endpoint and continuous VAD/AEC transport are connected.
-
-### Fish service
-
-Fish has a dedicated uv-managed Python 3.12 environment under its ignored
-third-party checkout. Start its fp16 CUDA server with:
+Reasoner:
 
 ```bash
-./scripts/launch_fish_speech.sh
+# CPU rollback profile on port 8080
+scripts/launch_reasoner.sh
+
+# Admitted pinned CUDA profile (doctor runs before launch)
+scripts/launch_reasoner_gpu.sh
 ```
 
-Keeping this 187-package Torch stack outside `.parcel` avoids Python and native
-dependency conflicts with MuJoCo or a future ROS environment.
-
-This starts the TTS service only. `FishSpeechProvider` and cancellable duplex
-output are implemented and tested, but speaker playback is intentionally not
-constructed until an output endpoint and echo-canceling transport exist.
-
-Health check:
+Speech prerequisites and service lifecycle:
 
 ```bash
-python - <<'PY'
-from urllib.request import urlopen
-print(urlopen("http://127.0.0.1:8091/v1/health").read().decode())
-PY
+scripts/install_speech_services.sh --help
+scripts/install_speech_services.sh
+scripts/run_speech_services.sh
+scripts/run_speech_services.sh --check
 ```
 
-## Safety behavior
+The installer places whisper.cpp and Piper in ignored repository directories;
+the service script starts whisper and verifies Piper. Fish remains separate:
 
-`stop`, `stop now`, and `emergency stop` bypass Gemma entirely. A stop engages
-the in-process safety latch and publishes `/parcel/stop_request`.
+```bash
+scripts/launch_fish_speech.sh
+```
 
-For streamed text, a newer partial/final turn cancels an older streamed model
-request and invalidates it before its tools can commit. Only the newest pending
-final is retained. Multiple tools in one model response are validated up front,
-but Parcel does not yet schedule pose/velocity choreography over time;
-do not treat consecutive tool calls as choreography—represent timed motion as
-an authored trajectory until a cancellable sequence scheduler is added.
+`speech.mode: auto` uses whichever STT/TTS roles are healthy and otherwise
+keeps text control available. `speech.mode: audio` requires both roles and
+fails startup if either is unavailable. The default `configs/robot.yaml` now
+places supported audio settings under `speech:`. Its `fish_reference_id`,
+`fish_streaming`, and `barge_in` keys remain reserved/inert; do not assume a
+visible YAML key is effective without a consumer and contract test.
 
-Before controlling hardware, the downstream Unitree controller must also:
+Keep every model service on loopback unless authentication, authorization, and
+transport encryption are added.
 
-- maintain its own emergency-stop latch;
-- enforce robot-specific position, velocity, torque, and temperature limits;
-- reject stale commands;
-- interpolate poses rather than stepping directly to targets;
-- require an explicit operator action to clear an emergency stop;
-- stop safely if ROS, DDS, network, or companion-computer heartbeats disappear.
+## Latency and evaluation policy
 
-The current supervisor validates intent. It is not a replacement for the
-robot-specific low-level safety controller.
+`/latency` records model TTFT, complete reasoning, planner stages, TTS stages,
+action commit, status, query, and response. The current final-text clock starts
+after microphone endpointing and STT, and first “spoken” audio is only a queue
+handoff, so the dashboard does not yet prove acoustic end-to-end latency.
 
-## Privacy and memory
+Initial product gates should remain:
 
-`ConversationMemory` stores text roles and messages in SQLite. It does not store
-raw audio. A production deployment should:
-
-- make persistence opt-in;
-- provide a command to erase stored conversations;
-- encrypt sensitive data at rest;
-- never store voice-reference audio without explicit consent;
-- keep operational logs separate from personal conversation memory.
-
-## Performance targets and implemented measurement
-
-Open `/latency` for the implemented per-turn and component dashboard. llama.cpp
-responses are accumulated as a stream to measure true model TTFT, but the full
-JSON still validates before action commit.
-
-Measure each stage independently:
-
-| Stage | Initial target |
+| Boundary | Target / policy |
 | --- | --- |
-| End-of-speech detection | under 300 ms |
-| Final transcript | under 1 second after speech ends |
-| First Gemma decision (CPU profile) | measure; currently interactive, not real-time |
-| Safety validation | under 10 ms |
-| First generated speech | under 1.5 seconds |
-| Emergency-stop recognition | immediate deterministic path |
+| Complete semantic silence tail | about 200 ms when Smart Turn predicts complete |
+| Final STT | measure from semantic commit; not yet instrumented |
+| Conversation TTFT | report warm/cold and valid-JSON completion separately |
+| Safety validation | under 10 ms and never bypassed |
+| First acoustic speech | under 500 ms P50 only after presentation timing exists |
+| Emergency stop | deterministic, synchronous, and independent of model health |
 
-Warm the models at startup and cache common phrases such as “Stopping” and
-“Battery low.” Optimize only after collecting latency measurements on the
-actual companion computer.
+Warm models before a latency run, retain failed/superseded traces, and never
+promote a model on TTFT alone. Conversation needs human review; planning needs
+schema/semantic gates; physical capability needs headless embodied execution
+and eventually Unitree evidence.
+
+## Remaining production gaps
+
+- connected and explicitly selected microphone/speaker endpoints;
+- hardware AEC and robot ego-noise testing;
+- true streaming ASR partials and content-aware interruption;
+- endpoint/STT/acoustic-presentation timestamps in the latency ledger;
+- native Fish chunk streaming through the runtime wrapper;
+- physical expression/neck embodiment and calibrated motion/audio lag;
+- encrypted, opt-in memory with an erase workflow;
+- authenticated service endpoints and operator enrollment; and
+- independently verified Unitree low-level safety, watchdog, and hardware
+  emergency-stop behavior.
