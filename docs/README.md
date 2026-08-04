@@ -39,6 +39,9 @@ this checkout from target architecture and research proposals.
 
 ## Eval entry points (outside `docs/`)
 
-- Product-facing companion scenarios: `evals/companion_nav/`
-- Offline BARN / Habitat research proxies: `evals/external/README.md`
-- Frozen PlanIR gates: `evals/companion/planner_quality_v2/README.md`
+- Product-facing companion scenarios and ledger:
+  [evals/companion_nav/results/README.md](../evals/companion_nav/results/README.md)
+- Offline BARN / Habitat research proxies:
+  [evals/external/README.md](../evals/external/README.md)
+- Frozen PlanIR gates:
+  [evals/companion/planner_quality_v2/README.md](../evals/companion/planner_quality_v2/README.md)

@@ -6,6 +6,10 @@ Unblocked work, ranked by impact per effort. Nothing here waits on hardware,
 an install, or a decision — it can start now. Roadmap rationale lives in
 [../docs/RESEARCH_2026_ROADMAPS.md](../docs/RESEARCH_2026_ROADMAPS.md).
 
+> **Scheduled:** N1 (→W8), N2 (→W1/W2), N3 (→W3/W4), N4 (→W5/W6), N6 (→W7),
+> and N8 (→W9) are cards in [../scrum/20260805/](../scrum/20260805/). They
+> leave this list when their sprint acceptance lands, not when assigned.
+
 ---
 
 ## N1 — Move emote triggers onto the playback clock · **days** · closes U6

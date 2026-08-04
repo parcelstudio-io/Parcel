@@ -109,6 +109,7 @@ from `pip freeze` after install). Key versions at last install:
 | PyYAML | 6.0.3 |
 | pytest | 8.4.2 |
 | ruff | 0.16.1 |
+| msgpack | 1.2.1 |
 | sounddevice | 0.5.5 |
 | parcel-robot-dog | 0.1.0 (editable) |
 

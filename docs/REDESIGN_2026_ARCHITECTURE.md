@@ -123,8 +123,9 @@ rate with zero LLM calls; LLM planning asynchronous per turn.
   occlusion/reacquire, sudden stop, pedestrian cut-in, doorway, POI
   navigation) scored on collision count (no sliding forgiveness),
   following-success band, personal-space intrusion time, jerk, and
-  time-to-reacquire, with the repo's ledger discipline. See its README for
-  metric definitions and `does_not_prove`.
+  time-to-reacquire, with the repo's ledger discipline. See the
+  [result ledger](../evals/companion_nav/results/README.md) for metric
+  definitions and `does_not_prove` boundaries.
 
 ### Viewer
 - `/viewer` — self-contained 2.5D city viewer (static geometry from

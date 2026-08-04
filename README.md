@@ -135,6 +135,7 @@ currently contains the editable project plus:
 - `mujoco`
 - `numpy`
 - `PyYAML`
+- `msgpack`
 - `sounddevice`
 - `pytest`
 - `ruff`
