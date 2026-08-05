@@ -4,6 +4,22 @@ This chapter explains how robots work for a reader who is experienced in
 software engineering but new to robotics and hardware. It uses the Parcel
 robot-dog stack as the concrete example.
 
+## Learning paths
+
+Two daily courses extend this orientation:
+
+- [Robotics Systems for Senior Software Engineers](robotics-60-days/README.md)
+  follows the full Parcel stack from hardware through navigation, voice,
+  safety, production architecture, and frontier research.
+- [Physics for Robot Builders](physics-60-days/README.md) is a parallel Day
+  0–60 crash course in measurement, mechanics, contact, electricity,
+  actuators, heat, structures, sound, optics, sensing, feedback, and
+  simulation.
+
+The robotics track is architecture-first; the physics track is
+calculation-and-intuition-first. Read them independently and use each daily
+lesson's companion link when a physical idea needs its software-system view.
+
 ## The core mental model
 
 A conventional service often looks like this:

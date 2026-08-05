@@ -1,6 +1,9 @@
 # Robotics Systems for Senior Software Engineers (60 days)
 
-Companion course for building **Parcel** on a **Unitree Go2**. Orientation: [`../INTRO.md`](../INTRO.md).
+Companion course for building **Parcel** on a **Unitree Go2**. Start with the
+[orientation](../INTRO.md). Use the parallel [Day 0–60 physics crash
+course](../physics-60-days/README.md) when you want a slower, calculation-first
+explanation of the physical concepts.
 
 Each lesson is ~800–1,100 words (hard cap ~1,200): one mental model, light equations, an SE analogy, one ASCII diagram, Parcel/Go2 mapping with codebase pointers, a failure story, three retrieval questions, and an optional ~10-minute exercise.
 
@@ -51,7 +54,7 @@ Ground truth for everything that follows: physics, morphology, power, and sensin
 | 27 | [day-27-planning-search.md](day-27-planning-search.md) | Planning and search |
 | 28 | [day-28-smooth-local-navigation.md](day-28-smooth-local-navigation.md) | Smooth local navigation |
 | 29 | [day-29-dynamic-obstacles-owner-tracking.md](day-29-dynamic-obstacles-owner-tracking.md) | Dynamic obstacles, owner tracking |
-| 30 | day-30-synthesis-sidewalk-lamppost-owner-orbit.md | Synthesis: sidewalk / orbit tasks *(add if missing)* |
+| 30 | [day-30-synthesis-sidewalk-lamppost-owner.md](day-30-synthesis-sidewalk-lamppost-owner.md) | Synthesis: sidewalk, lamppost, and owner-orbit tasks |
 
 ## Module 4: Autonomy and production robotics software — Days 31–40
 
@@ -66,7 +69,7 @@ Ground truth for everything that follows: physics, morphology, power, and sensin
 | 37 | [day-37-reality-gap.md](day-37-reality-gap.md) | The reality gap |
 | 38 | [day-38-testing-evaluation.md](day-38-testing-evaluation.md) | Testing and evaluation |
 | 39 | [day-39-observability-latency.md](day-39-observability-latency.md) | Observability and latency |
-| 40 | day-40-synthesis-production-readiness.md | Synthesis: production readiness *(add if missing)* |
+| 40 | [day-40-synthesis-production-readiness.md](day-40-synthesis-production-readiness.md) | Synthesis: production readiness |
 
 ## Module 5: Building a voice-enabled companion — Days 41–50
 
