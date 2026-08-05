@@ -155,6 +155,24 @@ def parse_spatial_intent(text: str) -> SpatialIntent | None:
             revolutions=1.0,
         )
 
+    # Product-bar orbit phrasings: "circle around the owner", "orbit the owner",
+    # "circle me" — must exercise the regression lane (task_6 arbitration).
+    orbit_short = re.fullmatch(
+        r"(?:circle|orbit)(?:\s+around)?\s+(?:me|owner|the owner)"
+        r"(?:\s+(?P<count>[a-z0-9]+)(?:\s+(?:times?|circles?))?)?",
+        clean,
+    )
+    if orbit_short:
+        count = _step_count(orbit_short.group("count"), default=1)
+        if count != 1:
+            return None
+        return SpatialIntent(
+            "orbit_owner",
+            "counterclockwise",
+            size="normal",
+            revolutions=1.0,
+        )
+
     steps = re.fullmatch(
         r"(?:walk|move|go|take)\s+"
         r"(?:(?P<before>[a-z0-9]+)\s+steps?\s+)?"
@@ -169,6 +187,24 @@ def parse_spatial_intent(text: str) -> SpatialIntent | None:
         direction = "backward" if steps.group("direction") in {"back", "backward"} else "forward"
         return SpatialIntent("move_steps", direction, steps=count)
     return None
+
+
+def parse_follow_intent(text: str) -> bool:
+    """True when the utterance is a high-confidence follow-owner command."""
+
+    clean = _imperative_body(text)
+    if clean is None:
+        return False
+    return (
+        re.fullmatch(
+            r"(?:follow(?:\s+(?:me|owner|the owner))?|"
+            r"come\s+with\s+me|"
+            r"stay\s+with(?:\s+(?:me|the owner|owner))?|"
+            r"heel)",
+            clean,
+        )
+        is not None
+    )
 
 
 def _imperative_body(text: str) -> str | None:

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parcel · Evals</title>
+  <style>
+    :root {
+      --page: #f4f1ea;
+      --panel: #fffdf8;
+      --ink: #1c1915;
+      --muted: #6b645a;
+      --line: #d9d0c2;
+      --accent: #0f6a4f;
+      --fail: #a33b2b;
+      --pass: #1f7a3a;
+      --tier: #245b8a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font: 14px/1.45 "IBM Plex Sans", "Source Sans 3", ui-sans-serif, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, #efe6d4 0%, transparent 45%),
+        linear-gradient(180deg, #f7f3ea, #efe8db);
+      min-height: 100vh;
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 22px; border-bottom: 1px solid var(--line);
+      background: rgba(255,253,248,0.9); backdrop-filter: blur(8px);
+      position: sticky; top: 0; z-index: 2;
+    }
+    h1 { margin: 0; font: 700 20px/1.2 "IBM Plex Serif", Georgia, serif; letter-spacing: -0.02em; }
+    nav a { color: var(--accent); margin-left: 14px; text-decoration: none; font-weight: 600; }
+    .filters { display: flex; gap: 10px; padding: 14px 22px; flex-wrap: wrap; }
+    select, button {
+      border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+      border-radius: 8px; padding: 8px 12px; font: inherit;
+    }
+    button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+    button:disabled { opacity: 0.5; }
+    .grid {
+      display: grid; gap: 12px; padding: 0 22px 28px;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+    .card {
+      background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; display: flex; flex-direction: column; gap: 8px;
+      box-shadow: 0 8px 20px rgba(40, 30, 10, 0.04);
+    }
+    .card h3 { margin: 0; font-size: 14px; }
+    .meta { color: var(--muted); font-size: 12px; }
+    .thumb {
+      height: 110px; border-radius: 8px; border: 1px solid var(--line);
+      background: #ebe4d6; position: relative; overflow: hidden;
+    }
+    .thumb canvas { width: 100%; height: 100%; display: block; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .badge {
+      font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+      background: #e7eef5; color: var(--tier);
+    }
+    .badge.pass { background: #dff3e4; color: var(--pass); }
+    .badge.fail { background: #f6e1dd; color: var(--fail); }
+    #status {
+      margin: 0 22px 12px; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--line); background: var(--panel);
+      min-height: 42px;
+    }
+    .bar { height: 6px; background: #e5ddd0; border-radius: 999px; overflow: hidden; margin-top: 6px; }
+    .bar > i { display: block; height: 100%; width: 0; background: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Parcel · Instruction Nav Evals</h1>
+    <nav>
+      <a href="/viewer">Viewer</a>
+      <a href="/">Panel</a>
+    </nav>
+  </header>
+  <div class="filters">
+    <select id="familyFilter"><option value="">All families</option></select>
+    <select id="tierFilter"><option value="">All tiers</option>
+      <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+    </select>
+    <button id="refreshBtn">Refresh</button>
+    <button id="batchBtn" class="primary">Run minival batch</button>
+  </div>
+  <div id="status">Loading scenarios…</div>
+  <div class="grid" id="grid"></div>
+  <script>
+    var scenarios = [];
+    var csrf = "__PARCEL_CSRF_TOKEN__";
+
+    function $(id) { return document.getElementById(id); }
+
+    function drawThumb(canvas, goal) {
+      var ctx = canvas.getContext("2d");
+      var w = canvas.width = canvas.clientWidth * devicePixelRatio;
+      var h = canvas.height = canvas.clientHeight * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      var cw = canvas.clientWidth, ch = canvas.clientHeight;
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.fillStyle = "#ebe4d6";
+      ctx.fillRect(0, 0, cw, ch);
+      function map(x, y) {
+        return [cw * (x + 10) / 20, ch * (10 - y) / 20];
+      }
+      ctx.strokeStyle = "#c9bead";
+      ctx.strokeRect(8, 8, cw - 16, ch - 16);
+      if (!goal) return;
+      ctx.fillStyle = "rgba(15,106,79,0.28)";
+      ctx.strokeStyle = "#0f6a4f";
+      ctx.lineWidth = 2;
+      if (goal.kind === "polygon" && goal.polygon && goal.polygon.length) {
+        ctx.beginPath();
+        goal.polygon.forEach(function (p, i) {
+          var m = map(p[0], p[1]);
+          if (i === 0) ctx.moveTo(m[0], m[1]); else ctx.lineTo(m[0], m[1]);
+        });
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      } else if (goal.kind === "disc" && goal.center) {
+        var c = map(goal.center[0], goal.center[1]);
+        var r = Math.max(6, (goal.radius_m || 0.5) * (cw / 20));
+        ctx.beginPath(); ctx.arc(c[0], c[1], r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      } else if (goal.kind === "relative_band" && goal.center) {
+        var c2 = map(goal.center[0], goal.center[1]);
+        var lo = Math.max(4, (goal.band_m ? goal.band_m[0] : 0.4) * (cw / 20));
+        var hi = Math.max(lo + 2, (goal.band_m ? goal.band_m[1] : 1.5) * (cw / 20));
+        ctx.beginPath(); ctx.arc(c2[0], c2[1], hi, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(c2[0], c2[1], lo, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+
+    function render() {
+      var family = $("familyFilter").value;
+      var tier = $("tierFilter").value;
+      var grid = $("grid");
+      grid.innerHTML = "";
+      scenarios.filter(function (s) {
+        return (!family || s.family === family) && (!tier || s.tier === tier);
+      }).forEach(function (s) {
+        var card = document.createElement("div");
+        card.className = "card";
+        var last = s.last_result;
+        var badge = last
+          ? (last.score && last.score.success
+              ? '<span class="badge pass">PASS</span>'
+              : '<span class="badge fail">' + ((last.score && last.score.failure) || "FAIL") + '</span>')
+          : '<span class="badge">' + s.tier + '</span>';
+        card.innerHTML =
+          "<div class='row'><h3>" + s.family + "</h3>" + badge + "</div>" +
+          "<div class='meta'>" + s.instruction + "</div>" +
+          "<div class='thumb'><canvas></canvas></div>" +
+          "<div class='row'>" +
+          "<button data-id='" + s.episode_id + "' class='select'>Mark goal</button>" +
+          "<button data-id='" + s.episode_id + "' class='run primary'>Run</button>" +
+          "<button data-id='" + s.episode_id + "' class='live'>Live</button>" +
+          "</div>";
+        grid.appendChild(card);
+        drawThumb(card.querySelector("canvas"), s.goal);
+      });
+      grid.querySelectorAll("button.select").forEach(function (btn) {
+        btn.onclick = function () { selectEpisode(btn.dataset.id); };
+      });
+      grid.querySelectorAll("button.run").forEach(function (btn) {
+        btn.onclick = function () { runEpisode(btn.dataset.id, "headless"); };
+      });
+      grid.querySelectorAll("button.live").forEach(function (btn) {
+        btn.onclick = function () { runEpisode(btn.dataset.id, "live"); };
+      });
+    }
+
+    async function loadScenarios() {
+      var res = await fetch("/api/evals/scenarios");
+      var data = await res.json();
+      scenarios = data.scenarios || [];
+      var families = Array.from(new Set(scenarios.map(function (s) { return s.family; }))).sort();
+      var sel = $("familyFilter");
+      var current = sel.value;
+      sel.innerHTML = '<option value="">All families</option>';
+      families.forEach(function (f) {
+        var opt = document.createElement("option");
+        opt.value = f; opt.textContent = f; sel.appendChild(opt);
+      });
+      sel.value = current;
+      render();
+      pollStatus();
+    }
+
+    async function selectEpisode(id) {
+      await fetch("/api/evals/select", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-Parcel-CSRF": csrf},
+        body: JSON.stringify({episode_id: id})
+      });
+      pollStatus();
+    }
+
+    async function runEpisode(id, mode) {
+      $("status").textContent = "Starting " + mode + " run…";
+      await fetch("/api/evals/run", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-Parcel-CSRF": csrf},
+        body: JSON.stringify({episode_id: id, mode: mode})
+      });
+      pollStatus();
+    }
+
+    async function pollStatus() {
+      var res = await fetch("/api/evals/status");
+      var s = await res.json();
+      var html = "<strong>" + (s.status || "idle") + "</strong>";
+      if (s.active_instruction) html += " · " + s.active_instruction;
+      if (s.last_result && s.last_result.failure) {
+        html += " · <span style='color:" + (s.last_result.success ? "var(--pass)" : "var(--fail)") + "'>" +
+          (s.last_result.success ? "PASS" : s.last_result.failure) + "</span>";
+      }
+      if (s.error) html += " · error: " + s.error;
+      html += "<div class='bar'><i style='width:" + Math.round((s.progress || 0) * 100) + "%'></i></div>";
+      $("status").innerHTML = html;
+      if (s.status === "running") setTimeout(pollStatus, 700);
+    }
+
+    $("refreshBtn").onclick = loadScenarios;
+    $("familyFilter").onchange = render;
+    $("tierFilter").onchange = render;
+    $("batchBtn").onclick = async function () {
+      if (!scenarios.length) return;
+      $("status").textContent = "Starting minival batch…";
+      await fetch("/api/evals/batch", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-Parcel-CSRF": csrf},
+        body: JSON.stringify({nav_mode: "candidate"})
+      });
+      pollStatus();
+    };
+
+    loadScenarios();
+    setInterval(function () { if (document.visibilityState === "visible") pollStatus(); }, 2000);
+  </script>
+</body>
+</html>

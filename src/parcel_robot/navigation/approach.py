@@ -3,6 +3,11 @@ from __future__ import annotations
 import math
 
 from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
+from parcel_robot.instructnav.relations import (
+    nearest_point_in_region,
+    next_to_placement,
+    towards_waypoint,
+)
 
 from .base import GoalPose, NavObservation
 from .goals import SemanticGoal
@@ -31,6 +36,7 @@ def safe_approach_pose(
         minimum=0.05,
         maximum=0.35,
     )
+    robot_xy = (observation.position[0], observation.position[1])
     if goal.terminal_relation == "inside" and candidate.polygon:
         terminal_clearance = _bounded_metadata_float(
             candidate.metadata,
@@ -56,14 +62,46 @@ def safe_approach_pose(
         )
         point = _safe_polygon_point(
             candidate.polygon,
-            (observation.position[0], observation.position[1]),
+            robot_xy,
             approach_clearance,
             blocked_points=blocked_points,
             obstacle_clearance=obstacle_clearance,
         )
         if point is None:
-            return None
+            # N-S3 fallback: nearest inset point without LiDAR pruning.
+            try:
+                point = nearest_point_in_region(
+                    candidate.polygon, robot_xy, inset_m=approach_clearance
+                )
+            except ValueError:
+                return None
         x, y = point
+    elif goal.terminal_relation == "towards":
+        x, y = towards_waypoint((candidate.x, candidate.y), robot_xy, stop_short_m=1.2)
+        arrival_radius = max(arrival_radius, 0.2)
+    elif goal.terminal_relation == "next_to":
+        footprint = _bounded_metadata_float(
+            candidate.metadata, "radius_m", default=0.3, minimum=0.05, maximum=2.0
+        )
+        occupied_ids = {item[0] for item in blocked_points if item[0]}
+
+        def _occupied(px: float, py: float) -> bool:
+            for oid, ox, oy in blocked_points:
+                if oid in occupied_ids and math.hypot(px - ox, py - oy) < obstacle_stop_m:
+                    return True
+            return False
+
+        placement = next_to_placement(
+            (candidate.x, candidate.y),
+            footprint,
+            robot_xy,
+            band_m=(0.4, 1.5),
+            occupied=_occupied,
+        )
+        if placement is None:
+            return None
+        x, y, _heading = placement
+        arrival_radius = max(arrival_radius, 0.08)
     elif goal.terminal_relation == "near":
         stand_off = _bounded_metadata_float(
             candidate.metadata,

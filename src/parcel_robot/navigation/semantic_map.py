@@ -165,18 +165,72 @@ def _candidate(item: Any, index: int) -> SemanticCandidate:
     )
 
 
+_SIGLIP_MATCHER: Any = None
+_SIGLIP_INIT = False
+
+
+def _siglip_matcher() -> Any:
+    """Lazy SigLIP seam — loud-degrades once when weights are missing."""
+
+    global _SIGLIP_MATCHER, _SIGLIP_INIT
+    if _SIGLIP_INIT:
+        return _SIGLIP_MATCHER
+    _SIGLIP_INIT = True
+    try:
+        from parcel_robot.instructnav.siglip import SigLIP2Matcher
+
+        _SIGLIP_MATCHER = SigLIP2Matcher()
+    except Exception:  # noqa: BLE001 — keep grounder online if seam fails
+        _SIGLIP_MATCHER = None
+    return _SIGLIP_MATCHER
+
+
 def _matches(query: str, label: str, aliases: Any) -> bool:
+    """Match a query against one candidate label (plus that label's aliases).
+
+    Important: do **not** inject other vocabulary classes into ``texts`` just
+    because the query names a class — that made every candidate match
+    ``\"sidewalk\"`` / ``\"lamppost\"`` and collapsed grounding to AMBIGUOUS.
+    """
+
     normalized_query = _normalized(query)
     if not normalized_query:
         return False
     texts = [label]
     if isinstance(aliases, (list, tuple)):
         texts.extend(str(alias) for alias in aliases[:16])
+    try:
+        from parcel_robot.city_semantics import CLASS_ALIASES
+
+        for class_label, class_aliases in CLASS_ALIASES.items():
+            class_norm = _normalized(class_label)
+            label_in_class = class_norm == _normalized(label) or any(
+                _normalized(alias) == _normalized(label) for alias in class_aliases
+            )
+            if not label_in_class:
+                continue
+            texts.append(class_label)
+            texts.extend(class_aliases)
+            # Query is this class name or one of its aliases → accept.
+            if class_norm == normalized_query or any(
+                _normalized(alias) == normalized_query for alias in class_aliases
+            ):
+                return True
+    except ImportError:
+        pass
     for text in texts:
         normalized_text = _normalized(text)
         if normalized_text and (
             normalized_query in normalized_text or normalized_text in normalized_query
         ):
+            return True
+    # SigLIP-2 embedding glue (N-C1): wired into the grounder match path.
+    # Missing weights → loud string_fallback inside the matcher (U25).
+    # Only score against this candidate's label-local texts.
+    matcher = _siglip_matcher()
+    if matcher is not None:
+        hit = matcher.match(str(query), [str(t) for t in texts])
+        if hit is not None:
             return True
     return False
 

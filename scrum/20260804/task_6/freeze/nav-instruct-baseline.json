@@ -1,0 +1,21 @@
+{
+  "collision_total": 0,
+  "episode_digest": "f462934221e6fb150371a1e00edaa372a171f4ff1d4b3cd8c0b44033f4abc886",
+  "failure_histogram": {
+    "control_error": 1,
+    "grounding_error": 0,
+    "none": 0,
+    "planning_error": 16,
+    "refusal": 6,
+    "search_error": 2
+  },
+  "frozen_baseline": true,
+  "minival": true,
+  "mode": "baseline",
+  "n": 25,
+  "report": "nav-instruct-v1-baseline-20260805T004302Z.json",
+  "report_id": "nav-instruct-v1-baseline-20260805T004302Z",
+  "seed": 20260804,
+  "spl": 0.0,
+  "sr": 0.0
+}

@@ -1,0 +1,827 @@
+{
+  "aggregate": {
+    "by_family_tier": [
+      {
+        "dtg_m": 0.0,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "circle_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "A"
+      },
+      {
+        "dtg_m": 0.1607467039053554,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "circle_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "B"
+      },
+      {
+        "dtg_m": 7.5082439194737995,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "circle_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "C"
+      },
+      {
+        "dtg_m": 0.0,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "circle_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "D"
+      },
+      {
+        "dtg_m": 2.6283019789569906,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "circle_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "E"
+      },
+      {
+        "dtg_m": 0.37082933460924106,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "follow_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "A"
+      },
+      {
+        "dtg_m": 0.8234519244689811,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "follow_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "B"
+      },
+      {
+        "dtg_m": 7.935405743984172,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "follow_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "C"
+      },
+      {
+        "dtg_m": 0.2070189336426298,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "follow_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "D"
+      },
+      {
+        "dtg_m": 2.9726433975313933,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "follow_owner",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "E"
+      },
+      {
+        "dtg_m": 1.6749840509961134,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "A"
+      },
+      {
+        "dtg_m": 3.8701398584300364,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "B"
+      },
+      {
+        "dtg_m": 1.79,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "C"
+      },
+      {
+        "dtg_m": 4.170797289396147,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "D"
+      },
+      {
+        "dtg_m": 56.159536928923096,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0
+        },
+        "family": "object_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "E"
+      },
+      {
+        "dtg_m": 2.5078048854703496,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "A"
+      },
+      {
+        "dtg_m": 2.178654645383282,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "B"
+      },
+      {
+        "dtg_m": 8.161942092560896,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "C"
+      },
+      {
+        "dtg_m": 4.465159260237734,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "D"
+      },
+      {
+        "dtg_m": 55.2003361982978,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 1,
+          "search_error": 0
+        },
+        "family": "object_relative",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "E"
+      },
+      {
+        "dtg_m": 0.0,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "A"
+      },
+      {
+        "dtg_m": 0.0,
+        "failures": {
+          "control_error": 1,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "B"
+      },
+      {
+        "dtg_m": 2.475,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 1,
+          "refusal": 0,
+          "search_error": 0
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "C"
+      },
+      {
+        "dtg_m": 1.7950276845112847,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 1
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "D"
+      },
+      {
+        "dtg_m": 56.139209034025185,
+        "failures": {
+          "control_error": 0,
+          "grounding_error": 0,
+          "none": 0,
+          "planning_error": 0,
+          "refusal": 0,
+          "search_error": 1
+        },
+        "family": "region_goal",
+        "n": 1,
+        "spl": 0.0,
+        "sr": 0.0,
+        "tier": "E"
+      }
+    ],
+    "collision_total": 0,
+    "does_not_prove": [
+      "sim ground-truth semantics \u2260 camera perception \u2014 closes with hardware perception",
+      "absent-target honesty under open-vocab detectors (tier E guards the class only)",
+      "downloaded VLM/VLA policies (rungs 6\u20137)"
+    ],
+    "failure_histogram": {
+      "control_error": 1,
+      "grounding_error": 0,
+      "none": 0,
+      "planning_error": 16,
+      "refusal": 6,
+      "search_error": 2
+    },
+    "n": 25,
+    "runner_version": "nav-instruct-v1.0",
+    "spl": 0.0,
+    "sr": 0.0
+  },
+  "by_family_tier": [
+    {
+      "dtg_m": 0.0,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "circle_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "A"
+    },
+    {
+      "dtg_m": 0.1607467039053554,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "circle_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "B"
+    },
+    {
+      "dtg_m": 7.5082439194737995,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "circle_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "C"
+    },
+    {
+      "dtg_m": 0.0,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "circle_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "D"
+    },
+    {
+      "dtg_m": 2.6283019789569906,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "circle_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "E"
+    },
+    {
+      "dtg_m": 0.37082933460924106,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "follow_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "A"
+    },
+    {
+      "dtg_m": 0.8234519244689811,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "follow_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "B"
+    },
+    {
+      "dtg_m": 7.935405743984172,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "follow_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "C"
+    },
+    {
+      "dtg_m": 0.2070189336426298,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "follow_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "D"
+    },
+    {
+      "dtg_m": 2.9726433975313933,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "follow_owner",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "E"
+    },
+    {
+      "dtg_m": 1.6749840509961134,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 1,
+        "search_error": 0
+      },
+      "family": "object_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "A"
+    },
+    {
+      "dtg_m": 3.8701398584300364,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 1,
+        "search_error": 0
+      },
+      "family": "object_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "B"
+    },
+    {
+      "dtg_m": 1.79,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "object_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "C"
+    },
+    {
+      "dtg_m": 4.170797289396147,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 1,
+        "search_error": 0
+      },
+      "family": "object_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "D"
+    },
+    {
+      "dtg_m": 56.159536928923096,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 1,
+        "search_error": 0
+      },
+      "family": "object_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "E"
+    },
+    {
+      "dtg_m": 2.5078048854703496,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 1,
+        "search_error": 0
+      },
+      "family": "object_relative",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "A"
+    },
+    {
+      "dtg_m": 2.178654645383282,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "object_relative",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "B"
+    },
+    {
+      "dtg_m": 8.161942092560896,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "object_relative",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "C"
+    },
+    {
+      "dtg_m": 4.465159260237734,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "object_relative",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "D"
+    },
+    {
+      "dtg_m": 55.2003361982978,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 1,
+        "search_error": 0
+      },
+      "family": "object_relative",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "E"
+    },
+    {
+      "dtg_m": 0.0,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "region_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "A"
+    },
+    {
+      "dtg_m": 0.0,
+      "failures": {
+        "control_error": 1,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "region_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "B"
+    },
+    {
+      "dtg_m": 2.475,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 1,
+        "refusal": 0,
+        "search_error": 0
+      },
+      "family": "region_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "C"
+    },
+    {
+      "dtg_m": 1.7950276845112847,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 0,
+        "search_error": 1
+      },
+      "family": "region_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "D"
+    },
+    {
+      "dtg_m": 56.139209034025185,
+      "failures": {
+        "control_error": 0,
+        "grounding_error": 0,
+        "none": 0,
+        "planning_error": 0,
+        "refusal": 0,
+        "search_error": 1
+      },
+      "family": "region_goal",
+      "n": 1,
+      "spl": 0.0,
+      "sr": 0.0,
+      "tier": "E"
+    }
+  ],
+  "report_id": "nav-instruct-v1-baseline-20260805T004302Z"
+}

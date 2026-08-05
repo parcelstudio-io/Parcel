@@ -64,10 +64,53 @@ def observation(
                 revolutions=1.0,
             ),
         ),
+        (
+            "circle around the owner",
+            SpatialIntent(
+                "orbit_owner",
+                "counterclockwise",
+                size="normal",
+                revolutions=1.0,
+            ),
+        ),
+        (
+            "orbit the owner",
+            SpatialIntent(
+                "orbit_owner",
+                "counterclockwise",
+                size="normal",
+                revolutions=1.0,
+            ),
+        ),
+        (
+            "circle me",
+            SpatialIntent(
+                "orbit_owner",
+                "counterclockwise",
+                size="normal",
+                revolutions=1.0,
+            ),
+        ),
     ],
 )
 def test_parse_bounded_spatial_intents(text, expected):
     assert parse_spatial_intent(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "follow the owner",
+        "follow me",
+        "come with me",
+        "stay with the owner",
+        "heel",
+    ],
+)
+def test_parse_follow_intent_product_bar(text):
+    from parcel_robot.navigation.spatial import parse_follow_intent
+
+    assert parse_follow_intent(text)
 
 
 @pytest.mark.parametrize(

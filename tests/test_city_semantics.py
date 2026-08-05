@@ -30,14 +30,16 @@ def test_city_scene_exposes_sidewalk_regions_with_terminal_contract(city_semanti
 
 def test_city_lampposts_have_aliases_standoff_and_sidewalk_support(city_semantics):
     _, objects = city_semantics
-    lamps = {item["id"]: item for item in objects}
+    lamps = {
+        item["id"]: item for item in objects if item["label"] == "lamppost"
+    }
 
     assert {"lamp_post_1", "lamp_post_2"} <= set(lamps)
     for lamp in lamps.values():
         metadata = lamp["metadata"]
         assert lamp["label"] == "lamppost"
         assert "street light" in metadata["aliases"]
-        assert metadata["associated_lidar_ids"] == [lamp["id"]]
+        assert lamp["id"] in metadata["associated_lidar_ids"]
         assert metadata["support_label"] == "sidewalk"
         assert len(metadata["support_polygon"]) == 4
         minimum_center_distance = lamp["metadata"]["radius_m"] + 0.32 + 0.8
@@ -70,3 +72,27 @@ def test_city_semantic_camera_only_returns_tracks_inside_its_view(city_semantics
     assert all(item["reachable"] is True for item in (*visible_regions, *visible_objects))
     assert any(item["label"] == "crosswalk" for item in visible_regions)
     assert all(item["id"] != "lamp_post_1" for item in visible_objects)
+
+
+def test_vocabulary_includes_bench_tree_planter_building_crosswalk(city_semantics):
+    regions, objects = city_semantics
+    labels = {item["label"] for item in objects}
+    region_labels = {item["label"] for item in regions}
+    assert {"bench", "tree", "planter", "building", "lamppost"} <= labels
+    assert {"sidewalk", "crosswalk"} <= region_labels
+
+    by_id = {item["id"]: item for item in objects}
+    assert "bench_1" in by_id
+    bench = by_id["bench_1"]
+    assert "seat" in bench["metadata"]["aliases"]
+    assert any(name.startswith("bench_") for name in bench["metadata"]["associated_lidar_ids"])
+    assert bench["metadata"]["goal_region"]["kind"] == "disc"
+    assert bench["metadata"]["goal_region"]["center"][0] == pytest.approx(-2.5)
+
+    crosswalk = next(item for item in regions if item["label"] == "crosswalk")
+    assert crosswalk["id"] == "crosswalk"
+    assert crosswalk["metadata"]["goal_region"]["kind"] == "polygon"
+    assert "crossing" in crosswalk["metadata"]["aliases"]
+
+    tree = next(item for item in objects if item["label"] == "tree")
+    assert any(name.startswith("tree_") for name in tree["metadata"]["associated_lidar_ids"])

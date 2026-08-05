@@ -441,3 +441,41 @@ with the words. That needs real audio output, which U5 blocks.
 - **To verify:** run a 30–60 min companion session with logging on; confirm
   rotate triggers, disk budget, and that `duplex.logging: false` stops writes.
 - **Risk:** unexpected PII retention or log growth on long demos.
+
+## U24 — NAV_INSTRUCT_V1 SR still zero on minival · **major**
+
+- **Claim (task_6):** grounding rewire (memory + ScanForTarget frontier +
+  vocabulary) fixes "go to the sidewalk" / bench / towards instructions.
+- **Reality:** historical freeze minival SR = 0.0 (refusals + planning stalls).
+  Candidate mode enables memory/scan/frontier; baseline mode is frustum-only
+  and reproducible from `--mode baseline`. Attribution distinguishes
+  grounding vs search. Follow/orbit regression lane now parses; spatial SR is
+  scored on real poses (no goal-disc teleport). No family yet shows a measured
+  SR win on the frozen split.
+- **To verify:** re-run paired baseline/candidate minival after further
+  ScanForTarget / SearchEntity rungs; promote only on seeded deltas with
+  failure attribution.
+- **Risk:** treating "typed outcomes + no dead-end reply" as navigation success.
+
+## U25 — SigLIP-2 weights missing; matcher degrades in grounder · **major**
+
+- **Claim (task_6 N-C1):** SigLIP-2 B/16 is Grounder v2 embedding glue.
+- **Reality:** `SigLIP2Matcher` is wired into `ObservationSemanticMap` label
+  matching, but weights are not downloaded. Missing weights log a loud warning
+  and the matcher falls back to string/alias match — not true cosine class
+  matching. Do not treat synonym cells as embedding-solved.
+- **To verify:** place Apache-2.0 SigLIP-2 B/16 under
+  `~/.cache/parcel/siglip2-b16/` and re-run synonym / Tier D cells.
+- **Risk:** synonym grounding looks solved in design while still string-only.
+
+## U26 — Eval panel live mode does not re-place entities · **minor**
+
+- **Claim (task_6 N-O4):** live mode adopts the episode (places entities, injects
+  instruction) with goal region pre-drawn in `/viewer`.
+- **Reality:** select/run APIs mark the GoalRegion and inject voice text; start
+  pose / distractor placement hooks are not yet wired into the live sim.
+  Headless mode applies `placement_overrides` / distractors / removals.
+  `/api/evals/batch` runs the full minival (not scenario[0] only).
+- **To verify:** click Live on a Tier B episode and confirm robot spawn + goal
+  overlay + instruction dispatch match the episode spec.
+- **Risk:** operators judge live UI runs as harness-equivalent.

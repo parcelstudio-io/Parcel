@@ -26,6 +26,7 @@ FALLBACK_CONFIG = Path(__file__).with_name("config") / "robot.yaml"
 UI_PATH = Path(__file__).with_name("ui") / "index.html"
 LATENCY_UI_PATH = Path(__file__).with_name("ui") / "latency.html"
 VIEWER_UI_PATH = Path(__file__).with_name("ui") / "viewer.html"
+EVALS_UI_PATH = Path(__file__).with_name("ui") / "evals.html"
 MAX_REQUEST_BYTES = 65_536
 
 #: Ordered (prefix, class) pairs; the first matching prefix wins, so longer
@@ -213,6 +214,12 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
                 "text/html; charset=utf-8",
             )
             return
+        if path in {"/evals", "/evals.html"}:
+            body = EVALS_UI_PATH.read_text(encoding="utf-8").replace(
+                "__PARCEL_CSRF_TOKEN__", self.server.csrf_token
+            )
+            self._send_bytes(body.encode(), "text/html; charset=utf-8")
+            return
         if path == "/api/scene":
             try:
                 self._send_json(scene_geometry(self.server.scene_path))
@@ -220,7 +227,18 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
                 self._send_json({"detail": str(error)}, HTTPStatus.SERVICE_UNAVAILABLE)
             return
         if path == "/api/state":
-            self._send_json(self.server.runtime.snapshot())
+            payload = self.server.runtime.snapshot()
+            try:
+                from parcel_robot.eval_panel import live_goal_overlay
+
+                overlay = live_goal_overlay()
+                if overlay is not None:
+                    payload = dict(payload)
+                    payload["eval"] = overlay
+            except (ImportError, RuntimeError, TypeError, ValueError):
+                # Overlay is best-effort; never break /api/state.
+                pass
+            self._send_json(payload)
             return
         if path == "/api/latency":
             self._send_json(self.server.runtime.latency_snapshot())
@@ -230,6 +248,17 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/prompt":
             self._send_json(self.server.runtime.prompt_inspection())
+            return
+        if path == "/api/evals/scenarios":
+            from parcel_robot.eval_panel import EVAL_PANEL
+
+            EVAL_PANEL.ensure_scenarios()
+            self._send_json({"scenarios": EVAL_PANEL.list_scenarios()})
+            return
+        if path == "/api/evals/status":
+            from parcel_robot.eval_panel import EVAL_PANEL
+
+            self._send_json(EVAL_PANEL.snapshot())
             return
         self._send_json({"detail": "not found"}, HTTPStatus.NOT_FOUND)
 
@@ -293,6 +322,45 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
                     self._string(payload, "key"), self._string(payload, "value")
                 )
                 self._send_json(self.server.runtime.prompt_inspection())
+                return
+            if path == "/api/evals/run":
+                from parcel_robot.eval_panel import EVAL_PANEL
+
+                episode_id = self._string(payload, "episode_id")
+                mode = str(payload.get("mode") or "headless").lower()
+                if mode == "live":
+                    selected = EVAL_PANEL.select(episode_id)
+                    # Live mode: place start pose is sim-owned; inject instruction.
+                    turn_id = self.server.runtime.submit_voice_text(
+                        str(selected["instruction"]), is_final=True
+                    )
+                    self._send_json(
+                        {
+                            "accepted": True,
+                            "mode": "live",
+                            "turn_id": turn_id,
+                            **selected,
+                        },
+                        HTTPStatus.ACCEPTED if turn_id is not None else HTTPStatus.OK,
+                    )
+                    return
+                selected = EVAL_PANEL.start_headless(episode_id)
+                self._send_json({"accepted": True, "mode": "headless", **selected}, HTTPStatus.ACCEPTED)
+                return
+            if path == "/api/evals/batch":
+                from parcel_robot.eval_panel import EVAL_PANEL
+
+                nav_mode = str(payload.get("nav_mode") or "candidate").lower()
+                if nav_mode not in {"baseline", "candidate"}:
+                    raise ValueError("nav_mode must be baseline or candidate")
+                accepted = EVAL_PANEL.start_batch(mode=nav_mode)
+                self._send_json(accepted, HTTPStatus.ACCEPTED)
+                return
+            if path == "/api/evals/select":
+                from parcel_robot.eval_panel import EVAL_PANEL
+
+                selected = EVAL_PANEL.select(self._string(payload, "episode_id"))
+                self._send_json(selected)
                 return
             self._send_json({"detail": "not found"}, HTTPStatus.NOT_FOUND)
         except PermissionError as error:

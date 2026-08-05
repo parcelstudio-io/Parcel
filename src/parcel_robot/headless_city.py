@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -29,6 +30,7 @@ from parcel_robot.mujoco_lidar import (
 )
 from parcel_robot.navigation.approach import point_in_polygon_with_clearance
 from parcel_robot.navigation.base import NavObservation
+from parcel_robot.navigation.follow import FollowOwnerController
 from parcel_robot.navigation.goals import navigation_directive_from_text
 from parcel_robot.navigation.pipeline import DirectiveNavigator
 from parcel_robot.navigation.reactive_safety import (
@@ -42,6 +44,7 @@ from parcel_robot.navigation.semantic_map import (
 from parcel_robot.navigation.spatial import (
     SpatialBehaviorConfig,
     SpatialBehaviorController,
+    parse_follow_intent,
     parse_spatial_intent,
 )
 
@@ -132,6 +135,8 @@ class HeadlessCityWorld:
         self.simulation_dt_s = simulation_dt_s
         self.robot_radius_m = robot_radius_m
         self._region_specs, self._object_specs = extract_city_semantics(self.model)
+        self._canonical_region_specs = copy.deepcopy(self._region_specs)
+        self._canonical_object_specs = copy.deepcopy(self._object_specs)
         self._obstacle_geom_ids = self._extract_obstacle_geom_ids()
         # Occlusion-true raycast scan state: robot root body for self-return
         # filtering plus a seeded RNG so headless runs stay deterministic.
@@ -188,7 +193,11 @@ class HeadlessCityWorld:
         *,
         robot: tuple[float, float, float] = (0.0, 0.0, 0.0),
         owner: tuple[float, float] | None = None,
+        restore_semantics: bool = True,
     ) -> SimObservation:
+        if restore_semantics:
+            self._region_specs = copy.deepcopy(self._canonical_region_specs)
+            self._object_specs = copy.deepcopy(self._canonical_object_specs)
         if self.model.nkey > 0:
             mujoco.mj_resetDataKeyframe(self.model, self.data, 0)
         else:
@@ -208,6 +217,88 @@ class HeadlessCityWorld:
         self._path = [(self._x, self._y)]
         self._minimum_clearance_m = self.truth_minimum_clearance(self._x, self._y)
         return self.observe()
+
+    def apply_placement_overrides(self, placement: dict[str, Any] | None) -> None:
+        """Apply episode distractors / removals / pose overrides to semantic specs.
+
+        Geometry in MuJoCo stays put; the perception adapter reads these specs,
+        so tier B–E attribution sees the episode's intended world.
+        """
+
+        if not placement:
+            return
+        remove = {
+            str(item)
+            for item in (placement.get("remove_entities") or [])
+            if item is not None
+        }
+        if remove:
+            self._object_specs = [
+                item for item in self._object_specs if str(item.get("id")) not in remove
+            ]
+            self._region_specs = [
+                item for item in self._region_specs if str(item.get("id")) not in remove
+            ]
+        distractors = placement.get("distractors") or {}
+        if isinstance(distractors, dict):
+            for entity_id, spec in distractors.items():
+                if not isinstance(spec, dict):
+                    continue
+                try:
+                    x = float(spec["x"])
+                    y = float(spec["y"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                label = str(spec.get("label") or "bench")
+                radius = float(spec.get("radius_m") or 0.7)
+                self._object_specs.append(
+                    {
+                        "id": str(entity_id),
+                        "label": label,
+                        "position": [x, y, 0.0],
+                        "metadata": {
+                            "vicinity_radius_m": radius + 1.4,
+                            "goal_region": {
+                                "kind": "disc",
+                                "center": [x, y],
+                                "radius_m": radius + 1.4,
+                                "anchor_entity": str(entity_id),
+                            },
+                            "aliases": (),
+                        },
+                    }
+                )
+        # Optional direct entity pose overrides (non-distractor keys).
+        for key, spec in placement.items():
+            if key in {
+                "robot",
+                "distractors",
+                "remove_entities",
+                "absent_target",
+                "owner_path",
+                "pedestrian_distractors",
+                "owner",
+            }:
+                continue
+            if not isinstance(spec, dict) or "x" not in spec or "y" not in spec:
+                continue
+            try:
+                x = float(spec["x"])
+                y = float(spec["y"])
+            except (TypeError, ValueError):
+                continue
+            for item in self._object_specs:
+                if str(item.get("id")) == str(key):
+                    item["position"] = [x, y, 0.0]
+                    metadata = dict(item.get("metadata") or {})
+                    goal = dict(metadata.get("goal_region") or {})
+                    if goal.get("kind") == "disc":
+                        goal["center"] = [x, y]
+                        metadata["goal_region"] = goal
+                    item["metadata"] = metadata
+            for item in self._region_specs:
+                if str(item.get("id")) == str(key) and "polygon" in spec:
+                    item["polygon"] = spec["polygon"]
 
     def apply(self, command: VelocityCommand) -> None:
         values = (command.vx, command.vy, command.vyaw)
@@ -496,6 +587,8 @@ class HeadlessCityQualityHarness:
     def run(self, text: str, *, max_steps: int = 1800) -> HeadlessTaskResult:
         if max_steps <= 0:
             raise ValueError("max_steps must be positive")
+        if parse_follow_intent(text):
+            return self._run_follow(text, max_steps=max_steps)
         spatial_intent = parse_spatial_intent(text)
         if spatial_intent is not None:
             return self._run_spatial(text, max_steps=max_steps)
@@ -582,6 +675,60 @@ class HeadlessCityQualityHarness:
             semantic_scan_steps=scan_steps,
             terminal_command=terminal_command,
             required_obstacle_clearance_m=required_clearance,
+        )
+
+    def _run_follow(self, text: str, *, max_steps: int) -> HeadlessTaskResult:
+        """Regression-lane owner follow via FollowOwnerController."""
+
+        controller = FollowOwnerController()
+        controller.start("direct")
+        trace: list[HeadlessTraceSample] = []
+        status = "timed_out"
+        reason = "follow_step_limit"
+        terminal_command = self.world.command
+        for _ in range(max_steps):
+            observation = self.world.observe()
+            decision = controller.step(observation, now=observation.timestamp)
+            command, _ = apply_reactive_safety(
+                decision.command,
+                observation,
+                policy=self.reactive_safety,
+                owner_orbit=False,
+                orbit_radius_m=0.0,
+                now=observation.timestamp,
+                require_fresh_telemetry=False,
+            )
+            terminal_command = command
+            trace.append(
+                HeadlessTraceSample(
+                    time_s=observation.timestamp,
+                    robot=observation.robot,
+                    command=command,
+                    phase=decision.state,
+                    note=decision.reason,
+                    progress=0.0,
+                )
+            )
+            self.world.apply(command)
+            # Follow has no natural "done"; treat stable following/holding as success.
+            if decision.state in {"following", "holding", "holding_behind"}:
+                status = "completed"
+                reason = decision.reason or f"follow_{decision.state}"
+                if len(trace) >= max(20, max_steps // 4):
+                    break
+            self.world.step()
+        self.world.stop()
+        controller.stop()
+        return self._result(
+            text,
+            status=status,
+            reason=reason,
+            target_id="owner-1",
+            terminal_relation="follow",
+            trace=trace,
+            semantic_scan_steps=0,
+            terminal_command=terminal_command,
+            required_obstacle_clearance_m=self.reactive_safety.obstacle_stop_m,
         )
 
     def _run_spatial(self, text: str, *, max_steps: int) -> HeadlessTaskResult:

@@ -65,7 +65,11 @@ _DESTINATION_PATTERNS = (
         r"(?:to|onto|into)\s+(?P<destination>.+)$"
     ),
     re.compile(
-        r"^(?:wait|stand|stay|go|walk|move)(?:\s+over)?\s+"
+        r"^(?:go|navigate|walk|move|head)(?:\s+over)?\s+"
+        r"towards?\s+(?P<destination>.+)$"
+    ),
+    re.compile(
+        r"^(?:wait|stand|stay|sit|go|walk|move)(?:\s+over)?\s+"
         r"(?:by|near|beside|next\s+to|at)\s+(?P<destination>.+)$"
     ),
 )
@@ -128,6 +132,8 @@ def semantic_goal_from_directive(directive: str) -> SemanticGoal:
     near_relation = bool(
         re.search(r"\b(?:by|near|beside|next\s+to|at)\s+(?:the\s+)?", normalized)
     )
+    towards_relation = bool(re.search(r"\btowards?\b", normalized))
+    sit_relation = bool(re.search(r"\bsit\b", normalized))
     query = normalized
     for pattern in _DESTINATION_PATTERNS:
         match = pattern.fullmatch(normalized)
@@ -142,6 +148,27 @@ def semantic_goal_from_directive(directive: str) -> SemanticGoal:
             kind="region",
             terminal_relation="inside",
             terminal_behavior="hold" if near_relation else "stop",
+        )
+    if towards_relation:
+        return SemanticGoal(
+            query=query,
+            kind="object",
+            terminal_relation="towards",
+            terminal_behavior="stop",
+        )
+    if sit_relation and ("next to" in normalized or near_relation):
+        return SemanticGoal(
+            query=query,
+            kind="object",
+            terminal_relation="next_to",
+            terminal_behavior="hold",
+        )
+    if near_relation:
+        return SemanticGoal(
+            query=query,
+            kind="object",
+            terminal_relation="near",
+            terminal_behavior="hold",
         )
     return SemanticGoal(
         query=query,

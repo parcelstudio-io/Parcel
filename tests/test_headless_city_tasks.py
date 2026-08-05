@@ -239,6 +239,8 @@ def test_harness_uses_navigation_config_selected_by_robot_config(
         )
     )
     navigation["semantic_search"]["max_steps"] = 1
+    # Keep ScanForTarget frontier off so this asserts the configured scan budget.
+    navigation["semantic_search"]["frontier_budget_steps"] = 0
     configured_navigation = tmp_path / "navigation.yaml"
     configured_navigation.write_text(yaml.safe_dump(navigation), encoding="utf-8")
 

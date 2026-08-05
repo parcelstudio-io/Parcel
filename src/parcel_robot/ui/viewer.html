@@ -866,6 +866,56 @@
       drawLabel(c, label, p[0], p[1] + 12, THEME.goal);
     }
 
+    function drawGoalRegion(c, evalState) {
+      if (!evalState || !evalState.goal_region) return;
+      var region = evalState.goal_region;
+      c.save();
+      c.fillStyle = "rgba(74, 58, 167, 0.18)";
+      c.strokeStyle = THEME.goal;
+      c.lineWidth = 2;
+      if (region.kind === "polygon" && region.polygon && region.polygon.length >= 3) {
+        c.beginPath();
+        for (var i = 0; i < region.polygon.length; i++) {
+          var pt = project(region.polygon[i][0], region.polygon[i][1], 0.02);
+          if (i === 0) c.moveTo(pt[0], pt[1]); else c.lineTo(pt[0], pt[1]);
+        }
+        c.closePath();
+        c.fill();
+        c.stroke();
+        var mid = project(region.polygon[0][0], region.polygon[0][1], 0.02);
+        drawLabel(c, "GOAL REGION", mid[0], mid[1] - 10, THEME.goal);
+      } else if (region.kind === "disc" && region.center) {
+        var center = project(region.center[0], region.center[1], 0.02);
+        // Approximate meters→pixels using a short projected offset.
+        var rim = project(region.center[0] + (region.radius_m || 0.5), region.center[1], 0.02);
+        var rad = Math.max(6, Math.hypot(rim[0] - center[0], rim[1] - center[1]));
+        c.beginPath();
+        c.arc(center[0], center[1], rad, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+        drawLabel(c, "GOAL REGION", center[0], center[1] - rad - 8, THEME.goal);
+      } else if (region.kind === "relative_band" && region.center) {
+        var c0 = project(region.center[0], region.center[1], 0.02);
+        var lo = region.band_m ? region.band_m[0] : 0.4;
+        var hi = region.band_m ? region.band_m[1] : 1.5;
+        var loP = project(region.center[0] + lo, region.center[1], 0.02);
+        var hiP = project(region.center[0] + hi, region.center[1], 0.02);
+        var loR = Math.max(4, Math.hypot(loP[0] - c0[0], loP[1] - c0[1]));
+        var hiR = Math.max(loR + 2, Math.hypot(hiP[0] - c0[0], hiP[1] - c0[1]));
+        c.beginPath(); c.arc(c0[0], c0[1], hiR, 0, Math.PI * 2); c.stroke();
+        c.beginPath(); c.arc(c0[0], c0[1], loR, 0, Math.PI * 2); c.stroke();
+        drawLabel(c, "NEXT-TO BAND", c0[0], c0[1] - hiR - 8, THEME.goal);
+      }
+      if (evalState.search_state) {
+        drawLabel(c, String(evalState.search_state), 16, 28, THEME.warning);
+      }
+      if (evalState.last_result) {
+        var verdict = evalState.last_result.success ? "PASS" : ("FAIL · " + (evalState.last_result.failure || ""));
+        drawLabel(c, verdict, 16, 46, evalState.last_result.success ? THEME.good : THEME.critical);
+      }
+      c.restore();
+    }
+
     function drawCompassAndScale(c) {
       var w = canvas.clientWidth, h = canvas.clientHeight;
       // North indicator: projected world +y direction.
@@ -938,6 +988,7 @@
       if (state && state.robot) {
         drawTrail(ctx);
         drawLidar(ctx, state.robot, state.lidar_scan);
+        drawGoalRegion(ctx, state.eval);
         drawGoal(ctx, state.navigation);
         drawAgents(ctx, state.dynamic_agents);
         drawOwner(ctx, state.owner);
