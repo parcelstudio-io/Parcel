@@ -87,7 +87,9 @@ def test_pose_message_roundtrip():
     "message",
     [
         {"version": 1, "type": "walk", "vx": math.nan, "vy": 0.0, "vyaw": 0.0},
-        {"version": 1, "type": "walk", "vx": 0.7, "vy": 0.0, "vyaw": 0.0},
+        # 2026-08-04: probe raised from 0.7 when max_vx went 0.6 -> 1.0; the
+        # assertion is "over-limit walk rejected", so it must exceed the clamp.
+        {"version": 1, "type": "walk", "vx": 1.2, "vy": 0.0, "vyaw": 0.0},
         {
             "version": 1,
             "type": "pose",

@@ -5,7 +5,7 @@ description: Sensor-only rolling LiDAR occupancy map, A* route, and smooth waypo
 checkpoint: ""
 device: cpu
 controller:
-  cruise_vx: 0.60
+  cruise_vx: 0.85  # raised 2026-08-04 (was 0.60)
   align_enter_deg: 28.0
   align_exit_deg: 7.0
   max_yaw_rate: 0.90

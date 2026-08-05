@@ -12,6 +12,9 @@ __pycache__/
 .cache/speech/
 parcel_memory.sqlite3
 
+# Duplex D0/D1 aligned-stream corpus (local transcripts; do not commit)
+logs/duplex/
+
 # Local model downloads (fetch from Hugging Face; do not commit weights)
 models/**/.cache/
 models/**/*.pt

@@ -23,6 +23,9 @@ camera/LiDAR observations → semantic grounding → grid/behavior controller
                               simulator or Unitree Sport controller
 
 conversation/prosody ──→ subordinate expression channel (never locomotion authority)
+
+observed replies + admitted behavior ──→ D0 TEXT/ACT frames ──→ local corpus
+                                      (shadow consumer; no control authority)
 ```
 
 ## D1. The model emits semantic intent, never raw motor control
@@ -57,6 +60,18 @@ the high-rate balance/foot-placement loop. A future custom controller must
 implement the same HAL contracts in
 [`control/base.py`](../src/parcel_robot/control/base.py).
 
+Normal outgoing commands are jerk-limited after arbitration and collision/TTC
+safety and immediately before `ControlManager`; emergency/terminal stops bypass
+and reset the shaper. This placement preserves a single actuator handoff without
+letting comfort smoothing delay a stop.
+
+Interruption semantics distinguish **pause** from **stop**. A pausable channel
+releases its lease and records a bounded `ResumeIntent`; the intended resumption
+path re-enters the controller/executive rather than replaying a stale velocity.
+That contract is incomplete today: semantic NavigateTo redispatch does not
+consume the stored intent or call `resume_navigation`, fresh-observation is only
+metadata, and search→follow still uses a legacy tuple.
+
 Viewer hotkeys, direct simulator IPC, and the standalone `Dog` API are explicit
 debug/development bypasses and do not inherit this whole boundary.
 
@@ -67,7 +82,9 @@ to solve balance before the product behavior is useful.
 **Limitations:** Sport is a closed vendor subsystem with limited internal
 observability and tuning; feedback does not prove every foot is safe; network,
 frame, mode, and firmware commissioning remain hardware-specific. The software
-E-stop is not independent hardware protection.
+E-stop is not independent hardware protection. The measured 42% commanded-jerk
+reduction uses a companion-eval replica that stops before `ControlManager` and
+the HAL; it is not a physical smoothness result.
 
 **Revisit when:** repeated tasks require dynamics Sport cannot express, and a
 new controller passes simulator, hardware-in-the-loop, fall, thermal, and stop
@@ -77,6 +94,8 @@ tests behind the same manager. Never run Sport and direct `LowCmd` together.
 
 **Decision:** `grid_v1` consumes the rolling raycast/LiDAR contract, constructs
 occupancy, plans with A*, and produces forward-preferred mid-level motion.
+It overlays bounded predicted-agent costs on A* and applies an all-track
+time-to-collision brake before command shaping.
 [`reactive_safety.py`](../src/parcel_robot/navigation/reactive_safety.py) applies
 an independent final veto to `RobotRuntime` velocity sources. Learned entries fail closed until an inference
 adapter and evaluation evidence exist.
@@ -88,7 +107,12 @@ paths, and reason codes.
 **Limitations:** a 2-D local grid is weak on curbs, stairs, overhangs,
 non-stationary crowd prediction, long-range localization, and ambiguous visual
 semantics. A reactive veto can stop safely yet deadlock. Simulation labels make
-semantic grounding look easier than it will be on hardware.
+semantic grounding look easier than it will be on hardware. The current dynamic
+cost can leave a predicted corridor; its normalized gradient and smoothing
+exposure checks prevent two earlier erasure modes. Arrival-time-free sampling
+still does not establish socially correct pass-behind behavior. The predictive
+TTC gate engages, but its benefit is not yet separated from the existing
+reactive-person brake.
 
 **Revisit when:** a learned or model-predictive proposer improves product
 scenario metrics and external proxies while the independent safety layer and
@@ -141,13 +165,18 @@ turn can dispatch an action. Audio codec tokens remain inside a speech provider.
 [`voice_pipeline.py`](../src/parcel_robot/voice_pipeline.py), and
 [`providers.py`](../src/parcel_robot/providers.py).
 
+The D0 10 Hz TEXT+ACT frame overlay is an aligned observation/logging contract,
+not a second action authority; see D14. The audio path is still turn-committed
+input, not simultaneous streaming acoustic tokens.
+
 **Advantages:** STT/TTS models remain replaceable; text plans are auditable;
 barge-in does not grant uncommitted speech motor authority; degraded text mode
 continues when hardware or a service fails.
 
 **Limitations:** cascades compound latency and recognition errors; text loses
 prosody; full duplex without AEC is fragile; sentence chunking is less natural
-than a native streaming speech model. Current desktop audio is not operational.
+than a native streaming speech model. Current desktop audio is not operational,
+and deterministic fillers have only fake-TTS/scripted-clock evidence.
 
 **Revisit when:** an open speech-to-speech model fits target compute and meets
 tool reliability, cancellation, privacy, and latency gates. Even then, treat its
@@ -188,7 +217,9 @@ responsive without an LLM call per beat.
 vendor controller; simulator appeal does not prove support-polygon or torque
 safety; pitch/accent heuristics are language- and voice-dependent; Go2 has no
 neck joint, so the current head-nod state is not a directly actuated gesture on
-that embodiment.
+that embodiment. Owner-proximity gating suppresses expression through much of
+some follow episodes. The new `StimulusBus` and `ReactionArbiter` are pure,
+unit-tested foundations only; they are not yet fed or ticked by the runtime.
 
 **Revisit when:** hardware actuation lag and safe envelopes are measured. A
 whole-body motion mixer may replace offsets, but must retain epoch cancellation,
@@ -227,7 +258,8 @@ process boundaries isolate the GIL from native real-time loops.
 dynamic typing can hurt tail latency; packaging Python 3.14 alongside ROS Humble
 is awkward. The current wheel is not relocatable because prompts and repository
 configuration assets are not packaged and the internal fallback config has
-drifted; only source-checkout/editable execution is supported.
+drifted; its legacy speech keys are rejected by current validation. Only
+source-checkout/editable execution is supported.
 
 **Revisit when:** profiling shows a specific deadline or resource budget is
 missed. Port that component behind an existing protocol and compare identical
@@ -262,6 +294,10 @@ Arbitrary UI-provided system prompts are not accepted. See
 [`dynamic_prompting.py`](../src/parcel_robot/dynamic_prompting.py) and the
 trusted [`prompts/`](../prompts) tree.
 
+The live `current_situation` source already renders in the volatile `turn`
+plane. Future retrieval therefore extends the snapshot/refresh mechanism rather
+than moving runtime state back into the stable prefix.
+
 **Advantages:** protects latency and prompt-cache stability; gives personality
 and owner facts explicit provenance; limits prompt/tool escalation; exposes the
 rendered prompt for debugging.
@@ -279,7 +315,9 @@ keep external results advisory until validated against sensors.
 **Decision:** turn traces and rolling component metrics are read-only
 diagnostics. The latency panel shows user text, model response, reasoning source,
 stage timestamps, and aggregates, but cannot issue commands. Sensitive raw
-audio is not required for core latency measurement.
+audio is not required for core latency measurement. D0 duplex session logs are
+a separate, local aligned-stream corpus with an explicit configuration kill
+switch; they are not the dashboard and have no control privilege.
 
 **Advantages:** separates user-facing E2E latency from model, TTS, endpointing,
 control, and navigation bottlenecks; supports regression work without granting
@@ -287,11 +325,42 @@ the dashboard authority.
 
 **Limitations:** software timestamps can cross unsynchronized clocks or omit
 device buffers; logging transcripts creates privacy risk; percentile summaries
-can hide failed/cancelled turns.
+can hide failed/cancelled turns. Duplex rotation has not been exercised over a
+long session, its <2 MB/hour budget is a target rather than evidence, and no
+retention/deletion policy is enforced.
 
 **Revisit when:** physical hardware is connected. Add monotonic clock mapping,
 audio-device and actuator-feedback markers, failure/cancellation stratification,
 and an explicit data-retention policy before collecting real conversations.
+
+## D14. Dual-stream behavior is introduced shadow-first
+
+**Decision:** D0 freezes a shared nominal-10 Hz `DuplexFrame {t, epoch, text, act}`
+contract. Reply text entering the spoken/text delivery path populates TEXT;
+events already admitted
+by planning, arbitration, expression, and safety populate ACT; silence/idle fill
+the gaps. Epoch changes drop stale frames. The consumer remains shadow-only and
+the local writer may build an aligned behavior-cloning corpus. See
+[`duplex/`](../src/parcel_robot/duplex) and
+[`DUPLEX_DUAL_STREAM_DESIGN.md`](DUPLEX_DUAL_STREAM_DESIGN.md).
+
+**Advantages:** the eventual model boundary is testable before training a model;
+idle becomes an explicit negative action label; TEXT and ACT share cancellation
+semantics; D0 cannot accidentally acquire actuator authority.
+
+**Limitations:** continuity proves index production and epoch/drop rules, not a
+10 Hz wall-clock deadline—the caller supplies cadence and `missing_frames`
+cannot detect a late tick. It also does not show that a model chose a good
+action. D0 records effects of the current stack and can encode its biases; its
+shadow round-trip is not a closed-loop policy eval. Reply-derived text and
+owner/context values are sensitive even though the user transcript is not
+written today. There is no D1 dual-head model, streaming audio input, or
+non-shadow ACT execution in this checkout.
+
+**Revisit when:** a D1 candidate is trained from consented/reviewed data and
+beats D0 on identical duplex and product-navigation scenarios. Promotion still
+requires PlanIR/admissibility, epoch atomicity, collision, latency, and
+interruption gates; a model token never bypasses the existing authority chain.
 
 ## Change discipline
 

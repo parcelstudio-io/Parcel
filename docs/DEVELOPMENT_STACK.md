@@ -21,20 +21,23 @@ browser text  and/or  MicrophoneVoiceLoop (VAD → STT)
        | final transcript
        v
  conversation Gemma / optional planner ----- reply text ---> Piper / Fish S2
-              |                                    |
-              v                                    v
-  allowlist + limits + E-stop              SentenceChunkedSynthesizer
-              |                                    |
-              v                                    v
- follow / grid_v1 nav / spatial / manual      SpeakerSink (barge-in)
+              |                                    |           \
+              v                                    v            \ reply chunks
+  allowlist + limits + E-stop              SentenceChunkedSynthesizer          \
+              |                                    |                            v
+              v                                    v                    D0 TEXT+ACT frames
+ follow / grid_v1 + dynamic costs / spatial   SpeakerSink (barge-in)      (shadow + local log)
               |                                    |
               |                         ProsodyTap → expression overlay
               |
               v
- priority arbiter + TTL + proximity brake
+ priority arbiter + TTL + proximity/TTC brake
               |
               v
-  ControlManager → SimulatorBackend (MuJoCo) / Unitree Sport
+ emergency-bypass S-curve handoff → ControlManager
+              |
+              v
+        SimulatorBackend (MuJoCo) / Unitree Sport
 ```
 
 See [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) for the
@@ -58,7 +61,13 @@ The local MuJoCo backend now provides:
 - persistent `grid_v1` point navigation over an occlusion-true raycast scan,
   with an explicit missing-scan fallback and runtime-wide reactive safety veto;
 - owner-follow states for acquire, follow, hold, occlusion, loss, stale input,
-  and blocked clearance;
+  and blocked clearance, with an enabled Kalman owner-prediction seam;
+- predicted-agent occupancy costs in `grid_v1`, an all-track TTC gate, and a
+  jerk-limited handoff before `ControlManager`;
+- a system-authored `SearchOwner` sequence (loss point → sweep → frontiers)
+  under the same arbiter and safety gates;
+- registered behavior channels with explicit stop versus pause state and resume
+  primitives (automatic semantic resume is not complete);
 - a final collision brake shared by manual, voice, follow, and navigation
   commands; and
 - a simulator-side motion watchdog independent of the web application; and
@@ -70,6 +79,15 @@ The simulator's base is still translated kinematically, semantic tracks derive
 from scene metadata rather than pixels, and direct viewer/debug commands bypass
 the runtime-wide arbiter. These are development affordances, not physical
 quadruped or perception evidence.
+
+The newer companion mechanisms are not all quality wins yet. Direct-follow
+prediction is effectively constrained by the owner keepout radius and did not
+improve the isolated turn case; dynamic planning has not proved a socially
+correct passing side or a reduction distinct from the reactive gate; and the
+earlier owner-loss run completed the search budget by giving up rather than
+reacquiring (the later planner-backed search has not been rerun there). The
+defensible shaping result is a 42% commanded-jerk reduction
+through a partial dispatch replica, not through hardware.
 
 The `SimulatorBackend` protocol is the seam for a later SimWorld, Isaac Sim, or
 ROS 2 implementation. MuJoCo remains the best first environment here because
@@ -132,14 +150,37 @@ not yet token/frame-streaming ASR. Browser text partials exercise cancellation
 semantics but are not evidence of acoustic streaming.
 
 The canonical YAML now keeps device selectors, endpointing/model paths, echo
-guard, and `fish_url` beneath the `speech:` section the runtime reads. Three
-reserved keys (`fish_reference_id`, `fish_streaming`, and `barge_in`) are still
-not consumed as switches; see [CURRENT_STATUS.md](CURRENT_STATUS.md) before
-changing audio behavior.
+guard, `fish_url`, and the consumed `fish_reference_id` beneath the `speech:`
+section the runtime reads. `fish_streaming` and `barge_in` are
+fallback-config-only legacy keys that current validation rejects as unknown,
+not switches. See [CURRENT_STATUS.md](CURRENT_STATUS.md) before changing audio
+behavior.
 
-The desktop has ALSA capture hardware plus a powered Bluetooth controller. No
-headset is currently paired, PipeWire has no input/output endpoint, and the
-native `libportaudio2` runtime required by Python `sounddevice` is absent.
+The canonical runtime also enables the **D0 dual-stream overlay**. At each 10 Hz
+tick, [`duplex/`](../src/parcel_robot/duplex) fills one epoch-scoped frame with a
+TEXT token or `<silence>` and an ACT token or `<idle>`. TEXT observes reply text
+entering the text/TTS delivery path; ACT observes post-gate twist and admitted
+gaze/skill/emote/filler events. Its consumer is configured `shadow_consumer:
+true`: frames are decoded/logged but never execute commands. This is a contract
+and local data-collection seam for a future D1 model, not a model-driven
+behavior stream. See [DUPLEX_DUAL_STREAM_DESIGN.md](DUPLEX_DUAL_STREAM_DESIGN.md).
+
+“10 Hz” is the nominal runtime-loop cadence, not a measured deadline guarantee:
+the interleaver increments one index per caller tick and cannot infer a missed
+wall-clock tick.
+
+Predictive slow-route fillers and a ~700 ms watchdog are wired around the same
+turn clocks. The timer is cleared at the TTS/text-delivery handoff, not merely at
+LLM completion. Real Piper/device playback has not been exercised, so neither
+the audible filler nor the 2 s response ceiling has acoustic evidence. D0 logs
+contain reply-derived text plus owner/context values and outcomes under
+`logs/duplex/` (not the user transcript today); disable them with
+`duplex.logging: false`. Long-session size and retention remain unverified.
+
+The desktop has ALSA capture hardware plus a powered Bluetooth controller.
+PipeWire currently exposes only `Dummy Output` and no source, no USB audio array
+appears in `lsusb`, and the native `libportaudio2` runtime required by Python
+`sounddevice` is absent.
 Parcel therefore starts in **streaming text mode**. A USB array or headset must
 be selected as both an input and an output-capable route; production duplex
 audio also needs acoustic echo cancellation. For the XVF3800, the speaker must
@@ -214,6 +255,10 @@ Use `./scripts/run_speech_services.sh --check` for a non-mutating speech
 readiness probe. It currently fails until whisper is running and Piper's binary,
 voice, and metadata are installed.
 
+Run these commands from this source checkout/editable install. The wheel is not
+relocatable: runtime prompts and skill/navigation YAML remain repository assets,
+and the packaged fallback config has drifted from `configs/robot.yaml`.
+
 ## What is not production-ready
 
 The current MuJoCo camera/LiDAR path includes an occlusion-true raycast scan
@@ -230,6 +275,13 @@ choreography system. Conversation emotes are bounded and subordinate; their
 intensity and beat timing have only simulator/test evidence. CityWalker/NaVILA
 YAML entries and MetaUrban setup remain research scaffolding until vendor
 inference and a real step adapter exist.
+
+The attention `StimulusBus`/`ReactionArbiter` modules are not connected to mic,
+prosody, or the control tick. Navigation pause/resume primitives have
+unit/composition coverage, but automatic semantic resume does not consume stored
+NavigateTo/follow intents or enforce fresh-observation metadata. D0 frames
+derive from behavior already commanded by the existing runtime; there is no trained
+dual-head decoder, streaming acoustic input, or live ACT-token executor.
 
 ## Primary references
 

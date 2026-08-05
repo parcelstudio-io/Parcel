@@ -399,3 +399,45 @@ with the words. That needs real audio output, which U5 blocks.
   feasible; confirm ledger rows stay byte-identical afterward.
 - **Risk:** lease re-acquire or double-dispatch bugs only show up when all
   three layers compose on a live mission.
+
+## U21 — Duplex fillers have never been heard on real TTS · **major**
+
+- **Claim (task_5 D-O1):** predictive + 700 ms watchdog fillers keep every
+  slow turn under the 2 s audible ceiling with clause-boundary handoff.
+  Watchdog/ceiling now key off TTS-queue / audible path (not LLM text alone);
+  `FillerLatency` samples audible time; mid-filler handoff covered by a fake
+  synthesizer unit test.
+- **Reality:** still no Piper/hardware timing from end-of-turn to first
+  audible filler sample on the robot. Text-mode and scripted clocks remain
+  the primary green path.
+- **To verify:** with Piper up, force a deliberative_plan turn and a stalled
+  TTS turn; measure `FillerLatency` and confirm zero
+  `ResponseCeilingBreach` while a human hears the filler before 2 s.
+- **Risk:** the metric can stay green while fillers are late or clipped on
+  real audio queues.
+
+## U22 — D0 duplex frames never drove actuators · **major**
+
+- **Claim (task_5 D-O2):** ACT stream continuity and shadow decode prove the
+  frame contract is D1-ready. D0 producer now also logs gaze/skill/emote
+  tokens alongside post-gate twists + fillers.
+- **Reality:** D0 still derives frames FROM commanded events; the shadow
+  consumer does not execute. Continuity is the producer clock, not a model
+  that chose the acts.
+- **To verify:** land D1 dual-head behind the same contract; A/B against D0
+  on DUPLEX_V1; promote only when continuity + atomicity + nav gates hold
+  with the consumer in live (non-shadow) mode.
+- **Risk:** treating D0 logs as proof the robot "already streams acts" oversells
+  readiness for a trained decoder.
+
+## U23 — Duplex session logs are unreviewed for privacy/size · **minor**
+
+- **Claim (task_5 D-O3):** `logs/duplex/*.jsonl` is a safe local D1 corpus
+  under 2 MB/hour with a kill switch. Per-turn outcomes (TTFT, filler,
+  barge-in) are now written from runtime when logging is on.
+- **Reality:** writer + gitignore + design privacy note + turn outcomes exist;
+  no hour-long session has been sized, and no operator review of retained
+  transcripts. Rotate cap is still a file-size limit, not an hourly rate.
+- **To verify:** run a 30–60 min companion session with logging on; confirm
+  rotate triggers, disk budget, and that `duplex.logging: false` stops writes.
+- **Risk:** unexpected PII retention or log growth on long demos.

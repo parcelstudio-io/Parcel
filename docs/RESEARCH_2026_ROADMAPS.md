@@ -10,9 +10,12 @@ max-effort synthesis), adjudicated against each other and against the codebase.
 > This is a research record and roadmap, not the operational source of truth.
 > Since the original synthesis, Parcel has wired the ProsodyTap, 50 Hz
 > expression/BeatLayer, epoch cancellation, bounded Gesture emotes, and an
-> optional semantic-endpointing seam. Hardware AEC, streaming STT, speculative
-> generation, an overlap classifier, expressive neural TTS, and physical timing
-> calibration remain future work. See [CURRENT_STATUS.md](CURRENT_STATUS.md).
+> optional semantic-endpointing seam. It also has a D0 system-composed
+> nominal-10 Hz TEXT+ACT frame/logging overlay and deterministic filler policy. D0 is
+> shadow-only—not a trained behavior model or actuator source. Hardware AEC,
+> streaming acoustic STT, speculative generation, an overlap classifier,
+> expressive neural TTS, D1, and physical timing calibration remain future work.
+> See [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
 ---
 
@@ -38,9 +41,12 @@ The industry converged on the same split (Moshi's inner monologue, Hume EVI 3,
 Nova Sonic half-cascade, Kyutai Unmute): expressive/duplex audio shell + text
 brain owning cognition and tools.
 
-### Where duplexness lives — six independently shippable mechanisms
+### Where duplexness should live — six independently shippable target mechanisms
 
-| Mechanism | Implementation |
+This table records the target design. It is not an implementation matrix; the
+current state is summarized in the build-order table and the D0 overlay below.
+
+| Mechanism | Target design |
 |---|---|
 | Listen while speaking | Hardware AEC (XVF3800) + always-on streaming STT during playback |
 | Real barge-in | Provisional epoch: VAD hit during playback ducks TTS immediately; supersession commits only on >400 ms speech or a content word in partials ("yeah/mm-hmm" never kills a reply) |
@@ -55,13 +61,17 @@ brain owning cognition and tools.
 The current desktop still runs the energy endpointing fallback and has no usable
 audio endpoints or Piper installation.
 
+The Orin NX 16 GB “Go2 dock” used in the sizing argument is an assumed future
+onboard target, not owned or verified hardware. The only verified accelerator in
+this checkout is the desktop RTX 5000 Ada.
+
 | Role | Primary | Fallback |
 |---|---|---|
-| Acoustic front-end / AEC | Seeed ReSpeaker XVF3800 USB 4-mic array (~$50) + 5 W speaker on its amp — AEC reference loop inherent; DoA gives head-turn free; deletes the echo-guard stopgap | WebRTC AEC3 (desktop/sim only) |
+| Acoustic front-end / AEC | Purchased Seeed ReSpeaker XVF3800 USB 4-mic array + CQRobot 4 Ω 3 W JST-PH2.0 speaker, intended to use the array's own playback/amp reference path; not attached, enumerated, electrically checked, or acoustically calibrated in Parcel | WebRTC AEC3 (desktop/sim only) |
 | VAD | Silero VAD v6 ONNX (2 MB, 32 ms frames, CPU) | Existing EnergyVad kept as zero-cost pre-gate |
 | End-of-turn | Pipecat Smart Turn v3 (BSD-2, 8 MB int8 ONNX, 12–60 ms CPU): ~200 ms commit on "complete", 2–3 s hold on "incomplete" — the single biggest latency win, sim-testable | TEN Turn Detection / LiveKit EOU |
 | Streaming STT | NVIDIA Parakeet TDT 0.6B v3 via sherpa-onnx (GPU) | Moonshine v2 streaming (CPU); whisper.cpp behind a build flag |
-| Brain + dispatch | Existing text-LLM → typed PlanIR (cloud frontier online; speculation on partials, dispatch held to commit) | Local 3–4B Q4 llama.cpp, identical PlanIR schema — reflexes never leave the robot |
+| Brain + dispatch | Existing local Gemma text LLM → typed PlanIR (speculation on partials remains planned; dispatch held to commit) | Smaller 3–4B Q4 llama.cpp candidate, identical PlanIR schema — reflexes never bypass local deterministic policy |
 | Expressive TTS | Chatterbox Turbo (MIT, 350M, ~5 s persona cloning, exaggeration knob from affect arousal — set once per utterance; Orin gate: first chunk ≤300 ms or auto-fallback) | CosyVoice 3 (0.5B, Apache-2.0, continuation-aware streaming); Piper always-on degraded mode |
 | Motion-sync timing | New **ProsodyTap** at the synthesizer→SpeakerSink seam: per-chunk (pre-playback) 10 ms-hop RMS envelope + pitch-gated accent list → BeatTrack on the playback clock. Engine-agnostic | wav2vec2 CTC forced alignment per chunk (stressed-word gestures) |
 | Wake/sleep | Always-on VAD-gated (audio never leaves robot); "go to sleep" → openWakeWord-gated low-power mode | Porcupine |
@@ -112,24 +122,29 @@ MuJoCo before hardware.
 
 ### Latency budget (end-of-speech → first audio; target P50 <500 ms)
 
-| Stage | Today (est.) | Post-upgrade |
+No acoustic end-to-end sample exists on this desktop: PipeWire has no real
+source/output route, PortAudio is unavailable, and Piper is absent. The left
+column is therefore a dated architecture estimate, not “today's measured
+latency”; the right column is an upgrade target.
+
+| Stage | Baseline design estimate (unmeasured here) | Post-upgrade target |
 |---|---|---|
 | Front-end AEC | n/a (echo-guard) | ~58 ms, overlapped |
 | Silence tail → turn commit | 500–800 ms fixed | ~200 ms semantic commit (+12–60 ms Smart Turn) |
-| STT finalize | multi-second re-decode | 50–100 ms residual (streaming partials caught up) |
-| LLM TTFT | 150–400+ ms serial | ~0–100 ms perceived (speculation; dispatch held) |
-| TTS first chunk | Piper 50–150 ms | Piper guaranteed; Chatterbox gate ≤300 ms on Orin |
+| STT finalize | one blocking full-utterance whisper.cpp request; duration unmeasured | 50–100 ms residual (streaming partials caught up) |
+| LLM TTFT | serial and workload-dependent; no acoustic E2E sample | ~0–100 ms perceived (speculation hit; dispatch still held) |
+| TTS first chunk | Piper absent, so no local number | Piper target, with Chatterbox gated at ≤300 ms on the eventual onboard target |
 | Audio out | 30–60 ms | 30–60 ms |
-| **Total** | often >1 s | **P50 ~250–350 ms** (speculation hit, Piper); ~450–500 with Chatterbox |
+| **Total** | **not measured** | **P50 target ~250–350 ms** (speculation hit, Piper); ~450–500 with Chatterbox |
 
-Barge-in → audible+visible yield: TTS duck within ~100 ms of post-AEC VAD hit;
-full supersession (audio + epoch-tagged motion) on commit.
+Target barge-in → audible+visible yield: TTS duck within ~100 ms of post-AEC VAD
+hit; full supersession (audio + epoch-tagged motion) on commit.
 
 ### Build order and current status (sim first, hardware gated)
 
 | Step | Slice | Status on 2026-08-04 |
 | --- | --- | --- |
-| 1 | Order XVF3800 + speaker | Purchased by the developer; not connected or verified by Parcel |
+| 1 | Order XVF3800 + speaker | Purchased: XVF3800 enclosure and CQRobot 4 Ω 3 W JST-PH2.0 speaker; not connected, enumerated, electrically checked, or heard by Parcel |
 | 2–3 | Silero v6 + Smart Turn dual-timeout seam | **Implemented/tested**, but inactive: ONNX Runtime/weights are absent and canonical mode remains `energy` |
 | 4 | Stage latency, turn-commit, apex error, interrupt metrics | **Partially implemented**; software metrics exist, physical-device timestamps do not |
 | 5 | ProsodyTap + head-nod BeatLayer | Timing, epochs, and metrics are **implemented/tested**; Go2 has no neck, so the scheduled nod is not actuated or visible |
@@ -141,6 +156,7 @@ full supersession (audio + epoch-tagged motion) on commit.
 | 11 | 50 Hz expression + idle + bounded emotes | **Implemented as a conservative additive v1**; full clip mixer/transitions remain planned |
 | 12–15 | XVF3800/Jetson integration, target benchmarks, ego-noise hardening, lag calibration | Hardware-gated and not started |
 | 16 | PersonaPlex/Moshi proposal-channel experiment | Research only |
+| D0 overlay | System-composed aligned TEXT+ACT frames, deterministic fillers, local session log, scripted eval | **Implemented/wired shadow-first**; no retained real-audio result, continuity checks index/epoch rather than wall-clock cadence, ACT observes existing behavior, and the consumer never drives commands. D1 remains future work. |
 
 ---
 
@@ -185,30 +201,43 @@ tracking described in steps 3–7.
 
 ## 3. Navigation & following (8-step roadmap)
 
-1. **(days)** Kalman CV/CA owner predictor (2–3 s horizon) behind a swappable
+The original sequence is retained below, but its implementation overlay now
+matters more than the forecast:
+
+1. **Implemented/wired; direct-follow benefit not demonstrated.** Kalman CV
+   owner predictor (2–3 s horizon) behind a swappable
    interface; FollowOwnerController servos the *predicted* path; NIS
    uncertainty brake as a validator rule. Follow-Bench's winning recipe at our
-   exact 0.1 s timestep; plain Kalman suffices for a single-owner home.
-2. **(days)** Dynamic agent cost layer on grid_v1 (time-decayed forward-projected
+   exact 0.1 s timestep. The current owner-clearance clamp leaves only 0.05 m
+   lead in direct mode, and the isolated 90° turn result was unchanged/slightly
+   worse; behind-mode benefit has not been evaluated.
+2. **Implemented/wired; social-quality and distinct-yield claims remain open.**
+   Dynamic agent cost layer on grid_v1 (time-decayed forward-projected
    Gaussian lobes along predicted agent paths) + 1–2 s rollout TTC gate
-   compiled into validator safety. Skip D* Lite — repeated A* at 10 Hz is fine.
-3. **(days)** Jerk-limited S-curve velocity shaping between controller and the
-   SE2 HAL, affect-modulated profiles; the existing jerk metric measures it.
-4. **(weeks)** MPPI local controller (pytorch_mppi, MIT): K~500, T~20–30,
+   before command shaping. Repeated A* at 10 Hz is sufficient today. Tests prove
+   corridor avoidance and TTC engagement, but not pass-behind choice or fewer
+   interventions than the existing reactive gate.
+3. **Implemented/wired; partially measured.** Jerk-limited S-curve velocity
+   shaping between safety and `ControlManager`, with affect-modulated profiles.
+   A partial dispatch replica reduced suite mean commanded jerk
+   0.9592→0.5530 m/s³ with no collision regression; the manager/HAL and calm
+   profile remain outside that evidence.
+4. **Planned.** MPPI local controller (pytorch_mppi, MIT): K~500, T~20–30,
    costs = grid occupancy + predicted agents + path-align + legibility critics;
    runs at its own faster inner rate while the brain stays at 10 Hz.
-5. **(week)** `SearchOwner` skill (RPF-Search-lite): tracking →
+5. **Implemented/wired; successful recovery not demonstrated.** `SearchOwner`
+   is system-authored rather than model-callable: tracking →
    last-observed-position → yaw-sweep scan → frontier search scored by info
-   gain, pruned by a max-owner-velocity reachability disk. Parcel currently
-   holds/stops through short occlusion and measures reacquisition, but has no
-   active frontier-search behavior — still a guaranteed real-world gap.
-6. **(week)** Occlusion-aware behind-formation (Adap-RPF): sample 30–50
+   gain, pruned by a max-owner-velocity reachability disk. The original scenario
+   exercised all phases and gave up; planner-backed mobile phases landed later
+   but the scenario has not been rerun to a finite reacquisition.
+6. **Planned.** Occlusion-aware behind-formation (Adap-RPF): sample 30–50
    candidate follow points per tick around the predicted owner pose, published
    weights (occlusion 10, distance 10, social 1, travel 1, stickiness 0.5).
-7. **(weeks)** Generalize to objects: OwnerTrack → TargetTrack; open-vocab
+7. **Planned.** Generalize to objects: OwnerTrack → TargetTrack; open-vocab
    detection (YOLO-World/FAn-style) only at query time to seed a Kalman +
    re-ID tracker; `target` argument on FollowFormation/OrbitOwner.
-8. **(month+, gated)** 2.5D terrain: MuJoCo heightfields + simulated depth +
+8. **Planned, hardware/perception-gated.** 2.5D terrain: MuJoCo heightfields + simulated depth +
    elevation_mapping_cupy core as one more cost layer; only after flat-ground
    following is solid.
 
@@ -282,10 +311,43 @@ runtime/agent/safety/panel — see §"What shipped" in the module docstring):
   section breakdown (chars, truncation, drops), registered tools, and profile
   facts.
 
-**Growth path (from the research, in order):** move `_prompt_runtime_context`
-fully into the turn plane and freeze the stable prefix for provider prompt
-caching; add an async prefetch hook (`refresh()` on partial ASR) for
-retrieval-backed sources; SQLite episodic memory + background reflector
-(Letta sleep-time pattern); `PendingEvents` source with Gemini-style
+`current_situation` is already registered as a volatile `turn` source; the
+earlier growth item to move runtime context out of the stable prefix is complete.
+The remaining growth path is: verify provider-side stable-prefix cache behavior;
+add an async prefetch hook (`refresh()` on partial ASR) for retrieval-backed
+sources; add SQLite episodic memory plus a background reflector (Letta
+sleep-time pattern); then add a `PendingEvents` source with Gemini-style
 `INTERRUPT | WHEN_IDLE | SILENT` scheduling for late async results (navigation
 finishing 30 s later) and proactive perceptions.
+
+---
+
+## 6. D0 dual-stream overlay: what the roadmap has actually produced
+
+The approved always-output contract is documented in
+[DUPLEX_DUAL_STREAM_DESIGN.md](DUPLEX_DUAL_STREAM_DESIGN.md): one epoch-scoped
+nominal-10 Hz frame carries TEXT-or-`<silence>` and ACT-or-`<idle>`. The current
+D0 producer composes those frames from existing outputs—reply text entering the
+delivery path plus post-gate twists and admitted gaze/skill/emote/filler events.
+It also has a deterministic slow-route/watchdog filler policy, a shadow decoder,
+local rotating JSONL outcomes, and the scripted `DUPLEX_V1` harness.
+
+That is a useful interface/corpus milestone, not native or model-driven duplex:
+
+- input remains turn-committed; real acoustic streaming partials do not exist;
+- ACT observes behavior selected elsewhere and the consumer never drives the
+  robot;
+- frame continuity covers index/epoch production, not 10 Hz wall-clock timing;
+  the caller supplies every tick;
+- filler TTFT/ceiling tests use text/fake-TTS clocks because Piper and devices
+  are unavailable;
+- no retained long-session run proves the log-size target or the privacy of
+  reply-derived text plus owner/context values (the user transcript is not
+  written today); and
+- no D1 dual-head weights, trainer, inference service, or live-ACT admission
+  result exists.
+
+D1 should be promoted only by side-by-side replay of identical turns and product
+navigation scenarios, with consented/reviewed corpus handling, zero stale-epoch
+execution, unchanged collision and interruption gates, and an explicit check
+that decoded ACT proposals still pass the current PlanIR/admissibility chain.

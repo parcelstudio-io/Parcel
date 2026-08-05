@@ -1,11 +1,21 @@
 # Parcel llama.cpp CUDA profiles
 
+Last checked against the repository and this desktop on **2026-08-04**.
+Retained JSON records below are immutable historical evidence; the operational
+snapshot is explicitly separate.
+
 ## Current decision
 
 Parcel now has an admitted GPU inference path for the installed Gemma 4
 26B-A4B QAT Q4 model. It uses the official `llama.cpp`
 `server-cuda12-b10236` OCI image staged in a repository-managed, ignored
 directory. It does not replace the known CPU b10235 runtime.
+
+On the latest host recheck, the RTX 5000 Ada and driver 595.84 were still
+visible with 32,760 MiB total and 30,667 MiB free VRAM, and the pinned CPU and
+CUDA binaries plus Gemma/Ministral artifacts were present. No reasoner was
+listening on port 8080 or 8081. This means the host still satisfies the
+device/memory preconditions while idle; it does not mean inference is active.
 
 The immutable readiness record is
 [`gpu-readiness-20260803-b10236-oci-cuda.json`](../evals/companion/gpu_readiness/results/gpu-readiness-20260803-b10236-oci-cuda.json).
@@ -86,6 +96,11 @@ CPU run 05's 19,664.294 ms.
 
 That result executed zero physical episodes. It proves neither perception,
 navigation, collision avoidance, companion dialogue, nor Unitree execution.
+It also does not prove a peak-memory bound under concurrent MuJoCo, ASR, TTS,
+or a second model load. The measured 5.66 s median usable-plan latency is a
+large improvement over CPU, but remains far outside a control-loop deadline;
+the planner must stay above deterministic execution. A duplex filler can make
+the wait legible, but it does not reduce planning latency.
 
 ## Compact Ministral challenger
 
@@ -154,6 +169,15 @@ After an evaluation, stop the server cleanly and confirm the port closes and
 VRAM returns near its pre-load baseline. Do not leave the 15 GB reasoner
 resident while admitting a competing navigation or voice profile.
 
+The CPU and GPU launchers intentionally have different default ports and
+resource trade-offs. CPU-on-8080 is slower but leaves the GPU available for
+simulation or an opt-in voice service. CUDA-on-8081 is much faster for the
+retained planner workload, but the canonical runtime still calls 8080 and the
+observed 15.28 GB idle allocation competes with every other GPU service. A
+32 GB device is not evidence that Gemma and the approximately 24 GB Fish
+profile can coexist safely; simultaneous admission and load testing would be
+required.
+
 ## Historical b10235 failure and source-build fallback
 
 The earlier
@@ -173,6 +197,35 @@ scripts/build_reasoner_cuda.py \
 The build path is isolated under `third_party/llama.cpp-build`; the script
 does not fetch source, install tools, or replace the CPU binary. This host does
 not currently satisfy that optional build path.
+
+## Why use a verified OCI runtime, and what it costs
+
+The staged OCI path is the best current production-development compromise on
+this workstation:
+
+- it provides an exact upstream binary, CUDA backend, libraries, manifests,
+  and hashes without installing a compiler toolchain into the app environment;
+- the admission doctor binds the model, binary, compute capability, and memory
+  floors before load; and
+- the independent CPU binary remains a simple rollback surface.
+
+Its limitations are operational rather than cosmetic:
+
+- the profile is deliberately pinned, so a llama.cpp/CUDA/model upgrade needs
+  new provenance, hashes, compatibility checks, and quality/latency runs;
+- extracted runtime layers consume substantial ignored disk space and still
+  inherit trust in the pinned upstream image contents;
+- admission is a preflight and retained placement snapshot, not continuous
+  VRAM supervision or an out-of-memory recovery policy;
+- `--n-gpu-layers 999` requests placement but only the server log proves the
+  achieved offload for a run; and
+- one shared HTTP endpoint correlates conversation/planner availability and
+  can introduce queueing under concurrent calls.
+
+For production, keep the existing provider boundary, but supervise the server
+as a separate process, health-check the exact model alias and profile, budget
+VRAM jointly with navigation/TTS, retain cold/warm latency separately, and
+promote upgrades only through conversation, planning, and embodied gates.
 
 ## Primary sources
 

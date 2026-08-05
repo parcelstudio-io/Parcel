@@ -10,8 +10,12 @@ Status terms used throughout the documentation:
 - **Implemented** — runtime code and tests exist; this does not imply physical
   production readiness.
 - **Wired** — the default runtime reaches that code path.
+- **Verified** — repeatable command/test/eval evidence exists for the named
+  scope; it does not automatically include a service, device, or physical robot.
 - **Operational** — its required local service or device was verified on this
   desktop.
+- **Commissioned** — verified on the intended physical hardware/environment
+  with its frames, modes, safety envelope, and failure behavior checked.
 - **Experimental** — isolated research code or an eval adapter exists, but it
   is not an admitted product path.
 - **Planned** — design only; do not infer a working capability.
@@ -26,7 +30,12 @@ Status terms used throughout the documentation:
 | MuJoCo city | Implemented | Wired | Yes | Dynamic actors and sensor contracts are useful regressions; Go2 base motion is still a kinematic preview, not validated legged dynamics. |
 | `grid_v1` navigation | Implemented | Wired and selected | Yes in headless/MuJoCo gates | Rolling 2-D occupancy, A*, forward-preferred tracking, and an independent reactive safety gate; it is not a learned social-navigation policy. |
 | Semantic sidewalk/object goals | Implemented | Wired in the simulated city | Yes in headless tests | Semantic candidates currently come from simulator observations. A physical camera/LiDAR perception stack is not implemented. |
-| Owner following and owner-relative motion | Implemented | Wired | Yes in simulation | Requires a fresh, visible owner track. Physical owner detection/re-identification is missing. |
+| Owner following and owner-relative motion | Implemented | Wired | Yes in simulation | Requires a fresh simulator owner track. The Kalman prediction path is enabled, but the measured direct-follow turn case showed no benefit because the owner-clearance clamp leaves only 0.05 m of lead. Physical owner detection/re-identification is missing. |
+| Dynamic-agent planning + predictive TTC gate | Implemented | Wired in `grid_v1`/runtime | Unit/integration and companion-scenario evidence | The planner leaves a predicted pedestrian corridor and the gate engages, but socially correct passing-side selection and a distinct reduction in reactive interventions have not been demonstrated. |
+| Jerk-limited command shaping | Implemented | Wired after arbitration/safety and before `ControlManager` | Partial-dispatch companion eval | Mean commanded jerk fell 0.9592→0.5530 m/s³ across 11 simulated episodes with no collision regression. That replica stops before `ControlManager`/HAL; calm-profile and physical-motion benefits are unverified. Emergency stops bypass and reset shaping. |
+| `SearchOwner` reacquisition | Implemented system-authored skill | Wired after follow loss | Phase/unit coverage; the earlier scenario searched then gave up | It goes to the last observation, sweeps, and explores frontiers under a 45 s budget. Mobile phases are now planner-backed, but that update has not been rerun to a finite reacquisition; it also maintains a search-local occupancy grid. It is deliberately not model-callable. |
+| Task/channel pause and resume foundations | Implemented | Pause path wired; automatic semantic resume is incomplete | Unit/composition tests | `resume_task()` can requeue, but NavigateTo redispatch does not consume its stored `ResumeIntent`/call `resume_navigation`; `requires_fresh_observation` is metadata only. Search→follow still resumes through a legacy tuple rather than the stored follow intent. |
+| Stimulus/attention reaction arbiter | Implemented as pure modules | **Not wired** into the control loop | Unit tests only | The mic/prosody path does not feed `StimulusBus`; `ReactionArbiter` is not ticked. Existing expression reactions are a separate path. |
 | Central command arbitration and leases | Implemented | Wired | Yes in simulation/tests | Covers `RobotRuntime`, not direct debug/Dog IPC paths; software E-stop/watchdogs never replace hardware E-stop. |
 | Unitree Sport closed-loop supervisor | Implemented | Explicit commissioning path only | Not hardware-verified | SDK absent, configured NIC absent, axes/frame uncommissioned, and `allowed_modes` intentionally empty. |
 | Microphone capture + interruptible speaker output | Implemented | Conditional on healthy STT/TTS and devices | No: native PortAudio is missing and PipeWire endpoints are disconnected | `speech.mode: auto` therefore degrades to text. No hardware AEC is attached yet. |
@@ -36,6 +45,9 @@ Status terms used throughout the documentation:
 | Semantic endpointing | Implemented with energy fallback | Selectable; canonical config chooses `energy` | ONNX Runtime and endpointing weights are absent | Energy VAD/hangover is the effective path today. |
 | Speech-synchronized expression | Implemented | Wired when audio chunks play | Timing/tests only | `ProsodyTap` schedules epoch-scoped head-pitch nod state, but Go2 has no neck so the nod is not actuated/visible; idle body offsets do actuate in MuJoCo. |
 | Latency dashboard | Implemented | Wired | Yes at `/latency` | Metrics describe observed software events, not physical actuation latency unless hardware feedback is present. |
+| D0 aligned TEXT+ACT stream | Implemented | One frame per nominal 10 Hz control-loop tick; consumer is shadow-only | Unit/scripted-text eval paths | Frames are composed from reply text entering the delivery path and behavior already selected by existing code. Index/epoch continuity is tested, but wall-clock deadline misses are not detectable; neither a trained model nor the frame consumer chooses or drives motion. D1 does not exist. |
+| Predictive/watchdog fillers | Implemented | Wired for slow routes and ~700 ms watchdog | Fake-TTS/scripted clocks only | The metric waits for the TTS/audible handoff, but no filler has been heard through real Piper or an audio device. The 2 s ceiling is therefore not acoustically validated. |
+| D0 duplex corpus logging | Implemented, enabled by canonical config | Local rotating JSONL under `logs/duplex/` | Writer tests only | Logs contain reply-derived TEXT plus owner/context values and outcomes (not the user transcript today). Git ignore and `duplex.logging: false` exist, but the <2 MB/hour design budget, retention, and long-session privacy behavior are unverified. |
 | Google Maps | Placeholder | Disabled | No | It supplies no localization, route, or safety authority. |
 | MetaUrban / learned navigation | Scaffolding and fail-closed registry entries | Not wired | No | Separate environment/adapters/weights are still required. |
 | BARN/Habitat external evals | Experimental adapters and provenance records | Offline only | Partial smoke/proxy evidence | External scores are not product companion scores and cannot authorize deployment. |
@@ -49,12 +61,12 @@ the `speech:` section read by the runtime. Device selectors (when uncommented),
 their consumers. The canonical selection remains `endpointing: energy` and
 `tts_provider: piper`.
 
-Three present keys are not currently consumed by provider/runtime construction:
-`fish_reference_id`, `fish_streaming`, and `barge_in`. Barge-in is wired on
-whenever the microphone loop exists, and the Fish adapter uses its implemented
-request behavior rather than these switches. Treat them as reserved/inert until
-code and configuration-contract tests explicitly bind them; their presence is
-not a feature toggle.
+All keys in the canonical `speech:` section are now bound: `fish_reference_id`
+is passed to `FishSpeechProvider`. `fish_streaming` and `barge_in` appear only
+in the divergent packaged fallback config; current speech-config validation
+rejects them as unknown rather than treating them as switches. Barge-in is
+wired on whenever the microphone loop exists. Remove or migrate those two
+legacy fallback keys before relying on packaged startup.
 
 ## Desktop evidence
 
@@ -62,9 +74,10 @@ The application virtual environment contains MuJoCo, NumPy, PyYAML, the Python
 `sounddevice` distribution, and the test/lint tooling. However, importing
 `sounddevice` currently raises an `OSError` because the native
 `libportaudio2` runtime is not installed. Separately, the desktop has a powered
-Bluetooth controller and ALSA capture hardware, but no connected PipeWire input
-or output endpoint. Parcel therefore reports text mode. `onnxruntime` is also
-not installed in `.parcel`.
+Bluetooth controller and ALSA capture hardware, but PipeWire exposes only a
+dummy output and no source. No USB audio array appears in the current `lsusb`
+inventory. Parcel therefore reports text mode. `onnxruntime` is also not
+installed in `.parcel`.
 
 The speech readiness check currently reports:
 
@@ -100,10 +113,11 @@ installed and whisper.cpp is running.
 
 Run from the source checkout on 2026-08-04:
 
-- `.parcel/bin/python -m pytest -q`: **1,426 passed, 2 skipped**; the two
-  warnings exercise documented semantic-endpointing fallback paths.
+- `.parcel/bin/python -m pytest -q`: **1,655 passed, 6 skipped**, with two
+  expected warnings exercising documented semantic-endpointing fallback paths.
 - `.parcel/bin/python -m ruff check .`: **passed**.
-- local Markdown link/path check across the root README and all docs: **passed**.
+- local Markdown link/path check across the root README and 21 docs (22 files):
+  **passed**.
 - `scripts/run_speech_services.sh --check`: **failed as expected** with the four
   speech-readiness blockers listed above.
 
@@ -137,7 +151,10 @@ not supported today: `pyproject.toml` packages only the module config, scene,
 and UI assets, while runtime behavior also needs repository-level `prompts/`,
 `configs/skills/`, and `configs/navigation/`. The internal fallback
 `src/parcel_robot/config/robot.yaml` has also drifted from the canonical config
-(including a Fish default and missing current brain/expression settings).
+(including a Fish default, an older brain skill contract, and no current
+duplex/expression/navigation-shaping sections). Its legacy `fish_streaming` and
+`barge_in` keys are rejected by current speech-config validation, so fallback
+startup can fail before later asset-path problems are reached.
 
 Production packaging must include/version every runtime asset, remove the
 silent divergent fallback, resolve paths relative to installed resources, and
@@ -149,6 +166,11 @@ execution is not installation portability evidence.
 - no physical Go2 commissioning or outdoor autonomy;
 - no production owner recognition, localization, or camera perception;
 - no physically validated expressive poses or speech/motion synchronization;
+- no acoustically validated filler or D0 duplex latency;
+- no model-generated ACT stream or live ACT-token actuator authority;
+- no demonstrated successful `SearchOwner` reacquisition or direct-follow
+  prediction improvement;
+- no control-loop wiring for the pure attention-reaction modules;
 - no installed semantic endpointing runtime on this desktop;
 - no authoritative Google Maps integration;
 - no admitted learned navigation policy; and

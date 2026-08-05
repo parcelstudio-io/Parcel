@@ -1,12 +1,13 @@
 # Implementation: Skills catalog, city scene, and RL-ready Dog API
 
-This document describes Parcel’s skill system, stylized city simulation scene,
-public `Dog` API, and Gymnasium-oriented RL hooks. For operational status and
-deployment boundaries, also read [CURRENT_STATUS.md](CURRENT_STATUS.md).
+Implementation snapshot: 2026-08-04. This document describes Parcel’s skill
+system, stylized city simulation scene, public `Dog` API, and
+Gymnasium-oriented RL hooks. For operational status and deployment boundaries,
+also read [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
 ## Goals
 
-- One YAML file per skill (20+), indexed by a catalog.
+- One YAML file per skill (26 enabled v1 skills), indexed by a catalog.
 - User-selectable skills via voice, CLI, control panel, or Python API.
 - Single public entry point: `Dog.execute(skill_id, ...)`.
 - Stylized MuJoCo city block for locomotion / navigation testing.
@@ -111,6 +112,11 @@ or centralized E-stop semantics. Use the browser/runtime path for end-to-end
 behavior and safety work; use direct `Dog` calls for bounded development and
 tests.
 
+This distinction is also a physical authority boundary. `RobotRuntime` rejects
+physical pose/trajectory dispatch after stopping because no controller-owned
+whole-body handoff exists. Constructing a `Dog` or `MotionRouter` directly must
+not be treated as a supported way around that rejection.
+
 ## Simulation IPC
 
 | type | payload |
@@ -131,7 +137,10 @@ their tracks plus LiDAR and semantic regions/objects through versioned IPC.
 
 This is deliberately a deterministic regression world. Actor trajectories are
 scripted rather than mutually responsive ORCA behavior, semantic labels are
-simulator-generated, and base motion remains kinematic. See
+simulator-generated, and base motion remains kinematic. `grid_v1` can add a
+soft constant-velocity predicted cost for published tracks, but that planner
+feature does not make the actors interactive or the camera semantics
+perception-realistic. See
 [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md) for the richer
 backend plan.
 
@@ -153,6 +162,17 @@ Configured via `simulation.scene` in `configs/robot.yaml`.
   sim-to-real validation are incomplete). Prefer the redesign deferred path
   (`unitree_rl_*` lineage → ONNX) when RL locomotion is funded.
 - Training loops stay outside the voice process.
+
+## Crucial design choices and tradeoffs
+
+| Choice | Advantage | Limitation / consequence |
+| --- | --- | --- |
+| Data-driven skill catalog | Adding a curated pose, trajectory, gait, or velocity preview does not require editing the public API | YAML validity and catalog admission prove structure, not dynamic stability or physical safety |
+| One `Dog.execute()` entry point | Tests, UI, voice adapters, and future training code share the same vocabulary | The direct API is intentionally below product arbitration and can accept unbounded velocity overrides; callers must not confuse composability with safety authority |
+| Preview first, policy replacement later | Choreography and product flows can be exercised before funding locomotion training | A non-empty `policy_path` currently means “armed” only; no file validation, inference, observation normalization, or action delivery occurs |
+| Kinematic city base motion | Fast, deterministic semantic and collision regression on the official Go2 geometry | It does not test balance, contact, slip, footholds, actuator limits, or Sport tracking |
+| Fixed 48-value experimental observation | Small, inspectable scaffold for API experiments | Approximate field mapping, placeholder reward/termination, and no stable ABI make existing policies non-portable without an explicit versioned contract |
+| Training outside the voice/runtime process | GPU jobs and simulator failures cannot stall the conversational control loop | A trained policy still needs a bounded serving/validation adapter before it can become a runtime controller |
 
 ## Migration
 

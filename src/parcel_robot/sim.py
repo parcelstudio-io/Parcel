@@ -569,8 +569,8 @@ def main() -> None:
             poses=store.poses(),
             kp=args.kp,
             kd=args.kd,
-            walk_vx=min(0.3, limits.max_vx),
-            walk_yaw=min(0.4, limits.max_vyaw),
+            walk_vx=min(0.5, limits.max_vx),
+            walk_yaw=min(0.8, limits.max_vyaw),
             dynamic_city_enabled=(
                 bool(dynamic_config.get("enabled", True)) and not args.static_city
             ),

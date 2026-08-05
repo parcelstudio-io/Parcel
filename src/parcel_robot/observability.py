@@ -65,6 +65,11 @@ COMPONENT_METRIC_DEFINITIONS = {
     "PlanValidation": "Wall-clock duration of PlanIR validation against fresh state.",
     "PlanAcceptance": "Wall-clock duration of task-executive plan admission.",
     "ExecutiveTick": "Wall-clock duration of one non-LLM task-executive tick.",
+    "FillerLatency": (
+        "End of final user input to the first audible duplex filler utterance "
+        "(playback start / TTS enqueue audible — not filler fire time)."
+    ),
+    "DuplexProducer": "Wall-clock duration of one duplex frame producer tick.",
 }
 
 STAGES = frozenset(
@@ -78,12 +83,17 @@ STAGES = frozenset(
         "reasoning_response",
         "response_logged",
         "tts_start",
+        "tts_text_chunk",
         "tts_first_chunk",
         "audio_first_playback",
         "tts_complete",
         "turn_complete",
         "superseded",
         "error",
+        "filler_start",
+        "filler_audible",
+        "filler_complete",
+        "filler_clause_boundary_wait",
     }
 )
 

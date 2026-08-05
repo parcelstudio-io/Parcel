@@ -68,9 +68,10 @@ animation files. Instead, a `RobotProfile` morphology layer removed the Go2
 literals from the kinematics.
 
 **Rejected: Fish-Speech as the TTS default.** Its own launcher gates at
-~24 GiB VRAM — not an onboard reality. Piper (CPU, ~40 ms-class first audio)
-is the default; Fish is an opt-in docked mode. Both research passes reached
-this independently.
+~24 GiB VRAM — not an onboard reality. Piper is the selected lightweight CPU
+default; Fish is an opt-in docked mode. The historical ~40 ms-class Piper
+estimate came from the research comparison, not a Parcel measurement: Piper is
+still absent on this desktop.
 
 **Replaced: BARN as the navigation eval.** BARN measures collision-free
 *speed through static clutter* on a wheeled-Jackal abstraction that discards
@@ -90,8 +91,8 @@ real-world transfer).
 Cross-checked across two independent research passes; agreement between both
 is marked ✓✓.
 
-1. ✓✓ **No shipping quadruped gives a learned model final collision
-   authority** (Unitree, Spot, Deep Robotics, ANYbotics). Deterministic
+1. ✓✓ **No reviewed vendor/reference quadruped stack gave a learned model final
+   collision authority** (Unitree, Spot, Deep Robotics, ANYbotics). Deterministic
    geometry is the last line of defense; learned components propose, never
    dispose. Parcel's runtime-wide `reactive_safety.py` gate under every runtime
    velocity source is the correct architecture — keep an independent final
@@ -110,7 +111,8 @@ is marked ✓✓.
    under 800 ms. Cascaded local stacks (VAD → streaming STT → LLM → sentence-
    streamed TTS) reach 500–800 ms on-device in 2026; S2S models (Moshi/
    PersonaPlex-class, ~200 ms) still lack reliable tool-calling, so a cascade
-   remains correct where commands must execute.
+   remains correct where commands must execute. These are product/research
+   targets, not measurements from Parcel's disconnected desktop audio path.
 5. ✓✓ **A speaker next to the mic makes software-only AEC marginal.** The
    2026 answer is hardware DSP AEC (XVF3800-class mic array) with software
    residual suppression. Until then, the echo-guard multiplier is an honest
@@ -174,3 +176,29 @@ operator deletes them — presence in the tree is not a production claim.
   owner line-of-sight, and injected person telemetry. They are absent from the
   analytic nearest-obstacle telemetry and static-collision oracle; that split is
   a v1 limitation recorded in the eval contract.
+
+## 8. Evidence added after the redesign record
+
+Later 2026-08-04 slices validate the **refactor-in-place** verdict while also
+showing why “wired” must not mean “improved”:
+
+- owner prediction, projected-agent costs, an all-track TTC gate, command
+  shaping, and `SearchOwner` are now in the source runtime. Direct-follow
+  prediction did not improve the isolated turn case; social passing-side and
+  distinct TTC-gate benefit remain unproved; the owner-loss scenario searched
+  and gave up before the planner-backed mobile-phase update, which has not been
+  rerun there. The one positive measured delta is commanded jerk
+  0.9592→0.5530 m/s³ through a partial dispatch replica, not hardware.
+- pause-versus-stop channel semantics were repaired and unit-tested, but
+  automatic semantic resume is incomplete: stored NavigateTo/follow intents and
+  fresh-observation metadata are not consumed end to end. Attention
+  stimulus/arbitration modules remain pure foundations outside the loop.
+- D0 now emits/logs aligned nominal-10 Hz TEXT+ACT frames and deterministic
+  fillers. The ACT consumer is shadow-only and observes behavior chosen elsewhere; no
+  trained D1 model or ACT-token actuator authority exists. Filler latency and
+  long-session corpus privacy/size have no real-audio/operational evidence.
+
+These additions preserve the original authority boundaries. They are available
+from the source checkout/editable install; they do not make the current Python
+wheel relocatable because repository prompt/skill/navigation assets are still
+outside package data.

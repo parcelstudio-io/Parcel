@@ -1,46 +1,82 @@
-# Pause semantics convention
+# Pause semantics: implemented primitives and integration limits
 
-**Status:** convention of record for V1 foundations (task_4 O1/O3).
-**Rule:** suspension freezes *both* budget kinds — tick-counted and wall-clock.
+Implementation snapshot: 2026-08-04. This page is the convention of record for
+suspending a behavior without declaring it successful, failed, or cancelled.
 
-## Why this exists
+The rule is simple: a true pause freezes every mission budget owned by the
+paused controller and emits no motion. Merely suppressing its command while its
+watchdog or deadline continues to advance is not a pause.
 
-Two budgets already disagree today:
+## Why budget type matters
 
-| Budget | Owner | Kind | Today's failure mode if output is suppressed |
+| Budget | Owner | Type | Implemented pause behavior |
 | --- | --- | --- | --- |
-| Navigation progress watchdog | `DirectiveNavigator` | tick-counted (`_steps_without_progress`, default 400 `step()` calls ≈ 40 s at 10 Hz) | A conversation-side "pause" that still ticks the navigator burns the watchdog and fails the mission mid-talk. |
-| SearchOwner give-up | `SearchOwnerController` | wall-clock (`now - _started_at` vs config budget, default 45 s) | An unticked search still ages out; a tick-paused search would otherwise burn wall time while frozen. |
+| Navigation progress and terminal-verification watchdogs | `DirectiveNavigator` | Tick-counted (`_steps_without_progress` and `_terminal_verification_steps`) | `pause()` retains the mission and counters; `step()` returns `mission_paused` without advancing them. `resume()` restores the previous mission status and counters. |
+| Owner-search total and phase deadlines | `SearchOwnerController` | Wall-clock | `pause(now=...)` snapshots elapsed times; `resume(now=...)` rewinds the clock origins so paused wall time is excluded. A paused `step()` returns zero motion. |
 
-Suspension must freeze **both** explicitly. Controllers that only stop emitting
-commands without freezing their budget are not paused — they are silently
-failing.
+This distinction is observable: an unticked search can still age out, while a
+navigation loop that continues to call `step()` can still exhaust a tick
+watchdog. Each controller therefore owns its own freeze implementation.
 
-## Per-channel freeze table
+## What is implemented by channel
 
-| Channel | What freezes on pause | What keeps running | Freeze owner |
+| Channel | What pause preserves | What continues while paused | Current limitations |
 | --- | --- | --- | --- |
-| `navigation` | `_steps_without_progress`, `_terminal_verification_steps`, mission advancement; `Mission.status → PAUSED` | Perception ingestion (optional), collision/E-stop authority, expression idle | `DirectiveNavigator.pause()` / `resume()`; runtime suspend path **≠** `stop_navigation()` |
-| `follow` | Controller step / lease claims; generation token held | PassiveOwner track observation (passive), predictor feed | Runtime `preempt(..., PAUSE)` + `ResumeIntent` |
-| `search` | Wall-clock budget accrual (`_started_at` / phase clocks advance only while unpaused); state machine step | None of the three search states advance while paused | `SearchOwnerController.pause()` / `resume()` (same convention even if v1 rarely interrupts search) |
-| `spatial` | Not pausable in v1 (destructive stop only) | — | `stop` via preemption table |
-| `activities` | Queue drain / dispatch | Cooldown clocks may continue (social rate-limit is wall-clock by design) | ActivityCoordinator clear vs future pause |
-| Executive task | `TASK_STATES` includes `suspended` as a **status, not an outcome** | Resource leases released via reconcile-stop; completion verifier must not treat suspend as success/failure | `TaskExecutive` suspend/resume |
+| `navigation` | `Mission`, its previous status, semantic-resolution state, progress count, and terminal-verification count | Runtime perception and global safety authority continue; a paused navigator itself returns zero motion | `resume_navigation()` is an explicit runtime API. Semantic task redispatch does not yet consume the stored intent automatically. |
+| `search` | Search phase, rolling planner state, last observed owner location, total budget, and phase budget | The controller emits zero motion; runtime perception may continue to update shared owner tracking | The generic stored search intent has no automatic consumer. Search-to-follow recovery still uses a separate legacy tuple. |
+| `follow` | A `ResumeIntent` containing only follow mode and requested distance | Passive owner heading/predictor feeds can continue outside the stopped controller | This is reconstruction, not a frozen controller: pause calls `FollowOwnerController.stop()`, cancels its lease, and bumps its generation token. The normal follow snapshot consequently appears idle rather than paused. |
+| `spatial` | Nothing | — | Not pausable; applicable preemption is destructive stop. |
+| `activities` | Nothing | Cooldown is wall-clock by design | Not pausable; stop clears queued/running gestures. Gesture `safe_checkpoint` is schema metadata, not an implemented checkpoint hand-off. |
+| Executive task | Current validated plan, step index, and attempt remain in a nonterminal `suspended` state | Resources are released; `tick()` emits no dispatch while suspended | `resume_task()` only requeues the step for a fresh dispatch. It does not itself resume a behavior channel. |
 
-## Runtime contracts
+Per-channel generation tokens invalidate late asynchronous work. Tokens are
+**bumped** on pause; they are not held constant. `ResumeStore` keeps at most one
+replace-on-suspend intent per channel and drops it when taken after its TTL.
 
-1. **Pause ≠ stop.** `stop_*` destroys mission/controller state. Pause retains
-   it and records a `ResumeIntent` when the preemption table says `PAUSE`.
-2. **Resume is a fresh dispatch.** Re-validate step tail, re-acquire TTL lease,
-   honor `requires_fresh_observation` after long suspensions, guard
-   double-dispatch with `(task, revision, step, attempt)` + completed-set.
-3. **Fail closed.** Unknown channel pairs in `PreemptionTable` resolve to
-   `STOP` with reason `undeclared_pair`.
-4. **Snapshots tell the truth.** A paused navigator/search reports paused
-   state in its detail/snapshot; panels must not show "running" while frozen.
+## Runtime authority contracts
 
-## Out of scope for this page
+1. **Pause is not stop.** `stop_*` destroys controller or mission state. A
+   pause retains controller state where supported and records a bounded
+   `ResumeIntent`.
+2. **Safety never pauses.** E-stop, stale-data checks, collision gates, and
+   command ownership remain authoritative while another behavior is frozen.
+3. **Resume must reacquire authority.** A resumed channel must make a new lease
+   claim and pass current perception/safety gates; stored motion is never
+   replayed.
+4. **Preemption fails closed.** An undeclared `(claimant, active)` pair resolves
+   to destructive `STOP`. The current default table explicitly declares every
+   ordered pair among its registered channels; `search -> follow` is its one
+   `PAUSE` override, while most other interactions are `STOP`, `DEFER`, or
+   `NONE` according to priority and explicit overrides.
+5. **Suspension is not an outcome.** `TaskExecutive` releases resources and
+   marks the task `suspended`; success/failure verification must not consume
+   that state as completion.
 
-HAL expressive-posture composition (Go2 Euler/BodyHeight spike), attention
-reactions (T2), and summons/recall (T1) consume this convention but do not
-redefine it.
+`ResumeIntent.requires_fresh_observation` currently records policy intent but
+is not enforced by a central resume dispatcher. Navigation and owner search do
+still reject stale observations in their normal per-tick execution paths.
+
+## End-to-end gap to close
+
+The repository has tested controller primitives, task suspension, intent TTLs,
+and redispatch, but it does **not** yet implement one automatic semantic
+suspend-to-resume transaction. In particular:
+
+1. resuming a `TaskExecutive` task produces a fresh `DispatchRequest`;
+2. a redispatched `NavigateTo` does not take the navigation `ResumeIntent` or
+   call `resume_navigation()`;
+3. follow and search intents have no general runtime consumer; and
+4. the `requires_fresh_observation` bit is not centrally checked before resume.
+
+The existing executive integration test proves that a suspended task emits no
+dispatch and later redispatches `NavigateTo`; it does not prove that the old
+mission resumes, retains progress, and completes. Until a resume coordinator
+closes that loop, callers that need non-destructive navigation continuation
+must explicitly use `pause_navigation()` / `resume_navigation()` and should
+verify fresh observations before the latter call. Note that
+`resume_navigation()` currently resumes a paused navigator even when the
+stored intent is absent or expired, so intent expiry alone is not a safety
+interlock.
+
+See [COMPANION_NAVIGATION_ARCHITECTURE.md](COMPANION_NAVIGATION_ARCHITECTURE.md)
+for the wider executive, arbitration, and safety boundaries.

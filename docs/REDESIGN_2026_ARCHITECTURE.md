@@ -27,21 +27,29 @@ run a second, non-Unitree adapter through the full manager lifecycle
 (registry construction → arming → velocity tracking → feedback-confirmed stop
 → latched E-stop → TTL watchdog) with zero edits to generic code.
 
+This is **control-contract portability**, not installation portability. The
+current wheel omits repository-level `prompts/`, skill YAML, and navigation YAML,
+and its packaged fallback config is divergent. Run the architecture from a
+source checkout/editable install until those assets and paths are packaged and a
+clean external-wheel test exists.
+
 ## Layer map
 
 ```
 L6  Deliberative brain     brain/            PlanIR → validator → executive → adapter
-L5  Voice                  voice_pipeline.py, voice_audio.py, providers.py
-L4  Skills / expression    configs/skills/, gait.py, expression.py, prosody.py; RL deferred
+L5  Voice / duplex         voice_pipeline.py, voice_audio.py, providers.py; D0 shadow frames
+L4  Skills / expression    configs/skills/, gait.py, expression.py, prosody.py; attention pure-only
 L3  Motion & skills        skills/, motion.py (vendor-neutral backends)
 L2  Navigation & collision navigation/       grid planner + unconditional reactive gate
 L1  Perception             mujoco_lidar.py raycaster (sim) → hardware sensors (next)
 L0  Vendor HAL             control/          registry, ControlManager, adapters
 ```
 
-Rates: control dispatch 10 Hz (runtime loop) / 50–100 Hz (`ControlManager`
-tick when threaded); scan per observation at 10 Hz; brain executive at control
-rate with zero LLM calls; LLM planning asynchronous per turn.
+Rates: control dispatch and nominal D0 frame production 10 Hz (runtime loop;
+D0 wall-clock cadence is not deadline-instrumented) / 50–100 Hz
+(`ControlManager` tick when threaded); expression overlay 50 Hz; scan per
+observation at 10 Hz; brain executive at control rate with zero LLM calls; LLM
+planning asynchronous per turn.
 
 ## What was implemented (2026-08-03)
 
@@ -151,8 +159,9 @@ rate with zero LLM calls; LLM planning asynchronous per turn.
 
 These pieces are wired and test-covered, but physical audio and expressive
 motion are not operationally validated. The canonical YAML now places the live
-endpointing/device keys under `speech:`; several reserved Fish/barge-in keys
-remain inert, as recorded in [CURRENT_STATUS.md](CURRENT_STATUS.md).
+endpointing/device keys and Fish reference ID under `speech:`. The divergent
+packaged fallback retains unsupported `fish_streaming`/`barge_in` keys, as
+recorded in [CURRENT_STATUS.md](CURRENT_STATUS.md).
 
 ## 2026-08-04 adversarial review round
 
@@ -199,6 +208,58 @@ example) the conversation LLM can invoke per its rendered when-to-use policy.
 Inspect live at `GET /api/prompt`; add facts via `POST /api/prompt/fact`.
 Design rationale and growth path: [RESEARCH_2026_ROADMAPS.md](RESEARCH_2026_ROADMAPS.md) §5.
 
+## Subsequent companion and duplex slices (2026-08-04)
+
+These are present in the source checkout after the Phase 0–4 redesign. Their
+interfaces and regression evidence are real; the limits below are part of the
+architecture, not deferred footnotes.
+
+### Predictive navigation and owner recovery
+
+- `OwnerMotionPredictor` feeds bounded lead/confidence into owner following.
+  The direct-follow keepout clamp leaves only 0.05 m of useful lead and the
+  isolated 90° turn scenario did not improve, so this is a wired mechanism—not
+  a proven anticipation gain.
+- `grid_v1` rebuilds projected dynamic-agent costs and the runtime applies an
+  all-track TTC gate. Tests prove corridor avoidance and gate engagement, but
+  not socially correct passing-side choice or a reduction distinct from the
+  existing reactive-person gate.
+- `SCurveVelocityShaper` runs after the safety gate and before
+  `ControlManager`; stop paths bypass/reset it. A companion-eval dispatch replica
+  reduced mean commanded jerk 0.9592→0.5530 m/s³ across 11 episodes, but stops
+  before the manager/HAL and never exercises the calm profile.
+- `SearchOwner` is a system-authored, non-model-callable skill: last observed
+  point → yaw sweep → planner-backed frontier search. Phase order and budget are
+  tested, but the earlier corner-loss run exhausted the budget and gave up; the
+  planner-backed update has not been rerun there and no successful reacquisition
+  has been measured.
+
+### Interruption and attention foundations
+
+Behavior channels distinguish destructive stop from pause plus bounded
+`ResumeIntent`; semantic task suspension no longer redispatches while suspended.
+Automatic semantic resume is still incomplete: NavigateTo redispatch does not
+consume the stored intent/call `resume_navigation`, fresh-observation is only
+metadata, and search→follow uses a legacy tuple. `attention/` provides a pure
+`StimulusBus` and `ReactionArbiter`, but no runtime producer or 10 Hz tick uses
+them yet; do not confuse those modules with the separately wired expression
+reaction hooks.
+
+### D0 dual-stream overlay (shadow-first)
+
+`duplex/` freezes an epoch-scoped nominal-10 Hz TEXT+ACT frame. The system
+composes TEXT from reply text entering the delivery path and ACT from post-gate
+twist plus admitted
+gaze/skill/emote/filler events; idle/silence fill every other frame. The consumer
+is shadow-only and frames never drive the actuator path. Frame tests prove
+index/epoch rules, not wall-clock cadence, because the caller supplies ticks.
+Predictive/watchdog
+fillers and aligned local JSONL outcomes are wired, but filler timing has only
+fake-TTS/scripted-clock evidence and long-session log size/privacy are
+unmeasured. D1—a trained dual-head decoder and non-shadow consumer—does not exist.
+The complete contract and promotion gates are in
+[DUPLEX_DUAL_STREAM_DESIGN.md](DUPLEX_DUAL_STREAM_DESIGN.md).
+
 ## Deferred (with the chosen path, so nobody re-researches)
 
 | Item | Trigger | Chosen path |
@@ -208,6 +269,7 @@ Design rationale and growth path: [RESEARCH_2026_ROADMAPS.md](RESEARCH_2026_ROAD
 | Terrain (stairs/curbs) | after flat-ground validation | elevation_mapping_cupy |
 | AEC / far-field mic | before real duplex demos | XVF3800-class hardware AEC + WebRTC residual |
 | Activate Silero VAD / Smart Turn | when ONNX Runtime + weights ship and an audio endpoint is available | implemented seam in `endpointing.py`; keep loud energy fallback |
+| D1 dual-head TEXT+ACT decoder | after consented D0 corpus + frozen side-by-side eval | train behind `DuplexFrame`; shadow A/B first; never bypass PlanIR/admissibility/safety |
 | RL locomotion | priority 4 funded | unitree_rl_gym→lab→mjlab lineage; ONNX; damping kill switch |
 | ros2_control spike | hardware phase | evaluate against the registry using `quadruped_ros2_control` as reference |
 | VLN ("next to the bed") | after eval baseline | NaVILA-shaped: VLM emits mid-level commands into the existing PlanIR executive |

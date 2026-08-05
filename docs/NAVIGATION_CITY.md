@@ -12,7 +12,8 @@ scene details: [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md).
   telemetry, and an occlusion-true planar MuJoCo raycast.
 - The configured navigator is **`grid_v1`**: rolling log-odds occupancy,
   footprint inflation, A*, observed-segment validation, and a rotate-first
-  waypoint controller.
+  waypoint controller. Current dynamic tracks add a soft, constant-velocity
+  predicted-cost field; they do not become hard occupancy.
 - `grid_v1` is production-path software, but “production” currently means the
   default Parcel runtime and regression suite. It has not navigated a physical
   Go2 from this workstation.
@@ -33,10 +34,12 @@ explicit destination directive
   -> bounded camera semantic search (unknown goals only)
   -> collision-cleared terminal pose
   -> grid_v1 over odometry + calibrated planar LiDAR
+       + per-tick soft predicted costs for dynamic tracks
   -> MidLevelCommand(vx, vy, vyaw)
   -> navigation-local collision brake and configured velocity bounds
   -> runtime CommandArbiter + smoother
-  -> runtime-wide camera/LiDAR reactive-safety veto
+  -> runtime-wide camera/LiDAR proximity and TTC vetoes
+  -> jerk-limited actuator hand-off (stop bypass)
   -> ControlManager -> selected locomotion controller
   -> odometry, LiDAR, semantic tracks, and measured velocity feed the next tick
 ```
@@ -66,9 +69,13 @@ src/parcel_robot/navigation/
   pipeline.py                  # DirectiveNavigator mission state machine
   grid_planner.py              # rolling occupancy, inflation, A*, waypoints
   grid_navigator.py            # route tracking, recovery, loud fallback
+  dynamic_costs.py             # constant-velocity agent costs and contact time
+  dynamic_layer.py             # strict config/payload wiring and TTC verdict
   collision.py                 # navigation-local brake
   reactive_safety.py           # final runtime gate for every velocity source
   follow.py                    # direct and behind-owner formation control
+  owner_prediction.py          # bounded lead-point prediction for follow
+  search_owner.py              # last-seen, sweep, and frontier reacquisition
   spatial.py                   # bounded relative movement and owner orbit
   envs/metaurban_env.py        # offline scaffold only
 
@@ -106,7 +113,7 @@ consistent frame.
 | Input | Used for | Current implementation | Important limit |
 | --- | --- | --- | --- |
 | Planar LiDAR | Free/occupied evidence, A* route, local collision range | 360-ray MuJoCo `mj_multiRay`, 30 m reported maximum, 0.008 m seeded hit noise, 0.2% dropout; navigator subsamples with stride 2 and caps mapping at 12 m | One horizontal plane misses terrain, drop-offs, glass, and obstacles above/below the plane |
-| Camera/depth semantic tracks | Owner identity/position; sidewalk/lamppost candidates | Simulator emits typed tracks from known scene objects with range/FOV filtering | No pixel detector, depth estimator, occlusion-aware semantic camera, or re-identification model is implemented |
+| Camera/depth semantic tracks | Owner identity/position; sidewalk/lamppost candidates; dynamic-agent tracks expected from a physical adapter | Simulator emits typed tracks from known scene objects with range/FOV filtering | No pixel detector, depth estimator, occlusion-aware semantic camera, or re-identification model is implemented |
 | Odometry / body state | Robot pose, route frame, progress, stop verification | Simulator state or Unitree `SportModeState` contract | No SLAM, relocalization, loop closure, or drift correction is implemented |
 | Static POI registry | Resolve known names to metric goals | `demo_pois.yaml` | A demo coordinate prior; hardware use requires a real localized map frame |
 | Google Maps | Future context/route hint | Disabled `NullMapProvider` | Placeholder only: no key, request, route, or navigation authority |
@@ -120,10 +127,11 @@ not make the simulator's semantic perception realistic.
 ## Geometric planner design and consequences
 
 The default grid has 0.10 m cells and 161 cells per side (a 16.1 m rolling
-window). It retains overlapping log-odds evidence as the window recenters,
-inflates obstacles by the 0.32 m footprint plus a 0.10 m hard margin, replans
-every five navigation ticks, and immediately invalidates a cached route segment
-when a newer scan makes it unsafe.
+window). It retains overlapping log-odds evidence as the window recenters and
+inflates obstacles by the 0.32 m footprint plus a 0.10 m hard margin. Static
+routes normally replan every five navigation ticks and immediately replan when
+a newer scan invalidates the cached segment. When a valid dynamic-agent layer
+is active, A* runs every tick so a cached route does not lag moving tracks.
 
 | Choice | Advantage | Limitation / consequence |
 | --- | --- | --- |
@@ -131,10 +139,18 @@ when a newer scan makes it unsafe.
 | Penalize unknown space in A* | A partial field of view can still suggest goal direction instead of treating the world as a wall | The controller executes only an observed clear segment; default `grid_v1` can enter scan-only recovery at an unknown frontier or local minimum |
 | Binary footprint inflation | Simple, inspectable hard geometric clearance | Conservative rasterization narrows passages; it is flat 2-D and not terrain traversability |
 | Known-free line-of-sight smoothing | Shorter paths without cutting an inflated corner | It cannot smooth through unseen space and may produce cautious stop/scan behavior |
-| Replan periodically plus on invalidation | Reduces A* load while reacting immediately to a newly blocked cached segment | At the 10 Hz runtime and five-step interval, ordinary global replans are about 0.5 s apart |
+| Replan periodically plus on invalidation | Reduces A* load while reacting immediately to a newly blocked cached segment | At the 10 Hz runtime and five-step interval, static-only global replans are about 0.5 s apart; any active dynamic layer increases this to every tick |
 | Rotate-first hysteresis (`28°` enter, `7°` exit) | Removes diagonal slide and gives a stable heading mode | Slower than simultaneous rotate/translate and may look hesitant in a crowd |
 | Nominal `vy=0` | Natural forward-facing travel and portability to non-strafing bases | Gives up useful holonomic sidesteps; a future local planner may intentionally use `vy` without changing the command contract |
 | Scan-only default recovery | Avoids reversing into the rear blind wedge of a 270° eval/hardware scan and remains conservative in the 360° simulator | Rotation alone cannot escape every U-trap or wall-end local minimum |
+
+The current speed values are deliberately layered. `grid.yaml` has a desired
+cruise of `0.85 m/s`, but `default.yaml` clamps any navigation output to
+`0.45 m/s`; `configs/robot.yaml` then has a broader body-level limit of
+`1.0 m/s`. The 2026-08-04 cruise/global-limit retune improves tapering and
+non-navigation motion, but does **not** make ordinary navigation a sustained
+`0.85 m/s` controller. These simulator values are not a commissioned hardware
+speed profile.
 
 The planner has its own acceleration slew, and the runtime applies another
 velocity smoother before the final safety gate. This makes command changes
@@ -186,22 +202,52 @@ learned open-vocabulary grounding or long-lived semantic SLAM on hardware.
 ## Dynamic people and collision handling
 
 Dynamic actors can appear in the MuJoCo raycast and the runtime separately
-publishes nearest-person range/bearing and time-to-contact. Static/detected
-geometry affects the grid, while people/owner envelopes are enforced again by
-reactive safety. This separation keeps social limits independent of A* map
-aging and protects manual/follow commands that never use the grid.
+publishes range, bearing, velocity, radius, and time-to-contact. `grid_v1`
+projects at most 16 validated tracks with a constant-velocity model over a
+two-second horizon. Decaying Gaussian lobes become an additive A* cost inside a
+six-meter window; the owner is handled as a separate, lower-weight lobe so
+following does not turn the owner into a wall. The layer is rebuilt and planned
+against every tick while tracks exist. A malformed track payload is logged and
+disables this **soft** layer for that tick rather than stopping the runtime.
 
-It is still reactive, not predictive crowd navigation. There is no
-time-indexed occupancy grid, multi-agent trajectory prediction, ORCA local
-planner, or social negotiation. A pedestrian can therefore block a geometric
-route until the safety layer slows/stops and replanning finds another observed
-route; smooth behavior in dense bidirectional crowds is not yet demonstrated.
+Two independent outgoing-command checks remain authoritative. The universal
+reactive gate consumes the simulator/adapter's selected nearest social
+candidate (including the owner) and geometric proximity. The later configured
+TTC gate recomputes constant-velocity contact against non-owner dynamic tracks
+for the candidate command and can only scale the already-admitted command down.
+Neither can release a proximity stop. This separation also protects
+manual/follow commands that never use the grid.
+
+This is bounded prediction, not full predictive crowd navigation. There is no
+uncertainty propagation, learned intention forecast, time-indexed A* state,
+multi-agent interaction model, ORCA local negotiation, or guarantee that a
+soft cost changes the selected route. Smooth behavior in dense bidirectional
+crowds is not yet demonstrated.
+
+## Owner following and reacquisition
+
+Direct and behind-owner following use camera owner tracks. A bounded motion
+predictor is fed even while follow is idle and may move the controller's lead
+point by `0.6 s`; low confidence scales translation down, and stale/invalid
+tracks fall back to the measured owner rather than authorizing extrapolated
+motion.
+
+After the follow controller reports the owner lost for three seconds, the
+default brain-enabled runtime can compile a deterministic `SearchOwner` system
+task. The `search` source has priority 35 and performs three bounded phases:
+return toward the last confident position, sweep in place, then visit
+information-gain frontiers inside a reachability disk. It uses the rolling A*
+planner when calibrated LiDAR is present and loudly degrades to direct steering
+plus coverage-only frontier ranking without it. Reacquisition resumes follow
+through the runtime's legacy saved follow tuple; generic `ResumeIntent`
+consumption is not yet the end-to-end resume mechanism. The search gives up
+after 45 seconds and holds rather than wandering indefinitely.
 
 ## Registry: working, degraded, and research-only
 
 | Capability | Status today | What would make it deployable |
 | --- | --- | --- |
-| `grid_v1` | Default Parcel navigator | Physical scan/localization commissioning and hardware eval |
+| `grid_v1` | Default Parcel navigator, including soft dynamic-agent costs | Physical scan/localization commissioning and hardware eval |
 | `stub_v0` | Tests and loud missing-scan fallback | Keep as a diagnostic; do not equate it with mapped navigation |
 | POI lookup | Working against static demo YAML | Real map frame, localization, lifecycle/version policy |
 | Semantic search and terminal verification | Working against typed simulator tracks | Physical camera/depth perception with freshness and calibration tests |
@@ -229,9 +275,19 @@ types, but advances the base kinematically with `mj_forward`. It proves closed-
 loop task predicates and collision geometry, not Unitree Sport tracking,
 contact dynamics, foothold selection, sensor synchronization, or sim-to-real.
 
-`evals/companion_nav/` is the product-oriented gate. BARN and Habitat under
-`evals/external/` remain planner research proxies and must not be reported as
-Go2 companion performance.
+`evals/companion/embodied_plan_v1/` additionally executes accepted PlanIR
+through the executive and headless controllers. It supports navigation,
+owner-orbit, relative motion, and hold; `FollowFormation` is intentionally
+reported as unsupported. Its committed result JSON is historical and predates
+the current grid/speed configuration, so regenerate a result before quoting a
+current metric.
+
+`evals/companion_nav/` is the product-oriented follow/search gate with scripted
+owners and pedestrians. Its expression portion drives the real expression
+engine from scripted speech events, not the audio pipeline, and scripted emote
+windows model base ownership rather than joint choreography. BARN and Habitat
+under `evals/external/` remain planner research proxies and must not be reported
+as Go2 companion performance.
 
 ## Later simulator backends
 
@@ -245,7 +301,7 @@ Go2 companion performance.
 The install helper prepares vendor research but does not integrate it:
 
 ```bash
-./scripts/setup_metaurban.sh
+bash scripts/setup_metaurban.sh
 ```
 
 Keep simulation engines behind `SimulatorBackend` or versioned process IPC.

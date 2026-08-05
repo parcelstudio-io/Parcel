@@ -1,7 +1,8 @@
 # Parcel documentation
 
 Start with the status and decision records. They distinguish what is working in
-this checkout from target architecture and research proposals.
+this checkout from target architecture and research proposals. This index was
+last audited against the repository worktree on **2026-08-04**.
 
 | Doc | Role |
 | --- | --- |
@@ -28,9 +29,22 @@ this checkout from target architecture and research proposals.
 | [GRID_UPDATE_PERFORMANCE.md](GRID_UPDATE_PERFORMANCE.md) | Occupancy-grid update microbenchmark |
 | [RESEARCH_2026_ROADMAPS.md](RESEARCH_2026_ROADMAPS.md) | Research conclusions, implemented slices, and explicitly future work |
 | [ATTENTION_STEERING_DESIGN.md](ATTENTION_STEERING_DESIGN.md) | Voice-steered attention design: audits, architecture, trainable-core staging, open decisions |
+| [DUPLEX_DUAL_STREAM_DESIGN.md](DUPLEX_DUAL_STREAM_DESIGN.md) | Always-streaming dual-head duplex agent: frame contract, filler policy, D0→D2 staging |
+| [INSTRUCTION_NAV_HILLCLIMB.md](INSTRUCTION_NAV_HILLCLIMB.md) | Language-grounded navigation hillclimb: layer plan, model shortlist (VLFM/NaVILA/SigLIP-2), experiment ladder, eval spec |
+| [PAUSE_SEMANTICS.md](PAUSE_SEMANTICS.md) | Cross-channel pause, stop, resume, and time-freeze conventions |
+| [RUNTIME_CONCURRENCY_AND_CLOCKS.md](RUNTIME_CONCURRENCY_AND_CLOCKS.md) | Process/thread ownership, queues, cancellation, clock domains, and real-time limitations |
 
 ## Reading rules
 
+- When documents disagree, inspect current code/configuration and executable
+  tests first, then [CURRENT_STATUS.md](CURRENT_STATUS.md), then decision
+  records. Roadmaps describe direction and never override runtime evidence.
+- **Implemented** means code exists. **Wired** means a normal entry point reaches
+  it. **Verified** names a repeatable test or measurement. **Operational** means
+  the required service/device is available in the audited environment.
+  **Commissioned** is reserved for evidence from the intended physical device
+  and environment; **experimental** and **planned** paths are not admitted
+  product capabilities.
 - A roadmap is not an implementation claim. Look for its implementation-status
   note, then confirm against [CURRENT_STATUS.md](CURRENT_STATUS.md).
 - A simulator success is not physical hardware evidence.
@@ -46,3 +60,5 @@ this checkout from target architecture and research proposals.
   [evals/external/README.md](../evals/external/README.md)
 - Frozen PlanIR gates:
   [evals/companion/planner_quality_v2/README.md](../evals/companion/planner_quality_v2/README.md)
+- Duplex D0 scripted-turn gate:
+  [evals/companion/duplex_v1/README.md](../evals/companion/duplex_v1/README.md)

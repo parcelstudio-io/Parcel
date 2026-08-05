@@ -136,9 +136,10 @@ control:
 
 motion:
   backend: rl
-  max_vx: 0.6
-  max_vy: 0.4
-  max_vyaw: 1.0
+  # Raised 2026-08-04 (was 0.6/0.4/1.0): sim pace read as sluggish.
+  max_vx: 1.0
+  max_vy: 0.5
+  max_vyaw: 1.5
   smoothing:
     linear_accel: 0.9
     linear_decel: 1.4
@@ -243,6 +244,22 @@ speech:
   # the microphone to hear the owner this many times louder than the VAD
   # threshold. Hardware AEC (XVF3800-class mic array) is the planned fix.
   echo_guard_scale: 2.5
+
+# Duplex dual-stream voice agent (D0). Always-streaming TEXT+ACT frames at
+# frame_hz; fillers fire predictively on slow routes and via filler_watchdog_s
+# so no turn exceeds response_ceiling_s without an audible filler. Unknown
+# keys fail closed. logging writes local JSONL under log_dir (gitignored);
+# set logging: false to kill the D1 corpus writer.
+duplex:
+  enabled: true
+  filler_watchdog_s: 0.7
+  response_ceiling_s: 2.0
+  frame_hz: 10.0
+  logging: true
+  log_dir: logs/duplex
+  log_rotate_bytes: 2000000
+  rng_seed: 20260804
+  shadow_consumer: true
 
 # Expressive liveness: idle breathing/weight shifts plus conversation
 # reactions (orient to the speaker, hold a thinking pose). Purely additive

@@ -1,13 +1,15 @@
 # Dynamic city, smooth navigation, and social actions
 
-Living-city simulator and social-action policy for Parcel. Architecture context:
+Implementation snapshot: 2026-08-04. Living-city simulator and social-action
+policy for Parcel. Architecture context:
 [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) and
 [NAVIGATION_CITY.md](NAVIGATION_CITY.md).
 
 Short version:
 
 1. Keep MuJoCo as the fast, deterministic Go2 development backend.
-2. Production navigation is `grid_v1` over the raycast scan (not the stub).
+2. Production-path navigation is `grid_v1` over the raycast scan, with soft
+   constant-velocity dynamic-agent costs and independent proximity/TTC gates.
 3. Add MetaUrban as the first procedural SocialNav service (separate process).
 4. Add URBAN-SIM/Isaac Lab when articulated Go2 training is the priority.
 5. Treat the reasoning model as a semantic action proposer, never a motor
@@ -26,27 +28,43 @@ The simulator and browser panel now expose:
 - all mapped dynamic tracks and the current safety-focus actor's range/bearing;
 - true first-contact time-to-collision across pedestrians, cyclists, and owner;
 - personal-space rings and velocity vectors on the top-down map;
-- directional obstacle selection plus social collision braking shared by manual,
-  follow, and navigation sources;
+- directional obstacle selection plus social collision braking after
+  arbitration for every velocity source;
+- a per-tick, two-second constant-velocity dynamic-agent cost field in
+  `grid_v1`, with a lower owner weight and a separate outgoing-command TTC
+  brake;
 - deterministic scenario seeds for replay (`simulation.dynamic_city.seed`);
 - `--static-city` for controlled A/B tests.
 
 This is a useful functional test world, not a photorealistic crowd simulator.
 The people are visible mocap collision proxies, their routes avoid the fixed
-street furniture but do not yet use ORCA with one another, and the Go2 root is
-still translated kinematically. The scripted gait is
-now continuous across command refreshes, but physically credible foot contact
-still requires a learned locomotion policy or Isaac/URBAN-SIM.
+street furniture but do not use ORCA with one another, and the Go2 root is
+still translated kinematically. The planner predicts published tracks with a
+constant-velocity Gaussian cost, but the actors do not perceive or negotiate
+with the dog or one another. The scripted gait is now continuous across command
+refreshes, but physically credible foot contact still requires a learned
+locomotion policy or Isaac/URBAN-SIM.
+
+The dynamic cost is a preference, not a safety mask. `grid_v1` accepts at most
+16 validated non-owner tracks plus a separately weighted owner track, scores
+only a six-meter window, and replans every tick while the layer is active. A
+malformed payload logs a warning and drops the soft layer for that tick. The
+universal proximity gate still consumes the simulator's earliest social
+contact candidate (which can be the owner), while the later configured TTC
+gate recomputes contact for non-owner dynamic tracks against the outgoing
+command and can only reduce it. Neither layer models prediction uncertainty or
+social intent.
 
 The expression layer is now also live in this backend. A separate 50 Hz channel
 publishes bounded body-height/pitch offsets for idle breathing and weight shift;
 voice-stage head/gaze state is exposed for UI/metrics. Prosody schedules
-speech-accent head-pitch nods, but Go2 has no neck joint, so those nods are
-timing/telemetry only and do not visibly or physically move the current
-embodiment. Expression is suppressed or reduced during locomotion, skills,
-hazards, critical battery, and E-stop. This remains a behavioral preview: no
-physical support-polygon, torque, thermal, or vendor-Sport interaction has been
-validated.
+speech-accent head-pitch nods, but Go2 has no neck joint, so head yaw/pitch is
+timing/telemetry only and does not visibly or physically move the current
+embodiment. Locomotion reduces expression to this head-only channel, which
+therefore produces no joint overlay on the current Go2; skills, hazards,
+critical battery, and E-stop suppress it entirely. This remains a behavioral
+preview: no physical support-polygon, torque, thermal, or vendor-Sport
+interaction has been validated.
 
 ## Simulator research conclusion
 
@@ -55,7 +73,7 @@ validated.
 [iGibson](https://github.com/StanfordVL/iGibson) is an excellent reference for
 task/environment separation, social-navigation metrics, personal space, and
 ORCA crowd baselines. Its released worlds are predominantly homes and offices,
-and its latest GitHub release is from 2023. Its active successor,
+and are not a city backend. The actively developed household-task lineage,
 [BEHAVIOR-1K/OmniGibson](https://github.com/StanfordVL/BEHAVIOR-1K), is based on
 Isaac Sim and remains household-interaction focused. Neither is the best new
 foundation for a city dog.
@@ -86,7 +104,9 @@ semantic mission / personality
           ↓
 grid_v1 (rolling occupancy + A*) or stub fallback
           ↓
-forward-preferred track / recovery + independent safety veto
+soft dynamic-agent cost + forward-preferred track / recovery
+          ↓
+independent proximity/TTC vetoes + jerk-limited hand-off
           ↓
 bounded vx/vy/vyaw → ControlManager
           ↓
@@ -103,15 +123,14 @@ imported into Parcel's Python 3.14 threaded runtime.
 
 ## Smooth navigation decision
 
-The old stub always retained at least 15% forward speed, even with a large
-heading error. That produced the visible diagonal slide. It now uses an
-explicit forward-preferred state machine for ordinary point goals:
+Ordinary point-goal controllers use an explicit forward-preferred state
+machine:
 
 ```text
 ALIGN: vx=0, vy=0, bounded yaw → exit below 7°
 TRACK: default point-goal policy uses vy=0; forward speed is tapered by
        heading/distance
-       → re-enter ALIGN above 30°
+       → re-enter ALIGN above 28° (`grid_v1`) or 30° (`stub_v0`)
 ```
 
 This does not make the quadruped nonholonomic. Body-frame lateral velocity is
@@ -123,7 +142,16 @@ avoidance uses the same alignment handoff before translating. Safety/E-stop can
 still force translation to zero immediately. The simulator also preserves gait
 phase when the 10 Hz runtime refreshes an otherwise compatible walk command.
 
-For the physical ROS 2 stack, use established local control rather than an LLM:
+The configured speed numbers have different authority. `grid_v1` now requests
+up to `0.85 m/s`, the default navigation pipeline caps its output at
+`0.45 m/s`, and the wider body-level clamp is `1.0 m/s`. A post-safety S-curve
+shaper bounds acceleration and jerk but bypasses every stop. The current calm
+profile is driven by prosody measured from the robot's own synthesized speech,
+not by a classifier of the owner's mood. These simulator pacing changes have
+not been commissioned on hardware.
+
+For a future physical ROS 2 stack, the recommended local-control composition is
+established geometry rather than an LLM:
 
 ```text
 Nav2 Smac State Lattice
@@ -141,6 +169,7 @@ is the simpler exact path follower and includes rotate-to-heading behavior.
 [MPPI](https://docs.nav2.org/configuration/packages/configuring-mppic.html) is
 the stronger later choice for locally deviating around dynamic occupancy. A
 pedestrian prediction layer is still needed for time-indexed crowd motion.
+None of these Nav2 components is installed or wired into Parcel today.
 
 ## Where learned navigation belongs
 
@@ -188,6 +217,13 @@ navigation, follow, and E-stop authority changes.
 | Owner follow | Defer | Defer | Preempt |
 | Manual control | Defer | Defer | Manual retains motion lease |
 | E-stop | Reject and clear queue | Reject and clear queue | Operator must clear latch |
+
+`timing_preference` and `interruption_request` are validated schema fields but
+the current `ActivityCoordinator` does not branch on either value. All admitted
+gestures use the same policy: wait until `ActivityContext.busy_reason` is clear,
+then start before the 20-second proposal TTL expires. In particular,
+`safe_checkpoint` describes the requested policy; it does not yet locate or
+preempt at a task checkpoint.
 
 The spoken empathetic reply does not wait for the gesture. Inferred transcript
 affect must meet the configured confidence threshold. Whisper transcription

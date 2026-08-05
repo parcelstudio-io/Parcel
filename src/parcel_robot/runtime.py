@@ -73,6 +73,7 @@ from parcel_robot.core.details import (
 )
 from parcel_robot.core.preemption import PreemptionTable
 from parcel_robot.core.resume import GenerationTokens, ResumeIntent, ResumeStore
+from parcel_robot.duplex import DuplexConfig, DuplexCoordinator
 from parcel_robot.dynamic_prompting import (
     CallableContextSource,
     EmotePolicySource,
@@ -599,7 +600,17 @@ class RobotRuntime:
             ),
             dog=self.dog,
             info_tools=self.prompting.tools if self.prompting.tools.names() else None,
+            slow_path_hook=self._duplex_slow_path,
         )
+        self.duplex_config = DuplexConfig.from_mapping(self.store.section("duplex") or None)
+        self.duplex = DuplexCoordinator(
+            self.duplex_config,
+            skills=tuple(self.brain_registry.names()) if self._brain_enabled else (),
+            emotes=tuple(self._emote_catalog),
+        )
+        self._duplex_latest_turn_id = 0
+        # Per-turn duplex outcome bookkeeping for the D1 session log.
+        self._duplex_turn_meta: dict[int, dict[str, object]] = {}
         if self.prompting.composer is not None:
             # Fresh tool output stays visible to the next turn without
             # permanently bloating conversation history.
@@ -652,6 +663,7 @@ class RobotRuntime:
             on_partial=self._voice_partial_received,
             on_error=self._voice_error,
             on_stage=self._voice_stage,
+            on_filler_audible=self._duplex_filler_audible,
         )
         neural_vad, endpointer, self._endpointing_detail = self._build_endpointing(
             speech_config
@@ -1128,6 +1140,8 @@ class RobotRuntime:
         except (LookupError, RuntimeError, TypeError, ValueError) as error:
             self._emit("activity", f"Emote tag {name!r} ignored: {error}", "warning")
             return
+        if self.duplex.enabled:
+            self.duplex.push_emote(name)
         self._emit("activity", f"Emote {name}: {detail}", "info")
 
     def _brain_return_to_safe_pose(self, pose_name: str) -> str:
@@ -1338,6 +1352,8 @@ class RobotRuntime:
                     "error",
                 )
                 continue
+            if self.duplex.enabled:
+                self.duplex.push_skill(request.skill)
             if immediate is not None:
                 self.task_executive.report(immediate)
         self.component_metrics.elapsed("ExecutiveTick", started)
@@ -2842,6 +2858,7 @@ class RobotRuntime:
 
     def interrupt_voice(self) -> str:
         self.voice_session.barge_in()
+        self._duplex_sync_epoch()
         with self._lock:
             self._voice_detail = {
                 **self._voice_detail,
@@ -3006,6 +3023,7 @@ class RobotRuntime:
                 "footprint_radius_m": self.robot_profile.footprint_radius_m,
             },
             "expression": self.expression.snapshot(),
+            "duplex": self.duplex.snapshot(),
             "owner": owner,
             "dynamic_agents": dynamic_agents,
             "nearest_person": nearest_person,
@@ -3172,6 +3190,9 @@ class RobotRuntime:
             dispatch_started = time.monotonic()
             self._dispatch_active()
             self.component_metrics.elapsed("MotionDispatch", dispatch_started)
+            duplex_started = time.monotonic()
+            self._step_duplex(observation)
+            self.component_metrics.elapsed("DuplexProducer", duplex_started)
             elapsed = time.monotonic() - started
             self.component_metrics.observe_ms("ControlLoopWork", elapsed * 1000.0)
             self.component_metrics.observe_ms(
@@ -3860,6 +3881,142 @@ class RobotRuntime:
                 }
             )
 
+    def _duplex_slow_path(self, reason: str) -> None:
+        """Predictive filler before planner / info-tool slow work."""
+
+        if not self.duplex.enabled:
+            return
+        fire = self.duplex.predictive_filler(reason="predictive")
+        if fire is None:
+            return
+        self.duplex.push_filler_act(index=0)
+        if fire.entry.gesture == "<thinking_pose>":
+            self.expression.reactions.on_turn_pending(time.monotonic())
+        meta = self._duplex_turn_meta.setdefault(self._duplex_latest_turn_id, {})
+        meta["filler_used"] = fire.entry.text
+        meta["filler_reason"] = fire.reason
+        # FillerLatency is recorded only when the filler becomes audible.
+        self.voice_session.play_filler(fire.entry.text, turn_id=self._duplex_latest_turn_id)
+        self._emit("duplex", f"filler:{fire.reason}:{reason}", "info")
+
+    def _duplex_filler_audible(self) -> None:
+        self.duplex.on_filler_audible()
+        latency = self.duplex.filler.filler_latency_s
+        if latency is not None:
+            self.component_metrics.observe_ms("FillerLatency", latency * 1000.0)
+        meta = self._duplex_turn_meta.setdefault(self._duplex_latest_turn_id, {})
+        meta["filler_audible"] = True
+        if self.duplex.filler.last_filler_text:
+            meta.setdefault("filler_used", self.duplex.filler.last_filler_text)
+
+    def _duplex_sync_epoch(self) -> None:
+        epoch = int(self.voice_session.speech_epoch)
+        if epoch != self.duplex.epoch:
+            self.duplex.set_epoch(epoch)
+
+    def _duplex_has_tts_path(self) -> bool:
+        return self._speaker_sink is not None
+
+    def _duplex_record_turn_outcome(self, turn_id: int, *, barge_in: bool = False) -> None:
+        if not self.duplex.enabled:
+            return
+        meta = self._duplex_turn_meta.pop(int(turn_id), {})
+        if barge_in:
+            meta["barge_in"] = True
+        outcome = {
+            "turn_id": int(turn_id),
+            "ttft_s": meta.get("ttft_s"),
+            "filler_used": meta.get("filler_used"),
+            "filler_reason": meta.get("filler_reason"),
+            "filler_audible": bool(meta.get("filler_audible", False)),
+            "barge_in": bool(meta.get("barge_in", False)),
+        }
+        self.duplex.record_turn_outcome(outcome)
+
+    def _duplex_on_voice_stage(self, stage: VoiceStage) -> None:
+        if not self.duplex.enabled:
+            return
+        self._duplex_sync_epoch()
+        if stage.name == "query_end":
+            self._duplex_latest_turn_id = int(stage.turn_id)
+            self.duplex.on_turn_start(now_s=stage.timestamp)
+            self._duplex_turn_meta[int(stage.turn_id)] = {
+                "query_end_s": float(stage.timestamp),
+                "barge_in": False,
+            }
+        elif stage.name in {"tts_first_chunk", "audio_first_playback"}:
+            # First token on the TTS / audible path cancels the watchdog.
+            self.duplex.on_first_token(now_s=stage.timestamp)
+            meta = self._duplex_turn_meta.setdefault(int(stage.turn_id), {})
+            if meta.get("ttft_s") is None and isinstance(meta.get("query_end_s"), (int, float)):
+                meta["ttft_s"] = float(stage.timestamp) - float(meta["query_end_s"])
+        elif stage.name == "tts_text_chunk" and stage.reply:
+            # Observe the same sentence/chunk tokens the spoken path is synthesizing.
+            self.duplex.push_text_tokens(stage.reply)
+        elif stage.name == "reasoning_response":
+            # LLM text alone must NOT cancel the watchdog when a TTS path exists.
+            # Text-only mode has no TTS queue; reply delivery is the audible path.
+            if stage.reply and not self._duplex_has_tts_path():
+                self.duplex.on_first_token(now_s=stage.timestamp)
+                self.duplex.push_text_tokens(stage.reply)
+                meta = self._duplex_turn_meta.setdefault(int(stage.turn_id), {})
+                if meta.get("ttft_s") is None and isinstance(
+                    meta.get("query_end_s"), (int, float)
+                ):
+                    meta["ttft_s"] = float(stage.timestamp) - float(meta["query_end_s"])
+        elif stage.name == "filler_clause_boundary_wait" and stage.reply:
+            # Mirror the voice-session clause-boundary queue into filler policy
+            # so duplex snapshot / session log see the pending handoff.
+            self.duplex.filler.note_clause_boundary_pending(stage.reply)
+        elif stage.name == "filler_audible":
+            self.duplex.on_filler_audible(now_s=stage.timestamp)
+        elif stage.name == "superseded":
+            self._duplex_sync_epoch()
+            meta = self._duplex_turn_meta.setdefault(int(stage.turn_id), {})
+            meta["barge_in"] = True
+        elif stage.name in {"turn_complete", "error"}:
+            if stage.name == "error":
+                self._duplex_sync_epoch()
+            self._duplex_record_turn_outcome(int(stage.turn_id))
+
+    def _step_duplex(self, observation: SimObservation | None) -> None:
+        if not self.duplex.enabled:
+            return
+        self._duplex_sync_epoch()
+        fire = self.duplex.poll_watchdog()
+        if fire is not None:
+            self.duplex.push_filler_act(index=0)
+            if fire.entry.gesture == "<thinking_pose>":
+                self.expression.reactions.on_turn_pending(time.monotonic())
+            meta = self._duplex_turn_meta.setdefault(self._duplex_latest_turn_id, {})
+            meta["filler_used"] = fire.entry.text
+            meta["filler_reason"] = fire.reason
+            # Latency sample waits for audible confirmation (_duplex_filler_audible).
+            self.voice_session.play_filler(fire.entry.text, turn_id=self._duplex_latest_turn_id)
+        # ResponseCeilingBreach is a counter on the duplex snapshot only — do
+        # not re-observe it as a rolling ms metric every control tick.
+        # ACT feed: encode what was actually commanded post-gate.
+        commanded = self._last_sent
+        if any(abs(v) > 1e-9 for v in (commanded.vx, commanded.vyaw)):
+            self.duplex.push_twist(commanded.vx, commanded.vyaw)
+        context: dict[str, object] = {
+            "activity": self.activities.snapshot().get("running"),
+            "follow_enabled": self.follow.enabled,
+            "expression": {
+                "producer": self.expression.snapshot().get("producer"),
+                "orients_triggered": self.expression.reactions.orients_triggered,
+                "thinking_holds": self.expression.reactions.thinking_holds,
+            },
+        }
+        if observation is not None:
+            owner = observation.owner
+            context["owner"] = {
+                "x_m": float(owner.x) if math.isfinite(owner.x) else None,
+                "y_m": float(owner.y) if math.isfinite(owner.y) else None,
+                "visible": bool(owner.visible),
+            }
+        self.duplex.tick(context=context)
+
     def _voice_partial_received(self, transcript: str) -> None:
         with self._lock:
             self._voice_detail = {
@@ -3902,6 +4059,7 @@ class RobotRuntime:
             self.expression.reactions.on_turn_pending(time.monotonic())
         elif stage.name in {"audio_first_playback", "turn_complete", "error"}:
             self.expression.reactions.on_reply_started(time.monotonic())
+        self._duplex_on_voice_stage(stage)
         if stage.name == "query_end":
             with self._lock:
                 self._voice_query_end_by_turn[stage.turn_id] = stage.timestamp
@@ -4090,12 +4248,19 @@ class RobotRuntime:
     def _owner_speech_started(self) -> None:
         """Owner began speaking: look at them (expressive reaction only)."""
 
-        self.expression.reactions.on_speech_start(
-            time.monotonic(), self._owner_bearing_rad()
-        )
+        bearing = self._owner_bearing_rad()
+        self.expression.reactions.on_speech_start(time.monotonic(), bearing)
+        if self.duplex.enabled:
+            # Attention decision → gaze ACT token (owner look-at).
+            if abs(bearing) < 1e-6:
+                self.duplex.push_gaze_owner()
+            else:
+                self.duplex.push_gaze_bearing(bearing)
 
     def _owner_speech_ended(self) -> None:
         self.expression.reactions.on_speech_end(time.monotonic())
+        if self.duplex.enabled:
+            self.duplex.push_gaze_release()
 
     def _microphone_failed(self, error: Exception) -> None:
         """Mid-session capture death degrades loudly to text mode.

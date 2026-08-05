@@ -3,7 +3,7 @@
   "suite_id": "parcel-embodied-plan-v1",
   "runner_version": "headless-executive-adapter-v1",
   "frozen": true,
-  "frozen_at_utc": "2026-08-04T09:02:00Z",
+  "frozen_at_utc": "2026-08-04T15:55:00Z",
   "case_count": 5,
   "base_motion": "deterministic_kinematic_mujoco_geometry",
   "policy_observation_contract": [
@@ -35,7 +35,7 @@
     },
     "robot_config": {
       "path": "configs/robot.yaml",
-      "sha256": "d8a090a4879d1a9451f41477dd65ef70a4b59886d5990bfc72bbec7d698c056a"
+      "sha256": "f64688874525f20d08b290613a49aec2f8cbec0055e7c2a3752503d67545726c"
     },
     "result_schema": {
       "path": "evals/companion/embodied_plan_v1/result.schema.json",

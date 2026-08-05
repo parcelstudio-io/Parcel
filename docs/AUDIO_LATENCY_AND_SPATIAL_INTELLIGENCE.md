@@ -18,6 +18,7 @@ artifacts or hardware, **fallback** means deliberately degraded behavior, and
 | Piper TTS | **Configured, not installed** | The configured binary and voice files are absent. `speech.mode: auto` therefore degrades without failing the simulator. |
 | Fish S2 TTS | **Optional service/adapter installed** | The provider exposes streaming, but the runtime's sentence wrapper currently calls blocking `synthesize()` once per sentence, so cancellation and first audio are sentence-granular. |
 | Acoustic echo cancellation | **Planned hardware integration** | The software path has only an energy echo guard. An XVF3800-class array must provide the real speaker reference. |
+| D0 duplex frames and fillers | **Active in software** | The runtime mirrors reply/action events into a 10 Hz shadow stream and can play deterministic fillers. Frames observe existing behavior; they do not drive speech or motion. |
 | Idle/reaction expression | **Active in the runtime** | A separate 50 Hz layer drives bounded body offsets in MuJoCo and reports head/gaze state. |
 | ProsodyTap + beat scheduling | **Wired** | Synthesized WAV chunks are analyzed before playback and nod timing is anchored when the sink starts a chunk. Go2 has no neck actuator, so the current head-pitch nod is state/metric output, not physical Go2 motion. |
 | Latency dashboard | **Active** | `/latency` shows bounded per-turn traces and rolling component distributions. Audio input and acoustic output boundaries remain incomplete; details are below. |
@@ -31,12 +32,15 @@ The read-only audit found:
 - Bluetooth AAC/SBC and hands-free codec support; and
 - ALSA capture hardware and drivers.
 
-No Bluetooth or USB audio endpoint was connected. PipeWire reported no default
-source and no real default sink, so `detect_audio_devices()` returned `text
+No Bluetooth or USB audio endpoint was connected. PipeWire reported only a
+dummy output, no source, and no real default sink; `lsusb` showed no XVF3800 or
+other USB audio device. Accordingly, `detect_audio_devices()` returned `text
 mode`, `connected_input: false`, `connected_output: false`, and `transport:
-none`. This is not a missing Bluetooth driver. It is compounded by a separate
-software prerequisite: the installed Python `sounddevice` distribution cannot
-import until the missing `libportaudio2` runtime is installed.
+none`. A powered adapter with A2DP/HFP roles is capability evidence, not a
+connected usable headset. This is not a missing Bluetooth driver. It is
+compounded by a separate software prerequisite: the installed Python
+`sounddevice` distribution cannot import until the missing `libportaudio2`
+runtime is installed.
 
 AirPods and similar headsets can be used after pairing. A2DP normally gives
 good playback without the headset microphone; opening the microphone switches
@@ -71,14 +75,16 @@ The final command is expected to fail on the audited host until
 
 The audio group in `configs/robot.yaml` is now under `speech:`, matching the
 runtime. Supported keys that reach their consumers are `fish_url`, device
-selectors, `endpointing`, `vad_model`, `turn_model`, and `echo_guard_scale`.
-The canonical config chooses energy endpointing, leaves devices on the system
-default, and selects Piper rather than Fish.
+selectors, `endpointing`, `vad_model`, `turn_model`, `echo_guard_scale`, and
+`fish_reference_id` (used when `tts_provider: fish_s2`). The canonical config
+chooses energy endpointing, leaves devices on the system default, and selects
+Piper rather than Fish.
 
-`fish_reference_id`, `fish_streaming`, and `barge_in` are present but not
-consumed by runtime/provider construction. Barge-in is currently enabled by the
-existence of a microphone loop rather than by the YAML boolean. These keys are
-reserved/inert, not working toggles.
+The canonical config does **not** contain `fish_streaming` or `barge_in`.
+Those stale keys remain only in the divergent packaged fallback at
+`src/parcel_robot/config/robot.yaml`; the current fail-closed speech builder
+does not allow them, so that fallback must be reconciled before use. Barge-in is
+enabled by construction when a microphone loop exists, not by a YAML toggle.
 
 ## Audio path and endpointing choices
 
@@ -164,11 +170,16 @@ The headline metrics are:
 
 - `UserQueryEndToFirstResponse`: final-text submission to the first response
   observable in the application log or audio queue, whichever occurs first.
+  A queued filler can win this race in audio mode; a text-only logical filler
+  does not create `response_logged` or `audio_first_playback` and therefore
+  does not count here.
 - `UserQueryEndToFirstReasoningResponse`: final-text submission to the first
   streamed provider output. Deterministic and non-streaming paths use their
-  complete validated result.
+  guarded/complete result. A provider TTFT sample is not yet a speakable reply:
+  Parcel withholds output until the complete JSON decision validates.
 - `QueryEndToFirstSpokenAudio`: final-text submission to first audio-sink
-  enqueue. Despite the name, this is not an acoustic timestamp.
+  enqueue, including a filler if it is first. Despite the name, this is not an
+  acoustic timestamp.
 - `UserQueryEndToFirstPlanOutput` and `UserQueryEndToAcceptedPlan`: planning
   TTFT and validated task-executive admission for deliberative turns.
 
@@ -181,8 +192,11 @@ status-stratified aggregates retain those cases.
 
 Rolling component metrics include the control/simulator path plus
 `TurnCommitLatency`, `ProsodyAnalysis`, `ExpressionLayer`, and
-`VoiceEndOfSpeechToFirstAudio`. Every component reports latest, mean, p50,
-p95, p99, maximum, and sample count where applicable.
+`VoiceEndOfSpeechToFirstAudio`, plus `FillerLatency` and `DuplexProducer` when
+D0 duplex is enabled. `ResponseCeilingBreach` is a cumulative counter in
+`GET /api/state` under `duplex`, not a duration distribution. Every rolling
+component reports latest, mean, p50, p95, p99, maximum, and sample count where
+applicable.
 
 ### Measurement gaps
 
@@ -200,6 +214,25 @@ that callback currently anchors only beat motion, not the latency ledger.
 PipeWire/Bluetooth presentation timestamps are not collected. The dashboard's
 audio values are thus software lower bounds.
 
+D0 filler timing uses the same caveat. With an audio sink, `tts_first_chunk`
+marks the turn answered before the subsequent enqueue, and `filler_audible`
+means the enqueue callback returned. In text-only mode it is an immediate
+logical-delivery marker despite there being no sound. The two-second ceiling
+counter therefore proves only that software observed a generated reply chunk
+or logical/queued filler, not that a listener heard one. Because filler and
+real reply reuse the same turn id and the latency tracker keeps the first value
+for most stages, `tts_start`, `tts_first_chunk`, `audio_first_playback`, and
+`tts_complete` can describe the filler while `turn_complete` describes the
+later answer. This is useful for first-response latency but makes the current
+`TTSTotal` decomposition ambiguous on filled turns.
+
+The duplex frame counter is not a timing metric either. `FrameInterleaver`
+increments `t` once per caller tick and never sleeps or catches up; its current
+`missing_frames` counter cannot detect a late 10 Hz control-loop deadline. See
+[Runtime concurrency, clocks, and ownership](RUNTIME_CONCURRENCY_AND_CLOCKS.md)
+and [Duplex dual-stream design](DUPLEX_DUAL_STREAM_DESIGN.md) for the exact
+producer and corpus boundaries.
+
 Production measurement needs four additional clocks:
 
 1. capture/VAD speech-end and semantic-commit timestamps;
@@ -216,8 +249,9 @@ The current design deliberately separates **what** from **when**:
 
 - the text brain may select one validated semantic gesture or emit one
   `[emote:name:intensity]` marker from an admitted catalog;
-- `SentenceChunkedSynthesizer` strips the marker from speech and dispatches
-  the gesture through the activity/proposal coordinator; and
+- `SentenceChunkedSynthesizer` strips the marker from speech, attaches it to
+  the containing `SpeechChunk`, and the speaker-worker chunk-start callback
+  dispatches it through the activity/proposal coordinator; and
 - `ProsodyTap` analyzes synthesized PCM with a 10 ms RMS envelope,
   pitch/onset-gated accents, and a bounded arousal score. `BeatLayer` schedules
   those accents against the actual chunk-start callback.
@@ -242,8 +276,10 @@ Current embodiment limitations:
 - Head-only mode during navigation is effectively snapshot-only on Go2.
 - Idle body offsets work in MuJoCo, but a physical Unitree expression channel
   and hardware validation are not implemented.
-- Inline emotes fire when their sentence starts synthesis, before confirmed
-  acoustic playback, and are constrained to stationary bounded skills.
+- With audio, inline emotes fire when the speaker worker begins their containing
+  chunk; in text mode they fire when the reply is logged. Worker start is closer
+  to the words than synthesis time but still not a device/acoustic presentation
+  timestamp. Emotes remain constrained to stationary bounded skills.
 - Arousal currently changes nod amplitude only. It is not an input to the
   reasoning model or the TTS provider, and no user-voice affect classifier is
   implemented.

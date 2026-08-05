@@ -27,6 +27,9 @@ browser partial/final text       16 kHz microphone frames
 
 reply text -> sentence/emote adapter -> Piper or Fish -> SpeakerSink
                               `-> ProsodyTap -> expression scheduler
+
+validated reply + post-gate runtime events
+          -> D0 TEXT/ACT interleaver -> shadow decoder + local JSONL
 ```
 
 The control boundary is intentionally text and typed semantics. Raw audio,
@@ -50,7 +53,31 @@ compilation, task admission, collision response, and E-stop.
 | Piper | Provider and install/run scripts implemented | Configured default, but binary and voice absent |
 | Fish S2 | Provider and isolated service implemented | Optional; not the configured default and not running |
 | Duplex cancellation | Implemented | Browser-tested; acoustic barge-in awaits a device/AEC integration |
+| D0 TEXT/ACT framing | Implemented and enabled | Observes existing reply/action events at the nominal control-loop cadence; shadow-only and not model-generated |
+| Deterministic filler policy | Implemented and enabled | Predictive for planner/info-tool paths plus a 700 ms watchdog; real speaker behavior is unverified on this host |
 | Native speech-to-speech model | Research only | No native-audio model has dispatch authority |
+| Dual-head TEXT/ACT model | Planned D1 | No installed model emits Parcel's frame vocabulary and no live ACT adapter exists |
+
+### Runtime endpoint and artifact paths
+
+`RobotRuntime` never opens a GGUF directly. Its `LlamaCppProvider` calls the
+OpenAI-compatible endpoint configured by `language_model.base_url` (canonical
+`http://127.0.0.1:8080`) and uses `language_model.model` as the server alias.
+The launcher owns artifact selection:
+
+| Path | Role |
+| --- | --- |
+| `models/gemma-4-26b-a4b/gemma-4-26B_q4_0-it.gguf` | Installed admitted Gemma artifact used by both CPU and default GPU launchers |
+| `third_party/llama.cpp-bin/llama-b10235/llama-server` | CPU rollback server used by `scripts/launch_reasoner.sh` on port 8080 |
+| `configs/reasoner/llama_cpp_cuda12_oci_b10236.json` | Provenance, hash, model, device, and memory admission profile for the CUDA server |
+| `third_party/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server` | Staged admitted CUDA binary; `scripts/launch_reasoner_gpu.sh` defaults to port 8081 unless overridden |
+| `models/reasoner/ministral-3-8b-*/` | Installed rejected challenger artifacts; no canonical runtime selects them |
+
+At this audit no reasoner was listening on 8080 or 8081. Starting the GPU
+launcher on its default 8081 does not connect the canonical runtime; use an
+explicit port override or a matching experimental `base_url`. See
+[Parcel llama.cpp CUDA profiles](REASONER_GPU_PROFILE.md) for immutable hashes
+and retained measurements.
 
 ## Crucial design choice: engineered cascade, not native speech-to-speech
 
@@ -76,6 +103,9 @@ Limitations:
 - endpointing, complete-utterance STT, model generation, and first-sentence TTS
   are serial today, so natural conversational latency is higher than a native
   duplex model;
+- although llama.cpp is read as a stream for cancellation and TTFT, Parcel must
+  accumulate and validate the complete structured JSON decision before any
+  reply text reaches TTS;
 - finalized text discards tone, hesitation, laughter, speaker overlap, and
   other paralinguistic evidence;
 - an ASR error becomes the model's semantic input unless a later layer notices
@@ -153,6 +183,23 @@ The system prompt comes from versioned personality/function templates plus
 bounded volatile turn tail, exposes its last assembly at `GET /api/prompt`, and
 contains source failures rather than failing the voice turn.
 
+The trusted assembly boundary is explicit:
+
+- [`system/core.md`](../prompts/system/core.md) owns immutable safety,
+  conversational, sensor, and output rules;
+- [`system/action_policy.md`](../prompts/system/action_policy.md) defines the
+  turn-level `next_action` proposal contract;
+- [`personalities/`](../prompts/personalities/) changes tone and maps clear
+  happy/sad cues to admitted social skills;
+- [`functions/`](../prompts/functions/) adds companion, navigation, spatial,
+  patrol, or manual-assistant guidance;
+- [`dynamic/runtime_context.md.tmpl`](../prompts/dynamic/runtime_context.md.tmpl)
+  labels serialized runtime state as untrusted and potentially stale; and
+- [`schemas/agent_decision.schema.json`](../prompts/schemas/agent_decision.schema.json)
+  documents the base fast-response shape. The live llama.cpp schema is built
+  programmatically by `_decision_response_schema(tools)` so tool arguments
+  match the current admitted definitions; this file is not loaded at runtime.
+
 Implemented sources are:
 
 - short owner-profile facts;
@@ -168,9 +215,20 @@ and the “stable” plane is ordering for prefix reuse rather than an explicit
 application-managed KV cache. Operational/manual facts still need a cited,
 permissioned retrieval layer.
 
-`ConversationMemory` stores bounded text roles/messages in SQLite and never raw
-microphone audio. Persistence is not yet opt-in or encrypted, and no user-facing
-erase workflow is implemented; those are production requirements.
+The prompt contract is deliberately turn-level. It never asks the model for
+`DuplexFrame`, `<idle>`, gaze/twist tokens, joint values, or a continuous
+attention policy. Filler phrases are currently hard-coded in Python rather
+than authored per personality, and the pure attention arbiter is not wired to
+these profiles. This separation protects control authority, but it also means
+personality does not yet shape fillers or 10 Hz attention decisions.
+Keeping the live response schema next to provider code makes the admitted tool
+surface dynamic, but the separate reference JSON can drift; a generated-schema
+parity test would be safer than treating both as authorities.
+
+`ConversationMemory` stores text roles/messages in SQLite and never raw
+microphone audio. Prompt retrieval is bounded, but the database itself has no
+retention/pruning bound. Persistence is not yet opt-in or encrypted, and no
+user-facing erase workflow is implemented; those are production requirements.
 
 ## Model selection: evidence before promotion
 
@@ -282,9 +340,10 @@ explicitly benchmarked before calling the Fish path low-latency streaming.
 
 Inline `[emote:name:intensity]` tags are removed before TTS and routed through
 the validated Gesture proposal path. They are useful sentence-level body
-language, but they fire at sentence synthesis start rather than confirmed
-speaker playback and are ignored/rejected when activity gates do not admit the
-gesture.
+language. With audio they ride the containing `SpeechChunk` and fire from the
+speaker-worker chunk-start callback; in text mode they fire when the reply is
+logged. Worker start is not a device/acoustic presentation timestamp, and the
+gesture is ignored/rejected when activity gates do not admit it.
 
 Fish S2 Pro's model has a research-oriented license; commercial deployment
 requires a separate license review. Sesame CSM artifacts exist locally as a
@@ -296,7 +355,7 @@ Official references:
 - [Fish Speech source](https://github.com/fishaudio/fish-speech)
 - [Piper source](https://github.com/rhasspy/piper)
 
-## Duplex behavior and expressive output
+## Duplex behavior, D0 framing, and expressive output
 
 `DuplexVoiceSession` serializes final turns while TTS runs on an independent
 worker. A newer partial or final:
@@ -311,6 +370,26 @@ This is genuine concurrency and cancellation at the application boundary, but
 not yet robust acoustic full duplex. There is no AEC, microphone ASR does not
 emit partials, and the energy guard can suppress quiet barge-in. Hardware AEC
 through the XVF3800 speaker-reference path is the intended next integration.
+
+Separately, the enabled `DuplexCoordinator` renders one D0 frame per nominal
+10 Hz control-loop tick. TEXT is complete sentence text observed at the TTS
+wrapper (or the completed reply in text mode), split into whitespace tokens and
+drained one per frame. ACT mirrors post-gate `vx`/`vyaw`, deterministic gaze
+callbacks, admitted skills/emotes, and filler events. The consumer decodes in
+shadow mode so behavior is not executed twice.
+
+This is useful coarsely time-indexed instrumentation, not a new reasoning model. llama.cpp
+does not emit ACT tokens, lateral `vy` is absent from the v1 codec, simultaneous
+ACT events collapse last-write-wins, and the unbounded TEXT queue can lead or
+trail speech. Setting `shadow_consumer: false` still does not route decoded commands
+through the runtime. See [Duplex dual-stream voice agent](DUPLEX_DUAL_STREAM_DESIGN.md)
+for logging, clock, privacy, and D1 promotion limits.
+
+The active filler path acknowledges deliberative planning and information tools
+predictively, or other TTS delays via the watchdog. A filled answer waits for
+the short filler worker to finish synthesis/enqueue before starting. The
+configured two-second ceiling uses generated/queued or text-mode logical
+markers; it is not an acoustic service-level guarantee.
 
 Expression is intentionally subordinate to task motion. The 50 Hz layer adds
 bounded idle body offsets, owner-orient/thinking state, and prosody-timed head
@@ -356,9 +435,13 @@ scripts/launch_fish_speech.sh
 `speech.mode: auto` uses whichever STT/TTS roles are healthy and otherwise
 keeps text control available. `speech.mode: audio` requires both roles and
 fails startup if either is unavailable. The default `configs/robot.yaml` now
-places supported audio settings under `speech:`. Its `fish_reference_id`,
-`fish_streaming`, and `barge_in` keys remain reserved/inert; do not assume a
-visible YAML key is effective without a consumer and contract test.
+places supported audio settings under `speech:`. `fish_reference_id` is a real
+Fish-provider input. `fish_streaming` and `barge_in` are absent from that
+canonical file and survive only in the divergent packaged fallback
+`src/parcel_robot/config/robot.yaml`; current fail-closed validation rejects
+them. Barge-in is wired by microphone-loop construction rather than a boolean
+toggle. Do not assume a visible YAML key is effective without a consumer and
+contract test.
 
 Keep every model service on loopback unless authentication, authorization, and
 transport encryption are added.
@@ -368,7 +451,11 @@ transport encryption are added.
 `/latency` records model TTFT, complete reasoning, planner stages, TTS stages,
 action commit, status, query, and response. The current final-text clock starts
 after microphone endpointing and STT, and first “spoken” audio is only a queue
-handoff, so the dashboard does not yet prove acoustic end-to-end latency.
+handoff, so the dashboard does not yet prove acoustic end-to-end latency. A
+filler can become the first audio response in an audio turn; in text mode the
+same filler is only a logical marker and does not count as the logged first
+response. Filled turns also reuse one turn id, so first-write TTS stage metrics
+can describe the filler while `turn_complete` describes the eventual answer.
 
 Initial product gates should remain:
 
@@ -393,6 +480,10 @@ and eventually Unitree evidence.
 - true streaming ASR partials and content-aware interruption;
 - endpoint/STT/acoustic-presentation timestamps in the latency ledger;
 - native Fish chunk streaming through the runtime wrapper;
+- bounded D0 TEXT backpressure, wall-clock frame deadline accounting, and
+  asynchronous/privacy-hardened duplex logging;
+- a D1 live ACT adapter through typed validation, arbitration, and collision
+  safety before any dual-head model can gain execution authority;
 - physical expression/neck embodiment and calibrated motion/audio lag;
 - encrypted, opt-in memory with an erase workflow;
 - authenticated service endpoints and operator enrollment; and

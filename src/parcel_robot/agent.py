@@ -79,6 +79,7 @@ class VoiceAgent:
         planner_output_adapter: PlannerOutputAdapter | None = None,
         dog=None,
         info_tools=None,
+        slow_path_hook: Callable[[str], None] | None = None,
     ):
         if not 1 <= conversation_history_messages <= 64:
             raise ValueError("conversation history messages must be between 1 and 64")
@@ -120,6 +121,8 @@ class VoiceAgent:
         # The safety supervisor admits them by exact name; anything else
         # stays fail-closed.
         self.info_tools = info_tools
+        # D0 duplex: emit a filler *before* slow work (planner / info tools).
+        self.slow_path_hook = slow_path_hook
         info_tool_names = tuple(info_tools.names()) if info_tools is not None else ()
         self.safety = SafetySupervisor(
             poses,
@@ -171,6 +174,14 @@ class VoiceAgent:
             if callable(cancel):
                 cancel()
 
+    def _emit_slow_path(self, reason: str) -> None:
+        hook = self.slow_path_hook
+        if callable(hook):
+            try:
+                hook(str(reason))
+            except Exception as error:  # noqa: BLE001 - filler must never fail the turn
+                self.last_reasoning_error = f"slow_path_hook:{error}"[:500]
+
     def _handle_text(self, transcript: str, commit: CommitGuard | None) -> str:
         original = re.sub(r"\s+", " ", transcript.strip())
         text = original.lower()
@@ -202,6 +213,7 @@ class VoiceAgent:
         # as a destination label). The router remains metadata-only; this
         # branch merely selects the separate constrained PlanIR call.
         if frame.route == "deliberative_plan" and self._planning_ready():
+            self._emit_slow_path("deliberative_plan")
             return self._handle_plan(original, frame, commit)
 
         if text in {"follow", "follow me", "come with me", "heel"}:
@@ -794,6 +806,7 @@ class VoiceAgent:
                     self.memory.add("tool", status)
                     detail = status
             elif self.info_tools is not None and self.info_tools.has(call.name):
+                self._emit_slow_path(f"info_tool:{call.name}")
                 try:
                     result = self.info_tools.invoke(call.name, dict(call.arguments))
                 except (LookupError, RuntimeError, TypeError, ValueError) as error:

@@ -84,6 +84,7 @@ class _OutputState:
     cancel_event: threading.Event
     stream: Iterator[bytes] | None = None
     thread: threading.Thread | None = None
+    is_filler: bool = False
 
 
 class DuplexVoiceSession:
@@ -112,6 +113,7 @@ class DuplexVoiceSession:
         on_partial: Callable[[str], None] | None = None,
         on_error: Callable[[Exception], None] | None = None,
         on_stage: Callable[[VoiceStage], None] | None = None,
+        on_filler_audible: Callable[[], None] | None = None,
     ):
         if (synthesizer is None) != (audio_chunk_player is None):
             raise ValueError("synthesizer and audio_chunk_player must be configured together")
@@ -124,6 +126,7 @@ class DuplexVoiceSession:
         self.on_partial = on_partial
         self.on_error = on_error
         self.on_stage = on_stage
+        self.on_filler_audible = on_filler_audible
 
         self._turn_queue: queue.Queue[_QueuedTurn | None] = queue.Queue()
         self._lock = threading.RLock()
@@ -137,12 +140,21 @@ class DuplexVoiceSession:
         self._output_threads: set[threading.Thread] = set()
         self._last_error: Exception | None = None
         self._closed = False
+        self._filler_active = False
+        self._filler_done = threading.Event()
+        self._filler_done.set()
+        self._pending_reply_after_filler: tuple[_QueuedTurn, str] | None = None
         self._worker = threading.Thread(
             target=self._run_input,
             name="parcel-voice-input",
             daemon=True,
         )
         self._worker.start()
+
+    @property
+    def speech_epoch(self) -> int:
+        with self._lock:
+            return self._speech_epoch
 
     @property
     def partial_transcript(self) -> str:
@@ -205,8 +217,70 @@ class DuplexVoiceSession:
             output = self._active_output
             if output is not None:
                 output.cancel_event.set()
+            self._filler_active = False
+            self._pending_reply_after_filler = None
+            self._filler_done.set()
         self._interrupt_output(output)
         self._cancel_reasoning()
+
+    def play_filler(self, text: str, *, turn_id: int = 0) -> bool:
+        """Speak a short filler through the normal TTS path (barge-in-able).
+
+        In text-only mode (no synthesizer), marks the filler audible immediately
+        via ``on_filler_audible`` so the ≤2 s ceiling metric still works.
+        """
+
+        clean = " ".join(str(text).split())
+        if not clean:
+            return False
+        with self._lock:
+            if self._closed:
+                return False
+            speech_epoch = self._speech_epoch
+            self._filler_active = True
+            self._filler_done.clear()
+        self._call_stage(
+            VoiceStage(turn_id, "filler_start", time.monotonic(), reply=clean)
+        )
+        if self.synthesizer is None or self.audio_chunk_player is None:
+            if self.on_filler_audible is not None:
+                try:
+                    self.on_filler_audible()
+                except Exception as error:  # noqa: BLE001
+                    self._report_error(error)
+            self._call_stage(
+                VoiceStage(turn_id, "filler_audible", time.monotonic(), reply=clean)
+            )
+            with self._lock:
+                self._filler_active = False
+                self._filler_done.set()
+                pending = self._pending_reply_after_filler
+                self._pending_reply_after_filler = None
+            self._call_stage(
+                VoiceStage(turn_id, "filler_complete", time.monotonic(), reply=clean)
+            )
+            if pending is not None:
+                pending_turn, pending_reply = pending
+                self._start_output(pending_turn, pending_reply)
+            return True
+        state = _OutputState(turn_id, speech_epoch, threading.Event(), is_filler=True)
+        thread = threading.Thread(
+            target=self._run_filler_output,
+            args=(state, clean),
+            name=f"parcel-voice-filler-{turn_id}",
+            daemon=True,
+        )
+        state.thread = thread
+        with self._idle:
+            if self._closed or speech_epoch != self._speech_epoch:
+                self._filler_active = False
+                self._filler_done.set()
+                return False
+            self._active_output = state
+            self._output_jobs += 1
+            self._output_threads.add(thread)
+        thread.start()
+        return True
 
     def wait_until_idle(self, timeout: float | None = None) -> bool:
         """Wait for queued reasoning and all output workers to finish."""
@@ -304,11 +378,27 @@ class DuplexVoiceSession:
                     )
                 )
                 if reply and not superseded:
-                    output_started = self._start_output(turn, reply)
-                    if not output_started:
+                    with self._lock:
+                        filler_active = self._filler_active
+                    if filler_active:
+                        # Clause-boundary handoff: finish the filler sentence,
+                        # then play the real reply (never cut mid-word).
+                        with self._lock:
+                            self._pending_reply_after_filler = (turn, reply)
                         self._call_stage(
-                            VoiceStage(turn.turn_id, "turn_complete", time.monotonic())
+                            VoiceStage(
+                                turn.turn_id,
+                                "filler_clause_boundary_wait",
+                                time.monotonic(),
+                                reply=reply,
+                            )
                         )
+                    else:
+                        output_started = self._start_output(turn, reply)
+                        if not output_started:
+                            self._call_stage(
+                                VoiceStage(turn.turn_id, "turn_complete", time.monotonic())
+                            )
                 else:
                     if superseded:
                         self._call_stage(VoiceStage(turn.turn_id, "superseded", time.monotonic()))
@@ -352,6 +442,10 @@ class DuplexVoiceSession:
     def _start_output(self, turn: _QueuedTurn, reply: str) -> bool:
         if self.synthesizer is None or self.audio_chunk_player is None:
             return False
+        with self._lock:
+            if self._filler_active:
+                self._pending_reply_after_filler = (turn, reply)
+                return True
         state = _OutputState(turn.turn_id, turn.speech_epoch, threading.Event())
         thread = threading.Thread(
             target=self._run_output,
@@ -373,10 +467,37 @@ class DuplexVoiceSession:
         thread.start()
         return True
 
-    def _run_output(self, state: _OutputState, reply: str) -> None:
+    def _run_filler_output(self, state: _OutputState, reply: str) -> None:
+        try:
+            self._run_output(state, reply, filler=True)
+        finally:
+            with self._lock:
+                self._filler_active = False
+                self._filler_done.set()
+                pending = self._pending_reply_after_filler
+                self._pending_reply_after_filler = None
+                speech_epoch = self._speech_epoch
+            self._call_stage(
+                VoiceStage(state.turn_id, "filler_complete", time.monotonic(), reply=reply)
+            )
+            if pending is not None and pending[0].speech_epoch == speech_epoch:
+                self._start_output(pending[0], pending[1])
+
+    def _emit_tts_text_chunk(self, turn_id: int, text: str) -> None:
+        """Observe a spoken sentence/chunk on the TEXT frame stream."""
+
+        clean = " ".join(str(text).split())
+        if not clean:
+            return
+        self._call_stage(
+            VoiceStage(turn_id, "tts_text_chunk", time.monotonic(), reply=clean)
+        )
+
+    def _run_output(self, state: _OutputState, reply: str, *, filler: bool = False) -> None:
         stream: Iterator[bytes] | None = None
         first_chunk = True
         failed = False
+        text_chunks_emitted = False
         try:
             self._call_stage(VoiceStage(state.turn_id, "tts_start", time.monotonic()))
             if self.audio_turn_start is not None and not state.cancel_event.is_set():
@@ -389,7 +510,22 @@ class DuplexVoiceSession:
                     self._report_error(error)
             stream_method = getattr(self.synthesizer, "synthesize_stream", None)
             if callable(stream_method):
-                stream = stream_method(reply, cancel_event=state.cancel_event)
+
+                def _on_sentence(sentence: str, *, _turn=state.turn_id) -> None:
+                    nonlocal text_chunks_emitted
+                    text_chunks_emitted = True
+                    self._emit_tts_text_chunk(_turn, sentence)
+
+                try:
+                    stream = stream_method(
+                        reply,
+                        cancel_event=state.cancel_event,
+                        on_sentence=_on_sentence,
+                    )
+                except TypeError:
+                    # Providers without on_sentence still stream audio; TEXT
+                    # observe falls back to the full reply at first chunk.
+                    stream = stream_method(reply, cancel_event=state.cancel_event)
                 state.stream = stream
                 if state.cancel_event.is_set():
                     self._cancel_stream(stream)
@@ -406,6 +542,9 @@ class DuplexVoiceSession:
                                     time.monotonic(),
                                 )
                             )
+                            if not text_chunks_emitted and not filler:
+                                self._emit_tts_text_chunk(state.turn_id, reply)
+                                text_chunks_emitted = True
                         self.audio_chunk_player(chunk)  # type: ignore[misc]
                         if first_chunk:
                             # A successful callback return is the earliest
@@ -420,15 +559,21 @@ class DuplexVoiceSession:
                                     time.monotonic(),
                                 )
                             )
+                            if filler:
+                                self._mark_filler_audible(state.turn_id)
                             first_chunk = False
             else:
                 audio = self.synthesizer.synthesize(reply)  # type: ignore[union-attr]
                 if audio and not state.cancel_event.is_set():
                     self._call_stage(VoiceStage(state.turn_id, "tts_first_chunk", time.monotonic()))
+                    if not filler:
+                        self._emit_tts_text_chunk(state.turn_id, reply)
                     self.audio_chunk_player(audio)  # type: ignore[misc]
                     self._call_stage(
                         VoiceStage(state.turn_id, "audio_first_playback", time.monotonic())
                     )
+                    if filler:
+                        self._mark_filler_audible(state.turn_id)
         # Provider and user-supplied sink implementations can raise arbitrary
         # exceptions; convert them to observable session errors at this boundary.
         except Exception as error:  # noqa: BLE001
@@ -442,7 +587,8 @@ class DuplexVoiceSession:
             if state.cancel_event.is_set() and not failed:
                 self._call_stage(VoiceStage(state.turn_id, "superseded", time.monotonic()))
             self._call_stage(VoiceStage(state.turn_id, "tts_complete", time.monotonic()))
-            self._call_stage(VoiceStage(state.turn_id, "turn_complete", time.monotonic()))
+            if not filler:
+                self._call_stage(VoiceStage(state.turn_id, "turn_complete", time.monotonic()))
             with self._idle:
                 if self._active_output is state:
                     self._active_output = None
@@ -450,6 +596,14 @@ class DuplexVoiceSession:
                 if state.thread is not None:
                     self._output_threads.discard(state.thread)
                 self._idle.notify_all()
+
+    def _mark_filler_audible(self, turn_id: int) -> None:
+        if self.on_filler_audible is not None:
+            try:
+                self.on_filler_audible()
+            except Exception as error:  # noqa: BLE001
+                self._report_error(error)
+        self._call_stage(VoiceStage(turn_id, "filler_audible", time.monotonic()))
 
     def _interrupt_output(self, output: _OutputState | None) -> None:
         # The audio interrupt must fire even with no live output state: the

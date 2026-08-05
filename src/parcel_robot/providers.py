@@ -1173,10 +1173,16 @@ class SentenceChunkedSynthesizer:
         text: str,
         *,
         cancel_event: threading.Event | None = None,
+        on_sentence: Callable[[str], None] | None = None,
     ) -> Iterator[SpeechChunk]:
         for sentence, emotes in _sentences_with_emotes(text, max_chars=self._max_chars):
             if cancel_event is not None and cancel_event.is_set():
                 return
+            if on_sentence is not None:
+                try:
+                    on_sentence(sentence)
+                except Exception as error:  # noqa: BLE001 - observe path must not kill TTS
+                    logger.debug("on_sentence observe callback failed: %s", error)
             chunk = self._synthesizer.synthesize(sentence)
             if cancel_event is not None and cancel_event.is_set():
                 return

@@ -1,8 +1,8 @@
 # Closed-loop locomotion and Unitree Sport
 
 Implementation snapshot: 2026-08-04. Parcel has one **body-velocity actuator
-owner**: `ControlManager`. Voice, navigation, follow, spatial behavior, and
-manual control may propose motion, but only the manager's selected
+owner**: `ControlManager`. Voice, navigation, owner search, follow, spatial
+behavior, and manual control may propose motion, but only the manager's selected
 `LocomotionController` can deliver a body-velocity command.
 
 That qualification matters. Simulator-only pose and trajectory skills use a
@@ -12,13 +12,20 @@ controller-owned whole-body handoff exists yet. The current architecture does
 not claim that `ControlManager` arbitrates arbitrary joint or torque writes.
 
 ```text
-voice / navigation / follow / manual
+voice / navigation / search / follow / spatial / manual
                  |
                  v
        arbiter + source TTL
                  |
                  v
-     smoothing + final camera/LiDAR gate
+       acceleration smoothing
+                 |
+                 v
+ final camera/LiDAR proximity + TTC gates
+                 |
+                 v
+ jerk-limited actuator hand-off
+       (all stops bypass it)
                  |
                  v
  leased body-velocity target (base_link)
@@ -49,14 +56,15 @@ boundaries:
 | Behavior producers | A short-lived desired `VelocityCommand` | Priority, final collision decision, vendor I/O |
 | `CommandArbiter` | One active source by priority and TTL | Acceleration, perception, physical feedback |
 | `VelocitySmoother` | Bounded acceleration/deceleration | Safety authority; a safety stop bypasses gradual braking |
-| Runtime reactive gate | Directional person/owner/obstacle slowdown or translation stop using fresh camera/LiDAR observations | Vendor state, balance, RPC delivery |
+| Runtime proximity and TTC gates | Directional person/owner/obstacle slowdown or translation stop, plus constant-velocity dynamic-track braking, using fresh camera/LiDAR observations | Vendor state, balance, RPC delivery, or socially optimal prediction |
+| `SCurveVelocityShaper` | Per-axis acceleration/jerk limits at the final SE(2) hand-off; optional calm profile | Collision authority; every stop uses the emergency bypass, and the current calm signal is derived from the robot's synthesized speech rather than owner affect |
 | `ControlManager` | Exclusive velocity writer, body limits, feedback freshness, controller faults/tilt, lease expiry, stop/E-stop lifecycle | Environmental collision perception or route planning |
 | Unitree Sport | Fast balance, gait, foot placement, and motor control for the requested body velocity | Semantic goals and external obstacle avoidance |
 
-The arbiter's current priority order is navigation (30), follow (40), spatial
-(50), voice (60), manual (80), and safety (100). A software E-stop is not a
-priority-100 command; it is a separate persistent latch in both the runtime
-arbiter and `ControlManager`.
+The arbiter's current priority order is navigation (30), search (35), follow
+(40), spatial (50), voice (60), manual (80), and safety (100). A software
+E-stop is not a priority-100 command; it is a separate persistent latch in both
+the runtime arbiter and `ControlManager`.
 
 `ControlManager` is safe to use as a vendor-neutral locomotion boundary, but it
 is not by itself an autonomous-navigation safety system. The standalone
@@ -74,7 +82,7 @@ Parcel navigation loop (~10 Hz)
   owner/goal feedback -> desired body velocity
                          |
                          v
-Parcel ControlManager (50 Hz default)
+Parcel ControlManager (50 Hz physical/external-manager default)
   feedback freshness, target lease, faults, stop watchdog
                          |
                          v
@@ -91,14 +99,18 @@ onboard closed-loop locomotion. A successful Python return indicates transport
 delivery, not proof of physical movement. Parcel therefore subscribes to
 `rt/sportmodestate` and supervises locally timestamped feedback.
 
-This is a **nested closed-loop design**, not open-loop control:
+This is a **nested closed-loop design**, not open-loop control. One simulator
+qualification matters: the built-in synchronous compatibility manager is
+ticked by the approximately 10 Hz `RobotRuntime` loop, so `control_hz: 50` is
+not an independent 50 Hz simulator watchdog thread. An explicitly supplied
+physical/external manager uses its configured control thread.
 
 - Unitree closes the hard real-time balance/gait loop around IMU, joint, and
   contact feedback.
 - `ControlManager` closes a supervisory loop around feedback freshness, mode,
   tilt/fault state, command leases, and measured stop confirmation.
-- Navigation/follow/spatial controllers close the task loop around odometry and
-  camera/LiDAR observations.
+- Navigation/search/follow/spatial controllers close the task loop around
+  odometry and camera/LiDAR observations.
 
 The outer loops do not make `Move` a precision trajectory servo. Parcel does
 not currently compare commanded and measured velocity to regulate away a
@@ -121,6 +133,7 @@ refuses to construct the physical controller until
 | Reuse Unitree Sport balance/gait | A proven onboard high-rate controller absorbs the hardest contact-control problem; Parcel can iterate on companion behavior safely at body-velocity level | Opaque firmware behavior, modes, tracking quality, foothold choices, and stop semantics remain vendor-specific |
 | Supervise Sport from Python | Python is appropriate for the current 10 Hz behavior loop and 50 Hz watchdog because hard real-time balance stays onboard | Python, DDS, and the host OS are not an independent real-time crash-stop layer; an onboard/native watchdog and physical E-stop remain required |
 | One leased `base_link` velocity contract | Simulator, Unitree, and a future vendor/custom controller share the same upper stack | A lowest-common-denominator SE(2) command cannot expose terrain-aware footsteps or whole-body maneuvers |
+| Two smoothers with a hard-stop bypass | Behavior commands change legibly and the actuator hand-off bounds jerk without delaying a safety stop | Cascaded filters add lag; the final response must be tuned and measured on the real Sport controller |
 | Feedback-confirm every physical stop | Prevents a transport acknowledgment from being mistaken for a stationary robot | Adds latency and rejects new motion if timestamps, sequence numbers, frame calibration, or feedback delivery are wrong |
 | Lazy vendor imports and registered factories | Normal simulation/test imports remain independent of Unitree SDK and a second vendor needs no generic-code edit | Process-global DDS and Unitree's non-releasable Python lease still require a dedicated physical driver process |
 | Fail-closed commissioning flags | Wrong mode/frame/axis assumptions cannot silently move hardware | Physical construction is intentionally impossible with the repository defaults until a human completes commissioning |
@@ -211,6 +224,36 @@ control:
     allowed_modes: []
 ```
 
+The active body limits and shaping settings are separate from that controller
+lifecycle block:
+
+```yaml
+motion:
+  max_vx: 1.0
+  max_vy: 0.5
+  max_vyaw: 1.5
+  smoothing:
+    linear_accel: 0.9
+    linear_decel: 1.4
+    yaw_accel: 1.8
+  shaping:
+    enabled: true
+    linear_max_accel: 1.2
+    linear_max_jerk: 3.0
+    yaw_max_accel: 2.4
+    yaw_max_jerk: 6.0
+    calm_scale: 0.6
+    calm_below_arousal: 0.35
+    arousal_valid_s: 20.0
+```
+
+These are maximum envelopes, not commanded speeds. The default navigation
+wrapper still caps its output at `0.45 m/s` even though `grid_v1`'s desired
+cruise is `0.85 m/s`; manual, spatial, and other producers can use different
+bounded portions of the wider body envelope. The 2026-08-04 increases were
+made from simulator pacing observations and are not physically commissioned
+Go2 limits.
+
 Important network distinction:
 
 | Target | DDS domain | Interface |
@@ -257,12 +300,12 @@ is left, and positive `vyaw` is counter-clockwise after commissioned sign
 mapping. Unitree Sport declares lateral-velocity support, and manual control or
 a future local planner may strafe.
 
-Ordinary point-goal, grid, follow, and owner-orbit controllers currently prefer
-turn-then-forward motion and normally emit `vy=0`. When a controller requests a
-pure turn, the runtime immediately clears residual translation instead of
-letting the acceleration smoother create an arc. Lateral motion is therefore a
-supported capability, not the preferred way to make sustained progress toward
-a place.
+Ordinary point-goal, grid, search, follow, and owner-orbit controllers currently
+prefer turn-then-forward motion and normally emit `vy=0`. When a controller
+requests a pure turn, the runtime immediately clears residual translation
+instead of letting the acceleration smoother create an arc. Lateral motion is
+therefore a supported capability, not the preferred way to make sustained
+progress toward a place.
 
 This choice makes the dog's body orientation legible, avoids the simulator's
 diagonal-slide appearance, and permits a future non-strafing controller to
@@ -278,6 +321,7 @@ as forward motion.
 | Capability | Repository status | Evidence boundary |
 | --- | --- | --- |
 | Simulator body-velocity path through `ControlManager` | Implemented and used by `RobotRuntime` | Unit/integration tests and MuJoCo behavior only |
+| Runtime S-curve actuator shaping | Implemented after the collision gates with stop bypass and watchdog-state reset | The calm profile follows prosody measured from Parcel's own TTS audio; physical response/lag is unmeasured |
 | Vendor-neutral lifecycle and portability | Implemented; mock second-vendor adapter covers arming, motion, watchdog, stop, and E-stop | No second physical robot |
 | Unitree Sport DDS/RPC/state adapter | Implemented and tested with injected SDK doubles | Not run against a physical Go2 from this workstation |
 | Frame, axis, and allowed-mode gates | Implemented and defaulted closed | Values remain uncommissioned in `configs/robot.yaml` |
@@ -330,6 +374,13 @@ Motion is rejected or stopped when:
 - Roll or pitch exceeds the configured limit.
 - `Move` or `StopMove` raises or returns an error.
 - The operator stops, closes, or emergency-stops the runtime.
+
+Environmental stops happen above this list: stale perception cancels active
+autonomy, directional proximity can zero translation, and the TTC gate can
+only scale a command down. The post-gate S-curve uses an emergency transition
+for zero/safety/E-stop commands, so jerk limiting never delays a stop. This is
+still software behavior on a non-real-time host and is not a certified crash
+stop.
 
 Ordinary stops use Unitree `StopMove`. Parcel does not automatically use
 `Damp`, `StandDown`, or another posture transition. Those operations have

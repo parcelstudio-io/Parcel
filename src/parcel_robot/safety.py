@@ -10,9 +10,12 @@ from .models import Pose, ToolCall, ToolResult
 class SafetyLimits:
     max_pose_duration: float = 10.0
     max_abs_joint_position: float = 3.2
-    max_vx: float = 0.6
-    max_vy: float = 0.4
-    max_vyaw: float = 1.0
+    # 2026-08-04: raised from (0.6, 0.4, 1.0) — the dog read as sluggish in
+    # the simulator. Go2 hardware trots 1.0-1.5 m/s; these remain clamps, not
+    # commands, and every dispatch still passes the collision gate + TTC.
+    max_vx: float = 1.0
+    max_vy: float = 0.5
+    max_vyaw: float = 1.5
 
 
 # Neutral backend names; "sport" is a deprecated vendor-branded alias for
