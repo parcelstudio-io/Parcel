@@ -31,3 +31,4 @@ MUJOCO_LOG.TXT
 
 # Nested clone of Sesame CSM (has its own .git)
 third_party/
+/usr/
