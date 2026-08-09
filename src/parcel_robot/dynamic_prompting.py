@@ -40,7 +40,14 @@ import logging
 import time
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, ClassVar, Protocol, runtime_checkable
+
+from parcel_robot.tiered_memory import (
+    ConcatSummarizer,
+    TieredMemory,
+    TieredMemoryConfig,
+    null_distiller,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -395,6 +402,64 @@ class RecentToolResultsSource:
         return "Recent tool results:\n" + "\n".join(f"- {item}" for item in recent)
 
 
+class MemorySource:
+    """Renders one tier of a :class:`TieredMemory` as a bounded prompt section.
+
+    Read-only and non-blocking: ``snapshot`` calls ``TieredMemory.retrieve``,
+    which is deterministic and model-free (no summarization on the read path),
+    then renders the requested tier. Register three instances — Tier 1 (recent
+    verbatim), Tier 2 (older summaries), Tier 3 (durable owner profile) — so the
+    ``/api/prompt`` snapshot shows all three memory bands with their budgets.
+    Tier 1/2 are volatile ``turn`` sections; Tier 3 is a stable, cache-friendly
+    section like the owner profile it seeds from.
+    """
+
+    _HEADERS: ClassVar[dict[int, str]] = {
+        1: "Recent conversation (verbatim, newest last):",
+        2: "Earlier conversation, summarized:",
+        3: "What you have learned about your owner (durable profile):",
+    }
+
+    def __init__(
+        self,
+        memory: TieredMemory,
+        tier: int,
+        *,
+        source_id: str,
+        placement: str,
+        priority: int,
+        budget_chars: int = 1200,
+    ):
+        if tier not in self._HEADERS:
+            raise ValueError("memory tier must be 1, 2, or 3")
+        self.memory = memory
+        self.tier = tier
+        self.source_id = source_id
+        self.placement = placement
+        self.priority = priority
+        self.budget_chars = budget_chars
+        _validate_section_params(self.source_id, self.placement, self.priority, self.budget_chars)
+
+    def snapshot(self, query: str | None) -> str | None:
+        try:
+            retrieval = self.memory.retrieve(query)
+        except Exception as error:  # noqa: BLE001 - a source must not break the turn
+            logger.warning("memory tier %s snapshot failed: %s", self.tier, error)
+            return None
+        if self.tier == 1:
+            lines = [f"- {turn.role}: {turn.content}" for turn in retrieval.tier1_recent]
+        elif self.tier == 2:
+            lines = [f"- {summary.text}" for summary in retrieval.tier2_summaries]
+        else:
+            lines = [
+                f"- {fact.key.replace('_', ' ')}: {fact.value}"
+                for fact in retrieval.tier3_profile
+            ]
+        if not lines:
+            return None
+        return self._HEADERS[self.tier] + "\n" + "\n".join(lines)
+
+
 def build_weather_tool(
     profile: UserProfileSource | None = None,
     *,
@@ -524,12 +589,19 @@ class DynamicPromptComposer:
 
 @dataclass(frozen=True)
 class PromptingStack:
-    """Everything the runtime wires: composer + profile + information tools."""
+    """Everything the runtime wires: composer + profile + information tools.
+
+    ``memory`` is the tiered conversation store when ``prompting.memory`` is
+    enabled (else ``None``). It is exposed so the runtime can feed live turns in
+    on the write path (``memory.append(role, content)``); the read path is
+    already wired through the three registered ``MemorySource`` sections.
+    """
 
     composer: DynamicPromptComposer | None
     profile: UserProfileSource | None
     tools: ConversationToolRegistry
     detail: str = "disabled"
+    memory: TieredMemory | None = None
 
 
 def build_prompting_stack(config: Mapping[str, Any] | None) -> PromptingStack:
@@ -547,6 +619,10 @@ def build_prompting_stack(config: Mapping[str, Any] | None) -> PromptingStack:
             occupation: software engineer
           tools:
             weather: true
+          memory:                    # opt-in tiered conversation memory
+            enabled: true
+            tier1_max_turns: 8
+            tier2_max_summaries: 6
     """
 
     config = dict(config or {})
@@ -560,6 +636,7 @@ def build_prompting_stack(config: Mapping[str, Any] | None) -> PromptingStack:
         "persona",
         "user_profile",
         "tools",
+        "memory",
     }
     if unknown:
         raise ValueError(f"unsupported prompting config keys: {sorted(unknown)}")
@@ -589,11 +666,74 @@ def build_prompting_stack(config: Mapping[str, Any] | None) -> PromptingStack:
         tools.register(build_weather_tool(profile))
     composer.register(ToolPolicySource(tools))
 
+    memory = _build_tiered_memory(config.get("memory"), profile)
+    if memory is not None:
+        # Three bounded sections, one per tier, so /api/prompt shows all three
+        # bands. Tier 1/2 are volatile (turn plane); Tier 3 (durable owner
+        # profile) renders in the cache-friendly stable plane.
+        composer.register(
+            MemorySource(
+                memory, 1, source_id="memory_tier1_recent",
+                placement=PLACEMENT_TURN, priority=12, budget_chars=1200,
+            )
+        )
+        composer.register(
+            MemorySource(
+                memory, 2, source_id="memory_tier2_summary",
+                placement=PLACEMENT_TURN, priority=14, budget_chars=1200,
+            )
+        )
+        composer.register(
+            MemorySource(
+                memory, 3, source_id="memory_tier3_profile",
+                placement=PLACEMENT_STABLE, priority=22, budget_chars=1200,
+            )
+        )
+
     enabled_tools = ", ".join(tools.names()) or "none"
     facts = len(profile.facts())
+    memory_detail = "" if memory is None else f", memory=tier1/2/3 (seed_facts={facts})"
     return PromptingStack(
         composer=composer,
         profile=profile,
         tools=tools,
-        detail=f"enabled (facts={facts}, tools={enabled_tools})",
+        detail=f"enabled (facts={facts}, tools={enabled_tools}){memory_detail}",
+        memory=memory,
     )
+
+
+def _build_tiered_memory(
+    memory_config: Any, profile: UserProfileSource
+) -> TieredMemory | None:
+    """Resolve the optional ``prompting.memory`` block into a wired store.
+
+    Disabled by default (returns ``None``) so existing prompts are unchanged.
+    When enabled, Tier 3 is seeded from the owner-profile facts — so
+    ``home: Manhattan`` becomes a durable Tier-3 row rather than a hardcoded
+    string. The offline default summarizer is the model-free
+    :class:`ConcatSummarizer`; inject a real ``summarize()`` at runtime for
+    quality. Unknown keys fail closed, mirroring the outer loader.
+    """
+
+    if memory_config is None:
+        return None
+    if not isinstance(memory_config, Mapping):
+        raise TypeError("prompting.memory must be a mapping")
+    unknown = set(memory_config) - {
+        "enabled",
+        "tier1_max_turns",
+        "tier2_max_summaries",
+        "summary_max_chars",
+    }
+    if unknown:
+        raise ValueError(f"unsupported prompting.memory keys: {sorted(unknown)}")
+    if not bool(memory_config.get("enabled", False)):
+        return None
+    tier_config = TieredMemoryConfig(
+        tier1_max_turns=int(memory_config.get("tier1_max_turns", 8)),
+        tier2_max_summaries=int(memory_config.get("tier2_max_summaries", 6)),
+    )
+    summarizer = ConcatSummarizer(max_chars=int(memory_config.get("summary_max_chars", 1200)))
+    memory = TieredMemory(summarizer=summarizer, distiller=null_distiller, config=tier_config)
+    memory.seed_profile_facts(profile.facts())
+    return memory

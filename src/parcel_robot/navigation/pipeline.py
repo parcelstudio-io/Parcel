@@ -258,6 +258,16 @@ class DirectiveNavigator:
             self.memory = None
         self.proposer_bus = ProposerBus() if _HAS_INSTRUCTNAV and ProposerBus is not None else None
         self.goal_arbiter = GoalArbiter() if _HAS_INSTRUCTNAV and GoalArbiter is not None else None
+        # P0-C proposal-buffer flush: the (task_id, plan_revision) every SE2Goal
+        # this navigator publishes is stamped with, so the executive's committed
+        # revision (flushed into proposer_bus/goal_arbiter as revision sinks) can
+        # atomically reject proposals authored under a corrected-away revision.
+        # Defaults ("", 0) keep an unwired navigator byte-for-byte as before -- a
+        # proposal is stale only relative to a *committed* revision, and an
+        # uncommitted channel commits nothing. runtime.set_active_revision feeds
+        # the live mission's key on plan accept / nav start.
+        self._active_task_id: str = ""
+        self._active_plan_revision: int = 0
         self.grounder_v2 = GrounderV2() if _HAS_INSTRUCTNAV and GrounderV2 is not None else None
         self.scan_behavior = (
             ScanBehaviorController()
@@ -593,6 +603,18 @@ class DirectiveNavigator:
 
     def done(self) -> bool:
         return self.mission is None or self.mission.status in {"arrived", "failed", "idle"}
+
+    def set_active_revision(self, task_id: str, plan_revision: int) -> None:
+        """Bind the (task_id, plan_revision) future SE2Goal proposals are stamped with.
+
+        The runtime calls this when a plan revision commits for the mission's task
+        (plan accept / correction) so this navigator's proposals carry the same key
+        the executive flushes into the proposer_bus / goal_arbiter revision sinks.
+        A stale-revision straggler is then rejected by ``GoalArbiter.resolve``.
+        """
+
+        self._active_task_id = str(task_id)
+        self._active_plan_revision = int(plan_revision)
 
     @property
     def paused(self) -> bool:
@@ -1527,6 +1549,8 @@ class DirectiveNavigator:
                 plan_step_id="align_then_translate",
                 issued_s=now_s,
                 priority=10,
+                task_id=self._active_task_id,
+                plan_revision=self._active_plan_revision,
             )
             self.proposer_bus.publish(proposed)
             self.goal_arbiter.set_plan_step("align_then_translate")
@@ -2358,6 +2382,8 @@ class DirectiveNavigator:
                     plan_step_id="search_entity",
                     issued_s=now_s,
                     priority=4,
+                    task_id=self._active_task_id,
+                    plan_revision=self._active_plan_revision,
                 )
                 self.proposer_bus.publish(proposed)
                 self.goal_arbiter.set_plan_step("search_entity")

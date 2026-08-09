@@ -1,0 +1,80 @@
+# Parcel CI — the declarative record of the promotion gate.
+#
+# This repo is not yet wired to GitHub Actions; this file IS the canonical,
+# versioned statement of what must run and when. The gate logic lives in
+# scripts/ci_gate.py so it runs identically here and on a developer's machine
+# (`.parcel/bin/python scripts/ci_gate.py --tier commit`). CI only provisions an
+# environment and invokes the runner — it holds no gate logic of its own.
+#
+# Tiers (see docs/CI.md):
+#   commit  — every push / PR. Fast, offline, deterministic. No model server,
+#             no network. The 3097-passing default suite + ruff ratchet + frozen
+#             digests + mutation-panel freshness + the three hard regression
+#             gates (model-off / latency-tail / hard-safety).
+#   nightly — scheduled. Everything above + the slow suite (live-sim e2e +
+#             acoustic rig), the candidate minival, the mutation panel (6/6),
+#             and the metamorphic suite.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # 08:00 UTC daily — the nightly bundle.
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: "gate tier to run"
+        required: false
+        default: commit
+        type: choice
+        options: [commit, nightly]
+
+# A newer push to the same ref cancels the older commit-tier run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commit-gate:
+    # Push / PR / manual commit runs. Not the scheduled nightly.
+    if: github.event_name != 'schedule' && (github.event.inputs.tier || 'commit') == 'commit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Headless offscreen MuJoCo. On a GPU-less runner switch to osmesa.
+      MUJOCO_GL: egl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,voice]"
+      - name: Commit-tier gate
+        run: python scripts/ci_gate.py --tier commit --json
+
+  nightly-gate:
+    # Scheduled nightly, or a manual nightly dispatch.
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.tier == 'nightly')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      MUJOCO_GL: egl
+      PARCEL_NIGHTLY: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,voice]"
+      - name: Nightly-tier gate
+        run: python scripts/ci_gate.py --tier nightly --json

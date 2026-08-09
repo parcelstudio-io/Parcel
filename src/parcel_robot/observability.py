@@ -100,6 +100,24 @@ STAGES = frozenset(
         # against the filler ceiling. See DuplexVoiceSession.speak_system.
         "system_utterance_start",
         "system_utterance_complete",
+        # Acoustic-ack clocks (N19). The four spans that were unmeasured
+        # between the owner finishing a sentence and the robot being AUDIBLE.
+        # `mark()` raises on any name absent here, so registering them is the
+        # keystone that lets RobotRuntime fan the already-landed measurement
+        # surfaces into the ledger:
+        #   capture_speech_end / semantic_commit  <- MicrophoneVoiceLoop.last_turn_clocks
+        #   stt_request_start / stt_final         <- WhisperCppProvider.last_metrics
+        #   audio_first_sample                    <- SpeakerSink.first_chunk_started_monotonic
+        # audio_first_sample is the honest partner to audio_first_playback:
+        # playback is the ENQUEUE instant, first_sample is when the speaker
+        # worker actually began the chunk. The acoustic rig measured 0.54-0.64 s
+        # between the two, so no sub-700 ms ack claim may rest on the enqueue
+        # stamp alone. See docs/ACOUSTIC_BRINGUP_PLAN.md §3.
+        "capture_speech_end",
+        "semantic_commit",
+        "stt_request_start",
+        "stt_final",
+        "audio_first_sample",
     }
 )
 

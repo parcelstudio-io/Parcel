@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
+import os
 import random
 import threading
 import time
@@ -165,6 +166,7 @@ from parcel_robot.runtime_channels import (
 )
 from parcel_robot.skills.api import Dog
 from parcel_robot.skills.executor import ExecutionResult
+from parcel_robot.tiered_memory import ConcatSummarizer
 from parcel_robot.voice.amendment import AMEND_SUSPEND_REASON, begin_goal_amend
 from parcel_robot.voice.closed_intents import ClosedIntent
 from parcel_robot.voice.dialogue_state import DialogueStateChannel
@@ -205,6 +207,81 @@ POSE_LOST_UTTERANCE = "I've lost track of where I am, so I've stopped and I'm ho
 #: Said only from a tick on which the navigator is driving again, which it can
 #: only do once MAP health has returned — so the claim cannot outrun the fact.
 POSE_REGAINED_UTTERANCE = "I know where I am again — carrying on."
+
+
+#: Leading verbs a navigation directive uses before the goal noun; stripped so the
+#: open-vocab camera detector is queried for the object, not the phrasing (Card B4).
+_CAMERA_QUERY_PREFIXES = (
+    "go to the ", "go to ", "walk to the ", "walk to ", "navigate to the ",
+    "navigate to ", "move to the ", "move to ", "head to the ", "head to ",
+    "go towards the ", "go toward the ", "walk towards the ", "walk toward the ",
+    "go over to the ", "go over to ", "find the ", "find ", "go to my ", "the ",
+)
+
+
+def _camera_query_from_directive(directive: str) -> str:
+    """Extract the goal noun phrase a navigation directive points at (best-effort).
+
+    ``go to the lamppost`` → ``lamppost``. Purely lexical: it strips a leading
+    navigation verb and trailing punctuation so the open-vocab detector is asked
+    for the object. Returns the cleaned directive unchanged when no prefix matches
+    (the detector still gets a reasonable phrase).
+    """
+
+    text = " ".join(str(directive).split()).strip().lower().rstrip(".!?,")
+    if not text:
+        return ""
+    for prefix in _CAMERA_QUERY_PREFIXES:
+        if text.startswith(prefix):
+            text = text[len(prefix) :].strip()
+            break
+    return text
+
+
+class LLMSummarizer:
+    """A real tiered-memory summarizer over the existing ``LanguageModel`` seam.
+
+    Card memory-write-path: replaces the deterministic :class:`ConcatSummarizer`
+    stand-in when a conversation model is wired, so aged-out turns are *abstracted*
+    into a rolling summary instead of concatenated. Called only on the write path
+    (``TieredMemory.append``), never on a read, so its latency is off the retrieval
+    path. Degrades to the deterministic fixture on ANY failure or empty reply —
+    memory must never break a turn, and offline runs must stay deterministic.
+    """
+
+    def __init__(self, model: LanguageModel, *, max_chars: int = 1200) -> None:
+        self._model = model
+        self._max_chars = int(max_chars)
+        self._fallback = ConcatSummarizer(max_chars=int(max_chars))
+
+    def __call__(self, previous_summary: str, aged_turns: Any) -> str:
+        turns = [
+            f"{turn.role}: {turn.content}"
+            for turn in aged_turns
+            if getattr(turn, "content", "").strip()
+        ]
+        if not turns:
+            return previous_summary
+        prompt = (
+            "You keep a concise running summary of a conversation between an owner "
+            "and their robot dog. Update the summary with the new turns below, "
+            "preserving durable facts (names, preferences, plans, feelings, "
+            "commitments) and dropping small talk. Reply with ONLY the updated "
+            f"summary, at most {self._max_chars} characters.\n\n"
+            f"Current summary:\n{previous_summary or '(none yet)'}\n\n"
+            "New turns:\n" + "\n".join(turns)
+        )
+        try:
+            decision = self._model.decide(prompt, [], [])
+            summary = " ".join(str(decision.reply).split()).strip()
+        except Exception as error:  # noqa: BLE001 - degrade, never break the write path
+            logger.warning("LLM summarizer failed; using deterministic fallback: %s", error)
+            return self._fallback(previous_summary, aged_turns)
+        if not summary:
+            return self._fallback(previous_summary, aged_turns)
+        if len(summary) > self._max_chars:
+            summary = summary[: self._max_chars - 1].rstrip() + "…"
+        return summary
 
 
 def _dynamic_agent_payload(
@@ -307,6 +384,17 @@ class RobotRuntime:
         self._vocal_arousal_at: float | None = None
         self.perception = PerceptionContract.from_config(self.store.section("perception"))
         self.maps = NullMapProvider()
+        # Card B4 — camera on the mission path. When enabled AND an in-process
+        # camera ingress is attached (``attach_camera_ingress``), the reactive
+        # navigation view derives ``semantic_candidates`` from RENDERED PIXELS via
+        # an async open-vocab detector instead of the GT-frustum oracle. Default
+        # OFF (env ``PARCEL_CAMERA_INGRESS`` or ``camera_ingress.enabled: true``),
+        # so the shipped oracle path stays byte-identical until a caller opts in
+        # AND supplies the model/data the EGL backend needs (the socket backend
+        # runs the sim out-of-process, so ingress is a same-process opt-in).
+        self._camera_ingress: Any = None
+        camera_ingress_cfg = self.store.section("camera_ingress")
+        self._camera_ingress_config_enabled = bool(camera_ingress_cfg.get("enabled", False))
         safety_config = self.store.section("safety")
         self.obstacle_stop_m = float(safety_config.get("obstacle_stop_m", 0.65))
         self.obstacle_slow_m = float(safety_config.get("obstacle_slow_m", 1.2))
@@ -416,6 +504,13 @@ class RobotRuntime:
         self._follow_detail: dict[str, object] = self.follow.snapshot()
         self._navigation_directive: str | None = None
         self._navigation_detail: dict[str, object] = NavigationDetail().as_dict()
+        # P0-C proposal-buffer flush (product-path activation): the executive's
+        # committed (task_id, plan_revision) for the live mission. Stamped onto the
+        # navigator's SE2Goal proposals so a correction's revision bump — flushed
+        # into the navigator's proposer_bus / goal_arbiter revision sinks — rejects
+        # a straggler proposal authored under the corrected-away revision. Default
+        # ("", 0) is the backward-compatible no-op key an unwired channel used.
+        self._active_nav_revision: tuple[str, int] = ("", 0)
         #: Edge state for the owner-facing localization announcement.
         self._pose_lost_announced = False
         #: Blocked-by-a-person yield policy (card P-1). Installed from the
@@ -665,6 +760,18 @@ class RobotRuntime:
         # tool registry the conversation model may call. Inspect and iterate
         # at /api/prompt.
         self.prompting = build_prompting_stack(self.store.section("prompting"))
+        # Card memory-write-path: when tiered memory is enabled AND a conversation
+        # model is wired, replace the deterministic offline summarizer with a real
+        # LLM ``summarize()`` over the existing provider seam. No model → keep the
+        # deterministic ConcatSummarizer fixture (offline-deterministic). Guarded so
+        # a future contract rename degrades loudly instead of crashing startup.
+        if self.prompting.memory is not None and language_model is not None:
+            if hasattr(self.prompting.memory, "_summarizer"):
+                self.prompting.memory._summarizer = LLMSummarizer(language_model)
+            else:  # pragma: no cover - tiered-memory contract changed under us
+                logger.warning(
+                    "tiered memory has no summarizer seam; keeping deterministic default"
+                )
         if self.prompting.composer is not None:
             self.prompting.composer.register(
                 CallableContextSource(
@@ -1103,6 +1210,16 @@ class RobotRuntime:
                     )
         if not submission.accepted:
             raise RuntimeError(f"task executive rejected plan: {submission.reason}")
+        # P0-C: this plan is now the committed steering revision for its task. A
+        # correction reached here via ``replace()``, which already flushed the
+        # navigator's proposer sinks in the executive's locked transaction; stamp
+        # the navigator so its *next* proposals carry the new revision (an
+        # already-running navigator is stamped now, a cold-starting one at nav
+        # start). Non-nav plans harmlessly re-point the key at their own task.
+        self._active_nav_revision = (plan.task_id, plan.plan_revision)
+        existing_navigator = getattr(self.dog, "_navigator", None)
+        if existing_navigator is not None:
+            self._apply_active_nav_revision(existing_navigator)
         accepted_at = time.monotonic()
         self.component_metrics.observe_ms(
             "PlanAcceptance", (accepted_at - acceptance_started) * 1000.0
@@ -2247,6 +2364,12 @@ class RobotRuntime:
                     self.velocity_smoother.reset()
                     self._reset_motion_shaper()
             auxiliary_error: BaseException | None = None
+            if self._camera_ingress is not None:
+                try:
+                    self._camera_ingress.stop()
+                except BaseException as error:  # noqa: BLE001 - render teardown must continue
+                    auxiliary_error = error
+                self._camera_ingress = None
             if self._microphone_loop is not None:
                 try:
                     self._microphone_loop.close()
@@ -2821,8 +2944,26 @@ class RobotRuntime:
         if self.arbiter.emergency_stopped:
             raise RuntimeError("motion is disabled by emergency stop")
 
+        # Card B4: point the camera detector at the goal noun so it searches for
+        # THIS object. Cheap + best-effort; a no-op without an attached ingress.
+        self._set_camera_query_from_directive(clean)
         with self._command_lock:
             return self._start_or_resume_navigation_locked(clean)
+
+    def _apply_active_nav_revision(self, navigator: Any) -> None:
+        """Stamp ``navigator`` with the executive's committed mission revision.
+
+        P0-C: the navigator's SE2Goal proposals must carry the same
+        ``(task_id, plan_revision)`` the executive flushes into the proposer
+        sinks, or a corrected-away straggler would keep the default ``("", 0)``
+        key and never be rejected. Guarded so navigators from historical bundles
+        (no ``set_active_revision``) stay compatible.
+        """
+
+        stamp = getattr(navigator, "set_active_revision", None)
+        if callable(stamp):
+            task_id, plan_revision = self._active_nav_revision
+            stamp(task_id, plan_revision)
 
     def _start_or_resume_navigation_locked(self, clean: str) -> str:
         """Resume a paused mission via ResumeIntent, or cold-start a new one.
@@ -2834,6 +2975,14 @@ class RobotRuntime:
         now = time.monotonic()
         intent = self._resume_store.peek("navigation", now_s=now)
         navigator = self.dog.navigator
+        # P0-C: bind the executive's committed plan_revision to this channel's
+        # learned-goal buffers so a correction atomically flushes stale proposals,
+        # and stamp the navigator with the mission's active revision (a nav that
+        # cold-starts after the plan was accepted picks up the committed key here).
+        for _sink in (navigator.proposer_bus, navigator.goal_arbiter):
+            if _sink is not None:
+                self.task_executive.register_revision_sink(_sink)
+        self._apply_active_nav_revision(navigator)
         if navigator.paused:
             if intent is None:
                 raise RuntimeError(
@@ -4876,7 +5025,7 @@ class RobotRuntime:
             "person_id": observation.nearest_person_id,
             "person_ttc_s": observation.nearest_person_ttc_s,
             "lidar_obstacles": lidar_payload_from_observation(observation),
-            "semantic_candidates": semantic_candidates_from_observation(observation),
+            "semantic_candidates": self._semantic_candidates(observation),
             # Card W4. The planner separates these two so it can weight the
             # owner's social envelope differently from a stranger's.
             "dynamic_agents": _dynamic_agent_payload(observation),
@@ -4892,6 +5041,88 @@ class RobotRuntime:
             },
             "query_context": self.context_builder.build().navigation_data(),
         }
+
+    def _camera_ingress_enabled(self) -> bool:
+        """True when camera pixel-ingress is opted in (env or config).
+
+        Env ``PARCEL_CAMERA_INGRESS`` wins so a run can flip it without editing
+        config; otherwise the ``camera_ingress.enabled`` config knob. Default OFF
+        keeps the oracle path byte-identical.
+        """
+
+        env = os.environ.get("PARCEL_CAMERA_INGRESS", "").strip().lower()
+        if env in {"1", "true", "yes", "on"}:
+            return True
+        if env in {"0", "false", "no", "off"}:
+            return False
+        return self._camera_ingress_config_enabled
+
+    def _semantic_candidates(self, observation: SimObservation) -> list[dict[str, Any]]:
+        """The one semantic ingress: pixel detections when armed, else the oracle.
+
+        Card B4: when camera ingress is enabled AND attached AND has published a
+        detection frame, the reactive view sees candidates FROM PIXELS (the async
+        detector proposes; this read never blocks on it). Otherwise — the default,
+        and whenever the detector has not produced a frame yet — this returns the
+        exact oracle read (``semantic_candidates_from_observation``), so the
+        flag-off path is byte-identical to the shipped behavior.
+        """
+
+        ingress = self._camera_ingress
+        if ingress is not None and self._camera_ingress_enabled():
+            try:
+                robot = observation.robot
+                ingress.set_pose(float(robot.x), float(robot.y), float(robot.yaw))
+                pixel = ingress.latest_candidates()
+            except Exception as error:  # noqa: BLE001 - never let ingress break a tick
+                logger.warning("camera ingress read failed: %s", error)
+                pixel = None
+            if pixel is not None:
+                return pixel
+        return semantic_candidates_from_observation(observation)
+
+    def attach_camera_ingress(self, ingress: Any, *, start: bool = True) -> None:
+        """Attach an async :class:`CameraIngress` (Card B4) and start its worker.
+
+        The caller owns the model/data + must have set ``MUJOCO_GL=egl`` before the
+        first ``import mujoco`` (the runtime never imports MuJoCo). This only stores
+        + starts the ingress; ``_semantic_candidates`` consults it once the ingress
+        flag is on. Replacing a prior ingress stops the old one first.
+        """
+
+        previous = self._camera_ingress
+        if previous is not None and previous is not ingress:
+            try:
+                previous.stop()
+            except Exception:  # noqa: BLE001, S110 - teardown best-effort
+                pass
+        self._camera_ingress = ingress
+        if ingress is not None and start:
+            ingress.start()
+
+    def detach_camera_ingress(self) -> None:
+        ingress = self._camera_ingress
+        self._camera_ingress = None
+        if ingress is not None:
+            try:
+                ingress.stop()
+            except Exception:  # noqa: BLE001, S110 - teardown best-effort
+                pass
+
+    def _set_camera_query_from_directive(self, directive: str) -> None:
+        """Tell the attached ingress WHICH object to search for from the directive.
+
+        Cheap + best-effort: the open-vocab detector is queried for the goal noun
+        phrase extracted from the raw navigation directive (``go to the lamppost``
+        → ``lamppost``). A no-op when no ingress is attached.
+        """
+
+        ingress = self._camera_ingress
+        if ingress is None:
+            return
+        phrase = _camera_query_from_directive(directive)
+        if phrase:
+            ingress.set_query(phrase)
 
     def _dynamic_cost_active(self) -> bool:
         try:
@@ -5129,6 +5360,27 @@ class RobotRuntime:
                     "timestamp": datetime.now(UTC).isoformat(),
                 }
             )
+        self._remember_turn(role, text)
+
+    def _remember_turn(self, role: str, content: str) -> None:
+        """Card memory-write-path: commit a live turn into tiered memory.
+
+        The single write feed: each committed user/assistant/tool turn flows into
+        :class:`TieredMemory` so aged-out turns roll into Tier-2 summaries / Tier-3
+        profile and later ``retrieve()`` surfaces them. A no-op when memory is
+        disabled (``prompting.memory is None``) — the default, keeping prompts
+        byte-identical. Guarded: a memory write must never break a turn.
+        """
+
+        memory = self.prompting.memory
+        if memory is None:
+            return
+        if role not in {"user", "assistant", "tool"} or not str(content).strip():
+            return
+        try:
+            memory.append(role, content)
+        except Exception as error:  # noqa: BLE001 - memory must never break a turn
+            logger.warning("tiered memory append failed: %s", error)
 
     def _duplex_slow_path(self, reason: str) -> None:
         """Predictive filler before planner / info-tool slow work."""

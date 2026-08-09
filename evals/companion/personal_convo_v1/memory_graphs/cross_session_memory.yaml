@@ -1,0 +1,110 @@
+# LoCoMo-style event graph for the cross_session_memory probe.
+#
+# Every row is AUTHORED and FROZEN here; nothing is model-produced. Three
+# evidence threads (job interview Mon -> result Fri; Manhattan -> Brooklyn move;
+# sister Mina's visit) are laid down in an earlier session, then a run of
+# unrelated small-talk distractors is appended so the evidence falls OUTSIDE the
+# recency window (recent(8)). A later probe session with empty live history can
+# only see the tail distractors, so today's ConversationMemory literally cannot
+# surface the interview result. That is the recency-window limitation the probe
+# is built to expose honestly.
+
+graph_id: cross_session_memory
+recency_limit: 8
+
+events:
+  # --- earlier session: the evidence the probe will ask about ---
+  - id: interview_mon
+    session: s0_prior
+    role: user
+    kind: evidence
+    content: "I have a big job interview this Monday and I'm really nervous about it."
+  - id: interview_ack
+    session: s0_prior
+    role: assistant
+    kind: distractor
+    content: "You've prepared hard for this — I'll be thinking of you on Monday."
+  - id: move_plan
+    session: s0_prior
+    role: user
+    kind: evidence
+    content: "We're also moving from Manhattan to Brooklyn at the end of this month."
+  - id: sister_visit
+    session: s0_prior
+    role: user
+    kind: evidence
+    content: "My sister Mina is visiting next weekend and I can't wait to see her."
+  - id: result_fri
+    session: s0_prior
+    role: user
+    kind: evidence
+    content: "I heard back on Friday — I got the offer! I'm so relieved and thrilled."
+  - id: result_ack
+    session: s0_prior
+    role: assistant
+    kind: distractor
+    content: "That's fantastic news — congratulations, you truly earned it."
+
+  # --- tail distractors: push all evidence past recent(8) ---
+  - id: d01
+    session: s0_prior
+    role: user
+    kind: distractor
+    content: "Anyway, I finally reorganized the kitchen cabinets today."
+  - id: d02
+    session: s0_prior
+    role: assistant
+    kind: distractor
+    content: "Nice — a tidy kitchen always feels like a fresh start."
+  - id: d03
+    session: s0_prior
+    role: user
+    kind: distractor
+    content: "I watered the plants and the basil is finally coming back."
+  - id: d04
+    session: s0_prior
+    role: assistant
+    kind: distractor
+    content: "Basil is stubborn but rewarding once it takes."
+  - id: d05
+    session: s0_prior
+    role: user
+    kind: distractor
+    content: "I think I'll repaint the hallway a pale green sometime soon."
+  - id: d06
+    session: s0_prior
+    role: assistant
+    kind: distractor
+    content: "Pale green is calming — it should suit the light there."
+  - id: d07
+    session: s0_prior
+    role: user
+    kind: distractor
+    content: "The coffee shop on the corner changed their beans again."
+  - id: d08
+    session: s0_prior
+    role: assistant
+    kind: distractor
+    content: "Hopefully the new roast is one you enjoy."
+  - id: d09
+    session: s0_prior
+    role: user
+    kind: distractor
+    content: "I might try a new podcast on my commute tomorrow."
+  - id: d10
+    session: s0_prior
+    role: assistant
+    kind: distractor
+    content: "A good commute podcast makes the ride disappear."
+
+probe:
+  query: "How did that job interview I had on Monday end up going?"
+  required_any_groups:
+    - ["offer", "got the job", "got it", "accepted", "hired"]
+  confabulation_guards:
+    - "didn't get it"
+    - "rejected"
+    - "they said no"
+    - "turned me down"
+    - "you failed"
+    - "went badly"

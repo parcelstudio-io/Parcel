@@ -1,0 +1,42 @@
+{
+  "scenario_id": "asr_robustness",
+  "probe_family": "asr_robustness",
+  "persona_id": "gentle_companion",
+  "profile_facts": {"location": "New York", "home": "Manhattan", "occupation": "software engineer"},
+  "memory_fixture": null,
+  "tool_fixtures": {"weather": {"mode": "normal"}},
+  "sessions": [
+    {
+      "session_id": "s1",
+      "reset_live_history": true,
+      "turns": [
+        {
+          "turn_id": "asr_robustness.s1.t1",
+          "user": "th w thr t mrrw shld i brng mbrll",
+          "contract": {
+            "facts_must_appear": [["didn't catch", "say it again", "come again", "repeat that"]],
+            "facts_must_not_appear": ["22", "partly cloudy", "umbrella", "yes you should", "forecast", "the weather is"],
+            "tool_calls_expected": [],
+            "tool_calls_forbidden": ["get_weather"],
+            "dialogue_act": {"asks_clarification_expected": true, "forbidden_claim_patterns": ["the weather is", "you should bring"], "max_veracity": "verified"},
+            "emote": {"max_tags": 0},
+            "reply_word_budget": 30
+          }
+        },
+        {
+          "turn_id": "asr_robustness.s1.t2",
+          "user": "Sorry, will it rain in Manhattan tomorrow?",
+          "contract": {
+            "facts_must_appear": [["manhattan"], ["partly cloudy", "22"]],
+            "facts_must_not_appear": [],
+            "tool_calls_expected": ["get_weather"],
+            "tool_calls_forbidden": [],
+            "dialogue_act": {"asks_clarification_expected": false, "forbidden_claim_patterns": [], "max_veracity": "verified"},
+            "emote": {"max_tags": 0},
+            "reply_word_budget": 45
+          }
+        }
+      ]
+    }
+  ]
+}

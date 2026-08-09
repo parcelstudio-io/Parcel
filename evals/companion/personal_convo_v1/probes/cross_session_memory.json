@@ -1,0 +1,29 @@
+{
+  "scenario_id": "cross_session_memory",
+  "probe_family": "cross_session_memory",
+  "persona_id": "calm_guardian",
+  "profile_facts": {"location": "New York", "home": "Manhattan", "occupation": "software engineer"},
+  "memory_fixture": {"graph": "memory_graphs/cross_session_memory.yaml", "recency_limit": 8},
+  "tool_fixtures": {},
+  "sessions": [
+    {
+      "session_id": "s_later",
+      "reset_live_history": true,
+      "turns": [
+        {
+          "turn_id": "cross_session_memory.s_later.t1",
+          "user": "How did that job interview I had on Monday end up going?",
+          "contract": {
+            "facts_must_appear": [["offer", "got the job", "got it", "accepted", "hired"]],
+            "facts_must_not_appear": ["didn't get it", "rejected", "they said no", "turned me down", "you failed", "went badly"],
+            "tool_calls_expected": [],
+            "tool_calls_forbidden": ["get_weather"],
+            "dialogue_act": {"asks_clarification_expected": false, "forbidden_claim_patterns": ["you got the offer", "the interview went", "i checked your calendar"], "max_veracity": "verified"},
+            "emote": {"max_tags": 0},
+            "reply_word_budget": 45
+          }
+        }
+      ]
+    }
+  ]
+}

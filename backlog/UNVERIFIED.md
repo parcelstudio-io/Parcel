@@ -489,7 +489,7 @@ with the words. That needs real audio output, which U5 blocks.
 - **Risk:** PlanIR admission looks complete while only navigator-internal
   recovery actually moves the base.
 
-## U25 — SigLIP-2 weights missing; matcher degrades in grounder · **major**
+## U25 — SigLIP-2 weights missing; matcher degrades in grounder · **major** · closed 2026-08-09 (real ONNX weights landed)
 
 - **Claim (task_6 N-C1):** SigLIP-2 B/16 is Grounder v2 embedding glue.
 - **Reality:** `SigLIP2Matcher` is wired into `ObservationSemanticMap` and
@@ -519,12 +519,42 @@ with the words. That needs real audio output, which U5 blocks.
   alias row**; provisional real-path threshold `SIGLIP2_MATCH_THRESHOLD = 0.30`
   (the `0.24` hash-era gate is retired), with `calibrate_threshold` as the
   FAR/TAR harness.
-- **Still deferred (this is what keeps U25 open):** the weights-present run —
-  fetch/install the model, recalibrate the threshold on known-absent trials +
-  record the real FAR/TAR curve, and re-measure Tier D synonym SR uplift and the
-  2 `false_arrival`s → 0 via the differential-authority instrument WITHOUT
-  weakening verification. Until then, synonym grounding is **string-only on this
-  machine**; the neural capability is verified on the synthetic fixture only.
+- **RESOLVED 2026-08-09 — real ONNX weights landed on THIS machine (card
+  `siglip-real-embeddings` follow-up; `scrum/20260809/task_5/SIGLIP_REAL_STATUS.md`
+  §"ONNX real-weight run").** The prior deferral targeted torch/transformers
+  (absent); the real fix runs the SigLIP-2 int8 ONNX encoders under
+  **onnxruntime** (already in `.parcel`), exactly how the audio stack runs
+  Silero/smart-turn — no torch, no sudo. `scripts/fetch_siglip2.sh` (sha-pinned)
+  landed `text_model_int8.onnx` (283 MB) + `vision_model_int8.onnx` (94 MB) +
+  tokenizer under `~/.cache/parcel/siglip2-b16`; new module
+  `instructnav/siglip2_onnx.py` tokenizes with the `tokenizers` rust wheel
+  (pip-installed, no torch) and preprocesses images in numpy (no PIL). The real
+  path is **opt-in behind `PARCEL_SIGLIP2_ONNX`** so merely landing weights never
+  flips the suite/mission onto a ~28 ms/query model.
+  - **Real calibration (scene vocab, int8):** SigLIP text↔text cosines cluster
+    HIGH & overlapping (present [0.844, 0.991] vs cross-class [0.759, 0.927]) — the
+    old `0.30` provisional would accept everything. Recalibrated
+    `SIGLIP2_MATCH_THRESHOLD = 0.90` (sits above streetlight/tree 0.869 &
+    tree/lamppost 0.872 → both refused, below streetlight/lamppost 0.962 → kept).
+    FAR/TAR curve in the status doc.
+  - **Deferred gate RAN with weights (candidate v3 minival, real ONNX):**
+    **false_arrival 2 → 0** (both `object_goal-B-05` & `object_goal-D-15`);
+    overall **SR 0.20 → 0.28**, SPL 0.160 → 0.240, **no regressions, no new
+    false_arrivals**; differential-authority instrument shows verification NOT
+    weakened (agreement 17→20, authority_disagreement 6→5, false_arrival 2→0).
+    Tier-D headline SR flat 0.20→0.20 (D-15's wrong-object commitment becomes an
+    honest `planning_error`, not a success — grounding fixed; its planning miss is
+    a separate concern).
+  - **Weights-absent / opt-out path byte-identical:** env-off candidate-v3 minival
+    reproduces the frozen baseline exactly (`episode_digest 919a0fea…`, sr 0.20,
+    spl 0.16016, false_arrival 2, authority histogram) and the frozen v2/v3 + 997
+    embodied pins stay green.
+  - **Honest boundary:** onnxruntime is CPU-only here (no CUDA provider);
+    ~28 ms/query warm (label embeddings cached), ~990 s for the 25-episode minival
+    vs ~25 s string — so grounding stays OFF the 10 Hz hot path (discrete
+    grounding decision, async), never in-loop. Weak generic synonyms (seat≡bench
+    0.873) are below 0.90 and rely on the curated alias table upstream, not the
+    neural gate.
 
 ## U26 — Eval panel live mode does not re-place entities · **minor**
 

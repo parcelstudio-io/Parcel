@@ -20,7 +20,7 @@ from parcel_robot.camera_channel import (
     d455_color_intrinsics,
     go2_d455_mount,
 )
-from parcel_robot.contracts import DetectionMsg, EvidenceEnvelopeV1, SCHEMA_VERSION
+from parcel_robot.contracts import SCHEMA_VERSION, DetectionMsg, EvidenceEnvelopeV1
 from parcel_robot.detection_adapter import (
     DetectionNoiseAdapter,
     DetectionNoiseConfig,
@@ -43,7 +43,6 @@ from parcel_robot.low_viewpoint import (
     gate_ocr_upward_angle,
     gate_vpr_at_35cm,
 )
-
 
 # ---------------------------------------------------------------------------
 # CameraChannel
@@ -347,6 +346,292 @@ def test_mount_height_mismatch_fails_viewpoint_gates() -> None:
     assert not gate_vpr_at_35cm(sample).passed
     thr = LowViewpointThresholds(mount_height_tolerance_m=0.0)
     assert not gate_legs_first_reid(sample, thr).passed
+
+
+# ---------------------------------------------------------------------------
+# B1: MuJoCo-EGL intrinsics fix + seg-truth back-projection self-check
+# ---------------------------------------------------------------------------
+
+import numpy as np
+
+from parcel_robot.detection_adapter.pixel_detections import (
+    CameraExtrinsics,
+    PixelDetection,
+    SegTruthDetector,
+    back_project,
+    localize_detection,
+    localize_frame,
+    project,
+)
+
+#: Pinned bound for the pure synthetic seg-truth self-check: a flat facing patch
+#: at the centroid depth back-projects to within pixel-quantization of truth.
+_SEG_TRUTH_PURE_BOUND_M = 0.01
+#: Pinned bound for the real-render self-check against a MuJoCo geom centroid:
+#: the back-projected SURFACE point sits ~one radius in front of the volumetric
+#: centre, so the bound is radius + a small geometry margin. The un-fixed
+#: fovy=45 render misses this by >2x (asserted below).
+_SEG_TRUTH_REAL_MARGIN_M = 0.03
+
+
+def _synthetic_seg_depth(intr, ext, targets):
+    """Project ``targets`` {seg_id: (label, world_xyz, radius)} to (seg, depth).
+
+    Flat facing patches at each centroid's optical-axis depth — the CI-safe
+    stand-in for a MuJoCo seg render, sharing the localizer's exact geometry.
+    """
+
+    h, w = intr.height_px, intr.width_px
+    seg = np.zeros((h, w), dtype=np.int32)
+    depth = np.zeros((h, w), dtype=np.float64)
+    for seg_id, (_label, pos, radius) in targets.items():
+        pr = project(pos, intr, ext)
+        assert pr is not None
+        u, v, d = pr
+        r_px = max(4, round(intr.fx * radius / d))
+        uc_i, vc_i = round(u), round(v)
+        u0, u1 = uc_i - r_px, uc_i + r_px
+        v0, v1 = vc_i - r_px, vc_i + r_px
+        seg[v0:v1, u0:u1] = seg_id
+        depth[v0:v1, u0:u1] = d
+    return seg, depth
+
+
+def test_advertised_fovy_reconstructs_the_d455_focal() -> None:
+    """The vertical fov the render is bound to reproduces fx=fy=644, cx/cy centered."""
+
+    intr = d455_color_intrinsics()
+    fovy = intr.vertical_fov_rad()  # 2·atan(H/(2·fy))
+    fy_reconstructed = intr.height_px / (2.0 * math.tan(fovy / 2.0))
+    assert fy_reconstructed == pytest.approx(644.0, abs=1e-6)
+    # A MuJoCo free camera can only carry a centered principal point.
+    assert intr.cx == pytest.approx(intr.width_px / 2.0)
+    assert intr.cy == pytest.approx(intr.height_px / 2.0)
+    assert intr.fx == pytest.approx(intr.fy)
+
+
+def test_back_projection_is_the_exact_inverse_of_projection() -> None:
+    intr = d455_color_intrinsics()
+    ext = CameraExtrinsics.from_mount_pose(robot_x=1.0, robot_y=-2.0, robot_yaw_rad=0.6)
+    for world in [(3.0, 0.4, 0.7), (2.2, -0.9, 1.3), (4.5, 1.1, 0.3)]:
+        u, v, d = project(world, intr, ext)
+        recovered = ext.camera_to_world(back_project(u, v, d, intr))
+        assert recovered == pytest.approx(world, abs=1e-9)
+
+
+def test_pure_seg_truth_backprojection_self_check() -> None:
+    """Back-project a rendered box+depth; assert it lands on the seg-truth centroid."""
+
+    intr = d455_color_intrinsics()
+    ext = CameraExtrinsics.from_mount_pose(robot_x=0.0, robot_y=0.0, robot_yaw_rad=0.2)
+    targets = {
+        2: ("bench", (3.0, 0.5, 0.5), 0.3),
+        3: ("lamppost", (4.0, -0.7, 1.1), 0.2),
+    }
+    seg, depth = _synthetic_seg_depth(intr, ext, targets)
+    localized = localize_frame(
+        SegTruthDetector({k: v[0] for k, v in targets.items()}),
+        rgb=None,
+        depth=depth,
+        seg=seg,
+        query=None,
+        intrinsics=intr,
+        extrinsics=ext,
+        source_timestamp_ns=1,
+        received_monotonic_ns=1,
+        depth_max_m=1000.0,
+    )
+    assert len(localized) == 2
+    for loc in localized:
+        truth = targets[loc.seg_id][1]
+        err = float(
+            np.linalg.norm(
+                np.array([loc.world_x, loc.world_y, loc.world_z]) - np.array(truth)
+            )
+        )
+        assert err < _SEG_TRUTH_PURE_BOUND_M
+
+
+def test_localizer_is_rigid_transform_equivariant() -> None:
+    """Rotate+translate the whole scene (world points AND camera) -> the recovered
+    world point transforms by the same SE2 rigid motion (metamorphic gate)."""
+
+    intr = d455_color_intrinsics()
+    base_pose = (0.5, -1.0, 0.3)
+    target = (3.0, 0.6, 0.7)
+    radius = 0.25
+
+    def localize(pose, tgt):
+        ext = CameraExtrinsics.from_mount_pose(
+            robot_x=pose[0], robot_y=pose[1], robot_yaw_rad=pose[2]
+        )
+        seg, depth = _synthetic_seg_depth(intr, ext, {2: ("x", tgt, radius)})
+        locs = localize_frame(
+            SegTruthDetector({2: "x"}), rgb=None, depth=depth, seg=seg, query=None,
+            intrinsics=intr, extrinsics=ext, source_timestamp_ns=1,
+            received_monotonic_ns=1, depth_max_m=1000.0,
+        )
+        assert len(locs) == 1
+        return np.array([locs[0].world_x, locs[0].world_y, locs[0].world_z])
+
+    p0 = localize(base_pose, target)
+
+    # Apply an SE2 rigid transform T = (rotate dyaw about origin, then translate).
+    dyaw, tx, ty = 0.7, 2.0, -1.5
+    c, s = math.cos(dyaw), math.sin(dyaw)
+
+    def se2(x, y):
+        return (c * x - s * y + tx, s * x + c * y + ty)
+
+    tpose = (*se2(base_pose[0], base_pose[1]), base_pose[2] + dyaw)
+    ttarget = (*se2(target[0], target[1]), target[2])
+    p1 = localize(tpose, ttarget)
+
+    expected = np.array([*se2(p0[0], p0[1]), p0[2]])
+    assert np.linalg.norm(p1 - expected) < 1e-6
+
+
+def test_erode_and_zscore_reject_survive_depth_outliers() -> None:
+    """Gross depth outliers under a box are Z-score rejected; the point holds."""
+
+    intr = d455_color_intrinsics()
+    ext = CameraExtrinsics.from_mount_pose(robot_x=0.0, robot_y=0.0, robot_yaw_rad=0.0)
+    target = (3.0, 0.0, 0.35)  # on the optical axis (mount height), centered
+    seg, depth = _synthetic_seg_depth(intr, ext, {2: ("x", target, 0.35)})
+    ys, xs = np.where(seg == 2)
+    # Spray 5% of the mask (scattered, not a contiguous strip) with a 4 m spike;
+    # scattered removal keeps the eroded-mask centroid unbiased.
+    rng = np.random.default_rng(0)
+    k = ys.size // 20
+    pick = rng.choice(ys.size, size=k, replace=False)
+    depth[ys[pick], xs[pick]] = depth[ys[0], xs[0]] + 4.0
+    clean = localize_detection(
+        PixelDetection(label="x", score=1.0, box=(int(xs.min()), int(ys.min()),
+            int(xs.max()) + 1, int(ys.max()) + 1), seg_id=2),
+        depth=depth, seg=seg, intrinsics=intr, extrinsics=ext,
+        source_timestamp_ns=1, received_monotonic_ns=1, sequence=0, depth_max_m=1000.0,
+    )
+    assert clean is not None
+    err = float(np.linalg.norm(
+        np.array([clean.world_x, clean.world_y, clean.world_z]) - np.array(target)))
+    assert err < _SEG_TRUTH_PURE_BOUND_M
+
+
+def _try_build_real_backend(model, data, spec):
+    from parcel_robot.camera_channel.backends.mujoco_egl import (
+        MujocoEglCameraBackend,
+        MujocoEglUnavailable,
+    )
+
+    try:
+        return MujocoEglCameraBackend(model, data, spec=spec, class_ids=("bg", "tg"))
+    except MujocoEglUnavailable as exc:
+        pytest.skip(f"MuJoCo offscreen render unavailable: {exc}")
+
+
+def test_real_render_seg_truth_self_check_and_fovy_bug_regression() -> None:
+    """Guarded: the REAL MuJoCo render back-projects onto the true geom centroid
+    with the fixed fovy, and the un-fixed fovy=45 misses by >2x (the fix is
+    load-bearing). Skips where no offscreen GL context exists (CI)."""
+
+    mujoco = pytest.importorskip("mujoco")
+    from parcel_robot.camera_channel.channel import CameraChannelSpec
+
+    spec = CameraChannelSpec.d455_go2_nominal()
+    intr = spec.intrinsics
+    tgt = (3.2, 0.6, 0.55)
+    radius = 0.09
+    xml = (
+        '<mujoco><worldbody><light pos="0 0 5"/>'
+        '<geom name="ground" type="plane" size="40 40 0.1"/>'
+        f'<body name="t" pos="{tgt[0]} {tgt[1]} {tgt[2]}">'
+        f'<geom name="tg" type="sphere" size="{radius}" rgba="1 0 0 1"/></body>'
+        "</worldbody></mujoco>"
+    )
+    model = mujoco.MjModel.from_xml_string(xml)
+    data = mujoco.MjData(model)
+    mujoco.mj_forward(model, data)
+    backend = _try_build_real_backend(model, data, spec)
+
+    # The render frustum is bound to the advertised focal, not the 45° default.
+    assert backend.render_fovy_deg == pytest.approx(
+        math.degrees(intr.vertical_fov_rad()), abs=1e-6
+    )
+
+    pose = (0.0, 0.0, 0.18)
+    try:
+        backend.capture(
+            source_timestamp_ns=1, sequence=0,
+            robot_x=pose[0], robot_y=pose[1], robot_yaw_rad=pose[2],
+        )
+    except Exception as exc:  # noqa: BLE001
+        pytest.skip(f"offscreen capture failed: {exc}")
+    buffers = backend.last_buffers
+    assert buffers is not None and buffers.seg_u16 is not None
+
+    seg = buffers.seg_u16.astype(np.int32)
+    depth = buffers.depth_m_f32.astype(np.float64)
+    tid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "tg")
+    seg_val = (tid + 1) & 0xFFFF
+    if not (seg == seg_val).any():
+        pytest.skip("target not visible in the rendered frustum")
+    ext = CameraExtrinsics.from_mount_pose(
+        robot_x=pose[0], robot_y=pose[1], robot_yaw_rad=pose[2], mount=spec.mount
+    )
+    localized = localize_frame(
+        SegTruthDetector({seg_val: "tg"}), rgb=None, depth=depth, seg=seg,
+        query="tg", intrinsics=intr, extrinsics=ext,
+        source_timestamp_ns=1, received_monotonic_ns=1, depth_max_m=1000.0,
+    )
+    assert len(localized) == 1
+    loc = localized[0]
+    err_fixed = float(np.linalg.norm(
+        np.array([loc.world_x, loc.world_y, loc.world_z]) - np.array(tgt)))
+    assert err_fixed < radius + _SEG_TRUTH_REAL_MARGIN_M
+
+    # Regression: render the SAME scene/camera at the buggy default fovy=45 and
+    # back-project the seg-mask centroid — the error is >2x the fixed bound.
+    pitch = spec.mount.pitch_up_rad
+    fwd = np.array([
+        math.cos(pitch) * math.cos(pose[2]),
+        math.cos(pitch) * math.sin(pose[2]),
+        math.sin(pitch),
+    ])
+    center = np.array([
+        pose[0] + spec.mount.forward_m * math.cos(pose[2]),
+        pose[1] + spec.mount.forward_m * math.sin(pose[2]),
+        spec.mount.height_m,
+    ])
+    model.vis.global_.offwidth = intr.width_px
+    model.vis.global_.offheight = intr.height_px
+    model.vis.global_.fovy = 45.0
+    renderer = mujoco.Renderer(model, intr.height_px, intr.width_px)
+    cam = mujoco.MjvCamera()
+    mujoco.mjv_defaultFreeCamera(model, cam)
+    look = center + 3.0 * fwd
+    cam.lookat[:] = look
+    cam.distance = 3.0
+    cam.azimuth = math.degrees(pose[2])
+    cam.elevation = math.degrees(spec.mount.pitch_up_rad)
+    renderer.enable_depth_rendering()
+    renderer.update_scene(data, camera=cam)
+    depth_bug = np.asarray(renderer.render(), dtype=np.float64).copy()
+    renderer.disable_depth_rendering()
+    renderer.enable_segmentation_rendering()
+    renderer.update_scene(data, camera=cam)
+    seg_bug = np.asarray(renderer.render())[..., 0].astype(np.int32)
+    renderer.disable_segmentation_rendering()
+    renderer.close()
+    ys, xs = np.where(seg_bug == tid)
+    if xs.size:
+        uc, vc = float(xs.mean()), float(ys.mean())
+        dd = float(np.median(depth_bug[ys, xs]))
+        world_bug = ext.camera_to_world(back_project(uc, vc, dd, intr))
+        err_bug = float(np.linalg.norm(np.array(world_bug) - np.array(tgt)))
+        # The bug fails the very self-check the fix passes: same scene, same
+        # camera placement, ONLY fovy differs.
+        assert err_bug > radius + _SEG_TRUTH_REAL_MARGIN_M
+        assert err_bug > 1.5 * err_fixed
 
 
 def test_evidence_envelope_still_valid_from_adapter() -> None:

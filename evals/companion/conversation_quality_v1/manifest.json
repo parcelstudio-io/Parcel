@@ -22,7 +22,7 @@
     },
     {
       "path": "prompts/system/action_policy.md",
-      "sha256": "5fcea66811a0507424197824e43a50994840a4eba26ef4a8bdc63ae27ab9e04c"
+      "sha256": "1f3e4258d8ba3779f8d8816523e82184483eb8b40f24f6775d362d1453ba0a1c"
     },
     {
       "path": "prompts/dynamic/runtime_context.md.tmpl",
@@ -30,7 +30,7 @@
     },
     {
       "path": "prompts/functions/companion.yaml",
-      "sha256": "65c5a8c4e12e86068276dd9a0d517c31445d701efd2da6a9a544fec371c54807"
+      "sha256": "2d04e0da7d174b10fa164287dfc385f4119ac4cd8806768c85da498e8657df79"
     },
     {
       "path": "prompts/personalities/calm_guardian.yaml",

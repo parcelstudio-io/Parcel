@@ -25,6 +25,7 @@ not be inferred from this index date.
 | [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md) | Living-city MuJoCo scene and social action policy |
 | [EMBODIED_EXPRESSION.md](EMBODIED_EXPRESSION.md) | Simulator pose/gesture palette, reaction arbitration, and physical Unitree commissioning boundary |
 | [DEVELOPMENT_STACK.md](DEVELOPMENT_STACK.md) | Local voice + sim development profile |
+| [CI.md](CI.md) | **CI / eval-runner gate:** per-commit + nightly tiers over the existing harnesses, the three hard regression gates (model-off / latency-tail / hard-safety), how to run locally, and the self-test |
 | [VOICE_AI_MODELS.md](VOICE_AI_MODELS.md) | STT/TTS/reasoner model choices and trust boundary |
 | [AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md) | Latency metrics and owner-relative spatial commands |
 | [ACOUSTIC_BRINGUP_PLAN.md](ACOUSTIC_BRINGUP_PLAN.md) | No-root audio bring-up, the Tier-1 virtual-rig acoustic baseline, the AEC ladder, and the owner runbook for everything transducer-gated |

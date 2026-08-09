@@ -5,7 +5,10 @@ from __future__ import annotations
 import math
 import threading
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
+
+from parcel_robot.revision import RevisionSink
 
 from .contracts import (
     RESOURCES,
@@ -206,6 +209,7 @@ class TaskExecutive:
         resources: ResourceLocks | None = None,
         *,
         max_records: int = 256,
+        revision_sinks: Sequence[RevisionSink] | None = None,
     ):
         if isinstance(max_records, bool) or not 1 <= max_records <= 10_000:
             raise ValueError("max_records must be an integer between 1 and 10000")
@@ -214,6 +218,44 @@ class TaskExecutive:
         self._tasks: dict[str, _TaskRecord] = {}
         self._sequence = 0
         self._lock = threading.RLock()
+        # P0-C proposal-buffer flush: sinks (ProposerBus / GoalArbiter) are told
+        # the committed plan_revision whenever a replacement activates, so a
+        # correction atomically invalidates stale learned-goal proposals. Empty
+        # by default -- an executive with no sinks behaves exactly as before.
+        self._revision_sinks: list[RevisionSink] = []
+        for sink in revision_sinks or ():
+            self.register_revision_sink(sink)
+
+    def register_revision_sink(self, sink: RevisionSink) -> None:
+        """Bind a proposer buffer to this executive's committed revision.
+
+        On every replacement activation the executive calls
+        ``sink.commit_revision(task_id=..., plan_revision=...)`` so the buffer
+        drops/rejects proposals authored under a superseded revision. Idempotent
+        by object identity; a sink missing ``commit_revision`` is rejected loudly
+        rather than silently failing to flush.
+        """
+
+        if not callable(getattr(sink, "commit_revision", None)):
+            raise TypeError("revision sink must expose a callable commit_revision")
+        with self._lock:
+            if all(existing is not sink for existing in self._revision_sinks):
+                self._revision_sinks.append(sink)
+
+    def _notify_revision_committed(self, record: _TaskRecord) -> None:
+        """Flush every registered proposer buffer to ``record``'s revision.
+
+        Called under ``self._lock`` from :meth:`_activate_replacement`, so the
+        buffer flush is atomic with the executive's revision bump -- there is no
+        window where an old-revision proposal survives the correction.
+        """
+
+        if not self._revision_sinks:
+            return
+        task_id = record.task_id
+        plan_revision = record.plan_revision
+        for sink in self._revision_sinks:
+            sink.commit_revision(task_id=task_id, plan_revision=plan_revision)
 
     def submit(
         self,
@@ -783,6 +825,10 @@ class TaskExecutive:
         record.pending_recovery = None
         record.conflicts = ()
         record.last_detail = "replacement_activated"
+        # The new plan is now the committed steering plan for this channel:
+        # flush stale proposer buffers in the same locked transaction so a
+        # superseded-revision proposal can never win arbitration after this.
+        self._notify_revision_committed(record)
 
 
 def _preconditions_satisfied(

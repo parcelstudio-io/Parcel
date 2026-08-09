@@ -56,6 +56,32 @@ class MujocoEglCameraBackend:
             )
 
         intr = self._channel.spec.intrinsics
+        # B1: the MuJoCo free camera derives its frustum from ``vis.global_.fovy``
+        # (a single VERTICAL fov in degrees), NOT from the advertised D455
+        # fx=fy=644. Left at the 45° default the rendered projection is
+        # fy≈869 px, so every depth back-projection is silently ~35% off. Drive
+        # the render from the explicit intrinsic instead: fovy = 2·atan(H/(2·fy)).
+        #
+        # A MuJoCo free camera can only represent a CENTERED principal point
+        # (cx=W/2, cy=H/2) and square pixels (fx=fy). The nominal D455 contract
+        # satisfies both exactly; anything else needs a fixed MJCF camera with an
+        # explicit principal point (MuJoCo issue #1183) and is rejected here
+        # rather than rendered with a silent offset.
+        if abs(intr.cx - intr.width_px / 2.0) > 0.5 or abs(
+            intr.cy - intr.height_px / 2.0
+        ) > 0.5:
+            raise MujocoEglUnavailable(
+                "MuJoCo free-camera render requires a centered principal point "
+                f"(cx=W/2, cy=H/2); got cx={intr.cx}, cy={intr.cy} for "
+                f"{intr.width_px}x{intr.height_px}. Use a fixed MJCF camera with "
+                "explicit focal/principal for an off-center intrinsic."
+            )
+        if abs(intr.fx - intr.fy) > 1e-6:
+            raise MujocoEglUnavailable(
+                "MuJoCo free-camera render assumes square pixels (fx=fy); got "
+                f"fx={intr.fx}, fy={intr.fy}."
+            )
+        self._render_fovy_deg = math.degrees(intr.vertical_fov_rad())
         try:
             # D455-nominal 1280×720 exceeds MuJoCo's default 640×480 offscreen FB.
             self._model.vis.global_.offwidth = max(
@@ -64,10 +90,14 @@ class MujocoEglCameraBackend:
             self._model.vis.global_.offheight = max(
                 int(self._model.vis.global_.offheight), intr.height_px
             )
+            # Bind the render frustum to the advertised D455 focal length.
+            self._model.vis.global_.fovy = self._render_fovy_deg
             self._renderer = mujoco.Renderer(
                 model, height=intr.height_px, width=intr.width_px
             )
-        except Exception as exc:  # noqa: BLE001 — surface as typed unavailable
+        except MujocoEglUnavailable:
+            raise
+        except Exception as exc:
             raise MujocoEglUnavailable(
                 "MuJoCo Renderer failed; set MUJOCO_GL=egl (or osmesa) before "
                 f"importing mujoco, or use SyntheticCameraBackend ({exc})"
@@ -76,6 +106,12 @@ class MujocoEglCameraBackend:
     @property
     def spec(self) -> CameraChannelSpec:
         return self._channel.spec
+
+    @property
+    def render_fovy_deg(self) -> float:
+        """Vertical fov (deg) the render frustum is bound to = 2·atan(H/(2·fy))."""
+
+        return self._render_fovy_deg
 
     @property
     def last_buffers(self) -> CaptureBuffers | None:
@@ -92,7 +128,7 @@ class MujocoEglCameraBackend:
         if renderer is not None:
             try:
                 renderer.close()
-            except Exception:  # noqa: BLE001 — teardown best-effort
+            except Exception:  # noqa: BLE001, S110 — teardown best-effort
                 pass
             self._renderer = None
 
@@ -196,15 +232,26 @@ class MujocoEglCameraBackend:
         )
         cam_z = mount.height_m
 
-        # Free-camera look-at a few meters ahead along yaw, with pitch_up.
-        look_dist = 3.0
+        # B1: MuJoCo derives a free camera's EYE from lookat/distance/azimuth/
+        # elevation as ``eye = lookat - distance · viewdir`` with
+        # ``viewdir = (cos(el)cos(az), cos(el)sin(az), sin(el))`` (az in the
+        # x-y plane, 0 = +x CCW; el above horizontal). To put the optical centre
+        # exactly at the mount and aim the optical axis along yaw at the mount's
+        # upward pitch, set az=yaw, el=pitch, and lookat = centre + dist·viewdir
+        # so the eye lands back on the centre. The previous ``az = yaw − 90`` /
+        # ``el = −pitch`` mis-set the extrinsic — depth back-projection landed
+        # ~0.3 m off a small target — even though the intrinsic was corrected.
         pitch = mount.pitch_up_rad
-        ahead_x = cam_x + look_dist * math.cos(yaw) * math.cos(pitch)
-        ahead_y = cam_y + look_dist * math.sin(yaw) * math.cos(pitch)
-        ahead_z = cam_z + look_dist * math.sin(pitch)
-        cam.lookat[:] = [ahead_x, ahead_y, ahead_z]
-        # Place eye near optical frame by setting distance ≈ look_dist.
+        look_dist = 3.0
+        fwd_x = math.cos(pitch) * math.cos(yaw)
+        fwd_y = math.cos(pitch) * math.sin(yaw)
+        fwd_z = math.sin(pitch)
+        cam.lookat[:] = [
+            cam_x + look_dist * fwd_x,
+            cam_y + look_dist * fwd_y,
+            cam_z + look_dist * fwd_z,
+        ]
         cam.distance = look_dist
-        cam.azimuth = math.degrees(yaw) - 90.0
-        cam.elevation = -math.degrees(pitch)
+        cam.azimuth = math.degrees(yaw)
+        cam.elevation = math.degrees(pitch)
         return cam

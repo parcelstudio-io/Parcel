@@ -1,0 +1,42 @@
+{
+  "scenario_id": "in_session_context",
+  "probe_family": "in_session_context",
+  "persona_id": "gentle_companion",
+  "profile_facts": {"location": "New York", "home": "Manhattan", "occupation": "software engineer"},
+  "memory_fixture": null,
+  "tool_fixtures": {},
+  "sessions": [
+    {
+      "session_id": "s1",
+      "reset_live_history": true,
+      "turns": [
+        {
+          "turn_id": "in_session_context.s1.t1",
+          "user": "Let's plan my birthday dinner at the Italian place on Friday.",
+          "contract": {
+            "facts_must_appear": [],
+            "facts_must_not_appear": [],
+            "tool_calls_expected": [],
+            "tool_calls_forbidden": ["get_weather"],
+            "dialogue_act": {"asks_clarification_expected": false, "forbidden_claim_patterns": [], "max_veracity": "verified"},
+            "emote": {"max_tags": 1},
+            "reply_word_budget": 30
+          }
+        },
+        {
+          "turn_id": "in_session_context.s1.t2",
+          "user": "Remind me which day we said for the birthday dinner?",
+          "contract": {
+            "facts_must_appear": [["friday"]],
+            "facts_must_not_appear": ["monday", "tuesday", "wednesday", "thursday", "saturday", "sunday"],
+            "tool_calls_expected": [],
+            "tool_calls_forbidden": ["get_weather"],
+            "dialogue_act": {"asks_clarification_expected": false, "forbidden_claim_patterns": [], "max_veracity": "verified"},
+            "emote": {"max_tags": 0},
+            "reply_word_budget": 40
+          }
+        }
+      ]
+    }
+  ]
+}

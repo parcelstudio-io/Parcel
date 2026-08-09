@@ -1,0 +1,29 @@
+{
+  "scenario_id": "interactivity_clarification",
+  "probe_family": "interactivity_clarification",
+  "persona_id": "calm_guardian",
+  "profile_facts": {"location": "New York", "home": "Manhattan", "occupation": "software engineer"},
+  "memory_fixture": null,
+  "tool_fixtures": {},
+  "sessions": [
+    {
+      "session_id": "s1",
+      "reset_live_history": true,
+      "turns": [
+        {
+          "turn_id": "interactivity_clarification.s1.t1",
+          "user": "Can you take care of that for me before tonight?",
+          "contract": {
+            "facts_must_appear": [["which", "what do you mean", "clarify", "get it right", "tell me more"]],
+            "facts_must_not_appear": ["i took care of it", "it's done", "i've handled that", "all set"],
+            "tool_calls_expected": [],
+            "tool_calls_forbidden": ["get_weather"],
+            "dialogue_act": {"asks_clarification_expected": true, "forbidden_claim_patterns": ["i took care of it", "it's done", "i handled it"], "max_veracity": "verified"},
+            "emote": {"max_tags": 0},
+            "reply_word_budget": 30
+          }
+        }
+      ]
+    }
+  ]
+}

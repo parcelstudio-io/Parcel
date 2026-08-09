@@ -393,6 +393,18 @@ write it (`sounddevice.OutputStream.abort()` discards buffered frames;
 `bargein_acoustic_stop_p50_s` to fall toward the detection figure. Baseline to
 beat: `results/acoustic-loop-v1-20260807-baseline-run01.json`.
 
+**UPDATE 2026-08-09 (card acoustic-close, `scrum/20260809/task_8`).** Code
+landed in `SpeakerSink._play` (`abort()` before the context-manager's draining
+`stop()`), unit-pinned in `tests/test_acoustic_defects.py`. **The rig gate did
+NOT move (0.78 s), and this is a rig limit, not the fix:** the null sink's
+`OutputStream.latency` is 0.0000 s, so there is no output-buffer drain to
+abort — with and without the change the robot stops 0.02 s after `interrupt()`.
+The 0.78 s the gate reports is owner-interrupt **residual** in
+`robot_only_envelope`'s power subtraction (frame dump: robot silent at
+interrupt+0.12 s, then spurious 1-frame owner-residual spikes at +0.5–0.7 s set
+`acoustic_end`). `abort()` needs a real output device to validate →
+`does_not_prove` on the null-sink tier. **Still OPEN as a rig-measurable gate.**
+
 ## N17 — Echo guard fragments the neural VAD's input · **hours** · found by acoustic_loop_v1
 
 False barge-in rate **1.00** against a 0.02 bar on the frozen noise set. Silero
@@ -410,6 +422,23 @@ the fragments look like speech.
 to its *decision* rather than to its input; or keep the guard as a gate on
 barge-in only and let the VAD see everything. Either way, re-run the `bargein`
 family. Interacts with N18 — with real AEC the guard should be redundant.
+
+**UPDATE 2026-08-09 (card acoustic-close, `scrum/20260809/task_8`).** Code
+landed (echo guard moved from the VAD's input to its decision; Silero now sees
+the continuous stream), unit-pinned in `tests/test_acoustic_defects.py`. **The
+original fragmentation diagnosis is WRONG and the rig gate did NOT move (1.00):**
+directly measured, Silero rejects the raw noise fixtures (max p 0.170 / 0.287)
+and **both old and new code reject every noise fixture at gains 1×–10×** on clean
+frames. The real cause of the rig false positives is that **the robot's own
+audio is in the loop's mic capture at full scale** — with the robot playing and
+NO owner injected, a barge-in still fires (capture RMS mean 2570, peak 32767).
+`pw-record --target <mic>` is being connected by WirePlumber to `<sink>:monitor`
+(which carries the robot); it survives wireplumber/pipewire restarts and
+`--target <mic>.monitor`. An energy guard cannot suppress a full-scale echo, so
+this is unfixable in `voice_audio.py`; it needs a clean mic capture (rig/env
+fix, `append/new only` barred this lane) or real AEC (N18). The decision-gating
+code is correct for a real *attenuated* echo, which this tier cannot create →
+`does_not_prove`. **Still OPEN as a rig-measurable gate.**
 
 ## N18 — Owner-gated acoustic cards · **blocked on B3** · runbook is written
 
@@ -439,6 +468,20 @@ Exact five-step diff (new `STAGES` entries, the hardcoded `source="text"` at
 **Until it lands no sub-700 ms ack claim may be made from `/latency`.** The
 acoustic tier has now measured the gap the dashboard hides: **0.54–0.64 s**
 between enqueue and audible.
+
+**UPDATE 2026-08-09 (card acoustic-close, `scrum/20260809/task_8`).** The
+`STAGES` half landed: `capture_speech_end`, `semantic_commit`,
+`stt_request_start`, `stt_final`, `audio_first_sample` are now in
+`observability.STAGES` (the keystone — `mark()` raised on them before), and the
+three measurement surfaces are verified present. Unit-pinned in
+`tests/test_acoustic_defects.py`. **The runtime fan-in remains OPEN and is now
+the ONLY blocker:** the four marks are all in `runtime.py`
+(`_audio_chunk_started` @1303, the `source="text"` @5353, `_record_turn_commit`
+@5511, the STT `last_metrics` read), which is DO-NOT-TOUCH for this card and
+whose `_audio_chunk_started` is shared with the gesture/emote lane. The
+`DuplexVoiceSession` cannot relocate the fan-in (it holds neither the tracker
+nor the sink/recognizer/turn-token). Remaining diff = §3 of
+`docs/ACOUSTIC_BRINGUP_PLAN.md`, now unblocked, for the runtime lane.
 
 ## N5 — Extend the BARN harness to all 300 public worlds · **days**
 
@@ -562,3 +605,26 @@ sink and asserts acoustic onset plus a non-trivial peak, and a gate of the form
 `system_utterance_audible_rate_min: 1.0`. Re-baseline both retained rows under
 the new runner version in the same commit, or the determinism contract is
 broken in a second way. The probe body is in the U35 record.
+
+## N-AUDIO-REC — Record the eval audio corpus (OWNER, hardware-gated) · **owner task**
+
+Audio-hardware finding (2026-08-09, coordinator): the workstation has an
+**onboard analog mic input** (ALSA `card 1: HD-Audio Generic, ALC1220 Analog`,
+Realtek ALC1220 codec) but it is **disabled** (PipeWire card profile = Off, zero
+Sources exposed, capture RMS 0.00) and **nothing is plugged into the jack**.
+There is **no USB microphone** attached. The planned robot mic is the USB
+XVF3800/ReSpeaker array (still to be procured — hardware-last).
+
+To record the PERSONAL_CONVO_V1 human-utterance corpus (the ~12.5% human-vs-TTS
+gap; the load-bearing eval stratum), the owner must EITHER:
+1. plug a 3.5 mm mic into the onboard jack, run `wpctl set-profile <ALC1220
+   card-id> 1` (Analog Duplex) + `wpctl set-default <source-id>` per
+   docs/ACOUSTIC_BRINGUP_PLAN.md §5, then record against the committed script at
+   `evals/companion/personal_convo_v1/human_recording/SCRIPT.md`; OR
+2. attach a USB mic (immediate, enumerates as a PipeWire source with no profile
+   dance).
+
+The recording is for EVAL TRUSTWORTHINESS only — it does not make live audio I/O
+work (that is the same transducer + `wpctl` activation) and does not fix
+barge-in (N16/N17 need real output latency + attenuated echo). The
+PERSONAL_CONVO text tier and all synthetic-voice acoustic gates run without it.

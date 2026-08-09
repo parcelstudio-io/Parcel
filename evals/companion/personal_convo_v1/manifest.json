@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-personal-convo-v1",
+  "runner_version": "personal-convo-text-tier-v1",
+  "tier": "T",
+  "frozen": true,
+  "frozen_at_utc": "2026-08-09T00:00:00Z",
+  "scenario_count": 8,
+  "probe_families": [
+    "in_session_context",
+    "cross_session_memory",
+    "fact_tool_composition",
+    "persona_consistency",
+    "affect_handling",
+    "interactivity_clarification",
+    "adaptability_no_sycophancy",
+    "asr_robustness"
+  ],
+  "human_review_required": true,
+  "requires_audio": false,
+  "requires_model_server": false,
+  "probe_files": [
+    "evals/companion/personal_convo_v1/probes/adaptability_no_sycophancy.json",
+    "evals/companion/personal_convo_v1/probes/affect_handling.json",
+    "evals/companion/personal_convo_v1/probes/asr_robustness.json",
+    "evals/companion/personal_convo_v1/probes/cross_session_memory.json",
+    "evals/companion/personal_convo_v1/probes/fact_tool_composition.json",
+    "evals/companion/personal_convo_v1/probes/in_session_context.json",
+    "evals/companion/personal_convo_v1/probes/interactivity_clarification.json",
+    "evals/companion/personal_convo_v1/probes/persona_consistency.json"
+  ],
+  "locked_files": [
+    {
+      "path": "evals/companion/personal_convo_v1/build_memory_fixture.py",
+      "sha256": "5d4cd23d6843ae12f1fa77781f8a77163ada03777a2c0b92d491882c52d2352d"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/fixture_provider.py",
+      "sha256": "a61ed82858c2c66894d34f10442bdb437e11c534fa627d09ccc519f78302bef2"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/human_recording/SCRIPT.md",
+      "sha256": "89f8a3292cf62b48a2f07ecc02153ca377af495c672d2081f49cd94b336c647e"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/memory_graphs/cross_session_memory.yaml",
+      "sha256": "fa29f87216b39676b3165e89690284ddf3fc83c968676bfb5bbf477815b38d92"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/probes/adaptability_no_sycophancy.json",
+      "sha256": "6ef1446870aafd7ea1c9e3a91f6b490c7514ff7157400952483eec0c9069b3e5"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/probes/affect_handling.json",
+      "sha256": "6b57bb197f80eed3866d1ccd3aa9eb3058ca70fd958339716ae1180acf52398b"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/probes/asr_robustness.json",
+      "sha256": "7a7201d3b26916f33b3f6932aa20aa02e9677e832178cdcc195db9bab8bd91ef"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/probes/cross_session_memory.json",
+      "sha256": "8d92c44a2a8342a6b2c4e91ca1a953ec2e414f326af77cc73a3e70455ea52011"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/probes/fact_tool_composition.json",
+      "sha256": "1f649f2ca0469d464feead092b39becad9fb5e6e7ca96658c1f5eee682921546"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/probes/in_session_context.json",
+      "sha256": "4ccccbdb7de7d450a65384c0223af6c6d210f620c01d6e37cf8f3216ed4c4553"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/probes/interactivity_clarification.json",
+      "sha256": "6fe51a29713f1780afb755bd7cfafc3b6f6a8f9029af866bb86fa344347a4548"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/probes/persona_consistency.json",
+      "sha256": "dc34fd8a4a65552960b9bef8560dd565cd7c98a55f385d87fcfca732fad5cc4e"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/result.schema.json",
+      "sha256": "f823132c25e3253bff3a6e9efe8b3c805325f2bce6fcc5f656f600dc27429760"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/scorers.py",
+      "sha256": "fa0b73568d2546cfe145266a72a58d675b6b1b21d0d4367b35647907ff0a0999"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/session_schema.py",
+      "sha256": "8fe6a7093fe9eaeabbb0e08fca3bcb977ad4923b5e912658e9079cfaf4d5aa0d"
+    }
+  ]
+}

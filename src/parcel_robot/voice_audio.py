@@ -565,17 +565,37 @@ class MicrophoneVoiceLoop:
             except Exception as error:  # noqa: BLE001 - AEC boundary
                 logger.warning("AEC failed; continuing without it: %s", error)
                 self.aec = None
+        # Echo guard (N17). During playback the robot's own voice bleeds into
+        # the speaker-adjacent mic, and with no AEC we must not treat that bleed
+        # as the owner barging in. The guard used to RETURN on every
+        # below-threshold frame, i.e. it removed frames from the VAD's INPUT.
+        # For the neural VAD that was actively harmful: Silero was trained on a
+        # continuous stream, and feeding it only the loud survivors manufactured
+        # artificial onsets that it scored as speech, driving the false-barge-in
+        # rate to 1.00 on noise-only injections. Instead compute the guard here
+        # but let every frame reach the VAD; ``echo_suppressed`` gates the
+        # DECISION (may this frame start / sustain a barge-in?), never the input.
+        echo_suppressed = False
         if playback:
-            # No AEC yet: require the speaker-adjacent microphone to hear the
-            # owner clearly ABOVE the robot's own speech before treating sound
-            # as barge-in. Crude but honest; hardware AEC replaces this.
             rms = EnergyVad.frame_rms(frame)
             guard = self.vad.noise_rms * self.vad.threshold_scale * self.echo_guard_scale
             if rms <= guard:
+                echo_suppressed = True
                 self.echo_guard_suppressions += 1
-                return
         if self.endpointer is not None:
-            self._handle_frame_semantic(frame, playback=playback)
+            # Neural path: Silero must see the CONTINUOUS stream (the N17 fix),
+            # so the frame is always processed; ``echo_suppressed`` only decides
+            # whether the resulting speech flag may act.
+            self._handle_frame_semantic(
+                frame, playback=playback, echo_suppressed=echo_suppressed
+            )
+            return
+        # Energy path (legacy, no neural VAD). The energy segmenter is stateful
+        # hangover logic, not a continuous neural model, so the historical
+        # swallow is preserved unchanged: a guard-suppressed frame is not fed to
+        # it at all. This keeps the shipped half-duplex barge-in behaviour when
+        # semantic endpointing is off.
+        if echo_suppressed:
             return
         for event in self.vad.process(frame):
             if event.kind == "speech_start":
@@ -627,12 +647,20 @@ class MicrophoneVoiceLoop:
         self.vad.update_floor(rms, voiced=self._last_is_speech)
         return self._last_is_speech
 
-    def _handle_frame_semantic(self, frame: np.ndarray, *, playback: bool) -> None:
+    def _handle_frame_semantic(
+        self, frame: np.ndarray, *, playback: bool, echo_suppressed: bool = False
+    ) -> None:
         """Turn segmentation owned by the semantic endpointer."""
 
         frame_s = frame.size / SAMPLE_RATE_HZ
         self._elapsed_s += frame_s
-        is_speech = self._frame_is_speech(frame)
+        # Silero always consumes the frame so its input stays continuous (N17).
+        raw_is_speech = self._frame_is_speech(frame)
+        # ...but a frame the echo guard flagged as the robot's own bleed cannot
+        # COUNT as owner speech: it neither starts a barge-in nor advances the
+        # endpointer toward a commit. This is the guard applied to the decision
+        # rather than to the model's input.
+        is_speech = raw_is_speech and not echo_suppressed
 
         if is_speech:
             # The last frame that still carried speech is the acoustic end of
@@ -949,6 +977,16 @@ class SpeakerSink:
         ) as stream:
             for start in range(0, len(data), block):
                 if self._interrupted.is_set():
+                    # N16: ceasing to WRITE is not enough to stop being heard.
+                    # PortAudio has already buffered up to a full output-latency
+                    # worth of samples, and the OutputStream context manager
+                    # exits through stop(), which *drains* that buffer — the
+                    # acoustic rig measured ~0.6 s of the robot still talking
+                    # after a correct barge-in decision. abort() discards the
+                    # already-queued frames immediately (stop() would play them
+                    # out), so the sink goes acoustically silent within one
+                    # block of the interrupt instead of one output latency.
+                    stream.abort()
                     return
                 chunk = data[start : start + block]
                 # Read the gain per block so a duck requested mid-chunk takes
