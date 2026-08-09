@@ -634,13 +634,64 @@ def test_the_snapshot_exposes_both_halves(tmp_path: Path) -> None:
 # --- the safety-authority claim ----------------------------------------------
 
 
-def test_the_safety_authority_files_are_untouched_on_this_branch() -> None:
-    """W4's whole safety argument rests on these two files not changing."""
+def _head_source(path: str) -> str:
+    return subprocess.run(
+        ["git", "show", f"HEAD:{path}"],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
 
-    guarded = (
-        "src/parcel_robot/navigation/collision.py",
-        "src/parcel_robot/navigation/reactive_safety.py",
-    )
+
+def _named_source(source: str, name: str) -> str:
+    """Normalised source of one top-level def/class (comments/format stripped)."""
+
+    import ast
+
+    for node in ast.parse(source).body:
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and node.name == name:
+            return ast.unparse(node)
+    raise AssertionError(f"{name!r} not found")
+
+
+def _method_source(source: str, class_name: str, method: str) -> str:
+    import ast
+
+    for node in ast.parse(source).body:
+        if isinstance(node, ast.ClassDef) and node.name == class_name:
+            for stmt in node.body:
+                if isinstance(stmt, ast.FunctionDef) and stmt.name == method:
+                    return ast.unparse(stmt)
+    raise AssertionError(f"{class_name}.{method} not found")
+
+
+def _annotated_defaults(source: str, class_name: str) -> dict[str, object]:
+    import ast
+
+    for node in ast.parse(source).body:
+        if isinstance(node, ast.ClassDef) and node.name == class_name:
+            found: dict[str, object] = {}
+            for stmt in node.body:
+                if (
+                    isinstance(stmt, ast.AnnAssign)
+                    and isinstance(stmt.target, ast.Name)
+                    and stmt.value is not None
+                ):
+                    try:
+                        found[stmt.target.id] = ast.literal_eval(stmt.value)
+                    except ValueError:
+                        # A derived (non-literal) default. Its value is checked
+                        # against HEAD's literal by the caller.
+                        continue
+            return found
+    raise AssertionError(f"{class_name} not found")
+
+
+def test_the_reactive_safety_authority_file_is_untouched_on_this_branch() -> None:
+    """W4's safety argument rests on this file not changing."""
+
+    guarded = ("src/parcel_robot/navigation/reactive_safety.py",)
     result = subprocess.run(
         ["git", "status", "--porcelain", "--", *guarded],
         cwd=REPO,
@@ -653,3 +704,52 @@ def test_the_safety_authority_files_are_untouched_on_this_branch() -> None:
         "card W4 supplements the geometric gate and must not modify it; "
         f"git reports changes:\n{result.stdout}"
     )
+
+
+def test_the_collision_gate_behaviour_is_untouched_on_this_branch() -> None:
+    """Same W4 claim for `collision.py`, stated behaviourally rather than by diff.
+
+    Lane A (strata 4+5, 2026-08-07) replaced ``CollisionPolicy``'s literal field
+    defaults with derivations from the single ``SafetyEnvelope`` authority, so a
+    bare ``git status`` check on this file now reports a change that W4's
+    argument does not actually care about. What W4 needs is that the *gate* did
+    not move, so that is what is asserted here, and more tightly than before:
+
+    * ``apply_collision_brake`` and ``CollisionPolicy.__post_init__`` are
+      compared against ``HEAD`` after AST normalisation — any change to the
+      braking logic or the validation, however formatted, is red;
+    * every threshold the live ``CollisionPolicy`` produces is compared, with
+      ``==`` on floats, against the literal that stood in ``HEAD``.
+
+    A pure ``git status`` check could not have caught a re-tuned constant hidden
+    behind a derivation; this can.
+    """
+
+    from parcel_robot.navigation.collision import CollisionPolicy
+
+    path = "src/parcel_robot/navigation/collision.py"
+    head = _head_source(path)
+    live = (REPO / path).read_text(encoding="utf-8")
+
+    assert _named_source(live, "apply_collision_brake") == _named_source(
+        head, "apply_collision_brake"
+    ), "card W4: the collision gate's braking logic must not change"
+    assert _method_source(live, "CollisionPolicy", "__post_init__") == _method_source(
+        head, "CollisionPolicy", "__post_init__"
+    ), "card W4: the collision policy's validation must not change"
+
+    head_defaults = _annotated_defaults(head, "CollisionPolicy")
+    policy = CollisionPolicy()
+    assert set(head_defaults) >= {
+        "person_stop_m",
+        "person_slow_m",
+        "obstacle_stop_m",
+        "obstacle_slow_m",
+        "slow_scale",
+        "reaction_time_s",
+    }
+    for name, expected in head_defaults.items():
+        assert getattr(policy, name) == expected, (
+            f"card W4: CollisionPolicy.{name} moved from {expected!r} to "
+            f"{getattr(policy, name)!r}"
+        )

@@ -18,8 +18,11 @@ AFFECT_SOURCES = frozenset({"explicit_transcript", "prosody", "multimodal", "unk
 TARGET_KINDS = frozenset(
     {"semantic_region", "semantic_object", "owner", "current_pose", "safe_region"}
 )
+# "follow" and "reacquire" are system-authored relations: they are absent from
+# the model-facing plan_ir/plan_sketch JSON schemas on purpose, so only the
+# runtime's own deterministic sketches can request them.
 GOAL_RELATIONS = frozenset(
-    {"inside", "near", "behind", "orbit", "hold", "safe_pose", "relative", "reacquire"}
+    {"inside", "near", "behind", "follow", "orbit", "hold", "safe_pose", "relative", "reacquire"}
 )
 RESOURCES = ("base", "posture", "voice", "attention")
 INTERRUPTIBILITIES = frozenset({"immediate", "checkpoint", "when_idle", "never"})

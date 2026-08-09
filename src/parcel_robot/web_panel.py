@@ -328,6 +328,15 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
 
                 episode_id = self._string(payload, "episode_id")
                 mode = str(payload.get("mode") or "headless").lower()
+                if mode == "voice" or self._boolean(payload, "voice_mode", False):
+                    # Product path: the instruction is typed into the live
+                    # runtime's handle_text instead of driving the navigator
+                    # directly, so admission/routing failures are visible to
+                    # the panel. Sequential by construction — start_voice
+                    # reuses the existing "already running" guard.
+                    selected = EVAL_PANEL.start_voice(episode_id, self.server.runtime)
+                    self._send_json({"accepted": True, **selected}, HTTPStatus.ACCEPTED)
+                    return
                 if mode == "live":
                     selected = EVAL_PANEL.select(episode_id)
                     # Live mode: place start pose is sim-owned; inject instruction.

@@ -15,7 +15,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
-from .base import MidLevelCommand, Mission, ModelSpec, NavObservation
+from .base import ODOM_FRAME, MidLevelCommand, Mission, ModelSpec, NavObservation
+from .base import pose_in as _pose_in
 
 logger = logging.getLogger(__name__)
 from .dynamic_layer import (
@@ -269,6 +270,36 @@ class GridNavigator:
         self.scan_fallback_count = 0
         self._scan_fallback_active = False
 
+    @property
+    def last_route_status(self) -> str | None:
+        """Status of the most recent global plan; ``None`` before the first.
+
+        Exposed because ``goal_blocked``/``no_path`` is the planner's *proof*
+        that the commanded goal has no traversable cell, not a slow-progress
+        heuristic — and the only response this controller has is
+        :meth:`_recovery_command`, which with the shipping
+        ``recovery_reverse_steps=0`` is pure in-place yaw. A caller that owns
+        the goal (the semantic mission) has to be able to see that proof, or an
+        unroutable goal turns into an indefinite spin.
+        """
+
+        plan = self._last_plan
+        return None if plan is None else str(plan.status)
+
+    def seed_ramp(self, vx: float) -> None:
+        """Raise slew state after a brief person-stop release (never a command).
+
+        ``RampMemory.release`` is the caller's assertion that the person-stop
+        gate already opened. This only lifts ``_last_vx`` for the next
+        ``_slew``; every downstream brake / reactive / TTC authority still
+        bounds the emitted command every tick.
+        """
+
+        value = float(vx)
+        if not math.isfinite(value) or value < 0.0:
+            raise ValueError("seed_ramp vx must be finite and non-negative")
+        self._last_vx = min(max(self._last_vx, value), self.cruise_vx)
+
     def reset(self, mission: Mission) -> None:
         self._planner.reset()
         self.dynamic_cost_active = False
@@ -293,11 +324,18 @@ class GridNavigator:
             return MidLevelCommand(stop=True, note="grid_goal_missing")
 
         goal = (mission.goal.x, mission.goal.y)
-        pose = Pose2D(
-            float(observation.position[0]),
-            float(observation.position[1]),
-            math.radians(float(observation.heading_deg)),
-        )
+        # ODOM: this is the short-horizon controller. The rolling occupancy grid
+        # is built from live LiDAR and re-centred every tick, so what it needs
+        # is a pose that is *continuous* -- a MAP correction jump would smear
+        # obstacles across the grid. Global consistency is not its job.
+        #
+        # Known gap, deliberately not closed here: ``mission.goal`` is a MAP
+        # quantity and there is no map->odom transform to bring it into this
+        # frame. With TruthPoseProvider the two frames are identical so nothing
+        # moves; once a real localizer occupies the MAP role, this call site is
+        # the one that needs the transform. Recorded as the stratum-1 hand-off.
+        robot = _pose_in(observation, ODOM_FRAME)
+        pose = Pose2D(robot.x, robot.y, robot.yaw)
         goal_distance = math.dist(pose.xy, goal)
         arrival_radius = (
             self.arrive_radius_m

@@ -1,0 +1,40 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_goal-D-15-109547e2",
+  "family": "object_goal",
+  "goal": {
+    "anchor_entity": "tree_1",
+    "anchor_footprint_m": 0.0,
+    "band_m": [
+      0.6,
+      2.5
+    ],
+    "center": [
+      -5.0,
+      3.15
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "walk towards the tree",
+  "notes": "ambiguity_or_synonym|object_goal",
+  "placement_overrides": {
+    "robot": {
+      "x": 0.1,
+      "y": -0.05,
+      "yaw": 1.0
+    }
+  },
+  "seed": 278218722,
+  "shortest_path_m": 7.5,
+  "start_pose": [
+    0.1,
+    -0.05,
+    1.0
+  ],
+  "synonym": null,
+  "target_entity_id": "tree_1",
+  "tier": "D"
+}

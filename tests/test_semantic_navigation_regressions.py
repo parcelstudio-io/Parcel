@@ -40,6 +40,30 @@ def _sidewalk_observation() -> NavObservation:
     )
 
 
+#: Region ("stuff class") goals are *interchangeable*, and the 2026-08-07
+#: region-instance arbitration forbids committing to the first instance that
+#: confirms: with one instance in view, "which sidewalk is nearest" is not
+#: answerable until the robot has looked around. `ActiveSemanticSearch.observe`
+#: therefore withholds the commit until the sweep completes, bounded by
+#: `scan_budget_steps` (80), where these cases used to commit on the second
+#: sighting. Every case below re-checks its own subject — the watchdog and the
+#: three terminal-verification behaviours — unchanged, after the sweep; only the
+#: number of ticks it takes to *get* a goal moved.
+REGION_SWEEP_BUDGET_STEPS = 80
+
+
+def _resolve_region_goal(navigator, observation, *, budget: int = REGION_SWEEP_BUDGET_STEPS):
+    """Drive the interchangeable-goal sweep to its commit."""
+
+    for _ in range(budget):
+        navigator.step(observation)
+        if navigator.mission is not None and navigator.mission.goal is not None:
+            return
+    raise AssertionError(
+        f"region goal never committed inside the {budget}-step sweep budget"
+    )
+
+
 def test_progress_watchdog_replans_then_fails_closed_instead_of_running_forever():
     navigator = DirectiveNavigator(
         registry=ModelRegistry.load(MODELS),
@@ -49,8 +73,7 @@ def test_progress_watchdog_replans_then_fails_closed_instead_of_running_forever(
     )
     mission = navigator.start("walk to the sidewalk")
     observation = _sidewalk_observation()
-    navigator.step(observation)
-    navigator.step(observation)
+    _resolve_region_goal(navigator, observation)
 
     first_attempt = [navigator.step(observation) for _ in range(10)]
 
@@ -59,8 +82,8 @@ def test_progress_watchdog_replans_then_fails_closed_instead_of_running_forever(
     assert mission.goal is None
     assert mission.metadata["replan_count"] == 1
 
-    navigator.step(observation)
-    navigator.step(observation)
+    # The replan resets the search, so the second attempt pays the sweep again.
+    _resolve_region_goal(navigator, observation)
     second_attempt = [navigator.step(observation) for _ in range(10)]
 
     assert second_attempt[-1].stop
@@ -77,8 +100,7 @@ def test_terminal_verification_fails_closed_without_measured_stop_feedback():
     )
     mission = navigator.start("walk to the sidewalk")
     observation = _sidewalk_observation()
-    navigator.step(observation)
-    navigator.step(observation)
+    _resolve_region_goal(navigator, observation)
     assert mission.goal is not None
     at_goal = NavObservation(
         position=(mission.goal.x, mission.goal.y, 0.0),
@@ -102,8 +124,7 @@ def test_terminal_verification_rejects_stale_semantic_perception():
     )
     mission = navigator.start("walk to the sidewalk")
     observation = _sidewalk_observation()
-    navigator.step(observation)
-    navigator.step(observation)
+    _resolve_region_goal(navigator, observation)
     assert mission.goal is not None
     stale_extras = {
         **observation.extras,
@@ -140,8 +161,7 @@ def test_terminal_verification_checks_nearest_obstacle_when_lidar_list_is_empty(
     )
     mission = navigator.start("walk to the sidewalk")
     observation = _sidewalk_observation()
-    navigator.step(observation)
-    navigator.step(observation)
+    _resolve_region_goal(navigator, observation)
     assert mission.goal is not None
     blocked_extras = {
         **observation.extras,

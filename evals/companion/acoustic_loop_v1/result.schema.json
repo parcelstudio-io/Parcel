@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "acoustic_loop_v1 result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "suite_id",
+    "runner_version",
+    "tier",
+    "rng_seed",
+    "manifest_sha256",
+    "locked_files",
+    "case_count",
+    "cases",
+    "case_verdicts",
+    "metrics",
+    "gates",
+    "teardown_clean",
+    "does_not_prove"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "suite_id": { "const": "parcel-acoustic-loop-v1" },
+    "runner_version": { "type": "string" },
+    "tier": {
+      "const": 1,
+      "description": "Virtual rig. Tier 2 is through-air; Tier 3 is owner sessions."
+    },
+    "rng_seed": { "type": "integer" },
+    "started_utc": { "type": "string" },
+    "duration_s": { "type": "number" },
+    "families": { "type": "array", "items": { "type": "string" } },
+    "audio_profile": { "type": "string" },
+    "node_prefix": { "type": "string" },
+    "manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "locked_files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "environment": { "type": "object" },
+    "orphan_nodes_after_teardown": { "type": "array", "items": { "type": "string" } },
+    "teardown_clean": {
+      "type": "boolean",
+      "description": "False means the run leaked lingering PipeWire nodes."
+    },
+    "case_count": { "type": "integer", "minimum": 0 },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "family", "verdict"],
+        "properties": {
+          "name": { "type": "string" },
+          "family": {
+            "enum": ["endpointing", "bargein", "duplex", "prosody"]
+          },
+          "kind": { "type": "string" },
+          "verdict": { "type": "string" }
+        }
+      }
+    },
+    "case_verdicts": {
+      "type": "object",
+      "description": "name -> verdict. This mapping is the determinism contract: two runs on the frozen clean pack must produce an identical object."
+    },
+    "metrics": { "type": "object" },
+    "gates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "value": { "type": ["number", "null"] },
+          "limit": { "type": "number" },
+          "direction": { "enum": ["max", "min"] },
+          "status": { "enum": ["pass", "FAIL", "not_measured"] }
+        }
+      }
+    },
+    "gates_passed": { "type": "boolean" },
+    "human_review_required": { "type": "boolean" },
+    "does_not_prove": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Mandatory. A Tier-1 report that omits its limits is a misleading report."
+    }
+  }
+}

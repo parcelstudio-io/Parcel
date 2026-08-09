@@ -123,6 +123,11 @@ def test_correction_interrupt_and_failure_boundaries_are_explicit() -> None:
 @pytest.mark.parametrize(
     ("case_id", "validation_code"),
     [
+        # NOTE: this fixture's plan *explicitly declares* target_grounded,
+        # so it tests precondition ENFORCEMENT machinery. Compiled
+        # NavigateTo plans no longer declare it — admission requires a
+        # searchable target, not a visible one (2026-08-05 regression;
+        # see tests/test_navigation_admission_regression.py).
         ("ungrounded_sidewalk_rejected", "target_not_grounded"),
         ("stale_lidar_rejected", "lidar_stale"),
         ("owner_heading_ungrounded_rejected", "owner_heading_unavailable"),

@@ -6,7 +6,7 @@ from pathlib import Path
 import mujoco
 import yaml
 
-from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M, ROBOT_OBSTACLE_HEIGHT_M
+from parcel_robot.robot_profile import DEFAULT_ROBOT_PROFILE
 
 REPO = Path(__file__).resolve().parents[1]
 SCENE = REPO / "src" / "parcel_robot" / "scenes" / "city_block.xml"
@@ -31,7 +31,7 @@ def test_default_owner_orbit_has_continuous_static_fixture_clearance() -> None:
     config = yaml.safe_load(ROBOT_CONFIG.read_text(encoding="utf-8"))
     orbit_radius = float(config["spatial_behaviors"]["default_orbit_radius_m"])
     obstacle_stop = float(config["safety"]["obstacle_stop_m"])
-    required_center_clearance = ROBOT_FOOTPRINT_RADIUS_M + obstacle_stop
+    required_center_clearance = DEFAULT_ROBOT_PROFILE.footprint_radius_m + obstacle_stop
 
     model = mujoco.MjModel.from_xml_path(str(SCENE))
     data = mujoco.MjData(model)
@@ -95,7 +95,7 @@ def _intersects_robot_height(
     else:
         return False
     bottom = float(data.geom_xpos[geom_id, 2]) - half_height
-    return bottom <= ROBOT_OBSTACLE_HEIGHT_M
+    return bottom <= DEFAULT_ROBOT_PROFILE.obstacle_clearance_height_m
 
 
 def _continuous_ring_to_geom_distance(

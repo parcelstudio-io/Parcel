@@ -1,0 +1,277 @@
+# GENERATED FILE - DO NOT EDIT BY HAND.
+#
+# Derived from configs/robot.yaml by scripts/make_acoustic_config.py.
+# Regenerate after any change to configs/robot.yaml:
+#     .parcel/bin/python scripts/make_acoustic_config.py
+#
+# configs/robot.yaml is hash-locked by evals/companion/embodied_plan_v1's
+# manifest, so acoustic-mode settings live here instead of being edited in.
+# Use it with:  scripts/launch_sim.sh --config configs/robot.acoustic.yaml
+#
+# Difference from configs/robot.yaml (speech: block only):
+#   endpointing: energy -> semantic
+#   vad_model:   models/endpointing/silero_vad_v6.onnx   (added)
+#   turn_model:  models/endpointing/smart_turn_v3.onnx   (added)
+#
+# echo_guard_scale stays at 2.5: it is lowered only after an ERLE gate
+# passes, and no acoustic echo path exists on this machine yet.
+#
+# derived_from: configs/robot.yaml
+# source_sha256: f64688874525f20d08b290613a49aec2f8cbec0055e7c2a3752503d67545726c
+robot:
+  model: go2
+simulation:
+  scene: src/parcel_robot/scenes/city_block.xml
+  dynamic_city:
+    enabled: true
+    seed: 7
+    speed_scale: 1.0
+skills:
+  root: configs/skills
+navigation:
+  enabled: true
+  config: configs/navigation/default.yaml
+perception:
+  spatial_sensors:
+  - camera
+  - lidar
+  maps:
+    provider: google_maps
+    enabled: false
+query_context:
+  enabled: false
+  timeout_ms: 150
+  max_age_s: 2.0
+  timezone: America/New_York
+  enable_location_context: false
+  enable_time_context: false
+  enable_map_context: false
+  enable_scene_context: false
+  include_precise_coordinates_in_prompt: false
+spatial_behaviors:
+  step_length_m: 0.25
+  max_steps: 12
+  default_orbit_radius_m: 1.6
+  min_orbit_radius_m: 1.3
+  max_orbit_radius_m: 2.0
+  max_revolutions: 1.0
+  owner_collision_envelope_m: 0.55
+  orbit_clearance_margin_m: 0.1
+  owner_anchor_tolerance_m: 0.6
+  stall_timeout_s: 20
+  timeout_s: 120
+owner_follow:
+  behind_distance_m: 1.9
+  owner_keepout_m: 1.55
+  staging_radius_m: 2.1
+  staging_lookahead_rad: 0.35
+  heading_min_displacement_m: 0.08
+  heading_min_speed_mps: 0.1
+  heading_max_speed_mps: 3.0
+  heading_smoothing_alpha: 0.35
+  heading_min_updates: 2
+  heading_stale_after_s: 0.8
+  prediction_horizon_s: 0.25
+  prediction_max_m: 0.25
+  prediction:
+    enabled: true
+    lead_s: 0.6
+    min_confidence: 0.45
+    brake_full_confidence: 0.5
+    brake_stop_confidence: 0.1
+owner_search:
+  lost_timeout_s: 3.0
+  max_search_s: 45.0
+  arrival_radius_m: 0.5
+  sweep_amplitude_rad: 2.0943951023931953
+  sweep_rate_rad_s: 0.6
+  owner_max_speed_mps: 1.6
+  max_search_radius_m: 12.0
+  sensor_radius_m: 3.0
+metrics:
+  max_turns: 200
+battery:
+  simulated_percent: 90.0
+  low_threshold_percent: 20.0
+  critical_threshold_percent: 8.0
+control:
+  controller: simulator
+  control_hz: 50
+  command_timeout_s: 0.35
+  state_timeout_s: 0.25
+  startup_timeout_s: 2.0
+  stop_timeout_s: 1.0
+  stop_retry_s: 0.2
+  io_quiesce_timeout_s: 2.5
+  stop_settled_samples: 2
+  settled_linear_speed_mps: 0.08
+  settled_yaw_speed_rad_s: 0.12
+  max_tilt_rad: 0.75
+  command_refresh_s: 0.2
+  unitree_sport:
+    interface: enp3s0
+    domain_id: 0
+    state_topic: rt/sportmodestate
+    rpc_timeout_s: 0.2
+    command_refresh_s: 0.1
+    enable_lease: true
+    lease_acquire_timeout_s: 2.0
+    axes_commissioned: false
+    state_velocity_frame: odom
+    state_frame_commissioned: false
+    lateral_sign: 1
+    yaw_sign: 1
+    allowed_modes: []
+motion:
+  backend: rl
+  max_vx: 1.0
+  max_vy: 0.5
+  max_vyaw: 1.5
+  smoothing:
+    linear_accel: 0.9
+    linear_decel: 1.4
+    yaw_accel: 1.8
+  shaping:
+    enabled: true
+    linear_max_accel: 1.2
+    linear_max_jerk: 3.0
+    yaw_max_accel: 2.4
+    yaw_max_jerk: 6.0
+    calm_scale: 0.6
+    calm_below_arousal: 0.35
+    arousal_valid_s: 20.0
+  sport:
+    enabled: false
+    interface: lo
+    domain_id: 1
+  rl:
+    enabled: true
+    policy_path: ''
+    control_dt: 0.02
+language_model:
+  enabled: true
+  provider: llama_cpp
+  base_url: http://127.0.0.1:8080
+  model: gemma-4-26b-a4b
+  timeout: 90
+  streaming: true
+  temperature: 0.25
+  top_p: 0.9
+  context_messages: 16
+  context_char_budget: 12000
+  max_tokens: 256
+  enable_thinking: false
+  plan_timeout: 90
+  plan_max_tokens: 1024
+  plan_enable_thinking: false
+  plan_temperature: 0.0
+  max_stream_events: 4096
+  max_response_bytes: 131072
+agent:
+  prompts_root: prompts
+  personality: gentle_companion
+  conversation_history_messages: 16
+  functions:
+  - companion
+  - navigator
+  - spatial_reasoner
+  - manual_assistant
+  brain:
+    enabled: true
+    skills:
+    - NavigateTo
+    - FollowFormation
+    - OrbitOwner
+    - MoveRelative
+    - Hold
+    - Vocalize
+    - AskClarification
+    - ReturnToSafePose
+    - Gesture
+    emotes:
+    - bow
+    - hello_pose
+    - hop
+    - look_left
+    - look_right
+    - paw_wave
+    - play_bow
+    - shake
+    - stretch
+    maximum_total_timeout_s: 600
+    max_task_records: 256
+  affect:
+    minimum_confidence: 0.75
+    social_action_cooldown_s: 8
+    proposal_ttl_s: 20
+speech:
+  mode: auto
+  stt_provider: whisper_cpp
+  whisper_url: http://127.0.0.1:8178
+  tts_provider: piper
+  piper_binary: third_party/piper/piper
+  piper_voice: models/piper/voice.onnx
+  fish_url: http://127.0.0.1:8091
+  fish_reference_id: null
+  endpointing: semantic
+  echo_guard_scale: 2.5
+  vad_model: models/endpointing/silero_vad_v6.onnx
+  turn_model: models/endpointing/smart_turn_v3.onnx
+duplex:
+  enabled: true
+  filler_watchdog_s: 0.7
+  response_ceiling_s: 2.0
+  frame_hz: 10.0
+  logging: true
+  log_dir: logs/duplex
+  log_rotate_bytes: 2000000
+  rng_seed: 20260804
+  shadow_consumer: true
+expression:
+  enabled: true
+  seed: 20260804
+  rate_hz: 50
+  idle:
+    breathing_hz: 0.25
+    breathing_amplitude_m: 0.004
+  beats:
+    lag_compensation_s: 0.0
+prompting:
+  enabled: true
+  turn_budget_chars: 2000
+  user_profile:
+    location: New York
+    home: Manhattan
+    occupation: software engineer
+  tools:
+    weather: true
+safety:
+  obstacle_stop_m: 0.65
+  obstacle_slow_m: 1.2
+  person_stop_m: 1.0
+  person_slow_m: 2.0
+  telemetry_stale_s: 0.6
+  time_to_collision:
+    enabled: true
+    brake_s: 2.0
+    stop_s: 0.8
+    robot_radius_m: 0.35
+    min_scale: 0.0
+memory:
+  path: parcel_memory.sqlite3
+poses: {}
+wifi_cards:
+  simulator:
+    interface: lo
+    ros_domain_id: 1
+    purpose: simulation
+  robot:
+    interface: enp3s0
+    ros_domain_id: 0
+    purpose: physical_robot
+modules:
+- name: status
+  class: parcel_robot.modules.StatusModule
+  enabled: true
+  config:
+    label: parcel-dog

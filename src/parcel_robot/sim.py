@@ -16,7 +16,6 @@ from .gait import ScriptedTrotGait, TrajectoryPlayer
 from .models import Pose, VelocityCommand
 from .mujoco_lidar import (
     MAX_LIDAR_OBSTACLES,
-    ROBOT_OBSTACLE_HEIGHT_M,
     planar_scan_payload,
     raycast_planar_scan,
     scan_mujoco_lidar,
@@ -187,7 +186,12 @@ def run_simulator(
                 math.sin(half_yaw),
             )
 
-    place_dynamic_agents()
+    # A disabled dynamic city means a STATIC city: leave the mocap bodies at
+    # their XML rest poses (bystanders far from the test corridors) instead
+    # of teleporting frozen mannequins onto their route start points, where
+    # one permanently walls off the corridor north of spawn.
+    if dynamic_city.enabled:
+        place_dynamic_agents()
     mujoco.mj_forward(model, data)
 
     owner_body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "owner")
@@ -253,7 +257,7 @@ def run_simulator(
                 robot_y=py,
                 robot_heading=heading,
                 robot_radius_m=robot_profile.footprint_radius_m,
-                obstacle_height_m=ROBOT_OBSTACLE_HEIGHT_M,
+                obstacle_height_m=robot_profile.obstacle_clearance_height_m,
                 limit=MAX_LIDAR_OBSTACLES,
             )
         ]
@@ -507,8 +511,9 @@ def run_simulator(
                 steps = 0
                 while sim_time_wall <= now and steps < max_steps_per_frame:
                     dt = model.opt.timestep
-                    dynamic_city.step(dt)
-                    place_dynamic_agents()
+                    if dynamic_city.enabled:
+                        dynamic_city.step(dt)
+                        place_dynamic_agents()
                     traj_joints = trajectory.joints_for(dt)
                     if traj_joints is not None:
                         controller.hold_joints(traj_joints)

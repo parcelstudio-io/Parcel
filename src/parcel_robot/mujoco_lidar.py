@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import mujoco
 
-from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M, ROBOT_OBSTACLE_HEIGHT_M
+from parcel_robot.robot_profile import DEFAULT_ROBOT_PROFILE, RobotProfile
 
 MAX_LIDAR_OBSTACLES = 64
 LIDAR_SURFACE_SAMPLE_SPACING_M = 0.5
@@ -41,8 +41,9 @@ def scan_mujoco_lidar(
     robot_x: float,
     robot_y: float,
     robot_heading: float,
-    robot_radius_m: float = ROBOT_FOOTPRINT_RADIUS_M,
-    obstacle_height_m: float = ROBOT_OBSTACLE_HEIGHT_M,
+    robot_radius_m: float | None = None,
+    obstacle_height_m: float | None = None,
+    profile: RobotProfile | None = None,
     limit: int = MAX_LIDAR_OBSTACLES,
     surface_spacing_m: float = LIDAR_SURFACE_SAMPLE_SPACING_M,
 ) -> list[MujocoLidarHit]:
@@ -51,8 +52,17 @@ def scan_mujoco_lidar(
     Every supported geometry contributes its exact closest point. Boxes also
     contribute deterministic perimeter samples so a local swept-path check
     cannot mistake one point on a long building face for the whole obstacle.
+
+    ``robot_radius_m`` / ``obstacle_height_m`` resolve in-body from ``profile``
+    (or the module-level default profile) when left as ``None``. They used to
+    bind ``geometry.ROBOT_FOOTPRINT_RADIUS_M`` / ``ROBOT_OBSTACLE_HEIGHT_M`` as
+    Python default arguments, which are evaluated once at import and can never
+    be reached by an injected profile.
     """
 
+    robot_radius_m, obstacle_height_m = _resolve_body(
+        profile, robot_radius_m, obstacle_height_m
+    )
     if limit <= 0:
         raise ValueError("LiDAR result limit must be positive")
     if not math.isfinite(surface_spacing_m) or surface_spacing_m <= 0.0:
@@ -140,6 +150,22 @@ def _bounded_angular_hits(
     return sorted(selected, key=_hit_sort_key)
 
 
+def _resolve_body(
+    profile: RobotProfile | None,
+    robot_radius_m: float | None,
+    obstacle_height_m: float | None,
+) -> tuple[float, float]:
+    """Resolve embodiment scale in-body, never as a Python default argument."""
+
+    body = profile if profile is not None else DEFAULT_ROBOT_PROFILE
+    return (
+        body.footprint_radius_m if robot_radius_m is None else float(robot_radius_m),
+        body.obstacle_clearance_height_m
+        if obstacle_height_m is None
+        else float(obstacle_height_m),
+    )
+
+
 def _bearing_sector(bearing_rad: float, sector_count: int) -> int:
     normalized = (_wrap(bearing_rad) + math.pi) / (2.0 * math.pi)
     return min(sector_count - 1, int(normalized * sector_count))
@@ -163,8 +189,9 @@ def planar_geom_surface_hit(
     robot_x: float,
     robot_y: float,
     robot_heading: float = 0.0,
-    robot_radius_m: float = ROBOT_FOOTPRINT_RADIUS_M,
-    obstacle_height_m: float = ROBOT_OBSTACLE_HEIGHT_M,
+    robot_radius_m: float | None = None,
+    obstacle_height_m: float | None = None,
+    profile: RobotProfile | None = None,
 ) -> MujocoLidarHit | None:
     """Measure clearance and bearing to a geometry's actual closest surface.
 
@@ -172,8 +199,14 @@ def planar_geom_surface_hit(
     footprints use the facing circumference point. This prevents an elongated
     box's center bearing from falsely moving a nearby surface outside the
     controller's travel corridor.
+
+    Embodiment scale resolves in-body from ``profile`` (or the module-level
+    default profile) — see :func:`scan_mujoco_lidar`.
     """
 
+    robot_radius_m, obstacle_height_m = _resolve_body(
+        profile, robot_radius_m, obstacle_height_m
+    )
     if not 0 <= geom_id < model.ngeom:
         raise IndexError(f"MuJoCo geom id is out of range: {geom_id}")
     if not math.isfinite(robot_radius_m) or robot_radius_m < 0.0:
@@ -396,8 +429,11 @@ DEFAULT_SCAN_RANGE_MAX_M = 30.0
 DEFAULT_SCAN_NOISE_STD_M = 0.008
 DEFAULT_SCAN_DROPOUT_RATE = 0.002
 # Above the standing torso top (a ray that starts inside the robot's own
-# geometry would first hit that geometry in every direction).
-DEFAULT_SCAN_HEIGHT_M = 0.45
+# geometry would first hit that geometry in every direction). Derived from the
+# profile so a scaled body scans at its own shoulder height; bit-equal to the
+# retired 0.45 literal at Go2 scale (F-scan-height, one of the 12 drift
+# families in NAV_GENERALIZATION_AUDIT.md).
+DEFAULT_SCAN_HEIGHT_M = DEFAULT_ROBOT_PROFILE.scan_height_m
 
 
 @dataclass(frozen=True)

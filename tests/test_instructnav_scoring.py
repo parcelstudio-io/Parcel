@@ -45,14 +45,15 @@ def test_relative_band_excludes_anchor_footprint():
 
 def test_success_requires_hold_and_agent_stop():
     goal = GoalRegion(kind="disc", center=(2.0, 0.0), radius_m=0.5)
-    # Pass through without stopping — fail.
+    # Pass through without stopping — fail as termination (L6), not planning.
     moving = [
         {"t_s": 0.0, "x": 0.0, "y": 0.0, "stopped": False},
         {"t_s": 1.0, "x": 2.0, "y": 0.0, "stopped": False, "speed_mps": 0.4},
     ]
     failed = score_episode(moving, goal, shortest_path_m=2.0, max_time_s=30.0)
     assert not failed.success
-    assert failed.failure == FailureClass.CONTROL_ERROR
+    assert failed.failure == FailureClass.TERMINATION
+    assert failed.attribution_layer == AttributionLayer.L6_TERMINATION
 
     holding = [
         {"t_s": 0.0, "x": 0.0, "y": 0.0, "stopped": False},

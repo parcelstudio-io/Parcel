@@ -22,10 +22,13 @@ semantic_search:
   yaw_rate: 0.35
 
 # Re-ground a semantic target when the body makes no meaningful goal progress.
-# At the 10 Hz runtime rate this is 40 s, allowing a bounded obstacle detour;
+# At the 10 Hz runtime rate this is 20 s, allowing a bounded obstacle detour;
 # two fresh camera/LiDAR plans are allowed before the mission fails closed.
+# 400->200 (2026-08-05): 40 s windows let the crawl/lease-lapse pathology idle
+# through most of the 240 s step budget; 20 s still allows a 9 m detour at
+# 0.45 m/s, more than this block ever needs, and makes stalls self-reporting.
 progress_watchdog:
-  timeout_steps: 400
+  timeout_steps: 200
   max_semantic_replans: 2
 
 # Once the geometric goal is reached, request a locomotion stop and wait for
@@ -33,10 +36,54 @@ progress_watchdog:
 terminal_verification:
   stop_timeout_steps: 30
 
+# Stratum-2 perception noise ladder (docs/STRATA_GENERALIZATION_PLAN.md).
+# The detection_adapter perception chain is the ONE semantic-candidate ingress
+# on the mission path; this block chooses which rung it runs at.
+#
+#   T0  pass-through / clean — THE DEFAULT. The structural round-trip runs, no
+#       RNG is drawn, no row is dropped, and every reconstructed row is the
+#       caller's own object. Byte-identical to the pre-chain oracle read, and
+#       proven so (empty NAV_INSTRUCT minival diff, LANE_D_STATUS.md).
+#   T1  calibrated — every constant datasheet-traceable, none tuned:
+#         * range sigma  = 1.25e-3 * z^2 m   (D455: baseline 0.095 m, f 674.4 px
+#           at 1280 px / 87 deg HFOV, 0.08 px sub-pixel sigma -> 0.02 m at 4 m,
+#           i.e. 0.5 % RMS, consistent with the datasheet "<2 % at 4 m" bound)
+#         * bearing sigma = 1.0e-2 rad (2 px centroid = 3.0e-3 rad, widened for
+#           box jitter under partial occlusion — widened, not derived)
+#         * dropout       = 0.1 at <=1.5 m rising linearly to 0.3 at >=8 m
+#         * false positives = 1.0 per 100 frames (published band 0.5-2.0)
+#         * confidence    = overlapping TP N(0.75, 0.12) / FP N(0.55, 0.15),
+#           scaled by `temperature`; the literal 0.98 is gone
+#
+# T1 is MEASUREMENT, NOT A GATE (plan, eval instrument 2). Never tune against it.
+perception:
+  tier: T0
+  seed: 20260807
+  # Widens both confidence distributions; 1.0 is the calibrated shape.
+  confidence_temperature: 1.0
+  # Arrival evidence threshold on the MEAN detection score across confirming
+  # frames. `null` = use the goal's own minimum_confidence (0.55), which is the
+  # value the system already used, so T0 cannot move. The calibrated T1 value
+  # from the known-absent trials is recorded in LANE_D_STATUS.md.
+  arrival_confidence_threshold: null
+
 safety:
-  max_vx: 0.45
+  # 0.45->0.9 (2026-08-05): completes the 2026-08-04 speed raise that touched
+  # grid.yaml cruise_vx (0.85) and robot.yaml motion.max_vx (1.0) but missed
+  # this clamp, silently capping clear-path speed at 0.45. The runtime
+  # reactive gate, TTC gate, and arbiter SafetyLimits still bound the
+  # actuator; predictive_mode below keeps braking speed-proportional.
+  max_vx: 0.9
   max_vy: 0.25
   max_vyaw: 0.8
   stop_distance_m: 0.8
+  # projected_speed_cap (2026-08-05): proportional directional cap reaching 0
+  # exactly at stop_distance_m, replacing the fixed slow_scale=0.35 cliff and
+  # the stop/creep limit cycle it caused at the 0.8 m boundary. The hard stop
+  # boundary itself is unchanged.
+  predictive_mode: projected_speed_cap
+  # Match the runtime reactive person band (2.0 m) so a pedestrian at
+  # 2.0-2.5 m is not slow-banded twice by disagreeing envelopes.
+  person_slow_m: 2.0
   people_cost_weight: 1.0
   obstacle_cost_weight: 1.0

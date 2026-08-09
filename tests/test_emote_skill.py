@@ -327,6 +327,16 @@ agent:
   brain:
     enabled: true
 {emotes}
+# Declared, not inferred. These cases are about the *text-only* reply path, and
+# they used to get it by accident: `build_speech_stack` defaults to `auto`, so
+# whether a synthesizer (and therefore a `_speaker_sink`) existed depended on
+# whether `models/piper/voice.onnx` happened to be on the disk. It appeared
+# mid-session on 2026-08-07 and reddened
+# `test_text_only_path_fires_emotes_immediately`, which asserts there is no
+# speaker sink. A test that flips with an unrelated asset download is not
+# testing what it says.
+speech:
+  mode: text
 memory:
   path: ":memory:"
 poses: {{}}

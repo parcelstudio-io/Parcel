@@ -80,3 +80,52 @@ def test_multi_action_phrasing_cannot_be_absorbed_into_one_navigation_target(
     assert frame.matched_rule == "compound_physical_request"
     assert frame.spatial_references == references
     assert frame.requires_fresh_scene is True
+
+
+@pytest.mark.parametrize(
+    "transcript",
+    ["come here", "Come", "come to me", "Come over", "here boy"],
+)
+def test_come_is_a_reviewed_direct_command_so_its_system_sketch_can_admit(
+    transcript: str,
+) -> None:
+    """COME must reach the *system* registry, not the model-facing one.
+
+    Its cap is a system-authored PlanSketch with
+    ``FollowFormation(relation="follow")``, and only ``system_authored``
+    registries admit that relation (arbitration OB-2). Before 2026-08-06 the
+    router let these phrases fall through to ``_PHYSICAL_CUE`` →
+    ``deliberative_plan``, so every "come here" was validated against the
+    model-facing registry, failed with ``invalid_argument_value`` and returned
+    the generic refusal. The closed intent existed but was unreachable.
+    """
+
+    frame = DeterministicIntentRouter().route(transcript, turn_id="turn-come")
+
+    assert frame.route == "direct_skill"
+    assert frame.matched_rule == "come_to_owner"
+    assert frame.speech_act == "request"
+    assert frame.spatial_references == ("owner",)
+    assert frame.requires_fresh_scene is True
+
+
+@pytest.mark.parametrize(
+    ("transcript", "route", "rule"),
+    [
+        # Negation and hypotheticals still lose motion authority.
+        ("don't come here", "conversation_only", "non_authoritative_motion_mention"),
+        # A second action still forces the deliberative lane.
+        ("come here and sit", "deliberative_plan", "compound_physical_request"),
+        # Free-form "come" phrasing outside the closed set is not a direct skill.
+        ("come to the kitchen please", "deliberative_plan", "ambiguous_physical_request"),
+    ],
+)
+def test_come_direct_routing_does_not_widen_beyond_the_closed_grammar(
+    transcript: str,
+    route: str,
+    rule: str,
+) -> None:
+    frame = DeterministicIntentRouter().route(transcript, turn_id="turn-come-neg")
+
+    assert frame.route == route
+    assert frame.matched_rule == rule

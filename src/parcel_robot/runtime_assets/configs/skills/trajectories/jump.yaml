@@ -1,0 +1,59 @@
+id: jump
+name: Jump
+kind: trajectory
+enabled: true
+tags:
+- dynamic
+- aerial
+keyframes:
+- t: 0.0
+  joints: &id001
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.9
+    FL_calf_joint: -1.8
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.9
+    FR_calf_joint: -1.8
+    RL_hip_joint: 0.0
+    RL_thigh_joint: 0.9
+    RL_calf_joint: -1.8
+    RR_hip_joint: 0.0
+    RR_thigh_joint: 0.9
+    RR_calf_joint: -1.8
+- t: 0.15
+  joints:
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 1.25
+    FL_calf_joint: -2.2
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 1.25
+    FR_calf_joint: -2.2
+    RL_hip_joint: 0.0
+    RL_thigh_joint: 1.25
+    RL_calf_joint: -2.2
+    RR_hip_joint: 0.0
+    RR_thigh_joint: 1.25
+    RR_calf_joint: -2.2
+- t: 0.35
+  joints:
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.45
+    FL_calf_joint: -1.2
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.45
+    FR_calf_joint: -1.2
+    RL_hip_joint: 0.0
+    RL_thigh_joint: 0.45
+    RL_calf_joint: -1.2
+    RR_hip_joint: 0.0
+    RR_thigh_joint: 0.45
+    RR_calf_joint: -1.2
+- t: 0.7
+  joints: *id001
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: jump_height
+  control_dt: 0.02

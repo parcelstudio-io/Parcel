@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import threading
 import time
 from dataclasses import dataclass, field
@@ -9,7 +10,19 @@ from typing import Any
 
 from evals.nav_instruct.generator import EpisodeSpec, generate_minival
 from evals.nav_instruct.runner import NavInstructRunner, aggregate_results
-from parcel_robot.instructnav.scoring import GoalRegion
+from parcel_robot.instructnav.scoring import GoalRegion, score_episode
+
+#: Terminal task states in the executive snapshot.
+TERMINAL_TASK_STATES: frozenset[str] = frozenset({"succeeded", "failed", "cancelled"})
+
+#: Voice-mode budget. Must dominate the NavigateTo contract timeout (240 s) so
+#: the panel observes the system's own terminal verdict instead of racing it —
+#: the same budget-ordering rule the voice→nav e2e gate uses.
+VOICE_DEADLINE_S: float = 270.0
+VOICE_POLL_S: float = 0.5
+
+#: Speed below which a sample counts as stopped (matches the scorer default).
+STOPPED_SPEED_MPS: float = 0.05
 
 
 @dataclass
@@ -135,6 +148,116 @@ class EvalPanelState:
                 self.error = str(error)[:500]
                 self.progress = 1.0
 
+    def start_voice(
+        self,
+        episode_id: str,
+        runtime: Any,
+        *,
+        deadline_s: float = VOICE_DEADLINE_S,
+    ) -> dict[str, Any]:
+        """Run one scenario through the **product path** on the live runtime.
+
+        Default (headless) mode drives ``DirectiveNavigator`` directly — fast,
+        but blind to everything above the navigator, which is exactly where the
+        2026-08-05 admission regression lived. Voice mode instead types the
+        scenario's instruction into ``runtime.handle_text``: intent route →
+        local PlanSketch → PlanIR admission → TaskExecutive → navigation. The
+        goal region is published by :meth:`select` *before* the run starts, so
+        the ``/viewer`` overlay marks the region pre-run and the verdict lands
+        on the same region at the end (the task_6 gate).
+
+        Sequential by construction: this reuses the existing ``status ==
+        "running"`` guard that headless/batch runs already share, so a second
+        request is refused rather than queued. There is one live runtime and
+        one city; concurrency here would be a lie about isolation.
+        """
+
+        selected = self.select(episode_id)
+        with self._lock:
+            if self.status == "running":
+                raise RuntimeError("eval already running")
+            self.status = "running"
+            self.mode = "voice"
+            self.progress = 0.05
+            self.error = None
+            self.last_result = None
+        thread = threading.Thread(
+            target=self._run_voice,
+            args=(episode_id, runtime, float(deadline_s)),
+            daemon=True,
+            name="nav-voice-eval",
+        )
+        thread.start()
+        return {**selected, "mode": "voice"}
+
+    def _run_voice(self, episode_id: str, runtime: Any, deadline_s: float) -> None:
+        try:
+            self.ensure_scenarios()
+            ep = next(e for e in self.scenarios if e.episode_id == episode_id)
+            reply = str(runtime.handle_text(ep.instruction))
+            with self._lock:
+                self.search_state = "dispatched"
+                self.progress = 0.15
+            trace: list[dict[str, Any]] = []
+            states: list[str] = []
+            started = time.monotonic()
+            while True:
+                elapsed = time.monotonic() - started
+                snapshot = runtime.snapshot()
+                sample = _pose_sample(snapshot, elapsed, trace[-1] if trace else None)
+                if sample is not None:
+                    trace.append(sample)
+                states = _task_states(snapshot)
+                with self._lock:
+                    self.progress = min(0.95, 0.15 + 0.8 * (elapsed / max(deadline_s, 1e-6)))
+                if states and all(state in TERMINAL_TASK_STATES for state in states):
+                    break
+                if elapsed >= deadline_s:
+                    break
+                time.sleep(VOICE_POLL_S)
+
+            system_verified = bool(states) and all(state == "succeeded" for state in states)
+            score = (
+                score_episode(
+                    trace,
+                    ep.goal,
+                    shortest_path_m=max(ep.shortest_path_m, 1e-6),
+                    max_time_s=deadline_s,
+                )
+                if trace
+                else None
+            )
+            predicate_success = bool(score is not None and score.success)
+            payload = {
+                "episode_id": ep.episode_id,
+                "mode": "voice",
+                "instruction": ep.instruction,
+                "reply": reply,
+                # A claim without the predicate is a failure, and so is the
+                # reverse — the same rule as the voice→nav e2e gate.
+                "success": bool(system_verified and predicate_success),
+                "system_verified": system_verified,
+                "predicate_success": predicate_success,
+                "task_states": states,
+                "failure": (score.failure.value if score is not None else "refusal"),
+                "distance_to_goal_m": (
+                    score.distance_to_goal_m if score is not None else float("inf")
+                ),
+                "spl": (score.spl if score is not None else 0.0),
+                "sample_count": len(trace),
+            }
+            with self._lock:
+                self.results.append(payload)
+                self.last_result = payload
+                self.search_state = "voice_done"
+                self.progress = 1.0
+                self.status = "done"
+        except Exception as error:  # noqa: BLE001 — surface to panel
+            with self._lock:
+                self.status = "error"
+                self.error = str(error)[:500]
+                self.progress = 1.0
+
     def start_batch(self, *, mode: str = "candidate") -> dict[str, Any]:
         """Kick a threaded minival batch (all scenarios)."""
 
@@ -197,6 +320,47 @@ class EvalPanelState:
                 self.error = str(error)[:500]
                 self.progress = 1.0
             raise
+
+
+def _task_states(snapshot: Any) -> list[str]:
+    brain = snapshot.get("brain") if isinstance(snapshot, dict) else None
+    rows = brain.get("tasks") if isinstance(brain, dict) else None
+    if not isinstance(rows, list):
+        return []
+    return [str(row.get("state")) for row in rows if isinstance(row, dict)]
+
+
+def _pose_sample(
+    snapshot: Any,
+    elapsed_s: float,
+    previous: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    """One scorer-shaped trace row from the panel's own ``/api/state`` payload.
+
+    Speed is differentiated from consecutive poses rather than read from a
+    telemetry field, so the settle gate stays true to what the robot actually
+    did instead of what a controller reported.
+    """
+
+    robot = snapshot.get("robot") if isinstance(snapshot, dict) else None
+    if not isinstance(robot, dict):
+        return None
+    try:
+        x = float(robot["x"])
+        y = float(robot["y"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    speed = 0.0
+    if previous is not None:
+        dt = max(float(elapsed_s) - float(previous["t_s"]), 1e-6)
+        speed = math.hypot(x - float(previous["x"]), y - float(previous["y"])) / dt
+    return {
+        "t_s": float(elapsed_s),
+        "x": x,
+        "y": y,
+        "speed_mps": speed,
+        "stopped": speed <= STOPPED_SPEED_MPS,
+    }
 
 
 EVAL_PANEL = EvalPanelState()

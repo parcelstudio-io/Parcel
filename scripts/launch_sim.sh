@@ -47,6 +47,15 @@ if ! "$PYTHON" -c 'import mujoco, parcel_robot.sim, parcel_robot.web_panel' >/de
   die "Parcel simulator dependencies are not installed in .parcel; run: .parcel/bin/pip install -e '.[dev]'"
 fi
 
+# User-space PortAudio so sounddevice can open the mic/speaker without root.
+# Never fatal: speech.mode=auto degrades loudly to text mode, and the whole
+# simulator must still come up on a host with no audio at all. Set
+# PARCEL_SKIP_AUDIO_ENV=1 to opt out entirely.
+if [[ "${PARCEL_SKIP_AUDIO_ENV:-0}" != "1" && -f "$ROOT/scripts/env-audio.sh" ]]; then
+  # shellcheck source=scripts/env-audio.sh
+  source "$ROOT/scripts/env-audio.sh" || true
+fi
+
 SOCKET="${PARCEL_SIM_SOCKET:-/tmp/parcel_sim.sock}"
 PANEL_HOST="${PARCEL_PANEL_HOST:-127.0.0.1}"
 PANEL_PORT="${PARCEL_PANEL_PORT:-8765}"

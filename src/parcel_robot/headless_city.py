@@ -19,11 +19,10 @@ from parcel_robot.backends.base import (
 )
 from parcel_robot.city_semantics import extract_city_semantics, visible_city_semantics
 from parcel_robot.config import ConfigStore
+from parcel_robot.instructnav.scoring import object_near_envelope_m, object_near_goal_region
 from parcel_robot.models import VelocityCommand
 from parcel_robot.mujoco_lidar import (
     MAX_LIDAR_OBSTACLES,
-    ROBOT_FOOTPRINT_RADIUS_M,
-    ROBOT_OBSTACLE_HEIGHT_M,
     planar_geom_surface_hit,
     raycast_planar_scan,
     scan_mujoco_lidar,
@@ -47,6 +46,13 @@ from parcel_robot.navigation.spatial import (
     parse_follow_intent,
     parse_spatial_intent,
 )
+from parcel_robot.pose import (
+    POSE_PROVIDER_KEY,
+    PoseProvider,
+    provider_from_config,
+    update_provider_from_sim,
+)
+from parcel_robot.robot_profile import DEFAULT_ROBOT_PROFILE, RobotProfile
 
 DEFAULT_CITY_SCENE = Path(__file__).with_name("scenes") / "city_block.xml"
 DEFAULT_ROBOT_CONFIG = Path(__file__).resolve().parents[2] / "configs" / "robot.yaml"
@@ -118,8 +124,16 @@ class HeadlessCityWorld:
         *,
         control_dt_s: float = 0.1,
         simulation_dt_s: float = 0.01,
-        robot_radius_m: float = ROBOT_FOOTPRINT_RADIUS_M,
+        robot_radius_m: float | None = None,
+        profile: RobotProfile | None = None,
     ):
+        # Embodiment scale resolves in-body, never as a Python default
+        # argument: a default argument is evaluated once at import and can
+        # never be reached by an injected profile.
+        self.profile = profile if profile is not None else DEFAULT_ROBOT_PROFILE
+        robot_radius_m = (
+            self.profile.footprint_radius_m if robot_radius_m is None else float(robot_radius_m)
+        )
         if not math.isfinite(control_dt_s) or control_dt_s <= 0.0:
             raise ValueError("control_dt_s must be positive and finite")
         if not math.isfinite(simulation_dt_s) or simulation_dt_s <= 0.0:
@@ -251,19 +265,24 @@ class HeadlessCityWorld:
                     continue
                 label = str(spec.get("label") or "bench")
                 radius = float(spec.get("radius_m") or 0.7)
+                goal = object_near_goal_region(
+                    (x, y),
+                    radius,
+                    label=label,
+                    entity_id=str(entity_id),
+                )
+                stand_off, minimum, vicinity = object_near_envelope_m(radius, label=label)
                 self._object_specs.append(
                     {
                         "id": str(entity_id),
                         "label": label,
                         "position": [x, y, 0.0],
                         "metadata": {
-                            "vicinity_radius_m": radius + 1.4,
-                            "goal_region": {
-                                "kind": "disc",
-                                "center": [x, y],
-                                "radius_m": radius + 1.4,
-                                "anchor_entity": str(entity_id),
-                            },
+                            "radius_m": radius,
+                            "stand_off_m": stand_off,
+                            "minimum_vicinity_radius_m": minimum,
+                            "vicinity_radius_m": vicinity,
+                            "goal_region": goal.as_dict(),
                             "aliases": (),
                         },
                     }
@@ -292,7 +311,7 @@ class HeadlessCityWorld:
                     item["position"] = [x, y, 0.0]
                     metadata = dict(item.get("metadata") or {})
                     goal = dict(metadata.get("goal_region") or {})
-                    if goal.get("kind") == "disc":
+                    if goal.get("kind") in {"disc", "relative_band"}:
                         goal["center"] = [x, y]
                         metadata["goal_region"] = goal
                     item["metadata"] = metadata
@@ -434,7 +453,7 @@ class HeadlessCityWorld:
                     robot_x=x,
                     robot_y=y,
                     robot_radius_m=self.robot_radius_m,
-                    obstacle_height_m=ROBOT_OBSTACLE_HEIGHT_M,
+                    obstacle_height_m=self.profile.obstacle_clearance_height_m,
                 )
             )
             is not None
@@ -502,7 +521,7 @@ class HeadlessCityWorld:
                 robot_y=self._y,
                 robot_heading=self._yaw,
                 robot_radius_m=self.robot_radius_m,
-                obstacle_height_m=ROBOT_OBSTACLE_HEIGHT_M,
+                obstacle_height_m=self.profile.obstacle_clearance_height_m,
                 limit=MAX_LIDAR_OBSTACLES,
             )
         ]
@@ -559,7 +578,13 @@ class HeadlessCityQualityHarness:
         reactive_safety: ReactiveSafetyPolicy | None = None,
         spatial_config: SpatialBehaviorConfig | None = None,
         robot_config: str | Path = DEFAULT_ROBOT_CONFIG,
+        pose_profile: str | None = None,
     ):
+        # Stratum-1 pose seam. ``pose_profile`` selects a profile from
+        # ``configs/navigation/pose.yaml``; the shipping default is the truth
+        # passthrough, so this is behavior-preserving. A fresh provider is built
+        # per run so accumulated drift never leaks across episodes.
+        self.pose_profile = pose_profile
         self.world = world or HeadlessCityWorld()
         store = ConfigStore(robot_config)
         self.navigation_config = _navigation_config_from_store(store)
@@ -583,6 +608,21 @@ class HeadlessCityQualityHarness:
             )
         ):
             raise ValueError("headless settled-speed thresholds must be finite and nonnegative")
+
+    def new_pose_provider(self) -> PoseProvider:
+        """One fresh provider per run — drift must never cross episodes.
+
+        Deliberately does **not** call ``world.observe()`` to learn the start
+        pose: ``observe()`` draws from the simulator's LiDAR-noise RNG, so an
+        extra call shifts the whole noise sequence and changes results by a
+        step or two. Providers re-baseline on their first truth sample instead.
+        """
+
+        provider = provider_from_config(profile=self.pose_profile)
+        reset = getattr(provider, "reset", None)
+        if callable(reset):
+            reset()
+        return provider
 
     def run(self, text: str, *, max_steps: int = 1800) -> HeadlessTaskResult:
         if max_steps <= 0:
@@ -608,6 +648,7 @@ class HeadlessCityQualityHarness:
         terminal_status = mission.status
         terminal_command = self.world.command
         required_clearance = self.reactive_safety.obstacle_stop_m
+        pose_provider = self.new_pose_provider()
         try:
             for _ in range(max_steps):
                 observation = self.world.observe()
@@ -618,6 +659,7 @@ class HeadlessCityQualityHarness:
                         stop_confirmed=self.world.stopped,
                         settled_linear_speed_mps=self._settled_linear_speed_mps,
                         settled_yaw_speed_rad_s=self._settled_yaw_speed_rad_s,
+                        pose_provider=pose_provider,
                     )
                 )
                 if command.note.startswith("semantic_search_scan"):
@@ -656,6 +698,26 @@ class HeadlessCityQualityHarness:
             else:
                 mission.status = "failed"
                 terminal_status = "timed_out"
+                reason = "navigation_step_limit"
+                arrival_raw = mission.metadata.get("arrival_goal_region")
+                if trace and arrival_raw:
+                    from parcel_robot.instructnav.scoring import GoalRegion
+
+                    try:
+                        region = (
+                            arrival_raw
+                            if isinstance(arrival_raw, GoalRegion)
+                            else GoalRegion.from_mapping(arrival_raw)
+                        )
+                    except (TypeError, ValueError, KeyError):
+                        region = None
+                    if region is not None:
+                        last = trace[-1]
+                        robot = last.robot
+                        rx = float(robot.x if hasattr(robot, "x") else robot[0])
+                        ry = float(robot.y if hasattr(robot, "y") else robot[1])
+                        if region.contains(rx, ry):
+                            reason = "navigation_step_limit_inside_goal"
         finally:
             self.world.stop()
             navigator.close()
@@ -838,7 +900,15 @@ def _nav_observation(
     stop_confirmed: bool,
     settled_linear_speed_mps: float,
     settled_yaw_speed_rad_s: float,
+    pose_provider: PoseProvider | None = None,
 ) -> NavObservation:
+    # Stratum-1 pose seam. ``pose_provider`` is fed this tick's sim truth and
+    # attached to the observation; navigation reads it through
+    # ``parcel_robot.pose.observation_pose`` and never touches ``position``
+    # again. ``None`` keeps the pre-seam behavior exactly: the accessor falls
+    # back to these same truth fields, which IS TruthPoseProvider semantics.
+    if pose_provider is not None:
+        update_provider_from_sim(pose_provider, observation)
     return NavObservation(
         position=(observation.robot.x, observation.robot.y, observation.robot.z),
         heading_deg=math.degrees(observation.robot.yaw),
@@ -846,6 +916,7 @@ def _nav_observation(
         nearest_obstacle_m=observation.nearest_obstacle_m,
         lidar=observation.lidar_ranges or None,
         extras={
+            POSE_PROVIDER_KEY: pose_provider,
             "collision": observation.collision,
             "perception_fresh": True,
             "lidar_angle_min_rad": observation.lidar_angle_min_rad,

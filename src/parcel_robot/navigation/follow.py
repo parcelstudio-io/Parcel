@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, fields, replace
 from typing import Any, ClassVar
 
+from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import SimObservation
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.owner_prediction import PredictedPath
@@ -111,7 +112,15 @@ class FollowConfig:
     occlusion_grace_s: float = 0.7
     stale_after_s: float = 0.6
     obstacle_stop_m: float = 0.65
-    obstacle_slow_m: float = 1.25
+    #: H-1 (LANE_A_STATUS.md), 2026-08-07: this was the live drift in the
+    #: ``obstacle_slow_m`` family — six copies of the comfort band, five of them
+    #: 1.2 (``collision.py``, ``reactive_safety.py``, ``pipeline.py``,
+    #: ``headless_city.py``, ``configs/robot.yaml``) and this one 1.25. It is
+    #: now derived by reference from the one authority instead of restated, so
+    #: the family cannot drift apart again. This is a VALUE change (1.25 ->
+    #: 1.2); the paired FOLLOW_BENCH_V1 evidence is in
+    #: scrum/20260807/task_2/NAV_FINISH_STATUS.md.
+    obstacle_slow_m: float = DEFAULT_SAFETY_ENVELOPE.obstacle_comfort_band_m
     person_stop_m: float = 1.0
     person_slow_m: float = 2.0
     owner_collision_envelope_m: float = 0.55
@@ -322,11 +331,23 @@ class FollowOwnerController:
             # the exact moment it acquires the base resource.
             self._stage_side = None
 
-    def start_formation(self, relation: str, *, distance_m: float | None = None) -> None:
-        """Semantic entry point used by a future ``FollowFormation`` PlanIR skill."""
+    # Formation relation -> controller mode. "follow" is plain owner-tracking
+    # (no heading estimate needed); "behind" stages on the owner's motion
+    # heading. Both are reachable from the FollowFormation contract.
+    FORMATION_MODES: ClassVar[dict[str, str]] = {"follow": "direct", "behind": "behind"}
 
-        if relation != "behind":
+    def start_formation(self, relation: str, *, distance_m: float | None = None) -> None:
+        """Semantic entry point used by the ``FollowFormation`` PlanIR skill."""
+
+        mode = self.FORMATION_MODES.get(relation)
+        if mode is None:
             raise ValueError(f"unsupported owner formation relation: {relation}")
+        if mode == "direct":
+            # Plain follow has one standoff, owned by the controller; a
+            # model-authored distance must not silently retune it.
+            with self._lock:
+                self.start("direct")
+            return
         distance = self.config.behind_distance_m if distance_m is None else float(distance_m)
         if not math.isfinite(distance):
             raise ValueError("behind formation distance must be finite")

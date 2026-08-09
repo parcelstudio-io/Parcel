@@ -117,14 +117,17 @@ def test_plansketch_compiles_trusted_envelope_and_system_boilerplate() -> None:
         "lamppost",
         None,
     ]
+    # No target_grounded at admission: grounding-with-recovery is the
+    # skill's own resolution ladder (2026-08-05 sidewalk regression).
     assert plan.steps[0].preconditions == (
         "base_available",
         "camera_fresh",
         "lidar_fresh",
-        "target_grounded",
     )
     assert plan.steps[0].resources == ("base", "attention")
-    assert plan.steps[0].timeout_s == 120.0
+    # 240 s: the contract safety net sits above the navigator's own bounded
+    # give-up (~220 s) so failures carry navigator attribution (2026-08-05).
+    assert plan.steps[0].timeout_s == 240.0
     assert plan.steps[0].max_attempts == 1
     assert plan.steps[0].recovery == ("safe_stop",)
     assert PlanValidator(registry).validate(plan).plan == plan

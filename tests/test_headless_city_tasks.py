@@ -33,9 +33,35 @@ def world() -> HeadlessCityWorld:
         pytest.param(
             (0.0, 0.0, 0.0),
             "walk to the sidewalk",
+            # Back to "sidewalk" (north) under the 2026-08-07 region-instance
+            # arbitration. History, because this row has moved twice:
+            #   * originally "sidewalk" (north), reached with the U34 phantom
+            #     yaw live — the north polygon read as more "in front";
+            #   * Lane D's U34 fix (card D-4) removed the phantom heading and
+            #     the then-current CENTROID tie-break flipped it south, because
+            #     the south centroid is 3.00 m from the origin against the
+            #     north centroid's 3.20 m;
+            #   * the arbitration ranks interchangeable ("stuff class")
+            #     instances by BOUNDARY distance — the distance to the region
+            #     you can actually step onto — and by that measure the north
+            #     sidewalk is nearer: 2.20 m (edge at y=+2.2) against the south
+            #     sidewalk's 2.25 m (edge at y=-2.25). A 16 m-long sidewalk is
+            #     not 3 m away because its middle is.
+            # The south instance keeps its own case in `safety-rationale-from-
+            # road`, where both measures agree on south (1.25 m boundary).
             "sidewalk",
             400,
             id="default-origin",
+        ),
+        pytest.param(
+            # Started north of the road, where the north sidewalk is the
+            # nearest instance (2.2 m against 4.0 m). Added with the U34 fix so
+            # the north polygon does not lose its case to the tie-break.
+            (0.0, 1.0, math.pi / 2.0),
+            "walk to the sidewalk",
+            "sidewalk",
+            400,
+            id="north-of-the-road",
         ),
     ],
 )

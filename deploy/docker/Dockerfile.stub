@@ -1,0 +1,11 @@
+# Generic stub service for compose layout (perception/voice placeholders).
+FROM python:3.12-slim-bookworm
+
+ARG STUB_NAME=stub
+ENV PARCEL_STUB_NAME=${STUB_NAME} \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /opt/stub
+COPY deploy/docker/stub_server.py /opt/stub/stub_server.py
+
+CMD ["python", "/opt/stub/stub_server.py"]

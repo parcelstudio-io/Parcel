@@ -75,15 +75,49 @@ def test_full_gate_executes_physics_and_separates_unsupported(report) -> None:
         # (cruise_vx 0.60->0.85, max_vx 0.6->1.0): success, collisions, and
         # minimum clearance are unchanged; missions simply finish faster.
         # (Prior 2026-08-03 re-freeze: stub_v0 -> grid_v1, 1137 -> 1303.)
-        "simulator_step_count": 1146,
+        #
+        # Re-frozen 2026-08-06: 1146 -> 1072. Measured 2x2 attribution (HEAD
+        # 4f6342d vs working tree) x (HEAD navigation config vs current):
+        #   HEAD code + HEAD cfg     1146   (the 2026-08-04 row)
+        #   HEAD code + current cfg  1111
+        #   tree code + HEAD cfg     1107
+        #   tree code + current cfg  1072
+        # -35 configs/navigation/default.yaml safety.max_vx 0.45 -> 0.9 (the
+        #     2026-08-05 speed-authority completion; reverting only this knob
+        #     restores 1107/1072 -> 1146/1111, and reverting predictive_mode,
+        #     person_slow_m, align_enter_deg, or the watchdog window each moves
+        #     this suite by exactly 0 steps).
+        # -37 K0 shared-GoalRegion arrival trigger in navigation/pipeline.py
+        #     (`_inside_arrival_goal_region`): a mission may now terminate on
+        #     GoalRegion membership, not only on the geometric approach-pose
+        #     tolerance, so the two lamppost `near` cases stop ~1 step-band
+        #     earlier (disabling only that trigger returns the total to 1109).
+        #  -2 residual working-tree navigation changes, unattributed.
+        # Success, collision, timeout, and minimum-clearance rows are all
+        # bit-identical across the four cells: this is pacing, not capability.
+        # Re-frozen 2026-08-07: 1072 -> 1250 (+178 across the two region-goal
+        # legs' bounded look-arounds; NOT "one full sweep" — max_steps is 80,
+        # the look-around is 160 deg/8 s, and the residual comes from the
+        # extra approach distance to the boundary-nearest instance; the
+        # original derivation claim was wrong and is corrected here).
+        # Region-instance selection arbitration: an
+        # interchangeable (stuff-class) goal with only ONE instance visible
+        # completes the look-around before committing, so "the sidewalk"
+        # resolves to the boundary-nearest instance (north, 2.2 m) instead of
+        # whichever entered the frustum first (south, scan-direction-
+        # dependent). This is what turned sidewalk_then_lamppost from FAILED
+        # (lamppost unreachable across the road from the south sidewalk) to
+        # PASSED. Collision, timeout, and clearance rows bit-identical:
+        # pacing + correct instance choice, not capability loss.
+        "simulator_step_count": 1250,
         "collision_count": 0,
         "timeout_count": 0,
         "minimum_clearance_m": pytest.approx(0.883147),
         "simulator_steps_per_case": {
             "count": 5,
             "minimum": 64.0,
-            "median": 209.0,
-            "mean": 229.2,
+            "median": 282.0,
+            "mean": 250.0,
             "maximum": 389.0,
         },
     }
@@ -163,7 +197,12 @@ def test_correction_waits_for_checkpoint_then_executes_replacement(report) -> No
     assert case["executive"]["final_task"]["plan_revision"] == 2
     # Re-frozen with the grid_v1 default navigator (was 194 under stub_v0).
     # 236 -> 186 with the 2026-08-04 speed raise (same route, faster cruise).
-    assert case["physical"]["simulator_step_count"] == 186
+    # 186 -> 153 (2026-08-06): -5 from safety.max_vx 0.45 -> 0.9 and -28 from
+    # the K0 shared-GoalRegion arrival trigger (this case terminates at the
+    # lamppost `near` band instead of the geometric approach pose). Same
+    # route, same checkpoint semantics, same clearance — see the aggregate
+    # row above for the measured 2x2 attribution.
+    assert case["physical"]["simulator_step_count"] == 153
     assert case["semantic"]["checks"]["near_surface_le_1m"] is True
     assert case["semantic"]["checks"]["off_road"] is True
 

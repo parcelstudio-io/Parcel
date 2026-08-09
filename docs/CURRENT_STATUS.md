@@ -68,6 +68,15 @@ rejects them as unknown rather than treating them as switches. Barge-in is
 wired on whenever the microphone loop exists. Remove or migrate those two
 legacy fallback keys before relying on packaged startup.
 
+[`configs/personality.yaml`](../configs/personality.yaml) (2026-08-08) is a
+**bound, not inert** surface: it carries the per-personality blocked-by-a-person
+yield policy and its utterance templates, and every key reaches the runtime's
+`_step_navigation` seam. It is a separate file because `configs/robot.yaml` is
+hash-locked by `evals/companion/embodied_plan_v1`. Loading is fail-closed on
+unknown keys; a tree that ships no such file gets the documented built-in
+defaults and reports `source="builtin"`. See
+[YIELD_POLICY.md](YIELD_POLICY.md).
+
 ## Desktop evidence
 
 The application virtual environment contains MuJoCo, NumPy, PyYAML, the Python

@@ -255,6 +255,14 @@ Use `./scripts/run_speech_services.sh --check` for a non-mutating speech
 readiness probe. It currently fails until whisper is running and Piper's binary,
 voice, and metadata are installed.
 
+Use `./scripts/watch_nav_evals.sh` to **watch** the live voice→nav e2e cases run
+one at a time in a native MuJoCo window (`MUJOCO_GL=glfw`, needs `DISPLAY`) —
+banner before each case (instruction, expected outcome, goal region), verdict and
+key metrics after, scoreboard at the end. `--only <substring>` filters, `--pause`
+waits for Enter between cases, `--list` prints the plan without running. It is a
+viewer over `pytest tests/test_voice_nav_e2e.py`, not a second harness: one
+subprocess per case, and the verdicts are pytest's own.
+
 Run these commands from this source checkout/editable install. The wheel is not
 relocatable: runtime prompts and skill/navigation YAML remain repository assets,
 and the packaged fallback config has drifted from `configs/robot.yaml`.

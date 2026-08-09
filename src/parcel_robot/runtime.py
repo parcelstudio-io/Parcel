@@ -6,13 +6,15 @@ import random
 import threading
 import time
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 from parcel_robot.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
+from parcel_robot.attention.stimuli import StimulusKind
 from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
 from parcel_robot.backends.base import SimObservation, SimulatorBackend
 from parcel_robot.brain import (
@@ -38,10 +40,15 @@ from parcel_robot.brain import (
     materialize_planner_output,
 )
 from parcel_robot.brain.contracts import BatteryStateSnapshot
+from parcel_robot.brain.executive import (
+    CLOSED_INTENT_PAUSE_REASON,
+    CLOSED_INTENT_RESUME_REASON,
+)
 from parcel_robot.brain.observations import (
     build_observation_snapshot,
     task_state_from_executive,
 )
+from parcel_robot.brain.runtime_adapter import PAUSABLE_SKILL_CHANNELS
 from parcel_robot.config import ConfigStore
 from parcel_robot.context import (
     CallableContextProvider,
@@ -50,6 +57,7 @@ from parcel_robot.context import (
     ContextBuilder,
     ContextField,
 )
+from parcel_robot.contracts.v1 import DialogueActV1
 from parcel_robot.control import (
     BufferedRobotStateSource,
     ControlManager,
@@ -72,7 +80,21 @@ from parcel_robot.core.details import (
     VoiceDetail,
 )
 from parcel_robot.core.preemption import PreemptionTable
-from parcel_robot.core.resume import GenerationTokens, ResumeIntent, ResumeStore
+from parcel_robot.core.resume import (
+    GenerationTokens,
+    ResumeIntent,
+    ResumeStore,
+    resume_rejection_reason,
+)
+from parcel_robot.core.yield_policy import (
+    YIELD_ACTION_ASK,
+    YIELD_ACTION_GIVE_UP,
+    PersonalityPolicyConfig,
+    YieldDecision,
+    YieldTracker,
+    load_personality_policy_config,
+    person_blocked_from_note,
+)
 from parcel_robot.duplex import DuplexConfig, DuplexCoordinator
 from parcel_robot.dynamic_prompting import (
     CallableContextSource,
@@ -101,6 +123,7 @@ from parcel_robot.navigation.follow import (
     FollowOwnerController,
     FollowPredictionConfig,
 )
+from parcel_robot.navigation.goals import pace_from_directive
 from parcel_robot.navigation.owner_prediction import OwnerMotionPredictor, PredictedPath
 from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
@@ -118,6 +141,11 @@ from parcel_robot.navigation.spatial import SpatialBehaviorConfig, SpatialBehavi
 from parcel_robot.navigation.velocity_shaping import SCurveVelocityShaper
 from parcel_robot.observability import ComponentMetrics, LatencyTracker
 from parcel_robot.perception import NullMapProvider, PerceptionContract
+from parcel_robot.pose import (
+    POSE_PROVIDER_KEY,
+    TruthPoseProvider,
+    update_provider_from_sim,
+)
 from parcel_robot.prompting import PromptLibrary
 from parcel_robot.prosody import analyze_wav_chunk
 from parcel_robot.providers import (
@@ -136,14 +164,46 @@ from parcel_robot.runtime_channels import (
     SpatialChannel,
 )
 from parcel_robot.skills.api import Dog
+from parcel_robot.voice.amendment import AMEND_SUSPEND_REASON, begin_goal_amend
+from parcel_robot.voice.closed_intents import ClosedIntent
+from parcel_robot.voice.dialogue_state import DialogueStateChannel
+from parcel_robot.voice.executive_caps import CapDirective, PaceCap, resolve_cap
+from parcel_robot.voice.local_plans import SETTLE_POSE_PHRASES
+from parcel_robot.voice.reaction_bridge import SocialReactionBridge
+from parcel_robot.voice.yield_speech import yield_dialogue_act
 from parcel_robot.voice_audio import (
     MicrophoneVoiceLoop,
     SpeakerSink,
     resolve_audio_device,
 )
-from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage, VoiceTurn
+from parcel_robot.voice_pipeline import (
+    SYSTEM_UTTERANCE_KIND,
+    DuplexVoiceSession,
+    VoiceStage,
+    VoiceTurn,
+)
 
 logger = logging.getLogger(__name__)
+
+#: The ``last_detail`` the executive writes when the closed-intent PAUSE cap
+#: parks a task. RESUME reads it to tell its own paused work apart from work an
+#: owner summons or a goal amendment parked.
+CLOSED_INTENT_SUSPEND_DETAIL = f"suspended:{CLOSED_INTENT_PAUSE_REASON}"
+
+#: The note ``DirectiveNavigator._pose_lost_hold`` puts on its stop command
+#: while MAP localization is ``LOST`` (Lane B, B-3). It is a **hold**, not an
+#: outcome: the navigator leaves the mission running because the goal is still
+#: valid and health can return. The literal is duplicated from
+#: ``navigation/pipeline.py`` (and ``evals/walk_with_me/runner.py``) because
+#: both live in trees this lane does not own; the shared home is a hand-off.
+POSE_LOST_HOLD_NOTE = "pose_lost_hold"
+#: What the robot says when it loses localization. Same sentence the
+#: walk_with_me trace has carried, unspoken, since Lane B: it states what
+#: happened and what the robot did, and claims nothing about recovery.
+POSE_LOST_UTTERANCE = "I've lost track of where I am, so I've stopped and I'm holding here."
+#: Said only from a tick on which the navigator is driving again, which it can
+#: only do once MAP health has returned — so the claim cannot outrun the fact.
+POSE_REGAINED_UTTERANCE = "I know where I am again — carrying on."
 
 
 def _dynamic_agent_payload(
@@ -345,7 +405,6 @@ class RobotRuntime:
         self._search_detail: dict[str, object] = self.search.snapshot()
         self._last_confident_owner: tuple[float, float, float] | None = None
         self._owner_lost_since: float | None = None
-        self._resume_follow_after_search: tuple[str, float | None] | None = None
         self._owner_search_sequence = 0
         self._last_search_state = ""
         self._last_search_degradation = ""
@@ -356,6 +415,22 @@ class RobotRuntime:
         self._follow_detail: dict[str, object] = self.follow.snapshot()
         self._navigation_directive: str | None = None
         self._navigation_detail: dict[str, object] = NavigationDetail().as_dict()
+        #: Edge state for the owner-facing localization announcement.
+        self._pose_lost_announced = False
+        #: Blocked-by-a-person yield policy (card P-1). Installed from the
+        #: personality config below; the tracker is fed one navigation note per
+        #: control tick and never sees a velocity.
+        self._yield_clock: Callable[[], float] = time.monotonic
+        self._yield_tracker = YieldTracker()
+        self._yield_profile = PersonalityPolicyConfig.builtin().for_personality(
+            "gentle_companion"
+        )
+        self._last_yield_act: DialogueActV1 | None = None
+        # Whether the last yield utterance actually reached the speaker.
+        # U35: the ask used to be text-only, and a snapshot that showed the
+        # sentence without this field implied audio that never existed.
+        self._last_yield_act_audible: bool = False
+        self._yield_asks_spoken = 0
         self._sim_status = "starting"
         self._sim_error = ""
         resolved_planner_model = planner_model if planner_model is not None else language_model
@@ -402,6 +477,18 @@ class RobotRuntime:
             table=self._preemption_table,
             resume_store=self._resume_store,
         )
+        # K6/P2: closed-intent pace caps + dialogue-state × T2 + social reactions.
+        self._pace_cap = PaceCap()
+        # Pace asked for by the directive itself ("running to the tree"); the
+        # pre-mission scale so it can be handed back when the mission ends.
+        self._directive_pace_restore: float | None = None
+        self._dialogue_state = DialogueStateChannel()
+        self._dialogue_pace_factor = 1.0
+        self._dialogue_last: dict[str, object] = {}
+        self._dialogue_gaze_mode = "idle"
+        self._amendment_pending = False
+        self._reaction_bridge = SocialReactionBridge(rng_seed=11)
+        self._reaction_last: dict[str, object] = {}
         self._behavior_generation = 0  # legacy aggregate; prefer _generation
         self._closed = False
         self._close_complete = False
@@ -438,6 +525,8 @@ class RobotRuntime:
         personality = self.prompt_library.personality(self._personality)
         for function_id in self._function_profiles:
             self.prompt_library.function(function_id)
+        self._personality_policy = self._load_personality_policy(agent_config)
+        self._install_yield_profile(self._personality)
         affect_config = agent_config.get("affect") or {}
         if not isinstance(affect_config, dict):
             raise TypeError("agent.affect must be a mapping")
@@ -462,6 +551,18 @@ class RobotRuntime:
             on_pose=self._run_pose,
             on_trajectory=self._run_trajectory,
         )
+        # Stratum-1 pose authority (see ``parcel_robot.pose``). The runtime owns
+        # exactly one provider and feeds it sim truth every observation; every
+        # navigation consumer reads it by REP-105 frame name. TruthPoseProvider
+        # is the shipping default and returns the same floats the observation
+        # already carried, so installing it changes no behavior. Swapping in a
+        # real localizer is a one-line change here and nowhere else.
+        self._pose_provider = TruthPoseProvider()
+        # Stratum-2 perception authority. The detection_adapter chain is the one
+        # semantic-candidate ingress; the runtime installs the tier the
+        # navigation config names. T0 (the shipping default) is pass-through and
+        # byte-identical to the oracle read it replaces.
+        self._install_perception_chain()
         brain_config = agent_config.get("brain") or {}
         if not isinstance(brain_config, dict):
             raise TypeError("agent.brain must be a mapping")
@@ -501,11 +602,16 @@ class RobotRuntime:
             gesture_names=self._emote_catalog,
             include_system_skills=True,
         )
-        self.brain_registry = admitted_registry.restricted(configured_brain_skills)
+        # Model-facing: explicitly NOT system-authored (arbitration OB-2).
+        self.brain_registry = admitted_registry.restricted(
+            configured_brain_skills,
+            system_authored=False,
+        )
         # System recovery plans are authored by the runtime, never by a model,
         # so they validate against a registry the planner never sees.
         self.system_registry = admitted_registry.restricted(
-            set(configured_brain_skills) | SemanticTaskRuntimeAdapter.SYSTEM_SKILLS
+            set(configured_brain_skills) | SemanticTaskRuntimeAdapter.SYSTEM_SKILLS,
+            system_authored=True,
         )
         maximum_total_timeout_s = float(brain_config.get("maximum_total_timeout_s", 600.0))
         self.plan_validator = PlanValidator(
@@ -523,7 +629,7 @@ class RobotRuntime:
             navigate=self._start_brain_navigation,
             follow_formation=self._start_brain_follow_formation,
             spatial_behavior=self._start_brain_spatial_behavior,
-            hold=self.stop_motion,
+            hold=self._brain_hold,
             vocalize=self._brain_vocalize,
             return_to_safe_pose=self._brain_return_to_safe_pose,
             gesture=self._brain_gesture,
@@ -601,6 +707,8 @@ class RobotRuntime:
             dog=self.dog,
             info_tools=self.prompting.tools if self.prompting.tools.names() else None,
             slow_path_hook=self._duplex_slow_path,
+            closed_intent_handler=self._apply_closed_intent,
+            pace_scale_provider=lambda: self._pace_cap.scale,
         )
         self.duplex_config = DuplexConfig.from_mapping(self.store.section("duplex") or None)
         self.duplex = DuplexCoordinator(
@@ -742,24 +850,35 @@ class RobotRuntime:
         )
         self._channels.register(ActivitiesChannel(self.activities), pausable=False)
 
-    def _stop_navigation_channel(self) -> None:
-        """Channel-level navigation stop (no re-entrant preempt)."""
+    def _stop_navigation_channel(
+        self, *, reason: str = "navigation_disabled", state: str = "idle"
+    ) -> None:
+        """Channel-level navigation stop (no re-entrant preempt).
+
+        ``reason``/``state`` exist so a caller that knows *why* it is stopping
+        can say so in one write. Without them the yield policy's honest give-up
+        would have to stop first and overwrite the detail afterwards, and the
+        executive polls between those two writes — it would read
+        ``navigation_disabled`` and attribute the failure to nothing.
+        """
 
         with self._lock:
             self._generation.bump("navigation")
             self._behavior_generation += 1
             was_enabled = self._navigation_directive is not None
             self._navigation_directive = None
+            self._yield_tracker.reset()
             if was_enabled:
                 self._navigation_detail = NavigationDetail.from_dict(
                     {
                         **self._navigation_detail,
                         "enabled": False,
-                        "state": "idle",
-                        "reason": "navigation_disabled",
+                        "state": state,
+                        "reason": reason,
                     }
                 ).as_dict()
         self.arbiter.cancel("navigation")
+        self._restore_directive_pace()
         if was_enabled:
             with self._navigation_lock:
                 self.dog.stop()
@@ -767,7 +886,8 @@ class RobotRuntime:
     def _stop_search_channel(self) -> None:
         self.search.stop()
         self.arbiter.cancel("search")
-        self._resume_follow_after_search = None
+        # Abandoned search must not later resurrect follow via a leftover intent.
+        self._resume_store.clear("follow")
         with self._lock:
             self._generation.bump("search")
             self._behavior_generation += 1
@@ -834,13 +954,27 @@ class RobotRuntime:
         frame: IntentFrame,
         snapshot: ObservationSnapshot,
     ) -> PlanIR:
-        """Adapt the configured model contract to the existing PlanIR runtime."""
+        """Adapt the configured model contract to the existing PlanIR runtime.
 
+        The registry is selected by *route*, the same way ``_accept_plan``
+        selects it: ``direct_skill`` output is a PlanSketch the runtime itself
+        authored and gets the system registry; ``deliberative_plan`` output is
+        model-authored and gets the model-facing one. Compiling everything
+        against ``brain_registry`` made the runtime's own settle step
+        (``Pose``) fail contract lookup on a plan no model had touched, which
+        is what the compiler's system-contract fallback existed to paper over
+        (H7). Widening nothing: ``_accept_plan`` re-compiles and re-validates
+        against the same route-selected registry immediately after.
+        """
+
+        registry = (
+            self.system_registry if frame.route == "direct_skill" else self.brain_registry
+        )
         return materialize_planner_output(
             output,
             frame,
             snapshot,
-            self.brain_registry,
+            registry,
         )
 
     def _build_brain_snapshot(self, *, now: float | None = None):
@@ -894,16 +1028,28 @@ class RobotRuntime:
             raise RuntimeError("deliberative planning is disabled")
         if self._closed:
             raise RuntimeError("runtime is closed")
-        if frame.route != "deliberative_plan":
-            raise ValueError("only deliberative IntentFrames may publish PlanIR")
+        # K6/B1: system-authored local PlanSketch also enters via direct_skill.
+        if frame.route not in {"deliberative_plan", "direct_skill"}:
+            raise ValueError(
+                "only deliberative or direct_skill IntentFrames may publish PlanIR"
+            )
         if plan.source_turn_id != frame.turn_id:
             raise ValueError("PlanIR source turn does not match IntentFrame")
 
-        plan = compile_plan_contracts(plan, self.brain_registry)
+        # Route decides the authority, and the route comes from the
+        # deterministic router (``ROUTER_VERSION = "deterministic-v1"``), never
+        # from a model: ``deliberative_plan`` carries model output and gets the
+        # model-facing registry; ``direct_skill`` carries the runtime's own
+        # closed-intent PlanSketches and gets the system registry, which is the
+        # only one that admits system-authored arguments (arbitration OB-2).
+        system_authored = frame.route == "direct_skill"
+        registry = self.system_registry if system_authored else self.brain_registry
+        validator = self.system_plan_validator if system_authored else self.plan_validator
+        plan = compile_plan_contracts(plan, registry)
 
         snapshot = self._build_brain_snapshot()
         validation_started = time.monotonic()
-        validated = self.plan_validator.validate(plan, snapshot)
+        validated = validator.validate(plan, snapshot)
         validated_at = time.monotonic()
         self.component_metrics.observe_ms(
             "PlanValidation", (validated_at - validation_started) * 1000.0
@@ -957,6 +1103,9 @@ class RobotRuntime:
             "PlanAcceptance", (accepted_at - acceptance_started) * 1000.0
         )
         self.agent.last_brain_metrics["_plan_accepted_monotonic"] = accepted_at
+        if self._amendment_pending:
+            self._amendment_pending = False
+            self.agent.last_brain_metrics["goal_amend_committed"] = True
         with self._lock:
             self._last_brain_plan = {
                 "task_id": plan.task_id,
@@ -992,11 +1141,46 @@ class RobotRuntime:
             return "Okay—I'll make the requested local circle around you safely."
         if goal.relation == "behind":
             return "Okay—I'll take up a safe position behind you."
+        if goal.relation == "follow":
+            return "Okay—I'll follow you safely."
         if goal.relation == "relative":
             return "Okay—I'll make that bounded move and verify the distance."
         if goal.relation == "safe_pose":
             return "Okay—I'll move to a safe place and settle there."
+        if goal.relation == "hold":
+            # `hold`/`current_pose` is the only goal shape the validator admits
+            # for a terminal Pose step, so a compound *settle* plan wears it
+            # too. Keying on the goal relation alone answered "Okay—I'll stay
+            # here." to a command that walks to a bench and sits down (H2), so
+            # read the plan instead of only its goal.
+            settle = RobotRuntime._settle_acknowledgement(plan)
+            return settle if settle is not None else "Okay—I'll stay here."
         return "Okay—I accepted the task and will carry it out safely."
+
+    @staticmethod
+    def _settle_acknowledgement(plan: PlanIR) -> str | None:
+        """Acknowledge a `hold` plan that travels first; ``None`` if it does not.
+
+        Nothing here claims arrival: the sentence describes what the robot will
+        *do*, in the order the plan does it, which is the same honesty rule the
+        rest of this table follows.
+        """
+
+        navigate = next((step for step in plan.steps if step.skill == "NavigateTo"), None)
+        if navigate is None:
+            return None
+        place = str(navigate.success.target or "").strip()
+        where = f" to {place}" if place else " there"
+        posture = next(
+            (step for step in plan.steps if step.skill in {"Pose", "ReturnToSafePose"}),
+            None,
+        )
+        if posture is None:
+            return f"Okay—I'll head over{where} and hold there."
+        pose = str(
+            posture.arguments.get("name") or posture.arguments.get("pose") or ""
+        ).strip()
+        return f"Okay—I'll head over{where} and {SETTLE_POSE_PHRASES.get(pose, 'settle')}."
 
     DEFAULT_EMOTES = (
         "bow",
@@ -1181,12 +1365,122 @@ class RobotRuntime:
         with self._lock:
             self._battery_percent = value
 
-    def _brain_vocalize(self, text: str) -> None:
+    @staticmethod
+    def _load_personality_policy(agent_config: Mapping[str, Any]) -> PersonalityPolicyConfig:
+        """Resolve ``configs/personality.yaml`` (or an explicitly named file).
+
+        Absence and corruption are answered differently on purpose. A checkout
+        or wheel that does not ship the file gets the documented built-in
+        defaults — the policy only decides how long to wait and what to say, so
+        a missing file must not take the runtime down. A file that *is* present
+        but malformed raises: silently adopting half a policy is the failure
+        mode the repo's fail-closed config rule exists to prevent. An
+        explicitly configured path that is missing also raises, because
+        somebody asked for it by name.
+        """
+
+        configured = agent_config.get("personality_policy")
+        if configured:
+            return load_personality_policy_config(str(configured))
+        from parcel_robot.paths import resolve_asset
+
+        try:
+            path = resolve_asset("configs", "personality.yaml", kind="file")
+        except FileNotFoundError:
+            return PersonalityPolicyConfig.builtin()
+        return load_personality_policy_config(path)
+
+    def _install_yield_profile(self, personality_id: str) -> None:
+        """Point the yield tracker at one personality's policy (clears state)."""
+
+        profile = self._personality_policy.for_personality(personality_id)
+        self._yield_profile = profile
+        self._yield_tracker.configure(profile.policy)
+        self._yield_asks_spoken = 0
+        self._last_yield_act = None
+        self._last_yield_act_audible = False
+
+    def yield_policy_snapshot(self) -> dict[str, Any]:
+        """Inspection surface for the blocked-by-a-person policy.
+
+        Deliberately a method rather than a ``snapshot()`` key: the panel
+        snapshot shape is pinned by tests, and this is diagnostic state, not a
+        channel detail.
+        """
+
+        with self._lock:
+            profile = self._yield_profile
+            act = self._last_yield_act
+            act_audible = self._last_yield_act_audible
+            asks = self._yield_asks_spoken
+        payload = profile.as_dict()
+        payload["asks_spoken"] = int(asks)
+        payload["tracker"] = self._yield_tracker.snapshot()
+        payload["last_utterance"] = None if act is None else act.as_dict()
+        payload["last_utterance_audible"] = None if act is None else bool(act_audible)
+        return payload
+
+    def _speak_system_utterance(self, text: str) -> bool:
+        """Attempt to make one system-initiated line audible; never raise.
+
+        A voice failure must not take down the caller — navigation, the
+        executive, and the search give-up all speak from paths where an
+        exception would abandon a mission. Returns whether an output worker
+        was started.
+        """
+
+        try:
+            return bool(self.voice_session.speak_system(text, kind=SYSTEM_UTTERANCE_KIND))
+        except Exception as error:  # noqa: BLE001 - speech must never break a mission
+            logger.warning("system utterance could not be spoken: %s", error)
+            return False
+
+    def _brain_vocalize(self, text: str) -> bool:
+        """Say one system-initiated line: chat, event, AND audio.
+
+        Every utterance the robot starts by itself comes through here — the
+        ``Vocalize`` and ``AskClarification`` skills, the localization-health
+        announcements, the search give-up, and the yield policy's ask /
+        re-ask / give-up lines. Until 2026-08-09 this method wrote the chat
+        item and the event and returned, so all of them were *visible in the
+        panel and inaudible in the room* (backlog U35). It now also attempts
+        the speaker through :meth:`DuplexVoiceSession.speak_system`.
+
+        The chat item and the event are still written unconditionally, and
+        first-class: they are the record, and they must not depend on whether
+        this host has a synthesizer. What the audio attempt buys is that the
+        event no longer *implies* sound that never happened — the outcome
+        rides the event's ``detail`` and the return value.
+
+        ``True`` means an output worker was started (synthesis + sink handoff
+        attempted), which is exactly what ``audio_first_playback`` means for
+        an ordinary reply. It is not an acoustic guarantee.
+        """
+
         clean = " ".join(str(text).split())
         if not clean:
             raise ValueError("brain utterance is empty")
+        # Speak first, record second: the sentence reaches the speaker without
+        # waiting on the panel bookkeeping, and the event can then state the
+        # truth about whether it was audible instead of guessing.
+        audible = self._speak_system_utterance(clean)
+        if self._speaker_sink is None:
+            audio_path = "text_only"
+        elif audible:
+            audio_path = "voice_tts"
+        else:
+            # The speaker was busy with a reply/filler, or the session is
+            # closing. speak_system skips rather than overlapping; the yield
+            # policy's re-ask timer is the retry.
+            audio_path = "suppressed_output_busy"
         self._chat_item("assistant", clean)
-        self._emit("brain", clean, "info")
+        self._emit(
+            "brain",
+            clean,
+            "info",
+            detail={"audible": audible, "audio_path": audio_path},
+        )
+        return audible
 
     def _brain_runtime_state(self, snapshot) -> SemanticRuntimeState:
         with self._lock:
@@ -1303,6 +1597,384 @@ class RobotRuntime:
                 "warning",
             )
 
+    def _apply_directive_pace(self, pace: str | None) -> None:
+        """Mission-scoped pace from directive phrasing, via the FASTER cap.
+
+        No new speed authority: this reuses exactly the bounded ``PaceCap``
+        scale the spoken "go faster" intent sets, and restores the previous
+        scale when the mission ends (SpeedRegime consolidation is Lane A's).
+        """
+
+        if pace != "fast" or self._directive_pace_restore is not None:
+            return
+        directive = resolve_cap(ClosedIntent.FASTER, current_pace=self._pace_cap.scale)
+        if directive.pace_scale is None:
+            return
+        self._directive_pace_restore = self._pace_cap.scale
+        self._pace_cap.set_scale(directive.pace_scale)
+        self._emit(
+            "navigation",
+            f"pace scale set to {self._pace_cap.scale:.2f} (directive pace)",
+            "info",
+        )
+
+    def _restore_directive_pace(self) -> None:
+        """Hand the pace scale back at mission end (idempotent)."""
+
+        scale = self._directive_pace_restore
+        if scale is None:
+            return
+        self._directive_pace_restore = None
+        self._pace_cap.set_scale(scale)
+
+    def _apply_closed_intent(self, intent: ClosedIntent, directive: CapDirective) -> str:
+        """Executive / CommandArbiter caps for the closed companion intent enum."""
+
+        if directive.emergency_stop or intent is ClosedIntent.STOP:
+            self.emergency_stop()
+            return directive.reply
+        if directive.pace_scale is not None:
+            self._pace_cap.set_scale(directive.pace_scale)
+            self._emit(
+                "voice",
+                f"pace scale set to {self._pace_cap.scale:.2f} ({intent.value})",
+                "info",
+            )
+            return directive.reply
+        if directive.suspend:
+            # True PAUSE on pausable channels (same path as pause_navigation).
+            # Do NOT preempt("voice") for navigation/follow/search — voice→nav
+            # is STOP in the mined table and would destroy ResumeIntent.
+            with self._command_lock:
+                for channel_name in ("navigation", "follow", "search"):
+                    self._pause_channel(channel_name, reason=CLOSED_INTENT_PAUSE_REASON)
+                # Non-pausable channels: STOP / clear is correct.
+                self.preempt(
+                    "voice",
+                    reason=CLOSED_INTENT_PAUSE_REASON,
+                    targets=("spatial", "activities"),
+                )
+                for row in self.task_executive.snapshot().get("tasks", []):
+                    if not isinstance(row, dict):
+                        continue
+                    if row.get("state") not in {
+                        "running",
+                        "waiting_checkpoint",
+                        "waiting_resource",
+                        "waiting_precondition",
+                        "queued",
+                    }:
+                        continue
+                    task_id = row.get("task_id")
+                    if isinstance(task_id, str):
+                        self.task_executive.request_interrupt(
+                            InterruptRequest(
+                                source="voice",
+                                reason=CLOSED_INTENT_PAUSE_REASON,
+                                requested="interrupt_now",
+                                target_task_id=task_id,
+                            )
+                        )
+            return directive.reply
+        if directive.resume:
+            # Fresh-scene resume is owned by channel ResumeIntent / K3 path.
+            # Fail closed: do not claim success when nothing resumes.
+            now_s = time.monotonic()
+            resumed: list[str] = []
+            failed: list[str] = []
+            refused: list[str] = []
+            parked = self._suspended_tasks_by_channel()
+            for channel_name in ("navigation", "follow", "search"):
+                if self._resume_store.peek(channel_name, now_s=now_s) is None:
+                    continue
+                # N14: the channel and the plan step that authorized it resume
+                # together or not at all. A channel driving under a suspended
+                # task has no running verification, timeout, or recovery policy;
+                # a channel whose task is parked by someone *else* (an owner
+                # summons, a goal amendment) is not this command's to release.
+                owners = parked.get(channel_name, ())
+                foreign = tuple(
+                    task_id
+                    for task_id, detail in owners
+                    if detail != CLOSED_INTENT_SUSPEND_DETAIL
+                )
+                if foreign:
+                    refused.append(channel_name)
+                    self._emit(
+                        "voice",
+                        f"resume {channel_name} refused: suspended by {foreign}",
+                        "warning",
+                    )
+                    continue
+                try:
+                    with self._command_lock:
+                        self._resume_from_store(channel_name, now_s=now_s)
+                        blocked = self._resume_parked_tasks(owners, now_s=now_s)
+                        if blocked:
+                            self._pause_channel(
+                                channel_name, reason=CLOSED_INTENT_PAUSE_REASON
+                            )
+                            raise RuntimeError(f"executive task blocked: {blocked}")
+                    resumed.append(channel_name)
+                except (RuntimeError, ValueError, AttributeError) as error:
+                    failed.append(channel_name)
+                    self._emit(
+                        "voice",
+                        f"resume {channel_name} failed: {error}",
+                        "warning",
+                    )
+            # Steps whose controller is stopped rather than paused by a suspend
+            # (spatial behaviors, postures, gestures) carry no ResumeIntent, so
+            # they are re-queued for a fresh dispatch instead of re-bound.
+            requeued = self._requeue_parked_tasks(parked.get(None, ()))
+            # Two different refusals, said differently. Reporting a
+            # someone-else-holds-this refusal as a freshness problem would send
+            # the owner to fix the wrong thing.
+            if not resumed and not requeued:
+                if refused:
+                    return (
+                        "I can't resume that yet — it's paused by something "
+                        "else right now."
+                    )
+                if failed:
+                    return (
+                        "I couldn't resume yet — the observation isn't fresh "
+                        "enough, or the paused task expired."
+                    )
+                return "There's nothing paused to resume right now."
+            if failed or refused:
+                return (
+                    f"Resumed {', '.join(resumed) or 'the paused task'}, but "
+                    f"couldn't resume {', '.join(failed + refused)}."
+                )
+            return directive.reply
+        if directive.goal_amend:
+            return self._apply_goal_amend(directive)
+        return directive.reply
+
+    def _suspended_tasks_by_channel(self) -> dict[str | None, tuple[tuple[str, str], ...]]:
+        """Channel → the suspended executive tasks that own it, with their reason.
+
+        Keyed by the channel the suspended step drives, with ``None`` for steps
+        whose controller has no pausable channel. Both halves of the key matter
+        to RESUME: the channel says which stored intent a task authorizes, and
+        the detail says *who* parked it — an owner summons and a goal amendment
+        park tasks too, and a spoken RESUME must neither restart that work nor
+        release its channel behind its back.
+        """
+
+        parked: dict[str | None, list[tuple[str, str]]] = {}
+        for row in self.task_executive.snapshot().get("tasks", []):
+            if not isinstance(row, dict):
+                continue
+            if row.get("state") != "suspended":
+                continue
+            task_id = row.get("task_id")
+            if not isinstance(task_id, str):
+                continue
+            skill = row.get("skill")
+            channel = PAUSABLE_SKILL_CHANNELS.get(skill) if isinstance(skill, str) else None
+            parked.setdefault(channel, []).append((task_id, str(row.get("last_detail") or "")))
+        return {key: tuple(value) for key, value in parked.items()}
+
+    def _resume_parked_tasks(
+        self,
+        parked: tuple[tuple[str, str], ...],
+        *,
+        now_s: float,
+    ) -> tuple[str, ...]:
+        """Re-bind suspended tasks to their already-restored controllers.
+
+        Returns the tasks that could **not** be returned to ``running`` (the
+        caller re-pauses the channel on any of them, so the channel never drives
+        without its plan step).
+        """
+
+        blocked: list[str] = []
+        for task_id, _detail in parked:
+            disposition, request = self.task_executive.resume_task_running(
+                task_id, reason=CLOSED_INTENT_RESUME_REASON, now=now_s
+            )
+            if not disposition.accepted or request is None:
+                blocked.append(f"{task_id}:{disposition.action}")
+                continue
+            # The controller kept its state across the pause and has just been
+            # restored from the stored intent, so the step is already executing:
+            # re-bind tracking rather than dispatching it again (a second
+            # dispatch would cold-start the mission).
+            self.semantic_tasks.adopt(request, now=now_s)
+        return tuple(blocked)
+
+    def _requeue_parked_tasks(self, parked: tuple[tuple[str, str], ...]) -> int:
+        """Re-queue suspended tasks whose controller was stopped, not paused."""
+
+        requeued = 0
+        for task_id, detail in parked:
+            if detail != CLOSED_INTENT_SUSPEND_DETAIL:
+                continue
+            # Drop any stale dispatch record first: the executive will emit a
+            # fresh DispatchRequest with the same key, and the adapter refuses a
+            # dispatch whose key is already active.
+            self.semantic_tasks.cancel((task_id,))
+            disposition = self.task_executive.resume_task(
+                task_id, reason=CLOSED_INTENT_RESUME_REASON
+            )
+            if disposition.accepted:
+                requeued += 1
+        return requeued
+
+    def _apply_goal_amend(self, directive: CapDirective) -> str:
+        """Pause/snapshot active work for mid-task amendment (fail-closed)."""
+
+        now_s = time.monotonic()
+        active: list[str] = []
+        paused: list[str] = []
+        with self._command_lock:
+            for channel_name in ("navigation", "follow", "search"):
+                channel = self._channels.get(channel_name)
+                if channel is not None and channel.active():
+                    active.append(channel_name)
+                elif self._resume_store.peek(channel_name, now_s=now_s) is not None:
+                    paused.append(channel_name)
+            # Executive tasks still count as amendable work.
+            for row in self.task_executive.snapshot().get("tasks", []):
+                if not isinstance(row, dict):
+                    continue
+                if row.get("state") in {
+                    "running",
+                    "waiting_checkpoint",
+                    "waiting_resource",
+                    "waiting_precondition",
+                    "queued",
+                    "suspended",
+                }:
+                    if "executive" not in active and "executive" not in paused:
+                        active.append("executive")
+                    break
+
+            gate = begin_goal_amend(active_channels=active, paused_channels=paused)
+            self.agent.last_brain_metrics["goal_amend_ok"] = gate.ok
+            self.agent.last_brain_metrics["goal_amend_reason"] = gate.reason
+            if not gate.ok:
+                self._amendment_pending = False
+                return gate.reply
+
+            paused_now: list[str] = []
+            for channel_name in ("navigation", "follow", "search"):
+                channel = self._channels.get(channel_name)
+                if channel is not None and channel.active():
+                    self._pause_channel(channel_name, reason=AMEND_SUSPEND_REASON)
+                    paused_now.append(channel_name)
+            for row in self.task_executive.snapshot().get("tasks", []):
+                if not isinstance(row, dict):
+                    continue
+                if row.get("state") not in {
+                    "running",
+                    "waiting_checkpoint",
+                    "waiting_resource",
+                    "waiting_precondition",
+                    "queued",
+                }:
+                    continue
+                task_id = row.get("task_id")
+                if isinstance(task_id, str):
+                    self.task_executive.request_interrupt(
+                        InterruptRequest(
+                            source="voice",
+                            reason=AMEND_SUSPEND_REASON,
+                            requested="interrupt_now",
+                            target_task_id=task_id,
+                        )
+                    )
+            self._amendment_pending = True
+            self._emit(
+                "voice",
+                f"goal amend snapshot: paused={paused_now or list(gate.paused_channels)}",
+                "info",
+            )
+            return directive.reply if directive.reply else gate.reply
+
+    def _step_reaction_bridge(self, observation: SimObservation | None) -> None:
+        """Tick StimulusBus/ReactionArbiter; never preempt base (K6/B2)."""
+
+        del observation  # reserved for future affect/prosody fusion
+        now_s = time.monotonic()
+        with self._lock:
+            base_busy = bool(
+                self.follow.enabled
+                or self._navigation_directive is not None
+                or self.arbiter.current(now=now_s) is not None
+            )
+            nav_detail = dict(self._navigation_detail)
+            dialogue_phase = self._dialogue_state.phase
+            dialogue_engagement = self._dialogue_state.engagement
+        critical = str(nav_detail.get("state", "")) in {
+            "crossing",
+            "collision_recovery",
+            "verifying",
+        }
+        # Feed dialogue-state into the bus as a T2 stimulus (white-space join).
+        if dialogue_phase in {"listening", "thinking", "speaking"}:
+            self._reaction_bridge.add_stimulus(
+                StimulusKind.DIALOGUE_STATE,
+                at_s=now_s,
+                confidence=max(0.05, min(1.0, float(dialogue_engagement))),
+                payload={"phase": dialogue_phase, "engagement": dialogue_engagement},
+                commit=True,
+            )
+        result = self._reaction_bridge.tick(
+            now_s=now_s,
+            base_busy=base_busy,
+            critical_phase=critical,
+            factors={"sociability": 0.7, "playfulness": 0.5},
+        )
+        self._reaction_last = {
+            "reaction": result.decision.reaction,
+            "vetoed": result.vetoed,
+            "reason": result.reason,
+            "false_base_preempt_attempts": self._reaction_bridge.false_base_preempt_attempts,
+            "drained": len(result.drained),
+        }
+
+    def _step_dialogue_state(self, observation: SimObservation | None) -> None:
+        """Publish DialogueStateMsg @ 10 Hz and apply T2 gaze/pace influence."""
+
+        now_s = time.monotonic()
+        now_ns = time.monotonic_ns()
+        msg = self._dialogue_state.publish(now_ns)
+        influence = self._dialogue_state.influence(now_ns)
+        # Soft pace overlay only — never raises above PaceCap, never authors vx.
+        self._dialogue_pace_factor = float(influence.pace_scale_factor)
+        prev_gaze = self._dialogue_gaze_mode
+        self._dialogue_gaze_mode = influence.gaze_mode
+        self._dialogue_last = {
+            "msg": msg.as_dict(),
+            "influence": influence.as_dict(),
+            "amendment_pending": self._amendment_pending,
+        }
+        # Gaze conditioning (attention track only — no base / safety).
+        if influence.gaze_mode != prev_gaze:
+            bearing = 0.0
+            if observation is not None:
+                bearing = self._owner_bearing_rad()
+            if influence.gaze_mode == "mutual":
+                self.expression.reactions.on_speech_start(now_s, bearing)
+                if self.duplex.enabled:
+                    if abs(bearing) < 1e-6:
+                        self.duplex.push_gaze_owner()
+                    else:
+                        self.duplex.push_gaze_bearing(bearing)
+            elif influence.gaze_mode == "aversion":
+                self.expression.reactions.on_turn_pending(now_s)
+                if self.duplex.enabled:
+                    self.duplex.push_gaze_release()
+            elif influence.gaze_mode == "soft":
+                self.expression.reactions.on_reply_started(now_s)
+            else:
+                self.expression.reactions.on_speech_end(now_s)
+                if self.duplex.enabled:
+                    self.duplex.push_gaze_release()
+
     def _step_brain(self) -> None:
         """Advance the bounded executive at control rate; never call an LLM."""
 
@@ -1401,14 +2073,18 @@ class RobotRuntime:
     def _pause_semantic_dispatches(self, dispatches, reason: str) -> None:
         """Release leases via channel pause + ResumeIntent (≠ destructive stop)."""
 
-        skills = {item.request.skill for item in dispatches}
+        # One table for "which skill owns which pausable channel", shared with
+        # the RESUME join: a disagreement here is a channel that resumes with no
+        # running plan step behind it (N14).
+        channels = {
+            PAUSABLE_SKILL_CHANNELS[item.request.skill]
+            for item in dispatches
+            if item.request.skill in PAUSABLE_SKILL_CHANNELS
+        }
         with self._command_lock:
-            if "NavigateTo" in skills:
-                self.pause_navigation(reason=reason)
-            if "FollowFormation" in skills:
-                self._pause_channel("follow", reason=reason)
-            if "SearchOwner" in skills:
-                self._pause_channel("search", reason=reason)
+            for channel_name in ("navigation", "follow", "search"):
+                if channel_name in channels:
+                    self._pause_channel(channel_name, reason=reason)
 
     def _pause_channel(self, name: str, *, reason: str) -> None:
         """Dedicated pause path: navigator/channel.pause + ResumeIntent, no STOP table."""
@@ -1596,6 +2272,18 @@ class RobotRuntime:
     ) -> str:
         if self._closed:
             raise RuntimeError("runtime is closed")
+        # Closed-intent pace caps scale commanded velocity before arbitration.
+        # Dialogue-state may only apply a further slowdown (≤1.0) — never raise
+        # speed, never author model velocity. Manual/emergency/safety untouched.
+        if source not in {"manual", "safety", "emergency"}:
+            vx, vy, vyaw = self._pace_cap.scale_command(
+                command.vx, command.vy, command.vyaw
+            )
+            factor = float(self._dialogue_pace_factor)
+            if factor < 1.0:
+                factor = max(0.35, min(1.0, factor))
+                vx, vy, vyaw = vx * factor, vy * factor, vyaw * factor
+            command = VelocityCommand(vx=vx, vy=vy, vyaw=vyaw)
         intent = MotionIntent(command=command, source=source, ttl=ttl)
         result = self.arbiter.submit(intent)
         if not result.accepted:
@@ -1650,6 +2338,36 @@ class RobotRuntime:
                 try:
                     self._ensure_compatibility_control_started()
                     self.control_manager.stop("runtime_stop")
+                except ControlNotReadyError as error:
+                    self._record_control_not_ready(error)
+                except (OSError, RuntimeError) as error:
+                    self._record_sim_error(error)
+            self._last_sent = VelocityCommand()
+            self._was_moving = False
+            self.velocity_smoother.reset()
+            self._reset_motion_shaper()
+
+    def _brain_hold(self) -> None:
+        """PlanIR Hold: settle in place and release follow/nav ownership."""
+
+        with self._command_lock:
+            self.preempt(
+                "manual",
+                reason="hold_skill",
+                targets=("follow", "navigation", "spatial", "search", "activities"),
+            )
+            # Destructive settle: STOP leaves ResumeIntent untouched; clear so a
+            # prior pause cannot resurrect follow/nav/search after "I'll stay".
+            self._resume_store.clear("follow")
+            self._resume_store.clear("navigation")
+            self._resume_store.clear("search")
+            self.arbiter.stop()
+            with self._lock:
+                simulator_feedback_available = self._observation is not None
+            if not self._synchronous_control_dispatch or simulator_feedback_available:
+                try:
+                    self._ensure_compatibility_control_started()
+                    self.control_manager.stop("runtime_hold")
                 except ControlNotReadyError as error:
                     self._record_control_not_ready(error)
                 except (OSError, RuntimeError) as error:
@@ -1717,6 +2435,10 @@ class RobotRuntime:
                     reason="owner_requested_stay",
                     targets=("follow", "navigation", "spatial", "activities"),
                 )
+                # Same destructive settle as PlanIR Hold: clear leftover intents.
+                self._resume_store.clear("follow")
+                self._resume_store.clear("navigation")
+                self._resume_store.clear("search")
                 self.stop_motion()
             self._emit("behavior", "Holding position", "info")
             return "Holding position"
@@ -1735,7 +2457,7 @@ class RobotRuntime:
         """
 
         clean = str(relation).strip().lower()
-        if clean != "behind":
+        if clean not in FollowOwnerController.FORMATION_MODES:
             raise ValueError(f"unsupported owner formation relation: {relation}")
         self._interrupt_brain("correction", "owner requested a new follow formation")
         return self._start_brain_follow_formation(clean, distance_m)
@@ -1745,9 +2467,32 @@ class RobotRuntime:
         relation: str,
         distance_m: float,
     ) -> str:
-        if relation != "behind":
+        follow_mode = FollowOwnerController.FORMATION_MODES.get(relation)
+        if follow_mode is None:
             raise ValueError(f"unsupported owner formation relation: {relation}")
-        return self._enable_owner_follow("behind", distance_m=distance_m)
+        now = time.monotonic()
+        intent = self._resume_store.peek("follow", now_s=now)
+        if intent is not None:
+            # Default matches the channel that writes the payload
+            # (runtime_channels: `snap.get("mode", "direct")`) — the two
+            # disagreed, so a payload without a mode read as behind here and
+            # direct there (arbitration OB-5).
+            stored = str(intent.payload.get("mode", "direct"))
+            if stored == follow_mode:
+                # Semantic redispatch after pause: consume stored intent (not cold start).
+                with self._command_lock:
+                    self._resume_from_store("follow", now_s=now)
+                return (
+                    "Behind-owner formation resumed"
+                    if follow_mode == "behind"
+                    else "Owner-follow resumed"
+                )
+            # Incompatible stored mode — drop and cold-start the requested formation.
+            self._resume_store.clear("follow")
+        return self._enable_owner_follow(
+            follow_mode,
+            distance_m=distance_m if follow_mode == "behind" else None,
+        )
 
     def owner_heading_available(self, now: float | None = None) -> bool:
         """Passive camera-track gate for ``FollowFormation`` plan admission."""
@@ -1770,6 +2515,8 @@ class RobotRuntime:
                 raise RuntimeError("runtime is closed")
             if self.arbiter.emergency_stopped:
                 raise RuntimeError("motion is disabled by emergency stop")
+            # Cold start replaces any pending resume; do not leave a stale intent.
+            self._resume_store.clear("follow")
             self.preempt(
                 "follow",
                 reason="owner_follow_started",
@@ -1865,17 +2612,7 @@ class RobotRuntime:
         # a semantic task owns it) fails on its next poll, which is what frees
         # the resource lease the search step is about to request.
         with self._command_lock:
-            if self.follow.enabled:
-                active = self.follow.snapshot()
-                self._resume_follow_after_search = (
-                    self.follow.mode,
-                    (
-                        float(active["desired_distance_m"])
-                        if self.follow.mode == "behind"
-                        else None
-                    ),
-                )
-            # Table says search→follow is PAUSE; also record legacy resume tuple.
+            # Table says search→follow is PAUSE; ResumeIntent is the sole resume path.
             self.preempt("search", reason="owner_search_queued", targets=("follow",))
         self._emit(
             "search",
@@ -1884,17 +2621,21 @@ class RobotRuntime:
         )
 
     def _start_brain_owner_search(self) -> str:
-        """Adapter dispatch: begin the three-state search from the loss point."""
+        """Adapter dispatch: begin or resume the three-state search from the loss point."""
 
         if self._closed:
             raise RuntimeError("runtime is closed")
         if self.arbiter.emergency_stopped:
             raise RuntimeError("motion is disabled by emergency stop")
-        with self._lock:
-            last_seen = self._last_confident_owner
-        if last_seen is None:
-            raise RuntimeError("no confident owner position to search from")
+        now = time.monotonic()
         with self._command_lock:
+            if self.search.paused:
+                self._resume_from_store("search", now_s=now)
+                return "resuming owner search"
+            with self._lock:
+                last_seen = self._last_confident_owner
+            if last_seen is None:
+                raise RuntimeError("no confident owner position to search from")
             self.preempt(
                 "search",
                 reason="owner_search_started",
@@ -1904,7 +2645,7 @@ class RobotRuntime:
                 last_x=last_seen[0],
                 last_y=last_seen[1],
                 lost_at_s=last_seen[2],
-                now=time.monotonic(),
+                now=now,
             )
             with self._lock:
                 self._generation.bump("search")
@@ -2016,26 +2757,32 @@ class RobotRuntime:
             except RuntimeError:
                 pass
             return
-        self._finish_owner_search(decision)
+        self._finish_owner_search(decision, observation)
 
-    def _finish_owner_search(self, decision) -> None:
-        """Terminal search state: resume following, or say so and wait."""
+    def _finish_owner_search(
+        self,
+        decision,
+        observation: SimObservation | None = None,
+    ) -> None:
+        """Terminal search state: resume following via stored intent, or hold."""
 
         self.arbiter.cancel("search")
         self._last_search_state = decision.state
         if decision.outcome == "owner_reacquired":
             self._emit("search", "Owner reacquired; resuming follow", "success")
-            resume = self._resume_follow_after_search
-            self._resume_follow_after_search = None
-            if resume is not None:
-                try:
-                    self._enable_owner_follow(resume[0], distance_m=resume[1])
-                except (RuntimeError, ValueError) as error:
-                    self._emit("search", f"Could not resume follow: {error}", "warning")
+            try:
+                with self._command_lock:
+                    self._resume_from_store(
+                        "follow",
+                        now_s=time.monotonic(),
+                        observation=observation,
+                    )
+            except RuntimeError as error:
+                self._emit("search", f"Could not resume follow: {error}", "warning")
             return
         # Give up cleanly: say it out loud, then hold. The failed step is what
         # the executive sees; the robot is left stopped either way.
-        self._resume_follow_after_search = None
+        self._resume_store.clear("follow")
         try:
             self._brain_vocalize("I lost you — I'll wait here.")
         except ValueError:  # pragma: no cover - the text is a constant
@@ -2059,7 +2806,42 @@ class RobotRuntime:
             raise RuntimeError("motion is disabled by emergency stop")
 
         with self._command_lock:
-            return self._start_navigation_locked(clean)
+            return self._start_or_resume_navigation_locked(clean)
+
+    def _start_or_resume_navigation_locked(self, clean: str) -> str:
+        """Resume a paused mission via ResumeIntent, or cold-start a new one.
+
+        Callers must hold ``_command_lock``. A paused navigator without a valid
+        matching intent fails closed — never silently restarts as if resumed.
+        """
+
+        now = time.monotonic()
+        intent = self._resume_store.peek("navigation", now_s=now)
+        navigator = self.dog.navigator
+        if navigator.paused:
+            if intent is None:
+                raise RuntimeError(
+                    "resume rejected: navigation intent missing or expired"
+                )
+            payload_dir = " ".join(str(intent.payload.get("directive", "")).split())
+            if payload_dir and payload_dir != clean:
+                # Different directive replaces the paused mission intentionally.
+                self._resume_store.clear("navigation")
+                navigator.stop()
+                return self._start_navigation_locked(clean)
+            self._resume_from_store("navigation", now_s=now)
+            place = clean
+            mission = navigator.mission
+            if mission is not None and mission.goal is not None:
+                place = mission.goal.label or mission.goal.poi_id or clean
+            with self._lock:
+                self._navigation_directive = clean
+            self._emit("navigation", f"Resuming navigation to {place}.", "success")
+            return f"Resuming navigation to {place}."
+        if intent is not None:
+            # Stale stored intent with no paused mission: drop it.
+            self._resume_store.clear("navigation")
+        return self._start_navigation_locked(clean)
 
     def _start_navigation_locked(self, clean: str) -> str:
         """Start a mission while serialized against social-action dispatch."""
@@ -2073,11 +2855,17 @@ class RobotRuntime:
             reason="navigation_started",
             targets=("spatial", "follow"),
         )
+        # A new mission owns the pace: drop any previous directive pace first.
+        self._restore_directive_pace()
+        self._apply_directive_pace(pace_from_directive(clean))
         with self._lock:
             self._generation.bump("navigation")
             self._behavior_generation += 1
             generation = self._behavior_generation
             observation = self._observation
+            # Patience is per-mission: a new directive never inherits the
+            # previous one's blocked time or its spent asks.
+            self._yield_tracker.reset()
         if observation is not None and not self._observation_is_fresh(observation):
             observation = None
         with self._navigation_lock:
@@ -2121,6 +2909,7 @@ class RobotRuntime:
         if command.stop and mission.status == "arrived":
             with self._lock:
                 self._navigation_directive = None
+            self._restore_directive_pace()
             message = f"Already at {place}."
         elif command.stop and mission.status == "verifying":
             self._request_navigation_terminal_stop()
@@ -2129,6 +2918,7 @@ class RobotRuntime:
             with self._lock:
                 self._navigation_directive = None
                 self._navigation_detail["enabled"] = False
+            self._restore_directive_pace()
             message = f"I couldn't find or safely reach {place}."
         else:
             message = f"Navigating to {place}."
@@ -2158,34 +2948,121 @@ class RobotRuntime:
         self._pause_channel("navigation", reason=reason)
 
     def resume_navigation(self, *, now_s: float | None = None) -> None:
+        """Consume the stored navigation ResumeIntent and restore the mission.
+
+        Fail-closed: missing/expired intent or a required-but-stale observation
+        raises ``RuntimeError`` instead of inventing a synthetic resume.
+        """
+
+        with self._command_lock:
+            self._resume_from_store("navigation", now_s=now_s)
+
+    def _resume_from_store(
+        self,
+        channel: str,
+        *,
+        now_s: float | None = None,
+        observation: SimObservation | None = None,
+    ) -> ResumeIntent:
+        """Central resume coordinator: take intent, enforce freshness, resume.
+
+        Callers that mutate motion ownership should hold ``_command_lock``.
+        """
+
         now = time.monotonic() if now_s is None else float(now_s)
-        intent = self._resume_store.take("navigation", now_s=now)
-        channel = self._channels.get("navigation")
-        if channel is None:
-            return
-        if intent is None:
-            # Allow resume even without a stored intent when the navigator is paused.
-            channel.resume(
-                ResumeIntent(
-                    channel="navigation",
-                    payload={},
-                    suspend_reason="manual_resume",
-                    suspended_at_s=now,
-                    valid_for_s=1.0,
-                ),
-                now_s=now,
+        intent = self._resume_store.peek(channel, now_s=now)
+        obs = observation
+        if obs is None:
+            with self._lock:
+                obs = self._observation
+        observation_fresh: bool | None = None
+        if intent is not None and intent.requires_fresh_observation:
+            observation_fresh = (
+                obs is not None and self._observation_is_fresh(obs, now=now)
             )
-        else:
-            channel.resume(intent, now_s=now)
+        reason = resume_rejection_reason(
+            intent,
+            now_s=now,
+            observation_fresh=observation_fresh,
+        )
+        if reason is not None:
+            raise RuntimeError(f"resume rejected: {reason}")
+        assert intent is not None  # narrowed by rejection gate
+        taken = self._resume_store.take(channel, now_s=now)
+        if taken is None:
+            raise RuntimeError("resume rejected: missing_intent")
+        channel_obj = self._channels.get(channel)
+        if channel_obj is None:
+            # Intent already consumed; do not silently succeed.
+            raise RuntimeError(f"resume rejected: unknown channel {channel}")
+        # Reacquire authority before restoring the paused controller.
+        if channel == "navigation":
+            self.preempt(
+                "navigation",
+                reason="navigation_resumed",
+                targets=("spatial", "follow"),
+            )
+        elif channel == "follow":
+            self.preempt(
+                "follow",
+                reason="follow_resumed",
+                targets=("spatial", "navigation", "search"),
+            )
+        elif channel == "search":
+            self.preempt(
+                "search",
+                reason="search_resumed",
+                targets=("spatial", "navigation", "follow"),
+            )
+        channel_obj.resume(taken, now_s=now)
+        self._apply_channel_resume_bookkeeping(channel, taken)
+        return taken
+
+    def _apply_channel_resume_bookkeeping(
+        self,
+        channel: str,
+        intent: ResumeIntent,
+    ) -> None:
+        """Update runtime detail/generation after a successful channel resume."""
+
         with self._lock:
-            if self._navigation_detail.get("state") == "paused":
+            if channel == "navigation":
+                mission = None
+                try:
+                    mission = self.dog.navigator.mission
+                except RuntimeError:
+                    mission = None
+                state = (
+                    mission.status_value()
+                    if mission is not None
+                    else "running"
+                )
+                directive = intent.payload.get("directive")
+                if self._navigation_directive is None and directive is not None:
+                    self._navigation_directive = str(directive)
                 self._navigation_detail = NavigationDetail.from_dict(
                     {
                         **self._navigation_detail,
-                        "state": "running",
+                        "enabled": True,
+                        "state": state,
+                        "directive": self._navigation_directive
+                        or self._navigation_detail.get("directive"),
                         "reason": "navigation_resumed",
                     }
                 ).as_dict()
+            elif channel == "follow":
+                self._generation.bump("follow")
+                self._behavior_generation += 1
+                self._follow_detail = FollowDetail.from_dict(
+                    self.follow.snapshot()
+                ).as_dict()
+            elif channel == "search":
+                self._generation.bump("search")
+                self._behavior_generation += 1
+                self._search_detail = {
+                    **self.search.snapshot(),
+                    "reason": "search_resumed",
+                }
 
     def start_spatial_behavior(self, intent: SpatialIntent) -> str:
         self._interrupt_brain("correction", "owner requested a new spatial behavior")
@@ -2320,6 +3197,9 @@ class RobotRuntime:
         with self._agent_lock:
             with self._lock:
                 self._personality = profile.id
+                # Temperament follows the profile: the yield policy and its
+                # words are part of "who this dog is", not global runtime state.
+                self._install_yield_profile(profile.id)
             self.agent.configure_personality(profile.affect_actions)
         self._emit("agent", f"Personality changed to {profile.name}", "success")
         return f"Personality set to {profile.name}"
@@ -3011,6 +3891,14 @@ class RobotRuntime:
             },
             "perception": self.perception.snapshot(self.maps),
             "voice": voice,
+            "dialogue_state": {
+                **self._dialogue_state.snapshot(),
+                "influence": dict(self._dialogue_last.get("influence") or {}),
+                "pace_factor": self._dialogue_pace_factor,
+                "gaze_mode": self._dialogue_gaze_mode,
+                "amendment_pending": self._amendment_pending,
+                "reaction": dict(self._reaction_last),
+            },
             "model": {
                 "status": self._model_status,
                 "detail": self._model_detail,
@@ -3182,6 +4070,8 @@ class RobotRuntime:
 
             self._enforce_perception_invariant(observation)
             self._step_brain()
+            self._step_dialogue_state(observation)
+            self._step_reaction_bridge(observation)
 
             activity_started = time.monotonic()
             self._step_activities()
@@ -3418,6 +4308,7 @@ class RobotRuntime:
             self._motion_shaper = shaper
             self._shaper_profile = profile
 
+        self._apply_yield_advance_seed(command, stopping=stopping)
         last = self._shaped_at
         dt_s = 0.1 if last is None else max(1e-3, min(0.25, now - last))
         self._shaped_at = now
@@ -3428,6 +4319,39 @@ class RobotRuntime:
         )
         self._last_shaped = (vx, vy, vyaw)
         return VelocityCommand(vx=vx, vy=vy, vyaw=vyaw)
+
+    def _apply_yield_advance_seed(
+        self,
+        command: VelocityCommand,
+        *,
+        stopping: bool,
+    ) -> None:
+        """N11 yield-advance: catch the shaper up after a brief person-stop.
+
+        The shaper is the ramp that actually binds recovery — seeding only the
+        navigator's slew was measured at +6.4% because this stage re-ramps from
+        zero regardless (arbitration OB-3). Three properties keep it safe:
+
+        1. The seed is **clamped to ``command.vx``** — the value that already
+           passed the arbiter, the collision gate, and the smoother — so the
+           shaper can never emit above the authorised command, and it still
+           approaches that command from below (no overshoot).
+        2. It is dropped entirely on any stopping tick; the emergency bypass is
+           untouched.
+        3. It only ever raises the ramp, never lowers one already higher.
+
+        Applied here and nowhere else: ``RampMemory`` in the navigation
+        pipeline is the single source, this is the single reader.
+        """
+
+        seed = self.dog.take_pending_ramp_seed()
+        if seed is None or stopping or self.arbiter.emergency_stopped:
+            return
+        target = min(float(seed), float(command.vx))
+        if target <= self._last_shaped[0]:
+            return
+        self._motion_shaper.reset((target, self._last_shaped[1], self._last_shaped[2]))
+        self._last_shaped = (target, self._last_shaped[1], self._last_shaped[2])
 
     def _reset_motion_shaper(self) -> None:
         """Drop shaper state so a hard stop cannot ramp out of stale velocity.
@@ -3531,6 +4455,7 @@ class RobotRuntime:
             if mission.goal is not None
             else str(mission.metadata.get("semantic_query", directive))
         )
+        yield_decision = None
         with self._lock:
             still_current = (
                 self._generation.is_current("navigation", generation)
@@ -3551,7 +4476,24 @@ class RobotRuntime:
                 and (mission_status == "paused" or command.note == "mission_paused")
             )
             verifying = bool(command.stop and mission_status == "verifying")
-            if paused:
+            # A localization hold is not a terminal outcome. Measured before
+            # this branch existed: `pose_lost_hold` fell into the generic
+            # `command.stop` arm, which cleared `_navigation_directive`,
+            # published `enabled=False`, restored the directive pace and
+            # emitted "Navigation failed for <place>: pose_lost_hold" — so the
+            # runtime tore down a mission the navigator had deliberately kept
+            # alive to resume when health returned.
+            holding = bool(command.stop and command.note == POSE_LOST_HOLD_NOTE)
+            if holding:
+                self._navigation_detail = {
+                    "enabled": True,
+                    "state": "waiting",
+                    "directive": directive,
+                    "goal": place,
+                    "reason": command.note,
+                }
+                self.arbiter.cancel("navigation")
+            elif paused:
                 # Pause is not a destructive terminal — keep the directive.
                 self._navigation_detail = {
                     "enabled": True,
@@ -3571,6 +4513,7 @@ class RobotRuntime:
                     "reason": command.note or "arrived",
                 }
                 self.arbiter.cancel("navigation")
+                self._restore_directive_pace()
             elif verifying:
                 self._navigation_detail = {
                     "enabled": True,
@@ -3593,14 +4536,45 @@ class RobotRuntime:
                     "goal": place,
                     "reason": command.note,
                 }
+                # Card P-1, the yield policy. A person-gate tick is the ONLY
+                # thing routed here (exact `person_stop` segment); the decision
+                # is taken under the lock and acted on outside it, exactly like
+                # `_announce_pose_health`. Nothing below alters the command —
+                # the submit two statements down is the navigator's own,
+                # already zeroed by the gate.
+                yield_decision = self._yield_tracker.observe(
+                    person_blocked=person_blocked_from_note(command.note),
+                    now_s=self._yield_clock(),
+                )
                 try:
                     self.submit_motion(
                         "navigation",
                         VelocityCommand(vx=command.vx, vy=command.vy, vyaw=command.vyaw),
                         ttl=self.loop_period * 3.0,
                     )
-                except RuntimeError:
-                    pass
+                except RuntimeError as error:
+                    # A rejection storm (latched E-stop, higher-priority
+                    # lease, limit violation) was previously invisible: the
+                    # lease lapsed and target_source went None with no
+                    # attributable cause. Record it; do not raise — the
+                    # arbiter's refusal is authoritative.
+                    self._navigation_detail = {
+                        **self._navigation_detail,
+                        "submit_rejected": str(error)[:160],
+                    }
+        if holding:
+            # Lane B hand-off 2: the navigator stopped the body and
+            # walk_with_me recorded it, but nothing ever told the owner. Said
+            # once per episode, through the same utterance door the Vocalize
+            # skill uses — no second announcement channel.
+            self._announce_pose_health(lost=True)
+            return
+        if yield_decision is not None and yield_decision.speaks:
+            self._act_on_yield_decision(yield_decision, place=place)
+            if yield_decision.action == YIELD_ACTION_GIVE_UP:
+                return
+        if not command.stop:
+            self._announce_pose_health(lost=False)
         if paused:
             return
         if verifying:
@@ -3623,13 +4597,136 @@ class RobotRuntime:
                 )
             return
 
+    def _announce_pose_health(self, *, lost: bool) -> None:
+        """Speak a localization transition to the owner, once per transition.
+
+        Edge-triggered on purpose: ``_pose_lost_hold`` fires on **every**
+        control tick while MAP health is ``LOST``, and repeating the sentence
+        at control rate would be noise, not honesty. The recovery line is only
+        reachable from a tick on which the navigator issued a non-stop command,
+        which requires health to have returned — so neither sentence can be
+        said before the thing it describes is true.
+        """
+
+        with self._lock:
+            if lost == self._pose_lost_announced:
+                return
+            self._pose_lost_announced = lost
+        self._brain_vocalize(POSE_LOST_UTTERANCE if lost else POSE_REGAINED_UTTERANCE)
+
+    def _act_on_yield_decision(self, decision: YieldDecision, *, place: str) -> None:
+        """Speak (and, on give-up, end the mission) for one yield edge.
+
+        Called only from ``_step_navigation`` and only on a tick where
+        :class:`YieldTracker` returned ``ask`` or ``give_up`` — the tracker's
+        rate limiting is what keeps this off the control-rate path, exactly as
+        ``_announce_pose_health``'s edge does.
+
+        The words come from the active personality's ``yield_speech``; this
+        method holds none. Every line was checked against the DialogueAct
+        truthfulness rules when the config loaded, and the act built here
+        carries only the two claims the person gate actually proves.
+        """
+
+        with self._lock:
+            speech = self._yield_profile.speech
+            personality = self._personality
+        kind = "give_up"
+        if decision.action == YIELD_ACTION_ASK:
+            kind = "ask" if decision.ask_index <= 1 else "reask"
+        text = speech.render(kind, place=place)
+        act = yield_dialogue_act(
+            turn_id=f"yield-{personality}-{kind}-{max(1, decision.ask_index)}",
+            text=text,
+            kind=kind,
+            speech_style=personality,
+        )
+        with self._lock:
+            self._last_yield_act = act
+            self._last_yield_act_audible = False
+            if decision.action == YIELD_ACTION_ASK:
+                self._yield_asks_spoken += 1
+        # U35: the ask is now attempted on the speaker as well as the panel.
+        # Whether it was audible is recorded, not assumed — the yield snapshot
+        # must not let an inaudible ask read like a spoken one.
+        audible = self._brain_vocalize(act.text)
+        with self._lock:
+            if self._last_yield_act is act:
+                self._last_yield_act_audible = audible
+        if decision.action != YIELD_ACTION_GIVE_UP:
+            return
+        # The honest end. The mission is torn down through the normal channel
+        # stop so nothing is left half-owned, but with an ATTRIBUTABLE reason:
+        # the executive's navigation verifier reads `state` + `reason` straight
+        # into the failed step's detail, so the plan record says
+        # `blocked_by_person...` instead of the blunt `step_timeout` the 240 s
+        # contract ceiling would otherwise produce ~4 minutes later.
+        self._stop_navigation_channel(reason=decision.reason, state="failed")
+        self._emit(
+            "navigation",
+            f"Navigation failed for {place}: {decision.reason}",
+            "error",
+        )
+
+    def _install_perception_chain(self) -> None:
+        """Install the configured perception tier as the process-default chain.
+
+        Reads ``perception:`` from the navigation config — the same file
+        ``DirectiveNavigator.from_config`` reads — and degrades to T0 (which is
+        the pre-stratum-2 behaviour exactly) if anything about that read fails.
+        A misconfigured tier must not take the runtime down.
+        """
+
+        from parcel_robot.detection_adapter.perception_chain import (
+            PerceptionChain,
+            use_perception_chain,
+        )
+
+        tier = "T0"
+        seed = 0
+        temperature = 1.0
+        try:
+            import yaml
+
+            from parcel_robot.paths import resolve_navigation_config
+
+            raw = yaml.safe_load(
+                resolve_navigation_config("configs/navigation/default.yaml").read_text(
+                    encoding="utf-8"
+                )
+            )
+            section = (raw or {}).get("perception") or {}
+            tier = str(section.get("tier", "T0"))
+            seed = int(section.get("seed", 0))
+            temperature = float(section.get("confidence_temperature", 1.0))
+        except (OSError, ValueError, TypeError, KeyError, ImportError):
+            tier = "T0"
+        try:
+            chain = (
+                PerceptionChain.from_tier(tier, seed=seed, temperature=temperature)
+                if tier.strip().upper() != "T0"
+                else PerceptionChain.from_tier("T0", seed=seed)
+            )
+        except (ValueError, TypeError):
+            chain = PerceptionChain.from_tier("T0", seed=seed)
+        use_perception_chain(chain)
+        self._perception_chain = chain
+
     def _navigation_extras(self, observation: SimObservation) -> dict[str, object]:
         """Build the sensor-limited navigation view used by runtime and tests."""
 
         status = self.control_manager.snapshot()
         feedback_age_ms = status.feedback_age_ms
         measured_linear = math.hypot(status.measured.vx, status.measured.vy)
+        # Stratum-1 pose seam: one long-lived TruthPoseProvider per runtime, fed
+        # this tick's sim truth. Navigation reads it by frame name through
+        # ``parcel_robot.pose`` and never touches ``position`` again. Both frames
+        # return the same floats the observation already carried, so this is
+        # behavior-preserving; a real localizer replaces the provider, not any
+        # consumer.
+        update_provider_from_sim(self._pose_provider, observation)
         return {
+            POSE_PROVIDER_KEY: self._pose_provider,
             "collision": observation.collision,
             "perception_fresh": self._observation_is_fresh(observation),
             "lidar_angle_min_rad": observation.lidar_angle_min_rad,
@@ -3858,18 +4955,33 @@ class RobotRuntime:
         if changed:
             self._emit("simulator", message, "error")
 
-    def _emit(self, source: str, text: str, level: str = "info") -> None:
+    def _emit(
+        self,
+        source: str,
+        text: str,
+        level: str = "info",
+        *,
+        detail: Mapping[str, object] | None = None,
+    ) -> None:
+        """Append one panel event.
+
+        ``detail`` is an optional structured rider for events whose text alone
+        would over-claim. The key is absent unless a caller supplies one, so
+        the historical event shape is unchanged for every existing call site.
+        """
+
         with self._lock:
             self._event_id += 1
-            self._events.append(
-                {
-                    "id": self._event_id,
-                    "role": source,
-                    "text": text,
-                    "level": level,
-                    "timestamp": datetime.now(UTC).isoformat(),
-                }
-            )
+            event: dict[str, object] = {
+                "id": self._event_id,
+                "role": source,
+                "text": text,
+                "level": level,
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+            if detail is not None:
+                event["detail"] = dict(detail)
+            self._events.append(event)
 
     def _chat_item(self, role: str, text: str) -> None:
         with self._lock:
@@ -4018,6 +5130,7 @@ class RobotRuntime:
         self.duplex.tick(context=context)
 
     def _voice_partial_received(self, transcript: str) -> None:
+        self._dialogue_state.set_phase("listening", engagement=0.7)
         with self._lock:
             self._voice_detail = {
                 **self._voice_detail,
@@ -4053,11 +5166,42 @@ class RobotRuntime:
             }
 
     def _voice_stage(self, stage: VoiceStage) -> None:
+        if stage.kind:
+            # A marked stage is system-initiated speech (``kind="system"`` is
+            # the only producer today, hence the assertion below): not a
+            # dialogue turn, no query, no trace, nobody waiting on a reply.
+            # The test is "is it marked at all" rather than an equality on one
+            # label so a future system stream cannot silently fall back into
+            # the turn machinery by naming itself something else.
+            #
+            # Its stages are still marked in the latency ledger so the closed
+            # stage vocabulary stays honest (turn 0 has no trace, so that is a
+            # no-op today), but it deliberately drives neither the dialogue
+            # phase machine nor the duplex per-turn ledger: letting it through
+            # would cancel the in-flight turn's filler watchdog and write a
+            # ttft for a turn nobody started.
+            if stage.kind != SYSTEM_UTTERANCE_KIND:  # pragma: no cover - future stream
+                logger.warning("unrecognized voice stage kind %r; not a turn", stage.kind)
+            self.latency.mark(stage.turn_id, stage.name, now=stage.timestamp)
+            return
         # Expressive reactions ride the same stage events the latency ledger
         # uses: think visibly from end-of-query until the reply is audible.
         if stage.name == "query_end":
+            self._dialogue_state.set_phase(
+                "thinking",
+                engagement=0.7,
+                turn_id=str(stage.turn_id),
+            )
             self.expression.reactions.on_turn_pending(time.monotonic())
-        elif stage.name in {"audio_first_playback", "turn_complete", "error"}:
+        elif stage.name in {"audio_first_playback", "tts_first_chunk"}:
+            self._dialogue_state.set_phase(
+                "speaking",
+                engagement=0.55,
+                turn_id=str(stage.turn_id),
+            )
+            self.expression.reactions.on_reply_started(time.monotonic())
+        elif stage.name in {"turn_complete", "error"}:
+            self._dialogue_state.set_phase("idle", engagement=0.0)
             self.expression.reactions.on_reply_started(time.monotonic())
         self._duplex_on_voice_stage(stage)
         if stage.name == "query_end":
@@ -4248,6 +5392,7 @@ class RobotRuntime:
     def _owner_speech_started(self) -> None:
         """Owner began speaking: look at them (expressive reaction only)."""
 
+        self._dialogue_state.set_phase("listening", engagement=0.75)
         bearing = self._owner_bearing_rad()
         self.expression.reactions.on_speech_start(time.monotonic(), bearing)
         if self.duplex.enabled:
@@ -4258,6 +5403,7 @@ class RobotRuntime:
                 self.duplex.push_gaze_bearing(bearing)
 
     def _owner_speech_ended(self) -> None:
+        self._dialogue_state.set_phase("thinking", engagement=0.6)
         self.expression.reactions.on_speech_end(time.monotonic())
         if self.duplex.enabled:
             self.duplex.push_gaze_release()

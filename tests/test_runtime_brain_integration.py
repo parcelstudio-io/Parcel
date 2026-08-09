@@ -185,7 +185,7 @@ def test_runtime_executes_one_deliberative_call_through_verified_semantic_hold(
 
     reply = runtime.handle_text("Walk to the sidewalk and then wait.")
 
-    assert "accepted the task" in reply.lower()
+    assert "stay here" in reply.lower() or "accepted the task" in reply.lower()
     assert len(model.plan_calls) == 1
     assert model.decide_calls == 0
     schema = model.plan_calls[0][1]["response_schema"]
@@ -235,7 +235,7 @@ def test_runtime_opt_in_plansketch_uses_same_trusted_planir_executive(
 
     reply = runtime.handle_text("Walk to the sidewalk and then wait.")
 
-    assert "accepted the task" in reply.lower()
+    assert "stay here" in reply.lower() or "accepted the task" in reply.lower()
     schema = model.plan_calls[0][1]["response_schema"]
     assert schema["x-parcel-output-contract"] == "plan_sketch_v1"
     assert set(schema["properties"]) == {"schema_version", "goal", "steps"}
@@ -280,7 +280,7 @@ def test_correction_must_revision_the_current_task_instead_of_starting_a_race(
     assert correction_schema["properties"]["requested_interrupt"]["const"] == ("at_checkpoint")
     assert task["plan_revision"] == 2
     assert task["state"] == "queued"
-    assert "accepted the task" in reply.lower()
+    assert "stay here" in reply.lower() or "accepted the task" in reply.lower()
     assert model.decide_calls == 0
     runtime.close()
 

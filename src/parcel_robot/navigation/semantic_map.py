@@ -79,8 +79,19 @@ class ObservationSemanticMap:
         )
 
 
-def semantic_candidates_from_observation(observation: SimObservation) -> list[dict[str, Any]]:
-    """Convert validated camera/depth tracks into the navigator's typed payload."""
+def semantic_candidates_from_observation(
+    observation: SimObservation,
+    *,
+    chain: Any = None,
+) -> list[dict[str, Any]]:
+    """Convert validated camera/depth tracks into the navigator's typed payload.
+
+    Stratum 2: this is the **one** semantic ingress on the mission path, and it
+    runs the ``detection_adapter`` perception chain. ``chain=None`` consults the
+    process-default chain, which is tier T0 (pass-through) unless a harness has
+    installed otherwise — so the shipping path is byte-identical to the oracle
+    read this replaced, by construction rather than by measurement.
+    """
 
     candidates: list[dict[str, Any]] = [
         {
@@ -108,7 +119,34 @@ def semantic_candidates_from_observation(observation: SimObservation) -> list[di
         }
         for item in observation.semantic_objects
     )
-    return candidates
+    active = chain if chain is not None else _active_chain()
+    if active is None:
+        return candidates
+    robot = observation.robot
+    return active.process(
+        candidates,
+        robot_x=float(robot.x),
+        robot_y=float(robot.y),
+        robot_yaw_rad=float(robot.yaw),
+    )
+
+
+def _active_chain() -> Any:
+    """Resolve the process-default perception chain.
+
+    Soft: frozen BARN bundles ship a ``parcel_robot`` tree that predates
+    ``detection_adapter``, and this module is reachable from a v8 replacement
+    source. ``None`` means "no chain", which is the pre-stratum-2 read and is
+    exactly what T0 would have produced anyway.
+    """
+
+    try:
+        from parcel_robot.detection_adapter.perception_chain import (
+            active_perception_chain,
+        )
+    except ImportError:  # pragma: no cover — frozen BARN bundle path
+        return None
+    return active_perception_chain()
 
 
 def lidar_payload_from_observation(observation: SimObservation) -> list[dict[str, Any]]:

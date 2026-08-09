@@ -670,13 +670,34 @@ class _FishAudioStream(Iterator[bytes]):
 
 @dataclass
 class WhisperCppProvider:
-    """Adapter for whisper.cpp's multipart `/inference` endpoint."""
+    """Adapter for whisper.cpp's multipart `/inference` endpoint.
+
+    ``last_metrics`` carries the STT request/final clocks the latency ledger
+    needs to attribute the ack budget. Until they existed, STT was the one
+    unmeasured span between the owner finishing a sentence and the robot
+    answering — docs/AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md lists it as one
+    of the four missing clocks. It mirrors ``LlamaCppProvider.last_metrics``
+    so the ledger consumes both the same way, and it is plain data: nothing
+    here reaches into the tracker, so this adapter stays dependency free.
+    """
 
     base_url: str = "http://127.0.0.1:8178"
     language: str = "en"
     timeout: float = 60.0
 
+    #: Populated after every transcribe() attempt, success or failure.
+    last_metrics: dict[str, object] = field(default_factory=dict)
+
     def transcribe(self, wav_audio: bytes) -> str:
+        # WAV header is 44 bytes for the PCM16 mono files pcm16_wav writes;
+        # audio_s lets a caller compute a real-time factor without decoding.
+        audio_s = max(0.0, (len(wav_audio) - 44) / 2.0 / 16_000.0)
+        request_start = time.monotonic()
+        self.last_metrics = {
+            "request_start_monotonic": request_start,
+            "audio_s": audio_s,
+            "status": "in_flight",
+        }
         boundary = "parcel-whisper-boundary"
         fields = [
             _multipart_field(boundary, "response_format", "json"),
@@ -700,11 +721,30 @@ class WhisperCppProvider:
             with urlopen(request, timeout=self.timeout) as response:
                 result = json.load(response)
         except (HTTPError, URLError, TimeoutError) as error:
+            self._record_final(request_start, audio_s, status="failed")
             raise RuntimeError(f"Whisper service request failed: {error}") from error
         text = result.get("text") if isinstance(result, dict) else None
         if not isinstance(text, str):
+            self._record_final(request_start, audio_s, status="malformed")
             raise TypeError("Whisper service response did not contain text")
+        self._record_final(request_start, audio_s, status="ok")
         return text.strip()
+
+    def _record_final(
+        self, request_start: float, audio_s: float, *, status: str
+    ) -> None:
+        final = time.monotonic()
+        duration = max(0.0, final - request_start)
+        self.last_metrics = {
+            "request_start_monotonic": request_start,
+            "final_monotonic": final,
+            "duration_s": duration,
+            "audio_s": audio_s,
+            # <1.0 means faster than real time, which is the whole reason
+            # base.en on CPU is viable for the ack budget.
+            "real_time_factor": (duration / audio_s) if audio_s > 0 else None,
+            "status": status,
+        }
 
 
 def _json_object(content: str, label: str) -> dict[str, object]:

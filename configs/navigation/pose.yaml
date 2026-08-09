@@ -1,0 +1,137 @@
+# Stratum-1 pose authority (Lane B). Consumed by `parcel_robot.pose`.
+#
+# This file configures a SEAM, not a localizer. There is no SLAM and no EKF in
+# sim (STRATA_GENERALIZATION_PLAN anti-goals, binding). `truth` is the shipping
+# default and is behavior-preserving by construction: both REP-105 frames return
+# the identical sim-truth pose with zero covariance.
+#
+# The drift profiles exist so the MAP/ODOM frame binding can be *measured*.
+# They are a stand-in for leg odometry, not a model of one.
+
+provider: truth
+
+profiles:
+
+  # ---------------------------------------------------------------------
+  # The plan's named defaults: alpha1..alpha4 = 0.2.
+  #
+  # These are a stated starting point, NOT a calibration. The closed form for
+  # the ALONG-TRACK component alone on the canned 20 m trajectory at the sim's
+  # 0.1 m step is sqrt(alpha3 * D * d) = sqrt(0.2 * 20 * 0.1) = 0.63 m = 3.2 %,
+  # but the MEASURED end-of-path drift over 60 seeds is far larger because
+  # heading error dominates (see the calibrated profile's note):
+  #   translational  20.3 % of distance   [4.2 % .. 52.2 % across seeds]
+  #   yaw             2.12 deg/m          [0.01 .. 6.24 across seeds]
+  # That is ~20x the published Go2 band below, so this is a STRESS tier well
+  # past the plan's "2 % stress" intent. It must never be tuned against and
+  # must never be used as the T1 calibrated tier.
+  # ---------------------------------------------------------------------
+  stress:
+    noise:
+      alpha1: 0.2
+      alpha2: 0.2
+      alpha3: 0.2
+      alpha4: 0.2
+      seed: 20260807
+
+  # ---------------------------------------------------------------------
+  # T1 calibrated tier.
+  #
+  # Published band (DogLegs, leg odometry measured on a Unitree Go2):
+  #   translational  0.5 - 1.0 % of distance travelled
+  #   yaw            0.2 - 0.5 deg per metre travelled
+  #
+  # THE TWO PUBLISHED NUMBERS CANNOT BOTH DESCRIBE END-OF-PATH DRIFT ON THE
+  # SAME 20 m RUN, and pretending otherwise would be a fabricated calibration.
+  # Accumulated position error in any odometry model is dominated by heading
+  # error, not by along-track error: a heading error theta carried over a
+  # distance D contributes roughly D*theta/2 of cross-track displacement. At
+  # the mid-band 0.35 deg/m that is 20 m * 0.061 rad / 2 = 0.6 m = 3 % over
+  # 20 m -- already several times the 0.5-1 % translational band, before any
+  # translational noise is added at all. Measured here: changing alpha3 by 10x
+  # (0.01 -> 0.001) moves end-of-path drift by less than 1 % relative, which is
+  # the same fact from the other side. The published translational figure is a
+  # SHORT-SUB-SEGMENT relative error (KITTI-style RPE), not an accumulated one.
+  #
+  # So this profile calibrates to the band that actually governs the outcome
+  # and is length-independent, and PINS the other as measured:
+  #
+  #  * yaw: `systematic_yaw_bias_sigma_rad_per_m` is the primary knob, because
+  #    a per-run bias gives drift LINEAR in distance -- which is the shape a
+  #    "deg per metre" spec asserts. A pure alpha random walk gives sqrt(D),
+  #    whose deg/m figure is meaningless without stating D.
+  #      E|bias| = sigma * sqrt(2/pi) = 0.798 * 0.0061 = 0.0049 rad/m
+  #                                   = 0.28 deg/m  -> mid-band.
+  #    Measured mean over 60 seeds: 0.378 / 0.311 / 0.275 deg/m at
+  #    D = 10 / 20 / 40 m -- in band at every length.
+  #
+  #  * translational: `systematic_translation_scale_sigma = 0.0075` is the
+  #    0.75 % mid-band SCALE error, which is the part of the translational
+  #    spec this model can honor directly. The resulting ACCUMULATED
+  #    end-of-path drift is measured at 1.5 / 2.3 / 3.9 % of distance at
+  #    D = 10 / 20 / 40 m -- above the published band, for the heading-
+  #    dominance reason above. That number is pinned as MEASURED, not claimed
+  #    as calibrated.
+  #
+  #  * alphas stay small and non-zero so runs differ from each other
+  #    stochastically rather than only by their drawn bias.
+  #
+  # tests/test_pose_drift_calibration.py measures all of this over 60 seeds and
+  # reddens if either band is left. It is a calibration check, not a
+  # capability claim: this is a stand-in for leg odometry, not a model of one.
+  # ---------------------------------------------------------------------
+  calibrated_go2:
+    noise:
+      alpha1: 0.002
+      alpha2: 0.001
+      alpha3: 0.003
+      alpha4: 0.001
+      systematic_translation_scale_sigma: 0.0075
+      systematic_yaw_bias_sigma_rad_per_m: 0.0061
+      seed: 20260807
+
+  # Same calibrated noise, but MAP re-anchors instead of passing truth through:
+  # MAP follows ODOM and snaps back to truth every interval_s. This is the only
+  # way to exercise the "MAP may jump" half of REP-105. Off by default.
+  calibrated_go2_reanchoring:
+    noise:
+      alpha1: 0.002
+      alpha2: 0.001
+      alpha3: 0.003
+      alpha4: 0.001
+      systematic_translation_scale_sigma: 0.0075
+      systematic_yaw_bias_sigma_rad_per_m: 0.0061
+      seed: 20260807
+    map_correction:
+      enabled: true
+      interval_s: 5.0
+
+  # Test hooks. TruthPoseProvider can NEVER report anything but HEALTHY; these
+  # profiles are the only way LOST/DEGRADED reaches a consumer today.
+  lost:
+    noise:
+      alpha1: 0.002
+      alpha2: 0.001
+      alpha3: 0.003
+      alpha4: 0.001
+      seed: 20260807
+    health:
+      force: lost
+
+  degraded:
+    noise:
+      alpha1: 0.002
+      alpha2: 0.001
+      alpha3: 0.003
+      alpha4: 0.001
+      seed: 20260807
+    health:
+      force: degraded
+
+# Chance-constrained region membership (stratum 1, "where polygons remain
+# legitimate"). P(inside) >= threshold replaces the boolean test ONLY when the
+# pose covariance is non-zero; at zero covariance the predicate short-circuits
+# to the identical boolean geometry, so TruthPoseProvider results are
+# bit-identical to the pre-seam system.
+chance_constrained:
+  inside_probability_threshold: 0.9

@@ -1,0 +1,1030 @@
+{
+  "corrections": {
+    "a": "derived scene truth \u2014 the landmark table becomes scene_truth.json's `derived` section (the scene's own geometry) instead of `transcribed`, which is wrong in 7 fields across 5 entities",
+    "b": "episode spec fixes \u2014 word-boundary class matching (B-05's 'streetlight' no longer matches the tree class) and visible-instance anchoring for definite references (D-15's 'the tree' anchors to the tree actually in frame)",
+    "c": "arrival rule \u2014 hold-or-trace-end-v1 replaces the frozen hold, which the runner's own termination made unobservable (U31)"
+  },
+  "episode_set_provenance": {
+    "v1": "frozen 2026-08-05 baseline / 2026-08-06 candidate; immutable",
+    "v1a-scene-truth-only": "bridge-only: correction (a) isolated; never run, never frozen",
+    "v2": "2026-08-07 re-freeze: corrections (a) + (b)"
+  },
+  "from_version": "v1",
+  "frozen_baseline": false,
+  "generated_at": "20260808T001537Z",
+  "historic_v1_rows_for_context_only": [
+    {
+      "episode_digest": "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf",
+      "frozen_baseline": true,
+      "mode": "baseline",
+      "report_id": "nav-instruct-v1-baseline-20260805T070524Z",
+      "sr": 0.04
+    },
+    {
+      "episode_digest": "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf",
+      "frozen_baseline": false,
+      "mode": "candidate",
+      "report_id": "nav-instruct-v1-candidate-20260806T070335Z",
+      "sr": 0.04
+    },
+    {
+      "episode_digest": "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf",
+      "frozen_baseline": false,
+      "kind": "derived_rescoring",
+      "mode": "baseline",
+      "parent_run_id": "nav-instruct-v1-baseline-20260805T070524Z",
+      "rescore_rule": "hold-or-trace-end-v1",
+      "sr_derived_rule": 0.12,
+      "sr_frozen_rule": 0.04
+    },
+    {
+      "episode_digest": "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf",
+      "frozen_baseline": false,
+      "kind": "derived_rescoring",
+      "mode": "candidate",
+      "parent_run_id": "nav-instruct-v1-candidate-20260806T070335Z",
+      "rescore_rule": "hold-or-trace-end-v1",
+      "sr_derived_rule": 0.16,
+      "sr_frozen_rule": 0.04
+    }
+  ],
+  "kind": "refreeze_bridge",
+  "measured_bridge": {
+    "deltas": {
+      "baseline": {
+        "a_scene_truth": {
+          "episodes_gained": [],
+          "episodes_lost": [],
+          "mean_dtg_after_m": 8.755213308594605,
+          "mean_dtg_before_m": 8.762734640209716,
+          "mean_dtg_delta_m": -0.007521331615111038,
+          "rule": "both sides scored under the frozen hold rule",
+          "sr_after": 0.04,
+          "sr_before": 0.04,
+          "sr_delta": 0.0
+        },
+        "b_episode_spec": {
+          "episodes_gained": [],
+          "episodes_lost": [],
+          "mean_dtg_after_m": 8.339591429412952,
+          "mean_dtg_before_m": 8.755213308594605,
+          "mean_dtg_delta_m": -0.4156218791816535,
+          "rule": "both sides scored under the frozen hold rule",
+          "sr_after": 0.04,
+          "sr_before": 0.04,
+          "sr_delta": 0.0
+        },
+        "c_arrival_rule": {
+          "flipped_episodes": [
+            "nav-object_goal-A-00-4caa923b",
+            "nav-object_goal-D-15-109547e2",
+            "nav-region_goal-A-00-1c735162"
+          ],
+          "note": "measured inside the v2 run: same traces, two rules",
+          "sr_after": 0.16,
+          "sr_before": 0.04,
+          "sr_delta": 0.12
+        },
+        "total_v1_to_v2": {
+          "collisions_after": 0,
+          "collisions_before": 0,
+          "mean_dtg_after_m": 8.339591429412952,
+          "mean_dtg_before_m": 8.762734640209716,
+          "mean_dtg_delta_m": -0.42314321079676454,
+          "sr_after": 0.16,
+          "sr_before": 0.04,
+          "sr_delta": 0.12
+        }
+      },
+      "candidate": {
+        "a_scene_truth": {
+          "episodes_gained": [],
+          "episodes_lost": [],
+          "mean_dtg_after_m": 8.495602372557393,
+          "mean_dtg_before_m": 8.49609010204574,
+          "mean_dtg_delta_m": -0.00048772948834674423,
+          "rule": "both sides scored under the frozen hold rule",
+          "sr_after": 0.04,
+          "sr_before": 0.04,
+          "sr_delta": 0.0
+        },
+        "b_episode_spec": {
+          "episodes_gained": [],
+          "episodes_lost": [],
+          "mean_dtg_after_m": 8.283334011317965,
+          "mean_dtg_before_m": 8.495602372557393,
+          "mean_dtg_delta_m": -0.2122683612394276,
+          "rule": "both sides scored under the frozen hold rule",
+          "sr_after": 0.04,
+          "sr_before": 0.04,
+          "sr_delta": 0.0
+        },
+        "c_arrival_rule": {
+          "flipped_episodes": [
+            "nav-object_goal-A-00-4caa923b"
+          ],
+          "note": "measured inside the v2 run: same traces, two rules",
+          "sr_after": 0.08,
+          "sr_before": 0.04,
+          "sr_delta": 0.04
+        },
+        "total_v1_to_v2": {
+          "collisions_after": 0,
+          "collisions_before": 0,
+          "mean_dtg_after_m": 8.283334011317965,
+          "mean_dtg_before_m": 8.49609010204574,
+          "mean_dtg_delta_m": -0.21275609072777435,
+          "sr_after": 0.08,
+          "sr_before": 0.04,
+          "sr_delta": 0.04
+        }
+      }
+    },
+    "measured_on": "today's tree (post Lane A-D), all cells, same process",
+    "runs": {
+      "baseline": {
+        "v1": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 24
+          },
+          "arrival_rule": "frozen-hold-v1",
+          "authority_histogram": {
+            "agreement": 19,
+            "authority_disagreement": 4,
+            "false_arrival": 2,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "episode_digest": "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 2,
+            "grounding_error": 1,
+            "none": 1,
+            "planning_error": 9,
+            "refusal": 8,
+            "search_error": 0,
+            "termination": 4
+          },
+          "mean_dtg_m": 8.762734640209716,
+          "spl": 0.00016476583919257094,
+          "sr": 0.04,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd"
+          ],
+          "successes_frozen_rule": [
+            "nav-follow_owner-D-15-74a535dd"
+          ]
+        },
+        "v1a-scene-truth-only": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 24
+          },
+          "arrival_rule": "frozen-hold-v1",
+          "authority_histogram": {
+            "agreement": 19,
+            "authority_disagreement": 4,
+            "false_arrival": 2,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "episode_digest": "71399cfc47707d8a3424e1992100e4602cdcad1883ed9d705325231906fa2b6f",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 2,
+            "grounding_error": 1,
+            "none": 1,
+            "planning_error": 9,
+            "refusal": 8,
+            "search_error": 0,
+            "termination": 4
+          },
+          "mean_dtg_m": 8.755213308594605,
+          "spl": 0.00016476583919257094,
+          "sr": 0.04,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd"
+          ],
+          "successes_frozen_rule": [
+            "nav-follow_owner-D-15-74a535dd"
+          ]
+        },
+        "v2": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 21,
+            "trace_end_hold": 3
+          },
+          "arrival_rule": "hold-or-trace-end-v1",
+          "authority_histogram": {
+            "agreement": 20,
+            "authority_disagreement": 4,
+            "false_arrival": 1,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "episode_digest": "a17c04dbec43a1749386c304060fb479a71f27d4b51b8c1b0fbb949753fc563d",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 1,
+            "none": 4,
+            "planning_error": 7,
+            "refusal": 8,
+            "search_error": 0,
+            "termination": 4
+          },
+          "mean_dtg_m": 8.339591429412952,
+          "spl": 0.12016476583919257,
+          "sr": 0.16,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b",
+            "nav-object_goal-D-15-109547e2",
+            "nav-region_goal-A-00-1c735162"
+          ],
+          "successes_frozen_rule": [
+            "nav-follow_owner-D-15-74a535dd"
+          ]
+        }
+      },
+      "candidate": {
+        "v1": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 24
+          },
+          "arrival_rule": "frozen-hold-v1",
+          "authority_histogram": {
+            "agreement": 19,
+            "authority_disagreement": 5,
+            "false_arrival": 1,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "episode_digest": "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 1,
+            "none": 1,
+            "planning_error": 16,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 5
+          },
+          "mean_dtg_m": 8.49609010204574,
+          "spl": 0.00016476583919257094,
+          "sr": 0.04,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd"
+          ],
+          "successes_frozen_rule": [
+            "nav-follow_owner-D-15-74a535dd"
+          ]
+        },
+        "v1a-scene-truth-only": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 24
+          },
+          "arrival_rule": "frozen-hold-v1",
+          "authority_histogram": {
+            "agreement": 18,
+            "authority_disagreement": 6,
+            "false_arrival": 1,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "episode_digest": "71399cfc47707d8a3424e1992100e4602cdcad1883ed9d705325231906fa2b6f",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 1,
+            "none": 1,
+            "planning_error": 15,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 6
+          },
+          "mean_dtg_m": 8.495602372557393,
+          "spl": 0.00016476583919257094,
+          "sr": 0.04,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd"
+          ],
+          "successes_frozen_rule": [
+            "nav-follow_owner-D-15-74a535dd"
+          ]
+        },
+        "v2": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 23,
+            "trace_end_hold": 1
+          },
+          "arrival_rule": "hold-or-trace-end-v1",
+          "authority_histogram": {
+            "agreement": 18,
+            "authority_disagreement": 6,
+            "false_arrival": 1,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "episode_digest": "a17c04dbec43a1749386c304060fb479a71f27d4b51b8c1b0fbb949753fc563d",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 1,
+            "none": 2,
+            "planning_error": 13,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 7
+          },
+          "mean_dtg_m": 8.283334011317965,
+          "spl": 0.04016476583919257,
+          "sr": 0.08,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b"
+          ],
+          "successes_frozen_rule": [
+            "nav-follow_owner-D-15-74a535dd"
+          ]
+        }
+      }
+    },
+    "why_not_the_frozen_rows": "the frozen v1 rows were measured on 2026-08-05/06 code; differencing against them would attribute four lanes of work to the re-freeze"
+  },
+  "runner_version": "nav-instruct-v1.1-k0-arrival",
+  "spec_bridge": {
+    "changed_rows": [
+      {
+        "changed_by": "scene_truth",
+        "episode_id": "nav-region_goal-A-00-1c735162",
+        "family": "region_goal",
+        "instruction": "go to the sidewalk",
+        "tier": "A",
+        "v1_goal": {
+          "anchor_entity": "sidewalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              2.4
+            ],
+            [
+              8.0,
+              2.4
+            ],
+            [
+              8.0,
+              3.6
+            ],
+            [
+              -8.0,
+              3.6
+            ]
+          ],
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 9.5,
+        "v1_target": "sidewalk",
+        "v1a_goal": {
+          "anchor_entity": "sidewalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              2.2
+            ],
+            [
+              8.0,
+              2.2
+            ],
+            [
+              8.0,
+              4.2
+            ],
+            [
+              -8.0,
+              4.2
+            ]
+          ],
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "sidewalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              2.2
+            ],
+            [
+              8.0,
+              2.2
+            ],
+            [
+              8.0,
+              4.2
+            ],
+            [
+              -8.0,
+              4.2
+            ]
+          ],
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 9.5,
+        "v2_target": "sidewalk"
+      },
+      {
+        "changed_by": "scene_truth",
+        "episode_id": "nav-region_goal-B-05-586317e4",
+        "family": "region_goal",
+        "instruction": "walk onto the sidewalk",
+        "tier": "B",
+        "v1_goal": {
+          "anchor_entity": "sidewalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              2.4
+            ],
+            [
+              8.0,
+              2.4
+            ],
+            [
+              8.0,
+              3.6
+            ],
+            [
+              -8.0,
+              3.6
+            ]
+          ],
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 10.0,
+        "v1_target": "sidewalk",
+        "v1a_goal": {
+          "anchor_entity": "sidewalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              2.2
+            ],
+            [
+              8.0,
+              2.2
+            ],
+            [
+              8.0,
+              4.2
+            ],
+            [
+              -8.0,
+              4.2
+            ]
+          ],
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "sidewalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              2.2
+            ],
+            [
+              8.0,
+              2.2
+            ],
+            [
+              8.0,
+              4.2
+            ],
+            [
+              -8.0,
+              4.2
+            ]
+          ],
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 10.0,
+        "v2_target": "sidewalk"
+      },
+      {
+        "changed_by": "scene_truth",
+        "episode_id": "nav-region_goal-C-10-138643ba",
+        "family": "region_goal",
+        "instruction": "go to the pavement",
+        "tier": "C",
+        "v1_goal": {
+          "anchor_entity": "sidewalk_south",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              -3.6
+            ],
+            [
+              8.0,
+              -3.6
+            ],
+            [
+              8.0,
+              -2.4
+            ],
+            [
+              -8.0,
+              -2.4
+            ]
+          ],
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 4.5,
+        "v1_target": "sidewalk_south",
+        "v1a_goal": {
+          "anchor_entity": "sidewalk_south",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              -3.75
+            ],
+            [
+              8.0,
+              -3.75
+            ],
+            [
+              8.0,
+              -2.25
+            ],
+            [
+              -8.0,
+              -2.25
+            ]
+          ],
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "sidewalk_south",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              -8.0,
+              -3.75
+            ],
+            [
+              8.0,
+              -3.75
+            ],
+            [
+              8.0,
+              -2.25
+            ],
+            [
+              -8.0,
+              -2.25
+            ]
+          ],
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 4.5,
+        "v2_target": "sidewalk_south"
+      },
+      {
+        "changed_by": "scene_truth",
+        "episode_id": "nav-region_goal-D-15-1b8b2361",
+        "family": "region_goal",
+        "instruction": "go to the crosswalk",
+        "tier": "D",
+        "v1_goal": {
+          "anchor_entity": "crosswalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              2.3,
+              -0.4
+            ],
+            [
+              3.9,
+              -0.4
+            ],
+            [
+              3.9,
+              2.0
+            ],
+            [
+              2.3,
+              2.0
+            ]
+          ],
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 2.5,
+        "v1_target": "crosswalk",
+        "v1a_goal": {
+          "anchor_entity": "crosswalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              2.35,
+              -0.4
+            ],
+            [
+              3.85,
+              -0.4
+            ],
+            [
+              3.85,
+              2.0
+            ],
+            [
+              2.35,
+              2.0
+            ]
+          ],
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "crosswalk",
+          "anchor_footprint_m": 0.0,
+          "band_m": null,
+          "center": null,
+          "kind": "polygon",
+          "polygon": [
+            [
+              2.35,
+              -0.4
+            ],
+            [
+              3.85,
+              -0.4
+            ],
+            [
+              3.85,
+              2.0
+            ],
+            [
+              2.35,
+              2.0
+            ]
+          ],
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 2.5,
+        "v2_target": "crosswalk"
+      },
+      {
+        "changed_by": "episode_spec",
+        "episode_id": "nav-object_goal-B-05-0ee314d5",
+        "family": "object_goal",
+        "instruction": "walk towards the streetlight",
+        "tier": "B",
+        "v1_goal": {
+          "anchor_entity": "tree_1",
+          "anchor_footprint_m": 0.0,
+          "band_m": [
+            0.6,
+            2.5
+          ],
+          "center": [
+            -5.0,
+            3.15
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 7.5,
+        "v1_target": "tree_1",
+        "v1a_goal": {
+          "anchor_entity": "tree_1",
+          "anchor_footprint_m": 0.0,
+          "band_m": [
+            0.6,
+            2.5
+          ],
+          "center": [
+            -5.0,
+            3.15
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "lamp_post_1",
+          "anchor_footprint_m": 0.0,
+          "band_m": [
+            0.6,
+            2.5
+          ],
+          "center": [
+            0.2,
+            3.15
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 3.5,
+        "v2_target": "lamp_post_1"
+      },
+      {
+        "changed_by": "episode_spec",
+        "episode_id": "nav-object_goal-D-15-109547e2",
+        "family": "object_goal",
+        "instruction": "walk towards the tree",
+        "tier": "D",
+        "v1_goal": {
+          "anchor_entity": "tree_1",
+          "anchor_footprint_m": 0.0,
+          "band_m": [
+            0.6,
+            2.5
+          ],
+          "center": [
+            -5.0,
+            3.15
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 7.5,
+        "v1_target": "tree_1",
+        "v1a_goal": {
+          "anchor_entity": "tree_1",
+          "anchor_footprint_m": 0.0,
+          "band_m": [
+            0.6,
+            2.5
+          ],
+          "center": [
+            -5.0,
+            3.15
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "tree_2",
+          "anchor_footprint_m": 0.0,
+          "band_m": [
+            0.6,
+            2.5
+          ],
+          "center": [
+            5.0,
+            3.1
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 7.0,
+        "v2_target": "tree_2"
+      },
+      {
+        "changed_by": "scene_truth",
+        "episode_id": "nav-object_relative-A-00-3efbba45",
+        "family": "object_relative",
+        "instruction": "sit next to the bench",
+        "tier": "A",
+        "v1_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.7,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.0
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 5.0,
+        "v1_target": "bench_1",
+        "v1a_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.733757,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.045
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.733757,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.045
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 5.0,
+        "v2_target": "bench_1"
+      },
+      {
+        "changed_by": "scene_truth",
+        "episode_id": "nav-object_relative-B-05-7d441aee",
+        "family": "object_relative",
+        "instruction": "wait by the bench",
+        "tier": "B",
+        "v1_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.7,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.0
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 4.0,
+        "v1_target": "bench_1",
+        "v1a_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.733757,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.045
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.733757,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.045
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 4.0,
+        "v2_target": "bench_1"
+      },
+      {
+        "changed_by": "scene_truth",
+        "episode_id": "nav-object_relative-C-10-0d3f5ebd",
+        "family": "object_relative",
+        "instruction": "stand next to the seat",
+        "tier": "C",
+        "v1_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.7,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.0
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v1_shortest_path_m": 11.5,
+        "v1_target": "bench_1",
+        "v1a_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.733757,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.045
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_goal": {
+          "anchor_entity": "bench_1",
+          "anchor_footprint_m": 0.733757,
+          "band_m": [
+            0.4,
+            1.5
+          ],
+          "center": [
+            -2.5,
+            3.045
+          ],
+          "kind": "relative_band",
+          "polygon": null,
+          "radius_m": null
+        },
+        "v2_shortest_path_m": 11.5,
+        "v2_target": "bench_1"
+      }
+    ],
+    "counts_by_change": {
+      "both": 0,
+      "episode_spec": 2,
+      "scene_truth": 7,
+      "unchanged": 16
+    },
+    "digests": {
+      "v1": "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf",
+      "v1a-scene-truth-only": "71399cfc47707d8a3424e1992100e4602cdcad1883ed9d705325231906fa2b6f",
+      "v2": "a17c04dbec43a1749386c304060fb479a71f27d4b51b8c1b0fbb949753fc563d"
+    },
+    "episode_count": 25,
+    "id_mapping_is_total": true,
+    "seed": 20260804
+  },
+  "to_version": "v2"
+}

@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://parcel.local/schemas/observation_snapshot_v1.schema.json",
+  "title": "Parcel ObservationSnapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "snapshot_id",
+    "captured_at_monotonic_s",
+    "camera",
+    "lidar",
+    "robot",
+    "safety",
+    "battery",
+    "task",
+    "resource_leases",
+    "entities"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "snapshot_id": {"$ref": "#/$defs/identifier"},
+    "captured_at_monotonic_s": {"type": "number", "minimum": 0},
+    "camera": {"$ref": "#/$defs/sensor"},
+    "lidar": {"$ref": "#/$defs/sensor"},
+    "robot": {"$ref": "#/$defs/robot"},
+    "safety": {"$ref": "#/$defs/safety"},
+    "battery": {"$ref": "#/$defs/battery"},
+    "task": {"$ref": "#/$defs/task"},
+    "resource_leases": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {"$ref": "#/$defs/lease"}
+    },
+    "entities": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {"$ref": "#/$defs/entity"}
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"
+    },
+    "nullable_number": {
+      "oneOf": [{"type": "null"}, {"type": "number"}]
+    },
+    "sensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "available", "fresh", "source", "observed_at_monotonic_s", "age_ms"],
+      "properties": {
+        "name": {"enum": ["camera", "lidar"]},
+        "available": {"type": "boolean"},
+        "fresh": {"type": "boolean"},
+        "source": {"type": "string", "minLength": 1, "maxLength": 80},
+        "observed_at_monotonic_s": {
+          "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}]
+        },
+        "age_ms": {
+          "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 3600000}]
+        }
+      }
+    },
+    "robot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["moving", "controller_state", "x", "y", "z", "yaw_rad"],
+      "properties": {
+        "moving": {"type": "boolean"},
+        "controller_state": {"type": "string", "minLength": 1, "maxLength": 80},
+        "x": {"$ref": "#/$defs/nullable_number"},
+        "y": {"$ref": "#/$defs/nullable_number"},
+        "z": {"$ref": "#/$defs/nullable_number"},
+        "yaw_rad": {"$ref": "#/$defs/nullable_number"}
+      }
+    },
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["emergency_stopped", "collision_imminent", "telemetry_fresh", "nearest_obstacle_m", "nearest_person_m"],
+      "properties": {
+        "emergency_stopped": {"type": "boolean"},
+        "collision_imminent": {"type": "boolean"},
+        "telemetry_fresh": {"type": "boolean"},
+        "nearest_obstacle_m": {
+          "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}]
+        },
+        "nearest_person_m": {
+          "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0}]
+        }
+      }
+    },
+    "battery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "percent", "source"],
+      "properties": {
+        "state": {"enum": ["unavailable", "normal", "low", "critical"]},
+        "percent": {
+          "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0, "maximum": 100}]
+        },
+        "source": {"type": "string", "minLength": 1, "maxLength": 80}
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "task_id", "plan_revision", "step_id", "at_checkpoint"],
+      "properties": {
+        "state": {
+          "enum": ["idle", "queued", "waiting_precondition", "waiting_resource", "running", "recovering", "waiting_checkpoint", "succeeded", "failed", "cancelled"]
+        },
+        "task_id": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/identifier"}]},
+        "plan_revision": {
+          "oneOf": [{"type": "null"}, {"type": "integer", "minimum": 1}]
+        },
+        "step_id": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/identifier"}]},
+        "at_checkpoint": {"type": "boolean"}
+      }
+    },
+    "lease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource", "owner_task_id", "owner_step_id"],
+      "properties": {
+        "resource": {"enum": ["base", "posture", "voice", "attention"]},
+        "owner_task_id": {"$ref": "#/$defs/identifier"},
+        "owner_step_id": {"$ref": "#/$defs/identifier"}
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity_id", "kind", "label", "confidence", "source", "observed_at_monotonic_s", "attributes"],
+      "properties": {
+        "entity_id": {"$ref": "#/$defs/identifier"},
+        "kind": {"enum": ["owner", "semantic_region", "semantic_object", "person"]},
+        "label": {"type": "string", "minLength": 1, "maxLength": 160},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "source": {"type": "string", "minLength": 1, "maxLength": 80},
+        "observed_at_monotonic_s": {"type": "number", "minimum": 0},
+        "attributes": {"type": "object", "maxProperties": 64}
+      }
+    }
+  }
+}

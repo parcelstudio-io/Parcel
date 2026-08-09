@@ -1,0 +1,40 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_goal-C-10-68aa2ab8",
+  "family": "object_goal",
+  "goal": {
+    "anchor_entity": "lamp_post_2",
+    "anchor_footprint_m": 0.06,
+    "band_m": [
+      1.1800000000000002,
+      1.38
+    ],
+    "center": [
+      -6.7,
+      -2.9
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "go to the lamp post",
+  "notes": "requires_search|object_goal",
+  "placement_overrides": {
+    "robot": {
+      "x": -5.9,
+      "y": -6.05,
+      "yaw": 1.0
+    }
+  },
+  "seed": 1755982520,
+  "shortest_path_m": 2.5,
+  "start_pose": [
+    -5.9,
+    -6.05,
+    1.0
+  ],
+  "synonym": "lamp post",
+  "target_entity_id": "lamp_post_2",
+  "tier": "C"
+}

@@ -6,8 +6,10 @@ from collections.abc import Callable
 from typing import Any
 
 from .brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
-from .brain.router import DeterministicIntentRouter
+from .brain.plan_sketch import PlanSketch
+from .brain.router import DeterministicIntentRouter, physical_cue_present
 from .brain.runtime_adapter import bind_plan_context, contextual_planner_schema
+from .brain.validator import PlanValidationError
 from .memory import ConversationMemory
 from .models import (
     ActionProposal,
@@ -23,8 +25,31 @@ from .navigation.goals import navigation_directive_from_text
 from .navigation.spatial import parse_spatial_intent, spatial_intent_from_arguments
 from .providers import LanguageModel
 from .safety import SafetyLimits, SafetySupervisor
+from .voice.amendment import strip_amend_prefix
+from .voice.closed_intents import ClosedIntent, closed_intent_phrases, parse_closed_intent
+from .voice.dialogue_lane import conversation_tool_definitions, dialogue_act_from_text
+from .voice.executive_caps import CapDirective, resolve_cap
+from .voice.local_plans import (
+    sketch_come,
+    sketch_follow,
+    sketch_hold,
+    sketch_navigate,
+    sketch_spatial,
+)
+from .voice.scene_reference import (
+    clarification_for,
+    dangling_reference,
+    resolve_pending_reference,
+    scene_class_mentioned,
+)
 
-EMERGENCY_STOP_PHRASES = frozenset({"stop", "emergency stop", "stop now"})
+#: Phrases that stop the robot on the fastest available path. Derived from the
+#: closed-intent parser so there is exactly ONE stop grammar: this set used to
+#: be a literal that omitted "halt", which the parser *did* recognize as STOP —
+#: and because `_handle_text` deliberately skips STOP in the closed-intent
+#: handler, `handle_text("halt")` answered "I did not understand that command"
+#: and stopped nothing (U33, measured 2026-08-07 on the product path).
+EMERGENCY_STOP_PHRASES = closed_intent_phrases(ClosedIntent.STOP)
 MOTION_TOOLS = frozenset(
     {
         "run_pose",
@@ -41,6 +66,7 @@ MODEL_FORBIDDEN_TOOLS = frozenset({"set_velocity", "set_motion_backend"})
 CommitGuard = Callable[[Callable[[], str]], str]
 PlanPublisher = Callable[[PlanIR, IntentFrame, str], str]
 PlannerOutputAdapter = Callable[[object, IntentFrame, ObservationSnapshot], PlanIR]
+ClosedIntentHandler = Callable[[ClosedIntent, CapDirective], str]
 
 
 class VoiceAgent:
@@ -80,6 +106,8 @@ class VoiceAgent:
         dog=None,
         info_tools=None,
         slow_path_hook: Callable[[str], None] | None = None,
+        closed_intent_handler: ClosedIntentHandler | None = None,
+        pace_scale_provider: Callable[[], float] | None = None,
     ):
         if not 1 <= conversation_history_messages <= 64:
             raise ValueError("conversation history messages must be between 1 and 64")
@@ -111,12 +139,23 @@ class VoiceAgent:
         self.planner_schema_provider = planner_schema_provider
         self.planner_skill_contracts_provider = planner_skill_contracts_provider
         self.planner_output_adapter = planner_output_adapter
+        self.closed_intent_handler = closed_intent_handler
+        self.pace_scale_provider = pace_scale_provider
         self._turn_sequence = 0
         self.last_intent_frame: IntentFrame | None = None
         self.last_brain_metrics: dict[str, object] = {}
         self.last_reasoning_source = "deterministic"
         self.last_reasoning_error: str | None = None
         self.last_reasoning_guard: str | None = None
+        self.last_dialogue_act = None
+        self.last_closed_intent: ClosedIntent | None = None
+        #: Scene class the last clarification asked about, for exactly one
+        #: turn. A clarification that offers "go to it" must be able to hear
+        #: "go to it"; a referent that outlived its turn would bind a pronoun
+        #: to something said minutes ago.
+        self._pending_scene_referent: str | None = None
+        #: ``(as spoken, as acted on)`` when a pronoun was bound this turn.
+        self.last_resolved_reference: tuple[str, str] | None = None
         # Read-only information tools (dynamic_prompting.ConversationToolRegistry).
         # The safety supervisor admits them by exact name; anything else
         # stays fail-closed.
@@ -189,6 +228,20 @@ class VoiceAgent:
         self.last_reasoning_error = None
         self.last_reasoning_guard = None
         self.last_brain_metrics = {}
+        # Bind a pronoun to the class the previous turn's clarification asked
+        # about, before routing, so the whole downstream path (route, grammar,
+        # grounding, reply) sees one resolved utterance. The pending referent
+        # is consumed unconditionally: whatever the owner says next ends the
+        # offer, answered or not.
+        pending_referent = self._pending_scene_referent
+        self._pending_scene_referent = None
+        self.last_resolved_reference = None
+        if pending_referent is not None:
+            resolved = resolve_pending_reference(original, pending_referent)
+            if resolved is not None:
+                self.last_resolved_reference = (original, resolved)
+                original = resolved
+                text = resolved.lower()
         self._turn_sequence += 1
         route_started = time.monotonic()
         frame = self.intent_router.route(
@@ -205,8 +258,25 @@ class VoiceAgent:
             "intent_router_ms": round((routed_at - route_started) * 1000.0, 3),
             "_intent_routed_monotonic": routed_at,
         }
+        if self.last_resolved_reference is not None:
+            # A substitution the robot made on the owner's behalf is reported,
+            # never silent: the acted-on utterance is not the spoken one.
+            self.last_brain_metrics["resolved_reference"] = list(self.last_resolved_reference)
         if text in EMERGENCY_STOP_PHRASES:
+            self.last_closed_intent = ClosedIntent.STOP
             return self._execute(AgentDecision("Stopping.", (ToolCall("stop_motion"),)))
+
+        # Closed companion intents (pause/resume/pace/come/goal-amend).
+        # Goal-amend: fail-closed pause/snapshot, then deliberative replan.
+        closed = parse_closed_intent(text)
+        self.last_closed_intent = closed
+        if closed is ClosedIntent.GOAL_AMEND:
+            return self._handle_goal_amend(original, frame, commit)
+        # STOP is deliberately excluded: it is handled above on the fast path,
+        # whose phrase set is now derived from this same parser, so a STOP
+        # phrase can no longer fall past both branches (U33 / "halt").
+        if closed is not None and closed is not ClosedIntent.STOP:
+            return self._handle_closed_intent(closed, original, frame, commit)
 
         # Compound/correction turns must not be truncated by a permissive
         # single-skill grammar (for example, treating "sidewalk and then sit"
@@ -217,6 +287,14 @@ class VoiceAgent:
             return self._handle_plan(original, frame, commit)
 
         if text in {"follow", "follow me", "come with me", "heel"}:
+            if self._local_plan_ready():
+                return self._admit_local_sketch(
+                    sketch_follow(behind=False),
+                    frame,
+                    original,
+                    commit,
+                    reply="Okay—I'll follow you safely.",
+                )
             return self._commit(
                 commit,
                 lambda: self._execute(
@@ -233,6 +311,14 @@ class VoiceAgent:
             "stay behind me",
             "heel behind me",
         }:
+            if self._local_plan_ready():
+                return self._admit_local_sketch(
+                    sketch_follow(behind=True),
+                    frame,
+                    original,
+                    commit,
+                    reply="Okay—I'll follow behind you once I can estimate your direction.",
+                )
             return self._commit(
                 commit,
                 lambda: self._execute(
@@ -244,6 +330,14 @@ class VoiceAgent:
                 ),
             )
         if text in {"stay", "wait", "wait here", "hold position"}:
+            if self._local_plan_ready():
+                return self._admit_local_sketch(
+                    sketch_hold(),
+                    frame,
+                    original,
+                    commit,
+                    reply="Okay—I'll stay here.",
+                )
             return self._commit(
                 commit,
                 lambda: self._execute(
@@ -256,13 +350,22 @@ class VoiceAgent:
             )
 
         spatial_intent = parse_spatial_intent(text)
-        if spatial_intent is not None and self.spatial_behavior_publisher is not None:
-            return self._commit(
-                commit,
-                lambda: self._remember(
-                    original, lambda: self.spatial_behavior_publisher(spatial_intent)
-                ),
-            )
+        if spatial_intent is not None:
+            if self._local_plan_ready():
+                return self._admit_local_sketch(
+                    sketch_spatial(spatial_intent),
+                    frame,
+                    original,
+                    commit,
+                    reply="Okay—I'll make that bounded move safely.",
+                )
+            if self.spatial_behavior_publisher is not None:
+                return self._commit(
+                    commit,
+                    lambda: self._remember(
+                        original, lambda: self.spatial_behavior_publisher(spatial_intent)
+                    ),
+                )
 
         walk = self._parse_walk(text)
         if walk is not None:
@@ -292,6 +395,30 @@ class VoiceAgent:
 
         nav_directive = self._parse_navigate(text)
         if nav_directive is not None and self.dog is not None:
+            # A destination that is only a pronoun reached here because the
+            # referent expired (or never existed): the clarification offer is
+            # one turn long by design. Ask rather than admit a mission whose
+            # target is the word "it".
+            dangling = dangling_reference(nav_directive)
+            if dangling is not None:
+                return self._commit(
+                    commit,
+                    lambda: self._remember(
+                        original,
+                        lambda: (
+                            f'I\'m not sure what "{dangling}" refers to — '
+                            f"could you name the place?"
+                        ),
+                    ),
+                )
+            if self._local_plan_ready():
+                return self._admit_local_sketch(
+                    sketch_navigate(nav_directive),
+                    frame,
+                    original,
+                    commit,
+                    reply=f"Okay—I'll navigate toward {nav_directive} safely.",
+                )
             return self._commit(
                 commit,
                 lambda: self._remember(original, lambda: self._execute_navigation(nav_directive)),
@@ -339,13 +466,36 @@ class VoiceAgent:
                 set_prompt = getattr(self.language_model, "set_system_prompt", None)
                 if callable(set_prompt) and self.system_prompt_provider is not None:
                     set_prompt(self.system_prompt_provider())
+                # Conversation lane: never expose physical tool schemas (K6/B1).
                 decision = self.language_model.decide(
                     original,
-                    self.tool_definitions(),
+                    self.conversation_tool_definitions(),
                     self.memory.recent(self.conversation_history_messages),
                 )
                 self.last_reasoning_source = "model"
+                # Belt-and-suspenders: strip any physical tool calls even if a
+                # provider ignores the schema filter.
+                if any(call.name in MOTION_TOOLS for call in decision.tool_calls):
+                    self.last_reasoning_guard = (
+                        "stripped physical tools from conversation-lane decision"
+                    )
+                    decision = AgentDecision(
+                        reply=decision.reply,
+                        tool_calls=tuple(
+                            call
+                            for call in decision.tool_calls
+                            if call.name not in MOTION_TOOLS
+                        ),
+                        intent="conversation",
+                        affect=decision.affect,
+                        next_action=None,
+                    )
                 decision = self._guard_model_motion(text, decision)
+                self.last_dialogue_act = dialogue_act_from_text(
+                    turn_id=frame.turn_id,
+                    text=decision.reply,
+                    acknowledgement_kind="model_reply",
+                )
                 return self._commit(
                     commit,
                     lambda: self._execute(decision, transcript=original),
@@ -418,6 +568,28 @@ class VoiceAgent:
                         ),
                     ),
                 )
+
+        # Novel-verb clarify fallback (stratum 3, language lanes). No grammar
+        # rule matched and no reviewed physical-cue verb is present, but the
+        # utterance may still *name* something the robot knows. Saying what was
+        # understood and what can be done with it is honest; the flat
+        # "I did not understand that command" below throws that away.
+        #
+        # Gated on `not physical_cue_present`: an utterance that DOES carry a
+        # motion verb but matched no rule is deliberately left to the existing
+        # deliberative/refusal path, because inviting a retry there would be a
+        # motion suggestion, not a clarification.
+        if not physical_cue_present(text):
+            clarification = clarification_for(text)
+            if clarification is not None:
+                # Offering "I can go to it" obliges the next turn to be able to
+                # hear "go to it". Without this the offer compiled a mission
+                # whose target was the literal word "it".
+                self._pending_scene_referent = scene_class_mentioned(text)
+                return self._commit(
+                    commit,
+                    lambda: self._remember(original, lambda: clarification),
+                )
         return "I did not understand that command"
 
     def _planning_ready(self) -> bool:
@@ -429,6 +601,198 @@ class VoiceAgent:
             and self.planner_system_prompt_provider is not None
             and self.planner_schema_provider is not None
             and self.planner_skill_contracts_provider is not None
+        )
+
+    def _local_plan_ready(self) -> bool:
+        """PlanSketch → PlanIR admission without calling a planner model."""
+
+        return bool(
+            self.planning_context_provider is not None
+            and self.plan_publisher is not None
+            and self.planner_output_adapter is not None
+        )
+
+    def conversation_tool_definitions(self) -> list[dict[str, Any]]:
+        """Schemas for the conversation lane — physical tools stripped."""
+
+        return conversation_tool_definitions(self.tool_definitions())
+
+    def _handle_goal_amend(
+        self,
+        transcript: str,
+        frame: IntentFrame,
+        commit: CommitGuard | None,
+    ) -> str:
+        """Mid-task amendment: pause/snapshot via executive, then replan remainder."""
+
+        from dataclasses import replace
+
+        from .voice.executive_caps import resolve_cap
+
+        directive = resolve_cap(ClosedIntent.GOAL_AMEND)
+        self.last_brain_metrics["closed_intent"] = ClosedIntent.GOAL_AMEND.value
+        self.last_brain_metrics["closed_intent_kind"] = directive.kind
+        self.last_brain_metrics.pop("goal_amend_ok", None)
+
+        if self.closed_intent_handler is not None:
+            pause_reply = self.closed_intent_handler(ClosedIntent.GOAL_AMEND, directive)
+        else:
+            # Without a runtime handler we cannot snapshot/pause — fail closed.
+            self.last_brain_metrics["goal_amend_ok"] = False
+            pause_reply = "There's nothing active to revise right now."
+
+        amend_ok = self.last_brain_metrics.get("goal_amend_ok")
+        if amend_ok is False:
+            return self._commit(
+                commit,
+                lambda: self._remember(transcript, lambda: pause_reply),
+            )
+
+        remainder = strip_amend_prefix(transcript)
+        if not remainder or not self._planning_ready():
+            self.last_brain_metrics["goal_amend_replan"] = (
+                "waiting_for_goal" if not remainder else "deferred_no_planner"
+            )
+            return self._commit(
+                commit,
+                lambda: self._remember(transcript, lambda: pause_reply),
+            )
+
+        correction = replace(
+            frame,
+            route="deliberative_plan",
+            speech_act="correction",
+            matched_rule="goal_amend",
+            requires_fresh_scene=True,
+            original_transcript_ref=remainder[:200],
+        )
+        self.last_intent_frame = correction
+        self.last_brain_metrics["goal_amend_replan"] = "deliberative"
+        self.last_brain_metrics["goal_amend_remainder"] = remainder
+        # Record the amend cue once, then admit the residual replan.
+        self.memory.add("user", transcript)
+        self.memory.add("assistant", pause_reply)
+        self._emit_slow_path("deliberative_plan")
+        return self._handle_plan(remainder, correction, commit)
+
+    def _handle_closed_intent(
+        self,
+        intent: ClosedIntent,
+        transcript: str,
+        frame: IntentFrame,
+        commit: CommitGuard | None,
+    ) -> str:
+        pace = 1.0
+        if self.pace_scale_provider is not None:
+            try:
+                pace = float(self.pace_scale_provider())
+            except (TypeError, ValueError):
+                pace = 1.0
+        directive = resolve_cap(intent, current_pace=pace)
+        self.last_brain_metrics["closed_intent"] = intent.value
+        self.last_brain_metrics["closed_intent_kind"] = directive.kind
+
+        if intent is ClosedIntent.COME:
+            if self._local_plan_ready():
+                return self._admit_local_sketch(
+                    directive.sketch or sketch_come(),
+                    frame,
+                    transcript,
+                    commit,
+                    reply=directive.reply,
+                )
+            return self._commit(
+                commit,
+                lambda: self._execute(
+                    AgentDecision(
+                        directive.reply,
+                        (ToolCall("set_behavior", {"mode": "follow"}),),
+                    ),
+                    transcript=transcript,
+                ),
+            )
+
+        if self.closed_intent_handler is not None:
+
+            def apply_cap() -> str:
+                return self.closed_intent_handler(intent, directive)
+
+            return self._commit(commit, lambda: self._remember(transcript, apply_cap))
+
+        # No runtime handler: acknowledge without inventing motion authority.
+        return self._commit(
+            commit,
+            lambda: self._remember(transcript, lambda: directive.reply),
+        )
+
+    def _admit_local_sketch(
+        self,
+        sketch: PlanSketch,
+        frame: IntentFrame,
+        transcript: str,
+        commit: CommitGuard | None,
+        *,
+        reply: str,
+    ) -> str:
+        """Compile a system-authored PlanSketch and publish via PlanIR admission."""
+
+        assert self.planning_context_provider is not None
+        assert self.plan_publisher is not None
+        assert self.planner_output_adapter is not None
+        try:
+            snapshot = self.planning_context_provider()
+            plan = self.planner_output_adapter(sketch, frame, snapshot)
+            if plan.source_turn_id != frame.turn_id:
+                raise ValueError("local PlanIR source_turn_id does not match routed turn")
+            self.last_reasoning_source = "local_plan_sketch"
+            self.last_brain_metrics["local_plan_skills"] = [step.skill for step in plan.steps]
+
+            def accept() -> str:
+                published = self.plan_publisher(plan, frame, transcript)
+                return published or reply
+
+            return self._commit(commit, lambda: self._remember(transcript, accept))
+        except (RuntimeError, TypeError, ValueError) as error:
+            self.last_reasoning_source = "local_plan_fallback"
+            self.last_reasoning_error = str(error)[:500]
+            reply = self._admission_failure_reply(error)
+            return self._commit(
+                commit,
+                lambda: self._remember(transcript, lambda: reply),
+            )
+
+    @staticmethod
+    def _admission_failure_reply(error: Exception) -> str:
+        """A refusal must say why; the generic reply is a last resort."""
+
+        code = error.code if isinstance(error, PlanValidationError) else None
+        replies = {
+            "emergency_stopped": (
+                "Emergency stop is latched, so I can't take new movement "
+                "commands until it's released."
+            ),
+            "camera_stale": (
+                "My camera feed is stale right now, so I'm holding still. "
+                "Give me a moment and try again."
+            ),
+            "lidar_stale": (
+                "My LiDAR feed is stale right now, so I'm holding still. "
+                "Give me a moment and try again."
+            ),
+            "owner_not_grounded": (
+                "I can't see you clearly enough to do that yet — step where "
+                "I can see you and ask again."
+            ),
+            "owner_heading_unavailable": (
+                "I can't tell which way you're moving yet — take a step or "
+                "two and ask again."
+            ),
+        }
+        if code in replies:
+            return replies[code]
+        return (
+            "I couldn't admit that command as a safe plan yet. "
+            "Please clarify or let me inspect the scene again."
         )
 
     def _handle_plan(

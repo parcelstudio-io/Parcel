@@ -34,7 +34,12 @@ parcel-unitree-control = "parcel_robot.unitree_control:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-parcel_robot = ["config/*.yaml", "scenes/*.xml", "ui/*.html"]
+parcel_robot = [
+  "config/*.yaml",
+  "scenes/*.xml",
+  "ui/*.html",
+  "runtime_assets/**/*",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

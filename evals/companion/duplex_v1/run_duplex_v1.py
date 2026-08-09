@@ -42,10 +42,21 @@ FOLLOW_BENCH_POST_SPEED = {
     "report": "follow-bench-v1-20260804104134Z-d1adc373.json",
 }
 
-# Embodied-plan aggregate after the same speed raise (authority:
+# Embodied-plan aggregate mirror (authority:
 # tests/test_embodied_plan_eval.py::test_full_gate_executes_physics...).
+# 1146 -> 1072 on 2026-08-06, then 1072 -> 1250 on 2026-08-07 (region-instance
+# selection: complete the look-around before choosing among interchangeable
+# instances — see tests/test_embodied_plan_eval.py provenance), in lockstep
+# with that suite's honest re-freezes:
+# -35 from configs/navigation/default.yaml safety.max_vx 0.45 -> 0.9 and -37
+# from the K0 shared-GoalRegion arrival trigger in navigation/pipeline.py
+# (measured 2x2 attribution; see the provenance block in the test).
+# The two invariants this gate actually guards — zero collisions and a 1.0
+# supported-case success rate — are unchanged, which is why this is a pacing
+# re-freeze and not a nav regression. _embodied_suite_freeze_agrees() keeps
+# the mirror and the suite from drifting apart silently.
 EMBODIED_POST_SPEED = {
-    "simulator_step_count": 1146,
+    "simulator_step_count": 1250,
     "collision_count": 0,
     "supported_case_success_rate": 1.0,
 }
@@ -300,8 +311,15 @@ def _embodied_suite_freeze_agrees() -> bool:
     """Cross-check this pin against the embodied suite freeze assertion."""
 
     text = (REPO_ROOT / "tests" / "test_embodied_plan_eval.py").read_text(encoding="utf-8")
-    # Match the post-speed-raise aggregate pin in test_full_gate_...
-    step_ok = bool(re.search(r'"simulator_step_count":\s*1146', text))
+    # Match the current frozen aggregate pin in test_full_gate_... The literal
+    # is read from EMBODIED_POST_SPEED so the mirror cannot be updated without
+    # the suite agreeing (2026-08-06: 1146 -> 1072).
+    step_ok = bool(
+        re.search(
+            rf'"simulator_step_count":\s*{EMBODIED_POST_SPEED["simulator_step_count"]}\b',
+            text,
+        )
+    )
     collision_ok = bool(re.search(r'"collision_count":\s*0', text))
     rate_ok = bool(re.search(r'"supported_case_success_rate":\s*1\.0', text))
     return step_ok and collision_ok and rate_ok
@@ -325,7 +343,10 @@ def _nav_regression_gate() -> dict[str, object]:
         and latest.get("navigate_success") == FOLLOW_BENCH_POST_SPEED["navigate_success"]
     )
     embodied_pin_ok = (
-        EMBODIED_POST_SPEED["simulator_step_count"] == 1146
+        # 1146 -> 1072 (2026-08-06) -> 1250 (2026-08-07 region-instance
+        # selection re-freeze); the two invariants below are what this gate
+        # guards and neither moved.
+        EMBODIED_POST_SPEED["simulator_step_count"] == 1250
         and EMBODIED_POST_SPEED["collision_count"] == 0
         and EMBODIED_POST_SPEED["supported_case_success_rate"] == 1.0
         and _embodied_suite_freeze_agrees()

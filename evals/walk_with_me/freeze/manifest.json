@@ -1,0 +1,412 @@
+{
+  "count": 10,
+  "digest": "d9487ce70602d69d117ef90e937546120c1c81fb03cb6908c623f18c6ff401da",
+  "does_not_prove": [
+    "real-sensor or real-robot performance (stub/headless kinematic base; oracle owner track when used)",
+    "acoustic barge-in / AEC under motion (barge-in scripts exercise arbitration stubs only \u2014 no mic array, no TTS playback clock)",
+    "owner re-identification or enrolled gallery (search/reacquire scripts use identity-perfect scripted tracks)",
+    "curb/crossing physics or road-entry legality under real perception (curb-stop is a companion-moment stub on scripted polygon events)",
+    "camera-grounded semantics (sidewalk/lamppost goals use sim ground-truth polygons, not OCR or open-vocab detectors)",
+    "full voice\u2192PlanIR\u2192executive path (pause/resume hooks ResumeStore; utterance parsing is fixture-level, not ASR)",
+    "hardware commissioning or Orin budgets (evidence ladder \u2264 L2 sim)"
+  ],
+  "freeze_seed": 20260805,
+  "generator_version": "walk-with-me-generator-v1",
+  "pack_id": "walk-with-me-v1",
+  "pack_version": "walk-with-me-v1.0-k8",
+  "script_ids": [
+    "wwm-follow-behind",
+    "wwm-wait-hold",
+    "wwm-orbit-once",
+    "wwm-sidewalk-from-road",
+    "wwm-lamppost-standoff",
+    "wwm-pause-resume",
+    "wwm-barge-in-tts",
+    "wwm-absent-target",
+    "wwm-owner-search",
+    "wwm-curb-stop"
+  ],
+  "script_seeds": {
+    "wwm-absent-target": 20260813,
+    "wwm-barge-in-tts": 20260812,
+    "wwm-curb-stop": 20260815,
+    "wwm-follow-behind": 20260806,
+    "wwm-lamppost-standoff": 20260810,
+    "wwm-orbit-once": 20260808,
+    "wwm-owner-search": 20260814,
+    "wwm-pause-resume": 20260811,
+    "wwm-sidewalk-from-road": 20260809,
+    "wwm-wait-hold": 20260807
+  },
+  "scripts": [
+    {
+      "absent_target": false,
+      "duration_s": 20.0,
+      "events": [],
+      "goal": {
+        "anchor_entity": null,
+        "anchor_footprint_m": 0.0,
+        "band_m": null,
+        "center": [
+          2.0,
+          -0.5
+        ],
+        "kind": "disc",
+        "polygon": null,
+        "radius_m": 2.0
+      },
+      "harness": "spatial",
+      "instruction": "follow behind me",
+      "notes": "Owner-relative follow; formation band scored when headless spatial is available.",
+      "placement_overrides": {
+        "owner": {
+          "x": 2.0,
+          "y": -0.5
+        }
+      },
+      "script_id": "wwm-follow-behind",
+      "seed": 20260806,
+      "start_pose": [
+        0.0,
+        0.0,
+        1.5708
+      ],
+      "success_predicate": "follow_band_hold",
+      "theme": "follow"
+    },
+    {
+      "absent_target": false,
+      "duration_s": 8.0,
+      "events": [],
+      "goal": {
+        "anchor_entity": null,
+        "anchor_footprint_m": 0.0,
+        "band_m": null,
+        "center": [
+          1.0,
+          0.5
+        ],
+        "kind": "disc",
+        "polygon": null,
+        "radius_m": 0.6
+      },
+      "harness": "behavior_stub",
+      "instruction": "wait here",
+      "notes": "Stay/wait hold: agent-issued stop inside start disc.",
+      "placement_overrides": {},
+      "script_id": "wwm-wait-hold",
+      "seed": 20260807,
+      "start_pose": [
+        1.0,
+        0.5,
+        0.0
+      ],
+      "success_predicate": "hold_stopped",
+      "theme": "wait"
+    },
+    {
+      "absent_target": false,
+      "duration_s": 25.0,
+      "events": [],
+      "goal": {
+        "anchor_entity": null,
+        "anchor_footprint_m": 0.0,
+        "band_m": null,
+        "center": [
+          2.0,
+          -0.5
+        ],
+        "kind": "disc",
+        "polygon": null,
+        "radius_m": 2.5
+      },
+      "harness": "spatial",
+      "instruction": "circle me once",
+      "notes": "Orbit/circle owner once; swept-revolution predicate when spatial harness runs.",
+      "placement_overrides": {
+        "owner": {
+          "x": 2.0,
+          "y": -0.5
+        }
+      },
+      "script_id": "wwm-orbit-once",
+      "seed": 20260808,
+      "start_pose": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "success_predicate": "orbit_once",
+      "theme": "orbit"
+    },
+    {
+      "absent_target": false,
+      "duration_s": 30.0,
+      "events": [],
+      "goal": {
+        "anchor_entity": "sidewalk",
+        "anchor_footprint_m": 0.0,
+        "band_m": null,
+        "center": null,
+        "kind": "polygon",
+        "polygon": [
+          [
+            -8.0,
+            2.4
+          ],
+          [
+            8.0,
+            2.4
+          ],
+          [
+            8.0,
+            3.6
+          ],
+          [
+            -8.0,
+            3.6
+          ]
+        ],
+        "radius_m": null
+      },
+      "harness": "navigation",
+      "instruction": "go to the sidewalk",
+      "notes": "Road\u2192sidewalk vertical slice; GoalRegion polygon authority (K0).",
+      "placement_overrides": {},
+      "script_id": "wwm-sidewalk-from-road",
+      "seed": 20260809,
+      "start_pose": [
+        0.0,
+        0.0,
+        1.5708
+      ],
+      "success_predicate": "inside_goal_stopped",
+      "theme": "sidewalk"
+    },
+    {
+      "absent_target": false,
+      "duration_s": 30.0,
+      "events": [],
+      "goal": {
+        "anchor_entity": "lamp_post_1",
+        "anchor_footprint_m": 0.06,
+        "band_m": [
+          0.46,
+          1.56
+        ],
+        "center": [
+          0.2,
+          3.15
+        ],
+        "kind": "relative_band",
+        "polygon": null,
+        "radius_m": null
+      },
+      "harness": "navigation",
+      "instruction": "wait by the lamppost",
+      "notes": "Lamppost stand-off via next_to GoalRegion (full footprint; K0).",
+      "placement_overrides": {},
+      "script_id": "wwm-lamppost-standoff",
+      "seed": 20260810,
+      "start_pose": [
+        0.0,
+        0.0,
+        1.5708
+      ],
+      "success_predicate": "inside_goal_stopped",
+      "theme": "lamppost"
+    },
+    {
+      "absent_target": false,
+      "duration_s": 12.0,
+      "events": [
+        {
+          "at_s": 3.0,
+          "kind": "pause",
+          "payload": {
+            "reason": "summons"
+          }
+        },
+        {
+          "at_s": 5.0,
+          "kind": "resume",
+          "payload": {
+            "requires_fresh_observation": true
+          }
+        }
+      ],
+      "goal": {
+        "anchor_entity": null,
+        "anchor_footprint_m": 0.0,
+        "band_m": null,
+        "center": [
+          2.0,
+          -0.5
+        ],
+        "kind": "disc",
+        "polygon": null,
+        "radius_m": 2.0
+      },
+      "harness": "resume",
+      "instruction": "follow me",
+      "notes": "Summons-suspend-resume: ResumeStore must require fresh observation.",
+      "placement_overrides": {
+        "owner": {
+          "x": 2.0,
+          "y": -0.5
+        }
+      },
+      "script_id": "wwm-pause-resume",
+      "seed": 20260811,
+      "start_pose": [
+        0.0,
+        0.0,
+        1.5708
+      ],
+      "success_predicate": "resume_fresh_observation",
+      "theme": "pause_resume"
+    },
+    {
+      "absent_target": false,
+      "duration_s": 6.0,
+      "events": [
+        {
+          "at_s": 2.0,
+          "kind": "barge_in",
+          "payload": {
+            "motion_intent": false,
+            "tts_active": true
+          }
+        }
+      ],
+      "goal": null,
+      "harness": "behavior_stub",
+      "instruction": "follow me",
+      "notes": "Barge-in without motion intent: TTS interrupted, base command unchanged.",
+      "placement_overrides": {},
+      "script_id": "wwm-barge-in-tts",
+      "seed": 20260812,
+      "start_pose": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "success_predicate": "barge_in_tts_only",
+      "theme": "barge_in"
+    },
+    {
+      "absent_target": true,
+      "duration_s": 10.0,
+      "events": [],
+      "goal": {
+        "anchor_entity": null,
+        "anchor_footprint_m": 0.0,
+        "band_m": null,
+        "center": [
+          40.0,
+          40.0
+        ],
+        "kind": "disc",
+        "polygon": null,
+        "radius_m": 0.5
+      },
+      "harness": "navigation",
+      "instruction": "walk towards the purple hydrant",
+      "notes": "Absent-target honesty: refusal / not-found without hallucinated arrival.",
+      "placement_overrides": {
+        "absent_target": true,
+        "remove_entities": [
+          "purple_hydrant"
+        ]
+      },
+      "script_id": "wwm-absent-target",
+      "seed": 20260813,
+      "start_pose": [
+        0.0,
+        0.0,
+        1.5708
+      ],
+      "success_predicate": "honest_absent",
+      "theme": "absent_target"
+    },
+    {
+      "absent_target": false,
+      "duration_s": 15.0,
+      "events": [
+        {
+          "at_s": 1.0,
+          "kind": "lose_owner",
+          "payload": {
+            "timeout_s": 2.0
+          }
+        }
+      ],
+      "goal": {
+        "anchor_entity": null,
+        "anchor_footprint_m": 0.0,
+        "band_m": null,
+        "center": [
+          4.0,
+          2.0
+        ],
+        "kind": "disc",
+        "polygon": null,
+        "radius_m": 2.0
+      },
+      "harness": "behavior_stub",
+      "instruction": "find me",
+      "notes": "Lost-owner \u2192 bounded search/stop; never attach to nearest person.",
+      "placement_overrides": {
+        "owner_path": "corner_occlusion"
+      },
+      "script_id": "wwm-owner-search",
+      "seed": 20260814,
+      "start_pose": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "success_predicate": "bounded_search_or_stop",
+      "theme": "owner_search"
+    },
+    {
+      "absent_target": false,
+      "duration_s": 10.0,
+      "events": [
+        {
+          "at_s": 2.0,
+          "kind": "curb_edge",
+          "payload": {
+            "require_voice_initiation": true
+          }
+        }
+      ],
+      "goal": null,
+      "harness": "behavior_stub",
+      "instruction": "cross with me",
+      "notes": "Curb-stop companion moment stub: stop at edge until voice initiation.",
+      "placement_overrides": {},
+      "script_id": "wwm-curb-stop",
+      "seed": 20260815,
+      "start_pose": [
+        2.5,
+        1.0,
+        -1.5708
+      ],
+      "success_predicate": "curb_stop_hold",
+      "theme": "curb_stop"
+    }
+  ],
+  "themes": [
+    "follow",
+    "wait",
+    "orbit",
+    "sidewalk",
+    "lamppost",
+    "pause_resume",
+    "barge_in",
+    "absent_target",
+    "owner_search",
+    "curb_stop"
+  ]
+}

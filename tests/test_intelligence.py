@@ -21,15 +21,8 @@ class FakeModel:
 
     def decide(self, transcript, tools, context):
         assert transcript
-        assert {tool["name"] for tool in tools} == {
-            "run_pose",
-            "run_skill",
-            "navigate",
-            "set_behavior",
-            "run_spatial_behavior",
-            "stop_motion",
-            "get_status",
-        }
+        # K6/B1: conversation lane must never receive physical tool schemas.
+        assert {tool["name"] for tool in tools} == {"get_status"}
         return self.decision
 
 
@@ -222,7 +215,7 @@ def test_model_plan_turn_id_is_rebound_to_trusted_router_context():
     assert published[0][0].source_turn_id == published[0][1].turn_id
 
 
-def test_model_pose_passes_safety_and_publishes():
+def test_conversation_model_physical_tools_are_stripped_not_executed():
     sent = []
     pose = Pose("sit", {"hip": 0.5})
     agent = VoiceAgent(
@@ -235,10 +228,12 @@ def test_model_pose_passes_safety_and_publishes():
     )
 
     assert agent.handle_text("Could you sit?") == "Sitting down."
-    assert sent == [pose]
+    assert sent == []
+    assert agent.last_reasoning_guard is not None
+    assert "stripped physical" in agent.last_reasoning_guard
 
 
-def test_hallucinated_pose_is_rejected():
+def test_conversation_model_hallucinated_pose_cannot_dispatch():
     sent = []
     agent = VoiceAgent(
         {},
@@ -249,11 +244,12 @@ def test_hallucinated_pose_is_rejected():
         ),
     )
 
-    assert "couldn't do that safely" in agent.handle_text("Do a flip")
+    assert agent.handle_text("please flip somehow") == "Doing a flip."
     assert sent == []
+    assert "stripped physical" in (agent.last_reasoning_guard or "")
 
 
-def test_invalid_multi_action_plan_is_rejected_atomically():
+def test_conversation_model_multi_physical_tools_are_stripped_atomically():
     sent = []
     pose = Pose("sit", {"hip": 0.5})
     agent = VoiceAgent(
@@ -271,8 +267,9 @@ def test_invalid_multi_action_plan_is_rejected_atomically():
         ),
     )
 
-    assert "couldn't do that safely" in agent.handle_text("Sit and then sprint")
+    assert agent.handle_text("please sit then sprint somehow") == "Sitting and sprinting."
     assert sent == []
+    assert "stripped physical" in (agent.last_reasoning_guard or "")
 
 
 @pytest.mark.parametrize(
@@ -310,11 +307,14 @@ def test_model_motion_is_suppressed_for_negated_or_hypothetical_text(transcript:
         spatial_behavior_publisher=lambda intent: spatial.append(intent) or "started",
     )
 
-    assert agent.handle_text(transcript) == (
-        "I won't move from that request, but I can explain what I would do."
-    )
+    reply = agent.handle_text(transcript)
     assert spatial == []
     assert agent.last_reasoning_guard is not None
+    # Conversation lane strips physical tools before the older prose guard.
+    assert reply in {
+        "I can explain that without moving.",
+        "I won't move from that request, but I can explain what I would do.",
+    }
 
 
 @pytest.mark.parametrize(
@@ -430,8 +430,10 @@ def test_model_cannot_route_velocity_skill_into_activity_coordinator(tool_name: 
         dog=dog,
     )
 
-    assert "couldn't do that safely" in agent.handle_text("Use walk forward skill")
+    reply = agent.handle_text("please use some unusual walk skill")
     assert proposed == []
+    assert reply == "Walking."
+    assert "stripped physical" in (agent.last_reasoning_guard or "")
 
 
 def test_follow_and_stay_publish_only_whitelisted_behaviors():
@@ -472,7 +474,12 @@ def test_direct_semantic_navigation_reports_search_without_resolved_goal():
     )
 
     assert reply.startswith("Navigating to sidewalk")
-    assert "semantic_search_scan" in reply
+    # The honest scan indication must be the CURRENT one: K4 renamed the
+    # recovery note semantic_search_scan -> scan_behavior_dwell when the
+    # frustum-only search became the ScanBehavior controller. Pinning both
+    # names would let either lane rot silently, so only the live name passes.
+    assert "scan_behavior_dwell" in reply
+    assert "semantic_search_scan" not in reply
     assert dog._navigator.mission.status == "searching"
     assert dog._navigator.mission.goal is None
 
@@ -527,9 +534,12 @@ def test_conversation_model_cannot_request_raw_motion_authority(tool_name: str):
 
     reply = agent.handle_text("do something unusual")
 
-    assert "couldn't do that safely" in reply
+    assert reply == "I am moving."
     assert agent.last_reasoning_guard is not None
-    assert tool_name in agent.last_reasoning_guard
+    assert "stripped physical" in agent.last_reasoning_guard
+    assert agent.conversation_tool_definitions() == [
+        tool for tool in agent.tool_definitions() if tool["name"] == "get_status"
+    ]
 
 
 def test_model_json_is_strict():

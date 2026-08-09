@@ -1,0 +1,30 @@
+{
+  "collision_total": 0,
+  "does_not_prove": [
+    "sim ground-truth semantics \u2260 camera perception \u2014 closes with hardware perception",
+    "absent-target honesty under open-vocab detectors (tier E guards the class only)",
+    "downloaded VLM/VLA policies (rungs 6\u20137)"
+  ],
+  "episode_digest": "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf",
+  "failure_histogram": {
+    "control_error": 0,
+    "grounding_error": 2,
+    "none": 1,
+    "planning_error": 14,
+    "refusal": 4,
+    "search_error": 0,
+    "termination": 4
+  },
+  "frozen_baseline": true,
+  "k0_arrival_authority": "GoalRegion",
+  "minival": true,
+  "mode": "baseline",
+  "n": 25,
+  "report": "nav-instruct-v1-baseline-20260805T070524Z.json",
+  "report_id": "nav-instruct-v1-baseline-20260805T070524Z",
+  "runner_version": "nav-instruct-v1.1-k0-arrival",
+  "seed": 20260804,
+  "spl": 0.00016476583919257094,
+  "sr": 0.04,
+  "supersedes": "nav-instruct-v1-baseline-20260805T004302Z"
+}

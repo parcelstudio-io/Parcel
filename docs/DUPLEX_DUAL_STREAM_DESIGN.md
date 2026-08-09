@@ -168,6 +168,31 @@ until that entire short filler sentence has completed synthesis/enqueue, then
 starts its own output job. The ordered speaker queue preserves source order,
 but the handoff is not a confirmed acoustic clause-end timestamp.
 
+### System-initiated speech is not a filler and is not a turn
+
+`DuplexVoiceSession.speak_system` (2026-08-09,
+[U35](../backlog/UNVERIFIED.md)) speaks the utterances nobody asked for — the
+`Vocalize` skill, localization-health announcements, the yield policy's
+ask/re-ask/give-up. It reuses `_run_output`, so the sink, chunk tokens,
+playback clock and barge-in behave exactly as they do for a reply, but it
+touches **none** of the filler bookkeeping and emits
+`system_utterance_start` / `system_utterance_complete` (both registered in
+`observability.STAGES`) rather than `filler_*`. A request for help must not
+enter `FillerLatency` or be scored against the two-second acknowledgement
+ceiling.
+
+Two consequences for this document's contracts. First, the concurrency rule is
+**skip, never queue**: if a reply or filler owns the speaker, the system
+utterance is dropped and its caller retries on its own timer, because two
+output workers would interleave their chunks in one ordered sink. Second, D0
+does **not** observe it — every stage it emits carries `kind="system"` and the
+runtime short-circuits those before `_duplex_on_voice_stage`, so the TEXT
+stream reads `<silence>` while the robot is speaking one. Letting it through
+would cancel the in-flight turn's filler watchdog and write a `ttft_s` for a
+turn nobody started. This is a corpus-fidelity limitation of the same class as
+the ACT last-write-wins rule above, and it is listed here rather than
+discovered later.
+
 ## Input and cancellation
 
 The active microphone path remains turn-based: VAD/endpointing buffers a whole

@@ -1,0 +1,20 @@
+id: crawl
+name: Crawl
+kind: gait
+enabled: true
+tags:
+- locomotion
+gait:
+  style: crawl
+  frequency_hz: 1.0
+velocity:
+  vx: 0.15
+  vy: 0.0
+  vyaw: 0.0
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: locomotion_velocity
+  control_dt: 0.02

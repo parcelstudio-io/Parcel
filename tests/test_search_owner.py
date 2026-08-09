@@ -289,7 +289,8 @@ def test_search_owner_is_a_system_skill_no_planner_can_author() -> None:
     assert "SearchOwner" in system_registry.names()
     assert "SearchOwner" not in SemanticTaskRuntimeAdapter.SUPPORTED_SKILLS
     assert "SearchOwner" in SemanticTaskRuntimeAdapter.EXECUTABLE_SKILLS
-    assert SYSTEM_SKILL_NAMES == frozenset({"SearchOwner"})
+    assert "SearchOwner" in SYSTEM_SKILL_NAMES
+    assert SYSTEM_SKILL_NAMES == frozenset({"SearchOwner", "ScanBehavior", "SearchEntity"})
 
     contract = system_registry.get("SearchOwner")
     # The skill runs precisely because the owner is not visible, so it must

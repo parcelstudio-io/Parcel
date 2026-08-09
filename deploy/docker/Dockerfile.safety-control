@@ -1,0 +1,22 @@
+# Network-independent safety+control image (desktop/CI skeleton).
+# Full MuJoCo/third_party meshes are not required for the authority-loop smoke.
+FROM python:3.12-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PARCEL_ROOT=/opt/parcel \
+    PYTHONPATH=/opt/parcel/src
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir "numpy>=2,<3" "PyYAML>=6,<7"
+
+WORKDIR /opt/parcel
+
+# Bake a minimal copy so the image still runs without the bind mount.
+COPY src/parcel_robot /opt/parcel/src/parcel_robot
+COPY configs /opt/parcel/configs
+COPY prompts /opt/parcel/prompts
+
+CMD ["python", "-m", "parcel_robot.safety_control_smoke", "--max-ticks", "50"]

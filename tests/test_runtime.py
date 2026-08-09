@@ -12,6 +12,7 @@ from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, SimObservation
 from parcel_robot.control import build_backend_control_manager
 from parcel_robot.core import CommandArbiter, MotionIntent
+from parcel_robot.core.resume import ResumeIntent
 from parcel_robot.expression import ReactionHooks
 from parcel_robot.models import AgentDecision, Pose, SpatialIntent, ToolCall, VelocityCommand
 from parcel_robot.navigation import GoalPose, MidLevelCommand, Mission, SemanticGoal
@@ -63,6 +64,43 @@ def _observation(
         collision=collision,
         backend="fake",
     )
+
+
+def _seed_owner_track(runtime: RobotRuntime, *, owner_x: float = 3.0) -> None:
+    """Give the runtime the current owner sighting a live robot always holds.
+
+    K6 routes follow/stay through PlanIR admission, whose ``owner_visible``
+    precondition reads the current observation snapshot. A cold ``RobotRuntime``
+    has no observation at all, which is fixture emptiness, not a product state.
+    """
+
+    observation = _observation(time.monotonic(), owner_x=owner_x)
+    runtime._observation = observation
+    if runtime._control_state_source is not None:
+        runtime._control_state_source.update_observation(observation)
+
+
+def _seed_owner_heading(runtime: RobotRuntime, *, owner_x: float = 3.0) -> None:
+    """Give *behind* formation admission the motion-heading evidence it requires.
+
+    Only relation="behind" consumes an owner motion heading; plain follow needs
+    ``_seed_owner_track`` alone (arbiter ruling 2026-08-06).
+    """
+
+    now = time.monotonic()
+    samples = (owner_x - 0.2, owner_x - 0.1, owner_x)
+    latest = _observation(now, owner_x=owner_x)
+    for index, x in enumerate(samples):
+        # Keep samples in the past→present window so camera/LiDAR stay fresh
+        # (future timestamps fail the ±0.05s transport skew check).
+        stamped = now - (len(samples) - 1 - index) * 0.2
+        observation = _observation(stamped, owner_x=x)
+        runtime.follow.observe_owner(observation, now=stamped)
+        latest = observation
+    runtime._observation = latest
+    if runtime._control_state_source is not None:
+        runtime._control_state_source.update_observation(latest)
+    assert runtime.owner_heading_available(now=now)
 
 
 class FakeSimulatorBackend:
@@ -299,7 +337,9 @@ def test_runtime_executes_bounded_owner_relative_steps_and_manual_preempts(
     runtime.start()
     try:
         reply = runtime.handle_text("Can you walk away from the owner 5 steps?")
-        assert "5 small steps" in reply
+        # K6 admission-lane reply (was "5 small steps" from direct dispatch).
+        # The bound itself is still pinned below by the executed step count.
+        assert "bounded move" in reply.lower()
         assert backend.wait_for_moves(1)
         assert any(command.vx < 0.0 for command in backend.move_history())
         spatial = runtime.snapshot()["spatial_behavior"]
@@ -626,17 +666,173 @@ def test_runtime_text_commands_switch_follow_and_stay(
 ) -> None:
     backend = FakeSimulatorBackend(_observation(0.0))
     runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
-    runtime._observation = backend.observe()
+    # Plain follow needs a visible owner, not an estimated heading.
+    _seed_owner_track(runtime)
     try:
-        assert runtime.handle_text("follow me") == "I will follow you."
+        # Reply text changed 2026-08-05 (K6): follow/stay now travel the PlanIR
+        # admission lane, so the acknowledgement is the plan acknowledgement,
+        # not the old direct-dispatch string ("I will follow you."). The
+        # behaviour it pins — plain follow enters direct owner tracking with no
+        # heading evidence — is unchanged.
+        assert runtime.handle_text("follow me") == "Okay—I'll follow you safely."
+        runtime._step_brain()
         assert runtime.follow.enabled
+        assert runtime.follow.mode == "direct"
         assert runtime.follow.state == "acquiring"
 
         stops = backend.stopped_count()
-        assert runtime.handle_text("stay") == "I will stay here."
+        # Was "I will stay here." for the same admission-lane reason.
+        assert runtime.handle_text("stay") == "Okay—I'll stay here."
+        runtime._step_brain()
         assert not runtime.follow.enabled
         assert runtime.follow.state == "idle"
         assert backend.stopped_count() == stops + 1
+    finally:
+        runtime.close()
+
+
+def test_come_here_admits_the_system_approach_sketch(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    """"Come here" must admit, not dead-end at the generic refusal.
+
+    The COME cap is a *system-authored* PlanSketch with
+    ``FollowFormation(relation="follow")``. Only ``direct_skill`` frames select
+    the system registry, which is the only registry that admits that relation
+    (arbitration OB-2). Until the router gained a ``come_to_owner`` rule
+    (2026-08-06) these phrases routed to ``deliberative_plan``, were validated
+    against the model-facing registry, and every one of them returned
+    "I couldn't admit that command as a safe plan yet" with
+    ``last_reasoning_error = invalid_argument_value ... must be one of
+    ['behind']``. Found by the product-path NAV_E2E work; no test at any level
+    had ever called ``handle_text("come here")``.
+    """
+
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    _seed_owner_track(runtime)
+    try:
+        reply = runtime.handle_text("come here")
+        assert "couldn't admit" not in reply, (
+            f"admission dead-end: {reply!r} "
+            f"(error={runtime.agent.last_reasoning_error!r})"
+        )
+        assert runtime.agent.last_reasoning_source == "local_plan_sketch"
+        assert runtime.agent.last_reasoning_error is None
+        runtime._step_brain()
+        assert runtime.follow.enabled
+        assert runtime.follow.mode == "direct"
+
+        # "stay" is what releases the approach behaviour again.
+        runtime.handle_text("stay")
+        runtime._step_brain()
+        assert not runtime.follow.enabled
+    finally:
+        runtime.close()
+
+
+def test_follow_behind_is_the_only_relation_that_needs_an_owner_heading(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    """Both follow lanes stay distinct: direct tracking vs behind staging.
+
+    Arbiter ruling 2026-08-06 — collapsing "follow me" onto the behind
+    formation made a stationary owner's plain follow fail admission with
+    ``owner_heading_unavailable``.
+    """
+
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    _seed_owner_track(runtime)
+    try:
+        # No heading evidence at all: behind is honestly refused, plain follow runs.
+        assert "which way you're moving" in runtime.handle_text("follow behind me")
+        assert not runtime.follow.enabled
+
+        assert runtime.handle_text("follow me") == "Okay—I'll follow you safely."
+        runtime._step_brain()
+        assert runtime.follow.mode == "direct"
+
+        runtime.handle_text("stay")
+        runtime._step_brain()
+        _seed_owner_heading(runtime)
+        assert runtime.handle_text("follow behind me") == (
+            "Okay—I'll take up a safe position behind you."
+        )
+        runtime._step_brain()
+        assert runtime.follow.enabled
+        assert runtime.follow.mode == "behind"
+        assert runtime.follow.state == "acquiring_heading"
+    finally:
+        runtime.close()
+
+
+def test_brain_hold_clears_resume_intents_and_blocks_follow_resurrection(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    """Hold/stay is destructive settle: leftover pause intents must not resurrect."""
+
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    _seed_owner_heading(runtime)
+    try:
+        now = time.monotonic()
+        runtime._resume_store.record(
+            ResumeIntent(
+                channel="follow",
+                payload={"mode": "behind", "distance_m": 1.9},
+                suspend_reason="seeded_pause",
+                suspended_at_s=now,
+                valid_for_s=120.0,
+                requires_fresh_observation=False,
+            )
+        )
+        assert runtime._resume_store.peek("follow", now_s=now) is not None
+
+        runtime._brain_hold()
+
+        now = time.monotonic()
+        assert runtime._resume_store.peek("follow", now_s=now) is None
+        assert runtime._resume_store.peek("navigation", now_s=now) is None
+        assert runtime._resume_store.peek("search", now_s=now) is None
+        assert not runtime.follow.enabled
+
+        with pytest.raises(RuntimeError, match="missing_intent"), runtime._command_lock:
+            runtime._resume_from_store("follow", now_s=now)
+        assert not runtime.follow.enabled
+    finally:
+        runtime.close()
+
+
+def test_set_behavior_stay_clears_resume_intents(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    """UI/action stay shares Hold's settle invariant for leftover ResumeIntents."""
+
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    try:
+        now = time.monotonic()
+        runtime._resume_store.record(
+            ResumeIntent(
+                channel="follow",
+                payload={"mode": "behind", "distance_m": 1.9},
+                suspend_reason="seeded_pause",
+                suspended_at_s=now,
+                valid_for_s=120.0,
+                requires_fresh_observation=False,
+            )
+        )
+        assert runtime.set_behavior("stay") == "Holding position"
+        now = time.monotonic()
+        assert runtime._resume_store.peek("follow", now_s=now) is None
+        assert runtime._resume_store.peek("navigation", now_s=now) is None
+        assert runtime._resume_store.peek("search", now_s=now) is None
+        assert not runtime.follow.enabled
     finally:
         runtime.close()
 
@@ -647,6 +843,7 @@ def test_runtime_streaming_text_executes_only_final_transcript(
 ) -> None:
     backend = FakeSimulatorBackend(_observation(0.0))
     runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    _seed_owner_track(runtime)
     try:
         assert runtime.submit_voice_text("follow", is_final=False) is None
         assert runtime.snapshot()["voice"]["partial"] == "follow"
@@ -654,6 +851,7 @@ def test_runtime_streaming_text_executes_only_final_transcript(
 
         assert runtime.submit_voice_text("follow me", is_final=True) == 1
         assert runtime.voice_session.wait_until_idle(2.0)
+        runtime._step_brain()
         snapshot = runtime.snapshot()
         assert snapshot["voice"]["status"] == "completed"
         assert snapshot["voice"]["last_transcript"] == "follow me"
@@ -661,8 +859,11 @@ def test_runtime_streaming_text_executes_only_final_transcript(
         assert runtime.follow.enabled
         trace = runtime.latency_snapshot()["turns"][0]
         assert trace["user_query"] == "follow me"
-        assert trace["model_response"] == "I will follow you."
-        assert trace["reasoning_source"] == "deterministic"
+        # Was "I will follow you." / "deterministic" before K6 routed the
+        # closed follow intent through PlanIR admission; the streamed final
+        # transcript still executes exactly once, which is what this pins.
+        assert trace["model_response"] == "Okay—I'll follow you safely."
+        assert trace["reasoning_source"] == "local_plan_sketch"
         assert trace["latency_ms"]["UserQueryEndToFirstResponse"] is not None
         assert trace["latency_ms"]["UserQueryEndToFirstReasoningResponse"] is not None
     finally:
@@ -849,7 +1050,11 @@ def test_runtime_navigation_persists_and_manual_control_preempts_it(
     )
     runtime.start()
     try:
-        assert runtime.handle_text("navigate to the crosswalk") == "Navigating to crosswalk."
+        # K6 admission-lane reply (was "Navigating to crosswalk." from direct
+        # dispatch); the navigation behaviour asserted below is unchanged.
+        assert runtime.handle_text("navigate to the crosswalk") == (
+            "Okay—I'll move onto crosswalk and verify it."
+        )
         assert backend.wait_for_moves(2)
         assert runtime.snapshot()["navigation"]["enabled"] is True
         assert runtime.snapshot()["motion"]["active_source"] == "navigation"
@@ -1410,7 +1615,11 @@ def test_social_affect_action_defers_until_navigation_finishes(
     )
     runtime.start()
     try:
-        assert runtime.handle_text("navigate to the crosswalk") == "Navigating to crosswalk."
+        # K6 admission-lane reply (was "Navigating to crosswalk." from direct
+        # dispatch); the navigation behaviour asserted below is unchanged.
+        assert runtime.handle_text("navigate to the crosswalk") == (
+            "Okay—I'll move onto crosswalk and verify it."
+        )
         assert backend.wait_for_moves(1)
         reply = runtime.handle_text("I am very happy")
         assert reply.startswith("I'm happy with you!")

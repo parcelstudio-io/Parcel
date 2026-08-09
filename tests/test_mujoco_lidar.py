@@ -9,7 +9,6 @@ from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, Sim
 from parcel_robot.models import VelocityCommand
 from parcel_robot.mujoco_lidar import (
     MAX_LIDAR_OBSTACLES,
-    ROBOT_FOOTPRINT_RADIUS_M,
     planar_geom_surface_hit,
     scan_mujoco_lidar,
 )
@@ -17,6 +16,7 @@ from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
     apply_reactive_safety,
 )
+from parcel_robot.robot_profile import DEFAULT_ROBOT_PROFILE
 
 _SCENE = """
 <mujoco model="lidar_geometry_test">
@@ -56,7 +56,7 @@ def test_long_box_bearing_uses_closest_surface_not_geom_center(model_and_data) -
     assert hit.surface_x == pytest.approx(3.0)
     assert hit.surface_y == pytest.approx(0.5)
     assert hit.bearing_rad == pytest.approx(-math.pi / 2.0)
-    assert hit.signed_clearance_m == pytest.approx(1.5 - ROBOT_FOOTPRINT_RADIUS_M)
+    assert hit.signed_clearance_m == pytest.approx(1.5 - DEFAULT_ROBOT_PROFILE.footprint_radius_m)
     center_bearing = math.atan2(-2.0, -3.0)
     assert abs(hit.bearing_rad - center_bearing) > 0.8
 
@@ -108,8 +108,8 @@ def test_scan_excludes_geometry_entirely_above_robot_height(model_and_data) -> N
 
 
 def test_bounded_scan_retains_forward_hazard_among_many_closer_rear_returns() -> None:
-    rear_center_x = -(ROBOT_FOOTPRINT_RADIUS_M + 0.05 + 0.10)
-    forward_center_x = ROBOT_FOOTPRINT_RADIUS_M + 0.05 + 0.55
+    rear_center_x = -(DEFAULT_ROBOT_PROFILE.footprint_radius_m + 0.05 + 0.10)
+    forward_center_x = DEFAULT_ROBOT_PROFILE.footprint_radius_m + 0.05 + 0.55
     rear_geoms = "\n".join(
         f'<geom name="rear_{index:02d}" type="sphere" '
         f'pos="{rear_center_x} 0 0.05" size="0.05"/>'

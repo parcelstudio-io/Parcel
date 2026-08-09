@@ -1,8 +1,26 @@
-"""NAV_INSTRUCT_V1 headless episode runner over HeadlessCityWorld.
+"""NAV_INSTRUCT headless episode runner over HeadlessCityWorld.
 
 Drives directive → grounder → planner → control, records the trace fields
 N-S1's scorer needs, and attributes failures. Baseline mode intentionally
 uses today's frustum-gated grounding (no SemanticMemory / ScanForTarget).
+
+Arrival rules (re-freeze correction (c))
+----------------------------------------
+The runner ends an episode one 0.1 s control tick after the mission's own
+``arrived_verified``, while ``score_episode`` wants the robot inside the goal
+and stopped for ``arrival_hold_s = 1.0 s``. Under the v1 rule those two facts
+are incompatible and the hold can never accumulate — U31. The v2 default is
+``hold-or-trace-end-v1``, the rule ``evals/nav_instruct/rescore.py`` documents
+and applied to the persisted v1 traces: arrived iff the frozen hold accumulates
+**or** the trace ends inside-and-stopped without being cut off by the step
+limit. Both numbers are recorded on every episode
+(``score`` under the active rule, ``frozen_rule_success`` under the v1 rule), so
+switching the rule can never hide what the old rule would have said.
+
+The rule lives here and **not** in ``instructnav/scoring.py``: the scorer is the
+shared K0 authority used by the runtime and by two other harnesses, and a rule
+that reasons about *how the recording ended* is a property of this harness, not
+of arrival.
 """
 
 from __future__ import annotations
@@ -12,7 +30,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from evals.nav_instruct.generator import EpisodeSpec, generate_episode_matrix, generate_minival
+from evals.nav_instruct.generator import (
+    DEFAULT_EPISODE_SET_VERSION,
+    EpisodeSpec,
+    episode_set_spec,
+    generate_episode_matrix,
+    generate_minival,
+)
+from evals.nav_instruct.rescore import (
+    DERIVED_RULE_ID,
+    derived_arrival,
+    promoted_derived_score,
+)
 from parcel_robot.headless_city import (
     DEFAULT_ROBOT_CONFIG,
     HeadlessCityQualityHarness,
@@ -20,9 +49,12 @@ from parcel_robot.headless_city import (
     _nav_observation,
 )
 from parcel_robot.instructnav.scoring import (
+    ARRIVAL_BOUNDARY_EPSILON_M,
+    AuthorityCategory,
     EpisodeScore,
     FailureClass,
     score_episode,
+    system_arrival_claim,
 )
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.goals import navigation_directive_from_text
@@ -30,7 +62,27 @@ from parcel_robot.navigation.pipeline import DirectiveNavigator
 from parcel_robot.navigation.reactive_safety import apply_reactive_safety
 from parcel_robot.navigation.spatial import parse_follow_intent, parse_spatial_intent
 
-RUNNER_VERSION = "nav-instruct-v1.0"
+RUNNER_VERSION = "nav-instruct-v1.1-k0-arrival"
+
+#: The v1 arrival rule: ``score_episode``'s hold, exactly as frozen.
+FROZEN_ARRIVAL_RULE = "frozen-hold-v1"
+#: The v2 arrival rule (re-freeze correction (c)).
+DERIVED_ARRIVAL_RULE = DERIVED_RULE_ID
+ARRIVAL_RULES: tuple[str, ...] = (FROZEN_ARRIVAL_RULE, DERIVED_ARRIVAL_RULE)
+
+#: The rule a fresh run uses unless told otherwise. Changing this default does
+#: not and cannot move a frozen row — frozen rows are persisted artifacts.
+DEFAULT_ARRIVAL_RULE = DERIVED_ARRIVAL_RULE
+
+#: Which arrival rule each episode-set version was frozen under.
+ARRIVAL_RULE_FOR_VERSION: dict[str, str] = {
+    "v1": FROZEN_ARRIVAL_RULE,
+    "v1a-scene-truth-only": FROZEN_ARRIVAL_RULE,
+    "v2": DERIVED_ARRIVAL_RULE,
+    # v3 changes the next_to band only; the arrival rule is v2's, unchanged, so
+    # a v2 -> v3 difference cannot contain a rule change.
+    "v3": DERIVED_ARRIVAL_RULE,
+}
 DOES_NOT_PROVE = (
     "sim ground-truth semantics ≠ camera perception — closes with hardware perception",
     "absent-target honesty under open-vocab detectors (tier E guards the class only)",
@@ -52,6 +104,32 @@ class EpisodeRunResult:
     grounding_outcome: str
     trace: tuple[dict[str, Any], ...]
     mode: str
+    #: Which arrival rule produced ``score.success``.
+    arrival_rule: str = FROZEN_ARRIVAL_RULE
+    #: What the frozen v1 hold rule would have said about this same trace.
+    #: Equal to ``score.success`` when ``arrival_rule`` is the frozen one.
+    frozen_rule_success: bool = False
+    #: Which half of ``hold-or-trace-end-v1`` fired: ``frozen_hold`` /
+    #: ``trace_end_hold`` / ``none``.
+    arrival_branch: str = "frozen_hold"
+
+    @property
+    def scorer_arrival(self) -> bool:
+        """K0 GoalRegion predicate on the final pose (no settle hold)."""
+
+        return bool(self.score.scorer_arrival)
+
+    @property
+    def system_arrival(self) -> bool | None:
+        """The navigator's own arrival claim for this episode."""
+
+        return self.score.system_arrival
+
+    @property
+    def authority_category(self) -> str:
+        """Differential-authority verdict category (eval instrument 5)."""
+
+        return self.score.authority_category.value
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -66,6 +144,15 @@ class EpisodeRunResult:
             "reason": self.reason,
             "grounding_outcome": self.grounding_outcome,
             "mode": self.mode,
+            # Correction (c) — both rules, always, so neither can hide the other.
+            "arrival_rule": self.arrival_rule,
+            "frozen_rule_success": self.frozen_rule_success,
+            "arrival_branch": self.arrival_branch,
+            # Instrument 5 — both arrival authorities, logged every episode.
+            "scorer_arrival": self.scorer_arrival,
+            "system_arrival": self.system_arrival,
+            "authority_category": self.authority_category,
+            "arrival_epsilon_m": ARRIVAL_BOUNDARY_EPSILON_M,
             "trace_len": len(self.trace),
             "trace": list(self.trace),
         }
@@ -80,6 +167,8 @@ class NavInstructRunner:
         robot_config: str | Path = DEFAULT_ROBOT_CONFIG,
         max_steps: int = 400,
         mode: str = "baseline",
+        arrival_rule: str = DEFAULT_ARRIVAL_RULE,
+        scene: str | Path | None = None,
     ) -> None:
         self.robot_config = robot_config
         self.max_steps = int(max_steps)
@@ -87,7 +176,14 @@ class NavInstructRunner:
         if mode_norm not in {"baseline", "candidate"}:
             raise ValueError("mode must be 'baseline' or 'candidate'")
         self.mode = mode_norm
-        self.world = HeadlessCityWorld()
+        rule = str(arrival_rule).strip()
+        if rule not in ARRIVAL_RULES:
+            raise ValueError(f"arrival_rule must be one of {ARRIVAL_RULES}")
+        self.arrival_rule = rule
+        self.world = (
+            HeadlessCityWorld() if scene is None else HeadlessCityWorld(scene)
+        )
+        self.scene = str(self.world.scene)
         self.harness = HeadlessCityQualityHarness(
             self.world, robot_config=robot_config
         )
@@ -105,6 +201,34 @@ class NavInstructRunner:
             return self._run_spatial(episode)
         return self._run_navigation(episode)
 
+    def _apply_arrival_rule(
+        self,
+        score: EpisodeScore,
+        trace: list[dict[str, Any]],
+        episode: EpisodeSpec,
+        *,
+        anchor_xy: tuple[float, float] | None,
+    ) -> tuple[EpisodeScore, bool, str]:
+        """Return ``(score under the active rule, frozen verdict, branch)``.
+
+        Only the navigation families reach this: the spatial families are scored
+        with ``arrival_hold_s = 0.0``, where the derived rule is a no-op by
+        construction, and the refusal paths never claim arrival at all.
+        """
+
+        frozen_success = bool(score.success)
+        if self.arrival_rule == FROZEN_ARRIVAL_RULE:
+            return score, frozen_success, "frozen_hold" if frozen_success else "none"
+        derived_success, branch = derived_arrival(
+            trace, episode.goal, frozen_success=frozen_success, anchor_xy=anchor_xy
+        )
+        if derived_success == frozen_success:
+            return score, frozen_success, branch
+        promoted = promoted_derived_score(
+            score, trace, shortest_path_m=episode.shortest_path_m
+        )
+        return promoted, frozen_success, branch
+
     def _navigator(self) -> DirectiveNavigator:
         """Baseline disables N-O2 memory/scan/frontier; candidate enables them."""
 
@@ -119,12 +243,13 @@ class NavInstructRunner:
         *,
         seed: int = 20260804,
         minival: bool = False,
+        version: str = DEFAULT_EPISODE_SET_VERSION,
     ) -> list[EpisodeRunResult]:
         if episodes is None:
             episodes = (
-                generate_minival(seed=seed)
+                generate_minival(seed=seed, version=version)
                 if minival
-                else generate_episode_matrix(seed=seed, per_family=25)
+                else generate_episode_matrix(seed=seed, per_family=25, version=version)
             )
         return [self.run_episode(ep) for ep in episodes]
 
@@ -150,6 +275,7 @@ class NavInstructRunner:
                 episode.goal,
                 shortest_path_m=episode.shortest_path_m,
                 max_time_s=self.max_steps * self.world.control_dt_s,
+                system_arrival=system_arrival_claim("failed", "directive_not_understood"),
             )
             return EpisodeRunResult(
                 episode_id=episode.episode_id,
@@ -164,6 +290,9 @@ class NavInstructRunner:
                 grounding_outcome="REFUSAL",
                 trace=tuple(trace),
                 mode=self.mode,
+                arrival_rule=self.arrival_rule,
+                frozen_rule_success=bool(score.success),
+                arrival_branch="frozen_hold" if score.success else "none",
             )
 
         navigator = self._navigator()
@@ -268,6 +397,18 @@ class NavInstructRunner:
                 mission.status = "failed"
                 terminal_status = "timed_out"
                 reason = "navigation_step_limit"
+                if trace and episode.goal.contains(
+                    float(trace[-1]["x"]),
+                    float(trace[-1]["y"]),
+                    anchor_xy=episode.goal.center,
+                ):
+                    reason = "navigation_step_limit_inside_goal"
+                    trace[-1]["termination_error"] = True
+                    trace[-1]["step_limit"] = True
+                    trace[-1]["note"] = reason
+                elif trace:
+                    trace[-1]["step_limit"] = True
+                    trace[-1]["note"] = reason
         finally:
             self.world.stop()
             navigator.close()
@@ -305,6 +446,11 @@ class NavInstructRunner:
                 trace[-1]["grounding_error"] = True
             trace[-1]["not_found"] = True
 
+        # Instrument 5: the navigator's own arrival claim, recorded next to the
+        # scorer's K0 predicate on every episode — never merged into it.
+        claimed_arrival = system_arrival_claim(terminal_status, reason)
+        if trace:
+            trace[-1]["system_arrival"] = claimed_arrival
         score = score_episode(
             trace,
             episode.goal,
@@ -312,6 +458,10 @@ class NavInstructRunner:
             max_time_s=self.max_steps * self.world.control_dt_s,
             arrival_hold_s=1.0,
             anchor_xy=episode.goal.center,
+            system_arrival=claimed_arrival,
+        )
+        score, frozen_success, branch = self._apply_arrival_rule(
+            score, trace, episode, anchor_xy=episode.goal.center
         )
         return EpisodeRunResult(
             episode_id=episode.episode_id,
@@ -326,6 +476,9 @@ class NavInstructRunner:
             grounding_outcome=grounding_outcome,
             trace=tuple(trace),
             mode=self.mode,
+            arrival_rule=self.arrival_rule,
+            frozen_rule_success=frozen_success,
+            arrival_branch=branch,
         )
 
     def _run_spatial(self, episode: EpisodeSpec) -> EpisodeRunResult:
@@ -344,6 +497,7 @@ class NavInstructRunner:
                 episode.goal,
                 shortest_path_m=max(episode.shortest_path_m, 1e-3),
                 max_time_s=self.max_steps * self.world.control_dt_s,
+                system_arrival=system_arrival_claim(result.status, result.reason),
             )
             return EpisodeRunResult(
                 episode_id=episode.episode_id,
@@ -358,11 +512,17 @@ class NavInstructRunner:
                 grounding_outcome="REFUSAL",
                 trace=tuple(trace),
                 mode=self.mode,
+                arrival_rule=self.arrival_rule,
+                frozen_rule_success=bool(score.success),
+                arrival_branch="frozen_hold" if score.success else "none",
             )
 
         if result.collision_count > 0:
             trace[-1]["collision"] = True
             trace[-1]["control_error"] = True
+        claimed_arrival = system_arrival_claim(result.status, result.reason)
+        if trace:
+            trace[-1]["system_arrival"] = claimed_arrival
         # Score real poses only — never teleport into the goal disc.
         score = score_episode(
             trace,
@@ -370,6 +530,7 @@ class NavInstructRunner:
             shortest_path_m=max(episode.shortest_path_m, 1e-3),
             max_time_s=self.max_steps * self.world.control_dt_s,
             arrival_hold_s=0.0,
+            system_arrival=claimed_arrival,
         )
         return EpisodeRunResult(
             episode_id=episode.episode_id,
@@ -384,6 +545,11 @@ class NavInstructRunner:
             grounding_outcome="RESOLVED",
             trace=tuple(trace),
             mode=self.mode,
+            # arrival_hold_s is 0.0 for the spatial families, so the derived
+            # rule is a no-op here by construction (see rescore.SPATIAL_FAMILIES).
+            arrival_rule=self.arrival_rule,
+            frozen_rule_success=bool(score.success),
+            arrival_branch="frozen_hold" if score.success else "none",
         )
 
     @staticmethod
@@ -434,13 +600,25 @@ def _trace_from_harness(result: Any, episode: EpisodeSpec) -> list[dict[str, Any
     return out
 
 
-def aggregate_results(results: list[EpisodeRunResult]) -> dict[str, Any]:
-    """Family × tier dashboard: SR, SPL, DTG, failure histogram."""
+def aggregate_results(
+    results: list[EpisodeRunResult],
+    *,
+    episode_set_version: str | None = None,
+    scene: str | None = None,
+) -> dict[str, Any]:
+    """Family × tier dashboard: SR, SPL, DTG, failure histogram.
+
+    ``sr`` is the headline under whichever arrival rule the run used;
+    ``sr_frozen_rule`` is always what the v1 hold rule would have said about the
+    same traces, so correction (c) is isolated inside every single report.
+    """
 
     cells: dict[str, dict[str, Any]] = {}
     failure_hist: dict[str, int] = {item.value: 0 for item in FailureClass}
+    authority_hist: dict[str, int] = {item.value: 0 for item in AuthorityCategory}
     collisions = 0
     for result in results:
+        authority_hist[result.authority_category] += 1
         key = f"{result.family}|{result.tier}"
         cell = cells.setdefault(
             key,
@@ -479,13 +657,41 @@ def aggregate_results(results: list[EpisodeRunResult]) -> dict[str, Any]:
             }
         )
     n_all = max(len(results), 1)
-    return {
+    rules = sorted({r.arrival_rule for r in results}) or [DEFAULT_ARRIVAL_RULE]
+    mean_dtg = sum(
+        0.0 if not math.isfinite(r.score.distance_to_goal_m) else r.score.distance_to_goal_m
+        for r in results
+    ) / n_all
+    aggregate: dict[str, Any] = {
         "runner_version": RUNNER_VERSION,
         "n": len(results),
         "sr": sum(1 for r in results if r.score.success) / n_all,
         "spl": sum(r.score.spl for r in results) / n_all,
+        "mean_dtg_m": mean_dtg,
         "collision_total": collisions,
         "failure_histogram": failure_hist,
+        "authority_histogram": authority_hist,
+        "arrival_epsilon_m": ARRIVAL_BOUNDARY_EPSILON_M,
+        # Correction (c), isolated inside the run itself.
+        "arrival_rule": rules[0] if len(rules) == 1 else "|".join(rules),
+        "sr_frozen_rule": sum(1 for r in results if r.frozen_rule_success) / n_all,
+        "arrival_branch_histogram": _histogram(r.arrival_branch for r in results),
         "by_family_tier": dashboard,
         "does_not_prove": list(DOES_NOT_PROVE),
     }
+    if episode_set_version is not None:
+        aggregate["episode_set_version"] = episode_set_version
+        aggregate["episode_set_provenance"] = episode_set_spec(
+            episode_set_version
+        ).provenance
+    if scene is not None:
+        aggregate["scene"] = scene
+    return aggregate
+
+
+def _histogram(values: Any) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for value in values:
+        key = str(value)
+        out[key] = out.get(key, 0) + 1
+    return dict(sorted(out.items()))

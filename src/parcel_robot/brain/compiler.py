@@ -10,10 +10,13 @@ from .runtime_adapter import bind_plan_context
 from .validator import SkillContractRegistry
 
 _CANONICAL_SUCCESS = {
+    # FollowFormation resolves per relation below (behind vs plain follow).
     "FollowFormation": ("behind", "owner"),
     "OrbitOwner": ("orbit_complete", "owner"),
     "MoveRelative": ("distance_travelled", None),
     "SearchOwner": ("owner_reacquired", "owner"),
+    "ScanBehavior": ("skill_completed", None),
+    "SearchEntity": ("skill_completed", None),
     "Hold": ("motion_stopped", None),
     "Pose": ("skill_completed", None),
     "Gesture": ("skill_completed", None),
@@ -50,6 +53,14 @@ def compile_plan_contracts(
             and proposed.arguments.get("direction") == "away_from_owner"
         ):
             preconditions.add("owner_visible")
+        if proposed.skill == "FollowFormation" and proposed.arguments.get("relation") == "behind":
+            # Relation-scoped, not skill-scoped (arbiter ruling 2026-08-06):
+            # staging behind the owner needs an estimated direction of travel;
+            # plain follow tracks the owner directly and does not. Adding it
+            # here keeps the contract table honest and keeps the "system owns
+            # preconditions" rule intact — a model omission still cannot
+            # weaken behind-formation admission.
+            preconditions.add("owner_heading_available")
         if proposed.skill == "NavigateTo":
             success = SuccessCondition(
                 proposed.success.fact,
@@ -57,6 +68,9 @@ def compile_plan_contracts(
                 None,
                 None,
             )
+        elif proposed.skill == "FollowFormation":
+            fact = "behind" if proposed.arguments.get("relation") == "behind" else "following"
+            success = SuccessCondition(fact, "owner", None, None)
         else:
             fact, target = _CANONICAL_SUCCESS[proposed.skill]
             success = SuccessCondition(fact, target, None, None)

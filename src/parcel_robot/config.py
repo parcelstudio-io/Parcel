@@ -41,19 +41,16 @@ class ConfigStore:
         configured = None
         if "skills" in self.data and isinstance(self.data["skills"], dict):
             configured = self.data["skills"].get("root")
-        if not configured:
-            configured = "configs/skills"
-        path = Path(str(configured)).expanduser()
-        if path.is_absolute():
-            return path
-        bases = [self.path.parent.parent, Path.cwd()]
-        if len(self.path.parents) >= 4:
-            bases.insert(0, self.path.parents[3])
-        for base in bases:
-            candidate = (base / path).resolve()
-            if candidate.is_dir():
-                return candidate
-        return (Path.cwd() / path).resolve()
+        from parcel_robot.paths import resolve_skills_root
+
+        try:
+            return resolve_skills_root(str(configured) if configured else None)
+        except FileNotFoundError:
+            # Preserve historical cwd fallback for ad-hoc local layouts.
+            path = Path(str(configured or "configs/skills")).expanduser()
+            if path.is_absolute():
+                return path
+            return (Path.cwd() / path).resolve()
 
     def motion_config(self) -> dict[str, Any]:
         return self.section("motion") if "motion" in self.data else {"backend": "rl"}
@@ -63,17 +60,15 @@ class ConfigStore:
 
     def prompts_root(self) -> Path:
         configured = self.agent_config().get("prompts_root", "prompts")
-        path = Path(str(configured)).expanduser()
-        if path.is_absolute():
-            return path.resolve()
-        bases = [self.path.parent.parent, Path.cwd()]
-        if len(self.path.parents) >= 4:
-            bases.insert(0, self.path.parents[3])
-        for base in bases:
-            candidate = (base / path).resolve()
-            if candidate.is_dir():
-                return candidate
-        return (Path.cwd() / path).resolve()
+        from parcel_robot.paths import resolve_prompts_root
+
+        try:
+            return resolve_prompts_root(str(configured) if configured else None)
+        except FileNotFoundError:
+            path = Path(str(configured or "prompts")).expanduser()
+            if path.is_absolute():
+                return path.resolve()
+            return (Path.cwd() / path).resolve()
 
     def safety_limits(self) -> SafetyLimits:
         motion = self.motion_config()

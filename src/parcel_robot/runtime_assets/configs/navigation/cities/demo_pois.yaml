@@ -1,0 +1,46 @@
+# Demo semantic map for language directives. Coordinates are meters in the
+# navigation frame (MetaUrban / local map). Expand when a real city map is wired.
+
+version: 1
+frame: city_map_v0
+
+pois:
+  - id: coffee_42nd
+    names:
+      - coffee shop at 42nd street
+      - coffee shop on 42nd
+      - 42nd street coffee
+      - coffee shop
+    street: 42nd street
+    category: cafe
+    position: [42.0, 8.5, 0.0]
+    heading_deg: 90.0
+
+  - id: bookstore_main
+    names:
+      - bookstore
+      - main street bookstore
+    street: main street
+    category: shop
+    position: [12.0, -3.0, 0.0]
+    heading_deg: 0.0
+
+  - id: park_entrance
+    names:
+      - park
+      - park entrance
+      - city park
+    street: park avenue
+    category: park
+    position: [-5.0, 20.0, 0.0]
+    heading_deg: 180.0
+
+  - id: crosswalk_a
+    names:
+      - crosswalk
+      - crosswalk near coffee
+    street: 42nd street
+    category: crosswalk
+    # Kept inside the compact MuJoCo city block for an end-to-end demo.
+    position: [3.5, -0.6, 0.0]
+    heading_deg: 0.0

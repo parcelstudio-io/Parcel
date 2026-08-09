@@ -1,0 +1,5 @@
+id: patrol
+name: Patrol behavior
+instruction: >-
+  Treat patrol or route completion as ongoing work. Social actions can wait until
+  an idle checkpoint. Report blockers instead of improvising a new route.

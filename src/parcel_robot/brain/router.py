@@ -12,12 +12,37 @@ from parcel_robot.navigation.goals import (
     semantic_goal_from_directive,
 )
 from parcel_robot.navigation.spatial import parse_spatial_intent
+from parcel_robot.voice.closed_intents import (
+    ClosedIntent,
+    closed_intent_phrases,
+    parse_closed_intent,
+)
 
 from .contracts import SCHEMA_VERSION, AffectEvidence, IntentFrame
 
 ROUTER_VERSION = "deterministic-v1"
 
-_EMERGENCY_STOP = frozenset({"stop", "stop now", "emergency stop"})
+#: One stop grammar, shared with the closed-intent parser and the agent's fast
+#: path. This used to be a third literal copy that omitted "halt" (U33).
+_EMERGENCY_STOP = closed_intent_phrases(ClosedIntent.STOP)
+
+#: Closed intents whose effect is an executive/CommandArbiter *cap* — no plan,
+#: no admission, but a real change to what the robot is doing. Routing them
+#: ``conversation_only`` (which is what "pause", "faster", and "slow down" got
+#: until 2026-08-07) labels an executive command as chat: every consumer of
+#: ``IntentFrame.route`` — metrics, the frozen router cases, any future
+#: barge-in policy — then reads a pause as small talk. The agent has always
+#: handled them correctly *before* consulting the route, so this changes the
+#: frame's honesty, not the behaviour. Phrase membership is read from
+#: ``parse_closed_intent``, so there is no second copy of the grammar.
+_CAP_INTENTS = frozenset(
+    {
+        ClosedIntent.PAUSE,
+        ClosedIntent.RESUME,
+        ClosedIntent.FASTER,
+        ClosedIntent.SLOWER,
+    }
+)
 _FOLLOW = frozenset({"follow", "follow me", "come with me", "heel"})
 _HOLD = frozenset({"stay", "wait", "wait here", "hold position"})
 _STATUS = frozenset({"status", "get status", "how are your systems"})
@@ -143,7 +168,15 @@ class DeterministicIntentRouter:
                 rule="non_authoritative_motion_mention",
             )
 
-        correction = bool(_CORRECTION.search(clean))
+        # One amendment grammar. ``_CORRECTION`` and the closed-intent parser's
+        # GOAL_AMEND regex overlapped but were not equal ("not that one", "the
+        # other bench"), so the agent paused and replanned as an amendment while
+        # the router had labelled the same turn ``conversation_only`` — the U33
+        # route/registry mismatch again, one layer up. The union is what the
+        # agent actually does.
+        correction = bool(
+            _CORRECTION.search(clean) or parse_closed_intent(clean) is ClosedIntent.GOAL_AMEND
+        )
         compound = bool(_COMPOUND.search(clean) and _PHYSICAL_CUE.search(clean))
         if correction or compound:
             references = _spatial_references(clean)
@@ -174,6 +207,47 @@ class DeterministicIntentRouter:
                 spatial_references=("owner",),
                 requires_fresh_scene=True,
                 rule="follow_owner",
+            )
+        # "Come here" is a reviewed closed grammar whose cap is a *system*
+        # PlanSketch (``sketch_come`` → FollowFormation relation="follow").
+        # Only ``direct_skill`` selects the system registry, and the system
+        # registry is the only one that admits relation="follow" (arbitration
+        # OB-2, validator.py `system_authored` gate). Routing these exact
+        # phrases anywhere else validated a system-authored plan against the
+        # model-facing registry and dead-ended every "come here" with the
+        # generic refusal — the closed intent existed but was unreachable from
+        # the product bar. Phrase membership comes from the closed-intent
+        # parser, so there is no second copy of the grammar to drift.
+        closed = parse_closed_intent(clean)
+        if closed is ClosedIntent.COME:
+            return self._frame(
+                turn_id,
+                transcript_ref,
+                digest,
+                route="direct_skill",
+                confidence=1.0,
+                speech_act="request",
+                affect=affect,
+                urgency=urgency,
+                spatial_references=("owner",),
+                requires_fresh_scene=True,
+                rule="come_to_owner",
+            )
+        if closed in _CAP_INTENTS:
+            return self._frame(
+                turn_id,
+                transcript_ref,
+                digest,
+                route="direct_skill",
+                confidence=1.0,
+                speech_act="request",
+                affect=affect,
+                urgency=urgency,
+                # A cap needs no scene: it retimes or suspends work already
+                # admitted against a snapshot, and demanding a fresh one would
+                # make "pause" fail exactly when perception is degraded.
+                requires_fresh_scene=False,
+                rule=f"closed_intent:{closed.value}",
             )
         if clean in _HOLD:
             return self._frame(
@@ -343,6 +417,18 @@ class DeterministicIntentRouter:
             router_version=ROUTER_VERSION,
             matched_rule=rule,
         )
+
+
+def physical_cue_present(text: str) -> bool:
+    """True when the transcript contains a reviewed physical-action verb.
+
+    Exported so the agent's clarify-fallback can ask the *same* question the
+    router asks, instead of keeping a second verb list that drifts. A novel
+    verb ("befriend the bench") is exactly the case where this is False and a
+    clarification is the honest reply.
+    """
+
+    return bool(_PHYSICAL_CUE.search(_normalize(text)))
 
 
 def _normalize(value: str) -> str:

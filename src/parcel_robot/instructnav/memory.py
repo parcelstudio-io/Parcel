@@ -1,14 +1,24 @@
-"""Persistent semantic memory: instance store + region/stuff channel (pure)."""
+"""Persistent semantic memory: instance store + region/stuff channel (pure).
+
+Hillclimb rung 1 / K4: ``SemanticMemory2D`` is the canonical name. The older
+``SemanticMemory`` alias remains for task_6 callers.
+"""
 
 from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from parcel_robot.contracts.v1 import DetectionMsg, GoalRegionV1
 
 
 @dataclass(frozen=True)
 class RememberedEntity:
+    """Instance-store row: class + optional embedding + centroid + decay clock."""
+
     entity_id: str
     label: str
     x: float
@@ -17,6 +27,8 @@ class RememberedEntity:
     confidence: float
     kind: str  # "object" | "region"
     polygon: tuple[tuple[float, float], ...] | None = None
+    embedding: tuple[float, ...] | None = None
+    class_id: str = ""
 
     def __post_init__(self) -> None:
         if not self.entity_id:
@@ -29,6 +41,14 @@ class RememberedEntity:
             raise ValueError("entity numeric fields must be finite")
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError("confidence must be in [0, 1]")
+        if self.embedding is not None:
+            if not self.embedding or len(self.embedding) > 2048:
+                raise ValueError("embedding must contain 1..2048 floats when set")
+            if any(
+                isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+                for v in self.embedding
+            ):
+                raise ValueError("embedding components must be finite numbers")
 
 
 @dataclass(frozen=True)
@@ -42,11 +62,13 @@ class RegionCell:
     last_seen_s: float
 
 
-class SemanticMemory:
+class SemanticMemory2D:
     """Seen-once-remembered store with confidence decay and a region channel.
 
-    Alias matching is the caller's job (grounder). Memory matches labels
-    exactly (case-folded whitespace-normalized).
+    Region cells are co-registered with a metric grid (``region_resolution_m``).
+    Instance rows carry ``{class, embedding optional, centroid, last_seen,
+    decaying confidence}``. Alias matching is the caller's job (grounder);
+    memory matches labels exactly (case-folded whitespace-normalized).
     """
 
     def __init__(
@@ -88,6 +110,89 @@ class SemanticMemory:
             self._entities[entity.entity_id] = entity
             if entity.kind == "region" and entity.polygon:
                 self._rasterize_region(entity, now)
+        self._evict_expired(now)
+
+    def observe_detections(
+        self,
+        detections: Sequence[DetectionMsg | Mapping[str, object]],
+        *,
+        robot_x: float,
+        robot_y: float,
+        robot_yaw_rad: float,
+        now_s: float,
+    ) -> None:
+        """Ingest detector-shaped observations (bearing/range → map centroid).
+
+        Accepts ``DetectionMsg`` or plain mappings with the same fields. Pure:
+        no runtime/sensor I/O — the caller supplies pose + detections.
+        """
+
+        now = _finite_time(now_s)
+        if not all(math.isfinite(v) for v in (robot_x, robot_y, robot_yaw_rad)):
+            raise ValueError("robot pose must be finite")
+        for raw in detections:
+            try:
+                entity = _entity_from_detection(
+                    raw,
+                    robot_x=robot_x,
+                    robot_y=robot_y,
+                    robot_yaw_rad=robot_yaw_rad,
+                    now_s=now,
+                )
+            except (KeyError, TypeError, ValueError):
+                continue
+            self._entities[entity.entity_id] = entity
+        self._evict_expired(now)
+
+    def observe_goal_region(
+        self,
+        goal: GoalRegionV1 | Mapping[str, object],
+        *,
+        label: str,
+        now_s: float,
+        confidence: float | None = None,
+    ) -> None:
+        """Remember a goal region's acceptable polygon as a stuff-class region."""
+
+        now = _finite_time(now_s)
+        if hasattr(goal, "acceptable_polygon"):
+            polygon = tuple(tuple(p) for p in goal.acceptable_polygon)  # type: ignore[union-attr]
+            goal_id = str(getattr(goal, "goal_id", "goal"))
+            conf = float(
+                confidence if confidence is not None else getattr(goal, "confidence", 0.98)
+            )
+        else:
+            raw = goal  # type: ignore[assignment]
+            if not isinstance(raw, Mapping):
+                raise TypeError("goal must be GoalRegionV1 or mapping")
+            poly_raw = raw.get("acceptable_polygon") or raw.get("polygon")
+            if not isinstance(poly_raw, (list, tuple)) or len(poly_raw) < 3:
+                raise ValueError("goal region requires acceptable_polygon ≥3 vertices")
+            polygon = tuple((float(p[0]), float(p[1])) for p in poly_raw)
+            goal_id = str(raw.get("goal_id") or raw.get("entity_id") or "goal")
+            conf = float(
+                confidence if confidence is not None else raw.get("confidence", 0.98)
+            )
+        key = _norm_label(label)
+        if not key:
+            raise ValueError("label must be non-empty")
+        if not 0.0 <= conf <= 1.0:
+            raise ValueError("confidence must be in [0, 1]")
+        cx = sum(p[0] for p in polygon) / len(polygon)
+        cy = sum(p[1] for p in polygon) / len(polygon)
+        entity = RememberedEntity(
+            entity_id=f"goal:{goal_id}",
+            label=key,
+            x=cx,
+            y=cy,
+            last_seen_s=now,
+            confidence=conf,
+            kind="region",
+            polygon=polygon,
+            class_id=key,
+        )
+        self._entities[entity.entity_id] = entity
+        self._rasterize_region(entity, now)
         self._evict_expired(now)
 
     def observe_region_labels(
@@ -248,6 +353,8 @@ class SemanticMemory:
                     "polygon": (
                         [list(p) for p in e.polygon] if e.polygon is not None else None
                     ),
+                    "embedding": list(e.embedding) if e.embedding is not None else None,
+                    "class_id": e.class_id,
                 }
                 for e in sorted(
                     self._entities.values(),
@@ -342,9 +449,13 @@ class SemanticMemory:
             del self._region_cells[victim_key]
 
 
+# Backward-compatible alias (task_6 N-S2 name).
+SemanticMemory = SemanticMemory2D
+
+
 def _parse_observation(raw: Mapping[str, object], now: float) -> RememberedEntity:
     entity_id = str(raw.get("entity_id") or raw.get("id") or "").strip()
-    label = str(raw.get("label") or "").strip()
+    label = str(raw.get("label") or raw.get("class_id") or "").strip()
     kind = str(raw.get("kind") or "object").strip().lower()
     if kind not in {"object", "region"}:
         kind = "object"
@@ -367,8 +478,10 @@ def _parse_observation(raw: Mapping[str, object], now: float) -> RememberedEntit
         polygon = tuple((float(p[0]), float(p[1])) for p in polygon_raw)
         if kind == "object" and "kind" not in raw:
             kind = "region"
-    conf = float(raw.get("confidence", 0.98))
+    conf = float(raw.get("confidence", raw.get("score", 0.98)))
     last_seen = float(raw.get("last_seen_s", now))
+    embedding = _optional_embedding(raw.get("embedding"))
+    class_id = str(raw.get("class_id") or label).strip()
     return RememberedEntity(
         entity_id=entity_id,
         label=label,
@@ -378,7 +491,70 @@ def _parse_observation(raw: Mapping[str, object], now: float) -> RememberedEntit
         confidence=conf,
         kind=kind,
         polygon=polygon,
+        embedding=embedding,
+        class_id=class_id,
     )
+
+
+def _entity_from_detection(
+    raw: DetectionMsg | Mapping[str, object],
+    *,
+    robot_x: float,
+    robot_y: float,
+    robot_yaw_rad: float,
+    now_s: float,
+) -> RememberedEntity:
+    if hasattr(raw, "class_id") and hasattr(raw, "bearing_rad"):
+        class_id = str(raw.class_id)  # type: ignore[union-attr]
+        bearing = float(raw.bearing_rad)  # type: ignore[union-attr]
+        range_m = float(raw.range_m)  # type: ignore[union-attr]
+        score = float(raw.score)  # type: ignore[union-attr]
+        embedding = tuple(float(v) for v in raw.embedding)  # type: ignore[union-attr]
+        track_id = str(getattr(raw, "track_id", "") or "")
+        evidence_id = str(getattr(getattr(raw, "envelope", None), "evidence_id", "") or "")
+    else:
+        if not isinstance(raw, Mapping):
+            raise TypeError("detection must be DetectionMsg or mapping")
+        class_id = str(raw.get("class_id") or raw.get("label") or "").strip()
+        bearing = float(raw["bearing_rad"])  # type: ignore[arg-type]
+        range_m = float(raw["range_m"])  # type: ignore[arg-type]
+        score = float(raw.get("score", raw.get("confidence", 0.98)))
+        embedding = _optional_embedding(raw.get("embedding"))
+        if embedding is None:
+            raise ValueError("detection embedding required")
+        track_id = str(raw.get("track_id") or "").strip()
+        evidence_id = str(raw.get("evidence_id") or "").strip()
+    if not class_id:
+        raise ValueError("detection class_id must be non-empty")
+    if not math.isfinite(bearing) or not math.isfinite(range_m) or range_m < 0.0:
+        raise ValueError("bearing/range must be finite; range ≥ 0")
+    if not 0.0 <= score <= 1.0:
+        raise ValueError("detection score must be in [0, 1]")
+    world_yaw = robot_yaw_rad + bearing
+    x = robot_x + math.cos(world_yaw) * range_m
+    y = robot_y + math.sin(world_yaw) * range_m
+    entity_id = track_id or evidence_id or f"det:{class_id}:{x:.2f}:{y:.2f}"
+    return RememberedEntity(
+        entity_id=entity_id,
+        label=class_id,
+        x=x,
+        y=y,
+        last_seen_s=now_s,
+        confidence=score,
+        kind="object",
+        embedding=embedding if isinstance(embedding, tuple) else tuple(embedding),
+        class_id=class_id,
+    )
+
+
+def _optional_embedding(value: object) -> tuple[float, ...] | None:
+    if value is None:
+        return None
+    if not isinstance(value, (list, tuple)):
+        raise TypeError("embedding must be an array")
+    if not value:
+        raise ValueError("embedding must be non-empty when provided")
+    return tuple(float(v) for v in value)
 
 
 def _decayed(confidence: float, *, age_s: float, half_life_s: float) -> float:
@@ -409,6 +585,8 @@ def _with_decayed_confidence(
         confidence=conf,
         kind=entity.kind,
         polygon=entity.polygon,
+        embedding=entity.embedding,
+        class_id=entity.class_id,
     )
 
 

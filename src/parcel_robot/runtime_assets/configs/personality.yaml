@@ -1,0 +1,128 @@
+# Per-personality runtime BEHAVIOUR policy.
+#
+# This file is not prompt text. Prompt fragments (instruction, reply_style,
+# affect_actions) live in prompts/personalities/<id>.yaml and are rendered into
+# the conversation model's system prompt. The values here are read by
+# deterministic runtime code and never reach a model.
+#
+# It lives beside configs/robot.yaml rather than inside it because
+# configs/robot.yaml is hash-locked by evals/companion/embodied_plan_v1
+# (manifest.json locked_inputs.robot_config); adding a key there would move a
+# frozen eval input. The active personality id still comes from
+# configs/robot.yaml `agent.personality`. A derived config may point somewhere
+# else with `agent.personality_policy: <path>`.
+#
+# Loading is fail-closed: unknown keys at any level are a startup error
+# (src/parcel_robot/core/yield_policy.py). A personality with no entry under
+# `profiles:` inherits `defaults:` and reports source="defaults" — it is never
+# silently given different numbers.
+#
+# ---------------------------------------------------------------------------
+# yield_policy — what the dog does when a PERSON blocks its path
+# ---------------------------------------------------------------------------
+# Owner directive (2026-08-08): "When the robot determines there is a person in
+# scene, that should be a personality decision. By default let the robot ask
+# for help but make sure that this personality is configurable."
+#
+#   patience_s        seconds a person-block EPISODE must persist before the
+#                     policy acts at all. Patience restarts once an episode
+#                     ends, so somebody walking past never spends it.
+#   on_blocked        ask_for_help    speak, rate-limited, then fail honestly
+#                                     (the shipped default)
+#                     wait            hold until the outer step budget expires
+#                                     — exactly the behaviour measured on
+#                                     2026-08-07 (240 s -> step_timeout)
+#                     give_up_honestly end the mission at patience expiry with
+#                                     an attributable reason, saying so
+#   reask_interval_s  minimum seconds between two asks, and between the last
+#                     ask and the honest give-up
+#   max_asks          how many times the dog may ask PER MISSION before failing
+#                     honestly. Not refunded when the gate flickers — that is
+#                     what makes the honest give-up reachable in traffic.
+#                     0 makes ask_for_help behave as give_up_honestly.
+#   release_grace_s   how long the gate must stay continuously OPEN before an
+#                     episode counts as over. MEASURED, not chosen: in the
+#                     dynamic city a pedestrian stream makes person_stop
+#                     chatter, and under the strict continuous-blockage rule
+#                     (0.0) the traffic case took 45 s to reach a first ask
+#                     that should have come at 8 s, then asked 13 times in
+#                     240 s and never gave up. 0.0 restores the strict rule.
+#
+# The policy decides HOW LONG TO WAIT AND WHAT TO SAY. It never touches
+# person_stop_m, obstacle_stop_m, TTC, the collision brake, or any velocity: a
+# gated tick still commands vx == 0.0 under every value in this file.
+#
+# ---------------------------------------------------------------------------
+# yield_speech — the words, per personality
+# ---------------------------------------------------------------------------
+# `{place}` is the mission's goal label and is the only substitution. Every
+# line is checked at load time against the DialogueAct truthfulness rules: a
+# yielding robot has verified exactly that a person is inside its stop distance
+# and that it stopped, so a line that claims arrival or completion is rejected
+# before the runtime starts (FORBIDDEN_ARRIVAL_PHRASES).
+
+schema_version: 1
+
+defaults:
+  yield_policy:
+    patience_s: 8.0
+    on_blocked: ask_for_help
+    reask_interval_s: 12.0
+    max_asks: 2
+    release_grace_s: 3.0
+  yield_speech:
+    ask: >-
+      Someone is standing right where I need to go, so I've stopped. Could you
+      help me get through to {place}?
+    reask: >-
+      I'm still waiting — there's someone in my way and I won't push past.
+      Could someone help me reach {place}?
+    give_up: >-
+      I couldn't get to {place}. Someone stayed in my way and I stopped rather
+      than push past, so I've stopped trying for now.
+
+profiles:
+  # Warm, grounded, patient. Takes the defaults.
+  gentle_companion:
+    yield_policy:
+      patience_s: 8.0
+      reask_interval_s: 12.0
+      max_asks: 2
+      release_grace_s: 3.0
+
+  # "Keep replies direct and composed." Waits longer, says less, asks once.
+  calm_guardian:
+    yield_policy:
+      patience_s: 12.0
+      reask_interval_s: 20.0
+      max_asks: 1
+      release_grace_s: 4.0
+    yield_speech:
+      ask: >-
+        I've stopped: a person is inside my safe distance and I'm holding.
+        Could you clear a path to {place}?
+      reask: >-
+        Still holding for the same person. A clear path to {place} would let me
+        carry on.
+      give_up: >-
+        I'm ending this one. A person stayed inside my safe distance the whole
+        time, so I held position and did not continue to {place}.
+
+  # "Energetic but concise", and serious about safety. Speaks up sooner and
+  # more often, and still yields exactly as hard.
+  playful_companion:
+    yield_policy:
+      patience_s: 5.0
+      reask_interval_s: 8.0
+      max_asks: 3
+      release_grace_s: 2.0
+    yield_speech:
+      ask: >-
+        Whoops — someone's parked right in my path, so I've put the brakes on.
+        Any chance of a hand getting through to {place}?
+      reask: >-
+        Still stuck behind the same pair of legs. A little room and I'll be off
+        to {place}.
+      give_up: >-
+        Alright, I give up on {place} for now. Someone stayed in my way and I'd
+        rather wait than barge through.

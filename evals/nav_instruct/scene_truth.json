@@ -1,0 +1,479 @@
+{
+  "artifact_version": 1,
+  "derived": {
+    "bench_1": {
+      "kind": "object",
+      "label": "bench",
+      "position": [
+        -2.5,
+        3.045
+      ],
+      "radius_m": 0.733757
+    },
+    "bldg_1": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        -4.5,
+        5.5
+      ],
+      "radius_m": 2.343075
+    },
+    "bldg_2": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        -1.0,
+        5.8
+      ],
+      "radius_m": 1.843909
+    },
+    "bldg_3": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        2.2,
+        5.6
+      ],
+      "radius_m": 2.051828
+    },
+    "bldg_4": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        5.5,
+        5.4
+      ],
+      "radius_m": 2.193171
+    },
+    "bldg_5": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        -5.5,
+        -4.5
+      ],
+      "radius_m": 2.202272
+    },
+    "bldg_6": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        5.0,
+        -5.0
+      ],
+      "radius_m": 2.408319
+    },
+    "crosswalk": {
+      "kind": "region",
+      "label": "crosswalk",
+      "polygon": [
+        [
+          2.35,
+          -0.4
+        ],
+        [
+          3.85,
+          -0.4
+        ],
+        [
+          3.85,
+          2.0
+        ],
+        [
+          2.35,
+          2.0
+        ]
+      ]
+    },
+    "lamp_post_1": {
+      "kind": "object",
+      "label": "lamppost",
+      "position": [
+        0.2,
+        3.15
+      ],
+      "radius_m": 0.06
+    },
+    "lamp_post_2": {
+      "kind": "object",
+      "label": "lamppost",
+      "position": [
+        -6.7,
+        -2.9
+      ],
+      "radius_m": 0.06
+    },
+    "planter_1": {
+      "kind": "object",
+      "label": "planter",
+      "position": [
+        -5.0,
+        3.15
+      ],
+      "radius_m": 0.45
+    },
+    "planter_2": {
+      "kind": "object",
+      "label": "planter",
+      "position": [
+        5.0,
+        3.1
+      ],
+      "radius_m": 0.45
+    },
+    "sidewalk": {
+      "kind": "region",
+      "label": "sidewalk",
+      "polygon": [
+        [
+          -8.0,
+          2.2
+        ],
+        [
+          8.0,
+          2.2
+        ],
+        [
+          8.0,
+          4.2
+        ],
+        [
+          -8.0,
+          4.2
+        ]
+      ]
+    },
+    "sidewalk_south": {
+      "kind": "region",
+      "label": "sidewalk",
+      "polygon": [
+        [
+          -8.0,
+          -3.75
+        ],
+        [
+          8.0,
+          -3.75
+        ],
+        [
+          8.0,
+          -2.25
+        ],
+        [
+          -8.0,
+          -2.25
+        ]
+      ]
+    },
+    "tree_1": {
+      "kind": "object",
+      "label": "tree",
+      "position": [
+        -5.0,
+        3.15
+      ],
+      "radius_m": 0.58
+    },
+    "tree_2": {
+      "kind": "object",
+      "label": "tree",
+      "position": [
+        5.0,
+        3.1
+      ],
+      "radius_m": 0.58
+    }
+  },
+  "do_not_hand_edit": "regenerate with: .parcel/bin/python -m evals.nav_instruct.scene_truth --regenerate",
+  "generated_by": "evals/nav_instruct/scene_truth.py",
+  "generator_landmark_ids": [
+    "sidewalk",
+    "sidewalk_south",
+    "crosswalk",
+    "lamp_post_1",
+    "lamp_post_2",
+    "bench_1",
+    "tree_1",
+    "planter_1",
+    "bldg_1"
+  ],
+  "scene": {
+    "path": "src/parcel_robot/scenes/city_block.xml",
+    "sha256": "bbb4d6e75d92294fa5bc59db0b6b0810482bb475a5e3b6afd489596338184426"
+  },
+  "transcribed": {
+    "bench_1": {
+      "kind": "object",
+      "label": "bench",
+      "position": [
+        -2.5,
+        3.0
+      ],
+      "radius_m": 0.7
+    },
+    "bldg_1": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        -4.5,
+        5.5
+      ],
+      "radius_m": 1.8
+    },
+    "crosswalk": {
+      "kind": "region",
+      "label": "crosswalk",
+      "polygon": [
+        [
+          2.3,
+          -0.4
+        ],
+        [
+          3.9,
+          -0.4
+        ],
+        [
+          3.9,
+          2.0
+        ],
+        [
+          2.3,
+          2.0
+        ]
+      ]
+    },
+    "lamp_post_1": {
+      "kind": "object",
+      "label": "lamppost",
+      "position": [
+        0.2,
+        3.15
+      ],
+      "radius_m": 0.06
+    },
+    "lamp_post_2": {
+      "kind": "object",
+      "label": "lamppost",
+      "position": [
+        -6.7,
+        -2.9
+      ],
+      "radius_m": 0.06
+    },
+    "planter_1": {
+      "kind": "object",
+      "label": "planter",
+      "position": [
+        -5.0,
+        3.15
+      ],
+      "radius_m": 0.45
+    },
+    "sidewalk": {
+      "kind": "region",
+      "label": "sidewalk",
+      "polygon": [
+        [
+          -8.0,
+          2.4
+        ],
+        [
+          8.0,
+          2.4
+        ],
+        [
+          8.0,
+          3.6
+        ],
+        [
+          -8.0,
+          3.6
+        ]
+      ]
+    },
+    "sidewalk_south": {
+      "kind": "region",
+      "label": "sidewalk",
+      "polygon": [
+        [
+          -8.0,
+          -3.6
+        ],
+        [
+          8.0,
+          -3.6
+        ],
+        [
+          8.0,
+          -2.4
+        ],
+        [
+          -8.0,
+          -2.4
+        ]
+      ]
+    },
+    "tree_1": {
+      "kind": "object",
+      "label": "tree",
+      "position": [
+        -5.0,
+        3.15
+      ],
+      "radius_m": 0.45
+    }
+  },
+  "transcription_deltas": [
+    {
+      "derived": [
+        -2.5,
+        3.045
+      ],
+      "entity_id": "bench_1",
+      "field": "position",
+      "transcribed": [
+        -2.5,
+        3.0
+      ]
+    },
+    {
+      "derived": 0.733757,
+      "entity_id": "bench_1",
+      "field": "radius_m",
+      "transcribed": 0.7
+    },
+    {
+      "derived": 2.343075,
+      "entity_id": "bldg_1",
+      "field": "radius_m",
+      "transcribed": 1.8
+    },
+    {
+      "derived": [
+        [
+          2.35,
+          -0.4
+        ],
+        [
+          3.85,
+          -0.4
+        ],
+        [
+          3.85,
+          2.0
+        ],
+        [
+          2.35,
+          2.0
+        ]
+      ],
+      "entity_id": "crosswalk",
+      "field": "polygon",
+      "transcribed": [
+        [
+          2.3,
+          -0.4
+        ],
+        [
+          3.9,
+          -0.4
+        ],
+        [
+          3.9,
+          2.0
+        ],
+        [
+          2.3,
+          2.0
+        ]
+      ]
+    },
+    {
+      "derived": [
+        [
+          -8.0,
+          2.2
+        ],
+        [
+          8.0,
+          2.2
+        ],
+        [
+          8.0,
+          4.2
+        ],
+        [
+          -8.0,
+          4.2
+        ]
+      ],
+      "entity_id": "sidewalk",
+      "field": "polygon",
+      "transcribed": [
+        [
+          -8.0,
+          2.4
+        ],
+        [
+          8.0,
+          2.4
+        ],
+        [
+          8.0,
+          3.6
+        ],
+        [
+          -8.0,
+          3.6
+        ]
+      ]
+    },
+    {
+      "derived": [
+        [
+          -8.0,
+          -3.75
+        ],
+        [
+          8.0,
+          -3.75
+        ],
+        [
+          8.0,
+          -2.25
+        ],
+        [
+          -8.0,
+          -2.25
+        ]
+      ],
+      "entity_id": "sidewalk_south",
+      "field": "polygon",
+      "transcribed": [
+        [
+          -8.0,
+          -3.6
+        ],
+        [
+          8.0,
+          -3.6
+        ],
+        [
+          8.0,
+          -2.4
+        ],
+        [
+          -8.0,
+          -2.4
+        ]
+      ]
+    },
+    {
+      "derived": 0.58,
+      "entity_id": "tree_1",
+      "field": "radius_m",
+      "transcribed": 0.45
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+id: hop
+name: Hop
+kind: trajectory
+enabled: true
+tags:
+- dynamic
+- aerial
+keyframes:
+- t: 0.0
+  joints: &id001
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.9
+    FL_calf_joint: -1.8
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.9
+    FR_calf_joint: -1.8
+    RL_hip_joint: 0.0
+    RL_thigh_joint: 0.9
+    RL_calf_joint: -1.8
+    RR_hip_joint: 0.0
+    RR_thigh_joint: 0.9
+    RR_calf_joint: -1.8
+- t: 0.12
+  joints:
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 1.15
+    FL_calf_joint: -2.1
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 1.15
+    FR_calf_joint: -2.1
+    RL_hip_joint: 0.0
+    RL_thigh_joint: 1.15
+    RL_calf_joint: -2.1
+    RR_hip_joint: 0.0
+    RR_thigh_joint: 1.15
+    RR_calf_joint: -2.1
+- t: 0.28
+  joints:
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.55
+    FL_calf_joint: -1.8
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.55
+    FR_calf_joint: -1.8
+    RL_hip_joint: 0.0
+    RL_thigh_joint: 0.55
+    RL_calf_joint: -1.8
+    RR_hip_joint: 0.0
+    RR_thigh_joint: 0.55
+    RR_calf_joint: -1.8
+- t: 0.5
+  joints: *id001
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: jump_height
+  control_dt: 0.02

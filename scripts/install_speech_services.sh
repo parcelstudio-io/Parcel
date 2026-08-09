@@ -81,6 +81,7 @@ FORCE=0
 JOBS=""
 DOWNLOADER=""
 STAGE_DIR=""
+PIPER_ONLY=0
 SUMMARY=()
 
 usage() {
@@ -110,6 +111,14 @@ Options:
   -h, --help        Show this help and exit
   -f, --force       Redo every step even if it already looks complete
   -j, --jobs N      Parallel build jobs (default: nproc, capped at 16)
+      --piper-only  Install ONLY the TTS half (piper binary + voice + JSON).
+                    Needs no git, no cmake and no C++ compiler — the pinned
+                    piper release is a prebuilt binary and the voice is a
+                    plain download. Use this on a host with no toolchain:
+                    scripts/run_speech_services.sh already accepts the
+                    official prebuilt whisper.cpp tree at
+                    third_party/whisper.cpp-bin/whisper-bin-ubuntu-x64 for
+                    the STT half, so the two halves compose.
 
 Disk footprint (~240 MB downloaded, ~600 MB installed):
   whisper.cpp clone ~45 MB, build tree ~120 MB (whisper-server target only)
@@ -243,7 +252,14 @@ preflight() {
 
   local missing=()
   local tool
-  for tool in git tar sha256sum awk; do
+  # --piper-only touches no source tree and compiles nothing, so it drops the
+  # git/cmake/compiler requirements. tar+sha256sum+awk+a downloader are still
+  # mandatory: the piper release is a checksum-verified tarball.
+  local required=(tar sha256sum awk)
+  if ((PIPER_ONLY == 0)); then
+    required+=(git)
+  fi
+  for tool in "${required[@]}"; do
     command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
   done
   if command -v curl >/dev/null 2>&1; then
@@ -253,10 +269,12 @@ preflight() {
   else
     missing+=("curl or wget")
   fi
-  command -v cmake >/dev/null 2>&1 || missing+=("cmake")
-  if ! command -v c++ >/dev/null 2>&1 && ! command -v g++ >/dev/null 2>&1 \
-    && ! command -v clang++ >/dev/null 2>&1; then
-    missing+=("a C++17 compiler (g++/clang++)")
+  if ((PIPER_ONLY == 0)); then
+    command -v cmake >/dev/null 2>&1 || missing+=("cmake")
+    if ! command -v c++ >/dev/null 2>&1 && ! command -v g++ >/dev/null 2>&1 \
+      && ! command -v clang++ >/dev/null 2>&1; then
+      missing+=("a C++17 compiler (g++/clang++)")
+    fi
   fi
   if ((${#missing[@]} > 0)); then
     local list
@@ -271,7 +289,11 @@ whisper.cpp release tree at third_party/whisper.cpp-bin/whisper-bin-ubuntu-x64
 all, since it ships as a prebuilt binary."
   fi
 
-  log "using downloader: $DOWNLOADER; build jobs: $JOBS"
+  if ((PIPER_ONLY == 1)); then
+    log "using downloader: $DOWNLOADER; --piper-only (no clone, no build)"
+  else
+    log "using downloader: $DOWNLOADER; build jobs: $JOBS"
+  fi
 }
 
 install_whisper_source() {
@@ -432,6 +454,7 @@ main() {
         exit 0
         ;;
       -f | --force) FORCE=1 ;;
+      --piper-only) PIPER_ONLY=1 ;;
       -j | --jobs)
         shift
         JOBS="${1:-}"
@@ -447,10 +470,16 @@ main() {
 
   preflight
   log "installing into $ROOT/third_party and $ROOT/models (both gitignored)"
-  install_whisper_source
-  build_whisper_server
-  fetch_verified "whisper model (base.en)" "$WHISPER_MODEL_URL" \
-    "$WHISPER_MODEL" "$WHISPER_MODEL_SHA256"
+  if ((PIPER_ONLY == 1)); then
+    log "--piper-only: skipping the whisper.cpp clone, build and model download"
+    log "  STT still needs a whisper-server; run_speech_services.sh accepts the"
+    log "  prebuilt tree at third_party/whisper.cpp-bin/whisper-bin-ubuntu-x64"
+  else
+    install_whisper_source
+    build_whisper_server
+    fetch_verified "whisper model (base.en)" "$WHISPER_MODEL_URL" \
+      "$WHISPER_MODEL" "$WHISPER_MODEL_SHA256"
+  fi
   install_piper_binary
   install_piper_voice
   print_summary

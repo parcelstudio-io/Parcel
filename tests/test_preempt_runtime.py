@@ -123,8 +123,10 @@ def test_voice_interrupt_policy_table_is_declared() -> None:
 
     assert VOICE_INTERRUPT_POLICY["default"] == "overlap"
     assert VOICE_INTERRUPT_POLICY["summons"] == "suspend"
+    assert VOICE_INTERRUPT_POLICY["closed_intent_pause"] == "suspend"
     assert _voice_interrupt_action("ambient chatter") == "overlap"
     assert _voice_interrupt_action("owner summons recall") == "suspend"
+    assert _voice_interrupt_action("closed_intent_pause") == "suspend"
     decision = TaskExecutive().request_interrupt(
         InterruptRequest(source="voice", reason="ambient chatter", requested="interrupt_now")
     )

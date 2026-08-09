@@ -1,0 +1,51 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-region_goal-A-00-1c735162",
+  "family": "region_goal",
+  "goal": {
+    "anchor_entity": "sidewalk",
+    "anchor_footprint_m": 0.0,
+    "band_m": null,
+    "center": null,
+    "kind": "polygon",
+    "polygon": [
+      [
+        -8.0,
+        2.4
+      ],
+      [
+        8.0,
+        2.4
+      ],
+      [
+        8.0,
+        3.6
+      ],
+      [
+        -8.0,
+        3.6
+      ]
+    ],
+    "radius_m": null
+  },
+  "instruction": "go to the sidewalk",
+  "notes": "visible_under_5m|region_goal",
+  "placement_overrides": {
+    "robot": {
+      "x": -0.1,
+      "y": 0.05,
+      "yaw": 1.5708
+    }
+  },
+  "seed": 477319522,
+  "shortest_path_m": 9.5,
+  "start_pose": [
+    -0.1,
+    0.05,
+    1.5708
+  ],
+  "synonym": null,
+  "target_entity_id": "sidewalk",
+  "tier": "A"
+}

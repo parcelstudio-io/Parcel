@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "fixture_id": "neighborhood-v1-sim",
+  "source": "authored_fixture",
+  "crs": "local_enu_m",
+  "does_not_prove": [
+    "Cached neighborhood fixture is not a live osmnx pull or surveyed sidewalk network.",
+    "Local ENU meters are sim-scene coordinates, not WGS84 field localization."
+  ],
+  "origin_note": "Synthetic 80 m × 60 m block with two sidewalks and one marked crossing.",
+  "nodes": [
+    {"id": "n_sw_a0", "x": 0.0, "y": 5.0, "kind": "footway"},
+    {"id": "n_sw_a1", "x": 20.0, "y": 5.0, "kind": "footway"},
+    {"id": "n_curb_n", "x": 30.0, "y": 5.0, "kind": "curb"},
+    {"id": "n_xw_mid", "x": 30.0, "y": 0.0, "kind": "crossing"},
+    {"id": "n_curb_s", "x": 30.0, "y": -5.0, "kind": "curb"},
+    {"id": "n_sw_b0", "x": 20.0, "y": -5.0, "kind": "footway"},
+    {"id": "n_sw_b1", "x": 0.0, "y": -5.0, "kind": "footway"},
+    {"id": "n_sw_a2", "x": 50.0, "y": 5.0, "kind": "footway"},
+    {"id": "n_sw_b2", "x": 50.0, "y": -5.0, "kind": "footway"}
+  ],
+  "edges": [
+    {"id": "e_a0_a1", "u": "n_sw_a0", "v": "n_sw_a1", "highway": "footway", "length_m": 20.0},
+    {"id": "e_a1_curb", "u": "n_sw_a1", "v": "n_curb_n", "highway": "footway", "length_m": 10.0},
+    {"id": "e_curb_xw", "u": "n_curb_n", "v": "n_xw_mid", "highway": "crossing", "length_m": 5.0},
+    {"id": "e_xw_curb", "u": "n_xw_mid", "v": "n_curb_s", "highway": "crossing", "length_m": 5.0},
+    {"id": "e_curb_b0", "u": "n_curb_s", "v": "n_sw_b0", "highway": "footway", "length_m": 10.0},
+    {"id": "e_b0_b1", "u": "n_sw_b0", "v": "n_sw_b1", "highway": "footway", "length_m": 20.0},
+    {"id": "e_a1_a2", "u": "n_sw_a1", "v": "n_sw_a2", "highway": "footway", "length_m": 30.0},
+    {"id": "e_b0_b2", "u": "n_sw_b0", "v": "n_sw_b2", "highway": "footway", "length_m": 30.0}
+  ],
+  "curbs": [
+    {
+      "id": "curb_north",
+      "node_id": "n_curb_n",
+      "crossing_edge_ids": ["e_curb_xw", "e_xw_curb"],
+      "approach_side": "north",
+      "announcement": "Curb — say go when you're ready."
+    },
+    {
+      "id": "curb_south",
+      "node_id": "n_curb_s",
+      "crossing_edge_ids": ["e_curb_xw", "e_xw_curb"],
+      "approach_side": "south",
+      "announcement": "Curb — say go when you're ready."
+    }
+  ],
+  "road_keepout": {
+    "id": "road_main",
+    "polygon": [
+      [25.0, -3.5],
+      [35.0, -3.5],
+      [35.0, 3.5],
+      [25.0, 3.5]
+    ],
+    "note": "Hard geofence: autonomous goals inside this polygon are lethal without crossing mode."
+  }
+}

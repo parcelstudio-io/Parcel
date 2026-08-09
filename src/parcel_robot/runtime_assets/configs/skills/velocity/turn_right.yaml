@@ -1,0 +1,18 @@
+id: turn_right
+name: Turn right
+kind: velocity
+enabled: true
+tags:
+- locomotion
+- velocity
+velocity:
+  vx: 0.0
+  vy: 0.0
+  vyaw: -0.4
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: locomotion_velocity
+  control_dt: 0.02

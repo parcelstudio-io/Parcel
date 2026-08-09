@@ -1,0 +1,28 @@
+id: lie_down
+name: Lie down
+kind: pose
+enabled: true
+tags:
+- pose
+- rest
+duration: 1.8
+joints:
+  FL_hip_joint: 0.0
+  FL_thigh_joint: 1.4
+  FL_calf_joint: -2.4
+  FR_hip_joint: 0.0
+  FR_thigh_joint: 1.4
+  FR_calf_joint: -2.4
+  RL_hip_joint: 0.0
+  RL_thigh_joint: 1.5
+  RL_calf_joint: -2.5
+  RR_hip_joint: 0.0
+  RR_thigh_joint: 1.5
+  RR_calf_joint: -2.5
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: pose_hold
+  control_dt: 0.02

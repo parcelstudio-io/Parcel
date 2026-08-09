@@ -71,6 +71,11 @@
     }
     .bar { height: 6px; background: #e5ddd0; border-radius: 999px; overflow: hidden; margin-top: 6px; }
     .bar > i { display: block; height: 100%; width: 0; background: var(--accent); }
+    .toggle {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid var(--line); background: var(--panel);
+      border-radius: 8px; padding: 8px 12px; cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -88,6 +93,9 @@
     </select>
     <button id="refreshBtn">Refresh</button>
     <button id="batchBtn" class="primary">Run minival batch</button>
+    <label class="toggle" title="Route the instruction through the live runtime's handle_text (admission → plan → executive → navigation) instead of driving the navigator directly. One run at a time.">
+      <input type="checkbox" id="voiceMode"> Voice mode (product path)
+    </label>
   </div>
   <div id="status">Loading scenarios…</div>
   <div class="grid" id="grid"></div>
@@ -167,7 +175,11 @@
         btn.onclick = function () { selectEpisode(btn.dataset.id); };
       });
       grid.querySelectorAll("button.run").forEach(function (btn) {
-        btn.onclick = function () { runEpisode(btn.dataset.id, "headless"); };
+        // Default stays headless (navigator-direct); the toggle opts into the
+        // product path so the two modes are never silently confused.
+        btn.onclick = function () {
+          runEpisode(btn.dataset.id, $("voiceMode").checked ? "voice" : "headless");
+        };
       });
       grid.querySelectorAll("button.live").forEach(function (btn) {
         btn.onclick = function () { runEpisode(btn.dataset.id, "live"); };
@@ -214,10 +226,17 @@
       var res = await fetch("/api/evals/status");
       var s = await res.json();
       var html = "<strong>" + (s.status || "idle") + "</strong>";
+      if (s.mode) html += " · mode: " + s.mode;
       if (s.active_instruction) html += " · " + s.active_instruction;
       if (s.last_result && s.last_result.failure) {
         html += " · <span style='color:" + (s.last_result.success ? "var(--pass)" : "var(--fail)") + "'>" +
           (s.last_result.success ? "PASS" : s.last_result.failure) + "</span>";
+      }
+      if (s.last_result && s.last_result.mode === "voice") {
+        // Both halves of the voice verdict, so a claim/predicate split is visible.
+        html += " · verified=" + s.last_result.system_verified +
+          " predicate=" + s.last_result.predicate_success +
+          " dtg=" + Number(s.last_result.distance_to_goal_m).toFixed(2) + " m";
       }
       if (s.error) html += " · error: " + s.error;
       html += "<div class='bar'><i style='width:" + Math.round((s.progress || 0) * 100) + "%'></i></div>";

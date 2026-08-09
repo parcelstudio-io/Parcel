@@ -337,6 +337,69 @@ def test_behind_follow_is_disabled_until_owner_heading_is_observable() -> None:
     assert missing_heading.value.code == "owner_heading_unavailable"
 
 
+def _plain_follow_plan() -> PlanIR:
+    """Plain follow: no behind staging, so no owner motion heading."""
+
+    return PlanIR(
+        schema_version=1,
+        task_id="task-follow",
+        plan_revision=1,
+        source_turn_id="turn-follow",
+        goal=GoalSpec("follow", GoalTarget("owner", "owner"), 0.5),
+        invariants=("keep_collision_margin", "stop_on_stale_perception"),
+        steps=(
+            PlanStep(
+                "follow",
+                "FollowFormation",
+                {"relation": "follow", "distance_m": 1.5},
+                ("camera_fresh", "lidar_fresh", "base_available", "owner_visible"),
+                SuccessCondition("following", "owner", None, 0.7),
+                120.0,
+                2,
+                ("reacquire_owner", "replan"),
+                ("base", "attention"),
+                "checkpoint",
+            ),
+        ),
+    )
+
+
+def test_plain_follow_relation_is_admitted_only_by_the_system_registry() -> None:
+    """Arbitration OB-2: the schema `const` is a hint; the registry enforces.
+
+    A loose-decode provider can emit any string it likes, so the model-facing
+    validator must reject ``relation="follow"`` on its own — the runtime's own
+    deterministic sketches are the only authors of that relation.
+    """
+
+    model_facing = SkillContractRegistry.default(owner_heading_supported=True)
+    assert model_facing.system_authored is False
+    with pytest.raises(PlanValidationError) as rejected:
+        PlanValidator(model_facing).validate(_plain_follow_plan(), _snapshot())
+    assert rejected.value.code == "invalid_argument_value"
+
+    system = SkillContractRegistry.default(
+        owner_heading_supported=True,
+        include_system_skills=True,
+    )
+    assert system.system_authored is True
+    validated = PlanValidator(system).validate(_plain_follow_plan(), _snapshot())
+    assert validated.steps[0].step.arguments["relation"] == "follow"
+    # And it needs no heading evidence at all — that is the whole point.
+    no_heading = PlanValidator(system).validate(
+        _plain_follow_plan(), _snapshot(owner_heading=False)
+    )
+    assert no_heading.steps[0].step.skill == "FollowFormation"
+
+
+def test_restricting_a_registry_never_grants_system_authority_by_accident() -> None:
+    system = SkillContractRegistry.default(include_system_skills=True)
+    assert system.restricted(("FollowFormation",)).system_authored is True
+    assert system.restricted(("FollowFormation",), system_authored=False).system_authored is False
+    plain = SkillContractRegistry.default()
+    assert plain.restricted(("FollowFormation",)).system_authored is False
+
+
 def test_registry_prompt_description_is_compact_machine_readable_policy() -> None:
     registry = SkillContractRegistry.default(pose_names=("sit",), gesture_names=("bow",))
     description = registry.prompt_description()

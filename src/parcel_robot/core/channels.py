@@ -94,6 +94,18 @@ class BehaviorChannelRegistry:
             if decision.action is PreemptionAction.PAUSE and row.pausable:
                 intent = row.channel.pause(reason)
                 if intent is not None:
+                    # Channels may leave suspended_at_s=0 as a fill-me sentinel.
+                    # Record with the preempt clock immediately — peek(now_s) would
+                    # otherwise treat 0+TTL as already expired on monotonic clocks.
+                    if intent.suspended_at_s == 0.0:
+                        intent = ResumeIntent(
+                            channel=intent.channel,
+                            payload=intent.payload,
+                            suspend_reason=intent.suspend_reason,
+                            suspended_at_s=now_s,
+                            valid_for_s=intent.valid_for_s,
+                            requires_fresh_observation=intent.requires_fresh_observation,
+                        )
                     self.resume_store.record(intent)
                 else:
                     # Pausable channel declined — fall back to stop.

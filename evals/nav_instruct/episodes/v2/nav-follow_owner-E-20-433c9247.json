@@ -1,0 +1,39 @@
+{
+  "absent_target": true,
+  "distractors": [],
+  "episode_id": "nav-follow_owner-E-20-433c9247",
+  "family": "follow_owner",
+  "goal": {
+    "anchor_entity": null,
+    "anchor_footprint_m": 0.0,
+    "band_m": null,
+    "center": [
+      2.0,
+      -0.5
+    ],
+    "kind": "disc",
+    "polygon": null,
+    "radius_m": 1.8
+  },
+  "instruction": "follow the owner",
+  "notes": "tier_E_absent_unreachable",
+  "placement_overrides": {
+    "absent_target": true,
+    "owner_path": "absent",
+    "robot": {
+      "x": -2.05,
+      "y": 2.025,
+      "yaw": -0.5
+    }
+  },
+  "seed": 1128043079,
+  "shortest_path_m": 4.5,
+  "start_pose": [
+    -2.05,
+    2.025,
+    -0.5
+  ],
+  "synonym": null,
+  "target_entity_id": null,
+  "tier": "E"
+}

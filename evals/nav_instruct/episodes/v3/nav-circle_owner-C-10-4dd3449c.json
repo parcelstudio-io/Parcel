@@ -1,0 +1,38 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-circle_owner-C-10-4dd3449c",
+  "family": "circle_owner",
+  "goal": {
+    "anchor_entity": null,
+    "anchor_footprint_m": 0.0,
+    "band_m": null,
+    "center": [
+      2.0,
+      -0.5
+    ],
+    "kind": "disc",
+    "polygon": null,
+    "radius_m": 2.2
+  },
+  "instruction": "walk around me",
+  "notes": "requires_search|circle_owner",
+  "placement_overrides": {
+    "pedestrian_distractors": 0,
+    "robot": {
+      "x": -6.0,
+      "y": -6.0,
+      "yaw": 1.0
+    }
+  },
+  "seed": 1305691292,
+  "shortest_path_m": 10.0,
+  "start_pose": [
+    -6.0,
+    -6.0,
+    1.0
+  ],
+  "synonym": null,
+  "target_entity_id": "owner",
+  "tier": "C"
+}

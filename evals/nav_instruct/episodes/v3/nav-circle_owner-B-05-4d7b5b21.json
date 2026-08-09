@@ -1,0 +1,37 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-circle_owner-B-05-4d7b5b21",
+  "family": "circle_owner",
+  "goal": {
+    "anchor_entity": null,
+    "anchor_footprint_m": 0.0,
+    "band_m": null,
+    "center": [
+      2.0,
+      -0.5
+    ],
+    "kind": "disc",
+    "polygon": null,
+    "radius_m": 2.2
+  },
+  "instruction": "orbit the owner",
+  "notes": "in_range_outside_frustum|circle_owner",
+  "placement_overrides": {
+    "robot": {
+      "x": -0.35,
+      "y": -0.275,
+      "yaw": 0.0
+    }
+  },
+  "seed": 1299929889,
+  "shortest_path_m": 0.0,
+  "start_pose": [
+    -0.35,
+    -0.275,
+    0.0
+  ],
+  "synonym": null,
+  "target_entity_id": "owner",
+  "tier": "B"
+}

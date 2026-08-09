@@ -1,0 +1,51 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-region_goal-D-15-1b8b2361",
+  "family": "region_goal",
+  "goal": {
+    "anchor_entity": "crosswalk",
+    "anchor_footprint_m": 0.0,
+    "band_m": null,
+    "center": null,
+    "kind": "polygon",
+    "polygon": [
+      [
+        2.35,
+        -0.4
+      ],
+      [
+        3.85,
+        -0.4
+      ],
+      [
+        3.85,
+        2.0
+      ],
+      [
+        2.35,
+        2.0
+      ]
+    ],
+    "radius_m": null
+  },
+  "instruction": "go to the crosswalk",
+  "notes": "ambiguity_or_synonym|region_goal",
+  "placement_overrides": {
+    "robot": {
+      "x": 0.0,
+      "y": 0.0,
+      "yaw": 1.0
+    }
+  },
+  "seed": 462103393,
+  "shortest_path_m": 2.5,
+  "start_pose": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "synonym": null,
+  "target_entity_id": "crosswalk",
+  "tier": "D"
+}

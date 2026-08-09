@@ -1,0 +1,40 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_relative-C-10-0d3f5ebd",
+  "family": "object_relative",
+  "goal": {
+    "anchor_entity": "bench_1",
+    "anchor_footprint_m": 0.733757,
+    "band_m": [
+      0.4,
+      1.5
+    ],
+    "center": [
+      -2.5,
+      3.045
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "stand next to the seat",
+  "notes": "requires_search|object_relative",
+  "placement_overrides": {
+    "robot": {
+      "x": -5.95,
+      "y": -6.025,
+      "yaw": 1.0
+    }
+  },
+  "seed": 222256829,
+  "shortest_path_m": 11.5,
+  "start_pose": [
+    -5.95,
+    -6.025,
+    1.0
+  ],
+  "synonym": "seat",
+  "target_entity_id": "bench_1",
+  "tier": "C"
+}

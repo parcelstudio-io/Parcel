@@ -1,0 +1,48 @@
+{
+  "budget": {
+    "median_ms": 176.0,
+    "period_ms": 100.0,
+    "within_budget": true
+  },
+  "card": "K7",
+  "does_not_prove": [
+    "Orin NX 16GB latency or thermal behavior",
+    "GPU co-residency with Gemma/Fish",
+    "Sport-mode tracking under the live 10 Hz stream",
+    "Real sensor end-to-end pipeline timing"
+  ],
+  "generated_at": "2026-08-05T08:24:27Z",
+  "hardware_readiness": "HR-6",
+  "host": {
+    "machine": "x86_64",
+    "platform": "Linux-7.0.0-28-generic-x86_64-with-glibc2.43",
+    "python": "3.14.4"
+  },
+  "parcel_roots": [
+    "/home/jaewoo-jang/Desktop/Projects/Parcel",
+    "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/runtime_assets"
+  ],
+  "profile": {
+    "directive": "go to the coffee shop at 42nd street",
+    "headroom_ms_median": -33.684492015163414,
+    "hz": 10.0,
+    "last_notes": [
+      "grid_recover_scan status=no_path|clear",
+      "grid_recover_scan status=no_path|clear",
+      "grid_recover_scan status=no_path|clear",
+      "grid_recover_scan status=no_path|clear",
+      "grid_recover_scan status=no_path|clear"
+    ],
+    "latency_ms": {
+      "max": 151.87614900059998,
+      "mean": 133.09423555096146,
+      "median": 133.6844920151634,
+      "min": 110.89997499948367,
+      "p95": 150.59163700789213
+    },
+    "period_ms": 100.0,
+    "ticks": 100,
+    "warmup": 10
+  },
+  "schema": "parcel.cpu_budget_proxy.v1"
+}

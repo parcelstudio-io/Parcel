@@ -1,0 +1,267 @@
+{
+  "acceptance": {
+    "proposals_tried": 1,
+    "rejections_by_filter": {}
+  },
+  "artifact_version": 1,
+  "derived": {
+    "bench_1": {
+      "kind": "object",
+      "label": "bench",
+      "position": [
+        -3.215,
+        3.871
+      ],
+      "radius_m": 0.733757
+    },
+    "bldg_1": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        -5.842,
+        6.511
+      ],
+      "radius_m": 1.744006
+    },
+    "bldg_2": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        -2.23,
+        7.153
+      ],
+      "radius_m": 1.872276
+    },
+    "bldg_3": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        1.882,
+        6.594
+      ],
+      "radius_m": 1.830272
+    },
+    "bldg_4": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        6.239,
+        6.922
+      ],
+      "radius_m": 1.948873
+    },
+    "bldg_5": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        -2.731,
+        -6.087
+      ],
+      "radius_m": 2.129613
+    },
+    "bldg_6": {
+      "kind": "object",
+      "label": "building",
+      "position": [
+        2.795,
+        -6.186
+      ],
+      "radius_m": 1.916285
+    },
+    "crosswalk": {
+      "kind": "region",
+      "label": "crosswalk",
+      "polygon": [
+        [
+          -1.05,
+          -0.804
+        ],
+        [
+          0.45,
+          -0.804
+        ],
+        [
+          0.45,
+          1.932
+        ],
+        [
+          -1.05,
+          1.932
+        ]
+      ]
+    },
+    "lamp_post_1": {
+      "kind": "object",
+      "label": "lamppost",
+      "position": [
+        0.186,
+        3.781
+      ],
+      "radius_m": 0.06
+    },
+    "lamp_post_2": {
+      "kind": "object",
+      "label": "lamppost",
+      "position": [
+        -6.33,
+        -3.212
+      ],
+      "radius_m": 0.06
+    },
+    "planter_1": {
+      "kind": "object",
+      "label": "planter",
+      "position": [
+        -6.647,
+        3.781
+      ],
+      "radius_m": 0.45
+    },
+    "planter_2": {
+      "kind": "object",
+      "label": "planter",
+      "position": [
+        4.812,
+        3.781
+      ],
+      "radius_m": 0.45
+    },
+    "sidewalk": {
+      "kind": "region",
+      "label": "sidewalk",
+      "polygon": [
+        [
+          -8.0,
+          2.931
+        ],
+        [
+          8.0,
+          2.931
+        ],
+        [
+          8.0,
+          4.631
+        ],
+        [
+          -8.0,
+          4.631
+        ]
+      ]
+    },
+    "sidewalk_south": {
+      "kind": "region",
+      "label": "sidewalk",
+      "polygon": [
+        [
+          -8.0,
+          -3.994
+        ],
+        [
+          8.0,
+          -3.994
+        ],
+        [
+          8.0,
+          -2.43
+        ],
+        [
+          -8.0,
+          -2.43
+        ]
+      ]
+    },
+    "tree_1": {
+      "kind": "object",
+      "label": "tree",
+      "position": [
+        -6.647,
+        3.781
+      ],
+      "radius_m": 0.58
+    },
+    "tree_2": {
+      "kind": "object",
+      "label": "tree",
+      "position": [
+        4.812,
+        3.781
+      ],
+      "radius_m": 0.58
+    }
+  },
+  "do_not_hand_edit": "regenerate with: .parcel/bin/python -m evals.nav_instruct.scene_gen --emit",
+  "filters": [
+    "round_trip: the derived table agrees with what the sampler wrote",
+    "overlap: furniture discs disjoint (0.35 m); buildings as boxes, disjoint from each other, from the furniture and from both pavements",
+    "layout: the crosswalk stays on the road",
+    "support: pavement furniture inside its sidewalk polygon",
+    "navigability: 4-connected search at 0.25 m, obstacles inflated by 0.64 m (RobotProfile.footprint_radius_m + terminal clearance), from every episode start pose to every landmark's stand-off band"
+  ],
+  "generated_by": "evals/nav_instruct/scene_gen.py",
+  "never_tuned_against": true,
+  "params": {
+    "bench_x": -3.215,
+    "buildings": [
+      [
+        -5.842,
+        6.511,
+        1.191,
+        1.274
+      ],
+      [
+        -2.23,
+        7.153,
+        1.291,
+        1.356
+      ],
+      [
+        1.882,
+        6.594,
+        1.336,
+        1.251
+      ],
+      [
+        6.239,
+        6.922,
+        1.391,
+        1.365
+      ],
+      [
+        -2.731,
+        -6.087,
+        1.556,
+        1.454
+      ],
+      [
+        2.795,
+        -6.186,
+        1.362,
+        1.348
+      ]
+    ],
+    "crosswalk_half_height": 1.368,
+    "crosswalk_x0": -0.9,
+    "crosswalk_y": 0.564,
+    "lamp_post_1_x": 0.186,
+    "lamp_post_2_x": -6.33,
+    "north_half_width": 0.85,
+    "north_y": 3.781,
+    "owner_xy": [
+      1.368,
+      -1.366
+    ],
+    "seed": 91013,
+    "south_half_width": 0.782,
+    "south_y": -3.212,
+    "tree_1_x": -6.647,
+    "tree_2_x": 4.812
+  },
+  "scene": {
+    "path": "configs/scenes/generated/val_unseen_91013.xml",
+    "sha256": "682a6621d696376cc9994d9230b2df47a2c096b64a5153c613c282ee3e51321a"
+  },
+  "scene_id": "val_unseen_91013",
+  "seed": 91013,
+  "semantics_sidecar": "configs/scenes/generated/val_unseen_91013.semantics.yaml",
+  "split": "val_unseen"
+}

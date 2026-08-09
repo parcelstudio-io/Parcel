@@ -40,6 +40,13 @@ INTERRUPT_SOURCES = frozenset(
         "voice",
     }
 )
+#: The reason the closed-intent PAUSE cap suspends work under, and the one the
+#: RESUME cap restores it under. Declared here because three parties must agree
+#: on the pause string or the pair silently stops matching: the interrupt policy
+#: below (which must map it to ``suspend``, not ``cancel``), the runtime branch
+#: that issues it, and the runtime branch that looks for tasks parked by it.
+CLOSED_INTENT_PAUSE_REASON = "closed_intent_pause"
+CLOSED_INTENT_RESUME_REASON = "closed_intent_resume"
 # Declared voice interrupt policy (was a hardcoded no-op / overlap).
 # Keys are reason prefixes or exact reasons; default is overlap.
 VOICE_INTERRUPT_POLICY: dict[str, str] = {
@@ -47,6 +54,7 @@ VOICE_INTERRUPT_POLICY: dict[str, str] = {
     "ambient": "overlap",
     "summons": "suspend",
     "recall": "suspend",
+    CLOSED_INTENT_PAUSE_REASON: "suspend",
     "explicit_directive": "cancel_now",
 }
 
@@ -360,21 +368,29 @@ class TaskExecutive:
                 record.at_checkpoint = False
                 record.step_started_at = timestamp
                 record.last_detail = "dispatched"
-                return (
-                    DispatchRequest(
-                        task_id=record.task_id,
-                        plan_revision=record.plan_revision,
-                        step_id=step.step.step_id,
-                        attempt=record.attempt,
-                        skill=step.step.skill,
-                        arguments=step.step.arguments,
-                        success=step.step.success,
-                        resources=step.effective_resources,
-                        timeout_s=step.step.timeout_s,
-                        recovery_action=recovery,
-                    ),
-                )
+                return (self._dispatch_request(record, step, recovery),)
         return ()
+
+    @staticmethod
+    def _dispatch_request(
+        record: _TaskRecord,
+        step: ValidatedStep,
+        recovery: str | None,
+    ) -> DispatchRequest:
+        """The one place a record + step becomes a dispatch (tick and resume)."""
+
+        return DispatchRequest(
+            task_id=record.task_id,
+            plan_revision=record.plan_revision,
+            step_id=step.step.step_id,
+            attempt=record.attempt,
+            skill=step.step.skill,
+            arguments=step.step.arguments,
+            success=step.step.success,
+            resources=step.effective_resources,
+            timeout_s=step.step.timeout_s,
+            recovery_action=recovery,
+        )
 
     def report(self, result: ExecutionResult) -> ReportDisposition:
         """Consume typed feedback; stale plan revisions are ignored."""
@@ -451,7 +467,16 @@ class TaskExecutive:
             if result.status == "cancelled":
                 self._cancel(record, result.detail_code)
                 return ReportDisposition(True, "task_cancelled", result.task_id, record.state)
-            self._fail_or_retry(record, result.feedback_code)
+            # ``feedback_code`` on a failed result is the constant ``"failed"``
+            # (``runtime_adapter._failed_result``), so recording it as the
+            # detail wrote the state down twice and threw the adapter's
+            # attribution away. ``detail_code`` is where the verifier put the
+            # reason — ``blocked_by_person_unanswered``,
+            # ``semantic_target_unreachable``, ``navigation_no_progress`` — and
+            # ``last_detail`` is the only attribution field the task snapshot
+            # carries. The cancellation arm one line above already prefers
+            # ``detail_code``; this makes the failure arm agree.
+            self._fail_or_retry(record, result.detail_code or result.feedback_code)
             action = "retry_scheduled" if record.state == "recovering" else "task_failed"
             return ReportDisposition(True, action, result.task_id, record.state)
 
@@ -567,6 +592,13 @@ class TaskExecutive:
                             if record.current_step is not None
                             else None
                         ),
+                        # The current step's skill: the runtime needs it to know
+                        # which channel a suspended task owns when it resumes.
+                        "skill": (
+                            record.current_step.step.skill
+                            if record.current_step is not None
+                            else None
+                        ),
                         "step_index": record.step_index,
                         "attempt": record.attempt,
                         "at_checkpoint": record.at_checkpoint,
@@ -657,6 +689,70 @@ class TaskExecutive:
             record.step_started_at = None
             record.last_detail = f"resumed:{reason[:140]}"
             return ReportDisposition(True, "task_resumed", task_id, record.state)
+
+    def resume_task_running(
+        self,
+        task_id: str,
+        *,
+        reason: str = "resume",
+        now: float | None = None,
+    ) -> tuple[ReportDisposition, DispatchRequest | None]:
+        """Return a suspended task to ``running`` *without* re-dispatching it.
+
+        :meth:`resume_task` re-queues, so the next :meth:`tick` dispatches the
+        step again. That is right when the controller was torn down, and wrong
+        when it was *paused* and has just been restored from its stored
+        ``ResumeIntent``: a second dispatch cold-starts the mission and throws
+        the restored state away. This is the other half of that pair — the step
+        is already executing, so the record is re-bound to it (resources
+        re-acquired, timeout clock restarted at ``now``) and the caller re-binds
+        its own dispatch tracking with the returned request.
+
+        Fail-closed: if the step's resources are held by someone else the task
+        is left suspended and the disposition says why, because a ``running``
+        record over an un-leased resource is a false claim of authority.
+        """
+
+        timestamp = time.monotonic() if now is None else float(now)
+        if not math.isfinite(timestamp):
+            raise ValueError("executive time must be finite")
+        with self._lock:
+            record = self._tasks.get(task_id)
+            if record is None:
+                return ReportDisposition(False, "ignored_unknown_task", task_id, "idle"), None
+            if record.state != "suspended":
+                return (
+                    ReportDisposition(False, "ignored_not_suspended", task_id, record.state),
+                    None,
+                )
+            step = record.current_step
+            if step is None:
+                return (
+                    ReportDisposition(False, "ignored_no_current_step", task_id, record.state),
+                    None,
+                )
+            acquired, conflicts = self.resources.acquire(
+                record.task_id,
+                step.step.step_id,
+                step.effective_resources,
+            )
+            if not acquired:
+                record.conflicts = conflicts
+                return (
+                    ReportDisposition(
+                        False, "ignored_resources_unavailable", task_id, record.state
+                    ),
+                    None,
+                )
+            record.conflicts = ()
+            record.state = "running"
+            record.at_checkpoint = False
+            record.step_started_at = timestamp
+            record.last_detail = f"resumed_running:{reason[:120]}"
+            return (
+                ReportDisposition(True, "task_resumed_running", task_id, record.state),
+                self._dispatch_request(record, step, None),
+            )
 
     def suspend_task(self, task_id: str, *, reason: str) -> ReportDisposition:
         with self._lock:

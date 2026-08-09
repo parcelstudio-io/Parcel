@@ -61,6 +61,12 @@ class VoiceTurn:
     superseded: bool = False
 
 
+# A system-initiated utterance is not a dialogue turn. It carries this marker
+# on every stage it emits so observers can tell "the robot answered you" from
+# "the robot said something nobody asked for" without parsing stage names.
+SYSTEM_UTTERANCE_KIND = "system"
+
+
 @dataclass(frozen=True)
 class VoiceStage:
     turn_id: int
@@ -68,6 +74,7 @@ class VoiceStage:
     timestamp: float
     transcript: str = ""
     reply: str = ""
+    kind: str = ""
 
 
 @dataclass(frozen=True)
@@ -282,6 +289,101 @@ class DuplexVoiceSession:
         thread.start()
         return True
 
+    def speak_system(
+        self,
+        text: str,
+        *,
+        turn_id: int = 0,
+        kind: str = SYSTEM_UTTERANCE_KIND,
+    ) -> bool:
+        """Speak a system-initiated line aloud through the ordinary TTS path.
+
+        This is the door for utterances nobody asked for: the ``Vocalize``
+        skill, the localization-health announcements, and the yield policy's
+        ask / re-ask / give-up lines. Before this existed those utterances
+        reached the chat panel and the event log and *never the speaker*
+        (backlog U35), so "the dog asks for help" was a sentence in a
+        transcript rather than a sound in a room.
+
+        Synthesis and playback are :meth:`_run_output`, unchanged — the same
+        audio sink, chunk tokens, playback clock, prosody tap, and cancel
+        event a reply gets. Barge-in and ``submit_text`` therefore cancel a
+        system utterance exactly the way they cancel a reply, and ``close``
+        tears it down with everything else.
+
+        **It is not a filler.** None of the filler bookkeeping is touched
+        (``_filler_active``, ``_pending_reply_after_filler``, the ``filler_*``
+        stages, ``on_filler_audible``), because a request for help is not an
+        acknowledgement token and must not enter the duplex filler metrics or
+        be measured against the ≤2 s filler ceiling. It emits
+        ``system_utterance_start`` / ``system_utterance_complete`` instead, and
+        every stage it emits carries ``kind="system"``.
+
+        CONCURRENCY POLICY — skip, never overlap, never queue.
+            If any output is already live (a reply, a filler, or an earlier
+            system utterance) this returns ``False`` and speaks nothing. There
+            is deliberately no queue: the caller that wants to be heard owns a
+            retry (the yield policy re-asks on its own timer), and a dog that
+            talks over itself is worse than a dog that says it once. Two
+            concurrent output workers would also both enqueue into one ordered
+            speaker sink, interleaving two sentences' chunks.
+
+        Returns ``True`` when an output worker was started — i.e. audio was
+        actually attempted. ``False`` means nothing was synthesized: empty
+        text, text-only mode (no synthesizer/player, which is not an error),
+        a closed session, or the busy case above. It never raises, and it
+        never blocks on synthesis: the caller keeps whatever chat/event record
+        it wrote regardless.
+
+        ``True`` is not proof the owner heard anything — it means the same
+        thing ``audio_first_playback`` means for a reply, a confirmed handoff
+        to the sink. Acoustic presentation is the acoustic rig's question.
+        """
+
+        clean = " ".join(str(text).split())
+        if not clean:
+            return False
+        if self.synthesizer is None or self.audio_chunk_player is None:
+            # Text-only host. The caller's chat/event write is the whole
+            # record and that is honest; returning False lets it say so.
+            return False
+        stage_kind = " ".join(str(kind).split()) or SYSTEM_UTTERANCE_KIND
+        state = _OutputState(int(turn_id), 0, threading.Event())
+        thread = threading.Thread(
+            target=self._run_system_output,
+            args=(state, clean, stage_kind),
+            name=f"parcel-voice-system-{turn_id}",
+            daemon=True,
+        )
+        state.thread = thread
+        with self._idle:
+            if self._closed:
+                return False
+            if (
+                self._active_output is not None
+                or self._filler_active
+                or self._pending_reply_after_filler is not None
+            ):
+                # Busy. The reply/filler owns the speaker; skip silently.
+                return False
+            state.speech_epoch = self._speech_epoch
+            self._active_output = state
+            self._output_jobs += 1
+            self._output_threads.add(thread)
+        # Emitted before the worker starts so `system_utterance_start` can
+        # never be observed after a stage the worker produced.
+        self._call_stage(
+            VoiceStage(
+                state.turn_id,
+                "system_utterance_start",
+                time.monotonic(),
+                reply=clean,
+                kind=stage_kind,
+            )
+        )
+        thread.start()
+        return True
+
     def wait_until_idle(self, timeout: float | None = None) -> bool:
         """Wait for queued reasoning and all output workers to finish."""
 
@@ -483,23 +585,50 @@ class DuplexVoiceSession:
             if pending is not None and pending[0].speech_epoch == speech_epoch:
                 self._start_output(pending[0], pending[1])
 
-    def _emit_tts_text_chunk(self, turn_id: int, text: str) -> None:
+    def _run_system_output(self, state: _OutputState, reply: str, kind: str) -> None:
+        try:
+            self._run_output(state, reply, system=True, stage_kind=kind)
+        finally:
+            # Always paired with the `system_utterance_start` speak_system
+            # emitted, including on cancel and on synthesis failure.
+            self._call_stage(
+                VoiceStage(
+                    state.turn_id,
+                    "system_utterance_complete",
+                    time.monotonic(),
+                    reply=reply,
+                    kind=kind,
+                )
+            )
+
+    def _emit_tts_text_chunk(self, turn_id: int, text: str, kind: str = "") -> None:
         """Observe a spoken sentence/chunk on the TEXT frame stream."""
 
         clean = " ".join(str(text).split())
         if not clean:
             return
         self._call_stage(
-            VoiceStage(turn_id, "tts_text_chunk", time.monotonic(), reply=clean)
+            VoiceStage(turn_id, "tts_text_chunk", time.monotonic(), reply=clean, kind=kind)
         )
 
-    def _run_output(self, state: _OutputState, reply: str, *, filler: bool = False) -> None:
+    def _run_output(
+        self,
+        state: _OutputState,
+        reply: str,
+        *,
+        filler: bool = False,
+        system: bool = False,
+        stage_kind: str = "",
+    ) -> None:
         stream: Iterator[bytes] | None = None
         first_chunk = True
         failed = False
         text_chunks_emitted = False
+        kind = stage_kind
         try:
-            self._call_stage(VoiceStage(state.turn_id, "tts_start", time.monotonic()))
+            self._call_stage(
+                VoiceStage(state.turn_id, "tts_start", time.monotonic(), kind=kind)
+            )
             if self.audio_turn_start is not None and not state.cancel_event.is_set():
                 # Re-arm the audio sink for this turn. The sink deliberately
                 # never re-arms on enqueue, so a stale chunk racing a barge-in
@@ -511,10 +640,10 @@ class DuplexVoiceSession:
             stream_method = getattr(self.synthesizer, "synthesize_stream", None)
             if callable(stream_method):
 
-                def _on_sentence(sentence: str, *, _turn=state.turn_id) -> None:
+                def _on_sentence(sentence: str, *, _turn=state.turn_id, _kind=kind) -> None:
                     nonlocal text_chunks_emitted
                     text_chunks_emitted = True
-                    self._emit_tts_text_chunk(_turn, sentence)
+                    self._emit_tts_text_chunk(_turn, sentence, _kind)
 
                 try:
                     stream = stream_method(
@@ -540,10 +669,11 @@ class DuplexVoiceSession:
                                     state.turn_id,
                                     "tts_first_chunk",
                                     time.monotonic(),
+                                    kind=kind,
                                 )
                             )
                             if not text_chunks_emitted and not filler:
-                                self._emit_tts_text_chunk(state.turn_id, reply)
+                                self._emit_tts_text_chunk(state.turn_id, reply, kind)
                                 text_chunks_emitted = True
                         self.audio_chunk_player(chunk)  # type: ignore[misc]
                         if first_chunk:
@@ -557,6 +687,7 @@ class DuplexVoiceSession:
                                     state.turn_id,
                                     "audio_first_playback",
                                     time.monotonic(),
+                                    kind=kind,
                                 )
                             )
                             if filler:
@@ -565,12 +696,21 @@ class DuplexVoiceSession:
             else:
                 audio = self.synthesizer.synthesize(reply)  # type: ignore[union-attr]
                 if audio and not state.cancel_event.is_set():
-                    self._call_stage(VoiceStage(state.turn_id, "tts_first_chunk", time.monotonic()))
+                    self._call_stage(
+                        VoiceStage(
+                            state.turn_id, "tts_first_chunk", time.monotonic(), kind=kind
+                        )
+                    )
                     if not filler:
-                        self._emit_tts_text_chunk(state.turn_id, reply)
+                        self._emit_tts_text_chunk(state.turn_id, reply, kind)
                     self.audio_chunk_player(audio)  # type: ignore[misc]
                     self._call_stage(
-                        VoiceStage(state.turn_id, "audio_first_playback", time.monotonic())
+                        VoiceStage(
+                            state.turn_id,
+                            "audio_first_playback",
+                            time.monotonic(),
+                            kind=kind,
+                        )
                     )
                     if filler:
                         self._mark_filler_audible(state.turn_id)
@@ -579,15 +719,23 @@ class DuplexVoiceSession:
         except Exception as error:  # noqa: BLE001
             failed = True
             if not state.cancel_event.is_set():
-                self._call_stage(VoiceStage(state.turn_id, "error", time.monotonic()))
+                self._call_stage(
+                    VoiceStage(state.turn_id, "error", time.monotonic(), kind=kind)
+                )
                 self._report_error(error)
         finally:
             if stream is not None:
                 self._close_stream(stream)
             if state.cancel_event.is_set() and not failed:
-                self._call_stage(VoiceStage(state.turn_id, "superseded", time.monotonic()))
-            self._call_stage(VoiceStage(state.turn_id, "tts_complete", time.monotonic()))
-            if not filler:
+                self._call_stage(
+                    VoiceStage(state.turn_id, "superseded", time.monotonic(), kind=kind)
+                )
+            self._call_stage(
+                VoiceStage(state.turn_id, "tts_complete", time.monotonic(), kind=kind)
+            )
+            # A filler is followed by the real reply and a system utterance is
+            # not a turn at all: neither may close a turn that is still open.
+            if not filler and not system:
                 self._call_stage(VoiceStage(state.turn_id, "turn_complete", time.monotonic()))
             with self._idle:
                 if self._active_output is state:

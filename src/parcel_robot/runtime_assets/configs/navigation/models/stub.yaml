@@ -1,0 +1,24 @@
+id: stub_v0
+type: stub
+version: "0.0.1"
+description: Offline rotate-first, forward-preferred navigator for API/tests without weights.
+checkpoint: ""
+device: cpu
+controller:
+  cruise_vx: 0.45
+  align_enter_deg: 30.0
+  align_exit_deg: 7.0
+  max_yaw_rate: 0.8
+  min_align_yaw_rate: 0.18
+  yaw_gain: 1.25
+  slowdown_radius_m: 2.25
+  control_dt_s: 0.1
+  max_linear_accel: 0.8
+  max_yaw_accel: 1.6
+rl:
+  enabled: true
+  trainable: true
+  algo: ppo
+  obs_keys: [goal_delta, velocity]
+  action_space: mid_level_velocity
+  reward: social_nav_v1

@@ -1,0 +1,12 @@
+.git
+.parcel
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+third_party
+evals/external
+managed
+*.bag
+*.mp4
+scrum/**/freeze
+.edu

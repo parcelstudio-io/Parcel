@@ -1,0 +1,44 @@
+# Repo-root mirror of packaged storefront fixtures (P3 OCR sim).
+# Canonical packaged copy:
+#   src/parcel_robot/runtime_assets/fixtures/storefronts/manifest.yaml
+# Prefer parcel_robot.storefront.fixtures.load_manifest() for resolution.
+
+schema_version: 1
+does_not_prove:
+  - Synthetic placard textures are not wild storefront photography.
+  - Fake OCR from fixture metadata does not validate PP-OCRv6 field recall.
+  - Passing CI OCR smoke does not prove ≥90% named-place precision outdoors.
+
+storefronts:
+  - id: nike_store
+    brand: Nike
+    expected_text: NIKE
+    placard_file: nike.png
+    roi_norm: [0.30, 0.08, 0.70, 0.28]
+    bearing_rad: 0.0
+    range_m: 4.5
+    bg_rgb: [20, 20, 20]
+    fg_rgb: [255, 255, 255]
+    sign_height_m: 2.2
+
+  - id: blue_bottle_coffee
+    brand: Blue Bottle Coffee
+    expected_text: BLUE BOTTLE
+    placard_file: blue_bottle.png
+    roi_norm: [0.10, 0.10, 0.48, 0.32]
+    bearing_rad: -0.35
+    range_m: 5.0
+    bg_rgb: [30, 60, 120]
+    fg_rgb: [255, 255, 255]
+    sign_height_m: 2.0
+
+  - id: parcel_cafe
+    brand: Parcel Cafe
+    expected_text: PARCEL CAFE
+    placard_file: parcel_cafe.png
+    roi_norm: [0.52, 0.12, 0.90, 0.34]
+    bearing_rad: 0.40
+    range_m: 3.8
+    bg_rgb: [180, 90, 40]
+    fg_rgb: [255, 255, 240]
+    sign_height_m: 1.8

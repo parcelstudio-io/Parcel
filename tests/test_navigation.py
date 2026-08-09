@@ -655,18 +655,46 @@ def _sidewalk_observation(position=(0.0, 0.0, 0.0)) -> NavObservation:
     )
 
 
+#: How many ticks a lone-visible region goal now takes to commit.
+#: Region ("stuff class") goals are *interchangeable*: the 2026-08-07
+#: region-instance arbitration forbids committing to the first instance that
+#: confirms, because with only one instance in view "which sidewalk is nearest"
+#: is not answerable until the robot has looked around. `ActiveSemanticSearch.
+#: observe` therefore withholds the commit until the sweep completes, bounded by
+#: `scan_budget_steps` (80). These cases used to commit on the second sighting,
+#: which was exactly the first-confirmed-wins rule the arbitration outlawed; the
+#: geometry each of them exists to check is untouched.
+REGION_SWEEP_BUDGET_STEPS = 80
+
+
+def _resolve_region_goal(nav, observation, *, budget: int = REGION_SWEEP_BUDGET_STEPS):
+    """Drive the interchangeable-goal sweep to its commit; return the commands."""
+
+    commands = []
+    for _ in range(budget):
+        commands.append(nav.step(observation))
+        if nav.mission is not None and nav.mission.goal is not None:
+            return commands
+    raise AssertionError(
+        f"region goal never committed inside the {budget}-step sweep budget"
+    )
+
+
 def test_unknown_sidewalk_uses_bounded_multiview_semantic_search():
     nav = _semantic_nav()
     mission = nav.start("go to the sidewalk")
 
-    first = nav.step(_sidewalk_observation())
-    second = nav.step(_sidewalk_observation())
+    commands = _resolve_region_goal(nav, _sidewalk_observation())
 
     assert mission.goal is not None
+    # Bounded is the claim in the name: the sweep terminates on its own budget,
+    # it does not run until something else stops it.
+    assert len(commands) == REGION_SWEEP_BUDGET_STEPS
+    first = commands[0]
     assert first.vx == first.vy == 0.0
     assert first.vyaw > 0.0
     assert first.note == "semantic_search_scan"
-    assert second == MidLevelCommand(note="semantic_target_resolved")
+    assert commands[-1] == MidLevelCommand(note="semantic_target_resolved")
     assert mission.status == "running"
     assert mission.metadata["candidate_source"] == "test_semantic_camera"
     assert mission.goal.poi_id == "observed-sidewalk-1"
@@ -676,8 +704,7 @@ def test_unknown_sidewalk_uses_bounded_multiview_semantic_search():
 def test_semantic_region_arrival_requires_robot_inside_region():
     nav = _semantic_nav()
     mission = nav.start("move to the sidewalk")
-    nav.step(_sidewalk_observation())
-    nav.step(_sidewalk_observation())
+    _resolve_region_goal(nav, _sidewalk_observation())
     assert mission.goal is not None
 
     arrived = nav.step(_sidewalk_observation((mission.goal.x, mission.goal.y, 0.0)))
@@ -699,8 +726,7 @@ def test_semantic_region_uses_tight_tolerance_and_rejects_an_outside_arrival():
         arrive_radius_m=1.5,
     )
     mission = nav.start("walk to the sidewalk")
-    nav.step(_sidewalk_observation())
-    nav.step(_sidewalk_observation())
+    _resolve_region_goal(nav, _sidewalk_observation())
     assert mission.goal is not None
     assert mission.goal.arrival_radius_m == pytest.approx(0.12)
 
@@ -768,6 +794,11 @@ def test_near_object_arrival_requires_vicinity_and_safe_support_region():
     nav.step(_lamppost_observation())
     nav.step(_lamppost_observation())
     assert mission.goal is not None
+    # Stratum-2 (Lane D, card D-3): arrival now also requires M-of-N confirming
+    # frames on the target track, so the two ticks that resolve the goal are no
+    # longer enough to *claim* it. One more sighting confirms the track; the
+    # geometry this case is about is unchanged.
+    nav.step(_lamppost_observation())
 
     at_approach = _lamppost_observation((mission.goal.x, mission.goal.y, 0.0))
     too_far_on_sidewalk = _lamppost_observation((0.5, 3.0, 0.0))
@@ -793,8 +824,7 @@ def test_near_object_arrival_requires_vicinity_and_safe_support_region():
 def test_semantic_arrival_waits_for_fresh_measured_stop_feedback():
     nav = _semantic_nav()
     mission = nav.start("move to the sidewalk")
-    nav.step(_sidewalk_observation())
-    nav.step(_sidewalk_observation())
+    _resolve_region_goal(nav, _sidewalk_observation())
     assert mission.goal is not None
     moving = _sidewalk_observation((mission.goal.x, mission.goal.y, 0.0))
     moving.extras["motion_feedback"] = {
@@ -825,6 +855,8 @@ def test_near_arrival_rejects_unsafe_current_target_lidar_range():
     nav.step(_lamppost_observation())
     nav.step(_lamppost_observation())
     assert mission.goal is not None
+    # See above: M-of-N confirmation (card D-3) needs a third sighting.
+    nav.step(_lamppost_observation())
     unsafe = _lamppost_observation((mission.goal.x, mission.goal.y, 0.0))
     unsafe.extras["lidar_obstacles"][0]["distance_m"] = 0.0
 

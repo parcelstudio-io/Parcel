@@ -1,0 +1,174 @@
+# Per-scene semantics sidecar for the city block (STRATA_GENERALIZATION_PLAN
+# stratum 3, registry 2). USD-LabelsAPI-shaped, joined to the scene by MJCF
+# geom name: MJCF has no per-element metadata, so a sidecar keyed on names is
+# the MuJoCo-native form and the forward seam to real perception (the detector
+# query set is the same class list).
+#
+# WHAT THIS FILE OWNS: the *vocabulary* of the scene — which geom-name prefixes
+# mean which class, what a human may call that class, which spatial relations
+# are achievable with it, and what role it plays as a landmark. It is loaded by
+# `parcel_robot.scene_semantics`, which fails closed on any key it does not
+# know, and consumed by `parcel_robot.city_semantics` (the class/alias/prefix
+# tables that used to be literals in that module).
+#
+# WHAT THIS FILE DOES NOT OWN: geometry. Positions, polygons, and radii are
+# read from the MJCF at extraction time and are never transcribed here.
+#
+# RELATIONSHIP TO evals/nav_instruct/scene_truth.json — DIFFERENT ARTIFACT, do
+# not merge them. `scene_truth.json` is a *generated* artifact (Wave 0, card
+# W0-D): it is the derived landmark/goal geometry table plus the pinned deltas
+# against the eval generator's hand transcription, regenerated from the MJCF
+# and checked in so a scene edit that silently moves eval goals is a red build.
+# It is downstream data. This file is upstream *vocabulary*, hand-authored, and
+# carries no coordinates. A future scene generator writes scene_truth.json; a
+# human writes this.
+
+schema_version: 1
+scene: src/parcel_robot/scenes/city_block.xml
+
+# Ordered geom-name prefix table for object classes. Order is significant and
+# enforced by the loader: when one prefix is a prefix of another, the longer
+# one must come first, or `tree_top_1` would be filed under `tree_`.
+geom_prefixes:
+  - {prefix: lamp_post_, class: lamppost}
+  - {prefix: bench_, class: bench}
+  - {prefix: tree_top_, class: tree}   # canopy geoms fold into the tree instance
+  - {prefix: tree_, class: tree}
+  - {prefix: planter_, class: planter}
+  - {prefix: bldg_, class: building}
+
+# Ordered geom-name prefix table for traversable region classes.
+region_prefixes:
+  - {prefix: sidewalk, class: sidewalk}
+  - {prefix: xw, class: crosswalk}
+  - {prefix: crosswalk, class: crosswalk}
+
+# `affordances` are relation names from parcel_robot.navigation.relation_registry
+# and are validated against it, so this file can never advertise a relation the
+# robot has no predicate for. `landmark_roles` come from the closed vocabulary
+# in scene_semantics.LANDMARK_ROLES.
+classes:
+  lamppost:
+    kind: object
+    aliases: [lamp post, streetlight, street light, lamp]
+    affordances: [near, next_to, towards]
+    landmark_roles: [waypoint, meeting_point]
+    size:
+      source: geom_radius_m
+      note: >-
+        Both lampposts are 0.06 m poles. `object_near_envelope_m` gives them the
+        point-anchor stand-off rather than a radius-derived one.
+    metadata: {}
+
+  bench:
+    kind: object
+    # `next_to` RESTORED 2026-08-09 (card S-1), by fixing the band rather than
+    # the class. From 2026-08-08 to 2026-08-09 this class did not advertise
+    # `next_to`, because the K0 band was measured to the anchor's CENTRE while
+    # every stand-off authority is measured to its SURFACE: a pose at the band's
+    # outer edge sat `1.5 - r` from the surface and had to clear
+    # StandOffEnvelope.minimum_vicinity(r) = r + 0.32 + 0.8, so the relation was
+    # achievable only for r <= 0.38 m and bench_1's derived 0.734 m radius left
+    # the region empty on all four sides (3601 bearings x 551 radii, true MJCF
+    # geometry). NEXT_TO_BAND_M is now measured to the SURFACE, so the band's
+    # 1.1 m width no longer depends on how big the anchor is: bench_1 gets
+    # 1.134-2.234 m from its centre, whose outer 0.38 m clears
+    # minimum_vicinity = 1.854 m. Measured admissible in the live scene at full
+    # shipping clearances (person social zone included) on the east end.
+    aliases: [seat, park bench, bench seat]
+    affordances: [near, next_to, towards]
+    landmark_roles: [waypoint, seating, meeting_point]
+    size:
+      source: geom_radius_m
+      note: >-
+        One bench instance; its parts (seat/back/legs) merge into `bench_1` and
+        the radius is the max over parts. Derived radius 0.733757 m. The
+        surface-anchored next_to band scales with that radius, so the size no
+        longer decides the affordance.
+    metadata: {}
+
+  tree:
+    kind: object
+    # `next_to` restored 2026-08-09 with `bench`, same derivation: the band is
+    # measured to the surface, so the 0.58 m derived radius (canopy included)
+    # no longer shrinks it. NOTE the residual, which is a scene fact and not an
+    # affordance one: every tree is co-located with a planter, which is what
+    # defeats approach-pose search for tree directives (backlog N-SUP-4).
+    aliases: [trees, street tree]
+    affordances: [near, next_to, towards]
+    landmark_roles: [waypoint, obstacle]
+    size:
+      source: geom_radius_m
+      note: >-
+        tree_1 and tree_2 are GEOMETRICALLY IDENTICAL in this scene (both
+        0.58 m derived radius, canopy included), so no size attribute can
+        distinguish them and "the big tree" honestly keeps both — see
+        navigation/attributes.py, which compares against the per-class median
+        inclusively for exactly this reason. Each tree is also co-located with
+        a planter, which is what defeats approach-pose search for every tree
+        directive (backlog N-SUP-4).
+    metadata: {}
+
+  planter:
+    kind: object
+    # `next_to` restored 2026-08-09 with `bench` and `tree`. Under the old
+    # centre-anchored band this was the narrowest of the four exclusions —
+    # minimum_vicinity(0.45) = 1.57 m against a 1.5 m outer edge, a 0.07 m miss.
+    aliases: [plant pot, flower box, pot]
+    affordances: [near, next_to, towards]
+    landmark_roles: [obstacle]
+    size:
+      source: geom_radius_m
+      note: Both planters are 0.45 m and co-located with a tree.
+    metadata: {}
+
+  building:
+    kind: object
+    aliases: [bldg, storefront, building face]
+    # No `next_to`. As of 2026-08-09 that is
+    # a VOCABULARY choice, not a measurement.
+    # Say so plainly, because it used to be the other way round:
+    # with the band measured to the anchor's CENTRE a 1.84-2.41 m facade had an
+    # empty next_to region, and the exclusion could be (and was) derived. The
+    # band is now measured to the SURFACE, so `next_to` around a building is a
+    # normal annulus 0.4-1.5 m from the wall and every pose in its outer 0.38 m
+    # clears minimum_vicinity. It is achievable; it is simply not what a person
+    # means. "Sit next to the building" is not a placement anyone asks for, and
+    # the class's landmark roles are boundary/obstacle rather than
+    # seating/meeting_point — the classes that keep `next_to` are the ones you
+    # can stand beside socially.
+    # THE CONSEQUENCE, STATED: no geometric test can justify this exclusion any
+    # more, so tests/test_scene_semantics.py asserts the necessary direction
+    # only (declared => achievable) plus that `building` is the one class whose
+    # exclusion is declared-semantic. Adding `next_to` here would be a
+    # behaviour-visible change to voice/scene_reference.py's clarification
+    # offers and nothing else; it is a product decision, not a fix.
+    affordances: [near, towards]
+    landmark_roles: [boundary, obstacle]
+    size:
+      source: geom_radius_m
+      note: >-
+        Facade boxes; derived radii run 1.84-2.41 m. Since the next_to band is
+        surface-anchored the radius no longer decides the affordance — see the
+        note above for why the exclusion stands anyway.
+    metadata: {}
+
+  sidewalk:
+    kind: region
+    aliases: [pavement, safe region]
+    affordances: [inside]
+    landmark_roles: [traversable, waypoint]
+    size:
+      source: polygon
+      note: The scene has a north and a south sidewalk; both carry this class.
+    metadata: {}
+
+  crosswalk:
+    kind: region
+    aliases: [crossing, zebra crossing, cross walk]
+    affordances: [inside]
+    landmark_roles: [traversable, boundary]
+    size:
+      source: polygon
+      note: Four `xw*` stripes merge into one crosswalk region at extraction.
+    metadata: {}

@@ -18,6 +18,7 @@ class StimulusKind(str, Enum):
     AFFECT = "affect"
     KEYWORD = "keyword"
     SPEECH_END = "speech_end"
+    DIALOGUE_STATE = "dialogue_state"
 
 
 @dataclass(frozen=True)

@@ -22,6 +22,27 @@ class ResumeIntent:
         return float(now_s) >= float(self.suspended_at_s) + float(self.valid_for_s)
 
 
+def resume_rejection_reason(
+    intent: ResumeIntent | None,
+    *,
+    now_s: float,
+    observation_fresh: bool | None = None,
+) -> str | None:
+    """Return a fail-closed rejection reason, or ``None`` when resume may proceed.
+
+    Central gate for the suspend→resume transaction: expired intents and
+    ``requires_fresh_observation`` without a proven-fresh sample never resume.
+    """
+
+    if intent is None:
+        return "missing_intent"
+    if intent.expired(now_s):
+        return "expired"
+    if intent.requires_fresh_observation and observation_fresh is not True:
+        return "stale_observation"
+    return None
+
+
 class ResumeStore:
     """At most one intent per channel; replace-on-suspend, take-on-resume."""
 
@@ -105,4 +126,5 @@ __all__ = [
     "GenerationTokens",
     "ResumeIntent",
     "ResumeStore",
+    "resume_rejection_reason",
 ]

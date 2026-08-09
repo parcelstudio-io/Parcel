@@ -40,8 +40,12 @@ class PlaceGrounder:
                 score += 3
             if category and category in text:
                 score += 1
+            # Whole words only. A substring test scored "near" (from the POI
+            # name "crosswalk near coffee") inside "the nearest lamppost" and
+            # grounded a superlative object directive to the crosswalk POI,
+            # which then never reached the semantic path at all.
             for word in re.findall(r"[a-z0-9]+", " ".join(names) + " " + label):
-                if len(word) >= 4 and word in text:
+                if len(word) >= 4 and re.search(rf"\b{re.escape(word)}\b", text):
                     score += 1
             if score > 0:
                 scored.append((score, poi))

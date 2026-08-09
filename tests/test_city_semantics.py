@@ -86,8 +86,11 @@ def test_vocabulary_includes_bench_tree_planter_building_crosswalk(city_semantic
     bench = by_id["bench_1"]
     assert "seat" in bench["metadata"]["aliases"]
     assert any(name.startswith("bench_") for name in bench["metadata"]["associated_lidar_ids"])
-    assert bench["metadata"]["goal_region"]["kind"] == "disc"
+    assert bench["metadata"]["goal_region"]["kind"] == "relative_band"
     assert bench["metadata"]["goal_region"]["center"][0] == pytest.approx(-2.5)
+    assert bench["metadata"]["goal_region"]["band_m"][1] == pytest.approx(
+        bench["metadata"]["vicinity_radius_m"]
+    )
 
     crosswalk = next(item for item in regions if item["label"] == "crosswalk")
     assert crosswalk["id"] == "crosswalk"

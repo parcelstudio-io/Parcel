@@ -1,0 +1,512 @@
+{
+  "corrections": {
+    "d": "surface-anchored next_to band \u2014 NEXT_TO_BAND_M becomes a distance to the anchor's SURFACE instead of its CENTRE, materialised in exactly one place (instructnav.scoring.next_to_band_from_centre). The band's 1.1 m width no longer shrinks with the anchor's radius, so next_to is achievable for bench/tree/planter instead of for the lamppost alone"
+  },
+  "episode_set_provenance": {
+    "v2": "2026-08-07 re-freeze: corrections (a) + (b)",
+    "v3": "2026-08-09 re-freeze: correction (d) surface-anchored next_to band; carries (a) + (b) unchanged from v2"
+  },
+  "from_version": "v2",
+  "frozen_baseline": false,
+  "generated_at": "20260809T045633Z",
+  "kind": "refreeze_bridge",
+  "measured_bridge": {
+    "deltas": {
+      "baseline": {
+        "d_next_to_band": {
+          "collisions_after": 0,
+          "collisions_before": 0,
+          "episodes_gained": [
+            "nav-object_relative-A-00-3efbba45"
+          ],
+          "episodes_lost": [],
+          "k0_arrival_gained": [
+            "nav-object_relative-A-00-3efbba45"
+          ],
+          "k0_arrival_lost": [],
+          "mean_dtg_after_m": 8.230755210223947,
+          "mean_dtg_before_m": 8.348521807173627,
+          "mean_dtg_delta_m": -0.11776659694968039,
+          "rule": "both sides on the v2 arrival rule (v3 does not change it)",
+          "sr_after": 0.2,
+          "sr_before": 0.16,
+          "sr_delta": 0.04000000000000001
+        }
+      },
+      "candidate": {
+        "d_next_to_band": {
+          "collisions_after": 0,
+          "collisions_before": 0,
+          "episodes_gained": [
+            "nav-object_relative-A-00-3efbba45"
+          ],
+          "episodes_lost": [],
+          "k0_arrival_gained": [
+            "nav-object_relative-A-00-3efbba45"
+          ],
+          "k0_arrival_lost": [],
+          "mean_dtg_after_m": 8.16773938853766,
+          "mean_dtg_before_m": 8.285504984335251,
+          "mean_dtg_delta_m": -0.11776559579759116,
+          "rule": "both sides on the v2 arrival rule (v3 does not change it)",
+          "sr_after": 0.12,
+          "sr_before": 0.08,
+          "sr_delta": 0.039999999999999994
+        }
+      }
+    },
+    "measured_on": "one tree, one process, all four cells",
+    "runs": {
+      "baseline": {
+        "v2": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 21,
+            "trace_end_hold": 3
+          },
+          "arrival_rule": "hold-or-trace-end-v1",
+          "authority_histogram": {
+            "agreement": 19,
+            "authority_disagreement": 4,
+            "false_arrival": 2,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "dtg_by_episode": {
+            "nav-circle_owner-A-00-6ba3a31d": 0.0,
+            "nav-circle_owner-B-05-4d7b5b21": 0.0,
+            "nav-circle_owner-C-10-4dd3449c": 7.5082439194737995,
+            "nav-circle_owner-D-15-717b5947": 0.0,
+            "nav-circle_owner-E-20-12e7db57": 0.0,
+            "nav-follow_owner-A-00-40672702": 0.0312018038568167,
+            "nav-follow_owner-B-05-334e8d3f": 0.03180852919484867,
+            "nav-follow_owner-C-10-41c8032b": 7.935405743984172,
+            "nav-follow_owner-D-15-74a535dd": 0.0,
+            "nav-follow_owner-E-20-433c9247": 1.257888655740891,
+            "nav-object_goal-A-00-4caa923b": 0.0,
+            "nav-object_goal-B-05-0ee314d5": 0.3163837568294636,
+            "nav-object_goal-C-10-68aa2ab8": 1.87,
+            "nav-object_goal-D-15-109547e2": 0.0,
+            "nav-object_goal-E-20-1a854173": 56.159536928923096,
+            "nav-object_relative-A-00-3efbba45": 0.7266509237420249,
+            "nav-object_relative-B-05-7d441aee": 2.2172604159515106,
+            "nav-object_relative-C-10-0d3f5ebd": 8.203988870562457,
+            "nav-object_relative-D-15-61f68ad6": 4.465159260237734,
+            "nav-object_relative-E-20-0c739ea2": 55.2003361982978,
+            "nav-region_goal-A-00-1c735162": 0.0,
+            "nav-region_goal-B-05-586317e4": 2.4250000000000003,
+            "nav-region_goal-C-10-138643ba": 2.325,
+            "nav-region_goal-D-15-1b8b2361": 1.8999711385208982,
+            "nav-region_goal-E-20-6a95f8c4": 56.139209034025185
+          },
+          "episode_digest": "a17c04dbec43a1749386c304060fb479a71f27d4b51b8c1b0fbb949753fc563d",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 2,
+            "grounding_error": 4,
+            "none": 4,
+            "planning_error": 5,
+            "refusal": 6,
+            "search_error": 0,
+            "termination": 4
+          },
+          "mean_dtg_m": 8.348521807173627,
+          "scorer_arrival": [
+            "nav-circle_owner-A-00-6ba3a31d",
+            "nav-circle_owner-B-05-4d7b5b21",
+            "nav-circle_owner-D-15-717b5947",
+            "nav-circle_owner-E-20-12e7db57",
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b",
+            "nav-object_goal-D-15-109547e2",
+            "nav-region_goal-A-00-1c735162"
+          ],
+          "spl": 0.12016476583919257,
+          "sr": 0.16,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b",
+            "nav-object_goal-D-15-109547e2",
+            "nav-region_goal-A-00-1c735162"
+          ]
+        },
+        "v3": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 20,
+            "trace_end_hold": 4
+          },
+          "arrival_rule": "hold-or-trace-end-v1",
+          "authority_histogram": {
+            "agreement": 20,
+            "authority_disagreement": 4,
+            "false_arrival": 1,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "dtg_by_episode": {
+            "nav-circle_owner-A-00-6ba3a31d": 0.0,
+            "nav-circle_owner-B-05-4d7b5b21": 0.0,
+            "nav-circle_owner-C-10-4dd3449c": 7.5082439194737995,
+            "nav-circle_owner-D-15-717b5947": 0.0,
+            "nav-circle_owner-E-20-12e7db57": 0.0,
+            "nav-follow_owner-A-00-40672702": 0.0312018038568167,
+            "nav-follow_owner-B-05-334e8d3f": 0.03180852919484867,
+            "nav-follow_owner-C-10-41c8032b": 7.935405743984172,
+            "nav-follow_owner-D-15-74a535dd": 0.0,
+            "nav-follow_owner-E-20-433c9247": 1.257888655740891,
+            "nav-object_goal-A-00-4caa923b": 0.0,
+            "nav-object_goal-B-05-0ee314d5": 0.3163837568294636,
+            "nav-object_goal-C-10-68aa2ab8": 1.87,
+            "nav-object_goal-D-15-109547e2": 0.0,
+            "nav-object_goal-E-20-1a854173": 56.159536928923096,
+            "nav-object_relative-A-00-3efbba45": 0.0,
+            "nav-object_relative-B-05-7d441aee": 1.4835034159515108,
+            "nav-object_relative-C-10-0d3f5ebd": 7.470231870562457,
+            "nav-object_relative-D-15-61f68ad6": 4.015159260237734,
+            "nav-object_relative-E-20-0c739ea2": 54.9003361982978,
+            "nav-region_goal-A-00-1c735162": 0.0,
+            "nav-region_goal-B-05-586317e4": 2.4250000000000003,
+            "nav-region_goal-C-10-138643ba": 2.325,
+            "nav-region_goal-D-15-1b8b2361": 1.8999711385208982,
+            "nav-region_goal-E-20-6a95f8c4": 56.139209034025185
+          },
+          "episode_digest": "919a0fea836363a6f6d04d3fb186b0dcb493aa6c76357d8af2b0c05408c556aa",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 4,
+            "none": 5,
+            "planning_error": 5,
+            "refusal": 6,
+            "search_error": 0,
+            "termination": 4
+          },
+          "mean_dtg_m": 8.230755210223947,
+          "scorer_arrival": [
+            "nav-circle_owner-A-00-6ba3a31d",
+            "nav-circle_owner-B-05-4d7b5b21",
+            "nav-circle_owner-D-15-717b5947",
+            "nav-circle_owner-E-20-12e7db57",
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b",
+            "nav-object_goal-D-15-109547e2",
+            "nav-object_relative-A-00-3efbba45",
+            "nav-region_goal-A-00-1c735162"
+          ],
+          "spl": 0.16016476583919256,
+          "sr": 0.2,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b",
+            "nav-object_goal-D-15-109547e2",
+            "nav-object_relative-A-00-3efbba45",
+            "nav-region_goal-A-00-1c735162"
+          ]
+        }
+      },
+      "candidate": {
+        "v2": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 23,
+            "trace_end_hold": 1
+          },
+          "arrival_rule": "hold-or-trace-end-v1",
+          "authority_histogram": {
+            "agreement": 17,
+            "authority_disagreement": 6,
+            "false_arrival": 2,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "dtg_by_episode": {
+            "nav-circle_owner-A-00-6ba3a31d": 0.0,
+            "nav-circle_owner-B-05-4d7b5b21": 0.0,
+            "nav-circle_owner-C-10-4dd3449c": 7.5082439194737995,
+            "nav-circle_owner-D-15-717b5947": 0.0,
+            "nav-circle_owner-E-20-12e7db57": 0.0,
+            "nav-follow_owner-A-00-40672702": 0.0312018038568167,
+            "nav-follow_owner-B-05-334e8d3f": 0.03180852919484867,
+            "nav-follow_owner-C-10-41c8032b": 7.935405743984172,
+            "nav-follow_owner-D-15-74a535dd": 0.0,
+            "nav-follow_owner-E-20-433c9247": 1.257888655740891,
+            "nav-object_goal-A-00-4caa923b": 0.0,
+            "nav-object_goal-B-05-0ee314d5": 0.3477229599481313,
+            "nav-object_goal-C-10-68aa2ab8": 1.87,
+            "nav-object_goal-D-15-109547e2": 2.9177579044372868,
+            "nav-object_goal-E-20-1a854173": 55.69189238242301,
+            "nav-object_relative-A-00-3efbba45": 0.7266258949397817,
+            "nav-object_relative-B-05-7d441aee": 2.2172604159515106,
+            "nav-object_relative-C-10-0d3f5ebd": 8.203988870562457,
+            "nav-object_relative-D-15-61f68ad6": 4.753098937340054,
+            "nav-object_relative-E-20-0c739ea2": 53.92026259864333,
+            "nav-region_goal-A-00-1c735162": 0.0,
+            "nav-region_goal-B-05-586317e4": 0.0,
+            "nav-region_goal-C-10-138643ba": 2.325,
+            "nav-region_goal-D-15-1b8b2361": 1.8999545113238898,
+            "nav-region_goal-E-20-6a95f8c4": 55.49951148056127
+          },
+          "episode_digest": "a17c04dbec43a1749386c304060fb479a71f27d4b51b8c1b0fbb949753fc563d",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 2,
+            "grounding_error": 1,
+            "none": 2,
+            "planning_error": 12,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 7
+          },
+          "mean_dtg_m": 8.285504984335251,
+          "scorer_arrival": [
+            "nav-circle_owner-A-00-6ba3a31d",
+            "nav-circle_owner-B-05-4d7b5b21",
+            "nav-circle_owner-D-15-717b5947",
+            "nav-circle_owner-E-20-12e7db57",
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b",
+            "nav-region_goal-A-00-1c735162",
+            "nav-region_goal-B-05-586317e4"
+          ],
+          "spl": 0.04016476583919257,
+          "sr": 0.08,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b"
+          ]
+        },
+        "v3": {
+          "arrival_branch_histogram": {
+            "frozen_hold": 1,
+            "none": 22,
+            "trace_end_hold": 2
+          },
+          "arrival_rule": "hold-or-trace-end-v1",
+          "authority_histogram": {
+            "agreement": 18,
+            "authority_disagreement": 6,
+            "false_arrival": 1,
+            "tolerated_boundary": 0,
+            "unknown": 0
+          },
+          "collision_total": 0,
+          "dtg_by_episode": {
+            "nav-circle_owner-A-00-6ba3a31d": 0.0,
+            "nav-circle_owner-B-05-4d7b5b21": 0.0,
+            "nav-circle_owner-C-10-4dd3449c": 7.5082439194737995,
+            "nav-circle_owner-D-15-717b5947": 0.0,
+            "nav-circle_owner-E-20-12e7db57": 0.0,
+            "nav-follow_owner-A-00-40672702": 0.0312018038568167,
+            "nav-follow_owner-B-05-334e8d3f": 0.03180852919484867,
+            "nav-follow_owner-C-10-41c8032b": 7.935405743984172,
+            "nav-follow_owner-D-15-74a535dd": 0.0,
+            "nav-follow_owner-E-20-433c9247": 1.257888655740891,
+            "nav-object_goal-A-00-4caa923b": 0.0,
+            "nav-object_goal-B-05-0ee314d5": 0.3477229599481313,
+            "nav-object_goal-C-10-68aa2ab8": 1.87,
+            "nav-object_goal-D-15-109547e2": 2.9177579044372868,
+            "nav-object_goal-E-20-1a854173": 55.69189238242301,
+            "nav-object_relative-A-00-3efbba45": 0.0,
+            "nav-object_relative-B-05-7d441aee": 1.4835034159515108,
+            "nav-object_relative-C-10-0d3f5ebd": 7.470231870562457,
+            "nav-object_relative-D-15-61f68ad6": 4.303098937340054,
+            "nav-object_relative-E-20-0c739ea2": 53.620262598643336,
+            "nav-region_goal-A-00-1c735162": 0.0,
+            "nav-region_goal-B-05-586317e4": 0.0,
+            "nav-region_goal-C-10-138643ba": 2.325,
+            "nav-region_goal-D-15-1b8b2361": 1.8999545113238898,
+            "nav-region_goal-E-20-6a95f8c4": 55.49951148056127
+          },
+          "episode_digest": "919a0fea836363a6f6d04d3fb186b0dcb493aa6c76357d8af2b0c05408c556aa",
+          "failure_histogram": {
+            "control_error": 0,
+            "false_arrival": 1,
+            "grounding_error": 1,
+            "none": 3,
+            "planning_error": 12,
+            "refusal": 1,
+            "search_error": 0,
+            "termination": 7
+          },
+          "mean_dtg_m": 8.16773938853766,
+          "scorer_arrival": [
+            "nav-circle_owner-A-00-6ba3a31d",
+            "nav-circle_owner-B-05-4d7b5b21",
+            "nav-circle_owner-D-15-717b5947",
+            "nav-circle_owner-E-20-12e7db57",
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b",
+            "nav-object_relative-A-00-3efbba45",
+            "nav-region_goal-A-00-1c735162",
+            "nav-region_goal-B-05-586317e4"
+          ],
+          "spl": 0.08016476583919258,
+          "sr": 0.12,
+          "sr_frozen_rule": 0.04,
+          "successes": [
+            "nav-follow_owner-D-15-74a535dd",
+            "nav-object_goal-A-00-4caa923b",
+            "nav-object_relative-A-00-3efbba45"
+          ]
+        }
+      }
+    },
+    "why_not_the_frozen_v2_rows": "the v2 ledger rows were measured on 2026-08-08 code; differencing against them would charge whatever landed since to the band change"
+  },
+  "next_to_band_reference": {
+    "v2": "centre",
+    "v3": "surface"
+  },
+  "predicted_vs_measured": {
+    "per_mode": {
+      "baseline": {
+        "k0_predicate_flips": [
+          "nav-object_relative-A-00-3efbba45"
+        ],
+        "matches_predicted_flips": true,
+        "matches_predicted_sr_delta": false,
+        "sr_delta": 0.04000000000000001
+      },
+      "candidate": {
+        "k0_predicate_flips": [
+          "nav-object_relative-A-00-3efbba45"
+        ],
+        "matches_predicted_flips": true,
+        "matches_predicted_sr_delta": false,
+        "sr_delta": 0.039999999999999994
+      }
+    },
+    "prediction": {
+      "episode_success_delta": 0,
+      "k0_predicate_flips": [
+        "nav-object_relative-A-00-3efbba45"
+      ],
+      "note": "one episode's K0 arrival predicate flips (the bench), in both modes; episode success additionally requires the settle hold and was 0/5 before and after, so headline SR was predicted not to move",
+      "source": "scrum/20260808/task_3/BENCH_PLACEMENT_STATUS.md (read-only re-scoring)"
+    },
+    "prediction_confirmed": false
+  },
+  "runner_version": "nav-instruct-v1.1-k0-arrival",
+  "spec_bridge": {
+    "changed_rows": [
+      {
+        "anchor_footprint_m": 0.733757,
+        "changed_by": "next_to_band",
+        "episode_id": "nav-object_relative-A-00-3efbba45",
+        "family": "object_relative",
+        "instruction": "sit next to the bench",
+        "target": "bench_1",
+        "tier": "A",
+        "v2_band_m": [
+          0.4,
+          1.5
+        ],
+        "v2_shortest_path_m": 5.0,
+        "v3_band_m": [
+          1.1337570000000001,
+          2.2337569999999998
+        ],
+        "v3_shortest_path_m": 4.5
+      },
+      {
+        "anchor_footprint_m": 0.733757,
+        "changed_by": "next_to_band",
+        "episode_id": "nav-object_relative-B-05-7d441aee",
+        "family": "object_relative",
+        "instruction": "wait by the bench",
+        "target": "bench_1",
+        "tier": "B",
+        "v2_band_m": [
+          0.4,
+          1.5
+        ],
+        "v2_shortest_path_m": 4.0,
+        "v3_band_m": [
+          1.1337570000000001,
+          2.2337569999999998
+        ],
+        "v3_shortest_path_m": 3.5
+      },
+      {
+        "anchor_footprint_m": 0.733757,
+        "changed_by": "next_to_band",
+        "episode_id": "nav-object_relative-C-10-0d3f5ebd",
+        "family": "object_relative",
+        "instruction": "stand next to the seat",
+        "target": "bench_1",
+        "tier": "C",
+        "v2_band_m": [
+          0.4,
+          1.5
+        ],
+        "v2_shortest_path_m": 11.5,
+        "v3_band_m": [
+          1.1337570000000001,
+          2.2337569999999998
+        ],
+        "v3_shortest_path_m": 11.0
+      },
+      {
+        "anchor_footprint_m": 0.45,
+        "changed_by": "next_to_band",
+        "episode_id": "nav-object_relative-D-15-61f68ad6",
+        "family": "object_relative",
+        "instruction": "go next to the planter",
+        "target": "planter_1",
+        "tier": "D",
+        "v2_band_m": [
+          0.4,
+          1.5
+        ],
+        "v2_shortest_path_m": 8.0,
+        "v3_band_m": [
+          0.8500000000000001,
+          1.95
+        ],
+        "v3_shortest_path_m": 7.5
+      },
+      {
+        "anchor_footprint_m": 0.3,
+        "changed_by": "next_to_band",
+        "episode_id": "nav-object_relative-E-20-0c739ea2",
+        "family": "object_relative",
+        "instruction": "sit next to the bench",
+        "target": null,
+        "tier": "E",
+        "v2_band_m": [
+          0.4,
+          1.5
+        ],
+        "v2_shortest_path_m": 56.3003361982978,
+        "v3_band_m": [
+          0.7,
+          1.8
+        ],
+        "v3_shortest_path_m": 56.000336198297795
+      }
+    ],
+    "counts_by_change": {
+      "next_to_band": 5,
+      "unchanged": 20
+    },
+    "digests": {
+      "v2": "a17c04dbec43a1749386c304060fb479a71f27d4b51b8c1b0fbb949753fc563d",
+      "v3": "919a0fea836363a6f6d04d3fb186b0dcb493aa6c76357d8af2b0c05408c556aa"
+    },
+    "episode_count": 25,
+    "families_moved": [
+      "object_relative"
+    ],
+    "id_mapping_is_total": true,
+    "only_object_relative_moved": true,
+    "seed": 20260804
+  },
+  "to_version": "v3"
+}

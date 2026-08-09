@@ -7,7 +7,7 @@ from .commands import MotionIntent
 from .details import FollowDetail, NavigationDetail, SpatialDetail, VoiceDetail
 from .motion_shaping import MotionShapingConfig
 from .preemption import PreemptionAction, PreemptionDecision, PreemptionTable
-from .resume import GenerationTokens, ResumeIntent, ResumeStore
+from .resume import GenerationTokens, ResumeIntent, ResumeStore, resume_rejection_reason
 from .velocity_smoother import VelocitySmoother
 
 __all__ = [
@@ -32,4 +32,5 @@ __all__ = [
     "SubmitResult",
     "VelocitySmoother",
     "VoiceDetail",
+    "resume_rejection_reason",
 ]

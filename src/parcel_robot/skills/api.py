@@ -9,15 +9,32 @@ import yaml
 from parcel_robot.config import ConfigStore
 from parcel_robot.models import Pose, VelocityCommand
 from parcel_robot.motion import MotionRouter, build_motion_router
+from parcel_robot.paths import resolve_config_yaml, resolve_navigation_config
 
 from .catalog import SkillCatalog
 from .executor import ExecutionResult, SkillExecutor
 from .schema import SkillSpec
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_CONFIG = REPO_ROOT / "configs" / "robot.yaml"
 FALLBACK_CONFIG = Path(__file__).resolve().parents[1] / "config" / "robot.yaml"
-DEFAULT_NAV_CONFIG = REPO_ROOT / "configs" / "navigation" / "default.yaml"
+
+
+def _default_config() -> Path:
+    try:
+        return resolve_config_yaml("configs/robot.yaml")
+    except FileNotFoundError:
+        return FALLBACK_CONFIG
+
+
+def _default_nav_config() -> Path:
+    try:
+        return resolve_navigation_config("configs/navigation/default.yaml")
+    except FileNotFoundError:
+        return REPO_ROOT / "configs" / "navigation" / "default.yaml"
+
+
+DEFAULT_CONFIG = _default_config()
+DEFAULT_NAV_CONFIG = _default_nav_config()
 
 
 class Dog:
@@ -56,7 +73,7 @@ class Dog:
         on_trajectory=None,
         on_stop=None,
     ) -> Dog:
-        path = Path(config_path) if config_path else DEFAULT_CONFIG
+        path = Path(config_path) if config_path else _default_config()
         if not path.is_file():
             path = FALLBACK_CONFIG
         store = ConfigStore(path)
@@ -78,11 +95,18 @@ class Dog:
         raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         nav_block = raw.get("navigation") or {}
         if nav_block.get("enabled", True):
-            candidate = Path(nav_block.get("config", DEFAULT_NAV_CONFIG))
-            if not candidate.is_absolute():
-                candidate = (REPO_ROOT / candidate).resolve()
-            if candidate.is_file():
-                nav_cfg = candidate
+            configured = nav_block.get("config", "configs/navigation/default.yaml")
+            candidate = Path(configured)
+            if candidate.is_absolute():
+                if candidate.is_file():
+                    nav_cfg = candidate
+            else:
+                try:
+                    nav_cfg = resolve_navigation_config(str(configured))
+                except FileNotFoundError:
+                    fallback = (REPO_ROOT / candidate).resolve()
+                    if fallback.is_file():
+                        nav_cfg = fallback
         return cls(catalog, executor, motion=router, config_path=path, navigation_config=nav_cfg)
 
     def list_skills(self, tag: str | None = None, kind: str | None = None) -> list[SkillSpec]:
@@ -134,6 +158,16 @@ class Dog:
         """Report the dynamic-cost layer without forcing navigator construction."""
 
         return bool(getattr(self._navigator, "dynamic_cost_active", False))
+
+    def take_pending_ramp_seed(self) -> float | None:
+        """Consume the navigator's yield-advance seed, if any (N11).
+
+        Deliberately does not force navigator construction: a runtime with
+        navigation disabled has no ramp memory and must not grow one here.
+        """
+
+        take = getattr(self._navigator, "take_pending_ramp_seed", None)
+        return take() if callable(take) else None
 
     def list_nav_models(self):
         return self._ensure_navigator().list_models()

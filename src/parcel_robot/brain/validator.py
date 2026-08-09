@@ -8,6 +8,7 @@ import math
 import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from functools import lru_cache
 
 from .contracts import (
     RESOURCES,
@@ -89,7 +90,24 @@ _NAME = re.compile(r"^[a-z][a-z0-9_]{0,79}$")
 # Skills the runtime proposes deterministically. They are validated, dispatched,
 # and verified exactly like any other semantic skill, but they never appear in a
 # planner prompt or response schema, so no model can author one.
-SYSTEM_SKILL_NAMES = frozenset({"SearchOwner"})
+SYSTEM_SKILL_NAMES = frozenset({"SearchOwner", "ScanBehavior", "SearchEntity"})
+
+#: Skills the **runtime's own deterministic sketches** may author even when the
+#: deployment's ``agent.brain.skills`` list does not name them. A registry built
+#: with ``system_authored=True`` always admits these; a model-facing registry
+#: never does, so this widens nothing a language model can reach.
+#:
+#: ``Pose`` is here for backlog N13's settle step ("sit next to X" = navigate +
+#: sit). It is deliberately NOT added to ``configs/robot.yaml``: that file is a
+#: **locked input of the frozen embodied-plan manifest**
+#: (``evals/companion/embodied_plan_v1/manifest.json`` pins its SHA-256), so
+#: editing it fails the manifest verification and invalidates a frozen
+#: baseline. It is also deliberately NOT moved into
+#: :data:`SYSTEM_SKILL_NAMES`, because that set is what
+#: ``SkillContractRegistry.default()`` filters on, and the frozen live-planner
+#: probe asserts ``Pose`` is present in the full default registry and raw plan
+#: schema.
+RUNTIME_AUTHORED_SKILLS = frozenset({"Pose"})
 
 
 class PlanValidationError(ValueError):
@@ -130,6 +148,7 @@ class SkillContractRegistry:
         pose_names: Iterable[str] = (),
         gesture_names: Iterable[str] = (),
         owner_heading_supported: bool = False,
+        system_authored: bool = False,
     ):
         values = tuple(contracts)
         self._contracts = {item.name: item for item in values}
@@ -140,6 +159,15 @@ class SkillContractRegistry:
         if not isinstance(owner_heading_supported, bool):
             raise TypeError("owner_heading_supported must be a boolean")
         self.owner_heading_supported = owner_heading_supported
+        if not isinstance(system_authored, bool):
+            raise TypeError("system_authored must be a boolean")
+        # True only for the registry the *runtime's own* deterministic plans
+        # validate against. Arguments a model may never author — today the
+        # plain-follow relation — are admitted off this flag, so a loose-decode
+        # provider cannot reach them through the model-facing validator
+        # (arbitration OB-2). The JSON-schema ``const`` is a hint to the model;
+        # this is the enforcement.
+        self.system_authored = system_authored
 
     @classmethod
     def default(
@@ -190,15 +218,26 @@ class SkillContractRegistry:
                 ("directive",),
                 (),
                 ("base", "attention"),
+                # Admission requires a searchable target, not a visible one:
+                # grounding-with-recovery is NavigateTo's own job via the
+                # resolution ladder (frustum -> memory -> scan -> frontier ->
+                # honest report). Requiring "target_grounded" here rejected
+                # every out-of-frustum target at admission and dead-ended
+                # "go to the sidewalk" before the ladder could run.
                 (
                     "camera_fresh",
                     "lidar_fresh",
                     "base_available",
-                    "target_grounded",
                 ),
                 ("inside", "near"),
                 ("replan", "alternate_candidate", "rescan", "ask_user", "safe_stop"),
-                120.0,
+                # 120->240 (2026-08-05): the contract timeout is a safety net
+                # for a hung controller and must sit ABOVE the navigator's own
+                # bounded give-up (~220 s worst case: stall windows + scans +
+                # frontier + travel), so failures arrive with navigator
+                # attribution instead of a blunt step_timeout. Same rule
+                # SearchOwner already applies below.
+                240.0,
                 "checkpoint",
             ),
             contract(
@@ -207,14 +246,16 @@ class SkillContractRegistry:
                 ("relation", "distance_m"),
                 (),
                 ("base", "attention"),
-                (
-                    "camera_fresh",
-                    "lidar_fresh",
-                    "base_available",
-                    "owner_visible",
-                    "owner_heading_available",
-                ),
-                ("behind",),
+                # owner_heading_available is deliberately NOT a blanket
+                # requirement (arbiter ruling 2026-08-06). It is a property of
+                # the *behind* relation — you cannot stage behind someone
+                # whose direction of travel you cannot estimate — not of the
+                # skill. Plain follow tracks the owner directly and needs
+                # owner_visible only. The compiler adds the heading
+                # precondition per relation, exactly as it does for
+                # MoveRelative(direction=away_from_owner) + owner_visible.
+                ("camera_fresh", "lidar_fresh", "base_available", "owner_visible"),
+                ("behind", "following"),
                 ("reacquire_owner", "replan", "wait", "safe_stop"),
                 300.0,
                 "checkpoint",
@@ -321,6 +362,30 @@ class SkillContractRegistry:
                 "checkpoint",
             ),
             contract(
+                "ScanBehavior",
+                "empty",
+                (),
+                (),
+                ("base", "attention"),
+                ("camera_fresh", "base_available"),
+                ("skill_completed",),
+                ("rescan", "safe_stop"),
+                30.0,
+                "checkpoint",
+            ),
+            contract(
+                "SearchEntity",
+                "search_entity",
+                ("query",),
+                (),
+                ("base", "attention"),
+                ("camera_fresh", "lidar_fresh", "base_available"),
+                ("skill_completed",),
+                ("replan", "alternate_candidate", "rescan", "safe_stop"),
+                90.0,
+                "checkpoint",
+            ),
+            contract(
                 "ReturnToSafePose",
                 "safe_pose",
                 ("pose",),
@@ -348,12 +413,27 @@ class SkillContractRegistry:
             pose_names=pose_names,
             gesture_names=gesture_names,
             owner_heading_supported=owner_heading_supported,
+            # Asking for the system skills is asking for the system registry.
+            system_authored=include_system_skills,
         )
 
     def get(self, name: str) -> SkillContract:
         try:
             return self._contracts[name]
         except KeyError as error:
+            # A *system-authored* registry also admits the skills only the
+            # runtime's own deterministic sketches emit, so a deployment's
+            # ``agent.brain.skills`` list does not have to name them. This is
+            # deliberately in ``get`` and NOT in ``names``: schemas, prompt
+            # contracts, and the duplex skill list all derive from ``names``,
+            # so the model-facing surface is provably unchanged — a model
+            # cannot even see ``Pose`` in its response schema, and the
+            # model-facing registry (system_authored=False) still refuses it
+            # here with ``unknown_skill``.
+            if self.system_authored and name in RUNTIME_AUTHORED_SKILLS:
+                fallback = _runtime_authored_contracts().get(name)
+                if fallback is not None:
+                    return fallback
             raise PlanValidationError(
                 "unknown_skill",
                 f"skill is not present in the admitted registry: {name}",
@@ -373,6 +453,12 @@ class SkillContractRegistry:
             "skills": [
                 {
                     "name": contract.name,
+                    # Model-facing admission only. The plan_ir/plan_sketch
+                    # schemas pin a model-authored FollowFormation to
+                    # relation="behind", so for a model this skill really does
+                    # require heading support. The system-authored plain
+                    # follow relation is not exposed here and is not gated by
+                    # this flag (arbiter ruling 2026-08-06).
                     "admitted": (
                         contract.name != "FollowFormation" or self.owner_heading_supported
                     ),
@@ -393,7 +479,12 @@ class SkillContractRegistry:
             ],
         }
 
-    def restricted(self, enabled: Iterable[str]) -> SkillContractRegistry:
+    def restricted(
+        self,
+        enabled: Iterable[str],
+        *,
+        system_authored: bool | None = None,
+    ) -> SkillContractRegistry:
         names = frozenset(enabled)
         unknown = names - self._contracts.keys()
         if unknown:
@@ -403,6 +494,11 @@ class SkillContractRegistry:
             pose_names=self.pose_names,
             gesture_names=self.gesture_names,
             owner_heading_supported=self.owner_heading_supported,
+            # Narrowing defaults to model-facing: a restricted registry must
+            # opt in to system authority, never inherit it by accident.
+            system_authored=(
+                self.system_authored if system_authored is None else bool(system_authored)
+            ),
         )
 
 
@@ -516,7 +612,7 @@ class PlanValidator:
         allowed_goal_relations = {
             "semantic_region": {"inside"},
             "semantic_object": {"near"},
-            "owner": {"behind", "orbit", "relative", "reacquire"},
+            "owner": {"behind", "follow", "orbit", "relative", "reacquire"},
             "current_pose": {"hold", "relative"},
             "safe_region": {"safe_pose"},
         }
@@ -542,6 +638,8 @@ class PlanValidator:
                 "MoveRelative",
                 "ReturnToSafePose",
                 "SearchOwner",
+                "ScanBehavior",
+                "SearchEntity",
             }
         )
         perception = any(
@@ -693,12 +791,25 @@ class PlanValidator:
             if profile == "navigate":
                 _text(args["directive"], minimum=1, maximum=500)
             elif profile == "follow":
-                if not self.registry.owner_heading_supported:
-                    raise ValueError(
-                        "owner heading support is unavailable; behind formation cannot be admitted"
-                    )
-                if args["relation"] != "behind":
-                    raise ValueError("relation must equal 'behind'")
+                # Plain follow is a system-authored relation: the model-facing
+                # schema pins `behind`, and this registry check is what makes
+                # that pin enforceable against a loose-decode provider
+                # (arbitration OB-2 — the plan_ir `const` is only a hint).
+                _one_of(
+                    args["relation"],
+                    {"follow", "behind"} if self.registry.system_authored else {"behind"},
+                )
+                if args["relation"] == "behind":
+                    # Behind staging is the only relation that consumes an
+                    # owner motion heading; plain follow must not inherit its
+                    # capability gate (arbiter ruling 2026-08-06).
+                    if not self.registry.owner_heading_supported:
+                        raise ValueError(
+                            "owner heading support is unavailable; behind formation "
+                            "cannot be admitted"
+                        )
+                    if "owner_heading_available" not in step.preconditions:
+                        raise ValueError("behind formation requires owner_heading_available")
                 _numeric(args["distance_m"], minimum=0.8, maximum=3.0)
             elif profile == "orbit":
                 _one_of(args["direction"], {"clockwise", "counterclockwise"})
@@ -734,6 +845,8 @@ class PlanValidator:
                 pose = _text(args["pose"], minimum=1, maximum=80)
                 if pose not in self.registry.pose_names:
                     raise ValueError(f"{pose!r} is not in the admitted pose catalog")
+            elif profile == "search_entity":
+                _text(args["query"], minimum=1, maximum=120)
             else:
                 raise RuntimeError(f"unsupported internal argument profile: {profile}")
         except (TypeError, ValueError) as error:
@@ -764,7 +877,7 @@ class PlanValidator:
             )
         final_index, final = goal_steps[-1]
         if (
-            final.skill in {"Pose", "Gesture"}
+            final.skill in {"Pose", "Gesture", "ScanBehavior", "SearchEntity"}
             and plan.goal.relation == "hold"
             and final.success.fact == "skill_completed"
         ):
@@ -773,6 +886,7 @@ class PlanValidator:
             "inside": "inside",
             "near": "near",
             "behind": "behind",
+            "follow": "following",
             "orbit": "orbit_complete",
             "hold": "motion_stopped",
             "safe_pose": "safe_pose",
@@ -917,3 +1031,11 @@ def _one_of(value: object, allowed: set[str]) -> str:
     if value not in allowed:
         raise ValueError(f"value must be one of {sorted(allowed)}")
     return str(value)
+
+
+@lru_cache(maxsize=1)
+def _runtime_authored_contracts() -> dict[str, SkillContract]:
+    """Contracts for :data:`RUNTIME_AUTHORED_SKILLS`, built once."""
+
+    full = SkillContractRegistry.default(include_system_skills=True)
+    return {name: full._contracts[name] for name in RUNTIME_AUTHORED_SKILLS}

@@ -29,6 +29,10 @@ NAVIGATION_IN_PROGRESS_STATES = frozenset(
 SPATIAL_SUCCESS_STATES = frozenset({"completed"})
 SPATIAL_FAILURE_STATES = frozenset({"failed", "cancelled"})
 FOLLOW_SUCCESS_STATES = frozenset({"holding_behind"})
+# Plain follow (relation="follow", controller mode "direct") is verified once
+# the controller is actively tracking or holding station on the owner. It has
+# no behind-staging state because it never estimates an owner heading.
+DIRECT_FOLLOW_SUCCESS_STATES = frozenset({"following", "holding"})
 SEARCH_SUCCESS_STATES = frozenset({"reacquired"})
 SEARCH_FAILURE_STATES = frozenset({"gave_up"})
 
@@ -40,9 +44,19 @@ from .contracts import (
     VerifiedFact,
 )
 from .executive import DispatchRequest
-from .validator import SYSTEM_SKILL_NAMES
+from .validator import RUNTIME_AUTHORED_SKILLS, SYSTEM_SKILL_NAMES
 
 DispatchKey = tuple[str, int, str, int]
+#: Skill → the runtime channel that can be *paused* (ResumeIntent) rather than
+#: stopped. Suspend→pause reconciliation and the RESUME join must agree on this
+#: table or a resumed channel drives with no running plan step behind it (N14).
+#: Every other skill's controller is stopped outright by a suspend, so restoring
+#: it means dispatching the step again, not re-binding to it.
+PAUSABLE_SKILL_CHANNELS: dict[str, str] = {
+    "NavigateTo": "navigation",
+    "FollowFormation": "follow",
+    "SearchOwner": "search",
+}
 # The camera-grounding threshold the validator and executive already use for
 # ``owner_visible``; reacquisition is held to the same bar.
 OWNER_TRACK_CONFIDENCE_MIN = 0.6
@@ -130,7 +144,12 @@ class SemanticTaskRuntimeAdapter:
     # so they stay out of ``SUPPORTED_SKILLS`` and out of every schema and
     # registry derived from it.
     SYSTEM_SKILLS = SYSTEM_SKILL_NAMES
-    EXECUTABLE_SKILLS = SUPPORTED_SKILLS | SYSTEM_SKILLS
+    # Skills only the runtime's own deterministic sketches author (``Pose``,
+    # the settle half of backlog N13). Executable and verified like any other
+    # skill, but deliberately absent from SUPPORTED_SKILLS, because that set is
+    # what every model-facing response schema enumerates.
+    RUNTIME_AUTHORED = RUNTIME_AUTHORED_SKILLS
+    EXECUTABLE_SKILLS = SUPPORTED_SKILLS | SYSTEM_SKILLS | RUNTIME_AUTHORED
 
     def __init__(
         self,
@@ -143,6 +162,8 @@ class SemanticTaskRuntimeAdapter:
         return_to_safe_pose: Callable[[str], object] | None = None,
         gesture: Callable[[str, float], object] | None = None,
         search_owner: Callable[[], object] | None = None,
+        scan_behavior: Callable[[], object] | None = None,
+        search_entity: Callable[[str], object] | None = None,
     ):
         self._navigate = navigate
         self._follow_formation = follow_formation
@@ -152,6 +173,8 @@ class SemanticTaskRuntimeAdapter:
         self._return_to_safe_pose = return_to_safe_pose
         self._gesture = gesture
         self._search_owner = search_owner
+        self._scan_behavior = scan_behavior
+        self._search_entity = search_entity
         self._active: dict[DispatchKey, ActiveSemanticDispatch] = {}
         self._lock = threading.RLock()
 
@@ -206,12 +229,18 @@ class SemanticTaskRuntimeAdapter:
             )
         elif request.skill == "Hold":
             self._hold()
-        elif request.skill == "ReturnToSafePose":
+        elif request.skill in {"ReturnToSafePose", "Pose"}:
             if self._return_to_safe_pose is None:
                 raise RuntimeError(
-                    "ReturnToSafePose has no runtime callback on this deployment"
+                    f"{request.skill} has no runtime callback on this deployment"
                 )
-            self._return_to_safe_pose(str(args["pose"]))
+            # One runtime door for postures: stop motion, then apply a pose from
+            # the admitted catalog. ``Pose`` differs from ``ReturnToSafePose``
+            # only in its admission contract (no battery_critical gate) and in
+            # its argument name, never in what actually moves the robot.
+            self._return_to_safe_pose(
+                str(args["pose"] if request.skill == "ReturnToSafePose" else args["name"])
+            )
         elif request.skill == "Gesture":
             if self._gesture is None:
                 raise RuntimeError("Gesture has no runtime callback on this deployment")
@@ -220,6 +249,14 @@ class SemanticTaskRuntimeAdapter:
             if self._search_owner is None:
                 raise RuntimeError("SearchOwner has no runtime callback on this deployment")
             self._search_owner()
+        elif request.skill == "ScanBehavior":
+            if self._scan_behavior is None:
+                raise RuntimeError("ScanBehavior has no runtime callback on this deployment")
+            self._scan_behavior()
+        elif request.skill == "SearchEntity":
+            if self._search_entity is None:
+                raise RuntimeError("SearchEntity has no runtime callback on this deployment")
+            self._search_entity(str(args["query"]))
         else:
             field = "text" if request.skill == "Vocalize" else "question"
             self._vocalize(str(args[field]))
@@ -237,6 +274,23 @@ class SemanticTaskRuntimeAdapter:
             # from crossing between the semantic callback and this record.
             self._active[key] = ActiveSemanticDispatch(request, timestamp)
         return None
+
+    def adopt(self, request: DispatchRequest, *, now: float | None = None) -> None:
+        """Track a step whose controller is *already* executing, without dispatching.
+
+        The RESUME join uses this: the paused channel was restored from its
+        stored ``ResumeIntent``, so the mission is running with all of its
+        state. Calling :meth:`dispatch` here would cold-start it instead. An
+        existing record for the same key is replaced so the elapsed clock
+        matches the executive's restarted step clock rather than counting the
+        pause.
+        """
+
+        timestamp = time.monotonic() if now is None else float(now)
+        if not math.isfinite(timestamp) or timestamp < 0.0:
+            raise ValueError("adopt time must be finite and non-negative")
+        with self._lock:
+            self._active[dispatch_key(request)] = ActiveSemanticDispatch(request, timestamp)
 
     def poll(
         self,
@@ -306,7 +360,12 @@ class SemanticTaskRuntimeAdapter:
             "MoveRelative": "spatial",
             "FollowFormation": "follow",
             "SearchOwner": "search",
+            # K4: navigator recovery owns ScanBehavior/SearchEntity motion;
+            # verified via the instructnav branch (not NavigateTo goal match).
+            "ScanBehavior": "instructnav",
+            "SearchEntity": "instructnav",
             "ReturnToSafePose": "posture",
+            "Pose": "posture",
             "Gesture": "activity",
             "Hold": "hold",
         }
@@ -378,21 +437,34 @@ class SemanticTaskRuntimeAdapter:
                 )
             detail = state.spatial_reason or state.spatial_state
         elif branch == "follow":
+            # The dispatched relation, not the controller, decides which mode
+            # counts as this task's formation: a behind plan is never verified
+            # by a plain-follow controller and vice versa.
+            expected_mode = (
+                "behind" if request.arguments.get("relation") == "behind" else "direct"
+            )
+            success_states = (
+                FOLLOW_SUCCESS_STATES if expected_mode == "behind" else DIRECT_FOLLOW_SUCCESS_STATES
+            )
             if (
                 state.follow_enabled
-                and state.follow_mode == "behind"
-                and state.follow_state in FOLLOW_SUCCESS_STATES
+                and state.follow_mode == expected_mode
+                and state.follow_state in success_states
             ):
                 return _terminal_result(
                     request,
                     started=item.started_at_monotonic_s,
                     snapshot_id=state.snapshot_id,
                     source="camera_track_formation_controller",
-                    detail="behind_formation_verified",
+                    detail=(
+                        "behind_formation_verified"
+                        if expected_mode == "behind"
+                        else "owner_follow_verified"
+                    ),
                     finished=now,
                     verified_target="owner",
                 )
-            if not state.follow_enabled or state.follow_mode != "behind":
+            if not state.follow_enabled or state.follow_mode != expected_mode:
                 return _failed_result(
                     request,
                     started=item.started_at_monotonic_s,
@@ -437,8 +509,42 @@ class SemanticTaskRuntimeAdapter:
                     finished=now,
                 )
             detail = state.search_reason or state.search_state
+        elif branch == "instructnav":
+            # ScanBehavior / SearchEntity: navigator recovery is the authority.
+            # skill_completed when the navigation channel reaches a terminal
+            # arrived/failed after being armed; still searching stays in progress.
+            if state.navigation_enabled and state.navigation_state not in (
+                NAVIGATION_SUCCESS_STATES | NAVIGATION_FAILURE_STATES
+            ):
+                detail = state.navigation_reason or state.navigation_state
+            elif state.navigation_state in NAVIGATION_SUCCESS_STATES or (
+                state.navigation_state in NAVIGATION_FAILURE_STATES
+                and state.navigation_reason
+            ):
+                return _terminal_result(
+                    request,
+                    started=item.started_at_monotonic_s,
+                    snapshot_id=state.snapshot_id,
+                    source="instructnav_recovery_verifier",
+                    detail=state.navigation_reason or "instructnav_recovery_complete",
+                    finished=now,
+                    verified_target=request.success.target,
+                )
+            elif not state.navigation_enabled and state.navigation_state == "idle":
+                return _failed_result(
+                    request,
+                    started=item.started_at_monotonic_s,
+                    snapshot_id=state.snapshot_id,
+                    detail="instructnav_recovery_not_active",
+                    finished=now,
+                )
+            else:
+                detail = state.navigation_reason or state.navigation_state
         elif branch == "posture":
-            requested_pose = str(request.arguments.get("pose", ""))
+            # ReturnToSafePose names it "pose"; the Pose skill names it "name".
+            requested_pose = str(
+                request.arguments.get("pose") or request.arguments.get("name") or ""
+            )
             posture_applied = state.posture == requested_pose and bool(requested_pose)
             if (
                 posture_applied

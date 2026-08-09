@@ -6,7 +6,11 @@ checkpoint: ""
 device: cpu
 controller:
   cruise_vx: 0.85  # raised 2026-08-04 (was 0.60)
-  align_enter_deg: 28.0
+  # 28->55 (2026-08-05): curvature_scale (cos^2) already slows smoothly
+  # through moderate heading error; the hard vx=0 align cut is reserved for
+  # genuine corners. At 28 deg every waypoint flap triggered a full stop +
+  # ~1 s re-align + ramp-from-zero, halving effective travel speed.
+  align_enter_deg: 55.0
   align_exit_deg: 7.0
   max_yaw_rate: 0.90
   min_align_yaw_rate: 0.20

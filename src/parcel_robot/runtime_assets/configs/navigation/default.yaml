@@ -1,0 +1,42 @@
+# Active city-navigation stack for Parcel.
+# Full MetaUrban city + pedestrians require a Conda Python 3.9 + GPU host.
+# See docs/NAVIGATION_CITY.md.
+
+# grid_v1: rolling occupancy grid + A* over the calibrated raycast scan.
+# Degrades loudly (scan_missing_fallback note + warning log) to the point-goal
+# stub if the scan contract is absent.
+active_model: grid_v1
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+metaurban:
+  enabled: false
+  density_ped: 1.0
+  density_obj: 0.4
+  mode: social_nav   # point_nav | social_nav
+
+# Unknown semantic targets rotate in place and must be observed repeatedly
+# before any translation is authorized.
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+# Re-ground a semantic target when the body makes no meaningful goal progress.
+# At the 10 Hz runtime rate this is 40 s, allowing a bounded obstacle detour;
+# two fresh camera/LiDAR plans are allowed before the mission fails closed.
+progress_watchdog:
+  timeout_steps: 400
+  max_semantic_replans: 2
+
+# Once the geometric goal is reached, request a locomotion stop and wait for
+# fresh measured-velocity confirmation before declaring semantic success.
+terminal_verification:
+  stop_timeout_steps: 30
+
+safety:
+  max_vx: 0.45
+  max_vy: 0.25
+  max_vyaw: 0.8
+  stop_distance_m: 0.8
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

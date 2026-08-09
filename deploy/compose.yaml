@@ -1,0 +1,90 @@
+# Parcel desktop/CI compose skeleton (K7).
+#
+# Safety+control is intentionally network-independent (network_mode: none).
+# Perception/voice are stubs for layout only — not production daemons.
+# Orin/aarch64 image bake and dock flash are deferred to P5 (owner amendment).
+#
+# Run from repository root:
+#   docker compose -f deploy/compose.yaml up --build safety-control
+#   docker compose -f deploy/compose.yaml --profile stubs up --build
+#   docker compose -f deploy/compose.yaml run --rm safety-control \
+#     python -m parcel_robot.safety_control_smoke --max-ticks 30
+
+name: parcel
+
+services:
+  safety-control:
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.safety-control
+    image: parcel-safety-control:desktop
+    container_name: parcel-safety-control
+    # Zero container/external network — authority loop must survive isolation.
+    network_mode: none
+    restart: "no"
+    environment:
+      PARCEL_ROOT: /opt/parcel
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      # Desktop/CI: bind the checkout so configs/prompts stay editable.
+      - ..:/opt/parcel:ro
+    working_dir: /opt/parcel
+    command:
+      [
+        "python",
+        "-m",
+        "parcel_robot.safety_control_smoke",
+        "--hz",
+        "10",
+        "--max-ticks",
+        "50",
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import parcel_robot.safety_control_smoke as s; raise SystemExit(0)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 5s
+
+  perception-stub:
+    profiles: ["stubs"]
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.stub
+      args:
+        STUB_NAME: perception
+    image: parcel-perception-stub:desktop
+    container_name: parcel-perception-stub
+    environment:
+      PARCEL_STUB_NAME: perception
+      PYTHONUNBUFFERED: "1"
+    networks:
+      - parcel_aux
+    command: ["python", "/opt/stub/stub_server.py"]
+
+  voice-stub:
+    profiles: ["stubs"]
+    build:
+      context: ..
+      dockerfile: deploy/docker/Dockerfile.stub
+      args:
+        STUB_NAME: voice
+    image: parcel-voice-stub:desktop
+    container_name: parcel-voice-stub
+    environment:
+      PARCEL_STUB_NAME: voice
+      PYTHONUNBUFFERED: "1"
+    networks:
+      - parcel_aux
+    command: ["python", "/opt/stub/stub_server.py"]
+
+networks:
+  parcel_aux:
+    driver: bridge
+    # Auxiliary only — safety-control does not join this network.

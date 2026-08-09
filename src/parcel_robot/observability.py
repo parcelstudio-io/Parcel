@@ -94,6 +94,12 @@ STAGES = frozenset(
         "filler_audible",
         "filler_complete",
         "filler_clause_boundary_wait",
+        # System-initiated speech (Vocalize, pose-health, the yield policy's
+        # ask/re-ask/give-up). Deliberately NOT filler stages: a request for
+        # help is not an acknowledgement token and must not be measured
+        # against the filler ceiling. See DuplexVoiceSession.speak_system.
+        "system_utterance_start",
+        "system_utterance_complete",
     }
 )
 

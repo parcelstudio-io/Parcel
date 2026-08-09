@@ -27,6 +27,7 @@ import logging
 import math
 import queue
 import threading
+import time
 import wave
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
@@ -173,6 +174,139 @@ class EnergyVad:
         self._speech_frames = []
 
 
+class AecStage:
+    """In-process acoustic echo canceller (AEC ladder rung L1).
+
+    Sits between capture and the VAD: it is handed the near-end microphone
+    frame plus whatever far-end audio the playback clock says was emitted in
+    that window, and returns the frame with the far-end's contribution
+    subtracted. The VAD, the endpointer and the echo guard all then see a
+    signal the robot's own voice has been removed from — which is the whole
+    point of barge-in without shouting.
+
+    ALGORITHM
+        Normalized least-mean-squares adaptive FIR. Deterministic, dependency
+        free, and unit-testable against synthetic delayed+attenuated echo. It
+        is deliberately NOT the ambition of WebRTC's AEC3: there is no double-
+        talk detector, no residual-echo suppressor and no nonlinear
+        processing, so it handles a linear echo path and degrades gracefully
+        (toward doing nothing) on anything else.
+
+    WHY NOT WebRTC AEC3
+        The named upstream wheel (``pywebrtc-audio``) does not install on this
+        host: 0.0.1 on PyPI is an empty placeholder and 0.1.0 is source-only
+        and needs a C compiler that is not present. Rather than leave the rung
+        empty, this is a real canceller behind the seam an AEC3 backend would
+        later occupy — swap ``process`` for the wheel's ``AudioProcessor`` and
+        nothing upstream of it changes.
+
+    OFF BY DEFAULT
+        ``MicrophoneVoiceLoop`` does not construct one unless asked. With no
+        AEC stage the frame path is byte-for-byte what it was before.
+
+    LIMITS
+        Cross-process clock drift between the far-end reference and the near
+        signal is the known killer for any AEC; ``stream_delay_ms`` is the
+        mitigation and it must come from the playback clock, not a guess.
+        Convergence takes a few hundred ms of far-end activity, so the first
+        moments after playback starts are not cancelled.
+    """
+
+    def __init__(
+        self,
+        *,
+        filter_taps: int = 512,
+        step_size: float = 0.30,
+        regularization: float = 1e-6,
+        stream_delay_ms: float = 0.0,
+    ):
+        if filter_taps < 16 or filter_taps > 8192:
+            raise ValueError("AEC filter length must be between 16 and 8192 taps")
+        if not 0.0 < step_size <= 2.0 or not math.isfinite(step_size):
+            raise ValueError("AEC step size must be in (0, 2]")
+        if regularization <= 0.0 or not math.isfinite(regularization):
+            raise ValueError("AEC regularization must be positive")
+        if stream_delay_ms < 0.0 or not math.isfinite(stream_delay_ms):
+            raise ValueError("AEC stream delay must be non-negative")
+        self.filter_taps = int(filter_taps)
+        self.step_size = float(step_size)
+        self.regularization = float(regularization)
+        self._weights = np.zeros(self.filter_taps, dtype=np.float64)
+        self._far_history = np.zeros(self.filter_taps, dtype=np.float64)
+        self._far_buffer = np.zeros(0, dtype=np.float64)
+        self.frames_processed = 0
+        self.set_stream_delay_ms(stream_delay_ms)
+
+    def set_stream_delay_ms(self, stream_delay_ms: float) -> None:
+        """Update the near/far alignment from the playback clock."""
+
+        if stream_delay_ms < 0.0 or not math.isfinite(stream_delay_ms):
+            raise ValueError("AEC stream delay must be non-negative")
+        self.stream_delay_ms = float(stream_delay_ms)
+        self._delay_samples = int(self.stream_delay_ms * SAMPLE_RATE_HZ / 1000.0)
+
+    def submit_far(self, pcm: np.ndarray) -> None:
+        """Register far-end (loudspeaker) audio as the cancellation reference."""
+
+        if pcm.dtype != np.int16:
+            raise TypeError("AEC far-end frames must be int16 PCM")
+        self._far_buffer = np.concatenate(
+            [self._far_buffer, pcm.astype(np.float64)]
+        )
+        # Bound the reference buffer: an unconsumed far end must not grow
+        # without limit when playback outruns capture.
+        limit = SAMPLE_RATE_HZ * 5
+        if self._far_buffer.size > limit:
+            self._far_buffer = self._far_buffer[-limit:]
+
+    def process(self, near: np.ndarray) -> np.ndarray:
+        """Return ``near`` with the far-end's echo estimate removed."""
+
+        if near.dtype != np.int16:
+            raise TypeError("AEC near-end frames must be int16 PCM")
+        count = near.size
+        if count == 0:
+            return near
+
+        # Pull the aligned far-end slice; pad with silence when the reference
+        # has not arrived (nothing is playing, or the delay outruns the data).
+        far = np.zeros(count, dtype=np.float64)
+        available = self._far_buffer.size - self._delay_samples
+        if available > 0:
+            take = min(count, available)
+            far[:take] = self._far_buffer[:take]
+            self._far_buffer = self._far_buffer[take:]
+
+        near_f = near.astype(np.float64)
+        out = np.empty(count, dtype=np.float64)
+        weights = self._weights
+        history = self._far_history
+        for index in range(count):
+            history[1:] = history[:-1]
+            history[0] = far[index]
+            estimate = float(weights @ history)
+            error = near_f[index] - estimate
+            out[index] = error
+            power = float(history @ history) + self.regularization
+            weights += (self.step_size * error / power) * history
+        self._weights = weights
+        self._far_history = history
+        self.frames_processed += 1
+        return np.clip(out, -32768.0, 32767.0).astype(np.int16)
+
+    @staticmethod
+    def erle_db(raw: np.ndarray, cleaned: np.ndarray) -> float:
+        """Echo return loss enhancement, 10*log10(P_raw / P_cleaned)."""
+
+        raw_power = float(np.mean(np.square(raw.astype(np.float64))))
+        clean_power = float(np.mean(np.square(cleaned.astype(np.float64))))
+        if clean_power <= 0.0:
+            return float("inf")
+        if raw_power <= 0.0:
+            return 0.0
+        return 10.0 * math.log10(raw_power / clean_power)
+
+
 def resolve_audio_device(
     spec: object, *, kind: str, query: Callable[[], object] | None = None
 ) -> tuple[int | None, str]:
@@ -267,6 +401,7 @@ class MicrophoneVoiceLoop:
         neural_vad: object | None = None,
         endpointer: object | None = None,
         on_turn_commit: Callable[[float], None] | None = None,
+        aec: AecStage | None = None,
     ):
         if echo_guard_scale < 1.0 or not math.isfinite(echo_guard_scale):
             raise ValueError("echo guard scale must be at least 1.0")
@@ -298,6 +433,9 @@ class MicrophoneVoiceLoop:
         self.neural_vad = neural_vad
         self.endpointer = endpointer
         self.on_turn_commit = on_turn_commit
+        # AEC ladder rung L1, off unless supplied. With aec=None the frame
+        # path below is byte-for-byte unchanged.
+        self.aec = aec
         self._silero_tail = np.zeros(0, dtype=np.int16)
         self._utterance = bytearray()
         self._turn_active = False
@@ -308,6 +446,16 @@ class MicrophoneVoiceLoop:
         self.utterances_submitted = 0
         self.barge_ins_triggered = 0
         self.echo_guard_suppressions = 0
+        # Acoustic-side clocks for the latency ledger. `_elapsed_s` is a
+        # SAMPLE clock (frames * 30 ms) with no monotonic anchor, so on its
+        # own it cannot be compared with anything else in the ledger. These
+        # capture time.monotonic() at the two moments that matter — the last
+        # speech frame of the turn, and the endpointer's commit — which is
+        # what makes "acoustically anchored end of owner speech" a real
+        # timestamp instead of a lower bound. Plain data: nothing here reaches
+        # into the tracker, so the capture path stays dependency free.
+        self.last_turn_clocks: dict[str, float] | None = None
+        self._speech_end_monotonic: float | None = None
 
     @property
     def running(self) -> bool:
@@ -407,6 +555,16 @@ class MicrophoneVoiceLoop:
             playback = bool(self.playback_active())
         except Exception:  # noqa: BLE001 - observability callback
             playback = False
+        if self.aec is not None:
+            # Cancel BEFORE the echo guard and the VAD, so every downstream
+            # decision is made on a signal the robot's own voice has been
+            # removed from. A failing canceller must not deafen the robot:
+            # it is dropped and capture continues on the raw frame.
+            try:
+                frame = self.aec.process(frame)
+            except Exception as error:  # noqa: BLE001 - AEC boundary
+                logger.warning("AEC failed; continuing without it: %s", error)
+                self.aec = None
         if playback:
             # No AEC yet: require the speaker-adjacent microphone to hear the
             # owner clearly ABOVE the robot's own speech before treating sound
@@ -476,6 +634,10 @@ class MicrophoneVoiceLoop:
         self._elapsed_s += frame_s
         is_speech = self._frame_is_speech(frame)
 
+        if is_speech:
+            # The last frame that still carried speech is the acoustic end of
+            # the owner's turn; everything after it is the endpointer thinking.
+            self._speech_end_monotonic = time.monotonic()
         if is_speech and not self._turn_active:
             self._turn_active = True
             self._utterance.clear()
@@ -526,6 +688,20 @@ class MicrophoneVoiceLoop:
         latency_s = 0.0
         if self._speech_started_at is not None:
             latency_s = max(0.0, self._elapsed_s - self._speech_started_at)
+        commit_monotonic = time.monotonic()
+        # A turn with no observed speech frame (max-length flush of pure noise)
+        # has no acoustic end; collapsing it onto the commit instant reports a
+        # zero decision time, which is true and not misleading.
+        speech_end = self._speech_end_monotonic or commit_monotonic
+        self.last_turn_clocks = {
+            "speech_end_monotonic": speech_end,
+            "semantic_commit_monotonic": commit_monotonic,
+            # How long the endpointer deliberated after the owner stopped
+            # talking. This is the span that ep50 measures acoustically.
+            "endpoint_decision_s": max(0.0, commit_monotonic - speech_end),
+            "utterance_s": len(utterance) / 2 / SAMPLE_RATE_HZ,
+        }
+        self._speech_end_monotonic = None
         self._turn_active = False
         self._utterance.clear()
         self._speech_started_at = None
@@ -594,6 +770,21 @@ class SpeakerSink:
         self._queue: queue.Queue[tuple[bytes, object] | None] = queue.Queue(maxsize=256)
         self._interrupted = threading.Event()
         self._playing = threading.Event()
+        # AEC ladder rung L2 (ducking). 1.0 is unity: with no duck ever
+        # requested the sample path is byte-for-byte what it was before.
+        self._gain = 1.0
+        self._duck_started_at: float | None = None
+        self.ducks_applied = 0
+        self.ducks_restored = 0
+        # Speaker-worker first-sample clock (the third of the ledger's four
+        # missing clocks). on_chunk_start already fires at the true start of a
+        # chunk, but today it only anchors beat motion; recording the instant
+        # here makes it available to the ledger without changing that callback
+        # contract. Note honestly what this is: the moment the worker began
+        # WRITING the chunk, not the moment it became audible. The virtual-rig
+        # eval measured 0.54-0.64 s between the two.
+        self.first_chunk_started_monotonic: float | None = None
+        self.last_chunk_started_monotonic: float | None = None
         self._sample_rate = SAMPLE_RATE_HZ
         self._header_parsed = False
         self._worker = threading.Thread(
@@ -617,6 +808,9 @@ class SpeakerSink:
         """
 
         self._interrupted.clear()
+        # A new reply gets a new first-sample anchor; the previous turn's
+        # value would otherwise make every later turn look instantaneous.
+        self.first_chunk_started_monotonic = None
 
     def enqueue(self, chunk: bytes, token: object = None) -> None:
         """Session-facing ``audio_chunk_player`` callback.
@@ -632,6 +826,54 @@ class SpeakerSink:
             self._queue.put_nowait((chunk, token))
         except queue.Full:
             logger.warning("speaker queue overflow; dropping audio chunk")
+
+    @property
+    def gain(self) -> float:
+        """Current output gain multiplier (1.0 = unity, <1.0 = ducked)."""
+
+        return self._gain
+
+    @property
+    def ducked(self) -> bool:
+        return self._gain < 1.0
+
+    def duck(self, attenuation_db: float = 10.0) -> None:
+        """Drop output level on a PROVISIONAL barge-in hit (AEC rung L2).
+
+        The roadmap's provisional-epoch design: when the VAD thinks the owner
+        may have started talking but nothing is confirmed yet, do not tear the
+        turn down — just get quieter. A 9-12 dB drop improves the owner's
+        near-end-to-echo ratio by the same amount, which is usually enough for
+        the endpointer to hear them properly and decide. If it was a false
+        alarm, ``restore()`` puts the level back and the turn was never
+        damaged; supersession still requires the normal commit criteria.
+
+        The gain is applied per ~50 ms output block, so it takes effect within
+        one block rather than at the next chunk boundary.
+        """
+
+        if not math.isfinite(attenuation_db) or not 0.0 < attenuation_db <= 60.0:
+            raise ValueError("duck attenuation must be in (0, 60] dB")
+        self._gain = float(10.0 ** (-attenuation_db / 20.0))
+        self._duck_started_at = time.monotonic()
+        self.ducks_applied += 1
+
+    def restore(self) -> None:
+        """Return to unity gain (the barge-in was not confirmed)."""
+
+        if self._gain != 1.0:
+            self.ducks_restored += 1
+        self._gain = 1.0
+        self._duck_started_at = None
+
+    @property
+    def ducked_for_s(self) -> float:
+        """How long the current duck has been held, for the confirm window."""
+
+        started = self._duck_started_at
+        if started is None:
+            return 0.0
+        return max(0.0, time.monotonic() - started)
 
     def interrupt(self) -> None:
         """Session-facing ``audio_interrupt`` callback: flush and stop now.
@@ -667,6 +909,10 @@ class SpeakerSink:
                 if not pcm:
                     continue
                 self._playing.set()
+                started = time.monotonic()
+                self.last_chunk_started_monotonic = started
+                if self.first_chunk_started_monotonic is None:
+                    self.first_chunk_started_monotonic = started
                 if self._on_chunk_start is not None:
                     try:
                         self._on_chunk_start(token)
@@ -704,4 +950,12 @@ class SpeakerSink:
             for start in range(0, len(data), block):
                 if self._interrupted.is_set():
                     return
-                stream.write(data[start : start + block])
+                chunk = data[start : start + block]
+                # Read the gain per block so a duck requested mid-chunk takes
+                # effect within one ~50 ms block instead of at the next chunk.
+                gain = self._gain
+                if gain != 1.0:
+                    chunk = np.clip(
+                        chunk.astype(np.float32) * gain, -32768, 32767
+                    ).astype(np.int16)
+                stream.write(chunk)

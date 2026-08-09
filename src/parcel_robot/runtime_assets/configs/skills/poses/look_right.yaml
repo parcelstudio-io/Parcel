@@ -1,0 +1,28 @@
+id: look_right
+name: Look right
+kind: pose
+enabled: true
+tags:
+- pose
+- gaze
+duration: 0.7
+joints:
+  FL_hip_joint: -0.25
+  FL_thigh_joint: 0.9
+  FL_calf_joint: -1.8
+  FR_hip_joint: -0.25
+  FR_thigh_joint: 0.9
+  FR_calf_joint: -1.8
+  RL_hip_joint: 0.15
+  RL_thigh_joint: 0.9
+  RL_calf_joint: -1.8
+  RR_hip_joint: 0.15
+  RR_thigh_joint: 0.9
+  RR_calf_joint: -1.8
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: pose_hold
+  control_dt: 0.02

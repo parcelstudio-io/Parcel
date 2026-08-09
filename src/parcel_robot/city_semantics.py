@@ -1,8 +1,17 @@
 """City-block semantic extraction shared by live sim, headless, and eval.
 
 Vocabulary table (prefix → class) with aliases drives both region and object
-tracks. Goal-region metadata (polygons for regions, vicinity discs for objects)
-is the single definition consumed by the scorer, grounder, and viewer.
+tracks. Goal-region metadata (polygons for regions, near relative bands for
+objects) is the single arrival authority consumed by navigator verification,
+the NAV_INSTRUCT scorer, and the viewer (K0).
+
+The vocabulary itself is **no longer literal here**: prefixes, class kinds, and
+aliases are read from the per-scene semantics sidecar
+(``configs/scenes/city_block.semantics.yaml``) by
+:mod:`parcel_robot.scene_semantics`, which fails closed on anything it does not
+recognize. ``tests/test_scene_semantics.py`` pins the derived tables
+bit-for-bit against the literals that used to live in this module. Geometry is
+still read from the MJCF and never from the sidecar.
 """
 
 from __future__ import annotations
@@ -12,32 +21,25 @@ from typing import Any
 
 import mujoco
 
-from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
+from parcel_robot.instructnav.scoring import object_near_envelope_m, object_near_goal_region
+from parcel_robot.scene_semantics import scene_semantics
 
-# Longer prefixes must precede shorter siblings (tree_top_ before tree_).
-OBJECT_PREFIX_TABLE: tuple[tuple[str, str], ...] = (
-    ("lamp_post_", "lamppost"),
-    ("bench_", "bench"),
-    ("tree_top_", "tree"),  # canopy geoms fold into the tree instance
-    ("tree_", "tree"),
-    ("planter_", "planter"),
-    ("bldg_", "building"),
-)
+_SCENE = scene_semantics()
 
-REGION_PREFIX_TABLE: tuple[tuple[str, str], ...] = (
-    ("sidewalk", "sidewalk"),
-    ("xw", "crosswalk"),
-    ("crosswalk", "crosswalk"),
-)
+#: Geom-name prefix → object class. Ordered by the sidecar, which enforces that
+#: a longer prefix precedes any shorter one it starts with (tree_top_ / tree_).
+OBJECT_PREFIX_TABLE: tuple[tuple[str, str], ...] = _SCENE.object_prefix_table()
 
-CLASS_ALIASES: dict[str, tuple[str, ...]] = {
-    "lamppost": ("lamp post", "streetlight", "street light", "lamp"),
-    "bench": ("seat", "park bench", "bench seat"),
-    "tree": ("trees", "street tree"),
-    "planter": ("plant pot", "flower box", "pot"),
-    "building": ("bldg", "storefront", "building face"),
-    "sidewalk": ("pavement", "safe region"),
-    "crosswalk": ("crossing", "zebra crossing", "cross walk"),
+REGION_PREFIX_TABLE: tuple[tuple[str, str], ...] = _SCENE.region_prefix_table()
+
+CLASS_ALIASES: dict[str, tuple[str, ...]] = _SCENE.alias_table()
+
+#: Extra per-class attribute metadata declared by the sidecar (empty today).
+#: Keys are validated against ``navigation.attributes.SIZE_METADATA_KEYS`` at
+#: load time, so the attribute matcher and the sidecar cannot drift: the
+#: matcher owns which keys mean "size", the sidecar owns their values.
+CLASS_ATTRIBUTE_METADATA: dict[str, dict[str, float]] = {
+    item.name: item.metadata_dict() for item in _SCENE.classes
 }
 
 def extract_city_semantics(
@@ -113,13 +115,13 @@ def extract_city_semantics(
         if support is not None:
             metadata["support_label"] = "sidewalk"
             metadata["support_polygon"] = support
-        # Goal-region disc shared with scorer/viewer.
-        metadata["goal_region"] = {
-            "kind": "disc",
-            "center": [x, y],
-            "radius_m": metadata["vicinity_radius_m"],
-            "anchor_entity": instance_id,
-        }
+        # Goal-region band shared with navigator verification + scorer (K0).
+        metadata["goal_region"] = object_near_goal_region(
+            (x, y),
+            radius,
+            label=label,
+            entity_id=instance_id,
+        ).as_dict()
         objects.append(
             {
                 "id": instance_id,
@@ -197,23 +199,21 @@ def _object_metadata(
     radius: float,
     lidar_ids: list[str],
 ) -> dict[str, Any]:
-    stand_off = radius + ROBOT_FOOTPRINT_RADIUS_M + 0.8 + 0.06 + 0.04
-    # Lampposts keep the historical commissioning standoff.
-    if label == "lamppost":
-        stand_off = 1.32
-    vicinity = radius + ROBOT_FOOTPRINT_RADIUS_M + 1.0
-    if label == "building":
-        # Buildings are approached as "near the face", not inside.
-        stand_off = max(stand_off, radius + ROBOT_FOOTPRINT_RADIUS_M + 1.0)
-        vicinity = max(vicinity, stand_off + 0.3)
+    stand_off, minimum, vicinity = object_near_envelope_m(radius, label=label)
     return {
         "diagnostics_only": True,
+        # Sidecar-declared attribute metadata (empty for every class today, so
+        # this is bit-for-bit identical). This is the seam by which a scene can
+        # supply, e.g., a per-class height the attribute matcher can read
+        # without any code change: navigation/attributes.py already looks for
+        # height_m and finds nothing today.
+        **CLASS_ATTRIBUTE_METADATA.get(label, {}),
         "aliases": list(CLASS_ALIASES.get(label, ())),
         "associated_lidar_ids": list(lidar_ids),
         "radius_m": radius,
         "stand_off_m": stand_off,
         "arrival_radius_m": 0.06,
-        "minimum_vicinity_radius_m": radius + ROBOT_FOOTPRINT_RADIUS_M + 0.8,
+        "minimum_vicinity_radius_m": minimum,
         "vicinity_radius_m": vicinity,
         "target_min_surface_clearance_m": 0.8,
         "non_target_obstacle_clearance_m": 1.25,
@@ -243,17 +243,14 @@ def _instance_id(name: str, label: str) -> str:
 
 
 def _label_for_instance(instance_id: str) -> str:
-    if instance_id.startswith("lamp_post_"):
-        return "lamppost"
-    if instance_id.startswith("bench_"):
-        return "bench"
-    if instance_id.startswith("tree_"):
-        return "tree"
-    if instance_id.startswith("planter_"):
-        return "planter"
-    if instance_id.startswith("bldg_"):
-        return "building"
-    return "object"
+    """Class of an instance id, from the same prefix table extraction used.
+
+    This used to be a second hand-written copy of ``OBJECT_PREFIX_TABLE``; a
+    class added to the sidecar but forgotten here would have extracted with a
+    label of ``"object"`` and grounded against nothing.
+    """
+
+    return _match_prefix(instance_id, OBJECT_PREFIX_TABLE) or "object"
 
 
 def _geom_radius_m(model: mujoco.MjModel, geom_id: int) -> float:

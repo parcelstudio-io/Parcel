@@ -4,6 +4,28 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
+try:
+    from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
+except ImportError:  # pragma: no cover — frozen BARN bundle path
+    # This file is a reviewed v8 replacement source copied into frozen BARN
+    # bundles whose tree predates parcel_robot.authority. The fallback pins
+    # the exact Go2-scale values the envelope derivation reproduces
+    # bit-for-bit (tests/test_authority_family_equality.py), so bundle
+    # behavior is unchanged. Same discipline as pipeline.py's paths/
+    # attributes/traffic_aware/pose soft imports.
+    class _FrozenBundleEnvelope:
+        person_comfort_band_m = 2.5
+        obstacle_stop_floor_m = 0.6
+        obstacle_comfort_band_m = 1.2
+        reaction_latency_s = 0.12
+
+        @staticmethod
+        def person_stop(speed_mps: float) -> float:
+            del speed_mps
+            return 1.2
+
+    DEFAULT_SAFETY_ENVELOPE = _FrozenBundleEnvelope()
+
 PredictiveBrakeMode = Literal[
     "stop",
     "speed_cap",
@@ -18,14 +40,24 @@ _TRANSLATIONAL_CAP_MODES = {"speed_cap", *_PROJECTED_CAP_MODES}
 
 @dataclass(frozen=True)
 class CollisionPolicy:
-    """Soft social / obstacle braking thresholds (meters)."""
+    """Soft social / obstacle braking thresholds (meters).
 
-    person_stop_m: float = 1.2
-    person_slow_m: float = 2.5
-    obstacle_stop_m: float = 0.6
-    obstacle_slow_m: float = 1.2
+    Every distance below is *derived by reference* from the one
+    :class:`~parcel_robot.authority.SafetyEnvelope` authority rather than
+    written as a literal. At Go2 scale each derivation reproduces the literal it
+    replaced bit-for-bit (pinned in ``tests/test_authority_family_equality.py``).
+    """
+
+    #: ``SafetyEnvelope.person_stop(0.0)``. At Go2 scale the 1.2 m human social
+    #: zone is what binds (the ISO/TS-15066 sum at rest is 0.488 m).
+    person_stop_m: float = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0)
+    person_slow_m: float = DEFAULT_SAFETY_ENVELOPE.person_comfort_band_m
+    obstacle_stop_m: float = DEFAULT_SAFETY_ENVELOPE.obstacle_stop_floor_m
+    obstacle_slow_m: float = DEFAULT_SAFETY_ENVELOPE.obstacle_comfort_band_m
+    #: Dimensionless comfort scale, NOT the 0.35 TTC robot radius. Kept a
+    #: literal on purpose; the drift test allowlists it as "not-a-radius".
     slow_scale: float = 0.35
-    reaction_time_s: float = 0.12
+    reaction_time_s: float = DEFAULT_SAFETY_ENVELOPE.reaction_latency_s
     predictive_mode: PredictiveBrakeMode = "stop"
 
     def __post_init__(self) -> None:
