@@ -236,24 +236,50 @@ inferred-affect personality map.
 
 - `comfort_bow` — supportive/sadness acknowledgement;
 - `happy_wiggle` — playful celebration;
+- `excited_paw_taps` — four rapid front-paw bend/return cycles for explicit
+  strong positive anticipation;
 - `attentive_nod` — restrained acknowledgement; and
-- `curious_look` — explicit/future curiosity reaction.
+- `curious_look` — explicit/future curiosity reaction;
+- `head_nod` and `head_shake` — affirmative/negative forequarter proxies;
+- `chuckle` — a silent three-bob body reaction paired with TTS when appropriate;
+- `shrug` — bounded uncertainty; and
+- `confused_head_tilt` / `observing_head_tilt` — distinct clarification and
+  decorative-attention proxies.
 
 All new trajectories start/end at neutral stand, contain all 12 joints, finish
 within 1.5 seconds, stay within a 0.30 rad authored delta, and are tagged
 `hardware_unverified`. Source and packaged runtime assets are byte-identical.
 
+Go2 has no articulated neck, so every “head” action is explicitly tagged as an
+embodiment proxy and only moves the legs/forequarter silhouette. Contextual
+reactions use a two-second TTL and are skipped while the body is busy; explicit
+owner requests retain the existing defer policy. `confused`, `observing`, and
+`amused` were deliberately not added to the owner-affect enum.
+
 Personality maps now use:
 
-| Personality | sad | happy |
-| --- | --- | --- |
-| gentle | `comfort_bow` | `paw_wave` |
-| playful | `comfort_bow` | `happy_wiggle` |
-| calm guardian | `attentive_nod` | `attentive_nod` |
+| Personality | sad | happy | excited anticipation |
+| --- | --- | --- | --- |
+| gentle | `comfort_bow` | `paw_wave` | `excited_paw_taps` |
+| playful | `comfort_bow` | `happy_wiggle` | `excited_paw_taps` |
+| calm guardian | `attentive_nod` | `attentive_nod` | `excited_paw_taps` |
 
 This corrects the earlier semantic mismatch where sadness triggered
 `play_bow`, which is an invitation to play. The system prompt now explicitly
 permits no gesture when confidence is weak or motion would add little.
+
+The excited reaction is a trajectory, not a persistent pose. Its authored
+keyframes contain exactly four cycles in 0.96 seconds (the regression ceiling
+is five), return to neutral after every bend, and do not allow an unbounded
+repeat or a leg-up terminal state. The `excited` affect label is reserved for
+explicit first-person anticipation and remains subject to the same activity
+deferral, TTL, cooldown, E-stop, and physical-runtime rejection boundaries.
+The affect extension first recorded `deterministic-v1.1`; the reviewed natural
+gesture aliases advance the observable router behavior to
+`deterministic-v1.2`. The intent
+frame keeps structural schema version 1, but strict external consumers that pin
+the old affect enum must update atomically with this release; a future public
+wire API should publish a separately versioned schema before widening it.
 
 ### Hardware boundary
 
@@ -266,6 +292,59 @@ The physical path should later map supported semantics to commissioned Sport
 actions (`Sit`/`RiseSit`, `Hello`, `Stretch`, bounded `Euler`, recovery/stand)
 through a typed controller action with feedback, timeout, clearance,
 cancel/abort/recovery, capability, and exact firmware checks.
+
+### Simulator pose-review gallery
+
+`scripts/launch_pose_review.sh` now reuses `launch_sim.sh` to open MuJoCo and a
+dedicated `/poses` browser sequencer. It lists the catalog's poses and
+trajectories in canonical order and supports Run, Run All, Previous/Next,
+filtering, dwell time, Stop, and neutral reset. The launcher starts the complete
+catalog after a three-second countdown by default; `--manual` suppresses that
+automatic run for individual inspection. `--autoplay` remains an explicit,
+backward-compatible spelling of the default.
+
+The preview surface is explicit and simulator-only: ordinary panel servers
+return 404 for it, the runtime requires the `mujoco` backend, and only bounded
+pose/trajectory skills are admitted. Velocity, gait, policy, unknown skills,
+physical runtimes, missing CSRF tokens, and non-enabled panel sessions fail
+closed. The Stop path restores the simulator's standing joints between items.
+
+Focused automated verification:
+
+```text
+79 passed, 3 existing warnings in 6.12 s
+10 portability/runtime-asset tests passed in 3.38 s
+ruff: all checks passed
+bash -n scripts/launch_pose_review.sh: passed
+```
+
+The live desktop smoke used an isolated socket and port. `/poses` loaded 24
+bounded motions, the API dispatched `excited_paw_taps` to MuJoCo, Stop restored
+neutral stand, and Ctrl+C removed the owned socket and stopped both processes.
+Non-fatal Wayland decoration/window-position and OpenGL warnings were observed;
+they did not prevent the native viewer or trajectory path from running.
+
+The expanded follow-up smoke exposed 30 bounded motions and dispatched all six
+new expression clips (`head_shake`, `head_nod`, `chuckle`, `shrug`,
+`confused_head_tilt`, and `observing_head_tilt`) through the live simulator API.
+Stop restored neutral and launcher shutdown again cleaned the isolated port and
+Unix socket. The focused behavior suite passed 26 tests; the broader
+runtime/web/packaging suite passed 158 tests with three existing deprecation
+warnings.
+
+The gallery and skill executor now also accept normalized motion speed in
+`[0, 1]`: `1` preserves authored timing and `0` selects the slowest bounded
+playback (at least 0.25×), while Stop remains cancellation. Optional YAML
+`speed` supplies the catalog default; a trusted execution/API override controls
+one run. Pose transition duration and trajectory timestamps are retimed without
+changing joint targets or gesture shape. Execution receipts are the shared UI
+and activity-scheduler timing authority. Activity-owned dispatch also no longer
+self-preempts its coordinator record.
+
+Verification for the speed-control change: 143 skill, expression, runtime,
+pose-review HTTP, simulator-control, and packaged-asset tests passed; Ruff and
+`git diff --check` also passed. The three warnings are existing footprint
+deprecations outside this change.
 
 ## Ordered implementation plan
 
@@ -344,6 +423,18 @@ The direct runtime and frozen-conversation checks also passed:
 That suite includes the full idle affect path: text inference, personality
 mapping, coordinator queue, runtime control tick, and simulator trajectory
 dispatch of `comfort_bow`.
+
+The excited-paw extension then passed the combined gesture, router, prompt,
+provider, schema, frozen-conversation, skill, agent, and runtime regression set:
+
+```text
+163 passed, 3 existing warnings in 4.83 s
+```
+
+That run includes explicit excitement parsing, rejection of a false excitement
+match for “wait by the lamppost,” the non-authoritative “looking forward to our
+walk” case, exact four-cycle trajectory shape, source/package parity, idle
+dispatch, navigation deferral, and return to neutral stand.
 
 The independent navigation audit ran a broader focused suite and observed
 `164 passed, 1 failed, 3 warnings`; the failure is a stale structural AST test

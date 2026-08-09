@@ -37,6 +37,41 @@ comparison lives in `bridge_v1_v2.json` and
 `../EPISODES_V2_CONTINUITY.md`; it is the only v1-vs-v2 comparison in this repo
 whose cells were all measured on one tree.
 
+## Budget policy (`budget_policy`, from 2026-08-09, card budget-honest-minival)
+
+From 2026-08-09 every `measured_run` row carries `budget_policy` and `max_steps`,
+and every report *episode* row carries its own effective `max_steps`.
+
+- `budget_policy: "fixed"` — the frozen behaviour every earlier row was run
+  under: one flat `--max-steps` for every episode. Rows written **before** this
+  field are implicitly `fixed` at whatever `--max-steps` the run used, and that
+  budget was **not recorded on the row** — the differencing hazard the two
+  diagnostic rows below make concrete.
+- `budget_policy: "scaled-path-v1"` — the per-episode budget is scaled by the
+  episode's own `shortest_path_m` (floored at `--max-steps`, capped at 1200) so a
+  tier-E truncation is attributable to a genuine miss, not to budget starvation.
+  Under this policy the tier-E absent targets report `semantic_target_not_found`
+  / `semantic_target_unreachable` honestly instead of `navigation_step_limit`.
+
+**Two rows may only be differenced when `budget_policy` AND (for fixed) `max_steps`
+match.** A `scaled-path-v1` SR and a `fixed` SR are not comparable.
+
+### The two audit-appended diagnostic rows (2026-08-09, both `frozen_baseline: false`)
+
+Both share the frozen v3 digest `919a0fea…`; they exist only to expose the
+budget artifact and must never be quoted as a headline SR:
+
+- `nav-instruct-v1-candidate-v3-20260809T054157Z` — **duplicate-of-repo-run.**
+  A bit-for-bit re-run of the repo candidate row `…045529Z` (both `sr 0.12`,
+  same digest); confirms reproducibility, adds no new measurement.
+- `nav-instruct-v1-candidate-v3-20260809T054430Z` — **long-budget probe.**
+  The identical episodes at a much larger flat `--max-steps`, `sr 0.48`. This is
+  the audit's "candidate SR 0.12 → 0.48 by raising `--max-steps` alone" artifact:
+  a flat budget conflates capability with start distance. Because both rows
+  predate the `max_steps` field, they are distinguishable **only** via their
+  report files — exactly why the field now exists. `scaled-path-v1` replaces the
+  brute flat 1200 with a per-episode budget so a candidate SR is honest.
+
 ## Diagnostic artifacts (never baselines, `frozen_baseline: false`)
 
 - `bridge_v1_v2.json` — the re-freeze bridge, per correction.

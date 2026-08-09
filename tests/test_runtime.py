@@ -14,7 +14,14 @@ from parcel_robot.control import build_backend_control_manager
 from parcel_robot.core import CommandArbiter, MotionIntent
 from parcel_robot.core.resume import ResumeIntent
 from parcel_robot.expression import ReactionHooks
-from parcel_robot.models import AgentDecision, Pose, SpatialIntent, ToolCall, VelocityCommand
+from parcel_robot.models import (
+    ActionProposal,
+    AgentDecision,
+    Pose,
+    SpatialIntent,
+    ToolCall,
+    VelocityCommand,
+)
 from parcel_robot.navigation import GoalPose, MidLevelCommand, Mission, SemanticGoal
 from parcel_robot.navigation.follow import FollowOwnerController
 from parcel_robot.navigation.reactive_safety import (
@@ -1602,9 +1609,121 @@ def test_social_affect_action_runs_from_idle_without_model(
         runtime.close()
 
 
+def test_excited_anticipation_runs_four_paw_taps_from_idle_without_model(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    backend = FakeSimulatorBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status, loop_hz=50.0)
+    try:
+        assert runtime.handle_text("I am really excited and I can't wait") == (
+            "I'm excited with you!"
+        )
+        pending = runtime.snapshot()["activities"]["pending"]
+        assert pending[0]["name"] == "excited_paw_taps"
+
+        runtime.start()
+        assert backend.wait_for_trajectories(1)
+        trajectory = backend.trajectories[0]
+        assert trajectory.id == "excited_paw_taps"
+        assert len(trajectory.keyframes[1::2]) == 4
+        assert trajectory.keyframes[-1].joints == trajectory.keyframes[0].joints
+        running = runtime.snapshot()["activities"]["running"]
+        assert running is not None
+        assert running["name"] == "excited_paw_taps"
+
+        deadline = time.monotonic() + 2.0
+        while time.monotonic() < deadline:
+            recent = runtime.snapshot()["activities"]["recent"]
+            if recent and recent[0]["name"] == "excited_paw_taps":
+                break
+            time.sleep(0.02)
+        assert recent[0]["status"] == "completed"
+        assert recent[0]["detail"] == "duration_elapsed"
+    finally:
+        runtime.close()
+
+
+def test_simulator_pose_review_lists_only_bounded_motions_and_allows_replay(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    class PoseReviewBackend(FakeSimulatorBackend):
+        name = "mujoco"
+
+    backend = PoseReviewBackend(_observation(0.0))
+    runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
+    try:
+        catalog = runtime.pose_review_skills()
+        assert catalog
+        assert {item["kind"] for item in catalog} == {"pose", "trajectory"}
+        assert "trot" not in {item["id"] for item in catalog}
+        assert {
+            "chuckle",
+            "confused_head_tilt",
+            "head_nod",
+            "head_shake",
+            "observing_head_tilt",
+            "shrug",
+        } <= {item["id"] for item in catalog}
+        excited = next(item for item in catalog if item["id"] == "excited_paw_taps")
+        assert excited["duration_s"] == pytest.approx(0.96)
+        assert excited["speed"] == 1.0
+        assert "hardware_unverified" in excited["tags"]
+
+        assert runtime.run_pose_review("sit") == "Pose sit"
+        assert runtime.run_pose_review("sit") == "Pose sit"
+        assert [pose.name for pose in backend.poses] == ["sit", "sit"]
+        slow_pose = runtime.execute_pose_review("sit", speed=0.0)
+        assert slow_pose.effective_rate == pytest.approx(0.25)
+        assert slow_pose.effective_duration_s == pytest.approx(6.0)
+        assert backend.poses[-1].duration == pytest.approx(6.0)
+        assert runtime.run_pose_review("excited_paw_taps") == (
+            "Trajectory excited_paw_taps"
+        )
+        assert backend.trajectories[-1].id == "excited_paw_taps"
+        slow_gesture = runtime.execute_pose_review("excited_paw_taps", speed=0.5)
+        assert slow_gesture.effective_rate == pytest.approx(0.625)
+        assert slow_gesture.effective_duration_s == pytest.approx(1.536)
+        assert backend.trajectories[-1].keyframes[-1].t == pytest.approx(1.536)
+
+        with pytest.raises(ValueError, match="only bounded pose or trajectory"):
+            runtime.run_pose_review("trot")
+        with pytest.raises(ValueError, match="unknown pose-review skill"):
+            runtime.run_pose_review("does_not_exist")
+    finally:
+        runtime.close()
+
+
+def test_pose_review_rejects_non_mujoco_runtime(
+    runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    runtime = RobotRuntime(
+        runtime_config,
+        FakeSimulatorBackend(_observation(0.0)),
+        audio_status=audio_status,
+    )
+    try:
+        with pytest.raises(RuntimeError, match="available only in the simulator"):
+            runtime.run_pose_review("sit")
+    finally:
+        runtime.close()
+
+
+@pytest.mark.parametrize(
+    ("transcript", "reply_prefix", "expected_skill"),
+    [
+        ("I am very happy", "I'm happy with you!", "paw_wave"),
+        ("I can't wait, I'm really excited", "I'm excited with you!", "excited_paw_taps"),
+    ],
+)
 def test_social_affect_action_defers_until_navigation_finishes(
     navigation_runtime_config: Path,
     audio_status: AudioDeviceStatus,
+    transcript: str,
+    reply_prefix: str,
+    expected_skill: str,
 ) -> None:
     backend = FakeSimulatorBackend(_observation(0.0))
     runtime = RobotRuntime(
@@ -1621,18 +1740,48 @@ def test_social_affect_action_defers_until_navigation_finishes(
             "Okay—I'll move onto crosswalk and verify it."
         )
         assert backend.wait_for_moves(1)
-        reply = runtime.handle_text("I am very happy")
-        assert reply.startswith("I'm happy with you!")
+        reply = runtime.handle_text(transcript)
+        assert reply.startswith(reply_prefix)
         assert "wait until the current task" in reply
         pending = runtime.snapshot()["activities"]["pending"]
-        assert pending[0]["name"] == "paw_wave"
+        assert pending[0]["name"] == expected_skill
         assert pending[0]["disposition"] == "defer"
         assert backend.trajectories == []
 
         backend.set_robot_pose(RobotPose(x=3.5, y=-0.6, z=0.32, yaw=0.0))
         assert backend.wait_for_trajectories(1)
-        assert backend.trajectories[0].id == "paw_wave"
+        assert backend.trajectories[0].id == expected_skill
         assert runtime.snapshot()["navigation"]["state"] == "arrived"
+    finally:
+        runtime.close()
+
+
+def test_conversation_reaction_is_skipped_during_navigation_not_deferred(
+    navigation_runtime_config: Path,
+    audio_status: AudioDeviceStatus,
+) -> None:
+    runtime = RobotRuntime(
+        navigation_runtime_config,
+        FakeSimulatorBackend(_observation(0.0)),
+        audio_status=audio_status,
+    )
+    reaction = ActionProposal(
+        kind="skill",
+        name="chuckle",
+        trigger="conversation_reaction",
+        timing_preference="when_safe",
+        interruption_request="none",
+        reason="clear joke",
+    )
+    try:
+        runtime._navigation_directive = "navigate to the crosswalk"
+        assert runtime.propose_action(reaction).startswith("Skipped:")
+        assert runtime.snapshot()["activities"]["pending"] == []
+
+        runtime._navigation_directive = None
+        assert runtime.propose_action(reaction).startswith("Accepted:")
+        pending = runtime.snapshot()["activities"]["pending"]
+        assert pending[0]["expires_at"] - pending[0]["created_at"] <= 2.0
     finally:
         runtime.close()
 

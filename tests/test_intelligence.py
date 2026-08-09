@@ -378,6 +378,67 @@ def test_inferred_affect_accepts_personality_social_trajectory():
     assert proposed == [proposal]
 
 
+def test_conversation_reaction_accepts_only_non_interrupting_social_trajectory():
+    proposed = []
+    dog = Dog.from_config(REPO / "configs" / "robot.yaml")
+    proposal = ActionProposal(
+        kind="skill",
+        name="chuckle",
+        trigger="conversation_reaction",
+        timing_preference="when_safe",
+        interruption_request="none",
+        reason="clear joke",
+    )
+    agent = VoiceAgent(
+        dog.poses(),
+        [],
+        lambda pose: None,
+        language_model=FakeModel(AgentDecision("Heh!", next_action=proposal)),
+        action_proposal_publisher=lambda action: proposed.append(action) or "Accepted",
+        dog=dog,
+    )
+
+    assert agent.handle_text("That joke always makes me laugh") == "Heh!"
+    assert proposed == [proposal]
+
+
+@pytest.mark.parametrize(
+    "proposal",
+    [
+        ActionProposal(
+            kind="skill",
+            name="jump",
+            trigger="conversation_reaction",
+            reason="not a social gesture",
+        ),
+        ActionProposal(
+            kind="skill",
+            name="chuckle",
+            trigger="conversation_reaction",
+            timing_preference="now",
+            interruption_request="safe_checkpoint",
+            reason="unsafe interruption request",
+        ),
+    ],
+)
+def test_conversation_reaction_rejects_non_social_or_interrupting_action(
+    proposal: ActionProposal,
+) -> None:
+    proposed = []
+    dog = Dog.from_config(REPO / "configs" / "robot.yaml")
+    agent = VoiceAgent(
+        dog.poses(),
+        [],
+        lambda pose: None,
+        language_model=FakeModel(AgentDecision("Reaction.", next_action=proposal)),
+        action_proposal_publisher=lambda action: proposed.append(action) or "Accepted",
+        dog=dog,
+    )
+
+    assert "couldn't do that safely" in agent.handle_text("That was surprising")
+    assert proposed == []
+
+
 @pytest.mark.parametrize("skill_name", ["sit", "play_bow"])
 def test_explicit_bounded_named_skill_still_uses_activity_coordinator(skill_name: str):
     proposed = []

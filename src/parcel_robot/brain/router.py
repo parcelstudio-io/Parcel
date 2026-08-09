@@ -20,7 +20,7 @@ from parcel_robot.voice.closed_intents import (
 
 from .contracts import SCHEMA_VERSION, AffectEvidence, IntentFrame
 
-ROUTER_VERSION = "deterministic-v1"
+ROUTER_VERSION = "deterministic-v1.2"
 
 #: One stop grammar, shared with the closed-intent parser and the agent's fast
 #: path. This used to be a third literal copy that omitted "halt" (U33).
@@ -86,11 +86,13 @@ _GREETING = re.compile(
 )
 _PHYSICAL_CUE = re.compile(
     r"\b(?:walk(?:ed|ing)?|move|go|navigate|follow|heel|stay|wait|stand|sit|bow|pose|gesture|"
-    r"circle|orbit|turn|back\s+away|come|run|stop|trot(?:ting|s)?|jog(?:ging|s)?|scoot(?:ing|s)?)\b"
+    r"circle|orbit|turn|back\s+away|come|run|stop|trot(?:ting|s)?|jog(?:ging|s)?|scoot(?:ing|s)?|"
+    r"nod|shake|shrug|tilt)\b"
 )
 _NON_AUTHORITATIVE = re.compile(
     r"(?:\b(?:do\s+not|don't|dont|never|imagine|hypothetical(?:ly)?)\b|"
-    r"\bwhat\s+would\s+happen\s+if\b|\bif\s+you\b)"
+    r"\bwhat\s+would\s+happen\s+if\b|\bif\s+you\b|"
+    r"\bi(?:'m|\s+am)\s+(?:really\s+|very\s+)?looking\s+forward\s+to\b)"
 )
 _REQUEST_PREFIX = re.compile(
     r"^(?:please\b|can\s+you\b|could\s+you\b|would\s+you\b|will\s+you\b|"
@@ -105,10 +107,19 @@ _AFFECT = (
         ),
     ),
     (
+        "excited",
+        re.compile(
+            r"\b(?:(?:i\s+am|i'm|i\s+feel|i'm\s+feeling|i\s+am\s+feeling)\s+"
+            r"(?:really\s+|very\s+)?excited\b|"
+            r"i\s+(?:cannot|can't)\s+wait\b|"
+            r"i(?:'m|\s+am)\s+(?:really\s+|very\s+)?looking\s+forward\s+to\b)"
+        ),
+    ),
+    (
         "happy",
         re.compile(
             r"\b(?:i\s+am|i'm|i\s+feel|i'm\s+feeling|i\s+am\s+feeling)\s+"
-            r"(?:really\s+|very\s+)?(?:happy|great|excited|joyful)\b"
+            r"(?:really\s+|very\s+)?(?:happy|great|joyful)\b"
         ),
     ),
 )
@@ -453,6 +464,18 @@ def physical_cue_present(text: str) -> bool:
     return bool(_PHYSICAL_CUE.search(_normalize(text)))
 
 
+def explicit_affect_from_text(text: str) -> AffectEvidence | None:
+    """Return the one reviewed explicit transcript affect, if present.
+
+    This is shared with the voice agent's deterministic reply path so routing
+    metadata and gesture selection cannot drift onto different regex grammars.
+    It recognizes only explicit first-person evidence; it does not infer an
+    emotional state from a task request or third-person statement.
+    """
+
+    return _explicit_affect(_normalize(text))
+
+
 def _normalize(value: str) -> str:
     translated = value.translate(
         str.maketrans(
@@ -475,11 +498,40 @@ def _explicit_affect(text: str) -> AffectEvidence | None:
 
 
 def _named_skill(text: str, skill_ids: frozenset[str]) -> str | None:
+    clean = text.strip().rstrip(".!?").strip()
+    polite = re.sub(
+        r"^(?:(?:please|can\s+you|could\s+you|would\s+you|will\s+you)\s+)",
+        "",
+        clean,
+    )
+    aliases = (
+        (r"(?:nod|nod\s+your\s+head|give\s+(?:me\s+)?a\s+nod)", "head_nod"),
+        (
+            r"(?:shake\s+your\s+head(?:\s+no)?|give\s+(?:me\s+)?a\s+head\s+shake)",
+            "head_shake",
+        ),
+        (r"(?:chuckle|laugh|give\s+(?:me\s+)?a\s+chuckle)", "chuckle"),
+        (r"(?:shrug|give\s+(?:me\s+)?a\s+shrug)", "shrug"),
+        (
+            (
+                r"(?:tilt\s+your\s+head(?:\s+like\s+you(?:'re|\s+are)\s+confused)?|"
+                r"look\s+confused|give\s+(?:me\s+)?a\s+confused\s+head\s+tilt)"
+            ),
+            "confused_head_tilt",
+        ),
+        (
+            r"(?:look\s+curious|give\s+(?:me\s+)?an?\s+observing\s+head\s+tilt)",
+            "observing_head_tilt",
+        ),
+    )
+    for pattern, skill_id in aliases:
+        if skill_id in skill_ids and re.fullmatch(pattern, polite):
+            return skill_id
     match = re.fullmatch(
         r"(?:do|pose|show|run|perform)\s+(?:the\s+)?(.+?)(?:\s+pose|\s+skill|\s+action)?",
-        text,
+        clean,
     )
-    candidate = match.group(1).replace(" ", "_") if match else text.replace(" ", "_")
+    candidate = match.group(1).replace(" ", "_") if match else clean.replace(" ", "_")
     return candidate if candidate in skill_ids else None
 
 

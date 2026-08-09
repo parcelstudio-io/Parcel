@@ -69,7 +69,9 @@ class PromptLibrary:
         ):
             raise TypeError("personality reply_style must be a list of strings")
         if not isinstance(affect_actions, dict) or not all(
-            key in {"happy", "sad"} and isinstance(value, str) and _PROFILE_ID.fullmatch(value)
+            key in {"excited", "happy", "sad"}
+            and isinstance(value, str)
+            and _PROFILE_ID.fullmatch(value)
             for key, value in affect_actions.items()
         ):
             raise TypeError("personality affect_actions contains an invalid mapping")

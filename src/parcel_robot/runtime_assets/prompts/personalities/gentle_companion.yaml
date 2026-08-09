@@ -10,3 +10,4 @@ reply_style:
 affect_actions:
   sad: comfort_bow
   happy: paw_wave
+  excited: excited_paw_taps

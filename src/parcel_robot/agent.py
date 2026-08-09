@@ -10,6 +10,7 @@ from .brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
 from .brain.plan_sketch import PlanSketch
 from .brain.router import (
     DeterministicIntentRouter,
+    explicit_affect_from_text,
     physical_cue_present,
     split_compound_clauses,
 )
@@ -135,7 +136,12 @@ class VoiceAgent:
         self.system_prompt_provider = system_prompt_provider
         self.affect_minimum_confidence = affect_minimum_confidence
         self.affect_actions = dict(
-            affect_actions or {"sad": "comfort_bow", "happy": "happy_wiggle"}
+            affect_actions
+            or {
+                "sad": "comfort_bow",
+                "happy": "happy_wiggle",
+                "excited": "excited_paw_taps",
+            }
         )
         self.conversation_history_messages = conversation_history_messages
         self.dog = dog
@@ -1128,21 +1134,15 @@ class VoiceAgent:
 
     @staticmethod
     def _detect_explicit_affect(text: str) -> tuple[str, str] | None:
-        sad = re.search(
-            r"\b(?:i am|i'm|i feel|i'm feeling|i am feeling)\s+"
-            r"(?:really\s+|very\s+)?(?:sad|down|upset|unhappy)\b",
-            text,
-        )
-        if sad:
-            return "sad", "I'm here with you."
-        happy = re.search(
-            r"\b(?:i am|i'm|i feel|i'm feeling|i am feeling)\s+"
-            r"(?:really\s+|very\s+)?(?:happy|great|excited|joyful)\b",
-            text,
-        )
-        if happy:
-            return "happy", "I'm happy with you!"
-        return None
+        evidence = explicit_affect_from_text(text)
+        if evidence is None:
+            return None
+        reply = {
+            "sad": "I'm here with you.",
+            "happy": "I'm happy with you!",
+            "excited": "I'm excited with you!",
+        }.get(evidence.label)
+        return (evidence.label, reply) if reply is not None else None
 
     def _execute(self, decision: AgentDecision, transcript: str | None = None) -> str:
         if transcript:
@@ -1352,6 +1352,14 @@ class VoiceAgent:
                 return "Inferred-affect action does not match the active personality"
             if not self._is_social_trajectory(proposal.name):
                 return "Inferred-affect actions require a social trajectory skill"
+        elif proposal.trigger == "conversation_reaction":
+            if not self._is_social_trajectory(proposal.name):
+                return "Conversation reactions require a social trajectory skill"
+            if (
+                proposal.timing_preference != "when_safe"
+                or proposal.interruption_request != "none"
+            ):
+                return "Conversation reactions cannot request interruption"
         elif proposal.name not in self._bounded_action_skill_ids():
             return "Explicit action proposals require a bounded pose or trajectory skill"
         return None

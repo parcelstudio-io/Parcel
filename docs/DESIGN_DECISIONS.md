@@ -234,6 +234,12 @@ They do not weaken this decision: inferred reactions defer while the base is
 busy, and all custom joint targets remain simulator-only/hardware-unverified.
 See [EMBODIED_EXPRESSION.md](EMBODIED_EXPRESSION.md).
 
+Contextual chuckle/nod/shake/shrug/tilt proposals are a separate short-lived
+class: they execute only while idle, expire within two seconds, and are skipped
+if navigation, following, manual control, or another physical activity already
+owns the body. Explicit owner gesture commands may still defer. This prevents a
+social reaction from replaying after its conversational meaning has gone stale.
+
 ## D9. MuJoCo is the deterministic inner loop; rich worlds stay out of process
 
 **Decision:** MuJoCo remains the daily simulator and headless regression

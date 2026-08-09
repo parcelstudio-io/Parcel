@@ -190,7 +190,7 @@ The trusted assembly boundary is explicit:
 - [`system/action_policy.md`](../prompts/system/action_policy.md) defines the
   turn-level `next_action` proposal contract;
 - [`personalities/`](../prompts/personalities/) changes tone and maps clear
-  happy/sad cues to admitted social skills;
+  sad, happy, and explicit strong-anticipation cues to admitted social skills;
 - [`functions/`](../prompts/functions/) adds companion, navigation, spatial,
   patrol, or manual-assistant guidance;
 - [`dynamic/runtime_context.md.tmpl`](../prompts/dynamic/runtime_context.md.tmpl)

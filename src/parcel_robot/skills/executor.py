@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from parcel_robot.models import Pose, VelocityCommand
 from parcel_robot.motion import MotionRouter
 from parcel_robot.sim_ipc import publish_pose, publish_stop, publish_trajectory, publish_velocity
 
 from .catalog import SkillCatalog
-from .schema import SkillSpec
+from .schema import (
+    MAX_POSE_PLAYBACK_S,
+    MAX_TRAJECTORY_PLAYBACK_S,
+    SkillSpec,
+    playback_timing,
+)
 
 
 @dataclass
@@ -17,6 +22,9 @@ class ExecutionResult:
     kind: str
     message: str
     accepted: bool = True
+    requested_speed: float = 1.0
+    effective_rate: float = 1.0
+    effective_duration_s: float = 0.0
 
 
 class SkillExecutor:
@@ -59,7 +67,13 @@ class SkillExecutor:
     def execute(self, skill_id: str, **overrides: float) -> ExecutionResult:
         skill = self.select(skill_id)
         if skill.kind == "pose":
-            pose = Pose(skill.id, dict(skill.joints), duration=skill.duration)
+            requested_speed = overrides.get("speed", skill.speed)
+            rate, duration = playback_timing(
+                skill.duration,
+                requested_speed,
+                maximum_duration_s=MAX_POSE_PLAYBACK_S,
+            )
+            pose = Pose(skill.id, dict(skill.joints), duration=duration)
             # Stop locomotion before publishing the pose. In the simulator the
             # stop hook restores standing joints, so doing this afterward would
             # immediately overwrite the requested pose.
@@ -69,7 +83,15 @@ class SkillExecutor:
                 self.on_pose(pose)
             if self.sim_socket is not None:
                 publish_pose(pose, self.sim_socket)
-            return ExecutionResult(skill.id, skill.kind, f"Pose {skill.id}", True)
+            return ExecutionResult(
+                skill.id,
+                skill.kind,
+                f"Pose {skill.id}",
+                True,
+                requested_speed=float(requested_speed),
+                effective_rate=rate,
+                effective_duration_s=duration,
+            )
 
         if skill.kind in {"velocity", "gait"}:
             command = VelocityCommand(
@@ -96,13 +118,37 @@ class SkillExecutor:
             return ExecutionResult(skill.id, skill.kind, message, True)
 
         if skill.kind == "trajectory":
+            requested_speed = overrides.get("speed", skill.speed)
+            authored_duration = float(skill.keyframes[-1].t)
+            rate, duration = playback_timing(
+                authored_duration,
+                requested_speed,
+                maximum_duration_s=MAX_TRAJECTORY_PLAYBACK_S,
+            )
+            retimed = replace(
+                skill,
+                # Timing is baked into the execution copy. Leave its speed at
+                # unity so a future backend cannot apply the rate a second time.
+                speed=1.0,
+                keyframes=tuple(
+                    replace(frame, t=float(frame.t) / rate) for frame in skill.keyframes
+                ),
+            )
             if self.motion is not None:
                 self.motion.stop()
             if self.on_trajectory is not None:
-                self.on_trajectory(skill)
+                self.on_trajectory(retimed)
             if self.sim_socket is not None:
-                publish_trajectory(skill, self.sim_socket)
-            return ExecutionResult(skill.id, skill.kind, f"Trajectory {skill.id}", True)
+                publish_trajectory(retimed, self.sim_socket)
+            return ExecutionResult(
+                skill.id,
+                skill.kind,
+                f"Trajectory {skill.id}",
+                True,
+                requested_speed=float(requested_speed),
+                effective_rate=rate,
+                effective_duration_s=duration,
+            )
 
         if skill.kind == "policy":
             if not skill.rl.policy_path:

@@ -740,16 +740,34 @@ def test_the_collision_gate_behaviour_is_untouched_on_this_branch() -> None:
 
     head_defaults = _annotated_defaults(head, "CollisionPolicy")
     policy = CollisionPolicy()
-    assert set(head_defaults) >= {
-        "person_stop_m",
-        "person_slow_m",
-        "obstacle_stop_m",
-        "obstacle_slow_m",
-        "slow_scale",
-        "reaction_time_s",
-    }
+    # Any field still carrying a *literal* default at HEAD is pinned against the
+    # live value directly (slow_scale = 0.35, predictive_mode = "stop"): a
+    # re-typed literal reddens here.
     for name, expected in head_defaults.items():
         assert getattr(policy, name) == expected, (
             f"card W4: CollisionPolicy.{name} moved from {expected!r} to "
             f"{getattr(policy, name)!r}"
         )
+    # Re-pinned 2026-08-09 (Wave-2): the six gate thresholds are no longer
+    # literals in collision.py — Lane A (strata 4+5, 2026-08-07) derives them by
+    # reference from the single SafetyEnvelope authority, so `_annotated_defaults`
+    # (which keeps only ast.literal_eval-able constants) can no longer see them,
+    # and the previous `set(head_defaults) >= {...}` guard was committed RED at
+    # b75ed05 because it demanded literal defaults the refactor had removed. The
+    # guard's INTENT — "catch a re-tuned constant hidden behind a derivation" —
+    # is preserved and made STRONGER: the live CollisionPolicy() is pinned
+    # against the exact Go2-scale thresholds the SafetyEnvelope derivation
+    # produces (person_stop 1.2 m social zone, person_slow 2.5 m comfort band,
+    # obstacle_stop 0.6 m floor, obstacle_slow 1.2 m comfort band, slow_scale
+    # 0.35, reaction 0.12 s — the values pinned bit-for-bit in
+    # tests/test_authority_family_equality.py). A re-tune of any threshold,
+    # written as a literal or hidden in the envelope, reddens this. The gate
+    # BEHAVIOUR is confirmed untouched by the two AST comparisons above (live ==
+    # HEAD for apply_collision_brake and __post_init__). NB the D5 two-authorities
+    # gap is separate: this is the CollisionPolicy gate; the runtime robot.yaml
+    # obstacle_stop_m (0.65) and navigator stop_distance_m (0.8) are distinct
+    # keys tracked by card safety-margin-derivation, not this one.
+    assert (policy.person_stop_m, policy.person_slow_m) == (1.2, 2.5)
+    assert (policy.obstacle_stop_m, policy.obstacle_slow_m) == (0.6, 1.2)
+    assert policy.slow_scale == 0.35
+    assert policy.reaction_time_s == 0.12

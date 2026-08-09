@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Parcel pose review</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --bg: #081018;
+      --panel: #101b25;
+      --panel-2: #142431;
+      --line: #284050;
+      --text: #e8f3f5;
+      --muted: #91a8b5;
+      --mint: #56e6c2;
+      --blue: #79b8ff;
+      --warn: #ffc66d;
+      --danger: #ff7d84;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0%, #102535 0, var(--bg) 38%); color: var(--text); }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    a { color: var(--mint); }
+    main { width: min(1440px, 100%); margin: auto; padding: 24px; }
+    header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+    h1 { margin: 2px 0 6px; font-size: clamp(25px, 4vw, 38px); letter-spacing: -.03em; }
+    h2 { margin: 0; font-size: 17px; }
+    p { color: var(--muted); margin: 0; line-height: 1.55; }
+    .eyebrow { color: var(--mint); text-transform: uppercase; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+    .links { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+    .notice { border: 1px solid rgba(86,230,194,.28); background: rgba(86,230,194,.075); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+    .layout { display: grid; grid-template-columns: minmax(270px, 340px) 1fr; gap: 16px; align-items: start; }
+    .panel { border: 1px solid var(--line); background: rgba(16,27,37,.94); border-radius: 14px; overflow: hidden; box-shadow: 0 16px 50px rgba(0,0,0,.18); }
+    .panel-head { padding: 16px 18px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .panel-body { padding: 17px; }
+    .status { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 4px rgba(255,125,132,.1); }
+    .online .dot { background: var(--mint); box-shadow: 0 0 0 4px rgba(86,230,194,.1); }
+    .controls { display: grid; gap: 10px; }
+    .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .primary, .secondary, .danger, .skill-run {
+      min-height: 42px; border-radius: 9px; border: 1px solid var(--line); color: var(--text); background: var(--panel-2); padding: 9px 12px;
+    }
+    .primary { color: #062019; border-color: var(--mint); background: var(--mint); font-weight: 800; }
+    .danger { color: var(--danger); border-color: rgba(255,125,132,.45); }
+    label { display: grid; gap: 7px; color: var(--muted); font-size: 13px; }
+    select, input[type="range"] { width: 100%; }
+    select { border: 1px solid var(--line); background: var(--panel-2); color: var(--text); border-radius: 8px; padding: 9px; }
+    .check { display: flex; align-items: center; gap: 8px; }
+    .check input { accent-color: var(--mint); }
+    .readout { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #0b151e; }
+    .readout strong { display: block; margin-bottom: 5px; }
+    .readout span { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+    .progress { height: 5px; border-radius: 99px; background: #071018; margin-top: 11px; overflow: hidden; }
+    .progress > span { display: block; height: 100%; width: 0; background: var(--mint); transition: width .2s ease; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+    .toolbar p { font-size: 13px; }
+    .grid { padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 11px; }
+    .skill { border: 1px solid var(--line); background: #0c1720; border-radius: 11px; padding: 13px; display: grid; gap: 10px; min-width: 0; }
+    .skill.active { border-color: var(--mint); box-shadow: 0 0 0 2px rgba(86,230,194,.11); }
+    .skill-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .skill h3 { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+    .kind { border: 1px solid var(--line); color: var(--blue); border-radius: 99px; padding: 3px 7px; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+    .meta { color: var(--muted); font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .tags { min-height: 20px; display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag { color: #adc0ca; background: #172633; border-radius: 99px; padding: 3px 7px; font-size: 10px; }
+    .skill-run { min-height: 36px; padding: 7px 10px; }
+    .skill-run:hover, .secondary:hover { border-color: rgba(86,230,194,.55); }
+    .empty { padding: 32px; color: var(--muted); text-align: center; }
+    .log { margin-top: 16px; max-height: 160px; overflow: auto; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); }
+    .log div { padding: 6px 0; border-bottom: 1px solid rgba(40,64,80,.55); }
+    .error { color: var(--danger); }
+    @media (max-width: 850px) { .layout { grid-template-columns: 1fr; } header { flex-direction: column; } .links { justify-content: flex-start; } }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <div class="eyebrow">Simulator commissioning tool</div>
+        <h1>Pose &amp; gesture review</h1>
+        <p>Run bounded catalog motions one at a time and reset to neutral between previews.</p>
+      </div>
+      <nav class="links" aria-label="Parcel panels">
+        <a href="/">Control deck</a>
+        <a href="/viewer">City viewer</a>
+        <a href="/latency">Latency</a>
+      </nav>
+    </header>
+
+    <div class="notice">
+      Watch the separate <strong>MuJoCo window</strong> for articulated leg motion. This page is a simulator-only sequencer; it never enables raw physical-robot pose control.
+    </div>
+
+    <div class="layout">
+      <aside class="panel">
+        <div class="panel-head">
+          <h2>Review controls</h2>
+          <div id="connection" class="status"><span class="dot"></span><span>Connecting</span></div>
+        </div>
+        <div class="panel-body">
+          <div class="controls">
+            <button id="run-all" class="primary" type="button">Run all visible</button>
+            <div class="button-row">
+              <button id="previous" class="secondary" type="button">Previous</button>
+              <button id="next" class="secondary" type="button">Next</button>
+            </div>
+            <div class="button-row">
+              <button id="reset" class="secondary" type="button">Reset to stand</button>
+              <button id="stop" class="danger" type="button">Stop review</button>
+            </div>
+            <label for="filter">Visible motions
+              <select id="filter">
+                <option value="all">Poses and trajectories</option>
+                <option value="pose">Poses only</option>
+                <option value="trajectory">Trajectories only</option>
+                <option value="social">Social gestures only</option>
+              </select>
+            </label>
+            <label for="hold">Extra viewing time: <output id="hold-value">1.0 s</output>
+              <input id="hold" type="range" min="0" max="4" step="0.25" value="1">
+            </label>
+            <label for="speed">Motion speed: <output id="speed-value">1.00</output>
+              <input id="speed" type="range" min="0" max="1" step="0.05" value="1">
+              <small>0 = slowest safe playback · 1 = authored timing</small>
+            </label>
+            <label class="check"><input id="catalog-speed" type="checkbox" checked> Use each skill's catalog speed</label>
+            <label class="check"><input id="auto-reset" type="checkbox" checked> Reset to neutral after each motion</label>
+          </div>
+          <div class="readout" aria-live="polite">
+            <strong id="current">No motion selected</strong>
+            <span id="detail">Waiting for the simulator catalog.</span>
+            <div class="progress" aria-hidden="true"><span id="progress"></span></div>
+          </div>
+          <div id="log" class="log" aria-label="Pose review events"></div>
+        </div>
+      </aside>
+
+      <section class="panel" aria-labelledby="catalog-heading">
+        <div class="toolbar">
+          <div>
+            <h2 id="catalog-heading">Bounded motion catalog</h2>
+            <p id="count">Loading…</p>
+          </div>
+          <span class="kind">Simulator only</span>
+        </div>
+        <div id="skills" class="grid"><div class="empty">Loading pose catalog…</div></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+
+    const CSRF_TOKEN = "__PARCEL_CSRF_TOKEN__";
+    const state = { skills: [], snapshot: {}, activeId: null, reviewing: false, cancel: false, cursor: -1 };
+    const el = (id) => document.getElementById(id);
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    async function api(path, options = {}) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      const method = options.method || "GET";
+      const headers = { "Accept": "application/json", ...(options.headers || {}) };
+      if (method !== "GET") {
+        headers["Content-Type"] = "application/json";
+        headers["X-Parcel-CSRF"] = CSRF_TOKEN;
+      }
+      try {
+        const response = await fetch(path, { ...options, method, headers, signal: controller.signal, cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.detail || payload.message || `HTTP ${response.status}`);
+        return payload;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    function log(message, error = false) {
+      const row = document.createElement("div");
+      row.textContent = `${new Date().toLocaleTimeString()} · ${message}`;
+      if (error) row.className = "error";
+      el("log").prepend(row);
+      while (el("log").children.length > 16) el("log").lastChild.remove();
+    }
+
+    function filteredSkills() {
+      const mode = el("filter").value;
+      if (mode === "all") return state.skills;
+      if (mode === "social") return state.skills.filter((skill) => skill.tags.includes("social"));
+      return state.skills.filter((skill) => skill.kind === mode);
+    }
+
+    function setReviewing(value) {
+      state.reviewing = value;
+      for (const button of document.querySelectorAll("button")) {
+        if (button.id !== "stop") button.disabled = value;
+      }
+      el("stop").disabled = false;
+    }
+
+    function renderSkills() {
+      const skills = filteredSkills();
+      el("count").textContent = `${skills.length} of ${state.skills.length} bounded motions shown`;
+      const grid = el("skills");
+      grid.replaceChildren();
+      if (!skills.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "No motions match this filter.";
+        grid.appendChild(empty);
+        return;
+      }
+      for (const skill of skills) {
+        const card = document.createElement("article");
+        card.className = `skill${state.activeId === skill.id ? " active" : ""}`;
+        card.dataset.skillId = skill.id;
+        const title = document.createElement("div");
+        title.className = "skill-title";
+        const heading = document.createElement("h3");
+        heading.textContent = skill.name;
+        const kind = document.createElement("span");
+        kind.className = "kind";
+        kind.textContent = skill.kind;
+        title.append(heading, kind);
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = `${skill.id} · ${skill.duration_s.toFixed(2)} s · default speed ${skill.speed.toFixed(2)}`;
+        const tags = document.createElement("div");
+        tags.className = "tags";
+        for (const value of skill.tags.slice(0, 5)) {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.textContent = value;
+          tags.appendChild(tag);
+        }
+        const run = document.createElement("button");
+        run.className = "skill-run";
+        run.type = "button";
+        run.textContent = "Run this motion";
+        run.disabled = state.reviewing;
+        run.addEventListener("click", () => runSingle(skill));
+        card.append(title, meta, tags, run);
+        grid.appendChild(card);
+      }
+    }
+
+    function renderSnapshot(snapshot) {
+      state.snapshot = snapshot || {};
+      const connection = el("connection");
+      connection.classList.add("online");
+      connection.lastElementChild.textContent = "Connected";
+      const activities = snapshot?.activities || {};
+      const active = activities.running || (activities.pending || [])[0];
+      if (!state.reviewing && active) {
+        el("detail").textContent = `${active.status || active.disposition}: ${active.name}`;
+      }
+    }
+
+    async function pollState() {
+      try {
+        renderSnapshot(await api("/api/state"));
+      } catch (error) {
+        el("connection").classList.remove("online");
+        el("connection").lastElementChild.textContent = "Disconnected";
+      }
+    }
+
+    async function waitForCompletion(effectiveDurationS) {
+      const started = Date.now();
+      const durationMs = Math.max(100, effectiveDurationS * 1000 + 150);
+      const deadline = started + durationMs;
+      while (Date.now() < deadline) {
+        if (state.cancel) throw new Error("review stopped");
+        const elapsed = Date.now() - started;
+        el("progress").style.width = `${Math.min(90, (elapsed / durationMs) * 90)}%`;
+        await sleep(120);
+      }
+      await pollState();
+    }
+
+    async function resetToStand(announce = true) {
+      await api("/api/action", { method: "POST", body: JSON.stringify({ action: "stop" }) });
+      if (announce) log("Reset simulator joints to neutral stand");
+      await sleep(350);
+    }
+
+    async function cancellablePause(ms) {
+      const deadline = Date.now() + ms;
+      while (Date.now() < deadline) {
+        if (state.cancel) throw new Error("review stopped");
+        await sleep(Math.min(100, deadline - Date.now()));
+      }
+    }
+
+    async function preview(skill, index, total, speed) {
+      state.activeId = skill.id;
+      state.cursor = Math.max(0, filteredSkills().findIndex((item) => item.id === skill.id));
+      renderSkills();
+      el("current").textContent = skill.name;
+      el("detail").textContent = `${skill.kind} · authored ${skill.duration_s.toFixed(2)} s · speed ${speed.toFixed(2)}${total > 1 ? ` · ${index + 1}/${total}` : ""}`;
+      el("progress").style.width = total > 1 ? `${(index / total) * 100}%` : "15%";
+      log(`Queueing ${skill.id} at speed ${speed.toFixed(2)}`);
+      const result = await api("/api/pose-review/run", {
+        method: "POST",
+        body: JSON.stringify({ name: skill.id, speed }),
+      });
+      renderSnapshot(result.state);
+      const effectiveDurationS = Number(result.effective_duration_s) || 0;
+      el("detail").textContent = `${skill.kind} · ${effectiveDurationS.toFixed(2)} s effective · ${Number(result.effective_rate).toFixed(2)}× authored rate`;
+      await waitForCompletion(effectiveDurationS);
+      const holdMs = Number(el("hold").value) * 1000;
+      el("detail").textContent = `${skill.name} complete · viewing for ${(holdMs / 1000).toFixed(2)} s`;
+      if (holdMs > 0) await cancellablePause(holdMs);
+      if (el("auto-reset").checked) await resetToStand(false);
+      log(`Completed ${skill.id} in ${effectiveDurationS.toFixed(2)} s`);
+    }
+
+    async function runSequence(skills) {
+      if (state.reviewing || !skills.length) return;
+      state.cancel = false;
+      setReviewing(true);
+      const speedOverride = el("catalog-speed").checked ? null : Number(el("speed").value);
+      try {
+        for (let index = 0; index < skills.length; index += 1) {
+          if (state.cancel) break;
+          const speed = speedOverride === null ? skills[index].speed : speedOverride;
+          await preview(skills[index], index, skills.length, speed);
+        }
+        if (!state.cancel) {
+          el("progress").style.width = "100%";
+          el("detail").textContent = `Review complete · ${skills.length} motions`;
+          log(`Review complete (${skills.length} motions)`);
+        }
+      } catch (error) {
+        if (!state.cancel) {
+          el("detail").textContent = error.message;
+          log(error.message, true);
+        }
+        try {
+          await resetToStand(false);
+        } catch (resetError) {
+          log(`Neutral recovery failed: ${resetError.message}`, true);
+        }
+      } finally {
+        state.activeId = null;
+        renderSkills();
+        setReviewing(false);
+      }
+    }
+
+    async function runSingle(skill) { await runSequence([skill]); }
+
+    el("run-all").addEventListener("click", () => runSequence([...filteredSkills()]));
+    el("previous").addEventListener("click", () => {
+      const skills = filteredSkills();
+      if (!skills.length) return;
+      state.cursor = (state.cursor - 1 + skills.length) % skills.length;
+      runSingle(skills[state.cursor]);
+    });
+    el("next").addEventListener("click", () => {
+      const skills = filteredSkills();
+      if (!skills.length) return;
+      state.cursor = (state.cursor + 1) % skills.length;
+      runSingle(skills[state.cursor]);
+    });
+    el("reset").addEventListener("click", () => resetToStand().catch((error) => log(error.message, true)));
+    el("stop").addEventListener("click", async () => {
+      state.cancel = true;
+      try {
+        await resetToStand(false);
+        el("detail").textContent = "Review stopped · neutral stand requested";
+        log("Review stopped and reset to stand");
+      } catch (error) {
+        log(error.message, true);
+      }
+    });
+    el("filter").addEventListener("change", () => { state.cursor = -1; renderSkills(); });
+    el("hold").addEventListener("input", () => { el("hold-value").textContent = `${Number(el("hold").value).toFixed(2)} s`; });
+    el("speed").addEventListener("input", () => { el("speed-value").textContent = Number(el("speed").value).toFixed(2); });
+    el("catalog-speed").addEventListener("change", () => { el("speed").disabled = el("catalog-speed").checked; });
+    window.addEventListener("pagehide", () => {
+      state.cancel = true;
+      fetch("/api/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Parcel-CSRF": CSRF_TOKEN },
+        body: JSON.stringify({ action: "stop" }),
+        keepalive: true,
+      }).catch(() => {});
+    });
+
+    async function initialize() {
+      try {
+        const catalog = await api("/api/pose-review/skills");
+        state.skills = (catalog.skills || []).map((skill) => ({
+          ...skill,
+          duration_s: Number(skill.duration_s) || 0,
+          speed: Number.isFinite(Number(skill.speed)) ? Number(skill.speed) : 1,
+          tags: Array.isArray(skill.tags) ? skill.tags.map(String) : [],
+        }));
+        renderSkills();
+        await pollState();
+        el("detail").textContent = "Select one motion or run the visible catalog.";
+        log(`Loaded ${state.skills.length} bounded motions`);
+        if (new URLSearchParams(window.location.search).get("autoplay") === "1") {
+          el("detail").textContent = "Autoplay begins in 3 seconds—focus the MuJoCo window.";
+          await sleep(3000);
+          if (!state.cancel) runSequence([...filteredSkills()]);
+        }
+      } catch (error) {
+        el("detail").textContent = error.message;
+        log(error.message, true);
+      }
+    }
+
+    setInterval(pollState, 750);
+    el("speed").disabled = el("catalog-speed").checked;
+    initialize();
+  </script>
+</body>
+</html>

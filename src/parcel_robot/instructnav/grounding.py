@@ -15,7 +15,7 @@ from typing import Any
 
 from parcel_robot.instructnav.memory import RememberedEntity
 from parcel_robot.instructnav.relations import nearest_point_in_region
-from parcel_robot.instructnav.siglip import SigLIP2Matcher
+from parcel_robot.instructnav.siglip import SIGLIP2_MATCH_THRESHOLD, SigLIP2Matcher
 
 
 class GroundingOutcome(str, Enum):
@@ -108,7 +108,10 @@ class GrounderV2:
     """
 
     matcher: SigLIP2Matcher | None = None
-    match_threshold: float = 0.24
+    #: Real-embedding cosine gate. Fed to an auto-built matcher as its
+    #: ``real_threshold``; inert on the weights-absent path (string fallback
+    #: ignores it), so it never moves a frozen row. Recalibrate on real weights.
+    match_threshold: float = SIGLIP2_MATCH_THRESHOLD
     ambiguity_margin: float = 0.05
     distance_ambiguity_m: float = 0.75
 
@@ -132,12 +135,11 @@ class GrounderV2:
                 candidates=(),
                 detail="empty_query",
             )
-        matcher = self.matcher or SigLIP2Matcher()
+        matcher = self.matcher or SigLIP2Matcher(real_threshold=self.match_threshold)
         frustum = _rank_candidates(
             query=q,
             items=detections,
             matcher=matcher,
-            threshold=self.match_threshold,
             source="detection",
             robot_xy=robot_xy,
             robot_yaw_rad=robot_yaw_rad,
@@ -146,7 +148,6 @@ class GrounderV2:
             query=q,
             items=memory,
             matcher=matcher,
-            threshold=self.match_threshold,
             source="memory",
             robot_xy=robot_xy,
             robot_yaw_rad=robot_yaw_rad,
@@ -165,7 +166,6 @@ def _rank_candidates(
     query: str,
     items: Sequence[Any],
     matcher: SigLIP2Matcher,
-    threshold: float,
     source: str,
     robot_xy: tuple[float, float] | None,
     robot_yaw_rad: float,
@@ -184,9 +184,17 @@ def _rank_candidates(
         label = str(candidate.get("label") or candidate.get("class_id") or "")
         if not label:
             continue
-        match = matcher.match(query, [label], threshold=threshold)
+        match = matcher.match(query, [label])
         if match is None:
-            # Exact/normalized string fallback even when matcher is picky.
+            if matcher.available:
+                # A2: real SigLIP-2 already decided this label is not the queried
+                # class. DELETE the cross-class substring rescue — it was the path
+                # that let "streetlight" commit a "tree" ("tree" ⊂ "s-tree-tlight")
+                # and "the tree" commit a lamppost via its "streetlight" alias.
+                # Gated: weights-absent CI keeps the exact string rescue below,
+                # byte-identical to the frozen baseline.
+                continue
+            # Weights absent: exact/normalized string fallback, unchanged.
             if _norm_token(query) != _norm_token(label) and _norm_token(label) not in _norm_token(
                 query
             ):
@@ -198,11 +206,13 @@ def _rank_candidates(
                 candidate.get("score", candidate.get("confidence", 1.0))
             )
             match_source = match.source
-        # Embedding cosine against stored vector when both sides present.
+        # Embedding cosine against stored vector when both sides present. A2: the
+        # query side is the real text embedding when weights are present, and the
+        # char-hash (byte-identical to today) when they are absent.
         emb = candidate.get("embedding")
         if isinstance(emb, (list, tuple)) and emb:
-            query_emb = _hash_embed(query)
-            if len(query_emb) == len(emb):
+            query_emb = matcher.embed_text(query) if matcher.available else _hash_embed(query)
+            if query_emb is not None and len(query_emb) == len(emb):
                 cos = _cosine(query_emb, tuple(float(v) for v in emb))
                 match_score = max(match_score, 0.5 * (1.0 + cos))
         candidate = {

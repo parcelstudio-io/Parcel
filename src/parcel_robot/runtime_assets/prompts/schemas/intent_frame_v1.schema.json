@@ -42,7 +42,7 @@
           "additionalProperties": false,
           "required": ["label", "confidence", "source"],
           "properties": {
-            "label": {"enum": ["happy", "sad", "neutral", "unknown"]},
+            "label": {"enum": ["excited", "happy", "sad", "neutral", "unknown"]},
             "confidence": {"type": "number", "minimum": 0, "maximum": 1},
             "source": {
               "enum": ["explicit_transcript", "prosody", "multimodal", "unknown"]

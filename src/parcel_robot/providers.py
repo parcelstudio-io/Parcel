@@ -441,7 +441,7 @@ def _decision_response_schema(tools: list[dict[str, Any]]) -> dict[str, Any]:
                         "properties": {
                             "label": {
                                 "type": "string",
-                                "enum": ["happy", "sad", "neutral", "unknown"],
+                                "enum": ["excited", "happy", "sad", "neutral", "unknown"],
                             },
                             "confidence": {
                                 "type": "number",
@@ -464,7 +464,11 @@ def _decision_response_schema(tools: list[dict[str, Any]]) -> dict[str, Any]:
                             "name": {"type": "string", "minLength": 1, "maxLength": 80},
                             "trigger": {
                                 "type": "string",
-                                "enum": ["inferred_affect", "explicit_command"],
+                                "enum": [
+                                    "inferred_affect",
+                                    "explicit_command",
+                                    "conversation_reaction",
+                                ],
                             },
                             "timing_preference": {
                                 "type": "string",
@@ -801,7 +805,7 @@ def _parse_affect(value: object) -> AffectEstimate | None:
         raise TypeError("affect must contain only label and confidence")
     label = value.get("label")
     confidence = value.get("confidence")
-    if label not in {"happy", "sad", "neutral", "unknown"}:
+    if label not in {"excited", "happy", "sad", "neutral", "unknown"}:
         raise ValueError("affect label is not allowed")
     if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
         raise TypeError("affect confidence must be numeric")
@@ -833,7 +837,11 @@ def _parse_action_proposal(value: object) -> ActionProposal | None:
     if not isinstance(name, str) or not name.strip() or len(name) > 80:
         raise TypeError("next_action name must be a short string")
     trigger = value.get("trigger", "inferred_affect")
-    if trigger not in {"inferred_affect", "explicit_command"}:
+    if trigger not in {
+        "inferred_affect",
+        "explicit_command",
+        "conversation_reaction",
+    }:
         raise ValueError("next_action trigger is not allowed")
     timing = value.get("timing_preference", "when_safe")
     if timing not in {"when_safe", "now"}:

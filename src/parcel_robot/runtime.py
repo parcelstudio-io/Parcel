@@ -164,6 +164,7 @@ from parcel_robot.runtime_channels import (
     SpatialChannel,
 )
 from parcel_robot.skills.api import Dog
+from parcel_robot.skills.executor import ExecutionResult
 from parcel_robot.voice.amendment import AMEND_SUSPEND_REASON, begin_goal_amend
 from parcel_robot.voice.closed_intents import ClosedIntent
 from parcel_robot.voice.dialogue_state import DialogueStateChannel
@@ -538,6 +539,10 @@ class RobotRuntime:
             cooldown_s=float(affect_config.get("social_action_cooldown_s", 8.0)),
         )
         self._activity_complete_at = 0.0
+        # Activity-owned pose/trajectory callbacks re-enter the command lock.
+        # Mark that narrow dispatch window so they do not preempt the
+        # coordinator record that launched them.
+        self._activity_dispatch_active = False
         self._voice_detail: dict[str, object] = VoiceDetail().as_dict()
 
         motion = build_motion_router(
@@ -1037,7 +1042,7 @@ class RobotRuntime:
             raise ValueError("PlanIR source turn does not match IntentFrame")
 
         # Route decides the authority, and the route comes from the
-        # deterministic router (``ROUTER_VERSION = "deterministic-v1"``), never
+        # versioned deterministic router (``brain.router.ROUTER_VERSION``), never
         # from a model: ``deliberative_plan`` carries model output and gets the
         # model-facing registry; ``direct_skill`` carries the runtime's own
         # closed-intent PlanSketches and gets the system registry, which is the
@@ -1185,16 +1190,23 @@ class RobotRuntime:
     DEFAULT_EMOTES = (
         "attentive_nod",
         "bow",
+        "chuckle",
         "comfort_bow",
+        "confused_head_tilt",
         "curious_look",
+        "excited_paw_taps",
         "happy_wiggle",
+        "head_nod",
+        "head_shake",
         "hello_pose",
         "hop",
         "look_left",
         "look_right",
+        "observing_head_tilt",
         "paw_wave",
         "play_bow",
         "shake",
+        "shrug",
         "stretch",
     )
 
@@ -3188,6 +3200,67 @@ class RobotRuntime:
             return self.clear_emergency_stop()
         raise ValueError(f"unknown action: {name}")
 
+    def pose_review_skills(self) -> list[dict[str, object]]:
+        """Describe the bounded catalog actions available to the simulator gallery."""
+
+        skills: list[dict[str, object]] = []
+        for skill in self.dog.list_skills():
+            if skill.kind not in {"pose", "trajectory"}:
+                continue
+            duration_s = (
+                float(skill.keyframes[-1].t)
+                if skill.kind == "trajectory" and skill.keyframes
+                else float(skill.duration)
+            )
+            skills.append(
+                {
+                    "id": skill.id,
+                    "name": skill.name,
+                    "kind": skill.kind,
+                    "duration_s": duration_s,
+                    "speed": skill.speed,
+                    "tags": list(skill.tags),
+                }
+            )
+        return skills
+
+    def execute_pose_review(
+        self,
+        name: str,
+        *,
+        speed: float | None = None,
+    ) -> ExecutionResult:
+        """Run one bounded skill for visual inspection in the simulator.
+
+        This operator-only path deliberately refuses every backend except the
+        MuJoCo socket backend. It uses the same validated skill executor and
+        pose/trajectory dispatch seams as the runtime, including command-lock,
+        E-stop, stop, and locomotion-preemption behavior. It does not use the
+        social-action cooldown because a commissioning operator must be able
+        to replay the same motion immediately.
+        """
+
+        if self._closed:
+            raise RuntimeError("runtime is closed")
+        if not self._synchronous_control_dispatch or self.backend.name != "mujoco":
+            raise RuntimeError("pose review is available only in the simulator")
+        clean = str(name).strip()
+        try:
+            skill = self.dog.catalog.get(clean)
+        except KeyError as error:
+            raise ValueError(f"unknown pose-review skill: {clean!r}") from error
+        if skill.kind not in {"pose", "trajectory"}:
+            raise ValueError("pose review accepts only bounded pose or trajectory skills")
+        result = self.dog.execute(clean) if speed is None else self.dog.execute(clean, speed=speed)
+        if not result.accepted:
+            raise RuntimeError(result.message)
+        return result
+
+    def run_pose_review(self, name: str, *, speed: float | None = None) -> str:
+        """Compatibility wrapper returning the pose-review status message."""
+
+        return self.execute_pose_review(name, speed=speed).message
+
     def list_personalities(self) -> list[dict[str, str]]:
         return [
             {"id": profile.id, "name": profile.name}
@@ -3225,6 +3298,7 @@ class RobotRuntime:
             "execute": "Accepted",
             "defer": "Deferred",
             "reject": "Rejected",
+            "skip": "Skipped",
         }.get(result.disposition, "Rejected")
         return f"{status}: {result.message}"
 
@@ -3304,15 +3378,15 @@ class RobotRuntime:
                 self._activity_complete_at = 0.0
                 return
             try:
-                skill = self.dog.catalog.get(record.proposal.name)
-                result = self.dog.execute(record.proposal.name)
+                self._activity_dispatch_active = True
+                try:
+                    result = self.dog.execute(record.proposal.name)
+                finally:
+                    self._activity_dispatch_active = False
                 if not result.accepted:
                     raise RuntimeError(result.message)
-                if skill.kind == "trajectory" and skill.keyframes:
-                    duration = float(skill.keyframes[-1].t)
-                else:
-                    duration = float(skill.duration)
-                self._activity_complete_at = now + max(0.1, min(30.0, duration + 0.15))
+                duration = result.effective_duration_s
+                self._activity_complete_at = now + max(0.1, min(30.15, duration + 0.15))
                 self._emit("activity", f"Executing {record.proposal.name}", "success")
             except (KeyError, OSError, RuntimeError, TypeError, ValueError) as error:
                 self.activities.finish(success=False, detail=str(error), now=now)
@@ -3600,10 +3674,13 @@ class RobotRuntime:
         if self.arbiter.emergency_stopped:
             raise RuntimeError("motion is disabled by emergency stop")
         with self._command_lock:
+            targets = ("follow", "navigation", "spatial", "search")
+            if not self._activity_dispatch_active:
+                targets += ("activities",)
             self.preempt(
                 "pose",
                 reason="pose_started",
-                targets=("follow", "navigation", "spatial", "search", "activities"),
+                targets=targets,
             )
         with self._command_lock:
             if self.arbiter.emergency_stopped:
@@ -3624,10 +3701,13 @@ class RobotRuntime:
         if self.arbiter.emergency_stopped:
             raise RuntimeError("motion is disabled by emergency stop")
         with self._command_lock:
+            targets = ("follow", "navigation", "spatial", "search")
+            if not self._activity_dispatch_active:
+                targets += ("activities",)
             self.preempt(
                 "trajectory",
                 reason="trajectory_started",
-                targets=("follow", "navigation", "spatial", "search", "activities"),
+                targets=targets,
             )
         with self._command_lock:
             if self.arbiter.emergency_stopped:

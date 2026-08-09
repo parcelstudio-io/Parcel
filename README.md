@@ -36,6 +36,23 @@ whisper.cpp services are optional. This desktop currently has no connected
 microphone/speaker endpoint, no native PortAudio runtime, and no Piper
 installation:
 
+To visually inspect every bounded pose and gesture without starting the
+reasoning or audio services, launch the simulator commissioning gallery:
+
+```bash
+./scripts/launch_pose_review.sh           # 3-second countdown, then run all
+./scripts/launch_pose_review.sh --manual  # inspect and run motions individually
+```
+
+This opens the native MuJoCo window plus <http://127.0.0.1:8765/poses>. Watch
+MuJoCo for articulated leg motion; the browser page provides Run, Run All,
+Previous/Next, Stop, filtering, normalized 0–1 motion speed, dwell timing, and
+neutral reset. Speed `1` is authored timing and `0` is the slowest bounded
+playback; Stop is the cancellation control. The preview
+API is enabled only by this launcher, accepts only catalogued poses and
+trajectories, and refuses non-MuJoCo runtimes. By default the complete catalog
+plays in canonical order after the countdown.
+
 ```bash
 ./scripts/launch_stack.sh --fish       # start Fish service only; does not select it
 ./scripts/launch_stack.sh --whisper    # local ASR service

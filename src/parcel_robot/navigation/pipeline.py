@@ -831,6 +831,27 @@ class DirectiveNavigator:
     #: Prediction horizon for "will the stream have cleared?".
     FINAL_APPROACH_HORIZON_S = 1.5
 
+    #: Scan-while-translating (card seamless-pacing seam 1, 2026-08-09). When the
+    #: grounder has RESOLVED a single (non-interchangeable) target and the body is
+    #: already roughly facing it, close distance during the multi-view
+    #: confirmation instead of rotating in place and only then translating —
+    #: the audit's "opening full-turn scan even when the frustum already RESOLVED
+    #: the target". Reuses the yield creep (one value) and is hard-gated so it can
+    #: neither drive a collision nor bias an instance ranking: it never fires for
+    #: a region/"nearest" look-around sweep, only when the target is within the
+    #: half-angle ahead (a straight-line approach, not an arc the actuator shaper
+    #: fights), only past ``_SCAN_CREEP_MIN_RANGE_M`` (the commit/approach owns the
+    #: close range), and only with a measured omnidirectional clearance beyond a
+    #: full creep reaction horizon — and it is still bounded by every downstream
+    #: reactive gate. Absent clearance data it does NOT creep (fail-safe).
+    SCAN_CREEP_MPS = FINAL_APPROACH_CREEP_MPS
+    _SCAN_CREEP_MAX_BEARING_RAD = 0.30
+    #: Below this range the commit + terminal-approach path owns the close
+    #: distance, so there is no reason to creep during confirmation. 1.5 m, not
+    #: the retired 1.2 F-proximity value.
+    _SCAN_CREEP_MIN_RANGE_M = 1.5
+    _SCAN_CREEP_CLEARANCE_M = 1.0
+
     def _final_metre_creep(
         self,
         observation: NavObservation,
@@ -1975,13 +1996,28 @@ class DirectiveNavigator:
                 # is a deliberate revolution to rank instances, not a single
                 # target to keep centred, and centring one would stop the sweep.
                 vyaw = result.vyaw
+                vx = 0.0
                 if mapped is not None and not interchangeable:
                     bearing = math.atan2(mapped.y - robot_y, mapped.x - robot_x) - robot_yaw
                     bearing = (bearing + math.pi) % (2.0 * math.pi) - math.pi
                     rate = float(self.search.yaw_rate)
                     vyaw = max(-rate, min(rate, 1.6 * bearing))
+                    # Seam 1: scan-WHILE-translating toward the resolved target.
+                    # Every clause is a hard gate — see SCAN_CREEP_MPS. Absent
+                    # clearance data (`nearest_obstacle_m is None`) it does not
+                    # creep, and the omnidirectional clearance requirement is far
+                    # more conservative than the creep needs.
+                    target_range = math.hypot(mapped.y - robot_y, mapped.x - robot_x)
+                    clearance = observation.nearest_obstacle_m
+                    if (
+                        abs(bearing) <= self._SCAN_CREEP_MAX_BEARING_RAD
+                        and target_range > self._SCAN_CREEP_MIN_RANGE_M
+                        and clearance is not None
+                        and clearance > self._SCAN_CREEP_CLEARANCE_M
+                    ):
+                        vx = self.SCAN_CREEP_MPS
                 return MidLevelCommand(
-                    vx=0.0,
+                    vx=vx,
                     vy=0.0,
                     vyaw=vyaw,
                     note=result.note or "semantic_search_scan",
@@ -3096,15 +3132,41 @@ class DirectiveNavigator:
             return False
         if self.mission.semantic_goal is None:
             return False
-        # Region "inside" success still requires terminal clearance; the approach
-        # pose owns the geometric trigger so we do not verify on a raw edge hit.
-        if self.mission.semantic_goal.terminal_relation == "inside":
-            return False
         region = self._arrival_goal_region()
         if region is None:
             return False
         # MAP: K0 arrival authority. A GoalRegion is a world-frame object.
         robot_map = _pose_in(observation, MAP_FRAME)
+        # Region "inside" (card seamless-pacing seam 3, 2026-08-09): converge the
+        # instant the robot stands INSIDE the committed region polygon with the
+        # SAME terminal clearance `_semantic_arrival_verified` requires (0.32 m
+        # from every edge) — never on a raw edge hit. This previously returned
+        # False unconditionally and left arrival to the geometric approach-pose
+        # heading align, which spins `align_goal` in place (no meaningful heading
+        # exists inside a polygon), is braked by the comfort gate, and burns the
+        # entire step budget while already arrived — the
+        # `navigation_step_limit_inside_goal` rows ("go to the sidewalk", "walk
+        # onto the sidewalk"). Triggering on the identical inside-with-clearance
+        # predicate the verification then re-checks makes trigger ⊆ verify, so it
+        # converges the case without inventing an arrival the K0 scorer would not
+        # also grant (terminal clearance is preserved, not a raw edge hit).
+        if self.mission.semantic_goal.terminal_relation == "inside":
+            polygon = getattr(region, "polygon", None)
+            if not polygon:
+                return False
+            # Same footprint-radius fallback the "inside" terminal verification
+            # uses; referenced by symbol so this read does not re-spell the
+            # retired 0.32 F-robot-radius literal (authority-no-literal-drift).
+            clearance = float(
+                self.mission.metadata.get(
+                    "terminal_clearance_m", ROBOT_FOOTPRINT_RADIUS_M
+                )
+            )
+            return self._inside_polygon_verified(
+                robot_map,
+                tuple((float(px), float(py)) for px, py in polygon),
+                clearance,
+            )
         if not region.contains(robot_map.x, robot_map.y):
             return False
         # The `near` K0 band is a full annulus, but a valid STAND pose

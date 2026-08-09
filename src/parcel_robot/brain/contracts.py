@@ -13,7 +13,7 @@ INTENT_ROUTES = frozenset(
     {"conversation_only", "direct_skill", "deliberative_plan", "clarify_or_abstain"}
 )
 SPEECH_ACTS = frozenset({"request", "question", "statement", "correction", "cancel", "unknown"})
-AFFECT_LABELS = frozenset({"happy", "sad", "neutral", "unknown"})
+AFFECT_LABELS = frozenset({"excited", "happy", "sad", "neutral", "unknown"})
 AFFECT_SOURCES = frozenset({"explicit_transcript", "prosody", "multimodal", "unknown"})
 TARGET_KINDS = frozenset(
     {"semantic_region", "semantic_object", "owner", "current_pose", "safe_region"}

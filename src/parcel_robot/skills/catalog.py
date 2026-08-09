@@ -6,7 +6,7 @@ import yaml
 
 from parcel_robot.models import Pose
 
-from .schema import SkillSpec, parse_skill
+from .schema import MAX_POSE_PLAYBACK_S, SkillSpec, parse_skill, playback_timing
 
 
 class SkillCatalog:
@@ -72,5 +72,10 @@ class SkillCatalog:
         for spec in self.list(kind="pose"):
             joints = spec.as_pose_joints()
             if joints:
-                poses[spec.id] = Pose(spec.id, joints, duration=spec.duration)
+                _, duration = playback_timing(
+                    spec.duration,
+                    spec.speed,
+                    maximum_duration_s=MAX_POSE_PLAYBACK_S,
+                )
+                poses[spec.id] = Pose(spec.id, joints, duration=duration)
         return poses

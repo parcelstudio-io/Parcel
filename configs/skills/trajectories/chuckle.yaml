@@ -1,0 +1,70 @@
+id: chuckle
+name: Chuckle bounce (Go2 body proxy)
+kind: trajectory
+enabled: true
+tags:
+- social
+- gesture
+- amusement
+- audio_pairable
+- embodiment_proxy
+- returns_to_stand
+- hardware_unverified
+keyframes:
+- t: 0.0
+  joints: &stand
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.9
+    FL_calf_joint: -1.8
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.9
+    FR_calf_joint: -1.8
+    RL_hip_joint: 0.0
+    RL_thigh_joint: 0.9
+    RL_calf_joint: -1.8
+    RR_hip_joint: 0.0
+    RR_thigh_joint: 0.9
+    RR_calf_joint: -1.8
+- t: 0.12
+  joints: &bounce_left
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.97
+    FL_calf_joint: -1.89
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.97
+    FR_calf_joint: -1.89
+    RL_hip_joint: 0.06
+    RL_thigh_joint: 0.97
+    RL_calf_joint: -1.89
+    RR_hip_joint: -0.06
+    RR_thigh_joint: 0.97
+    RR_calf_joint: -1.89
+- t: 0.24
+  joints: *stand
+- t: 0.36
+  joints: &bounce_right
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.97
+    FL_calf_joint: -1.89
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.97
+    FR_calf_joint: -1.89
+    RL_hip_joint: -0.06
+    RL_thigh_joint: 0.97
+    RL_calf_joint: -1.89
+    RR_hip_joint: 0.06
+    RR_thigh_joint: 0.97
+    RR_calf_joint: -1.89
+- t: 0.48
+  joints: *stand
+- t: 0.6
+  joints: *bounce_left
+- t: 0.78
+  joints: *stand
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: gesture_track
+  control_dt: 0.02

@@ -300,7 +300,9 @@ agent:
 
 The current profiles map sadness to the self-returning `comfort_bow` (or the
 restrained `attentive_nod` for calm guardian), while happiness maps to
-`paw_wave`, `happy_wiggle`, or `attentive_nod`. `play_bow` now means an explicit
+`paw_wave`, `happy_wiggle`, or `attentive_nod`. Explicit strong anticipation is
+separate from general happiness and maps to `excited_paw_taps`, a finite
+four-cycle front-paw bend/return trajectory. `play_bow` now means an explicit
 invitation to play rather than sadness. If navigation is active, the event
 stream shows the gesture deferred until the robot arrives. The added custom
 joint trajectories are simulator-only and hardware-unverified; see

@@ -249,23 +249,32 @@ def _matches(query: str, label: str, aliases: Any) -> bool:
                 continue
             texts.append(class_label)
             texts.extend(class_aliases)
-            # Query is this class name or one of its aliases → accept.
+            # Query is this class name or one of its aliases → accept (a real
+            # synonym via the curated alias table, not a substring coincidence).
             if class_norm == normalized_query or any(
                 _normalized(alias) == normalized_query for alias in class_aliases
             ):
                 return True
     except ImportError:
         pass
+    # SigLIP-2 embedding glue (N-C1 / A2). Missing weights → loud string_fallback
+    # inside the matcher (U25). Only score against this candidate's label-local
+    # texts. Never inject other vocabulary classes into ``texts``.
+    matcher = _siglip_matcher()
+    if matcher is not None and matcher.available:
+        # A2: real SigLIP-2 present. Identity is decided by neural cosine — NO
+        # substring containment, which is the path that let "tree" match a
+        # lamppost via its "streetlight" alias ("tree" ⊂ "street"). This is the
+        # semantic_map half of the cross-class false-positive deletion.
+        return matcher.match(str(query), [str(t) for t in texts]) is not None
+    # Weights absent: byte-identical to the pre-neural path — substring
+    # containment first, then the matcher's own loud string fallback.
     for text in texts:
         normalized_text = _normalized(text)
         if normalized_text and (
             normalized_query in normalized_text or normalized_text in normalized_query
         ):
             return True
-    # SigLIP-2 embedding glue (N-C1): wired into the grounder match path.
-    # Missing weights → loud string_fallback inside the matcher (U25).
-    # Only score against this candidate's label-local texts.
-    matcher = _siglip_matcher()
     if matcher is not None:
         hit = matcher.match(str(query), [str(t) for t in texts])
         if hit is not None:

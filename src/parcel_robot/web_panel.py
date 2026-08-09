@@ -27,6 +27,7 @@ UI_PATH = Path(__file__).with_name("ui") / "index.html"
 LATENCY_UI_PATH = Path(__file__).with_name("ui") / "latency.html"
 VIEWER_UI_PATH = Path(__file__).with_name("ui") / "viewer.html"
 EVALS_UI_PATH = Path(__file__).with_name("ui") / "evals.html"
+POSE_REVIEW_UI_PATH = Path(__file__).with_name("ui") / "poses.html"
 MAX_REQUEST_BYTES = 65_536
 
 #: Ordered (prefix, class) pairs; the first matching prefix wins, so longer
@@ -181,9 +182,12 @@ class RuntimeHTTPServer(ThreadingHTTPServer):
         address: tuple[str, int],
         runtime: RobotRuntime,
         scene_path: Path | None = None,
+        *,
+        pose_review_enabled: bool = False,
     ):
         self.runtime = runtime
         self.scene_path = scene_path
+        self.pose_review_enabled = pose_review_enabled
         self.csrf_token = secrets.token_urlsafe(32)
         super().__init__(address, RuntimeRequestHandler)
 
@@ -220,6 +224,15 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
             )
             self._send_bytes(body.encode(), "text/html; charset=utf-8")
             return
+        if path in {"/poses", "/poses.html"}:
+            if not self.server.pose_review_enabled:
+                self._send_json({"detail": "pose review is not enabled"}, HTTPStatus.NOT_FOUND)
+                return
+            body = POSE_REVIEW_UI_PATH.read_text(encoding="utf-8").replace(
+                "__PARCEL_CSRF_TOKEN__", self.server.csrf_token
+            )
+            self._send_bytes(body.encode(), "text/html; charset=utf-8")
+            return
         if path == "/api/scene":
             try:
                 self._send_json(scene_geometry(self.server.scene_path))
@@ -248,6 +261,17 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/prompt":
             self._send_json(self.server.runtime.prompt_inspection())
+            return
+        if path == "/api/pose-review/skills":
+            if not self.server.pose_review_enabled:
+                self._send_json({"detail": "pose review is not enabled"}, HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(
+                {
+                    "simulator_only": True,
+                    "skills": self.server.runtime.pose_review_skills(),
+                }
+            )
             return
         if path == "/api/evals/scenarios":
             from parcel_robot.eval_panel import EVAL_PANEL
@@ -305,6 +329,28 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
             if path == "/api/action":
                 message = self.server.runtime.action(self._string(payload, "action"))
                 self._send_json({"message": message, "state": self.server.runtime.snapshot()})
+                return
+            if path == "/api/pose-review/run":
+                if not self.server.pose_review_enabled:
+                    self._send_json(
+                        {"detail": "pose review is not enabled"}, HTTPStatus.NOT_FOUND
+                    )
+                    return
+                name = self._string(payload, "name")
+                speed = self._optional_normalized_speed(payload, "speed")
+                result = self.server.runtime.execute_pose_review(name, speed=speed)
+                self._send_json(
+                    {
+                        "accepted": True,
+                        "message": result.message,
+                        "name": name,
+                        "speed": result.requested_speed,
+                        "effective_rate": result.effective_rate,
+                        "effective_duration_s": result.effective_duration_s,
+                        "state": self.server.runtime.snapshot(),
+                    },
+                    HTTPStatus.ACCEPTED,
+                )
                 return
             if path == "/api/owner":
                 message = self.server.runtime.move_owner(
@@ -442,6 +488,20 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
         return value
 
     @staticmethod
+    def _optional_normalized_speed(
+        payload: dict[str, Any], name: str
+    ) -> float | None:
+        if name not in payload:
+            return None
+        raw = payload[name]
+        if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+            raise TypeError(f"{name} must be a number between 0 and 1")
+        value = float(raw)
+        if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+            raise ValueError(f"{name} must be finite and between 0 and 1")
+        return value
+
+    @staticmethod
     def _boolean(payload: dict[str, Any], name: str, default: bool) -> bool:
         value = payload.get(name, default)
         if not isinstance(value, bool):
@@ -519,10 +579,25 @@ def main() -> None:
     llm.add_argument("--llm", action="store_true", help="require the configured LLM")
     llm.add_argument("--no-llm", action="store_true", help="use deterministic commands only")
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument(
+        "--browser-path",
+        choices=("/", "/poses", "/poses?autoplay=1", "/viewer", "/latency", "/evals"),
+        default="/",
+        help="local panel page to open after startup",
+    )
+    parser.add_argument(
+        "--pose-review",
+        action="store_true",
+        help="enable the simulator-only bounded pose/trajectory gallery",
+    )
     args = parser.parse_args()
 
     if not _is_loopback_host(args.host):
         parser.error("--host must be a loopback address; remote control requires authentication")
+    if args.browser_path.startswith("/poses") and not args.pose_review:
+        parser.error("/poses requires --pose-review")
+    if args.pose_review and args.browser_path == "/":
+        args.browser_path = "/poses"
 
     use_llm = True if args.llm else False if args.no_llm else None
     runtime = build_runtime(Path(args.config), Path(args.socket), use_llm=use_llm)
@@ -530,12 +605,16 @@ def main() -> None:
         (args.host, args.port),
         runtime,
         scene_path=resolve_viewer_scene(Path(args.config)),
+        pose_review_enabled=args.pose_review,
     )
     runtime.start()
     url = f"http://{args.host}:{args.port}"
+    browser_url = f"{url}{args.browser_path}"
     print(f"Parcel control deck: {url}", flush=True)
+    if args.browser_path != "/":
+        print(f"Parcel startup page: {browser_url}", flush=True)
     if not args.no_browser:
-        threading.Timer(0.5, lambda: webbrowser.open(url)).start()
+        threading.Timer(0.5, lambda: webbrowser.open(browser_url)).start()
     try:
         server.serve_forever(poll_interval=0.2)
     except KeyboardInterrupt:

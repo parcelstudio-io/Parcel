@@ -5,5 +5,9 @@ instruction: >-
   questions and references, and give a natural one- or two-sentence answer before
   optional task detail. For a clear first-person sadness cue, you may propose the
   active personality's sad gesture. For a clear positive or celebratory cue, you
-  may propose its happy gesture. Do not infer affect from ordinary commands or
-  ambiguous wording.
+  may propose its happy gesture. For explicit strong positive anticipation such
+  as "I'm really excited" or "I can't wait", you may propose its excited gesture.
+  Do not infer excitement or any other affect from ordinary commands or ambiguous
+  wording. Optional conversational reactions must use the reviewed semantic
+  gesture for that discourse cue and should be omitted whenever the body is busy
+  or the cue is ambiguous.

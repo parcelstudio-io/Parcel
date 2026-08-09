@@ -109,15 +109,61 @@ def test_full_gate_executes_physics_and_separates_unsupported(report) -> None:
         # (lamppost unreachable across the road from the south sidewalk) to
         # PASSED. Collision, timeout, and clearance rows bit-identical:
         # pacing + correct instance choice, not capability loss.
-        "simulator_step_count": 1250,
+        # Re-frozen 2026-08-09 (Wave-2): 1250 -> 1219 (-31). Measured 2x2
+        # attribution ((Wave-1 nav code b75ed05 vs be20471) x (gesture library
+        # + config)): reverting ONLY approach.py + pipeline.py + instructnav to
+        # the b75ed05 freeze point, with the embodied gesture library
+        # (configs/skills/*) and every config at HEAD, restores 1250 total /
+        # 153 correction / 362 sidewalk_then_lamppost and min_clearance
+        # 0.883147 bit-for-bit. So the gesture library moves this suite by
+        # exactly 0 (its five cases invoke no gesture/pose/emote skill),
+        # configs/navigation + authority.py are unchanged in be20471, and the
+        # whole movement is card near-band-inset:
+        #  -29 correct_active_task_to_lamppost (153->124): the lamppost `near`
+        #      approach pose insets from the band OUTER edge (stand_off_m
+        #      metadata 1.32 = vicinity - arrival_radius) to the band centre
+        #      1.28 m via approach.py::_near_planning_band, so the terminal
+        #      approach stops ~4 cm sooner. A FASTER, now-verifying arrival, not
+        #      a regression: still passed, near_surface_le_1m + off_road True,
+        #      collision 0, plan_revision 2, checkpoint semantics identical.
+        #  -2 sidewalk_then_lamppost (362->360): same inset on the compound's
+        #      lamppost leg; passed before and after.
+        # search-reground (near_arrival.py fallback) moves 0 here: it fires only
+        # when safe_approach_pose returns None, and both lamppost cases commit a
+        # valid approach pose (fallback dormant). Success/collision/timeout/
+        # min-clearance rows bit-identical across cells: arrival inset, not
+        # capability loss.
+        # Re-frozen 2026-08-09 (Wave-2, card seamless-pacing): 1219 -> 997
+        # (-222). Measured seam-by-seam by toggling the two new pacing constants
+        # off (GridNavigator.TERMINAL_APPROACH_FLOOR_MPS=0,
+        # DirectiveNavigator.SCAN_CREEP_MPS=0):
+        #   seam 3 alone (region "inside" convergence) 1219 -> 1190 (-29):
+        #     sidewalk_then_hold -23, sidewalk_then_lamppost -6 (its sidewalk
+        #     leg); the lamppost `near` case is untouched (relation "near", not
+        #     "inside"). The region goals now declare arrival the instant the
+        #     robot stands inside the committed polygon with the SAME terminal
+        #     clearance the verification requires, instead of spinning `align_goal`
+        #     in place to the step limit.
+        #   seam 2 terminal creep floor (+ seam 1 scan creep) 1190 -> 997 (-193):
+        #     sidewalk_then_hold -59, sidewalk_then_lamppost -94,
+        #     correct_active_task_to_lamppost -40 (153->124->84 total). The last
+        #     ~0.5 m no longer crawls at ~0.032 m/s; it holds >=0.12 m/s until the
+        #     arrival radius where the point-goal fallback owns the stop.
+        # ALL five cases still pass; collision 0, timeout 0, and min-clearance
+        # 0.883147 are bit-identical (that min is five_steps_away_then_hold, which
+        # moves 0). Faster arrivals that still verify, not weakened capability.
+        "simulator_step_count": 997,
         "collision_count": 0,
         "timeout_count": 0,
         "minimum_clearance_m": pytest.approx(0.883147),
         "simulator_steps_per_case": {
             "count": 5,
             "minimum": 64.0,
-            "median": 282.0,
-            "mean": 250.0,
+            # Median 282 -> 200 and mean 243.8 -> 199.4: the two region legs and
+            # the lamppost `near` case all sped up (seams 2/3); min (64,
+            # five_steps) and max (389, orbit unsupported) cases move 0.
+            "median": 200.0,
+            "mean": 199.4,
             "maximum": 389.0,
         },
     }
@@ -202,7 +248,19 @@ def test_correction_waits_for_checkpoint_then_executes_replacement(report) -> No
     # lamppost `near` band instead of the geometric approach pose). Same
     # route, same checkpoint semantics, same clearance — see the aggregate
     # row above for the measured 2x2 attribution.
-    assert case["physical"]["simulator_step_count"] == 153
+    # 153 -> 124 (2026-08-09, Wave-2): card near-band-inset insets the lamppost
+    # `near` approach pose from the band outer edge (1.32 m) to the band centre
+    # (1.28 m), so the terminal approach stops ~4 cm sooner. Faster, still-
+    # verifying arrival, not a regression: still passed, near_surface_le_1m +
+    # off_road True, collision 0, plan_revision 2, checkpoint semantics
+    # identical. Attribution measured in the aggregate row above — the gesture
+    # library and every config move this case by exactly 0 steps.
+    # 124 -> 84 (2026-08-09, Wave-2, card seamless-pacing seam 2): the terminal
+    # creep floor stops the final ~0.5 m of the lamppost `near` approach crawling
+    # at ~0.032 m/s (now >=0.12 m/s until the arrival radius). Same route, same
+    # checkpoint semantics, same clearance; still near_surface_le_1m + off_road
+    # True. Seam 3 (region convergence) moves this "near" case by 0.
+    assert case["physical"]["simulator_step_count"] == 84
     assert case["semantic"]["checks"]["near_surface_le_1m"] is True
     assert case["semantic"]["checks"]["off_road"] is True
 

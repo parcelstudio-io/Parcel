@@ -60,6 +60,25 @@ class GridNavigator:
     deliberately emits zero lateral velocity during nominal route tracking.
     """
 
+    #: Terminal creep floor (card seamless-pacing seam 2, 2026-08-09). Near the
+    #: goal ``distance_scale`` (floor 0.15) and ``waypoint_scale`` (floor 0.25)
+    #: multiply down to ~0.032 m/s at cruise 0.85, so the last ~0.5 m crawled for
+    #: >15 s and step-limited missions that were already essentially arrived. The
+    #: *approaching* forward request is floored at the same 0.12 m/s recovery
+    #: creep the yield policy already trusts for the final metre
+    #: (``DirectiveNavigator.FINAL_APPROACH_CREEP_MPS``) — one value, both paths.
+    #: This is neither a gate nor a stop override: it only raises a forward
+    #: request that ``apply_collision_brake``, the TTC gate and the all-ray
+    #: shield still bound on the same tick, it applies only while
+    #: ``goal_distance > arrival_radius`` (inside the radius the point-goal
+    #: fallback owns decelerate-to-stop), and it is gated off while the body is
+    #: turning hard (``curvature_scale`` small) so it never fights a sharp corner.
+    TERMINAL_APPROACH_FLOOR_MPS: float = 0.12
+    #: Only floor the creep when the heading is roughly on-route: below this
+    #: cos^2(heading_error) the controller is effectively turning, and forcing a
+    #: forward creep through a hard corner would widen the turn radius.
+    _TERMINAL_FLOOR_MIN_CURVATURE: float = 0.75
+
     def __init__(
         self,
         spec: ModelSpec,
@@ -478,6 +497,13 @@ class GridNavigator:
             curvature_scale = max(0.15, math.cos(waypoint.heading_error_rad) ** 2)
             waypoint_scale = min(1.0, max(0.25, waypoint.distance_m / 0.60))
             desired_vx = self.cruise_vx * distance_scale * curvature_scale * waypoint_scale
+            # Terminal creep floor: keep the final approach from crawling at
+            # ~0.032 m/s once the multiplicative slowdown bottoms out, but only
+            # when the body is tracking (not turning hard) — see the class
+            # constant for the full safety argument. goal_distance is already
+            # > arrival_radius here (the <= branch returned above).
+            if curvature_scale >= self._TERMINAL_FLOOR_MIN_CURVATURE:
+                desired_vx = max(desired_vx, self.TERMINAL_APPROACH_FLOOR_MPS)
             vx = self._slew(
                 self._last_vx,
                 desired_vx,

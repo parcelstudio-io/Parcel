@@ -89,6 +89,66 @@ DOES_NOT_PROVE = (
     "downloaded VLM/VLA policies (rungs 6–7)",
 )
 
+# --- step-budget policies (card budget-honest-minival, 2026-08-09) ------------
+#: "fixed" is the frozen behaviour every persisted row was run under: one flat
+#: ``max_steps`` for every episode, regardless of how far its start pose sits
+#: from the goal. That conflates capability with distance — the audit's
+#: "candidate SR 0.12 -> 0.48 by raising --max-steps alone" artifact, where a
+#: 56 m tier-E reach and a 3 m tier-A reach are scored under the identical clock.
+#: "scaled-path-v1" derives a per-episode budget from the episode's OWN
+#: ``shortest_path_m`` so a tier-E truncation is attributable to a genuine miss,
+#: not to budget starvation. It is a NEW policy version: the default stays
+#: "fixed", so every frozen row and every existing test is byte-identical.
+FIXED_BUDGET_POLICY = "fixed"
+SCALED_BUDGET_POLICY = "scaled-path-v1"
+BUDGET_POLICIES: tuple[str, ...] = (FIXED_BUDGET_POLICY, SCALED_BUDGET_POLICY)
+DEFAULT_BUDGET_POLICY = FIXED_BUDGET_POLICY
+
+#: Only the point-goal families scale with a path. The spatial families
+#: (follow/circle) are continuous behaviours whose budget is a duration, not a
+#: distance, so they keep the flat base budget under every policy.
+_PATH_SCALED_FAMILIES = frozenset({"region_goal", "object_goal", "object_relative"})
+#: Fixed overhead a navigation episode pays regardless of path length: the
+#: opening look-around/scan to acquire the target (~80 steps for a revolution at
+#: the search yaw-rate) plus the terminal align + settle + verification hold
+#: (~40). Measured from the pacing traces.
+_BUDGET_OVERHEAD_STEPS = 120
+#: Effective net planning progress along the path (m/s). Deliberately well below
+#: the 0.85 m/s cruise: it amortises slowdown, alignment, detours and the
+#: reactive gate over the whole path. A SMALLER number is a MORE generous
+#: budget, which is the safe direction for "not budget starvation".
+_BUDGET_PLANNING_SPEED_MPS = 0.30
+#: The sim control tick the runner's world advances at.
+_BUDGET_CONTROL_DT_S = 0.1
+#: Upper bound so a phantom tier-E path (absent target ~56 m away) cannot demand
+#: an unbounded run: an absent target completes its bounded scan+frontier search
+#: and reports NOT_FOUND well inside this, and a present far target is reachable
+#: within it. Keeps the honest-failure claim without an open-ended compute cost.
+_BUDGET_CAP_STEPS = 1200
+
+
+def scaled_step_budget(episode: EpisodeSpec, base_steps: int, policy: str) -> int:
+    """Per-episode step budget under ``policy`` (see :data:`BUDGET_POLICIES`).
+
+    ``fixed`` returns ``base_steps`` unchanged for every episode — byte-identical
+    to every frozen row. ``scaled-path-v1`` derives a budget from the episode's
+    own ``shortest_path_m`` for the point-goal families, floored at ``base_steps``
+    (a scaled budget only ever ADDS room, never removes it) and capped at
+    ``_BUDGET_CAP_STEPS``.
+    """
+
+    if policy == FIXED_BUDGET_POLICY:
+        return int(base_steps)
+    if policy != SCALED_BUDGET_POLICY:
+        raise ValueError(f"budget_policy must be one of {BUDGET_POLICIES}")
+    if episode.family not in _PATH_SCALED_FAMILIES:
+        return int(base_steps)
+    travel_steps = math.ceil(
+        max(0.0, float(episode.shortest_path_m))
+        / (_BUDGET_PLANNING_SPEED_MPS * _BUDGET_CONTROL_DT_S)
+    )
+    return int(max(base_steps, min(_BUDGET_CAP_STEPS, _BUDGET_OVERHEAD_STEPS + travel_steps)))
+
 
 @dataclass(frozen=True)
 class EpisodeRunResult:
@@ -112,6 +172,11 @@ class EpisodeRunResult:
     #: Which half of ``hold-or-trace-end-v1`` fired: ``frozen_hold`` /
     #: ``trace_end_hold`` / ``none``.
     arrival_branch: str = "frozen_hold"
+    #: The effective step budget this episode ran under (card
+    #: budget-honest-minival). Under the "fixed" policy every episode carries the
+    #: same base; under "scaled-path-v1" it is the per-episode scaled budget, so
+    #: a truncation can be read against the room the episode actually had.
+    max_steps: int = 0
 
     @property
     def scorer_arrival(self) -> bool:
@@ -153,6 +218,7 @@ class EpisodeRunResult:
             "system_arrival": self.system_arrival,
             "authority_category": self.authority_category,
             "arrival_epsilon_m": ARRIVAL_BOUNDARY_EPSILON_M,
+            "max_steps": self.max_steps,
             "trace_len": len(self.trace),
             "trace": list(self.trace),
         }
@@ -169,6 +235,7 @@ class NavInstructRunner:
         mode: str = "baseline",
         arrival_rule: str = DEFAULT_ARRIVAL_RULE,
         scene: str | Path | None = None,
+        budget_policy: str = DEFAULT_BUDGET_POLICY,
     ) -> None:
         self.robot_config = robot_config
         self.max_steps = int(max_steps)
@@ -176,6 +243,10 @@ class NavInstructRunner:
         if mode_norm not in {"baseline", "candidate"}:
             raise ValueError("mode must be 'baseline' or 'candidate'")
         self.mode = mode_norm
+        policy = str(budget_policy).strip()
+        if policy not in BUDGET_POLICIES:
+            raise ValueError(f"budget_policy must be one of {BUDGET_POLICIES}")
+        self.budget_policy = policy
         rule = str(arrival_rule).strip()
         if rule not in ARRIVAL_RULES:
             raise ValueError(f"arrival_rule must be one of {ARRIVAL_RULES}")
@@ -237,6 +308,11 @@ class NavInstructRunner:
             instructnav_recovery=(self.mode == "candidate"),
         )
 
+    def _episode_max_steps(self, episode: EpisodeSpec) -> int:
+        """The effective step budget for ``episode`` under the active policy."""
+
+        return scaled_step_budget(episode, self.max_steps, self.budget_policy)
+
     def run_matrix(
         self,
         episodes: tuple[EpisodeSpec, ...] | None = None,
@@ -255,6 +331,7 @@ class NavInstructRunner:
 
     def _run_navigation(self, episode: EpisodeSpec) -> EpisodeRunResult:
         text = episode.instruction
+        budget = self._episode_max_steps(episode)
         directive = navigation_directive_from_text(text)
         if directive is None:
             # Honest baseline refusal path when the parser rejects the utterance.
@@ -274,7 +351,7 @@ class NavInstructRunner:
                 trace,
                 episode.goal,
                 shortest_path_m=episode.shortest_path_m,
-                max_time_s=self.max_steps * self.world.control_dt_s,
+                max_time_s=budget * self.world.control_dt_s,
                 system_arrival=system_arrival_claim("failed", "directive_not_understood"),
             )
             return EpisodeRunResult(
@@ -293,6 +370,7 @@ class NavInstructRunner:
                 arrival_rule=self.arrival_rule,
                 frozen_rule_success=bool(score.success),
                 arrival_branch="frozen_hold" if score.success else "none",
+                max_steps=budget,
             )
 
         navigator = self._navigator()
@@ -303,7 +381,7 @@ class NavInstructRunner:
         reason = "navigation_step_limit"
         terminal_status = mission.status
         try:
-            for _ in range(self.max_steps):
+            for _ in range(budget):
                 observation = self.world.observe()
                 command = navigator.step(
                     _nav_observation(
@@ -455,7 +533,7 @@ class NavInstructRunner:
             trace,
             episode.goal,
             shortest_path_m=max(episode.shortest_path_m, 1e-3),
-            max_time_s=self.max_steps * self.world.control_dt_s,
+            max_time_s=budget * self.world.control_dt_s,
             arrival_hold_s=1.0,
             anchor_xy=episode.goal.center,
             system_arrival=claimed_arrival,
@@ -479,14 +557,16 @@ class NavInstructRunner:
             arrival_rule=self.arrival_rule,
             frozen_rule_success=frozen_success,
             arrival_branch=branch,
+            max_steps=budget,
         )
 
     def _run_spatial(self, episode: EpisodeSpec) -> EpisodeRunResult:
         """Follow/circle regression lane via the existing spatial/follow harness."""
 
         text = episode.instruction
+        budget = self._episode_max_steps(episode)
         understood = parse_follow_intent(text) or parse_spatial_intent(text) is not None
-        result = self.harness.run(text, max_steps=self.max_steps)
+        result = self.harness.run(text, max_steps=budget)
         trace = _trace_from_harness(result, episode)
         if not understood or result.reason == "directive_not_understood":
             if trace:
@@ -496,7 +576,7 @@ class NavInstructRunner:
                 trace,
                 episode.goal,
                 shortest_path_m=max(episode.shortest_path_m, 1e-3),
-                max_time_s=self.max_steps * self.world.control_dt_s,
+                max_time_s=budget * self.world.control_dt_s,
                 system_arrival=system_arrival_claim(result.status, result.reason),
             )
             return EpisodeRunResult(
@@ -515,6 +595,7 @@ class NavInstructRunner:
                 arrival_rule=self.arrival_rule,
                 frozen_rule_success=bool(score.success),
                 arrival_branch="frozen_hold" if score.success else "none",
+                max_steps=budget,
             )
 
         if result.collision_count > 0:
@@ -528,7 +609,7 @@ class NavInstructRunner:
             trace,
             episode.goal,
             shortest_path_m=max(episode.shortest_path_m, 1e-3),
-            max_time_s=self.max_steps * self.world.control_dt_s,
+            max_time_s=budget * self.world.control_dt_s,
             arrival_hold_s=0.0,
             system_arrival=claimed_arrival,
         )
@@ -550,6 +631,7 @@ class NavInstructRunner:
             arrival_rule=self.arrival_rule,
             frozen_rule_success=bool(score.success),
             arrival_branch="frozen_hold" if score.success else "none",
+            max_steps=budget,
         )
 
     @staticmethod

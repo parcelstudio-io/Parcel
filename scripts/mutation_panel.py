@@ -15,7 +15,7 @@ How it works
 Six defects from the plan are seeded **one at a time**, each by monkeypatching a
 live object or injecting a config at runtime. **Nothing is ever committed as a
 source edit**: a mutation panel that edits files is one bad exit away from
-shipping its own defect. Each mutant then runs the NAV_INSTRUCT v2 minival and
+shipping its own defect. Each mutant then runs the NAV_INSTRUCT v3 minival and
 the result is compared against the clean run through a fixed list of named
 harness checks. A mutant that reddens **no** check has *survived*, and a
 surviving mutant is itself a panel failure — it means the harness is blind to
@@ -61,7 +61,7 @@ REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from evals.nav_instruct.generator import EPISODE_SET_V2, EpisodeSpec, generate_minival
+from evals.nav_instruct.generator import EPISODE_SET_V3, EpisodeSpec, generate_minival
 from evals.nav_instruct.runner import ARRIVAL_RULE_FOR_VERSION, NavInstructRunner
 
 DEFAULT_REPORT = REPO / "evals" / "nav_instruct" / "results" / "mutation_panel.json"
@@ -76,13 +76,17 @@ PAIRED_TOLERANCE_M = 0.10
 #: the code each mutation touches — a mutant on a code path the episodes never
 #: reach is an equivalent mutant and tells you nothing about the harness.
 #:
-#: Selection is recorded rather than asserted. Instrumenting
-#: ``apply_reactive_safety`` over the whole v2 minival shows it modifies the
-#: command on exactly three episodes (``region_goal-D-15`` 184/200 ticks,
-#: ``object_goal-B-05`` 57/100, ``object_goal-D-15`` 54/93) and on **no other
+#: Selection is recorded rather than asserted. Re-audited on the **v3** minival
+#: (2026-08-09, card panel-v3-repin): instrumenting ``apply_reactive_safety`` over
+#: the whole v3 minival shows it modifies the command on four episodes
+#: (``region_goal-D-15`` 184/200 ticks, ``object_relative-D-15`` 186/200,
+#: ``object_goal-D-15`` 160/200, ``object_goal-B-05`` 60/102) and on **no other
 #: episode at all**. ``region_goal-D-15`` is therefore in the panel; without it
-#: the reactive-gate mutant cannot be exercised. This is coverage selection for
-#: a mutation panel, not tuning: no robot parameter is chosen from a result.
+#: the reactive-gate mutant cannot be exercised — and it still binds at
+#: 184/200 on v3, so the coverage claim is unchanged by the v2->v3 bump. This is
+#: coverage selection for a mutation panel, not tuning: no robot parameter is
+#: chosen from a result. (v2 bound on three episodes: region_goal-D-15 184/200,
+#: object_goal-B-05 57/100, object_goal-D-15 54/93.)
 PANEL_EPISODE_IDS: tuple[str, ...] = (
     # longest traverse in the minival (184 control ticks): the episode a pose
     # error has time to accumulate over
@@ -362,7 +366,7 @@ class MutantResult:
 
 
 def _episodes(ids: Sequence[str]) -> list[EpisodeSpec]:
-    by_id = {ep.episode_id: ep for ep in generate_minival(version=EPISODE_SET_V2)}
+    by_id = {ep.episode_id: ep for ep in generate_minival(version=EPISODE_SET_V3)}
     return [by_id[episode_id] for episode_id in ids]
 
 
@@ -381,7 +385,7 @@ def run_once(episodes: Sequence[EpisodeSpec], *, max_steps: int) -> dict[str, An
     runner = NavInstructRunner(
         max_steps=max_steps,
         mode="baseline",
-        arrival_rule=ARRIVAL_RULE_FOR_VERSION[EPISODE_SET_V2],
+        arrival_rule=ARRIVAL_RULE_FOR_VERSION[EPISODE_SET_V3],
     )
     results = []
     clearances = []
@@ -482,7 +486,7 @@ def run_panel(
     return {
         "kind": "mutation_panel",
         "generated_at": datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
-        "episode_set_version": EPISODE_SET_V2,
+        "episode_set_version": EPISODE_SET_V3,
         "episode_ids": list(episode_ids),
         "episode_selection": (
             "chosen to exercise the code each mutation touches (longest traverse, "

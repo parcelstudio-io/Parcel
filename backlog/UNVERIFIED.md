@@ -499,6 +499,32 @@ with the words. That needs real audio output, which U5 blocks.
 - **To verify:** place Apache-2.0 SigLIP-2 B/16 under
   `~/.cache/parcel/siglip2-b16/` and re-run synonym / Tier D cells.
 - **Risk:** synonym grounding looks solved in design while still string-only.
+- **REAL PATH LANDED, WEIGHTS STILL ABSENT 2026-08-09 (card `siglip-real-embeddings`,
+  A1+A2; `scrum/20260809/task_5/SIGLIP_REAL_STATUS.md`).** `siglip.py` no longer
+  stubs the "available" branch with a char-hash: `SigLIP2Matcher` now does real
+  `embed_text`/`embed_image` + neural cosine when `google/siglip2-base-patch16`
+  (Apache-2.0, 768-dim) loads, and `available` means *a real embedder actually
+  loaded*, not that a file exists. A2 routed it through
+  `grounding._rank_candidates` and `semantic_map._matches` and **deleted the
+  cross-class substring accept path** — but every real-path branch is gated
+  behind `matcher.available`, so with weights absent the fallback is
+  byte-identical to the old stub (proven: same-budget candidate-v3 minival A/B =
+  0/25 per-episode trace mismatches, `episode_digest 919a0fea…` unchanged, 82
+  frozen pins + the 997 embodied row green, ratchet green). **Still absent on
+  this machine** (no cache, and `torch`/`transformers`/`PIL` not installed —
+  offline, cannot fetch), so the neural path is exercised only through a
+  synthetic embedding fixture. On that fixture: the two Wave-2 cross-class
+  `false_arrival`s (`object_goal-B-05` streetlight→tree, `object_goal-D-15`
+  tree→lamppost) are rejected and `streetlamp`→lamppost grounds **without an
+  alias row**; provisional real-path threshold `SIGLIP2_MATCH_THRESHOLD = 0.30`
+  (the `0.24` hash-era gate is retired), with `calibrate_threshold` as the
+  FAR/TAR harness.
+- **Still deferred (this is what keeps U25 open):** the weights-present run —
+  fetch/install the model, recalibrate the threshold on known-absent trials +
+  record the real FAR/TAR curve, and re-measure Tier D synonym SR uplift and the
+  2 `false_arrival`s → 0 via the differential-authority instrument WITHOUT
+  weakening verification. Until then, synonym grounding is **string-only on this
+  machine**; the neural capability is verified on the synthetic fixture only.
 
 ## U26 — Eval panel live mode does not re-place entities · **minor**
 

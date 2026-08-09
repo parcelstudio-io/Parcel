@@ -85,6 +85,56 @@ def test_model_decision_parses_bounded_semantic_action():
     assert decision.affect.confidence == pytest.approx(0.9)
 
 
+def test_model_decision_accepts_explicit_excitement_action() -> None:
+    decision = parse_model_decision(
+        json.dumps(
+            {
+                "reply": "I'm excited with you!",
+                "tool_calls": [],
+                "intent": "conversation",
+                "affect": {"label": "excited", "confidence": 0.98},
+                "next_action": {
+                    "kind": "skill",
+                    "name": "excited_paw_taps",
+                    "trigger": "inferred_affect",
+                    "timing_preference": "when_safe",
+                    "interruption_request": "none",
+                    "reason": "clear positive anticipation",
+                },
+            }
+        )
+    )
+
+    assert decision.affect is not None
+    assert decision.affect.label == "excited"
+    assert decision.next_action is not None
+    assert decision.next_action.name == "excited_paw_taps"
+
+
+def test_model_decision_accepts_short_lived_conversation_reaction() -> None:
+    decision = parse_model_decision(
+        json.dumps(
+            {
+                "reply": "Heh—that was a good one.",
+                "tool_calls": [],
+                "intent": "conversation",
+                "affect": None,
+                "next_action": {
+                    "kind": "skill",
+                    "name": "chuckle",
+                    "trigger": "conversation_reaction",
+                    "timing_preference": "when_safe",
+                    "interruption_request": "none",
+                    "reason": "clear humorous moment",
+                },
+            }
+        )
+    )
+
+    assert decision.next_action is not None
+    assert decision.next_action.trigger == "conversation_reaction"
+
+
 def test_model_cannot_supply_force_or_priority():
     raw = {
         "reply": "Moving.",
@@ -130,6 +180,46 @@ def test_activity_coordinator_rejects_estop_and_expires_deferred_action():
     snapshot = coordinator.snapshot(now=3.1)
     assert snapshot["pending"] == []
     assert snapshot["recent"][-1]["status"] == "expired"
+
+
+def test_conversation_reaction_skips_busy_body_and_has_short_idle_ttl() -> None:
+    coordinator = ActivityCoordinator(proposal_ttl_s=20.0, cooldown_s=0.0)
+    reaction = ActionProposal(
+        kind="skill",
+        name="chuckle",
+        trigger="conversation_reaction",
+        timing_preference="when_safe",
+        interruption_request="none",
+        reason="clear joke",
+    )
+
+    skipped = coordinator.submit(
+        reaction,
+        ActivityContext(navigation_active=True),
+        now=1.0,
+    )
+    assert skipped.accepted is False
+    assert skipped.disposition == "skip"
+    assert coordinator.snapshot(now=1.0)["pending"] == []
+
+    accepted = coordinator.submit(reaction, ActivityContext(), now=2.0)
+    assert accepted.accepted is True
+    pending = coordinator.snapshot(now=2.0)["pending"]
+    assert pending[0]["expires_at"] == pytest.approx(4.0)
+    assert coordinator.snapshot(now=4.1)["pending"] == []
+
+
+def test_prompt_defines_semantics_and_limits_for_conversation_reactions() -> None:
+    library = PromptLibrary(REPO / "prompts")
+    rendered = library.render_system(
+        personality_id="gentle_companion",
+        function_ids=["companion"],
+        runtime_context={"available_social_skills": ["chuckle", "head_nod"]},
+    )
+
+    assert "conversation_reaction" in rendered
+    assert "robot has no articulated neck" in rendered
+    assert "tilt never proves" in rendered
 
 
 def test_velocity_smoother_bounds_acceleration_and_can_force_safety_stop():

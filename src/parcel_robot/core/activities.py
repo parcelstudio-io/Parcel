@@ -101,6 +101,13 @@ class ActivityCoordinator:
             self._expire(current_time)
             if context.emergency_stopped:
                 return ActivitySubmission(False, "reject", "Rejected during emergency stop")
+            busy = context.busy_reason
+            if proposal.trigger == "conversation_reaction" and busy is not None:
+                return ActivitySubmission(
+                    False,
+                    "skip",
+                    f"Reaction skipped while {busy} is active",
+                )
             last_started = self._last_started.get(proposal.name)
             if last_started is not None and current_time - last_started < self.cooldown_s:
                 return ActivitySubmission(False, "reject", "Gesture is cooling down")
@@ -112,12 +119,16 @@ class ActivityCoordinator:
                 return ActivitySubmission(False, "reject", "Gesture queue is full")
 
             self._next_id += 1
-            busy = context.busy_reason
+            ttl_s = (
+                min(self.proposal_ttl_s, 2.0)
+                if proposal.trigger == "conversation_reaction"
+                else self.proposal_ttl_s
+            )
             record = ActivityRecord(
                 activity_id=self._next_id,
                 proposal=proposal,
                 created_at=current_time,
-                expires_at=current_time + self.proposal_ttl_s,
+                expires_at=current_time + ttl_s,
                 disposition="execute" if busy is None else "defer",
                 detail="ready" if busy is None else f"waiting_for_{busy}",
             )

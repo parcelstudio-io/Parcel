@@ -33,6 +33,8 @@ from evals.nav_instruct.generator import (
 from evals.nav_instruct.runner import (
     ARRIVAL_RULE_FOR_VERSION,
     ARRIVAL_RULES,
+    BUDGET_POLICIES,
+    DEFAULT_BUDGET_POLICY,
     DOES_NOT_PROVE,
     RUNNER_VERSION,
     NavInstructRunner,
@@ -72,6 +74,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--minival", action="store_true", help="25-episode CI slice")
     parser.add_argument("--mode", default="baseline", choices=("baseline", "candidate"))
     parser.add_argument("--max-steps", type=int, default=200)
+    parser.add_argument(
+        "--budget-policy",
+        default=DEFAULT_BUDGET_POLICY,
+        choices=sorted(BUDGET_POLICIES),
+        help=(
+            "step-budget policy (default: 'fixed', the frozen flat budget every "
+            "persisted row used). 'scaled-path-v1' scales the per-episode budget "
+            "by shortest_path_m (floored at --max-steps) so a tier-E truncation "
+            "is attributable to a genuine miss, not to budget starvation."
+        ),
+    )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument(
         "--limit",
@@ -146,6 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         mode=args.mode,
         arrival_rule=arrival_rule,
         scene=args.scene,
+        budget_policy=args.budget_policy,
     )
     started = time.perf_counter()
     results = [runner.run_episode(ep) for ep in episodes]
@@ -166,6 +180,8 @@ def main(argv: list[str] | None = None) -> int:
         "baseline_version": version,
         "episode_set_provenance": spec.provenance,
         "arrival_rule": arrival_rule,
+        "budget_policy": args.budget_policy,
+        "max_steps": args.max_steps,
         "scene": runner.scene,
         "elapsed_s": elapsed_s,
         "aggregate": aggregate,
@@ -197,6 +213,12 @@ def main(argv: list[str] | None = None) -> int:
         # the superseded rule would have said about the same traces.
         "baseline_version": version,
         "arrival_rule": arrival_rule,
+        # Budget provenance (card budget-honest-minival): the policy and the base
+        # budget. Under "fixed" every episode ran at max_steps; under
+        # "scaled-path-v1" this is the floor and each report episode row carries
+        # its own scaled ``max_steps``. No two rows are comparable across policies.
+        "budget_policy": args.budget_policy,
+        "max_steps": args.max_steps,
         "sr_frozen_rule": aggregate["sr_frozen_rule"],
         "arrival_branch_histogram": aggregate["arrival_branch_histogram"],
         "scene": runner.scene,

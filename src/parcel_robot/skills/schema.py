@@ -1,9 +1,55 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
 SkillKind = Literal["pose", "trajectory", "gait", "velocity", "policy"]
+
+# A normalized speed is a style control rather than an unconstrained motor
+# rate.  Keeping a non-zero playback floor makes speed=0 useful while ensuring
+# every bounded motion still finishes.  Stop remains the way to halt motion.
+MIN_PLAYBACK_RATE = 0.25
+MAX_POSE_PLAYBACK_S = 10.0
+MAX_TRAJECTORY_PLAYBACK_S = 30.0
+
+
+def validate_playback_speed(value: object) -> float:
+    """Return a finite normalized playback speed, rejecting bool/string coercion."""
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError("speed must be a number between 0 and 1")
+    speed = float(value)
+    if not math.isfinite(speed) or not 0.0 <= speed <= 1.0:
+        raise ValueError("speed must be finite and between 0 and 1")
+    return speed
+
+
+def playback_timing(
+    authored_duration_s: float,
+    speed: object,
+    *,
+    maximum_duration_s: float,
+) -> tuple[float, float]:
+    """Map normalized speed to a safe rate and effective duration.
+
+    ``speed=1`` preserves authored timing. ``speed=0`` selects the slowest
+    admitted playback.  The duration-derived floor keeps retimed commands
+    inside the transport's bounded-duration contract.
+    """
+
+    duration = float(authored_duration_s)
+    maximum = float(maximum_duration_s)
+    if not math.isfinite(duration) or duration <= 0.0:
+        raise ValueError("authored motion duration must be positive and finite")
+    if not math.isfinite(maximum) or maximum <= 0.0:
+        raise ValueError("maximum motion duration must be positive and finite")
+    if duration > maximum:
+        raise ValueError("authored motion duration exceeds the safe maximum")
+    normalized = validate_playback_speed(speed)
+    rate_floor = max(MIN_PLAYBACK_RATE, duration / maximum)
+    rate = rate_floor + normalized * (1.0 - rate_floor)
+    return rate, duration / rate
 
 
 @dataclass(frozen=True)
@@ -49,6 +95,7 @@ class SkillSpec:
     gait: GaitParams = field(default_factory=GaitParams)
     rl: RLMeta = field(default_factory=RLMeta)
     source_path: str = ""
+    speed: float = 1.0
 
     def as_pose_joints(self) -> dict[str, float]:
         if self.kind == "pose":
@@ -84,6 +131,7 @@ def parse_skill(data: dict[str, Any], source_path: str = "") -> SkillSpec:
         enabled=bool(data.get("enabled", True)),
         tags=tuple(str(tag) for tag in data.get("tags", []) or []),
         duration=float(data.get("duration", 1.0)),
+        speed=validate_playback_speed(data.get("speed", 1.0)),
         joints=joints,
         keyframes=keyframes,
         velocity=VelocityParams(

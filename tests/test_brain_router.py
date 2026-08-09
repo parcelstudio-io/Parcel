@@ -53,6 +53,81 @@ def test_partial_asr_can_never_become_actionable() -> None:
         assert frame.matched_rule == "non_final_transcript"
 
 
+@pytest.mark.parametrize(
+    ("transcript", "skill"),
+    [
+        ("Can you nod your head?", "head_nod"),
+        ("Please shake your head no.", "head_shake"),
+        ("Give me a chuckle", "chuckle"),
+        ("Could you shrug?", "shrug"),
+        ("Tilt your head like you're confused", "confused_head_tilt"),
+        ("Look curious", "observing_head_tilt"),
+    ],
+)
+def test_reviewed_gesture_aliases_route_to_exact_catalog_skills(
+    transcript: str,
+    skill: str,
+) -> None:
+    router = DeterministicIntentRouter(
+        skill_ids=(
+            "head_nod",
+            "head_shake",
+            "chuckle",
+            "shrug",
+            "confused_head_tilt",
+            "observing_head_tilt",
+        )
+    )
+
+    frame = router.route(transcript, turn_id=f"turn-{skill}")
+
+    assert frame.route == "direct_skill"
+    assert frame.matched_rule == f"catalog_skill:{skill}"
+    assert frame.router_version == "deterministic-v1.2"
+
+
+@pytest.mark.parametrize(
+    "transcript",
+    ["Don't shake your head.", "Never shrug.", "What would happen if you nod?"],
+)
+def test_gesture_aliases_do_not_bypass_non_authoritative_motion_guard(
+    transcript: str,
+) -> None:
+    router = DeterministicIntentRouter(
+        skill_ids=("head_nod", "head_shake", "shrug")
+    )
+
+    frame = router.route(transcript, turn_id="turn-no-gesture")
+
+    assert frame.route == "conversation_only"
+    assert frame.matched_rule == "non_authoritative_motion_mention"
+
+
+@pytest.mark.parametrize(
+    "transcript",
+    [
+        "I'm really excited!",
+        "I cannot wait for tomorrow.",
+        "I'm looking forward to our walk.",
+    ],
+)
+def test_explicit_anticipation_is_distinct_from_general_happiness(transcript: str) -> None:
+    frame = DeterministicIntentRouter().route(transcript, turn_id="turn-excited")
+
+    assert frame.route == "conversation_only"
+    assert frame.affect_evidence is not None
+    assert frame.affect_evidence.label == "excited"
+    assert frame.affect_evidence.confidence == 1.0
+
+
+def test_wait_request_is_not_misclassified_as_excitement() -> None:
+    frame = DeterministicIntentRouter().route(
+        "Can you wait by the lamppost?", turn_id="turn-wait"
+    )
+
+    assert frame.affect_evidence is None
+
+
 @pytest.mark.parametrize("transcript", ["use sport", "Use RL backend"])
 def test_backend_selection_is_a_reviewed_direct_command(transcript: str) -> None:
     frame = DeterministicIntentRouter().route(transcript, turn_id="turn-backend")

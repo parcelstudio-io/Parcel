@@ -58,12 +58,15 @@ FOLLOW_BENCH_POST_SPEED = {
 # -35 from configs/navigation/default.yaml safety.max_vx 0.45 -> 0.9 and -37
 # from the K0 shared-GoalRegion arrival trigger in navigation/pipeline.py
 # (measured 2x2 attribution; see the provenance block in the test).
-# The two invariants this gate actually guards — zero collisions and a 1.0
-# supported-case success rate — are unchanged, which is why this is a pacing
+# 1250 -> 1219 on 2026-08-09 (Wave-2, near-band-inset: the lamppost `near` pose
+# insets to the band centre) then 1219 -> 997 (Wave-2, seamless-pacing: region
+# "inside" convergence + terminal creep floor). All five cases still pass; the
+# two invariants this gate actually guards — zero collisions and a 1.0
+# supported-case success rate — are unchanged, which is why this stays a pacing
 # re-freeze and not a nav regression. _embodied_suite_freeze_agrees() keeps
 # the mirror and the suite from drifting apart silently.
 EMBODIED_POST_SPEED = {
-    "simulator_step_count": 1250,
+    "simulator_step_count": 997,
     "collision_count": 0,
     "supported_case_success_rate": 1.0,
 }
@@ -351,9 +354,10 @@ def _nav_regression_gate() -> dict[str, object]:
     )
     embodied_pin_ok = (
         # 1146 -> 1072 (2026-08-06) -> 1250 (2026-08-07 region-instance
-        # selection re-freeze); the two invariants below are what this gate
-        # guards and neither moved.
-        EMBODIED_POST_SPEED["simulator_step_count"] == 1250
+        # selection) -> 1219 -> 997 (2026-08-09 Wave-2 near-band-inset +
+        # seamless-pacing); the two invariants below are what this gate guards
+        # and neither moved (zero collisions, 1.0 supported success rate).
+        EMBODIED_POST_SPEED["simulator_step_count"] == 997
         and EMBODIED_POST_SPEED["collision_count"] == 0
         and EMBODIED_POST_SPEED["supported_case_success_rate"] == 1.0
         and _embodied_suite_freeze_agrees()
