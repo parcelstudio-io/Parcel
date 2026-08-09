@@ -34,7 +34,7 @@ browser text  and/or  MicrophoneVoiceLoop (VAD → STT)
  priority arbiter + TTL + proximity/TTC brake
               |
               v
- emergency-bypass S-curve handoff → ControlManager
+ S-curve handoff (current environmental-stop ramp) → ControlManager
               |
               v
         SimulatorBackend (MuJoCo) / Unitree Sport
@@ -68,8 +68,9 @@ The local MuJoCo backend now provides:
   under the same arbiter and safety gates;
 - registered behavior channels with explicit stop versus pause state and resume
   primitives (automatic semantic resume is not complete);
-- a final collision brake shared by manual, voice, follow, and navigation
-  commands; and
+- a shared collision brake for manual, voice, follow, and navigation commands;
+  it currently precedes the S-curve handoff, so post-shaper exact-zero
+  reassertion remains P0 work; and
 - a simulator-side motion watchdog independent of the web application; and
 - a subordinate 50 Hz expression channel: idle body offsets actuate in MuJoCo,
   while Go2 head/gaze and speech-accent nods are state/metrics only because the

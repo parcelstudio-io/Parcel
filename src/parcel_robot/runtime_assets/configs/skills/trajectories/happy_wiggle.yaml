@@ -1,0 +1,77 @@
+id: happy_wiggle
+name: Happy wiggle
+kind: trajectory
+enabled: true
+tags:
+- social
+- gesture
+- celebratory
+- emotion_happy
+- returns_to_stand
+- hardware_unverified
+keyframes:
+- t: 0.0
+  joints: &stand
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.9
+    FL_calf_joint: -1.8
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.9
+    FR_calf_joint: -1.8
+    RL_hip_joint: 0.0
+    RL_thigh_joint: 0.9
+    RL_calf_joint: -1.8
+    RR_hip_joint: 0.0
+    RR_thigh_joint: 0.9
+    RR_calf_joint: -1.8
+- t: 0.22
+  joints:
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.9
+    FL_calf_joint: -1.8
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.9
+    FR_calf_joint: -1.8
+    RL_hip_joint: 0.16
+    RL_thigh_joint: 0.9
+    RL_calf_joint: -1.8
+    RR_hip_joint: -0.16
+    RR_thigh_joint: 0.9
+    RR_calf_joint: -1.8
+- t: 0.44
+  joints:
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.9
+    FL_calf_joint: -1.8
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.9
+    FR_calf_joint: -1.8
+    RL_hip_joint: -0.16
+    RL_thigh_joint: 0.9
+    RL_calf_joint: -1.8
+    RR_hip_joint: 0.16
+    RR_thigh_joint: 0.9
+    RR_calf_joint: -1.8
+- t: 0.66
+  joints:
+    FL_hip_joint: 0.0
+    FL_thigh_joint: 0.9
+    FL_calf_joint: -1.8
+    FR_hip_joint: 0.0
+    FR_thigh_joint: 0.9
+    FR_calf_joint: -1.8
+    RL_hip_joint: 0.16
+    RL_thigh_joint: 0.9
+    RL_calf_joint: -1.8
+    RR_hip_joint: -0.16
+    RR_thigh_joint: 0.9
+    RR_calf_joint: -1.8
+- t: 0.95
+  joints: *stand
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: gesture_track
+  control_dt: 0.02

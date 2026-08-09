@@ -39,7 +39,7 @@ explicit destination directive
   -> navigation-local collision brake and configured velocity bounds
   -> runtime CommandArbiter + smoother
   -> runtime-wide camera/LiDAR proximity and TTC vetoes
-  -> jerk-limited actuator hand-off (stop bypass)
+  -> jerk-limited actuator hand-off (environmental stop currently ramps)
   -> ControlManager -> selected locomotion controller
   -> odometry, LiDAR, semantic tracks, and measured velocity feed the next tick
 ```
@@ -101,8 +101,10 @@ while not nav.done():
 The product path calls the same pipeline through `Dog.navigate(...)` from
 `RobotRuntime`. Runtime supplies pose, the full calibrated scan, bounded
 camera/depth semantic tracks, LiDAR obstacle returns, freshness, and measured
-motion feedback. The returned command still passes through runtime arbitration
-and the final reactive gate before `ControlManager` sees it.
+motion feedback. The returned command still passes through runtime arbitration,
+the shared reactive gate, and final shaping before `ControlManager` sees it.
+The current reactive decision precedes that final S-curve shaper; the
+2026-08-09 audit marks a post-shaper exact-zero reassertion as P0 work.
 
 ## Sensor and map contract
 
@@ -153,10 +155,12 @@ non-navigation motion, but does **not** make ordinary navigation a sustained
 speed profile.
 
 The planner has its own acceleration slew, and the runtime applies another
-velocity smoother before the final safety gate. This makes command changes
-gentler and safety-forced stops remain immediate, but the nested filters add
-tracking lag and must be tuned with the physical Sport response rather than
-assumed from kinematic simulation.
+velocity smoother before the shared safety gate and an S-curve shaper after it.
+This makes command changes gentler, but the nested filters add tracking lag.
+The S-curve emergency branch currently decelerates rather than guaranteeing an
+exact-zero final command on an ordinary proximity/TTC veto, so neither immediate
+environmental stop behavior nor physical response may be inferred from the
+kinematic simulation.
 
 The current batched grid-update microbenchmark is documented in
 [GRID_UPDATE_PERFORMANCE.md](GRID_UPDATE_PERFORMANCE.md). Its local-host timing

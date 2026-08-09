@@ -194,13 +194,17 @@ def safe_approach_pose(
                 maximum=2.0,
             ),
         )
+        # The near band's INNER edge in anchor-centre coordinates: the same
+        # ``minimum_vicinity`` = r + footprint + target_surface_clearance the
+        # pipeline terminal check and the scorer read. Kept explicit so the
+        # planning band below insets from the identical edge the authority
+        # verifies against — one band, not two that agree by convention.
+        minimum_vicinity = (
+            candidate_radius + footprint_clearance_m + target_surface_clearance
+        )
         stand_off = max(
             stand_off,
-            candidate_radius
-            + footprint_clearance_m
-            + target_surface_clearance
-            + arrival_radius
-            + stand_off_envelope.stand_off_margin_m,
+            minimum_vicinity + arrival_radius + stand_off_envelope.stand_off_margin_m,
         )
         maximum_vicinity = _bounded_metadata_float(
             candidate.metadata,
@@ -209,8 +213,23 @@ def safe_approach_pose(
             minimum=0.5,
             maximum=4.0,
         )
-        if stand_off + arrival_radius > maximum_vicinity + 1e-9:
+        # F-1 for near (card near-band-inset, 2026-08-09). Inset BOTH edges of
+        # the K0 near band by (arrival tolerance + stand_off_margin) and clamp
+        # the planned stand-off inside, so the controller's stop — up to
+        # arrival_radius past the pose in any direction, plus settle overshoot —
+        # lands INSIDE the band the mission verifies. Without the outer inset
+        # the lamppost pose sat on the outer edge (stand_off_m metadata = 1.32 =
+        # vicinity − arrival_radius) and every run stopped ~1 cm outside the
+        # 1.38 m verify max. Narrowing only; the K0 arrival authority is
+        # unchanged.
+        try:
+            plan_lo, plan_hi = _near_planning_band(
+                minimum_vicinity, maximum_vicinity, arrival_radius, stand_off_envelope
+            )
+        except ValueError:
+            # The inset empties the band — no admissible near pose exists here.
             return None
+        stand_off = max(plan_lo, min(stand_off, plan_hi))
         non_target_clearance = _bounded_metadata_float(
             candidate.metadata,
             "non_target_obstacle_clearance_m",
@@ -301,6 +320,63 @@ def _next_to_planning_band(
     hi = centre_band[1] - inset
     if not (math.isfinite(lo) and math.isfinite(hi)) or lo >= hi:
         raise ValueError("next_to planning band is empty after the arrival inset")
+    return (lo, hi)
+
+
+#: A ``near`` band whose inset edges cross by no more than this is treated as a
+#: single admissible ring at the midpoint, not an empty band. The lamppost's
+#: near band is razor-thin by construction — its width (vicinity −
+#: minimum_vicinity = 0.20 m) is exactly twice the inset (arrival 0.06 +
+#: stand_off_margin 0.04), so the two inset edges land on the SAME midpoint
+#: (1.28 m) and float rounding makes ``lo`` exceed ``hi`` by ~4e-16. Collapsing
+#: that to the midpoint is the honest reading; only a genuine crossing (the
+#: inset is wider than half the band) is "no such pose exists".
+_NEAR_BAND_COLLAPSE_EPS_M = 1e-6
+
+
+def _near_planning_band(
+    minimum_vicinity_m: float,
+    maximum_vicinity_m: float,
+    arrival_radius_m: float,
+    envelope: Any = DEFAULT_STAND_OFF_ENVELOPE,
+) -> tuple[float, float]:
+    """The stand-off distances a ``near`` pose may be planned at, inset from K0.
+
+    The K0 ``near`` band the arrival authority verifies against is
+    ``[minimum_vicinity, vicinity]`` in anchor-CENTRE coordinates — the same
+    ``minimum_vicinity_radius_m .. vicinity_radius_m`` the pipeline terminal
+    check reads (``pipeline.py`` near branch) and
+    :func:`~parcel_robot.instructnav.scoring.object_near_goal_region` stamps.
+    It is not the band a pose may be planned in, for exactly the reason spelled
+    out in :func:`_next_to_planning_band`: the controller does not stop on the
+    pose — it stops anywhere within ``arrival_radius_m`` of it, in **any**
+    direction, including radially away from the anchor, plus a small settle
+    overshoot. A pose on the outer edge (which is where the lamppost's
+    ``stand_off_m`` metadata put it: 1.32 m = vicinity − arrival_radius)
+    therefore admits a final pose OUTSIDE the very band the mission then
+    verifies, and the mission fails ``semantic_arrival_verification_failed``
+    having walked to the right object. The F-1 inset fix landed for ``next_to``
+    on 2026-08-07; this is the same shape for ``near`` (card near-band-inset).
+
+    Both edges are inset by ``arrival_radius_m + stand_off_margin_m`` — the
+    tolerance the controller may spend plus the authority's own "and a little
+    more than exactly enough". This is a *narrowing*: every pose it admits was
+    already admissible, and no band, tolerance, or gate is widened.
+
+    Raises ``ValueError`` when the inset genuinely empties the band (the inset
+    exceeds half the band width); callers treat that as "no such pose exists".
+    """
+
+    inset = float(arrival_radius_m) + float(envelope.stand_off_margin_m)
+    lo = float(minimum_vicinity_m) + inset
+    hi = float(maximum_vicinity_m) - inset
+    if not (math.isfinite(lo) and math.isfinite(hi)):
+        raise ValueError("near planning band is not finite")
+    if lo > hi:
+        if lo - hi <= _NEAR_BAND_COLLAPSE_EPS_M:
+            mid = 0.5 * (lo + hi)
+            return (mid, mid)
+        raise ValueError("near planning band is empty after the arrival inset")
     return (lo, hi)
 
 

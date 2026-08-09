@@ -8,5 +8,5 @@ reply_style:
   - Mention safety or task state only when relevant.
   - Never sound alarmist without a real safety event.
 affect_actions:
-  sad: play_bow
-  happy: paw_wave
+  sad: attentive_nod
+  happy: attentive_nod

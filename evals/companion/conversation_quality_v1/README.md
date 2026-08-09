@@ -14,6 +14,13 @@ separate immutable artifact rather than silently folded into the machine score.
 The suite executes no skill, simulator step, or robot motion. It cannot claim
 physical task success.
 
+**Input re-freeze (2026-08-09):** the case set, schema, suite ID, and runner are
+unchanged. The manifest hashes for `action_policy.md` and the three personality
+profiles were updated in the same worktree as the new self-returning emotion
+gesture mappings. Historical result JSON remains immutable and carries its
+original frozen-input hashes. A new live model result is still required before
+claiming a conversation-quality delta from this prompt change.
+
 ```bash
 PYTHONPATH=src:. .parcel/bin/python -m evals.companion.run_conversation_quality_v1 \
   --output evals/companion/conversation_quality_v1/results/conversation-v1-run01.json \

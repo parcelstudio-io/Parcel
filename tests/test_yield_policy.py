@@ -53,7 +53,11 @@ from parcel_robot.core.yield_policy import (
     person_blocked_from_note,
 )
 from parcel_robot.models import VelocityCommand
+from parcel_robot.navigation.base import NavObservation
+from parcel_robot.navigation.grounder import PlaceGrounder
 from parcel_robot.navigation.models import MidLevelCommand
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.runtime import RobotRuntime
 from parcel_robot.voice.yield_speech import yield_dialogue_act
 
@@ -953,3 +957,245 @@ def test_the_snapshot_reports_no_audibility_before_anything_is_said(
     snapshot = runtime.yield_policy_snapshot()
     assert snapshot["last_utterance"] is None
     assert snapshot["last_utterance_audible"] is None
+
+# ---------------------------------------------------------------------------
+# N20 — replan after a yield give-up instead of ending the mission.
+#
+# The runtime's yield policy (above) ends a person-blocked mission honestly at
+# patience expiry. N20 gives the navigation lane one chance first: release the
+# committed approach through its SINGLE release door
+# (``DirectiveNavigator.release_current_candidate`` → ``_release_unreachable_
+# candidate``, the same door A* and the obstacle gate use) and replan to an
+# alternative. Two seams are tested: the navigation entry point in isolation,
+# and the runtime wiring that calls it — while person-stop still zeroes every
+# gated tick.
+# ---------------------------------------------------------------------------
+
+_RELEASE_MODELS = REPO / "configs" / "navigation" / "models"
+
+
+def _release_nav() -> DirectiveNavigator:
+    return DirectiveNavigator(
+        registry=ModelRegistry.load(_RELEASE_MODELS),
+        grounder=PlaceGrounder([]),
+        model_id="stub_v0",
+        arrive_radius_m=0.25,
+    )
+
+
+def _release_lamppost(candidate_id: str, x: float, y: float, *, distance_m: float):
+    return {
+        "id": candidate_id,
+        "label": "lamppost",
+        "kind": "object",
+        "position": [x, y, 0.0],
+        "confidence": 0.98,
+        "source": "test_semantic_camera",
+        "reachable": True,
+        "metadata": {"aliases": ["street light"], "arrival_radius_m": 0.2},
+    }, {"id": candidate_id, "distance_m": distance_m, "bearing_rad": 0.0}
+
+
+def _release_observation(*names: str, position=(0.0, 0.0, 0.0)) -> NavObservation:
+    table = {
+        "far": _release_lamppost("lamp-far", -6.7, -2.9, distance_m=7.3),
+        "near": _release_lamppost("lamp-near", 0.2, 3.15, distance_m=3.16),
+    }
+    rows = [table[name] for name in names]
+    return NavObservation(
+        position=position,
+        heading_deg=0.0,
+        extras={
+            "collision": False,
+            "perception_fresh": True,
+            "semantic_candidates": [row[0] for row in rows],
+            "lidar_obstacles": [row[1] for row in rows],
+            "motion_feedback": {
+                "fresh": True,
+                "stop_confirmed": True,
+                "linear_speed_mps": 0.0,
+                "yaw_speed_rad_s": 0.0,
+                "settled_linear_speed_mps": 0.08,
+                "settled_yaw_speed_rad_s": 0.12,
+            },
+        },
+    )
+
+
+def _commit_release(nav: DirectiveNavigator, obs: NavObservation, *, budget: int = 8) -> None:
+    for _ in range(budget):
+        nav.step(obs)
+        if nav.mission is not None and nav.mission.goal is not None:
+            return
+    raise AssertionError("semantic goal never committed")
+
+
+def test_release_current_candidate_drives_the_single_door_and_replans() -> None:
+    """The N20 entry point releases through the ONE door and hands to the ladder.
+
+    Not a second release authority: it adds the committed instance to the same
+    per-mission exclusion set A* and the obstacle gate use, starts one replan,
+    and returns True because the mission continues.
+    """
+
+    nav = _release_nav()
+    mission = nav.start("walk towards the lamppost")
+    _commit_release(nav, _release_observation("far"))
+    assert mission.metadata["candidate_id"] == "lamp-far"
+
+    continued = nav.release_current_candidate(BLOCKED_BY_PERSON_UNANSWERED_REASON)
+
+    assert continued is True
+    assert mission.goal is None
+    assert mission.status == "searching"
+    assert mission.metadata["unreachable_candidates"] == ["lamp-far"]
+    assert mission.metadata["replan_count"] == 1
+    assert mission.metadata["yield_release_reason"] == BLOCKED_BY_PERSON_UNANSWERED_REASON
+    nav.close()
+
+
+def test_release_current_candidate_lets_the_ladder_commit_the_alternative() -> None:
+    """The whole point: an alternative approach exists, so the mission finds it.
+
+    The blocked instance stays in frustum; the exclusion is what makes the
+    rescan commit the *other* lamppost instead of re-deriving the same one.
+    """
+
+    nav = _release_nav()
+    mission = nav.start("walk towards the lamppost")
+    _commit_release(nav, _release_observation("far"))
+    assert nav.release_current_candidate(BLOCKED_BY_PERSON_REASON) is True
+
+    _commit_release(nav, _release_observation("far", "near"), budget=16)
+
+    assert mission.metadata["candidate_id"] == "lamp-near"
+    assert mission.goal is not None and mission.goal.poi_id == "lamp-near"
+    nav.close()
+
+
+def test_release_current_candidate_returns_false_when_the_ladder_is_spent() -> None:
+    """No alternative left: the honest end, reported as False (not a silent hold)."""
+
+    nav = _release_nav()
+    mission = nav.start("walk towards the lamppost")
+    _commit_release(nav, _release_observation("far"))
+    # Spend the replan budget so the next release exhausts the ladder.
+    mission.metadata["replan_count"] = nav.max_semantic_replans
+
+    continued = nav.release_current_candidate(BLOCKED_BY_PERSON_UNANSWERED_REASON)
+
+    assert continued is False
+    assert mission.status == "failed"
+    assert mission.metadata["resolution_state"] == "unreachable"
+    nav.close()
+
+
+def test_release_current_candidate_is_a_noop_without_a_committed_target() -> None:
+    """Nothing committed → nothing to release; report False, never crash."""
+
+    nav = _release_nav()
+    assert nav.release_current_candidate("blocked_by_person") is False
+    nav.start("walk towards the lamppost")  # searching, no goal yet
+    assert nav.release_current_candidate("blocked_by_person") is False
+    nav.close()
+
+
+def _fast_yield_policy(tmp_path: Path, on_blocked: str = "ask_for_help") -> Path:
+    path = tmp_path / f"personality-n20-{on_blocked}.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "schema_version": 1,
+                "defaults": {
+                    "yield_policy": {
+                        "patience_s": 1.0,
+                        "on_blocked": on_blocked,
+                        "reask_interval_s": 2.0,
+                        "max_asks": 1,
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_a_yield_give_up_releases_and_replans_instead_of_ending(tmp_path: Path) -> None:
+    """N20 at the runtime seam: patience expiry drives the release door, and when
+    an alternative may exist the mission CONTINUES — nothing is stopped, the
+    give-up line is never spoken, and the person gate still zeroes translation.
+    """
+
+    session = _runtime(tmp_path, personality_policy=_fast_yield_policy(tmp_path))
+    try:
+        clock = _Clock()
+        session._yield_clock = clock
+        _start(session)
+        _block_with(session, TRAFFIC_NOTE)
+
+        # Spy the navigation-side door: first give-up finds an alternative, a
+        # later one does not (bounding the loop exactly as the replan budget does).
+        calls: list[str] = []
+        nav = session.dog._navigator
+
+        def _spy(reason: str) -> bool:
+            calls.append(reason)
+            return len(calls) == 1
+
+        nav.release_current_candidate = _spy  # type: ignore[method-assign]
+
+        backend = session.backend_under_test  # type: ignore[attr-defined]
+        backend.moves.clear()
+        _tick(session, clock, seconds=6.0)  # first patience+ask+give-up cycle
+
+        # The release fired at give-up with the attributable reason, and the
+        # mission did NOT end — it is still looking for another approach.
+        assert calls == [BLOCKED_BY_PERSON_UNANSWERED_REASON], calls
+        navigation = session.snapshot()["navigation"]
+        assert navigation["enabled"] is True, navigation
+        assert session._navigation_directive == "go to the sidewalk"
+        # The give-up line ("I couldn't get to ...") was never spoken: continuing
+        # after claiming defeat is the finality lie the yield rules forbid.
+        assert not any(
+            "couldn't get" in line.lower() or "stopped trying" in line.lower()
+            for line in _chat(session)
+        ), _chat(session)
+        # Every gated tick still commanded zero translation.
+        assert all(m.vx == 0.0 and m.vy == 0.0 for m in backend.moves), backend.moves
+    finally:
+        session.close()
+
+
+def test_a_yield_give_up_with_no_alternative_still_ends_honestly(tmp_path: Path) -> None:
+    """The other branch: the door reports no alternative, so the honest end
+    stands exactly as before — and the person gate still zeroes translation."""
+
+    session = _runtime(tmp_path, personality_policy=_fast_yield_policy(tmp_path))
+    try:
+        clock = _Clock()
+        session._yield_clock = clock
+        _start(session)
+        _block_with(session, TRAFFIC_NOTE)
+
+        calls: list[str] = []
+        nav = session.dog._navigator
+
+        def _spy(reason: str) -> bool:
+            calls.append(reason)
+            return False
+
+        nav.release_current_candidate = _spy  # type: ignore[method-assign]
+
+        backend = session.backend_under_test  # type: ignore[attr-defined]
+        backend.moves.clear()
+        _tick(session, clock, seconds=8.0)
+
+        assert calls == [BLOCKED_BY_PERSON_UNANSWERED_REASON], calls
+        navigation = session.snapshot()["navigation"]
+        assert navigation["enabled"] is False, navigation
+        assert navigation["state"] == "failed"
+        assert navigation["reason"] == BLOCKED_BY_PERSON_UNANSWERED_REASON
+        assert all(m.vx == 0.0 and m.vy == 0.0 for m in backend.moves), backend.moves
+    finally:
+        session.close()

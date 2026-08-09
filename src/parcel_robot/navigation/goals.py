@@ -151,21 +151,33 @@ _NEGATED_OR_HYPOTHETICAL = re.compile(
 )
 _POLITE_PREFIXES = (
     re.compile(r"^(?:hey\s+)?parcel[,.]?\s+"),
-    re.compile(r"^(?:please\s+)?(?:can|could|would|will)\s+you\s+(?:please\s+)?"),
+    # "would you MIND trotting over…" is as much a request as "would you trot
+    # over…"; the ``mind`` filler otherwise survived the strip and blocked the
+    # verb match, dead-ending a polite physical request in conversation.
+    re.compile(r"^(?:please\s+)?(?:can|could|would|will)\s+you\s+(?:please\s+|mind\s+)?"),
     re.compile(r"^(?:please\s+)?i\s+(?:want|need)\s+you\s+to\s+"),
     re.compile(r"^(?:please\s+)?i(?:'d|\s+would)\s+like\s+you\s+to\s+"),
     re.compile(r"^(?:please|kindly)\s+"),
 )
 _PACE_VERB_ALTERNATION = "|".join(sorted(PACE_VERB_TABLE, key=len, reverse=True))
+#: Gait verbs that mean "move to a place" at a neutral pace — the casual
+#: register ("trot over to the lamppost", "scoot to the bench"). Kept separate
+#: from PACE_VERB_TABLE because a trot is not a declared pace level; it is just
+#: a colloquial "go". Recognising them is what stops a polite "would you mind
+#: trotting over to the lamppost?" from dead-ending in the conversation lane.
+_GAIT_VERB_ALTERNATION = (
+    "trotting|trots|trot|jogging|jogs|jog|scooting|scoots|scoot|"
+    "ambling|ambles|amble|wander\\s+over|wandering|wanders|wander"
+)
 _DESTINATION_PATTERNS = (
     re.compile(
         r"^(?:go|navigate|walk|move|head|drive|take\s+me"
-        rf"|{_PACE_VERB_ALTERNATION})(?:\s+over)?\s+"
+        rf"|{_GAIT_VERB_ALTERNATION}|{_PACE_VERB_ALTERNATION})(?:\s+over)?\s+"
         r"(?:to|onto|into)\s+(?P<destination>.+)$"
     ),
     re.compile(
         r"^(?:go|navigate|walk|move|head"
-        rf"|{_PACE_VERB_ALTERNATION})(?:\s+over)?\s+"
+        rf"|{_GAIT_VERB_ALTERNATION}|{_PACE_VERB_ALTERNATION})(?:\s+over)?\s+"
         rf"(?:{_TOWARDS_ALIASES})\s+(?P<destination>.+)$"
     ),
     re.compile(

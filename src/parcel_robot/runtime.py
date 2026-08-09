@@ -1183,7 +1183,11 @@ class RobotRuntime:
         return f"Okay—I'll head over{where} and {SETTLE_POSE_PHRASES.get(pose, 'settle')}."
 
     DEFAULT_EMOTES = (
+        "attentive_nod",
         "bow",
+        "comfort_bow",
+        "curious_look",
+        "happy_wiggle",
         "hello_pose",
         "hop",
         "look_left",
@@ -4631,6 +4635,16 @@ class RobotRuntime:
         with self._lock:
             speech = self._yield_profile.speech
             personality = self._personality
+        if decision.action == YIELD_ACTION_GIVE_UP and self._yield_release_and_replan(
+            place=place, reason=decision.reason
+        ):
+            # N20: the navigation lane released the person-blocked commitment and
+            # a replan may now find an alternative approach. The mission
+            # CONTINUES, so the give-up line is never spoken and the channel is
+            # never stopped — saying "I couldn't get there" and then continuing
+            # would be exactly the arrival/finality lie the yield speech rules
+            # forbid.
+            return
         kind = "give_up"
         if decision.action == YIELD_ACTION_ASK:
             kind = "ask" if decision.ask_index <= 1 else "reask"
@@ -4667,6 +4681,49 @@ class RobotRuntime:
             f"Navigation failed for {place}: {decision.reason}",
             "error",
         )
+
+    def _yield_release_and_replan(self, *, place: str, reason: str) -> bool:
+        """Offer the navigation lane its single release door on a yield give-up.
+
+        N20: instead of ending the mission the instant yield patience is spent,
+        ask the navigator to release the person-blocked commitment and replan.
+        The navigator owns the one release authority
+        (:meth:`DirectiveNavigator.release_current_candidate`, the same door A*
+        and the obstacle gate use); the runtime only asks. This never touches a
+        velocity or the person gate — the gated tick that got us here was
+        already zeroed by the collision gate and stays zeroed.
+
+        Returns ``True`` when the mission CONTINUES (an alternative may be found,
+        so the yield accounting restarts and nothing is spoken), ``False`` when
+        no release happened and the honest give-up must proceed.
+        """
+
+        # The underlying field, never the ``navigator`` property: the property
+        # constructs (and can raise) when none exists, but a yield give-up only
+        # reaches here from an active navigation mission, so the navigator is
+        # already live. Absence is reported as "no release", never a crash.
+        navigator = getattr(self.dog, "_navigator", None)
+        release = getattr(navigator, "release_current_candidate", None)
+        if not callable(release):
+            return False
+        try:
+            released = bool(release(reason))
+        except (RuntimeError, ValueError, AttributeError):
+            # A navigation-side failure must not strand the yield path: fall
+            # through to the honest give-up rather than crash the mission.
+            released = False
+        if not released:
+            return False
+        # The new approach gets its own patience and ask budget; the old
+        # episode's accounting does not carry over onto a different pose.
+        self._yield_tracker.reset()
+        self._emit(
+            "navigation",
+            f"Someone stayed in my way to {place}; releasing that approach and "
+            f"looking for another way there.",
+            "info",
+        )
+        return True
 
     def _install_perception_chain(self) -> None:
         """Install the configured perception tier as the process-default chain.

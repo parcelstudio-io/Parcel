@@ -61,9 +61,12 @@ implement the same HAL contracts in
 [`control/base.py`](../src/parcel_robot/control/base.py).
 
 Normal outgoing commands are jerk-limited after arbitration and collision/TTC
-safety and immediately before `ControlManager`; emergency/terminal stops bypass
-and reset the shaper. This placement preserves a single actuator handoff without
-letting comfort smoothing delay a stop.
+safety and immediately before `ControlManager`. Explicit E-stop/terminal stop
+paths reset or call through to manager stopping, but a 2026-08-09 audit found
+that the ordinary environmental-veto path enters a bounded emergency ramp
+rather than reasserting exact zero. The intended decision remains a single
+actuator handoff with non-relaxable post-shaper safety; implementing that typed
+final disposition is now P0 work.
 
 Interruption semantics distinguish **pause** from **stop**. A pausable channel
 releases its lease and records a bounded `ResumeIntent`; the intended resumption
@@ -224,6 +227,12 @@ unit-tested foundations only; they are not yet fed or ticked by the runtime.
 **Revisit when:** hardware actuation lag and safe envelopes are measured. A
 whole-body motion mixer may replace offsets, but must retain epoch cancellation,
 clamps, and higher-priority suppression.
+
+The 2026-08-09 starter palette adds short self-returning social trajectories
+and persistent explicit poses as a separate, serialized whole-body skill path.
+They do not weaken this decision: inferred reactions defer while the base is
+busy, and all custom joint targets remain simulator-only/hardware-unverified.
+See [EMBODIED_EXPRESSION.md](EMBODIED_EXPRESSION.md).
 
 ## D9. MuJoCo is the deterministic inner loop; rich worlds stay out of process
 

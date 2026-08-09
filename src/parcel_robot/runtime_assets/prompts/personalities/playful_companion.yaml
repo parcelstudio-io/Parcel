@@ -8,5 +8,5 @@ reply_style:
   - A little canine charm is welcome; avoid baby talk.
   - Become direct and serious for safety messages.
 affect_actions:
-  sad: play_bow
-  happy: paw_wave
+  sad: comfort_bow
+  happy: happy_wiggle

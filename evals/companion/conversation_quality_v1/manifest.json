@@ -22,7 +22,7 @@
     },
     {
       "path": "prompts/system/action_policy.md",
-      "sha256": "056a7fc087ea7ac3f6f7a8b62b75e9b7e9278312f89942dbbc8ace5a442ab08d"
+      "sha256": "f253dbfbf074ce6d87e3d74bb1f15b0e49dc377ecf7e56a3b0ebf4ef99a0e118"
     },
     {
       "path": "prompts/dynamic/runtime_context.md.tmpl",
@@ -34,15 +34,15 @@
     },
     {
       "path": "prompts/personalities/calm_guardian.yaml",
-      "sha256": "9898f1b3e952c4092d29933abc30af198d1f9cf32ce2a0e6cbb536ccb64f3dcf"
+      "sha256": "1c995b23684e99a9d530ad356bd6efd12c25e6a592db68528da8cecdd0120493"
     },
     {
       "path": "prompts/personalities/gentle_companion.yaml",
-      "sha256": "03a6e24ab4ee0a7121384ac13edb8601962277c29bf626f6589b7346bca53e11"
+      "sha256": "015f7e141d7d5b251eec71adcdfb16a115a56167eb837c97df0733b2fd202114"
     },
     {
       "path": "prompts/personalities/playful_companion.yaml",
-      "sha256": "31f3437b6be34eafbe4883e5880079e53b0dc554b15837dd61a88db26d290d57"
+      "sha256": "d6f8a39557cd30e450136f9f5f6a8b68a7b8baf36ff753b201b0ba94259ca3b7"
     }
   ]
 }

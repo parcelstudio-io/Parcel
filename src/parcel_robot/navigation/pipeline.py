@@ -11,7 +11,7 @@ import yaml
 from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
 
 from .approach import point_in_polygon_with_clearance, safe_approach_pose
-from .base import MidLevelCommand, Mission, NavObservation
+from .base import GoalPose, MidLevelCommand, Mission, NavObservation
 from .collision import CollisionPolicy, apply_collision_brake
 from .goals import (
     SemanticGoal,
@@ -158,6 +158,7 @@ try:
         honest_not_found_reply,
     )
     from parcel_robot.instructnav.memory import SemanticMemory, SemanticMemory2D
+    from parcel_robot.instructnav.near_arrival import near_band_fallback_point
     from parcel_robot.instructnav.scan import ScanRecoveryAction, full_turn_scan_spec
     from parcel_robot.instructnav.scoring import (
         ARRIVAL_CONFIRMING_FRAMES_M,
@@ -188,6 +189,7 @@ except ImportError:  # pragma: no cover — frozen BARN bundle path
     honest_not_found_reply = None  # type: ignore[misc, assignment]
     SemanticMemory = None  # type: ignore[misc, assignment]
     SemanticMemory2D = None  # type: ignore[misc, assignment]
+    near_band_fallback_point = None  # type: ignore[misc, assignment]
     ScanRecoveryAction = None  # type: ignore[misc, assignment]
     full_turn_scan_spec = None  # type: ignore[misc, assignment]
     GoalRegion = None  # type: ignore[misc, assignment]
@@ -1361,6 +1363,23 @@ class DirectiveNavigator:
             cost_out=approach_costs,
         )
         if pose is None:
+            # Before conceding this instance, try the K0-band approach fallback.
+            # ``safe_approach_pose`` plans a ``near`` pose on the object's
+            # SUPPORT SURFACE (the sidewalk it sits on). For a wide object on a
+            # narrow strip flanked by other furniture — a 0.73 m bench on a 2 m
+            # sidewalk with a lamppost and a tree ~2.5 m to each side — that
+            # support-gated ring has no admissible point from ANY robot pose, so
+            # the solver returns ``None`` unconditionally, the release below
+            # banishes the only real target from the excluding semantic map, and
+            # the search-reground loop spins out its whole budget never seeing
+            # the bench again (2026-08-09 root cause). But the directive's own
+            # success test — the same K0 vicinity band the mission then verifies
+            # against — accepts any collision-clear pose in that band, sidewalk
+            # or not. Committing there is a grounded arrival at the real object,
+            # not a hallucination: we only reach here for a candidate already
+            # grounded, confirmed, reachable, and frustum-visible.
+            pose = self._fallback_near_arrival_pose(semantic_goal, result, observation)
+        if pose is None:
             # "No admissible approach pose for THIS instance" is a fact about
             # one instance, not about the directive. Failing the mission on it
             # outright was the sibling of the unroutable-goal defect
@@ -1369,7 +1388,9 @@ class DirectiveNavigator:
             # another instance. Same release, same per-mission memory, same
             # exclusion from the rescan, same replan budget — the only
             # difference is which authority produced the proof (the approach
-            # solver here, A* there).
+            # solver here, A* there). The K0-band fallback above has already run
+            # and also found no collision-clear pose, so this instance is
+            # genuinely boxed in and the honest release stands.
             self.mission.metadata["grounding_outcome"] = grounding_outcome
             self.mission.metadata["unreachable_pose_candidate"] = str(result.candidate_id)
             return self._release_unreachable_candidate(
@@ -1509,6 +1530,129 @@ class DirectiveNavigator:
         # very next tick's geometric association has an anchor.
         self._bind_target_track()
         return MidLevelCommand(vx=0.0, vy=0.0, vyaw=0.0, note="semantic_target_resolved")
+
+    def _fallback_near_arrival_pose(
+        self,
+        semantic_goal: Any,
+        result: SemanticCandidate,
+        observation: NavObservation,
+    ) -> GoalPose | None:
+        """Approach pose inside the K0 ``near`` vicinity band when the
+        support-gated :func:`safe_approach_pose` solver finds none.
+
+        This is the search-reground fix's honest fallback, and it never widens a
+        band or weakens a gate. It commits only to a point that (1) lies inside
+        the SAME ``near`` vicinity band ``_inside_arrival_goal_region`` verifies
+        against — ``[minimum_vicinity_radius_m, vicinity_radius_m]`` from the
+        candidate's own metadata, the K0 authority — and (2) keeps the full
+        footprint-to-surface collision clearance from every observed non-target
+        obstacle. If no such point exists the instance is genuinely boxed in and
+        this returns ``None``, leaving the existing unreachable-release to fail
+        the mission honestly. Applies to the band relations ``near`` and
+        ``next_to`` — both verify against a distance band around the object, and
+        the ``near`` vicinity ``[minimum_vicinity_radius_m, vicinity_radius_m]``
+        is a subset of the wider ``next_to`` band, so a pose this admits sits
+        inside whichever band the mission then verifies. ``towards`` has its own
+        stop-short waypoint and never reaches the support-gated solver.
+        """
+
+        if near_band_fallback_point is None or GoalPose is None or self.mission is None:
+            return None
+        if getattr(semantic_goal, "terminal_relation", "") not in {"near", "next_to"}:
+            return None
+        if not bool(getattr(result, "reachable", True)):
+            return None
+        radius = _metadata_float(
+            result.metadata, "radius_m", default=0.0, minimum=0.0, maximum=5.0
+        )
+        inner = _metadata_float(
+            result.metadata,
+            "minimum_vicinity_radius_m",
+            default=radius + ROBOT_FOOTPRINT_RADIUS_M + self.collision.obstacle_stop_m,
+            minimum=0.1,
+            maximum=4.0,
+        )
+        outer = _metadata_float(
+            result.metadata,
+            "vicinity_radius_m",
+            default=inner + 0.2,
+            minimum=0.5,
+            maximum=4.0,
+        )
+        if not (0.0 < inner <= outer):
+            return None
+        robot_map = _pose_in(observation, MAP_FRAME)
+        blocked = self._non_target_obstacle_points(observation, result)
+        # The same footprint-to-surface clearance the reactive gate enforces, so
+        # a pose this admits is one the gate will also let the body reach.
+        clearance = ROBOT_FOOTPRINT_RADIUS_M + self.collision.obstacle_stop_m
+        point = near_band_fallback_point(
+            center=(float(result.x), float(result.y)),
+            band_m=(inner, outer),
+            robot_xy=robot_map.xy,
+            blocked_points=blocked,
+            clearance_m=clearance,
+        )
+        if point is None:
+            return None
+        x, y = point
+        heading = math.degrees(math.atan2(result.y - y, result.x - x))
+        arrival_radius = _metadata_float(
+            result.metadata, "arrival_radius_m", default=0.12, minimum=0.05, maximum=0.5
+        )
+        self.mission.metadata["approach_pose_source"] = "near_band_fallback"
+        return GoalPose(
+            x=float(x),
+            y=float(y),
+            z=float(result.z),
+            heading_deg=float(heading),
+            poi_id=str(result.candidate_id),
+            label=str(result.label),
+            arrival_radius_m=arrival_radius,
+        )
+
+    def _non_target_obstacle_points(
+        self,
+        observation: NavObservation,
+        result: SemanticCandidate,
+    ) -> tuple[tuple[str | None, float, float], ...]:
+        """Observed obstacle SURFACE points with the target's own body removed.
+
+        Mirrors the collision-authority projection the approach solver uses (the
+        LiDAR footprint-to-surface contract plus the nominal body radius), then
+        drops any surface within the target's own footprint (radius + the
+        stratum-2 association slack) so the object never blocks its own vicinity
+        band. Every other observed surface stays a solid — no gate is relaxed.
+        """
+
+        raw = observation.extras.get("lidar_obstacles")
+        if not isinstance(raw, (list, tuple)):
+            return ()
+        robot = _pose_in(observation, MAP_FRAME)
+        radius = _metadata_float(
+            result.metadata, "radius_m", default=0.0, minimum=0.0, maximum=5.0
+        )
+        exclude_r = radius + self.TARGET_ASSOCIATION_SLACK_M
+        cx, cy = float(result.x), float(result.y)
+        points: list[tuple[str | None, float, float]] = []
+        for item in raw[:64]:
+            if not isinstance(item, dict):
+                continue
+            try:
+                distance = float(item["distance_m"])
+                bearing = float(item["bearing_rad"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if not math.isfinite(distance) or not math.isfinite(bearing) or distance < 0.0:
+                continue
+            ray = distance + ROBOT_FOOTPRINT_RADIUS_M
+            angle = robot.yaw + bearing
+            px = robot.x + ray * math.cos(angle)
+            py = robot.y + ray * math.sin(angle)
+            if math.hypot(px - cx, py - cy) <= exclude_r:
+                continue
+            points.append((str(item["id"]) if item.get("id") else None, px, py))
+        return tuple(points)
 
     def _pose_lost_hold(self, observation: NavObservation) -> MidLevelCommand | None:
         """Stop and hold while MAP localization is ``LOST``.
@@ -1815,10 +1959,31 @@ class DirectiveNavigator:
                     grounding_outcome=GroundingOutcome.RESOLVED.value,
                 )
             if isinstance(result, MidLevelCommand) and not result.stop:
+                # Steer the confirming rotation TOWARD the grounded target so it
+                # stays in the frustum for the second sighting. The multi-view
+                # gate (``required_observations``) rotated at a fixed +yaw_rate,
+                # which pushes a target that flickered in on the frustum's
+                # trailing edge straight back OUT before it can be confirmed —
+                # the second search-reground defect (2026-08-09): a bench seen
+                # for a single tick never reaches two sightings, so it is never
+                # committed and the scan spins out its budget. Centering the
+                # target (yaw toward its bearing, held still once centred) keeps
+                # it visible without weakening the two-sighting anti-false-
+                # positive gate. When the grounder gave no mapped instance we
+                # keep the original sweep. Interchangeable (region / "nearest")
+                # goals keep the look-around sweep untouched: their multi-view
+                # is a deliberate revolution to rank instances, not a single
+                # target to keep centred, and centring one would stop the sweep.
+                vyaw = result.vyaw
+                if mapped is not None and not interchangeable:
+                    bearing = math.atan2(mapped.y - robot_y, mapped.x - robot_x) - robot_yaw
+                    bearing = (bearing + math.pi) % (2.0 * math.pi) - math.pi
+                    rate = float(self.search.yaw_rate)
+                    vyaw = max(-rate, min(rate, 1.6 * bearing))
                 return MidLevelCommand(
                     vx=0.0,
                     vy=0.0,
-                    vyaw=result.vyaw,
+                    vyaw=vyaw,
                     note=result.note or "semantic_search_scan",
                 )
             # Confirmation budget exhausted without required_observations —
@@ -2470,6 +2635,47 @@ class DirectiveNavigator:
         self.mission.metadata["plan_step"] = "failed"
         return MidLevelCommand(stop=True, note="semantic_target_unreachable")
 
+    def release_current_candidate(self, reason: str) -> bool:
+        """Release the committed target and replan — the runtime's N20 entry point.
+
+        The ONE place outside the navigator's own tick that may drive the single
+        release door (:meth:`_release_unreachable_candidate`). The runtime's
+        yield policy calls it when patience expires on a person-blocked approach:
+        the committed approach pose is held behind a person who will not clear
+        it, and the mission may have an alternative to try — another instance, or
+        the same target re-approached after a re-ground — before it ends. It
+        reuses the SAME exclusion door A* (``_unroutable_goal_recovery``), the
+        obstacle gate (``_gate_blocked_route_recovery``) and the approach solver
+        (a ``None`` pose) use, so there is exactly ONE release authority and no
+        second person-stop dwell counter living in a second tree — the D5 defect
+        class N20 was filed to respect. ``person_stop`` remains untouched as a
+        motion gate: this method never sees or proposes a velocity, it only
+        drops a commitment the runtime has proved (via its patience budget) is
+        not going to clear.
+
+        Returns ``True`` when the mission CONTINUES — the replan budget had room,
+        so the resolution ladder will now look for an alternative — and
+        ``False`` when the release exhausted that budget and the mission ended
+        honestly (no alternative left to try, ``semantic_target_unreachable``).
+        A no-op returning ``False`` when there is no active semantic mission with
+        a committed target to release.
+        """
+
+        if (
+            self.mission is None
+            or self.mission.semantic_goal is None
+            or self.mission.goal is None
+        ):
+            return False
+        candidate_id = str(self.mission.metadata.get("candidate_id") or "")
+        self.mission.metadata["yield_release_reason"] = str(reason)
+        self._release_unreachable_candidate(
+            candidate_id, note="semantic_replan_after_person_block"
+        )
+        # The door either began a replan (status 'searching' → the mission
+        # continues) or spent the ladder and failed honestly (status 'failed').
+        return self.mission is not None and self.mission.status != "failed"
+
     #: Consecutive ticks the local obstacle gate may hard-stop translation,
     #: with zero goal progress, before the mission accepts that as proof that
     #: the route it is holding cannot be executed by this body. Same 6.0 s at
@@ -2619,21 +2825,20 @@ class DirectiveNavigator:
             self.mission.metadata.pop("arrival_not_verified_reason", None)
         position = (robot_map.x, robot_map.y)
         if observation.extras.get("perception_fresh") is not True:
+            self.mission.metadata["arrival_not_verified_reason"] = "perception_stale"
             return False
         if not self._terminal_environment_is_clear(observation, relation=relation):
+            self.mission.metadata["arrival_not_verified_reason"] = (
+                "terminal_environment_not_clear"
+            )
             return False
-        candidate = _current_semantic_candidate(
-            observation,
-            self.mission.metadata,
-            expected_kind=self.mission.semantic_goal.kind,
-            minimum_confidence=self.mission.semantic_goal.minimum_confidence,
-            target_xy=self._tracked_target_xy(),
-            gate_m=self.CANDIDATE_ASSOCIATION_GATE_M
-            + float(self.mission.metadata.get("candidate_radius_m", 0.0) or 0.0),
-        )
+        candidate = self._resight_committed_candidate(observation)
         arrival_region = self._arrival_goal_region()
         if candidate is None:
             if relation != "inside" or arrival_region is None:
+                self.mission.metadata["arrival_not_verified_reason"] = (
+                    "target_not_resighted"
+                )
                 return False
             # Standing inside a region routinely puts its centroid outside
             # the camera frustum, so a same-tick re-sighting is the wrong
@@ -2649,6 +2854,7 @@ class DirectiveNavigator:
                 clearance,
             )
         if arrival_region is not None and not arrival_region.contains(position[0], position[1]):
+            self.mission.metadata["arrival_not_verified_reason"] = "outside_arrival_region"
             return False
         # Stratum-2 evidence half of the ONE K0 predicate. Geometry says "I am
         # in the right place"; evidence says "and the thing I came for is
@@ -2657,6 +2863,9 @@ class DirectiveNavigator:
         # exist. Region membership keeps pure GoalRegion geometry (the branch
         # above, where no live candidate is required at all).
         if not self._arrival_evidence_verified(relation):
+            self.mission.metadata.setdefault(
+                "arrival_not_verified_reason", "arrival_evidence_insufficient"
+            )
             return False
         if relation == "inside":
             polygon = _polygon(candidate.get("polygon"))
@@ -2683,14 +2892,21 @@ class DirectiveNavigator:
                     or maximum_surface < minimum_surface
                     or not minimum_surface - 1e-6 <= target_clearance <= maximum_surface + 1e-6
                 ):
+                    self.mission.metadata["arrival_not_verified_reason"] = (
+                        "target_surface_unobserved"
+                        if target_clearance is None
+                        else "surface_clearance_out_of_band"
+                    )
+                    self.mission.metadata["arrival_target_clearance_m"] = (
+                        None if target_clearance is None else float(target_clearance)
+                    )
                     return False
-                support = _polygon(self.mission.metadata.get("support_polygon"))
-                support_clearance = float(
-                    self.mission.metadata.get("terminal_support_clearance_m", 0.32)
-                )
-                return not support or point_in_polygon_with_clearance(
-                    position, support, support_clearance
-                )
+                if not self._on_support_surface(position[0], position[1]):
+                    self.mission.metadata["arrival_not_verified_reason"] = (
+                        "outside_support_polygon"
+                    )
+                    return False
+                return True
             # next_to / towards: GoalRegion membership is the spatial authority.
             return True
         return False
@@ -2833,6 +3049,48 @@ class DirectiveNavigator:
                 return None
         return None
 
+    def _on_support_surface(self, x: float, y: float) -> bool:
+        """Is ``(x, y)`` on the committed target's support surface (or is there none)?
+
+        A ``near`` arrival requires standing ON the object's support polygon (the
+        sidewalk it stands on) with footprint clearance. One place answers it, so
+        the arrival TRIGGER (``_inside_arrival_goal_region``) and the terminal
+        VERIFICATION (``_semantic_arrival_verified``) cannot disagree about the
+        surface. Objects with no support polygon place no such constraint.
+        """
+
+        if self.mission is None:
+            return True
+        support = _polygon(self.mission.metadata.get("support_polygon"))
+        if not support:
+            return True
+        support_clearance = float(
+            self.mission.metadata.get("terminal_support_clearance_m", 0.32)
+        )
+        return point_in_polygon_with_clearance((x, y), support, support_clearance)
+
+    def _resight_committed_candidate(self, observation: NavObservation) -> Any:
+        """The committed target re-sighted in THIS frame, or ``None``.
+
+        One place asks "is the thing I came for visible right now", so the
+        arrival TRIGGER and the terminal VERIFICATION cannot disagree about it —
+        the near arrival trigger uses it to avoid stopping to verify while still
+        facing away from the target (whose re-sighting the verification then
+        requires), and the verification uses it as the evidence gate.
+        """
+
+        if self.mission is None or self.mission.semantic_goal is None:
+            return None
+        return _current_semantic_candidate(
+            observation,
+            self.mission.metadata,
+            expected_kind=self.mission.semantic_goal.kind,
+            minimum_confidence=self.mission.semantic_goal.minimum_confidence,
+            target_xy=self._tracked_target_xy(),
+            gate_m=self.CANDIDATE_ASSOCIATION_GATE_M
+            + float(self.mission.metadata.get("candidate_radius_m", 0.0) or 0.0),
+        )
+
     def _inside_arrival_goal_region(self, observation: NavObservation) -> bool:
         if self.mission is None or self.mission.status != "running":
             return False
@@ -2847,7 +3105,35 @@ class DirectiveNavigator:
             return False
         # MAP: K0 arrival authority. A GoalRegion is a world-frame object.
         robot_map = _pose_in(observation, MAP_FRAME)
-        return bool(region.contains(robot_map.x, robot_map.y))
+        if not region.contains(robot_map.x, robot_map.y):
+            return False
+        # The `near` K0 band is a full annulus, but a valid STAND pose
+        # additionally lies on the object's support surface (the sidewalk it
+        # stands on) — exactly what `_semantic_arrival_verified` enforces at
+        # terminal verification. The arrival TRIGGER must read the same region,
+        # or the robot stops to verify the instant it crosses the band from the
+        # off-surface side (approaching the lamppost across the road, band edge
+        # at y≈1.77 due south of a sidewalk that starts at y=2.2) and then fails
+        # support-polygon verification having never reached the surface — the
+        # 'walks to the object, declares failure 3/3' defect. One region,
+        # checked identically at trigger and at verify; a NARROWING of the
+        # trigger, never a widening of any band. Objects with no support polygon
+        # are unaffected (the whole annulus stays valid).
+        if self.mission.semantic_goal.terminal_relation == "near":
+            if not self._on_support_surface(robot_map.x, robot_map.y):
+                return False
+            # The near verification additionally requires the target re-sighted
+            # in-frame. Triggering the stop on band membership alone lets the
+            # robot halt while still facing along its approach heading (not at
+            # the target) — the band is a full annulus but the planned approach
+            # pose faces the anchor, and only there is the anchor in frustum.
+            # Deferring the trigger until the target is actually re-sighted lets
+            # the robot finish the approach and its terminal heading align, so
+            # the very next verification tick can succeed instead of failing
+            # 'target_not_resighted' from a pose that never faced the anchor.
+            if self._resight_committed_candidate(observation) is None:
+                return False
+        return True
 
     def _build_arrival_goal_region(
         self,

@@ -2,7 +2,9 @@
 
 Start with the status and decision records. They distinguish what is working in
 this checkout from target architecture and research proposals. This index was
-last audited against the repository worktree on **2026-08-04**.
+amended on **2026-08-09** for the navigation and embodied-expression review.
+The broader operational snapshot remains dated in `CURRENT_STATUS.md` and must
+not be inferred from this index date.
 
 | Doc | Role |
 | --- | --- |
@@ -18,8 +20,10 @@ last audited against the repository worktree on **2026-08-04**.
 | --- | --- |
 | [MOTION.md](MOTION.md) | Closed-loop `ControlManager` and Unitree Sport commissioning |
 | [COMPANION_NAVIGATION_ARCHITECTURE.md](COMPANION_NAVIGATION_ARCHITECTURE.md) | Hierarchical companion navigation / instruction-following |
+| [NAVIGATION_ALGORITHM_2026.md](NAVIGATION_ALGORITHM_2026.md) | **Current navigation research decision:** detailed algorithms, interfaces, controller/model placement, phases, and promotion gates |
 | [NAVIGATION_CITY.md](NAVIGATION_CITY.md) | City navigation registry, `grid_v1` default, MetaUrban path |
 | [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md) | Living-city MuJoCo scene and social action policy |
+| [EMBODIED_EXPRESSION.md](EMBODIED_EXPRESSION.md) | Simulator pose/gesture palette, reaction arbitration, and physical Unitree commissioning boundary |
 | [DEVELOPMENT_STACK.md](DEVELOPMENT_STACK.md) | Local voice + sim development profile |
 | [VOICE_AI_MODELS.md](VOICE_AI_MODELS.md) | STT/TTS/reasoner model choices and trust boundary |
 | [AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md) | Latency metrics and owner-relative spatial commands |

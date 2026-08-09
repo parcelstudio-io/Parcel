@@ -1,6 +1,7 @@
 # Companion navigation and instruction-following architecture
 
-Current implementation snapshot (2026-08-04), aligned with
+Current implementation snapshot (2026-08-04), with the navigation
+safety-ordering correction audited on 2026-08-09, aligned with
 [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md). This document
 describes the default implemented code path, not a target architecture or a
 claim of physical deployment.
@@ -26,8 +27,8 @@ final audio/text + camera/LiDAR tracks + task/control state
        `-> SpatialBehaviorController (bounded relative move / owner orbit)
   -> CommandArbiter (one time-limited velocity intent)
   -> acceleration smoothing
-  -> final runtime proximity + constant-velocity TTC gates
-  -> jerk-limited actuator hand-off (hard stops bypass it)
+  -> runtime proximity + constant-velocity TTC gates
+  -> jerk-limited actuator hand-off
   -> ControlManager (limits, feedback, lifecycle, watchdog, E-stop)
   -> simulator adapter or Unitree Sport Move/StopMove
   -> fresh robot/perception feedback closes the task loop
@@ -59,9 +60,12 @@ classical global-plan/local-control/independent-shield split.
 `DirectiveNavigator` also applies `navigation/collision.py` to its own output.
 That is useful local defense, but it is not the universal safety boundary. The
 runtime applies `reactive_safety.py` and a configured constant-velocity
-time-to-collision brake after arbitration and smoothing to manual, voice,
-follow, search, spatial, and navigation commands alike. The later S-curve
-shaper cannot release a stop: all stop paths use its emergency bypass.
+time-to-collision brake after arbitration and the first smoother to manual,
+voice, follow, search, spatial, and navigation commands alike. A 2026-08-09
+audit found that the later S-curve shaper's emergency branch decelerates toward
+zero rather than reasserting exact zero. Thus the environmental gate is shared
+but is not yet the required non-relaxable **post-shaper** authority. Explicit
+E-stop/manager-stop paths remain stronger; closing this ordering defect is P0.
 `ControlManager` then adds controller-state safety—fresh feedback, finite
 limits, tilt/fault checks, command expiry, stop confirmation, and the software
 E-stop—but it has no camera or LiDAR view of its own.

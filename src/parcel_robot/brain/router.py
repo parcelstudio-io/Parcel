@@ -56,6 +56,28 @@ _CORRECTION = re.compile(
 # outside``). The transcript stays authoritative; this expression only selects
 # the deliberative route and never performs decomposition itself.
 _COMPOUND = re.compile(r"\b(?:and(?:\s+then)?|then|after\s+(?:that|you)|before\s+you|while)\b")
+
+
+def split_compound_clauses(text: str) -> list[str]:
+    """Split a compound physical request into its ordered clauses.
+
+    Cuts the transcript at the SAME ``_COMPOUND`` conjunctions the router
+    matches to route a compound to the deliberative lane, so "detect" and
+    "split" cannot disagree about what a compound is. It grounds nothing and
+    compiles no plan — it exists so the no-planner fallback can NAME the parts
+    ("go to the sidewalk", "sit") in a clarification instead of compiling the
+    whole string as one literal destination label. Empty and
+    pure-conjunction fragments are dropped; a string with no conjunction
+    returns ``[itself]``.
+    """
+
+    clean = " ".join(str(text).strip().split())
+    if not clean:
+        return []
+    clauses = [fragment.strip(" ,.;") for fragment in _COMPOUND.split(clean)]
+    return [fragment for fragment in clauses if fragment] or [clean]
+
+
 _QUESTION = re.compile(
     r"^(?:what|why|how|who|when|where|which|tell\s+me|explain|do\s+you|are\s+you)\b"
 )
@@ -64,7 +86,7 @@ _GREETING = re.compile(
 )
 _PHYSICAL_CUE = re.compile(
     r"\b(?:walk(?:ed|ing)?|move|go|navigate|follow|heel|stay|wait|stand|sit|bow|pose|gesture|"
-    r"circle|orbit|turn|back\s+away|come|run|stop)\b"
+    r"circle|orbit|turn|back\s+away|come|run|stop|trot(?:ting|s)?|jog(?:ging|s)?|scoot(?:ing|s)?)\b"
 )
 _NON_AUTHORITATIVE = re.compile(
     r"(?:\b(?:do\s+not|don't|dont|never|imagine|hypothetical(?:ly)?)\b|"

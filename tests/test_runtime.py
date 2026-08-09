@@ -1593,11 +1593,11 @@ def test_social_affect_action_runs_from_idle_without_model(
     try:
         assert runtime.handle_text("I am feeling sad") == "I'm here with you."
         pending = runtime.snapshot()["activities"]["pending"]
-        assert pending[0]["name"] == "play_bow"
+        assert pending[0]["name"] == "comfort_bow"
 
         runtime.start()
         assert backend.wait_for_trajectories(1)
-        assert backend.trajectories[0].id == "play_bow"
+        assert backend.trajectories[0].id == "comfort_bow"
     finally:
         runtime.close()
 

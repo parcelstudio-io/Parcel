@@ -13,7 +13,7 @@ from parcel_robot.agent import VoiceAgent
 from parcel_robot.attention.stimuli import StimulusKind
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.contracts.v1 import DialogueStateMsg, SCHEMA_VERSION
+from parcel_robot.contracts.v1 import SCHEMA_VERSION, DialogueStateMsg
 from parcel_robot.instructnav.grounding import GroundingOutcome, GroundingResult
 from parcel_robot.models import VelocityCommand
 from parcel_robot.runtime import RobotRuntime
@@ -116,15 +116,15 @@ def test_dialogue_state_publish_consume_and_ttl() -> None:
 
 
 def test_t2_mapping_phases() -> None:
-    base = dict(
-        schema_version=SCHEMA_VERSION,
-        channel="dialogue_state",
-        turn_id="t1",
-        published_monotonic_ns=0,
-        expires_monotonic_ns=DIALOGUE_STATE_TTL_NS,
-        sequence=1,
-        engagement=0.9,
-    )
+    base = {
+        "schema_version": SCHEMA_VERSION,
+        "channel": "dialogue_state",
+        "turn_id": "t1",
+        "published_monotonic_ns": 0,
+        "expires_monotonic_ns": DIALOGUE_STATE_TTL_NS,
+        "sequence": 1,
+        "engagement": 0.9,
+    }
     listening = DialogueStateMsg(**base, phase="listening")
     thinking = DialogueStateMsg(**base, phase="thinking")
     speaking = DialogueStateMsg(**base, phase="speaking")
@@ -214,11 +214,13 @@ def test_agent_goal_amend_via_handler_metrics() -> None:
 
     agent = VoiceAgent({}, [], lambda _pose: None, closed_intent_handler=handler)
     agent_box["agent"] = agent
-    # No planner adapters → waits after successful pause.
+    # No planner adapters and an anaphoric replacement ("the other lamppost")
+    # → the amendment gives an HONEST, non-hanging reply after the successful
+    # pause (card no-llm-honesty), not the old ``deferred_no_planner`` stall.
     reply = agent.handle_text("instead the other lamppost")
     assert seen == ["goal-amend"]
     assert "revise" in reply.lower()
-    assert agent.last_brain_metrics.get("goal_amend_replan") == "deferred_no_planner"
+    assert agent.last_brain_metrics.get("goal_amend_replan") == "no_planner_honest"
 
 
 def test_runtime_dialogue_state_tick_and_pace(

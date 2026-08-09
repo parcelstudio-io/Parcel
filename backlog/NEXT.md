@@ -473,7 +473,22 @@ the evaluated commit — the paper is under review and the repo is young.
 Pays three times: an external comparison number, the recipe donor for N2, and
 metric alignment for the in-house eval.
 
-## N20 — Re-plan after a yield give-up, instead of ending the mission · **hours** · needs a navigation-side hand-off
+## N20 — Re-plan after a yield give-up, instead of ending the mission · **LANDED 2026-08-09**
+
+**Closed (card n20-person-release).** `DirectiveNavigator.release_current_candidate(reason) -> bool`
+(`navigation/pipeline.py`) is the runtime-callable entry point; it drives the
+existing single release door (`_release_unreachable_candidate`) — the same
+exclusion set and replan budget A\*, the obstacle gate, and the approach solver
+share, so there is no second person-stop dwell counter (the D5 rule). The
+runtime's yield policy calls it at give-up (`runtime.py::_yield_release_and_replan`,
+before the give-up line is spoken): a replan may find an alternative and the
+mission continues, or the ladder is spent and the honest end stands. Pinned in
+`tests/test_yield_policy.py` (navigation entry point + runtime wiring, with
+person-stop still zeroing every gated tick). The traffic e2e stays xfail on U35 /
+the stratum-3 region-instance decision — a pedestrian STREAM blocks every
+alternative approach, so release alone does not flip it (reason text updated).
+
+The original hand-off, for the record:
 
 The yield policy (2026-08-08, card P-1,
 [../docs/YIELD_POLICY.md](../docs/YIELD_POLICY.md)) ends a mission honestly

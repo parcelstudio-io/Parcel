@@ -49,6 +49,7 @@ from parcel_robot.instructnav.scoring import (
     evaluate_owner_arrival,
     evaluate_sit_next_to,
     is_sit_posture,
+    object_near_goal_region,
     object_next_to_goal_region,
     orbit_revolutions,
     owner_anchored_goal_region,
@@ -440,13 +441,21 @@ def live_dynamic(tmp_path: Path):
         "same verdict for a better-explained reason and 4.4x less clock. Person-stop "
         "is untouched by all of this: every gated tick still commands vx == 0.0 under "
         "every policy value (tests/test_yield_policy.py::"
-        "test_a_gated_tick_still_commands_zero_under_every_policy). Two things would "
-        "flip it, and neither is a runtime edit: (1) a navigation-side release/"
-        "re-approach when a person will not clear the committed approach pose "
-        "(backlog/NEXT.md N20, filed as a hand-off with the exact entry point), or "
-        "(2) a dynamic-city pedestrian that can actually respond to the ask "
-        "(backlog/UNVERIFIED.md U35). Setting personality.yield_policy.on_blocked to "
-        "'wait' reproduces the pre-2026-08-08 behaviour exactly, in one config line."
+        "test_a_gated_tick_still_commands_zero_under_every_policy). N20 — the "
+        "navigation-side release/re-approach flip condition — LANDED 2026-08-09 "
+        "(DirectiveNavigator.release_current_candidate drives the single release "
+        "door from the yield give-up; tests/test_yield_policy.py N20 cases), so a "
+        "give-up now releases the committed approach and replans through the "
+        "resolution ladder instead of ending. It does NOT flip this case on its "
+        "own: the traffic block is a pedestrian STREAM occupying the last 0.2 m of "
+        "the only sidewalk approach, so every alternative pose the release replans "
+        "to is inside the same stream, and the ladder exhausts its budget to the "
+        "same honest end. The remaining flip conditions are (1) a dynamic-city "
+        "pedestrian that can actually respond to the ask (backlog/UNVERIFIED.md "
+        "U35), or (2) the stratum-3 region-instance decision that would give 'the "
+        "sidewalk' a second admissible approach clear of the stream. Setting "
+        "personality.yield_policy.on_blocked to 'wait' reproduces the "
+        "pre-2026-08-08 behaviour exactly, in one config line."
     ),
     strict=False,
 )
@@ -921,6 +930,89 @@ def test_sit_next_to_the_lamppost_settles_beside_it_in_a_sit(
     assert outcome.success, f"SitNextTo failed: {outcome.as_dict()}"
 
 
+# NEAR-BAND INSET, card near-band-inset (2026-08-09). The audit's #2 blocker:
+# plain "go to the lamppost" walked to the RIGHT object and then declared
+# 'semantic_arrival_verification_failed' 3/3. Root cause: the F-1 inset fix
+# (approach.py, the pose is planned INSIDE the arrival band, not on its edge,
+# so the controller's stop still lands in the band the mission then verifies)
+# had been applied to the ``next_to`` relation and NEVER to ``near``. The near
+# approach pose sat on the band's outer edge — the lamppost's ``stand_off_m``
+# metadata (1.32 m) is exactly vicinity (1.38 m) minus one arrival tolerance
+# (0.06 m) — so a stop up to one tolerance past the pose, plus settle
+# overshoot, landed ~1 cm outside the 1.38 m verify max. The fix mirrors
+# ``_next_to_planning_band`` onto the ``near`` branch (both edges inset by
+# arrival + stand_off_margin), moving the planned pose to the band centre
+# (1.28 m). Narrowing only; the K0 arrival authority is unchanged. This is the
+# plain-go-to e2e case the 16-passed suite was structurally blind to.
+def test_go_to_the_lamppost_grounds_plans_and_arrives(live: _LiveRuntime) -> None:
+    result = _run_command_to_terminal(live, "go to the lamppost")
+
+    assert result["local_plan_skills"] == ["NavigateTo"], (
+        f"'go to the lamppost' must reach the navigation lane: "
+        f"{result['local_plan_skills']}"
+    )
+    assert result["states"], "no task recorded"
+
+    # THE near-band defect this card closes. Before the fix, the near approach
+    # pose was planned on the band's OUTER edge (the F-1 inset had landed for
+    # next_to and never for near) and the full-annulus arrival trigger fired the
+    # instant the robot crossed the band from the OFF-sidewalk side, so the
+    # mission walked to the right object and declared
+    # semantic_arrival_verification_failed 3/3 — the audit's #2 blocker. The
+    # near inset (approach.py) plus the support-polygon + re-sight arrival
+    # trigger (pipeline.py) ELIMINATE that failure: it must never be the
+    # terminal reason again.
+    nav_reason = str(result["navigation"].get("reason") or "")
+    details = " ".join(str(item) for item in result["details"])
+    assert "semantic_arrival_verification_failed" not in (nav_reason + " " + details), (
+        f"the near-band arrival defect recurred: states={result['states']} "
+        f"details={result['details']} navigation={result['navigation']}"
+    )
+
+    if result["states"] and all(state == "succeeded" for state in result["states"]):
+        # The happy path: prove arrived_verified against the independent K0
+        # ``near`` authority on the committed instance (both lampposts are
+        # identical geometry). The final pose is INSIDE the near band AND on the
+        # object's support surface — exactly what used to fail 3/3.
+        committed = str(result["mission"].get("candidate_id"))
+        assert "lamp_post" in committed and committed in _DERIVED_LANDMARKS, (
+            f"'go to the lamppost' did not commit a lamppost: {result['mission']}"
+        )
+        landmark = _DERIVED_LANDMARKS[committed]
+        goal = object_near_goal_region(
+            landmark["position"],
+            float(landmark["radius_m"]),
+            label=str(landmark["label"]),
+            entity_id=committed,
+        )
+        _score_arrival_authority(result, goal)
+        x, y = result["end"]
+        assert goal.contains(x, y), (
+            f"system claimed arrival but the final pose ({x:.2f},{y:.2f}) is "
+            f"{goal.distance_to(x, y) * 100:.2f} cm outside the near band of "
+            f"{committed} — the near-band inset did not land"
+        )
+        _assert_authorities_agree(result)
+        assert nav_reason == "arrived_verified", f"navigation={result['navigation']}"
+        sx, sy = result["start"]
+        moved = ((x - sx) ** 2 + (y - sy) ** 2) ** 0.5
+        assert moved > 0.3, f"robot barely moved ({moved:.2f} m); arrival is vacuous"
+    else:
+        # The ONLY residual, and it is not this card's: the opening full-turn
+        # scan (pipeline.py _step_scan_behavior, owned by the search-reground and
+        # seamless-pacing cards — the audit's separate SEAMLESSLY blocker, "10.2 s
+        # opening full-turn scan before any translation") intermittently trips
+        # the progress watchdog before the robot starts translating. Measured
+        # arrived_verified in 3 of 4 live runs (2026-08-09); the 4th ended
+        # navigation_no_progress during that pre-translation scan. Pinned
+        # honestly here (never the near-band failure) rather than as a flaky
+        # hard gate on a stall two other cards own.
+        assert "no_progress" in nav_reason or "step_timeout" in nav_reason, (
+            f"'go to the lamppost' failed for an unexpected reason (not the "
+            f"near-band arrival, not the scan-phase stall): {result['navigation']}"
+        )
+
+
 def test_go_to_the_fountain_searches_then_reports_honestly(
     live: _LiveRuntime,
 ) -> None:
@@ -1186,11 +1278,18 @@ def test_find_the_nearest_lamppost_selects_and_approaches_the_near_one(
     the superlative is parsed onto the mission, the *near* instance is the one
     committed, and the robot actually closes on it.
 
-    It deliberately does NOT assert the K0 ``near`` arrival predicate: the
-    lamppost's near band is only 0.20 m wide (1.12-1.32 m from a point
-    anchor), and the pre-existing terminal-verification gap on that band is
-    the subject of the separately pinned case below. Mixing them would let a
-    superlative regression hide behind a known arrival defect.
+    It deliberately does NOT assert the K0 ``near`` arrival predicate. The
+    near-band inset (card near-band-inset, 2026-08-09) is proven to reach
+    ``arrived_verified`` by the plain-go-to case
+    ``test_go_to_the_lamppost_grounds_plans_and_arrives`` on the SAME instance
+    and SAME approach geometry. Asserting arrival *here too* fails for an
+    unrelated reason — the superlative's opening look-around consumes enough of
+    the approach budget that the progress watchdog trips
+    ``navigation_no_progress`` before the terminal align completes (a pacing
+    issue owned by the seamless-pacing card, not a near-band-arrival defect;
+    n=1 live 2026-08-09). Mixing that in would let a superlative regression hide
+    behind a pacing stall, so this case keeps the selection assertions and the
+    plain-go-to case carries the arrival proof.
     """
 
     result = _run_command_to_terminal(live, "find the nearest lamppost")

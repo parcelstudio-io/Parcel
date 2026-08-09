@@ -14,6 +14,10 @@ from parcel_robot.instructnav.memory import (
     SemanticMemory,
     SemanticMemory2D,
 )
+from parcel_robot.instructnav.near_arrival import (
+    DEFAULT_BEARING_SAMPLES,
+    near_band_fallback_point,
+)
 from parcel_robot.instructnav.relations import (
     nearest_point_in_region,
     next_to_placement,
@@ -69,6 +73,7 @@ from parcel_robot.instructnav.siglip import EmbeddingMatch, SigLIP2Matcher
 
 __all__ = [
     "ARRIVAL_BOUNDARY_EPSILON_M",
+    "DEFAULT_BEARING_SAMPLES",
     "NEXT_TO_BAND_M",
     "SIDEWALK_BORDERS_ROAD_PRIORS",
     "TOWARDS_BAND_M",
@@ -103,6 +108,7 @@ __all__ = [
     "differential_arrival_verdict",
     "full_turn_scan_spec",
     "honest_not_found_reply",
+    "near_band_fallback_point",
     "nearest_point_in_region",
     "next_to_band_from_centre",
     "next_to_band_surface_slack_m",

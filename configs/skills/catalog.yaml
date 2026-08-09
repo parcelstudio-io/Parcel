@@ -9,6 +9,8 @@ skills:
 - crouch
 - look_left
 - look_right
+- attentive_stand
+- relaxed_crouch
 - jump
 - hop
 - kick_front
@@ -17,6 +19,10 @@ skills:
 - shake
 - recover_standup
 - play_bow
+- comfort_bow
+- happy_wiggle
+- attentive_nod
+- curious_look
 - trot
 - run
 - crawl

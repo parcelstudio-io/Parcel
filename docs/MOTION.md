@@ -1,7 +1,8 @@
 # Closed-loop locomotion and Unitree Sport
 
-Implementation snapshot: 2026-08-04. Parcel has one **body-velocity actuator
-owner**: `ControlManager`. Voice, navigation, owner search, follow, spatial
+Implementation snapshot: 2026-08-04, with a safety-ordering correction audited
+on 2026-08-09. Parcel has one **body-velocity actuator owner**:
+`ControlManager`. Voice, navigation, owner search, follow, spatial
 behavior, and manual control may propose motion, but only the manager's selected
 `LocomotionController` can deliver a body-velocity command.
 
@@ -25,7 +26,7 @@ voice / navigation / search / follow / spatial / manual
                  |
                  v
  jerk-limited actuator hand-off
-       (all stops bypass it)
+   (current emergency mode ramps toward zero)
                  |
                  v
  leased body-velocity target (base_link)
@@ -46,6 +47,16 @@ This fixes the previous split path in which a voice request could call
 `SportClient.Move` before runtime smoothing and collision checks while
 follow/navigation commands went only to the simulator.
 
+**Open P0 defect:** the ordinary proximity/TTC decision currently runs before
+the final S-curve shaper. That shaper's `emergency=True` path uses bounded
+deceleration rather than returning exact zero, so a safety veto can still leave
+a residual final velocity on that tick. Explicit E-stop/stop paths are stronger
+and reset/call the manager stop path, but the normal environmental veto is not
+yet the post-shaper exact-zero authority described by the target architecture.
+The required correction is a typed, non-relaxable post-shaper admission whose
+`EXACT_HOLD` reasserts `(0, 0, 0)` and resets shaper state. See
+[NAVIGATION_ALGORITHM_2026.md](NAVIGATION_ALGORITHM_2026.md).
+
 ## Where authority lives
 
 The body-velocity path has intentionally separate policy and transport
@@ -55,9 +66,9 @@ boundaries:
 | --- | --- | --- |
 | Behavior producers | A short-lived desired `VelocityCommand` | Priority, final collision decision, vendor I/O |
 | `CommandArbiter` | One active source by priority and TTL | Acceleration, perception, physical feedback |
-| `VelocitySmoother` | Bounded acceleration/deceleration | Safety authority; a safety stop bypasses gradual braking |
+| `VelocitySmoother` | Bounded acceleration/deceleration | Safety authority; environmental stops are evaluated after this stage |
 | Runtime proximity and TTC gates | Directional person/owner/obstacle slowdown or translation stop, plus constant-velocity dynamic-track braking, using fresh camera/LiDAR observations | Vendor state, balance, RPC delivery, or socially optimal prediction |
-| `SCurveVelocityShaper` | Per-axis acceleration/jerk limits at the final SE(2) hand-off; optional calm profile | Collision authority; every stop uses the emergency bypass, and the current calm signal is derived from the robot's synthesized speech rather than owner affect |
+| `SCurveVelocityShaper` | Per-axis acceleration/jerk limits at the final SE(2) hand-off; optional calm profile | Collision authority; its current emergency branch still ramps toward zero, and the current calm signal is derived from the robot's synthesized speech rather than owner affect |
 | `ControlManager` | Exclusive velocity writer, body limits, feedback freshness, controller faults/tilt, lease expiry, stop/E-stop lifecycle | Environmental collision perception or route planning |
 | Unitree Sport | Fast balance, gait, foot placement, and motor control for the requested body velocity | Semantic goals and external obstacle avoidance |
 
@@ -133,7 +144,7 @@ refuses to construct the physical controller until
 | Reuse Unitree Sport balance/gait | A proven onboard high-rate controller absorbs the hardest contact-control problem; Parcel can iterate on companion behavior safely at body-velocity level | Opaque firmware behavior, modes, tracking quality, foothold choices, and stop semantics remain vendor-specific |
 | Supervise Sport from Python | Python is appropriate for the current 10 Hz behavior loop and 50 Hz watchdog because hard real-time balance stays onboard | Python, DDS, and the host OS are not an independent real-time crash-stop layer; an onboard/native watchdog and physical E-stop remain required |
 | One leased `base_link` velocity contract | Simulator, Unitree, and a future vendor/custom controller share the same upper stack | A lowest-common-denominator SE(2) command cannot expose terrain-aware footsteps or whole-body maneuvers |
-| Two smoothers with a hard-stop bypass | Behavior commands change legibly and the actuator hand-off bounds jerk without delaying a safety stop | Cascaded filters add lag; the final response must be tuned and measured on the real Sport controller |
+| Two smoothers around the environmental gate | Behavior commands change legibly and the actuator hand-off bounds jerk | Cascaded filters add lag, and the current post-gate emergency ramp does not reassert exact zero; ordering and final response must be corrected and measured on Sport |
 | Feedback-confirm every physical stop | Prevents a transport acknowledgment from being mistaken for a stationary robot | Adds latency and rejects new motion if timestamps, sequence numbers, frame calibration, or feedback delivery are wrong |
 | Lazy vendor imports and registered factories | Normal simulation/test imports remain independent of Unitree SDK and a second vendor needs no generic-code edit | Process-global DDS and Unitree's non-releasable Python lease still require a dedicated physical driver process |
 | Fail-closed commissioning flags | Wrong mode/frame/axis assumptions cannot silently move hardware | Physical construction is intentionally impossible with the repository defaults until a human completes commissioning |
@@ -321,7 +332,7 @@ as forward motion.
 | Capability | Repository status | Evidence boundary |
 | --- | --- | --- |
 | Simulator body-velocity path through `ControlManager` | Implemented and used by `RobotRuntime` | Unit/integration tests and MuJoCo behavior only |
-| Runtime S-curve actuator shaping | Implemented after the collision gates with stop bypass and watchdog-state reset | The calm profile follows prosody measured from Parcel's own TTS audio; physical response/lag is unmeasured |
+| Runtime S-curve actuator shaping | Implemented after the collision gates; explicit stops reset it, while ordinary environmental vetoes use a bounded emergency ramp | The calm profile follows prosody measured from Parcel's own TTS audio; exact-zero post-shaper admission and physical response/lag remain unverified |
 | Vendor-neutral lifecycle and portability | Implemented; mock second-vendor adapter covers arming, motion, watchdog, stop, and E-stop | No second physical robot |
 | Unitree Sport DDS/RPC/state adapter | Implemented and tested with injected SDK doubles | Not run against a physical Go2 from this workstation |
 | Frame, axis, and allowed-mode gates | Implemented and defaulted closed | Values remain uncommissioned in `configs/robot.yaml` |

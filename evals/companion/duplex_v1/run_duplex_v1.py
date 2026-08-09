@@ -33,13 +33,20 @@ from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
-# Post-speed-raise follow-bench ledger row (shipped features, 2026-08-04).
+# Follow-bench ledger row the duplex nav-regression gate mirrors (shipped
+# features). RE-PINNED 2026-08-09 (card pedestrian-evidence-refresh): a fresh
+# run on the current tree — after the F-1 near-band inset, the surface-anchored
+# next_to band, and the yield policy — flipped follow_success 8/9 -> 9/9 with
+# hard collisions still 0 and navigate still 2/2, and jerk essentially unchanged
+# (0.553 -> 0.6025 m/s^3). The stale 2026-08-04 row (…104134Z, the earlier
+# lane's 8/9) is retained in the append-only ledger; this pin now tracks the
+# fresh 9/9 latest-shipped row, resolving the 8/9-vs-live-9/9 mismatch honestly.
 FOLLOW_BENCH_POST_SPEED = {
     "features": "shipped",
-    "follow_success": "8/9",
+    "follow_success": "9/9",
     "hard_collision_total": 0,
     "navigate_success": "2/2",
-    "report": "follow-bench-v1-20260804104134Z-d1adc373.json",
+    "report": "follow-bench-v1-20260809094511Z-601d8c6e.json",
 }
 
 # Embodied-plan aggregate mirror (authority:

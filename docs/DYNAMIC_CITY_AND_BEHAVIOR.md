@@ -1,7 +1,8 @@
 # Dynamic city, smooth navigation, and social actions
 
-Implementation snapshot: 2026-08-04. Living-city simulator and social-action
-policy for Parcel. Architecture context:
+Implementation snapshot: 2026-08-04, with emotion-palette and navigation
+safety-ordering corrections audited on 2026-08-09. Living-city simulator and
+social-action policy for Parcel. Architecture context:
 [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) and
 [NAVIGATION_CITY.md](NAVIGATION_CITY.md).
 
@@ -52,8 +53,10 @@ malformed payload logs a warning and drops the soft layer for that tick. The
 universal proximity gate still consumes the simulator's earliest social
 contact candidate (which can be the owner), while the later configured TTC
 gate recomputes contact for non-owner dynamic tracks against the outgoing
-command and can only reduce it. Neither layer models prediction uncertainty or
-social intent.
+command and can only reduce the command at that gate. The later S-curve shaper
+can still leave residual velocity while decelerating, which the 2026-08-09 audit
+marks as a P0 ordering defect. Neither dynamic layer models prediction
+uncertainty or social intent.
 
 The expression layer is now also live in this backend. A separate 50 Hz channel
 publishes bounded body-height/pitch offsets for idle breathing and weight shift;
@@ -138,14 +141,16 @@ supported end to end and remains useful for manual strafing, close repositioning
 recovery, and planners that intentionally request it. It is simply not the
 preferred mode for sustained progress toward a particular location. Any lateral
 request remains acceleration- and safety-limited like forward motion. Obstacle
-avoidance uses the same alignment handoff before translating. Safety/E-stop can
-still force translation to zero immediately. The simulator also preserves gait
+avoidance uses the same alignment handoff before translating. Explicit E-stop
+uses the stronger manager stop path; ordinary environmental vetoes require the
+post-shaper exact-zero correction described above. The simulator preserves gait
 phase when the 10 Hz runtime refreshes an otherwise compatible walk command.
 
 The configured speed numbers have different authority. `grid_v1` now requests
 up to `0.85 m/s`, the default navigation pipeline caps its output at
 `0.45 m/s`, and the wider body-level clamp is `1.0 m/s`. A post-safety S-curve
-shaper bounds acceleration and jerk but bypasses every stop. The current calm
+shaper bounds acceleration and jerk; ordinary environmental vetoes currently
+enter its bounded emergency ramp. The current calm
 profile is driven by prosody measured from the robot's own synthesized speech,
 not by a classifier of the owner's mood. These simulator pacing changes have
 not been commissioned on hardware.
@@ -194,7 +199,7 @@ not the next velocity tick. The strict result allows one bounded skill:
   "affect": {"label": "sad", "confidence": 0.86},
   "next_action": {
     "kind": "skill",
-    "name": "play_bow",
+    "name": "comfort_bow",
     "trigger": "inferred_affect",
     "timing_preference": "when_safe",
     "interruption_request": "none",
@@ -293,6 +298,10 @@ agent:
     proposal_ttl_s: 20
 ```
 
-Try `I am feeling sad` (queues `play_bow`) or `I am very happy` (queues
-`paw_wave`, which lifts a leg and returns to stand). If navigation is active,
-the event stream shows the gesture deferred until the robot arrives.
+The current profiles map sadness to the self-returning `comfort_bow` (or the
+restrained `attentive_nod` for calm guardian), while happiness maps to
+`paw_wave`, `happy_wiggle`, or `attentive_nod`. `play_bow` now means an explicit
+invitation to play rather than sadness. If navigation is active, the event
+stream shows the gesture deferred until the robot arrives. The added custom
+joint trajectories are simulator-only and hardware-unverified; see
+[EMBODIED_EXPRESSION.md](EMBODIED_EXPRESSION.md).

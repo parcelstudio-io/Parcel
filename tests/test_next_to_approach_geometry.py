@@ -39,9 +39,15 @@ from parcel_robot.authority import DEFAULT_STAND_OFF_ENVELOPE
 from parcel_robot.instructnav.scoring import (
     NEXT_TO_BAND_M,
     next_to_band_from_centre,
+    object_near_envelope_m,
+    object_near_goal_region,
     object_next_to_goal_region,
 )
-from parcel_robot.navigation.approach import _next_to_planning_band, safe_approach_pose
+from parcel_robot.navigation.approach import (
+    _near_planning_band,
+    _next_to_planning_band,
+    safe_approach_pose,
+)
 from parcel_robot.navigation.base import NavObservation
 from parcel_robot.navigation.goals import semantic_goal_from_directive
 from parcel_robot.navigation.semantic_map import SemanticCandidate
@@ -238,6 +244,167 @@ def test_the_pre_fix_edge_pose_is_exactly_the_measured_7_cm_miss():
     assert object_next_to_goal_region(anchor, 0.0).distance_to(
         *measured_live
     ) == pytest.approx(0.070, abs=5e-4)
+
+
+# --- 1b. the SAME inset, for the ``near`` relation (card near-band-inset) ---
+#
+# The F-1 inset shape above was applied to ``next_to`` on 2026-08-07 and NEVER
+# to ``near``, so plain "go to the lamppost" walked to the right object and
+# then declared ``semantic_arrival_verification_failed`` 3/3: the lamppost's
+# ``stand_off_m`` metadata (1.32 m) is the band's OUTER edge (vicinity 1.38 m −
+# arrival_radius 0.06 m), so the controller's stop — up to one tolerance past
+# the pose in any direction, plus settle overshoot — landed ~1 cm outside the
+# 1.38 m verify max. These pin the mirrored fix.
+
+
+def _near_metadata(radius_m: float, label: str = "lamppost") -> dict:
+    """Faithful ``near`` candidate metadata, from the shared K0 envelope."""
+
+    stand_off, minimum, vicinity = object_near_envelope_m(radius_m, label=label)
+    return {
+        "radius_m": radius_m,
+        "arrival_radius_m": 0.06,
+        "stand_off_m": stand_off,
+        "minimum_vicinity_radius_m": minimum,
+        "vicinity_radius_m": vicinity,
+        "target_min_surface_clearance_m": 0.8,
+    }
+
+
+def _near_pose_for(anchor, radius_m: float, label: str = "lamppost"):
+    goal = semantic_goal_from_directive("go to the lamppost")
+    assert goal is not None and goal.terminal_relation == "near"
+    candidate = SemanticCandidate(
+        candidate_id="target-1",
+        label=label,
+        kind="object",
+        x=anchor[0],
+        y=anchor[1],
+        z=0.0,
+        confidence=0.98,
+        source="test",
+        reachable=True,
+        metadata=_near_metadata(radius_m, label),
+    )
+    # Robot approaching the lamppost from the south, no obstacles.
+    observation = NavObservation(
+        position=(anchor[0], anchor[1] - 4.0, 0.0), heading_deg=90.0, extras={}
+    )
+    return safe_approach_pose(
+        goal, candidate, observation,
+        footprint_clearance_m=FOOTPRINT_M, obstacle_stop_m=OBSTACLE_STOP_M,
+    )
+
+
+@pytest.mark.parametrize("radius_m", [0.0, 0.06, 0.3, 0.45])
+def test_the_near_planner_and_arrival_authority_read_ONE_band(radius_m: float):
+    """The planning band is the *verified* near band, inset by the tolerance.
+
+    The arrival authority verifies the near band ``[minimum_vicinity,
+    vicinity]`` (``object_near_goal_region`` / the pipeline terminal check),
+    and the planner insets that same band by ``arrival_radius +
+    stand_off_margin`` on both edges. There is no second radius: pass the
+    identical edges to both and the inset is exact.
+    """
+
+    _stand_off, minimum, vicinity = object_near_envelope_m(radius_m, label="lamppost")
+    verified = object_near_goal_region((1.0, -2.0), radius_m, label="lamppost").band_m
+    assert verified == pytest.approx((minimum, vicinity))
+
+    arrival = 0.06
+    inset = arrival + DEFAULT_STAND_OFF_ENVELOPE.stand_off_margin_m
+    lo, hi = _near_planning_band(minimum, vicinity, arrival)
+    # A narrowing (never a widening); lo == hi is a razor-thin-but-valid band.
+    assert lo >= verified[0] and hi <= verified[1]
+    if hi > lo:
+        assert (lo, hi) == pytest.approx((verified[0] + inset, verified[1] - inset))
+
+
+def test_the_lamppost_near_band_collapses_to_its_midpoint_not_to_empty():
+    """The lamppost near band is razor-thin *by construction*, not empty.
+
+    Its width (vicinity − minimum_vicinity = 0.20 m) is exactly twice the inset
+    (0.06 + 0.04), so both inset edges land on the same 1.28 m midpoint and
+    float rounding makes ``lo`` exceed ``hi`` by ~4e-16. That is one admissible
+    ring, not "no such pose exists".
+    """
+
+    _, minimum, vicinity = object_near_envelope_m(0.06, label="lamppost")
+    lo, hi = _near_planning_band(minimum, vicinity, 0.06)
+    assert lo == pytest.approx(hi)
+    assert lo == pytest.approx(1.28)
+
+
+def test_the_planned_near_pose_moves_off_the_outer_edge_to_the_band_centre():
+    """The whole fix, as a single number: 1.32 m -> 1.28 m for the lamppost.
+
+    Before, the pose sat at ``stand_off_m`` = 1.32 m (the band's outer edge), so
+    the worst-case outward stop was 1.32 + 0.06 = 1.38 m == vicinity exactly and
+    any settle overshoot failed verification. After, it sits at the band centre
+    (1.28 m), leaving one ``stand_off_margin`` (0.04 m) of headroom each side.
+    """
+
+    anchor = (0.2, 3.15)  # lamp_post_1, live city
+    pose = _near_pose_for(anchor, 0.06)
+    assert pose is not None
+    planned = math.hypot(pose.x - anchor[0], pose.y - anchor[1])
+    assert planned == pytest.approx(1.28, abs=1e-6)
+
+
+@pytest.mark.parametrize(
+    ("anchor", "radius_m"),
+    [
+        ((0.2, 3.15), 0.06),  # lamp_post_1, live city
+        ((3.0, 0.0), 0.3),  # metadata-default radius
+        ((-2.0, 2.0), 0.45),  # planter-scale
+    ],
+)
+def test_every_near_pose_the_controller_may_stop_at_is_inside_the_verified_band(
+    anchor, radius_m
+):
+    """The invariant the 1 cm miss violated, as geometry, for ``near``.
+
+    The controller declares arrival anywhere within ``arrival_radius`` of the
+    pose. Every point of that disc — worst case radially in/out along the anchor
+    ray — must satisfy the K0 near predicate, or the mission can be driven to a
+    place it will then refuse to verify.
+    """
+
+    pose = _near_pose_for(anchor, radius_m)
+    assert pose is not None
+    region = object_near_goal_region(anchor, radius_m, label="lamppost", entity_id="target-1")
+    tolerance = pose.arrival_radius_m
+    assert tolerance is not None
+    planned = math.hypot(pose.x - anchor[0], pose.y - anchor[1])
+    assert region.contains(pose.x, pose.y)
+    assert region.contains(*_along_ray(anchor, pose, planned + tolerance)), (
+        "a stop at the far edge of the arrival tolerance leaves the near band"
+    )
+    assert region.contains(*_along_ray(anchor, pose, planned - tolerance))
+
+
+def test_the_pre_fix_near_edge_pose_is_the_measured_1_cm_miss():
+    """Regression witness: the old band-edge near pose, in numbers.
+
+    ``lamp_post_1``'s near band ends at vicinity = 1.38 m. The old solver placed
+    the pose at ``stand_off_m`` = 1.32 m, one arrival tolerance (0.06 m) short of
+    that edge, so the controller's outward stop reached the edge exactly and any
+    overshoot left the band. The inset planning band is what keeps a *planned*
+    pose off the edge.
+    """
+
+    anchor = (0.2, 3.15)
+    _, _minimum, vicinity = object_near_envelope_m(0.06, label="lamppost")
+    region = object_near_goal_region(anchor, 0.06, label="lamppost", entity_id="lamp_post_1")
+    assert vicinity == pytest.approx(1.38)
+
+    on_the_edge = (anchor[0], anchor[1] - vicinity)
+    just_past = (anchor[0], anchor[1] - (vicinity + 0.011))  # the ~1 cm live miss
+    assert region.contains(*on_the_edge)
+    assert not region.contains(*just_past)
+    # The old pose at stand_off_m = 1.32 m + one tolerance = 1.38 m == the edge.
+    old_outward_stop = (anchor[0], anchor[1] - (1.32 + 0.06))
+    assert region.distance_to(*old_outward_stop) == pytest.approx(0.0, abs=1e-6)
 
 
 # --- 2. the footprint term in the occupancy test ---------------------------

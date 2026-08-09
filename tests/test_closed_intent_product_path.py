@@ -37,7 +37,7 @@ import pytest
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.brain.router import DeterministicIntentRouter
-from parcel_robot.models import VelocityCommand
+from parcel_robot.models import ActionProposal, AgentDecision, VelocityCommand
 from parcel_robot.runtime import RobotRuntime
 from parcel_robot.voice.closed_intents import (
     CLOSED_INTENT_NAMES,
@@ -513,9 +513,147 @@ def test_goal_amend_suspends_active_work_before_replanning(runtime: RobotRuntime
     navigation = runtime.snapshot()["navigation"]
     assert navigation["state"] == "paused"
     assert navigation["reason"] == "goal_amend"
-    # No planner in this fixture, so the replan is explicitly deferred rather
-    # than silently dropped — the amendment still pauses first, fail-closed.
-    assert metrics["goal_amend_replan"] == "deferred_no_planner"
+    # No planner in this fixture, and the replacement is anaphoric ("the other
+    # one") — not a place this route can ground without context. Card
+    # no-llm-honesty: the amendment now gives an HONEST, non-hanging reply
+    # instead of the old ``deferred_no_planner`` indefinite pause behind
+    # "I'll revise the current goal".
+    assert metrics["goal_amend_replan"] == "no_planner_honest"
+    assert "planner" in reply.lower()
+    assert "new command" in reply.lower() or "start it fresh" in reply.lower()
+
+
+# --- no-planner honesty (card no-llm-honesty, 2026-08-09) -------------------
+#
+# Without the planner model, the two most natural multi-step interactions used
+# to over-promise: a compound ("go to the sidewalk and then sit") fell through
+# to the single-skill navigation parser and compiled the whole conjunction as
+# ONE literal destination label, sending the dog searching for a "sidewalk and
+# then sit" entity behind a confident acknowledgment; and a goal amendment
+# paused the mission forever behind "I'll revise the current goal". Both now
+# fail honestly and never over-promise.
+
+
+def test_a_compound_without_a_planner_clarifies_instead_of_compiling_a_literal():
+    """The audit's 'sidewalk and then sit' case: clarify, never a literal query.
+
+    The router routes it to the planner; without one, the turn must ask which
+    part comes first rather than compile the conjunction into one NavigateTo
+    label. Uses its own no-planner runtime so nothing carries over.
+    """
+
+    import tempfile
+
+    from parcel_robot.audio_io import AudioDeviceStatus as _Status
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cfg = Path(tmp) / "robot.yaml"
+        cfg.write_text(
+            f"""
+skills:
+  root: {REPO / "configs" / "skills"}
+navigation:
+  enabled: true
+  config: {REPO / "configs" / "navigation" / "default.yaml"}
+motion:
+  backend: rl
+  max_vx: 0.6
+  max_vy: 0.4
+  max_vyaw: 1.0
+  rl:
+    enabled: true
+    policy_path: ""
+memory:
+  path: ":memory:"
+poses: {{}}
+modules: []
+""",
+            encoding="utf-8",
+        )
+        status = _Status(
+            status="text mode",
+            driver="test",
+            capture_hardware=False,
+            connected_input=False,
+            connected_output=False,
+            detail="x",
+        )
+        backend = _Backend()
+        session = RobotRuntime(cfg, backend, audio_status=status)
+        obs = backend.observe()
+        session._observation = obs
+        if session._control_state_source is not None:
+            session._control_state_source.update_observation(obs)
+        try:
+            reply = session.handle_text("go to the sidewalk and then sit")
+            metrics = session.agent.last_brain_metrics
+            assert session.agent.last_reasoning_source == "compound_clarify_no_planner"
+            assert metrics["compound_without_planner"] == "clarify"
+            # It split the conjunction to NAME the parts, and never compiled a
+            # NavigateTo for the literal "sidewalk and then sit".
+            assert metrics["compound_clauses"] == ["go to the sidewalk", "sit"]
+            assert metrics.get("local_plan_skills") in (None, []), metrics
+            assert "one thing at a time" in reply.lower()
+            assert "sidewalk" in reply.lower() and "sit" in reply.lower()
+            # No mission for the literal conjunction was ever started.
+            assert session.snapshot()["navigation"]["enabled"] is False
+        finally:
+            session.close()
+
+
+def test_a_compound_without_a_planner_is_routed_and_never_dead_ended(
+    runtime: RobotRuntime,
+) -> None:
+    """A second navigation compound: clarified, never compiled to a literal query.
+
+    Only compounds that reach the single-skill navigation parser (and would
+    otherwise become one literal destination label) are intercepted; a
+    non-navigation compound like "sit then sprint" never parses as a directive
+    and stays with the conversation lane.
+    """
+
+    reply = runtime.handle_text("go to the bench and then sit down")
+    metrics = runtime.agent.last_brain_metrics
+    assert GENERIC_REFUSAL not in reply, reply
+    assert metrics["compound_without_planner"] == "clarify"
+    assert len(metrics["compound_clauses"]) >= 2
+    assert metrics.get("local_plan_skills") in (None, [])  # no literal NavigateTo
+    assert "planner" in reply.lower()
+
+
+def test_a_goal_amend_without_a_planner_retargets_a_named_place(
+    runtime: RobotRuntime,
+) -> None:
+    """A concrete replacement retargets deterministically — no planner needed to
+    head somewhere new, and no indefinite pause."""
+
+    _start_navigation(runtime)
+    reply = runtime.handle_text("actually, go to the lamppost")
+    metrics = runtime.agent.last_brain_metrics
+    assert GENERIC_REFUSAL not in reply, reply
+    assert metrics["goal_amend_ok"] is True
+    assert metrics["goal_amend_replan"] == "local_retarget_no_planner"
+    assert session_reasoning(runtime) == "local_plan_sketch"
+    assert metrics["local_plan_skills"] == ["NavigateTo"]
+
+
+def test_a_goal_amend_reply_never_over_promises_a_revision_it_cannot_make(
+    runtime: RobotRuntime,
+) -> None:
+    """The honest branch says nothing it will not do — no "I'll revise the goal"
+    followed by an indefinite hold."""
+
+    _start_navigation(runtime)
+    reply = runtime.handle_text("actually, the same thing but better")
+    assert runtime.agent.last_brain_metrics["goal_amend_replan"] == "no_planner_honest"
+    lowered = reply.lower()
+    assert "planner" in lowered
+    # It must not claim the revision is underway.
+    assert "i'll revise" not in lowered and "revising the current goal" not in lowered
+
+
+def session_reasoning(runtime: RobotRuntime) -> str:
+    return str(runtime.agent.last_reasoning_source)
 
 
 def test_goal_amend_with_nothing_active_is_honest(runtime: RobotRuntime) -> None:
@@ -558,3 +696,106 @@ def test_the_closed_grammars_do_not_widen(phrase: str) -> None:
     """Closed means closed: near-miss phrasing must not seize the executive."""
 
     assert parse_closed_intent(phrase) is None
+
+
+# --- polite / LLM-lane physical requests (card llm-lane-dead-ends, 2026-08-09)
+#
+# Two dead-ends the LLM lane exists to absorb: a polite question-shaped motion
+# request ("would you mind trotting over to the lamppost?") routed
+# conversation_only and dead-ended in silence, and a conversation-lane decision
+# that proposed the stripped-out 'navigate' tool leaked the raw internal
+# "Unknown proposed skill: navigate" validator string to the owner. Neither may
+# happen: the request starts NavigateTo (or clarifies), and no validator string
+# ever reaches a user reply.
+
+
+def test_a_polite_question_shaped_motion_request_starts_navigation(
+    runtime: RobotRuntime,
+) -> None:
+    reply = runtime.handle_text("would you mind trotting over to the lamppost?")
+    assert GENERIC_REFUSAL not in reply, reply
+    assert runtime.agent.last_reasoning_source == "local_plan_sketch", reply
+    assert runtime.agent.last_brain_metrics["local_plan_skills"] == ["NavigateTo"]
+
+
+@pytest.mark.parametrize(
+    "phrase",
+    [
+        "could you jog to the bench?",
+        "would you mind scooting to the sidewalk?",
+        "please trot over to the lamppost",
+        "trot over to the bench",
+    ],
+)
+def test_polite_gait_verb_requests_reach_the_navigation_lane(
+    runtime: RobotRuntime, phrase: str
+) -> None:
+    reply = runtime.handle_text(phrase)
+    assert GENERIC_REFUSAL not in reply, reply
+    assert runtime.agent.last_brain_metrics.get("local_plan_skills") == ["NavigateTo"], (
+        f"{phrase!r} did not reach navigation: {reply!r}"
+    )
+
+
+def test_a_polite_non_motion_question_does_not_manufacture_navigation(
+    runtime: RobotRuntime,
+) -> None:
+    """The 'mind'/gait widening must not seize a genuine conversational turn."""
+
+    runtime.handle_text("would you mind telling me a story?")
+    assert runtime.agent.last_brain_metrics.get("local_plan_skills") in (None, [])
+    assert runtime.snapshot()["navigation"]["enabled"] is False
+
+
+class _NavProposingModel:
+    """A conversation model that reaches for the stripped-out physical tool.
+
+    Returns a decision proposing an ActionProposal naming a skill the
+    conversation schema does not carry ("navigate") — the exact shape that used
+    to leak "Unknown proposed skill: navigate" to the owner.
+    """
+
+    def __init__(self, name: str = "navigate") -> None:
+        self._name = name
+
+    def decide(self, transcript, tools, context):
+        return AgentDecision(
+            "Of course!",
+            intent="conversation",
+            next_action=ActionProposal(
+                kind="skill", name=self._name, trigger="explicit_command"
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    "transcript",
+    [
+        "I really wish I could see the lamppost",
+        "get closer to that thing over there",
+        "it would be nice to be near the bench",
+    ],
+)
+def test_a_conversation_lane_physical_proposal_never_leaks_the_validator_string(
+    transcript: str,
+) -> None:
+    """The model proposes a stripped physical tool; the owner must never see the
+    raw ``Unknown proposed skill`` string — a clarify stands in its place."""
+
+    from parcel_robot.agent import VoiceAgent
+    from parcel_robot.skills import Dog
+
+    dog = Dog.from_config(REPO / "configs" / "robot.yaml")
+    agent = VoiceAgent(
+        dog.poses(),
+        [],
+        lambda _pose: None,
+        language_model=_NavProposingModel(),
+        action_proposal_publisher=lambda _proposal: "accepted",
+        dog=dog,
+    )
+    reply = agent.handle_text(transcript)
+    assert "Unknown proposed skill" not in reply, reply
+    assert "navigate" not in reply.lower() or "could you" in reply.lower(), reply
+    # It is a clarify, not silence and not a raw error.
+    assert "?" in reply

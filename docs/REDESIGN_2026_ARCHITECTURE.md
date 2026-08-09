@@ -40,7 +40,7 @@ L6  Deliberative brain     brain/            PlanIR → validator → executive 
 L5  Voice / duplex         voice_pipeline.py, voice_audio.py, providers.py; D0 shadow frames
 L4  Skills / expression    configs/skills/, gait.py, expression.py, prosody.py; attention pure-only
 L3  Motion & skills        skills/, motion.py (vendor-neutral backends)
-L2  Navigation & collision navigation/       grid planner + unconditional reactive gate
+L2  Navigation & collision navigation/       grid planner + shared reactive gate; post-shaper exact-zero pending
 L1  Perception             mujoco_lidar.py raycaster (sim) → hardware sensors (next)
 L0  Vendor HAL             control/          registry, ControlManager, adapters
 ```
@@ -225,7 +225,8 @@ architecture, not deferred footnotes.
   not socially correct passing-side choice or a reduction distinct from the
   existing reactive-person gate.
 - `SCurveVelocityShaper` runs after the safety gate and before
-  `ControlManager`; stop paths bypass/reset it. A companion-eval dispatch replica
+  `ControlManager`; explicit stop paths reset it, but ordinary environmental
+  vetoes currently use its bounded emergency ramp. A companion-eval dispatch replica
   reduced mean commanded jerk 0.9592→0.5530 m/s³ across 11 episodes, but stops
   before the manager/HAL and never exercises the calm profile.
 - `SearchOwner` is a system-authored, non-model-callable skill: last observed

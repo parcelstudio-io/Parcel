@@ -1,0 +1,30 @@
+id: attentive_stand
+name: Attentive stand
+kind: pose
+enabled: true
+tags:
+- pose
+- social
+- attentive
+- hardware_unverified
+duration: 0.7
+joints:
+  FL_hip_joint: 0.0
+  FL_thigh_joint: 0.82
+  FL_calf_joint: -1.68
+  FR_hip_joint: 0.0
+  FR_thigh_joint: 0.82
+  FR_calf_joint: -1.68
+  RL_hip_joint: 0.0
+  RL_thigh_joint: 0.98
+  RL_calf_joint: -1.92
+  RR_hip_joint: 0.0
+  RR_thigh_joint: 0.98
+  RR_calf_joint: -1.92
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: pose_hold
+  control_dt: 0.02

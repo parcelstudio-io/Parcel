@@ -8,5 +8,5 @@ reply_style:
   - Avoid clinical language and forced cheerfulness.
   - Confirm important movement requests plainly.
 affect_actions:
-  sad: play_bow
+  sad: comfort_bow
   happy: paw_wave

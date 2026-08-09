@@ -1,0 +1,30 @@
+id: relaxed_crouch
+name: Relaxed crouch
+kind: pose
+enabled: true
+tags:
+- pose
+- social
+- relaxed
+- hardware_unverified
+duration: 0.8
+joints:
+  FL_hip_joint: 0.0
+  FL_thigh_joint: 1.05
+  FL_calf_joint: -2.0
+  FR_hip_joint: 0.0
+  FR_thigh_joint: 1.05
+  FR_calf_joint: -2.0
+  RL_hip_joint: 0.0
+  RL_thigh_joint: 1.05
+  RL_calf_joint: -2.0
+  RR_hip_joint: 0.0
+  RR_thigh_joint: 1.05
+  RR_calf_joint: -2.0
+rl:
+  enabled: false
+  policy_path: ''
+  action_dim: 12
+  obs_dim: 48
+  reward: pose_hold
+  control_dt: 0.02

@@ -3,11 +3,16 @@ from __future__ import annotations
 import re
 import time
 from collections.abc import Callable
+from dataclasses import replace
 from typing import Any
 
 from .brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
 from .brain.plan_sketch import PlanSketch
-from .brain.router import DeterministicIntentRouter, physical_cue_present
+from .brain.router import (
+    DeterministicIntentRouter,
+    physical_cue_present,
+    split_compound_clauses,
+)
 from .brain.runtime_adapter import bind_plan_context, contextual_planner_schema
 from .brain.validator import PlanValidationError
 from .memory import ConversationMemory
@@ -129,7 +134,9 @@ class VoiceAgent:
         self.action_proposal_publisher = action_proposal_publisher
         self.system_prompt_provider = system_prompt_provider
         self.affect_minimum_confidence = affect_minimum_confidence
-        self.affect_actions = dict(affect_actions or {"sad": "play_bow", "happy": "paw_wave"})
+        self.affect_actions = dict(
+            affect_actions or {"sad": "comfort_bow", "happy": "happy_wiggle"}
+        )
         self.conversation_history_messages = conversation_history_messages
         self.dog = dog
         self.intent_router = intent_router or DeterministicIntentRouter(self._skill_ids())
@@ -395,6 +402,18 @@ class VoiceAgent:
 
         nav_directive = self._parse_navigate(text)
         if nav_directive is not None and self.dog is not None:
+            # A compound physical request the router sent to the planner, WITHOUT
+            # a planner, has reached the single-skill navigation parser — which
+            # would compile the whole conjunction as ONE literal destination
+            # label ("go to the sidewalk and then sit"), sending the dog to
+            # search for a nonexistent "sidewalk and then sit" entity behind a
+            # confident acknowledgment. Detect the router's compound signal and
+            # clarify which part comes first, rather than compile the literal.
+            # (Non-navigation compounds — "sit then sprint" — do not parse as a
+            # directive and never reach here; they stay with the conversation
+            # lane.)
+            if frame.matched_rule == "compound_physical_request":
+                return self._handle_compound_without_planner(original, frame, commit)
             # A destination that is only a pronoun reached here because the
             # referent expired (or never existed): the clarification offer is
             # one turn long by design. Ask rather than admit a mission whose
@@ -617,6 +636,102 @@ class VoiceAgent:
 
         return conversation_tool_definitions(self.tool_definitions())
 
+    def _handle_compound_without_planner(
+        self,
+        transcript: str,
+        frame: IntentFrame,
+        commit: CommitGuard | None,
+    ) -> str:
+        """Clarify a multi-action request when there is no planner to sequence it.
+
+        Reached only for a ``compound_physical_request`` on the deliberative
+        route while :meth:`_planning_ready` is False. Splitting is for the WORDS
+        of the clarification only — it grounds nothing and compiles no plan, so
+        the literal-conjunction entity search this replaces can never fire. One
+        turn long by design: the owner names the first step and the ordinary
+        single-skill lane serves it.
+        """
+
+        self.last_reasoning_source = "compound_clarify_no_planner"
+        self.last_brain_metrics["compound_without_planner"] = "clarify"
+        clauses = split_compound_clauses(transcript)
+        self.last_brain_metrics["compound_clauses"] = list(clauses)
+        if len(clauses) >= 2:
+            reply = (
+                "I can only do one thing at a time without my full planner — "
+                f'which first: "{clauses[0]}", or "{clauses[1]}"?'
+            )
+        else:
+            reply = (
+                "That sounds like more than one step and I can't sequence them "
+                "without my full planner — tell me just the first thing to do."
+            )
+        return self._commit(commit, lambda: self._remember(transcript, lambda: reply))
+
+    def _goal_amend_without_planner(
+        self,
+        transcript: str,
+        remainder: str,
+        frame: IntentFrame,
+        commit: CommitGuard | None,
+        *,
+        pause_reply: str,
+    ) -> str:
+        """Honestly resolve a goal amendment when there is no planner.
+
+        The old behaviour returned the pause line and left the mission paused
+        forever behind "I'll revise the current goal" — an indefinite stall.
+        Instead: if the replacement is itself a groundable single navigation
+        directive naming a place, apply a DETERMINISTIC retarget through the
+        local-sketch lane (no planner needed to head somewhere new); otherwise
+        reply honestly that a general amendment needs the planner and tell the
+        owner to give the new command on its own. Never a silent hold.
+        """
+
+        nav_directive = self._parse_navigate(remainder)
+        if nav_directive is None:
+            # The amend prefix strips the verb ("actually, go to the lamppost" →
+            # "the lamppost"), so re-attach a neutral one; a bare place still
+            # retargets, a non-place remainder still yields None.
+            nav_directive = self._parse_navigate(f"go to {remainder}")
+        # An anaphoric replacement ("the other one", "the same") names a prior
+        # referent this route has no context to resolve — that is precisely what
+        # the planner is for, so it takes the honest reply, not a guess.
+        anaphoric = re.search(r"\b(?:other|another|same)\b", remainder.lower()) is not None
+        if (
+            nav_directive is not None
+            and self.dog is not None
+            and not anaphoric
+            and dangling_reference(nav_directive) is None
+            and self._local_plan_ready()
+        ):
+            retarget = replace(
+                frame,
+                route="deliberative_plan",
+                speech_act="correction",
+                matched_rule="goal_amend",
+                requires_fresh_scene=True,
+                original_transcript_ref=remainder[:200],
+            )
+            self.last_intent_frame = retarget
+            self.last_brain_metrics["goal_amend_replan"] = "local_retarget_no_planner"
+            self.last_brain_metrics["goal_amend_remainder"] = remainder
+            return self._admit_local_sketch(
+                sketch_navigate(nav_directive),
+                retarget,
+                transcript,
+                commit,
+                reply=f"Okay — revising the goal: {nav_directive}.",
+            )
+
+        self.last_brain_metrics["goal_amend_replan"] = "no_planner_honest"
+        reply = (
+            "I've paused what I was doing, but I can't revise the goal on the fly "
+            "without my full planner — give me the new command on its own and "
+            "I'll start it fresh."
+        )
+        return self._commit(commit, lambda: self._remember(transcript, lambda: reply))
+
     def _handle_goal_amend(
         self,
         transcript: str,
@@ -624,8 +739,6 @@ class VoiceAgent:
         commit: CommitGuard | None,
     ) -> str:
         """Mid-task amendment: pause/snapshot via executive, then replan remainder."""
-
-        from dataclasses import replace
 
         from .voice.executive_caps import resolve_cap
 
@@ -649,13 +762,22 @@ class VoiceAgent:
             )
 
         remainder = strip_amend_prefix(transcript)
-        if not remainder or not self._planning_ready():
-            self.last_brain_metrics["goal_amend_replan"] = (
-                "waiting_for_goal" if not remainder else "deferred_no_planner"
-            )
+        if not remainder:
+            # An amend cue with no replacement yet ("actually…"): the mission is
+            # paused and we wait for the owner to name the new goal. This is a
+            # bounded, self-explaining hold (the pause line names the state), not
+            # the indefinite "I'll revise the current goal" stall.
+            self.last_brain_metrics["goal_amend_replan"] = "waiting_for_goal"
             return self._commit(
                 commit,
                 lambda: self._remember(transcript, lambda: pause_reply),
+            )
+        if not self._planning_ready():
+            # No planner to sequence a general amendment: retarget deterministically
+            # when the replacement names a place, else reply honestly — never the
+            # old ``deferred_no_planner`` indefinite pause.
+            return self._goal_amend_without_planner(
+                transcript, remainder, frame, commit, pause_reply=pause_reply
             )
 
         correction = replace(
@@ -1050,6 +1172,21 @@ class VoiceAgent:
         if decision.next_action is not None:
             proposal_error = self._validate_action_proposal(decision)
             if proposal_error:
+                if proposal_error.startswith("Unknown proposed skill"):
+                    # An INTERNAL validator string — the conversation model
+                    # reached for a physical tool its schema does not carry
+                    # ("navigate"). It must never reach the owner verbatim
+                    # (card llm-lane-dead-ends): translate it to a clarify.
+                    self.last_reasoning_guard = (
+                        f"suppressed unknown-skill validator string: {proposal_error}"
+                    )
+                    reply = (
+                        "I think you're asking me to move or act, but I couldn't "
+                        "turn that into a safe command — could you say it as a "
+                        'direct request, like "go to the lamppost"?'
+                    )
+                    self.memory.add("assistant", reply)
+                    return reply
                 failures.append(proposal_error)
         if failures:
             reply = f"I couldn't do that safely. {failures[0]}"
