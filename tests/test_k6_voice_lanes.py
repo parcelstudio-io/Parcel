@@ -150,7 +150,7 @@ def test_pace_cap_bounds_and_scales() -> None:
     cap = PaceCap(1.0)
     assert cap.set_scale(2.0) == 1.25
     assert cap.set_scale(0.01) == 0.35
-    vx, vy, vyaw = cap.scale_command(1.0, 0.5, 0.2)
+    vx, vy, _vyaw = cap.scale_command(1.0, 0.5, 0.2)
     assert abs(vx - 0.35) < 1e-9
     assert abs(vy - 0.175) < 1e-9
 

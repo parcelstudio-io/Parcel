@@ -17,8 +17,8 @@ from parcel_robot.storefront.ocr import OcrHit
 from parcel_robot.storefront.placards import normalize_sign_text
 
 DOES_NOT_PROVE = (
-    "OCR→DetectionMsg ingest on synthetic fixtures does not prove wild "
-    "storefront named-place precision.",
+    ("OCR→DetectionMsg ingest on synthetic fixtures does not prove wild "
+    "storefront named-place precision."),
 )
 
 

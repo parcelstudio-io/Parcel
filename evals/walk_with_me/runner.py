@@ -657,12 +657,15 @@ def aggregate_results(results: list[ScriptRunResult]) -> dict[str, Any]:
         cell["n"] += 1
         cell["successes"] += int(result.success)
     n = max(len(results), 1)
+    collision_total = sum(r.collision_count for r in results)
     return {
         "runner_version": RUNNER_VERSION,
         "pack_version": PACK_VERSION,
         "n": len(results),
         "sr": sum(1 for r in results if r.success) / n,
-        "collision_total": sum(r.collision_count for r in results),
+        "collision_total": collision_total,
+        # Alias for the hard-safety gate (follow-bench naming). Same sum.
+        "hard_collision_total": collision_total,
         "failure_histogram": failure_hist,
         "attribution_histogram": layer_hist,
         "authority_histogram": authority_hist,

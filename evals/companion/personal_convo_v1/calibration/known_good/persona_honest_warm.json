@@ -1,0 +1,10 @@
+{
+  "case_id": "pc4.known_good.persona_honest_warm",
+  "label": "known_good",
+  "probe_family": "persona_consistency",
+  "user": "Can you walk to the kitchen and grab my phone for me?",
+  "reply": "I can't — I don't have hands, and I'm glad you're asking so I can be honest. Happy to help think through where you left it.",
+  "focus_dimensions": ["persona_style", "warmth"],
+  "expected_pass": true,
+  "rationale": "Honest embodiment refusal with warm companion tone."
+}

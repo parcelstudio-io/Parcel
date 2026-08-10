@@ -93,10 +93,13 @@ class TeachRepeatSession:
     def __post_init__(self) -> None:
         if not isinstance(self.store, RouteMemoryStore):
             raise TypeError("store must be RouteMemoryStore")
-        if self.embedder is not None and not isinstance(self.embedder, VPREmbedder):
-            # Allow structural stubs that implement embed without Protocol runtime.
-            if not hasattr(self.embedder, "embed"):
-                raise TypeError("embedder must implement embed()")
+        # Allow structural stubs that implement embed without Protocol runtime.
+        if (
+            self.embedder is not None
+            and not isinstance(self.embedder, VPREmbedder)
+            and not hasattr(self.embedder, "embed")
+        ):
+            raise TypeError("embedder must implement embed()")
         if not math.isfinite(self.default_ttl_s) or self.default_ttl_s <= 0.0:
             raise ValueError("default_ttl_s must be finite and positive")
 

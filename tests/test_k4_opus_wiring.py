@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from parcel_robot.brain.compiler import compile_plan_contracts
 from parcel_robot.brain.contracts import (
     FrozenDict,

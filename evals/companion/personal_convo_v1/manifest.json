@@ -1,38 +1,39 @@
 {
-  "schema_version": 1,
-  "suite_id": "parcel-personal-convo-v1",
-  "runner_version": "personal-convo-text-tier-v1",
-  "tier": "T",
   "frozen": true,
   "frozen_at_utc": "2026-08-09T00:00:00Z",
-  "scenario_count": 8,
-  "probe_families": [
-    "in_session_context",
-    "cross_session_memory",
-    "fact_tool_composition",
-    "persona_consistency",
-    "affect_handling",
-    "interactivity_clarification",
-    "adaptability_no_sycophancy",
-    "asr_robustness"
-  ],
   "human_review_required": true,
-  "requires_audio": false,
-  "requires_model_server": false,
-  "probe_files": [
-    "evals/companion/personal_convo_v1/probes/adaptability_no_sycophancy.json",
-    "evals/companion/personal_convo_v1/probes/affect_handling.json",
-    "evals/companion/personal_convo_v1/probes/asr_robustness.json",
-    "evals/companion/personal_convo_v1/probes/cross_session_memory.json",
-    "evals/companion/personal_convo_v1/probes/fact_tool_composition.json",
-    "evals/companion/personal_convo_v1/probes/in_session_context.json",
-    "evals/companion/personal_convo_v1/probes/interactivity_clarification.json",
-    "evals/companion/personal_convo_v1/probes/persona_consistency.json"
-  ],
   "locked_files": [
     {
       "path": "evals/companion/personal_convo_v1/build_memory_fixture.py",
       "sha256": "5d4cd23d6843ae12f1fa77781f8a77163ada03777a2c0b92d491882c52d2352d"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/calibration/known_bad/cold_dismissive.json",
+      "sha256": "756775fad391a240b2ae4cfa4ea1963e7a4b7615187ec55210ba1e75bb14093a"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/calibration/known_bad/embodiment_overclaim.json",
+      "sha256": "9f2e4973007bb8d3300c9f2f5251a831eba3f828c07907723c83dd05ce059775"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/calibration/known_bad/sycophantic_agree.json",
+      "sha256": "464bbbe8341e77285d39fbbc65d3c51948dea6eeaed0c966cd63ec2075acabe6"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/calibration/known_good/affect_supportive.json",
+      "sha256": "0a4699c73224a0946280546abcac69d661e29b129f1ea48f3fa7c395cdf6d363"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/calibration/known_good/no_sycophancy_pushback.json",
+      "sha256": "97d0c3c775eb122c0e3c4b7daa5863e0eb170bee13442b3939a4a963c140cef8"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/calibration/known_good/persona_honest_warm.json",
+      "sha256": "d3c81869f3ccd791349957938667f8e0db7042936d4bcbac4fdabe6ffdd081ec"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/calibration/pack.json",
+      "sha256": "0c051dd8e2537a6c74256c5cdb47ee4f1676e47f2ed5e392d623d29b5172d361"
     },
     {
       "path": "evals/companion/personal_convo_v1/fixture_provider.py",
@@ -41,6 +42,10 @@
     {
       "path": "evals/companion/personal_convo_v1/human_recording/SCRIPT.md",
       "sha256": "89f8a3292cf62b48a2f07ecc02153ca377af495c672d2081f49cd94b336c647e"
+    },
+    {
+      "path": "evals/companion/personal_convo_v1/judge.py",
+      "sha256": "1db98f309aa3f8ef85f20610c8bdac108c959c24fae8f48eb998b84b1e8a5d3e"
     },
     {
       "path": "evals/companion/personal_convo_v1/memory_graphs/cross_session_memory.yaml",
@@ -90,5 +95,32 @@
       "path": "evals/companion/personal_convo_v1/session_schema.py",
       "sha256": "8fe6a7093fe9eaeabbb0e08fca3bcb977ad4923b5e912658e9079cfaf4d5aa0d"
     }
-  ]
+  ],
+  "probe_families": [
+    "in_session_context",
+    "cross_session_memory",
+    "fact_tool_composition",
+    "persona_consistency",
+    "affect_handling",
+    "interactivity_clarification",
+    "adaptability_no_sycophancy",
+    "asr_robustness"
+  ],
+  "probe_files": [
+    "evals/companion/personal_convo_v1/probes/adaptability_no_sycophancy.json",
+    "evals/companion/personal_convo_v1/probes/affect_handling.json",
+    "evals/companion/personal_convo_v1/probes/asr_robustness.json",
+    "evals/companion/personal_convo_v1/probes/cross_session_memory.json",
+    "evals/companion/personal_convo_v1/probes/fact_tool_composition.json",
+    "evals/companion/personal_convo_v1/probes/in_session_context.json",
+    "evals/companion/personal_convo_v1/probes/interactivity_clarification.json",
+    "evals/companion/personal_convo_v1/probes/persona_consistency.json"
+  ],
+  "requires_audio": false,
+  "requires_model_server": false,
+  "runner_version": "personal-convo-text-tier-v1",
+  "scenario_count": 8,
+  "schema_version": 1,
+  "suite_id": "parcel-personal-convo-v1",
+  "tier": "T"
 }

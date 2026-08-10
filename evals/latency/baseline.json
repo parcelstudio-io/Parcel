@@ -1,0 +1,32 @@
+{
+  "metrics": {
+    "AcousticAck": {
+      "p95_ms": 1550.0,
+      "p99_ms": 1550.0
+    },
+    "EndpointDecision": {
+      "p95_ms": 200.0,
+      "p99_ms": 200.0
+    },
+    "PlaybackEnqueueToFirstSample": {
+      "p95_ms": 550.0,
+      "p99_ms": 550.0
+    },
+    "SttTranscribe": {
+      "p95_ms": 290.0,
+      "p99_ms": 290.0
+    },
+    "TurnTotal": {
+      "p95_ms": 1250.0,
+      "p99_ms": 1250.0
+    },
+    "UserQueryEndToFirstResponse": {
+      "p95_ms": 450.0,
+      "p99_ms": 450.0
+    }
+  },
+  "note": "Pinned p95/p99 ceiling source for ci_gate latency-ledger ratchet. While ledger rows < window, the ratchet skips (never red); percentile-pin pytest remains authoritative. Regenerated from the committed seed row.",
+  "schema_version": 1,
+  "source_row_id": "latency-seed-n19-20260809T000000Z",
+  "window": 5
+}

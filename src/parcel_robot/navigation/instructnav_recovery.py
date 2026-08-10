@@ -22,14 +22,19 @@ from parcel_robot.instructnav.scan import (
     scan_stops,
 )
 from parcel_robot.instructnav.search_entity import (
+    FrontierScorer,
+    PlanTimePriorCache,
     SearchEntityPlanSpec,
+    TargetExistenceBelief,
+    ValueMapFrontierScorer,
     ring_frontier_candidates,
     select_frontier,
-    semantic_prior_for_label,
 )
 
 from .base import MidLevelCommand, NavObservation
 from .semantic_map import SemanticCandidate
+from .value_directed_scan import ValueDirectedScanSession
+from .value_map import SemanticValueMap2D
 
 
 @dataclass
@@ -39,6 +44,10 @@ class ScanBehaviorController:
     Step-budgeted (navigator ticks), not wall-clock. Completing the stop
     sequence means the scan finished — whether the query grounded is the
     caller's job via GrounderV2.
+
+    With ``value_directed=True`` and a shared :class:`SemanticValueMap2D`, the
+    first start uses ``full_turn_scan_spec`` as VLFM init; further looks are
+    chosen by GP-UCB via :class:`ValueDirectedScanSession`.
     """
 
     spec: ScanPlanSpec = field(default_factory=full_turn_scan_spec)
@@ -46,11 +55,14 @@ class ScanBehaviorController:
     yaw_limit: float = 0.85
     settle_rad: float = 0.12
     dwell_steps_per_stop: int = 4
+    value_directed: bool = False
+    value_session: ValueDirectedScanSession | None = None
     _stops: tuple[ScanStop, ...] = ()
     _stop_index: int = 0
     _dwell_left: int = 0
     _complete: bool = False
     _started: bool = False
+    _phase: str = "idle"  # idle|init|value|done
 
     def reset(self) -> None:
         self._stops = ()
@@ -58,18 +70,55 @@ class ScanBehaviorController:
         self._dwell_left = 0
         self._complete = False
         self._started = False
+        self._phase = "idle"
+        if self.value_session is not None:
+            self.value_session.reset()
 
     def start(self, start_yaw_rad: float, *, spec: ScanPlanSpec | None = None) -> ScanPlanSpec:
         if spec is not None:
             self.spec = spec
         if not math.isfinite(start_yaw_rad):
             raise ValueError("start_yaw_rad must be finite")
-        self._stops = scan_stops(float(start_yaw_rad), self.spec)
+        # C2: full_turn_scan_spec is ONLY the first-UNSEEN initialization.
+        if self.value_directed and self.value_session is not None:
+            self.spec = self.value_session.init_plan_spec()
+            self._stops = self.value_session.init_stops(float(start_yaw_rad))
+            self._phase = "init"
+        else:
+            self._stops = scan_stops(float(start_yaw_rad), self.spec)
+            self._phase = "init"
         self._stop_index = 0
         self._dwell_left = max(1, int(self.dwell_steps_per_stop))
         self._complete = False
         self._started = True
         return self.spec
+
+    def enqueue_value_look(self, yaw_rad: float) -> None:
+        """Append one GP-UCB-selected dwell after init (value-directed mode)."""
+
+        if not self.value_directed:
+            raise RuntimeError("enqueue_value_look requires value_directed=True")
+        stop = ScanStop(
+            index=len(self._stops),
+            yaw_rad=float(yaw_rad),
+            yaw_delta_from_start_rad=0.0,
+            dwell_s=self.spec.dwell_s,
+        )
+        self._stops = self._stops + (stop,)
+        self._complete = False
+        self._phase = "value"
+        if self.value_session is not None:
+            self.value_session.record_look(yaw_rad)
+
+    def suspend(self) -> None:
+        """Summons path: suspend in-flight scan (does not cancel / reset)."""
+
+        if self.value_session is not None:
+            self.value_session.suspend()
+
+    def resume(self) -> None:
+        if self.value_session is not None:
+            self.value_session.resume()
 
     @property
     def complete(self) -> bool:
@@ -79,11 +128,26 @@ class ScanBehaviorController:
     def started(self) -> bool:
         return self._started
 
+    @property
+    def phase(self) -> str:
+        return self._phase
+
+    @property
+    def current_stop_yaw(self) -> float | None:
+        if not self._stops or self._stop_index >= len(self._stops):
+            return None
+        return self._stops[self._stop_index].yaw_rad
+
     def plan_step(self) -> dict[str, object]:
         return self.spec.as_plan_step()
 
     def step(self, observation: NavObservation) -> MidLevelCommand | None:
-        """Return a yaw command, or ``None`` when the full turn is finished."""
+        """Return a yaw command, or ``None`` when the current stop list is done.
+
+        In value-directed mode, ``None`` after init means the caller should ask
+        the session for a GP-UCB look (or commit). After a value look is
+        enqueued, stepping resumes until that stop completes.
+        """
 
         if self._complete:
             return None
@@ -91,7 +155,10 @@ class ScanBehaviorController:
             yaw = _robot_yaw_rad(observation)
             self.start(yaw)
         if self._stop_index >= len(self._stops):
+            if self._phase == "init" and self.value_session is not None:
+                self.value_session.mark_init_complete()
             self._complete = True
+            self._phase = "done" if self._phase != "value" else "value_done"
             return None
         stop = self._stops[self._stop_index]
         yaw = _robot_yaw_rad(observation)
@@ -114,7 +181,10 @@ class ScanBehaviorController:
             )
         self._stop_index += 1
         if self._stop_index >= len(self._stops):
+            if self._phase == "init" and self.value_session is not None:
+                self.value_session.mark_init_complete()
             self._complete = True
+            self._phase = "done" if self._phase == "init" else "value_done"
             return None
         self._dwell_left = max(1, int(self.dwell_steps_per_stop))
         return MidLevelCommand(
@@ -185,10 +255,20 @@ def select_search_entity_frontier(
     max_radius_m: float = 12.0,
     travel_weight: float = 0.06,
     coverage_weight: float = 0.45,
+    scorer: FrontierScorer | None = None,
+    value_map: SemanticValueMap2D | None = None,
+    plan_prior: PlanTimePriorCache | None = None,
+    existence: TargetExistenceBelief | None = None,
 ) -> tuple[float, float] | None:
-    """SearchEntity ring scoring: semantic prior − geodesic (+ coverage novelty)."""
+    """SearchEntity ring scoring: semantic prior − geodesic (+ coverage novelty).
 
-    prior = semantic_prior_for_label(query_label)
+    When ``value_map`` (or an explicit ``scorer``) is provided, C3
+    :class:`ValueMapFrontierScorer` replaces the table-only path. Priors come
+    from a plan-time cache — never a runtime model call.
+    """
+
+    prior_cache = plan_prior or PlanTimePriorCache.from_query_table(query_label)
+    prior = prior_cache.prior_for_region(query_label)
 
     def _covered(xy: tuple[float, float]) -> bool:
         return any(
@@ -204,6 +284,19 @@ def select_search_entity_frontier(
         return prior
 
     def coverage_fn(xy: tuple[float, float]) -> float:
+        if value_map is not None:
+            res = value_map.resolution_m
+            cell = (math.floor(xy[0] / res), math.floor(xy[1] / res))
+            # Local 3×3 unknown fraction — SearchOwner _information_gain analogue.
+            cells = [
+                (cell[0] + dx, cell[1] + dy)
+                for dy in (-1, 0, 1)
+                for dx in (-1, 0, 1)
+            ]
+            try:
+                return float(value_map.unknown_fraction(cells))
+            except ValueError:
+                return 0.0 if _covered(xy) else 1.0
         return 0.0 if _covered(xy) else 1.0
 
     candidates = ring_frontier_candidates(
@@ -218,8 +311,19 @@ def select_search_entity_frontier(
         coverage_fn=coverage_fn,
         label=query_label,
     )
+    active: FrontierScorer | None = scorer
+    if active is None and value_map is not None:
+        active = ValueMapFrontierScorer(
+            value_map=value_map,
+            plan_prior=prior_cache,
+            existence=existence
+            or TargetExistenceBelief(mean_xy=origin_xy, variance_m2=max_radius_m**2),
+            travel_weight=travel_weight,
+            coverage_weight=coverage_weight,
+        )
     best = select_frontier(
         candidates,
+        scorer=active,
         travel_weight=travel_weight,
         coverage_weight=coverage_weight,
     )

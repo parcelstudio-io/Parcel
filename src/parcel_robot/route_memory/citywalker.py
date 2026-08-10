@@ -178,7 +178,7 @@ class CityWalkerInferenceAdapter:
             import torch  # noqa: F401
 
             return True
-        except Exception:
+        except ImportError:
             return False
 
     def availability(self) -> dict[str, Any]:

@@ -97,4 +97,7 @@ def test_cli_smoke(tmp_path):
     report = json.loads(reports[0].read_text(encoding="utf-8"))
     assert report["smoke"] is True
     assert report["aggregate"]["n"] == 2
+    assert report["aggregate"]["hard_collision_total"] == 0
     assert report["does_not_prove"]
+    ledger = json.loads((tmp_path / "ledger.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert ledger["hard_collision_total"] == 0

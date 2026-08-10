@@ -26,6 +26,7 @@ from scripts.ci_gate import (
     MODEL_OFF_NODE_IDS,
     evaluate_frozen_digest_sentinels,
     evaluate_hard_safety,
+    evaluate_latency_ledger,
     evaluate_latency_ratchet,
     evaluate_ruff,
     run_pytest,
@@ -63,7 +64,20 @@ def _clean_artifacts(tmp: Path) -> dict[str, Path]:
         tmp / "followbench.jsonl",
         [{"report_id": "fb-1", "hard_collision_total": 0}, {"report_id": "fb-2", "hard_collision_total": 0}],
     )
-    return {"nav_ledger": nav, "mutation_panel": panel, "followbench_ledger": fb}
+    wwm = _write_jsonl(
+        tmp / "walk_with_me.jsonl",
+        [
+            # Legacy stub row without the field — must not redden hard-safety.
+            {"report_id": "wwm-legacy", "smoke": True, "n": 2},
+            {"report_id": "wwm-1", "hard_collision_total": 0, "smoke": True, "n": 2},
+        ],
+    )
+    return {
+        "nav_ledger": nav,
+        "mutation_panel": panel,
+        "followbench_ledger": fb,
+        "walk_with_me_ledger": wwm,
+    }
 
 
 # ===========================================================================
@@ -107,6 +121,31 @@ def test_hard_safety_reddens_on_followbench_collision(tmp_path: Path) -> None:
     result = evaluate_hard_safety(**a)
     assert result.status == "fail"
     assert "fb-x" in result.detail
+
+
+def test_hard_safety_skips_legacy_walk_with_me_rows_without_field(tmp_path: Path) -> None:
+    a = _clean_artifacts(tmp_path)
+    _write_jsonl(
+        a["walk_with_me_ledger"],
+        [{"report_id": "wwm-legacy", "smoke": True, "n": 2}],
+    )
+    result = evaluate_hard_safety(**a)
+    assert result.status == "pass", result.detail
+    assert "none carry hard_collision_total" in result.detail
+
+
+def test_hard_safety_reddens_on_walk_with_me_collision(tmp_path: Path) -> None:
+    a = _clean_artifacts(tmp_path)
+    _write_jsonl(
+        a["walk_with_me_ledger"],
+        [
+            {"report_id": "wwm-legacy", "smoke": True},
+            {"report_id": "wwm-x", "hard_collision_total": 1},
+        ],
+    )
+    result = evaluate_hard_safety(**a)
+    assert result.status == "fail"
+    assert "wwm-x" in result.detail
 
 
 # ===========================================================================
@@ -166,6 +205,45 @@ def test_latency_tail_reddens_on_p99_regression() -> None:
     baseline = {"turn": {"p95_ms": 100.0, "p99_ms": 120.0}}
     result = evaluate_latency_ratchet(series, baseline)
     assert result.status == "fail", "a p99 spike past the ceiling must redden latency-tail"
+    assert "p99_ms" in result.detail
+
+
+def test_latency_ledger_skips_under_window(tmp_path: Path) -> None:
+    ledger = _write_jsonl(
+        tmp_path / "ledger.jsonl",
+        [{"row_id": "one", "metrics": {"TurnTotal": {"p95_ms": 10.0, "p99_ms": 12.0}}}],
+    )
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(
+        json.dumps({
+            "window": 5,
+            "metrics": {"TurnTotal": {"p95_ms": 100.0, "p99_ms": 120.0}},
+        }),
+        encoding="utf-8",
+    )
+    result = evaluate_latency_ledger(ledger=ledger, baseline_path=baseline)
+    assert result.status == "skip", result.detail
+    assert "rows=1 < window=5" in result.detail
+
+
+def test_latency_ledger_reddens_on_seeded_spike(tmp_path: Path) -> None:
+    """Source-switch self-test: enough rows + a p99 spike must redden."""
+
+    row = {
+        "row_id": "spike",
+        "metrics": {"TurnTotal": {"p95_ms": 90.0, "p99_ms": 200.0}},
+    }
+    ledger = _write_jsonl(tmp_path / "ledger.jsonl", [row, row, row, row, row])
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(
+        json.dumps({
+            "window": 5,
+            "metrics": {"TurnTotal": {"p95_ms": 100.0, "p99_ms": 120.0}},
+        }),
+        encoding="utf-8",
+    )
+    result = evaluate_latency_ledger(ledger=ledger, baseline_path=baseline)
+    assert result.status == "fail", "a p99 spike past the ceiling must redden latency-ledger"
     assert "p99_ms" in result.detail
 
 

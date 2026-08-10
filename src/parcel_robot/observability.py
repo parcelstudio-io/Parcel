@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import json
 import math
+import os
 import statistics
 import threading
 import time
+import uuid
 from collections import Counter, deque
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 
 PLANNING_STAGE_DEFINITIONS = {
     "intent_routed": (
@@ -27,6 +31,34 @@ PLANNING_STAGE_DEFINITIONS = {
     ),
     "plan_accepted": (
         "The validated plan has been admitted by the task executive for execution."
+    ),
+}
+
+#: The acoustic-ack spans (N19). Each is derived from two of the clocks the
+#: capture/STT/playback surfaces already measure; before they were fanned in,
+#: everything between the owner finishing a sentence and the robot being
+#: audible was one opaque block inside ``UserQueryEndToFirstSpokenAudio``.
+ACOUSTIC_ACK_LATENCY_DEFINITIONS = {
+    "EndpointDecision": (
+        "Last speech frame of the owner's utterance to the endpointer's commit "
+        "decision (how long the robot deliberated before deciding they stopped)."
+    ),
+    "SttRequestQueue": (
+        "Endpointer commit to the start of the STT request (segmentation, WAV "
+        "framing and dispatch overhead)."
+    ),
+    "SttTranscribe": "STT request start to the final transcript.",
+    "SttFinalToQueryEnd": (
+        "Final transcript to the turn's query-end anchor (session admission)."
+    ),
+    "AcousticAck": (
+        "The end-to-end acknowledgement budget: last owner speech frame to the "
+        "instant the speaker worker began writing the first reply chunk. This "
+        "is the number a sub-700 ms ack claim has to beat."
+    ),
+    "PlaybackEnqueueToFirstSample": (
+        "Audio-sink handoff to the speaker worker starting that chunk. The "
+        "acoustic rig measured 0.54-0.64 s here, so it may never be assumed 0."
     ),
 }
 
@@ -302,6 +334,7 @@ class LatencyTracker:
                     "are available."
                 ),
                 **PLANNING_LATENCY_DEFINITIONS,
+                **ACOUSTIC_ACK_LATENCY_DEFINITIONS,
             },
             "stage_definitions": dict(PLANNING_STAGE_DEFINITIONS),
             "component_definitions": dict(COMPONENT_METRIC_DEFINITIONS),
@@ -399,9 +432,22 @@ def _trace_row(trace: TurnTrace) -> dict[str, object]:
         "QueryEndToFirstSpokenAudio": delta(query_end, "audio_first_playback"),
         "TTSTotal": delta("tts_start", "tts_complete"),
         "TurnTotal": delta(query_end, "turn_complete"),
+        # Acoustic-ack spans (N19). Absent on a typed turn: the capture/STT
+        # clocks only exist when the owner actually spoke, and a missing span
+        # stays ``None`` rather than being imputed from the query-end anchor.
+        "EndpointDecision": delta("capture_speech_end", "semantic_commit"),
+        "SttRequestQueue": delta("semantic_commit", "stt_request_start"),
+        "SttTranscribe": delta("stt_request_start", "stt_final"),
+        "SttFinalToQueryEnd": delta("stt_final", query_end),
+        "AcousticAck": delta("capture_speech_end", "audio_first_sample"),
+        "PlaybackEnqueueToFirstSample": delta("audio_first_playback", "audio_first_sample"),
     }
+    # Signed on purpose: the capture/STT clocks are genuinely *earlier* than
+    # the query-end anchor, and clamping them to zero would report the ack
+    # budget as free. No stage produced before the acoustic fan-in lands
+    # before query_end, so existing rows are unchanged.
     stage_offsets = {
-        name: round(max(0.0, (value - query_end) * 1000.0), 3) for name, value in stages.items()
+        name: round((value - query_end) * 1000.0, 3) for name, value in stages.items()
     }
     return {
         "turn_id": trace.turn_id,
@@ -471,3 +517,127 @@ def _bounded_details(details: dict[str, object]) -> dict[str, object]:
         elif isinstance(value, str):
             bounded[clean_key] = value[:500]
     return bounded
+
+
+# ---------------------------------------------------------------------------
+# Persisted latency ledger
+# ---------------------------------------------------------------------------
+#
+# Until now p50/p95/p99 were computed in memory for the ``/latency`` dashboard
+# and thrown away when the process exited, so the CI latency-tail gate had
+# nothing to ratchet except committed percentile pins (the handoff recorded in
+# scrum/20260809/task_13/CI_OWNERSHIP_STATUS.md). These helpers turn one run's
+# snapshot into an append-only ledger row.
+
+#: Stage names the acoustic-ack fan-in writes. Grouped here so the runtime and
+#: the ledger agree on what "the acoustic clocks landed" means.
+ACOUSTIC_ACK_STAGES: tuple[str, ...] = (
+    "capture_speech_end",
+    "semantic_commit",
+    "stt_request_start",
+    "stt_final",
+    "audio_first_sample",
+)
+
+#: Repo-relative home of the committed ledger the CI latency-tail gate reads.
+LATENCY_LEDGER_RELPATH = "evals/latency/ledger.jsonl"
+
+#: Opt-in: an explicit path here makes a runtime append one row when it closes.
+#: Unset, nothing is ever written and the runtime is byte-identical to before.
+LATENCY_LEDGER_ENV = "PARCEL_LATENCY_LEDGER"
+
+_LEDGER_WRITE_LOCK = threading.Lock()
+
+
+def resolve_latency_ledger_path(explicit: str | Path | None = None) -> Path | None:
+    """Explicit path, else ``PARCEL_LATENCY_LEDGER``, else no ledger at all."""
+
+    if explicit is not None:
+        return Path(explicit)
+    configured = os.environ.get(LATENCY_LEDGER_ENV, "").strip()
+    return Path(configured) if configured else None
+
+
+def latency_ledger_row(
+    snapshot: dict[str, object],
+    *,
+    source: str,
+    run_id: str | None = None,
+    extra: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Reduce one ``LatencyTracker`` snapshot to an append-only ledger row.
+
+    Only metrics that actually have samples are carried, so a run that never
+    exercised (say) the acoustic clocks records their absence by omission
+    rather than by a fabricated zero.
+    """
+
+    aggregate = snapshot.get("aggregate") or {}
+    components = snapshot.get("components") or {}
+    turns = snapshot.get("turns") or []
+    stages_observed = sorted(
+        {
+            name
+            for turn in turns
+            for name in (turn.get("stage_offsets_ms") or {})  # type: ignore[union-attr]
+        }
+    )
+    stamp = datetime.now(UTC)
+    return {
+        "schema_version": 1,
+        "row_id": run_id or f"latency-{stamp.strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}",
+        "utc": stamp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "source": str(source)[:120],
+        "turns": len(turns),
+        "status_counts": dict(snapshot.get("status_counts") or {}),
+        "stages_observed": stages_observed,
+        "acoustic_stages_present": [
+            name for name in ACOUSTIC_ACK_STAGES if name in stages_observed
+        ],
+        "metrics": {
+            name: value
+            for name, value in sorted(aggregate.items())  # type: ignore[union-attr]
+            if isinstance(value, dict)
+        },
+        "components": {
+            name: value
+            for name, value in sorted(components.items())  # type: ignore[union-attr]
+            if isinstance(value, dict)
+        },
+        **(dict(extra) if extra else {}),
+    }
+
+
+def append_latency_ledger_row(row: dict[str, object], path: str | Path) -> Path:
+    """Append one row to the JSONL ledger, creating the directory if needed."""
+
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n"
+    with _LEDGER_WRITE_LOCK, target.open("a", encoding="utf-8") as handle:
+        handle.write(line)
+    return target
+
+
+def latency_tail_series(row: dict[str, object]) -> dict[str, dict[str, float]]:
+    """``{metric: {p95_ms, p99_ms}}`` for the ratchet, from a ledger row.
+
+    Metric and component series share one namespace; components are prefixed
+    so a component named like a turn metric cannot silently shadow it.
+    """
+
+    series: dict[str, dict[str, float]] = {}
+    for prefix, block in (("", row.get("metrics")), ("component:", row.get("components"))):
+        if not isinstance(block, dict):
+            continue
+        for name, value in block.items():
+            if not isinstance(value, dict):
+                continue
+            tail = {
+                key: float(value[key])
+                for key in ("p95_ms", "p99_ms")
+                if isinstance(value.get(key), (int, float))
+            }
+            if tail:
+                series[f"{prefix}{name}"] = tail
+    return series

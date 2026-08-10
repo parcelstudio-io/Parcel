@@ -4,23 +4,55 @@ import math
 import time
 from dataclasses import dataclass
 
+from parcel_robot.authority import CLEARANCE_CONVENTION, DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import SimObservation
+from parcel_robot.core.input_health import (
+    InputEvidence,
+    InputOrigin,
+    RequiredInput,
+    RequiredInputSpec,
+    evaluate_input_health,
+)
 from parcel_robot.models import VelocityCommand
+
+#: robot.yaml ``safety.obstacle_stop_m`` commissioning floor. Stricter than
+#: ``SafetyEnvelope.obstacle_stop_floor_m`` (0.6); unifying downward would
+#: loosen the live reactive gate (forbidden). Under
+#: :data:`~parcel_robot.authority.CLEARANCE_CONVENTION` both thresholds are
+#: base-center-to-surface metres; consumers must not re-add the footprint.
+_REACTIVE_OBSTACLE_STOP_FLOOR_M = 0.65
 
 
 @dataclass(frozen=True)
 class ReactiveSafetyPolicy:
-    obstacle_stop_m: float = 0.65
-    obstacle_slow_m: float = 1.2
-    person_stop_m: float = 1.0
-    person_slow_m: float = 2.0
+    """Final body-frame proximity gate; distances from :class:`SafetyEnvelope`.
+
+    Clearance convention matches :data:`~parcel_robot.authority.CLEARANCE_CONVENTION`
+    (``base_center_to_obstacle_surface``). Person/obstacle slow bands and the
+    reaction horizon are envelope-derived; obstacle stop keeps the stricter
+    commissioning floor via ``max(envelope.floor, 0.65)``.
+    """
+
+    clearance_convention: str = CLEARANCE_CONVENTION
+    obstacle_stop_m: float = max(
+        DEFAULT_SAFETY_ENVELOPE.obstacle_stop_floor_m,
+        _REACTIVE_OBSTACLE_STOP_FLOOR_M,
+    )
+    obstacle_slow_m: float = DEFAULT_SAFETY_ENVELOPE.obstacle_comfort_band_m
+    person_stop_m: float = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0)
+    person_slow_m: float = DEFAULT_SAFETY_ENVELOPE.person_comfort_band_m
     telemetry_stale_s: float = 0.6
     owner_collision_envelope_m: float = 0.55
     orbit_clearance_margin_m: float = 0.10
     orbit_waypoint_tolerance_m: float = 0.16
-    reaction_time_s: float = 0.12
+    reaction_time_s: float = DEFAULT_SAFETY_ENVELOPE.reaction_latency_s
 
     def __post_init__(self) -> None:
+        if self.clearance_convention != CLEARANCE_CONVENTION:
+            raise ValueError(
+                "reactive safety clearance_convention must be "
+                f"{CLEARANCE_CONVENTION!r} (got {self.clearance_convention!r})"
+            )
         values = (
             self.obstacle_stop_m,
             self.obstacle_slow_m,
@@ -38,6 +70,11 @@ class ReactiveSafetyPolicy:
             raise ValueError("obstacle stop distance must be below slow distance")
         if self.person_stop_m >= self.person_slow_m:
             raise ValueError("person stop distance must be below slow distance")
+        if self.obstacle_stop_m + 1e-12 < DEFAULT_SAFETY_ENVELOPE.obstacle_stop_floor_m:
+            raise ValueError(
+                "reactive obstacle_stop_m must not undercut "
+                "SafetyEnvelope.obstacle_stop_floor_m"
+            )
 
 
 def apply_reactive_safety(
@@ -59,6 +96,10 @@ def apply_reactive_safety(
         return _stop_translation(command) if _translating(command) else (command, "clear")
 
     translating = _translating(command)
+    # P0-B: a present observation with no scan must not authorize translation.
+    # Route through the core input-health join (missing → HOLD), never "clear".
+    if translating and not _scan_health_allows_translation(observation, now=timestamp):
+        return _stop_translation(command)
     predictive_state = "clear"
     owner_dx = observation.owner.x - observation.robot.x
     owner_dy = observation.owner.y - observation.robot.y
@@ -171,6 +212,57 @@ def apply_reactive_safety(
 
 def _translating(command: VelocityCommand) -> bool:
     return math.hypot(command.vx, command.vy) > 1e-6
+
+
+def scan_present(observation: SimObservation) -> bool:
+    """True when any commissioned scan channel carries a sample this tick."""
+
+    if observation.lidar_obstacles:
+        return True
+    if observation.nearest_obstacle_m is not None:
+        return True
+    return bool(observation.lidar_ranges)
+
+
+def scan_evidence_from_observation(observation: SimObservation) -> InputEvidence | None:
+    """Build scan ``InputEvidence`` for the core health join, or ``None`` if missing."""
+
+    if not scan_present(observation):
+        return None
+    backend = str(observation.backend or "")
+    # Simulated backends are labeled fixtures; unlabeled sim is rejected by the
+    # health join. Physical / unknown backends stay unlabeled physical samples.
+    if backend and backend not in {"unknown", "physical"}:
+        return InputEvidence(
+            captured_at=observation.timestamp,
+            frame_id="base_link",
+            payload_valid=True,
+            origin=InputOrigin.SIM_FIXTURE,
+            fixture_label=backend,
+        )
+    return InputEvidence(
+        captured_at=observation.timestamp,
+        frame_id="base_link",
+        payload_valid=True,
+        origin=InputOrigin.PHYSICAL,
+    )
+
+
+def _scan_health_allows_translation(observation: SimObservation, *, now: float) -> bool:
+    """Fail closed on missing/stale/malformed scan via the core health join."""
+
+    verdict = evaluate_input_health(
+        {RequiredInput.SCAN: scan_evidence_from_observation(observation)},
+        now=now,
+        requirements={
+            RequiredInput.SCAN: RequiredInputSpec(
+                frame_id="base_link",
+                max_age_s=0.25,
+                sim_fixture_allowed=True,
+            ),
+        },
+    )
+    return verdict.translation_allowed
 
 
 def _toward(

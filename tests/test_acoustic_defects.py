@@ -11,9 +11,11 @@ scrum/20260809/task_8/ACOUSTIC_CLOSE_STATUS.md for the rig evidence.
 
 from __future__ import annotations
 
+import json
 import sys
 import threading
 import time
+from pathlib import Path
 from typing import Self
 
 import numpy as np
@@ -281,3 +283,119 @@ def test_n19_unknown_stage_still_raises() -> None:
     tracker.start(1, "hello", now=0.0)
     with pytest.raises(ValueError, match="unsupported latency stage"):
         tracker.mark(1, "not_a_real_stage")
+
+
+def test_n19_runtime_fans_in_acoustic_clocks_on_duplex_voice_path(
+    tmp_path: Path,
+) -> None:
+    """Prove RobotRuntime fan-in marks fire on the duplex voice-stage path.
+
+    Injects the same surfaces the live duplex path already measures
+    (``MicrophoneVoiceLoop.last_turn_clocks``, recognizer ``last_metrics``,
+    speaker first-sample callback) and drives ``_voice_stage`` /
+    ``_audio_chunk_started`` exactly as DuplexVoiceSession does.
+    """
+
+    from parcel_robot.audio_io import AudioDeviceStatus
+    from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
+    from parcel_robot.providers import SpeechStack
+    from parcel_robot.runtime import RobotRuntime
+    from parcel_robot.voice_pipeline import VoiceStage
+    from tests.test_runtime import FakeSimulatorBackend
+
+    repo = Path(__file__).resolve().parents[1]
+    config = tmp_path / "robot.yaml"
+    config.write_text(
+        f"""
+skills:
+  root: {repo / "configs" / "skills"}
+navigation:
+  enabled: false
+motion:
+  backend: rl
+  max_vx: 0.6
+  max_vy: 0.4
+  max_vyaw: 1.0
+  rl:
+    enabled: true
+    policy_path: ""
+memory:
+  path: ":memory:"
+poses: {{}}
+modules: []
+""",
+        encoding="utf-8",
+    )
+
+    class _Mic:
+        def __init__(self) -> None:
+            self.last_turn_clocks = {
+                "speech_end_monotonic": 10.20,
+                "semantic_commit_monotonic": 10.40,
+            }
+
+        def close(self) -> None:
+            return None
+
+    class _Recognizer:
+        def __init__(self) -> None:
+            self.last_metrics = {
+                "status": "ok",
+                "request_start_monotonic": 10.41,
+                "final_monotonic": 10.70,
+            }
+
+    observation = SimObservation(
+        timestamp=0.0,
+        robot=RobotPose(),
+        owner=OwnerTrack(
+            owner_id="owner-test", x=3.0, y=0.0, visible=True, confidence=1.0
+        ),
+        backend="fake",
+    )
+    runtime = RobotRuntime(
+        config,
+        FakeSimulatorBackend(observation),
+        audio_status=AudioDeviceStatus(
+            status="text mode",
+            driver="test",
+            capture_hardware=False,
+            connected_input=False,
+            connected_output=False,
+            detail="n19 fan-in fixture",
+        ),
+    )
+    try:
+        runtime.speech_stack = SpeechStack(
+            recognizer=_Recognizer(),  # type: ignore[arg-type]
+            synthesizer=runtime.speech_stack.synthesizer,
+            mode=runtime.speech_stack.mode,
+            stt_detail=runtime.speech_stack.stt_detail,
+            tts_detail=runtime.speech_stack.tts_detail,
+        )
+        runtime._microphone_loop = _Mic()  # type: ignore[assignment]
+
+        runtime._voice_stage(
+            VoiceStage(
+                turn_id=1, name="query_end", timestamp=10.75, transcript="come here"
+            )
+        )
+        runtime._voice_stage(VoiceStage(turn_id=1, name="tts_start", timestamp=11.12))
+        runtime._audio_chunk_started(None)
+        runtime._voice_stage(VoiceStage(turn_id=1, name="turn_complete", timestamp=12.0))
+
+        turns = runtime.latency_snapshot()["turns"]
+        assert turns, "expected a completed latency turn"
+        offsets = turns[0]["stage_offsets_ms"]
+        for name in N19_STAGES:
+            assert name in offsets, f"missing fan-in mark {name} in {sorted(offsets)}"
+        assert offsets["capture_speech_end"] < 0.0
+        assert offsets["audio_first_sample"] > 0.0
+
+        ledger = tmp_path / "ledger.jsonl"
+        written = runtime.write_latency_ledger_row(path=ledger, source="n19-duplex-proof")
+        assert written == ledger
+        row = json.loads(ledger.read_text(encoding="utf-8").splitlines()[0])
+        assert set(N19_STAGES) <= set(row["acoustic_stages_present"])
+    finally:
+        runtime.close()

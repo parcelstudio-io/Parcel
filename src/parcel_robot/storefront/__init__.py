@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from parcel_robot.storefront.fixtures import (
     DOES_NOT_PROVE as FIXTURE_DOES_NOT_PROVE,
+)
+from parcel_robot.storefront.fixtures import (
     StorefrontFixture,
     StorefrontManifest,
     load_manifest,
@@ -18,6 +20,8 @@ from parcel_robot.storefront.fixtures import (
 )
 from parcel_robot.storefront.ingest import (
     DOES_NOT_PROVE as INGEST_DOES_NOT_PROVE,
+)
+from parcel_robot.storefront.ingest import (
     ingest_ocr_hits,
     ocr_hit_to_detection,
     ocr_hits_to_detections,

@@ -79,7 +79,7 @@ def profile_hot_path(
     nav.close()
     samples_ms.sort()
     median_ms = float(statistics.median(samples_ms))
-    p95_ms = float(samples_ms[max(0, int(round(0.95 * (len(samples_ms) - 1))))])
+    p95_ms = float(samples_ms[max(0, round(0.95 * (len(samples_ms) - 1)))])
     mean_ms = float(statistics.fmean(samples_ms))
     period_ms = 1000.0 / hz
     return {

@@ -58,7 +58,15 @@ OWNER_ARRIVAL_RADIUS_M: float = 1.8
 #: :func:`evidence_arrival_verified`, :class:`FalsePositiveMemory`). It adds a
 #: requirement to the navigator's K0 predicate; it does not change how a
 #: recorded trace is scored, so every persisted row re-scores identically.
-SCORING_VERSION: str = "instructnav-scoring-v1.3-arrival-evidence"
+#: v1.4 adds chance-constrained ``GoalRegion.contains`` under optional D2
+#: anchor covariance (``P(inside) >= INSIDE_PROBABILITY_THRESHOLD``). The
+#: zero-covariance / omitted-covariance path is the identical boolean test
+#: as v1.3 (T0 byte-equal); non-zero covariance is opt-in only.
+SCORING_VERSION: str = "instructnav-scoring-v1.4-chance-constrained-k0"
+
+#: Chance-constraint threshold for K0 membership under detection (D2) covariance.
+#: STRATA Stratum-1: at zero covariance the predicate reduces to today's boolean.
+INSIDE_PROBABILITY_THRESHOLD: float = 0.9
 
 #: ``M``-of-``N`` confirming-frame requirement for an arrival claim. Same shape
 #: and same numbers as the tracker's confirmation rule
@@ -215,6 +223,44 @@ class GoalRegion:
         x: float,
         y: float,
         anchor_xy: tuple[float, float] | None = None,
+        *,
+        anchor_covariance: (
+            tuple[tuple[float, float], tuple[float, float]] | None
+        ) = None,
+        probability_threshold: float = INSIDE_PROBABILITY_THRESHOLD,
+    ) -> bool:
+        """K0 membership — boolean at zero cov; ``P(inside)≥τ`` under D2 cov.
+
+        ``anchor_covariance`` is the 2×2 world-frame covariance of the region's
+        anchor (D2 fused target position). When omitted or numerically zero this
+        is the *identical* boolean geometry the system has always used (T0
+        byte-equal). With non-zero covariance it is the single chance-constrained
+        upgrade — no second arrival authority.
+        """
+
+        exact = self._contains_exact(x, y, anchor_xy=anchor_xy)
+        if not _has_nonzero_covariance(anchor_covariance):
+            return exact
+        if not math.isfinite(float(probability_threshold)) or not (
+            0.0 <= float(probability_threshold) <= 1.0
+        ):
+            raise ValueError("probability_threshold must be in [0, 1]")
+        return (
+            p_inside_goal_region(
+                x,
+                y,
+                self,
+                anchor_xy=anchor_xy,
+                anchor_covariance=anchor_covariance,
+            )
+            >= float(probability_threshold)
+        )
+
+    def _contains_exact(
+        self,
+        x: float,
+        y: float,
+        anchor_xy: tuple[float, float] | None = None,
     ) -> bool:
         if not (math.isfinite(x) and math.isfinite(y)):
             return False
@@ -241,7 +287,7 @@ class GoalRegion:
     ) -> float:
         if not (math.isfinite(x) and math.isfinite(y)):
             return float("inf")
-        if self.contains(x, y, anchor_xy=anchor_xy):
+        if self._contains_exact(x, y, anchor_xy=anchor_xy):
             return 0.0
         if self.kind == "disc":
             assert self.center is not None and self.radius_m is not None
@@ -636,7 +682,12 @@ def object_near_goal_region(
     label: str = "",
     entity_id: str | None = None,
 ) -> GoalRegion:
-    """Arrival authority for ``near`` object goals (relative band, not a bare radius)."""
+    """Arrival authority for ``near`` object goals (relative band, not a bare radius).
+
+    Membership is :meth:`GoalRegion.contains`. Under D2 detection covariance that
+    becomes ``P(inside) >= INSIDE_PROBABILITY_THRESHOLD``; at zero covariance it
+    is today's boolean point-in-band test (T0 byte-equal).
+    """
 
     _finite_xy(center)
     _, minimum, vicinity = object_near_envelope_m(object_radius_m, label=label)
@@ -646,6 +697,97 @@ def object_near_goal_region(
         band_m=(minimum, vicinity),
         anchor_entity=entity_id,
         anchor_footprint_m=float(object_radius_m),
+    )
+
+
+def _standard_normal_cdf(value: float) -> float:
+    return 0.5 * (1.0 + math.erf(float(value) / math.sqrt(2.0)))
+
+
+def _has_nonzero_covariance(
+    covariance: tuple[tuple[float, float], tuple[float, float]] | None,
+) -> bool:
+    if covariance is None:
+        return False
+    try:
+        sxx = float(covariance[0][0])
+        sxy = float(covariance[0][1])
+        syx = float(covariance[1][0])
+        syy = float(covariance[1][1])
+    except (TypeError, IndexError, ValueError):
+        return False
+    if not all(math.isfinite(v) for v in (sxx, sxy, syx, syy)):
+        return False
+    return max(abs(sxx), abs(sxy), abs(syx), abs(syy)) > 0.0
+
+
+def p_inside_goal_region(
+    x: float,
+    y: float,
+    region: GoalRegion,
+    *,
+    anchor_xy: tuple[float, float] | None = None,
+    anchor_covariance: tuple[tuple[float, float], tuple[float, float]] | None = None,
+) -> float:
+    """``P(point inside region)`` under optional D2 anchor covariance.
+
+    At zero / omitted covariance this returns exactly ``1.0`` or ``0.0`` matching
+    :meth:`GoalRegion._contains_exact` — the reduction that keeps T0 byte-equal.
+    For ``relative_band`` / ``disc`` with non-zero covariance, radial uncertainty
+    is the projection ``nᵀ Σ n`` of the anchor covariance onto the robot→anchor
+    unit vector (STRATA Stratum-1 half-space form).
+    """
+
+    if not _has_nonzero_covariance(anchor_covariance):
+        return 1.0 if region._contains_exact(x, y, anchor_xy=anchor_xy) else 0.0
+
+    assert anchor_covariance is not None
+    sxx = float(anchor_covariance[0][0])
+    sxy = 0.5 * (float(anchor_covariance[0][1]) + float(anchor_covariance[1][0]))
+    syy = float(anchor_covariance[1][1])
+
+    if region.kind == "polygon":
+        # Polygon K0 under *robot* pose uncertainty lives in pose.py; D2 cov is
+        # an anchor/target uncertainty. Without an edge-normal model for a
+        # moving polygon, refuse (fail closed) rather than invent a second rule.
+        return 0.0
+
+    if region.kind == "disc":
+        assert region.center is not None and region.radius_m is not None
+        cx, cy = float(region.center[0]), float(region.center[1])
+        dist = math.hypot(float(x) - cx, float(y) - cy)
+        dx, dy = float(x) - cx, float(y) - cy
+        if dist <= 1e-12:
+            nx, ny = 1.0, 0.0
+        else:
+            nx, ny = dx / dist, dy / dist
+        variance = max(0.0, nx * (sxx * nx + sxy * ny) + ny * (sxy * nx + syy * ny))
+        if variance <= 0.0:
+            return 1.0 if dist <= float(region.radius_m) else 0.0
+        return _standard_normal_cdf((float(region.radius_m) - dist) / math.sqrt(variance))
+
+    # relative_band — the near / next_to / towards K0 shape.
+    anchor = anchor_xy if anchor_xy is not None else region.center
+    if anchor is None or region.band_m is None:
+        return 0.0
+    cx, cy = float(anchor[0]), float(anchor[1])
+    dx, dy = float(x) - cx, float(y) - cy
+    dist = math.hypot(dx, dy)
+    if dist <= 1e-12:
+        nx, ny = 1.0, 0.0
+    else:
+        nx, ny = dx / dist, dy / dist
+    variance = max(0.0, nx * (sxx * nx + sxy * ny) + ny * (sxy * nx + syy * ny))
+    lo = max(float(region.band_m[0]), float(region.anchor_footprint_m))
+    hi = float(region.band_m[1])
+    if lo > hi:
+        return 0.0
+    if variance <= 0.0:
+        return 1.0 if lo <= dist <= hi else 0.0
+    sigma = math.sqrt(variance)
+    # P(lo ≤ d ≤ hi) ≈ Φ((hi-d)/σ) · Φ((d-lo)/σ) under radial Gaussian approx.
+    return _standard_normal_cdf((hi - dist) / sigma) * _standard_normal_cdf(
+        (dist - lo) / sigma
     )
 
 
@@ -1285,6 +1427,10 @@ def differential_arrival_verdict(
     system_arrival: bool | None,
     anchor_xy: tuple[float, float] | None = None,
     epsilon_m: float = ARRIVAL_BOUNDARY_EPSILON_M,
+    anchor_covariance: (
+        tuple[tuple[float, float], tuple[float, float]] | None
+    ) = None,
+    probability_threshold: float = INSIDE_PROBABILITY_THRESHOLD,
 ) -> ArrivalAuthorityVerdict:
     """Record both arrival authorities and classify their (dis)agreement.
 
@@ -1303,12 +1449,21 @@ def differential_arrival_verdict(
 
     ``system_arrival=None`` means the harness could not observe a system
     verdict; the category is ``unknown`` and nothing is asserted.
+
+    ``anchor_covariance`` (optional) engages the same chance-constrained K0
+    predicate the navigator uses under D2; omitted / zero keeps the boolean.
     """
 
     if not math.isfinite(float(epsilon_m)) or float(epsilon_m) < 0.0:
         raise ValueError("epsilon_m must be finite and ≥ 0")
     x, y = float(final_xy[0]), float(final_xy[1])
-    scorer_arrival = goal.contains(x, y, anchor_xy=anchor_xy)
+    scorer_arrival = goal.contains(
+        x,
+        y,
+        anchor_xy=anchor_xy,
+        anchor_covariance=anchor_covariance,
+        probability_threshold=probability_threshold,
+    )
     dtg = goal.distance_to(x, y, anchor_xy=anchor_xy)
     margin = goal.signed_distance_to_boundary(x, y, anchor_xy=anchor_xy)
     near_boundary = math.isfinite(margin) and abs(margin) <= float(epsilon_m)

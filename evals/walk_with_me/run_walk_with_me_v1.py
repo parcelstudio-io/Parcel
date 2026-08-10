@@ -163,6 +163,7 @@ def main(argv: list[str] | None = None) -> int:
         "smoke": bool(args.smoke),
         "n": aggregate["n"],
         "sr": aggregate["sr"],
+        "hard_collision_total": int(aggregate["hard_collision_total"]),
         "failure_histogram": aggregate["failure_histogram"],
         "attribution_histogram": aggregate["attribution_histogram"],
         # Instrument 5 — differential arrival verdicts, per run.

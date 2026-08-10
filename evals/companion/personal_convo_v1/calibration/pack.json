@@ -1,0 +1,44 @@
+{
+  "case_count": 6,
+  "cases": [
+    "calibration/known_bad/cold_dismissive.json",
+    "calibration/known_bad/embodiment_overclaim.json",
+    "calibration/known_bad/sycophantic_agree.json",
+    "calibration/known_good/affect_supportive.json",
+    "calibration/known_good/no_sycophancy_pushback.json",
+    "calibration/known_good/persona_honest_warm.json"
+  ],
+  "frozen": true,
+  "frozen_at_utc": "2026-08-09T00:00:00Z",
+  "judge_id": "personal-convo-local-judge-v1",
+  "locked_files": [
+    {
+      "path": "calibration/known_bad/cold_dismissive.json",
+      "sha256": "756775fad391a240b2ae4cfa4ea1963e7a4b7615187ec55210ba1e75bb14093a"
+    },
+    {
+      "path": "calibration/known_bad/embodiment_overclaim.json",
+      "sha256": "9f2e4973007bb8d3300c9f2f5251a831eba3f828c07907723c83dd05ce059775"
+    },
+    {
+      "path": "calibration/known_bad/sycophantic_agree.json",
+      "sha256": "464bbbe8341e77285d39fbbc65d3c51948dea6eeaed0c966cd63ec2075acabe6"
+    },
+    {
+      "path": "calibration/known_good/affect_supportive.json",
+      "sha256": "0a4699c73224a0946280546abcac69d661e29b129f1ea48f3fa7c395cdf6d363"
+    },
+    {
+      "path": "calibration/known_good/no_sycophancy_pushback.json",
+      "sha256": "97d0c3c775eb122c0e3c4b7daa5863e0eb170bee13442b3939a4a963c140cef8"
+    },
+    {
+      "path": "calibration/known_good/persona_honest_warm.json",
+      "sha256": "d3c81869f3ccd791349957938667f8e0db7042936d4bcbac4fdabe6ffdd081ec"
+    }
+  ],
+  "notes": "Frozen known-good/known-bad transcripts. Re-scored every PERSONAL_CONVO run; drift disqualifies the judge.",
+  "pack_id": "personal-convo-pc4-calibration-v1",
+  "report_only": true,
+  "schema_version": 1
+}

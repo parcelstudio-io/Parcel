@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from parcel_robot.bags.schema import (
     MANIFEST_FILENAME,
@@ -14,8 +15,8 @@ from parcel_robot.bags.schema import (
     make_envelope,
     make_manifest,
     reject_privileged_fields,
-    validate_message,
     validate_manifest,
+    validate_message,
 )
 
 

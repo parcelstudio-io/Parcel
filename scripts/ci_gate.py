@@ -138,6 +138,7 @@ DIGEST_SENTINELS: dict[str, str] = {
 NAV_LEDGER = REPO / "evals" / "nav_instruct" / "results" / "ledger.jsonl"
 MUTATION_PANEL_JSON = REPO / "evals" / "nav_instruct" / "results" / "mutation_panel.json"
 FOLLOWBENCH_LEDGER = REPO / "evals" / "companion_nav" / "results" / "ledger.jsonl"
+WALK_WITH_ME_LEDGER = REPO / "evals" / "walk_with_me" / "results" / "ledger.jsonl"
 
 #: The frozen baseline is collision-free with zero false arrivals; that is the
 #: Design-A/product guarantee. Any increase is a new hazard.
@@ -145,11 +146,14 @@ PINNED_FROZEN_FALSE_ARRIVAL = 0
 
 RUFF_BASELINE = REPO / "scripts" / "ci_ruff_baseline.json"
 
-#: Latency-tail ratchet tolerance: a persisted product latency ledger does not
-#: exist yet (see HANDOFFS in docs/CI.md); this margin governs the ratchet
-#: helper the self-test exercises and any future latency ledger the runner is
-#: pointed at. 1.20 mirrors the BARN controller-p99 ratio ceiling already in the
-#: repo.
+#: Persisted product latency ledger + pinned p95/p99 baseline (N19 / C-A).
+#: The percentile-pin pytest selection (``LATENCY_TAIL_NODE_IDS``) stays; this
+#: is the ledger source the ratchet reads once enough rows exist.
+LATENCY_LEDGER = REPO / "evals" / "latency" / "ledger.jsonl"
+LATENCY_BASELINE = REPO / "evals" / "latency" / "baseline.json"
+
+#: Latency-tail ratchet tolerance against the pinned baseline. 1.20 mirrors the
+#: BARN controller-p99 ratio ceiling already in the repo.
 LATENCY_TAIL_MARGIN = 1.20
 
 
@@ -334,6 +338,7 @@ def evaluate_hard_safety(
     nav_ledger: Path = NAV_LEDGER,
     mutation_panel: Path = MUTATION_PANEL_JSON,
     followbench_ledger: Path = FOLLOWBENCH_LEDGER,
+    walk_with_me_ledger: Path = WALK_WITH_ME_LEDGER,
     pinned_false_arrival: int = PINNED_FROZEN_FALSE_ARRIVAL,
     tier: str = "commit",
 ) -> GateResult:
@@ -342,6 +347,8 @@ def evaluate_hard_safety(
     Reads the existing harness ledgers. The frozen-baseline nav row and the
     mutation-panel clean run and every follow-bench row must show zero hard
     collisions; the frozen-baseline false_arrival may not exceed its pin.
+    walk_with_me rows join only when they carry ``hard_collision_total`` —
+    legacy stub rows without the field are skipped by field-presence.
     """
 
     problems: list[str] = []
@@ -389,6 +396,25 @@ def evaluate_hard_safety(
     else:
         checks.append("follow-bench: no rows (skipped)")
 
+    wwm_rows = _read_jsonl(walk_with_me_ledger)
+    wwm_with_field = [r for r in wwm_rows if "hard_collision_total" in r]
+    if wwm_with_field:
+        bad = [
+            r.get("report_id", r.get("run_id", "?"))
+            for r in wwm_with_field
+            if int(r.get("hard_collision_total", -1)) != 0
+        ]
+        checks.append(
+            f"walk_with_me: {len(wwm_with_field)}/{len(wwm_rows)} row(s) with "
+            f"hard_collision_total, all 0 = {not bad}"
+        )
+        if bad:
+            problems.append(f"walk_with_me rows with hard collisions: {bad}")
+    else:
+        checks.append(
+            f"walk_with_me: {len(wwm_rows)} row(s), none carry hard_collision_total (skipped)"
+        )
+
     detail = " | ".join(checks)
     if problems:
         return GateResult("hard-safety", tier, True, "fail", "; ".join(problems), extra={"checks": checks})
@@ -401,14 +427,13 @@ def evaluate_latency_ratchet(
     *,
     margin: float = LATENCY_TAIL_MARGIN,
     tier: str = "commit",
+    name: str = "latency-tail-ratchet",
 ) -> GateResult:
     """Ratchet p95/p99 in ``series`` against ``baseline * margin``.
 
-    A persisted product latency ledger does not exist yet, so in the real run
-    the authoritative latency-tail gate is the committed percentile pins
-    (``LATENCY_TAIL_NODE_IDS``). This pure ratchet is the seedable core the
-    self-test regresses, and is ready to read a real latency ledger the moment
-    one is persisted (see the HANDOFF in docs/CI.md).
+    Pure core used by the ledger source switch and by the self-test (a seeded
+    spike must still redden). The commit tier also keeps the percentile-pin
+    pytest selection (``LATENCY_TAIL_NODE_IDS``).
     """
 
     problems: list[str] = []
@@ -424,11 +449,68 @@ def evaluate_latency_ratchet(
                         f"{metric}.{key} {cur[key]:.2f} > {ceiling:.2f} (baseline {base[key]:.2f} x {margin})"
                     )
     if problems:
-        return GateResult("latency-tail-ratchet", tier, True, "fail", "; ".join(problems))
+        return GateResult(name, tier, True, "fail", "; ".join(problems))
     return GateResult(
-        "latency-tail-ratchet", tier, True, "pass",
+        name, tier, True, "pass",
         f"{len(baseline)} metric series within {margin}x tail ceiling",
     )
+
+
+def evaluate_latency_ledger(
+    *,
+    ledger: Path = LATENCY_LEDGER,
+    baseline_path: Path = LATENCY_BASELINE,
+    margin: float = LATENCY_TAIL_MARGIN,
+    tier: str = "commit",
+) -> GateResult:
+    """Point the latency-tail ratchet at ``evals/latency/ledger.jsonl``.
+
+    While the ledger has fewer rows than the pinned ``window``, skip with a
+    note (never red) — the percentile-pin pytest gate remains authoritative.
+    """
+
+    if not baseline_path.exists():
+        return GateResult(
+            "latency-tail-ledger", tier, True, "error",
+            f"missing latency baseline at {baseline_path.name}",
+        )
+    try:
+        doc = json.loads(baseline_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return GateResult("latency-tail-ledger", tier, True, "error", f"baseline JSON: {exc}")
+    window = int(doc.get("window", 5))
+    baseline_metrics = doc.get("metrics") or {}
+    if not isinstance(baseline_metrics, dict) or not baseline_metrics:
+        return GateResult(
+            "latency-tail-ledger", tier, True, "error", "baseline.metrics missing or empty"
+        )
+
+    rows = _read_jsonl(ledger)
+    if len(rows) < window:
+        return GateResult(
+            "latency-tail-ledger",
+            tier,
+            True,
+            "skip",
+            (
+                f"ledger rows={len(rows)} < window={window}; ratchet skipped "
+                "(percentile-pin pytest remains authoritative)"
+            ),
+            extra={"rows": len(rows), "window": window},
+        )
+
+    from parcel_robot.observability import latency_tail_series
+
+    series = latency_tail_series(rows[-1])
+    result = evaluate_latency_ratchet(
+        series, baseline_metrics, margin=margin, tier=tier, name="latency-tail-ledger"
+    )
+    if result.status == "pass":
+        result.detail = (
+            f"latest row {rows[-1].get('row_id', '?')}: {result.detail} "
+            f"(rows={len(rows)}, window={window})"
+        )
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -583,10 +665,12 @@ def run_commit_tier() -> list[GateResult]:
     results.append(evaluate_ruff(tier=tier))
     results.append(evaluate_hard_safety(tier=tier))
     results.append(evaluate_frozen_digest_sentinels(DIGEST_SENTINELS, tier=tier))
+    results.append(evaluate_latency_ledger(tier=tier))
     # Targeted hard-gate pytest selections (small, fast).
     results.append(_pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900))
     results.append(_pytest_gate("frozen-digest-integrity", tier, FROZEN_DIGEST_NODE_IDS, timeout=900))
     results.append(_pytest_gate("mutation-panel-freshness", tier, MUTATION_FRESHNESS_NODE_IDS, timeout=600))
+    # Percentile-pin pytest stays; ledger source switch is evaluate_latency_ledger above.
     results.append(_pytest_gate("latency-tail", tier, LATENCY_TAIL_NODE_IDS, timeout=600))
     # The full default gate last (the 3097-passing suite).
     results.append(
@@ -602,6 +686,7 @@ def run_nightly_tier() -> list[GateResult]:
     results.append(evaluate_ruff(tier=tier))
     results.append(evaluate_hard_safety(tier=tier))
     results.append(evaluate_frozen_digest_sentinels(DIGEST_SENTINELS, tier=tier))
+    results.append(evaluate_latency_ledger(tier=tier))
     results.append(_pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900))
     results.append(_pytest_gate("frozen-digest-integrity", tier, FROZEN_DIGEST_NODE_IDS, timeout=900))
     results.append(_pytest_gate("mutation-panel-freshness", tier, MUTATION_FRESHNESS_NODE_IDS, timeout=600))

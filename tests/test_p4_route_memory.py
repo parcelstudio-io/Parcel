@@ -36,7 +36,6 @@ from parcel_robot.route_memory import (
     resolve_citywalker_vendor,
 )
 
-
 # --- Route memory store -----------------------------------------------------
 
 

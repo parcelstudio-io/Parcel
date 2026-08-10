@@ -168,6 +168,7 @@ try:
         arrival_goal_region_for_relation,
         evidence_arrival_verified,
     )
+    from parcel_robot.instructnav.search_entity import PlanTimePriorCache
     from parcel_robot.voice.amendment import clarification_from_grounding
 
     from .instructnav_recovery import (
@@ -178,6 +179,13 @@ try:
         search_entity_plan_step,
         select_search_entity_frontier,
     )
+    from .value_directed_scan import (
+        SCAN_PROPOSER_SOURCE,
+        ScanLookDecision,
+        ValueDirectedScanSession,
+        paint_look,
+    )
+    from .value_map import SemanticValueMap2D
 
     _HAS_INSTRUCTNAV = True
 except ImportError:  # pragma: no cover — frozen BARN bundle path
@@ -205,7 +213,30 @@ except ImportError:  # pragma: no cover — frozen BARN bundle path
     recovery_action_for = None  # type: ignore[misc, assignment]
     search_entity_plan_step = None  # type: ignore[misc, assignment]
     select_search_entity_frontier = None  # type: ignore[misc, assignment]
+    PlanTimePriorCache = None  # type: ignore[misc, assignment]
+    SCAN_PROPOSER_SOURCE = "scan_behavior"
+    ScanLookDecision = None  # type: ignore[misc, assignment]
+    ValueDirectedScanSession = None  # type: ignore[misc, assignment]
+    paint_look = None  # type: ignore[misc, assignment]
+    SemanticValueMap2D = None  # type: ignore[misc, assignment]
     _HAS_INSTRUCTNAV = False
+
+# D3 lock-on is a separate soft import (same pattern as value_directed_scan):
+# keep it out of the instructnav try so a detection_adapter miss cannot disable
+# the whole GrounderV2 / ScanBehavior ladder.
+try:
+    from .detection_lock_on import (
+        LOCK_ON_PLAN_STEP_ID,
+        LOCK_ON_PROPOSER_SOURCE,
+        DetectionLockOnSession,
+    )
+
+    _HAS_DETECTION_LOCK_ON = True
+except ImportError:  # pragma: no cover — optional D3 module
+    DetectionLockOnSession = None  # type: ignore[misc, assignment]
+    LOCK_ON_PLAN_STEP_ID = "align_then_translate"
+    LOCK_ON_PROPOSER_SOURCE = "detection_lock_on"
+    _HAS_DETECTION_LOCK_ON = False
 
 
 class DirectiveNavigator:
@@ -230,6 +261,8 @@ class DirectiveNavigator:
         scan_budget_steps: int = 80,
         frontier_budget_steps: int = 300,
         instructnav_recovery: bool = True,
+        value_directed_search: bool = False,
+        detection_lock_on: bool = False,
         inside_probability_threshold: float | None = None,
         arrival_confidence_threshold: float | None = None,
     ):
@@ -269,8 +302,37 @@ class DirectiveNavigator:
         self._active_task_id: str = ""
         self._active_plan_revision: int = 0
         self.grounder_v2 = GrounderV2() if _HAS_INSTRUCTNAV and GrounderV2 is not None else None
+        # C2/C3 opt-in: flag-off must stay byte-identical to the fixed-spin path.
+        self.value_directed_search = (
+            bool(value_directed_search) and _HAS_INSTRUCTNAV and SemanticValueMap2D is not None
+        )
+        self.semantic_value_map = (
+            SemanticValueMap2D(shape=(64, 64), resolution_m=0.5, origin_global_cell=(-32, -32))
+            if self.value_directed_search
+            else None
+        )
+        self._value_scan_session = (
+            ValueDirectedScanSession(value_map=self.semantic_value_map)
+            if self.value_directed_search and ValueDirectedScanSession is not None
+            else None
+        )
+        self._plan_time_prior = None
+        # D3 opt-in: detection-triggered SEARCH→NAVIGATE lock-on. Flag-off keeps
+        # the frustum multi-view commit path byte-identical.
+        self.detection_lock_on = (
+            bool(detection_lock_on)
+            and _HAS_INSTRUCTNAV
+            and _HAS_DETECTION_LOCK_ON
+            and DetectionLockOnSession is not None
+        )
+        self._detection_lock_on = (
+            DetectionLockOnSession() if self.detection_lock_on else None
+        )
         self.scan_behavior = (
-            ScanBehaviorController()
+            ScanBehaviorController(
+                value_directed=self.value_directed_search,
+                value_session=self._value_scan_session,
+            )
             if _HAS_INSTRUCTNAV and ScanBehaviorController is not None
             else None
         )
@@ -503,6 +565,18 @@ class DirectiveNavigator:
                     data.get("instructnav_recovery", True),
                 )
             ),
+            value_directed_search=bool(
+                overrides.get(
+                    "value_directed_search",
+                    data.get("value_directed_search", False),
+                )
+            ),
+            detection_lock_on=bool(
+                overrides.get(
+                    "detection_lock_on",
+                    data.get("detection_lock_on", False),
+                )
+            ),
             semantic_memory=overrides.get("semantic_memory"),
             # Stratum-2 perception tier: ``null`` (the shipping default) means
             # "use the goal's own minimum_confidence", which is the value the
@@ -588,6 +662,21 @@ class DirectiveNavigator:
         self._steps_gate_blocked = 0
         if self.scan_behavior is not None:
             self.scan_behavior.reset()
+        if self._value_scan_session is not None:
+            self._value_scan_session.reset()
+        if self._detection_lock_on is not None:
+            self._detection_lock_on.reset()
+        if self.value_directed_search and PlanTimePriorCache is not None:
+            query = str(
+                mission.metadata.get("semantic_query")
+                or getattr(mission.semantic_goal, "query", "")
+                or ""
+            )
+            self._plan_time_prior = (
+                PlanTimePriorCache.from_query_table(query) if query.strip() else None
+            )
+        else:
+            self._plan_time_prior = None
         self._reset_ramp_memory()
         mission.metadata.pop("paused", None)
         mission.metadata.setdefault("replan_count", 0)
@@ -596,6 +685,10 @@ class DirectiveNavigator:
             GroundingOutcome.UNSEEN.value if GroundingOutcome is not None else "UNSEEN",
         )
         mission.metadata.setdefault("recovery_phase", "frustum")
+        if self.value_directed_search:
+            mission.metadata["value_directed_search"] = True
+        if self.detection_lock_on:
+            mission.metadata["detection_lock_on"] = True
         if mission.goal is not None:
             self._navigator.reset(mission)
         self.mission = mission
@@ -1386,6 +1479,118 @@ class DirectiveNavigator:
             ),
         )
 
+    def _try_detection_lock_on(
+        self,
+        semantic_goal: Any,
+        mapped: SemanticCandidate | None,
+        observation: NavObservation,
+        *,
+        robot_xy: tuple[float, float],
+    ) -> SemanticCandidate | MidLevelCommand | None:
+        """D3: D1+SigLIP detection trigger → ONE stamped SE2Goal → candidate.
+
+        Returns the locked SemanticCandidate on commit, a stop command on arbiter
+        veto, or ``None`` while evidence is still accumulating.
+        """
+
+        assert self.mission is not None
+        session = self._detection_lock_on
+        if session is None:
+            return None
+        now_s = float(observation.extras.get("time_s") or 0.0)
+        now_ns = int(max(0.0, now_s) * 1_000_000_000) + int(self._scan_steps)
+        decision = session.observe_candidate(
+            query=str(semantic_goal.query),
+            candidate=mapped,
+            robot_xy=robot_xy,
+            now_ns=now_ns,
+        )
+        if decision is None:
+            if self._scan_steps + 1 >= self.scan_budget_steps:
+                reply = (
+                    honest_not_found_reply(
+                        _refusal_label(semantic_goal),
+                        scanned=self._already_scanned,
+                        searched=self._already_searched,
+                    )
+                    if honest_not_found_reply is not None
+                    else "target not confirmed"
+                )
+                self.mission.status = "failed"
+                self.mission.metadata.update(
+                    {
+                        "resolution_state": "not_found",
+                        "recovery_phase": "failed",
+                        "reply": reply,
+                        "lock_on_outcome": "budget_exhausted",
+                    }
+                )
+                return MidLevelCommand(stop=True, note="detection_lock_on_budget")
+            return None
+        self.mission.metadata["lock_on_credibility"] = decision.credibility
+        self.mission.metadata["lock_on_siglip_score"] = decision.siglip_score
+        self.mission.metadata["arrival_anchor_covariance"] = (
+            (float(decision.covariance[0][0]), float(decision.covariance[0][1])),
+            (float(decision.covariance[1][0]), float(decision.covariance[1][1])),
+        )
+        self.mission.metadata["lock_on_source"] = LOCK_ON_PROPOSER_SOURCE
+        if (
+            _HAS_INSTRUCTNAV
+            and SE2Goal is not None
+            and self.proposer_bus is not None
+            and self.goal_arbiter is not None
+        ):
+            proposed = session.build_se2_goal(
+                decision,
+                task_id=self._active_task_id,
+                plan_revision=self._active_plan_revision,
+                now_s=now_s,
+            )
+            self.proposer_bus.publish(proposed)
+            self.goal_arbiter.set_plan_step(LOCK_ON_PLAN_STEP_ID)
+            chosen = self.goal_arbiter.resolve((proposed,), now_s=now_s)
+            if chosen is None:
+                self.mission.status = "failed"
+                self.mission.metadata["resolution_state"] = "arbiter_veto"
+                return MidLevelCommand(stop=True, note="detection_lock_on_vetoed")
+            self.mission.metadata["lock_on_se2"] = chosen.as_dict()
+        # Prefer the grounded instance; retarget xy to the fused metric estimate.
+        base = mapped if mapped is not None else decision.source_candidate
+        if base is None:
+            base = SemanticCandidate(
+                candidate_id=decision.candidate_id,
+                label=decision.label,
+                x=float(decision.position[0]),
+                y=float(decision.position[1]),
+                confidence=float(decision.confidence),
+                kind="object",
+                source=LOCK_ON_PROPOSER_SOURCE,
+                reachable=True,
+                metadata={
+                    "covariance_xy": decision.covariance,
+                    "lock_on": True,
+                },
+            )
+            return base
+        meta = dict(base.metadata or {})
+        meta["covariance_xy"] = decision.covariance
+        meta["lock_on"] = True
+        meta["lock_on_credibility"] = decision.credibility
+        return SemanticCandidate(
+            candidate_id=base.candidate_id,
+            label=base.label,
+            x=float(decision.position[0]),
+            y=float(decision.position[1]),
+            z=float(getattr(base, "z", 0.0) or 0.0),
+            confidence=float(decision.confidence),
+            kind=base.kind,
+            polygon=base.polygon,
+            source=base.source,
+            observed_at=base.observed_at,
+            reachable=base.reachable,
+            metadata=meta,
+        )
+
     def _commit_semantic_candidate(
         self,
         semantic_goal: Any,
@@ -1988,21 +2193,50 @@ class DirectiveNavigator:
                     grounding_outcome=GroundingOutcome.MEMORY_HIT.value,
                 )
             # RESOLVED (and scan-phase MEMORY_HIT): confirm with multi-view search.
+            # D3 flag-on: detection-triggered lock-on (D1+SigLIP) replaces the
+            # frustum required_observations commit; flag-off keeps the legacy path.
             self._recovery_phase = (
                 "scan" if self._recovery_phase == "scan" else "frustum"
             )
             self.mission.status = "searching"
             self.mission.metadata["recovery_phase"] = self._recovery_phase
             self.mission.metadata["resolution_state"] = "searching"
-            result = self.search.observe(semantic_goal, self._resolution_semantic_map, observation)
-            self._scan_steps += 1
-            if isinstance(result, SemanticCandidate):
-                return self._commit_semantic_candidate(
+            if self.detection_lock_on and self._detection_lock_on is not None:
+                locked = self._try_detection_lock_on(
                     semantic_goal,
-                    result,
+                    mapped,
                     observation,
-                    grounding_outcome=GroundingOutcome.RESOLVED.value,
+                    robot_xy=(robot_x, robot_y),
                 )
+                self._scan_steps += 1
+                if isinstance(locked, SemanticCandidate):
+                    return self._commit_semantic_candidate(
+                        semantic_goal,
+                        locked,
+                        observation,
+                        grounding_outcome=GroundingOutcome.RESOLVED.value,
+                    )
+                if isinstance(locked, MidLevelCommand):
+                    return locked
+                # Still accumulating D1 evidence — steer toward the grounded target.
+                result = MidLevelCommand(
+                    vx=0.0,
+                    vy=0.0,
+                    vyaw=self.search.yaw_rate,
+                    note="detection_lock_on_scan",
+                )
+            else:
+                result = self.search.observe(
+                    semantic_goal, self._resolution_semantic_map, observation
+                )
+                self._scan_steps += 1
+                if isinstance(result, SemanticCandidate):
+                    return self._commit_semantic_candidate(
+                        semantic_goal,
+                        result,
+                        observation,
+                        grounding_outcome=GroundingOutcome.RESOLVED.value,
+                    )
             if isinstance(result, MidLevelCommand) and not result.stop:
                 # Steer the confirming rotation TOWARD the grounded target so it
                 # stays in the frustum for the second sighting. The multi-view
@@ -2195,11 +2429,13 @@ class DirectiveNavigator:
             # standing height), so every full-turn scan began 15.5 deg from
             # where the robot was actually pointing and its stop bearings were
             # all offset by that constant.
+            # C2: full_turn_scan_spec is ONLY the first-UNSEEN VLFM init.
             spec = self.scan_behavior.start(
                 _pose_in(observation, MAP_FRAME).yaw,
                 spec=full_turn_scan_spec(),
             )
             self.mission.metadata["recovery_plan_step"] = spec.as_plan_step()
+            self._publish_scan_viewpoint(observation)
 
         self._scan_steps += 1
         # Interchangeable (stuff-class / explicit "nearest") queries must not
@@ -2233,9 +2469,38 @@ class DirectiveNavigator:
                 grounding_outcome=GroundingOutcome.MEMORY_HIT.value,
             )
 
+        self._paint_scan_observation(semantic_goal, observation, frustum)
         cmd = self.scan_behavior.step(observation)
         if cmd is not None and self._scan_steps < self.scan_budget_steps:
             return cmd
+
+        # C2: after init (or a value look) completes, GP-UCB may request another
+        # dwell before handing off to SearchEntity. Flag-off skips this block.
+        if (
+            self.value_directed_search
+            and self._value_scan_session is not None
+            and self.scan_behavior is not None
+            and self._scan_steps < self.scan_budget_steps
+            and not interchangeable_scan
+        ):
+            if not self._value_scan_session.init_done:
+                self._value_scan_session.mark_init_complete()
+            robot_map = _pose_in(observation, MAP_FRAME)
+            choice = self._value_scan_session.choose_next_look(
+                origin_world_xy=robot_map.xy,
+                current_yaw_rad=robot_map.yaw,
+            )
+            self.mission.metadata["scan_look_decision"] = choice.decision.value
+            self.mission.metadata["scan_look_ucb"] = choice.ucb
+            if (
+                choice.decision == ScanLookDecision.LOOK
+                and choice.yaw_rad is not None
+            ):
+                self.scan_behavior.enqueue_value_look(choice.yaw_rad)
+                self._publish_scan_viewpoint(observation, yaw_rad=choice.yaw_rad)
+                cmd = self.scan_behavior.step(observation)
+                if cmd is not None:
+                    return cmd
 
         if interchangeable_scan:
             # Scan complete: choose over EVERYTHING seen, ranked by the
@@ -2447,6 +2712,8 @@ class DirectiveNavigator:
                 bearings=bearings,
                 ring_step_m=ring_step_m,
                 travel_weight=travel_weight,
+                value_map=self.semantic_value_map if self.value_directed_search else None,
+                plan_prior=self._plan_time_prior if self.value_directed_search else None,
             )
         # Soft-import fallback without SearchEntity helpers.
         scored: list[tuple[float, int, tuple[float, float]]] = []
@@ -2475,6 +2742,88 @@ class DirectiveNavigator:
             math.hypot(candidate[0] - x, candidate[1] - y) <= radius
             for x, y in self._frontier_viewpoints
         )
+
+    def _publish_scan_viewpoint(
+        self,
+        observation: NavObservation,
+        *,
+        yaw_rad: float | None = None,
+    ) -> None:
+        """Plan scan stops as SE2 viewpoints through ProposerBus / base-lease."""
+
+        if (
+            not self.value_directed_search
+            or self._value_scan_session is None
+            or SE2Goal is None
+            or self.proposer_bus is None
+            or self.goal_arbiter is None
+        ):
+            return
+        robot_map = _pose_in(observation, MAP_FRAME)
+        yaw = float(yaw_rad) if yaw_rad is not None else float(robot_map.yaw)
+        if self.scan_behavior is not None and yaw_rad is None:
+            current = self.scan_behavior.current_stop_yaw
+            if current is not None:
+                yaw = float(current)
+        now_s = float(observation.extras.get("time_s") or 0.0)
+        proposed = self._value_scan_session.se2_viewpoint(
+            x=robot_map.x,
+            y=robot_map.y,
+            yaw_rad=yaw,
+            now_s=now_s,
+            task_id=self._active_task_id,
+            plan_revision=self._active_plan_revision,
+        )
+        self.proposer_bus.publish(proposed)
+        self.goal_arbiter.set_plan_step(proposed.plan_step_id)
+        self.goal_arbiter.resolve((proposed,), now_s=now_s)
+        if self.mission is not None:
+            self.mission.metadata["scan_proposer_source"] = SCAN_PROPOSER_SOURCE
+
+    def _paint_scan_observation(
+        self,
+        semantic_goal: Any,
+        observation: NavObservation,
+        frustum: list[Any],
+    ) -> None:
+        """Paint the current look into the shared SemanticValueMap2D belief."""
+
+        if (
+            not self.value_directed_search
+            or self.semantic_value_map is None
+            or paint_look is None
+        ):
+            return
+        robot_map = _pose_in(observation, MAP_FRAME)
+        query = str(getattr(semantic_goal, "query", "") or "").strip().lower()
+        value = 0.15
+        for candidate in frustum:
+            label = str(getattr(candidate, "label", "") or "").strip().lower()
+            if query and (query in label or label in query):
+                value = max(value, float(getattr(candidate, "confidence", 0.7)))
+            else:
+                value = max(value, 0.05)
+        paint_look(
+            self.semantic_value_map,
+            origin_world_xy=robot_map.xy,
+            heading_rad=robot_map.yaw,
+            value=min(1.0, value),
+            conf=1.0,
+        )
+
+    def suspend_scan_for_summons(self) -> None:
+        """Acoustic/attention summons: suspend in-flight scan (do not cancel)."""
+
+        if self.scan_behavior is not None:
+            self.scan_behavior.suspend()
+        if self.mission is not None:
+            self.mission.metadata["scan_suspended"] = True
+
+    def resume_scan_after_summons(self) -> None:
+        if self.scan_behavior is not None:
+            self.scan_behavior.resume()
+        if self.mission is not None:
+            self.mission.metadata.pop("scan_suspended", None)
 
     def _record_frontier_viewpoint(self, position: tuple[float, float]) -> None:
         spacing = 0.8
@@ -2915,7 +3264,12 @@ class DirectiveNavigator:
                 tuple((float(px), float(py)) for px, py in polygon),
                 clearance,
             )
-        if arrival_region is not None and not arrival_region.contains(position[0], position[1]):
+        if arrival_region is not None and not arrival_region.contains(
+            position[0],
+            position[1],
+            anchor_covariance=self._arrival_anchor_covariance(),
+            probability_threshold=self.inside_probability_threshold,
+        ):
             self.mission.metadata["arrival_not_verified_reason"] = "outside_arrival_region"
             return False
         # Stratum-2 evidence half of the ONE K0 predicate. Geometry says "I am
@@ -3193,8 +3547,28 @@ class DirectiveNavigator:
                 tuple((float(px), float(py)) for px, py in polygon),
                 clearance,
             )
-        if not region.contains(robot_map.x, robot_map.y):
+        # D4: chance-constrained K0 under D2 anchor covariance when present;
+        # zero / omitted covariance is today's boolean (T0 byte-equal).
+        cov = self._arrival_anchor_covariance()
+        if not region.contains(
+            robot_map.x,
+            robot_map.y,
+            anchor_covariance=cov,
+            probability_threshold=self.inside_probability_threshold,
+        ):
             return False
+        if cov is not None and self.mission is not None:
+            from parcel_robot.instructnav.scoring import p_inside_goal_region
+
+            self.mission.metadata["arrival_inside_probability"] = p_inside_goal_region(
+                robot_map.x,
+                robot_map.y,
+                region,
+                anchor_covariance=cov,
+            )
+            self.mission.metadata["arrival_inside_probability_threshold"] = (
+                self.inside_probability_threshold
+            )
         # The `near` K0 band is a full annulus, but a valid STAND pose
         # additionally lies on the object's support surface (the sidewalk it
         # stands on) — exactly what `_semantic_arrival_verified` enforces at
@@ -3222,6 +3596,28 @@ class DirectiveNavigator:
             if self._resight_committed_candidate(observation) is None:
                 return False
         return True
+
+    def _arrival_anchor_covariance(
+        self,
+    ) -> tuple[tuple[float, float], tuple[float, float]] | None:
+        """D2 planar covariance stamped at lock-on / commit, or None (T0 path)."""
+
+        if self.mission is None:
+            return None
+        raw = self.mission.metadata.get("arrival_anchor_covariance")
+        if raw is None:
+            return None
+        try:
+            row0, row1 = raw[0], raw[1]
+            cov = (
+                (float(row0[0]), float(row0[1])),
+                (float(row1[0]), float(row1[1])),
+            )
+        except (TypeError, ValueError, IndexError, KeyError):
+            return None
+        if max(abs(v) for row in cov for v in row) <= 0.0:
+            return None
+        return cov
 
     def _build_arrival_goal_region(
         self,

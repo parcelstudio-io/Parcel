@@ -110,13 +110,27 @@ def test_person_stop_is_never_below_the_bare_stopping_distance(
 def test_person_stop_dominates_stop_distance_plus_the_human_allowance(
     envelope: SafetyEnvelope, speed: float
 ) -> None:
-    """The documented definition, asserted as an inequality."""
+    """P0-H definition: metres = stop_m + closing_mps * latency_s."""
 
-    allowance = envelope.stop_distance(speed) + (
-        envelope.person_latency_factor * envelope.reaction_latency_s
-    )
+    allowance = envelope.stop_distance(speed) + speed * envelope.person_latency_s
     assert envelope.person_stop(speed) >= allowance
     assert envelope.person_stop(speed) >= envelope.person_social_zone_m
+
+
+@SETTINGS
+@given(envelope=envelopes(), speed=speeds, closing=speeds)
+def test_person_stop_closing_term_is_dimensionally_metres(
+    envelope: SafetyEnvelope, speed: float, closing: float
+) -> None:
+    """Closing speed × person_latency_s must add metres, never seconds."""
+
+    base = envelope.stop_distance(speed)
+    got = envelope.person_stop(speed, closing_speed_mps=closing)
+    expected = max(
+        envelope.person_social_zone_m,
+        base + max(0.0, closing) * envelope.person_latency_s,
+    )
+    assert got == expected
 
 
 @SETTINGS

@@ -1,4 +1,4 @@
-"""Run PERSONAL_CONVO_V1 — text tier (Tier T), per-commit CI (PC-1..PC-3).
+"""Run PERSONAL_CONVO_V1 — text tier (Tier T), per-commit CI (PC-1..PC-4).
 
 The runner drives frozen multi-turn session scripts through the live text path
 and scores every turn with the deterministic Tier-D bank. It mirrors
@@ -10,11 +10,16 @@ Provider selection mirrors conversation_quality_v1's fake: the default provider
 is the offline, deterministic :class:`FixtureConversationProvider`, so CI is
 byte-reproducible with no model server. ``--provider live`` assembles the real
 prompting stack (owner profile + weather tool + persona) around a llama.cpp
-server for a provenanced live run; it is out of the CI path.
+server and swaps in a live Tier-2 summarizer so summary *quality* is measured;
+it is out of the CI path.
 
-Tier A (audio e2e on the acoustic rig), the human-recorded corpus, and the
-local judge + calibration pack (PC-4) are separate, owner-gated cards and are
-intentionally not implemented here.
+PC-4: every run re-scores the frozen known-good/known-bad calibration pack with
+the local report-only judge. Drift ⇒ ``judge.status=disqualified`` and probe
+judged scores are omitted (never silently shifted). Judge output never gates
+``family_status`` / ``case_verdicts``.
+
+Tier A (audio e2e on the acoustic rig) and the human-recorded corpus remain
+separate owner-gated cards.
 """
 
 from __future__ import annotations
@@ -39,12 +44,23 @@ from evals.companion.personal_convo_v1.fixture_provider import (
     FixtureConversationProvider,
     TurnResult,
 )
+from evals.companion.personal_convo_v1.judge import (
+    JUDGE_ID,
+    calibrate,
+    judge_probe_turns,
+)
+from evals.companion.personal_convo_v1.live_provider import (
+    LiveConversationProvider,
+    LiveSummarizer,
+    measure_summarizer_quality,
+)
 from evals.companion.personal_convo_v1.scorers import classify_family, score_turn
 from evals.companion.personal_convo_v1.session_schema import (
     PROBE_FAMILIES,
     validate_session_script,
 )
 from parcel_robot.dynamic_prompting import UserProfileSource, build_weather_tool
+from parcel_robot.providers import LlamaCppProvider
 from parcel_robot.tiered_memory import (
     TieredMemory,
     TieredMemoryConfig,
@@ -196,7 +212,10 @@ def make_eval_summarizer(evidence_contents: frozenset[str]) -> Callable[..., str
 
 
 def _tiered_memory_window(
-    graph: MemoryGraph, limit: int
+    graph: MemoryGraph,
+    limit: int,
+    *,
+    summarizer: Callable[..., str] | None = None,
 ) -> tuple[list[dict[str, str]], dict[str, Any]]:
     """Replay the event graph into a TieredMemory and flatten a retrieval.
 
@@ -207,8 +226,9 @@ def _tiered_memory_window(
     """
 
     evidence_contents = frozenset(event.content for event in graph.evidence)
+    active = summarizer or make_eval_summarizer(evidence_contents)
     store = TieredMemory(
-        summarizer=make_eval_summarizer(evidence_contents),
+        summarizer=active,
         distiller=null_distiller,
         config=TieredMemoryConfig(tier1_max_turns=limit),
     )
@@ -216,6 +236,7 @@ def _tiered_memory_window(
         store.append(event.role, event.content, session_id=event.session or "default")
     retrieval = store.retrieve(graph.probe_query)
     window: list[dict[str, str]] = []
+    summary_texts = [summary.text for summary in retrieval.tier2_summaries]
     for summary in retrieval.tier2_summaries:
         window.append({"role": "assistant", "content": summary.text})
     for fact in retrieval.tier3_profile:
@@ -224,16 +245,30 @@ def _tiered_memory_window(
         )
     for turn in retrieval.tier1_recent:
         window.append({"role": turn.role, "content": turn.content})
-    meta = {
+    meta: dict[str, Any] = {
         "tier1_recent": len(retrieval.tier1_recent),
         "tier2_summaries": len(retrieval.tier2_summaries),
         "tier3_profile_facts": len(retrieval.tier3_profile),
+        "tier2_summary_texts": summary_texts,
+        "summarizer_kind": (
+            "live_llm" if isinstance(active, LiveSummarizer) else "fixture_deterministic"
+        ),
     }
+    if isinstance(active, LiveSummarizer):
+        joined = " ".join(summary_texts) or active.last_summary
+        meta["summarizer_quality"] = measure_summarizer_quality(
+            summary_text=joined,
+            used_fallback=active.used_fallback,
+            call_count=active.call_count,
+        )
     return window, meta
 
 
 def _build_memory_window(
-    memory_spec: Mapping[str, Any], memory_backend: str
+    memory_spec: Mapping[str, Any],
+    memory_backend: str,
+    *,
+    summarizer: Callable[..., str] | None = None,
 ) -> tuple[list[dict[str, str]], dict[str, Any]]:
     """Resolve a scenario's ``memory_fixture`` into (window rows, provenance).
 
@@ -255,7 +290,7 @@ def _build_memory_window(
         "evidence_within_recency_window": evidence_within_window(graph),
     }
     if memory_backend == "tiered":
-        window, extra = _tiered_memory_window(graph, limit)
+        window, extra = _tiered_memory_window(graph, limit, summarizer=summarizer)
     elif memory_backend == "recency":
         window = build_memory(graph).recent(limit)
         extra = {"tier1_recent": len(window), "tier2_summaries": 0, "tier3_profile_facts": 0}
@@ -271,6 +306,7 @@ def run_scenario(
     respond: Callable[..., TurnResult],
     *,
     memory_backend: str = "tiered",
+    summarizer: Callable[..., str] | None = None,
 ) -> dict[str, Any]:
     """Drive one probe scenario end to end and score every turn."""
 
@@ -287,7 +323,9 @@ def run_scenario(
     memory_window: list[dict[str, str]] = []
     memory_meta: dict[str, Any] | None = None
     if memory_spec:
-        memory_window, memory_meta = _build_memory_window(memory_spec, memory_backend)
+        memory_window, memory_meta = _build_memory_window(
+            memory_spec, memory_backend, summarizer=summarizer
+        )
 
     turn_records: list[dict[str, Any]] = []
     turn_verdicts: list[dict[str, Any]] = []
@@ -355,6 +393,7 @@ def run_pack(
     run_id: str,
     recorded_at_utc: str,
     memory_backend: str = "tiered",
+    summarizer: Callable[..., str] | None = None,
     manifest_path: str | Path = MANIFEST_PATH,
 ) -> dict[str, Any]:
     """Load the frozen pack, run every scenario, and assemble the result object."""
@@ -367,7 +406,13 @@ def run_pack(
     probes = load_probes(manifest)
 
     scenarios = [
-        run_scenario(scenario, respond, memory_backend=memory_backend) for scenario in probes
+        run_scenario(
+            scenario,
+            respond,
+            memory_backend=memory_backend,
+            summarizer=summarizer,
+        )
+        for scenario in probes
     ]
 
     case_verdicts: dict[str, str] = {}
@@ -382,8 +427,13 @@ def run_pack(
     blocked = sorted(f for f, s in family_status.items() if s == "recency_window_blocked")
     failing = sorted(f for f, s in family_status.items() if s == "fail")
 
+    # PC-4: re-score frozen known-good/known-bad every run. Drift ⇒ disqualified.
+    calibration = calibrate()
+    judge_report = judge_probe_turns(scenarios, calibration=calibration)
+
     locked_files = manifest["locked_files"]
     tiered = memory_backend == "tiered"
+    live_summarizer = isinstance(summarizer, LiveSummarizer)
     memory_note = (
         (
             "cross_session_memory now PASSES via the tiered store: the aged-out "
@@ -408,13 +458,19 @@ def run_pack(
         ),
         memory_note,
     ]
-    if tiered:
+    if tiered and not live_summarizer:
         does_not_prove.append(
             "Under the tiered backend the Tier-2 summarizer is a DETERMINISTIC "
             "fixture stand-in (evidence-aware compression), not a live model. This "
             "proves the retrieval MECHANISM — an aged fact survives into a summary "
             "and is retrievable — not that a real LLM writes good summaries; that "
             "needs a provenanced --provider live run."
+        )
+    if live_summarizer:
+        does_not_prove.append(
+            "Live Tier-2 summarizer quality is reported under "
+            "scenarios[*].memory_fixture.summarizer_quality (report-only). A single "
+            "provenanced run is not a non-inferiority claim across model swaps."
         )
     does_not_prove.extend(
         [
@@ -423,16 +479,32 @@ def run_pack(
                 "covered by this text tier."
             ),
             (
-                "No judge model ran (PC-4 calibration pack + local judge is a later card); "
-                "the judged half of every family is absent."
-            ),
-            (
-                "Under the fixture provider these verdicts reflect a deterministic reference "
-                "companion, not a live model; a live delta requires a provenanced --provider "
-                "live run."
+                f"PC-4 local judge ({JUDGE_ID}) is report-only; calibration "
+                f"status={calibration['status']}. Drift disqualifies the judge "
+                "(scores_valid=false) rather than silently shifting scores. Heuristic "
+                "dimensions are not human preference."
             ),
         ]
     )
+    if provider_kind == "fixture":
+        does_not_prove.append(
+            "Under the fixture provider Tier-D verdicts reflect a deterministic "
+            "reference companion, not a live model; a live delta requires a "
+            "provenanced --provider live run."
+        )
+    else:
+        does_not_prove.append(
+            "Live companion turns use a conservative DialogueAct derivation from the "
+            "model reply (not the production voice-lane extractor)."
+        )
+
+    summarizer_quality = None
+    for scenario in scenarios:
+        meta = scenario.get("memory_fixture") or {}
+        if isinstance(meta, dict) and meta.get("summarizer_quality"):
+            summarizer_quality = meta["summarizer_quality"]
+            break
+
     result = {
         "schema_version": 1,
         "suite_id": SUITE_ID,
@@ -458,13 +530,22 @@ def run_pack(
             "families_failing": failing,
         },
         "scenarios": scenarios,
+        "judge": {
+            "calibration": calibration,
+            "probe_scores": judge_report,
+            "report_only": True,
+        },
+        "summarizer_quality": summarizer_quality,
         "claims": {
             "text_tier_only": True,
             "audio_tier_executed": False,
             "human_recording_executed": False,
-            "judge_model_used": False,
+            "judge_model_used": True,
+            "judge_report_only": True,
+            "judge_calibration_qualified": calibration["status"] == "qualified",
             "machine_checks_prove_conversational_quality": False,
             "cross_session_recall_beyond_recency_window": tiered,
+            "live_summarizer_measured": live_summarizer,
         },
         "does_not_prove": does_not_prove,
     }
@@ -487,21 +568,45 @@ def _fixture_respond() -> Callable[..., TurnResult]:
     return provider.respond
 
 
-def _live_respond(args: argparse.Namespace) -> tuple[Callable[..., TurnResult], dict[str, Any]]:
-    """Assemble the real stack around a llama.cpp server (out of CI).
+def _live_stack(
+    args: argparse.Namespace,
+) -> tuple[Callable[..., TurnResult], LiveSummarizer, dict[str, Any]]:
+    """Assemble the real llama.cpp companion + live Tier-2 summarizer (out of CI).
 
-    Kept intentionally thin: a full DialogueAct extraction from the production
-    voice lane needs runtime wiring this card must not touch (a gesture/voice
-    session is committing concurrently). This path records provenance and runs
-    the same session loop, deriving a conservative DialogueAct from the model's
-    reply. It is not exercised by the offline suite.
+    DialogueAct extraction is conservative (eval-local), not the production voice
+    lane. The live summarizer is the measurement target for summarizer quality.
     """
 
-    raise PersonalConvoError(
-        "--provider live is a documented seam; wiring the production voice lane's "
-        "DialogueAct extraction is deferred to the Tier-A / owner-gated cards. Run "
-        "with the default fixture provider for the offline CI gate."
+    model_id = str(args.model or "gemma-4-26b-a4b")
+    model = LlamaCppProvider(
+        base_url=str(args.base_url),
+        model=model_id,
+        timeout=float(args.timeout),
+        streaming=True,
+        temperature=float(args.temperature),
+        top_p=float(args.top_p),
+        max_tokens=max(int(args.max_tokens), 384),
+        enable_thinking=False,
     )
+    provider = LiveConversationProvider(model, retries=2)
+    summarizer = LiveSummarizer(
+        base_url=str(args.base_url),
+        model=model_id,
+        timeout=float(args.timeout),
+        max_chars=int(args.summary_max_chars),
+        temperature=min(float(args.temperature), 0.3),
+        top_p=float(args.top_p),
+        max_tokens=512,
+    )
+    extra = {
+        "live_stack": {
+            "companion": LiveConversationProvider.provider_id,
+            "summarizer": "live_llm_freeform",
+            "base_url": str(args.base_url),
+            "model": model_id,
+        }
+    }
+    return provider.respond, summarizer, extra
 
 
 def _provenance(args: argparse.Namespace) -> dict[str, Any]:
@@ -535,7 +640,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--provider", choices=("fixture", "live"), default="fixture")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8081")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8080")
     parser.add_argument("--model")
     parser.add_argument("--model-artifact", type=Path)
     parser.add_argument("--model-sha256")
@@ -543,6 +648,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--device-profile")
     parser.add_argument("--description", default="")
     parser.add_argument("--run-id")
+    parser.add_argument("--temperature", type=float, default=0.25)
+    parser.add_argument("--top-p", type=float, default=0.9)
+    parser.add_argument("--max-tokens", type=int, default=256)
+    parser.add_argument("--timeout", type=float, default=90.0)
+    parser.add_argument("--summary-max-chars", type=int, default=1200)
     parser.add_argument(
         "--memory",
         choices=MEMORY_BACKENDS,
@@ -558,10 +668,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.description.strip():
         provenance["description"] = args.description.strip()
 
+    summarizer: Callable[..., str] | None = None
     if args.provider == "live":
-        respond, extra = _live_respond(args)
+        respond, summarizer, extra = _live_stack(args)
         provenance.update(extra)
-        provider_id = args.model or "live"
+        provider_id = args.model or LiveConversationProvider.provider_id
     else:
         respond = _fixture_respond()
         provider_id = FixtureConversationProvider.provider_id
@@ -578,6 +689,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         run_id=run_id,
         recorded_at_utc=datetime.now(timezone.utc).isoformat(),
         memory_backend=args.memory,
+        summarizer=summarizer,
     )
     path = write_result(result, args.output)
     print(
@@ -588,6 +700,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "family_status": result["family_status"],
                 "aggregate": result["aggregate"],
                 "pack_digest": result["pack_digest"],
+                "judge_status": result["judge"]["calibration"]["status"],
+                "summarizer_quality": result.get("summarizer_quality"),
             },
             indent=2,
             sort_keys=True,

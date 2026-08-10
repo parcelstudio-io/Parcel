@@ -195,12 +195,10 @@ ALLOWLIST: dict[tuple[str, float], tuple[int, str, str, str]] = {
     # scrum/20260807/task_2/NAV_FINISH_STATUS.md. (The ledger rows those runs
     # wrote were reverted: appending one moves a duplex pin, which reads the
     # latest shipped row -- see the same record.)
-    ("navigation/reactive_safety.py", 1.2): (
-        1,
-        "F-proximity",
-        "unassigned",
-        "ReactiveSafetyPolicy.obstacle_slow_m, one of the six copies",
-    ),
+    # ("navigation/reactive_safety.py", 1.2) — RESOLVED 2026-08-09 (card S-B).
+    # ReactiveSafetyPolicy.obstacle_slow_m / person bands now derive from
+    # DEFAULT_SAFETY_ENVELOPE; the 1.2 literal is gone. Entry deleted so the
+    # ratchet's shrink is visible (same discipline as follow.py 1.25 above).
     ("navigation/dynamic_costs.py", 0.35): (
         1,
         "F-robot-radius",

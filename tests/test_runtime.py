@@ -43,8 +43,10 @@ def _observation(
     owner_y: float = 0.0,
     visible: bool = True,
     confidence: float = 1.0,
-    obstacle_m: float | None = None,
-    obstacle_bearing_rad: float | None = None,
+    # Default far-field scan sample: missing scan must fail closed (P0-B), so
+    # a "healthy clear" fixture needs an explicit range rather than None.
+    obstacle_m: float | None = 10.0,
+    obstacle_bearing_rad: float | None = 0.0,
     person_m: float | None = None,
     person_bearing_rad: float | None = None,
     person_ttc_s: float | None = None,

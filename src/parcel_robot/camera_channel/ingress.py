@@ -46,6 +46,7 @@ recognition (a hardware re-earn). No field recall/precision is claimed.
 from __future__ import annotations
 
 import logging
+import math
 import threading
 import time
 from collections.abc import Callable, Sequence
@@ -62,6 +63,108 @@ DEFAULT_MIN_POLL_INTERVAL_S = 0.25
 #: Candidate source tag so downstream logging / the arbiter can tell a pixel
 #: proposal apart from the GT-frustum oracle.
 PIXEL_SOURCE = "pixel_detector"
+
+#: Arrival tolerance stamped on pixel candidates — matches city_semantics objects
+#: so approach planning and terminal verification share one band convention.
+_PIXEL_ARRIVAL_RADIUS_M = 0.06
+
+#: Surface / support clearances stamped on pixel candidates (city_semantics parity).
+_PIXEL_TARGET_MIN_SURFACE_CLEARANCE_M = 0.8
+_PIXEL_NON_TARGET_OBSTACLE_CLEARANCE_M = 1.25
+_PIXEL_TERMINAL_SUPPORT_CLEARANCE_M = 0.32
+
+
+def radius_m_from_box_depth(
+    box: Sequence[int] | Sequence[float],
+    depth_m: float,
+    fx: float,
+) -> float:
+    """Honest object footprint radius from detection box angular width × depth / 2.
+
+    Half the larger box side in pixels, back-projected at the localized depth
+    through the camera's horizontal focal length: ``r = (side_px / 2) * D / fx``.
+    That is the planar footprint a sphere (or the object's projected half-width)
+    subtends at that range — the same lever city objects get from geom size.
+    """
+
+    if len(box) != 4:
+        raise ValueError("box must be (u0, v0, u1, v1)")
+    u0, v0, u1, v1 = (float(box[0]), float(box[1]), float(box[2]), float(box[3]))
+    depth = float(depth_m)
+    focal = float(fx)
+    if not math.isfinite(depth) or depth <= 0.0:
+        raise ValueError("depth_m must be finite and positive")
+    if not math.isfinite(focal) or focal <= 0.0:
+        raise ValueError("fx must be finite and positive")
+    half_w = 0.5 * abs(u1 - u0)
+    half_h = 0.5 * abs(v1 - v0)
+    return max(0.0, max(half_w, half_h) * depth / focal)
+
+
+def _near_envelope_metadata(radius_m: float, label: str) -> dict[str, Any]:
+    """City-object near-envelope field set, derived from an honest footprint.
+
+    Consumes :func:`instructnav.scoring.object_near_envelope_m` (read-only) so
+    approach planning and arrival verification cannot disagree with city objects.
+    """
+
+    from parcel_robot.instructnav.scoring import object_near_envelope_m
+
+    radius = max(0.0, float(radius_m))
+    stand_off, minimum, vicinity = object_near_envelope_m(radius, label=label)
+    return {
+        "radius_m": round(radius, 4),
+        "stand_off_m": float(stand_off),
+        "arrival_radius_m": _PIXEL_ARRIVAL_RADIUS_M,
+        "minimum_vicinity_radius_m": float(minimum),
+        "vicinity_radius_m": float(vicinity),
+        "target_min_surface_clearance_m": _PIXEL_TARGET_MIN_SURFACE_CLEARANCE_M,
+        "non_target_obstacle_clearance_m": _PIXEL_NON_TARGET_OBSTACLE_CLEARANCE_M,
+        "terminal_support_clearance_m": _PIXEL_TERMINAL_SUPPORT_CLEARANCE_M,
+    }
+
+
+def _front_surface_world_xy(
+    box: Sequence[int] | Sequence[float],
+    depth: Any,
+    *,
+    intrinsics: Any,
+    extrinsics: Any,
+    depth_min_m: float,
+    depth_max_m: float,
+) -> tuple[float, float, float] | None:
+    """Back-project the box centre at the FRONT (min valid) depth.
+
+    Median-inlier depth (what ``localize_detection`` uses) sits inside curved
+    bodies; the near-envelope treats ``position`` as the object CENTRE, so the
+    surface point used for centre recovery must be the nearest face.
+    """
+
+    import numpy as np
+
+    from parcel_robot.detection_adapter.pixel_detections import back_project
+
+    depth_arr = np.asarray(depth, dtype=np.float64)
+    if depth_arr.ndim != 2:
+        return None
+    h, w = depth_arr.shape
+    u0 = max(0, min(int(box[0]), w))
+    u1 = max(0, min(int(box[2]), w))
+    v0 = max(0, min(int(box[1]), h))
+    v1 = max(0, min(int(box[3]), h))
+    if u1 <= u0 or v1 <= v0:
+        return None
+    patch = depth_arr[v0:v1, u0:u1]
+    valid = np.isfinite(patch) & (patch > max(0.0, float(depth_min_m)))
+    if math.isfinite(float(depth_max_m)):
+        valid &= patch <= float(depth_max_m)
+    if not valid.any():
+        return None
+    front_d = float(patch[valid].min())
+    u_c = 0.5 * (u0 + u1)
+    v_c = 0.5 * (v0 + v1)
+    world = extrinsics.camera_to_world(back_project(u_c, v_c, front_d, intrinsics))
+    return (float(world[0]), float(world[1]), front_d)
 
 
 @dataclass
@@ -296,7 +399,7 @@ class CameraIngress:
 
         from parcel_robot.detection_adapter.pixel_detections import (
             CameraExtrinsics,
-            localize_frame,
+            localize_detection,
         )
 
         t0 = time.perf_counter()
@@ -327,51 +430,124 @@ class CameraIngress:
             mount=self.mount,
         )
 
+        # Detect then localize per-box so the candidate can carry an honest
+        # box+depth footprint (``localize_frame`` drops the box after localization).
         t_detect = time.perf_counter()
-        localized = localize_frame(
-            self.detector,
-            rgb=rgb,
-            depth=depth,
-            seg=None,  # a real open-vocab detector is box-only (seg_id=None)
-            query=list(query),
-            intrinsics=self.intrinsics,
-            extrinsics=extrinsics,
-            source_timestamp_ns=source_ts % (1 << 62),
-            received_monotonic_ns=recv_ns,
-            sequence=seq,
-            embed_fn=self.embed_fn,
-            depth_min_m=self.depth_min_m,
-            depth_max_m=self.depth_max_m,
+        detections = self.detector.detect(
+            rgb=rgb, depth=depth, seg=None, query=list(query)
         )
         detect_ms = (time.perf_counter() - t_detect) * 1000.0
 
-        candidates = [
-            self._candidate_from_localized(loc, seq, offset)
-            for offset, loc in enumerate(localized)
-        ]
+        fx = float(getattr(self.intrinsics, "fx", 0.0) or 0.0)
+        candidates: list[dict[str, Any]] = []
+        localized_count = 0
+        for offset, detection in enumerate(detections):
+            loc = localize_detection(
+                detection,
+                depth=depth,
+                seg=None,  # a real open-vocab detector is box-only (seg_id=None)
+                intrinsics=self.intrinsics,
+                extrinsics=extrinsics,
+                source_timestamp_ns=source_ts % (1 << 62),
+                received_monotonic_ns=recv_ns,
+                sequence=int(seq) * 1000 + offset,
+                rgb=rgb,
+                embed_fn=self.embed_fn,
+                detector_name=getattr(self.detector, "name", "detector"),
+                depth_min_m=self.depth_min_m,
+                depth_max_m=self.depth_max_m,
+            )
+            if loc is None:
+                continue
+            localized_count += 1
+            front = _front_surface_world_xy(
+                detection.box,
+                depth,
+                intrinsics=self.intrinsics,
+                extrinsics=extrinsics,
+                depth_min_m=self.depth_min_m,
+                depth_max_m=self.depth_max_m,
+            )
+            candidates.append(
+                self._candidate_from_localized(
+                    loc,
+                    seq,
+                    len(candidates),
+                    box=detection.box,
+                    fx=fx,
+                    robot_xy=(pose.x, pose.y),
+                    front_surface_xy=None if front is None else (front[0], front[1]),
+                    front_depth_m=None if front is None else front[2],
+                )
+            )
         latency_ms = (time.perf_counter() - t0) * 1000.0
         with self._lock:
-            self.stats.detections_last = len(localized)
+            self.stats.detections_last = localized_count
             self.stats.last_latency_ms = latency_ms
             self.stats.last_detect_ms = detect_ms
         return candidates
 
     @staticmethod
-    def _candidate_from_localized(loc: Any, seq: int, offset: int) -> dict[str, Any]:
+    def _candidate_from_localized(
+        loc: Any,
+        seq: int,
+        offset: int,
+        *,
+        box: Sequence[int] | Sequence[float] | None = None,
+        fx: float = 0.0,
+        robot_xy: tuple[float, float] = (0.0, 0.0),
+        front_surface_xy: tuple[float, float] | None = None,
+        front_depth_m: float | None = None,
+    ) -> dict[str, Any]:
         """One :class:`LocalizedDetection` → the navigator's candidate dict shape.
 
-        Matches ``navigation.semantic_map._candidate``: an ``object`` candidate with
-        a world ``position``, the detector ``score`` as confidence (clamped to the
-        [0, 1] the schema requires), and ``source=pixel_detector`` so grounding /
-        the arbiter can see it came from pixels, not the oracle.
+        Matches ``navigation.semantic_map._candidate`` / city_semantics objects:
+        an ``object`` candidate with a world ``position``, the detector ``score``
+        as confidence, ``source=pixel_detector``, and the full near-envelope
+        metadata (``radius_m`` from box angular width × depth / 2, plus
+        ``stand_off_m`` / vicinity fields from ``object_near_envelope_m``) so
+        surface-anchored band math can verify arrival the same way city objects do.
+
+        ``position`` is the estimated object CENTRE: front-surface back-projection
+        advanced along the robot→surface ray by ``radius_m``. Median-inlier depth
+        alone sits inside curved bodies and would mis-place the centre.
         """
 
         confidence = float(loc.score)
         confidence = 0.0 if confidence < 0.0 else min(confidence, 1.0)
+        depth_for_radius = (
+            float(front_depth_m)
+            if front_depth_m is not None and math.isfinite(float(front_depth_m))
+            else float(loc.depth_m)
+        )
+        if (
+            box is not None
+            and float(fx) > 0.0
+            and math.isfinite(depth_for_radius)
+            and depth_for_radius > 0.0
+        ):
+            radius_m = radius_m_from_box_depth(box, depth_for_radius, float(fx))
+        else:
+            radius_m = 0.0
+        envelope = _near_envelope_metadata(radius_m, label=str(loc.label))
+        if front_surface_xy is not None:
+            world_x = float(front_surface_xy[0])
+            world_y = float(front_surface_xy[1])
+        else:
+            world_x = float(loc.world_x)
+            world_y = float(loc.world_y)
+        world_z = float(loc.world_z)
+        if radius_m > 0.0:
+            dx = world_x - float(robot_xy[0])
+            dy = world_y - float(robot_xy[1])
+            dist = math.hypot(dx, dy)
+            if dist > 1e-6:
+                world_x += (dx / dist) * radius_m
+                world_y += (dy / dist) * radius_m
         return {
             "id": f"pxdet-{seq}-{offset}",
             "label": str(loc.label),
-            "position": [float(loc.world_x), float(loc.world_y), float(loc.world_z)],
+            "position": [world_x, world_y, world_z],
             "confidence": confidence,
             "kind": "object",
             "source": PIXEL_SOURCE,
@@ -383,6 +559,8 @@ class CameraIngress:
                 "sigma_range_m": round(float(loc.sigma_range_m), 4),
                 "inlier_pixels": int(loc.inlier_pixels),
                 "depth_m": round(float(loc.depth_m), 4),
+                "front_depth_m": round(depth_for_radius, 4),
+                **envelope,
             },
         }
 
@@ -426,4 +604,10 @@ class CameraIngress:
                 pass
 
 
-__all__ = ["DEFAULT_MIN_POLL_INTERVAL_S", "PIXEL_SOURCE", "CameraIngress", "IngressStats"]
+__all__ = [
+    "DEFAULT_MIN_POLL_INTERVAL_S",
+    "PIXEL_SOURCE",
+    "CameraIngress",
+    "IngressStats",
+    "radius_m_from_box_depth",
+]

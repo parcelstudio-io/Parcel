@@ -7,10 +7,10 @@ SIGINT/SIGTERM. No outbound network is required or used.
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import signal
 import time
-import math
 from typing import Any
 
 from parcel_robot.navigation.base import NavObservation

@@ -31,7 +31,11 @@ from parcel_robot.backends.base import (
     SemanticObjectTrack,
     SimObservation,
 )
-from parcel_robot.camera_channel.ingress import PIXEL_SOURCE, CameraIngress
+from parcel_robot.camera_channel.ingress import (
+    PIXEL_SOURCE,
+    CameraIngress,
+    radius_m_from_box_depth,
+)
 from parcel_robot.detection_adapter.pixel_detections import PixelDetection
 from parcel_robot.navigation.semantic_map import semantic_candidates_from_observation
 from parcel_robot.runtime import RobotRuntime, _camera_query_from_directive
@@ -346,8 +350,20 @@ def _fake_ingress_frame() -> tuple[np.ndarray, np.ndarray, tuple[int, int, int, 
     return rgb, depth, (u0, v0, u1, v1)
 
 
+def test_radius_m_from_box_depth_is_half_angular_width_times_depth() -> None:
+    # 80 px wide box at D=3 m, fx=644 → r = 40 * 3 / 644.
+    assert radius_m_from_box_depth((600, 320, 680, 400), 3.0, 644.0) == pytest.approx(
+        40.0 * 3.0 / 644.0
+    )
+    # Tall thin box: footprint uses the larger side.
+    assert radius_m_from_box_depth((600, 200, 620, 400), 2.0, 500.0) == pytest.approx(
+        100.0 * 2.0 / 500.0
+    )
+
+
 def test_camera_ingress_poll_produces_pixel_candidate() -> None:
     from parcel_robot.camera_channel.channel import CameraChannelSpec
+    from parcel_robot.instructnav.scoring import object_near_envelope_m
 
     spec = CameraChannelSpec.d455_go2_nominal()
     rgb, depth, box = _fake_ingress_frame()
@@ -380,6 +396,20 @@ def test_camera_ingress_poll_produces_pixel_candidate() -> None:
     assert all(math.isfinite(v) for v in (x, y, z))
     assert 2.5 < x < 4.0
     assert abs(y) < 1.0
+    # Honest box+depth footprint + full near-envelope (city_semantics field set).
+    expected_r = radius_m_from_box_depth(box, 3.0, spec.intrinsics.fx)
+    meta = cand["metadata"]
+    assert meta["radius_m"] == pytest.approx(expected_r, abs=1e-3)
+    stand_off, minimum, vicinity = object_near_envelope_m(
+        expected_r, label="lamppost"
+    )
+    assert meta["stand_off_m"] == pytest.approx(stand_off)
+    assert meta["minimum_vicinity_radius_m"] == pytest.approx(minimum)
+    assert meta["vicinity_radius_m"] == pytest.approx(vicinity)
+    assert meta["arrival_radius_m"] == pytest.approx(0.06)
+    assert meta["target_min_surface_clearance_m"] == pytest.approx(0.8)
+    # Front-surface + radius recovers a CENTRE ahead of the depth plane.
+    assert x > 3.0  # 3 m front depth + radius push along +x
     # The render was placed at the pose we set.
     assert backend.captures[-1]["x"] == 0.0
     assert ingress.latest_candidates()[0]["id"] == cand["id"]

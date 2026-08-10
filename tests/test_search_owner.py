@@ -71,6 +71,9 @@ def _observation(
             visible=owner_visible,
             confidence=confidence,
         ),
+        # Healthy fixtures include a far-field scan; missing scan fails closed (P0-B).
+        nearest_obstacle_m=10.0,
+        nearest_obstacle_bearing_rad=0.0,
         collision=collision,
         backend="search-owner-test",
     )

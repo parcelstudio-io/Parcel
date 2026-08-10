@@ -47,6 +47,9 @@ def _observation(
             visible=True,
             confidence=confidence,
         ),
+        # Healthy fixtures include a far-field scan; missing scan fails closed (P0-B).
+        nearest_obstacle_m=10.0,
+        nearest_obstacle_bearing_rad=0.0,
         backend="follow-prediction-test",
     )
 

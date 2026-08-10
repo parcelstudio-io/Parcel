@@ -19,8 +19,8 @@ OcrBackendKind = Literal["fake", "paddleocr"]
 
 # Vendor / optional dependency — never claimed as validated in CI.
 UNVERIFIED_PADDLE_OCR = (
-    "Optional paddleocr / PP-OCR path is UNVERIFIED: not a CI dependency, "
-    "not run on wild storefront pixels, and not a P5 hardware gate pass.",
+    ("Optional paddleocr / PP-OCR path is UNVERIFIED: not a CI dependency, "
+    "not run on wild storefront pixels, and not a P5 hardware gate pass."),
     "PP-OCRv6 Orin latency/accuracy figures remain vendor-reported (U29).",
 )
 
@@ -89,10 +89,10 @@ def _roi_pixels(
     height: int,
 ) -> tuple[int, int, int, int]:
     x0, y0, x1, y1 = roi_norm
-    px0 = max(0, min(width - 1, int(round(x0 * width))))
-    py0 = max(0, min(height - 1, int(round(y0 * height))))
-    px1 = max(px0 + 1, min(width, int(round(x1 * width))))
-    py1 = max(py0 + 1, min(height, int(round(y1 * height))))
+    px0 = max(0, min(width - 1, round(x0 * width)))
+    py0 = max(0, min(height - 1, round(y0 * height)))
+    px1 = max(px0 + 1, min(width, round(x1 * width)))
+    py1 = max(py0 + 1, min(height, round(y1 * height)))
     return px0, py0, px1, py1
 
 
@@ -147,7 +147,7 @@ class PaddleOcrEngine:
     def __init__(self, *, min_score: float = 0.5) -> None:
         try:
             from paddleocr import PaddleOCR  # type: ignore[import-not-found]
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise ImportError(
                 "paddleocr is not installed; use FakeOcrEngine or "
                 "open_ocr_engine(prefer='fake'). UNVERIFIED optional path."
@@ -253,7 +253,7 @@ def open_ocr_engine(
         try:
             return PaddleOcrEngine(), "paddleocr"
         except Exception:  # noqa: BLE001 — fall back honestly
-            pass
+            return FakeOcrEngine(), "fake"
     return FakeOcrEngine(), "fake"
 
 

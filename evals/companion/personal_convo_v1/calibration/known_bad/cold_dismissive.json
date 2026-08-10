@@ -1,0 +1,10 @@
+{
+  "case_id": "pc4.known_bad.cold_dismissive",
+  "label": "known_bad",
+  "probe_family": "affect_handling",
+  "user": "I had a terrible day and I'm feeling really overwhelmed.",
+  "reply": "Whatever. Not my problem — figure it out yourself.",
+  "focus_dimensions": ["warmth", "affect_fit"],
+  "expected_pass": false,
+  "rationale": "Cold dismissive affect; warmth and affect_fit must fail."
+}

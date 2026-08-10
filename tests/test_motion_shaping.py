@@ -168,10 +168,25 @@ modules: []
 
 
 def _seed_perception(runtime: RobotRuntime) -> None:
-    """Dispatch only reaches the HAL once telemetry has proved it exists."""
+    """Dispatch only reaches the HAL once telemetry has proved it exists.
 
+    Includes a far-field scan sample so the P0-B input-health join allows
+    translation (missing scan must fail closed, not look like "clear").
+    """
+
+    observation = runtime.backend.observe()
+    observation = SimObservation(
+        timestamp=observation.timestamp,
+        robot=observation.robot,
+        owner=observation.owner,
+        nearest_obstacle_m=10.0,
+        nearest_obstacle_bearing_rad=0.0,
+        backend=observation.backend,
+    )
     with runtime._lock:
-        runtime._observation = runtime.backend.observe()
+        runtime._observation = observation
+    if runtime._control_state_source is not None:
+        runtime._control_state_source.update_observation(observation)
 
 
 def _shape(
@@ -399,17 +414,17 @@ def test_stop_entry_point_6_a_proximity_stop_is_not_smoothed(tmp_path: Path) -> 
         moving = runtime._last_shaped[0]
         assert moving > 0.0
 
-        # The gate's "stopped" verdict routes to the emergency bypass, which
-        # slews at max_accel instead of respecting the jerk limit.
+        # Emergency bypass snaps to exact zero (P0-A); a normal ramp to zero
+        # still leaves residual velocity on the same dt.
         gated = _shape(runtime, VelocityCommand(), stopping=True)
-        bypass_drop = moving - gated.vx
+        assert gated == VelocityCommand()
+        assert runtime._last_shaped == (0.0, 0.0, 0.0)
 
         runtime._reset_motion_shaper()
         _shape(runtime, VelocityCommand(vx=0.6), stopping=False, ticks=20)
         smoothed = _shape(runtime, VelocityCommand(), stopping=False)
-        smoothed_drop = moving - smoothed.vx
-
-        assert bypass_drop > smoothed_drop
+        assert smoothed.vx > 0.0
+        assert moving - smoothed.vx < moving
     finally:
         runtime.close()
 
@@ -487,9 +502,9 @@ def test_the_shaper_runs_after_the_collision_gate(tmp_path: Path) -> None:
     seen: list[VelocityCommand] = []
     original = runtime._collision_safe
 
-    def recording(command, observation, *, source=None):
+    def recording(command, observation, *, source=None, now=None):
         seen.append(command)
-        return original(command, observation, source=source)
+        return original(command, observation, source=source, now=now)
 
     runtime._collision_safe = recording  # type: ignore[method-assign]
     try:

@@ -525,6 +525,9 @@ def _closing(agent_vx: float = -1.5) -> SimObservation:
         timestamp=time.monotonic(),
         robot=RobotPose(x=0.0, y=0.0, yaw=0.0),
         owner=OwnerTrack(),
+        # Far-field scan sample: missing scan fails closed (P0-B / S-A2).
+        nearest_obstacle_m=10.0,
+        nearest_obstacle_bearing_rad=0.0,
         dynamic_agents=(
             DynamicAgentTrack(
                 agent_id="ped-1",
@@ -583,6 +586,8 @@ def test_the_gate_can_only_scale_down(tmp_path: Path) -> None:
                 timestamp=time.monotonic(),
                 robot=RobotPose(),
                 owner=OwnerTrack(),
+                nearest_obstacle_m=10.0,
+                nearest_obstacle_bearing_rad=0.0,
                 dynamic_agents=(
                     DynamicAgentTrack(
                         agent_id="ped-1",
@@ -688,22 +693,77 @@ def _annotated_defaults(source: str, class_name: str) -> dict[str, object]:
     raise AssertionError(f"{class_name} not found")
 
 
-def test_the_reactive_safety_authority_file_is_untouched_on_this_branch() -> None:
-    """W4's safety argument rests on this file not changing."""
+def test_the_reactive_safety_authority_gate_behaviour_holds() -> None:
+    """W4 geometric-gate behaviour pin; S-A2 may wire input_health into the file.
 
-    guarded = ("src/parcel_robot/navigation/reactive_safety.py",)
-    result = subprocess.run(
-        ["git", "status", "--porcelain", "--", *guarded],
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        check=True,
+    W4 cared that the geometric stop/slow surface did not move. S-A2 (task_15)
+    is authorized to edit ``reactive_safety.py`` so missing scan fails closed
+    via ``input_health``; a bare ``git status`` pin would false-alarm on that
+    wiring. Behavioural pins cover the W4 thresholds plus the S-A2 contract.
+    """
+
+    from parcel_robot.navigation.reactive_safety import (
+        ReactiveSafetyPolicy,
+        apply_reactive_safety,
     )
 
-    assert result.stdout.strip() == "", (
-        "card W4 supplements the geometric gate and must not modify it; "
-        f"git reports changes:\n{result.stdout}"
+    policy = ReactiveSafetyPolicy()
+    assert policy.obstacle_stop_m == 0.65
+    assert policy.obstacle_slow_m == 1.2
+    assert policy.person_stop_m == 1.2
+    assert policy.person_slow_m == 2.5
+    assert policy.reaction_time_s == 0.12
+
+    clear = SimObservation(
+        timestamp=1.0,
+        robot=RobotPose(),
+        owner=OwnerTrack(),
+        nearest_obstacle_m=10.0,
+        nearest_obstacle_bearing_rad=0.0,
+        backend="dynamic-layer-runtime",
     )
+    admitted, state = apply_reactive_safety(
+        VelocityCommand(vx=0.4),
+        clear,
+        policy=policy,
+        now=1.0,
+    )
+    assert admitted == VelocityCommand(vx=0.4)
+    assert state == "clear"
+
+    missing_scan = SimObservation(
+        timestamp=1.0,
+        robot=RobotPose(),
+        owner=OwnerTrack(),
+        nearest_obstacle_m=None,
+        lidar_obstacles=(),
+        backend="dynamic-layer-runtime",
+    )
+    held, held_state = apply_reactive_safety(
+        VelocityCommand(vx=0.4),
+        missing_scan,
+        policy=policy,
+        now=1.0,
+    )
+    assert held.vx == 0.0 and held.vy == 0.0
+    assert held_state == "stopped"
+
+    near = SimObservation(
+        timestamp=1.0,
+        robot=RobotPose(),
+        owner=OwnerTrack(),
+        nearest_obstacle_m=0.4,
+        nearest_obstacle_bearing_rad=0.0,
+        backend="dynamic-layer-runtime",
+    )
+    stopped, stop_state = apply_reactive_safety(
+        VelocityCommand(vx=0.4),
+        near,
+        policy=policy,
+        now=1.0,
+    )
+    assert stopped.vx == 0.0
+    assert stop_state == "stopped"
 
 
 def test_the_collision_gate_behaviour_is_untouched_on_this_branch() -> None:

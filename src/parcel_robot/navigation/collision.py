@@ -18,10 +18,16 @@ except ImportError:  # pragma: no cover — frozen BARN bundle path
         obstacle_stop_floor_m = 0.6
         obstacle_comfort_band_m = 1.2
         reaction_latency_s = 0.12
+        person_latency_s = 0.168
+        clearance_convention = "base_center_to_obstacle_surface"
 
         @staticmethod
-        def person_stop(speed_mps: float) -> float:
-            del speed_mps
+        def person_stop(
+            speed_mps: float,
+            *,
+            closing_speed_mps: float | None = None,
+        ) -> float:
+            del speed_mps, closing_speed_mps
             return 1.2
 
     DEFAULT_SAFETY_ENVELOPE = _FrozenBundleEnvelope()
@@ -44,12 +50,15 @@ class CollisionPolicy:
 
     Every distance below is *derived by reference* from the one
     :class:`~parcel_robot.authority.SafetyEnvelope` authority rather than
-    written as a literal. At Go2 scale each derivation reproduces the literal it
-    replaced bit-for-bit (pinned in ``tests/test_authority_family_equality.py``).
+    written as a literal. Clearance convention is
+    ``base_center_to_obstacle_surface`` (footprint inside
+    ``SafetyEnvelope.stop_distance`` only). At Go2 scale each derivation
+    reproduces the literal it replaced bit-for-bit (pinned in
+    ``tests/test_authority_family_equality.py``).
     """
 
     #: ``SafetyEnvelope.person_stop(0.0)``. At Go2 scale the 1.2 m human social
-    #: zone is what binds (the ISO/TS-15066 sum at rest is 0.488 m).
+    #: zone is what binds (the ISO/TS-15066 sum at rest is the footprint alone).
     person_stop_m: float = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0)
     person_slow_m: float = DEFAULT_SAFETY_ENVELOPE.person_comfort_band_m
     obstacle_stop_m: float = DEFAULT_SAFETY_ENVELOPE.obstacle_stop_floor_m

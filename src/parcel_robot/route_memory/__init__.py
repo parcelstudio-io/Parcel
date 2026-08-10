@@ -8,6 +8,9 @@ promotion gates pass. No Nav2. No hardware.
 from __future__ import annotations
 
 from parcel_robot.route_memory.citywalker import (
+    DOES_NOT_PROVE as CITYWALKER_DOES_NOT_PROVE,
+)
+from parcel_robot.route_memory.citywalker import (
     PROPOSER_SOURCE as CITYWALKER_PROPOSER_SOURCE,
 )
 from parcel_robot.route_memory.citywalker import (
@@ -19,8 +22,8 @@ from parcel_robot.route_memory.citywalker import (
     resolve_citywalker_checkpoint,
     resolve_citywalker_vendor,
 )
-from parcel_robot.route_memory.citywalker import (
-    DOES_NOT_PROVE as CITYWALKER_DOES_NOT_PROVE,
+from parcel_robot.route_memory.memory import (
+    DOES_NOT_PROVE as MEMORY_DOES_NOT_PROVE,
 )
 from parcel_robot.route_memory.memory import (
     PROPOSER_SOURCE,
@@ -29,44 +32,41 @@ from parcel_robot.route_memory.memory import (
     RouteMemoryStore,
     RoutePath,
 )
-from parcel_robot.route_memory.memory import (
-    DOES_NOT_PROVE as MEMORY_DOES_NOT_PROVE,
+from parcel_robot.route_memory.proposer import (
+    DOES_NOT_PROVE as PROPOSER_DOES_NOT_PROVE,
 )
 from parcel_robot.route_memory.proposer import (
     RouteMemoryProposer,
     goal_from_path_snapshot,
     propose_with_context,
 )
-from parcel_robot.route_memory.proposer import (
-    DOES_NOT_PROVE as PROPOSER_DOES_NOT_PROVE,
+from parcel_robot.route_memory.runtime_hook import (
+    DOES_NOT_PROVE as HOOK_DOES_NOT_PROVE,
 )
 from parcel_robot.route_memory.runtime_hook import (
     EXTRAS_KEY,
     RouteMemoryRuntimeHook,
 )
-from parcel_robot.route_memory.runtime_hook import (
-    DOES_NOT_PROVE as HOOK_DOES_NOT_PROVE,
-)
-from parcel_robot.route_memory.teach_repeat import TeachRepeatSession
 from parcel_robot.route_memory.teach_repeat import (
     DOES_NOT_PROVE as TEACH_DOES_NOT_PROVE,
+)
+from parcel_robot.route_memory.teach_repeat import TeachRepeatSession
+from parcel_robot.route_memory.vlfm import (
+    DOES_NOT_PROVE as VLFM_DOES_NOT_PROVE,
 )
 from parcel_robot.route_memory.vlfm import (
     HeuristicValueMap,
     HeuristicVLFMScorer,
     ValueMapCell,
 )
-from parcel_robot.route_memory.vlfm import (
-    DOES_NOT_PROVE as VLFM_DOES_NOT_PROVE,
+from parcel_robot.route_memory.vpr import (
+    DOES_NOT_PROVE as VPR_DOES_NOT_PROVE,
 )
 from parcel_robot.route_memory.vpr import (
     StubVPREmbedder,
     VPREmbedder,
     cosine_similarity,
     match_keyframe_index,
-)
-from parcel_robot.route_memory.vpr import (
-    DOES_NOT_PROVE as VPR_DOES_NOT_PROVE,
 )
 
 DOES_NOT_PROVE = (

@@ -63,6 +63,7 @@ from parcel_robot.control import (
     BufferedRobotStateSource,
     ControlManager,
     ControlNotReadyError,
+    FaultReason,
     build_backend_control_manager,
 )
 from parcel_robot.core import (
@@ -79,6 +80,17 @@ from parcel_robot.core.details import (
     NavigationDetail,
     SpatialDetail,
     VoiceDetail,
+)
+from parcel_robot.core.hard_stop import (
+    InterventionSeverity,
+    ResetObligation,
+    finalize_command,
+)
+from parcel_robot.core.input_health import (
+    InputEvidence,
+    InputOrigin,
+    RequiredInput,
+    evaluate_input_health,
 )
 from parcel_robot.core.preemption import PreemptionTable
 from parcel_robot.core.resume import (
@@ -140,7 +152,13 @@ from parcel_robot.navigation.semantic_map import (
 )
 from parcel_robot.navigation.spatial import SpatialBehaviorConfig, SpatialBehaviorController
 from parcel_robot.navigation.velocity_shaping import SCurveVelocityShaper
-from parcel_robot.observability import ComponentMetrics, LatencyTracker
+from parcel_robot.observability import (
+    ComponentMetrics,
+    LatencyTracker,
+    append_latency_ledger_row,
+    latency_ledger_row,
+    resolve_latency_ledger_path,
+)
 from parcel_robot.perception import NullMapProvider, PerceptionContract
 from parcel_robot.pose import (
     POSE_PROVIDER_KEY,
@@ -596,6 +614,8 @@ class RobotRuntime:
         self._last_send_at = 0.0
         self._was_moving = False
         self._proximity_state = "clear"
+        #: Latched by the dispatch input-health join (malformed / frame faults).
+        self._input_health_latched = False
         self._control_not_ready_reason: str | None = None
         agent_config = self.store.agent_config()
         context_config = ContextBuildConfig.from_mapping(self.store.section("query_context"))
@@ -911,6 +931,15 @@ class RobotRuntime:
                 on_turn_commit=self._record_turn_commit,
             )
         self._voice_query_end_by_turn: dict[int, float] = {}
+        # Acoustic-ack fan-in (N19). The capture loop, the STT provider and the
+        # speaker sink each already measure their own clock; nothing joined
+        # them to a turn. These three fields are that join: the turn whose
+        # audio the sink is currently writing, and the last capture/STT clocks
+        # already consumed, so a typed turn can never inherit the previous
+        # spoken turn's timings.
+        self._audio_output_turn_id = 0
+        self._acoustic_commit_consumed: float | None = None
+        self._stt_request_consumed: float | None = None
         self._emit(
             "voice",
             f"Speech: stt={self.speech_stack.stt_detail}; tts={self.speech_stack.tts_detail}",
@@ -1420,6 +1449,12 @@ class RobotRuntime:
     def _audio_chunk_started(self, token: object) -> None:
         """Playback of a chunk began: arm its nods and fire its emotes now."""
 
+        # Fourth acoustic-ack clock (N19), taken before the token guard: an
+        # un-analyzable chunk carries no token but is still the moment the
+        # speaker worker started writing audio, which is what the ack budget
+        # is measured against. ``mark`` is first-wins, so later chunks of the
+        # same reply do not move it.
+        self._mark_audio_first_sample()
         if token is None:
             return
         track, epoch, emotes = token
@@ -2395,6 +2430,14 @@ class RobotRuntime:
                     thread.join(timeout=timeout)
                 except RuntimeError as error:
                     auxiliary_error = auxiliary_error or error
+            # One latency row per run, once the voice path is quiesced so the
+            # snapshot covers every completed turn. Opt-in and best-effort: an
+            # unconfigured ledger writes nothing, and a failed write must never
+            # turn a clean shutdown into an exception.
+            try:
+                self.write_latency_ledger_row(source="runtime_close")
+            except BaseException as error:  # noqa: BLE001 - observability must not block teardown
+                auxiliary_error = auxiliary_error or error
             # A bounded manager close can intentionally raise and require a
             # retry; assignment below is deliberately after the call.
             self.control_manager.close()
@@ -4164,7 +4207,9 @@ class RobotRuntime:
         snapshot["components"] = self.component_metrics.snapshot()
         snapshot["audio"] = self.audio_status.as_dict()
         asr_detail = (
-            "capture endpoint connected, but continuous VAD/ASR endpointer timing is not wired"
+            "capture endpoint connected; endpointer + STT clocks are wired "
+            "(EndpointDecision / SttTranscribe), continuous per-frame ASR "
+            "timing is still not exposed"
             if self.audio_status.connected_input
             else "text input mode; no connected capture endpoint"
         )
@@ -4405,24 +4450,38 @@ class RobotRuntime:
                 command,
                 observation,
                 source=active.source if active is not None else None,
+                now=now,
             )
+            gated_command = command
             self.component_metrics.elapsed("CollisionGate", collision_started)
             self.velocity_smoother.force(command, now=now)
             # Card W6. The last thing before the SE2 hand-off, and after every
             # authority above it has spoken. Stops route to the emergency
             # bypass so no stop decision is ever smoothed.
+            stopping = (
+                proximity_state == "stopped"
+                or self.arbiter.emergency_stopped
+                or self._input_health_latched
+                # The *intent* decides, not the pre-gate smoother's ramp:
+                # asking for zero is a stop even while the ramp is still
+                # emitting a non-zero value on its way down.
+                or active is None
+                or _is_zero_command(active.command)
+            )
             command = self._shape_for_actuator(
                 command,
                 now=now,
-                stopping=(
-                    proximity_state == "stopped"
-                    or self.arbiter.emergency_stopped
-                    # The *intent* decides, not the pre-gate smoother's ramp:
-                    # asking for zero is a stop even while the ramp is still
-                    # emitting a non-zero value on its way down.
-                    or active is None
-                    or _is_zero_command(active.command)
-                ),
+                stopping=stopping,
+            )
+            # P0-A: final-stop monitor immediately before set_target. HARD_STOP
+            # emits exact (0,0,0) and resets stateful stages; PROXIMITY_STOP
+            # zeroes translation while preserving the gated yaw.
+            command = self._finalize_for_actuator(
+                command,
+                gated_command=gated_command,
+                proximity_state=proximity_state,
+                active=active,
+                now=now,
             )
             if proximity_state != self._proximity_state:
                 if proximity_state == "stopped":
@@ -4552,6 +4611,51 @@ class RobotRuntime:
         )
         self._last_shaped = (vx, vy, vyaw)
         return VelocityCommand(vx=vx, vy=vy, vyaw=vyaw)
+
+    def _finalize_for_actuator(
+        self,
+        shaped: VelocityCommand,
+        *,
+        gated_command: VelocityCommand,
+        proximity_state: str,
+        active: MotionIntent | None,
+        now: float,
+    ) -> VelocityCommand:
+        """Apply the core hard-stop monitor at the set_target boundary."""
+
+        if self.arbiter.emergency_stopped or self._input_health_latched:
+            severity = InterventionSeverity.HARD_STOP
+            candidate = shaped
+        elif proximity_state == "stopped":
+            severity = InterventionSeverity.PROXIMITY_STOP
+            # Preserve gated yaw; shaping emergency zeroes all axes.
+            candidate = VelocityCommand(
+                vx=shaped.vx,
+                vy=shaped.vy,
+                vyaw=gated_command.vyaw,
+            )
+        elif active is None or _is_zero_command(active.command):
+            severity = InterventionSeverity.HARD_STOP
+            candidate = shaped
+        else:
+            severity = InterventionSeverity.CLEAR
+            candidate = shaped
+
+        stages: tuple[ResetObligation, ...] = ()
+        if severity is InterventionSeverity.HARD_STOP:
+            stages = (
+                ResetObligation(
+                    "velocity_smoother",
+                    lambda: self.velocity_smoother.reset(now=now),
+                ),
+                ResetObligation("actuator_shaper", self._reset_motion_shaper),
+            )
+        decision = finalize_command(
+            candidate,
+            severity,
+            downstream_stages=stages,
+        )
+        return decision.command
 
     def _apply_yield_advance_seed(
         self,
@@ -5241,8 +5345,21 @@ class RobotRuntime:
         observation: SimObservation | None,
         *,
         source: str | None = None,
+        now: float | None = None,
     ) -> tuple[VelocityCommand, str]:
         """Final reactive brake shared by voice, manual, follow, and navigation."""
+        decision_now = time.monotonic() if now is None else now
+        # Mirror the dispatch tick: refresh sim feedback from the observation
+        # before the health join so direct _collision_safe callers share the
+        # same pose/scan/feedback contract as _dispatch_active.
+        if observation is not None and self._control_state_source is not None:
+            state = self._control_state_source.latest()
+            if state is None or state.received_at < observation.timestamp:
+                self._control_state_source.update_observation(observation)
+        health = self._evaluate_dispatch_input_health(observation, now=decision_now)
+        self._input_health_latched = bool(health.stop_latched)
+        if not health.translation_allowed and math.hypot(command.vx, command.vy) > 1e-6:
+            command = VelocityCommand(vyaw=command.vyaw)
         spatial_detail = self.spatial.snapshot() if source == "spatial" else {}
         spatial_intent = spatial_detail.get("intent")
         owner_orbit = (
@@ -5254,9 +5371,59 @@ class RobotRuntime:
             policy=self.reactive_safety_policy,
             owner_orbit=owner_orbit,
             orbit_radius_m=float(spatial_detail.get("orbit_radius_m") or 0.0),
-            now=time.monotonic(),
+            now=decision_now,
         )
+        if (
+            not health.translation_allowed
+            and proximity_state == "clear"
+            and math.hypot(command.vx, command.vy) <= 1e-6
+        ):
+            proximity_state = "stopped"
         return self._time_to_collision_gate(command, observation, proximity_state)
+
+    def _evaluate_dispatch_input_health(
+        self,
+        observation: SimObservation | None,
+        *,
+        now: float,
+    ):
+        """Join pose/scan/feedback health before translation-authorizing gates."""
+
+        from parcel_robot.navigation.reactive_safety import scan_evidence_from_observation
+
+        pose: InputEvidence | None = None
+        scan: InputEvidence | None = None
+        if observation is not None:
+            pose = InputEvidence(
+                captured_at=observation.timestamp,
+                frame_id="odom",
+                payload_valid=True,
+                origin=InputOrigin.PHYSICAL,
+            )
+            scan = scan_evidence_from_observation(observation)
+
+        feedback: InputEvidence | None = None
+        state = (
+            self._control_state_source.latest()
+            if self._control_state_source is not None
+            else None
+        )
+        if state is not None:
+            feedback = InputEvidence(
+                captured_at=state.received_at,
+                frame_id="base_link",
+                payload_valid=state.fault_reason is FaultReason.NONE,
+                origin=InputOrigin.PHYSICAL,
+            )
+
+        return evaluate_input_health(
+            {
+                RequiredInput.POSE: pose,
+                RequiredInput.SCAN: scan,
+                RequiredInput.CONTROLLER_FEEDBACK: feedback,
+            },
+            now=now,
+        )
 
     def _time_to_collision_gate(
         self,
@@ -5571,6 +5738,11 @@ class RobotRuntime:
             # ttft for a turn nobody started.
             if stage.kind != SYSTEM_UTTERANCE_KIND:  # pragma: no cover - future stream
                 logger.warning("unrecognized voice stage kind %r; not a turn", stage.kind)
+            if stage.name == "tts_start":
+                # System speech owns the sink from here, so its first sample
+                # belongs to nobody's turn: park the attribution rather than
+                # crediting the previous dialogue turn with this audio.
+                self._audio_output_turn_id = 0
             self.latency.mark(stage.turn_id, stage.name, now=stage.timestamp)
             return
         # Expressive reactions ride the same stage events the latency ledger
@@ -5615,7 +5787,13 @@ class RobotRuntime:
                     "bluetooth_duplex_ready": self.audio_status.bluetooth_duplex_ready,
                 },
             )
+            self._mark_acoustic_capture_clocks(stage.turn_id, stage.timestamp)
             return
+        if stage.name == "tts_start":
+            # The turn that owns the speaker sink from here until the next
+            # tts_start. Set before any chunk is enqueued, so the sink worker's
+            # first-sample callback always has a turn to attribute to.
+            self._audio_output_turn_id = int(stage.turn_id)
         if stage.name == "audio_first_playback":
             # The single most important companion-voice number: end of the
             # owner's speech to the first audible robot audio.
@@ -5707,6 +5885,92 @@ class RobotRuntime:
         )
         if stage.name == "turn_complete":
             self.latency.finalize(stage.turn_id, now=stage.timestamp)
+
+    def _mark_acoustic_capture_clocks(self, turn_id: int, query_end: float) -> None:
+        """Fan the capture + STT clocks of the utterance into this turn's trace.
+
+        The four spans between "the owner stopped talking" and "the turn was
+        admitted" are each measured somewhere already — the microphone loop's
+        ``last_turn_clocks`` and the recognizer's ``last_metrics`` — but until
+        now nothing joined them to a turn id, so the ledger's first observable
+        instant was query_end and the whole capture/STT budget was invisible.
+
+        Every clock is admitted only if it is *this* turn's: it must not be one
+        already consumed by an earlier turn, and it must precede the query-end
+        anchor. A typed turn therefore records nothing, which is correct — it
+        had no acoustic capture at all.
+        """
+
+        clocks = getattr(self._microphone_loop, "last_turn_clocks", None)
+        if isinstance(clocks, dict):
+            commit = _finite(clocks.get("semantic_commit_monotonic"))
+            speech_end = _finite(clocks.get("speech_end_monotonic"))
+            if (
+                commit is not None
+                and commit != self._acoustic_commit_consumed
+                and commit <= query_end
+            ):
+                self._acoustic_commit_consumed = commit
+                if speech_end is not None and speech_end <= commit:
+                    self.latency.mark(turn_id, "capture_speech_end", now=speech_end)
+                self.latency.mark(turn_id, "semantic_commit", now=commit)
+
+        metrics = getattr(self.speech_stack.recognizer, "last_metrics", None)
+        if isinstance(metrics, dict) and metrics.get("status") == "ok":
+            request_start = _finite(metrics.get("request_start_monotonic"))
+            final = _finite(metrics.get("final_monotonic"))
+            if (
+                request_start is not None
+                and final is not None
+                and request_start != self._stt_request_consumed
+                and final <= query_end
+            ):
+                self._stt_request_consumed = request_start
+                self.latency.mark(turn_id, "stt_request_start", now=request_start)
+                self.latency.mark(turn_id, "stt_final", now=final)
+
+    def _mark_audio_first_sample(self) -> None:
+        """Record when the speaker worker actually began writing this reply.
+
+        ``audio_first_playback`` is the enqueue instant; the acoustic rig
+        measured 0.54-0.64 s between that and the first sample leaving the
+        worker, so an ack claim resting on the enqueue stamp alone is not
+        honest. This is the partner clock (still a lower bound on *audible*,
+        which needs PipeWire presentation timestamps).
+        """
+
+        turn_id = self._audio_output_turn_id
+        if turn_id <= 0:
+            return
+        self.latency.mark(turn_id, "audio_first_sample", now=time.monotonic())
+
+    def write_latency_ledger_row(
+        self,
+        *,
+        path: str | Path | None = None,
+        source: str = "runtime",
+        run_id: str | None = None,
+        extra: dict[str, object] | None = None,
+    ) -> Path | None:
+        """Append this run's latency snapshot to the persisted ledger.
+
+        Returns the ledger path, or ``None`` when no ledger is configured —
+        the CI runner's ratchet needs a persisted series, but an ordinary
+        robot session must not litter the tree, so this is opt-in through
+        ``PARCEL_LATENCY_LEDGER`` or an explicit path.
+        """
+
+        target = resolve_latency_ledger_path(path)
+        if target is None:
+            return None
+        row = latency_ledger_row(
+            self.latency_snapshot(), source=source, run_id=run_id, extra=extra
+        )
+        try:
+            return append_latency_ledger_row(row, target)
+        except OSError as error:
+            logger.warning("latency ledger write failed at %s: %s", target, error)
+            return None
 
     def _voice_error(self, error: Exception) -> None:
         with self._lock:
@@ -5810,6 +6074,15 @@ class RobotRuntime:
             f"Microphone unavailable: {error}; degrading to text mode",
             "warning",
         )
+
+
+def _finite(value: object) -> float | None:
+    """A finite float, or ``None`` — a clock we cannot trust is not a clock."""
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) else None
 
 
 def http_service_health(url: str, timeout: float = 0.5) -> bool:

@@ -97,22 +97,24 @@ class SCurveVelocityShaper:
         if not math.isfinite(dt_s) or dt_s <= 0.0:
             raise ValueError("dt_s must be finite and positive")
 
+        if emergency:
+            # Hard stops must not leave a residual ramp on the actuator.
+            # Accel/jerk limits are intentionally ignored: the next command is
+            # exact zero on every axis.
+            self._acceleration = [0.0, 0.0, 0.0]
+            self._velocity = [0.0, 0.0, 0.0]
+            return (0.0, 0.0, 0.0)
+
         for index, limits in enumerate(self._limits):
-            velocity = self._velocity[index]
-            if emergency:
-                next_velocity = _move_toward(velocity, 0.0, limits.max_accel * dt_s)
-                self._acceleration[index] = (next_velocity - velocity) / dt_s
-                self._velocity[index] = next_velocity
-            else:
-                next_velocity, next_acceleration = self._normal_step(
-                    velocity,
-                    self._acceleration[index],
-                    float(target[index]),
-                    dt_s,
-                    limits,
-                )
-                self._velocity[index] = next_velocity
-                self._acceleration[index] = next_acceleration
+            next_velocity, next_acceleration = self._normal_step(
+                self._velocity[index],
+                self._acceleration[index],
+                float(target[index]),
+                dt_s,
+                limits,
+            )
+            self._velocity[index] = next_velocity
+            self._acceleration[index] = next_acceleration
         return tuple(self._velocity)
 
     def scaled(self, factor: float) -> SCurveVelocityShaper:

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from parcel_robot.uwb.fusion import (
     DOES_NOT_PROVE as FUSION_DOES_NOT_PROVE,
+)
+from parcel_robot.uwb.fusion import (
     OWNER_CHANNEL_PRIMARIES,
     OwnerChannelPrimary,
     OwnerFusionConfig,
@@ -17,6 +19,8 @@ from parcel_robot.uwb.fusion import (
 )
 from parcel_robot.uwb.injector import (
     DOES_NOT_PROVE as INJECTOR_DOES_NOT_PROVE,
+)
+from parcel_robot.uwb.injector import (
     EXTRAS_KEY,
     SimUwbInjector,
     SimUwbPose,

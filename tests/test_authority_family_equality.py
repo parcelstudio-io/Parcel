@@ -19,14 +19,17 @@ import math
 import pytest
 
 from parcel_robot.authority import (
+    CLEARANCE_CONVENTION,
     DEFAULT_SAFETY_ENVELOPE,
     DEFAULT_STAND_OFF_ENVELOPE,
+    PERSON_LATENCY_S,
     PERSON_SOCIAL_ZONE_M,
     SafetyEnvelope,
 )
 from parcel_robot.instructnav.scoring import object_near_envelope_m
 from parcel_robot.navigation.collision import CollisionPolicy
 from parcel_robot.navigation.proxemic_approach import ProxemicApproachConfig
+from parcel_robot.navigation.reactive_safety import ReactiveSafetyPolicy
 from parcel_robot.robot_profile import DEFAULT_ROBOT_PROFILE, RobotProfile
 
 # --- the retired literals, transcribed from the pre-migration source ---------
@@ -149,11 +152,33 @@ def test_collision_policy_defaults_are_bit_equal_to_the_retired_literals() -> No
     assert policy.reaction_time_s == RETIRED_REACTION_TIME_S
 
 
+def test_reactive_safety_policy_defaults_derive_from_the_envelope() -> None:
+    """S-B proximity unification: ReactiveSafetyPolicy joins the family ratchet."""
+
+    policy = ReactiveSafetyPolicy()
+    envelope = DEFAULT_SAFETY_ENVELOPE
+    assert policy.clearance_convention == CLEARANCE_CONVENTION
+    assert policy.person_stop_m == envelope.person_stop(0.0) == RETIRED_PERSON_STOP_M
+    assert policy.person_slow_m == envelope.person_comfort_band_m == RETIRED_PERSON_SLOW_M
+    assert policy.obstacle_slow_m == envelope.obstacle_comfort_band_m == RETIRED_OBSTACLE_SLOW_M
+    assert policy.reaction_time_s == envelope.reaction_latency_s == RETIRED_REACTION_TIME_S
+    # Obstacle stop keeps the stricter commissioning floor (0.65 ≥ envelope 0.6).
+    assert policy.obstacle_stop_m == 0.65
+    assert policy.obstacle_stop_m >= envelope.obstacle_stop_floor_m
+
+
+def test_clearance_convention_is_single_across_proximity_consumers() -> None:
+    assert CLEARANCE_CONVENTION == "base_center_to_obstacle_surface"
+    assert SafetyEnvelope.clearance_convention == CLEARANCE_CONVENTION
+    assert ReactiveSafetyPolicy().clearance_convention == CLEARANCE_CONVENTION
+
+
 def test_person_stop_at_rest_is_the_social_zone_not_the_iso_sum() -> None:
-    """The human floor binds at Go2 scale; the ISO sum at rest is 0.488 m."""
+    """The human floor binds at Go2 scale; at rest closing term is zero metres."""
 
     envelope = DEFAULT_SAFETY_ENVELOPE
-    iso_sum_at_rest = envelope.stop_distance(0.0) + 1.4 * envelope.reaction_latency_s
+    assert envelope.person_latency_s == PERSON_LATENCY_S
+    iso_sum_at_rest = envelope.stop_distance(0.0)  # closing=0 → no latency metres
     assert iso_sum_at_rest < envelope.person_social_zone_m
     assert envelope.person_stop(0.0) == PERSON_SOCIAL_ZONE_M
     assert envelope.social_zone_is_binding

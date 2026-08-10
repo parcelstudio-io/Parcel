@@ -7,6 +7,7 @@ PlanSketch for admission; ``goal-amend`` only signals revision (no motion).
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 from parcel_robot.brain.plan_sketch import PlanSketch
@@ -114,7 +115,7 @@ def _clamp_pace(value: float) -> float:
     if not isinstance(value, (int, float)) or isinstance(value, bool):
         raise TypeError("pace scale must be numeric")
     number = float(value)
-    if number != number:  # NaN
+    if math.isnan(number):
         raise ValueError("pace scale must be finite")
     return max(PACE_MIN, min(PACE_MAX, number))
 

@@ -166,7 +166,7 @@ def test_stale_rejection_is_additive_to_ttl_and_lethal_vetoes() -> None:
         plan_revision=1,
     )
     assert arbiter.resolve((lethal_fresh,), now_s=now) is None
-    # ...and a mixed-lethal-waypoint goal still passes only via all()-lethal rule.
+    # S-B harden: mixed lethal/non-lethal waypoints fail closed (any() veto).
     mixed = SE2Goal(
         source="mixed",
         pose=None,
@@ -176,7 +176,7 @@ def test_stale_rejection_is_additive_to_ttl_and_lethal_vetoes() -> None:
         task_id="nav",
         plan_revision=1,
     )
-    assert arbiter.resolve((mixed,), now_s=now) is mixed
+    assert arbiter.resolve((mixed,), now_s=now) is None
 
 
 # --------------------------------------------------------------------------- #

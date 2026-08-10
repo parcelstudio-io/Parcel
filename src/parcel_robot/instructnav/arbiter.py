@@ -3,11 +3,29 @@
 from __future__ import annotations
 
 import math
+import os
+import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
+from parcel_robot.core.arbiter import waypoints_trigger_lethal_veto
+from parcel_robot.counterfactual import (
+    ArbitrationCandidateV1,
+    ArbitrationLogRecordV1,
+    CounterfactualReportV1,
+    build_arbitration_log,
+    counterfactual_report,
+)
 from parcel_robot.revision import CommittedRevisions
+
+#: Opt-in C-B arbitration candidate log at GoalArbiter.resolve commit.
+#: Default off — observational measurement only; never changes selection.
+ARBITRATION_LOG_ENV = "PARCEL_ARBITRATION_LOG"
+
+
+def _env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 @dataclass(frozen=True)
@@ -169,19 +187,53 @@ class GoalArbiter:
 
     TTL-expired or lethal-cost goals are vetoed (AsyncShield staleness lesson).
     grid_v1 A* remains the sole consumer of the winner.
+
+    When ``arbitration_log`` is enabled (constructor or ``PARCEL_ARBITRATION_LOG``),
+    each :meth:`resolve` stamps a digest-backed ``ArbitrationLogRecordV1`` at the
+    commit point for offline oracle replay. Selection is unchanged either way.
     """
 
     def __init__(
         self,
         *,
         lethal_cost: Callable[[float, float], bool] | None = None,
+        arbitration_log: bool | None = None,
+        episode_id: str = "unset",
     ) -> None:
         self._lethal = lethal_cost or (lambda _x, _y: False)
         self._active_plan_step: str | None = None
         self._committed = CommittedRevisions()
+        self._arbitration_log_enabled = (
+            bool(arbitration_log)
+            if arbitration_log is not None
+            else _env_flag(ARBITRATION_LOG_ENV)
+        )
+        if not episode_id or not str(episode_id).strip():
+            raise ValueError("episode_id must be non-empty")
+        self._episode_id = str(episode_id)
+        self._log_seq = 0
+        self._last_arbitration_log: ArbitrationLogRecordV1 | None = None
+        self._last_counterfactual_report: CounterfactualReportV1 | None = None
+
+    @property
+    def arbitration_log_enabled(self) -> bool:
+        return self._arbitration_log_enabled
+
+    @property
+    def last_arbitration_log(self) -> ArbitrationLogRecordV1 | None:
+        return self._last_arbitration_log
+
+    @property
+    def last_counterfactual_report(self) -> CounterfactualReportV1 | None:
+        return self._last_counterfactual_report
 
     def set_plan_step(self, plan_step_id: str | None) -> None:
         self._active_plan_step = plan_step_id
+
+    def set_episode_id(self, episode_id: str) -> None:
+        if not episode_id or not str(episode_id).strip():
+            raise ValueError("episode_id must be non-empty")
+        self._episode_id = str(episode_id)
 
     def commit_revision(self, *, task_id: str, plan_revision: int) -> int:
         """Commit a revision for a task so older proposals can never win.
@@ -196,6 +248,93 @@ class GoalArbiter:
     def committed_revision(self, task_id: str = "") -> int:
         return self._committed.committed(task_id)
 
+    def report_counterfactual(
+        self,
+        oracle_success: Mapping[str, bool],
+    ) -> CounterfactualReportV1:
+        """Emit would-a-different-candidate-have-won for the last logged resolve.
+
+        Requires a prior flag-on :meth:`resolve` that stamped
+        :attr:`last_arbitration_log`.  Oracle labels never affect selection.
+        """
+
+        record = self._last_arbitration_log
+        if record is None:
+            raise RuntimeError(
+                "no arbitration log; enable arbitration_log=True or "
+                f"{ARBITRATION_LOG_ENV}=1 before resolve"
+            )
+        report = counterfactual_report(record, oracle_success=oracle_success)
+        self._last_counterfactual_report = report
+        return report
+
+    def _veto_reason(self, goal: SE2Goal, now_s: float) -> str:
+        if self._committed.is_stale(
+            task_id=goal.task_id, plan_revision=goal.plan_revision
+        ):
+            return "stale_revision"
+        if goal.expired(now_s):
+            return "ttl"
+        pose = goal.pose
+        if pose is not None and self._lethal(pose[0], pose[1]):
+            return "lethal"
+        # S-B / verdict arbiter mixed-lethal harden: any lethal waypoint vetoes
+        # (old all() let mixed safe/lethal waypoint goals through).
+        if waypoints_trigger_lethal_veto(self._lethal, goal.waypoints):
+            return "lethal"
+        return ""
+
+    def _candidate_from_goal(
+        self,
+        goal: SE2Goal,
+        *,
+        admissible: bool,
+        veto_reason: str,
+    ) -> ArbitrationCandidateV1:
+        return ArbitrationCandidateV1(
+            candidate_id=goal.source,
+            source=goal.source,
+            priority=int(goal.priority),
+            confidence=float(goal.confidence),
+            issued_s=float(goal.issued_s),
+            pose_xyyaw=goal.pose,
+            waypoints_xy=tuple(goal.waypoints),
+            plan_step_id=str(goal.plan_step_id),
+            task_id=str(goal.task_id),
+            plan_revision=int(goal.plan_revision),
+            admissible=admissible,
+            veto_reason=veto_reason,
+        )
+
+    def _stamp_arbitration_log(
+        self,
+        goals: Sequence[SE2Goal],
+        *,
+        now_s: float,
+        winner: SE2Goal | None,
+    ) -> ArbitrationLogRecordV1:
+        candidates = []
+        for goal in goals:
+            reason = self._veto_reason(goal, now_s)
+            candidates.append(
+                self._candidate_from_goal(
+                    goal,
+                    admissible=not reason,
+                    veto_reason=reason,
+                )
+            )
+        self._log_seq += 1
+        record = build_arbitration_log(
+            record_id=f"{self._episode_id}:{self._log_seq}",
+            episode_id=self._episode_id,
+            decision_monotonic_ns=time.monotonic_ns(),
+            candidates=candidates,
+            committed_candidate_id=None if winner is None else winner.source,
+            active_plan_step=self._active_plan_step or "",
+        )
+        self._last_arbitration_log = record
+        return record
+
     def resolve(
         self,
         goals: Sequence[SE2Goal],
@@ -207,30 +346,27 @@ class GoalArbiter:
             # P0-C: a proposal authored under a superseded revision can never
             # win, mirroring TaskExecutive.report()'s stale-revision-ignore. This
             # is additive to -- and never relaxes -- the TTL/lethal vetoes below.
-            if self._committed.is_stale(
-                task_id=goal.task_id, plan_revision=goal.plan_revision
-            ):
-                continue
-            if goal.expired(now_s):
-                continue
-            pose = goal.pose
-            if pose is not None and self._lethal(pose[0], pose[1]):
-                continue
-            if goal.waypoints and all(self._lethal(x, y) for x, y in goal.waypoints):
+            if self._veto_reason(goal, now_s):
                 continue
             viable.append(goal)
+        winner: SE2Goal | None
         if not viable:
-            return None
-        if self._active_plan_step:
-            owned = [g for g in viable if g.plan_step_id == self._active_plan_step]
-            if owned:
-                viable = owned
-        viable.sort(
-            key=lambda g: (
-                -int(g.priority),
-                -float(g.confidence),
-                -float(g.issued_s),
-                g.source,
+            winner = None
+        else:
+            pool = viable
+            if self._active_plan_step:
+                owned = [g for g in pool if g.plan_step_id == self._active_plan_step]
+                if owned:
+                    pool = owned
+            pool.sort(
+                key=lambda g: (
+                    -int(g.priority),
+                    -float(g.confidence),
+                    -float(g.issued_s),
+                    g.source,
+                )
             )
-        )
-        return viable[0]
+            winner = pool[0]
+        if self._arbitration_log_enabled:
+            self._stamp_arbitration_log(goals, now_s=now_s, winner=winner)
+        return winner

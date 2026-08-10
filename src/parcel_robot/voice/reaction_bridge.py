@@ -72,13 +72,9 @@ def default_social_specs() -> tuple[ReactionSpec, ...]:
 
 def tracks_are_social_safe(tracks: Sequence[str] | frozenset[str]) -> bool:
     track_set = frozenset(tracks)
-    if not track_set:
-        return False
-    if track_set & FORBIDDEN_REACTION_TRACKS:
-        return False
-    # Also reject unknown track names outside the V1 resource vocabulary when
-    # they look like motion (legacy head_gaze is remapped by the bridge).
-    return True
+    # Empty is unsafe; forbidden tracks deny. Unknown names outside the V1
+    # resource vocabulary are accepted here (legacy head_gaze is remapped).
+    return bool(track_set) and not bool(track_set & FORBIDDEN_REACTION_TRACKS)
 
 
 def proposal_preempts_base(proposal: ReactionProposalV1) -> bool:

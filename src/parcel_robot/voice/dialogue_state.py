@@ -214,9 +214,9 @@ def _pace_factor(base: float, engagement: float) -> float:
 
 
 __all__ = [
+    "DEFER_ENGAGEMENT",
     "DIALOGUE_CHANNEL",
     "DIALOGUE_STATE_TTL_NS",
-    "DEFER_ENGAGEMENT",
     "DialogueInfluence",
     "DialogueStateChannel",
     "GaitHint",

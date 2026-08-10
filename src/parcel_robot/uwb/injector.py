@@ -18,10 +18,10 @@ from parcel_robot.uwb.noise import UwbNoiseConfig
 from parcel_robot.uwb.sample import UwbSample
 
 DOES_NOT_PROVE = (
-    "Sim UWB noise is an HR-2 stand-in for owner-fusion path tests, not "
-    "characterized rt/uwbstate statistics (indoor/outdoor/occlusion/multipath).",
-    "Privileged GT pose → noise model is scorer/test-only; agent path consumes "
-    "UwbSample / extras['uwb'] only.",
+    ("Sim UWB noise is an HR-2 stand-in for owner-fusion path tests, not "
+    "characterized rt/uwbstate statistics (indoor/outdoor/occlusion/multipath)."),
+    ("Privileged GT pose → noise model is scorer/test-only; agent path consumes "
+    "UwbSample / extras['uwb'] only."),
 )
 
 EXTRAS_KEY = "uwb"
@@ -140,8 +140,8 @@ class SimUwbInjector:
         (test convenience only).
         """
 
-        robot = getattr(observation, "robot")
-        owner = getattr(observation, "owner")
+        robot = observation.robot
+        owner = observation.owner
         if require_owner_visible and not bool(getattr(owner, "visible", True)):
             return None
         resolved_fob = fob_id or str(getattr(owner, "owner_id", "owner-fob-1"))

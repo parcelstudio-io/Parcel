@@ -48,11 +48,47 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from parcel_robot.instructnav.scoring import GoalRegion
 
 #: Number of bearings sampled around the band mid-radius. 72 → one every 5°,
 #: dense enough that a clear gap wider than the robot footprint is never
 #: stepped over, cheap enough to run inside one control tick.
 DEFAULT_BEARING_SAMPLES = 72
+
+
+def near_band_contains(
+    xy: tuple[float, float],
+    region: GoalRegion,
+    *,
+    anchor_covariance: (
+        tuple[tuple[float, float], tuple[float, float]] | None
+    ) = None,
+    probability_threshold: float | None = None,
+) -> bool:
+    """K0 ``near`` membership — the single arrival authority, chance-aware.
+
+    Delegates to :meth:`~parcel_robot.instructnav.scoring.GoalRegion.contains`
+    so D4's ``P(inside)≥0.9`` upgrade stays in one place. Zero / omitted
+    covariance is today's boolean (T0 byte-equal). Never invents a second
+    arrival predicate.
+    """
+
+    from parcel_robot.instructnav.scoring import INSIDE_PROBABILITY_THRESHOLD
+
+    threshold = (
+        INSIDE_PROBABILITY_THRESHOLD
+        if probability_threshold is None
+        else float(probability_threshold)
+    )
+    return region.contains(
+        float(xy[0]),
+        float(xy[1]),
+        anchor_covariance=anchor_covariance,
+        probability_threshold=threshold,
+    )
 
 
 def near_band_fallback_point(

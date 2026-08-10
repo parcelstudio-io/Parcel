@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 import time
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from parcel_robot.models import VelocityCommand
@@ -14,6 +15,22 @@ from .commands import MotionIntent
 class SubmitResult:
     accepted: bool
     reason: str
+
+
+def waypoints_trigger_lethal_veto(
+    lethal: Callable[[float, float], bool],
+    waypoints: Sequence[tuple[float, float]] | None,
+) -> bool:
+    """Fail-closed lethal veto for a waypoint list (P0 mixed-lethal harden).
+
+    Empty / missing waypoints do not veto on their own (pose is checked
+    separately). **Any** lethal waypoint vetoes — a mixed safe/lethal list
+    must not pass (the old ``all()`` rule let mixed goals through).
+    """
+
+    if not waypoints:
+        return False
+    return any(lethal(float(x), float(y)) for x, y in waypoints)
 
 
 class CommandArbiter:

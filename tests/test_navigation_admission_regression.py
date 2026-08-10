@@ -18,9 +18,9 @@ from pathlib import Path
 from parcel_robot.agent import VoiceAgent
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
+from parcel_robot.brain.navigate_admission import assert_searchable_admission_contract
 from parcel_robot.brain.observations import build_observation_snapshot
 from parcel_robot.brain.router import DeterministicIntentRouter
-from parcel_robot.brain.navigate_admission import assert_searchable_admission_contract
 from parcel_robot.brain.validator import (
     PlanValidationError,
     PlanValidator,

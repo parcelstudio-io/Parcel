@@ -23,8 +23,9 @@ def _observation(
     robot_y: float = 0.0,
     robot_yaw: float = 0.0,
     confidence: float = 1.0,
-    obstacle_m: float | None = None,
-    obstacle_bearing_rad: float | None = None,
+    # Healthy fixtures include a far-field scan; missing scan fails closed (P0-B).
+    obstacle_m: float | None = 10.0,
+    obstacle_bearing_rad: float | None = 0.0,
     person_m: float | None = None,
     person_bearing_rad: float | None = None,
 ) -> SimObservation:

@@ -89,6 +89,17 @@ SCALING_BUCKETS: Final[frozenset[str]] = frozenset(
 #: The bucket whose members never scale with robot size.
 HUMAN_BUCKET: Final[str] = "human"
 
+#: Single declared clearance convention for authority / collision / reactive_safety.
+#: Distances are robot-base-center to obstacle/person surface; footprint enters
+#: ``stop_distance`` exactly once and must not be added again by consumers.
+CLEARANCE_CONVENTION: Final[str] = "base_center_to_obstacle_surface"
+
+#: Human prediction horizon formerly smuggled in as the dimensionless
+#: ``person_latency_factor`` (1.4) times ``reaction_latency_s`` (0.12 s) and
+#: then illegally added to metres. Kept as an explicit seconds field so
+#: ``closing_speed_mps * person_latency_s`` is dimensionally metres.
+PERSON_LATENCY_S: Final[float] = 0.168
+
 #: Canonical regime names, in the arbitration-documentation order.
 REGIME_NAMES: Final[tuple[str, ...]] = ("cruise", "search", "approach", "recover")
 
@@ -478,7 +489,13 @@ class SpeedRegime:
 class SafetyEnvelope(_MetadataMixin):
     """ISO/TS-15066 shaped stopping envelope — the one proximity authority.
 
-    ``stop_distance(v) = r_foot + v*tau + v^2/(2*a) + Zs + Zr``
+    Clearance convention: :data:`CLEARANCE_CONVENTION`
+    (``base_center_to_obstacle_surface``). Footprint is included exactly once
+    inside ``stop_distance``; collision / reactive_safety consumers compare
+    center-to-surface ranges against envelope-derived thresholds and must not
+    re-add the footprint.
+
+    ``stop_distance(v) = r_foot + v*tau + v^2/(2*a) + Zs + Zr``  [metres]
 
     The four terms after the footprint are, in ISO/TS-15066 vocabulary, the
     reaction distance, the braking distance, the intrusion distance of the
@@ -487,12 +504,16 @@ class SafetyEnvelope(_MetadataMixin):
     envelope in the stack the moment stratum-1 pose covariance goes live —
     Lane B sets it, no consumer changes.
 
-    ``person_stop(v) = max(person_social_zone_m, stop_distance(v) + 1.4*tau)``
+    ``person_stop(v, v_close) = max(
+         person_social_zone_m,
+         stop_distance(v) + max(0, v_close) * person_latency_s
+    )``  [metres — P0-H]
 
-    The social zone is a floor, not a term: at Go2 scale and zero speed the
-    ISO sum is 0.488 m and the floor is what binds. That is the point — the
-    person's comfort, not the robot's brakes, sets the final metre.
+    The social zone is a floor, not a term: at Go2 scale and zero speed /
+    zero closing the ISO sum is the footprint alone and the floor binds.
     """
+
+    clearance_convention: ClassVar[str] = CLEARANCE_CONVENTION
 
     footprint_radius_m: float = DEFAULT_ROBOT_PROFILE.footprint_radius_m
     reaction_latency_s: float = DEFAULT_ROBOT_PROFILE.reaction_latency_s
@@ -500,7 +521,7 @@ class SafetyEnvelope(_MetadataMixin):
     sensing_intrusion_m: float = 0.0
     pose_uncertainty_m: float = 0.0
     person_social_zone_m: float = 1.2
-    person_latency_factor: float = 1.4
+    person_latency_s: float = PERSON_LATENCY_S
     obstacle_comfort_band_m: float = 1.2
     person_comfort_band_m: float = 2.5
     obstacle_stop_floor_m: float = 0.6
@@ -551,13 +572,14 @@ class SafetyEnvelope(_MetadataMixin):
             note="HUMAN BUCKET — never scales. A half-size dog does not get half "
             "a personal-space zone.",
         ),
-        "person_latency_factor": FieldMeta(
-            unit="dimensionless",
-            source="STRATA_GENERALIZATION_PLAN.md strata 4+5 (person_stop = "
-            "max(1.2, stop + 1.4*tau))",
-            date="2026-08-07",
+        "person_latency_s": FieldMeta(
+            unit="s",
+            source="DESIGN_B P0-H / SHARED_FOUNDATION §5; replaces dimensionless "
+            "person_latency_factor (1.4) that was added as seconds-to-metres",
+            date="2026-08-09",
             bucket="human",
-            note="Human reaction allowance on top of the robot's own tau.",
+            note="Human prediction horizon. Distance term is "
+            "max(0, closing_speed_mps) * person_latency_s (metres).",
         ),
         "obstacle_comfort_band_m": FieldMeta(
             unit="m",
@@ -577,9 +599,10 @@ class SafetyEnvelope(_MetadataMixin):
             source="navigation/collision.py CollisionPolicy.obstacle_stop_m",
             date="2026-08-07",
             bucket="human",
-            note="Un-reconciled: robot.yaml safety.obstacle_stop_m is 0.65 and "
-            "configs/navigation/default.yaml stop_distance_m is 0.8. See the "
-            "F-stop-distance handoff note in LANE_A_STATUS.md.",
+            note="Envelope floor under base_center_to_obstacle_surface. Reactive "
+            "gate may keep a stricter commissioning floor (0.65) via max(); "
+            "never looser. configs/navigation/default.yaml stop_distance_m=0.8 "
+            "remains a separate planner term (F-stop-distance).",
         ),
     }
 
@@ -590,7 +613,7 @@ class SafetyEnvelope(_MetadataMixin):
         _non_negative(self.sensing_intrusion_m, "sensing_intrusion_m")
         _non_negative(self.pose_uncertainty_m, "pose_uncertainty_m")
         _non_negative(self.person_social_zone_m, "person_social_zone_m")
-        _non_negative(self.person_latency_factor, "person_latency_factor")
+        _non_negative(self.person_latency_s, "person_latency_s")
         _positive(self.obstacle_comfort_band_m, "obstacle_comfort_band_m")
         _positive(self.person_comfort_band_m, "person_comfort_band_m")
         _positive(self.obstacle_stop_floor_m, "obstacle_stop_floor_m")
@@ -607,13 +630,26 @@ class SafetyEnvelope(_MetadataMixin):
             + self.pose_uncertainty_m
         )
 
-    def person_stop(self, speed_mps: float) -> float:
-        """Stopping distance around a person: the social zone is a floor."""
+    def person_stop(
+        self,
+        speed_mps: float,
+        *,
+        closing_speed_mps: float | None = None,
+    ) -> float:
+        """Person clearance (metres): social floor vs stop + closing×latency.
 
+        ``closing_speed_mps`` defaults to ``speed_mps`` (robot speed as the
+        relative-closing bound when no track closing speed is supplied).
+        """
+
+        speed = _non_negative(speed_mps, "speed_mps")
+        if closing_speed_mps is None:
+            closing = speed
+        else:
+            closing = max(0.0, _finite(closing_speed_mps, "closing_speed_mps"))
         return max(
             self.person_social_zone_m,
-            self.stop_distance(speed_mps)
-            + self.person_latency_factor * self.reaction_latency_s,
+            self.stop_distance(speed) + closing * self.person_latency_s,
         )
 
     @property

@@ -31,10 +31,10 @@ LOW_VIEWPOINT_GATE_IDS = frozenset(
 )
 
 DOES_NOT_PROVE = (
-    "Sim/synthetic low-viewpoint gates do not prove real D455 optics, lighting, "
-    "motion blur, or domain gap (hardware-readiness HR-4).",
-    "Passing OCR/ReID/VPR/curb predicates on authored metrics does not validate "
-    "field storefront confirmation or owner ReID at 35 cm.",
+    ("Sim/synthetic low-viewpoint gates do not prove real D455 optics, lighting, "
+    "motion blur, or domain gap (hardware-readiness HR-4)."),
+    ("Passing OCR/ReID/VPR/curb predicates on authored metrics does not validate "
+    "field storefront confirmation or owner ReID at 35 cm."),
 )
 
 

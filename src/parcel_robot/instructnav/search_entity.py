@@ -2,17 +2,19 @@
 
 Hillclimb rung 4 / K4: generalize SearchOwner's frontier machinery without
 editing SearchOwner. Score = semantic prior − geodesic cost; the scorer is
-swappable (VLFM value map later). Callers inject A* geodesic costs.
+swappable (VLFM value map / C3 ValueMapFrontierScorer). Callers inject A*
+geodesic costs. Semantic priors are sourced at PLAN TIME only (LGR pattern).
 """
 
 from __future__ import annotations
 
 import math
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
-# Default sidewalk-borders-road prior table (sim-now; VLFM replaces later).
+# Default sidewalk-borders-road prior table (sim-now; plan-time cache replaces
+# in-loop model calls — C3 ValueMapFrontierScorer never invokes a runtime model).
 SIDEWALK_BORDERS_ROAD_PRIORS: dict[str, float] = {
     "sidewalk": 0.95,
     "footway": 0.92,
@@ -306,3 +308,190 @@ class SearchEntityPlanSpec:
                 "travel_weight": self.travel_weight,
             },
         }
+
+
+# ---------------------------------------------------------------------------
+# C3 — value-map FrontierScorer + plan-time prior (no runtime model calls)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class PlanTimePriorCache:
+    """Cached noun×region-class relevance scores (LGR: plan-time only).
+
+    Built once when the SearchEntity plan step is authored. The 10 Hz control
+    tick must only *read* this table — never call an LLM/SigLIP here.
+    """
+
+    query: str
+    noun_region_scores: Mapping[str, float] = field(default_factory=dict)
+    default: float = 0.35
+
+    def __post_init__(self) -> None:
+        if not str(self.query).strip():
+            raise ValueError("query must be non-empty")
+        if not 0.0 <= float(self.default) <= 1.0:
+            raise ValueError("default must be in [0, 1]")
+        for key, value in self.noun_region_scores.items():
+            if not 0.0 <= float(value) <= 1.0:
+                raise ValueError(f"prior for {key!r} must be in [0, 1]")
+
+    def prior_for_region(self, region_class: str) -> float:
+        key = " ".join(str(region_class).strip().lower().split())
+        if key in self.noun_region_scores:
+            return float(self.noun_region_scores[key])
+        # Fall back to the sidewalk-borders-road table (still plan-time data).
+        return semantic_prior_for_label(key, default=self.default)
+
+    @classmethod
+    def from_query_table(
+        cls,
+        query: str,
+        *,
+        table: Mapping[str, float] | None = None,
+        default: float = 0.35,
+    ) -> PlanTimePriorCache:
+        """Freeze SIDEWALK_BORDERS_ROAD_PRIORS (or custom) at plan time."""
+
+        source = dict(table if table is not None else SIDEWALK_BORDERS_ROAD_PRIORS)
+        return cls(query=query, noun_region_scores=source, default=default)
+
+
+@dataclass(frozen=True, slots=True)
+class TargetExistenceBelief:
+    """V_e — Gaussian target-existence belief over where the noun likely is."""
+
+    mean_xy: tuple[float, float]
+    variance_m2: float = 16.0
+    peak: float = 1.0
+
+    def __post_init__(self) -> None:
+        if not all(math.isfinite(v) for v in self.mean_xy):
+            raise ValueError("mean_xy must be finite")
+        if not math.isfinite(self.variance_m2) or self.variance_m2 <= 0.0:
+            raise ValueError("variance_m2 must be finite and positive")
+        if not 0.0 <= self.peak <= 1.0:
+            raise ValueError("peak must be in [0, 1]")
+
+    def value_at(self, x: float, y: float) -> float:
+        dx = float(x) - self.mean_xy[0]
+        dy = float(y) - self.mean_xy[1]
+        r2 = dx * dx + dy * dy
+        return float(self.peak * math.exp(-0.5 * r2 / self.variance_m2))
+
+
+@dataclass(frozen=True, slots=True)
+class BeliefInheritance:
+    """V_p — belief inheritance across scans (confidence-weighted map carry)."""
+
+    weight: float = 0.35
+
+    def __post_init__(self) -> None:
+        if not math.isfinite(self.weight) or not 0.0 <= self.weight <= 1.0:
+            raise ValueError("weight must be finite and in [0, 1]")
+
+    def value(self, map_value: float, map_confidence: float) -> float:
+        """Inherited belief rises with both fused value and observation weight."""
+
+        conf_factor = min(1.0, max(0.0, float(map_confidence)))
+        return self.weight * float(map_value) * conf_factor
+
+
+@runtime_checkable
+class ValueMapReader(Protocol):
+    """Minimal read surface (SemanticValueMap2D or test double)."""
+
+    resolution_m: float
+
+    def read(self, cell: tuple[int, int]) -> tuple[float, float]: ...
+
+    def unknown_fraction(self, region: Sequence[tuple[int, int]]) -> float: ...
+
+
+@dataclass(frozen=True, slots=True)
+class ValueMapFrontierScorer:
+    """FrontierScorer: value-map + V_e + V_p − travel; plan-time prior blend.
+
+    Drop-in for ``select_frontier(..., scorer=...)``. Zero runtime model calls —
+    ``plan_prior`` and ``value_map`` are pre-populated / pure-math lookups.
+    """
+
+    value_map: ValueMapReader
+    plan_prior: PlanTimePriorCache
+    existence: TargetExistenceBelief | None = None
+    inheritance: BeliefInheritance = field(default_factory=BeliefInheritance)
+    travel_weight: float = 0.06
+    map_weight: float = 1.0
+    existence_weight: float = 0.55
+    prior_blend: float = 0.25
+    coverage_weight: float = 0.45
+    sensor_radius_m: float = 3.0
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("travel_weight", self.travel_weight),
+            ("map_weight", self.map_weight),
+            ("existence_weight", self.existence_weight),
+            ("prior_blend", self.prior_blend),
+            ("coverage_weight", self.coverage_weight),
+            ("sensor_radius_m", self.sensor_radius_m),
+        ):
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(f"{name} must be finite and ≥ 0")
+        if self.prior_blend > 1.0:
+            raise ValueError("prior_blend must be ≤ 1")
+
+    def score(self, candidate: FrontierCandidate) -> float:
+        if not isinstance(candidate, FrontierCandidate):
+            raise TypeError("candidate must be FrontierCandidate")
+        map_v, map_c = self._sample_map(candidate.x, candidate.y)
+        v_p = self.inheritance.value(map_v, map_c)
+        v_e = self.existence.value_at(candidate.x, candidate.y) if self.existence else 0.0
+        # Plan-time prior for the queried noun × candidate label / region.
+        plan_v = self.plan_prior.prior_for_region(candidate.label or "unknown")
+        # Prefer authored candidate.semantic_prior when the ring builder stamped it.
+        table_prior = candidate.semantic_prior if candidate.semantic_prior > 0.0 else plan_v
+        blended_map = (1.0 - self.prior_blend) * map_v + self.prior_blend * table_prior
+        coverage = candidate.coverage_gain
+        if coverage <= 0.0:
+            coverage = self._unknown_coverage(candidate.x, candidate.y)
+        return (
+            self.map_weight * blended_map
+            + self.existence_weight * v_e
+            + v_p
+            + self.coverage_weight * coverage
+            - self.travel_weight * candidate.geodesic_cost_m
+        )
+
+    def _sample_map(self, x: float, y: float) -> tuple[float, float]:
+        res = float(self.value_map.resolution_m)
+        cell = (math.floor(x / res), math.floor(y / res))
+        return self.value_map.read(cell)
+
+    def _unknown_coverage(self, x: float, y: float) -> float:
+        """SearchOwner-style information gain via value-map unknown_fraction."""
+
+        res = float(self.value_map.resolution_m)
+        radius_cells = max(1, math.ceil(self.sensor_radius_m / res))
+        cx = math.floor(x / res)
+        cy = math.floor(y / res)
+        cells = [
+            (cx + dx, cy + dy)
+            for dy in range(-radius_cells, radius_cells + 1)
+            for dx in range(-radius_cells, radius_cells + 1)
+            if dx * dx + dy * dy <= radius_cells * radius_cells
+        ]
+        if not cells:
+            return 1.0
+        try:
+            return float(self.value_map.unknown_fraction(cells))
+        except ValueError:
+            return 1.0
+
+
+@dataclass(frozen=True, slots=True)
+class NearestFrontierScorer:
+    """Baseline for Tier C: nearest reachable frontier (geodesic only)."""
+
+    def score(self, candidate: FrontierCandidate) -> float:
+        return -float(candidate.geodesic_cost_m)

@@ -41,11 +41,14 @@ def test_variable_dt_tracks_without_overshoot() -> None:
     assert all(value[2] <= 0.2 + 1e-12 for value in values)
 
 
-def test_emergency_ignores_target_and_bypasses_jerk() -> None:
+def test_emergency_snaps_to_exact_zero() -> None:
     shaper = _shaper(accel=1.5, jerk=0.01)
     shaper.reset((1.0, -0.4, 0.1))
     result = shaper.step((10.0, 10.0, 10.0), dt_s=0.2, emergency=True)
-    assert result == pytest.approx((0.7, -0.1, 0.0))
+    assert result == (0.0, 0.0, 0.0)
+    # Residual state is cleared so the next non-emergency tick cannot resume
+    # from a pre-stop velocity.
+    assert shaper.step((0.0, 0.0, 0.0), dt_s=0.2, emergency=False) == (0.0, 0.0, 0.0)
 
 
 def test_scaled_halves_limits_and_preserves_velocity() -> None:

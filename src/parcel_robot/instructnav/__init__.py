@@ -16,6 +16,7 @@ from parcel_robot.instructnav.memory import (
 )
 from parcel_robot.instructnav.near_arrival import (
     DEFAULT_BEARING_SAMPLES,
+    near_band_contains,
     near_band_fallback_point,
 )
 from parcel_robot.instructnav.relations import (
@@ -34,6 +35,7 @@ from parcel_robot.instructnav.scan import (
 )
 from parcel_robot.instructnav.scoring import (
     ARRIVAL_BOUNDARY_EPSILON_M,
+    INSIDE_PROBABILITY_THRESHOLD,
     NEXT_TO_BAND_M,
     TOWARDS_BAND_M,
     ArrivalAuthorityVerdict,
@@ -52,6 +54,7 @@ from parcel_robot.instructnav.scoring import (
     object_near_goal_region,
     object_next_to_goal_region,
     object_towards_goal_region,
+    p_inside_goal_region,
     region_inside_goal_region,
     score_episode,
     score_episode_with_oracle,
@@ -59,11 +62,16 @@ from parcel_robot.instructnav.scoring import (
 )
 from parcel_robot.instructnav.search_entity import (
     SIDEWALK_BORDERS_ROAD_PRIORS,
+    BeliefInheritance,
     FrontierCandidate,
     FrontierScore,
     FrontierScorer,
+    NearestFrontierScorer,
+    PlanTimePriorCache,
     SearchEntityPlanSpec,
     SemanticMinusGeodesicScorer,
+    TargetExistenceBelief,
+    ValueMapFrontierScorer,
     ring_frontier_candidates,
     score_frontier,
     select_frontier,
@@ -74,12 +82,14 @@ from parcel_robot.instructnav.siglip import EmbeddingMatch, SigLIP2Matcher
 __all__ = [
     "ARRIVAL_BOUNDARY_EPSILON_M",
     "DEFAULT_BEARING_SAMPLES",
+    "INSIDE_PROBABILITY_THRESHOLD",
     "NEXT_TO_BAND_M",
     "SIDEWALK_BORDERS_ROAD_PRIORS",
     "TOWARDS_BAND_M",
     "ArrivalAuthorityVerdict",
     "AttributionLayer",
     "AuthorityCategory",
+    "BeliefInheritance",
     "EmbeddingMatch",
     "EpisodeScore",
     "FailureClass",
@@ -91,7 +101,9 @@ __all__ = [
     "GrounderV2",
     "GroundingOutcome",
     "GroundingResult",
+    "NearestFrontierScorer",
     "OracleAttribution",
+    "PlanTimePriorCache",
     "ProposerBus",
     "RegionCell",
     "RememberedEntity",
@@ -104,10 +116,13 @@ __all__ = [
     "SemanticMemory2D",
     "SemanticMinusGeodesicScorer",
     "SigLIP2Matcher",
+    "TargetExistenceBelief",
+    "ValueMapFrontierScorer",
     "arrival_goal_region_for_relation",
     "differential_arrival_verdict",
     "full_turn_scan_spec",
     "honest_not_found_reply",
+    "near_band_contains",
     "near_band_fallback_point",
     "nearest_point_in_region",
     "next_to_band_from_centre",
@@ -118,6 +133,7 @@ __all__ = [
     "object_near_goal_region",
     "object_next_to_goal_region",
     "object_towards_goal_region",
+    "p_inside_goal_region",
     "recovery_for_outcome",
     "region_inside_goal_region",
     "resolve_grounding",

@@ -136,7 +136,7 @@ def load_manifest(
     path = base / _MANIFEST_NAME
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
-        raise ValueError("storefront manifest must be a mapping")
+        raise TypeError("storefront manifest must be a mapping")
     schema = int(raw.get("schema_version", 1))
     dnp = raw.get("does_not_prove") or list(DOES_NOT_PROVE)
     if not isinstance(dnp, list) or not dnp or any(not isinstance(x, str) or not x for x in dnp):
@@ -148,7 +148,7 @@ def load_manifest(
     fixtures: list[StorefrontFixture] = []
     for row in rows:
         if not isinstance(row, dict):
-            raise ValueError("storefront entry must be a mapping")
+            raise TypeError("storefront entry must be a mapping")
         sid = str(row["id"]).strip()
         brand = str(row["brand"]).strip()
         expected = str(row["expected_text"]).strip()

@@ -24,12 +24,12 @@ from parcel_robot.bags.schema import (
 )
 
 __all__ = [
-    "BagRecorder",
-    "BagReplayer",
-    "BagSchemaError",
     "DEFAULT_DOES_NOT_PROVE",
     "KNOWN_TOPICS",
     "SCHEMA_VERSION",
+    "BagRecorder",
+    "BagReplayer",
+    "BagSchemaError",
     "default_clocks",
     "default_frames",
     "is_privileged_key",

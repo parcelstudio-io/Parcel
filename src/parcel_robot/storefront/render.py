@@ -74,10 +74,10 @@ def _roi_pixels(
     height: int,
 ) -> tuple[int, int, int, int]:
     x0, y0, x1, y1 = roi_norm
-    px0 = max(0, min(width - 1, int(round(x0 * width))))
-    py0 = max(0, min(height - 1, int(round(y0 * height))))
-    px1 = max(px0 + 1, min(width, int(round(x1 * width))))
-    py1 = max(py0 + 1, min(height, int(round(y1 * height))))
+    px0 = max(0, min(width - 1, round(x0 * width)))
+    py0 = max(0, min(height - 1, round(y0 * height)))
+    px1 = max(px0 + 1, min(width, round(x1 * width)))
+    py1 = max(py0 + 1, min(height, round(y1 * height)))
     return px0, py0, px1, py1
 
 
