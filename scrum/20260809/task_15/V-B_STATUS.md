@@ -28,17 +28,86 @@ core, grounding, or SigLIP file was changed by V-B.
 
 ## Measured evidence
 
-Operating-threshold cell uses the observed lamppost score sequence
-`0.28, 0.35, 0.42`. It remains unconfirmed for views 1 and 2, then confirms on
-view 3 at credibility `0.72856`. A score-1.0 singleton does not confirm.
-There is no class-specific threshold or per-class gate.
+### CORRECTION (lane E4, 2026-08-10) — what the old headline claimed vs proved
 
-Standalone T-cam pure report:
+Fable's independent audit returned this card on evidence strength. Three findings,
+all confirmed by E4 and all now corrected:
+
+1. **`PARCEL_OWLV2_THRESHOLD` was never exercised by any V-B file.** The card
+   claimed a lower detector operating point was safe without ever running the
+   detector at one. Repo-wide the env var appeared only in `b4_gate.py` and
+   `owlv2_onnx.py`.
+2. **`scores = (0.28, 0.35, 0.42)` was a HARDCODED LITERAL** at
+   `cam_multiview_metric.py:45`, described as "the observed lamppost score
+   sequence". It was not a recording.
+3. **`false_positive_commits=0` was ARITHMETICALLY GUARANTEED**: one
+   `confirmer.update(phantom)` on a fresh `MultiViewConfirm` per phantom, against
+   a 3-of-5 rule. One view can never satisfy 3-of-5. It is a single-frame-
+   rejection assertion, not a false-positive measurement.
+
+**The "a lower detector operating point is safe" framing is DELETED.** What
+replaces it is measured, in the honest form the measurement supports.
+
+### NEW: live operating-point cell (option (a) — the real detector was run)
+
+`evals/nav_instruct/cam_multiview_metric.py::evaluate_live_cells`,
+tier id `T-cam-proxy-vb-live`. Real OWLv2 ONNX on live MuJoCo-EGL renders of the
+b4-gate lamppost prop, from **5 distinct camera poses** on a 3.0 m orbit
+(azimuths −40°/−20°/0°/+20°/+40°, each facing the target). Every score below is
+recorded by the run.
+
+```
+MUJOCO_GL=egl PARCEL_OWLV2_ONNX=1 \
+  .parcel/bin/python -m evals.nav_instruct.cam_multiview_metric --live
+```
+
+| | threshold **0.2** | threshold **0.55** (unmodified grounder floor) |
+|---|---|---|
+| distinct views | 5 | 5 |
+| views yielding a box | **5 / 5** | **1 / 5** |
+| recorded lamppost scores | `0.4309, 0.4598, 0.5539, 0.3139, 0.2308` | `0.5539` (the other four fall below the gate) |
+| lamppost confirmed (3-of-5) | **yes, on view index 2**, credibility 0.86285 | **no** — 3-of-5 unreachable |
+| absent-class (`"fire hydrant"`) boxes | **0** across 5/5 views | **0** across 5/5 views |
+| `live_absent_class_commits` (measured) | **0** | **0** |
+| `live_repeated_phantom_commits` (measured) | **1**, on view index 2 | 0 (never reaches 3 views) |
+
+Credibility trace at 0.2: `0.43086 → 0.69254 → 0.86285 → 0.90589 → 0.92761`.
+Re-run after an internal refactor: identical.
+
+**What this supports, stated exactly.** On this prop, lowering the operating
+point from the unmodified 0.55 grounder floor to 0.2 is what makes multi-view
+confirmation *possible at all*: at 0.55 only one of five views survives the gate
+and the 3-of-5 rule can never be met; at 0.2 all five survive and confirmation
+lands on the third view. In the same run the absent class produced **zero** boxes
+at both operating points, so the extra recall was not bought with a hallucination
+**on this scene**.
+
+**What this refutes.** It is *not* evidence that a lower operating point is safe.
+The same run injects a view-consistent phantom — a hypothesis with no object
+behind it, re-observed at constant bearing/range — and it **commits on exactly
+the same view as the real target**. Finite-window M-of-N offers no protection
+against a persistent false positive. `false_positive_commits = 0` must never be
+quoted from this card without that sentence.
+
+### Pure cell (unchanged in value, corrected in description)
+
+`tier_id` is now `T-cam-proxy-vb-pure` and the report carries
+`operating_scores_are_synthetic: true` and
+`false_positive_commits_is_arithmetic: true`. Numbers are byte-unchanged so the
+two publications stay comparable:
+
+Operating-threshold cell uses a **synthetic** score sequence
+`0.28, 0.35, 0.42` (a literal, not a recording). It remains unconfirmed for views
+1 and 2, then confirms on view 3 at credibility `0.72856`. A score-1.0 singleton
+does not confirm. There is no class-specific threshold or per-class gate.
+
+Standalone pure report (`T-cam-proxy-vb-pure`):
 
 - scenes: 24
 - confirmed scenes after three low-score views: 24/24
 - single-frame commits: 0
-- injected singleton false-positive commits: 0/12
+- injected singleton false-positive commits: 0/12 — **arithmetically guaranteed,
+  not measured** (one `update()` per phantom against a 3-of-5 confirmer)
 - singleton hypotheses entered rejected memory: 12/12
 - same-id next-scan recommits suppressed: 12/12
 - fused planar localization error: mean `0.002608 m`, p95 `0.006249 m`,

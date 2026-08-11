@@ -41,10 +41,73 @@ elapsed 107.3s
 
 All C-A-owned hard gates green. Sole red = pre-existing habitat smoke (DISPATCH_WAVE1 pre-dispatch note); this card did not touch that test or habitat config.
 
+## Latency-ledger reachability — CLOSED by lane E4 (2026-08-10)
+
+**The defect.** `resolve_latency_ledger_path` returned `None` unless
+`PARCEL_LATENCY_LEDGER` was set, and **nothing in the repo ever set it**.
+`LATENCY_LEDGER_RELPATH` was declared and never used as a default. So the only
+writer (`RobotRuntime.close()`) was permanently inert, the ledger held its 1
+hand-seeded row for its whole life, and `ci_gate`'s `latency-tail-ledger` gate
+was permanently `skip` — a hard gate that could not fire.
+
+**The fix** (`src/parcel_robot/observability.py`, ledger-path resolution only —
+`runtime.py` untouched):
+
+1. `resolve_latency_ledger_path()` now falls back to
+   `REPO/evals/latency/ledger.jsonl` via the new `default_latency_ledger_path()`.
+2. `PARCEL_LATENCY_LEDGER_OFF` is the **explicit opt-out** that restores the
+   old write-nothing behaviour byte-for-byte.
+3. A **pytest process never resolves the committed ledger.** A unit test's
+   runtime teardown is not a measurement and must not mutate a committed
+   measurement artifact; ~29 test files close a runtime. Tests that do want a
+   ledger pass an explicit path (`tests/test_acoustic_defects.py` does), which is
+   honoured above the default.
+4. `append_latency_ledger_row` **refuses a turn-less row into the committed
+   ledger** (returns `None`). This one is load-bearing: `evaluate_latency_ratchet`
+   iterates the *baseline's* metrics and `continue`s on any the row lacks, so a
+   row with no percentile series would have made the newly-reachable gate return
+   a **vacuous pass**. Making a gate reachable must not make it meaningless.
+5. `evals/companion/duplex_v1/run_duplex_v1.py` (ledger emission only) replays
+   the `DuplexVoiceSession` stage clocks it *already collects* for TTFT into a
+   `LatencyTracker` and appends one real row per run. No new measurement, no new
+   dependency.
+
+**Measured.** Ledger rows **1 → 5** across four duplex runs. `ci_gate`'s gate
+flipped:
+
+```
+before: [  skip] HARD  latency-tail-ledger  ledger rows=1 < window=5; ratchet skipped
+after:  [  PASS] HARD  latency-tail-ledger  latest row latency-20260810T082415Z-4d83035f:
+                                            6 metric series within 1.2x tail ceiling (rows=5, window=5)
+```
+
+Example real row: `turns=2`, `TurnTotal p95 40.635 ms` (pin 1250 ms),
+`UserQueryEndToFirstResponse` present, `stages_observed` = the 10 stages the text
+path genuinely produces.
+
+**Honest limit, stated because the gate message hides it.** The duplex text path
+has no microphone, endpointer or audio sink, so the four **acoustic** pins
+(`AcousticAck`, `EndpointDecision`, `SttTranscribe`,
+`PlaybackEnqueueToFirstSample`) are **absent by omission** from duplex rows. The
+ratchet reads only `rows[-1]`, so today it actually compares **2 of the 6**
+pinned metrics. `ci_gate`'s detail string says "6 metric series" because it
+counts *baseline* metrics, not compared ones — that string is misleading and is
+flagged here as a follow-up for the `scripts/ci_gate.py` owner (out of E4's
+OWNS). The percentile-pin pytest gate (`latency-tail`) remains the authoritative
+latency-tail hard check, exactly as before, so nothing was lost.
+
+Pinned by `tests/test_e4_evidence_seams.py` (resolution order, opt-out env,
+pytest suppression, turn-less-row refusal).
+
 ## does_not_prove
 
 - Seed ledger row is **clock-honest against the N19 stage vocabulary**, not a live duplex / PipeWire wall-clock measurement; sub-700 ms AcousticAck on hardware is unproven.
-- Ledger ratchet is intentionally **skipped** until `window=5` rows exist; today the percentile-pin pytest gate is still the authoritative latency-tail hard check.
+- The duplex-emitted rows are real wall-clock measurements of the **text** path
+  only. They do **not** exercise the acoustic clocks, so the AcousticAck ratchet
+  is still aspirational until a real capture/playback run writes a row.
+- ~~Ledger ratchet is intentionally **skipped** until `window=5` rows exist~~ —
+  superseded: the ratchet now fires (rows=5), with the partial-coverage caveat
+  above.
 - walk_with_me stub `hard_collision_total=0` is stub geometry, not headless/hardware collision evidence.
 - Ruff remainder in camera_channel / detection_adapter is other cards' debt, not cleared.
 

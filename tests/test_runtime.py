@@ -595,7 +595,14 @@ def test_runtime_exposes_bounded_semantic_follow_formation(
 
         runtime.set_behavior("follow")
         assert runtime.follow.mode == "direct"
-        assert runtime.follow.snapshot()["desired_distance_m"] == pytest.approx(1.6)
+        # The direct stand-off is the controller's own derived value, never the
+        # model-authored formation distance. 1.6 -> 1.85 on 2026-08-10 (the
+        # owner-authorized person-clearance retune derives it from the owner
+        # keepout ring); read from the config so it cannot re-fork to a literal.
+        assert runtime.follow.snapshot()["desired_distance_m"] == pytest.approx(
+            runtime.follow.config.desired_distance_m
+        )
+        assert runtime.follow.config.desired_distance_m == pytest.approx(1.85)
     finally:
         runtime.close()
 

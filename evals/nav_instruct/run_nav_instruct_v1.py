@@ -31,6 +31,7 @@ from evals.nav_instruct.generator import (
     write_episode_files,
 )
 from evals.nav_instruct.runner import (
+    ALLOWED_NAVIGATOR_OVERRIDES,
     ARRIVAL_RULE_FOR_VERSION,
     ARRIVAL_RULES,
     BUDGET_POLICIES,
@@ -121,6 +122,34 @@ def main(argv: list[str] | None = None) -> int:
         help="MJCF scene to run against (default: the frozen city block)",
     )
     parser.add_argument(
+        "--navigator-flag",
+        action="append",
+        default=[],
+        metavar="NAME",
+        choices=sorted(ALLOWED_NAVIGATOR_OVERRIDES),
+        help=(
+            "turn ON a pre-registered pipeline flag for this run (repeatable). "
+            "Default: none — the flag-OFF arm is the navigator every frozen row "
+            "was measured with. The chosen flags are recorded on the report and "
+            "on the ledger row, so a flag-on row can never be read as a flag-off "
+            "one."
+        ),
+    )
+    parser.add_argument(
+        "--refreeze-provenance",
+        default=None,
+        metavar="TEXT",
+        help=(
+            "stamp a re-freeze provenance note on the report and the ledger row. "
+            "A frozen-baseline row that SUPERSEDES an earlier one must say why in "
+            "the ledger itself — the pin is what ci_gate's hard-safety gate reads, "
+            "and a reader of that row should not have to find the status doc to "
+            "learn that the episode set moved under an authorization. Optional and "
+            "omitted when unset, so an ordinary row stays byte-identical in shape "
+            "to every row already in the ledger."
+        ),
+    )
+    parser.add_argument(
         "--scenes",
         default=None,
         help=(
@@ -154,12 +183,19 @@ def main(argv: list[str] | None = None) -> int:
             episodes, args.out / "episodes" / version, version=version, seed=args.seed
         )
 
+    navigator_flags = sorted(set(args.navigator_flag or ()))
+    if navigator_flags and args.freeze:
+        parser.error(
+            "--freeze refuses a flag-on run: a frozen baseline pointer must "
+            "describe the default navigator, never one reconfigured by a flag"
+        )
     runner = NavInstructRunner(
         max_steps=args.max_steps,
         mode=args.mode,
         arrival_rule=arrival_rule,
         scene=args.scene,
         budget_policy=args.budget_policy,
+        navigator_overrides={name: True for name in navigator_flags},
     )
     started = time.perf_counter()
     results = [runner.run_episode(ep) for ep in episodes]
@@ -169,9 +205,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     suffix = "" if version == EPISODE_SET_V1 else f"-{version}"
-    report_id = f"nav-instruct-v1-{args.mode}{suffix}-{stamp}"
+    # A flag-on run gets its own visible name. Two rows that differ only by a
+    # pipeline flag must not be distinguishable solely by reading a key most
+    # readers will not look at.
+    flag_suffix = "-flagon" if navigator_flags else ""
+    report_id = f"nav-instruct-v1-{args.mode}{suffix}{flag_suffix}-{stamp}"
     report = {
         "report_id": report_id,
+        "navigator_flags": navigator_flags,
         "runner_version": RUNNER_VERSION,
         "mode": args.mode,
         "seed": args.seed,
@@ -223,6 +264,18 @@ def main(argv: list[str] | None = None) -> int:
         "arrival_branch_histogram": aggregate["arrival_branch_histogram"],
         "scene": runner.scene,
     }
+    if navigator_flags:
+        # Only stamped when non-empty: a flag-off row stays byte-identical in
+        # shape to every row already in the ledger.
+        ledger_row["navigator_flags"] = navigator_flags
+    if args.refreeze_provenance:
+        # Same convention as navigator_flags: present only when it means
+        # something, so an ordinary row's shape does not move.
+        report["refreeze_provenance"] = args.refreeze_provenance
+        ledger_row["refreeze_provenance"] = args.refreeze_provenance
+        report_path.write_text(
+            json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8"
+        )
     with LEDGER.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(ledger_row, sort_keys=True) + "\n")
 
@@ -262,6 +315,7 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(
             {
                 "report": str(report_path),
+                "navigator_flags": navigator_flags,
                 "baseline_version": version,
                 "arrival_rule": arrival_rule,
                 "sr": aggregate["sr"],

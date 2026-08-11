@@ -9,6 +9,17 @@ the newest frozen ``vN`` episode set, pass 6/6, and keep ``no_false_arrival``
 live (green on the clean run AND actually reddened by a mutant, not merely
 absent). When a v4 is frozen, ``_CURRENT_FROZEN_EPISODE_SET`` advances on its own
 and both tests fail until ``scripts/mutation_panel.py`` is bumped with it.
+
+Card E7 (2026-08-10) added the third one, and it is the one that would have
+caught this class a batch earlier. The two tests above are *both* satisfiable by
+a stale file: the fast one only reads the committed payload, and the live one is
+``@pytest.mark.slow``, so the commit tier never ran it. The committed payload
+went a whole batch out of date — recording ``no_false_arrival: true`` while a
+live run on the same tree said ``false`` — and ``scripts/ci_gate.py``'s HARD
+``hard-safety`` gate kept certifying "no false arrival" from it.
+:func:`test_committed_panel_safety_fields_still_reproduce` closes that: it is
+cheap enough (one clean run, no mutants) to sit in the commit tier, and it
+compares the committed *safety-relevant* fields against a live re-derivation.
 """
 
 from __future__ import annotations
@@ -67,6 +78,31 @@ def test_committed_mutation_panel_is_on_the_current_frozen_set() -> None:
 
     payload = json.loads(PANEL_JSON.read_text(encoding="utf-8"))
     _assert_panel_payload_is_current_and_sensitive(payload)
+
+
+def test_committed_panel_safety_fields_still_reproduce() -> None:
+    """The GATED artifact's safety-relevant fields must survive a live re-run.
+
+    ``scripts/ci_gate.py``'s hard-safety gate reads ``clean_checks`` out of the
+    committed payload and prints it as a safety certification. An artifact that
+    a live run contradicts is therefore not merely out of date — it is the gate
+    asserting something untrue. One clean run (~4 s), no mutants, so this can
+    live in the commit tier where the slow whole-panel test cannot.
+
+    A red here is NOT a licence to regenerate the artifact: the artifact is a
+    gated input, and the honest response is to diagnose why the tree stopped
+    reproducing it.
+    """
+
+    from scripts.mutation_panel import clean_safety_fields, live_clean_safety_fields
+
+    committed = clean_safety_fields(json.loads(PANEL_JSON.read_text(encoding="utf-8")))
+    live = live_clean_safety_fields()
+    assert live == committed, (
+        "the committed mutation panel no longer reproduces its own safety-relevant "
+        f"fields on this tree: committed={committed} live={live} — the hard-safety "
+        "gate must not certify from it until the divergence is diagnosed"
+    )
 
 
 @pytest.mark.slow

@@ -65,6 +65,7 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -109,9 +110,13 @@ FROZEN_DIGEST_NODE_IDS: tuple[str, ...] = (
     "tests/test_personal_convo_v1.py::test_manifest_locks_all_inputs_and_covers_every_family",
 )
 
-#: The mutation panel's anti-rot guard (fast, committed-payload check).
+#: The mutation panel's anti-rot guards (both fast enough for the commit tier).
+#: The first reads the committed payload; the second re-derives its
+#: safety-relevant fields from a LIVE clean run, because a committed payload
+#: alone cannot tell you whether it is still true (lane E7, 2026-08-10).
 MUTATION_FRESHNESS_NODE_IDS: tuple[str, ...] = (
     "tests/test_mutation_panel_freshness.py::test_committed_mutation_panel_is_on_the_current_frozen_set",
+    "tests/test_mutation_panel_freshness.py::test_committed_panel_safety_fields_still_reproduce",
 )
 
 #: (b) LATENCY-TAIL — the committed p95/p99 percentile pins that exist today
@@ -127,9 +132,54 @@ LATENCY_TAIL_NODE_IDS: tuple[str, ...] = (
 #: policy (never concurrently edited), so the gate is deterministic. The
 #: authoritative recompute-vs-manifest coverage is the pytest ids above; this
 #: sentinel is what the self-test seeds to prove the gate is not theatre.
+#:
+#: EVERY manifest carrying ``"frozen": true`` belongs here. ``personal_convo_v1``
+#: was NOT pinned during task_15 and that is exactly why a green gate missed its
+#: pack_digest moving under card M-A (Fable audit ``AUDIT_FABLE_INDEPENDENT.md``,
+#: BLOCKING 2). Adding a frozen suite without adding it here re-opens that hole,
+#: so ``tests/test_ci_gate.py`` pins the set of frozen-but-unpinned manifests and
+#: seeds each pin here individually to prove it reddens.
+#:
+#: Re-pin log — one entry per authorized movement, because a sentinel that moves
+#: without a reason is a sentinel nobody trusts:
+#:
+#: * ``embodied_plan_v1/manifest.json`` ``33c662c8…`` -> ``22736f6e…``,
+#:   2026-08-10, lane E5, EXPLICIT OWNER AUTHORIZATION ("1. person clearance.
+#:   Implement your recommendation"). **Nothing about the eval changed.** The
+#:   manifest SHA-locks ``configs/robot.yaml`` as an input, that file was retuned
+#:   (``safety.person_stop_m`` 1.0 -> 1.2, ``person_slow_m`` 2.0 -> 2.5,
+#:   ``owner_follow.owner_keepout_m`` 1.55 -> 1.75), so the lock had to be
+#:   refreshed ``f6468887…`` -> ``aff69113…`` and the manifest's own sha moved
+#:   MECHANICALLY with it. The suite's BEHAVIOUR is unmoved and was re-measured
+#:   against a scratch copy of the manifest BEFORE the committed file was
+#:   touched: 997 simulator steps, 0 collisions, 0 timeouts, minimum clearance
+#:   0.883147 m, per-case 200/260/64/389/84 — bit-identical to the frozen row.
+#:   Only the one ``robot_config`` sha string changed in the file; every other
+#:   locked input and every byte of layout is untouched. Full 2x2 attribution in
+#:   ``scrum/20260809/task_15/E5_PERSON_CLEARANCE_STATUS.md``.
+#:
+#: * ``nav_instruct/episodes/v4/manifest.json`` **ADDED** (not moved) as
+#:   ``b2945444…``, 2026-08-11, lane E8, EXPLICIT OWNER AUTHORIZATION (re-freeze
+#:   the episodes to v4 so the follow goal radii match the retuned stand-off,
+#:   keeping the pedestrian-clearance gain). **v3's pin and v3's bytes are
+#:   UNCHANGED** — v3 stays frozen, so every historical row measured against it
+#:   keeps meaning what it meant. v4 is a new frozen set carrying exactly one
+#:   correction: the ``follow_owner`` goal radius stops being the literal 1.8 m
+#:   and becomes ``(desired_distance_m + distance_deadband_m) +
+#:   OWNER_STAND_OFF_MARGIN_M`` = 2.13 m, derived from the same authority terms
+#:   the follow controller obeys. It is pinned here for the reason the others
+#:   are: it is now the newest frozen set (``mutation_panel.py`` and the
+#:   frozen-baseline ledger row both moved onto it), so a byte of it moving must
+#:   be loud. Only the five ``follow_owner`` episodes' ``goal.radius_m`` and the
+#:   ``shortest_path_m`` computed from it differ from v3; the robot's own arrival
+#:   claims are byte-identical across the two sets. 2x2 attribution and the
+#:   per-episode bridge: ``scrum/20260809/task_15/E8_V4_REFREEZE_STATUS.md``,
+#:   ``evals/nav_instruct/bridge_v3_v4.py``.
 DIGEST_SENTINELS: dict[str, str] = {
     "evals/nav_instruct/episodes/v3/manifest.json": "eb1289e9723e008336b33bff83f2e4c9a91e07d1e6552866f6ede52da7f57858",
-    "evals/companion/embodied_plan_v1/manifest.json": "33c662c8d3611f39bb1fc56dabbebb2c4c7c913a8499449107cd5add95c6e54f",
+    "evals/nav_instruct/episodes/v4/manifest.json": "b29454443e93b68d238c11d31298e81c2e9cae89d7669d9d6556405e9b7388ec",
+    "evals/companion/embodied_plan_v1/manifest.json": "22736f6e0e4b106c0d130b9f7f425feca465a73b20da1431dfd5e2e3b1ce9389",
+    "evals/companion/personal_convo_v1/manifest.json": "d338f3352cd9597aeb9977f75c139d926bdfba1fe1d6b036b9a3ace08a1cf114",
 }
 
 # ---------------------------------------------------------------------------
@@ -325,12 +375,21 @@ def evaluate_frozen_digest_sentinels(
     return GateResult(
         "frozen-digest-sentinels", tier, True, "pass",
         f"{checked} immutable manifest(s) byte-identical to pin",
+        extra={"checked": checked},
     )
 
 
 def _latest_frozen_baseline_row(nav_rows: list[dict[str, Any]]) -> dict[str, Any] | None:
     frozen = [r for r in nav_rows if r.get("frozen_baseline") is True]
     return frozen[-1] if frozen else None
+
+
+def _panel_safety_fields_live() -> dict[str, Any]:
+    """Live re-derivation of the panel clean run's safety-relevant fields."""
+
+    from scripts.mutation_panel import live_clean_safety_fields
+
+    return live_clean_safety_fields()
 
 
 def evaluate_hard_safety(
@@ -340,6 +399,7 @@ def evaluate_hard_safety(
     followbench_ledger: Path = FOLLOWBENCH_LEDGER,
     walk_with_me_ledger: Path = WALK_WITH_ME_LEDGER,
     pinned_false_arrival: int = PINNED_FROZEN_FALSE_ARRIVAL,
+    reproduce_panel: Callable[[], dict[str, Any]] | None = None,
     tier: str = "commit",
 ) -> GateResult:
     """Zero hard collisions on every product artifact + no new false_arrival.
@@ -349,6 +409,21 @@ def evaluate_hard_safety(
     collisions; the frozen-baseline false_arrival may not exceed its pin.
     walk_with_me rows join only when they carry ``hard_collision_total`` —
     legacy stub rows without the field are skipped by field-presence.
+
+    **Freshness (lane E7, 2026-08-10).** The mutation panel is the only input
+    here that is a *derived artifact* rather than a run ledger, and this gate
+    used to certify ``no_false_arrival`` straight out of it. That is a hole with
+    a name: the committed payload was written at 19c9226 and a live run on the
+    current tree contradicted it (``no_false_arrival`` true -> false) while the
+    gate kept printing ``no_false_arrival=True``. So the committed payload's
+    safety-relevant fields are now RE-DERIVED live (one clean run, ~4 s) and
+    must match. A gate may read a stale artifact; it may not *certify a safety
+    property* from one.
+
+    ``reproduce_panel`` is the seam: ``None`` means "re-derive live, but only
+    when reading the real committed artifact" — a synthetic ``mutation_panel``
+    path (the self-tests) has no tree to reproduce from, so the comparison is
+    recorded as skipped rather than silently passed.
     """
 
     problems: list[str] = []
@@ -380,6 +455,32 @@ def evaluate_hard_safety(
             problems.append(f"mutation panel clean_run collisions={coll} (expected 0)")
         if not no_fa:
             problems.append("mutation panel clean run has a false arrival (no_false_arrival=false)")
+
+        reproducer = reproduce_panel
+        if reproducer is None and mutation_panel == MUTATION_PANEL_JSON:
+            reproducer = _panel_safety_fields_live
+        if reproducer is None:
+            checks.append(
+                "mutation panel freshness: skipped (synthetic artifact, no tree to reproduce)"
+            )
+        else:
+            from scripts.mutation_panel import clean_safety_fields
+
+            committed_fields = clean_safety_fields(panel)
+            live_fields = reproducer()
+            fresh = live_fields == committed_fields
+            checks.append(f"mutation panel freshness: committed fields reproduce live = {fresh}")
+            if not fresh:
+                drift = sorted(
+                    key
+                    for key in set(committed_fields) | set(live_fields)
+                    if committed_fields.get(key) != live_fields.get(key)
+                )
+                problems.append(
+                    "mutation panel is STALE: a live clean run contradicts the committed "
+                    f"artifact on {drift} (committed={committed_fields} live={live_fields}) "
+                    "— the hard gate will not certify a safety property from it"
+                )
     else:
         problems.append("mutation_panel.json missing (missing evidence)")
 
@@ -623,7 +724,11 @@ def evaluate_nav_instruct_candidate(tier: str = "nightly") -> list[GateResult]:
         proc = subprocess.run(
             [
                 PYTHON, "-m", "evals.nav_instruct.run_nav_instruct_v1",
-                "--minival", "--mode", "candidate", "--episode-version", "v3",
+                # v4 since the 2026-08-11 re-freeze (lane E8): the candidate arm
+                # must run the same frozen set the frozen-baseline row and the
+                # mutation panel are on, or the nightly comparison is between
+                # two different eval regions.
+                "--minival", "--mode", "candidate", "--episode-version", "v4",
             ],
             cwd=str(REPO), env=_base_env(), capture_output=True, text=True, timeout=1800,
             check=False,

@@ -12,10 +12,11 @@ from pathlib import Path
 
 import pytest
 
+from parcel_robot import runtime as runtime_module
 from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.core.commands import MotionIntent
-from parcel_robot.core.hard_stop import ZERO_COMMAND
+from parcel_robot.core.hard_stop import ZERO_COMMAND, FinalStopDecision
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
@@ -69,7 +70,7 @@ class _SilentModel:
         return AgentDecision("no planning in this test")
 
 
-def _runtime(tmp_path: Path) -> RobotRuntime:
+def _runtime(tmp_path: Path, *, shaping: bool = True) -> RobotRuntime:
     path = tmp_path / "sa2-live.yaml"
     path.write_text(
         f"""
@@ -83,7 +84,7 @@ motion:
     enabled: true
     policy_path: ""
   shaping:
-    enabled: true
+    enabled: {"true" if shaping else "false"}
 agent:
   prompts_root: {REPO / "prompts"}
 memory:
@@ -333,13 +334,113 @@ def test_p0a_live_pipeline_interrupt_at_every_stage_is_exact_zero(
         runtime.close()
 
 
-def test_mutation_oracle_residual_nonzero_after_hard_stop_is_killed() -> None:
-    """Seeded defect class: emergency residual must fail the P0-A oracle."""
+def _zero_intent_reaches_set_target(
+    tmp_path: Path, *, shaping: bool
+) -> VelocityCommand:
+    """Drive the PRODUCT dispatch path to a zero intent; return what set_target got.
 
-    healthy = VelocityCommand()
-    residual = VelocityCommand(vx=0.12)
-    assert healthy == ZERO_COMMAND
-    assert residual != ZERO_COMMAND
+    Warms the velocity smoother on a real forward intent so its ramp holds a
+    non-zero residual, then submits the zero intent and dispatches once. Nothing
+    here is a stand-in: ``_dispatch_active`` is the live path
+    (smoother -> collision gate -> shaper -> ``finalize_command`` -> ``set_target``).
+    """
+
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    runtime = _runtime(tmp_path, shaping=shaping)
+    sent: list[VelocityCommand] = []
+    original = runtime.control_manager.set_target
+
+    def capture(command, **kwargs):
+        sent.append(command)
+        return original(command, **kwargs)
+
+    runtime.control_manager.set_target = capture  # type: ignore[method-assign]
+    try:
+        _seed_healthy(runtime)
+        for _ in range(20):
+            runtime.submit_motion("voice", VelocityCommand(vx=0.6), ttl=5.0)
+            runtime._dispatch_active()
+        assert sent and sent[-1].vx > 0.0, "the smoother must be warm before the stop"
+
+        sent.clear()
+        runtime.submit_motion("voice", VelocityCommand(), ttl=5.0)
+        runtime._dispatch_active()
+        assert sent, "the dispatch path must reach set_target on the zero intent"
+        return sent[-1]
+    finally:
+        runtime.close()
+
+
+def _finalize_passthrough(candidate, severity, *, downstream_stages=()):
+    """The seeded mutant: ``finalize_command`` forwards its candidate unchanged.
+
+    Same signature, same return type — it just never enforces HARD_STOP's exact
+    zero and never runs the reset obligations. Injected by monkeypatch only; the
+    mutation-panel rule forbids committing a source edit as a mutant.
+    """
+
+    del downstream_stages
+    return FinalStopDecision(command=candidate, severity=severity, reset_required=False)
+
+
+def test_mutation_oracle_residual_nonzero_after_hard_stop_is_killed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """P0-A's oracle must KILL a ``finalize_command`` pass-through. Proven here.
+
+    This test used to compare ``VelocityCommand()`` against ``VelocityCommand(vx=0.12)``
+    and assert they differed. That touches no product code and cannot fail for any
+    reason a robot cares about — Fable's independent audit of task_15 named it a
+    tautology, and ``S-A2_STATUS.md`` had cited it as the reason the real mutation
+    panel went untouched. So it now drives the product path and proves its own kill.
+
+    The configuration matters, and the honest statement of the layering is:
+
+    * with ``motion.shaping.enabled: false`` the smoother's ramp residual is
+      carried all the way to the finalize boundary, so ``finalize_command`` is the
+      ONLY authority between that residual and ``set_target``. The mutant is
+      killed here, and this is the case the oracle asserts;
+    * with shaping enabled ``_shape_for_actuator`` is called with
+      ``stopping=True`` on every HARD_STOP route and emergency-zeroes first, so a
+      finalize pass-through is an EQUIVALENT mutant on that path. That is
+      defence-in-depth working, not the oracle being weak, and it is recorded
+      rather than hidden — see ``test_the_shaper_is_defence_in_depth_not_the_oracle``.
+    """
+
+    clean = _zero_intent_reaches_set_target(tmp_path / "clean", shaping=False)
+    assert clean == ZERO_COMMAND, (
+        f"P0-A: a zero intent must reach set_target as exact zero, got {clean}"
+    )
+
+    monkeypatch.setattr(runtime_module, "finalize_command", _finalize_passthrough)
+    mutated = _zero_intent_reaches_set_target(tmp_path / "mutant", shaping=False)
+
+    assert mutated != ZERO_COMMAND, (
+        "the finalize_command pass-through mutant SURVIVED — this oracle is "
+        "theatre and P0-A is unproven"
+    )
+    assert mutated.vx > 0.0, (
+        f"the surviving residual should be the smoother's forward ramp, got {mutated}"
+    )
+
+
+def test_the_shaper_is_defence_in_depth_not_the_oracle(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With shaping on, the shaper alone already zeroes — stated, not assumed.
+
+    Recorded so the equivalence above is a measured property of the layering and
+    not an unexamined gap: if a future change makes the shaper stop zeroing on
+    ``stopping=True``, this reddens and the layering claim is re-opened.
+    """
+
+    monkeypatch.setattr(runtime_module, "finalize_command", _finalize_passthrough)
+    with_shaper = _zero_intent_reaches_set_target(tmp_path / "shaped", shaping=True)
+
+    assert with_shaper == ZERO_COMMAND, (
+        "the actuator shaper is supposed to emergency-zero on every stop route "
+        "independently of finalize_command; it no longer does"
+    )
 
 
 def test_mutation_oracle_missing_scan_as_clear_is_killed() -> None:

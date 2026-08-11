@@ -317,7 +317,11 @@ def test_search_to_follow_uses_stored_intent(
     rt = RobotRuntime(runtime_config, _Backend(), audio_status=audio_status)
     try:
         _fresh_obs(rt)
-        rt._enable_owner_follow("behind", distance_m=1.8)
+        # 1.8 -> 2.0 (2026-08-10, owner-authorized person-clearance retune):
+        # the behind-formation floor is owner_keepout_m + the stand-off margin,
+        # now 1.75 + 0.10 = 1.85 m, so 1.8 m is refused at the door. The value
+        # is incidental to this test; what it pins is the resume transaction.
+        rt._enable_owner_follow("behind", distance_m=2.0)
         assert rt.follow.enabled
         # Search preempts follow with PAUSE → ResumeIntent (no legacy tuple).
         taken = rt.preempt("search", reason="owner_search_queued", targets=("follow",))
@@ -326,7 +330,7 @@ def test_search_to_follow_uses_stored_intent(
         intent = rt._resume_store.peek("follow", now_s=time.monotonic())
         assert intent is not None
         assert intent.payload.get("mode") == "behind"
-        assert float(intent.payload["distance_m"]) == pytest.approx(1.8)
+        assert float(intent.payload["distance_m"]) == pytest.approx(2.0)
         assert not hasattr(rt, "_resume_follow_after_search")
 
         class _Decision:

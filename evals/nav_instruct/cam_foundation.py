@@ -75,6 +75,15 @@ from parcel_robot.detection_adapter.pixel_detections import (
     project,
 )
 
+#: NOT renamed to ``T-cam-proxy-foundation`` with its sibling cells, and the
+#: exception is deliberate. This string is BAKED INTO the frozen pack
+#: ``cam_foundation_pack.json`` (``"tier_id": "T-cam-foundation"``), which
+#: ``tests/test_cam_foundation.py`` byte-pins by sha256. Renaming it would move a
+#: frozen digest to make a label prettier — a rule-2 STOP, not a cleanup. Like
+#: every other ``T-cam*`` label in this directory it is a REPORT id, not a
+#: registered perception tier: see
+#: :data:`~parcel_robot.detection_adapter.perception_chain.REGISTERED_TIERS`.
+#: Retiring it belongs to whoever next re-freezes this pack.
 TIER_ID = "T-cam-foundation"
 PACK_VERSION = 1
 

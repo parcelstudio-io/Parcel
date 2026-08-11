@@ -542,20 +542,64 @@ ACOUSTIC_ACK_STAGES: tuple[str, ...] = (
 #: Repo-relative home of the committed ledger the CI latency-tail gate reads.
 LATENCY_LEDGER_RELPATH = "evals/latency/ledger.jsonl"
 
-#: Opt-in: an explicit path here makes a runtime append one row when it closes.
-#: Unset, nothing is ever written and the runtime is byte-identical to before.
+#: Override: an explicit path here redirects the ledger anywhere on disk.
 LATENCY_LEDGER_ENV = "PARCEL_LATENCY_LEDGER"
+
+#: Opt-OUT. Truthy => no ledger is ever resolved from the repo default, so a
+#: deployment that must not write into its own tree keeps the pre-2026-08-10
+#: behaviour exactly (nothing written, byte-identical).
+LATENCY_LEDGER_OPT_OUT_ENV = "PARCEL_LATENCY_LEDGER_OFF"
 
 _LEDGER_WRITE_LOCK = threading.Lock()
 
+_TRUTHY = frozenset({"1", "true", "yes", "on"})
+
+
+def _env_truthy(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in _TRUTHY
+
+
+def default_latency_ledger_path() -> Path | None:
+    """The committed repo ledger, or ``None`` when this is not a repo checkout.
+
+    Installed-package deployments have no ``evals/`` tree; there the default is
+    simply absent and nothing is written.
+    """
+
+    candidate = Path(__file__).resolve().parents[2] / LATENCY_LEDGER_RELPATH
+    return candidate if candidate.parent.is_dir() else None
+
 
 def resolve_latency_ledger_path(explicit: str | Path | None = None) -> Path | None:
-    """Explicit path, else ``PARCEL_LATENCY_LEDGER``, else no ledger at all."""
+    """Explicit path, else ``PARCEL_LATENCY_LEDGER``, else the repo default.
+
+    Until 2026-08-10 the last clause was "else no ledger at all", and nothing in
+    the repo set ``PARCEL_LATENCY_LEDGER``. The ledger therefore held exactly one
+    hand-seeded row for its whole life and ci_gate's ``latency-tail-ledger``
+    ratchet was permanently ``skip`` — a gate that could never fire. Fable's
+    independent audit of task_15 returned that as C-A debt. The default now
+    resolves, so rows accumulate from duplex/eval runs on their own.
+
+    Two suppressions keep that from being a regression:
+
+    * ``PARCEL_LATENCY_LEDGER_OFF`` — the explicit opt-out, for any deployment
+      that must not write into its own tree.
+    * a pytest process — a unit test's runtime teardown is **not** a measurement,
+      and must never mutate a committed measurement artifact. Tests that do want
+      a ledger pass an explicit path (as ``tests/test_acoustic_defects.py``
+      does), which is honoured above.
+    """
 
     if explicit is not None:
         return Path(explicit)
     configured = os.environ.get(LATENCY_LEDGER_ENV, "").strip()
-    return Path(configured) if configured else None
+    if configured:
+        return Path(configured)
+    if _env_truthy(LATENCY_LEDGER_OPT_OUT_ENV):
+        return None
+    if "PYTEST_CURRENT_TEST" in os.environ:
+        return None
+    return default_latency_ledger_path()
 
 
 def latency_ledger_row(
@@ -608,10 +652,25 @@ def latency_ledger_row(
     }
 
 
-def append_latency_ledger_row(row: dict[str, object], path: str | Path) -> Path:
-    """Append one row to the JSONL ledger, creating the directory if needed."""
+def append_latency_ledger_row(row: dict[str, object], path: str | Path) -> Path | None:
+    """Append one row to the JSONL ledger, creating the directory if needed.
+
+    Returns ``None`` without writing when a **turn-less** row would land in the
+    committed repo ledger. That guard is load-bearing, not tidiness: ci_gate's
+    ratchet reads ``latency_tail_series(rows[-1])``, and a row with no measured
+    turns carries no percentile series, so
+    :func:`evaluate_latency_ratchet` would skip every baseline metric and return
+    a **vacuous pass**. Making the ledger reachable must not create a gate that
+    is green because it compared nothing. An explicitly-addressed ledger (a test
+    fixture, ``PARCEL_LATENCY_LEDGER``) is written unconditionally — there the
+    caller chose the target and owns what lands in it.
+    """
 
     target = Path(path)
+    if not int(row.get("turns") or 0):
+        default = default_latency_ledger_path()
+        if default is not None and target.resolve() == default.resolve():
+            return None
     target.parent.mkdir(parents=True, exist_ok=True)
     line = json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n"
     with _LEDGER_WRITE_LOCK, target.open("a", encoding="utf-8") as handle:

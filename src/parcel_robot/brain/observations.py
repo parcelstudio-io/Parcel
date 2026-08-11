@@ -7,6 +7,7 @@ import re
 import time
 from collections.abc import Iterable, Mapping
 
+from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import SimObservation
 from parcel_robot.models import VelocityCommand
 
@@ -36,7 +37,12 @@ def build_observation_snapshot(
     measured_velocity: VelocityCommand | None = None,
     emergency_stopped: bool = False,
     obstacle_stop_m: float = 0.65,
-    person_stop_m: float = 1.0,
+    # Derived, not restated: the last 1.0 m person literal on any construction
+    # path (owner-authorized person-clearance retune, 2026-08-10). The runtime
+    # always passes ``self.person_stop_m`` explicitly, so this default never
+    # fires there; it existed only to let an un-wired caller report
+    # ``collision_imminent`` against the retired 1.0 m clearance.
+    person_stop_m: float = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0),
     task: TaskStateSnapshot | None = None,
     resource_leases: Iterable[ResourceLease] = (),
     battery: BatteryStateSnapshot | None = None,

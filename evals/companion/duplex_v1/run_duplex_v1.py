@@ -41,12 +41,82 @@ DEFAULT_RESULTS_DIR = Path(__file__).resolve().parent / "results"
 # (0.553 -> 0.6025 m/s^3). The stale 2026-08-04 row (…104134Z, the earlier
 # lane's 8/9) is retained in the append-only ledger; this pin now tracks the
 # fresh 9/9 latest-shipped row, resolving the 8/9-vs-live-9/9 mismatch honestly.
+#
+# RE-PINNED AGAIN 2026-08-10 (lane E5, EXPLICIT OWNER AUTHORIZATION — "1. person
+# clearance. Implement your recommendation"): **9/9 -> 6/9**. This is a real
+# capability regression and it is pinned as one, not smoothed over.
+#
+# What moved and what did not:
+#   * hard_collision_total 0 and navigate_success 2/2 are UNCHANGED. The gate's
+#     actual safety invariants did not move.
+#   * min_pedestrian_surface_m 0.3566 -> 0.5300 m (+0.17) and
+#     personal_space_time_total_s 3.8 -> 2.3 s. Pedestrian safety IMPROVED.
+#   * follow_success 9/9 -> 6/9 (pedestrian_group, pedestrian_cut_in,
+#     owner_turn_90 fall out of the [1.2, 3.0] m band by falling BEHIND).
+#
+# Measured factorial attribution over the four retuned quantities (all cells on
+# this tree, FOLLOW_BENCH_V1 all 11 scenarios — see
+# scrum/20260809/task_15/E5_PERSON_CLEARANCE_STATUS.md):
+#   safety.person_slow_m 2.0 -> 2.5      : 9/9 -> 6/9   AND 0.3566 -> 0.5300 m
+#   safety.person_stop_m 1.0 -> 1.2      : 9/9 -> 9/9   (costs nothing)
+#   owner_follow.owner_keepout_m -> 1.75 : 9/9 -> 9/9   (costs nothing)
+#   FollowConfig.desired_distance_m 1.85 : 9/9 -> 9/9   (costs nothing)
+# The benefit and the cost are the SAME knob. Raising the follow distance
+# further does NOT buy the rows back (2.2 m -> 6/9, 2.6 m -> 5/9), which refutes
+# the "follow target inside its own keepout" diagnosis for this loss.
+# Mechanism, proven by owner_turn_90 (which has NO pedestrians at all and still
+# drops 0.821 -> 0.500): apply_reactive_safety applies ONE comfort band to both
+# strangers and the OWNER, so widening it to 2.5 m throttles the follow
+# controller at every distance it operates at. The follow-up card is to give the
+# owner branch its own band; that is a change to the gate function itself and
+# was NOT in this card's authorization.
+#
+# RE-PINNED AGAIN 2026-08-11 (lane E6, EXPLICIT OWNER AUTHORIZATION for exactly
+# that follow-up card): **6/9 -> 7/9**, a partial recovery, pinned as partial.
+#
+# The change: apply_reactive_safety now gives a positively-identified owner its
+# own comfort band, derived as person_stop_m + OWNER_STAND_OFF_MARGIN_M = 1.30 m
+# of clearance = the follow controller's own 1.85 m stand-off expressed in the
+# gate's coordinates. It is granted only while no stranger is on the person
+# channel; anything else FAILS CLOSED to the 2.5 m stranger band. The owner's
+# hard stop, the predictive stop, TTC and the collision gate are untouched.
+#
+# What moved and what did not (2x2 attribution: old-code = this tree at E5,
+# new-code = that tree plus E6; both measured today on all 11 scenarios):
+#   * follow_success 6/9 -> 7/9. The single recovered episode is owner_turn_90
+#     (band_fraction 0.500 -> 0.953), which is precisely the episode E5 proved
+#     was owner-only: it contains ZERO pedestrians.
+#   * min_pedestrian_surface_m 0.5300 and personal_space_time_total_s 2.3 are
+#     UNCHANGED — not "within noise", unchanged. Every episode containing a
+#     pedestrian re-measures bit-identical to E5 (pedestrian_group 0.584,
+#     pedestrian_cut_in 0.525, pedestrian_cut_in_predictive 0.7154 /
+#     0.818256373512604, navigate_crossing_ped 0.5300 / 2.3 s), because the
+#     two-body interlock makes the gate provably the same function whenever a
+#     stranger is perceived.
+#   * hard_collision_total 0, pedestrian_contact_total 0, intimate 0.0,
+#     navigate_success 2/2, reactive_gate_stop_total 2: all unchanged.
+#   * mean_band_fraction 0.63986 -> 0.70878; mean_rms_commanded_jerk_mps3
+#     0.8918 -> 1.2187 (the dog now accelerates to hold formation instead of
+#     being throttled into it; not gated, reported).
+#
+# 9/9 was NOT reached and is NOT reachable through the owner band. Measured
+# sweep of the owner band with the interlock OFF (most favourable case for
+# following), all on this tree:
+#   owner band 2.50 (= no separation) : 6/9  min_ped 0.5300
+#   owner band 2.00                   : 7/9  min_ped 0.3824
+#   owner band 1.75                   : 8/9  min_ped 0.2182
+#   owner band 1.30 (the derivation)  : 8/9  min_ped 0.1794
+# pedestrian_group fails in EVERY cell (0.584 / 0.636 / 0.652 / 0.652 against a
+# 0.75 threshold): it is not an owner-band episode at all. The remaining two
+# failures are the STRANGER band's cost, i.e. the pedestrian-clearance knob E5
+# bought the +0.17 m with, and buying them back means selling that clearance.
+# Full factorial: scrum/20260809/task_15/E6_OWNER_BAND_STATUS.md.
 FOLLOW_BENCH_POST_SPEED = {
     "features": "shipped",
-    "follow_success": "9/9",
+    "follow_success": "7/9",
     "hard_collision_total": 0,
     "navigate_success": "2/2",
-    "report": "follow-bench-v1-20260809094511Z-601d8c6e.json",
+    "report": "follow-bench-v1-20260811023618Z-93eba090.json",
 }
 
 # Embodied-plan aggregate mirror (authority:
@@ -100,7 +170,91 @@ class _InstantSynth:
         return b"RIFF" + str(text).encode("utf-8")[:64]
 
 
-def _measure_ttft_via_voice_pipeline() -> list[float]:
+def _latency_row_from_stages(stages: list[VoiceStage]) -> dict[str, object] | None:
+    """Replay real ``VoiceStage`` clocks into a ``LatencyTracker`` ledger row.
+
+    Why this exists (card C-A debt, Fable's independent task_15 audit):
+    ``evals/latency/ledger.jsonl`` held exactly one hand-seeded row for its whole
+    life, because the only writer was ``RobotRuntime.close()`` behind a
+    ``PARCEL_LATENCY_LEDGER`` env nothing in the repo ever set. ci_gate's
+    ``latency-tail-ledger`` ratchet was therefore permanently ``skip`` — a gate
+    that could not fire. The duplex eval already drives a real
+    ``DuplexVoiceSession`` and already collects its stage clocks to compute TTFT;
+    turning those same clocks into a ledger row costs no new measurement and
+    makes rows accumulate from every duplex run.
+
+    The timestamps are the session's own ``time.monotonic()`` marks, not
+    re-derived. Stage names outside the tracker vocabulary are dropped rather
+    than mapped onto a near-neighbour.
+    """
+
+    from parcel_robot.observability import STAGES, LatencyTracker, latency_ledger_row
+
+    by_turn: dict[int, list[VoiceStage]] = {}
+    for stage in stages:
+        by_turn.setdefault(int(stage.turn_id), []).append(stage)
+    if not by_turn:
+        return None
+
+    tracker = LatencyTracker()
+    for turn_id, turn_stages in sorted(by_turn.items()):
+        ordered = sorted(turn_stages, key=lambda item: float(item.timestamp))
+        anchor = next((s for s in ordered if s.name == "query_end"), ordered[0])
+        transcript = str(getattr(anchor, "transcript", "") or f"duplex turn {turn_id}")
+        tracker.start(turn_id, transcript, source="text", now=float(anchor.timestamp))
+        for stage in ordered:
+            if stage.name in STAGES:
+                tracker.mark(turn_id, stage.name, now=float(stage.timestamp))
+        last = ordered[-1]
+        reply = next(
+            (str(s.reply) for s in reversed(ordered) if getattr(s, "reply", None)),
+            "",
+        )
+        tracker.finish(
+            turn_id,
+            reply or "(no reply text recorded)",
+            reasoning_source="duplex-v1-scripted",
+            status="completed",
+            now=float(last.timestamp),
+        )
+    return latency_ledger_row(
+        tracker.snapshot(),
+        source="duplex-v1",
+        extra={
+            "seed": False,
+            "note": (
+                "Live DuplexVoiceSession stage clocks from the duplex-v1 scripted "
+                "session. The text path has no microphone, endpointer or audio "
+                "sink, so the N19 acoustic spans (AcousticAck, EndpointDecision, "
+                "SttTranscribe, PlaybackEnqueueToFirstSample) are ABSENT by "
+                "omission, not zero. A sub-700 ms acoustic ack still needs a real "
+                "capture/playback run."
+            ),
+        },
+    )
+
+
+def _emit_latency_ledger_row(stages: list[VoiceStage]) -> str | None:
+    """Append the duplex latency row to the resolved ledger; return its path."""
+
+    from parcel_robot.observability import (
+        append_latency_ledger_row,
+        resolve_latency_ledger_path,
+    )
+
+    row = _latency_row_from_stages(stages)
+    if row is None:
+        return None
+    target = resolve_latency_ledger_path()
+    if target is None:
+        return None
+    written = append_latency_ledger_row(row, target)
+    return None if written is None else str(written)
+
+
+def _measure_ttft_via_voice_pipeline(
+    collected_stages: list[VoiceStage] | None = None,
+) -> list[float]:
     """Measure query_end → tts_first_chunk on a real DuplexVoiceSession path."""
 
     agent = _ScriptedAgent(
@@ -136,6 +290,8 @@ def _measure_ttft_via_voice_pipeline() -> list[float]:
                 ttfts.append(row["ttft"])
     assert ttfts, "voice-pipeline TTFT measurement produced no samples"
     assert played, "synthesizer path never enqueued audio"
+    if collected_stages is not None:
+        collected_stages.extend(stages)
     return ttfts
 
 
@@ -182,7 +338,8 @@ def _scripted_session() -> dict[str, object]:
     fillers_used: list[str] = []
 
     # --- Measured TTFT from the local voice pipeline (not hardcoded) ---
-    ttfts = _measure_ttft_via_voice_pipeline()
+    voice_stages: list[VoiceStage] = []
+    ttfts = _measure_ttft_via_voice_pipeline(voice_stages)
 
     # --- Fast-answer turn on the coordinator (TEXT observe + ACT) ---
     duplex.set_epoch(1)
@@ -314,6 +471,7 @@ def _scripted_session() -> dict[str, object]:
         "response_ceiling_breaches": duplex.filler.response_ceiling_breaches,
         "frames_sample": frames[-12:],
         "frames_emitted": duplex.snapshot()["frames_emitted"],
+        "latency_ledger_row": _emit_latency_ledger_row(voice_stages),
     }
 
 

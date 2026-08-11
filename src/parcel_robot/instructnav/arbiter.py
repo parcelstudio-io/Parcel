@@ -9,7 +9,9 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from parcel_robot.core.arbiter import waypoints_trigger_lethal_veto
+# NOT ``parcel_robot.core.arbiter``: that runs ``parcel_robot/core/__init__.py``,
+# which reaches navigation.pipeline and silently disables the whole InstructNav
+# ladder when instructnav is imported first (see tests/test_import_order_no_cycle.py).
 from parcel_robot.counterfactual import (
     ArbitrationCandidateV1,
     ArbitrationLogRecordV1,
@@ -17,6 +19,7 @@ from parcel_robot.counterfactual import (
     build_arbitration_log,
     counterfactual_report,
 )
+from parcel_robot.lethal_veto import waypoints_trigger_lethal_veto
 from parcel_robot.revision import CommittedRevisions
 
 #: Opt-in C-B arbitration candidate log at GoalArbiter.resolve commit.

@@ -27,6 +27,7 @@ from evals.companion_nav.scenarios import (
     interpolate_position,
     interpolate_velocity,
 )
+from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import DynamicAgentTrack, SimObservation
 from parcel_robot.config import ConfigStore
 from parcel_robot.core.motion_shaping import MotionShapingConfig
@@ -852,8 +853,16 @@ def _follow_config_from_store(
     """Replicate the runtime's authoritative owner-follow configuration merge."""
 
     safety = store.section("safety")
-    person_stop_m = float(safety.get("person_stop_m", 1.0))
-    person_slow_m = float(safety.get("person_slow_m", 2.0))
+    # Envelope-derived fallbacks, mirroring runtime.py: an absent key must not
+    # silently reintroduce the retired 1.0 m / 2.0 m person clearance into a
+    # bench that reports pedestrian-safety metrics. Behaviour-identical today
+    # (every shipped config supplies both keys explicitly).
+    person_stop_m = float(
+        safety.get("person_stop_m", DEFAULT_SAFETY_ENVELOPE.person_stop(0.0))
+    )
+    person_slow_m = float(
+        safety.get("person_slow_m", DEFAULT_SAFETY_ENVELOPE.person_comfort_band_m)
+    )
     follow_raw = store.section("owner_follow")
     raw_prediction = follow_raw.pop("prediction", {})
     if not isinstance(raw_prediction, dict):

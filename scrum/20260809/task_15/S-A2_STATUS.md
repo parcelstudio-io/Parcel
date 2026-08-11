@@ -49,8 +49,52 @@ Emergency path in `SCurveVelocityShaper.step` no longer ramps residual velocity.
 ## Mutation panel / frozen rows
 
 - **Frozen rows: UNMOVED** (`mutation_panel.json` / digests untouched).
-- NAV_INSTRUCT mutation panel does not exercise `RobotRuntime._dispatch_active` / `set_target` hard_stop; seeding hard_stop mutants there would be equivalent. Live-pipeline oracles in `tests/test_sa2_live_pipeline.py` kill residual-nonzero and missing-scan-as-clear classes.
+  Scope note: this claim was about `mutation_panel.json` and is accurate. It does
+  **not** cover `evals/companion/personal_convo_v1/manifest.json`, whose
+  `pack_digest` did move under card M-A — see the correction in `M-A_STATUS.md`.
+- NAV_INSTRUCT mutation panel does not exercise `RobotRuntime._dispatch_active` / `set_target` hard_stop; seeding hard_stop mutants there would be equivalent.
+
+  > **CORRECTED 2026-08-10 (lane E3, after `AUDIT_FABLE_INDEPENDENT.md`).** The
+  > first sentence is right and lane E3 re-verified it independently:
+  > `scripts/mutation_panel.py` runs the headless NAV_INSTRUCT minival and never
+  > constructs a `RobotRuntime`, so a `finalize_command` mutant there is an
+  > equivalent mutant by the panel's own stated rule. The panel is therefore
+  > correctly left untouched at **6/6 killed**.
+  >
+  > What was FALSE is the justification that followed it. The original text
+  > claimed the live-pipeline oracles "kill residual-nonzero and
+  > missing-scan-as-clear classes". The residual-nonzero oracle
+  > (`test_mutation_oracle_residual_nonzero_after_hard_stop_is_killed`) compared
+  > two `VelocityCommand` constants and touched no product code — a tautology
+  > that could not fail for any reason a robot cares about, so it justified
+  > nothing. It has been rewritten to drive the real dispatch path
+  > (smoother → collision gate → shaper → `finalize_command` → `set_target`) and
+  > now proves its own kill against a seeded `finalize_command` pass-through
+  > mutant. Measured: clean → `set_target` receives exact `(0,0,0)`; mutant →
+  > `set_target` receives `vx≈0.0909`.
+  >
+  > One honest layering finding came out of the rewrite and is recorded rather
+  > than hidden: with `motion.shaping.enabled: true` the pass-through mutant
+  > SURVIVES, because `_shape_for_actuator` is called with `stopping=True` on
+  > every HARD_STOP route and emergency-zeroes before finalize ever runs. The
+  > mutant is killable only with shaping disabled, where `finalize_command` is
+  > the sole authority between the smoother's ramp residual and `set_target`.
+  > Both cases are now asserted.
 - W4 git-status pin on `reactive_safety.py` converted to behavioural pin (`test_the_reactive_safety_authority_gate_behaviour_holds`) — S-A2 is authorized to edit that file.
+
+  > **CORRECTED 2026-08-10 (lane E3).** "Converted" understates what happened.
+  > The unconditional ratchet
+  > `test_the_reactive_safety_authority_file_is_untouched_on_this_branch` was
+  > **deleted**, and the replacement was authored by the same card the ratchet
+  > was watching — a rule-4 process breach. Authorization to edit
+  > `reactive_safety.py` is not authorization to remove the guard on it. After
+  > the deletion `grep -rn "git status --porcelain" tests/*.py` returned nothing
+  > repo-wide: the safety authority had no file-level ratchet at all, in either
+  > form. Re-armed by lane E3 as
+  > `test_the_reactive_safety_authority_is_pinned_not_merely_unmodified`
+  > (`tests/test_dynamic_layer.py`) using the stronger AST-normalised convention
+  > of the sibling collision pin, against a committed digest. The behavioural
+  > pin S-A2 wrote is kept — it is complementary, not a substitute.
 
 ## Evidence
 

@@ -2,35 +2,26 @@ from __future__ import annotations
 
 import threading
 import time
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
+# Re-export only. The predicate itself lives in a leaf module so that callers
+# outside ``parcel_robot.core`` (notably ``instructnav/arbiter.py``) can import
+# it WITHOUT executing ``parcel_robot/core/__init__.py``, which reaches the
+# navigation package and opens an import cycle. See parcel_robot/lethal_veto.py
+# and tests/test_import_order_no_cycle.py — do not move it back here.
+from parcel_robot.lethal_veto import waypoints_trigger_lethal_veto
 from parcel_robot.models import VelocityCommand
 from parcel_robot.safety import SafetyLimits
 
 from .commands import MotionIntent
+
+__all__ = ["CommandArbiter", "SubmitResult", "waypoints_trigger_lethal_veto"]
 
 
 @dataclass(frozen=True)
 class SubmitResult:
     accepted: bool
     reason: str
-
-
-def waypoints_trigger_lethal_veto(
-    lethal: Callable[[float, float], bool],
-    waypoints: Sequence[tuple[float, float]] | None,
-) -> bool:
-    """Fail-closed lethal veto for a waypoint list (P0 mixed-lethal harden).
-
-    Empty / missing waypoints do not veto on their own (pose is checked
-    separately). **Any** lethal waypoint vetoes — a mixed safe/lethal list
-    must not pass (the old ``all()`` rule let mixed goals through).
-    """
-
-    if not waypoints:
-        return False
-    return any(lethal(float(x), float(y)) for x, y in waypoints)
 
 
 class CommandArbiter:

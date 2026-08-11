@@ -17,6 +17,7 @@ from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.navigation.follow import (
+    OWNER_STAND_OFF_MARGIN_M,
     FollowConfig,
     FollowOwnerController,
     FollowPredictionConfig,
@@ -202,8 +203,17 @@ def test_the_lead_point_curls_with_a_turning_owner() -> None:
 
 
 def test_the_lead_is_clamped_to_the_owner_keepout() -> None:
-    # Shipped direct standoff (1.6) minus the owner keepout (1.55) leaves
-    # 0.05 m of lead: anticipation may not be paid for with owner clearance.
+    # The lead budget IS the stand-off margin: the direct stand-off minus the
+    # owner keepout. Anticipation may not be paid for with owner clearance.
+    # 2026-08-10 (owner-authorized person-clearance retune): the budget moved
+    # 0.05 -> 0.10 m because ``desired_distance_m`` is now derived as
+    # ``owner_keepout_m + OWNER_STAND_OFF_MARGIN_M`` instead of being a literal
+    # 1.6 that happened to sit 0.05 m outside a 1.55 m keepout. Asserted through
+    # the derivation so it cannot re-fork into a literal.
+    config = FollowConfig()
+    budget = config.desired_distance_m - config.owner_keepout_m
+    assert budget == pytest.approx(OWNER_STAND_OFF_MARGIN_M)
+
     controller = FollowOwnerController(prediction=_enabled(lead_s=0.6))
     controller.start()
 
@@ -213,11 +223,11 @@ def test_the_lead_is_clamped_to_the_owner_keepout() -> None:
         prediction=_path(velocity=(1.2, 0.0)),
     )
 
-    assert decision.lead_x_m == pytest.approx(0.05)
+    assert decision.lead_x_m == pytest.approx(budget)
     assert controller.snapshot()["prediction"]["reason"] == "lead_clamped_to_owner_keepout"
     # The aim point still sits a full keepout away from the measured owner.
     assert decision.distance_m is not None
-    assert math.hypot(decision.lead_x_m - 0.0, 0.0) <= 1.6 - 1.55 + 1e-9
+    assert math.hypot(decision.lead_x_m - 0.0, 0.0) <= budget + 1e-9
 
 
 def test_the_behind_formation_anchors_on_the_prediction() -> None:
@@ -237,12 +247,26 @@ def test_the_behind_formation_anchors_on_the_prediction() -> None:
     measured = controller.step(observation, now=0.9, prediction=None)
 
     assert predicted.target_x_m is not None and measured.target_x_m is not None
-    # Behind distance 1.9 minus keepout 1.55 leaves 0.35 m of usable lead, so
-    # the anchor sits at owner + 0.35 and the rear offset is the full 1.9.
-    assert predicted.target_x_m == pytest.approx(0.9 + 0.35 - 1.9)
+    # The usable lead is behind_distance minus the keepout, so the anchor sits
+    # at owner + budget and the rear offset is the full behind distance.
+    # 2026-08-10 (owner-authorized person-clearance retune): keepout
+    # 1.55 -> 1.75 shrinks that budget 0.35 -> 0.15 m at an unchanged 1.9 m
+    # behind distance. Derived from the config, not restated as a literal.
+    behind_budget = config.behind_distance_m - config.owner_keepout_m
+    assert behind_budget == pytest.approx(0.15)
+    assert predicted.target_x_m == pytest.approx(
+        0.9 + behind_budget - config.behind_distance_m
+    )
     # The unpredicted path keeps its own 0.25 m short-horizon extrapolation;
-    # the lead point replaces that rather than stacking on top of it.
-    assert measured.target_x_m == pytest.approx(0.9 - (1.9 - 0.25))
+    # the lead point replaces that rather than stacking on top of it. That
+    # extrapolation is floored at the keepout ring plus the stand-off margin,
+    # and after the retune the floor (1.85) now BINDS over 1.9 - 0.25 = 1.65:
+    # a short-horizon guess may not pull the rear station inside the ring.
+    rear_floor = config.owner_keepout_m + OWNER_STAND_OFF_MARGIN_M
+    assert rear_floor == pytest.approx(1.85)
+    assert measured.target_x_m == pytest.approx(
+        0.9 - max(rear_floor, config.behind_distance_m - 0.25)
+    )
     assert predicted.target_x_m > measured.target_x_m
     assert predicted.state == "tracking_behind"
 

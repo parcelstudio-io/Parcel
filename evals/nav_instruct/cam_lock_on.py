@@ -27,7 +27,7 @@ from parcel_robot.navigation.detection_lock_on import (
 )
 from parcel_robot.navigation.semantic_map import SemanticCandidate
 
-TIER_ID = "T-cam-ve-lock-on"
+TIER_ID = "T-cam-proxy-ve-lock-on"
 DOES_NOT_PROVE = (
     (
         "Paired-seed lock-on vs oracle SR margin proves detection-triggered "

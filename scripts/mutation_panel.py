@@ -61,7 +61,7 @@ REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from evals.nav_instruct.generator import EPISODE_SET_V3, EpisodeSpec, generate_minival
+from evals.nav_instruct.generator import EPISODE_SET_V4, EpisodeSpec, generate_minival
 from evals.nav_instruct.runner import ARRIVAL_RULE_FOR_VERSION, NavInstructRunner
 
 DEFAULT_REPORT = REPO / "evals" / "nav_instruct" / "results" / "mutation_panel.json"
@@ -87,6 +87,47 @@ PAIRED_TOLERANCE_M = 0.10
 #: coverage selection for a mutation panel, not tuning: no robot parameter is
 #: chosen from a result. (v2 bound on three episodes: region_goal-D-15 184/200,
 #: object_goal-B-05 57/100, object_goal-D-15 54/93.)
+#: Why the committed artifact was regenerated, stamped onto the artifact itself.
+#: This file is a GATED INPUT: ``ci_gate``'s hard-safety gate certifies
+#: ``no_false_arrival`` from it. Lane E7 found a live run contradicting it and
+#: deliberately REFUSED to regenerate, because "regenerating it would launder a
+#: live defect into a fresh green certificate". That reasoning still binds, so
+#: the regeneration below happened only after the defect itself was resolved,
+#: and the evidence that nothing was laundered is that the artifact's
+#: safety-relevant fields did not move at all.
+PANEL_REGENERATION_PROVENANCE = (
+    "regenerated 2026-08-11 (lane E8) onto the v4 frozen set, OWNER-AUTHORIZED. "
+    "NOT a re-baseline of a red result: every safety-relevant field is "
+    "BIT-IDENTICAL to the superseded v3 artifact — clean_checks all four green "
+    "(no_false_arrival, no_authority_disagreement, zero_collisions, "
+    "path_length_plausible), clean authority {agreement: 5}, collisions 0, the "
+    "same four clean successes, the same failure histogram, 6/6 mutants killed. "
+    "What moved: the episode_set_version label, two clean-run poses that lanes "
+    "E1-E6 already moved on the CODE axis (nav-region_goal-D-15 path "
+    "0.4548 -> 0.2520 and nav-follow_owner-D-15 path 0.2428 -> 0.0, both "
+    "reported by E7 before this lane existed), and two mutants gaining an EXTRA "
+    "reddened check. The panel got stronger, not greener: on the retired v3 set "
+    "the clean run itself now contains a false arrival, which silently DISABLES "
+    "no_false_arrival as a kill channel for all six mutants (harness_checks "
+    "excludes any check already red on the clean run). On v4 that channel is "
+    "live and reactive_gate_disabled kills through it. "
+    "See scrum/20260809/task_15/E7_FALSE_ARRIVAL_STATUS.md §1.1 and "
+    "E8_V4_REFREEZE_STATUS.md."
+)
+
+#: The frozen episode set the panel certifies. Bumped v3 -> v4 on 2026-08-11
+#: (lane E8, OWNER-AUTHORIZED) together with the re-freeze. This is the bump
+#: ``tests/test_mutation_panel_freshness.py`` is written to demand: its
+#: ``_CURRENT_FROZEN_EPISODE_SET`` advances on its own when a ``vN`` freeze is
+#: added, and both its guards stay red until this module follows. Leaving the
+#: panel on v3 would have kept certifying a retired set — and on THIS tree that
+#: retired set contains a live false arrival, so ``no_false_arrival`` would have
+#: been silently disabled as a kill channel for every mutant (the exact v2 rot,
+#: recurring; see ``scrum/20260809/task_15/E7_FALSE_ARRIVAL_STATUS.md`` §1.1).
+#:
+#: The five episode ids below are UNCHANGED by the re-freeze: v4 moves only the
+#: ``follow_owner`` goal radius, and the selection is a coverage argument about
+#: which code each mutation touches, not about any goal's size.
 PANEL_EPISODE_IDS: tuple[str, ...] = (
     # longest traverse in the minival (184 control ticks): the episode a pose
     # error has time to accumulate over
@@ -148,6 +189,72 @@ def harness_checks(run: dict[str, Any], clean: dict[str, Any] | None) -> dict[st
             for a, b in zip(run["episodes"], clean["episodes"], strict=False)
         )
     return checks
+
+
+# ---------------------------------------------------------------------------
+# freshness — the committed payload is a GATED INPUT, so it must stay true
+# ---------------------------------------------------------------------------
+
+#: The clean-run checks ``scripts/ci_gate.py``'s HARD ``hard-safety`` gate
+#: certifies from. All four are **absolute** (computed from one run, never
+#: relative to a baseline), so they are reproducible from the tree alone — which
+#: is what makes a freshness comparison possible at all. The paired checks
+#: (``success_set_identical`` and friends) are deliberately absent: they only
+#: exist for a mutant-vs-clean comparison.
+SAFETY_RELEVANT_CLEAN_CHECKS: tuple[str, ...] = (
+    "zero_collisions",
+    "no_authority_disagreement",
+    "no_false_arrival",
+    "path_length_plausible",
+)
+
+
+def clean_safety_fields(payload: dict[str, Any]) -> dict[str, Any]:
+    """The safety-relevant projection of a panel payload's clean run.
+
+    Deliberately **narrow**. Performance fields (``successes``, ``mean_dtg_m``,
+    per-episode path lengths) move for benign reasons, and a freshness guard
+    that reddens on those is a guard somebody eventually turns off. What is left
+    is exactly what the hard gate reads and prints as a safety certification:
+    the collision count, the arrival-authority histogram (where ``false_arrival``
+    lives), and the four absolute clean checks.
+
+    A missing check reads as ``False`` — a payload that simply *drops*
+    ``no_false_arrival`` must not be able to satisfy a guard that a payload
+    recording ``false`` would fail.
+    """
+
+    clean = payload.get("clean_run") or {}
+    checks = payload.get("clean_checks") or {}
+    return {
+        "collisions": int(clean.get("collisions", -1)),
+        "authority": {
+            str(key): int(value) for key, value in (clean.get("authority") or {}).items()
+        },
+        "clean_checks": {
+            name: bool(checks.get(name, False)) for name in SAFETY_RELEVANT_CLEAN_CHECKS
+        },
+    }
+
+
+def live_clean_safety_fields(
+    *,
+    episode_ids: Sequence[str] = PANEL_EPISODE_IDS,
+    max_steps: int = 200,
+) -> dict[str, Any]:
+    """Re-derive :func:`clean_safety_fields` from a LIVE clean run on this tree.
+
+    One clean run (~4 s), not the whole panel (seven runs): the six mutants say
+    nothing about whether the committed clean run is still true, and the point
+    of this helper is to be cheap enough for the *commit* tier. A guard that
+    only runs nightly is how the committed payload got a whole batch out of date
+    in the first place.
+    """
+
+    clean = run_once(_episodes(episode_ids), max_steps=max_steps)
+    return clean_safety_fields(
+        {"clean_run": clean, "clean_checks": harness_checks(clean, None)}
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -366,7 +473,7 @@ class MutantResult:
 
 
 def _episodes(ids: Sequence[str]) -> list[EpisodeSpec]:
-    by_id = {ep.episode_id: ep for ep in generate_minival(version=EPISODE_SET_V3)}
+    by_id = {ep.episode_id: ep for ep in generate_minival(version=EPISODE_SET_V4)}
     return [by_id[episode_id] for episode_id in ids]
 
 
@@ -385,7 +492,7 @@ def run_once(episodes: Sequence[EpisodeSpec], *, max_steps: int) -> dict[str, An
     runner = NavInstructRunner(
         max_steps=max_steps,
         mode="baseline",
-        arrival_rule=ARRIVAL_RULE_FOR_VERSION[EPISODE_SET_V3],
+        arrival_rule=ARRIVAL_RULE_FOR_VERSION[EPISODE_SET_V4],
     )
     results = []
     clearances = []
@@ -486,7 +593,8 @@ def run_panel(
     return {
         "kind": "mutation_panel",
         "generated_at": datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
-        "episode_set_version": EPISODE_SET_V3,
+        "episode_set_version": EPISODE_SET_V4,
+        "episode_set_provenance": PANEL_REGENERATION_PROVENANCE,
         "episode_ids": list(episode_ids),
         "episode_selection": (
             "chosen to exercise the code each mutation touches (longest traverse, "

@@ -27,6 +27,48 @@ Suite `manifest.json` sha-pins judge + calibration (23 locked files).
 New `pack_digest` = `fc1af2f76f2b491451558ef51c375723f070b9ed9fa94ea40344a3e194006b04`  
 (additive pins only; no pre-existing locked file content rewritten).
 
+> **CORRECTED 2026-08-10 (lane E3, after `AUDIT_FABLE_INDEPENDENT.md` BLOCKING 2).**
+>
+> **A frozen digest MOVED and this card did not STOP.** The line above records
+> the new `pack_digest` but never says the word that mattered: the *old* one was
+> `7e904d5335e049acc745357d226e6e03f262d2b5d8e86f7ee5de1f1ae056fa31`, and
+> `evals/companion/personal_convo_v1/manifest.json` still declares
+> `"frozen": true` / `"frozen_at_utc": "2026-08-09T00:00:00Z"`. NEXT_BATCH_PLAN
+> rule 2 required **STOP-and-report on any frozen digest move, with no
+> self-service re-freeze in this batch**. That STOP never happened, and the batch
+> record then asserted three times that no digest moved
+> (`AUDIT_WAVE2.md:29`, `:63`, `:164`) — all three now carry corrections.
+>
+> **What is NOT wrong.** Fable independently recomputed the lock delta:
+> `locked_files` **15 → 23, ADDED 8, REMOVED 0, REPINNED 0**. No existing lock's
+> sha256 was altered and no locked file's content was rewritten. The digest move
+> is fully explained by the additions — `pack_digest` is a hash over the sorted
+> locked-file sha256 set, so it necessarily moves when locks are *added*. There
+> is no tampering, and the PC-4 judge/calibration work is real: the calibration
+> genuinely disqualifies on judge drift.
+>
+> **Why a green CI gate missed it.** `scripts/ci_gate.py DIGEST_SENTINELS`
+> byte-pinned only two manifests and this was not one of them. That is the
+> durable defect, not the arithmetic.
+>
+> **What lane E3 did about it** (no lock re-pinned, no locked file's sha touched):
+> 1. added this manifest as the **third** `DIGEST_SENTINELS` entry, and extended
+>    `tests/test_ci_gate.py` to seed *each real sentinel individually* so every
+>    pin is proven to redden — plus a test that pins the set of frozen-but-unpinned
+>    manifests so a new frozen suite cannot escape silently again;
+> 2. restored the manifest's original top-level key **order**. The M-A diff had
+>    re-serialized the whole file (60 insertions / 28 deletions for 8 added
+>    locks). Fable verified the key sets were equal and no value changed — pure
+>    re-serialization — but it obscured review. The diff vs `60ecea2` now shows
+>    only the 8 added locks plus the provenance block;
+> 3. wrote a `freeze_provenance` block **into the manifest itself**, recording the
+>    additive-only delta, that it was **not owner-authorized at the time**, and
+>    that the digest legitimately moves *because entries were added*.
+>
+> Adding `freeze_provenance` does not move `pack_digest` (that digest reads
+> `locked_files` shas only, not the manifest bytes); it does move the manifest's
+> own file sha, which is what the new sentinel pins.
+
 ## Gate evidence
 
 ### 1) PC-4 calibration (offline)

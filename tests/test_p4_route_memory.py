@@ -188,6 +188,53 @@ def test_citywalker_skips_live_inference_honestly() -> None:
     assert result.goal is None
 
 
+@pytest.mark.parametrize("exc", [OSError, RuntimeError, ImportError])
+def test_citywalker_torch_probe_fails_soft_on_broken_install(
+    monkeypatch: pytest.MonkeyPatch, exc: type[Exception]
+) -> None:
+    """A broken-but-installed torch must degrade, not propagate.
+
+    torch is a compiled extension: a CUDA/driver mismatch or a bad ``.so`` load
+    raises ``OSError`` / ``RuntimeError``, never ``ImportError``. Narrowing
+    ``_probe_torch``'s handler to ``ImportError`` (a ruff lint sweep did exactly
+    that) makes the adapter constructor explode on such a machine instead of
+    taking the documented ``UNVERIFIED: torch unavailable`` skip.
+    """
+
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _broken_import(name: str, *args: object, **kwargs: object) -> object:
+        if name == "torch" or name.startswith("torch."):
+            raise exc("simulated broken torch install")
+        return real_import(name, *args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.delitem(__import__("sys").modules, "torch", raising=False)
+    monkeypatch.setattr(builtins, "__import__", _broken_import)
+
+    # Constructing the adapter probes torch — it must not raise.
+    adapter = CityWalkerInferenceAdapter(
+        CityWalkerAdapterConfig(
+            gate_enabled=True,
+            require_vendor=False,
+            require_checkpoint=False,
+            require_torch=True,
+            allow_cached_offline=True,
+        )
+    )
+    assert adapter.availability()["torch_ok"] is False
+
+    result = adapter.propose(
+        CityWalkerObservation(robot_x=0.0, robot_y=0.0),
+        now_s=0.0,
+    )
+    assert result.status == "skipped"
+    assert result.reason == "UNVERIFIED: torch unavailable for CityWalker inference"
+    assert result.goal is None
+    assert result.unverified is True
+
+
 def test_citywalker_rejects_huge_cached_step() -> None:
     vendor = resolve_citywalker_vendor()
     if vendor is None:

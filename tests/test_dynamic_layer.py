@@ -8,6 +8,8 @@ asserts that second half against git directly.
 
 from __future__ import annotations
 
+import ast
+import hashlib
 import math
 import subprocess
 import time
@@ -652,8 +654,6 @@ def _head_source(path: str) -> str:
 def _named_source(source: str, name: str) -> str:
     """Normalised source of one top-level def/class (comments/format stripped)."""
 
-    import ast
-
     for node in ast.parse(source).body:
         if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and node.name == name:
             return ast.unparse(node)
@@ -661,8 +661,6 @@ def _named_source(source: str, name: str) -> str:
 
 
 def _method_source(source: str, class_name: str, method: str) -> str:
-    import ast
-
     for node in ast.parse(source).body:
         if isinstance(node, ast.ClassDef) and node.name == class_name:
             for stmt in node.body:
@@ -671,9 +669,20 @@ def _method_source(source: str, class_name: str, method: str) -> str:
     raise AssertionError(f"{class_name}.{method} not found")
 
 
-def _annotated_defaults(source: str, class_name: str) -> dict[str, object]:
-    import ast
+def _symbol_source(source: str, symbol: str) -> str:
+    """``"name"`` or ``"Class.method"`` -> its AST-normalised source."""
 
+    if "." in symbol:
+        class_name, method = symbol.split(".", 1)
+        return _method_source(source, class_name, method)
+    return _named_source(source, symbol)
+
+
+def _symbol_digest(source: str, symbol: str) -> str:
+    return hashlib.sha256(_symbol_source(source, symbol).encode("utf-8")).hexdigest()
+
+
+def _annotated_defaults(source: str, class_name: str) -> dict[str, object]:
     for node in ast.parse(source).body:
         if isinstance(node, ast.ClassDef) and node.name == class_name:
             found: dict[str, object] = {}
@@ -691,6 +700,194 @@ def _annotated_defaults(source: str, class_name: str) -> dict[str, object]:
                         continue
             return found
     raise AssertionError(f"{class_name} not found")
+
+
+REACTIVE_SAFETY_PATH = "src/parcel_robot/navigation/reactive_safety.py"
+
+#: sha256 of the AST-normalised (``ast.unparse``) source of the reactive-safety
+#: authority's load-bearing symbols.
+#:
+#: Regenerate ONLY with owner authorization, and record why in the batch status
+#: doc — that record is the whole point of the ratchet::
+#:
+#:   PYTHONPATH=src:. .parcel/bin/python -c "
+#:   import hashlib, pathlib, sys; sys.path.insert(0,'tests')
+#:   from test_dynamic_layer import _symbol_digest, REACTIVE_SAFETY_PATH
+#:   src = pathlib.Path(REACTIVE_SAFETY_PATH).read_text()
+#:   for s in ('apply_reactive_safety','ReactiveSafetyPolicy.__post_init__',
+#:             'ReactiveSafetyPolicy.owner_slow_m','_owner_comfort_band_m',
+#:             '_owner_identity_trusted'):
+#:       print(repr(s), repr(_symbol_digest(src, s)))"
+#: Captured 2026-08-10 (lane E3) from the settled post-E2 working tree. Both
+#: values equal commit 6bd945d after AST normalisation.
+#:
+#: Regeneration log — one line per movement. This log is the record the deleted
+#: ``git status --porcelain`` ratchet never produced, and it is why a COMMITTED
+#: digest was chosen over a ``HEAD`` comparison: a ``HEAD`` comparison absorbs a
+#: change silently the moment it is committed, so nobody has to read it.
+#:
+#: * ``apply_reactive_safety`` — ``1f46251c…``. Moved between 60ecea2 and
+#:   6bd945d (card S-A2's authorized ``input_health`` wiring, which is what this
+#:   pin holds) and has not moved since. Lane E2's task_15 follow-up never
+#:   touched it.
+#: * ``ReactiveSafetyPolicy.__post_init__`` — ``2be49ad0…``. Net-unchanged from
+#:   6bd945d, but it did NOT sit still: lane E2 added a symmetric person-clearance
+#:   floor (``person_stop_m`` may not undercut
+#:   ``SafetyEnvelope.person_stop(0.0)``), this ratchet reddened on it unprompted
+#:   and named the symbol, the pin was regenerated to ``4c07dc07…`` after reading
+#:   the diff — and E2 then REVERTED the guard (the legacy ``robot.yaml`` inject
+#:   of ``person_stop_m=1.0`` undercuts the derived floor and 33 tests failed on
+#:   it), which reddened the ratchet a second time and returned the pin here.
+#:   Both movements were caught, read, and recorded rather than absorbed; see
+#:   ``scrum/20260809/task_15/E3_EVAL_INTEGRITY_STATUS.md``.
+#: * ``ReactiveSafetyPolicy.__post_init__`` — ``2be49ad0…`` -> ``4c07dc07…``,
+#:   regenerated 2026-08-10 by lane E5 under EXPLICIT OWNER AUTHORIZATION
+#:   ("1. person clearance. Implement your recommendation"). The symmetric
+#:   person-clearance floor landed for real this time: ``person_stop_m`` may no
+#:   longer undercut ``SafetyEnvelope.person_stop(0.0)``, mirroring the
+#:   ``obstacle_stop_m`` floor that was already there. It could land now because
+#:   the paired ``robot.yaml`` retune (1.0/2.0 -> 1.2/2.5, all four copies) went
+#:   in with it, so no shipped config undercuts the floor any more.
+#:   **The regenerated value is bit-identical to the ``4c07dc07…`` E3 captured
+#:   during E2's measurement window** — i.e. the guard that finally landed is
+#:   AST-identical to the one E2 built and then reverted under rule 2, which is
+#:   independent evidence that the pin now names a state that actually exists.
+#:   ``apply_reactive_safety`` is UNCHANGED at ``1f46251c…`` across this move
+#:   (checked, not assumed): the gate function did not move, only the
+#:   constructor's validation. Measurements, the 2x2 attribution for every row
+#:   this moved, and the follow stand-off derivation are in
+#:   ``scrum/20260809/task_15/E5_PERSON_CLEARANCE_STATUS.md``.
+#: * ``apply_reactive_safety`` — ``1f46251c…`` -> ``f52db9c5…``, and
+#:   ``ReactiveSafetyPolicy.__post_init__`` — ``4c07dc07…`` -> ``e01bcca9…``,
+#:   regenerated 2026-08-11 by lane E6 under EXPLICIT OWNER AUTHORIZATION (the
+#:   owner-band separation card written up by E5 §7.1 and declined there under
+#:   rule 2). **This is the first authorized change to the gate function itself
+#:   in this batch.** The owner branch now gets its OWN comfort band
+#:   (``ReactiveSafetyPolicy.owner_slow_m``, derived = ``person_stop_m +
+#:   OWNER_STAND_OFF_MARGIN_M`` = the follow controller's stand-off expressed in
+#:   the gate's clearance coordinates), granted only to a positively-identified
+#:   owner track in a scene with no stranger on the person channel; every other
+#:   case FAILS CLOSED to the 2.5 m stranger band. The owner's STOP distance,
+#:   the predictive stop, the TTC brake, the orbit gate and the obstacle path
+#:   are untouched — the stop ring was re-measured by bisection at three speeds
+#:   for both an identified owner and an unidentified person and is the same
+#:   number (``tests/test_e6_owner_band.py``).
+#:   2x2, with the pre-E6 tree reconstructed by reverse-applying this lane's own
+#:   edits: HEAD digests ``1f46251c…`` / ``2be49ad0…`` and pre-E6 digests
+#:   ``1f46251c…`` / ``4c07dc07…``, i.e. BOTH outgoing pins matched the state
+#:   they named, and this lane's delta is exactly the band separation plus the
+#:   band's construction-time guard. FOLLOW_BENCH_V1: ``follow_success`` 6/9 ->
+#:   **7/9** with ``min_pedestrian_surface_m`` **0.5300 unchanged** and the
+#:   personal-space dwell **2.3 s unchanged**. 9/9 was NOT reached and is not
+#:   reachable this way; the factorial that proves it is in
+#:   ``scrum/20260809/task_15/E6_OWNER_BAND_STATUS.md``.
+#: * Three symbols were ADDED to the pin by the same lane rather than left
+#:   outside it: ``ReactiveSafetyPolicy.owner_slow_m`` (the derivation),
+#:   ``_owner_comfort_band_m`` (which band, and why) and
+#:   ``_owner_identity_trusted`` (who counts as the owner). The gate's safety
+#:   decision moved partly into helpers, and a ratchet that watched only the
+#:   caller would have been weaker after this change than before it.
+REACTIVE_SAFETY_PIN: dict[str, str] = {
+    "apply_reactive_safety": (
+        "f52db9c50cd6efe3958471a87d7f53e7ef3ba7b0038c895422dd0d7a4cf6bded"
+    ),
+    "ReactiveSafetyPolicy.__post_init__": (
+        "e01bcca941f8b8ed1448a62b066246235682941e8ff94e5c2927de7e8c47684e"
+    ),
+    "ReactiveSafetyPolicy.owner_slow_m": (
+        "119af4adb6575f21ebbebe929e77e1e29eba3da345a021a69a2f32959e222f0e"
+    ),
+    "_owner_comfort_band_m": (
+        "7d5050eb563e5a8336a94f8eb26d648dc7de6e46680bd1108a68c9f1149848a9"
+    ),
+    "_owner_identity_trusted": (
+        "5262d3edb03522b558b43b47fbe66117b8ab6eb05ed71abd1041cf60e25e24d5"
+    ),
+}
+
+
+def test_the_reactive_safety_authority_is_pinned_not_merely_unmodified() -> None:
+    """Card W4's safety-authority ratchet, RE-ARMED (lane E3, 2026-08-10).
+
+    History, because it is the reason this test is shaped the way it is:
+
+    * W4 pinned this file with an unconditional ``git status --porcelain`` check
+      (``test_the_reactive_safety_authority_file_is_untouched_on_this_branch``).
+    * Card S-A2 in task_15 DELETED that ratchet and replaced it with a behavioural
+      test of its own — a self-replacement of a guard by the card the guard was
+      watching, which is a rule-4 process breach. After the deletion
+      ``grep -rn "git status --porcelain" tests/*.py`` returned nothing repo-wide:
+      the safety authority had no file-level ratchet at all.
+    * Fable's independent audit caught it
+      (``scrum/20260809/task_15/AUDIT_FABLE_INDEPENDENT.md``).
+
+    Re-armed to the STRONGER sibling convention already used by
+    ``test_the_collision_gate_behaviour_is_untouched_on_this_branch``: AST
+    normalisation, so cosmetic reformatting and comment edits are green and only
+    a semantic change is red. Two differences from that sibling, both deliberate:
+
+    * it compares against a COMMITTED digest rather than against ``HEAD``. A
+      HEAD comparison silently re-baselines the moment the change is committed —
+      the ratchet forgets. A committed pin survives the commit and has to be
+      edited by a human, in the diff, on purpose.
+    * it covers ``ReactiveSafetyPolicy.__post_init__`` as well as the gate
+      function, so a re-tuned threshold hidden behind a derivation is red too.
+
+    The behavioural pins in the next test are kept; they are complementary (they
+    catch a value moving through config, this catches the code moving).
+    """
+
+    live = (REPO / REACTIVE_SAFETY_PATH).read_text(encoding="utf-8")
+
+    drifted: list[str] = []
+    for symbol, pinned in sorted(REACTIVE_SAFETY_PIN.items()):
+        actual = _symbol_digest(live, symbol)
+        if actual != pinned:
+            drifted.append(f"  {symbol}: {actual} != pinned {pinned}")
+
+    assert not drifted, (
+        "the reactive-safety authority changed semantically:\n"
+        + "\n".join(drifted)
+        + "\n\nThis is a ratchet, not a blocker. If the change is intended and "
+        "owner-authorized, regenerate REACTIVE_SAFETY_PIN with the command in "
+        "its docstring and record the reason in the batch status doc. Do NOT "
+        "delete this test to make it pass — that is exactly what card S-A2 did."
+    )
+
+
+def test_the_reactive_safety_pin_ignores_formatting_but_not_semantics() -> None:
+    """The two directions the ratchet claims, proven on the live source.
+
+    A pin that reddened on reformatting would be abandoned within a week; a pin
+    that stayed green on a re-tuned threshold would be theatre. Both are checked
+    against the real file rather than a fixture.
+    """
+
+    live = (REPO / REACTIVE_SAFETY_PATH).read_text(encoding="utf-8")
+    symbol = "apply_reactive_safety"
+    baseline = _symbol_digest(live, symbol)
+
+    # Cosmetic: blank lines, a comment, and a re-wrapped signature. Green.
+    reformatted = live.replace(
+        "def apply_reactive_safety(",
+        "# a comment that changes nothing\ndef apply_reactive_safety(\n",
+        1,
+    )
+    assert _symbol_digest(reformatted, symbol) == baseline, (
+        "AST-normalised comparison must ignore comments and line breaks"
+    )
+
+    # Semantic: the admitted command is returned unchanged (gate disabled). Red.
+    tree = ast.parse(live)
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name == symbol:
+            node.body = ast.parse("return command, 'clear'").body
+            break
+    else:  # pragma: no cover - the symbol is asserted to exist above
+        raise AssertionError(f"{symbol} not found")
+    assert _symbol_digest(ast.unparse(tree), symbol) != baseline, (
+        "a pass-through gate must move the pin"
+    )
 
 
 def test_the_reactive_safety_authority_gate_behaviour_holds() -> None:

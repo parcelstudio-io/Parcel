@@ -1,7 +1,34 @@
 {
+  "schema_version": 1,
+  "suite_id": "parcel-personal-convo-v1",
+  "runner_version": "personal-convo-text-tier-v1",
+  "tier": "T",
   "frozen": true,
   "frozen_at_utc": "2026-08-09T00:00:00Z",
+  "scenario_count": 8,
+  "probe_families": [
+    "in_session_context",
+    "cross_session_memory",
+    "fact_tool_composition",
+    "persona_consistency",
+    "affect_handling",
+    "interactivity_clarification",
+    "adaptability_no_sycophancy",
+    "asr_robustness"
+  ],
   "human_review_required": true,
+  "requires_audio": false,
+  "requires_model_server": false,
+  "probe_files": [
+    "evals/companion/personal_convo_v1/probes/adaptability_no_sycophancy.json",
+    "evals/companion/personal_convo_v1/probes/affect_handling.json",
+    "evals/companion/personal_convo_v1/probes/asr_robustness.json",
+    "evals/companion/personal_convo_v1/probes/cross_session_memory.json",
+    "evals/companion/personal_convo_v1/probes/fact_tool_composition.json",
+    "evals/companion/personal_convo_v1/probes/in_session_context.json",
+    "evals/companion/personal_convo_v1/probes/interactivity_clarification.json",
+    "evals/companion/personal_convo_v1/probes/persona_consistency.json"
+  ],
   "locked_files": [
     {
       "path": "evals/companion/personal_convo_v1/build_memory_fixture.py",
@@ -96,31 +123,36 @@
       "sha256": "8fe6a7093fe9eaeabbb0e08fca3bcb977ad4923b5e912658e9079cfaf4d5aa0d"
     }
   ],
-  "probe_families": [
-    "in_session_context",
-    "cross_session_memory",
-    "fact_tool_composition",
-    "persona_consistency",
-    "affect_handling",
-    "interactivity_clarification",
-    "adaptability_no_sycophancy",
-    "asr_robustness"
-  ],
-  "probe_files": [
-    "evals/companion/personal_convo_v1/probes/adaptability_no_sycophancy.json",
-    "evals/companion/personal_convo_v1/probes/affect_handling.json",
-    "evals/companion/personal_convo_v1/probes/asr_robustness.json",
-    "evals/companion/personal_convo_v1/probes/cross_session_memory.json",
-    "evals/companion/personal_convo_v1/probes/fact_tool_composition.json",
-    "evals/companion/personal_convo_v1/probes/in_session_context.json",
-    "evals/companion/personal_convo_v1/probes/interactivity_clarification.json",
-    "evals/companion/personal_convo_v1/probes/persona_consistency.json"
-  ],
-  "requires_audio": false,
-  "requires_model_server": false,
-  "runner_version": "personal-convo-text-tier-v1",
-  "scenario_count": 8,
-  "schema_version": 1,
-  "suite_id": "parcel-personal-convo-v1",
-  "tier": "T"
+  "freeze_provenance": {
+    "note": "This suite is frozen. `pack_digest` is a digest over the sorted locked-file sha256 set, so it necessarily MOVES when locks are ADDED even though no existing lock was touched. Every change to `locked_files` must be recorded below, additive or not.",
+    "entries": [
+      {
+        "at_utc": "2026-08-09T00:00:00Z",
+        "batch": "scrum/20260809/task_15",
+        "card": "M-A (PC-4 judge + frozen calibration pack)",
+        "change_class": "additive-only",
+        "locked_files_before": 15,
+        "locked_files_after": 23,
+        "added": 8,
+        "removed": 0,
+        "repinned": 0,
+        "added_paths": [
+          "evals/companion/personal_convo_v1/calibration/known_bad/cold_dismissive.json",
+          "evals/companion/personal_convo_v1/calibration/known_bad/embodiment_overclaim.json",
+          "evals/companion/personal_convo_v1/calibration/known_bad/sycophantic_agree.json",
+          "evals/companion/personal_convo_v1/calibration/known_good/affect_supportive.json",
+          "evals/companion/personal_convo_v1/calibration/known_good/no_sycophancy_pushback.json",
+          "evals/companion/personal_convo_v1/calibration/known_good/persona_honest_warm.json",
+          "evals/companion/personal_convo_v1/calibration/pack.json",
+          "evals/companion/personal_convo_v1/judge.py"
+        ],
+        "pack_digest_before": "7e904d5335e049acc745357d226e6e03f262d2b5d8e86f7ee5de1f1ae056fa31",
+        "pack_digest_after": "fc1af2f76f2b491451558ef51c375723f070b9ed9fa94ea40344a3e194006b04",
+        "owner_authorized_at_the_time": false,
+        "process_finding": "NEXT_BATCH_PLAN rule 2 required STOP-and-report on any frozen digest move with no self-service re-freeze in this batch. That STOP did not happen and the batch record asserted three times that no digest moved. Recorded retroactively by lane E3 (scrum/20260809/task_15/E3_EVAL_INTEGRITY_STATUS.md) after Fable's independent audit (AUDIT_FABLE_INDEPENDENT.md, BLOCKING 2) caught it.",
+        "independently_verified": "Fable recomputed the lock delta: 15 -> 23 locked files, ADDED 8, REMOVED 0, REPINNED 0. No existing locked file's sha256 was altered and no locked file content was rewritten. The digest move is fully explained by the 8 additions; there is no tampering.",
+        "digest_moves_because": "entries were added, not because any pin changed"
+      }
+    ]
+  }
 }

@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-duplex-v1",
+  "runner_version": "duplex-d0-scripted-v2",
+  "utc": "2026-08-10T08:24:14Z",
+  "elapsed_ms": 74.931,
+  "metrics": {
+    "ttft_p50_s": 0.03558733593672514,
+    "ttft_samples_s": [
+      0.030542359920218587,
+      0.04063231195323169
+    ],
+    "ttft_source": "DuplexVoiceSession query_end\u2192tts_first_chunk",
+    "filler_latencies_s": [
+      0.08000000000000007,
+      0.10000000000000142,
+      0.10000000000000142,
+      0.10000000000000142,
+      0.7999999999999972
+    ],
+    "filler_audible_max_s": 0.7999999999999972,
+    "filler_consecutive_repeats": 0,
+    "fillers_used": [
+      "Just a sec while I check that\u2026",
+      "Hmm, let me think\u2026",
+      "One second \u2014 looking into it\u2026",
+      "Just a sec while I check that\u2026"
+    ],
+    "continuity_missing_frames": 0,
+    "continuity_source": "DuplexCoordinator 10Hz ticks with ACT/TEXT pushes",
+    "atomicity_ok": true,
+    "shadow_round_trip_ok": true,
+    "response_ceiling_breaches": 0,
+    "frames_sample": [
+      {
+        "t": 0,
+        "epoch": 1,
+        "text": "Sure",
+        "act": "<emote:bow>"
+      },
+      {
+        "t": 1,
+        "epoch": 1,
+        "text": "thing.",
+        "act": "<idle>"
+      },
+      {
+        "t": 2,
+        "epoch": 1,
+        "text": "<silence>",
+        "act": "<idle>"
+      },
+      {
+        "t": 3,
+        "epoch": 1,
+        "text": "<silence>",
+        "act": "<idle>"
+      },
+      {
+        "t": 4,
+        "epoch": 1,
+        "text": "<silence>",
+        "act": "<idle>"
+      },
+      {
+        "t": 6,
+        "epoch": 2,
+        "text": "Here",
+        "act": "<skill:NavigateTo>"
+      },
+      {
+        "t": 7,
+        "epoch": 2,
+        "text": "is",
+        "act": "<idle>"
+      },
+      {
+        "t": 8,
+        "epoch": 2,
+        "text": "the",
+        "act": "<idle>"
+      },
+      {
+        "t": 9,
+        "epoch": 2,
+        "text": "plan.",
+        "act": "<idle>"
+      },
+      {
+        "t": 10,
+        "epoch": 2,
+        "text": "<silence>",
+        "act": "<idle>"
+      },
+      {
+        "t": 14,
+        "epoch": 10,
+        "text": "Long",
+        "act": "<twist:3:2>"
+      },
+      {
+        "t": 15,
+        "epoch": 11,
+        "text": "<silence>",
+        "act": "<idle>"
+      }
+    ],
+    "frames_emitted": 216,
+    "latency_ledger_row": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/latency/ledger.jsonl"
+  },
+  "nav_regression": {
+    "follow_bench_latest_shipped": {
+      "follow_success": "9/9",
+      "hard_collision_total": 0,
+      "navigate_success": "2/2",
+      "mean_band_fraction": 0.7433396178984414,
+      "report": "follow-bench-v1-20260809094511Z-601d8c6e.json"
+    },
+    "follow_bench_unchanged": true,
+    "embodied_post_speed": {
+      "simulator_step_count": 997,
+      "collision_count": 0,
+      "supported_case_success_rate": 1.0,
+      "source": "tests/test_embodied_plan_eval.py frozen aggregate",
+      "suite_freeze_agrees": true
+    },
+    "embodied_unchanged": true
+  },
+  "hard_gates": {
+    "ttft_p50_under_1s": true,
+    "no_response_over_2s_without_filler": true,
+    "act_continuity_zero_missing": true,
+    "barge_in_atomicity": true,
+    "shadow_round_trip": true,
+    "nav_regression_unchanged": true,
+    "filler_no_consecutive_repeats": true
+  },
+  "hard_gates_pass": true,
+  "does_not_prove": [
+    "live audio / acoustic barge-in (turns are text-injected; no mic or speaker)",
+    "D0 frames derive from executed behavior rather than driving it \u2014 that flips in D1",
+    "real planner / model TTFT on production weights (slow path is injected)",
+    "navigation quality from this script alone (nav is a ledger regression gate)"
+  ],
+  "pool_size": 7
+}

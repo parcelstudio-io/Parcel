@@ -34,7 +34,7 @@ from parcel_robot.camera_channel.ingress import (
 from parcel_robot.detection_adapter.pixel_detections import PixelDetection
 from parcel_robot.instructnav.scoring import object_near_envelope_m
 
-TIER_ID = "T-cam-arrival"
+TIER_ID = "T-cam-proxy-arrival"
 DOES_NOT_PROVE = (
     (
         "Offline envelope stamping proves pixel candidates carry the city-object "

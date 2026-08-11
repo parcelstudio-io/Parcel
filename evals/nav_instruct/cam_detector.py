@@ -54,7 +54,7 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-TIER_ID = "T-cam-detector"
+TIER_ID = "T-cam-proxy-detector"
 
 # The recognition-error budget the OWLv2 localization delta is reported against.
 # OWLv2's box differs from the exact seg mask, so its back-projected centroid drifts

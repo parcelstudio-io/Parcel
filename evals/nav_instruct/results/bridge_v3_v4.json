@@ -1,0 +1,1019 @@
+{
+  "corrections": {
+    "e": "derived follow_owner goal radius \u2014 the disc centred on the owner stops being the bare literal 1.8 m and becomes (desired_distance_m + distance_deadband_m) + OWNER_STAND_OFF_MARGIN_M, i.e. the outer edge of the hold band a compliant follow controller may claim at_follow_distance from, wrapped by the same arrival_radius_m + stand_off_margin_m the authority already puts between a ring and the region that wraps it. 1.8 -> 2.13 m. circle_owner is NOT touched"
+  },
+  "derivation": {
+    "authorization": "owner, 2026-08-11 \u2014 re-freeze the episodes to v4 so the follow goal radii match the retuned stand-off, keeping the pedestrian-clearance gain",
+    "circle_owner_unchanged": {
+      "radius_m": 2.2,
+      "why": "its compliant terminal ring is default_orbit_radius_m (1.6) \u00b1 waypoint_tolerance_m (0.16) = 1.76 m, and even the widest orbit the config permits (max_orbit_radius_m 2.0) tops out at 2.16 m \u2014 both inside 2.2. Not one term feeding that ring moved under E5 or E6, and E7 measured the five circle_owner episodes reproducing the frozen baseline exactly (4 authority_disagreement + 1 agreement, 0 false arrivals). The retuned stand-off did not invalidate this region, so correction (e) does not reach it"
+    },
+    "formula": "radius = (desired_distance_m + distance_deadband_m) + OWNER_STAND_OFF_MARGIN_M",
+    "hold_band_outer_m": 2.0300000000000002,
+    "not_a_fit": "the three measured false arrivals sit at 2.0070 / 2.0190 / 2.0282 m of owner distance, so ANY radius from 2.0282 up turns them green and 2.13 is not the smallest such number \u2014 it is what the derivation yields. Nor is it applied only to the three that failed: the radius is a family-level constant and the defect is family-level (E7 \u00a73.4), so all five follow_owner episodes take it",
+    "terms": [
+      {
+        "name": "person_stop_m",
+        "read_from": "authority.DEFAULT_SAFETY_ENVELOPE.person_stop(0.0)",
+        "value": 1.2,
+        "why": "the authority's person clearance; E5 raised it 1.0 -> 1.2"
+      },
+      {
+        "name": "owner_collision_envelope_m",
+        "read_from": "navigation.follow._OWNER_COLLISION_ENVELOPE_M",
+        "value": 0.55,
+        "why": "apply_reactive_safety subtracts it from the owner CENTRE distance before comparing against person_stop_m"
+      },
+      {
+        "name": "owner_keepout_m",
+        "read_from": "person_stop_m + owner_collision_envelope_m",
+        "value": 1.75,
+        "why": "the ring the final safety gate refuses to translate through"
+      },
+      {
+        "name": "OWNER_STAND_OFF_MARGIN_M",
+        "read_from": "authority.DEFAULT_STAND_OFF_ENVELOPE.arrival_radius_m (0.06) + .stand_off_margin_m (0.04)",
+        "value": 0.1,
+        "why": "StandOffEnvelope already fixes this pair as the margin between a ring that must be cleared and the stand-off that wraps it (stand_off(r) - minimum_vicinity(r) == arrival_radius_m + stand_off_margin_m). arrival_radius_m is, verbatim from FIELD_META, 'Controller position tolerance at the terminal pose' \u2014 exactly what an eval region must tolerate on top of a nominal hold band. Lane E5 named this constant and applied it to the keepout ring; (e) applies the SAME pair one ring further out, to the hold band's outer edge"
+      },
+      {
+        "name": "desired_distance_m",
+        "read_from": "owner_keepout_m + OWNER_STAND_OFF_MARGIN_M  (lane E5)",
+        "value": 1.85,
+        "why": "the nominal follow stand-off; 1.60 -> 1.85 under E5"
+      },
+      {
+        "name": "distance_deadband_m",
+        "read_from": "navigation.follow.FollowConfig.distance_deadband_m",
+        "value": 0.18,
+        "why": "the half-width of the hold band; unchanged by E5/E6"
+      }
+    ],
+    "v3_radius_m": 1.8,
+    "v4_radius_m": 2.1300000000000003,
+    "what_the_region_must_admit": "FollowOwnerController.step's holding branch fires when distance - desired_distance_m <= distance_deadband_m and returns reason='at_follow_distance', which is in SYSTEM_ARRIVAL_REASONS. So the set of owner distances at which a COMPLIANT controller may claim arrival is (0, desired_distance_m + distance_deadband_m]. Approaching from outside \u2014 which is how every one of these episodes starts \u2014 the controller stops at the first distance satisfying the predicate, i.e. at the band's OUTER edge. That edge is the ring the eval region must contain."
+  },
+  "derivation_check": {
+    "delta_from_v3_m": 0.3300000000000003,
+    "goal_radius_m": 2.1300000000000003,
+    "hold_band_outer_m": 2.0300000000000002,
+    "matches_frozen_v4_radius": true,
+    "owner_keepout_m": 1.75,
+    "stand_off_m": 1.85,
+    "stand_off_matches_follow_config": true
+  },
+  "episode_set_provenance": {
+    "v3": "2026-08-09 re-freeze: correction (d) surface-anchored next_to band; carries (a) + (b) unchanged from v2",
+    "v4": "2026-08-11 re-freeze: correction (e) derived follow_owner goal radius (owner-authorized 2026-08-11, on lane E7's false-arrival diagnosis); carries (a) + (b) + (d) unchanged from v3"
+  },
+  "follow_goal_radius_reference": {
+    "v3": "frozen_literal",
+    "v4": "follow_hold_band"
+  },
+  "from_version": "v3",
+  "frozen_baseline": false,
+  "generated_at": "20260811T071149Z",
+  "kind": "refreeze_bridge",
+  "measured_bridge": {
+    "cells": {
+      "new_episodes_x_new_code": {
+        "arrival_branch_histogram": {
+          "frozen_hold": 3,
+          "none": 19,
+          "trace_end_hold": 3
+        },
+        "arrival_rule": "hold-or-trace-end-v1",
+        "authority_by_episode": {
+          "nav-circle_owner-A-00-6ba3a31d": "authority_disagreement",
+          "nav-circle_owner-B-05-4d7b5b21": "authority_disagreement",
+          "nav-circle_owner-C-10-4dd3449c": "agreement",
+          "nav-circle_owner-D-15-717b5947": "authority_disagreement",
+          "nav-circle_owner-E-20-12e7db57": "authority_disagreement",
+          "nav-follow_owner-A-00-40672702": "agreement",
+          "nav-follow_owner-B-05-334e8d3f": "agreement",
+          "nav-follow_owner-C-10-41c8032b": "agreement",
+          "nav-follow_owner-D-15-74a535dd": "agreement",
+          "nav-follow_owner-E-20-433c9247": "agreement",
+          "nav-object_goal-A-00-4caa923b": "agreement",
+          "nav-object_goal-B-05-0ee314d5": "agreement",
+          "nav-object_goal-C-10-68aa2ab8": "agreement",
+          "nav-object_goal-D-15-109547e2": "agreement",
+          "nav-object_goal-E-20-1a854173": "agreement",
+          "nav-object_relative-A-00-3efbba45": "agreement",
+          "nav-object_relative-B-05-7d441aee": "agreement",
+          "nav-object_relative-C-10-0d3f5ebd": "agreement",
+          "nav-object_relative-D-15-61f68ad6": "agreement",
+          "nav-object_relative-E-20-0c739ea2": "agreement",
+          "nav-region_goal-A-00-1c735162": "agreement",
+          "nav-region_goal-B-05-586317e4": "agreement",
+          "nav-region_goal-C-10-138643ba": "agreement",
+          "nav-region_goal-D-15-1b8b2361": "agreement",
+          "nav-region_goal-E-20-6a95f8c4": "agreement"
+        },
+        "authority_histogram": {
+          "agreement": 21,
+          "authority_disagreement": 4,
+          "false_arrival": 0,
+          "tolerated_boundary": 0,
+          "unknown": 0
+        },
+        "budget_policy": "scaled-path-v1",
+        "collision_total": 0,
+        "dtg_by_episode": {
+          "nav-circle_owner-A-00-6ba3a31d": 0.0,
+          "nav-circle_owner-B-05-4d7b5b21": 0.0,
+          "nav-circle_owner-C-10-4dd3449c": 7.5082439194737995,
+          "nav-circle_owner-D-15-717b5947": 0.0,
+          "nav-circle_owner-E-20-12e7db57": 0.0,
+          "nav-follow_owner-A-00-40672702": 0.0,
+          "nav-follow_owner-B-05-334e8d3f": 0.0,
+          "nav-follow_owner-C-10-41c8032b": 7.605405743984171,
+          "nav-follow_owner-D-15-74a535dd": 0.0,
+          "nav-follow_owner-E-20-433c9247": 0.9278886557408907,
+          "nav-object_goal-A-00-4caa923b": 0.0,
+          "nav-object_goal-B-05-0ee314d5": 0.39549388710361066,
+          "nav-object_goal-C-10-68aa2ab8": 1.87,
+          "nav-object_goal-D-15-109547e2": 3.0282521329294605,
+          "nav-object_goal-E-20-1a854173": 56.159536928923096,
+          "nav-object_relative-A-00-3efbba45": 0.0,
+          "nav-object_relative-B-05-7d441aee": 1.4835034159515108,
+          "nav-object_relative-C-10-0d3f5ebd": 7.470231870562457,
+          "nav-object_relative-D-15-61f68ad6": 4.182242834619638,
+          "nav-object_relative-E-20-0c739ea2": 54.9003361982978,
+          "nav-region_goal-A-00-1c735162": 0.0,
+          "nav-region_goal-B-05-586317e4": 2.4250000000000003,
+          "nav-region_goal-C-10-138643ba": 2.325,
+          "nav-region_goal-D-15-1b8b2361": 2.1020243883371372,
+          "nav-region_goal-E-20-6a95f8c4": 56.139209034025185
+        },
+        "episode_digest": "4113607b92c734dfdd46004b6e77baf6575fc2a1c493e5d9dc5a12c6c5490222",
+        "failure_histogram": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 3,
+          "none": 6,
+          "planning_error": 6,
+          "refusal": 6,
+          "search_error": 0,
+          "termination": 4
+        },
+        "false_arrivals": [],
+        "mean_dtg_m": 8.340894760397951,
+        "scorer_arrival": [
+          "nav-circle_owner-A-00-6ba3a31d",
+          "nav-circle_owner-B-05-4d7b5b21",
+          "nav-circle_owner-D-15-717b5947",
+          "nav-circle_owner-E-20-12e7db57",
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-object_relative-A-00-3efbba45",
+          "nav-region_goal-A-00-1c735162"
+        ],
+        "spl": 0.19325925214230982,
+        "sr": 0.24,
+        "sr_frozen_rule": 0.12,
+        "successes": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-object_relative-A-00-3efbba45",
+          "nav-region_goal-A-00-1c735162"
+        ],
+        "system_arrival": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-object_relative-A-00-3efbba45",
+          "nav-region_goal-A-00-1c735162"
+        ],
+        "terminal_by_episode": {
+          "nav-circle_owner-A-00-6ba3a31d": "timed_out/spatial_step_limit",
+          "nav-circle_owner-B-05-4d7b5b21": "timed_out/spatial_step_limit",
+          "nav-circle_owner-C-10-4dd3449c": "timed_out/spatial_step_limit",
+          "nav-circle_owner-D-15-717b5947": "timed_out/spatial_step_limit",
+          "nav-circle_owner-E-20-12e7db57": "timed_out/spatial_step_limit",
+          "nav-follow_owner-A-00-40672702": "completed/at_follow_distance",
+          "nav-follow_owner-B-05-334e8d3f": "completed/at_follow_distance",
+          "nav-follow_owner-C-10-41c8032b": "completed/tracking_owner",
+          "nav-follow_owner-D-15-74a535dd": "completed/at_follow_distance",
+          "nav-follow_owner-E-20-433c9247": "completed/tracking_owner",
+          "nav-object_goal-A-00-4caa923b": "arrived/arrived_verified",
+          "nav-object_goal-B-05-0ee314d5": "timed_out/navigation_step_limit",
+          "nav-object_goal-C-10-68aa2ab8": "failed/semantic_target_unreachable",
+          "nav-object_goal-D-15-109547e2": "timed_out/navigation_step_limit",
+          "nav-object_goal-E-20-1a854173": "failed/semantic_target_not_found",
+          "nav-object_relative-A-00-3efbba45": "arrived/arrived_verified",
+          "nav-object_relative-B-05-7d441aee": "failed/semantic_target_not_found",
+          "nav-object_relative-C-10-0d3f5ebd": "failed/semantic_target_not_found",
+          "nav-object_relative-D-15-61f68ad6": "timed_out/navigation_step_limit",
+          "nav-object_relative-E-20-0c739ea2": "failed/semantic_target_not_found",
+          "nav-region_goal-A-00-1c735162": "arrived/arrived_verified",
+          "nav-region_goal-B-05-586317e4": "failed/semantic_target_not_found",
+          "nav-region_goal-C-10-138643ba": "failed/semantic_target_not_found",
+          "nav-region_goal-D-15-1b8b2361": "timed_out/navigation_step_limit",
+          "nav-region_goal-E-20-6a95f8c4": "failed/semantic_target_unreachable"
+        }
+      },
+      "new_episodes_x_old_code": {
+        "arrival_branch_histogram": {
+          "frozen_hold": 1,
+          "none": 20,
+          "trace_end_hold": 4
+        },
+        "authority_histogram": {
+          "agreement": 19,
+          "authority_disagreement": 6,
+          "false_arrival": 0,
+          "tolerated_boundary": 0,
+          "unknown": 0
+        },
+        "collision_total": 0,
+        "episode_digest": "4113607b92c734dfdd46004b6e77baf6575fc2a1c493e5d9dc5a12c6c5490222",
+        "failure_histogram": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 3,
+          "none": 5,
+          "planning_error": 4,
+          "refusal": 6,
+          "search_error": 0,
+          "termination": 7
+        },
+        "mean_dtg_m": 8.215403974074324,
+        "per_episode": {
+          "nav-circle_owner-A-00-6ba3a31d": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-circle_owner-B-05-4d7b5b21": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-circle_owner-C-10-4dd3449c": [
+            7.508244,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-circle_owner-D-15-717b5947": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-circle_owner-E-20-12e7db57": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-follow_owner-A-00-40672702": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-follow_owner-B-05-334e8d3f": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-follow_owner-C-10-41c8032b": [
+            7.605406,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-follow_owner-D-15-74a535dd": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-follow_owner-E-20-433c9247": [
+            0.927889,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-object_goal-A-00-4caa923b": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-object_goal-B-05-0ee314d5": [
+            0.340725,
+            "agreement",
+            "termination",
+            false
+          ],
+          "nav-object_goal-C-10-68aa2ab8": [
+            1.87,
+            "agreement",
+            "grounding_error",
+            false
+          ],
+          "nav-object_goal-D-15-109547e2": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-object_goal-E-20-1a854173": [
+            56.159537,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-object_relative-A-00-3efbba45": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-object_relative-B-05-7d441aee": [
+            1.483503,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-object_relative-C-10-0d3f5ebd": [
+            7.470232,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-object_relative-D-15-61f68ad6": [
+            4.330079,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-object_relative-E-20-0c739ea2": [
+            54.900336,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-region_goal-A-00-1c735162": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-region_goal-B-05-586317e4": [
+            2.425,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-region_goal-C-10-138643ba": [
+            2.325,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-region_goal-D-15-1b8b2361": [
+            1.89994,
+            "agreement",
+            "grounding_error",
+            false
+          ],
+          "nav-region_goal-E-20-6a95f8c4": [
+            56.139209,
+            "agreement",
+            "grounding_error",
+            false
+          ]
+        },
+        "reading": "the pre-retune controller stops at ~1.83 m from the owner, which is INSIDE the 2.13 m disc \u2014 so K0 says arrived \u2014 but it is still OUTSIDE its own 1.78 m hold band, so it never claims at_follow_distance. The honest verdict is authority_disagreement (scorer yes, system no), the SAFE direction, and the v4 region reports it rather than manufacturing a success. A-00 and B-05 do NOT flip to success on old code: the widened region alone does not buy them",
+        "spl": 0.16016476583919256,
+        "sr": 0.2,
+        "sr_frozen_rule": 0.04
+      },
+      "old_episodes_x_new_code": {
+        "arrival_branch_histogram": {
+          "none": 22,
+          "trace_end_hold": 3
+        },
+        "arrival_rule": "hold-or-trace-end-v1",
+        "authority_by_episode": {
+          "nav-circle_owner-A-00-6ba3a31d": "authority_disagreement",
+          "nav-circle_owner-B-05-4d7b5b21": "authority_disagreement",
+          "nav-circle_owner-C-10-4dd3449c": "agreement",
+          "nav-circle_owner-D-15-717b5947": "authority_disagreement",
+          "nav-circle_owner-E-20-12e7db57": "authority_disagreement",
+          "nav-follow_owner-A-00-40672702": "false_arrival",
+          "nav-follow_owner-B-05-334e8d3f": "false_arrival",
+          "nav-follow_owner-C-10-41c8032b": "agreement",
+          "nav-follow_owner-D-15-74a535dd": "false_arrival",
+          "nav-follow_owner-E-20-433c9247": "agreement",
+          "nav-object_goal-A-00-4caa923b": "agreement",
+          "nav-object_goal-B-05-0ee314d5": "agreement",
+          "nav-object_goal-C-10-68aa2ab8": "agreement",
+          "nav-object_goal-D-15-109547e2": "agreement",
+          "nav-object_goal-E-20-1a854173": "agreement",
+          "nav-object_relative-A-00-3efbba45": "agreement",
+          "nav-object_relative-B-05-7d441aee": "agreement",
+          "nav-object_relative-C-10-0d3f5ebd": "agreement",
+          "nav-object_relative-D-15-61f68ad6": "agreement",
+          "nav-object_relative-E-20-0c739ea2": "agreement",
+          "nav-region_goal-A-00-1c735162": "agreement",
+          "nav-region_goal-B-05-586317e4": "agreement",
+          "nav-region_goal-C-10-138643ba": "agreement",
+          "nav-region_goal-D-15-1b8b2361": "agreement",
+          "nav-region_goal-E-20-6a95f8c4": "agreement"
+        },
+        "authority_histogram": {
+          "agreement": 18,
+          "authority_disagreement": 4,
+          "false_arrival": 3,
+          "tolerated_boundary": 0,
+          "unknown": 0
+        },
+        "budget_policy": "scaled-path-v1",
+        "collision_total": 0,
+        "dtg_by_episode": {
+          "nav-circle_owner-A-00-6ba3a31d": 0.0,
+          "nav-circle_owner-B-05-4d7b5b21": 0.0,
+          "nav-circle_owner-C-10-4dd3449c": 7.5082439194737995,
+          "nav-circle_owner-D-15-717b5947": 0.0,
+          "nav-circle_owner-E-20-12e7db57": 0.0,
+          "nav-follow_owner-A-00-40672702": 0.22819559660036748,
+          "nav-follow_owner-B-05-334e8d3f": 0.21902902962352466,
+          "nav-follow_owner-C-10-41c8032b": 7.935405743984172,
+          "nav-follow_owner-D-15-74a535dd": 0.2070189336426298,
+          "nav-follow_owner-E-20-433c9247": 1.257888655740891,
+          "nav-object_goal-A-00-4caa923b": 0.0,
+          "nav-object_goal-B-05-0ee314d5": 0.39549388710361066,
+          "nav-object_goal-C-10-68aa2ab8": 1.87,
+          "nav-object_goal-D-15-109547e2": 3.0282521329294605,
+          "nav-object_goal-E-20-1a854173": 56.159536928923096,
+          "nav-object_relative-A-00-3efbba45": 0.0,
+          "nav-object_relative-B-05-7d441aee": 1.4835034159515108,
+          "nav-object_relative-C-10-0d3f5ebd": 7.470231870562457,
+          "nav-object_relative-D-15-61f68ad6": 4.182242834619638,
+          "nav-object_relative-E-20-0c739ea2": 54.9003361982978,
+          "nav-region_goal-A-00-1c735162": 0.0,
+          "nav-region_goal-B-05-586317e4": 2.4250000000000003,
+          "nav-region_goal-C-10-138643ba": 2.325,
+          "nav-region_goal-D-15-1b8b2361": 2.1020243883371372,
+          "nav-region_goal-E-20-6a95f8c4": 56.139209034025185
+        },
+        "episode_digest": "919a0fea836363a6f6d04d3fb186b0dcb493aa6c76357d8af2b0c05408c556aa",
+        "failure_histogram": {
+          "control_error": 0,
+          "false_arrival": 3,
+          "grounding_error": 3,
+          "none": 3,
+          "planning_error": 6,
+          "refusal": 6,
+          "search_error": 0,
+          "termination": 4
+        },
+        "false_arrivals": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd"
+        ],
+        "mean_dtg_m": 8.393464502792611,
+        "scorer_arrival": [
+          "nav-circle_owner-A-00-6ba3a31d",
+          "nav-circle_owner-B-05-4d7b5b21",
+          "nav-circle_owner-D-15-717b5947",
+          "nav-circle_owner-E-20-12e7db57",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-object_relative-A-00-3efbba45",
+          "nav-region_goal-A-00-1c735162"
+        ],
+        "spl": 0.12,
+        "sr": 0.12,
+        "sr_frozen_rule": 0.0,
+        "successes": [
+          "nav-object_goal-A-00-4caa923b",
+          "nav-object_relative-A-00-3efbba45",
+          "nav-region_goal-A-00-1c735162"
+        ],
+        "system_arrival": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-object_goal-A-00-4caa923b",
+          "nav-object_relative-A-00-3efbba45",
+          "nav-region_goal-A-00-1c735162"
+        ],
+        "terminal_by_episode": {
+          "nav-circle_owner-A-00-6ba3a31d": "timed_out/spatial_step_limit",
+          "nav-circle_owner-B-05-4d7b5b21": "timed_out/spatial_step_limit",
+          "nav-circle_owner-C-10-4dd3449c": "timed_out/spatial_step_limit",
+          "nav-circle_owner-D-15-717b5947": "timed_out/spatial_step_limit",
+          "nav-circle_owner-E-20-12e7db57": "timed_out/spatial_step_limit",
+          "nav-follow_owner-A-00-40672702": "completed/at_follow_distance",
+          "nav-follow_owner-B-05-334e8d3f": "completed/at_follow_distance",
+          "nav-follow_owner-C-10-41c8032b": "completed/tracking_owner",
+          "nav-follow_owner-D-15-74a535dd": "completed/at_follow_distance",
+          "nav-follow_owner-E-20-433c9247": "completed/tracking_owner",
+          "nav-object_goal-A-00-4caa923b": "arrived/arrived_verified",
+          "nav-object_goal-B-05-0ee314d5": "timed_out/navigation_step_limit",
+          "nav-object_goal-C-10-68aa2ab8": "failed/semantic_target_unreachable",
+          "nav-object_goal-D-15-109547e2": "timed_out/navigation_step_limit",
+          "nav-object_goal-E-20-1a854173": "failed/semantic_target_not_found",
+          "nav-object_relative-A-00-3efbba45": "arrived/arrived_verified",
+          "nav-object_relative-B-05-7d441aee": "failed/semantic_target_not_found",
+          "nav-object_relative-C-10-0d3f5ebd": "failed/semantic_target_not_found",
+          "nav-object_relative-D-15-61f68ad6": "timed_out/navigation_step_limit",
+          "nav-object_relative-E-20-0c739ea2": "failed/semantic_target_not_found",
+          "nav-region_goal-A-00-1c735162": "arrived/arrived_verified",
+          "nav-region_goal-B-05-586317e4": "failed/semantic_target_not_found",
+          "nav-region_goal-C-10-138643ba": "failed/semantic_target_not_found",
+          "nav-region_goal-D-15-1b8b2361": "timed_out/navigation_step_limit",
+          "nav-region_goal-E-20-6a95f8c4": "failed/semantic_target_unreachable"
+        }
+      },
+      "old_episodes_x_old_code": {
+        "arrival_branch_histogram": {
+          "frozen_hold": 1,
+          "none": 20,
+          "trace_end_hold": 4
+        },
+        "authority_histogram": {
+          "agreement": 21,
+          "authority_disagreement": 4,
+          "false_arrival": 0,
+          "tolerated_boundary": 0,
+          "unknown": 0
+        },
+        "collision_total": 0,
+        "episode_digest": "919a0fea836363a6f6d04d3fb186b0dcb493aa6c76357d8af2b0c05408c556aa",
+        "failure_histogram": {
+          "control_error": 0,
+          "false_arrival": 0,
+          "grounding_error": 3,
+          "none": 5,
+          "planning_error": 6,
+          "refusal": 6,
+          "search_error": 0,
+          "termination": 5
+        },
+        "mean_dtg_m": 8.24432438739639,
+        "per_episode": {
+          "nav-circle_owner-A-00-6ba3a31d": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-circle_owner-B-05-4d7b5b21": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-circle_owner-C-10-4dd3449c": [
+            7.508244,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-circle_owner-D-15-717b5947": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-circle_owner-E-20-12e7db57": [
+            0.0,
+            "authority_disagreement",
+            "termination",
+            false
+          ],
+          "nav-follow_owner-A-00-40672702": [
+            0.031202,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-follow_owner-B-05-334e8d3f": [
+            0.031809,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-follow_owner-C-10-41c8032b": [
+            7.935406,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-follow_owner-D-15-74a535dd": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-follow_owner-E-20-433c9247": [
+            1.257889,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-object_goal-A-00-4caa923b": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-object_goal-B-05-0ee314d5": [
+            0.340725,
+            "agreement",
+            "termination",
+            false
+          ],
+          "nav-object_goal-C-10-68aa2ab8": [
+            1.87,
+            "agreement",
+            "grounding_error",
+            false
+          ],
+          "nav-object_goal-D-15-109547e2": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-object_goal-E-20-1a854173": [
+            56.159537,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-object_relative-A-00-3efbba45": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-object_relative-B-05-7d441aee": [
+            1.483503,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-object_relative-C-10-0d3f5ebd": [
+            7.470232,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-object_relative-D-15-61f68ad6": [
+            4.330079,
+            "agreement",
+            "planning_error",
+            false
+          ],
+          "nav-object_relative-E-20-0c739ea2": [
+            54.900336,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-region_goal-A-00-1c735162": [
+            0.0,
+            "agreement",
+            "none",
+            true
+          ],
+          "nav-region_goal-B-05-586317e4": [
+            2.425,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-region_goal-C-10-138643ba": [
+            2.325,
+            "agreement",
+            "refusal",
+            false
+          ],
+          "nav-region_goal-D-15-1b8b2361": [
+            1.89994,
+            "agreement",
+            "grounding_error",
+            false
+          ],
+          "nav-region_goal-E-20-6a95f8c4": [
+            56.139209,
+            "agreement",
+            "grounding_error",
+            false
+          ]
+        },
+        "spl": 0.16016476583919256,
+        "sr": 0.2,
+        "sr_frozen_rule": 0.04
+      }
+    },
+    "code_axis": {
+      "identical_outside_follow_owner": true,
+      "non_follow_owner_under_v3": [
+        "nav-object_goal-B-05-0ee314d5",
+        "nav-object_goal-D-15-109547e2",
+        "nav-object_relative-D-15-61f68ad6",
+        "nav-region_goal-D-15-1b8b2361"
+      ],
+      "non_follow_owner_under_v4": [
+        "nav-object_goal-B-05-0ee314d5",
+        "nav-object_goal-D-15-109547e2",
+        "nav-object_relative-D-15-61f68ad6",
+        "nav-region_goal-D-15-1b8b2361"
+      ],
+      "reading": "these episodes move because of E1-E6, not because of the resize: they move by the SAME amount under both episode sets. They are pre-existing on this working tree (E7's panel reproduction already flagged nav-region_goal-D-15), they are NOT this lane's, and the v4 re-baseline carries them honestly rather than letting the wider region hide them. Measured non-causes: safety.person_slow_m (2.5 vs 2.0 is bit-identical on all four) and InstructNav ladder availability (_HAS_INSTRUCTNAV is True in both arms)",
+      "under_v3_episodes": [
+        "nav-follow_owner-A-00-40672702",
+        "nav-follow_owner-B-05-334e8d3f",
+        "nav-follow_owner-D-15-74a535dd",
+        "nav-object_goal-B-05-0ee314d5",
+        "nav-object_goal-D-15-109547e2",
+        "nav-object_relative-D-15-61f68ad6",
+        "nav-region_goal-D-15-1b8b2361"
+      ],
+      "under_v4_episodes": [
+        "nav-follow_owner-A-00-40672702",
+        "nav-follow_owner-B-05-334e8d3f",
+        "nav-object_goal-B-05-0ee314d5",
+        "nav-object_goal-D-15-109547e2",
+        "nav-object_relative-D-15-61f68ad6",
+        "nav-region_goal-D-15-1b8b2361"
+      ]
+    },
+    "code_axis_definition": {
+      "new_code": "6bd945d + the uncommitted repair lanes E1-E6",
+      "old_code": "6bd945d (the tree the historical row was measured on)"
+    },
+    "deltas": {
+      "e_follow_goal_radius": {
+        "collisions_after": 0,
+        "collisions_before": 0,
+        "dtg_changed": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-C-10-41c8032b",
+          "nav-follow_owner-D-15-74a535dd",
+          "nav-follow_owner-E-20-433c9247"
+        ],
+        "episodes_gained": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd"
+        ],
+        "episodes_lost": [],
+        "every_moved_episode_is_follow_owner": true,
+        "false_arrivals_after": [],
+        "false_arrivals_before": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd"
+        ],
+        "k0_arrival_gained": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd"
+        ],
+        "k0_arrival_lost": [],
+        "mean_dtg_after_m": 8.340894760397951,
+        "mean_dtg_before_m": 8.393464502792611,
+        "rule": "both sides on the v2/v3 arrival rule (v4 does not change it) and on budget_policy='scaled-path-v1'",
+        "sr_after": 0.24,
+        "sr_before": 0.12,
+        "sr_delta": 0.12,
+        "system_arrival_moved": [],
+        "verdict_changed": [
+          "nav-follow_owner-A-00-40672702",
+          "nav-follow_owner-B-05-334e8d3f",
+          "nav-follow_owner-D-15-74a535dd"
+        ]
+      }
+    },
+    "episode_axis": {
+      "on_new_code": [
+        "nav-follow_owner-A-00-40672702",
+        "nav-follow_owner-B-05-334e8d3f",
+        "nav-follow_owner-C-10-41c8032b",
+        "nav-follow_owner-D-15-74a535dd",
+        "nav-follow_owner-E-20-433c9247"
+      ],
+      "on_old_code": [
+        "nav-follow_owner-A-00-40672702",
+        "nav-follow_owner-B-05-334e8d3f",
+        "nav-follow_owner-C-10-41c8032b",
+        "nav-follow_owner-E-20-433c9247"
+      ],
+      "only_follow_owner_on_both_code_arms": true
+    },
+    "measured_on": "the two new-code cells in one process on this tree; the two old-code cells recorded from a detached worktree at 6bd945d (see old_code_provenance)",
+    "old_code_provenance": {
+      "budget_policy": "scaled-path-v1",
+      "data_axis": "the v4 column on old code replays the FROZEN v4 episode data (digest below); 6bd945d's generator has no v4 and its pre-retune authority would derive 1.93 m, not 2.13 m",
+      "import_order": "parcel_robot.navigation.pipeline imported first, per E7 \u00a72.1: at 6bd945d importing evals.nav_instruct.runner first hits the instructnav import cycle that lane E1 fixed. _HAS_INSTRUCTNAV was asserted True in BOTH arms, so the old-code column is not a degraded navigator",
+      "loader_control": "v3 was ALSO run on old code through the same JSON episode loader the v4 column uses; the two v3 old-code runs are byte-identical, so the loader is not a confound",
+      "tree": "git worktree add --detach <scratch>/oldtree 6bd945d; third_party/ symlinked in; run with PYTHONPATH=<oldtree>/src:<oldtree> and parcel_robot.__file__ asserted in-process to resolve inside the worktree (the editable .pth points at the main tree's src)"
+    },
+    "signature": {
+      "false_arrival": {
+        "new_episodes_x_new_code": 0,
+        "new_episodes_x_old_code": 0,
+        "old_episodes_x_new_code": 3,
+        "old_episodes_x_old_code": 0
+      },
+      "holds": true,
+      "required": "false arrivals exist ONLY in (old episodes \u00d7 new code) and are absent in (new episodes \u00d7 new code); (old \u00d7 old) reproduces the historical baseline"
+    },
+    "why_not_the_frozen_v3_rows_alone": "the v3 ledger rows were measured on 2026-08-09 code; differencing against them would charge everything E1-E6 landed to the resize. The 2x2 separates the two axes instead"
+  },
+  "next_to_band_reference": {
+    "v3": "surface",
+    "v4": "surface"
+  },
+  "recorded_baseline_cell_check": {
+    "compared_fields": [
+      "episode_digest",
+      "sr",
+      "spl",
+      "mean_dtg_m",
+      "collision_total",
+      "sr_frozen_rule",
+      "authority_histogram",
+      "failure_histogram",
+      "arrival_branch_histogram"
+    ],
+    "mismatches": {},
+    "reproduces_historical_baseline": true,
+    "row_budget_policy": "scaled-path-v1",
+    "row_found": true,
+    "row_id": "nav-instruct-v1-baseline-v3-20260809T161252Z"
+  },
+  "runner_version": "nav-instruct-v1.1-k0-arrival",
+  "spec_bridge": {
+    "changed_rows": [
+      {
+        "changed_by": "follow_goal_radius",
+        "episode_id": "nav-follow_owner-A-00-40672702",
+        "family": "follow_owner",
+        "fields_changed": [
+          "goal",
+          "shortest_path_m"
+        ],
+        "goal_fields_changed": [
+          "radius_m"
+        ],
+        "instruction": "follow the owner",
+        "instruction_unchanged": true,
+        "notes_unchanged": true,
+        "placement_unchanged": true,
+        "seed_unchanged": true,
+        "start_pose_unchanged": true,
+        "target": "owner",
+        "target_unchanged": true,
+        "tier": "A",
+        "v3_radius_m": 1.8,
+        "v3_shortest_path_m": 1.0,
+        "v4_radius_m": 2.1300000000000003,
+        "v4_shortest_path_m": 0.0
+      },
+      {
+        "changed_by": "follow_goal_radius",
+        "episode_id": "nav-follow_owner-B-05-334e8d3f",
+        "family": "follow_owner",
+        "fields_changed": [
+          "goal",
+          "shortest_path_m"
+        ],
+        "goal_fields_changed": [
+          "radius_m"
+        ],
+        "instruction": "follow me",
+        "instruction_unchanged": true,
+        "notes_unchanged": true,
+        "placement_unchanged": true,
+        "seed_unchanged": true,
+        "start_pose_unchanged": true,
+        "target": "owner",
+        "target_unchanged": true,
+        "tier": "B",
+        "v3_radius_m": 1.8,
+        "v3_shortest_path_m": 1.0,
+        "v4_radius_m": 2.1300000000000003,
+        "v4_shortest_path_m": 0.5
+      },
+      {
+        "changed_by": "follow_goal_radius",
+        "episode_id": "nav-follow_owner-C-10-41c8032b",
+        "family": "follow_owner",
+        "fields_changed": [
+          "goal",
+          "shortest_path_m"
+        ],
+        "goal_fields_changed": [
+          "radius_m"
+        ],
+        "instruction": "come with me",
+        "instruction_unchanged": true,
+        "notes_unchanged": true,
+        "placement_unchanged": true,
+        "seed_unchanged": true,
+        "start_pose_unchanged": true,
+        "target": "owner",
+        "target_unchanged": true,
+        "tier": "C",
+        "v3_radius_m": 1.8,
+        "v3_shortest_path_m": 11.0,
+        "v4_radius_m": 2.1300000000000003,
+        "v4_shortest_path_m": 10.5
+      },
+      {
+        "changed_by": "follow_goal_radius",
+        "episode_id": "nav-follow_owner-D-15-74a535dd",
+        "family": "follow_owner",
+        "fields_changed": [
+          "goal"
+        ],
+        "goal_fields_changed": [
+          "radius_m"
+        ],
+        "instruction": "stay with the owner",
+        "instruction_unchanged": true,
+        "notes_unchanged": true,
+        "placement_unchanged": true,
+        "seed_unchanged": true,
+        "start_pose_unchanged": true,
+        "target": "owner",
+        "target_unchanged": true,
+        "tier": "D",
+        "v3_radius_m": 1.8,
+        "v3_shortest_path_m": 0.0,
+        "v4_radius_m": 2.1300000000000003,
+        "v4_shortest_path_m": 0.0
+      },
+      {
+        "changed_by": "follow_goal_radius",
+        "episode_id": "nav-follow_owner-E-20-433c9247",
+        "family": "follow_owner",
+        "fields_changed": [
+          "goal",
+          "shortest_path_m"
+        ],
+        "goal_fields_changed": [
+          "radius_m"
+        ],
+        "instruction": "follow the owner",
+        "instruction_unchanged": true,
+        "notes_unchanged": true,
+        "placement_unchanged": true,
+        "seed_unchanged": true,
+        "start_pose_unchanged": true,
+        "target": null,
+        "target_unchanged": true,
+        "tier": "E",
+        "v3_radius_m": 1.8,
+        "v3_shortest_path_m": 4.5,
+        "v4_radius_m": 2.1300000000000003,
+        "v4_shortest_path_m": 4.0
+      }
+    ],
+    "circle_owner_radius_unchanged": true,
+    "counts_by_change": {
+      "follow_goal_radius": 5,
+      "unchanged": 20
+    },
+    "digests": {
+      "v3": "919a0fea836363a6f6d04d3fb186b0dcb493aa6c76357d8af2b0c05408c556aa",
+      "v4": "4113607b92c734dfdd46004b6e77baf6575fc2a1c493e5d9dc5a12c6c5490222"
+    },
+    "episode_count": 25,
+    "families_moved": [
+      "follow_owner"
+    ],
+    "fields_moved_anywhere": [
+      "goal",
+      "shortest_path_m"
+    ],
+    "goal_fields_moved_anywhere": [
+      "radius_m"
+    ],
+    "id_mapping_is_total": true,
+    "only_follow_owner_moved": true,
+    "only_radius_and_derived_path_moved": true,
+    "seed": 20260804
+  },
+  "to_version": "v4"
+}

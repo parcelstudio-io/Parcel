@@ -389,6 +389,62 @@ def test_select_search_entity_frontier_reads_value_map() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Flag-OFF equivalence (global rule 3): no value_map / plan_prior / scorer means
+# the pre-value-map path, byte-identical.
+# ---------------------------------------------------------------------------
+
+
+def test_flag_off_frontier_uses_table_prior_not_plan_time_cache() -> None:
+    """Flag-off must not construct a PlanTimePriorCache.
+
+    The C3 value-map card replaced ``semantic_prior_for_label(query_label)`` with
+    ``plan_prior or PlanTimePriorCache.from_query_table(query_label)`` OUTSIDE
+    any ``value_map is not None`` guard. ``PlanTimePriorCache.__post_init__``
+    rejects an empty query, so flag-off calls that previously returned a
+    frontier started raising ``ValueError`` — a value-map card changing the
+    value-map-OFF path. These are the exact values the pre-card tree returned.
+    """
+
+    for query_label in ("", "   "):
+        assert (
+            select_search_entity_frontier(
+                origin_xy=(0.0, 0.0),
+                robot_xy=(0.0, 0.0),
+                query_label=query_label,
+                covered=[],
+            )
+            == (2.0, 0.0)
+        ), f"flag-off regressed for query_label={query_label!r}"
+
+
+def test_flag_off_frontier_matches_semantic_prior_for_label_path() -> None:
+    """Flag-off scoring is the plain table prior, for known and unknown nouns."""
+
+    for query_label in ("bench", "sidewalk", "not_a_real_noun_xyzzy"):
+        flag_off = select_search_entity_frontier(
+            origin_xy=(0.0, 0.0),
+            robot_xy=(1.0, 0.5),
+            query_label=query_label,
+            covered=[(2.0, 0.0)],
+            rings=2,
+            bearings=8,
+        )
+        # An explicit cache over the same table is the documented equivalent, so
+        # flag-off and plan_prior-only must agree; only value_map may change it.
+        with_cache = select_search_entity_frontier(
+            origin_xy=(0.0, 0.0),
+            robot_xy=(1.0, 0.5),
+            query_label=query_label,
+            covered=[(2.0, 0.0)],
+            rings=2,
+            bearings=8,
+            plan_prior=PlanTimePriorCache.from_query_table(query_label),
+        )
+        assert flag_off == with_cache, query_label
+        assert flag_off is not None
+
+
+# ---------------------------------------------------------------------------
 # Lease contention: glance does not trip SearchOwner; summons suspends scan
 # ---------------------------------------------------------------------------
 

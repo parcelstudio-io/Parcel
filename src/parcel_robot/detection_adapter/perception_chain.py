@@ -53,6 +53,22 @@ from parcel_robot.detection_adapter.sim_bridge import (
 TIER_T0 = "T0"
 TIER_T1 = "T1"
 
+#: The COMPLETE set of tiers :meth:`PerceptionChain.from_tier` can construct, and
+#: therefore the complete set ``use_perception_chain`` can install on the mission
+#: path. Exported so a claim about a tier can be checked instead of believed.
+#:
+#: Read this before writing "T-cam" in a report. There is **no T-cam tier**. The
+#: ``T-cam*`` ids in ``evals/nav_instruct/cam_*.py`` are card-local REPORT labels
+#: on standalone cells that call the detector/localizer modules directly; none of
+#: them travels through this seam, so none of them exercises the noise model,
+#: the false-positive injector, or the T0 byte-equality short-circuit. Fable's
+#: independent audit of task_15 returned every "T-cam" gate row for exactly that
+#: conflation; those cells now carry ``T-cam-proxy-*`` ids. Registering a real
+#: ``T-CAM`` tier means giving it a :class:`NoiseTier` whose candidates come from
+#: rendered pixels rather than the GT oracle ``_lift`` reads — a wiring card, not
+#: a rename.
+REGISTERED_TIERS: tuple[str, ...] = (TIER_T0, TIER_T1)
+
 #: Intel RealSense D455 depth-error model. RMS depth error for a stereo pair is
 #: ``sigma_z(z) = z^2 * sigma_disparity / (focal_px * baseline_m)``. For the
 #: D455: baseline 0.095 m; 1280 px across an 87 deg horizontal FOV gives
@@ -272,7 +288,11 @@ class PerceptionChain:
             return cls(tier_t0(), seed=seed)
         if name == TIER_T1:
             return cls(tier_t1(**kwargs), seed=seed)
-        raise ValueError(f"unknown perception tier: {tier_name!r}")
+        raise ValueError(
+            f"unknown perception tier: {tier_name!r}; registered tiers are "
+            f"{list(REGISTERED_TIERS)} (a 'T-cam' label in an eval report is a "
+            "report id, not a tier — see REGISTERED_TIERS)"
+        )
 
     @property
     def tier(self) -> NoiseTier:

@@ -17,6 +17,7 @@ from urllib.request import urlopen
 from parcel_robot.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
 from parcel_robot.attention.stimuli import StimulusKind
 from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
+from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import SimObservation, SimulatorBackend
 from parcel_robot.brain import (
     FrozenDict,
@@ -87,10 +88,14 @@ from parcel_robot.core.hard_stop import (
     finalize_command,
 )
 from parcel_robot.core.input_health import (
+    DEFAULT_REQUIRED_INPUTS,
+    HealthAction,
     InputEvidence,
-    InputOrigin,
     RequiredInput,
     evaluate_input_health,
+    evidence_origin,
+    is_simulated_source,
+    requirements_allowing_sim_fixtures,
 )
 from parcel_robot.core.preemption import PreemptionTable
 from parcel_robot.core.resume import (
@@ -416,8 +421,17 @@ class RobotRuntime:
         safety_config = self.store.section("safety")
         self.obstacle_stop_m = float(safety_config.get("obstacle_stop_m", 0.65))
         self.obstacle_slow_m = float(safety_config.get("obstacle_slow_m", 1.2))
-        self.person_stop_m = float(safety_config.get("person_stop_m", 1.0))
-        self.person_slow_m = float(safety_config.get("person_slow_m", 2.0))
+        # Person clearance derives from the one authority, never from a literal:
+        # a hardcoded 1.0 here silently reintroduced the retired value whenever
+        # the key was absent, while the authority model claimed 1.2.
+        self.person_stop_m = float(
+            safety_config.get("person_stop_m", DEFAULT_SAFETY_ENVELOPE.person_stop(0.0))
+        )
+        self.person_slow_m = float(
+            safety_config.get(
+                "person_slow_m", DEFAULT_SAFETY_ENVELOPE.person_comfort_band_m
+            )
+        )
         self.telemetry_stale_s = float(safety_config.get("telemetry_stale_s", 0.6))
         if not 0 < self.obstacle_stop_m < self.obstacle_slow_m:
             raise ValueError("safety obstacle distances must satisfy 0 < stop < slow")
@@ -425,6 +439,30 @@ class RobotRuntime:
             raise ValueError("safety person distances must satisfy 0 < stop < slow")
         if not math.isfinite(self.telemetry_stale_s) or self.telemetry_stale_s <= 0:
             raise ValueError("safety telemetry_stale_s must be positive and finite")
+        # P0-B sim-fixture commissioning. Under DEFAULT_REQUIRED_INPUTS a
+        # SIM_FIXTURE pose or controller-feedback sample is a LATCHED_STOP —
+        # that is the check that catches stub geometry silently satisfying a
+        # physical-sensor requirement. A deployment explicitly commissioned
+        # against a simulator accepts those samples ONLY through the labeled
+        # fixture path (origin=SIM_FIXTURE + non-empty fixture_label); an
+        # unlabeled fixture still latches, and SCAN's rules are unchanged.
+        # ``safety.require_physical_inputs: true`` is the hardware-readiness
+        # switch that withdraws the allowance everywhere.
+        self._require_physical_inputs = bool(
+            safety_config.get("require_physical_inputs", False)
+        )
+        # ``_synchronous_control_dispatch`` is True exactly when the control
+        # manager came from config, where ``control.controller`` is required to
+        # be "simulator" (hardware needs an explicitly injected manager).
+        self._sim_fixture_inputs_allowed = not self._require_physical_inputs and (
+            self._synchronous_control_dispatch
+            or is_simulated_source(getattr(self.backend, "name", None))
+        )
+        self._input_health_requirements = (
+            requirements_allowing_sim_fixtures()
+            if self._sim_fixture_inputs_allowed
+            else DEFAULT_REQUIRED_INPUTS
+        )
         # Card W4. Supplements the geometric gate; validated strictly so a
         # mistyped brake threshold cannot silently disable the gate.
         raw_ttc = safety_config.get("time_to_collision", {})
@@ -615,7 +653,13 @@ class RobotRuntime:
         self._was_moving = False
         self._proximity_state = "clear"
         #: Latched by the dispatch input-health join (malformed / frame faults).
+        #: P0-B: this is a LATCH, not a mirror of the current verdict — once a
+        #: ``LATCHED_STOP`` verdict is seen, translation stays forbidden even
+        #: after the input recovers, until an explicit operator acknowledgement
+        #: (:meth:`clear_input_health_latch` / :meth:`clear_emergency_stop`).
         self._input_health_latched = False
+        #: Faults that set the latch, kept for the operator/telemetry surface.
+        self._input_health_latch_faults: tuple[str, ...] = ()
         self._control_not_ready_reason: str | None = None
         agent_config = self.store.agent_config()
         context_config = ContextBuildConfig.from_mapping(self.store.section("query_context"))
@@ -2600,8 +2644,51 @@ class RobotRuntime:
                     raise RuntimeError("controller emergency stop could not be cleared") from error
             self.arbiter.clear_emergency_stop()
             self.agent.safety.clear_emergency_stop()
+        # The operator acknowledgement that clears an emergency stop is also the
+        # acknowledgement that clears a latched input-health stop (P0-B). It is
+        # refused while the inputs are still faulted, so the clear can never
+        # re-authorize translation into a broken sensor.
+        self.clear_input_health_latch()
         self._emit("safety", "Emergency stop cleared by operator", "warning")
         return "Emergency stop cleared"
+
+    def input_health_latch(self) -> dict[str, object]:
+        """Inspect the P0-B input-health latch (state + the faults that set it)."""
+
+        return {
+            "latched": bool(self._input_health_latched),
+            "faults": list(self._input_health_latch_faults),
+            "sim_fixture_inputs_allowed": bool(self._sim_fixture_inputs_allowed),
+            "require_physical_inputs": bool(self._require_physical_inputs),
+        }
+
+    def clear_input_health_latch(self, *, now: float | None = None) -> str:
+        """Operator acknowledgement for a latched input-health stop (P0-B).
+
+        The latch is what makes ``LATCHED_STOP`` a latch: input recovery alone
+        never clears it. This refuses to clear while the current evidence still
+        latches, so acknowledging a fault that is still live cannot re-authorize
+        motion.
+        """
+
+        if not self._input_health_latched:
+            return "input health not latched"
+        with self._lock:
+            observation = self._observation
+        verdict = self._evaluate_dispatch_input_health(
+            observation,
+            now=time.monotonic() if now is None else now,
+        )
+        if verdict.stop_latched:
+            return "input health still latched: " + ", ".join(
+                f"{fault.required_input.value}:{fault.reason}"
+                for fault in verdict.faults
+                if fault.action is HealthAction.LATCHED_STOP
+            )
+        self._input_health_latched = False
+        self._input_health_latch_faults = ()
+        self._emit("safety", "Input-health stop cleared by operator", "warning")
+        return "Input health latch cleared"
 
     def set_behavior(self, mode: str) -> str:
         if self._closed:
@@ -5357,8 +5444,18 @@ class RobotRuntime:
             if state is None or state.received_at < observation.timestamp:
                 self._control_state_source.update_observation(observation)
         health = self._evaluate_dispatch_input_health(observation, now=decision_now)
-        self._input_health_latched = bool(health.stop_latched)
-        if not health.translation_allowed and math.hypot(command.vx, command.vy) > 1e-6:
+        if health.stop_latched:
+            # P0-B: LATCHED_STOP means latched. A single recovered tick must not
+            # silently re-authorize motion, so this only ever sets the flag;
+            # ``clear_input_health_latch`` (operator ack) is the only clear.
+            self._input_health_latched = True
+            self._input_health_latch_faults = tuple(
+                f"{fault.required_input.value}:{fault.reason}"
+                for fault in health.faults
+                if fault.action is HealthAction.LATCHED_STOP
+            )
+        translation_allowed = health.translation_allowed and not self._input_health_latched
+        if not translation_allowed and math.hypot(command.vx, command.vy) > 1e-6:
             command = VelocityCommand(vyaw=command.vyaw)
         spatial_detail = self.spatial.snapshot() if source == "spatial" else {}
         spatial_intent = spatial_detail.get("intent")
@@ -5374,7 +5471,7 @@ class RobotRuntime:
             now=decision_now,
         )
         if (
-            not health.translation_allowed
+            not translation_allowed
             and proximity_state == "clear"
             and math.hypot(command.vx, command.vy) <= 1e-6
         ):
@@ -5394,11 +5491,17 @@ class RobotRuntime:
         pose: InputEvidence | None = None
         scan: InputEvidence | None = None
         if observation is not None:
+            # Every authority-bearing sample is stamped from its PRODUCER, the
+            # same way SCAN already was. Hard-coding PHYSICAL here let a
+            # simulated pose sail through the ``sim_fixture_allowed=False``
+            # check that exists to catch exactly that.
+            pose_origin, pose_label = evidence_origin(observation.backend)
             pose = InputEvidence(
                 captured_at=observation.timestamp,
                 frame_id="odom",
                 payload_valid=True,
-                origin=InputOrigin.PHYSICAL,
+                origin=pose_origin,
+                fixture_label=pose_label,
             )
             scan = scan_evidence_from_observation(observation)
 
@@ -5409,11 +5512,16 @@ class RobotRuntime:
             else None
         )
         if state is not None:
+            # ``RobotMotionState.source`` is the controller/backend that
+            # produced the feedback (``observation.backend`` on the simulator
+            # path, the vendor channel name on hardware).
+            feedback_origin, feedback_label = evidence_origin(state.source)
             feedback = InputEvidence(
                 captured_at=state.received_at,
                 frame_id="base_link",
                 payload_valid=state.fault_reason is FaultReason.NONE,
-                origin=InputOrigin.PHYSICAL,
+                origin=feedback_origin,
+                fixture_label=feedback_label,
             )
 
         return evaluate_input_health(
@@ -5423,6 +5531,7 @@ class RobotRuntime:
                 RequiredInput.CONTROLLER_FEEDBACK: feedback,
             },
             now=now,
+            requirements=self._input_health_requirements,
         )
 
     def _time_to_collision_gate(

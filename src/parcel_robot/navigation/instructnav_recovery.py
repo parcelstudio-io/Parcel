@@ -29,6 +29,7 @@ from parcel_robot.instructnav.search_entity import (
     ValueMapFrontierScorer,
     ring_frontier_candidates,
     select_frontier,
+    semantic_prior_for_label,
 )
 
 from .base import MidLevelCommand, NavObservation
@@ -267,8 +268,18 @@ def select_search_entity_frontier(
     from a plan-time cache — never a runtime model call.
     """
 
-    prior_cache = plan_prior or PlanTimePriorCache.from_query_table(query_label)
-    prior = prior_cache.prior_for_region(query_label)
+    # Flag-OFF must stay byte-identical to the pre-value-map path. Building a
+    # PlanTimePriorCache unconditionally changed that: its __post_init__ rejects
+    # an empty/whitespace query, so a caller that passed query_label="" and got
+    # a frontier back now gets ValueError. The cache is a value-map concern —
+    # only build it when the value-map path is actually being taken.
+    prior_cache: PlanTimePriorCache | None = plan_prior
+    if prior_cache is None and value_map is not None:
+        prior_cache = PlanTimePriorCache.from_query_table(query_label)
+    if prior_cache is None:
+        prior = semantic_prior_for_label(query_label)
+    else:
+        prior = prior_cache.prior_for_region(query_label)
 
     def _covered(xy: tuple[float, float]) -> bool:
         return any(
@@ -313,9 +324,11 @@ def select_search_entity_frontier(
     )
     active: FrontierScorer | None = scorer
     if active is None and value_map is not None:
+        # prior_cache is always non-None on the value-map path (built above);
+        # the fallback only keeps the type honest.
         active = ValueMapFrontierScorer(
             value_map=value_map,
-            plan_prior=prior_cache,
+            plan_prior=prior_cache or PlanTimePriorCache.from_query_table(query_label),
             existence=existence
             or TargetExistenceBelief(mean_xy=origin_xy, variance_m2=max_radius_m**2),
             travel_weight=travel_weight,

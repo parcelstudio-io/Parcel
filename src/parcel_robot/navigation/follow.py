@@ -12,9 +12,47 @@ from parcel_robot.backends.base import SimObservation
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.owner_prediction import PredictedPath
 from parcel_robot.navigation.reactive_safety import (
+    OWNER_IDENTITY_CONFIDENCE_MIN,
+    OWNER_STAND_OFF_MARGIN_M,
     ReactiveSafetyPolicy,
     apply_reactive_safety,
 )
+
+# ---------------------------------------------------------------------------
+# The owner stand-off family, DERIVED (owner-authorized person-clearance
+# retune, 2026-08-10 — "1. person clearance. Implement your recommendation").
+#
+# ``apply_reactive_safety`` treats the owner as a person by subtracting
+# ``owner_collision_envelope_m`` from the owner CENTER distance and comparing
+# the remainder against ``person_stop_m``. So the ring at which the final gate
+# refuses to translate toward the owner is exactly
+# ``person_stop_m + owner_collision_envelope_m`` — that is what
+# ``owner_keepout_m`` names, and why it is a derivation and not a knob.
+#
+# The nominal follow stand-off must sit OUTSIDE that ring, or the controller's
+# own target is inside its own keepout and it brakes against itself (measured:
+# FOLLOW_BENCH_V1 follow_success 9/9 -> 6/9 when person_stop_m moved 1.0 -> 1.2
+# and ``desired_distance_m`` was left at 1.6; see
+# scrum/20260809/task_15/E2_SAFETY_WIRING_STATUS.md).
+#
+# The margin is not chosen either: it is the same margin
+# ``StandOffEnvelope`` already puts between a minimum clearance and the
+# stand-off that wraps it —
+# ``stand_off(r) == minimum_vicinity(r) + arrival_radius_m + stand_off_margin_m``
+# — i.e. the controller's terminal position tolerance plus the authority's
+# standing trailing margin. Applied here to the owner keepout ring instead of
+# an object's minimum vicinity, the same two terms give the follow stand-off.
+_OWNER_COLLISION_ENVELOPE_M = 0.55
+_OWNER_KEEPOUT_M = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0) + _OWNER_COLLISION_ENVELOPE_M
+#: ``arrival_radius_m`` (0.06, controller position tolerance at the terminal
+#: pose) + ``stand_off_margin_m`` (0.04). Re-exported from
+#: :mod:`parcel_robot.navigation.reactive_safety`, which is where it moved
+#: (lane E6, 2026-08-11) when the reactive gate became a consumer: the OWNER's
+#: comfort band is exactly this margin, so the gate's band and the controller's
+#: stand-off are now provably the same ring rather than two computations of the
+#: same formula. Imported, not restated, so the two ``owner_keepout_m + margin``
+#: floors below cannot drift from it either.
+_FOLLOW_DESIRED_DISTANCE_M = _OWNER_KEEPOUT_M + OWNER_STAND_OFF_MARGIN_M
 
 
 def _wrap_angle(angle: float) -> float:
@@ -101,14 +139,25 @@ class FollowConfig:
 
     MODES: ClassVar[frozenset[str]] = frozenset({"direct", "behind"})
 
-    desired_distance_m: float = 1.6
+    #: DERIVED (see ``_FOLLOW_DESIRED_DISTANCE_M`` above): the owner keepout
+    #: ring plus the authority's stand-off margin. 1.6 -> 1.85 as part of the
+    #: owner-authorized 2026-08-10 person-clearance retune; it is not exposed in
+    #: ``robot.yaml`` on purpose, so it can never be configured back inside the
+    #: keepout it is defined against.
+    desired_distance_m: float = _FOLLOW_DESIRED_DISTANCE_M
     distance_deadband_m: float = 0.18
     max_vx: float = 0.35
     max_vyaw: float = 0.75
     distance_gain: float = 0.65
     yaw_gain: float = 1.2
     turn_in_place_rad: float = 0.8
-    min_confidence: float = 0.65
+    #: The stack's one answer to "is this track the owner?". Derived by reference
+    #: from :data:`~parcel_robot.navigation.reactive_safety.OWNER_IDENTITY_CONFIDENCE_MIN`
+    #: (lane E6, 2026-08-11, value unchanged at 0.65): the reactive gate now
+    #: grants a relaxed comfort band on the same question this field answers, and
+    #: the gate must never be more willing to believe a track than the controller
+    #: that follows it.
+    min_confidence: float = OWNER_IDENTITY_CONFIDENCE_MIN
     occlusion_grace_s: float = 0.7
     stale_after_s: float = 0.6
     obstacle_stop_m: float = 0.65
@@ -121,14 +170,18 @@ class FollowConfig:
     #: 1.2); the paired FOLLOW_BENCH_V1 evidence is in
     #: scrum/20260807/task_2/NAV_FINISH_STATUS.md.
     obstacle_slow_m: float = DEFAULT_SAFETY_ENVELOPE.obstacle_comfort_band_m
-    person_stop_m: float = 1.0
-    person_slow_m: float = 2.0
-    owner_collision_envelope_m: float = 0.55
+    #: Same authority as ``ReactiveSafetyPolicy``: 1.0/2.0 were restated
+    #: literals that undercut ``SafetyEnvelope`` by 0.2 m / 0.5 m. Derived by
+    #: reference now (1.2 / 2.5), owner-authorized 2026-08-10.
+    person_stop_m: float = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0)
+    person_slow_m: float = DEFAULT_SAFETY_ENVELOPE.person_comfort_band_m
+    owner_collision_envelope_m: float = _OWNER_COLLISION_ENVELOPE_M
 
     behind_distance_m: float = 1.9
     max_behind_distance_m: float = 3.0
     formation_deadband_m: float = 0.20
-    owner_keepout_m: float = 1.55
+    #: DERIVED: ``person_stop_m + owner_collision_envelope_m`` (1.55 -> 1.75).
+    owner_keepout_m: float = _OWNER_KEEPOUT_M
     staging_radius_m: float = 2.1
     staging_lookahead_rad: float = 0.35
     heading_min_dt_s: float = 0.05
@@ -168,6 +221,17 @@ class FollowConfig:
         if self.owner_keepout_m + 1e-9 < minimum_keepout:
             raise ValueError(
                 "owner_keepout_m must include person stop distance and owner envelope"
+            )
+        # The defect this guard exists for: raising ``person_stop_m`` raises
+        # ``owner_keepout_m``, and a follow stand-off left behind ends up INSIDE
+        # its own keepout, so the controller brakes against the reactive gate it
+        # shares (measured cost when this was unguarded: FOLLOW_BENCH_V1
+        # follow_success 9/9 -> 6/9). Same floor the behind formation uses.
+        minimum_stand_off = self.owner_keepout_m + OWNER_STAND_OFF_MARGIN_M
+        if self.desired_distance_m + 1e-9 < minimum_stand_off:
+            raise ValueError(
+                "desired_distance_m must clear owner_keepout_m by the stand-off "
+                f"margin (minimum {minimum_stand_off:.2f} m)"
             )
         if self.behind_distance_m <= self.owner_keepout_m:
             raise ValueError("behind distance must be outside the owner keepout")
@@ -351,7 +415,7 @@ class FollowOwnerController:
         distance = self.config.behind_distance_m if distance_m is None else float(distance_m)
         if not math.isfinite(distance):
             raise ValueError("behind formation distance must be finite")
-        minimum = self.config.owner_keepout_m + 0.05
+        minimum = self.config.owner_keepout_m + OWNER_STAND_OFF_MARGIN_M
         if not minimum <= distance <= self.config.max_behind_distance_m:
             raise ValueError(
                 "behind formation distance must be between "
@@ -729,7 +793,7 @@ class FollowOwnerController:
             else 0.0
         )
         effective_rear_distance = max(
-            self.config.owner_keepout_m + 0.05,
+            self.config.owner_keepout_m + OWNER_STAND_OFF_MARGIN_M,
             self._active_behind_distance_m - prediction,
         )
         target_x = anchor_x - heading_x * effective_rear_distance

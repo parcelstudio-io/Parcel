@@ -174,11 +174,21 @@ class CityWalkerInferenceAdapter:
 
     @staticmethod
     def _probe_torch() -> bool:
+        """Fail-soft torch probe: a broken torch is *unavailable*, not fatal.
+
+        Narrowing this to ``ImportError`` breaks the adapter's contract. torch
+        is a compiled extension: a CUDA/driver mismatch or a bad ``.so`` raises
+        ``OSError`` or ``RuntimeError``, not ``ImportError``. Those must land on
+        the documented ``UNVERIFIED: torch unavailable`` skip below rather than
+        propagating out of ``__init__`` and taking down every caller that merely
+        *constructed* the adapter on a machine with a broken install.
+        """
+
         try:
             import torch  # noqa: F401
 
             return True
-        except ImportError:
+        except (ImportError, OSError, RuntimeError):
             return False
 
     def availability(self) -> dict[str, Any]:

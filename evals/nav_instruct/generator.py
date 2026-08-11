@@ -30,6 +30,36 @@ alone (see :data:`EPISODE_SETS`):
     (c) the corrected arrival-hold rule, which lives in the runner
         (``evals/nav_instruct/runner.py``), not here.
 
+``v3``
+    The 2026-08-09 re-freeze. One approved correction, and only one:
+
+    (d) **surface-anchored ``next_to`` band** — the band is measured to the
+        anchor's surface instead of its centre. Carries (a) + (b) unchanged.
+
+``v4``
+    The 2026-08-11 re-freeze. One approved correction, and only one:
+
+    (e) **derived ``follow_owner`` goal radius** — the disc the owner sits in
+        stops being the bare literal ``1.8`` and becomes a derivation from the
+        same authority terms the follow controller obeys (see
+        :data:`FOLLOW_OWNER_GOAL_RADIUS_M`). Carries (a) + (b) + (d) unchanged.
+
+        Authorized by the owner on 2026-08-11 after lane E7 measured what the
+        literal had become: the owner-authorized person-clearance retune (E5,
+        2026-08-10) raised ``person_stop_m`` 1.0 -> 1.2, which raised the owner
+        keepout ring 1.55 -> 1.75 and with it the follow stand-off 1.60 -> 1.85.
+        A compliant follow controller therefore holds out to
+        ``1.85 + 0.18 = 2.03 m`` from the owner, which is **outside** a 1.8 m
+        disc centred on the owner — so the controller terminated
+        ``at_follow_distance`` (a system arrival claim) while the K0 predicate
+        said no, i.e. ``FALSE_ARRIVAL: claim_without_predicate`` on three of the
+        five ``follow_owner`` minival episodes. With E5's settled clearance the
+        v3 episode is unsatisfiable by ANY compliant robot, so the eval region
+        is what went stale, not the robot. Full diagnosis:
+        ``scrum/20260809/task_15/E7_FALSE_ARRIVAL_STATUS.md``; the re-freeze and
+        its attribution: ``scrum/20260809/task_15/E8_V4_REFREEZE_STATUS.md`` and
+        ``evals/nav_instruct/bridge_v3_v4.py``.
+
 A third, bridge-only set — :data:`EPISODE_SET_V1A` — carries correction (a)
 alone. It exists so ``bridge_v1_v2.py`` can attribute every moved goal to one
 correction rather than to "the re-freeze"; it is never run and never frozen.
@@ -48,6 +78,7 @@ from pathlib import Path
 from typing import Any
 
 from evals.nav_instruct.scene_truth import derived_landmark_table, landmark_table
+from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE, DEFAULT_STAND_OFF_ENVELOPE
 from parcel_robot.instructnav.scoring import (
     NEXT_TO_BAND_M,
     GoalRegion,
@@ -86,6 +117,7 @@ _LANDMARKS: dict[str, dict[str, Any]] = landmark_table()
 EPISODE_SET_V1 = "v1"
 EPISODE_SET_V2 = "v2"
 EPISODE_SET_V3 = "v3"
+EPISODE_SET_V4 = "v4"
 #: Bridge-only intermediate: correction (a) with the v1 spec logic. Never run,
 #: never frozen — it exists so a moved goal can be attributed to (a) or to (b).
 EPISODE_SET_V1A = "v1a-scene-truth-only"
@@ -96,6 +128,107 @@ DEFAULT_EPISODE_SET_VERSION = EPISODE_SET_V1
 FROZEN_V1_MINIVAL_DIGEST = (
     "cf4d5384d1787d110cbc5a74e8b46699e6aa26eaaa576b1c24beb0fbb04adfbf"
 )
+
+# ---------------------------------------------------------------------------
+# The ``follow_owner`` goal disc, DERIVED — correction (e), v4.
+#
+# WHAT THE REGION HAS TO ADMIT.  ``FollowOwnerController.step``'s holding branch
+# is ``distance - desired_distance_m <= distance_deadband_m``, so the set of
+# owner distances at which a compliant controller may report
+# ``at_follow_distance`` — a reason in ``SYSTEM_ARRIVAL_REASONS``, i.e. a system
+# arrival CLAIM — is ``(0, desired_distance_m + distance_deadband_m]``. Its
+# supremum is the hold band's OUTER edge, and that is the ring the eval region
+# must contain, because approaching from outside the band is how every one of
+# these episodes starts: the controller stops at the first distance that
+# satisfies the predicate, which is the outer edge.
+#
+# WHICH TERMS.  Every one of them is read from the same authority the controller
+# obeys, never typed as a target:
+#
+#   owner_keepout_m   = SafetyEnvelope.person_stop(0.0) + owner_collision_envelope
+#                       — the ring ``apply_reactive_safety`` refuses to translate
+#                         through (it subtracts the envelope from the owner CENTRE
+#                         distance and compares the remainder to person_stop_m)
+#   stand_off         = owner_keepout_m + OWNER_STAND_OFF_MARGIN_M   (lane E5)
+#   hold band outer   = stand_off + distance_deadband_m
+#
+# WHICH MARGIN, AND WHY THAT ONE.  ``StandOffEnvelope`` already fixes the margin
+# this codebase puts between a ring that must be cleared and the region that
+# wraps it:
+#
+#     stand_off(r) - minimum_vicinity(r) == arrival_radius_m + stand_off_margin_m
+#
+# — ``arrival_radius_m`` (0.06) is, verbatim from ``authority.FIELD_META``,
+# "Controller position tolerance at the terminal pose", and ``stand_off_margin_m``
+# (0.04) is the authority's standing trailing margin on every stand-off. That is
+# exactly the pair lane E5 named ``OWNER_STAND_OFF_MARGIN_M`` and applied to the
+# owner keepout ring to get the stand-off. Correction (e) applies the SAME pair,
+# one ring further out, to the hold band's outer edge to get the eval region:
+# the region must tolerate the controller's own terminal position error on top
+# of its nominal hold band, or the eval sits exactly on the controller's worst
+# case and one tick of overshoot re-opens the false arrival.
+#
+#     radius = (desired_distance_m + distance_deadband_m) + OWNER_STAND_OFF_MARGIN_M
+#            = (1.85 + 0.18) + 0.10   =   2.13 m
+#
+# WHAT THIS IS NOT.  It is not a number chosen to make an episode pass. The three
+# measured false arrivals sit at 2.0070 / 2.0190 / 2.0282 m of owner distance;
+# any radius from 2.0282 up would have turned them green, and 2.13 is not the
+# smallest such number — it is what the derivation yields. Nor is it applied only
+# to the three that failed: the radius is a family-level constant and the defect
+# is family-level (E7 §3.4), so all five ``follow_owner`` episodes take it.
+# ``circle_owner`` is deliberately NOT touched — see :data:`CIRCLE_OWNER_GOAL_RADIUS_M`.
+#
+# WHY THIS IS BETTER THAN THE LITERAL IT REPLACES.  v1-v3's ``1.8`` had no
+# relationship to the controller, so E5's authorized retune could invalidate it
+# silently and the failure surfaced three lanes later as a false arrival. As a
+# live derivation, the same class of retune now moves this value and reddens the
+# v4 digest pin immediately, naming the cause.
+
+#: The owner's body envelope on the person channel. Restated here (not imported)
+#: because this module is deliberately sim-free; it is the same 0.55 as
+#: ``navigation.follow._OWNER_COLLISION_ENVELOPE_M`` and
+#: ``navigation.spatial.SpatialBehaviorConfig.owner_collision_envelope_m``, and
+#: ``tests/test_nav_instruct_episodes_v4.py`` pins the equality — the same
+#: convention :data:`VISIBILITY_MAX_RANGE_M` below already uses.
+FOLLOW_OWNER_COLLISION_ENVELOPE_M = 0.55
+#: ``FollowConfig.distance_deadband_m``. Restated + pinned, as above.
+FOLLOW_DISTANCE_DEADBAND_M = 0.18
+#: ``arrival_radius_m`` + ``stand_off_margin_m`` — the authority's own margin
+#: between a ring and the region that wraps it. Read from the authority, not
+#: restated (lane E5 exports the identical expression as
+#: ``navigation.reactive_safety.OWNER_STAND_OFF_MARGIN_M``).
+OWNER_STAND_OFF_MARGIN_M = (
+    DEFAULT_STAND_OFF_ENVELOPE.arrival_radius_m
+    + DEFAULT_STAND_OFF_ENVELOPE.stand_off_margin_m
+)
+#: The ring the final safety gate refuses to translate through.
+OWNER_KEEPOUT_M = (
+    DEFAULT_SAFETY_ENVELOPE.person_stop(0.0) + FOLLOW_OWNER_COLLISION_ENVELOPE_M
+)
+#: ``FollowConfig.desired_distance_m`` — the nominal follow stand-off.
+FOLLOW_STAND_OFF_M = OWNER_KEEPOUT_M + OWNER_STAND_OFF_MARGIN_M
+#: The farthest owner distance at which a compliant controller may still claim
+#: ``at_follow_distance``.
+FOLLOW_HOLD_BAND_OUTER_M = FOLLOW_STAND_OFF_M + FOLLOW_DISTANCE_DEADBAND_M
+#: v4's ``follow_owner`` goal radius: the hold band's outer edge, wrapped by the
+#: authority's own stand-off margin.
+FOLLOW_OWNER_GOAL_RADIUS_M = FOLLOW_HOLD_BAND_OUTER_M + OWNER_STAND_OFF_MARGIN_M
+#: v1/v2/v3's ``follow_owner`` goal radius. A bare literal, frozen; kept so those
+#: three sets still regenerate byte-identically.
+FROZEN_FOLLOW_OWNER_GOAL_RADIUS_M = 1.8
+
+#: ``circle_owner``'s goal radius, UNCHANGED in v4 and deliberately so. Its
+#: compliant terminal ring is ``SpatialBehaviorConfig.default_orbit_radius_m``
+#: (1.6) ± ``waypoint_tolerance_m`` (0.16) = 1.76 m at most, and even the widest
+#: orbit the config permits (``max_orbit_radius_m`` 2.0) tops out at 2.16 m —
+#: both inside 2.2. Not one term feeding that ring (orbit radii, waypoint
+#: tolerance, ``owner_collision_envelope_m``, ``orbit_clearance_margin_m``) moved
+#: under E5 or E6, and E7 measured the five ``circle_owner`` episodes reproducing
+#: the frozen baseline exactly (4 ``authority_disagreement`` + 1 ``agreement``,
+#: 0 false arrivals, dtg 0.0000). The retuned stand-off did not invalidate this
+#: region, so correction (e) does not reach it.
+CIRCLE_OWNER_GOAL_RADIUS_M = 2.2
 
 #: The observation frustum the *world* reports through — the defaults of
 #: ``parcel_robot.city_semantics.visible_city_semantics``. They are repeated
@@ -131,6 +264,10 @@ class EpisodeSetSpec:
     #: exists only so those sets still regenerate byte-identically — see
     #: :func:`_superseded_centre_anchored_next_to_region`.
     next_to_band_reference: str = "centre"
+    #: Where the ``follow_owner`` goal radius comes from. ``"frozen_literal"`` is
+    #: v1/v2/v3's bare ``1.8``; ``"follow_hold_band"`` is v4's derivation from the
+    #: controller's own hold band — see :data:`FOLLOW_OWNER_GOAL_RADIUS_M`.
+    follow_goal_radius_reference: str = "frozen_literal"
 
 
 EPISODE_SETS: dict[str, EpisodeSetSpec] = {
@@ -166,7 +303,39 @@ EPISODE_SETS: dict[str, EpisodeSetSpec] = {
         ),
         next_to_band_reference="surface",
     ),
+    EPISODE_SET_V4: EpisodeSetSpec(
+        version=EPISODE_SET_V4,
+        landmark_section="derived",
+        word_boundary_class_match=True,
+        visible_instance_anchoring=True,
+        provenance=(
+            "2026-08-11 re-freeze: correction (e) derived follow_owner goal "
+            "radius (owner-authorized 2026-08-11, on lane E7's false-arrival "
+            "diagnosis); carries (a) + (b) + (d) unchanged from v3"
+        ),
+        next_to_band_reference="surface",
+        follow_goal_radius_reference="follow_hold_band",
+    ),
 }
+
+#: The ``follow_owner`` goal radius each episode-set version was frozen under.
+FOLLOW_GOAL_RADIUS_BY_REFERENCE: dict[str, float] = {
+    "frozen_literal": FROZEN_FOLLOW_OWNER_GOAL_RADIUS_M,
+    "follow_hold_band": FOLLOW_OWNER_GOAL_RADIUS_M,
+}
+
+
+def follow_owner_goal_radius_m(spec: EpisodeSetSpec) -> float:
+    """The ``follow_owner`` disc radius this episode-set version generates."""
+
+    try:
+        return FOLLOW_GOAL_RADIUS_BY_REFERENCE[spec.follow_goal_radius_reference]
+    except KeyError:
+        raise ValueError(
+            "unknown follow_goal_radius_reference "
+            f"{spec.follow_goal_radius_reference!r}; known: "
+            f"{sorted(FOLLOW_GOAL_RADIUS_BY_REFERENCE)}"
+        ) from None
 
 
 def episode_set_spec(version: str = DEFAULT_EPISODE_SET_VERSION) -> EpisodeSetSpec:
@@ -459,13 +628,19 @@ def _build_episode(
             }
     elif family == "follow_owner":
         target_id = "owner"
-        goal = GoalRegion(kind="disc", center=(2.0, -0.5), radius_m=1.8)
+        # Correction (e), v4: the radius is the version's, not a literal. v1/v2/v3
+        # still resolve to 1.8 through ``follow_goal_radius_reference``.
+        goal = GoalRegion(
+            kind="disc", center=(2.0, -0.5), radius_m=follow_owner_goal_radius_m(spec)
+        )
         if tier in {"C", "D", "E"}:
             placement["owner_path"] = "corner_occlusion" if tier != "E" else "absent"
             absent = tier == "E"
     else:  # circle_owner
         target_id = "owner"
-        goal = GoalRegion(kind="disc", center=(2.0, -0.5), radius_m=2.2)
+        goal = GoalRegion(
+            kind="disc", center=(2.0, -0.5), radius_m=CIRCLE_OWNER_GOAL_RADIUS_M
+        )
         if tier in {"C", "D", "E"}:
             placement["pedestrian_distractors"] = 2 if tier == "D" else 0
             absent = tier == "E"

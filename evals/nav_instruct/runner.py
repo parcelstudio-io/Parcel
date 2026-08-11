@@ -26,6 +26,7 @@ of arrival.
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -64,6 +65,17 @@ from parcel_robot.navigation.spatial import parse_follow_intent, parse_spatial_i
 
 RUNNER_VERSION = "nav-instruct-v1.1-k0-arrival"
 
+#: Pipeline flags the harness is allowed to flip for a paired flag-on/flag-off
+#: A/B. Deliberately a closed set: the runner is the frozen measurement rig, and
+#: an open ``**overrides`` passthrough would let a run silently reconfigure the
+#: navigator in a way no persisted row records. Both names are the pre-registered
+#: card flags (V-D value-directed search, V-E detection lock-on) and both default
+#: to False inside ``DirectiveNavigator``, so the flag-OFF arm of the A/B is the
+#: same navigator every frozen row was measured with.
+ALLOWED_NAVIGATOR_OVERRIDES: frozenset[str] = frozenset(
+    {"value_directed_search", "detection_lock_on"}
+)
+
 #: The v1 arrival rule: ``score_episode``'s hold, exactly as frozen.
 FROZEN_ARRIVAL_RULE = "frozen-hold-v1"
 #: The v2 arrival rule (re-freeze correction (c)).
@@ -82,6 +94,11 @@ ARRIVAL_RULE_FOR_VERSION: dict[str, str] = {
     # v3 changes the next_to band only; the arrival rule is v2's, unchanged, so
     # a v2 -> v3 difference cannot contain a rule change.
     "v3": DERIVED_ARRIVAL_RULE,
+    # v4 changes the follow_owner goal radius only (correction (e), owner-
+    # authorized 2026-08-11). The arrival rule is still v2's, so a v3 -> v4
+    # difference cannot contain a rule change either — every delta has to be the
+    # resized region. See evals/nav_instruct/bridge_v3_v4.py.
+    "v4": DERIVED_ARRIVAL_RULE,
 }
 DOES_NOT_PROVE = (
     "sim ground-truth semantics ≠ camera perception — closes with hardware perception",
@@ -236,9 +253,21 @@ class NavInstructRunner:
         arrival_rule: str = DEFAULT_ARRIVAL_RULE,
         scene: str | Path | None = None,
         budget_policy: str = DEFAULT_BUDGET_POLICY,
+        navigator_overrides: Mapping[str, Any] | None = None,
     ) -> None:
         self.robot_config = robot_config
         self.max_steps = int(max_steps)
+        # Opt-in pipeline flags (card V-D ``value_directed_search`` / card V-E
+        # ``detection_lock_on``). EMPTY by default, and an empty mapping expands
+        # to no keyword at all in ``_navigator``, so every frozen row and every
+        # existing caller makes the byte-identical ``from_config`` call.
+        self.navigator_overrides: dict[str, Any] = dict(navigator_overrides or {})
+        unknown = set(self.navigator_overrides) - ALLOWED_NAVIGATOR_OVERRIDES
+        if unknown:
+            raise ValueError(
+                "navigator_overrides may only carry the pre-registered flags "
+                f"{sorted(ALLOWED_NAVIGATOR_OVERRIDES)}; got {sorted(unknown)}"
+            )
         mode_norm = str(mode).strip().lower()
         if mode_norm not in {"baseline", "candidate"}:
             raise ValueError("mode must be 'baseline' or 'candidate'")
@@ -306,6 +335,7 @@ class NavInstructRunner:
         return DirectiveNavigator.from_config(
             self.harness.navigation_config,
             instructnav_recovery=(self.mode == "candidate"),
+            **self.navigator_overrides,
         )
 
     def _episode_max_steps(self, episode: EpisodeSpec) -> int:

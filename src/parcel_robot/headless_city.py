@@ -9,6 +9,7 @@ from typing import Any
 import mujoco
 import numpy as np
 
+from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import (
     LidarObstacle,
     OwnerTrack,
@@ -989,8 +990,14 @@ def _reactive_safety_from_store(
     policy = ReactiveSafetyPolicy(
         obstacle_stop_m=float(config.get("obstacle_stop_m", 0.65)),
         obstacle_slow_m=float(config.get("obstacle_slow_m", 1.2)),
-        person_stop_m=float(config.get("person_stop_m", 1.0)),
-        person_slow_m=float(config.get("person_slow_m", 2.0)),
+        # Derived from the one authority, not restated: a literal 1.0 here put
+        # the headless product path 0.2 m closer to a person than the envelope.
+        person_stop_m=float(
+            config.get("person_stop_m", DEFAULT_SAFETY_ENVELOPE.person_stop(0.0))
+        ),
+        person_slow_m=float(
+            config.get("person_slow_m", DEFAULT_SAFETY_ENVELOPE.person_comfort_band_m)
+        ),
         telemetry_stale_s=float(config.get("telemetry_stale_s", 0.6)),
         owner_collision_envelope_m=spatial.owner_collision_envelope_m,
         orbit_clearance_margin_m=spatial.orbit_clearance_margin_m,

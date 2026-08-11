@@ -62,7 +62,10 @@ spatial_behaviors:
   timeout_s: 120
 owner_follow:
   behind_distance_m: 1.9
-  owner_keepout_m: 1.55
+  # DERIVED: safety.person_stop_m (1.2) + owner_collision_envelope_m (0.55).
+  # Owner-authorized person-clearance retune 2026-08-10; kept in lockstep with
+  # configs/robot.yaml (see E5_PERSON_CLEARANCE_STATUS.md).
+  owner_keepout_m: 1.75
   staging_radius_m: 2.1
   staging_lookahead_rad: 0.35
   heading_min_displacement_m: 0.08
@@ -248,8 +251,10 @@ prompting:
 safety:
   obstacle_stop_m: 0.65
   obstacle_slow_m: 1.2
-  person_stop_m: 1.0
-  person_slow_m: 2.0
+  # Matches the authority: SafetyEnvelope.person_stop(0.0) == 1.2 and
+  # person_comfort_band_m == 2.5. Owner-authorized retune 2026-08-10.
+  person_stop_m: 1.2
+  person_slow_m: 2.5
   telemetry_stale_s: 0.6
   time_to_collision:
     enabled: true

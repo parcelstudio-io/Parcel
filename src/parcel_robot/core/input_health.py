@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum, IntEnum
 from types import MappingProxyType
 
@@ -95,6 +95,62 @@ DEFAULT_REQUIRED_INPUTS: Mapping[RequiredInput, RequiredInputSpec] = MappingProx
         ),
     }
 )
+
+
+#: Provenance strings that name a *physical* (or unattributed) sample source.
+#: Everything else is a simulator / stub / fixture. The set is deliberately a
+#: whitelist of non-fixture names so an unrecognised producer fails CLOSED —
+#: it is stamped ``SIM_FIXTURE`` and therefore rejected wherever fixtures are
+#: not commissioned, rather than silently satisfying a physical-sensor
+#: requirement.
+PHYSICAL_SOURCE_NAMES: frozenset[str] = frozenset({"", "unknown", "physical"})
+
+
+def is_simulated_source(source: object) -> bool:
+    """True when ``source`` names a simulator/stub rather than a physical sensor.
+
+    Matching is exact — deliberately not case- or whitespace-normalised, so a
+    near-miss like ``"Physical"`` reads as an unrecognised producer and fails
+    CLOSED instead of being waved through as the real sensor.
+    """
+
+    return str(source or "") not in PHYSICAL_SOURCE_NAMES
+
+
+def evidence_origin(source: object) -> tuple[InputOrigin, str | None]:
+    """``(origin, fixture_label)`` for a sample produced by ``source``.
+
+    Simulated producers get :attr:`InputOrigin.SIM_FIXTURE` plus the producer
+    name as the (required, non-empty) ``fixture_label``; physical producers get
+    :attr:`InputOrigin.PHYSICAL` and no label.  Every authority-bearing sample
+    must be stamped through this one helper so no channel can hard-code
+    ``PHYSICAL`` and defeat the fixture check.
+    """
+
+    name = str(source or "")
+    if is_simulated_source(name):
+        return InputOrigin.SIM_FIXTURE, name
+    return InputOrigin.PHYSICAL, None
+
+
+def requirements_allowing_sim_fixtures(
+    requirements: Mapping[RequiredInput, RequiredInputSpec] = DEFAULT_REQUIRED_INPUTS,
+) -> Mapping[RequiredInput, RequiredInputSpec]:
+    """``requirements`` with LABELED sim fixtures permitted for every input.
+
+    Only a deployment that is explicitly commissioned against a simulator may
+    use this.  It relaxes *who may produce* a sample, never *what makes it
+    healthy*: an unlabeled sim fixture still latches, and a physically
+    commissioned deployment keeps :data:`DEFAULT_REQUIRED_INPUTS`, where a
+    sim-labeled pose or controller-feedback sample is a ``LATCHED_STOP``.
+    """
+
+    return MappingProxyType(
+        {
+            required_input: replace(spec, sim_fixture_allowed=True)
+            for required_input, spec in requirements.items()
+        }
+    )
 
 
 def evaluate_input_health(
@@ -189,6 +245,7 @@ def _global_latched_fault(reason: str) -> InputHealthVerdict:
 
 __all__ = [
     "DEFAULT_REQUIRED_INPUTS",
+    "PHYSICAL_SOURCE_NAMES",
     "HealthAction",
     "InputEvidence",
     "InputFault",
@@ -197,4 +254,7 @@ __all__ = [
     "RequiredInput",
     "RequiredInputSpec",
     "evaluate_input_health",
+    "evidence_origin",
+    "is_simulated_source",
+    "requirements_allowing_sim_fixtures",
 ]

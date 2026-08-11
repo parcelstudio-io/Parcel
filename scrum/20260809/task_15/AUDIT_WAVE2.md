@@ -30,6 +30,19 @@ RESULT: PASS — every hard gate green.
 (`scripts/mutation_panel.py` clean vs HEAD; only `scripts/ci_ruff_baseline.json`
 appears in frozenish-name diffs — Wave-1 C-A residue, not a Wave-2 silent freeze).
 
+> **FALSE — CORRECTED 2026-08-10 (lane E3).** "Frozen digests: UNMOVED" is wrong.
+> `evals/companion/personal_convo_v1/manifest.json` kept `"frozen": true` while
+> its `pack_digest` moved `7e904d5335e049ac… → fc1af2f76f2b4914…` under card
+> **M-A**, and rule 2's STOP-and-report never fired. The check that produced this
+> line looked at *frozen-ish filenames in the diff*, which a manifest edit does
+> not announce, and `ci_gate`'s `DIGEST_SENTINELS` byte-pinned only two manifests
+> — this was not one of them, so a green gate agreed. The delta is additive-only
+> (15 → 23 locks, +8 / −0 / repin 0, independently recomputed by Fable) and there
+> is no tampering; the defect is process plus CI blindness. Sentinel added,
+> provenance written into the manifest, key order restored — see `M-A_STATUS.md`
+> and `E3_EVAL_INTEGRITY_STATUS.md`. The `mutation_panel.json` half of the claim
+> is accurate and stands.
+
 ---
 
 ## 2–4. Per-card ownership / named gate / adversarial
@@ -61,7 +74,18 @@ appears in frozenish-name diffs — Wave-1 C-A residue, not a Wave-2 silent free
   - Live path: `_finalize_for_actuator` + `finalize_command` sit immediately
     before `control_manager.set_target`; HARD_STOP resets smoother/shaper.
   - Frozen rows: **UNMOVED** (no silent mutation-panel / digest rewrite).
+    > **CORRECTED 2026-08-10 (lane E3):** true for the mutation panel, false as a
+    > blanket claim — `personal_convo_v1`'s frozen `pack_digest` moved under card
+    > M-A. See the correction at the head of this file.
   - **P0-A / P0-B may be claimed CLOSED** (only this card).
+    > **QUALIFIED 2026-08-10 (lane E3):** the P0-A *product path* is closed, but
+    > the oracle cited as evidence,
+    > `test_mutation_oracle_residual_nonzero_after_hard_stop_is_killed`, was a
+    > tautology comparing two `VelocityCommand` constants and proved nothing. It
+    > has been rewritten to drive the real dispatch path and now demonstrably
+    > kills a seeded `finalize_command` pass-through mutant. The CLOSED verdict
+    > survives on the rewritten evidence; it was not supported by the evidence
+    > this audit accepted.
 
 #### V-D — CONFIRMED
 
@@ -162,6 +186,9 @@ appears in frozenish-name diffs — Wave-1 C-A residue, not a Wave-2 silent free
   - Mixed-lethal: old `all(self._lethal…)` removed; `waypoints_trigger_lethal_veto`
     is `any()`.
   - Frozen rows: **UNMOVED**.
+    > **CORRECTED 2026-08-10 (lane E3):** same correction as above — the frozen
+    > `personal_convo_v1` `pack_digest` moved under card M-A. This audit repeated
+    > the claim without a check that could have seen a manifest edit.
   - Status-doc STOP (ci_gate ruff red on V-E/`pipeline`/`__init__` at S-B cut)
     is **cleared** by this audit’s fresh green gate — cross-card residue, not
     an S-B ownership breach.

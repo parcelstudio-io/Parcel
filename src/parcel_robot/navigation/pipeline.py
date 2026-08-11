@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import logging
 import math
 from dataclasses import dataclass, replace
@@ -150,6 +151,64 @@ except ImportError:  # pragma: no cover — frozen BARN bundle path
 
 # Historical BARN isolated bundles ship an older parcel_robot tree without
 # instructnav/. Keep the import soft so grid_v1 sidecars still load.
+#
+# ---------------------------------------------------------------------------
+# A soft import must degrade for ABSENCE and ONLY for absence.
+#
+# The guard below covers the entire semantic-nav ladder. If it swallows any
+# ImportError, an import cycle anywhere in the tree can flip _HAS_INSTRUCTNAV to
+# False and quietly turn GrounderV2 / ProposerBus / GoalArbiter / SemanticMemory2D
+# / value-directed search into no-ops — with a fully green test suite, because
+# whether the cycle fires depends on module import ORDER. That regression has
+# already shipped once (instructnav/arbiter.py -> parcel_robot.core.arbiter ->
+# core/__init__ -> navigation/__init__ -> navigation.pipeline).
+#
+# So: "the module is not in this tree" degrades; anything else — a cycle, a
+# partially initialized module, a name that vanished, a broken dependency — is a
+# defect and is raised. tests/test_import_order_no_cycle.py is the standing gate.
+# ---------------------------------------------------------------------------
+
+#: Set when a soft import legitimately degraded (module genuinely absent).
+#: ``None`` means the ladder is fully wired. Read it for health reporting.
+INSTRUCTNAV_IMPORT_ERROR: ImportError | None = None
+DETECTION_LOCK_ON_IMPORT_ERROR: ImportError | None = None
+
+
+def _is_genuine_absence(exc: ImportError) -> bool:
+    """True only when ``exc`` means "that module is not in this tree".
+
+    A circular import raises a plain ``ImportError`` ("cannot import name X from
+    partially initialized module ..."), never ``ModuleNotFoundError`` — so the
+    isinstance check alone already separates the two dominant cases. The
+    ``find_spec`` probe additionally rejects a ``ModuleNotFoundError`` raised
+    from *inside* a module that does exist (a missing third-party dependency of
+    an instructnav module is our problem, not a bundle shape).
+    """
+
+    if not isinstance(exc, ModuleNotFoundError):
+        return False
+    missing = getattr(exc, "name", None)
+    if not missing:
+        return False
+    try:
+        return importlib.util.find_spec(missing) is None
+    except (ImportError, AttributeError, ValueError):
+        # The parent package itself cannot be located/loaded — absent.
+        return True
+
+
+def _reraise_if_not_absent(exc: ImportError, ladder: str, gate: str) -> None:
+    if _is_genuine_absence(exc):
+        return
+    raise ImportError(
+        f"{ladder} failed to import for a reason that is NOT a missing module: "
+        f"{exc!r}. Refusing to degrade silently — doing so would disable the "
+        f"{ladder} at runtime while every test stays green. This is almost "
+        f"always an import cycle opened by a new cross-package import; move the "
+        f"shared symbol into a leaf module or import it lazily. Gate: {gate}."
+    ) from exc
+
+
 try:
     from parcel_robot.instructnav.arbiter import GoalArbiter, ProposerBus, SE2Goal
     from parcel_robot.instructnav.grounding import (
@@ -188,7 +247,16 @@ try:
     from .value_map import SemanticValueMap2D
 
     _HAS_INSTRUCTNAV = True
-except ImportError:  # pragma: no cover — frozen BARN bundle path
+except ImportError as _exc:  # pragma: no cover — frozen BARN bundle path
+    _reraise_if_not_absent(
+        _exc, "the InstructNav ladder", "tests/test_import_order_no_cycle.py"
+    )
+    INSTRUCTNAV_IMPORT_ERROR = _exc
+    logging.getLogger(__name__).warning(
+        "InstructNav ladder unavailable (%s) — semantic navigation, grounding, "
+        "scan recovery and value-directed search are DISABLED for this process.",
+        _exc,
+    )
     GoalArbiter = None  # type: ignore[misc, assignment]
     ProposerBus = None  # type: ignore[misc, assignment]
     SE2Goal = None  # type: ignore[misc, assignment]
@@ -232,11 +300,37 @@ try:
     )
 
     _HAS_DETECTION_LOCK_ON = True
-except ImportError:  # pragma: no cover — optional D3 module
+except ImportError as _exc:  # pragma: no cover — optional D3 module
+    _reraise_if_not_absent(
+        _exc, "the D3 detection lock-on module", "tests/test_import_order_no_cycle.py"
+    )
+    DETECTION_LOCK_ON_IMPORT_ERROR = _exc
     DetectionLockOnSession = None  # type: ignore[misc, assignment]
     LOCK_ON_PLAN_STEP_ID = "align_then_translate"
     LOCK_ON_PROPOSER_SOURCE = "detection_lock_on"
     _HAS_DETECTION_LOCK_ON = False
+
+
+def soft_import_health() -> dict[str, object]:
+    """Machine-readable state of this module's soft imports.
+
+    A caller that expects semantic navigation should assert
+    ``soft_import_health()["instructnav"] is True`` at startup rather than
+    discovering the no-op ladder from a silently degraded run.
+    """
+
+    return {
+        "instructnav": _HAS_INSTRUCTNAV,
+        "instructnav_error": (
+            None if INSTRUCTNAV_IMPORT_ERROR is None else repr(INSTRUCTNAV_IMPORT_ERROR)
+        ),
+        "detection_lock_on": _HAS_DETECTION_LOCK_ON,
+        "detection_lock_on_error": (
+            None
+            if DETECTION_LOCK_ON_IMPORT_ERROR is None
+            else repr(DETECTION_LOCK_ON_IMPORT_ERROR)
+        ),
+    }
 
 
 class DirectiveNavigator:

@@ -53,6 +53,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
+from parcel_robot.authority import DEFAULT_STAND_OFF_ENVELOPE
+
 logger = logging.getLogger(__name__)
 
 #: Default worker cadence floor. OWLv2 detect itself is ~559 ms, so the effective
@@ -64,14 +66,33 @@ DEFAULT_MIN_POLL_INTERVAL_S = 0.25
 #: proposal apart from the GT-frustum oracle.
 PIXEL_SOURCE = "pixel_detector"
 
-#: Arrival tolerance stamped on pixel candidates — matches city_semantics objects
-#: so approach planning and terminal verification share one band convention.
-_PIXEL_ARRIVAL_RADIUS_M = 0.06
+#: Arrival / clearance metadata stamped on pixel candidates.
+#:
+#: These are read by the SAME approach planner and terminal verifier that consume
+#: ``city_semantics`` object metadata, so a pixel candidate and a GT-oracle
+#: candidate must describe the same physical bands. They were introduced as bare
+#: literals duplicating values ``parcel_robot.authority`` already owns; Fable's
+#: independent audit of task_15 flagged that (the no-literal-drift ratchet did not
+#: yet scan this tree). They now DERIVE, so re-tuning the envelope moves the pixel
+#: path with everything else instead of leaving it silently pinned to old numbers.
+_PIXEL_ARRIVAL_RADIUS_M = DEFAULT_STAND_OFF_ENVELOPE.arrival_radius_m
+_PIXEL_TARGET_MIN_SURFACE_CLEARANCE_M = DEFAULT_STAND_OFF_ENVELOPE.target_surface_clearance_m
+_PIXEL_TERMINAL_SUPPORT_CLEARANCE_M = DEFAULT_STAND_OFF_ENVELOPE.footprint_radius_m
 
-#: Surface / support clearances stamped on pixel candidates (city_semantics parity).
-_PIXEL_TARGET_MIN_SURFACE_CLEARANCE_M = 0.8
+#: The one band that does NOT derive, deliberately and for a measured reason.
+#:
+#: ``city_semantics`` stamps 1.25 for non-target obstacles. That is the stand-off
+#: composite plus commissioning margin, but the composite is NOT 1.25 in IEEE-754:
+#: ``DEFAULT_STAND_OFF_ENVELOPE.stand_off(0.0)`` is ``1.2200000000000002`` in the
+#: authority's canonical left-to-right association, so ``stand_off(0.0) + 0.03``
+#: is ``1.2500000000000002`` — NOT equal to the ``1.25`` the oracle path stamps.
+#: A pixel candidate and a GT-oracle candidate for the same object would then
+#: carry different clearances and compare unequal. Reassociating the sum until it
+#: happens to land on 1.25 would be derivation theatre, so the literal stays and
+#: is allowlisted by name in ``tests/test_authority_no_literal_drift.py``, exactly
+#: as ``city_semantics.py``'s own 1.25 already is. Owner: the scene-metadata /
+#: sidecar lane, which owns both copies and must retire them together.
 _PIXEL_NON_TARGET_OBSTACLE_CLEARANCE_M = 1.25
-_PIXEL_TERMINAL_SUPPORT_CLEARANCE_M = 0.32
 
 
 def radius_m_from_box_depth(

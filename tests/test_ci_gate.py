@@ -21,6 +21,8 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from scripts.ci_gate import (
     DIGEST_SENTINELS,
     MODEL_OFF_NODE_IDS,
@@ -148,6 +150,116 @@ def test_hard_safety_reddens_on_walk_with_me_collision(tmp_path: Path) -> None:
     assert "wwm-x" in result.detail
 
 
+# ---------------------------------------------------------------------------
+# HARD-SAFETY / mutation-panel FRESHNESS (lane E7, 2026-08-10)
+#
+# The seeded regression here is *staleness*, not a bad number: a committed panel
+# artifact whose safety fields no longer reproduce on the tree. That is the exact
+# hole this lane found — the gate printed ``no_false_arrival=True`` from a
+# payload written at 19c9226 while a live clean run on the same tree said
+# ``false``. The reproducer is injected, so the seed is a stub and never a
+# committed-artifact edit (the mutation-panel rule).
+# ---------------------------------------------------------------------------
+
+
+def _panel_fields(*, no_false_arrival: bool, false_arrivals: int = 0) -> dict:
+    authority = {"agreement": 5 - false_arrivals}
+    if false_arrivals:
+        authority["false_arrival"] = false_arrivals
+    return {
+        "collisions": 0,
+        "authority": authority,
+        "clean_checks": {
+            "zero_collisions": True,
+            "no_authority_disagreement": True,
+            "no_false_arrival": no_false_arrival,
+            "path_length_plausible": True,
+        },
+    }
+
+
+def _panel_artifact(tmp: Path, fields: dict) -> Path:
+    path = tmp / "mutation_panel.json"
+    path.write_text(
+        json.dumps(
+            {
+                "clean_run": {"collisions": fields["collisions"], "authority": fields["authority"]},
+                "clean_checks": fields["clean_checks"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_hard_safety_is_green_when_the_panel_reproduces(tmp_path: Path) -> None:
+    a = _clean_artifacts(tmp_path)
+    fields = _panel_fields(no_false_arrival=True)
+    a["mutation_panel"] = _panel_artifact(tmp_path, fields)
+    result = evaluate_hard_safety(**a, reproduce_panel=lambda: fields)
+    assert result.status == "pass", result.detail
+    assert "freshness: committed fields reproduce live = True" in result.detail
+
+
+def test_hard_safety_reddens_when_a_live_run_contradicts_the_committed_panel(
+    tmp_path: Path,
+) -> None:
+    """The E7 defect: the artifact says no false arrival, the tree says otherwise."""
+
+    a = _clean_artifacts(tmp_path)
+    a["mutation_panel"] = _panel_artifact(tmp_path, _panel_fields(no_false_arrival=True))
+    live = _panel_fields(no_false_arrival=False, false_arrivals=1)
+    result = evaluate_hard_safety(**a, reproduce_panel=lambda: live)
+    assert result.status == "fail", (
+        "a committed panel a live run contradicts must redden hard-safety — "
+        "otherwise the gate certifies a safety property from a stale file"
+    )
+    assert "STALE" in result.detail
+    assert "clean_checks" in result.detail
+
+
+def test_hard_safety_reddens_when_the_panel_merely_drops_the_check(tmp_path: Path) -> None:
+    """Deleting ``no_false_arrival`` must not be cheaper than recording it false."""
+
+    a = _clean_artifacts(tmp_path)
+    committed = _panel_fields(no_false_arrival=True)
+    del committed["clean_checks"]["no_false_arrival"]
+    a["mutation_panel"] = _panel_artifact(tmp_path, committed)
+    result = evaluate_hard_safety(
+        **a, reproduce_panel=lambda: _panel_fields(no_false_arrival=True)
+    )
+    assert result.status == "fail", "a dropped safety check must read as False, not as absent"
+
+
+def test_hard_safety_freshness_is_skipped_only_for_synthetic_artifacts(
+    tmp_path: Path,
+) -> None:
+    """No reproducer + a synthetic path = recorded skip, never a silent pass."""
+
+    a = _clean_artifacts(tmp_path)
+    result = evaluate_hard_safety(**a)
+    assert "freshness: skipped (synthetic artifact" in result.detail
+
+
+def test_hard_safety_defaults_to_reproducing_the_real_committed_artifact() -> None:
+    """The default path must WIRE the live reproducer, not default to skipping."""
+
+    from scripts.ci_gate import MUTATION_PANEL_JSON, _panel_safety_fields_live
+
+    calls: list[int] = []
+
+    def spy() -> dict:
+        calls.append(1)
+        return {"collisions": 0, "authority": {}, "clean_checks": {}}
+
+    assert callable(_panel_safety_fields_live)
+    result = evaluate_hard_safety(mutation_panel=MUTATION_PANEL_JSON, reproduce_panel=spy)
+    assert calls, "hard-safety did not reproduce the committed panel"
+    checks = result.extra["checks"]
+    assert any("freshness" in line for line in checks), checks
+    assert not any("skipped" in line for line in checks if "freshness" in line), checks
+
+
 # ===========================================================================
 # FROZEN-DIGEST INTEGRITY
 # ===========================================================================
@@ -187,6 +299,101 @@ def test_real_frozen_sentinels_match_the_current_tree() -> None:
 
     result = evaluate_frozen_digest_sentinels(DIGEST_SENTINELS)
     assert result.status == "pass", result.detail
+    # A LITERAL, deliberately — deriving it from ``len(DIGEST_SENTINELS)`` would
+    # make the assertion vacuous and let a sentinel be dropped silently. 3 -> 4
+    # on 2026-08-11 (lane E8): ``nav_instruct/episodes/v4/manifest.json`` was
+    # ADDED when the owner authorized the v4 re-freeze. The other three, v3
+    # included, are unchanged and still byte-identical to their pins.
+    assert result.extra["checked"] == 4, "four immutable manifests are pinned"
+
+
+@pytest.mark.parametrize("relpath", sorted(DIGEST_SENTINELS))
+def test_each_real_sentinel_reddens_on_a_seeded_byte(relpath: str, tmp_path: Path) -> None:
+    """Per-sentinel proof, not one synthetic stand-in.
+
+    ``test_frozen_digest_reddens_on_byte_change`` only proves the *comparator*
+    works on a made-up file. It could not tell you whether any particular
+    committed manifest is actually wired to it — which is how
+    ``personal_convo_v1``'s pack_digest moved under a green gate during task_15
+    (Fable audit ``AUDIT_FABLE_INDEPENDENT.md``, BLOCKING 2): the manifest simply
+    was not in ``DIGEST_SENTINELS``.
+
+    So this seeds each *real* pinned manifest's bytes and asserts that manifest's
+    own pin reddens. The seed goes into a tmp COPY — never the frozen artifact
+    (the mutation-panel rule).
+    """
+
+    source = REPO / relpath
+    assert source.is_file(), f"{relpath} is pinned but absent from the tree"
+
+    copy = tmp_path / relpath
+    copy.parent.mkdir(parents=True, exist_ok=True)
+    copy.write_bytes(source.read_bytes())
+    pinned = DIGEST_SENTINELS[relpath]
+
+    clean = evaluate_frozen_digest_sentinels({relpath: pinned}, root=tmp_path)
+    assert clean.status == "pass", f"{relpath} clean copy must match its pin: {clean.detail}"
+
+    # Seed: one byte appended to the copy -> this manifest's own pin must redden.
+    copy.write_bytes(copy.read_bytes() + b" ")
+    seeded = evaluate_frozen_digest_sentinels({relpath: pinned}, root=tmp_path)
+    assert seeded.status == "fail", f"a byte-changed {relpath} must redden its sentinel"
+    assert relpath in seeded.detail and "!=" in seeded.detail
+
+
+def test_one_seeded_sentinel_reddens_the_whole_gate(tmp_path: Path) -> None:
+    """A single bad manifest fails the aggregate gate and is named in the detail."""
+
+    for relpath in DIGEST_SENTINELS:
+        copy = tmp_path / relpath
+        copy.parent.mkdir(parents=True, exist_ok=True)
+        copy.write_bytes((REPO / relpath).read_bytes())
+
+    target = "evals/companion/personal_convo_v1/manifest.json"
+    seeded = tmp_path / target
+    seeded.write_bytes(seeded.read_bytes() + b"\n")
+
+    result = evaluate_frozen_digest_sentinels(DIGEST_SENTINELS, root=tmp_path)
+    assert result.status == "fail"
+    assert target in result.detail
+
+
+def test_no_frozen_manifest_silently_escapes_the_sentinel_set() -> None:
+    """The set of frozen-but-unpinned manifests is itself pinned.
+
+    ``personal_convo_v1`` was frozen but unpinned, so its digest could move under
+    a green gate. Freezing a new suite (or dropping an existing pin) changes this
+    set and reddens here, forcing an explicit decision instead of silence.
+    """
+
+    frozen = set()
+    for manifest in sorted((REPO / "evals").rglob("manifest.json")):
+        try:
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        if isinstance(payload, dict) and payload.get("frozen") is True:
+            frozen.add(manifest.relative_to(REPO).as_posix())
+
+    # (Not every sentinel carries a ``frozen`` flag — ``nav_instruct/episodes/v3``
+    # is an immutable episode set pinned by convention, so this is one-way: every
+    # flagged-frozen manifest is accounted for, pins may cover more.)
+    #
+    # Frozen suites that are knowingly not byte-pinned yet. Each is covered by a
+    # recompute-vs-manifest pytest id in ``FROZEN_DIGEST_NODE_IDS`` or its own
+    # suite tests; byte-pinning them is tracked follow-up, not silence.
+    known_unpinned = {
+        "evals/companion/acoustic_loop_v1/manifest.json",
+        "evals/companion/brain_v1/manifest.json",
+        "evals/companion/conversation_quality_v1/manifest.json",
+        "evals/companion/live_planner_v1/manifest.json",
+        "evals/companion/planner_quality_sketch_v1/manifest.json",
+        "evals/companion/planner_quality_v2/manifest.json",
+    }
+    assert frozen - set(DIGEST_SENTINELS) == known_unpinned, (
+        "a frozen manifest appeared or lost its pin; add it to DIGEST_SENTINELS "
+        "(preferred) or to known_unpinned with a reason"
+    )
 
 
 # ===========================================================================

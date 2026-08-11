@@ -37,14 +37,52 @@
 - `core/hard_stop.py`, `core/input_health.py` — untouched
 - `camera_channel/**`, `counterfactual/**`, `personal_convo`, frozen packs — untouched
 
-## Gates (measured)
+## VERDICT AFTER THE REAL RUN (lane E4, 2026-08-10) — SR margin NOT MET at tier level
+
+`detection_lock_on` had never been run on `nav_instruct`. E4 ran it, paired,
+frozen v3 minival, seed 20260804, `episode_digest 919a0fea…c556aa` on every arm
+(n = 25; **each tier is n = 5**).
+
+| arm | overall SR | Tier A | **Tier B** | Tier C | Tier D | Tier E | false_arrival |
+|---|---|---|---|---|---|---|---|
+| flag-OFF (oracle/frustum path) | **0.24** | 0.60 | **0.40** | 0.00 | 0.20 | 0.00 | 2 |
+| `detection_lock_on` on | **0.16** | 0.60 | **0.00** | 0.00 | 0.20 | 0.00 | 1 |
+
+Paired flips: **2 episodes lost, 0 gained** — both Tier B, both regressions.
+
+| pre-registered gate | measured | verdict |
+|---|---|---|
+| `\|SR_lock − SR_oracle\| ≤ T_CAM_ORACLE_SR_MARGIN (0.10)` — aggregate | 0.24 → 0.16, gap **0.08** | within margin, but on n = 25 a single episode is 4 pp |
+| same margin, **per tier** | Tier B 0.40 → 0.00, gap **0.40** | **FAIL** — 4× the pre-registered margin |
+
+### The two lost episodes, attributed
+
+| episode | flag-OFF | `detection_lock_on` ON |
+|---|---|---|
+| `nav-region_goal-B-05-586317e4` | success, `arrived_verified`, dtg 0.0 m, authority `agreement` | **failure class `false_arrival`** — mission still reports `arrived_verified` while **4.779 m** from the goal; authority `false_arrival` |
+| `nav-object_relative-B-05-7d441aee` | success, dtg 0.0 m | grounding degrades **RESOLVED → UNSEEN**, times out `navigation_step_limit_inside_goal` |
+
+The first is the safety-relevant one: lock-on committed an SE2 goal on an anchor
+the terminal verifier then accepted, producing a **confident arrival 4.8 m from
+the target**. That is precisely the failure mode the card's own FP gate was
+supposed to exclude, and the proxy cell (`sr_gap=0.0`, `fp=0`) did not see it
+because it never ran the product path.
+
+This does **not** redden ci_gate hard-safety: that gate reads the latest
+`frozen_baseline: true` row, and all four E4 arms are `mode=candidate`
+(`frozen_baseline: false`). The frozen baseline is untouched.
+
+**Card stays RETURNED on the SR margin.** The D4 chance-constrained-K0 work and
+the T0 byte-equality below are unaffected and remain CONFIRMED.
+
+## Gates
 
 | Gate | Result |
 |---|---|
 | T0 zero-covariance = boolean | **PASS** — `test_zero_covariance_contains_matches_boolean_exactly`; cam_lock_on `t0_byte_equal_zero_covariance=true` |
 | Noisy far / edge cov refuses arrival | **PASS** — edge P≈0.328 < 0.9 → refused |
-| T-cam SR within pre-registered margin of oracle | **PASS** — paired-seed proxy `sr_gap=0.0` ≤ `T_CAM_ORACLE_SR_MARGIN=0.10` (16 scenes) |
-| Differential authority / FP | **PASS** — single-frame commits 0; `false_positive_lock_commits=0` |
+| T-cam SR within pre-registered margin of oracle | **FAIL on the real run** — Tier B gap 0.40 ≫ `T_CAM_ORACLE_SR_MARGIN=0.10` (see above). The paired-seed **proxy** `sr_gap=0.0` over 16 constructed scenes is retained as a unit result only. |
+| Differential authority / FP | **PASS in the pure cell** (single-frame commits 0; `false_positive_lock_commits=0`) — but the product run produced a **real false arrival at 4.779 m** under this flag, so the pure cell must not be read as an end-to-end FP claim. |
 | P0-C mid-run correction e2e | **PASS** — `test_p0c_mid_run_correction_flushes_stale_lock_on_goal` (stamp + flush + new revision wins) |
 | Flag-off byte-identical | **PASS by construction** — `detection_lock_on` defaults False; frustum path unchanged |
 | S-A2 P0 wiring | **NOT REGRESSED** — MUST-NOT files clean |

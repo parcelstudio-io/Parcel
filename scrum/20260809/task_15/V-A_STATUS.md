@@ -35,26 +35,64 @@ MUST NOT touched: `runtime.py`, `instructnav/scoring.py`, `navigation/**`,
 
 ## Measured evidence (Mission A — live OWLv2 + EGL)
 
+**RE-RECORDED 2026-08-10 by lane E4 on the repaired tree.** The block below is
+this run, not the pre-repair one. Superseded numbers are kept at the bottom of
+this section so the delta is visible rather than quietly overwritten.
+
+Tree state: `HEAD = 6bd945d` **plus the uncommitted E1 (import-cycle) + E2
+(safety-wiring) + E3 (eval-integrity) repairs**. Command run verbatim, no
+wrapper, no preload:
+
 ```
 MUJOCO_GL=egl PARCEL_OWLV2_ONNX=1 \
   .parcel/bin/python scrum/20260809/task_12/b4_gate.py A
 ```
 
-| field | value |
+| field | value (2026-08-10 re-run) |
 |---|---|
 | `arrival` | **succeeded** |
 | `candidate_source` | **pixel_detector** |
 | `grounding_outcome` | RESOLVED |
+| `resolution_state` | verified |
 | `mission_status` / `reason` | arrived / arrived_verified |
-| OWLv2 confidence | 0.881 |
-| localization error vs truth | **0.037 m** |
-| `candidate_radius_m` | 0.4156 |
-| vicinity band | [1.536, 1.736] m |
-| oracle objects seen | 0 |
-| reactive read vs detect | 0.073 ms vs 568 ms |
+| `arrival_trigger` | goal_region |
+| OWLv2 confidence | 0.858 |
+| localization error vs truth | **0.035 m** |
+| **arrival distance** (`final_distance_m`) | **1.717 m** (inside band [1.5263, 1.7263]) |
+| `candidate_radius_m` | 0.4063 |
+| vicinity band | [1.5263, 1.7263] m |
+| oracle objects seen by navigator | 0 |
+| **wall time** | 0.41 s closed-loop (68 steps); 2.2 s process wall incl. imports |
+| detect / ingress read | 598.3 ms vs 0.071 ms max |
+| `owlv2_threshold` | 0.1 (unset → default) |
+
+### Reproducibility and tree-state attribution
+
+* Two consecutive runs on the repaired tree: **byte-identical except the timing
+  fields** (`detect_ms`, `ingress_detect_ms`, `ingress_read_max_ms`,
+  `wall_time_s`). Every geometry/confidence field is deterministic.
+* Controlled A/B — `git checkout HEAD -- camera_channel/ingress.py
+  headless_city.py`, re-run, restore: the report is **identical modulo timing**.
+  So the E1/E2/E3 repairs move **nothing** in this measurement.
+* E3's pixel-clearance derivation confirmed bit-identical to the literals it
+  replaced (`struct.pack('<d', …)` equality):
+  `arrival_radius_m 0.06`, `target_surface_clearance_m 0.8`,
+  `footprint_radius_m 0.32`. Metadata unchanged, as predicted.
+
+### Superseded numbers (pre-repair publication)
+
+The originally published row read confidence `0.881`, localization error
+`0.037 m`, `candidate_radius_m 0.4156`, band `[1.536, 1.736]`. Those do **not**
+reproduce today. The controlled A/B above rules out the repair lanes as the
+cause, so the residual is the detector/render stack across sessions, not a code
+change in this batch. **The gate verdict is unchanged and re-earned:
+`arrival=succeeded` with `candidate_source=pixel_detector`.** The exact
+confidence/radius are re-recorded above and the old ones are not restated as
+current.
 
 Mission B (lamppost recognition floor) was not required for the V-A gate;
-OWLv2 scores there remain below the unmodified 0.55 grounder floor (V-B's lane).
+OWLv2 scores there remain below the unmodified 0.55 grounder floor — now
+**measured** across five distinct views in V-B's live cell.
 
 ## Offline / additive gates
 
