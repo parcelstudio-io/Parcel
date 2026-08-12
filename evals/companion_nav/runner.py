@@ -31,6 +31,7 @@ from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import DynamicAgentTrack, SimObservation
 from parcel_robot.config import ConfigStore
 from parcel_robot.core.motion_shaping import MotionShapingConfig
+from parcel_robot.core.stop_ramp import enforce_monotone_stop, nominal_stop_step
 from parcel_robot.core.velocity_smoother import VelocitySmoother
 from parcel_robot.dynamic_city import select_social_collision_candidate
 from parcel_robot.expression import ExpressionEngine, ExpressionGate
@@ -56,6 +57,7 @@ from parcel_robot.navigation.follow import (
     FollowConfig,
     FollowOwnerController,
     FollowPredictionConfig,
+    FollowYieldConfig,
 )
 from parcel_robot.navigation.owner_prediction import OwnerMotionPredictor, PredictedPath
 from parcel_robot.navigation.pipeline import DirectiveNavigator
@@ -99,6 +101,10 @@ class BenchFeatures:
     time_to_collision_gate: bool = True
     velocity_shaping: bool = True
     owner_search: bool = True
+    # Card Y-2. Unlike the switches above this one is default OFF on BOTH
+    # arms: the shipped code default is off, so a "shipped" bench row must
+    # keep measuring the shipped controller.
+    yield_aside: bool = False
 
     def __post_init__(self) -> None:
         for item in fields(self):
@@ -115,6 +121,7 @@ class BenchFeatures:
             time_to_collision_gate=False,
             velocity_shaping=False,
             owner_search=False,
+            yield_aside=False,
         )
 
     @property
@@ -141,9 +148,16 @@ class FollowBenchRunner:
         spatial = _spatial_config_from_store(store)
         self.reactive_safety = _reactive_safety_from_store(store, spatial)
         self.navigation_config = _navigation_config_from_store(store)
-        self.follow_config, self.follow_prediction = _follow_config_from_store(store, spatial)
+        (
+            self.follow_config,
+            self.follow_prediction,
+            self.follow_yield,
+        ) = _follow_config_from_store(store, spatial)
         if not self.features.owner_prediction:
             self.follow_prediction = replace(self.follow_prediction, enabled=False)
+        # The bench switch is the only way the yield-aside turns on here: no
+        # robot.yaml ships the flag, so an unswitched row is the shipped path.
+        self.follow_yield = replace(self.follow_yield, enabled=self.features.yield_aside)
         self.time_to_collision = _time_to_collision_from_store(store)
         if not self.features.time_to_collision_gate:
             self.time_to_collision = replace(self.time_to_collision, enabled=False)
@@ -189,6 +203,7 @@ class FollowBenchRunner:
             self.follow_config,
             safety_policy=self.reactive_safety,
             prediction=self.follow_prediction,
+            yield_aside=self.follow_yield,
         )
         follow.start("direct")
         # The runtime owns the predictor and feeds it from the same owner
@@ -275,6 +290,7 @@ class FollowBenchRunner:
                         expression_head_yaw_rad=offsets.head_yaw_rad,
                         expression_producer=conversation.producer,
                         emote_label=emote,
+                        emergency=dispatch.last_emergency,
                     )
                 )
                 world.apply(command)
@@ -419,6 +435,7 @@ class FollowBenchRunner:
                         expression_head_yaw_rad=offsets.head_yaw_rad,
                         expression_producer=conversation.producer,
                         emote_label=emote,
+                        emergency=dispatch.last_emergency,
                     )
                 )
                 world.apply(velocity)
@@ -534,6 +551,14 @@ class _DispatchReplica:
         self._shaping = shaping
         self._shaper = SCurveVelocityShaper(*shaping.limits())
         self._shaped_at: float | None = None
+        # Card J-B nominal-stop-ramp state. Inert unless the flag is on.
+        self._last_shaped: tuple[float, float, float] = (0.0, 0.0, 0.0)
+        self._ramping = False
+        self._ramp_ticks = 0
+        self._regate_ticks = 0
+        self._preempt_ticks = 0
+        # Card J-C: last tick's hard-stop-bypass classification (report-only).
+        self.last_emergency = False
 
     def step(
         self,
@@ -581,15 +606,48 @@ class _DispatchReplica:
         # allowed, so the next tick ramps from the executed velocity rather
         # than from an intent that was never actuated.
         self._smoother.force(command, now=now)
-        command = self._shape(command, now=now, proximity_state=proximity_state)
+        # Card J-C (additive, report-only). Did this tick take the shaper's
+        # hard-stop bypass? Recorded here rather than inside ``_shape`` so the
+        # J-B stopping-predicate digest pin does not move for a metric; the two
+        # are held in lockstep by a per-tick parity test
+        # (tests/test_ci_gate_jerk_ratchet.py), which is the guard that makes
+        # this duplication safe.
+        if self._shaping.enabled and self._shaping.nominal_stop_ramp:
+            self.last_emergency = proximity_state == "stopped"
+        else:
+            self.last_emergency = proximity_state == "stopped" or _is_zero(command)
+        command = self._shape(
+            command,
+            now=now,
+            proximity_state=proximity_state,
+            intent=requested,
+            observation=observation,
+            require_fresh_telemetry=require_fresh_telemetry,
+        )
         return command, proximity_state, ttc, reactive_proximity_state
 
     def _shape(
-        self, command: VelocityCommand, *, now: float, proximity_state: str
+        self,
+        command: VelocityCommand,
+        *,
+        now: float,
+        proximity_state: str,
+        intent: VelocityCommand | None = None,
+        observation: SimObservation | None = None,
+        require_fresh_telemetry: bool = True,
     ) -> VelocityCommand:
         if not self._shaping.enabled:
             self._shaped_at = now
             return command
+        if self._shaping.nominal_stop_ramp:
+            return self._shape_severity_split(
+                command,
+                now=now,
+                proximity_state=proximity_state,
+                intent=intent,
+                observation=observation,
+                require_fresh_telemetry=require_fresh_telemetry,
+            )
         dt_s = 0.1 if self._shaped_at is None else max(1e-3, min(0.25, now - self._shaped_at))
         self._shaped_at = now
         vx, vy, vyaw = self._shaper.step(
@@ -600,6 +658,149 @@ class _DispatchReplica:
             emergency=proximity_state == "stopped" or _is_zero(command),
         )
         return VelocityCommand(vx=vx, vy=vy, vyaw=vyaw)
+
+    # --- Card J-B: the flag-ON severity split ---------------------------------
+    #
+    # Reached only when ``motion.shaping.nominal_stop_ramp`` is true. Two
+    # deliberate differences from the flag-off block above, both required by the
+    # design record (§3.2 part 2):
+    #
+    # * OPERAND PARITY. The split classifies on the INTENT, as the runtime does
+    #   (``runtime.py``: ``_is_zero_command(active.command)``). The flag-OFF
+    #   block keeps its post-chain ``_is_zero(command)`` operand byte-untouched:
+    #   that pre-existing divergence is recorded in the status doc's
+    #   does_not_prove, not silently "fixed" here — fixing it moves the pinned
+    #   ledger row and is an owner decision.
+    # * PER-TICK RE-GATE. Every ramp candidate is re-disposed by the untouched
+    #   ``apply_reactive_safety`` (plus the TTC verdict), and any stop verdict
+    #   preempts to exact zero on the same tick, mirroring the runtime.
+
+    def _shape_severity_split(
+        self,
+        command: VelocityCommand,
+        *,
+        now: float,
+        proximity_state: str,
+        intent: VelocityCommand | None,
+        observation: SimObservation | None,
+        require_fresh_telemetry: bool,
+    ) -> VelocityCommand:
+        emergency = proximity_state == "stopped"
+        nominal = (
+            not emergency
+            and intent is not None
+            and observation is not None
+            and _is_zero(intent)
+        )
+        if nominal:
+            return self._nominal_stop_ramp_tick(
+                command,
+                now=now,
+                observation=observation,
+                require_fresh_telemetry=require_fresh_telemetry,
+            )
+        if self._ramping:
+            # Resume-reset: the first non-zero intent after a ramp starts from
+            # a zeroed shaper, exactly as a flag-off resume does.
+            self._reset_shaper()
+        dt_s = 0.1 if self._shaped_at is None else max(1e-3, min(0.25, now - self._shaped_at))
+        self._shaped_at = now
+        vx, vy, vyaw = self._shaper.step(
+            (command.vx, command.vy, command.vyaw),
+            dt_s=dt_s,
+            emergency=emergency,
+        )
+        self._last_shaped = (vx, vy, vyaw)
+        return VelocityCommand(vx=vx, vy=vy, vyaw=vyaw)
+
+    def _nominal_stop_ramp_tick(
+        self,
+        command: VelocityCommand,
+        *,
+        now: float,
+        observation: SimObservation,
+        require_fresh_telemetry: bool,
+    ) -> VelocityCommand:
+        previous = self._last_shaped
+        dt_s = 0.1 if self._shaped_at is None else max(1e-3, min(0.25, now - self._shaped_at))
+        self._shaped_at = now
+        self._ramp_ticks += 1
+        candidate = VelocityCommand(
+            *self._shaper.step(
+                (command.vx, command.vy, command.vyaw),
+                dt_s=dt_s,
+                stop=nominal_stop_step,
+            )
+        )
+        disposed, verdict = self._regate(
+            candidate,
+            observation,
+            now=now,
+            require_fresh_telemetry=require_fresh_telemetry,
+        )
+        allowed = None
+        translating = math.hypot(candidate.vx, candidate.vy) > 1e-6
+        zeroed = math.hypot(disposed.vx, disposed.vy) <= 1e-6
+        if verdict != "stopped" and not (translating and zeroed):
+            allowed = enforce_monotone_stop(
+                previous, (disposed.vx, disposed.vy, disposed.vyaw)
+            )
+        if allowed is None:
+            self._preempt_ticks += 1
+            self._reset_shaper()
+            return VelocityCommand()
+        self._shaper.reset(allowed)
+        self._last_shaped = allowed
+        self._ramping = True
+        return VelocityCommand(vx=allowed[0], vy=allowed[1], vyaw=allowed[2])
+
+    def _regate(
+        self,
+        candidate: VelocityCommand,
+        observation: SimObservation,
+        *,
+        now: float,
+        require_fresh_telemetry: bool,
+    ) -> tuple[VelocityCommand, str]:
+        """The untouched gate, re-run on the ramp candidate (+ TTC verdict)."""
+
+        self._regate_ticks += 1
+        gated, state = apply_reactive_safety(
+            candidate,
+            observation,
+            policy=self._policy,
+            owner_orbit=False,
+            orbit_radius_m=0.0,
+            now=now,
+            require_fresh_telemetry=require_fresh_telemetry,
+        )
+        if not self._time_to_collision.enabled:
+            return gated, state
+        verdict = time_to_collision_verdict(
+            config=self._time_to_collision,
+            tracks=tracks_from_payload(_agent_payload(observation)),
+            robot_xy=(observation.robot.x, observation.robot.y),
+            robot_yaw_rad=observation.robot.yaw,
+            command_vx=gated.vx,
+            command_vy=gated.vy,
+            proximity_state=state,
+        )
+        if not verdict.intervened:
+            return gated, state
+        return (
+            VelocityCommand(
+                vx=gated.vx * verdict.scale,
+                vy=gated.vy * verdict.scale,
+                vyaw=gated.vyaw * verdict.scale,
+            ),
+            verdict.proximity_state,
+        )
+
+    def _reset_shaper(self) -> None:
+        self._shaper.reset()
+        self._last_shaped = (0.0, 0.0, 0.0)
+        self._shaped_at = None
+        self._ramping = False
 
 
 class _ExpressionRig:
@@ -787,6 +988,7 @@ def _record(
     expression_head_yaw_rad: float = 0.0,
     expression_producer: str = "none",
     emote_label: str | None = None,
+    emergency: bool = False,
 ) -> StepRecord:
     center, surface = rig.nearest_pedestrian(
         observation.timestamp, observation.robot.x, observation.robot.y
@@ -818,6 +1020,7 @@ def _record(
         expression_head_yaw_rad=expression_head_yaw_rad,
         expression_producer=expression_producer,
         emote_label=emote_label,
+        emergency=emergency,
     )
 
 
@@ -849,7 +1052,7 @@ def _owner_line_of_sight(
 def _follow_config_from_store(
     store: ConfigStore,
     spatial,
-) -> tuple[FollowConfig, FollowPredictionConfig]:
+) -> tuple[FollowConfig, FollowPredictionConfig, FollowYieldConfig]:
     """Replicate the runtime's authoritative owner-follow configuration merge."""
 
     safety = store.section("safety")
@@ -868,6 +1071,10 @@ def _follow_config_from_store(
     if not isinstance(raw_prediction, dict):
         raise TypeError("owner_follow.prediction must be a mapping")
     prediction = FollowPredictionConfig.from_mapping(raw_prediction)
+    raw_yield = follow_raw.pop("yield_aside", {})
+    if not isinstance(raw_yield, dict):
+        raise TypeError("owner_follow.yield_aside must be a mapping")
+    yield_aside = FollowYieldConfig.from_mapping(raw_yield)
     follow_raw.update(
         {
             "person_stop_m": person_stop_m,
@@ -883,7 +1090,7 @@ def _follow_config_from_store(
             "and owner collision envelope"
         )
     follow_raw["owner_keepout_m"] = configured_keepout
-    return FollowConfig.from_mapping(follow_raw), prediction
+    return FollowConfig.from_mapping(follow_raw), prediction, yield_aside
 
 
 def _time_to_collision_from_store(store: ConfigStore) -> TimeToCollisionConfig:

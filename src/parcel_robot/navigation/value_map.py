@@ -81,6 +81,19 @@ class SemanticValueMap2D:
 
     The confidence returned by :meth:`read` is accumulated observation weight,
     not a probability, and can therefore exceed one after repeated looks.
+
+    **Evidence surface (card VS-5).** ``write(..., is_evidence=True)`` records
+    that the painted look carried QUERY-RELEVANT evidence, as decided upstream
+    by :mod:`parcel_robot.navigation.value_evidence` (VS-3's frozen contract:
+    ``is_evidence`` is true iff at least one observation in the cone matched the
+    query at or above ``SIGLIP2_MATCH_THRESHOLD``).  :attr:`evidence_count` is
+    the number of such looks that actually landed at least one cell, and it is
+    the number the empty-map delegation keys on: ``evidence_count == 0`` means
+    no cell in this map holds anything that could move a decision, which is what
+    makes "flag-on with no evidence is EXACTLY the baseline" provable rather
+    than accidental (``FOLLOWUP_DESIGNS.md`` §2.2(d)).  MISS paints — a scanned
+    cone with nothing query-relevant in it — deliberately do NOT increment it:
+    a miss lowers value, it is not evidence that the target is anywhere.
     """
 
     def __init__(
@@ -107,10 +120,35 @@ class SemanticValueMap2D:
         self._origin_global_cell = _cell(origin_global_cell)
         self._values = np.zeros(shape, dtype=np.float64)
         self._confidence = np.zeros(shape, dtype=np.float64)
+        self._evidence_count = 0
 
     @property
     def shape(self) -> tuple[int, int]:
         return self._shape
+
+    @property
+    def evidence_count(self) -> int:
+        """Number of query-relevant evidence looks painted into this map.
+
+        Zero means the map is evidence-free — the delegation predicate card
+        VS-5 keys on.  Misses and background looks leave it at zero for any
+        number of looks.
+        """
+
+        return self._evidence_count
+
+    def reset(self) -> None:
+        """Mission scope: forget every look, including the evidence count.
+
+        A new search starts with an empty map (VS-3's ``ValueEvidencePolicy``
+        has the same clause).  Without this, evidence from a previous mission
+        would make ``evidence_count > 0`` before the new mission has looked at
+        anything, and the empty-map delegation would silently not fire.
+        """
+
+        self._values = np.zeros(self._shape, dtype=np.float64)
+        self._confidence = np.zeros(self._shape, dtype=np.float64)
+        self._evidence_count = 0
 
     @property
     def resolution_m(self) -> float:
@@ -120,8 +158,22 @@ class SemanticValueMap2D:
     def origin_global_cell(self) -> GridCell:
         return self._origin_global_cell
 
-    def write(self, cone: ViewCone, value: float, conf: float) -> int:
-        """Paint one look and return the number of cells with positive weight."""
+    def write(
+        self,
+        cone: ViewCone,
+        value: float,
+        conf: float,
+        *,
+        is_evidence: bool = False,
+    ) -> int:
+        """Paint one look and return the number of cells with positive weight.
+
+        ``is_evidence`` is VS-3's paint-tuple third field.  It is keyword-only
+        and defaults to ``False`` so every pre-existing caller is unchanged, and
+        it increments :attr:`evidence_count` only when the look also LANDED
+        (``painted > 0``) — a cone that fell entirely outside the rolling window
+        put no evidence in the map and must not claim to have.
+        """
 
         semantic_value = _unit_interval(value, "value")
         axis_confidence = _unit_interval(conf, "conf")
@@ -171,6 +223,8 @@ class SemanticValueMap2D:
                     ) / total_confidence
                 self._confidence[local_y, local_x] = total_confidence
                 painted += 1
+        if is_evidence and painted > 0:
+            self._evidence_count += 1
         return painted
 
     def read(self, cell: GridCell) -> tuple[float, float]:

@@ -3,6 +3,18 @@
 Records a sequence of keyframes (SE2 pose + optional VPR embedding stub) from
 a sim walk. Replay emits SE2Goal proposals only — never model-authored
 velocity. Learned proposers remain behind an explicit gate.
+
+**RM-1 amendment (2026-08-12, scrum/20260811/task_2/SLAM_M_PLAN.md card RM-1).**
+:class:`RouteKeyframe` gained three additive, defaulted fields —
+``frame``, ``labels``, ``tick`` — so the queryable place graph
+(:mod:`parcel_robot.route_memory.place_graph`) can build on the store's
+existing keyframe type instead of forking a parallel one.  All three carry
+behaviour-preserving defaults and are appended *after* the pre-existing fields,
+so positional construction (``RouteKeyframe(0.0, 0.0, 0.0)``) and every v1
+payload on disk are unchanged: ``from_mapping`` supplies the same defaults for
+a payload that lacks the keys, and a v1 reader ignores keys it does not know.
+``ROUTE_MEMORY_SCHEMA`` therefore stays at ``v1`` — the change is additive in
+both directions, not a format break.
 """
 
 from __future__ import annotations
@@ -29,7 +41,27 @@ DOES_NOT_PROVE = (
 
 @dataclass(frozen=True, slots=True)
 class RouteKeyframe:
-    """One teach keyframe: map-frame SE2 pose + optional embedding stub."""
+    """One teach keyframe: map-frame SE2 pose + optional embedding stub.
+
+    ``frame_id`` and ``frame`` are different channels and the names are
+    unfortunately close:
+
+    ``frame_id``
+        the *rendered image* identifier this keyframe's embedding came from
+        (pairs with ``frame_bytes`` on the VPR seam).  Pre-existing.
+
+    ``frame``
+        the REP-105 **coordinate** frame the pose is expressed in, mirroring
+        :attr:`RoutePath.frame`.  RM-1 amendment: the place graph only ever
+        ingests ``parcel_robot.pose.Frame.MAP`` poses, and recording the frame
+        on the keyframe itself (not just on the enclosing path) is what makes a
+        persisted keyframe self-describing — a loader can refuse an ``odom``
+        keyframe without trusting its container.
+
+    ``labels`` are the resolved semantic labels observed at this place and
+    ``tick`` is the ingestion-time monotonic tick counter, both RM-1 additions
+    for :meth:`~parcel_robot.route_memory.place_graph.RoutePlaceGraph.record_visit`.
+    """
 
     x: float
     y: float
@@ -38,6 +70,11 @@ class RouteKeyframe:
     embedding: tuple[float, ...] = ()
     frame_id: str = ""
     meta: Mapping[str, Any] = field(default_factory=dict)
+    # RM-1 additive fields — appended last so positional construction of the
+    # pre-existing signature keeps working.
+    frame: str = "map"
+    labels: tuple[str, ...] = ()
+    tick: int = 0
 
     def __post_init__(self) -> None:
         for name, value in (
@@ -63,10 +100,26 @@ class RouteKeyframe:
             raise TypeError("frame_id must be a string")
         if not isinstance(self.meta, Mapping):
             raise TypeError("meta must be a mapping")
+        # --- RM-1 additive fields ---
+        if not isinstance(self.frame, str) or not self.frame.strip():
+            raise ValueError("frame must be a non-empty string")
+        if not isinstance(self.labels, tuple):
+            raise TypeError("labels must be a tuple")
+        for label in self.labels:
+            if not isinstance(label, str):
+                raise TypeError("labels must contain strings")
+        if isinstance(self.tick, bool) or not isinstance(self.tick, int):
+            raise TypeError("tick must be an int")
+        if self.tick < 0:
+            raise ValueError("tick must be non-negative")
 
     @property
     def pose(self) -> tuple[float, float, float]:
         return (float(self.x), float(self.y), float(self.yaw_rad))
+
+    @property
+    def xy(self) -> tuple[float, float]:
+        return (float(self.x), float(self.y))
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -77,6 +130,10 @@ class RouteKeyframe:
             "embedding": [float(v) for v in self.embedding],
             "frame_id": self.frame_id,
             "meta": dict(self.meta),
+            # RM-1: frame discipline is persisted per keyframe, not inferred.
+            "frame": self.frame,
+            "labels": list(self.labels),
+            "tick": int(self.tick),
         }
 
     @classmethod
@@ -93,6 +150,13 @@ class RouteKeyframe:
             meta = {}
         if not isinstance(meta, Mapping):
             raise TypeError("meta must be a mapping")
+        # RM-1: absent keys take the pre-amendment defaults, so v1 payloads
+        # written before this change still load byte-for-byte identically.
+        labels_raw = data.get("labels", ())
+        if labels_raw is None:
+            labels_raw = ()
+        if not isinstance(labels_raw, Sequence) or isinstance(labels_raw, (str, bytes)):
+            raise TypeError("labels must be a sequence of strings")
         return cls(
             x=float(data["x"]),
             y=float(data["y"]),
@@ -101,6 +165,9 @@ class RouteKeyframe:
             embedding=tuple(float(v) for v in emb_raw),
             frame_id=str(data.get("frame_id", "")),
             meta=dict(meta),
+            frame=str(data.get("frame", "map")),
+            labels=tuple(str(s) for s in labels_raw),
+            tick=int(data.get("tick", 0)),
         )
 
 

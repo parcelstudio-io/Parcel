@@ -1,0 +1,53 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_relative-BB-16-47655953",
+  "family": "object_relative",
+  "goal": {
+    "anchor_entity": "bench_1",
+    "anchor_footprint_m": 0.733757,
+    "band_m": [
+      1.1337570000000001,
+      2.2337569999999998
+    ],
+    "center": [
+      -2.5,
+      3.045
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "wait by the bench",
+  "notes": "search_beyond_the_block_frontier|object_relative",
+  "placement_overrides": {
+    "robot": {
+      "x": -8.5,
+      "y": -7.5,
+      "yaw": -1.3027040711642037
+    },
+    "search_cell": {
+      "axis": "BB",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [
+        "bldg_5"
+      ],
+      "detour_ratio": 1.0715040971920524,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 13.0,
+      "start_target_range_m": 12.13247810630623,
+      "target_entity_id": "bench_1",
+      "visible_from_start": false
+    }
+  },
+  "seed": 1197824339,
+  "shortest_path_m": 13.0,
+  "start_pose": [
+    -8.5,
+    -7.5,
+    -1.3027040711642037
+  ],
+  "synonym": null,
+  "target_entity_id": "bench_1",
+  "tier": "BB"
+}

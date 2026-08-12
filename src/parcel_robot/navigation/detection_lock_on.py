@@ -86,6 +86,25 @@ class LockOnDecision:
     source_candidate: Any | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class LockOnEstimate:
+    """The D2 fused ESTIMATE, offered to verify-on-approach (card VS-4).
+
+    In the record's reference/estimate separation
+    (``scrum/20260811/task_1/FOLLOWUP_DESIGNS.md`` §2.2) this is the *estimate*
+    half: what perception currently believes, never the mission's grounded
+    reference. ``identity_score`` is the SigLIP re-check computed through this
+    session's own matcher seam, so the caller never touches the model surface.
+    """
+
+    position: tuple[float, float]
+    covariance: tuple[tuple[float, float], tuple[float, float]]
+    identity_score: float
+    admitted: bool
+    committed: bool
+    decision: LockOnDecision | None = None
+
+
 class DetectionLockOnSession:
     """Stateful D1+D2+SigLIP gate that emits at most one lock-on commit."""
 
@@ -141,32 +160,13 @@ class DetectionLockOnSession:
 
         confirmed, credibility, _rejected = self.confirmer.update(detection)
         if detection is not None and world_xy is not None and covariance is not None:
-            self.localizer.update(
-                MetricMeasurement(
-                    x=float(world_xy[0]),
-                    y=float(world_xy[1]),
-                    covariance=covariance,
-                    depth_reliable=True,
-                    camera_x=None if robot_xy is None else float(robot_xy[0]),
-                    camera_y=None if robot_xy is None else float(robot_xy[1]),
-                    world_bearing_rad=(
-                        None
-                        if robot_xy is None
-                        else math.atan2(
-                            float(world_xy[1]) - float(robot_xy[1]),
-                            float(world_xy[0]) - float(robot_xy[0]),
-                        )
-                    ),
-                    source_id=detection.envelope.evidence_id,
-                )
-            )
-            self._last_candidate = candidate
-            self._last_label = str(detection.class_id)
-            self._last_candidate_id = str(
-                getattr(candidate, "candidate_id", "") or detection.track_id or detection.class_id
-            )
-            self._last_siglip = _siglip_score(
-                self.matcher, query, detection.class_id, self.config.siglip_threshold
+            self._ingest_measurement(
+                query=query,
+                detection=detection,
+                world_xy=world_xy,
+                covariance=covariance,
+                robot_xy=robot_xy,
+                candidate=candidate,
             )
 
         if not confirmed:
@@ -201,6 +201,118 @@ class DetectionLockOnSession:
         )
         self._committed = True
         return decision
+
+    def _ingest_measurement(
+        self,
+        *,
+        query: str,
+        detection: DetectionMsg,
+        world_xy: tuple[float, float],
+        covariance: tuple[tuple[float, float], tuple[float, float]],
+        robot_xy: tuple[float, float] | None,
+        candidate: Any | None,
+    ) -> None:
+        """Fuse ONE metric measurement into D2 and remember its identity.
+
+        Extracted verbatim from :meth:`observe` so :meth:`fuse_view` (card
+        VS-4's verify-on-approach seam) fuses through exactly the same code
+        path — a second copy of this arithmetic would be a second D2.
+        """
+
+        self.localizer.update(
+            MetricMeasurement(
+                x=float(world_xy[0]),
+                y=float(world_xy[1]),
+                covariance=covariance,
+                depth_reliable=True,
+                camera_x=None if robot_xy is None else float(robot_xy[0]),
+                camera_y=None if robot_xy is None else float(robot_xy[1]),
+                world_bearing_rad=(
+                    None
+                    if robot_xy is None
+                    else math.atan2(
+                        float(world_xy[1]) - float(robot_xy[1]),
+                        float(world_xy[0]) - float(robot_xy[0]),
+                    )
+                ),
+                source_id=detection.envelope.evidence_id,
+            )
+        )
+        self._last_candidate = candidate
+        self._last_label = str(detection.class_id)
+        self._last_candidate_id = str(
+            getattr(candidate, "candidate_id", "") or detection.track_id or detection.class_id
+        )
+        self._last_siglip = _siglip_score(
+            self.matcher, query, detection.class_id, self.config.siglip_threshold
+        )
+
+    def fuse_view(
+        self,
+        *,
+        query: str,
+        candidate: Any,
+        robot_xy: tuple[float, float],
+        now_ns: int,
+        admit_for_confirmation: bool,
+    ) -> LockOnEstimate | None:
+        """Card VS-4 seam: fuse one view, offer it to M-of-N only if ADMITTED.
+
+        The record's independent-evidence rule (§2.2(b)) gates **M-of-N
+        admission**: a view that is not separated from the previously admitted
+        view by the full-turn scan's own stop separation can no longer advance
+        the confirmation window — that is the measured self-confirmation defect
+        (``observe_candidate`` re-reading one cached candidate every tick with a
+        fresh ``now_ns``). D2 keeps fusing EVERY view, because covariance shrink
+        under closing range is exactly what the checkpoints ask about.
+
+        Also the only way to keep fusing AFTER the session has committed:
+        :meth:`observe` returns ``None`` immediately once committed, which is
+        the "no re-verification on approach" half of the same defect
+        (record §2.1(3)). ``observe``/``observe_candidate`` are untouched, so no
+        flag-off caller can reach this.
+        """
+
+        if candidate is None:
+            return None
+        self._view_sequence += 1
+        detection = candidate_to_detection_msg(
+            candidate,
+            robot_xy=robot_xy,
+            sequence=self._view_sequence,
+            now_ns=now_ns,
+        )
+        cov = covariance_from_candidate(candidate, robot_xy=robot_xy)
+        decision: LockOnDecision | None = None
+        if admit_for_confirmation and not self._committed:
+            decision = self.observe(
+                query=query,
+                detection=detection,
+                world_xy=(float(candidate.x), float(candidate.y)),
+                covariance=cov,
+                robot_xy=robot_xy,
+                candidate=candidate,
+            )
+        else:
+            self._ingest_measurement(
+                query=query,
+                detection=detection,
+                world_xy=(float(candidate.x), float(candidate.y)),
+                covariance=cov,
+                robot_xy=robot_xy,
+                candidate=candidate,
+            )
+        estimate = self.localizer.estimate
+        if estimate is None:
+            return None
+        return LockOnEstimate(
+            position=estimate.position,
+            covariance=estimate.covariance,
+            identity_score=float(self._last_siglip),
+            admitted=bool(admit_for_confirmation),
+            committed=bool(self._committed),
+            decision=decision,
+        )
 
     def observe_candidate(
         self,
@@ -416,6 +528,7 @@ __all__ = [
     "DetectionLockOnConfig",
     "DetectionLockOnSession",
     "LockOnDecision",
+    "LockOnEstimate",
     "candidate_to_detection_msg",
     "covariance_from_candidate",
 ]

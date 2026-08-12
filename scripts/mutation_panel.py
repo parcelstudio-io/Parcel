@@ -35,6 +35,16 @@ The six defects (plan, instrument 6):
 ``doubled_envelope``         the stand-off envelope's every margin doubled
 ===========================  ===================================================
 
+Card VS-6 (2026-08-11) adds a seventh, ADDITIVELY. The six above are untouched
+and their verdicts unmoved; the panel artifact gains exactly one row:
+
+===========================  ===================================================
+``phantom_view_consistent``  perception invents a persistent object — every
+                             candidate gains a never-flickering twin, reflected
+                             through the start pose, that the multi-view
+                             confirmer cannot reject
+===========================  ===================================================
+
 Runtime is bounded: a subset of episodes (``--episodes``), one clean run plus
 one run per mutant.
 
@@ -112,7 +122,13 @@ PANEL_REGENERATION_PROVENANCE = (
     "excludes any check already red on the clean run). On v4 that channel is "
     "live and reactive_gate_disabled kills through it. "
     "See scrum/20260809/task_15/E7_FALSE_ARRIVAL_STATUS.md §1.1 and "
-    "E8_V4_REFREEZE_STATUS.md."
+    "E8_V4_REFREEZE_STATUS.md. "
+    "RE-RUN 2026-08-11 (card VS-6) to add ONE mutant, phantom_view_consistent. "
+    "Additive by construction and proven so by diff: the clean run, the four "
+    "clean_checks, the survivors list and all six pre-existing mutant rows are "
+    "BYTE-IDENTICAL to the superseded artifact; the only fields that moved are "
+    "generated_at, this note, and the appended seventh row. 7/7 killed. "
+    "See scrum/20260811/task_1/W2_EVAL_STATUS.md."
 )
 
 #: The frozen episode set the panel certifies. Bumped v3 -> v4 on 2026-08-11
@@ -388,6 +404,102 @@ def mutate_dropped_detections(*, probability: float = 0.5, seed: int = 41) -> It
         yield
 
 
+def _reflected_phantom(item: dict[str, Any], origin: tuple[float, float]) -> dict[str, Any]:
+    """One real semantic payload, reflected through ``origin``, at max confidence.
+
+    Reflection, not a nudge: the phantom lands the same distance away on the
+    opposite bearing, so it is exactly as plausible as the thing it copies from
+    the pose the episode starts at, and no offset literal is invented. Every
+    geometry the payload carries moves together — position, region polygon, and
+    the ``goal_region`` inside ``metadata``, which is what the navigator
+    actually approaches. A phantom whose goal_region still pointed at the real
+    object would be a mutation that does not mutate.
+
+    ``confidence`` is 1.0: the closed upper bound
+    ``SemanticCandidate.__post_init__`` enforces, and the reason the phantom
+    WINS — ``ObservationSemanticMap.query`` sorts by ``-confidence`` first and
+    the oracle reports 0.98. A detector that is certain about something that is
+    not there is the defect being seeded.
+    """
+
+    def reflect(x: float, y: float) -> tuple[float, float]:
+        return (2.0 * origin[0] - float(x), 2.0 * origin[1] - float(y))
+
+    phantom = dict(item)
+    phantom["id"] = f"phantom-{item.get('id')}"
+    phantom["confidence"] = 1.0
+    position = item.get("position")
+    if isinstance(position, (list, tuple)) and len(position) >= 2:
+        moved = reflect(position[0], position[1])
+        phantom["position"] = [moved[0], moved[1], *[float(v) for v in position[2:]]]
+    polygon = item.get("polygon")
+    if isinstance(polygon, (list, tuple)):
+        phantom["polygon"] = [list(reflect(point[0], point[1])) for point in polygon]
+    metadata = dict(item.get("metadata") or {})
+    goal_region = metadata.get("goal_region")
+    if isinstance(goal_region, dict):
+        goal = dict(goal_region)
+        centre = goal.get("center")
+        if isinstance(centre, (list, tuple)) and len(centre) >= 2:
+            goal["center"] = list(reflect(centre[0], centre[1]))
+        goal_polygon = goal.get("polygon")
+        if isinstance(goal_polygon, (list, tuple)):
+            goal["polygon"] = [list(reflect(p[0], p[1])) for p in goal_polygon]
+        metadata["goal_region"] = goal
+    phantom["metadata"] = metadata
+    return phantom
+
+
+@contextlib.contextmanager
+def mutate_phantom_view_consistent() -> Iterator[None]:
+    """A hallucination the confirmer cannot reject: seen in EVERY frame, never moving.
+
+    Card VS-6 / design record §2.1(3). ``MultiViewConfirm`` only ever writes
+    negative evidence when a track fails its M-of-N window, i.e. when it
+    FLICKERS. A phantom that is view-consistent — reported in every frame, at a
+    fixed world point, with geometry that closes exactly like a real object's as
+    the robot drives at it — passes any finite window (V-B measured the commit
+    on view 2), and once committed the session returns ``None`` forever. So the
+    harness question this mutant asks is the one no other mutant asks: if
+    perception invents a persistent object, does anything downstream notice?
+
+    The seeded defect is at the one semantic ingress (the same binding
+    ``dropped_detections`` patches, for the same reason): every candidate the
+    oracle reports gains a twin reflected through the pose the episode started
+    at. The twin is LATCHED — created once, then re-emitted every tick whether
+    or not its source is still in frustum — because a phantom that vanished
+    when the robot turned away would be flicker, which is precisely the class
+    the confirmer already handles. The latch resets when the world clock does
+    (``HeadlessCityWorld.reset`` zeroes ``data.time``), so one episode's
+    phantoms cannot leak into the next.
+
+    The kill channel this is built for is the differential-authority one: the
+    robot commits to the twin, drives to it, and claims arrival where K0's
+    (untouched) goal region says it is not — ``false_arrival``.
+    """
+
+    from parcel_robot import headless_city
+
+    original = headless_city.semantic_candidates_from_observation
+    state: dict[str, Any] = {"time": None, "origin": (0.0, 0.0), "phantoms": {}}
+
+    def with_phantoms(observation: Any, **kwargs: Any) -> Any:
+        real = original(observation, **kwargs)
+        now = float(observation.timestamp)
+        previous = state["time"]
+        if previous is None or now < previous:
+            state["origin"] = (float(observation.robot.x), float(observation.robot.y))
+            state["phantoms"] = {}
+        state["time"] = now
+        for item in real:
+            phantom = _reflected_phantom(item, state["origin"])
+            state["phantoms"].setdefault(str(phantom["id"]), phantom)
+        return [*real, *state["phantoms"].values()]
+
+    with _patched(headless_city, "semantic_candidates_from_observation", with_phantoms):
+        yield
+
+
 @contextlib.contextmanager
 def mutate_doubled_envelope() -> Iterator[None]:
     """Every stand-off margin doubled: the robot stops twice as far out."""
@@ -424,6 +536,9 @@ MUTATIONS: dict[str, Callable[[], Any]] = {
     "inverted_relation": mutate_inverted_relation,
     "dropped_detections": mutate_dropped_detections,
     "doubled_envelope": mutate_doubled_envelope,
+    # Appended, never inserted: the panel artifact lists mutants in this order,
+    # so a new defect adds a row at the end and moves no existing verdict.
+    "phantom_view_consistent": mutate_phantom_view_consistent,
 }
 
 

@@ -12,17 +12,32 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import IntEnum
 
+from parcel_robot.core.stop_ramp import enforce_monotone_stop
 from parcel_robot.models import VelocityCommand
 
 ZERO_COMMAND = VelocityCommand()
 
 
 class InterventionSeverity(IntEnum):
-    """Ordered final-monitor intervention classes."""
+    """Ordered final-monitor intervention classes.
+
+    The three original values are an ON-DISK contract: they are pinned by test
+    and dispatched by identity, so a new class is APPENDED and nothing is ever
+    renumbered. ``NOMINAL_STOP`` (card J-B, 2026-08-11) is deliberately 3 rather
+    than "between" PROXIMITY_STOP and HARD_STOP for exactly that reason — the
+    numeric order is not a severity order and no comparison relies on it.
+    """
 
     CLEAR = 0
     PROXIMITY_STOP = 1
     HARD_STOP = 2
+    #: A NOMINAL (non-emergency) zero intent whose command may decay along the
+    #: monotone ramp of :mod:`parcel_robot.core.stop_ramp` instead of snapping
+    #: to zero. Every emergency arm — arbiter e-stop, input-health latch,
+    #: proximity stop, expired intent — keeps its own severity and P0-A's
+    #: instant zero. The caller must supply ``previous_command``; without it,
+    #: or on any non-monotone candidate, this fails closed to ``HARD_STOP``.
+    NOMINAL_STOP = 3
 
 
 @dataclass(frozen=True)
@@ -61,6 +76,7 @@ def finalize_command(
     severity: InterventionSeverity,
     *,
     downstream_stages: Iterable[ResetObligation] = (),
+    previous_command: VelocityCommand | None = None,
 ) -> FinalStopDecision:
     """Return the command for the dispatch boundary and reset stateful stages.
 
@@ -70,33 +86,74 @@ def finalize_command(
     being reset.  ``PROXIMITY_STOP`` preserves finite yaw while zeroing only
     translation, matching Parcel's existing proximity convention.
 
+    ``NOMINAL_STOP`` passes the candidate through ONLY when
+    :func:`~parcel_robot.core.stop_ramp.enforce_monotone_stop` accepts it as a
+    legal continuation of ``previous_command`` (finite, non-increasing in
+    magnitude per axis, sign preserved or collapsed).  A missing
+    ``previous_command`` or any rejected candidate takes the untouched
+    ``HARD_STOP`` branch, resets included.
+
     Unknown severities and non-finite commands fail closed as ``HARD_STOP``.
+    The tail below is EXPLICITLY fail-closed: before card J-B it returned the
+    candidate for any severity that was not HARD/PROXIMITY, so appending a
+    member would have opened a hole.  Every reachable input today is
+    byte-unaffected by that hardening.
     """
 
     resolved = _severity_or_hard_stop(severity)
     if not _finite_command(candidate):
         resolved = InterventionSeverity.HARD_STOP
 
-    if resolved is InterventionSeverity.HARD_STOP:
-        attempted, failures = _reset_all(downstream_stages)
-        return FinalStopDecision(
-            command=ZERO_COMMAND,
-            severity=resolved,
-            reset_required=True,
-            reset_attempted=attempted,
-            reset_failures=failures,
-        )
+    if resolved is InterventionSeverity.NOMINAL_STOP:
+        allowed = _monotone_stop_or_none(previous_command, candidate)
+        if allowed is None:
+            resolved = InterventionSeverity.HARD_STOP
+        else:
+            candidate = allowed
+
     if resolved is InterventionSeverity.PROXIMITY_STOP:
         return FinalStopDecision(
             command=VelocityCommand(vyaw=candidate.vyaw),
             severity=resolved,
             reset_required=False,
         )
+    if resolved is InterventionSeverity.NOMINAL_STOP:
+        return FinalStopDecision(
+            command=candidate,
+            severity=resolved,
+            reset_required=False,
+        )
+    if resolved is InterventionSeverity.CLEAR:
+        return FinalStopDecision(
+            command=candidate,
+            severity=resolved,
+            reset_required=False,
+        )
+    attempted, failures = _reset_all(downstream_stages)
     return FinalStopDecision(
-        command=candidate,
-        severity=resolved,
-        reset_required=False,
+        command=ZERO_COMMAND,
+        severity=InterventionSeverity.HARD_STOP,
+        reset_required=True,
+        reset_attempted=attempted,
+        reset_failures=failures,
     )
+
+
+def _monotone_stop_or_none(
+    previous: VelocityCommand | None,
+    candidate: VelocityCommand,
+) -> VelocityCommand | None:
+    """The nominal-ramp boundary check, in command space."""
+
+    if not isinstance(previous, VelocityCommand):
+        return None
+    allowed = enforce_monotone_stop(
+        (previous.vx, previous.vy, previous.vyaw),
+        (candidate.vx, candidate.vy, candidate.vyaw),
+    )
+    if allowed is None:
+        return None
+    return VelocityCommand(vx=allowed[0], vy=allowed[1], vyaw=allowed[2])
 
 
 def _severity_or_hard_stop(value: object) -> InterventionSeverity:

@@ -1,0 +1,1312 @@
+{
+  "aggregate": {
+    "chain_ticks_total": 456,
+    "collisions": 0,
+    "deferred_releases_total": 0,
+    "drift_pct_mean": 3.3774868649460053,
+    "episodes_drift_in_band": 4,
+    "episodes_goal_known_at_tick0": 5,
+    "episodes_with_drift_row": 6,
+    "episodes_with_route_found": 4,
+    "episodes_with_win": 4,
+    "false_arrival": 0,
+    "fidelity_coverage": 0.13952991452991453,
+    "fidelity_mean_m": 2.276112860201828,
+    "graph_edges_total": 359,
+    "graph_keyframes_total": 364,
+    "graph_reanchor_events_total": 0,
+    "handbacks_total": 2,
+    "mean_dtg_m": 8.370893297064706,
+    "n": 6,
+    "sr": 0.0,
+    "successes": 0,
+    "teach_collisions": 0,
+    "teach_completed": 6,
+    "teach_ticks_total": 7284,
+    "vetoes_total": 0
+  },
+  "arm": "on",
+  "artifact": "rm3-on",
+  "base_max_steps": 200,
+  "budget_policy": "scaled-path-v1",
+  "card": "RM-3",
+  "cells_digest": "9af5a60ee404c879fb0e640411c83711b83beab8e44c12baed61f22a12a752cd",
+  "does_not_prove": [
+    "one scene, one simulator, sim-truth semantics \u2014 not camera perception",
+    "the taught leg is a scripted demonstration, not a learned or spoken teach",
+    "route memory is session-scoped: nothing here measures cross-session recall"
+  ],
+  "elapsed_s": 126.5,
+  "episodes": [
+    {
+      "authority_category": "agreement",
+      "cell": {
+        "corridor_blockers": [],
+        "corridor_min_clearance_m": -0.77,
+        "detour_excess_m": 15.687217,
+        "goal_attach_m": 2.412986,
+        "goal_distance_m": 12.60843,
+        "goal_edge_distance_m": 10.10843,
+        "obstacle_stop_floor_m": 0.6,
+        "range_m": 12.60843,
+        "reach_m": 8.05,
+        "removed_entities": [
+          "bench_1",
+          "lamp_post_1",
+          "lamp_post_2",
+          "planter_1",
+          "planter_2",
+          "tree_2"
+        ],
+        "route_min_clearance_m": 0.858308,
+        "set": "v4r",
+        "start_attach_m": 0.0,
+        "start_clearance_m": 1.038308,
+        "target_entity_id": "tree_1",
+        "taught_route": [
+          [
+            7.5,
+            1.5
+          ],
+          [
+            7.75,
+            1.25
+          ],
+          [
+            7.75,
+            -1.75
+          ],
+          [
+            8.25,
+            -2.25
+          ],
+          [
+            8.25,
+            -7.75
+          ],
+          [
+            7.75,
+            -7.75
+          ],
+          [
+            7.25,
+            -8.25
+          ],
+          [
+            2.25,
+            -8.25
+          ],
+          [
+            1.75,
+            -7.75
+          ],
+          [
+            1.75,
+            -6.75
+          ],
+          [
+            -2.25,
+            -2.75
+          ],
+          [
+            -2.25,
+            -2.25
+          ],
+          [
+            -2.75,
+            -2.25
+          ],
+          [
+            -2.75,
+            -1.25
+          ],
+          [
+            -4.75,
+            0.75
+          ]
+        ],
+        "taught_route_m": 27.960155,
+        "teach_min_clearance_m": 0.85,
+        "visibility_max_range_m": 12.0,
+        "visible_from_start": false
+      },
+      "collision_count": 0,
+      "distance_to_goal_m": 12.461891796930198,
+      "episode_id": "nav-rmem-object_goal-00-95c11929",
+      "failure": "planning_error",
+      "family": "object_goal",
+      "fidelity": {
+        "coverage": 0.26666666666666666,
+        "max_m": 0.41326461946832804,
+        "mean_m": 0.2594406813750415,
+        "path_m": 8.169232648368972,
+        "vertices": 15,
+        "vertices_covered": 4
+      },
+      "graph": {
+        "edges": 50,
+        "graph_reanchor_events": 0,
+        "keyframes": 51,
+        "keyframes_admitted": 51,
+        "proposals_made": 3,
+        "proposals_vetoed": 0,
+        "proposals_won": 3,
+        "provider_reanchors": 0,
+        "routes_found": 3,
+        "routes_queried": 3,
+        "schema_version": 1,
+        "visits": 1953
+      },
+      "max_steps": 1053,
+      "measured": {
+        "chain_ticks": 200,
+        "deferred_releases": 0,
+        "flushes": 2,
+        "handbacks": 1,
+        "keyframes": 0,
+        "proposals": 2,
+        "routes_found": 2,
+        "routes_queried": 2,
+        "vetoes": 0,
+        "wins": 2
+      },
+      "mission_status": "failed",
+      "opening_grounding_outcome": "RESOLVED",
+      "opening_resolution_state": "resolved",
+      "pose_drift": {
+        "band_applied": true,
+        "band_pct": [
+          0.105,
+          22.88
+        ],
+        "distance_m": 8.169232648368974,
+        "divergence_m": 0.29490028990044787,
+        "divergence_pct": 3.6098897239672336,
+        "first_lost_t_s": null,
+        "healthy_ticks": 739,
+        "in_band": true,
+        "last_lost_t_s": null,
+        "lost_recovered": false,
+        "lost_ticks": 0,
+        "profile": "calibrated_go2",
+        "reanchor_events": 0,
+        "recovered_t_s": null,
+        "seed": 1387799314,
+        "slip_events": 0,
+        "yaw_divergence_rad": 0.06651551861214468
+      },
+      "pre_drive": {
+        "collisions": 0,
+        "completed": true,
+        "drive_m": 55.92031,
+        "drive_waypoints": 29,
+        "final_gap_m": 0.209138,
+        "final_xy": [
+          7.660348,
+          1.365734
+        ],
+        "reached_goal_end": true,
+        "reached_goal_end_tick": 603,
+        "reason": "route_complete",
+        "route_m": 27.960155,
+        "teach_budget": 3452,
+        "teach_ticks": 1214,
+        "waypoints": 15
+      },
+      "reason": "navigation_no_progress",
+      "route_memory_enabled": true,
+      "scorer_arrival": false,
+      "spl": 0.0,
+      "success": false,
+      "system_arrival": false,
+      "target_entity_id": "tree_1",
+      "taught_leg_counters": {
+        "chain_ticks": 60,
+        "deferred_releases": 0,
+        "enabled": true,
+        "flushes": 1,
+        "handbacks": 1,
+        "hook": {
+          "edges": 50,
+          "graph_reanchor_events": 0,
+          "keyframes": 51,
+          "keyframes_admitted": 51,
+          "proposals_made": 1,
+          "proposals_vetoed": 0,
+          "proposals_won": 1,
+          "provider_reanchors": 0,
+          "routes_found": 1,
+          "routes_queried": 1,
+          "schema_version": 1,
+          "visits": 1214
+        },
+        "keyframes": 51,
+        "proposals": 1,
+        "routes_found": 1,
+        "vetoes": 0,
+        "wins": 1
+      },
+      "trace_len": 739,
+      "wall_s": 26.61
+    },
+    {
+      "authority_category": "agreement",
+      "cell": {
+        "corridor_blockers": [],
+        "corridor_min_clearance_m": -0.77,
+        "detour_excess_m": 15.972653,
+        "goal_attach_m": 2.405203,
+        "goal_distance_m": 12.767537,
+        "goal_edge_distance_m": 10.267537,
+        "obstacle_stop_floor_m": 0.6,
+        "range_m": 12.767537,
+        "reach_m": 8.05,
+        "removed_entities": [
+          "bench_1",
+          "lamp_post_1",
+          "lamp_post_2",
+          "planter_1",
+          "planter_2",
+          "tree_1"
+        ],
+        "route_min_clearance_m": 0.93,
+        "set": "v4r",
+        "start_attach_m": 0.0,
+        "start_clearance_m": 2.873144,
+        "target_entity_id": "tree_2",
+        "taught_route": [
+          [
+            -7.5,
+            0.5
+          ],
+          [
+            -7.25,
+            1.25
+          ],
+          [
+            -7.25,
+            2.75
+          ],
+          [
+            -7.75,
+            3.25
+          ],
+          [
+            -7.75,
+            7.75
+          ],
+          [
+            -7.25,
+            8.25
+          ],
+          [
+            8.25,
+            8.25
+          ],
+          [
+            8.25,
+            7.75
+          ],
+          [
+            8.75,
+            7.25
+          ],
+          [
+            8.75,
+            3.25
+          ],
+          [
+            7.75,
+            2.25
+          ],
+          [
+            7.25,
+            2.25
+          ]
+        ],
+        "taught_route_m": 30.826103,
+        "teach_min_clearance_m": 0.85,
+        "visibility_max_range_m": 12.0,
+        "visible_from_start": false
+      },
+      "collision_count": 0,
+      "distance_to_goal_m": 2.459114039891852,
+      "episode_id": "nav-rmem-object_goal-01-d7c1f694",
+      "failure": "grounding_error",
+      "family": "object_goal",
+      "fidelity": {
+        "coverage": 0.08333333333333333,
+        "max_m": 7.337825720230582,
+        "mean_m": 4.324659671140679,
+        "path_m": 8.097163833014722,
+        "vertices": 12,
+        "vertices_covered": 1
+      },
+      "graph": {
+        "edges": 71,
+        "graph_reanchor_events": 0,
+        "keyframes": 72,
+        "keyframes_admitted": 72,
+        "proposals_made": 0,
+        "proposals_vetoed": 0,
+        "proposals_won": 0,
+        "provider_reanchors": 0,
+        "routes_found": 0,
+        "routes_queried": 0,
+        "schema_version": 1,
+        "visits": 1912
+      },
+      "max_steps": 1148,
+      "measured": {
+        "chain_ticks": 0,
+        "deferred_releases": 0,
+        "flushes": 0,
+        "handbacks": 0,
+        "keyframes": 15,
+        "proposals": 0,
+        "routes_found": 0,
+        "routes_queried": 0,
+        "vetoes": 0,
+        "wins": 0
+      },
+      "mission_status": "failed",
+      "opening_grounding_outcome": "RESOLVED",
+      "opening_resolution_state": "resolved",
+      "pose_drift": {
+        "band_applied": true,
+        "band_pct": [
+          0.105,
+          22.88
+        ],
+        "distance_m": 8.097163833014735,
+        "divergence_m": 0.6200328563527208,
+        "divergence_pct": 7.657407817594698,
+        "first_lost_t_s": null,
+        "healthy_ticks": 516,
+        "in_band": true,
+        "last_lost_t_s": null,
+        "lost_recovered": false,
+        "lost_ticks": 0,
+        "profile": "calibrated_go2",
+        "reanchor_events": 0,
+        "recovered_t_s": null,
+        "seed": 3903697642,
+        "slip_events": 0,
+        "yaw_divergence_rad": 0.12676304807216934
+      },
+      "pre_drive": {
+        "collisions": 0,
+        "completed": true,
+        "drive_m": 61.652207,
+        "drive_waypoints": 23,
+        "final_gap_m": 0.245866,
+        "final_xy": [
+          -7.410362,
+          0.728944
+        ],
+        "reached_goal_end": true,
+        "reached_goal_end_tick": 673,
+        "reason": "route_complete",
+        "route_m": 30.826103,
+        "teach_budget": 3430,
+        "teach_ticks": 1396,
+        "waypoints": 12
+      },
+      "reason": "semantic_target_unreachable",
+      "route_memory_enabled": true,
+      "scorer_arrival": false,
+      "spl": 0.0,
+      "success": false,
+      "system_arrival": false,
+      "target_entity_id": "tree_2",
+      "taught_leg_counters": {
+        "chain_ticks": 0,
+        "deferred_releases": 0,
+        "enabled": true,
+        "flushes": 0,
+        "handbacks": 0,
+        "hook": {
+          "edges": 56,
+          "graph_reanchor_events": 0,
+          "keyframes": 57,
+          "keyframes_admitted": 57,
+          "proposals_made": 0,
+          "proposals_vetoed": 0,
+          "proposals_won": 0,
+          "provider_reanchors": 0,
+          "routes_found": 0,
+          "routes_queried": 0,
+          "schema_version": 1,
+          "visits": 1396
+        },
+        "keyframes": 57,
+        "proposals": 0,
+        "routes_found": 0,
+        "vetoes": 0,
+        "wins": 0
+      },
+      "trace_len": 516,
+      "wall_s": 32.33
+    },
+    {
+      "authority_category": "agreement",
+      "cell": {
+        "corridor_blockers": [
+          "owner"
+        ],
+        "corridor_min_clearance_m": -0.38,
+        "detour_excess_m": 10.76897,
+        "goal_attach_m": 2.390084,
+        "goal_distance_m": 12.042114,
+        "goal_edge_distance_m": 9.542114,
+        "obstacle_stop_floor_m": 0.6,
+        "range_m": 12.042114,
+        "reach_m": 8.05,
+        "removed_entities": [
+          "bench_1",
+          "lamp_post_2",
+          "planter_1",
+          "planter_2",
+          "tree_1",
+          "tree_2"
+        ],
+        "route_min_clearance_m": 0.853699,
+        "set": "v4r",
+        "start_attach_m": 0.0,
+        "start_clearance_m": 2.38,
+        "target_entity_id": "lamp_post_1",
+        "taught_route": [
+          [
+            9.5,
+            -4.5
+          ],
+          [
+            9.75,
+            -4.75
+          ],
+          [
+            9.75,
+            -6.25
+          ],
+          [
+            8.25,
+            -7.75
+          ],
+          [
+            7.75,
+            -7.75
+          ],
+          [
+            7.25,
+            -8.25
+          ],
+          [
+            2.25,
+            -8.25
+          ],
+          [
+            1.75,
+            -7.75
+          ],
+          [
+            1.75,
+            -6.75
+          ],
+          [
+            -2.25,
+            -2.75
+          ],
+          [
+            -2.25,
+            -2.25
+          ],
+          [
+            -2.75,
+            -2.25
+          ],
+          [
+            -2.75,
+            0.25
+          ],
+          [
+            -2.25,
+            0.25
+          ],
+          [
+            -1.25,
+            1.25
+          ]
+        ],
+        "taught_route_m": 22.960155,
+        "teach_min_clearance_m": 0.85,
+        "visibility_max_range_m": 12.0,
+        "visible_from_start": false
+      },
+      "collision_count": 0,
+      "distance_to_goal_m": 7.407083205324589,
+      "episode_id": "nav-rmem-object_goal-02-09d9541d",
+      "failure": "planning_error",
+      "family": "object_goal",
+      "fidelity": {
+        "coverage": 0.13333333333333333,
+        "max_m": 2.1356645178523403,
+        "mean_m": 2.0353962056813413,
+        "path_m": 2.3677694283100528,
+        "vertices": 15,
+        "vertices_covered": 2
+      },
+      "graph": {
+        "edges": 44,
+        "graph_reanchor_events": 0,
+        "keyframes": 45,
+        "keyframes_admitted": 45,
+        "proposals_made": 1,
+        "proposals_vetoed": 0,
+        "proposals_won": 1,
+        "provider_reanchors": 0,
+        "routes_found": 1,
+        "routes_queried": 1,
+        "schema_version": 1,
+        "visits": 1691
+      },
+      "max_steps": 886,
+      "measured": {
+        "chain_ticks": 0,
+        "deferred_releases": 0,
+        "flushes": 0,
+        "handbacks": 0,
+        "keyframes": 4,
+        "proposals": 0,
+        "routes_found": 0,
+        "routes_queried": 0,
+        "vetoes": 0,
+        "wins": 0
+      },
+      "mission_status": "failed",
+      "opening_grounding_outcome": "UNSEEN",
+      "opening_resolution_state": "searching",
+      "pose_drift": {
+        "band_applied": false,
+        "band_pct": [
+          0.105,
+          22.88
+        ],
+        "distance_m": 2.3677694283100514,
+        "divergence_m": 0.038157333855253286,
+        "divergence_pct": 1.611530810349525,
+        "first_lost_t_s": null,
+        "healthy_ticks": 670,
+        "in_band": false,
+        "last_lost_t_s": null,
+        "lost_recovered": false,
+        "lost_ticks": 0,
+        "profile": "calibrated_go2",
+        "reanchor_events": 0,
+        "recovered_t_s": null,
+        "seed": 1686662463,
+        "slip_events": 0,
+        "yaw_divergence_rad": 0.0017006080976300633
+      },
+      "pre_drive": {
+        "collisions": 0,
+        "completed": true,
+        "drive_m": 45.92031,
+        "drive_waypoints": 29,
+        "final_gap_m": 0.230706,
+        "final_xy": [
+          9.665369,
+          -4.660868
+        ],
+        "reached_goal_end": true,
+        "reached_goal_end_tick": 511,
+        "reason": "route_complete",
+        "route_m": 22.960155,
+        "teach_budget": 3052,
+        "teach_ticks": 1021,
+        "waypoints": 15
+      },
+      "reason": "navigation_no_progress",
+      "route_memory_enabled": true,
+      "scorer_arrival": false,
+      "spl": 0.0,
+      "success": false,
+      "system_arrival": false,
+      "target_entity_id": "lamp_post_1",
+      "taught_leg_counters": {
+        "chain_ticks": 60,
+        "deferred_releases": 0,
+        "enabled": true,
+        "flushes": 1,
+        "handbacks": 1,
+        "hook": {
+          "edges": 40,
+          "graph_reanchor_events": 0,
+          "keyframes": 41,
+          "keyframes_admitted": 41,
+          "proposals_made": 1,
+          "proposals_vetoed": 0,
+          "proposals_won": 1,
+          "provider_reanchors": 0,
+          "routes_found": 1,
+          "routes_queried": 1,
+          "schema_version": 1,
+          "visits": 1021
+        },
+        "keyframes": 41,
+        "proposals": 1,
+        "routes_found": 1,
+        "vetoes": 0,
+        "wins": 1
+      },
+      "trace_len": 670,
+      "wall_s": 18.31
+    },
+    {
+      "authority_category": "agreement",
+      "cell": {
+        "corridor_blockers": [
+          "bldg_5",
+          "owner"
+        ],
+        "corridor_min_clearance_m": -0.38,
+        "detour_excess_m": 15.522802,
+        "goal_attach_m": 2.263846,
+        "goal_distance_m": 12.280065,
+        "goal_edge_distance_m": 9.780065,
+        "obstacle_stop_floor_m": 0.6,
+        "range_m": 12.280065,
+        "reach_m": 8.05,
+        "removed_entities": [
+          "bench_1",
+          "lamp_post_1",
+          "planter_1",
+          "planter_2",
+          "tree_1",
+          "tree_2"
+        ],
+        "route_min_clearance_m": 0.930035,
+        "set": "v4r",
+        "start_attach_m": 0.0,
+        "start_clearance_m": 1.58,
+        "target_entity_id": "lamp_post_2",
+        "taught_route": [
+          [
+            5.5,
+            -1.5
+          ],
+          [
+            6.25,
+            -1.25
+          ],
+          [
+            7.25,
+            -1.25
+          ],
+          [
+            8.25,
+            -2.25
+          ],
+          [
+            8.25,
+            -7.75
+          ],
+          [
+            7.75,
+            -7.75
+          ],
+          [
+            7.25,
+            -8.25
+          ],
+          [
+            2.25,
+            -8.25
+          ],
+          [
+            1.75,
+            -7.75
+          ],
+          [
+            1.75,
+            -6.75
+          ],
+          [
+            -2.25,
+            -2.75
+          ],
+          [
+            -2.25,
+            -2.25
+          ],
+          [
+            -2.75,
+            -2.25
+          ],
+          [
+            -2.75,
+            -1.75
+          ],
+          [
+            -4.75,
+            -1.75
+          ]
+        ],
+        "taught_route_m": 25.775851,
+        "teach_min_clearance_m": 0.85,
+        "visibility_max_range_m": 12.0,
+        "visible_from_start": false
+      },
+      "collision_count": 0,
+      "distance_to_goal_m": 7.8479194220004675,
+      "episode_id": "nav-rmem-object_goal-03-8249b0a1",
+      "failure": "planning_error",
+      "family": "object_goal",
+      "fidelity": {
+        "coverage": 0.06666666666666667,
+        "max_m": 2.0267733500018963,
+        "mean_m": 1.829309339652105,
+        "path_m": 2.4678848009035703,
+        "vertices": 15,
+        "vertices_covered": 1
+      },
+      "graph": {
+        "edges": 50,
+        "graph_reanchor_events": 0,
+        "keyframes": 51,
+        "keyframes_admitted": 51,
+        "proposals_made": 2,
+        "proposals_vetoed": 0,
+        "proposals_won": 2,
+        "provider_reanchors": 0,
+        "routes_found": 2,
+        "routes_queried": 2,
+        "schema_version": 1,
+        "visits": 1841
+      },
+      "max_steps": 980,
+      "measured": {
+        "chain_ticks": 60,
+        "deferred_releases": 0,
+        "flushes": 1,
+        "handbacks": 1,
+        "keyframes": 4,
+        "proposals": 1,
+        "routes_found": 1,
+        "routes_queried": 1,
+        "vetoes": 0,
+        "wins": 1
+      },
+      "mission_status": "failed",
+      "opening_grounding_outcome": "RESOLVED",
+      "opening_resolution_state": "resolved",
+      "pose_drift": {
+        "band_applied": false,
+        "band_pct": [
+          0.105,
+          22.88
+        ],
+        "distance_m": 2.46788480090175,
+        "divergence_m": 0.04260101908988439,
+        "divergence_pct": 1.7262158701377892,
+        "first_lost_t_s": null,
+        "healthy_ticks": 707,
+        "in_band": false,
+        "last_lost_t_s": null,
+        "lost_recovered": false,
+        "lost_ticks": 0,
+        "profile": "calibrated_go2",
+        "reanchor_events": 0,
+        "recovered_t_s": null,
+        "seed": 2607401967,
+        "slip_events": 0,
+        "yaw_divergence_rad": 0.014626962919886743
+      },
+      "pre_drive": {
+        "collisions": 0,
+        "completed": true,
+        "drive_m": 51.551702,
+        "drive_waypoints": 29,
+        "final_gap_m": 0.241756,
+        "final_xy": [
+          5.72377,
+          -1.408496
+        ],
+        "reached_goal_end": true,
+        "reached_goal_end_tick": 570,
+        "reason": "route_complete",
+        "route_m": 25.775851,
+        "teach_budget": 3277,
+        "teach_ticks": 1134,
+        "waypoints": 15
+      },
+      "reason": "navigation_no_progress",
+      "route_memory_enabled": true,
+      "scorer_arrival": false,
+      "spl": 0.0,
+      "success": false,
+      "system_arrival": false,
+      "target_entity_id": "lamp_post_2",
+      "taught_leg_counters": {
+        "chain_ticks": 60,
+        "deferred_releases": 0,
+        "enabled": true,
+        "flushes": 1,
+        "handbacks": 1,
+        "hook": {
+          "edges": 46,
+          "graph_reanchor_events": 0,
+          "keyframes": 47,
+          "keyframes_admitted": 47,
+          "proposals_made": 1,
+          "proposals_vetoed": 0,
+          "proposals_won": 1,
+          "provider_reanchors": 0,
+          "routes_found": 1,
+          "routes_queried": 1,
+          "schema_version": 1,
+          "visits": 1134
+        },
+        "keyframes": 47,
+        "proposals": 1,
+        "routes_found": 1,
+        "vetoes": 0,
+        "wins": 1
+      },
+      "trace_len": 707,
+      "wall_s": 21.68
+    },
+    {
+      "authority_category": "agreement",
+      "cell": {
+        "corridor_blockers": [
+          "bldg_4"
+        ],
+        "corridor_min_clearance_m": -0.519687,
+        "detour_excess_m": 17.591023,
+        "goal_attach_m": 1.812326,
+        "goal_distance_m": 12.008623,
+        "goal_edge_distance_m": 9.774866,
+        "obstacle_stop_floor_m": 0.6,
+        "range_m": 12.008623,
+        "reach_m": 8.05,
+        "removed_entities": [
+          "lamp_post_1",
+          "lamp_post_2",
+          "planter_1",
+          "planter_2",
+          "tree_1",
+          "tree_2"
+        ],
+        "route_min_clearance_m": 0.853699,
+        "set": "v4r",
+        "start_attach_m": 0.0,
+        "start_clearance_m": 2.113105,
+        "target_entity_id": "bench_1",
+        "taught_route": [
+          [
+            9.5,
+            3.5
+          ],
+          [
+            9.75,
+            3.25
+          ],
+          [
+            9.75,
+            -6.25
+          ],
+          [
+            8.25,
+            -7.75
+          ],
+          [
+            7.75,
+            -7.75
+          ],
+          [
+            7.25,
+            -8.25
+          ],
+          [
+            2.25,
+            -8.25
+          ],
+          [
+            1.75,
+            -7.75
+          ],
+          [
+            1.75,
+            -6.75
+          ],
+          [
+            -2.25,
+            -2.75
+          ],
+          [
+            -2.25,
+            -2.25
+          ],
+          [
+            -2.75,
+            -2.25
+          ],
+          [
+            -2.75,
+            1.25
+          ]
+        ],
+        "taught_route_m": 30.045942,
+        "teach_min_clearance_m": 0.85,
+        "visibility_max_range_m": 12.0,
+        "visible_from_start": false
+      },
+      "collision_count": 0,
+      "distance_to_goal_m": 4.6278306770251865,
+      "episode_id": "nav-rmem-object_relative-04-49d40d2e",
+      "failure": "planning_error",
+      "family": "object_relative",
+      "fidelity": {
+        "coverage": 0.15384615384615385,
+        "max_m": 6.065323061565003,
+        "mean_m": 3.771802198682163,
+        "path_m": 14.519082381733766,
+        "vertices": 13,
+        "vertices_covered": 2
+      },
+      "graph": {
+        "edges": 82,
+        "graph_reanchor_events": 0,
+        "keyframes": 82,
+        "keyframes_admitted": 82,
+        "proposals_made": 2,
+        "proposals_vetoed": 0,
+        "proposals_won": 2,
+        "provider_reanchors": 0,
+        "routes_found": 2,
+        "routes_queried": 2,
+        "schema_version": 1,
+        "visits": 2083
+      },
+      "max_steps": 1122,
+      "measured": {
+        "chain_ticks": 140,
+        "deferred_releases": 0,
+        "flushes": 1,
+        "handbacks": 0,
+        "keyframes": 26,
+        "proposals": 1,
+        "routes_found": 1,
+        "routes_queried": 1,
+        "vetoes": 0,
+        "wins": 1
+      },
+      "mission_status": "failed",
+      "opening_grounding_outcome": "RESOLVED",
+      "opening_resolution_state": "resolved",
+      "pose_drift": {
+        "band_applied": true,
+        "band_pct": [
+          0.105,
+          22.88
+        ],
+        "distance_m": 14.519082381733758,
+        "divergence_m": 0.22845186064481157,
+        "divergence_pct": 1.5734593594718043,
+        "first_lost_t_s": null,
+        "healthy_ticks": 800,
+        "in_band": true,
+        "last_lost_t_s": null,
+        "lost_recovered": false,
+        "lost_ticks": 0,
+        "profile": "calibrated_go2",
+        "reanchor_events": 0,
+        "recovered_t_s": null,
+        "seed": 1593349239,
+        "slip_events": 0,
+        "yaw_divergence_rad": 0.06947635578304956
+      },
+      "pre_drive": {
+        "collisions": 0,
+        "completed": true,
+        "drive_m": 60.091883,
+        "drive_waypoints": 25,
+        "final_gap_m": 0.24875,
+        "final_xy": [
+          9.684907,
+          3.333609
+        ],
+        "reached_goal_end": true,
+        "reached_goal_end_tick": 640,
+        "reason": "route_complete",
+        "route_m": 30.045942,
+        "teach_budget": 3451,
+        "teach_ticks": 1283,
+        "waypoints": 13
+      },
+      "reason": "navigation_no_progress",
+      "route_memory_enabled": true,
+      "scorer_arrival": false,
+      "spl": 0.0,
+      "success": false,
+      "system_arrival": false,
+      "target_entity_id": "bench_1",
+      "taught_leg_counters": {
+        "chain_ticks": 60,
+        "deferred_releases": 0,
+        "enabled": true,
+        "flushes": 1,
+        "handbacks": 1,
+        "hook": {
+          "edges": 55,
+          "graph_reanchor_events": 0,
+          "keyframes": 56,
+          "keyframes_admitted": 56,
+          "proposals_made": 1,
+          "proposals_vetoed": 0,
+          "proposals_won": 1,
+          "provider_reanchors": 0,
+          "routes_found": 1,
+          "routes_queried": 1,
+          "schema_version": 1,
+          "visits": 1283
+        },
+        "keyframes": 56,
+        "proposals": 1,
+        "routes_found": 1,
+        "vetoes": 0,
+        "wins": 1
+      },
+      "trace_len": 800,
+      "wall_s": 16.78
+    },
+    {
+      "authority_category": "agreement",
+      "cell": {
+        "corridor_blockers": [],
+        "corridor_min_clearance_m": -0.77,
+        "detour_excess_m": 16.207604,
+        "goal_attach_m": 1.916377,
+        "goal_distance_m": 12.60843,
+        "goal_edge_distance_m": 10.65843,
+        "obstacle_stop_floor_m": 0.6,
+        "range_m": 12.60843,
+        "reach_m": 8.05,
+        "removed_entities": [
+          "bench_1",
+          "lamp_post_1",
+          "lamp_post_2",
+          "planter_2",
+          "tree_1",
+          "tree_2"
+        ],
+        "route_min_clearance_m": 0.853699,
+        "set": "v4r",
+        "start_attach_m": 0.0,
+        "start_clearance_m": 1.038308,
+        "target_entity_id": "planter_1",
+        "taught_route": [
+          [
+            7.5,
+            1.5
+          ],
+          [
+            7.75,
+            1.25
+          ],
+          [
+            7.75,
+            -1.75
+          ],
+          [
+            8.25,
+            -2.25
+          ],
+          [
+            8.25,
+            -7.75
+          ],
+          [
+            7.75,
+            -7.75
+          ],
+          [
+            7.25,
+            -8.25
+          ],
+          [
+            2.25,
+            -8.25
+          ],
+          [
+            1.75,
+            -7.75
+          ],
+          [
+            1.75,
+            -6.75
+          ],
+          [
+            -2.25,
+            -2.75
+          ],
+          [
+            -2.25,
+            -2.25
+          ],
+          [
+            -2.75,
+            -2.25
+          ],
+          [
+            -2.75,
+            -0.75
+          ],
+          [
+            -4.75,
+            1.25
+          ]
+        ],
+        "taught_route_m": 28.460155,
+        "teach_min_clearance_m": 0.85,
+        "visibility_max_range_m": 12.0,
+        "visible_from_start": false
+      },
+      "collision_count": 0,
+      "distance_to_goal_m": 15.421520641215949,
+      "episode_id": "nav-rmem-object_relative-05-3302fe0d",
+      "failure": "grounding_error",
+      "family": "object_relative",
+      "fidelity": {
+        "coverage": 0.13333333333333333,
+        "max_m": 5.564534529951758,
+        "mean_m": 1.4360690646796388,
+        "path_m": 6.283322682868089,
+        "vertices": 15,
+        "vertices_covered": 2
+      },
+      "graph": {
+        "edges": 62,
+        "graph_reanchor_events": 0,
+        "keyframes": 63,
+        "keyframes_admitted": 63,
+        "proposals_made": 1,
+        "proposals_vetoed": 0,
+        "proposals_won": 1,
+        "provider_reanchors": 0,
+        "routes_found": 1,
+        "routes_queried": 1,
+        "schema_version": 1,
+        "visits": 1775
+      },
+      "max_steps": 1069,
+      "measured": {
+        "chain_ticks": 56,
+        "deferred_releases": 0,
+        "flushes": 1,
+        "handbacks": 0,
+        "keyframes": 11,
+        "proposals": 1,
+        "routes_found": 1,
+        "routes_queried": 1,
+        "vetoes": 0,
+        "wins": 1
+      },
+      "mission_status": "failed",
+      "opening_grounding_outcome": "RESOLVED",
+      "opening_resolution_state": "resolved",
+      "pose_drift": {
+        "band_applied": true,
+        "band_pct": [
+          0.105,
+          22.88
+        ],
+        "distance_m": 6.283322682868094,
+        "divergence_m": 0.25676280448991773,
+        "divergence_pct": 4.086417608154981,
+        "first_lost_t_s": null,
+        "healthy_ticks": 539,
+        "in_band": true,
+        "last_lost_t_s": null,
+        "lost_recovered": false,
+        "lost_ticks": 0,
+        "profile": "calibrated_go2",
+        "reanchor_events": 0,
+        "recovered_t_s": null,
+        "seed": 2703179522,
+        "slip_events": 0,
+        "yaw_divergence_rad": 0.02413500022065096
+      },
+      "pre_drive": {
+        "collisions": 0,
+        "completed": true,
+        "drive_m": 56.92031,
+        "drive_waypoints": 29,
+        "final_gap_m": 0.208548,
+        "final_xy": [
+          7.6603,
+          1.366597
+        ],
+        "reached_goal_end": true,
+        "reached_goal_end_tick": 614,
+        "reason": "route_complete",
+        "route_m": 28.460155,
+        "teach_budget": 3492,
+        "teach_ticks": 1236,
+        "waypoints": 15
+      },
+      "reason": "semantic_target_unreachable",
+      "route_memory_enabled": true,
+      "scorer_arrival": false,
+      "spl": 0.0,
+      "success": false,
+      "system_arrival": false,
+      "target_entity_id": "planter_1",
+      "taught_leg_counters": {
+        "chain_ticks": 0,
+        "deferred_releases": 0,
+        "enabled": true,
+        "flushes": 0,
+        "handbacks": 0,
+        "hook": {
+          "edges": 51,
+          "graph_reanchor_events": 0,
+          "keyframes": 52,
+          "keyframes_admitted": 52,
+          "proposals_made": 0,
+          "proposals_vetoed": 0,
+          "proposals_won": 0,
+          "provider_reanchors": 0,
+          "routes_found": 0,
+          "routes_queried": 0,
+          "schema_version": 1,
+          "visits": 1236
+        },
+        "keyframes": 52,
+        "proposals": 0,
+        "routes_found": 0,
+        "vetoes": 0,
+        "wins": 0
+      },
+      "trace_len": 539,
+      "wall_s": 10.74
+    }
+  ],
+  "frozen_baseline": false,
+  "generated": "20260812T085436Z",
+  "isolation": {
+    "mission_boundary_per_leg": true,
+    "navigator_per_episode": true,
+    "process_per_arm": true,
+    "world_per_episode": true
+  },
+  "matcher_arm": "default",
+  "mode": "candidate",
+  "n": 6,
+  "pose_drift_profile": "calibrated_go2",
+  "route_memory": true,
+  "runner_version": "nav-instruct-v1.1-k0-arrival",
+  "set": "v4r",
+  "set_provenance": "2026-08-12 ADDITIVE taught-prior-route substrate (card RM-3): every scene cell whose target is sighted from the start, sits beyond the planner's 8.05 m half-window, and whose straight corridor is blocked by a scene obstacle that a driveable detour goes around. Each cell declares the route the robot DRIVES before the measured mission, so the place graph's edges cover start -> goal by traversal and by nothing else. Built from v4s's geometry primitives and the live K0 goal builders; adds no arrival rule, no new natural-language surface, and re-freezes nothing. CANDIDATE-ONLY",
+  "taught_leg": true
+}

@@ -61,6 +61,7 @@ import argparse
 import dataclasses
 import hashlib
 import json
+import math
 import os
 import subprocess
 import sys
@@ -205,6 +206,14 @@ LATENCY_BASELINE = REPO / "evals" / "latency" / "baseline.json"
 #: Latency-tail ratchet tolerance against the pinned baseline. 1.20 mirrors the
 #: BARN controller-p99 ratio ceiling already in the repo.
 LATENCY_TAIL_MARGIN = 1.20
+
+#: Card J-C. Follow-bench comfort ratchet: the committed jerk baseline with its
+#: three-component attribution (60ecea2 terminal-approach floor, 6bd945d P0-A
+#: instant-zero, E6 dynamics x instant-zero). Deliberately reuses
+#: LATENCY_TAIL_MARGIN by REFERENCE rather than introducing a second ratchet
+#: tolerance — one repo-wide ratchet margin.
+FOLLOWBENCH_JERK_BASELINE = REPO / "evals" / "companion_nav" / "results" / "jerk_baseline.json"
+FOLLOWBENCH_JERK_FIELD = "mean_rms_commanded_jerk_mps3"
 
 
 # ---------------------------------------------------------------------------
@@ -614,6 +623,114 @@ def evaluate_latency_ledger(
     return result
 
 
+def evaluate_followbench_jerk_ratchet(
+    rows: list[dict[str, Any]],
+    baseline: float,
+    *,
+    margin: float = LATENCY_TAIL_MARGIN,
+    tier: str = "commit",
+) -> GateResult:
+    """Ratchet the latest SHIPPED follow-bench row's mean jerk against a pin.
+
+    Pure core, shared by the ledger source below and by the seeded-spike
+    self-test. Mirrors ``evaluate_latency_ratchet``: red iff the latest shipped
+    row carrying the field exceeds ``baseline * margin``; skip-with-note (never
+    red) when no such row exists, because a missing measurement is not evidence
+    of a regression and the immutable reports remain the escape hatch.
+
+    The INCLUSIVE mean is gated on purpose. Gating only the nominal variant
+    would blind this to a bug spraying spurious hard stops; the nominal variant
+    is reported alongside so a future re-pin can attribute stop-cost separately
+    from smoothness-cost (design record §3.3, "Gate only 'nominal' jerk").
+    """
+
+    shipped = [
+        row
+        for row in rows
+        if row.get("features") == "shipped" and row.get(FOLLOWBENCH_JERK_FIELD) is not None
+    ]
+    if not shipped:
+        return GateResult(
+            "follow-bench-jerk-ratchet",
+            tier,
+            True,
+            "skip",
+            (
+                f"no shipped follow-bench row carries {FOLLOWBENCH_JERK_FIELD}; "
+                "ratchet skipped (immutable reports remain the record)"
+            ),
+            extra={"rows": len(rows)},
+        )
+    latest = shipped[-1]
+    raw = latest[FOLLOWBENCH_JERK_FIELD]
+    # A string that happens to parse as a float is malformed ledger data, not a
+    # measurement: coercing it would let a mis-typed row pass as green.
+    if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+        return GateResult(
+            "follow-bench-jerk-ratchet", tier, True, "error",
+            f"latest shipped row {FOLLOWBENCH_JERK_FIELD} is not a number: {raw!r}",
+        )
+    value = float(raw)
+    if not math.isfinite(value):
+        return GateResult(
+            "follow-bench-jerk-ratchet", tier, True, "error",
+            f"latest shipped row {FOLLOWBENCH_JERK_FIELD} is not finite",
+        )
+    ceiling = baseline * margin
+    report = latest.get("report", "?")
+    nominal = latest.get("mean_rms_commanded_jerk_nominal_mps3")
+    note = "" if nominal is None else f", nominal {nominal}"
+    if value > ceiling:
+        return GateResult(
+            "follow-bench-jerk-ratchet", tier, True, "fail",
+            (
+                f"{FOLLOWBENCH_JERK_FIELD} {value:.4f} > {ceiling:.5f} "
+                f"(baseline {baseline:.4f} x {margin}) in {report}"
+            ),
+        )
+    return GateResult(
+        "follow-bench-jerk-ratchet", tier, True, "pass",
+        (
+            f"latest shipped row {report}: {value:.4f} <= {ceiling:.5f} "
+            f"(baseline {baseline:.4f} x {margin}{note})"
+        ),
+    )
+
+
+def evaluate_followbench_jerk_ledger(
+    *,
+    ledger: Path = FOLLOWBENCH_LEDGER,
+    baseline_path: Path = FOLLOWBENCH_JERK_BASELINE,
+    margin: float = LATENCY_TAIL_MARGIN,
+    tier: str = "commit",
+) -> GateResult:
+    """Point the follow-bench jerk ratchet at the committed ledger."""
+
+    if not baseline_path.exists():
+        return GateResult(
+            "follow-bench-jerk-ratchet", tier, True, "error",
+            f"missing jerk baseline at {baseline_path.name}",
+        )
+    try:
+        doc = json.loads(baseline_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return GateResult("follow-bench-jerk-ratchet", tier, True, "error", f"baseline JSON: {exc}")
+    raw = doc.get(FOLLOWBENCH_JERK_FIELD)
+    if not isinstance(raw, (int, float)) or isinstance(raw, bool) or not math.isfinite(float(raw)):
+        return GateResult(
+            "follow-bench-jerk-ratchet", tier, True, "error",
+            f"baseline.{FOLLOWBENCH_JERK_FIELD} missing or not a finite number",
+        )
+    if not doc.get("provenance"):
+        return GateResult(
+            "follow-bench-jerk-ratchet", tier, True, "error",
+            "baseline carries no provenance; a re-pin without attribution is not a baseline",
+        )
+    return evaluate_followbench_jerk_ratchet(
+        _read_jsonl(ledger), float(raw), margin=margin, tier=tier
+    )
+
+
 # ---------------------------------------------------------------------------
 # Ruff — ratcheted against a pinned baseline of pre-existing debt
 # ---------------------------------------------------------------------------
@@ -716,6 +833,110 @@ def evaluate_mutation_panel(tier: str = "nightly") -> GateResult:
     return GateResult("mutation-panel", tier, True, "pass", detail)
 
 
+def evaluate_pose_drift_arms(
+    tier: str = "nightly", *, limit: int = 0
+) -> list[GateResult]:
+    """Card DR-2 — the standing degraded-pose arms, nightly.
+
+    Nightly and not commit: the arms are seven full passes over the 61-cell
+    long-travel substrate, which is minutes of simulation, not seconds. What the
+    commit tier gets instead is the cheap half — the seed derivation, the band
+    algebra, the record shape and the flag-off byte-path — as ordinary unit
+    tests in ``tests/test_dr2_pose_drift_arm.py``.
+
+    Three gates, and the split between them is the card's:
+
+    * ``:safety`` — HARD. Zero collisions and zero false arrivals under EVERY
+      profile, from day one, with no measurement grace.
+    * ``:non-vacuity`` — HARD. Every episode's measured truth-vs-ODOM divergence
+      inside its profile's pre-registered band, every episode on its own seed,
+      the ``*_lost`` windows held AND recovered, the re-anchoring profile's MAP
+      really jumped, and the tier ladder monotone at the arm mean. A drift arm
+      that silently ran on truth would be green on safety and red here.
+    * ``:floors`` — HARD once ``DRIFT_FLOORS`` is pinned, and an explicit
+      report-only ``skip`` before that. A gate that quietly passes because
+      nothing is pinned yet is worse than no gate.
+
+    ``limit`` exists for a smoke invocation and is 0 (the whole substrate) for
+    the real nightly run. A limited run truncates the substrate, so its SR is
+    measured on a DIFFERENT set from the one the floors were derived on and
+    cannot certify them either way — the floors gate therefore degrades to a
+    loud, non-hard ``skip`` naming the limit rather than reporting a comparison
+    that does not mean what it says. Safety and non-vacuity are per-episode
+    properties and stay hard at any limit.
+    """
+
+    try:
+        from evals.nav_instruct.run_drift_arms import (
+            DRIFT_FLOORS,
+            check_floors,
+            hard_invariants,
+            ladder_monotone,
+            non_vacuity,
+            run_stage,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return [GateResult("pose-drift-arms", tier, True, "error", f"import failed: {exc}")]
+    try:
+        payload = run_stage("b" if DRIFT_FLOORS else "a", limit=limit)
+    except Exception as exc:  # noqa: BLE001
+        return [
+            GateResult(
+                "pose-drift-arms", tier, True, "error", f"{type(exc).__name__}: {exc}"
+            )
+        ]
+    rows = payload["arms"]
+    safety = [problem for row in rows for problem in hard_invariants(row)]
+    vacuity = [problem for row in rows for problem in non_vacuity(row)]
+    vacuity += ladder_monotone(rows)
+    floors = check_floors(rows) if DRIFT_FLOORS else []
+    arms = ", ".join(
+        f"{row['profile'] or 'truth'}={row['sr']:.3f}" for row in rows
+    )
+    banded = sum(int((row.get("pose_drift") or {}).get("episodes_banded", 0)) for row in rows)
+    in_band = sum(int((row.get("pose_drift") or {}).get("episodes_in_band", 0)) for row in rows)
+    results = [
+        GateResult(
+            "pose-drift-arms:safety", tier, True,
+            "pass" if not safety else "fail",
+            "; ".join(safety)
+            or f"collisions=0 false_arrival=0 across {len(rows)} arm(s) on "
+               f"{payload['n']} cell(s)",
+        ),
+        GateResult(
+            "pose-drift-arms:non-vacuity", tier, True,
+            "pass" if not vacuity else "fail",
+            "; ".join(vacuity) or f"{in_band}/{banded} episode(s) in band; SR {arms}",
+        ),
+    ]
+    if DRIFT_FLOORS and limit > 0:
+        results.append(
+            GateResult(
+                "pose-drift-arms:floors", tier, False, "skip",
+                f"limit={limit} truncates the substrate the floors were derived "
+                f"on ({len(DRIFT_FLOORS)} arm(s) pinned); a partial run cannot "
+                "certify them either way",
+            )
+        )
+    elif DRIFT_FLOORS:
+        results.append(
+            GateResult(
+                "pose-drift-arms:floors", tier, True,
+                "pass" if not floors else "fail",
+                "; ".join(floors)
+                or f"{len(DRIFT_FLOORS)} arm(s) at or above their Stage-B floor",
+            )
+        )
+    else:
+        results.append(
+            GateResult(
+                "pose-drift-arms:floors", tier, False, "skip",
+                "no Stage-B floor pinned yet (run_drift_arms.DRIFT_FLOORS is empty)",
+            )
+        )
+    return results
+
+
 def evaluate_nav_instruct_candidate(tier: str = "nightly") -> list[GateResult]:
     """Run the candidate minival; hard-gate collisions, report the rest."""
 
@@ -771,6 +992,7 @@ def run_commit_tier() -> list[GateResult]:
     results.append(evaluate_hard_safety(tier=tier))
     results.append(evaluate_frozen_digest_sentinels(DIGEST_SENTINELS, tier=tier))
     results.append(evaluate_latency_ledger(tier=tier))
+    results.append(evaluate_followbench_jerk_ledger(tier=tier))
     # Targeted hard-gate pytest selections (small, fast).
     results.append(_pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900))
     results.append(_pytest_gate("frozen-digest-integrity", tier, FROZEN_DIGEST_NODE_IDS, timeout=900))
@@ -792,6 +1014,7 @@ def run_nightly_tier() -> list[GateResult]:
     results.append(evaluate_hard_safety(tier=tier))
     results.append(evaluate_frozen_digest_sentinels(DIGEST_SENTINELS, tier=tier))
     results.append(evaluate_latency_ledger(tier=tier))
+    results.append(evaluate_followbench_jerk_ledger(tier=tier))
     results.append(_pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900))
     results.append(_pytest_gate("frozen-digest-integrity", tier, FROZEN_DIGEST_NODE_IDS, timeout=900))
     results.append(_pytest_gate("mutation-panel-freshness", tier, MUTATION_FRESHNESS_NODE_IDS, timeout=600))
@@ -800,6 +1023,8 @@ def run_nightly_tier() -> list[GateResult]:
     # Nightly-only: the slow harnesses.
     results.append(evaluate_mutation_panel(tier=tier))
     results.extend(evaluate_nav_instruct_candidate(tier=tier))
+    # Card DR-2: the standing degraded-pose arms.
+    results.extend(evaluate_pose_drift_arms(tier=tier))
     results.append(
         _pytest_gate(
             "slow-suite", tier, (), markers="slow",

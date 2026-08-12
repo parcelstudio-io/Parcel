@@ -259,6 +259,13 @@ class OdometryNoiseParams:
     meaningful with the trajectory length and step length stated.  See
     ``configs/navigation/pose.yaml`` for the derivation that lands the
     ``calibrated_go2`` profile inside the published DogLegs Go2 band.
+
+    **Foot slip** (``slip_jump_*``) is a *discrete* error source the alpha model
+    cannot express: a leg loses traction, the body moves while the kinematic
+    chain says it did not, and the estimate takes a step displacement.  It is a
+    Poisson process along *distance* (not time), and it is OFF unless both the
+    magnitude and the rate are strictly positive — see
+    :meth:`DriftingOdomProvider.update_truth` for why that guard is load-bearing.
     """
 
     # The plan's named defaults.  These are a stated starting point, not a
@@ -273,6 +280,27 @@ class OdometryNoiseParams:
     #: Per-run systematic yaw bias in rad per metre travelled, drawn once.
     systematic_yaw_bias_sigma_rad_per_m: float = 0.0
     seed: int = 20260807
+    # NOTE: the slip knobs are appended *after* ``seed`` on purpose.  Inserting
+    # them mid-list would silently re-map any positional construction of this
+    # dataclass; appending cannot.  Field order is API surface here.
+    #: Displacement of one slip event, in metres, applied in a uniformly random
+    #: direction.  ``0.0`` disables slip entirely (the shipping default).
+    slip_jump_magnitude_m: float = 0.0
+    #: Mean slip-event rate in events per metre TRAVELLED.  ``0.0`` disables
+    #: slip entirely.  Distance-rated rather than time-rated because slip is
+    #: caused by stepping, not by the clock.
+    slip_jump_rate_per_m: float = 0.0
+
+    @property
+    def slip_enabled(self) -> bool:
+        """True only when a slip event can actually occur.
+
+        Both knobs must be positive: a zero-magnitude event is a no-op and a
+        zero-rate process never fires, so either zero means "off" and the
+        provider must not even draw for it.
+        """
+
+        return self.slip_jump_magnitude_m > 0.0 and self.slip_jump_rate_per_m > 0.0
 
     def __post_init__(self) -> None:
         for name in (
@@ -282,6 +310,8 @@ class OdometryNoiseParams:
             "alpha4",
             "systematic_translation_scale_sigma",
             "systematic_yaw_bias_sigma_rad_per_m",
+            "slip_jump_magnitude_m",
+            "slip_jump_rate_per_m",
         ):
             value = _finite(getattr(self, name), name)
             if value < 0.0:
@@ -302,6 +332,37 @@ def _wrap_angle(angle: float) -> float:
     return math.atan2(math.sin(angle), math.cos(angle))
 
 
+def _normalize_lost_windows(
+    windows: Sequence[Sequence[float]] | None,
+) -> tuple[tuple[float, float], ...]:
+    """Validate scheduled ``(start_s, duration_s)`` LOST windows; fail closed.
+
+    Windows are episode-relative (measured from the provider's first stamped
+    truth sample, exactly like ``lost_after_s``) and half-open — ``[start,
+    start + duration)`` — so a window's duration is exactly ``duration_s`` and
+    recovery happens at a single well-defined instant.  Overlapping windows are
+    legal and mean their union; the tuple is sorted so two configs that name the
+    same set of windows compare equal regardless of authoring order.
+    """
+
+    if windows is None:
+        return ()
+    if isinstance(windows, (str, bytes)) or not isinstance(windows, Sequence):
+        raise TypeError("lost_windows must be a sequence of (start_s, duration_s) pairs")
+    out: list[tuple[float, float]] = []
+    for entry in windows:
+        if isinstance(entry, (str, bytes)) or not isinstance(entry, Sequence) or len(entry) != 2:
+            raise ValueError("each lost window must be a (start_s, duration_s) pair")
+        start = _finite(entry[0], "lost window start_s")
+        duration = _finite(entry[1], "lost window duration_s")
+        if start < 0.0:
+            raise ValueError("lost window start_s must be non-negative")
+        if duration <= 0.0:
+            raise ValueError("lost window duration_s must be positive")
+        out.append((start, duration))
+    return tuple(sorted(out))
+
+
 class DriftingOdomProvider:
     """``ODOM`` drifts under the alpha odometry model; ``MAP`` is re-anchored.
 
@@ -316,6 +377,21 @@ class DriftingOdomProvider:
     ``map_correction.enabled``, ``MAP`` instead follows ``ODOM`` and snaps back
     to truth every ``interval_s`` — a discontinuous re-anchor that exercises the
     "MAP may jump" half of REP-105.
+
+    **Health has two independent schedules**, and they answer different
+    questions.  ``lost_after_s`` is a one-way trapdoor: once elapsed, the
+    provider reports ``LOST`` forever.  ``lost_windows`` is a list of
+    ``(start_s, duration_s)`` dropouts that **recover** — the robot walks under
+    a gantry, localization drops, and it comes back.  Only the second one can
+    exercise a consumer's re-acquisition path, which is why it exists.  Both are
+    episode-relative, both default to off, and ``forced_health`` still overrides
+    both.
+
+    Drift integration is **independent of health**: ``ODOM`` keeps accumulating
+    through a LOST window exactly as it would have without one.  That is the
+    honest model — a localizer announcing it is lost does not stop the legs — and
+    it is pinned by a test that drives the same seed with and without windows and
+    demands bit-identical ODOM.
     """
 
     name = "drifting_odom"
@@ -328,6 +404,7 @@ class DriftingOdomProvider:
         map_correction_interval_s: float = 5.0,
         forced_health: PoseHealth | None = None,
         lost_after_s: float | None = None,
+        lost_windows: Sequence[Sequence[float]] | None = None,
         map_covariance_floor_m2: float = 0.0,
     ) -> None:
         self.params = params or OdometryNoiseParams()
@@ -341,6 +418,7 @@ class DriftingOdomProvider:
             raise TypeError("forced_health must be a PoseHealth member or None")
         self.forced_health = forced_health
         self.lost_after_s = None if lost_after_s is None else _finite(lost_after_s, "lost_after_s")
+        self.lost_windows = _normalize_lost_windows(lost_windows)
         self.map_covariance_floor_m2 = _finite(
             map_covariance_floor_m2, "map_covariance_floor_m2"
         )
@@ -371,6 +449,7 @@ class DriftingOdomProvider:
         self._start_stamp: float | None = None
         self._last_correction_s = 0.0
         self._distance_m = 0.0
+        self._slip_events = 0
         # Accumulated ODOM covariance: isotropic xy plus a yaw term.  A
         # documented approximation, not a filter — there is no filter here.
         self._var_xy = 0.0
@@ -439,10 +518,40 @@ class DriftingOdomProvider:
         nx = ox + hat_trans * math.cos(oyaw + hat_rot1)
         ny = oy + hat_trans * math.sin(oyaw + hat_rot1)
         nyaw = _wrap_angle(oyaw + hat_rot1 + hat_rot2)
+
+        # Foot slip — a discrete mis-integration event, not Gaussian noise.
+        #
+        # THE GUARD IS LOAD-BEARING. ``self._rng`` is a single shared stream, so
+        # drawing here when slip is off would advance it and change every
+        # pre-existing profile's trajectory bit-for-bit — the calibrated band,
+        # the pinned stress figures, all of it. Slip therefore draws NOTHING
+        # unless it is genuinely enabled, and ``tests/test_pose_degraded_
+        # profiles.py`` pins the pre-slip ODOM endpoints to prove it.
+        #
+        # Model: a Poisson process along distance with rate ``slip_jump_rate_
+        # per_m``, thinned to at most one event per increment. Over an increment
+        # of length ``trans`` the event probability is ``1 - exp(-rate*trans)``,
+        # which is exact for the "at least one event" question and negligibly
+        # different from the count at the 0.1 m increments this runs at.
+        slip_var = 0.0
+        if p.slip_enabled:
+            slip_var = 0.5 * p.slip_jump_rate_per_m * trans * p.slip_jump_magnitude_m**2
+            if self._rng.random() < -math.expm1(-p.slip_jump_rate_per_m * trans):
+                heading = self._rng.uniform(-math.pi, math.pi)
+                nx += p.slip_jump_magnitude_m * math.cos(heading)
+                ny += p.slip_jump_magnitude_m * math.sin(heading)
+                self._slip_events += 1
         self._odom = (nx, ny, nyaw)
 
         self._distance_m += trans
-        self._var_xy += var_trans
+        # ``slip_var`` is the EXPECTED per-axis variance the slip process
+        # contributes over this increment (a fixed-magnitude jump in a uniform
+        # direction has per-axis variance ``m^2/2``, and the expected event
+        # count is ``rate*trans``). Expectation, not the realized jump, because
+        # covariance reports uncertainty — the same convention the alpha terms
+        # already use. It is exactly 0.0 when slip is off, so the accumulation
+        # stays bit-identical for every pre-existing profile.
+        self._var_xy += var_trans + slip_var
         self._var_yaw += var_rot1 + var_rot2
         if self.map_correction_enabled:
             self._map = (
@@ -463,6 +572,15 @@ class DriftingOdomProvider:
     # -- health ------------------------------------------------------------
 
     def _health(self) -> PoseHealth:
+        """Resolve health.  Precedence: forced > one-way trapdoor > windows.
+
+        The order is not arbitrary.  ``forced_health`` is a test hook and must
+        win outright.  ``lost_after_s`` is permanent, so once it has fired no
+        window can un-fire it — checking it first makes that irreversibility
+        structural rather than incidental.  Scheduled windows are last and are
+        the only branch that can ever return to ``HEALTHY``.
+        """
+
         if self.forced_health is not None:
             return self.forced_health
         if (
@@ -471,6 +589,11 @@ class DriftingOdomProvider:
             and self._stamp - self._start_stamp >= self.lost_after_s
         ):
             return PoseHealth.LOST
+        if self.lost_windows and self._start_stamp is not None:
+            elapsed = self._stamp - self._start_stamp
+            for start, duration in self.lost_windows:
+                if start <= elapsed < start + duration:
+                    return PoseHealth.LOST
         return PoseHealth.HEALTHY
 
     # -- provider ----------------------------------------------------------
@@ -478,6 +601,17 @@ class DriftingOdomProvider:
     @property
     def travelled_m(self) -> float:
         return self._distance_m
+
+    @property
+    def slip_events(self) -> int:
+        """Slip events fired since the last reset — non-vacuity evidence.
+
+        A slip profile that reports zero events over an episode did not
+        actually exercise the mechanism, and a test or eval row that claims it
+        did would be lying.  This counter is how that claim gets checked.
+        """
+
+        return self._slip_events
 
     @property
     def odom_error_m(self) -> float:
@@ -530,6 +664,10 @@ class PoseConfig:
     map_correction_interval_s: float = 5.0
     forced_health: PoseHealth | None = None
     lost_after_s: float | None = None
+    #: Scheduled ``(start_s, duration_s)`` LOST windows that RECOVER.  Empty by
+    #: default, so every pre-existing profile parses to exactly the config it
+    #: parsed to before this field existed.
+    lost_windows: tuple[tuple[float, float], ...] = ()
     map_covariance_floor_m2: float = 0.0
     inside_probability_threshold: float = 0.9
 
@@ -538,6 +676,7 @@ class PoseConfig:
             raise ValueError(f"unknown pose provider: {self.provider!r}")
         if not 0.0 < self.inside_probability_threshold <= 1.0:
             raise ValueError("inside_probability_threshold must be in (0, 1]")
+        object.__setattr__(self, "lost_windows", _normalize_lost_windows(self.lost_windows))
 
     def build(self) -> PoseProvider:
         if self.provider == "truth":
@@ -548,6 +687,7 @@ class PoseConfig:
             map_correction_interval_s=self.map_correction_interval_s,
             forced_health=self.forced_health,
             lost_after_s=self.lost_after_s,
+            lost_windows=self.lost_windows,
             map_covariance_floor_m2=self.map_covariance_floor_m2,
         )
 
@@ -559,6 +699,53 @@ _PROFILE_KEYS = {
     "health",
     "map_covariance_floor_m2",
 }
+# Nested key sets. The profile level already failed closed; the two sub-maps did
+# NOT — a typo'd ``health: {los_after_s: 3}`` used to be silently ignored, which
+# is the exact failure mode fail-closed parsing exists to prevent. Adding a new
+# nested key (``lost_windows``) without closing that hole would have widened it,
+# so both sub-maps are now validated. No pre-existing profile carries an unknown
+# nested key, so no parsed config moves; tests pin all of them.
+_MAP_CORRECTION_KEYS = {"enabled", "interval_s"}
+_HEALTH_KEYS = {"force", "lost_after_s", "lost_windows"}
+_LOST_WINDOW_KEYS = {"start_s", "duration_s"}
+
+
+def _lost_windows_from_yaml(raw: object, profile: str) -> tuple[tuple[float, float], ...]:
+    """Parse ``health.lost_windows`` from yaml.  One shape only, fail closed.
+
+    Entries are mappings — ``{start_s: 4.0, duration_s: 3.0}`` — rather than
+    bare pairs, because ``[4.0, 3.0]`` is ambiguous between (start, duration)
+    and (start, end) at a glance, and a silently misread dropout schedule would
+    invalidate every eval row that ran under it.
+
+    Wrong *shape* raises :class:`TypeError`; well-shaped but invalid *values*
+    raise :class:`ValueError`.  Both fail closed — the distinction only tells a
+    reader whether the yaml is malformed or merely wrong.
+    """
+
+    if raw is None:
+        return ()
+    if isinstance(raw, (str, bytes)) or not isinstance(raw, Sequence):
+        raise TypeError(f"pose profile {profile!r} health.lost_windows must be a list")
+    windows: list[tuple[float, float]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            raise TypeError(
+                f"pose profile {profile!r} health.lost_windows entries must be mappings "
+                "with start_s and duration_s"
+            )
+        unknown = set(entry) - _LOST_WINDOW_KEYS
+        if unknown:
+            raise ValueError(
+                f"unknown keys in pose profile {profile!r} lost window: {sorted(unknown)}"
+            )
+        missing = _LOST_WINDOW_KEYS - set(entry)
+        if missing:
+            raise ValueError(
+                f"pose profile {profile!r} lost window is missing keys: {sorted(missing)}"
+            )
+        windows.append((entry["start_s"], entry["duration_s"]))
+    return _normalize_lost_windows(windows)
 
 
 def load_pose_config(
@@ -599,7 +786,15 @@ def load_pose_config(
     if unknown:
         raise ValueError(f"unknown keys in pose profile {name!r}: {sorted(unknown)}")
     correction = dict(raw.get("map_correction") or {})
+    unknown = set(correction) - _MAP_CORRECTION_KEYS
+    if unknown:
+        raise ValueError(
+            f"unknown keys in pose profile {name!r} map_correction: {sorted(unknown)}"
+        )
     health = dict(raw.get("health") or {})
+    unknown = set(health) - _HEALTH_KEYS
+    if unknown:
+        raise ValueError(f"unknown keys in pose profile {name!r} health: {sorted(unknown)}")
     forced = health.get("force")
     return PoseConfig(
         provider="drifting_odom",
@@ -610,6 +805,7 @@ def load_pose_config(
         lost_after_s=(
             None if health.get("lost_after_s") is None else float(health["lost_after_s"])
         ),
+        lost_windows=_lost_windows_from_yaml(health.get("lost_windows"), name),
         map_covariance_floor_m2=float(raw.get("map_covariance_floor_m2", 0.0)),
         inside_probability_threshold=float(
             (data.get("chance_constrained") or {}).get("inside_probability_threshold", 0.9)
@@ -622,6 +818,27 @@ def provider_from_config(
     *,
     profile: str | None = None,
 ) -> PoseProvider:
+    """Build a ready-to-use provider by profile NAME.  The whole seam.
+
+    This is the entire integration contract for a degraded-pose eval arm — a
+    caller names a profile and gets a provider; it never constructs
+    :class:`OdometryNoiseParams`, never learns what an alpha coefficient is, and
+    never needs a code change here to add a tier.  The degraded-pose ladder
+    (DR-1, ``scrum/20260811/task_2``) is therefore reachable as::
+
+        provider_from_config(profile="calibrated_go2")    # nominal rung
+        provider_from_config(profile="go2_aggressive")    # 2x the published band
+        provider_from_config(profile="go2_degraded")      # 4x, plus foot slip
+        provider_from_config(profile=f"{name}_lost")      # + a recovering dropout
+
+    ``profile=None`` yields the shipping truth passthrough.  Unknown profiles
+    and unknown yaml keys raise — a mistyped arm fails loudly instead of
+    quietly measuring the nominal tier and reporting it as degraded.
+
+    Providers are stateful and accumulate drift, so callers build a FRESH one
+    per episode (``HeadlessCityQualityHarness.new_pose_provider``).
+    """
+
     return load_pose_config(path, profile=profile).build()
 
 

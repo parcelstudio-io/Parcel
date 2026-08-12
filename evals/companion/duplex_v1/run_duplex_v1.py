@@ -111,11 +111,45 @@ DEFAULT_RESULTS_DIR = Path(__file__).resolve().parent / "results"
 # failures are the STRANGER band's cost, i.e. the pedestrian-clearance knob E5
 # bought the +0.17 m with, and buying them back means selling that clearance.
 # Full factorial: scrum/20260809/task_15/E6_OWNER_BAND_STATUS.md.
+# Card J-C (2026-08-11): the comfort number joins this mirror, WITH its
+# attribution, because leaving it out was how a 58% drift stayed unexplained
+# through two lanes. It is re-pinned, not "fixed": the whole movement is three
+# deliberate, committed decisions.
+#
+#   0.6025 (be20471)
+#     +0.09  terminal-approach floor  — 60ecea2 grid_navigator.py
+#            TERMINAL_APPROACH_FLOOR_MPS=0.12 (owner pacing seam; single-hunk
+#            revert restores navigate_near_wall to exactly 1.1401). A ~+0.29
+#            residual on navigate_crossing_ped is attributed BY ELIMINATION to
+#            the same commit's pipeline.py scan-creep seam and is not
+#            single-hunk isolated.
+#     +0.23  instant-zero            — 6bd945d card P0-A: emergency stops went
+#            from an accel-limited ramp to exact (0,0,0). Reverting only that
+#            hunk returns the mean to exactly 0.7212, the 60ecea2 value. P0-A
+#            is the verdict-ranked hard-stop contract and stays.
+#     +0.33  E6 dynamics x instant-zero — 0.8918 -> 1.2187. E6's own
+#            band-edge-transition explanation is REFUTED by trace: the owner
+#            band is granted 200/200 and 180/180 ticks and owner centre
+#            distance stays 2.00-2.18 m, never inside the 0.10 m ramp. 96.7% /
+#            96.3% of summed squared jerk sits on emergency-ADJACENT ticks,
+#            where the runtime routes ANY zero intent through the same
+#            emergency bypass as a safety stop.
+#   = 1.2187 (dd2e857), the value pinned below and ratcheted at 1.20x by
+#   scripts/ci_gate.py's follow-bench-jerk-ratchet against
+#   evals/companion_nav/results/jerk_baseline.json.
+#
+# Card J-B landed a severity split (nominal zero intents may ramp; emergency
+# stops keep the instant zero) behind motion.shaping.nominal_stop_ramp, DEFAULT
+# OFF, so this number is unchanged. Measured flag-ON: 1.0813 — below the
+# flag-off value but ABOVE the pre-registered 1.05 bar, so the default flip is
+# STOP-and-report and stays an owner decision (FOLLOWUP_DESIGNS.md §8 q1).
+# If it is ever flipped, this pin and the baseline move DOWN, with a 2x2.
 FOLLOW_BENCH_POST_SPEED = {
     "features": "shipped",
     "follow_success": "7/9",
     "hard_collision_total": 0,
     "navigate_success": "2/2",
+    "mean_rms_commanded_jerk_mps3": 1.2187,
     "report": "follow-bench-v1-20260811023618Z-93eba090.json",
 }
 

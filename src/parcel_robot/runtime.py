@@ -104,6 +104,7 @@ from parcel_robot.core.resume import (
     ResumeStore,
     resume_rejection_reason,
 )
+from parcel_robot.core.stop_ramp import nominal_stop_step
 from parcel_robot.core.yield_policy import (
     YIELD_ACTION_ASK,
     YIELD_ACTION_GIVE_UP,
@@ -140,6 +141,7 @@ from parcel_robot.navigation.follow import (
     FollowConfig,
     FollowOwnerController,
     FollowPredictionConfig,
+    FollowYieldConfig,
 )
 from parcel_robot.navigation.goals import pace_from_directive
 from parcel_robot.navigation.owner_prediction import OwnerMotionPredictor, PredictedPath
@@ -328,6 +330,18 @@ def _is_zero_command(command: VelocityCommand) -> bool:
     return all(abs(value) <= 1e-9 for value in (command.vx, command.vy, command.vyaw))
 
 
+def _finite_command_values(command: VelocityCommand) -> bool:
+    """Card J-B: a re-gated ramp candidate must be finite before it is trusted."""
+
+    return all(math.isfinite(value) for value in (command.vx, command.vy, command.vyaw))
+
+
+def _command_translates(command: VelocityCommand) -> bool:
+    """Mirror of the reactive gate's own translation test (1e-6, by value)."""
+
+    return math.hypot(command.vx, command.vy) > 1e-6
+
+
 class RobotRuntime:
     """Own command arbitration, behavior loops, telemetry, and agent execution."""
 
@@ -402,6 +416,14 @@ class RobotRuntime:
         self._shaper_profile = "nominal"
         self._last_shaped: tuple[float, float, float] = (0.0, 0.0, 0.0)
         self._shaped_at: float | None = None
+        # Card J-B. Nominal-stop ramp bookkeeping. All three counters stay 0
+        # and the flag stays False while ``motion_shaping.nominal_stop_ramp``
+        # is off, which is the default; they exist so the "every ramp candidate
+        # was disposed by the gate" property is measurable rather than asserted.
+        self._nominal_stop_ramping = False
+        self._nominal_stop_ramp_ticks = 0
+        self._nominal_stop_regate_ticks = 0
+        self._nominal_stop_preempt_ticks = 0
         self._seen_watchdog_stops = 0
         self._vocal_arousal: float | None = None
         self._vocal_arousal_at: float | None = None
@@ -529,10 +551,18 @@ class RobotRuntime:
         if not isinstance(raw_prediction, dict):
             raise TypeError("owner_follow.prediction must be a mapping")
         follow_prediction = FollowPredictionConfig.from_mapping(raw_prediction)
+        # Yield-aside (card Y-2), same nested-block treatment as prediction: a
+        # typo inside it must not ride through as an unknown top-level follow
+        # key. Absent section == code default OFF; no yaml ships the flag.
+        raw_yield = follow_config.pop("yield_aside", {})
+        if not isinstance(raw_yield, dict):
+            raise TypeError("owner_follow.yield_aside must be a mapping")
+        follow_yield = FollowYieldConfig.from_mapping(raw_yield)
         self.follow = FollowOwnerController(
             FollowConfig.from_mapping(follow_config),
             safety_policy=self.reactive_safety_policy,
             prediction=follow_prediction,
+            yield_aside=follow_yield,
         )
         # One predictor, owned here and fed from the same owner track the
         # follow controller consumes, so the prediction and the measurement can
@@ -4545,21 +4575,44 @@ class RobotRuntime:
             # Card W6. The last thing before the SE2 hand-off, and after every
             # authority above it has spoken. Stops route to the emergency
             # bypass so no stop decision is ever smoothed.
-            stopping = (
+            #
+            # Card J-B splits that predicate by SEVERITY without moving a
+            # single member out of the emergency set: every arm below is still
+            # an emergency (instant zero + HARD finalize + resets), and the
+            # only thing the flag can reclassify is a zero INTENT with no
+            # emergency arm asserted.
+            emergency_stopping = (
                 proximity_state == "stopped"
                 or self.arbiter.emergency_stopped
                 or self._input_health_latched
-                # The *intent* decides, not the pre-gate smoother's ramp:
-                # asking for zero is a stop even while the ramp is still
-                # emitting a non-zero value on its way down.
+                # An expired/absent intent stays fail-closed: no ramp.
                 or active is None
-                or _is_zero_command(active.command)
             )
-            command = self._shape_for_actuator(
-                command,
-                now=now,
-                stopping=stopping,
+            # The *intent* decides, not the pre-gate smoother's ramp:
+            # asking for zero is a stop even while the ramp is still
+            # emitting a non-zero value on its way down.
+            zero_intent = active is not None and _is_zero_command(active.command)
+            stopping = emergency_stopping or zero_intent
+            nominal_ramp = (
+                self.motion_shaping.nominal_stop_ramp
+                and self.motion_shaping.enabled
+                and zero_intent
+                and not emergency_stopping
             )
+            previous_shaped = self._last_shaped
+            if nominal_ramp:
+                command, nominal_ramp = self._nominal_stop_ramp_tick(
+                    command,
+                    observation,
+                    now=now,
+                )
+            if not nominal_ramp:
+                self._resume_reset_after_nominal_ramp()
+                command = self._shape_for_actuator(
+                    command,
+                    now=now,
+                    stopping=stopping,
+                )
             # P0-A: final-stop monitor immediately before set_target. HARD_STOP
             # emits exact (0,0,0) and resets stateful stages; PROXIMITY_STOP
             # zeroes translation while preserving the gated yaw.
@@ -4569,6 +4622,16 @@ class RobotRuntime:
                 proximity_state=proximity_state,
                 active=active,
                 now=now,
+                nominal_stop=nominal_ramp,
+                previous_command=(
+                    VelocityCommand(
+                        vx=previous_shaped[0],
+                        vy=previous_shaped[1],
+                        vyaw=previous_shaped[2],
+                    )
+                    if nominal_ramp
+                    else None
+                ),
             )
             if proximity_state != self._proximity_state:
                 if proximity_state == "stopped":
@@ -4663,12 +4726,98 @@ class RobotRuntime:
             return "nominal"
         return "calm" if arousal <= config.calm_below_arousal else "nominal"
 
+    def _nominal_stop_ramp_tick(
+        self,
+        command: VelocityCommand,
+        observation: SimObservation | None,
+        *,
+        now: float,
+    ) -> tuple[VelocityCommand, bool]:
+        """One flag-ON nominal-stop tick: ramp, RE-GATE, then dispose.
+
+        Card J-B, per skeptic 1's blocking finding. A decaying stop is only
+        admissible if the safety layer sees the speed that is actually going to
+        be actuated, so the ramp candidate is fed back through the UNTOUCHED
+        ``apply_reactive_safety`` (plus the TTC verdict) as this tick's command.
+        Three outcomes:
+
+        * the gate clears it — the gate's own disposition is actuated and the
+          shaper is re-synced to it, so the next ramp tick starts from the
+          executed velocity and can never exceed what was approved;
+        * the gate brakes it — the braked value is actuated (still monotone,
+          the gate only ever scales translation down);
+        * the gate stops it, or anything is malformed — ``(command, False)`` is
+          returned, and the caller takes the untouched emergency path THIS tick
+          (exact zero + every reset obligation).
+        """
+
+        self._nominal_stop_ramp_ticks += 1
+        candidate = self._shape_for_actuator(
+            command,
+            now=now,
+            stopping=False,
+            nominal_stop=True,
+        )
+        disposed, verdict = self._regate_nominal_stop(candidate, observation, now=now)
+        if verdict == "stopped" or not _finite_command_values(disposed):
+            self._nominal_stop_preempt_ticks += 1
+            return command, False
+        if _command_translates(candidate) and not _command_translates(disposed):
+            # The gate zeroed translation without naming the state 'stopped'
+            # (input-health mask, stale telemetry, missing scan). Treat a
+            # zeroed translation as the stop verdict it is.
+            self._nominal_stop_preempt_ticks += 1
+            return command, False
+        self._motion_shaper.reset((disposed.vx, disposed.vy, disposed.vyaw))
+        self._last_shaped = (disposed.vx, disposed.vy, disposed.vyaw)
+        self._nominal_stop_ramping = True
+        return disposed, True
+
+    def _regate_nominal_stop(
+        self,
+        candidate: VelocityCommand,
+        observation: SimObservation | None,
+        *,
+        now: float,
+    ) -> tuple[VelocityCommand, str]:
+        """Re-dispose one ramp candidate through the untouched reactive gate.
+
+        ``owner_orbit`` is deliberately False here: it is the gate's *exemption*
+        path (it drops the owner from the people list), so declining it makes
+        the re-gate at least as strict as the tick's first pass, never weaker.
+        """
+
+        self._nominal_stop_regate_ticks += 1
+        gated, proximity_state = apply_reactive_safety(
+            candidate,
+            observation,
+            policy=self.reactive_safety_policy,
+            owner_orbit=False,
+            orbit_radius_m=0.0,
+            now=now,
+        )
+        return self._time_to_collision_gate(gated, observation, proximity_state)
+
+    def _resume_reset_after_nominal_ramp(self) -> None:
+        """Zero the shaper on the first tick after a nominal ramp.
+
+        Card J-B's resume-reset: a resume must not inherit the ramp's residual
+        velocity, so the shaper starts the resume tick from exactly the state a
+        flag-off resume would have started from (the emergency bypass zeroes it
+        on every stop tick), making resume dynamics byte-equal across the flag.
+        """
+
+        if not self._nominal_stop_ramping:
+            return
+        self._reset_motion_shaper()
+
     def _shape_for_actuator(
         self,
         command: VelocityCommand,
         *,
         now: float,
         stopping: bool,
+        nominal_stop: bool = False,
     ) -> VelocityCommand:
         """Jerk-limit the outgoing command, bypassing for every stop."""
 
@@ -4687,15 +4836,28 @@ class RobotRuntime:
             self._motion_shaper = shaper
             self._shaper_profile = profile
 
-        self._apply_yield_advance_seed(command, stopping=stopping)
+        self._apply_yield_advance_seed(command, stopping=stopping or nominal_stop)
         last = self._shaped_at
         dt_s = 0.1 if last is None else max(1e-3, min(0.25, now - last))
         self._shaped_at = now
-        vx, vy, vyaw = self._motion_shaper.step(
-            (command.vx, command.vy, command.vyaw),
-            dt_s=dt_s,
-            emergency=stopping,
-        )
+        if nominal_stop:
+            # Only the flag-ON nominal branch passes ``stop=``; the flag-off
+            # call below stays byte-identical, keyword for keyword (an existing
+            # W6 test wraps ``step`` with the historical signature and would
+            # red on a new keyword appearing unconditionally — which is exactly
+            # the identity property the standing rule asks for).
+            vx, vy, vyaw = self._motion_shaper.step(
+                (command.vx, command.vy, command.vyaw),
+                dt_s=dt_s,
+                emergency=stopping,
+                stop=nominal_stop_step,
+            )
+        else:
+            vx, vy, vyaw = self._motion_shaper.step(
+                (command.vx, command.vy, command.vyaw),
+                dt_s=dt_s,
+                emergency=stopping,
+            )
         self._last_shaped = (vx, vy, vyaw)
         return VelocityCommand(vx=vx, vy=vy, vyaw=vyaw)
 
@@ -4707,6 +4869,8 @@ class RobotRuntime:
         proximity_state: str,
         active: MotionIntent | None,
         now: float,
+        nominal_stop: bool = False,
+        previous_command: VelocityCommand | None = None,
     ) -> VelocityCommand:
         """Apply the core hard-stop monitor at the set_target boundary."""
 
@@ -4722,14 +4886,25 @@ class RobotRuntime:
                 vyaw=gated_command.vyaw,
             )
         elif active is None or _is_zero_command(active.command):
-            severity = InterventionSeverity.HARD_STOP
+            # Card J-B. Only a live intent asking for zero, with the flag on and
+            # the ramp already re-gated this tick, is NOMINAL; the expired-intent
+            # arm above it stays fail-closed HARD. finalize_command still holds
+            # the monotone boundary and falls closed to HARD with these resets.
+            severity = (
+                InterventionSeverity.NOMINAL_STOP
+                if nominal_stop and active is not None
+                else InterventionSeverity.HARD_STOP
+            )
             candidate = shaped
         else:
             severity = InterventionSeverity.CLEAR
             candidate = shaped
 
         stages: tuple[ResetObligation, ...] = ()
-        if severity is InterventionSeverity.HARD_STOP:
+        if (
+            severity is InterventionSeverity.HARD_STOP
+            or severity is InterventionSeverity.NOMINAL_STOP
+        ):
             stages = (
                 ResetObligation(
                     "velocity_smoother",
@@ -4737,11 +4912,22 @@ class RobotRuntime:
                 ),
                 ResetObligation("actuator_shaper", self._reset_motion_shaper),
             )
-        decision = finalize_command(
-            candidate,
-            severity,
-            downstream_stages=stages,
-        )
+        if severity is InterventionSeverity.NOMINAL_STOP:
+            decision = finalize_command(
+                candidate,
+                severity,
+                downstream_stages=stages,
+                previous_command=previous_command,
+            )
+        else:
+            # Byte-identical to the pre-J-B call, keyword for keyword: the
+            # mutation-oracle tests wrap ``finalize_command`` with the historical
+            # signature, and flag-off dispatch must not notice this card.
+            decision = finalize_command(
+                candidate,
+                severity,
+                downstream_stages=stages,
+            )
         return decision.command
 
     def _apply_yield_advance_seed(
@@ -4789,6 +4975,10 @@ class RobotRuntime:
         self._motion_shaper.reset()
         self._last_shaped = (0.0, 0.0, 0.0)
         self._shaped_at = None
+        # Card J-B: the shaper is now at zero, so any nominal ramp in flight is
+        # over. Every hard-stop reset obligation reaches here, which is what
+        # makes the resume-reset unconditional rather than best-effort.
+        self._nominal_stop_ramping = False
 
     def _sync_shaper_with_control_watchdog(self) -> None:
         """Reset the shaper when the manager watchdog stops hardware.

@@ -1,0 +1,56 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_relative-BB-05-41c414e2",
+  "family": "object_relative",
+  "goal": {
+    "anchor_entity": "planter_1",
+    "anchor_footprint_m": 0.45,
+    "band_m": [
+      0.8500000000000001,
+      1.95
+    ],
+    "center": [
+      -5.0,
+      3.15
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "go next to the planter",
+  "notes": "search_beyond_the_block_frontier|object_relative",
+  "placement_overrides": {
+    "remove_entities": [
+      "planter_2"
+    ],
+    "robot": {
+      "x": -8.5,
+      "y": -8.5,
+      "yaw": -1.0772486586423753
+    },
+    "search_cell": {
+      "axis": "BB",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [
+        "bldg_5"
+      ],
+      "detour_ratio": 0.9864855779324666,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 12.0,
+      "start_target_range_m": 12.164394765050993,
+      "target_entity_id": "planter_1",
+      "visible_from_start": false
+    }
+  },
+  "seed": 1103369442,
+  "shortest_path_m": 12.0,
+  "start_pose": [
+    -8.5,
+    -8.5,
+    -1.0772486586423753
+  ],
+  "synonym": null,
+  "target_entity_id": "planter_1",
+  "tier": "BB"
+}

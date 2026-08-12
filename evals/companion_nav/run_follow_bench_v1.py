@@ -121,6 +121,13 @@ def build_report(
         if item.min_pedestrian_surface_m is not None
     ]
     jerks = [item.rms_commanded_jerk_mps3 for item in metrics]
+    # Card J-C: the additive nominal variant. Episodes whose every window
+    # touched an emergency step contribute nothing rather than a zero.
+    nominal_jerks = [
+        item.rms_commanded_jerk_nominal_mps3
+        for item in metrics
+        if item.rms_commanded_jerk_nominal_mps3 is not None
+    ]
     duty_cycles = [
         item.emote_duty_cycle for item in metrics if item.emote_duty_cycle is not None
     ]
@@ -154,6 +161,14 @@ def build_report(
         "mean_rms_commanded_jerk_mps3": (
             round(sum(jerks) / len(jerks), 4) if jerks else None
         ),
+        # Card J-C, ADDITIVE and report-only: the same mean over non-emergency
+        # windows. The gated ratchet reads the inclusive field above; this one
+        # exists so a future re-pin can attribute stop-cost separately from
+        # smoothness-cost without re-deriving it from traces.
+        "mean_rms_commanded_jerk_nominal_mps3": (
+            round(sum(nominal_jerks) / len(nominal_jerks), 4) if nominal_jerks else None
+        ),
+        "nominal_jerk_episode_count": len(nominal_jerks),
         "reactive_gate_stop_total": sum(
             item.reactive_gate_stop_count for item in metrics
         ),
@@ -217,6 +232,10 @@ def write_report(report: dict[str, object], results_dir: Path) -> Path:
         ),
         "mean_band_fraction": aggregate["mean_band_fraction"],
         "mean_rms_commanded_jerk_mps3": aggregate["mean_rms_commanded_jerk_mps3"],
+        # Card J-C, additive: report-only companion to the gated field above.
+        "mean_rms_commanded_jerk_nominal_mps3": aggregate[
+            "mean_rms_commanded_jerk_nominal_mps3"
+        ],
     }
     ledger = results_dir / "ledger.jsonl"
     with ledger.open("a", encoding="utf-8") as stream:

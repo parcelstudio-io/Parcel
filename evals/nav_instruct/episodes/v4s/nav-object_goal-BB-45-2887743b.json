@@ -1,0 +1,57 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_goal-BB-45-2887743b",
+  "family": "object_goal",
+  "goal": {
+    "anchor_entity": "lamp_post_2",
+    "anchor_footprint_m": 0.0,
+    "band_m": [
+      0.6,
+      2.5
+    ],
+    "center": [
+      -6.7,
+      -2.9
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "can you walk towards the lamppost",
+  "notes": "search_beyond_the_block_frontier|object_goal",
+  "placement_overrides": {
+    "remove_entities": [
+      "lamp_post_1"
+    ],
+    "robot": {
+      "x": -4.5,
+      "y": 9.5,
+      "yaw": 2.1806023282421645
+    },
+    "search_cell": {
+      "axis": "BB",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [
+        "bldg_1",
+        "bldg_5"
+      ],
+      "detour_ratio": 1.0719688783572294,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 13.5,
+      "start_target_range_m": 12.593649193144932,
+      "target_entity_id": "lamp_post_2",
+      "visible_from_start": false
+    }
+  },
+  "seed": 679965755,
+  "shortest_path_m": 13.5,
+  "start_pose": [
+    -4.5,
+    9.5,
+    2.1806023282421645
+  ],
+  "synonym": null,
+  "target_entity_id": "lamp_post_2",
+  "tier": "BB"
+}

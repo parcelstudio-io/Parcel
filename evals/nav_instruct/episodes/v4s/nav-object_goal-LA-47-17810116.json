@@ -1,0 +1,54 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_goal-LA-47-17810116",
+  "family": "object_goal",
+  "goal": {
+    "anchor_entity": "tree_1",
+    "anchor_footprint_m": 0.0,
+    "band_m": [
+      0.6,
+      2.5
+    ],
+    "center": [
+      -5.0,
+      3.15
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "walk towards the tree",
+  "notes": "search_beyond_opening_scan|object_goal",
+  "placement_overrides": {
+    "remove_entities": [
+      "tree_2"
+    ],
+    "robot": {
+      "x": 1.5,
+      "y": -8.5,
+      "yaw": -1.0618776569572272
+    },
+    "search_cell": {
+      "axis": "LA",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [],
+      "detour_ratio": 1.124384392384653,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 15.0,
+      "start_target_range_m": 13.340633418245178,
+      "target_entity_id": "tree_1",
+      "visible_from_start": false
+    }
+  },
+  "seed": 394330390,
+  "shortest_path_m": 15.0,
+  "start_pose": [
+    1.5,
+    -8.5,
+    -1.0618776569572272
+  ],
+  "synonym": null,
+  "target_entity_id": "tree_1",
+  "tier": "LA"
+}

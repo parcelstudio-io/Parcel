@@ -1,0 +1,42 @@
+{
+  "metric": "mean_rms_commanded_jerk_mps3",
+  "suite": "follow-bench-v1",
+  "features": "shipped",
+  "window": 1,
+  "mean_rms_commanded_jerk_mps3": 1.2187,
+  "captured_utc": "2026-08-11",
+  "captured_by": "card J-C (scrum/20260811/task_1/FOLLOWUP_DESIGNS.md §3.2 part 1)",
+  "row": "follow-bench-v1-20260811023618Z-93eba090.json",
+  "margin_reference": "scripts/ci_gate.py LATENCY_TAIL_MARGIN (1.20) — one repo-wide ratchet margin, not a new constant",
+  "provenance": {
+    "summary": "The 0.6025 -> 1.2187 drift is three DELIBERATE, committed changes, not a regression. This baseline re-pins the value WITH that attribution; it is never widened, only decreased.",
+    "record_attribution_string": "0.6025 -> +0.09 floor [60ecea2 pacing] -> +0.23 instant-zero [6bd945d P0-A] -> +0.33 E6-dynamics x instant-zero interaction (FOLLOWUP_DESIGNS.md §3.2 part 1, verbatim)",
+    "sum_is_approximate_because": "the three deltas were measured on different protocols/rows (single-hunk reverts, a 6/9 shipped row at 0.8918, and the 11-scenario dd2e857 row); only the two bit-exact anchors below are byte-pinned.",
+    "components": [
+      {
+        "delta": "+0.0923",
+        "range": "be20471 -> 60ecea2",
+        "cause": "navigation/grid_navigator.py TERMINAL_APPROACH_FLOOR_MPS=0.12 (owner pacing seam). Single-hunk revert restores navigate_near_wall to exactly 1.1401. A ~+0.29 residual on navigate_crossing_ped is attributed by ELIMINATION to the same commit's pipeline.py scan-creep seam and is NOT single-hunk isolated (FOLLOWUP_DESIGNS.md §8 open question 10)."
+      },
+      {
+        "delta": "+0.2329",
+        "range": "60ecea2 -> 6bd945d",
+        "cause": "card P0-A's hard-stop change in navigation/velocity_shaping.py: emergency went from accel-limited _move_toward to instant exact (0,0,0). Reverting only that hunk returns the mean to exactly 0.7212, the 60ecea2 value. P0-A is the verdict-ranked hard-stop contract and is NOT reverted."
+      },
+      {
+        "delta": "+0.33 (0.8918 -> 1.2187, +37%)",
+        "range": "6bd945d -> dd2e857 (lane E6)",
+        "cause": "E6 owner-band dynamics INTERACTING with P0-A's instant zero. E6's own band-edge-transition guess is REFUTED by trace: the owner band is granted 200/200 and 180/180 ticks and owner centre distance stays 2.00-2.18 m, never inside the 0.10 m ramp. 96.7%/96.3% of summed squared jerk sits on emergency-ADJACENT ticks, where the runtime routes ANY zero intent through the same emergency bypass as a safety stop (runtime.py _is_zero_command)."
+      }
+    ],
+    "bit_exact_anchors": [
+      "be20471: mean 0.6025, mean_band_fraction 0.7433396178984414",
+      "dd2e857: mean 1.2187, mean_band_fraction 0.708782386458857, follow 7/9"
+    ],
+    "future_repin": "Card J-B landed the severity split behind motion.shaping.nominal_stop_ramp (default OFF). If the owner flips that default, this baseline is re-pinned DOWNWARD with a 2x2 attribution. Ratchets only tighten."
+  },
+  "does_not_prove": [
+    "Bench-only: these are the shaper's contribution on the headless kinematic block, not a hardware ride-quality claim.",
+    "A 1.20x ceiling tolerates ~+22% silent creep by construction; mean_rms_commanded_jerk_nominal_mps3 and the immutable reports are the escape hatch."
+  ]
+}

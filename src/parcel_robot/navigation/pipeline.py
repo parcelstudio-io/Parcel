@@ -172,6 +172,8 @@ except ImportError:  # pragma: no cover — frozen BARN bundle path
 #: ``None`` means the ladder is fully wired. Read it for health reporting.
 INSTRUCTNAV_IMPORT_ERROR: ImportError | None = None
 DETECTION_LOCK_ON_IMPORT_ERROR: ImportError | None = None
+LOCK_ON_VERIFY_IMPORT_ERROR: ImportError | None = None
+ROUTE_MEMORY_IMPORT_ERROR: ImportError | None = None
 
 
 def _is_genuine_absence(exc: ImportError) -> bool:
@@ -244,6 +246,7 @@ try:
         ValueDirectedScanSession,
         paint_look,
     )
+    from .value_evidence import ValueEvidencePolicy
     from .value_map import SemanticValueMap2D
 
     _HAS_INSTRUCTNAV = True
@@ -286,6 +289,7 @@ except ImportError as _exc:  # pragma: no cover — frozen BARN bundle path
     ScanLookDecision = None  # type: ignore[misc, assignment]
     ValueDirectedScanSession = None  # type: ignore[misc, assignment]
     paint_look = None  # type: ignore[misc, assignment]
+    ValueEvidencePolicy = None  # type: ignore[misc, assignment]
     SemanticValueMap2D = None  # type: ignore[misc, assignment]
     _HAS_INSTRUCTNAV = False
 
@@ -311,6 +315,73 @@ except ImportError as _exc:  # pragma: no cover — optional D3 module
     _HAS_DETECTION_LOCK_ON = False
 
 
+# VS-4 verify-on-approach consumes two Wave-2 pure modules (VS-1's session +
+# per-kind refinement gate, VS-2's negative-evidence memory). Same soft-import
+# pattern, separate try: a miss must disable the verify path only, never the D3
+# lock-on or the GrounderV2 ladder.
+try:
+    from parcel_robot.detection_adapter.false_positive_memory import (
+        NegativeEvidenceMemory,
+    )
+
+    from .lock_on_verify import (
+        ApproachView,
+        GroundedReference,
+        LockOnVerifySession,
+        ReferenceKind,
+        admits_for_confirmation,
+        refinement_gate,
+    )
+
+    _HAS_LOCK_ON_VERIFY = True
+except ImportError as _exc:  # pragma: no cover — optional VS-1/VS-2 modules
+    _reraise_if_not_absent(
+        _exc, "the VS-1/VS-2 verify-on-approach modules", "tests/test_import_order_no_cycle.py"
+    )
+    LOCK_ON_VERIFY_IMPORT_ERROR = _exc
+    NegativeEvidenceMemory = None  # type: ignore[misc, assignment]
+    ApproachView = None  # type: ignore[misc, assignment]
+    GroundedReference = None  # type: ignore[misc, assignment]
+    LockOnVerifySession = None  # type: ignore[misc, assignment]
+    ReferenceKind = None  # type: ignore[misc, assignment]
+    admits_for_confirmation = None  # type: ignore[misc, assignment]
+    refinement_gate = None  # type: ignore[misc, assignment]
+    _HAS_LOCK_ON_VERIFY = False
+
+
+# RM-2 route memory: a fourth soft import, deliberately separate again. The
+# place graph is a leaf module (RM-1 pins "no navigation imports" with an AST
+# walk), so importing it here cannot open a cycle; a miss must disable route
+# memory only.
+try:
+    from parcel_robot.pose import POSE_PROVIDER_KEY
+    from parcel_robot.route_memory.place_graph import (
+        DEFAULT_ATTACH_RADIUS_M as ROUTE_MEMORY_ATTACH_RADIUS_M,
+    )
+    from parcel_robot.route_memory.proposer import (
+        DEFAULT_WAYPOINT_REACHED_M,
+        PLACE_ROUTE_SOURCE,
+        chain_length_m,
+        waypoint_goal_from_chain,
+    )
+    from parcel_robot.route_memory.runtime_hook import RouteMemoryPlaceHook
+
+    _HAS_ROUTE_MEMORY = True
+except ImportError as _exc:  # pragma: no cover — optional RM-1 module
+    _reraise_if_not_absent(
+        _exc, "the RM-1 place-graph modules", "tests/test_import_order_no_cycle.py"
+    )
+    ROUTE_MEMORY_IMPORT_ERROR = _exc
+    RouteMemoryPlaceHook = None  # type: ignore[misc, assignment]
+    waypoint_goal_from_chain = None  # type: ignore[misc, assignment]
+    chain_length_m = None  # type: ignore[misc, assignment]
+    PLACE_ROUTE_SOURCE = "route_memory_place"
+    POSE_PROVIDER_KEY = "pose_provider"
+    ROUTE_MEMORY_ATTACH_RADIUS_M = 8.05
+    DEFAULT_WAYPOINT_REACHED_M = 0.25
+    _HAS_ROUTE_MEMORY = False
+
+
 def soft_import_health() -> dict[str, object]:
     """Machine-readable state of this module's soft imports.
 
@@ -329,6 +400,16 @@ def soft_import_health() -> dict[str, object]:
             None
             if DETECTION_LOCK_ON_IMPORT_ERROR is None
             else repr(DETECTION_LOCK_ON_IMPORT_ERROR)
+        ),
+        "lock_on_verify": _HAS_LOCK_ON_VERIFY,
+        "lock_on_verify_error": (
+            None
+            if LOCK_ON_VERIFY_IMPORT_ERROR is None
+            else repr(LOCK_ON_VERIFY_IMPORT_ERROR)
+        ),
+        "route_memory": _HAS_ROUTE_MEMORY,
+        "route_memory_error": (
+            None if ROUTE_MEMORY_IMPORT_ERROR is None else repr(ROUTE_MEMORY_IMPORT_ERROR)
         ),
     }
 
@@ -357,6 +438,9 @@ class DirectiveNavigator:
         instructnav_recovery: bool = True,
         value_directed_search: bool = False,
         detection_lock_on: bool = False,
+        lock_on_verify_on_approach: bool = False,
+        person_aware_nav: bool = False,
+        route_memory: bool = False,
         inside_probability_threshold: float | None = None,
         arrival_confidence_threshold: float | None = None,
     ):
@@ -410,6 +494,23 @@ class DirectiveNavigator:
             if self.value_directed_search and ValueDirectedScanSession is not None
             else None
         )
+        # VS-5: the evidence policy VS-3 froze. It replaces the substring/floor
+        # painter this pipeline used to run inline: value comes from the query
+        # MATCH SCORE through the SigLIP seam, a look with nothing
+        # query-relevant in it paints a MISS (which LOWERS the cone's value), and
+        # ``evidence_count`` is the number the empty-map delegation keys on.
+        self._value_evidence = (
+            ValueEvidencePolicy()
+            if self.value_directed_search and ValueEvidencePolicy is not None
+            else None
+        )
+        # VS-5 non-vacuity telemetry (counters only; no decision reads these).
+        self.value_paints = 0
+        self.value_evidence_paints = 0
+        self.value_miss_paints = 0
+        self.value_cells_painted = 0
+        self.value_directed_frontiers = 0
+        self.value_baseline_frontiers = 0
         self._plan_time_prior = None
         # D3 opt-in: detection-triggered SEARCH→NAVIGATE lock-on. Flag-off keeps
         # the frustum multi-view commit path byte-identical.
@@ -422,6 +523,163 @@ class DirectiveNavigator:
         self._detection_lock_on = (
             DetectionLockOnSession() if self.detection_lock_on else None
         )
+        # VS-4 opt-in: arrival integrity + verify-on-approach (card VS-4,
+        # 2026-08-11). Strictly a REFUSAL channel layered on the D3 lock-on:
+        # it never chooses an instance, never widens an arrival, and cannot be
+        # on unless ``detection_lock_on`` is. Flag-OFF every branch it owns is
+        # guarded, so the unconditional path is byte-identical.
+        self.lock_on_verify_on_approach = (
+            bool(lock_on_verify_on_approach)
+            and self.detection_lock_on
+            and _HAS_LOCK_ON_VERIFY
+        )
+        if self.detection_lock_on and not self.lock_on_verify_on_approach:
+            # AF-2 (scrum/20260811/task_1/AUDIT_WAVE2_FABLE.md, Notes): this is
+            # the OLD DEFECTIVE ARM and it is still reachable. Without
+            # verify-on-approach the lock-on retargets the mission goal to its
+            # own D2 fused point and builds ``arrival_goal_region`` FROM that
+            # rewritten candidate — the measured V-E wrong-instance false
+            # arrival (nav-region_goal-B-05: final pose on the SOUTH sidewalk
+            # while the episode polygon was the north one, dtg 4.7785 m) — and
+            # a committed session never re-verifies, so nothing can refute it.
+            # Measured on the v4 minival: SR 0.32 -> 0.24, 1 false arrival, 2
+            # episodes lost; with verify on, 0.32 / 0 / 0 (W2_WIRE1_STATUS.md
+            # §5). NOT a hard refusal: whether this combination should be
+            # refused outright is owner decision-queue item 6 of the Wave-2
+            # audit ("whether the defective lock-on-without-verify combination
+            # should be refused outright"), and refusing it here would silently
+            # move a flag-conditional arm the record still allows.
+            logger.warning(
+                "detection_lock_on is ON while lock_on_verify_on_approach is OFF: "
+                "this is the measured V-E defective arm (wrong-instance commit "
+                "against a silently rewritten goal, false arrival at dtg 4.7785 m "
+                "on nav-region_goal-B-05; v4 minival SR 0.32->0.24, 2 episodes "
+                "lost). Enable lock_on_verify_on_approach, or turn detection_lock_on "
+                "off. Owner decision queue item 6, "
+                "scrum/20260811/task_1/AUDIT_WAVE2_FABLE.md."
+            )
+        self._lock_on_fp_memory = (
+            NegativeEvidenceMemory() if self.lock_on_verify_on_approach else None
+        )
+        self._lock_on_verify: Any | None = None
+        self._lock_on_verify_session_id = ""
+        self._lock_on_last_admitted: Any | None = None
+        self._lock_on_view_index = 0
+        self._lock_on_hypothesis_committed = False
+        self._lock_on_instance_id = ""
+        #: Non-vacuity evidence for the card's gate (adjudication #19); never
+        #: read by any decision. Same pattern as D15-B's engagement counters.
+        self.lock_on_verify_states: list[tuple[str, str]] = []
+        self.lock_on_sessions = 0
+        self.lock_on_verify_ticks = 0
+        self.lock_on_admitted_views = 0
+        self.lock_on_deferred_ticks = 0
+        self.lock_on_instance_switches = 0
+        self.lock_on_commits = 0
+        self.lock_on_refutations = 0
+        #: AF-2: how many (class, cell) keys those refutations were written at.
+        #: Two per refutation whenever the estimate and the grounded candidate
+        #: fall in different cells — the case the audit measured inert.
+        self.lock_on_refutation_cells = 0
+        self.lock_on_suppressions = 0
+        self.lock_on_reanchors = 0
+        self.lock_on_flushes = 0
+        # D15-B opt-in: person-aware navigation (card D15-B, 2026-08-11).
+        #
+        # The D-15 regression is a COMPLIANT robot deadlocking behind a human:
+        # ``apply_reactive_safety`` vetoes translation whenever a person's
+        # clearance is inside ``person_stop_m + |v|·reaction_time_s``, and the
+        # planner — which never sees that veto — replans the same blocked route
+        # until the budget expires (FOLLOWUP_DESIGNS.md §1.1).
+        #
+        # Flag-ON adds two PROPOSER-side behaviours and nothing else:
+        #   (i) people the planner is BLIND to are published into the payload
+        #       its own dynamic-agent cost layer already consumes, so A* can
+        #       route AROUND them (measured: a declared person on the route
+        #       turns a 0.03 m deadlock into a 3.86 m detour, W1_D15_STATUS.md);
+        #  (ii) the commanded translation is capped at ``compliant_speed`` —
+        #       the float-lattice supremum below the gate's own veto boundary —
+        #       so the veto ring shrinks because the PROPOSAL slowed down.
+        # ``apply_reactive_safety`` is untouched and still disposes every tick;
+        # the cap can only ever REDUCE a commanded speed, so a proposer/gate
+        # disagreement can lose the capability but can never grant motion the
+        # gate would have refused. Flag-OFF is byte-identical: every branch
+        # below is guarded, and the observation handed to the navigator is the
+        # same object.
+        self.person_aware_nav = bool(person_aware_nav)
+        #: Ticks on which the flag-on path actually engaged. Non-vacuity
+        #: evidence for the card's gate; never read by any decision.
+        self.person_costs_published_ticks = 0
+        self.person_compliant_cap_ticks = 0
+        self._person_keepout_unavailable = False
+        # RM-2 opt-in: route memory on the product path (card RM-2,
+        # scrum/20260811/task_2/SLAM_M_PLAN.md, 2026-08-12).
+        #
+        # Three mechanisms, all behind this one flag:
+        #   (1) AUTO-TEACH  — every tick's MAP-frame pose is offered to a
+        #       session-scoped RoutePlaceGraph, so a route the robot has
+        #       actually driven is remembered as recorded edges;
+        #   (2) BEYOND-REACH TRIGGER — when the planner has PROVED it cannot
+        #       route to a committed goal that is out of window range, memory is
+        #       consulted BEFORE the instance is released and blacklisted;
+        #   (3) CONSUMPTION — a remembered chain becomes ONE interim SE2Goal,
+        #       stamped with the active (task_id, plan_revision), resolved
+        #       through ``goal_arbiter`` (veto and lethal rules untouched), and
+        #       on a win stored as an interim navigation target ONLY.
+        #
+        # The mission goal, the K0 arrival region and the arrival predicate are
+        # NEVER replaced: ``self.mission.goal`` keeps the committed approach pose
+        # for its whole life, ``_inside_arrival_goal_region`` keeps verifying
+        # against the true target, and the chain hands back to normal planning as
+        # soon as the true goal is inside the live planner window. Memory returns
+        # an empty tuple ⇒ this whole path is inert and behaviour is today's,
+        # verbatim (RM-1's fail-closed contract).
+        #
+        # Flag-OFF ``self._route_memory`` is None and every branch below is
+        # guarded on that, so the unconditional path is byte-identical.
+        self.route_memory = (
+            bool(route_memory) and _HAS_ROUTE_MEMORY and RouteMemoryPlaceHook is not None
+        )
+        self._route_memory = RouteMemoryPlaceHook() if self.route_memory else None
+        #: The chain memory last handed back, in travel order (RECORDED edges).
+        self._route_memory_chain: tuple[Any, ...] = ()
+        #: The interim navigation target. NOT the mission goal, never an arrival.
+        self._route_memory_target: GoalPose | None = None
+        #: The (task_id, plan_revision) the live chain was authored under.
+        self._route_memory_stamp: tuple[str, int] = ("", 0)
+        #: Best remaining recorded distance seen on the live chain, and the
+        #: consecutive ticks it has failed to improve — "active AND advancing".
+        self._route_memory_best_remaining_m: float | None = None
+        self._steps_route_memory_stalled = 0
+        #: Hand-back probe state (see ``_route_memory_navigate``).
+        self._route_memory_probing = False
+        self._route_memory_probe_refuted = False
+        self._route_memory_robot_xy: tuple[float, float] | None = None
+        self._route_memory_tick = 0
+        self._route_memory_now_s = 0.0
+        #: Committed instances memory has already spent its one chain on. The
+        #: livelock guard: without it a retired chain is re-armed on the next
+        #: unroutable tick and the release the deferral suspended never returns.
+        #: Mission-scoped, exactly like ``_unreachable_candidates``.
+        self._route_memory_spent: set[str] = set()
+        #: The task id a waypoint proposal is currently buffered under in the
+        #: shared ``ProposerBus``, or ``None``. Recorded at PUBLISH time rather
+        #: than read off ``_active_task_id`` at withdrawal time, because a
+        #: correction may switch tasks in between (AUDIT_WAVE2 finding 1).
+        self._route_memory_published_task: str | None = None
+        #: Ticks the hand-back probe has been held waiting for the planner to
+        #: actually plan for the TRUE goal (AUDIT_WAVE2 finding 2).
+        self._steps_route_memory_probing = 0
+        #: Append-only non-vacuity counters; read by no decision.
+        self.route_memory_keyframes = 0
+        self.route_memory_routes_found = 0
+        self.route_memory_proposals = 0
+        self.route_memory_wins = 0
+        self.route_memory_vetoes = 0
+        self.route_memory_chain_ticks = 0
+        self.route_memory_deferred_releases = 0
+        self.route_memory_flushes = 0
+        self.route_memory_handbacks = 0
         self.scan_behavior = (
             ScanBehaviorController(
                 value_directed=self.value_directed_search,
@@ -671,6 +929,24 @@ class DirectiveNavigator:
                     data.get("detection_lock_on", False),
                 )
             ),
+            lock_on_verify_on_approach=bool(
+                overrides.get(
+                    "lock_on_verify_on_approach",
+                    data.get("lock_on_verify_on_approach", False),
+                )
+            ),
+            person_aware_nav=bool(
+                overrides.get(
+                    "person_aware_nav",
+                    data.get("person_aware_nav", False),
+                )
+            ),
+            route_memory=bool(
+                overrides.get(
+                    "route_memory",
+                    data.get("route_memory", False),
+                )
+            ),
             semantic_memory=overrides.get("semantic_memory"),
             # Stratum-2 perception tier: ``null`` (the shipping default) means
             # "use the goal's own minimum_confidence", which is the value the
@@ -754,12 +1030,36 @@ class DirectiveNavigator:
         self._unreachable_candidates = set()
         self._steps_goal_unroutable = 0
         self._steps_gate_blocked = 0
+        # RM-2: MISSION BOUNDARY. The graph survives (that is the whole point --
+        # a route driven under an earlier directive is what makes the next one
+        # solvable), the ingest TRACK does not. Skipping this is the one failure
+        # AUDIT_WAVE1_FABLE.md called out by name: the teleport from one
+        # episode's end pose to the next one's start pose would be recorded as a
+        # traversal, handing the router an edge across ground nothing walked.
+        self._reset_route_memory_track()
         if self.scan_behavior is not None:
             self.scan_behavior.reset()
         if self._value_scan_session is not None:
             self._value_scan_session.reset()
+        # VS-5: the belief map is MISSION-scoped, like VS-3's policy ledger. A
+        # map that kept a previous mission's evidence would report
+        # ``evidence_count > 0`` before this mission has looked at anything, and
+        # the empty-map delegation would silently not fire on its first frontier.
+        if self.semantic_value_map is not None:
+            self.semantic_value_map.reset()
+        if self._value_evidence is not None:
+            self._value_evidence.reset()
         if self._detection_lock_on is not None:
             self._detection_lock_on.reset()
+        if self.lock_on_verify_on_approach:
+            # VS-2's memory is MISSION-scoped; the counters are append-only
+            # evidence and deliberately survive (D15-B's pattern).
+            self._end_lock_on_verify()
+            self._lock_on_last_admitted = None
+            self._lock_on_hypothesis_committed = False
+            self._lock_on_instance_id = ""
+            if self._lock_on_fp_memory is not None:
+                self._lock_on_fp_memory.reset()
         if self.value_directed_search and PlanTimePriorCache is not None:
             query = str(
                 mission.metadata.get("semantic_query")
@@ -783,6 +1083,8 @@ class DirectiveNavigator:
             mission.metadata["value_directed_search"] = True
         if self.detection_lock_on:
             mission.metadata["detection_lock_on"] = True
+        if self.lock_on_verify_on_approach:
+            mission.metadata["lock_on_verify_on_approach"] = True
         if mission.goal is not None:
             self._navigator.reset(mission)
         self.mission = mission
@@ -800,8 +1102,33 @@ class DirectiveNavigator:
         A stale-revision straggler is then rejected by ``GoalArbiter.resolve``.
         """
 
+        # The two assignments below are the pre-RM-2 body, in the pre-RM-2 ORDER,
+        # with the pre-RM-2 exception behaviour: ``str(task_id)`` is evaluated and
+        # stored, THEN ``int(plan_revision)``, so a non-integer revision leaves the
+        # task id already updated exactly as it always did. Computing the "changed"
+        # predicate from the tuple ahead of the assignments (RM-2's first shape)
+        # quietly moved that exception boundary on the unconditional path.
+        previous = (self._active_task_id, self._active_plan_revision)
         self._active_task_id = str(task_id)
         self._active_plan_revision = int(plan_revision)
+        # RM-2: a CORRECTION is exactly a change of the active revision key. A
+        # pending waypoint chain was derived under the OLD one, so it is gone --
+        # withdrawn from the buffer by the revision-neutral purge and dropped as
+        # an interim target here, in the same call. The mission goal is untouched:
+        # a correction that keeps the same goal simply re-derives the chain on the
+        # next trigger.
+        #
+        # AUDIT_WAVE2 finding 1: the withdrawal keys off the task the proposal was
+        # PUBLISHED under (``_route_memory_published_task``), not off
+        # ``_active_task_id``. A correction may SWITCH tasks -- ``runtime`` re-points
+        # the key on every accepted plan, including non-nav voice plans -- and
+        # purging under the new task left the old task's waypoint buffered and still
+        # able to win ``GoalArbiter.resolve`` inside its TTL.
+        if self._route_memory is not None and (
+            self._active_task_id,
+            self._active_plan_revision,
+        ) != previous:
+            self._flush_route_memory_waypoints("revision_changed")
 
     @property
     def paused(self) -> bool:
@@ -850,17 +1177,47 @@ class DirectiveNavigator:
         if self._paused:
             # Budgets stay frozen; do not advance watchdog counters.
             return MidLevelCommand(stop=True, note="mission_paused")
+        # RM-2 AUTO-TEACH, before the LOST hold: RM-1 refuses a LOST pose and
+        # breaks its own track on it, and that break is exactly what must be
+        # recorded (MAP jumps on recovery). Returning first would hide it.
+        if self._route_memory is not None:
+            self._route_memory_teach(observation)
         lost = self._pose_lost_hold(observation)
         if lost is not None:
             return lost
         self._update_tracker(observation)
         if self.mission.goal is None:
-            return self._step_semantic_resolution(observation)
+            # VS-5: the searching path is the value map's path; stamp its
+            # counters here, the one place every searching command returns
+            # through. Flag-off returns the identical object.
+            return self._value_map_telemetry_note(
+                self._step_semantic_resolution(observation)
+            )
         self._reanchor_landmark_goal(observation)
+        # VS-4: re-verify the committed reference BEFORE anything acts on it,
+        # terminal verification included — a proposal refuted on the doorstep is
+        # exactly the one that must not be allowed to claim an arrival.
+        if self.lock_on_verify_on_approach and self._lock_on_verify is not None:
+            refused = self._verify_lock_on_on_approach(observation)
+            if refused is not None:
+                return refused
         if self.mission.status == "verifying":
             return self._step_terminal_verification(observation)
         control_observation = self._control_observation(observation)
-        cmd = self._navigator.act(control_observation, self.mission)
+        # D15-B (i): the planner plans against the people it can see when the
+        # flag is on. Flag-off this is the SAME OBJECT, so the navigator sees
+        # exactly what it saw before this card.
+        plan_observation = (
+            self._publish_person_costs(control_observation)
+            if self.person_aware_nav
+            else control_observation
+        )
+        # RM-2 (iii): flag-off this is the SAME call it always was.
+        cmd = (
+            self._navigator.act(plan_observation, self.mission)
+            if self._route_memory is None
+            else self._route_memory_navigate(plan_observation)
+        )
         geometrically_arrived = bool(cmd.stop) or self.mission.status == "arrived"
         inside_arrival = self._inside_arrival_goal_region(observation)
         if geometrically_arrived or inside_arrival:
@@ -886,6 +1243,11 @@ class DirectiveNavigator:
         unroutable = self._unroutable_goal_recovery()
         if unroutable is not None:
             return unroutable
+        # RM-2 trigger (ii): the beyond-window case, which is CLIPPED to
+        # ``partial`` and never reaches the hook above. Arms only; returns
+        # nothing, so the tick proceeds exactly as it would have.
+        if self._route_memory is not None:
+            self._route_memory_partial_recovery()
         gate_blocked = self._gate_blocked_route_recovery()
         if gate_blocked is not None:
             return gate_blocked
@@ -932,6 +1294,15 @@ class DirectiveNavigator:
             and vx >= 0.0
         ):
             vx = max(vx, min(ramp_seed, max_vx))
+        # D15-B (ii): proposer-side compliant-speed cap. Applied AFTER every
+        # existing clamp and lift so it is the last word this pipeline has on
+        # translation magnitude, and BEFORE the shields/gate that dispose of it.
+        if self.person_aware_nav:
+            vx, vy, cap_note = self._person_compliant_translation(
+                control_observation, vx, vy
+            )
+            if cap_note:
+                cnote = f"{cnote}|{cap_note}"
         if self.all_ray_shield is not None:
             from .experimental_all_ray_shield import apply_v8_all_ray_shield
 
@@ -954,6 +1325,11 @@ class DirectiveNavigator:
                 vy = shield.output_vy_mps
                 cnote = f"{cnote}|{shield.note}"
         note = f"{cmd.note}|{cnote}" if cmd.note else cnote
+        # VS-4: stamp the verify counters onto the approach ticks — the trace is
+        # where adjudication #19's conjuncts have to be assertable from. Both
+        # returns below are non-terminal (``stop=False``), so ``reason`` (the
+        # runner's terminal-note field) is never touched by this.
+        note = self._lock_on_telemetry_note(note)
         # Person-stop authority is decided by apply_collision_brake; keep the
         # zero return even if a later shield note rewrites ``cnote``.
         if person_gate_stop or cnote.endswith("_stop"):
@@ -965,6 +1341,247 @@ class DirectiveNavigator:
     # (grid_navigator align cut), and recording that as a running tick wipes
     # exactly the memory this feature exists to hold (arbitration OB-4).
     RAMP_RUNNING_FLOOR_MPS = 0.05
+
+    # ---- D15-B: person-aware navigation (flag ``person_aware_nav``) --------
+    #
+    # Everything below runs ONLY under the flag. It reads the person channels
+    # the observation already publishes — ``nearest_person_m`` (+ bearing),
+    # ``extras['dynamic_agents']`` and ``extras['owner_track']``, the same
+    # payloads ``grid_navigator._refresh_dynamic_costs`` consumes — and never
+    # invents perception. A harness that publishes no person channel therefore
+    # gets no behaviour change even flag-ON; that is a property of the harness,
+    # not of this code (see W1_D15_STATUS.md, handoff H-1).
+
+    def _person_keepout_tools(self) -> tuple[Any, Any, Any, Any] | None:
+        """Soft-import the derived keepout module and the gate's own predicates.
+
+        Imported here rather than at module scope because this file is copied
+        verbatim into frozen BARN bundles whose package predates both modules;
+        a hard import would break them on load. Flag-ON with the module absent
+        degrades to flag-OFF behaviour, loudly, once.
+
+        ``_toward`` is IMPORTED from the gate rather than restated: the whole
+        point of the cap is to agree with the disposer's own arithmetic.
+        """
+
+        if self._person_keepout_unavailable:
+            return None
+        try:
+            from parcel_robot.models import VelocityCommand
+
+            from . import person_keepout
+            from .reactive_safety import ReactiveSafetyPolicy, _toward
+        except ImportError as error:  # pragma: no cover — frozen bundle path
+            self._person_keepout_unavailable = True
+            logger.warning("person_aware_nav disabled: %s", error)
+            return None
+        return person_keepout, ReactiveSafetyPolicy, _toward, VelocityCommand
+
+    def _person_keepout_policy(self, policy_cls: Any) -> Any:
+        """The clearance authority the keepout derives from.
+
+        ``ReactiveSafetyPolicy()`` defaults ARE the authority
+        (``SafetyEnvelope.person_stop(0.0)`` / ``person_comfort_band_m``), which
+        is what a commissioned gate is floored to. A commissioning file may make
+        the LIVE gate stricter; that can only make this proposal be refused, and
+        never make a refused command approved, because the cap below is a
+        minimum with the pipeline's existing clamps.
+        """
+
+        return policy_cls()
+
+    def _declared_people(
+        self, observation: NavObservation
+    ) -> list[tuple[float, float | None]]:
+        """``(clearance_m, bearing_rad)`` for every person the observation declares.
+
+        Clearance convention is the gate's (base-centre to person surface), so
+        payload CENTRES are converted with the same
+        ``owner_collision_envelope_m`` the gate subtracts when it turns the
+        owner's centre distance into a clearance.
+        """
+
+        tools = self._person_keepout_tools()
+        if tools is None:
+            return []
+        _, policy_cls, _, _ = tools
+        policy = self._person_keepout_policy(policy_cls)
+        people: list[tuple[float, float | None]] = []
+
+        nearest = observation.nearest_person_m
+        if isinstance(nearest, (int, float)) and math.isfinite(float(nearest)):
+            bearing = observation.extras.get("person_bearing_rad")
+            people.append(
+                (
+                    float(nearest),
+                    float(bearing)
+                    if isinstance(bearing, (int, float)) and not isinstance(bearing, bool)
+                    else None,
+                )
+            )
+
+        robot = _pose_in(observation, MAP_FRAME)
+        yaw = getattr(robot, "yaw", 0.0)
+        for key in ("dynamic_agents", "owner_track"):
+            for x, y, _ in _person_payload_entries(observation.extras.get(key)):
+                dx = x - robot.x
+                dy = y - robot.y
+                clearance = math.hypot(dx, dy) - policy.owner_collision_envelope_m
+                people.append(
+                    (max(0.0, clearance), _wrap_to_pi(math.atan2(dy, dx) - yaw))
+                )
+        return people
+
+    def _publish_person_costs(self, observation: NavObservation) -> NavObservation:
+        """Give the planner the people it would otherwise be BLIND to.
+
+        The planner already owns an additive dynamic-agent cost layer
+        (``GridPlanner.set_dynamic_cost_layer``: a cost, never a mask — it can
+        only make a cell more expensive, so it cannot open a route that hard
+        inflation closed), fed from ``extras['dynamic_agents']`` /
+        ``extras['owner_track']``. D-15's bystander reached that layer through
+        NEITHER: the harness publishes no payload and the person is not in the
+        LiDAR either, so A* replanned straight through a human it could not see.
+
+        Flag-ON, a person carried only on the SENSED scalar channel
+        (``nearest_person_m`` + ``person_bearing_rad``) is converted into one
+        payload entry in the planner's own contract. Deliberately narrow:
+
+        * it runs ONLY when both payloads are empty, so a person can never be
+          costed twice (the runtime publishes both channels for the same body);
+        * it does not touch existing entries — measured, widening their
+          ``radius_m`` to the keepout ring FLATTENS the Gaussian lobe and
+          destroys the very cost gradient A* detours on (0.05 m of progress
+          against 3.86 m; the same "flat mesa" defect ``dynamic_costs`` records
+          for 2026-08-04). The ring belongs in a cost layer of its own —
+          ``person_keepout.keepout_cost_field`` is written and tested for it —
+          which lives in ``grid_navigator``/``grid_planner``, files no card in
+          this batch owns (handoff H-2, W1_D15_STATUS.md);
+        * the footprint is the person's own collision envelope from the policy,
+          never an invented radius.
+
+        Perception is not invented here: the person must already be sensed.
+        """
+
+        tools = self._person_keepout_tools()
+        if tools is None:
+            return observation
+        _, policy_cls, _, _ = tools
+        policy = self._person_keepout_policy(policy_cls)
+        if _person_payload_entries(
+            observation.extras.get("dynamic_agents")
+        ) or _person_payload_entries(observation.extras.get("owner_track")):
+            return observation
+
+        nearest = observation.nearest_person_m
+        bearing = observation.extras.get("person_bearing_rad")
+        if not isinstance(nearest, (int, float)) or isinstance(nearest, bool):
+            return observation
+        if not isinstance(bearing, (int, float)) or isinstance(bearing, bool):
+            return observation
+        distance = float(nearest) + policy.owner_collision_envelope_m
+        if not (math.isfinite(distance) and math.isfinite(float(bearing))):
+            return observation
+
+        robot = _pose_in(observation, MAP_FRAME)
+        angle = float(bearing) + getattr(robot, "yaw", 0.0)
+        extras = dict(observation.extras)
+        extras["dynamic_agents"] = [
+            {
+                "id": str(observation.extras.get("person_id") or "person"),
+                "x": robot.x + distance * math.cos(angle),
+                "y": robot.y + distance * math.sin(angle),
+                "vx": 0.0,
+                "vy": 0.0,
+                "radius_m": policy.owner_collision_envelope_m,
+            }
+        ]
+        self.person_costs_published_ticks += 1
+        return replace(observation, extras=extras)
+
+    def _person_compliant_translation(
+        self,
+        observation: NavObservation,
+        vx: float,
+        vy: float,
+    ) -> tuple[float, float, str]:
+        """Cap the commanded translation at the gate's compliant speed.
+
+        For each declared person INSIDE the comfort band that the command is
+        CLOSING ON, ``compliant_speed(clearance)`` is the largest speed whose
+        predictive stop ring still clears them. Taking the minimum and scaling
+        the command down leaves the direction alone — the route is the planner's
+        business — and hands ``apply_reactive_safety`` a command its own
+        inequality accepts.
+
+        The cap binds on any CLOSING command — ``|Δbearing| < pi/2`` — which is
+        the gate's own ``_toward`` predicate at a deliberately STRICTER
+        half-angle (the gate uses a 1.15 rad cone). A proposer may be stricter
+        than its disposer but never looser, and the wider predicate is what
+        holds the closed-loop floor: one tick closes at most
+        ``compliant_speed·dt``, and ``dt`` (0.1 s) is below ``reaction_time_s``
+        (0.12 s), so clearance converges to ``person_stop_m`` FROM ABOVE and
+        never crosses it. Moving AWAY is never capped — retreating from a person
+        is not the behaviour to throttle.
+
+        Measured on the card's declared-bystander cell, owner-declared bystander
+        at D-15's clearance: gate vetoes 0.985 -> 0.000 of translating ticks,
+        minimum person clearance 1.2000 m = ``person_stop_m`` exactly, never
+        below (W1_D15_STATUS.md §4.1).
+
+        Never raises the command: ``scale <= 1`` by construction. A clearance
+        inside ``person_stop_m`` yields ``0.0`` (no compliant speed exists) and
+        the robot proposes a stop, which is what the gate would have imposed.
+        """
+
+        speed = math.hypot(vx, vy)
+        if speed <= 0.0:
+            return vx, vy, ""
+        tools = self._person_keepout_tools()
+        if tools is None:
+            return vx, vy, ""
+        keepout, policy_cls, toward, velocity_cls = tools
+        policy = self._person_keepout_policy(policy_cls)
+        command = velocity_cls(vx=vx, vy=vy, vyaw=0.0)
+
+        limit: float | None = None
+        binding_clearance = math.inf
+        for clearance, bearing in self._declared_people(observation):
+            if clearance >= policy.person_slow_m:
+                continue
+            # Unknown bearing fails closed to head-on, exactly as the gate's
+            # ``_toward`` does with ``bearing is None``.
+            if not toward(command, bearing, half_angle=math.pi / 2.0):
+                continue
+            compliant = keepout.compliant_speed(clearance, policy=policy)
+            if limit is None or compliant < limit:
+                # ``compliant_speed`` is monotone in clearance, so the smallest
+                # limit and the smallest clearance are the same person.
+                limit = compliant
+                binding_clearance = clearance
+        if limit is None or speed <= limit:
+            return vx, vy, ""
+
+        scale = limit / speed
+        capped_vx = vx * scale
+        capped_vy = vy * scale
+        # Scaling is not exact on the float lattice: ``hypot(vx·s, vy·s)`` can
+        # land an ULP ABOVE ``limit``, and the gate compares the magnitude it
+        # actually receives — one ULP is the difference between a moving robot
+        # and a vetoed one at this boundary. Verify with the gate's own
+        # inequality and step down until it holds. Measured before this guard:
+        # 0.519 of translating ticks vetoed on the cell's owner-declared pin
+        # case; after: 0.000 (W1_D15_STATUS.md §4.1).
+        for _ in range(_COMPLIANT_CAP_LATTICE_STEPS):
+            magnitude = math.hypot(capped_vx, capped_vy)
+            if magnitude <= 0.0 or not keepout.gate_vetoes(
+                binding_clearance, magnitude, policy=policy
+            ):
+                break
+            capped_vx = math.nextafter(capped_vx, 0.0)
+            capped_vy = math.nextafter(capped_vy, 0.0)
+        self.person_compliant_cap_ticks += 1
+        return capped_vx, capped_vy, f"person_compliant_cap={limit:.4f}"
 
     def _reset_ramp_memory(self) -> None:
         if self._ramp is not None:
@@ -1685,6 +2302,625 @@ class DirectiveNavigator:
             metadata=meta,
         )
 
+    # ------------------------------------------------------------------
+    # VS-4 — arrival integrity + verify-on-approach (record §2.2(a) + (b))
+    #
+    # Every method below returns early unless ``lock_on_verify_on_approach`` is
+    # on, and the flag can only be on when ``detection_lock_on`` is: the
+    # unconditional path is byte-identical (adjudication #9). The architecture
+    # is reference/estimate separation — the grounded instance is the
+    # REFERENCE and perception never rewrites it; a lock-on produces an
+    # ESTIMATE that must stay consistent with the reference; K0 keeps verifying
+    # the reference and is untouched here (no epsilon, no arrival reason, no
+    # special case). This path can only ever WITHHOLD or RETRACT a proposal.
+    # ------------------------------------------------------------------
+
+    def _lock_on_grounded_reference(
+        self,
+        semantic_goal: Any,
+        result: SemanticCandidate,
+    ) -> Any | None:
+        """The mission's REFERENCE, built from the grounded instance only.
+
+        Never from the fused point: that rewrite is the measured V-E defect
+        (record §2.1(1)). Returns ``None`` when the candidate carries no usable
+        geometry, which leaves the whole verify path inert for that commit —
+        refusals are added by evidence, never by its absence.
+
+        AF-2 (``scrum/20260811/task_1/AUDIT_WAVE2_FABLE.md``, should-fix 1): the
+        terminal RELATION and — when K0 built a band-shaped arrival region for
+        this very commit — that region's band travel with the reference, because
+        the checkpoint schedule must cover the whole K0 arrival region and the
+        near-object envelope alone does not (``towards`` reaches 2.5 m,
+        ``next_to`` reaches ``R+1.5``). The band handed over is
+        :meth:`_build_arrival_goal_region`'s own output, i.e. literally the
+        region K0 will verify the arrival against, so the two cannot disagree.
+        """
+
+        if not self.lock_on_verify_on_approach or GroundedReference is None:
+            return None
+        landmark_id = str(getattr(result, "candidate_id", "") or "")
+        if not landmark_id:
+            return None
+        kind = ReferenceKind.from_goal_kind(getattr(semantic_goal, "kind", ""))
+        polygon = tuple(
+            (float(point[0]), float(point[1]))
+            for point in (getattr(result, "polygon", None) or ())
+            if isinstance(point, (list, tuple)) and len(point) >= 2
+        )
+        relation = str(getattr(semantic_goal, "terminal_relation", "") or "")
+        arrival_band = self._arrival_band_for_commit(relation, result)
+        try:
+            if kind is ReferenceKind.REGION:
+                if len(polygon) < 3:
+                    return None
+                return GroundedReference(
+                    landmark_id=landmark_id,
+                    kind=kind,
+                    label=str(result.label or ""),
+                    polygon=polygon,
+                    relation=relation,
+                    arrival_band_m=arrival_band,
+                )
+            return GroundedReference(
+                landmark_id=landmark_id,
+                kind=kind,
+                label=str(result.label or ""),
+                center=(float(result.x), float(result.y)),
+                radius_m=_metadata_float(
+                    result.metadata, "radius_m", default=0.0, minimum=0.0, maximum=5.0
+                ),
+                relation=relation,
+                arrival_band_m=arrival_band,
+            )
+        except (TypeError, ValueError):
+            return None
+
+    def _arrival_band_for_commit(
+        self,
+        relation: str,
+        result: SemanticCandidate,
+    ) -> tuple[float, float] | None:
+        """K0's own arrival band for this commit, or ``None`` if it has none.
+
+        Read off :meth:`_build_arrival_goal_region` — the single place this
+        pipeline builds the region K0 verifies arrival against — so the verify
+        schedule is derived from the SAME authority rather than a second copy of
+        it. A polygon (``inside``) region carries no band and returns ``None``;
+        VS-1 then derives the edge from the relation itself.
+        """
+
+        try:
+            region = self._build_arrival_goal_region(relation, result)
+        except (TypeError, ValueError, KeyError):
+            return None
+        if not isinstance(region, dict):
+            return None
+        band = region.get("band_m")
+        if not isinstance(band, (list, tuple)) or len(band) < 2:
+            return None
+        try:
+            low, high = float(band[0]), float(band[1])
+        except (TypeError, ValueError):
+            return None
+        if not (math.isfinite(low) and math.isfinite(high)) or low > high:
+            return None
+        return (low, high)
+
+    def _lock_on_view_candidate(
+        self,
+        semantic_goal: Any,
+        observation: NavObservation,
+    ) -> SemanticCandidate | None:
+        """This tick's perception answer for the instance under verification.
+
+        Before a commit there is nothing to associate to, so this is perception's
+        own ranking (``ObservationSemanticMap.query`` order). After a commit the
+        association is the pipeline's OWN stratum-2 geometry — nearest candidate
+        to the tracked target position inside
+        :attr:`CANDIDATE_ASSOCIATION_GATE_M` + the target's radius, the same gate
+        :meth:`_bind_target_track` uses — never an oracle id join. That is what
+        keeps a lock-on REFINING one instance instead of switching to another
+        (record §2.2(a)(i)).
+        """
+
+        candidates = list(self._resolution_semantic_map.query(semantic_goal, observation))
+        if not candidates:
+            return None
+        anchor = self._tracked_target_xy()
+        if anchor is None or self.mission is None or self.mission.goal is None:
+            return candidates[0]
+        gate = self.CANDIDATE_ASSOCIATION_GATE_M + float(
+            self.mission.metadata.get("candidate_radius_m", 0.0) or 0.0
+        )
+        best: SemanticCandidate | None = None
+        best_distance: float | None = None
+        for candidate in candidates:
+            distance = math.hypot(float(candidate.x) - anchor[0], float(candidate.y) - anchor[1])
+            if distance <= gate and (best_distance is None or distance < best_distance):
+                best, best_distance = candidate, distance
+        return best
+
+    def _lock_on_estimate_xy(self, candidate: SemanticCandidate) -> tuple[float, float]:
+        """The current D2 estimate, or this measurement before any fusion."""
+
+        session = self._detection_lock_on
+        estimate = None if session is None else session.localizer.estimate
+        if estimate is None:
+            return (float(candidate.x), float(candidate.y))
+        return (float(estimate.position[0]), float(estimate.position[1]))
+
+    def _lock_on_track_instance(self, candidate: SemanticCandidate) -> None:
+        """One hypothesis per INSTANCE — a different instance is a new estimate.
+
+        The measured D2 defect is that ``MetricLocalizer`` "fuses every
+        measurement into one [x, y] state with no association gate"
+        (record §2.1(1)). Left alone that produces an estimate which is about no
+        instance in particular — a mixture of two sidewalks sits between them,
+        outside both, and the refinement gate would then refute a perfectly good
+        reference on the strength of our own contaminated fusion. Refusals must
+        come from evidence about the target, so the estimator restarts whenever
+        the instance under observation changes. Strictly an ADDITION of state
+        hygiene: it cannot admit anything the flag-off path refuses.
+        """
+
+        candidate_id = str(getattr(candidate, "candidate_id", "") or "")
+        if not candidate_id or candidate_id == self._lock_on_instance_id:
+            return
+        if self._detection_lock_on is not None:
+            self._detection_lock_on.reset()
+        self._lock_on_instance_id = candidate_id
+        self._lock_on_last_admitted = None
+        self._lock_on_hypothesis_committed = False
+        self.lock_on_instance_switches += 1
+
+    def _lock_on_fuse(
+        self,
+        semantic_goal: Any,
+        observation: NavObservation,
+        candidate: SemanticCandidate | None = None,
+    ) -> tuple[Any, ApproachView] | None:
+        """Fuse one view into D2 and return ``(estimate, view)``.
+
+        M-of-N admission is the record's independent-evidence rule consumed by
+        reference from VS-1 (``admits_for_confirmation``: one admissible view per
+        full-turn scan arc, measured at the estimate). D2 fuses every view; only
+        the CONFIRMER is gated, which is what kills the measured
+        self-confirmation (a re-read of one cached candidate from an unmoved
+        pose can no longer advance the window).
+        """
+
+        session = self._detection_lock_on
+        if session is None or ApproachView is None:
+            return None
+        if candidate is None:
+            candidate = self._lock_on_view_candidate(semantic_goal, observation)
+        if candidate is None:
+            return None
+        self._lock_on_track_instance(candidate)
+        robot = _pose_in(observation, MAP_FRAME)
+        probe = ApproachView(robot_xy=robot.xy, fused_xy=self._lock_on_estimate_xy(candidate))
+        admit = bool(admits_for_confirmation(self._lock_on_last_admitted, probe))
+        now_s = float(observation.extras.get("time_s") or 0.0)
+        now_ns = int(max(0.0, now_s) * 1_000_000_000) + int(self._lock_on_view_index)
+        estimate = session.fuse_view(
+            query=str(semantic_goal.query),
+            candidate=candidate,
+            robot_xy=robot.xy,
+            now_ns=now_ns,
+            admit_for_confirmation=admit,
+        )
+        self._lock_on_view_index += 1
+        if admit:
+            self._lock_on_last_admitted = probe
+            self.lock_on_admitted_views += 1
+        if estimate is None:
+            return None
+        if estimate.committed and not self._lock_on_hypothesis_committed:
+            self._lock_on_hypothesis_committed = True
+            self.lock_on_commits += 1
+        view = ApproachView(
+            robot_xy=robot.xy,
+            fused_xy=estimate.position,
+            covariance=estimate.covariance,
+            persistence=self._lock_on_target_persists(observation),
+            identity_score=float(estimate.identity_score),
+        )
+        return estimate, view
+
+    def _lock_on_target_persists(self, observation: NavObservation) -> bool:
+        """Is the committed detection still ASSOCIATED in this view?
+
+        For an OBJECT the answer is the pipeline's own stratum-2 association
+        between the semantic detection and the RANGE channel:
+        :meth:`_target_clearance` returns the nearest LiDAR return whose ray
+        geometry says it belongs to the tracked target, and ``None`` when no
+        return does. "A detection with nothing behind it" — the phantom class
+        this card exists to refuse — is exactly the case that returns ``None``.
+
+        A REGION has no depth signature (a sidewalk IS the ground plane), so a
+        region reference persists on the semantic channel alone; VS-1 only
+        consults persistence AT a checkpoint, and K0 keeps sole authority over
+        the arrival itself either way.
+        """
+
+        session = self._lock_on_verify
+        if session is None or session.reference.kind is not ReferenceKind.OBJECT:
+            return True
+        return self._target_clearance(observation) is not None
+
+    def _lock_on_observe_estimate(
+        self,
+        semantic_goal: Any,
+        observation: NavObservation,
+        mapped: SemanticCandidate | None = None,
+    ) -> None:
+        """Deference (§2.2(a)(i)): the lock-on OBSERVES; it never picks the instance.
+
+        With ``lock_on_verify_on_approach`` on, the instance is fixed by the
+        SAME authority the flag-off arm uses — the grounder's ranking, and for
+        interchangeable (region / "nearest") queries the scan-complete
+        boundary-aware ranking. The session still fuses D2 and still runs its
+        M-of-N, but its product is the ESTIMATE (an approach pose), never the
+        choice of which instance the mission is about.
+        """
+
+        if not self.lock_on_verify_on_approach:
+            return
+        self.lock_on_deferred_ticks += 1
+        # ``mapped`` is the grounder's own pick for this tick — the SAME
+        # candidate the flag-off arm would commit and the same one the
+        # unconditional lock-on path feeds. Handing the estimator the ranking's
+        # instance is what keeps "refine, never switch" true upstream of the
+        # commit as well as after it.
+        self._lock_on_fuse(semantic_goal, observation, mapped)
+
+    def _lock_on_admission_guard(
+        self,
+        semantic_goal: Any,
+        result: SemanticCandidate,
+        observation: NavObservation,
+    ) -> MidLevelCommand | None:
+        """Run BEFORE any commit: FP memory, then the per-kind refinement gate.
+
+        Returns a command when the commit is REFUSED, ``None`` when it may
+        proceed unchanged. Two refusal reasons, both from the record:
+        a remembered refutation at this place (VS-2's negative evidence,
+        consulted before accepting any hypothesis at a remembered location), and
+        a fused estimate that contradicts the grounded reference (§2.2(a)(iii) —
+        "violation is a REFUTATION, not a commit").
+        """
+
+        memory = self._lock_on_fp_memory
+        if memory is None or self.mission is None:
+            return None
+        reference = self._lock_on_grounded_reference(semantic_goal, result)
+        if reference is None:
+            return None
+        label = reference.label or reference.landmark_id
+        world_xy = (float(result.x), float(result.y))
+        suppression = memory.consult(label, world_xy, view_index=self._lock_on_view_index)
+        if suppression.suppressed:
+            self.lock_on_suppressions += 1
+            self.mission.metadata["lock_on_suppression"] = suppression.reason
+            self.mission.metadata["lock_on_suppression_strength"] = suppression.strength
+            return self._lock_on_refuse(
+                reason=f"fp_memory_suppressed:{suppression.reason}",
+                reference=reference,
+                world_xy=world_xy,
+                record_refutation=False,
+            )
+        session = self._detection_lock_on
+        estimate = None if session is None else session.localizer.estimate
+        if estimate is None or refinement_gate is None:
+            return None
+        verdict = refinement_gate(
+            reference, estimate.position, covariance=estimate.covariance
+        )
+        self.mission.metadata["lock_on_refinement"] = verdict.reason
+        self.mission.metadata["lock_on_refinement_displacement_m"] = verdict.displacement_m
+        if verdict.accepted:
+            return None
+        return self._lock_on_refuse(
+            reason=verdict.reason,
+            reference=reference,
+            world_xy=(float(estimate.position[0]), float(estimate.position[1])),
+            # AF-2 (should-fix 2): the refusal is about THIS grounded candidate,
+            # so the memory has to hold it at the candidate's cell too — this is
+            # the cell the guard consults on the very next sighting, and the
+            # refinement-gate class of refusal is precisely the one where the
+            # estimate is metres away from it.
+            reference_xy=world_xy,
+            record_refutation=True,
+        )
+
+    def _begin_lock_on_verify(
+        self,
+        semantic_goal: Any,
+        result: SemanticCandidate,
+    ) -> None:
+        """Open the verify-on-approach session for a freshly committed reference."""
+
+        self._end_lock_on_verify()
+        if not self.lock_on_verify_on_approach or LockOnVerifySession is None:
+            return
+        reference = self._lock_on_grounded_reference(semantic_goal, result)
+        if reference is None or self.mission is None:
+            return
+        self._lock_on_verify = LockOnVerifySession(reference)
+        self.lock_on_sessions += 1
+        self._lock_on_verify_session_id = f"{reference.landmark_id}#{self.lock_on_sessions}"
+        self.mission.metadata["lock_on_verify_session"] = self._lock_on_verify_session_id
+        self.mission.metadata["lock_on_verify_checkpoints_m"] = list(
+            self._lock_on_verify.checkpoints_m
+        )
+
+    def _end_lock_on_verify(self) -> None:
+        self._lock_on_verify = None
+        self._lock_on_verify_session_id = ""
+
+    def _verify_lock_on_on_approach(
+        self,
+        observation: NavObservation,
+    ) -> MidLevelCommand | None:
+        """One re-verification tick on a COMMITTED reference (record §2.2(b)).
+
+        The session is the machine (VS-1): checkpoints derive from the near-object
+        envelope, each demands fresh evidence (persistence, covariance shrink,
+        SigLIP identity re-check), and ``VERIFIED`` is not terminal — every later
+        view still runs the refinement gate. A refutation is a VETO: flush the
+        proposal through the P0-C revision seam, write negative evidence, resume
+        search. Nothing here can admit an arrival.
+
+        Between roughly 8 m and 12 m a target is visible but the grid planner's
+        local costmap cannot yet route to it (W2_EVAL_STATUS.md §3). No
+        checkpoint is due at those ranges — they are the near-object envelope,
+        metres not tens of metres — so the proposal simply stays PENDING and
+        keeps being re-verified while the planner closes range. Nothing is
+        weakened to achieve that: the window is quiet because no evidence is due.
+        """
+
+        session = self._lock_on_verify
+        if (
+            session is None
+            or self.mission is None
+            or self.mission.semantic_goal is None
+            or self.mission.goal is None
+        ):
+            return None
+        fused = self._lock_on_fuse(self.mission.semantic_goal, observation)
+        if fused is None:
+            return None
+        _estimate, view = fused
+        verdict = session.observe(view)
+        self.lock_on_verify_ticks += 1
+        self.lock_on_verify_states.append(
+            (self._lock_on_verify_session_id, verdict.state.value)
+        )
+        self.mission.metadata["lock_on_verify_state"] = verdict.state.value
+        self.mission.metadata["lock_on_verify_reason"] = verdict.reason
+        self.mission.metadata["lock_on_verify_states"] = list(self.lock_on_verify_states)
+        self.mission.metadata["lock_on_cleared_checkpoints_m"] = list(
+            verdict.cleared_checkpoints
+        )
+        if not verdict.veto:
+            return None
+        negative = session.negative_evidence()
+        world_xy = (
+            (float(negative.world_xy[0]), float(negative.world_xy[1]))
+            if negative is not None
+            else (float(view.fused_xy[0]), float(view.fused_xy[1]))
+        )
+        return self._lock_on_refuse(
+            reason=verdict.reason,
+            reference=session.reference,
+            world_xy=world_xy,
+            reference_xy=self._lock_on_reference_xy(session.reference),
+            record_refutation=True,
+        )
+
+    def _lock_on_reference_xy(self, reference: Any) -> tuple[float, float] | None:
+        """The GROUNDED candidate's own cell — the one the guard consults.
+
+        AF-2 (``scrum/20260811/task_1/AUDIT_WAVE2_FABLE.md``, should-fix 2).
+        Objects publish a centre; a region's representative point is its
+        polygon centroid, the same point the semantic map hands the grounder as
+        a region candidate's ``(x, y)``.
+        """
+
+        center = getattr(reference, "center", None)
+        if isinstance(center, (list, tuple)) and len(center) >= 2:
+            try:
+                point = (float(center[0]), float(center[1]))
+            except (TypeError, ValueError):
+                return None
+            return point if all(math.isfinite(v) for v in point) else None
+        polygon = tuple(getattr(reference, "polygon", None) or ())
+        if not polygon:
+            return None
+        try:
+            point = (
+                sum(float(vertex[0]) for vertex in polygon) / len(polygon),
+                sum(float(vertex[1]) for vertex in polygon) / len(polygon),
+            )
+        except (TypeError, ValueError, IndexError):
+            return None
+        return point if all(math.isfinite(v) for v in point) else None
+
+    def _lock_on_refuse(
+        self,
+        *,
+        reason: str,
+        reference: Any,
+        world_xy: tuple[float, float],
+        record_refutation: bool,
+        reference_xy: tuple[float, float] | None = None,
+    ) -> MidLevelCommand:
+        """Withdraw the lock-on proposal and resume the search, honestly.
+
+        The instance is NOT added to ``_unreachable_candidates``: a refutation is
+        evidence about a hypothesis at a PLACE, and VS-2's memory is the thing
+        that carries it (class + world cell, TTL/decay). Excluding the id would
+        make the re-encounter unobservable, which is precisely the suppression
+        the design wants to happen on the next sighting.
+
+        **AF-2 amendment** (``AUDIT_WAVE2_FABLE.md``, should-fix 2): the
+        refutation is written at BOTH the estimate's cell and the grounded
+        candidate's cell. The dominant refutation class on the live arm is the
+        refinement gate — "the fused point is metres away from the reference it
+        claims to be" — and it USED to record only at the estimate's cell while
+        :meth:`_lock_on_admission_guard` consults at the CANDIDATE's, so a wrong
+        reference more than a cell away from its estimate was re-committed and
+        re-refuted until the replan ladder was spent (measured live: 24
+        refutations, 1 suppression). VS-2's contract is untouched — the two
+        writes are two ordinary ``record_refutation`` calls, and the second is
+        skipped when both points fall in the SAME cell so a single refutation
+        can never reinforce (and so double the TTL horizon of) one entry.
+        """
+
+        assert self.mission is not None
+        if record_refutation and self._lock_on_fp_memory is not None:
+            memory = self._lock_on_fp_memory
+            label = reference.label or reference.landmark_id
+            cells = [(float(world_xy[0]), float(world_xy[1]))]
+            if reference_xy is not None:
+                candidate_cell = (float(reference_xy[0]), float(reference_xy[1]))
+                if memory.key(label, candidate_cell) != memory.key(label, cells[0]):
+                    cells.append(candidate_cell)
+            for cell in cells:
+                memory.record_refutation(
+                    label,
+                    cell,
+                    view_index=self._lock_on_view_index,
+                    reason=reason,
+                )
+            self.lock_on_refutations += 1
+            self.lock_on_refutation_cells += len(cells)
+        self._flush_lock_on_proposal()
+        self._end_lock_on_verify()
+        if self._detection_lock_on is not None:
+            # Drop the contradicted hypothesis so the next sighting starts from
+            # a fresh measurement rather than re-deriving the refuted estimate.
+            self._detection_lock_on.reset()
+        self._lock_on_last_admitted = None
+        self._lock_on_hypothesis_committed = False
+        self._lock_on_instance_id = ""
+        self.mission.metadata["lock_on_refusal"] = reason
+        self.mission.metadata["lock_on_refutations"] = self.lock_on_refutations
+        self.mission.metadata["lock_on_suppressions"] = self.lock_on_suppressions
+        replans = int(self.mission.metadata.get("replan_count", 0))
+        if replans < self.max_semantic_replans:
+            resumed = self._begin_semantic_replan(
+                replans, note="semantic_replan_after_lock_on_refutation"
+            )
+            # The refusal tick is an early return, so it never reaches the note
+            # stamp in ``step``; stamp it here or the REJECTED verdict — the one
+            # state the gate must see — never reaches a trace. Non-terminal
+            # command, so the runner's ``reason`` field is untouched.
+            return MidLevelCommand(
+                vx=resumed.vx,
+                vy=resumed.vy,
+                vyaw=resumed.vyaw,
+                stop=resumed.stop,
+                note=self._lock_on_telemetry_note(resumed.note or ""),
+            )
+        # The ladder is spent: every hypothesis this mission could form was
+        # refuted. Fail through the existing not-found exit — the honest
+        # classification is "I did not find it", not "I arrived".
+        reply = (
+            honest_not_found_reply(
+                _refusal_label(self.mission.semantic_goal),
+                scanned=self._already_scanned,
+                searched=self._already_searched,
+            )
+            if honest_not_found_reply is not None
+            else "target not confirmed"
+        )
+        self.mission.status = "failed"
+        self.mission.metadata.update(
+            {
+                "resolution_state": "not_found",
+                "recovery_phase": "failed",
+                "reply": reply,
+                "lock_on_outcome": "refuted",
+            }
+        )
+        return self._target_missing_command()
+
+    def _flush_lock_on_proposal(self) -> None:
+        """Withdraw the refuted lock-on proposal from the buffers, revision-NEUTRALLY.
+
+        **Amended by card AF-2 (2026-08-11); provenance
+        ``scrum/20260811/task_1/AUDIT_WAVE2_FABLE.md``, BLOCKING finding.**
+        This used to self-commit ``plan_revision + 1`` on the ProposerBus and the
+        GoalArbiter. Revision authority belongs to the EXECUTIVE (the P0-C
+        discipline): the ledger never lowers, the runtime restamps this navigator
+        with the executive's (lower) revision on every nav start/resume and plan
+        accept, and from that moment every goal this pipeline published was
+        "stale", ``GoalArbiter.resolve`` returned ``None`` and the mission died
+        ``arbiter_veto`` with no way to heal.
+
+        A refusal is a statement about ONE proposal, not about the plan, so it
+        purges the buffer and leaves the ledger alone:
+        :meth:`ProposerBus.flush_task` drops this task's buffered goals without
+        touching :class:`~parcel_robot.revision.CommittedRevisions`, and the
+        arbiter's paired ``flush_task`` keeps the two sinks uniform. The real
+        stale-drop semantics — an owner correction bumping ``plan_revision`` —
+        are untouched, and the very next proposal this navigator publishes under
+        the SAME revision buffers and resolves normally.
+        """
+
+        if self.proposer_bus is None or self.goal_arbiter is None:
+            return
+        flush_bus = getattr(self.proposer_bus, "flush_task", None)
+        flush_arbiter = getattr(self.goal_arbiter, "flush_task", None)
+        if not callable(flush_bus) or not callable(flush_arbiter):
+            # Historical bundles predate the AF-2 amendment. Withdrawing nothing
+            # is safe (the refusal path already releases the mission goal and
+            # resumes the search); bumping the revision was not.
+            return
+        flush_bus(self._active_task_id)
+        flush_arbiter(self._active_task_id)
+        self.lock_on_flushes += 1
+        # RM-2: a refusal withdraws the lock-on proposal AND any waypoint chain
+        # derived while that refuted commitment was live. The buffers are already
+        # purged above; this drops the interim target in the same transaction.
+        # Counted only when something was actually pending, so ``flushes`` stays
+        # a record of withdrawals rather than of call sites.
+        if self._route_memory is not None and self._route_memory_chain:
+            self._clear_route_memory_chain()
+            self.route_memory_flushes += 1
+            if self.mission is not None:
+                self.mission.metadata["route_memory_flush"] = "lock_on_refusal"
+
+    def _lock_on_telemetry_note(self, note: str) -> str:
+        """Append the card's non-vacuity counters to a note, for the trace.
+
+        ``MidLevelCommand.note`` is the only navigator-side channel the frozen
+        eval runner persists per step, and adjudication #19's conjuncts have to
+        be assertable FROM TRACES. Appended after a ``|`` delimiter and only on
+        non-terminal commands, so no substring the runner keys on
+        (``semantic_search_scan`` prefix, ``semantic_target_not_found``,
+        ``frontier``) is introduced or displaced.
+        """
+
+        if not self.lock_on_verify_on_approach:
+            return note
+        # The LAST VERDICT, not the live session: a refutation ends the session,
+        # and "the session is gone" is exactly the state the gate must be able
+        # to see. ``sessions`` is the ordinal that groups verdicts by session.
+        state = (
+            self.lock_on_verify_states[-1][1] if self.lock_on_verify_states else ""
+        )
+        return (
+            f"{note}|lock_on_verify={state}"
+            f",sessions={self.lock_on_sessions}"
+            f",views={self.lock_on_verify_ticks}"
+            f",commits={self.lock_on_commits}"
+            f",refutations={self.lock_on_refutations}"
+            f",suppressions={self.lock_on_suppressions}"
+        )
+
     def _commit_semantic_candidate(
         self,
         semantic_goal: Any,
@@ -1694,6 +2930,10 @@ class DirectiveNavigator:
         grounding_outcome: str,
     ) -> MidLevelCommand:
         assert self.mission is not None
+        if self.lock_on_verify_on_approach:
+            refused = self._lock_on_admission_guard(semantic_goal, result, observation)
+            if refused is not None:
+                return refused
         approach_costs: dict[str, Any] = {}
         pose = safe_approach_pose(
             semantic_goal,
@@ -1873,7 +3113,17 @@ class DirectiveNavigator:
         # Bind the freshly committed target to a confirmed track now, so the
         # very next tick's geometric association has an anchor.
         self._bind_target_track()
-        return MidLevelCommand(vx=0.0, vy=0.0, vyaw=0.0, note="semantic_target_resolved")
+        # VS-4: the committed REFERENCE (this grounded instance and its
+        # geometry, which is what ``arrival_goal_region`` above was built from)
+        # now gets a re-verification schedule as range closes.
+        if self.lock_on_verify_on_approach:
+            self._begin_lock_on_verify(semantic_goal, result)
+        return MidLevelCommand(
+            vx=0.0,
+            vy=0.0,
+            vyaw=0.0,
+            note=self._lock_on_telemetry_note("semantic_target_resolved"),
+        )
 
     def _fallback_near_arrival_pose(
         self,
@@ -2097,6 +3347,21 @@ class DirectiveNavigator:
         region = mission.metadata.get("arrival_goal_region")
         if isinstance(region, dict):
             mission.metadata["arrival_goal_region"] = _translated_goal_region(region, dx, dy)
+        # AF-2 (AUDIT_WAVE2_FABLE.md, should-fix 3): the verify session's
+        # GROUNDED REFERENCE is anchored to the same landmark and is part of the
+        # same transaction. Left behind under real frame drift, the object gate
+        # would measure a perfectly healthy estimate against a pre-drift centre,
+        # refute a good commitment, and write negative evidence AT THE TRUE
+        # TARGET -- self-suppressing it for the whole TTL horizon. Static sim
+        # never drifts, so this is invisible there and hardware-relevant; the
+        # branch is flag-gated (the session is None flag-off) and retract-only,
+        # so it can only ever remove a refusal.
+        session = self._lock_on_verify
+        if session is not None:
+            reanchor = getattr(session, "reanchor", None)
+            if callable(reanchor):
+                reanchor(dx, dy)
+                self.lock_on_reanchors += 1
         # The progress watchdog measures distance to the goal; a re-anchor moves
         # the goal, so its baseline is stale and must not read as a stall.
         self._best_goal_distance_m = None
@@ -2167,6 +3432,16 @@ class DirectiveNavigator:
             semantic_goal.kind == "region"
             or getattr(semantic_goal, "superlative", None) == "nearest"
         )
+        # VS-5: paint THIS look into the belief map, at the ONE ingress — the
+        # frustum list grounding itself is about to read, after the
+        # false-positive and attribute filters. Until this card the map was
+        # painted only from inside ``_step_scan_behavior``, and only on the
+        # ticks that reached the bottom of it, so a sighting that resolved
+        # immediately (the frustum branch below) and every frontier tick painted
+        # NOTHING: the map ran empty, which is the mechanical half of the
+        # measured V-D no-op (§2.1(2a)). One ingress, one paint per searching
+        # tick, hit or miss. Flag-off this returns immediately.
+        self._paint_scan_observation(semantic_goal, observation, frustum)
         if ground_query is not None and self.grounder_v2 is not None:
             grounded, mapped = ground_query(
                 semantic_goal.query,
@@ -2295,7 +3570,11 @@ class DirectiveNavigator:
             self.mission.status = "searching"
             self.mission.metadata["recovery_phase"] = self._recovery_phase
             self.mission.metadata["resolution_state"] = "searching"
-            if self.detection_lock_on and self._detection_lock_on is not None:
+            if (
+                self.detection_lock_on
+                and self._detection_lock_on is not None
+                and not self.lock_on_verify_on_approach
+            ):
                 locked = self._try_detection_lock_on(
                     semantic_goal,
                     mapped,
@@ -2320,6 +3599,16 @@ class DirectiveNavigator:
                     note="detection_lock_on_scan",
                 )
             else:
+                # VS-4 (§2.2(a)(i)): with verify-on-approach on, the lock-on
+                # DEFERS — it fuses this view into D2 and runs its M-of-N under
+                # the independent-evidence rule, but the instance is chosen by
+                # the same authority the flag-off arm uses (the grounder's
+                # ranking; for interchangeable queries the scan-complete
+                # boundary-aware ranking). That is the direct fix for the
+                # measured wrong-instance commit: there is no longer a second
+                # commit door for perception to walk through.
+                if self.lock_on_verify_on_approach:
+                    self._lock_on_observe_estimate(semantic_goal, observation, mapped)
                 result = self.search.observe(
                     semantic_goal, self._resolution_semantic_map, observation
                 )
@@ -2563,7 +3852,10 @@ class DirectiveNavigator:
                 grounding_outcome=GroundingOutcome.MEMORY_HIT.value,
             )
 
-        self._paint_scan_observation(semantic_goal, observation, frustum)
+        # VS-5: the paint moved UP to the single ingress in
+        # ``_step_semantic_resolution`` (every searching tick, before grounding),
+        # so this call site is gone — it painted only the ticks that got past the
+        # commit doors above, which is why the map ran empty.
         cmd = self.scan_behavior.step(observation)
         if cmd is not None and self._scan_steps < self.scan_budget_steps:
             return cmd
@@ -2797,6 +4089,22 @@ class DirectiveNavigator:
         """SearchEntity frontier: semantic prior − geodesic (+ coverage novelty)."""
 
         if select_search_entity_frontier is not None:
+            # VS-5 empty-map delegation, made TOTAL at the call site. The scorer
+            # itself delegates to the flag-off scorer object on an evidence-free
+            # map (``ValueMapFrontierScorer.baseline_scorer``), but the scorer
+            # cannot reach the CANDIDATES: with a value map in hand the callee
+            # also stamps ``coverage_gain`` from the map's unknown_fraction
+            # instead of the flag-off novelty test, and a map full of MISSES is
+            # no longer unknown. Passing ``None`` here is not an approximation of
+            # the flag-off call — it IS the flag-off call, same function, same
+            # arguments, so ``evidence_count == 0`` gives a bit-identical
+            # frontier decision sequence however many misses have been painted.
+            directed = self._value_map_has_evidence()
+            if self.value_directed_search:
+                if directed:
+                    self.value_directed_frontiers += 1
+                else:
+                    self.value_baseline_frontiers += 1
             return select_search_entity_frontier(
                 origin_xy=origin,
                 robot_xy=robot_xy,
@@ -2806,8 +4114,8 @@ class DirectiveNavigator:
                 bearings=bearings,
                 ring_step_m=ring_step_m,
                 travel_weight=travel_weight,
-                value_map=self.semantic_value_map if self.value_directed_search else None,
-                plan_prior=self._plan_time_prior if self.value_directed_search else None,
+                value_map=self.semantic_value_map if directed else None,
+                plan_prior=self._plan_time_prior if directed else None,
             )
         # Soft-import fallback without SearchEntity helpers.
         scored: list[tuple[float, int, tuple[float, float]]] = []
@@ -2880,30 +4188,108 @@ class DirectiveNavigator:
         observation: NavObservation,
         frustum: list[Any],
     ) -> None:
-        """Paint the current look into the shared SemanticValueMap2D belief."""
+        """Paint the current look into the shared SemanticValueMap2D belief.
+
+        VS-5: the paint tuple is VS-3's, not this method's. The replaced painter
+        floored every scanned cone at ``0.15`` (and every irrelevant sighting at
+        ``0.05``) with ``conf=1.0``, so LOOKING somewhere RAISED its value
+        whether or not anything relevant was there — a scanned-cone marker, and
+        the reason the map could not distinguish "searched here, nothing" from
+        "never looked". The policy replaces both floors and the substring
+        branch: ``value = match_score x observation_confidence`` through the
+        SigLIP seam, and a cone with no query-relevant evidence in it paints a
+        MISS at the SAME optical-axis confidence, which pulls the fused value of
+        every covered cell DOWN so the search stops re-looking there.
+
+        ``frustum`` is the one ingress — the very list grounding is about to
+        read, after the false-positive and attribute filters — so this method
+        invents no second perception channel (record §2.1(2a)). Its caller is
+        the single ingress point in :meth:`_step_semantic_resolution`, which
+        runs on EVERY searching tick: the frustum-confirm ticks, the scan ticks
+        and the frontier crawl alike. The evidence a look produces therefore
+        survives the release of a commitment the planner could not route to
+        (``_begin_semantic_replan`` clears scan/frontier state but not the
+        belief map), which is how the ~12 m frustum / ~8 m local-costmap window
+        the record names is closed by the existing frontier machinery rather
+        than by a new mechanism.
+        """
 
         if (
             not self.value_directed_search
             or self.semantic_value_map is None
+            or self._value_evidence is None
             or paint_look is None
         ):
             return
         robot_map = _pose_in(observation, MAP_FRAME)
-        query = str(getattr(semantic_goal, "query", "") or "").strip().lower()
-        value = 0.15
-        for candidate in frustum:
-            label = str(getattr(candidate, "label", "") or "").strip().lower()
-            if query and (query in label or label in query):
-                value = max(value, float(getattr(candidate, "confidence", 0.7)))
-            else:
-                value = max(value, 0.05)
-        paint_look(
+        paint = self._value_evidence.paint(
+            str(getattr(semantic_goal, "query", "") or ""), frustum
+        )
+        painted = paint_look(
             self.semantic_value_map,
             origin_world_xy=robot_map.xy,
             heading_rad=robot_map.yaw,
-            value=min(1.0, value),
-            conf=1.0,
+            value=paint.value,
+            conf=paint.conf,
+            is_evidence=paint.is_evidence,
         )
+        self.value_paints += 1
+        self.value_cells_painted += int(painted)
+        if paint.is_evidence:
+            self.value_evidence_paints += 1
+        else:
+            self.value_miss_paints += 1
+        if self.mission is not None:
+            self.mission.metadata["value_map_evidence_count"] = (
+                self.semantic_value_map.evidence_count
+            )
+            self.mission.metadata["value_map_last_paint"] = paint.as_tuple()
+
+    def _value_map_has_evidence(self) -> bool:
+        """The empty-map delegation predicate (VS-3's frozen ``evidence_count``).
+
+        False means the map holds nothing that could move a decision, and every
+        value-directed branch must then be the flag-off branch — not an
+        approximation of it, the same call.
+        """
+
+        return (
+            self.value_directed_search
+            and self.semantic_value_map is not None
+            and self.semantic_value_map.evidence_count > 0
+        )
+
+    def _value_map_telemetry_note(self, cmd: MidLevelCommand) -> MidLevelCommand:
+        """Stamp the VS-5 counters onto a non-terminal searching command.
+
+        ``MidLevelCommand.note`` is the only navigator-side channel the frozen
+        eval runner persists per step (VS-4 §14.4), and the card's non-vacuity
+        conjunct — that the value-directed path ENGAGED — has to be assertable
+        from traces. Appended after a ``|`` delimiter, only under the flag, and
+        only on non-terminal commands, so the runner's own note keys are
+        untouched: the ``semantic_search_scan`` prefix test still sees the same
+        prefix, ``reason`` (set only from a terminal note) is never written, and
+        none of ``frontier`` / ``semantic_target_not_found`` / ``scan_for_target``
+        appears in the suffix.
+        """
+
+        if not self.value_directed_search or cmd.stop:
+            return cmd
+        evidence = (
+            self.semantic_value_map.evidence_count
+            if self.semantic_value_map is not None
+            else 0
+        )
+        suffix = (
+            f"value_map=evidence={evidence}"
+            f",paints={self.value_paints}"
+            f",hits={self.value_evidence_paints}"
+            f",misses={self.value_miss_paints}"
+            f",cells={self.value_cells_painted}"
+            f",directed={self.value_directed_frontiers}"
+            f",delegated={self.value_baseline_frontiers}"
+        )
+        return replace(cmd, note=f"{cmd.note}|{suffix}" if cmd.note else suffix)
 
     def suspend_scan_for_summons(self) -> None:
         """Acoustic/attention summons: suspend in-flight scan (do not cancel)."""
@@ -3016,11 +4402,789 @@ class DirectiveNavigator:
         if self._steps_goal_unroutable < self.UNROUTABLE_GOAL_STEPS:
             return None
 
+        # RM-2 trigger (i): consult route memory BEFORE the release. The release
+        # is irreversible for this mission -- a blacklisted candidate can never
+        # be re-grounded -- so "I have a recorded route to that place" has to be
+        # asked here or it can never be asked at all. Memory answers ``()`` for
+        # anything it has not actually driven, in which case this falls straight
+        # through to the byte-identical release below.
+        if self._route_memory is not None and self._route_memory_defer_release(
+            trigger=f"unroutable:{status}"
+        ):
+            self.route_memory_deferred_releases += 1
+            self.mission.metadata["route_memory_deferred_release"] = str(status)
+            # DEFER, do not cancel: the counter is reset so the suspended
+            # UNROUTABLE_GOAL_STEPS budget starts over if the chain retires
+            # without getting anywhere. Nothing is blacklisted.
+            self._steps_goal_unroutable = 0
+            return None
+
         self.mission.metadata["unroutable_route_status"] = str(status)
         return self._release_unreachable_candidate(
             str(self.mission.metadata.get("candidate_id") or ""),
             note="semantic_replan_after_unroutable_goal",
         )
+
+    # ------------------------------------------------------------------
+    # RM-2 — route memory on the product path. Every method below returns
+    # immediately unless ``route_memory`` is on (``self._route_memory`` is None
+    # flag-off), so the unconditional path is byte-identical.
+    # ------------------------------------------------------------------
+
+    #: Half the rolling planner window (RM-1's ``DEFAULT_ATTACH_RADIUS_M``,
+    #: 161 cells * 0.10 m / 2 = 8.05 m), used here for the two questions it
+    #: already answers: is the committed goal OUT of live-map range (so this is
+    #: an at-range problem memory can help with, not an inside-obstacle one), and
+    #: has it come back INTO range (so the chain hands back to normal planning)?
+    #: One number, RM-1's derivation, no second constant.
+    ROUTE_MEMORY_RANGE_M = ROUTE_MEMORY_ATTACH_RADIUS_M
+
+    #: Mirror of ``controller.replan_interval_steps`` in every shipping grid model
+    #: config (5). Mirrored rather than imported because this class is handed a
+    #: NAVIGATOR, not a config: the navigator's own ``replan_interval_steps`` is
+    #: preferred whenever it publishes one and this is the fallback for a
+    #: stand-in that does not. ``tests/test_rm2_route_memory_product_path.py``
+    #: pins it by reference against the yaml, so a cadence retune reddens the
+    #: gate instead of silently invalidating the probe budget below.
+    GRID_REPLAN_INTERVAL_STEPS = 5
+
+    #: Consecutive ticks a live chain may fail to shorten before it is retired
+    #: and today's release path resumes. Same 60 ticks / 6.0 s at 10 Hz, and the
+    #: same reasoning, as :attr:`UNROUTABLE_GOAL_STEPS`: long enough for a
+    #: transient blockage on the remembered route to clear, short enough that a
+    #: chain going nowhere cannot spend the whole watchdog budget. Deliberately
+    #: NOT a new number -- the deferral it bounds is a suspension of exactly that
+    #: budget, so it is the same clock.
+    ROUTE_MEMORY_STALL_STEPS = UNROUTABLE_GOAL_STEPS
+
+    def _reset_route_memory_track(self) -> None:
+        """Mission boundary: break the ingest track, drop any live chain.
+
+        AUDIT_WAVE2 finding 1(a): the boundary must withdraw the BUFFERED
+        proposal too, not only the chain. ``stop()`` + ``start()`` keep the same
+        ``(task_id, plan_revision)`` key, so mission N's waypoint was neither
+        stale nor flushed and survived into mission N+1's bus, where it still won
+        arbitration inside its TTL.
+        """
+
+        if self._route_memory is None:
+            return
+        self._flush_route_memory_waypoints("mission_boundary")
+        self._route_memory.reset_track()
+        self._clear_route_memory_chain()
+        # Mission-scoped, like ``_unreachable_candidates``: a new directive is
+        # entitled to memory's help even on an instance the previous one could
+        # not reach, because the robot is somewhere else by then.
+        self._route_memory_spent = set()
+
+    def _clear_route_memory_chain(self) -> None:
+        self._route_memory_chain = ()
+        self._route_memory_target = None
+        self._route_memory_stamp = ("", 0)
+        self._route_memory_best_remaining_m = None
+        self._steps_route_memory_stalled = 0
+        self._route_memory_probing = False
+        self._route_memory_probe_refuted = False
+        self._steps_route_memory_probing = 0
+
+    def _route_memory_commitment_key(self) -> str:
+        """The candidate id the release door blacklists — memory's key too.
+
+        One key, read off the same metadata slot
+        :meth:`_unroutable_goal_recovery` hands
+        :meth:`_release_unreachable_candidate`, so "memory already tried and
+        failed on this instance" and "this instance was released" can never
+        disagree about *which* instance they mean.
+        """
+
+        if self.mission is None:
+            return ""
+        return str(self.mission.metadata.get("candidate_id") or "")
+
+    def _route_memory_defer_release(self, *, trigger: str) -> bool:
+        """Is the release suspended right now? The ONE answer to that question.
+
+        Two ways it can be True, and they are not the same thing:
+
+        * a chain is **already live**. It is live and advancing by construction —
+          :meth:`_route_memory_hand_back` runs earlier in the same tick and
+          retires any chain that has stopped advancing — so the deferral simply
+          continues. Critically this does NOT re-arm: calling
+          :meth:`_arm_route_memory_chain` again would re-query the same route and
+          reset :attr:`_steps_route_memory_stalled` to zero, which is precisely
+          how a stalled chain would hide its own stall and hold the release off
+          forever;
+        * no chain is live and memory has one to offer, so a fresh one is armed.
+
+        Everything else is False, and False means today's release path runs
+        unchanged.
+        """
+
+        if self._route_memory is None:
+            return False
+        if self._route_memory_chain:
+            return True
+        return self._arm_route_memory_chain(trigger=trigger)
+
+    def _flush_route_memory_waypoints(self, reason: str) -> int:
+        """Withdraw pending waypoints, revision-NEUTRALLY (the AF-2 amendment).
+
+        The card's requirement is that ``flush_task`` clears pending waypoints on
+        refusal or correction, and this is the single door that does it: the two
+        sinks' :meth:`~parcel_robot.instructnav.arbiter.ProposerBus.flush_task`
+        purge the buffered proposal, and the interim target is dropped in the
+        same call so no half-withdrawn state can survive.
+
+        It is the revision-NEUTRAL purge on purpose. Reaching for
+        ``commit_revision`` here would repeat the measured AF-2 defect exactly
+        (proposer self-commits ``plan_revision + 1``, the runtime restamps lower,
+        every later proposal is stale and the mission dies ``arbiter_veto``
+        forever). Withdrawing a waypoint is a statement about one proposal, never
+        about the plan.
+        """
+
+        if self._route_memory is None:
+            return 0
+        if (
+            not self._route_memory_chain
+            and self._route_memory_target is None
+            and self._route_memory_published_task is None
+        ):
+            # Nothing of this card's is pending, so nothing of this card's is
+            # withdrawn. The published-task test is the third one on purpose: the
+            # chain and the target are cleared by several paths, and without it a
+            # buffered proposal whose chain had already gone would never be
+            # reached by any flush at all (AUDIT_WAVE2 finding 1).
+            return 0
+        had_target = self._route_memory_target is not None
+        self._clear_route_memory_chain()
+        dropped = self._withdraw_route_memory_proposal()
+        if had_target or dropped:
+            self.route_memory_flushes += 1
+            if self.mission is not None:
+                self.mission.metadata["route_memory_flush"] = str(reason)
+        return dropped
+
+    def _withdraw_route_memory_proposal(self) -> int:
+        """Purge route memory's OWN buffered proposal, and nothing else.
+
+        Two corrections from the Wave-2 audit live in this one method.
+
+        **Whose entry.** The purge keys off ``_route_memory_published_task`` — the
+        task id the proposal was actually published under — never off
+        ``_active_task_id``. A correction can SWITCH tasks, and by the time this
+        runs the active key may already be the new one; keying off it left the old
+        task's waypoint buffered and winning.
+
+        **How much.** ``ProposerBus.flush_task`` is TASK-scoped by AF-2's design:
+        it drops EVERY source's proposal for that task. That is right for a
+        correction and wrong for a route-memory-private event such as a MAP
+        re-anchor or this card's own chain retirement, where no other proposer's
+        goal became invalid. ``instructnav/arbiter.py`` is consumed and not
+        amended by this card, so the source-scoped withdrawal is composed from its
+        public surface: read the buffer, flush the task, put everyone else back.
+        ``publish`` refuses a stale proposal, so a survivor that a concurrent
+        commit has just invalidated stays dropped — the restore can only ever be a
+        subset of what was there, never a resurrection.
+        """
+
+        task = self._route_memory_published_task
+        self._route_memory_published_task = None
+        if task is None or self.proposer_bus is None or self.goal_arbiter is None:
+            return 0
+        flush_bus = getattr(self.proposer_bus, "flush_task", None)
+        flush_arbiter = getattr(self.goal_arbiter, "flush_task", None)
+        poll = getattr(self.proposer_bus, "poll", None)
+        publish = getattr(self.proposer_bus, "publish", None)
+        if not callable(flush_bus) or not callable(flush_arbiter):
+            # Historical bundle without the AF-2 amendment: withdrawing nothing is
+            # safe (the interim target is already dropped above and the pipeline
+            # never polls the bus), and reaching for ``commit_revision`` is not.
+            return 0
+        survivors: tuple[Any, ...] = ()
+        mine = 0
+        scoped = callable(poll) and callable(publish)
+        if scoped:
+            buffered = tuple(poll(now_s=float(self._route_memory_now_s)))
+            survivors = tuple(
+                goal
+                for goal in buffered
+                if getattr(goal, "source", "") != PLACE_ROUTE_SOURCE
+            )
+            mine = len(buffered) - len(survivors)
+        dropped = int(flush_bus(task) or 0)
+        flush_arbiter(task)
+        for goal in survivors:
+            publish(goal)
+        # Report only what was route memory's: the restored entries were never
+        # withdrawn as far as any caller of this method is concerned.
+        return mine if scoped else min(dropped, 1)
+
+    def _route_memory_teach(self, observation: NavObservation) -> None:
+        """AUTO-TEACH: offer this tick's MAP pose to the place graph.
+
+        MAP, through the sanctioned seam, because that is RM-1's hard contract
+        (``record_visit`` raises on anything else) and because it is the right
+        answer: ODOM drifts without bound and an ODOM place graph describes a
+        world that does not exist.
+
+        Labels come from the mission's RESOLVED candidate — the instance the
+        ladder actually committed to, not every phantom the frustum reported —
+        so a keyframe is tagged with a place the robot went to on purpose.
+
+        This runs on EVERY tick of an active mission, including searching ticks
+        and including ``PoseHealth.LOST`` ones: RM-1 refuses a LOST pose and
+        breaks the track itself, which is exactly the behaviour wanted (MAP jumps
+        on recovery, so no edge may span it).
+        """
+
+        hook = self._route_memory
+        if hook is None:
+            return
+        try:
+            pose = _pose_in(observation, MAP_FRAME)
+        except (AttributeError, TypeError, ValueError):
+            return
+        self._route_memory_tick += 1
+        # Cached for the recovery hooks and the proposer, neither of which has an
+        # observation in hand at the point it needs the pose.
+        self._route_memory_robot_xy = (float(pose.x), float(pose.y))
+        raw_now = observation.extras.get("time_s")
+        if isinstance(raw_now, (int, float)) and not isinstance(raw_now, bool):
+            self._route_memory_now_s = float(raw_now)
+        labels: tuple[str, ...] = ()
+        if self.mission is not None and self.mission.goal is not None:
+            label = self.mission.metadata.get("candidate_label")
+            if isinstance(label, str) and label.strip():
+                labels = (label.strip(),)
+        provider = observation.extras.get(POSE_PROVIDER_KEY)
+        reanchored = hook.reanchored_from_provider(provider) if provider is not None else False
+        if reanchored:
+            # AUDIT_WAVE1_FABLE.md: prefer the provider's OWN correction event
+            # over RM-1's distance backstop. A live chain is a list of MAP
+            # snapshots taken before the jump; the robot's pose is now on the
+            # other side of it, so the recorded geometry and the current estimate
+            # no longer describe the same frame. RM-1 refuses to ROUTE over an
+            # edge laid across a jump for exactly this reason — driving a chain
+            # extracted across one would be the same claim by another door.
+            self._flush_route_memory_waypoints("map_reanchor")
+        try:
+            keyframe = hook.record(
+                pose,
+                semantic_labels=labels,
+                timestamp_tick=self._route_memory_tick,
+                reanchored=reanchored,
+            )
+        except (TypeError, ValueError) as error:
+            # A pose the contract refuses is a wiring bug in THIS method, not a
+            # reason to take the mission down. Say so once, then stay out of the
+            # way: the flag-off behaviour is the fallback.
+            logger.warning("route_memory ingestion disabled this tick: %s", error)
+            return
+        if keyframe is not None:
+            self.route_memory_keyframes += 1
+
+    def _route_memory_goal_is_at_range(self) -> bool:
+        """At-range (memory's problem) vs inside-obstacle (today's release path).
+
+        Two independent readings, and BOTH must say at-range:
+
+        * geometry — the committed goal is further than half the rolling window
+          (:attr:`ROUTE_MEMORY_RANGE_M`), so the planner is not looking at the
+          goal at all: ``RollingGridPlanner.plan`` clipped it to the window edge
+          and planned somewhere else;
+        * the planner's own last :class:`RoutePlan`, when it exposes one — a
+          ``planning_target_world`` that differs from ``requested_goal_world`` IS
+          that clip, stated by the planner rather than inferred.
+
+        A goal that sits INSIDE the window and is still unroutable is a goal
+        buried in an inflated obstacle. Memory has nothing to say about that: no
+        remembered route ends anywhere the planner can now reach, and pretending
+        otherwise would spend the mission's budget re-approaching a blocked cell.
+        Those keep today's release path, unchanged.
+        """
+
+        if self.mission is None or self.mission.goal is None:
+            return False
+        robot_xy = self._route_memory_robot_xy
+        if robot_xy is None:
+            return False
+        distance = math.hypot(
+            self.mission.goal.x - robot_xy[0], self.mission.goal.y - robot_xy[1]
+        )
+        if distance <= self.ROUTE_MEMORY_RANGE_M:
+            return False
+        plan = getattr(self._navigator, "_last_plan", None)
+        requested = getattr(plan, "requested_goal_world", None)
+        target = getattr(plan, "planning_target_world", None)
+        if requested is not None and target is not None:
+            clipped = (
+                abs(float(target[0]) - float(requested[0])) > 1e-9
+                or abs(float(target[1]) - float(requested[1])) > 1e-9
+            )
+            return bool(clipped)
+        # No RoutePlan surface (stub navigator, historical bundle): the geometry
+        # reading stands on its own.
+        return True
+
+    def _arm_route_memory_chain(self, *, trigger: str) -> bool:
+        """Ask memory for a route to the committed goal and, if it has one, arm it.
+
+        Returns ``True`` only when a chain was obtained AND the waypoint it
+        implies WON arbitration. Every other outcome — no commitment, goal inside
+        the window, memory has no route, the arbiter vetoed, **memory already
+        spent its one chain on this instance** — returns ``False``, and the
+        caller then does exactly what it did before this card existed.
+
+        The last of those is the livelock guard. A remembered route that has
+        stopped advancing is retired by :meth:`_route_memory_hand_back`, and
+        without this the very next unroutable tick would re-query memory, get the
+        SAME recorded chain back, re-arm it, and defer the release again — a
+        tight loop, at the ``UNROUTABLE_GOAL_STEPS`` cadence, whose only exit is
+        the progress watchdog. With it, a retired chain gives the release back
+        after :attr:`ROUTE_MEMORY_STALL_STEPS` + ``UNROUTABLE_GOAL_STEPS`` ticks.
+
+        **What this does NOT say (AUDIT_WAVE2 finding 3).** It is *not* "one chain
+        per committed instance". ``_route_memory_spent`` is keyed on the candidate
+        id and cleared at every mission boundary, and — deliberately — the release
+        funnel's own flush (``_begin_semantic_replan``, reason
+        ``candidate_released``) does NOT mark the instance spent. So a 400-tick
+        progress-watchdog replan that re-grounds and re-commits the SAME candidate
+        gets a fresh chain, and a doomed world can therefore see the release
+        postponed to the watchdog cadence rather than to the 120-tick bound above.
+
+        That is a two-sided decision, taken on measured evidence and recorded in
+        ``RM2_STATUS.md`` §5.4: marking the funnel's flush spent postpones nothing
+        in the doomed world worth having, and in the adjacent RECOVERABLE world it
+        converts a measured arrival (t=762, dtg 2.48 m — the second chain is the
+        one that works) into a blacklist failure. The honest bound is not "one
+        chain": it is that the deferral only ever suspends the release while a
+        chain is ADVANCING, and that termination is guaranteed by the
+        flag-INDEPENDENT ``progress_timeout_steps`` x ``max_semantic_replans``
+        ladder, which route memory neither extends nor resets.
+        """
+
+        hook = self._route_memory
+        if (
+            hook is None
+            or self.mission is None
+            or self.mission.goal is None
+            or self._route_memory_robot_xy is None
+        ):
+            return False
+        if self._route_memory_commitment_key() in self._route_memory_spent:
+            return False
+        if not self._route_memory_goal_is_at_range():
+            return False
+        chain = hook.route(
+            (self.mission.goal.x, self.mission.goal.y), self._route_memory_robot_xy
+        )
+        if not chain:
+            # RM-1's fail-closed contract: () means "memory has no route", never
+            # "maybe". Today's behaviour, verbatim.
+            return False
+        self.route_memory_routes_found += 1
+        self._route_memory_chain = tuple(chain)
+        self._route_memory_stamp = (self._active_task_id, self._active_plan_revision)
+        self._route_memory_best_remaining_m = None
+        self._steps_route_memory_stalled = 0
+        self.mission.metadata["route_memory_trigger"] = str(trigger)
+        armed = self._publish_route_memory_waypoint()
+        if not armed:
+            self._clear_route_memory_chain()
+        return armed
+
+    def _publish_route_memory_waypoint(self) -> bool:
+        """Chain -> stamped SE2Goal -> arbiter -> interim target. The one door.
+
+        Nothing else in this pipeline may write ``_route_memory_target``. The
+        proposal is stamped with the pipeline's ACTIVE ``(task_id,
+        plan_revision)`` exactly like the lock-on and grounder proposals, is
+        published into the shared ``ProposerBus`` (so the P0-C flush can reach
+        it), and is then resolved by ``goal_arbiter``. The arbiter's TTL, stale
+        revision and LETHAL vetoes are applied unchanged and unweakened; a veto
+        means no interim target, which means today's behaviour.
+
+        The winner is stored as an interim NAVIGATION target and nothing else. It
+        is not the mission goal, it is not written to ``self.mission.goal``, and
+        no arrival predicate anywhere reads it.
+        """
+
+        hook = self._route_memory
+        chain = self._route_memory_chain
+        if (
+            hook is None
+            or not chain
+            or self.mission is None
+            or self.mission.goal is None
+            or self._route_memory_robot_xy is None
+            or not _HAS_INSTRUCTNAV
+            or SE2Goal is None
+            or self.proposer_bus is None
+            or self.goal_arbiter is None
+            or waypoint_goal_from_chain is None
+            or GoalPose is None
+        ):
+            return False
+        now_s = float(self._route_memory_now_s)
+        proposed = waypoint_goal_from_chain(
+            chain,
+            robot_xy=self._route_memory_robot_xy,
+            now_s=now_s,
+            task_id=self._active_task_id,
+            plan_revision=self._active_plan_revision,
+            plan_step_id="align_then_translate",
+            reach_radius_m=self.ROUTE_MEMORY_RANGE_M,
+            final_heading_xy=(self.mission.goal.x, self.mission.goal.y),
+        )
+        if proposed is None:
+            # The chain is spent: the robot stands on its last keyframe and the
+            # rest is the planner's leg.
+            self._route_memory_target = None
+            return False
+        self.route_memory_proposals += 1
+        self.proposer_bus.publish(proposed)
+        # Recorded HERE, at the publish, so a withdrawal can always find its own
+        # entry no matter what the active key has become in the meantime
+        # (AUDIT_WAVE2 finding 1).
+        self._route_memory_published_task = str(proposed.task_id)
+        self.goal_arbiter.set_plan_step(proposed.plan_step_id)
+        chosen = self.goal_arbiter.resolve((proposed,), now_s=now_s)
+        won = chosen is not None and chosen.source == proposed.source
+        hook.note_proposal(won=won)
+        if not won:
+            self.route_memory_vetoes += 1
+            self._route_memory_target = None
+            self.mission.metadata["route_memory_waypoint_vetoed"] = True
+            return False
+        if not self._route_memory_chain or self._route_memory_stamp != (
+            self._active_task_id,
+            self._active_plan_revision,
+        ):
+            # A correction landed between ``resolve`` returning a winner and this
+            # store. Writing the target now would leave it orphaned — an interim
+            # target with no chain behind it and a stamp that no longer matches —
+            # which is inert today only because ``_route_memory_navigate`` refuses
+            # to drive without a chain. Fail closed instead of relying on that.
+            self._route_memory_target = None
+            self._withdraw_route_memory_proposal()
+            return False
+        self.route_memory_wins += 1
+        assert chosen is not None and chosen.pose is not None
+        x, y, yaw = chosen.pose
+        self._route_memory_target = GoalPose(
+            x=float(x),
+            y=float(y),
+            z=float(self.mission.goal.z),
+            heading_deg=math.degrees(float(yaw)),
+            poi_id="",
+            label="route_memory_waypoint",
+            # The keyframe arrival disc RM-1's spacing was derived from: two
+            # consecutive keyframes are 0.50 m apart precisely so their 0.25 m
+            # discs do not overlap, so 0.25 m is what "at this waypoint" means.
+            arrival_radius_m=DEFAULT_WAYPOINT_REACHED_M,
+        )
+        self.mission.metadata["route_memory_waypoint"] = (float(x), float(y))
+        self.mission.metadata["route_memory_chain_len"] = len(chain)
+        self.mission.metadata.pop("route_memory_waypoint_vetoed", None)
+        return True
+
+    def _route_memory_partial_recovery(self) -> None:
+        """RM-2 trigger (ii): prolonged non-progress on a CLIPPED (partial) plan.
+
+        The beyond-window case never reaches ``_unroutable_goal_recovery`` at
+        all, and that is the measured reason route memory could not have been
+        "already wired": ``RollingGridPlanner.plan`` CLIPS a goal outside the
+        window to the window edge and reports ``partial``, which is a perfectly
+        healthy status. A robot pushing a partial plan into a wall reports
+        ``partial`` forever while going nowhere, and the only thing that ever
+        ends it today is the 200-tick progress watchdog failing the mission.
+
+        So: ``partial`` + the commitment still grounded + the same non-progress
+        hysteresis the unroutable path uses. Never returns a command; it only
+        arms the chain, and the tick continues exactly as it would have.
+        """
+
+        if (
+            self._route_memory is None
+            or self.mission is None
+            or self.mission.goal is None
+            or self.mission.semantic_goal is None
+            # A LIVE chain, not merely a live waypoint: on the one tick a
+            # hand-back probe is in flight the target is None while the chain is
+            # very much still running, and re-arming there would silently
+            # overwrite the probe.
+            or self._route_memory_chain
+        ):
+            return
+        status = getattr(self._navigator, "last_route_status", None)
+        if status != "partial":
+            return
+        if self._steps_without_progress < self.UNROUTABLE_GOAL_STEPS:
+            return
+        self._route_memory_defer_release(trigger="partial_non_progress")
+
+    def _route_memory_navigate(
+        self, plan_observation: NavObservation
+    ) -> MidLevelCommand:
+        """CONSUMPTION: drive the interim waypoint when one is live, else normally.
+
+        The navigator is handed a PROXY :class:`Mission` whose ``goal`` is the
+        interim waypoint. ``self.mission`` is not touched — its ``goal`` is still
+        the committed approach pose, its ``arrival_goal_region`` is still the K0
+        region built from the real target, and ``_inside_arrival_goal_region``
+        (evaluated by the caller against the real mission, every tick, including
+        these ticks) is still the only thing that can claim an arrival.
+
+        Reaching the waypoint therefore CANNOT be an arrival: the proxy's
+        ``arrived`` status and the navigator's ``stop`` are consumed here and
+        converted into "advance the chain", and the command handed back is
+        non-terminal.
+        """
+
+        assert self.mission is not None
+        if not self._route_memory_chain:
+            return self._navigator.act(plan_observation, self.mission)
+        if self._route_memory_stale():
+            self._flush_route_memory_waypoints("stale_revision")
+            return self._navigator.act(plan_observation, self.mission)
+        # --- the hand-back PROBE ------------------------------------------
+        # Earlier ticks handed the navigator the TRUE goal to see whether normal
+        # planning can reach it now. The verdict is the planner's, and it is only
+        # read once the planner has actually PLANNED for that goal — see
+        # ``_route_memory_probe_verdict``.
+        if self._route_memory_probing:
+            budget = self._route_memory_probe_budget()
+            self._steps_route_memory_probing += 1
+            held_out = self._steps_route_memory_probing >= budget
+            verdict = self._route_memory_probe_verdict(held_out=held_out)
+            if verdict is None:
+                if not held_out:
+                    # The planner has not answered about the TRUE goal yet — its
+                    # plan in hand is still the waypoint's. Hold the probe: keep
+                    # handing it the true goal, tick after tick, until it plans
+                    # for it or the budget is out.
+                    return self._navigator.act(plan_observation, self.mission)
+                # Held out with a RoutePlan surface that never once named the
+                # probed goal: this planner is suppressing replans (a committed
+                # detour). Fail closed — REFUTED is the answer that loses
+                # nothing, because the chain keeps running and normal planning
+                # still owns whatever leg is left at the end of it.
+                self.mission.metadata["route_memory_probe"] = "timeout"
+                verdict = False
+            self._route_memory_probing = False
+            self._steps_route_memory_probing = 0
+            if verdict:
+                # Routable again: memory is done, and the mission finishes the
+                # way it always would have.
+                self.route_memory_handbacks += 1
+                self.mission.metadata["route_memory_handback"] = "goal_routable"
+                self._clear_route_memory_chain()
+                return self._navigator.act(plan_observation, self.mission)
+            # Refuted. In RANGE is not the same as ROUTABLE -- the goal can be
+            # 7 m away with the barrier still between. Probe once per chain, so
+            # a refuted probe cannot become a one-tick-on/one-tick-off
+            # oscillation between the two goals; the chain now simply runs to
+            # exhaustion and normal planning owns whatever is left.
+            self.mission.metadata.setdefault(
+                "route_memory_probe",
+                str(getattr(self._navigator, "last_route_status", None)),
+            )
+            self._route_memory_probe_refuted = True
+        if self._route_memory_target is None and not self._publish_route_memory_waypoint():
+            # Chain spent (or vetoed): the remaining leg is the planner's, and
+            # memory's turn on this instance is over. Re-querying would hand back
+            # the same recorded route — the graph has not changed — so the
+            # commitment is marked spent and today's release path becomes
+            # reachable again (the livelock guard; see ``_arm_route_memory_chain``).
+            self.route_memory_handbacks += 1
+            self._route_memory_spent.add(self._route_memory_commitment_key())
+            self.mission.metadata.setdefault("route_memory_handback", "chain_spent")
+            self.mission.metadata["route_memory_spent"] = sorted(self._route_memory_spent)
+            self._clear_route_memory_chain()
+            return self._navigator.act(plan_observation, self.mission)
+        if self._route_memory_hand_back():
+            return self._navigator.act(plan_observation, self.mission)
+        assert self._route_memory_target is not None
+        proxy = Mission(
+            directive=self.mission.directive,
+            goal=self._route_memory_target,
+            status="running",
+            semantic_goal=self.mission.semantic_goal,
+            metadata=self.mission.metadata,
+        )
+        cmd = self._navigator.act(plan_observation, proxy)
+        self.route_memory_chain_ticks += 1
+        if not (cmd.stop or proxy.status == "arrived"):
+            return cmd
+        # The waypoint is reached. Re-derive the next one from the SAME recorded
+        # chain and hold this tick; the next tick drives on. Whatever happens,
+        # ``stop`` is dropped: an interim waypoint is not an arrival.
+        self._publish_route_memory_waypoint()
+        return MidLevelCommand(
+            vx=0.0, vy=0.0, vyaw=0.0, stop=False, note="route_memory_waypoint_reached"
+        )
+
+    def _route_memory_stale(self) -> bool:
+        """A chain authored under a superseded revision can never be driven."""
+
+        if self._route_memory_stamp != (self._active_task_id, self._active_plan_revision):
+            return True
+        if self.goal_arbiter is None:
+            return False
+        committed = getattr(self.goal_arbiter, "committed_revision", None)
+        if not callable(committed):
+            return False
+        return int(committed(self._active_task_id)) > int(self._active_plan_revision)
+
+    def _route_memory_hand_back(self) -> bool:
+        """Start a hand-back probe, or retire a chain that has stopped advancing.
+
+        Two retirement conditions, both structural:
+
+        * **the true goal came back into range** — it is inside half the rolling
+          window again, so the planner has live occupancy for it. That is a
+          NECESSARY condition for handing back, not a sufficient one: a goal 7 m
+          away with the barrier still between it and the robot is in range and
+          not routable. So this arms a PROBE — the true goal is handed to the
+          planner and HELD there until the planner has demonstrably planned for
+          it (``_route_memory_probe_verdict`` / ``_route_memory_probe_budget``,
+          AUDIT_WAVE2 finding 2), not for one tick. Exactly one probe per chain;
+        * **the chain stopped advancing** for :attr:`ROUTE_MEMORY_STALL_STEPS`
+          ticks. "Active AND advancing" is the condition under which the release
+          is deferred, so the moment the second half stops being true the
+          deferral ends and today's release path resumes.
+        """
+
+        if self.mission is None or self.mission.goal is None:
+            return True
+        robot_xy = self._route_memory_robot_xy
+        if robot_xy is None:
+            return True
+        distance = math.hypot(
+            self.mission.goal.x - robot_xy[0], self.mission.goal.y - robot_xy[1]
+        )
+        if distance <= self.ROUTE_MEMORY_RANGE_M and not self._route_memory_probe_refuted:
+            self._route_memory_probing = True
+            self._steps_route_memory_probing = 0
+            self._route_memory_target = None
+            self.mission.metadata.pop("route_memory_probe", None)
+            self.mission.metadata["route_memory_handback"] = "probing"
+            return True
+        remaining = self._route_memory_remaining_m()
+        if remaining is None:
+            self._clear_route_memory_chain()
+            return True
+        best = self._route_memory_best_remaining_m
+        if best is None or remaining < best - 0.025:
+            # Same 25 mm quantum ``_progress_watchdog`` uses for "real closing of
+            # the gap"; one threshold for progress, not two.
+            self._route_memory_best_remaining_m = remaining
+            self._steps_route_memory_stalled = 0
+            return False
+        self._steps_route_memory_stalled += 1
+        if self._steps_route_memory_stalled < self.ROUTE_MEMORY_STALL_STEPS:
+            return False
+        # Retirement, and the end of memory's turn on this instance. The route
+        # was recorded, it was driven, and it did not get the robot anywhere:
+        # marking the commitment spent is what lets ``_unroutable_goal_recovery``
+        # reach its release again instead of re-arming the same dead chain until
+        # the progress watchdog kills the mission.
+        self.route_memory_handbacks += 1
+        self._route_memory_spent.add(self._route_memory_commitment_key())
+        self.mission.metadata["route_memory_handback"] = "chain_stalled"
+        self.mission.metadata["route_memory_spent"] = sorted(self._route_memory_spent)
+        self._clear_route_memory_chain()
+        return True
+
+    def _route_memory_probe_budget(self) -> int:
+        """Ticks a hand-back probe may hold the true goal waiting for a real plan.
+
+        Derived, twice over. ``GridNavigator`` replans on its OWN cadence
+        (``replan_interval_steps``) and **never because the goal changed**
+        (``grid_navigator.py``'s ``should_replan``), so one cadence period is the
+        smallest hold that can contain a plan computed for the probed goal, and
+        two gives a whole period of slack for the phase the probe happened to be
+        armed on. The period is read off the navigator when it publishes one and
+        falls back to :attr:`GRID_REPLAN_INTERVAL_STEPS`, the value every shipping
+        model config pins.
+
+        This is the fail-closed timeout, not the mechanism: a planner that has
+        replanned for the true goal is detected immediately by
+        :meth:`_route_memory_probe_verdict` and the hold ends early.
+        """
+
+        interval = getattr(self._navigator, "replan_interval_steps", None)
+        if isinstance(interval, bool) or not isinstance(interval, int) or interval < 1:
+            interval = self.GRID_REPLAN_INTERVAL_STEPS
+        return 2 * int(interval)
+
+    def _route_memory_probe_verdict(self, *, held_out: bool) -> bool | None:
+        """``True`` routable, ``False`` refuted, ``None`` the planner has not answered.
+
+        **AUDIT_WAVE2 finding 2.** The probe used to be a single tick: hand the
+        navigator the true goal once, read ``last_route_status`` next tick. That
+        read is not a verdict about the true goal. ``GridNavigator`` replans on
+        its own 5-tick cadence and **not** because the goal changed, and
+        suppresses replans entirely under a committed detour, so the status the
+        probe read was usually the CACHED WAYPOINT plan's — and a cached
+        ``planned`` was taken as "the true goal is routable again", destroying the
+        chain the moment the goal entered the 8.05 m disc while it was still
+        walled off, in exactly the scenario class this card exists to win.
+        Measured: 5 of 5 cadence phases produced a false hand-back and a mission
+        that failed at dtg 9.10 m where a per-tick-replanning stand-in arrived.
+
+        ``goal_routable`` is now returned only on a DEMONSTRABLE verdict, of which
+        there are exactly two kinds:
+
+        1. the planner publishes a :class:`RoutePlan` whose
+           ``requested_goal_world`` is the goal being probed — the same field
+           :meth:`_route_memory_goal_is_at_range` already reads. That is the
+           planner saying, itself, which goal the status is about, and it ends the
+           hold immediately;
+        2. the planner publishes no ``RoutePlan`` at all (stub navigator,
+           historical bundle) **and** the probe has been held for its full budget,
+           i.e. at least two of the shipping cadence's periods of consecutive
+           true-goal acts, after which no cadenced planner can still be answering
+           about the waypoint.
+
+        Everything else is ``None`` — "ask again" — and a ``None`` that survives
+        the budget fails closed to REFUTED. Every path here is biased toward
+        KEEPING the chain, which is the direction that cannot destroy a route the
+        robot has actually driven.
+        """
+
+        status = getattr(self._navigator, "last_route_status", None)
+        if status is None:
+            return None
+        if self.mission is not None and self.mission.goal is not None:
+            plan = getattr(self._navigator, "_last_plan", None)
+            requested = getattr(plan, "requested_goal_world", None)
+            if requested is not None:
+                planned_for_the_probe = (
+                    abs(float(requested[0]) - self.mission.goal.x) <= 1e-9
+                    and abs(float(requested[1]) - self.mission.goal.y) <= 1e-9
+                )
+                return (status in {"planned", "at_goal"}) if planned_for_the_probe else None
+        if not held_out:
+            return None
+        return status in {"planned", "at_goal"}
+
+    def _route_memory_remaining_m(self) -> float | None:
+        """Recorded distance still to travel along the live chain, or ``None``."""
+
+        chain = self._route_memory_chain
+        robot_xy = self._route_memory_robot_xy
+        if not chain or robot_xy is None or chain_length_m is None:
+            return None
+        best_i = 0
+        best_d = float("inf")
+        for i, keyframe in enumerate(chain):
+            d = math.hypot(keyframe.x - robot_xy[0], keyframe.y - robot_xy[1])
+            if d < best_d:
+                best_d = d
+                best_i = i
+        return best_d + chain_length_m(chain[best_i:])
 
     #: Ceiling on the ``Z_r`` term one pose estimate may add to every proximity
     #: threshold on one tick. A localizer that reports a 10 m sigma is broken,
@@ -3242,6 +5406,20 @@ class DirectiveNavigator:
 
     def _begin_semantic_replan(self, replans: int, *, note: str) -> MidLevelCommand:
         assert self.mission is not None and self.mission.semantic_goal is not None
+        # VS-4: the single replan funnel is also the single place a verify
+        # session dies. A released commitment must never leave a session
+        # verifying against a reference the mission no longer holds — including
+        # the ~8-12 m visible-but-unroutable release the grid planner produces.
+        if self.lock_on_verify_on_approach:
+            self._end_lock_on_verify()
+        # RM-2: the single release funnel is also the single place a route-memory
+        # chain dies. Every release authority (A*, the obstacle gate, the
+        # approach solver, the runtime's ``release_current_candidate``) arrives
+        # here, and a chain that outlived the commitment it was derived for would
+        # keep driving the navigator toward a waypoint on the way to a goal this
+        # mission no longer holds.
+        if self._route_memory is not None:
+            self._flush_route_memory_waypoints("candidate_released")
         self.mission.goal = None
         self.mission.status = "searching"
         self.mission.metadata.update(
@@ -3860,6 +6038,8 @@ class DirectiveNavigator:
         self._unreachable_candidates = set()
         self._steps_goal_unroutable = 0
         self._steps_gate_blocked = 0
+        # RM-2: the other mission boundary (see ``start``).
+        self._reset_route_memory_track()
 
     def close(self) -> None:
         self.stop()
@@ -3888,6 +6068,45 @@ class _ExcludingSemanticMap:
             for candidate in self.inner.query(goal, observation)
             if candidate.candidate_id not in self.excluded
         ]
+
+
+#: Float-lattice steps the compliant-speed cap may walk down while proving its
+#: own output against the gate's inequality (card D15-B). A rounding residue is
+#: a handful of ULPs; this bound only stops a pathological loop.
+_COMPLIANT_CAP_LATTICE_STEPS = 64
+
+
+def _wrap_to_pi(angle: float) -> float:
+    """Fold an angle into ``[-pi, pi)`` — the convention every bearing here uses."""
+
+    return (angle + math.pi) % (2.0 * math.pi) - math.pi
+
+
+def _person_payload_entries(raw: Any) -> list[tuple[float, float, dict[str, Any]]]:
+    """``(x, y, item)`` for a dynamic-agent / owner-track payload (card D15-B).
+
+    Same contract as ``grid_navigator._refresh_dynamic_costs`` and
+    ``_update_people_tracker`` read: a sequence of dicts carrying at least
+    finite ``x``/``y``. Malformed entries are skipped rather than raising —
+    a bad track must not take a mission down, and the gate is unaffected either
+    way.
+    """
+
+    if not isinstance(raw, (list, tuple)):
+        return []
+    entries: list[tuple[float, float, dict[str, Any]]] = []
+    for item in raw[:16]:
+        if not isinstance(item, dict):
+            continue
+        try:
+            x = float(item["x"])
+            y = float(item["y"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not (math.isfinite(x) and math.isfinite(y)):
+            continue
+        entries.append((x, y, item))
+    return entries
 
 
 def _dynamic_tracks_from_observation(observation: NavObservation) -> tuple[Any, ...]:

@@ -33,6 +33,14 @@ class MotionShapingConfig:
     """
 
     enabled: bool = False
+    #: Card J-B. When True, a NOMINAL zero intent (no emergency arm asserted)
+    #: decays along the monotone ramp of ``core.stop_ramp`` instead of taking
+    #: P0-A's instant zero, with every ramp candidate re-gated by the untouched
+    #: reactive gate. Default OFF: flag-off dispatch is byte-identical, and the
+    #: flip is an owner decision on the measured bench numbers
+    #: (scrum/20260811/task_1/FOLLOWUP_DESIGNS.md §3.2, §8 open question 1).
+    #: Emergency stops are NOT affected by this flag in either state.
+    nominal_stop_ramp: bool = False
     linear_max_accel: float = 1.2
     linear_max_jerk: float = 3.0
     yaw_max_accel: float = 2.4
@@ -44,8 +52,9 @@ class MotionShapingConfig:
     arousal_valid_s: float = 20.0
 
     def __post_init__(self) -> None:
-        if not isinstance(self.enabled, bool):
-            raise TypeError("motion.shaping.enabled must be a boolean")
+        for flag in ("enabled", "nominal_stop_ramp"):
+            if not isinstance(getattr(self, flag), bool):
+                raise TypeError(f"motion.shaping.{flag} must be a boolean")
         for name in (
             "linear_max_accel",
             "linear_max_jerk",
@@ -67,9 +76,9 @@ class MotionShapingConfig:
             raise ValueError(f"unknown motion.shaping settings: {sorted(unknown)}")
         values: dict[str, Any] = {}
         for key, value in raw.items():
-            if key == "enabled":
+            if key in {"enabled", "nominal_stop_ramp"}:
                 if not isinstance(value, bool):
-                    raise TypeError("motion.shaping.enabled must be a boolean")
+                    raise TypeError(f"motion.shaping.{key} must be a boolean")
                 values[key] = value
             else:
                 values[key] = float(value)

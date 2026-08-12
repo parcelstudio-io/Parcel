@@ -131,8 +131,31 @@ def test_navigator_overrides_defaults_to_empty_and_is_a_closed_set() -> None:
         "navigator_overrides"
     ].default
     assert default is None
+    # The closed set grows only by a pre-registered card flag, and this pin is
+    # the record that it did: ``person_aware_nav`` added by card D15-B
+    # (scrum/20260811/task_1/FOLLOWUP_DESIGNS.md §6, Wave 1) and
+    # ``lock_on_verify_on_approach`` by card VS-4 (same record, §6 Wave 2 —
+    # the declared one-name pin move D15-B set the precedent for). Both still
+    # default to False inside ``DirectiveNavigator``, so the flag-OFF arm is
+    # unchanged — verified by re-running the frozen v4 minival bit-for-bit
+    # (W1_D15_STATUS.md, W2_WIRE1_STATUS.md).
+    #
+    # ENUMERATED AMENDMENT (card RM-3, scrum/20260811/task_2/SLAM_M_PLAN.md r2
+    # Wave 3, closing RM2_STATUS.md §8.2 handoff 2): ``route_memory`` is the
+    # fifth name. RM-2 wired route memory onto the product path behind a
+    # default-OFF flag and this allowlist was the reason no eval arm could ever
+    # run it flag-ON. Same one-name precedent, same default-False guarantee:
+    # ``DirectiveNavigator.__init__(route_memory=False)`` and every RM-2 branch
+    # returns immediately while ``self._route_memory is None``, and RM2_STATUS.md
+    # §5.1 measured the frozen v4 minival byte-identical at the flag's default.
     assert ALLOWED_NAVIGATOR_OVERRIDES == frozenset(
-        {"value_directed_search", "detection_lock_on"}
+        {
+            "value_directed_search",
+            "detection_lock_on",
+            "person_aware_nav",
+            "lock_on_verify_on_approach",
+            "route_memory",
+        }
     )
 
 

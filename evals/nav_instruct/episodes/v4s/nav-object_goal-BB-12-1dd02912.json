@@ -1,0 +1,56 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_goal-BB-12-1dd02912",
+  "family": "object_goal",
+  "goal": {
+    "anchor_entity": "tree_1",
+    "anchor_footprint_m": 0.0,
+    "band_m": [
+      0.6,
+      2.5
+    ],
+    "center": [
+      -5.0,
+      3.15
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "walk towards the tree",
+  "notes": "search_beyond_the_block_frontier|object_goal",
+  "placement_overrides": {
+    "remove_entities": [
+      "tree_2"
+    ],
+    "robot": {
+      "x": -5.5,
+      "y": -9.5,
+      "yaw": -1.6103014543640048
+    },
+    "search_cell": {
+      "axis": "BB",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [
+        "bldg_5"
+      ],
+      "detour_ratio": 1.026866170834869,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 13.0,
+      "start_target_range_m": 12.65987756654858,
+      "target_entity_id": "tree_1",
+      "visible_from_start": false
+    }
+  },
+  "seed": 500181266,
+  "shortest_path_m": 13.0,
+  "start_pose": [
+    -5.5,
+    -9.5,
+    -1.6103014543640048
+  ],
+  "synonym": null,
+  "target_entity_id": "tree_1",
+  "tier": "BB"
+}

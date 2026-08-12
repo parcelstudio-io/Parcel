@@ -58,6 +58,57 @@ def test_route_keyframe_and_path_roundtrip(tmp_path: Path) -> None:
     assert any("teach-and-repeat" in s.lower() for s in loaded.does_not_prove)
 
 
+# --- RM-1 amendment: RouteKeyframe frame / labels / tick --------------------
+# Contract amendment (scrum/20260811/task_2/SLAM_M_PLAN.md card RM-1, memory.py
+# module docstring): RouteKeyframe gained three additive, defaulted fields so
+# the place graph builds on the store's keyframe type instead of forking one.
+# The amendment is only safe if it is additive in BOTH directions, which is what
+# these three cases pin.
+
+
+def test_rm1_keyframe_fields_default_to_pre_amendment_behaviour() -> None:
+    """Defaults preserve the old shape, including positional construction."""
+
+    kf = RouteKeyframe(0.0, 1.0, 0.5)
+    assert kf.frame == "map"
+    assert kf.labels == ()
+    assert kf.tick == 0
+    assert kf.xy == (0.0, 1.0)
+
+    kf2 = RouteKeyframe(x=1.0, y=2.0, yaw_rad=0.0, frame="map", labels=("bench",), tick=7)
+    assert RouteKeyframe.from_mapping(kf2.as_dict()) == kf2
+
+
+def test_rm1_keyframe_amendment_still_reads_pre_amendment_payloads() -> None:
+    """A v1 payload written before the amendment loads unchanged."""
+
+    pre_amendment = {
+        "x": 3.0,
+        "y": 4.0,
+        "yaw_rad": 0.25,
+        "t_s": 1.5,
+        "embedding": [0.5, 0.5],
+        "frame_id": "f9",
+        "meta": {"note": "old"},
+    }
+    kf = RouteKeyframe.from_mapping(pre_amendment)
+    assert kf.frame == "map"
+    assert kf.labels == ()
+    assert kf.tick == 0
+    assert kf.frame_id == "f9", "frame_id (image id) and frame (coordinate frame) stay distinct"
+
+
+def test_rm1_keyframe_amendment_validates_the_new_fields() -> None:
+    with pytest.raises(ValueError, match="frame must be"):
+        RouteKeyframe(x=0.0, y=0.0, yaw_rad=0.0, frame="")
+    with pytest.raises(TypeError, match="labels"):
+        RouteKeyframe(x=0.0, y=0.0, yaw_rad=0.0, labels=["bench"])  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="tick"):
+        RouteKeyframe(x=0.0, y=0.0, yaw_rad=0.0, tick=1.0)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="tick"):
+        RouteKeyframe(x=0.0, y=0.0, yaw_rad=0.0, tick=-1)
+
+
 def test_teach_and_follow_gated_by_default() -> None:
     session = TeachRepeatSession()
     path = session.teach([(0.0, 0.0, 0.0), (1.0, 0.0, 0.0), (2.0, 0.5, 0.2)], path_id="p1")
@@ -74,6 +125,29 @@ def test_teach_and_follow_gated_by_default() -> None:
     assert goal.ttl_s == 2.0
     assert goal.pose is not None
     assert goal.issued_s == 1.0
+
+
+def test_rm1_teach_reembed_preserves_frame_labels_and_tick() -> None:
+    """Amendment: teach_repeat.py ``_as_keyframe`` back-fill branch.
+
+    Feeding an embedding-less place-graph keyframe through ``teach()`` takes the
+    re-embed branch, which rebuilt the keyframe field by field. Before the RM-1
+    amendment that rebuild silently dropped ``frame``/``labels``/``tick``, so a
+    MAP keyframe came back claiming the default frame with its semantics erased.
+    """
+
+    session = TeachRepeatSession(embedder=StubVPREmbedder(dim=16))
+    source = RouteKeyframe(
+        x=1.0, y=2.0, yaw_rad=0.3, t_s=0.4, frame="map", labels=("bench", "tree"), tick=11
+    )
+    assert source.embedding == (), "the case only arises on the re-embed branch"
+
+    path = session.teach([source], path_id="reembed")
+    out = path.keyframes[0]
+    assert out.embedding, "the branch under test must have run"
+    assert out.frame == "map"
+    assert out.labels == ("bench", "tree")
+    assert out.tick == 11
 
 
 def test_incremental_teach_and_vpr_match() -> None:

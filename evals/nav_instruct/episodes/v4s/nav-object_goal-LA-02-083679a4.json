@@ -1,0 +1,54 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_goal-LA-02-083679a4",
+  "family": "object_goal",
+  "goal": {
+    "anchor_entity": "lamp_post_1",
+    "anchor_footprint_m": 0.0,
+    "band_m": [
+      0.6,
+      2.5
+    ],
+    "center": [
+      0.2,
+      3.15
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "walk towards the streetlight",
+  "notes": "search_beyond_opening_scan|object_goal",
+  "placement_overrides": {
+    "remove_entities": [
+      "lamp_post_2"
+    ],
+    "robot": {
+      "x": -3.5,
+      "y": -8.5,
+      "yaw": -2.6637157333498083
+    },
+    "search_cell": {
+      "axis": "LA",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [],
+      "detour_ratio": 0.9408153056280177,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 11.5,
+      "start_target_range_m": 12.2234405958388,
+      "target_entity_id": "lamp_post_1",
+      "visible_from_start": false
+    }
+  },
+  "seed": 137787812,
+  "shortest_path_m": 11.5,
+  "start_pose": [
+    -3.5,
+    -8.5,
+    -2.6637157333498083
+  ],
+  "synonym": "streetlight",
+  "target_entity_id": "lamp_post_1",
+  "tier": "LA"
+}

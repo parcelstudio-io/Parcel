@@ -1,0 +1,64 @@
+{
+  "absent_target": false,
+  "distractors": [
+    "bench_1_phantom"
+  ],
+  "episode_id": "nav-object_relative-PH-45-6177a6f3",
+  "family": "object_relative",
+  "goal": {
+    "anchor_entity": "bench_1",
+    "anchor_footprint_m": 0.733757,
+    "band_m": [
+      1.1337570000000001,
+      2.2337569999999998
+    ],
+    "center": [
+      -2.5,
+      3.045
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "wait by the bench",
+  "notes": "search_beyond_opening_scan_with_view_consistent_phantom|object_relative",
+  "placement_overrides": {
+    "distractors": {
+      "bench_1_phantom": {
+        "label": "bench",
+        "radius_m": 0.733757,
+        "x": 0.0,
+        "y": -3.2275
+      }
+    },
+    "robot": {
+      "x": 2.5,
+      "y": -9.5,
+      "yaw": -0.4061293243264039
+    },
+    "search_cell": {
+      "axis": "PH",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [],
+      "detour_ratio": 1.073699964385533,
+      "phantom_entity_id": "bench_1_phantom",
+      "phantom_offset_from_target_m": 6.752351905077223,
+      "phantom_range_from_start_m": 6.752351905077223,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 14.5,
+      "start_target_range_m": 13.504703810154446,
+      "target_entity_id": "bench_1",
+      "visible_from_start": false
+    }
+  },
+  "seed": 1635231475,
+  "shortest_path_m": 14.5,
+  "start_pose": [
+    2.5,
+    -9.5,
+    -0.4061293243264039
+  ],
+  "synonym": null,
+  "target_entity_id": "bench_1",
+  "tier": "PH"
+}

@@ -45,6 +45,16 @@ def _as_keyframe(
                 embedding=emb,
                 frame_id=frame_id or kf.frame_id,
                 meta=kf.meta,
+                # RM-1 amendment (SLAM_M_PLAN card RM-1): back-filling an
+                # embedding must not silently drop the keyframe's coordinate
+                # frame, labels, or tick.  A place-graph keyframe fed through
+                # teach() would otherwise come out claiming the default frame
+                # with its semantics erased — a frame-discipline hole that only
+                # opens on the re-embed branch, which is exactly the kind that
+                # survives review.
+                frame=kf.frame,
+                labels=kf.labels,
+                tick=kf.tick,
             )
         return kf
     if isinstance(item, Mapping):

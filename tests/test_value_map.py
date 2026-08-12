@@ -149,3 +149,81 @@ def test_write_rejects_values_outside_frozen_contract(name: str, value: float) -
 
     with pytest.raises(ValueError):
         value_map.write(cone, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# VS-5 — evidence_count surface + mission-scoped reset
+# ---------------------------------------------------------------------------
+
+
+def _forward_cone() -> ViewCone:
+    return ViewCone(
+        origin_world_xy=(0.5, 0.5),
+        heading_rad=0.0,
+        fov_rad=math.pi / 2.0,
+        min_range_m=0.5,
+        max_range_m=2.1,
+    )
+
+
+def test_evidence_count_starts_at_zero_and_misses_never_raise_it() -> None:
+    """A miss LOWERS value; it is not evidence that the target is anywhere."""
+
+    value_map = _map()
+    assert value_map.evidence_count == 0
+    for _ in range(25):
+        painted = value_map.write(_forward_cone(), value=0.0, conf=1.0)
+        assert painted > 0
+    # Twenty-five looks, a well-covered map, and still nothing to be directed by.
+    assert value_map.evidence_count == 0
+    assert value_map.read((1, 0))[1] > 0.0
+
+
+def test_evidence_paint_increments_exactly_once_per_landed_look() -> None:
+    value_map = _map()
+    value_map.write(_forward_cone(), value=0.9, conf=1.0, is_evidence=True)
+    assert value_map.evidence_count == 1
+    value_map.write(_forward_cone(), value=0.9, conf=1.0, is_evidence=True)
+    assert value_map.evidence_count == 2
+    value_map.write(_forward_cone(), value=0.1, conf=1.0)
+    assert value_map.evidence_count == 2
+
+
+def test_evidence_that_lands_no_cell_is_not_counted() -> None:
+    """A cone entirely outside the rolling window put nothing in the map."""
+
+    value_map = _map()
+    far = ViewCone(
+        origin_world_xy=(500.0, 500.0),
+        heading_rad=0.0,
+        fov_rad=math.pi / 2.0,
+        min_range_m=0.5,
+        max_range_m=2.1,
+    )
+    assert value_map.write(far, value=1.0, conf=1.0, is_evidence=True) == 0
+    assert value_map.evidence_count == 0
+    # Same for a zero-confidence look, which paints nothing by contract.
+    assert value_map.write(_forward_cone(), value=1.0, conf=0.0, is_evidence=True) == 0
+    assert value_map.evidence_count == 0
+
+
+def test_default_write_signature_is_unchanged_for_pre_vs5_callers() -> None:
+    value_map = _map()
+    value_map.write(_forward_cone(), 0.7, 1.0)
+    assert value_map.evidence_count == 0
+    assert value_map.read((1, 0)) == pytest.approx((0.7, 1.0))
+
+
+def test_reset_returns_the_map_to_its_constructed_state() -> None:
+    value_map = _map()
+    value_map.write(_forward_cone(), value=0.9, conf=1.0, is_evidence=True)
+    assert value_map.evidence_count == 1
+    assert value_map.read((1, 0))[1] > 0.0
+
+    value_map.reset()
+
+    assert value_map.evidence_count == 0
+    for cell in CellRegion(min_cell=(-3, -3), max_cell_exclusive=(4, 4)):
+        assert value_map.read(cell) == (0.0, 0.0)
+    assert value_map.shape == (7, 7)
+    assert value_map.origin_global_cell == (-3, -3)

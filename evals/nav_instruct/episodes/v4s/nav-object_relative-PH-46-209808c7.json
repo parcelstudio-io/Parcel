@@ -1,0 +1,67 @@
+{
+  "absent_target": false,
+  "distractors": [
+    "planter_1_phantom"
+  ],
+  "episode_id": "nav-object_relative-PH-46-209808c7",
+  "family": "object_relative",
+  "goal": {
+    "anchor_entity": "planter_1",
+    "anchor_footprint_m": 0.45,
+    "band_m": [
+      0.8500000000000001,
+      1.95
+    ],
+    "center": [
+      -5.0,
+      3.15
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "go next to the planter",
+  "notes": "search_beyond_opening_scan_with_view_consistent_phantom|object_relative",
+  "placement_overrides": {
+    "distractors": {
+      "planter_1_phantom": {
+        "label": "planter",
+        "radius_m": 0.45,
+        "x": -1.25,
+        "y": -3.175
+      }
+    },
+    "remove_entities": [
+      "planter_2"
+    ],
+    "robot": {
+      "x": 2.5,
+      "y": -9.5,
+      "yaw": -1.821022755159503
+    },
+    "search_cell": {
+      "axis": "PH",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [],
+      "detour_ratio": 1.1899737970654798,
+      "phantom_entity_id": "planter_1_phantom",
+      "phantom_offset_from_target_m": 7.353103086452685,
+      "phantom_range_from_start_m": 7.353103086452685,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 17.5,
+      "start_target_range_m": 14.70620617290537,
+      "target_entity_id": "planter_1",
+      "visible_from_start": false
+    }
+  },
+  "seed": 546834631,
+  "shortest_path_m": 17.5,
+  "start_pose": [
+    2.5,
+    -9.5,
+    -1.821022755159503
+  ],
+  "synonym": null,
+  "target_entity_id": "planter_1",
+  "tier": "PH"
+}

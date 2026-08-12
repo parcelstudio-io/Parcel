@@ -123,6 +123,21 @@ class ValueDirectedScanSession:
             )
         if not self._init_done:
             raise RuntimeError("choose_next_look requires init (full_turn) first")
+        # VS-5 empty-map contract (FOLLOWUP_DESIGNS.md §2.2(d)): with no
+        # query-relevant evidence in the map there is nothing for GP-UCB to be
+        # directed BY — every heading scores the same prior, so an "informed"
+        # extra look is an uninformed one that costs dwell steps the baseline
+        # full turn does not spend. Return COMMIT, which is exactly the baseline
+        # behaviour: the flag-on scan is then the flag-off scan.
+        if _evidence_count_of(self.value_map) == 0:
+            return ValueDirectedLookChoice(
+                decision=ScanLookDecision.COMMIT,
+                yaw_rad=None,
+                ucb=0.0,
+                mu=0.0,
+                sigma=0.0,
+                detail="empty_map_no_evidence",
+            )
         if self._value_looks >= self.max_value_looks:
             return ValueDirectedLookChoice(
                 decision=ScanLookDecision.COMMIT,
@@ -263,8 +278,14 @@ def paint_look(
     fov_rad: float = math.radians(70.0),
     max_range_m: float = 8.0,
     min_range_m: float = 0.4,
+    is_evidence: bool = False,
 ) -> int:
-    """Convenience write of one camera look into the shared belief map."""
+    """Convenience write of one camera look into the shared belief map.
+
+    ``is_evidence`` is the third field of VS-3's paint tuple, passed straight
+    through to :meth:`SemanticValueMap2D.write`; it defaults to ``False`` so
+    every pre-existing caller paints exactly what it painted before.
+    """
 
     return value_map.write(
         ViewCone(
@@ -276,7 +297,18 @@ def paint_look(
         ),
         value,
         conf,
+        is_evidence=is_evidence,
     )
+
+
+def _evidence_count_of(value_map: object) -> int:
+    """VS-3's ``evidence_count``, read defensively off any map-like object.
+
+    A test double that predates the surface reports no evidence, which keeps
+    the empty-map clause a no-op for it rather than a crash.
+    """
+
+    return int(getattr(value_map, "evidence_count", 0) or 0)
 
 
 def _cone_belief(

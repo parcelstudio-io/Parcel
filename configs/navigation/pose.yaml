@@ -128,6 +128,169 @@ profiles:
     health:
       force: degraded
 
+  # =====================================================================
+  # DEGRADED-POSE EVAL TIERS (DR-1, scrum/20260811/task_2).
+  #
+  # The standing degraded-pose eval arms need a LADDER, not one point. The
+  # nominal rung already exists and is NOT duplicated here: the nominal tier
+  # IS `calibrated_go2` above, whose derivation block is the provenance for
+  # all three rungs. (There is deliberately no `go2_nominal` alias --
+  # copying those seven constants into a second entry would create two
+  # things that must be kept equal, and the plan says nominal is
+  # calibrated_go2 *verbatim*.)
+  #
+  # HOW THE TWO NEW RUNGS ARE DERIVED. Not by inventing a second citation --
+  # no published slip-rate or degraded-terrain drift figure for the Go2
+  # exists in the sources this repo cites, and fabricating one would be
+  # worse than admitting the choice. Instead each rung is a STATED MULTIPLE
+  # `k` of the calibrated sigma, so the single published anchor (DogLegs,
+  # 0.5-1.0 % distance RPE / 0.2-0.5 deg/m yaw) governs the whole ladder:
+  #
+  #     go2_aggressive  k = 2      go2_degraded  k = 4
+  #
+  # and the TARGET BAND for each rung is `k x the published band`. The
+  # multiplier is an engineering tier choice, stated as such; the bands it
+  # implies are then MEASURED over 60 seeds by the existing harness in
+  # tests/test_pose_drift_calibration.py, which is what makes the tier real
+  # rather than asserted.
+  #
+  # THE k^2 ON THE ALPHAS IS NOT A TYPO. alpha1..4 are VARIANCE
+  # coefficients (pose.py:246 -- sampled sigma of a straight d-metre
+  # increment is sqrt(alpha3)*d), so scaling sampled sigma by k requires
+  # scaling the alphas by k^2. The two systematic sigmas are already
+  # standard deviations and scale by k directly. Getting this backwards
+  # would make "2x" mean 1.41x.
+  #
+  # MEASURED, 60 seeds, canned square circuit (D = 10 / 20 / 40 m):
+  #
+  #   profile          yaw deg/m            scale-only %   accum % @ 20 m
+  #   calibrated_go2   0.368/0.315/0.274        0.641           2.30
+  #   go2_aggressive   0.737/0.629/0.548        1.282           4.59
+  #   go2_degraded     1.557/1.239/1.197        2.563           9.22
+  #   stress           (pinned above)                          20.3
+  #
+  # Every rung sits inside its own k x DogLegs band at every length, and the
+  # ladder is strictly monotone in both metrics -- calibrated < aggressive <
+  # degraded < stress -- so the two new tiers genuinely INTERPOLATE between
+  # the two anchors this repo already owned. As with calibrated_go2, the
+  # accumulated end-of-path percentage is pinned as MEASURED, not claimed to
+  # match the published translational band: heading error dominates it, for
+  # exactly the reason derived in the calibrated_go2 block above.
+  #
+  # These tiers must never be tuned against a downstream eval gate.
+  # =====================================================================
+
+  go2_aggressive:
+    noise:
+      # k = 2. alphas x k^2 = x4; systematic sigmas x k = x2.
+      alpha1: 0.008
+      alpha2: 0.004
+      alpha3: 0.012
+      alpha4: 0.004
+      systematic_translation_scale_sigma: 0.015
+      systematic_yaw_bias_sigma_rad_per_m: 0.0122
+      seed: 20260807
+
+  # k = 4, plus the one error source the alpha model structurally cannot
+  # express: discrete FOOT SLIP. A leg loses traction, the body moves, the
+  # kinematic chain reports it did not, and the estimate takes a step
+  # displacement that no amount of Gaussian increment noise reproduces.
+  #
+  # The two slip constants are a declared TIER CHOICE with a stated intent,
+  # not a measurement (see above -- no published Go2 slip rate to cite):
+  #   * magnitude 0.15 m ~ one Go2 stride at the ~1 m/s eval cruise, i.e.
+  #     one fully-slipped stance phase mis-integrated.
+  #   * rate 0.05 /m = one expected event per 20 m, i.e. ~one observable
+  #     discrete jump per travel-heavy episode -- frequent enough to be
+  #     exercised, rare enough to stay a jump rather than a second noise
+  #     floor.
+  # MEASURED mean events over 60 seeds: 0.57 / 1.13 / 2.15 at D = 10/20/40 m,
+  # matching the intended one-per-20-m rate. `DriftingOdomProvider.
+  # slip_events` exposes the count so an eval row can prove it fired.
+  go2_degraded:
+    noise:
+      alpha1: 0.032
+      alpha2: 0.016
+      alpha3: 0.048
+      alpha4: 0.016
+      systematic_translation_scale_sigma: 0.030
+      systematic_yaw_bias_sigma_rad_per_m: 0.0244
+      slip_jump_magnitude_m: 0.15
+      slip_jump_rate_per_m: 0.05
+      seed: 20260807
+
+  # ---------------------------------------------------------------------
+  # SCHEDULED LOST WINDOWS THAT RECOVER.
+  #
+  # Distinct from the `lost` profile above (permanently forced) and from
+  # `health.lost_after_s` (a one-way trapdoor): these drop out and COME
+  # BACK, which is the only way to exercise a consumer's re-acquisition
+  # path. Drift keeps accumulating through the window -- a localizer
+  # announcing it is lost does not stop the legs.
+  #
+  # WINDOW DERIVATION (start_s 4.0, duration_s 3.0). The travel-heavy eval
+  # cells run ~12 m at the ~1 m/s cruise the harness assumes (0.1 m per
+  # 0.1 s tick) = ~12 s of travel. To prove RECOVERY and not merely the
+  # drop, the episode must contain healthy operation before AND after the
+  # window, so split the shortest such episode in three: 4 s healthy
+  # lead-in, 3 s LOST, ~5 s recovered. The 3 s duration is 30 ticks at the
+  # 10 Hz control rate, so the LOST hold is held across many ticks rather
+  # than being a single-tick blip a consumer could miss.
+  #
+  # If a DR-2 substrate is materially shorter than ~10 s of travel this
+  # window stops being derivable and needs a DR-1 handoff, not a local edit.
+  #
+  # Each `_lost` variant repeats its base profile's noise block verbatim.
+  # That duplication is deliberate and forced: the base profiles are
+  # byte-frozen, so a yaml anchor would require editing them. It follows the
+  # precedent `calibrated_go2_reanchoring` already set in this file, and
+  # tests/test_pose_degraded_profiles.py asserts each variant's parsed noise
+  # is EQUAL to its base -- so the copies cannot silently drift apart.
+  # ---------------------------------------------------------------------
+  calibrated_go2_lost:
+    noise:
+      alpha1: 0.002
+      alpha2: 0.001
+      alpha3: 0.003
+      alpha4: 0.001
+      systematic_translation_scale_sigma: 0.0075
+      systematic_yaw_bias_sigma_rad_per_m: 0.0061
+      seed: 20260807
+    health:
+      lost_windows:
+        - start_s: 4.0
+          duration_s: 3.0
+
+  go2_aggressive_lost:
+    noise:
+      alpha1: 0.008
+      alpha2: 0.004
+      alpha3: 0.012
+      alpha4: 0.004
+      systematic_translation_scale_sigma: 0.015
+      systematic_yaw_bias_sigma_rad_per_m: 0.0122
+      seed: 20260807
+    health:
+      lost_windows:
+        - start_s: 4.0
+          duration_s: 3.0
+
+  go2_degraded_lost:
+    noise:
+      alpha1: 0.032
+      alpha2: 0.016
+      alpha3: 0.048
+      alpha4: 0.016
+      systematic_translation_scale_sigma: 0.030
+      systematic_yaw_bias_sigma_rad_per_m: 0.0244
+      slip_jump_magnitude_m: 0.15
+      slip_jump_rate_per_m: 0.05
+      seed: 20260807
+    health:
+      lost_windows:
+        - start_s: 4.0
+          duration_s: 3.0
+
 # Chance-constrained region membership (stratum 1, "where polygons remain
 # legitimate"). P(inside) >= threshold replaces the boolean test ONLY when the
 # pose covariance is non-zero; at zero covariance the predicate short-circuits

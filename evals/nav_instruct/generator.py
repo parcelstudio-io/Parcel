@@ -77,8 +77,14 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from evals.nav_instruct.scene_truth import derived_landmark_table, landmark_table
+from evals.nav_instruct.scene_truth import (
+    V2_LANDMARK_IDS,
+    derived_landmark_table,
+    landmark_table,
+    load_artifact,
+)
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE, DEFAULT_STAND_OFF_ENVELOPE
+from parcel_robot.instructnav.scan import full_turn_scan_spec
 from parcel_robot.instructnav.scoring import (
     NEXT_TO_BAND_M,
     GoalRegion,
@@ -121,6 +127,38 @@ EPISODE_SET_V4 = "v4"
 #: Bridge-only intermediate: correction (a) with the v1 spec logic. Never run,
 #: never frozen — it exists so a moved goal can be attributed to (a) or to (b).
 EPISODE_SET_V1A = "v1a-scene-truth-only"
+#: Card VS-6's ADDITIVE search tier. Not a re-freeze and not a baseline: it adds
+#: episodes the frozen matrix does not contain (targets the opening scan cannot
+#: see) so the visual-search rework has something to move. It carries v4's
+#: corrections verbatim and moves not one byte of v1-v4 — the ``v\d+`` shape of
+#: its name is deliberately NOT matched, so
+#: ``tests/test_mutation_panel_freshness.py``'s "newest frozen set" scan still
+#: resolves to ``v4``. See :func:`generate_v4s_matrix`.
+EPISODE_SET_V4S = "v4s"
+
+#: The three v4s axes, used as the ``tier`` code so the runner's existing
+#: ``by_family_tier`` dashboard reports per-axis cells with no scoring change.
+#:
+#: ``LA``  look-around: the target is out of the start frustum AND beyond the
+#:        world's visibility RANGE, so the opening full-turn scan cannot see it
+#:        from the start pose; the straight corridor to it is clear of every
+#:        building (no detour needed — the missing ingredient is *looking*).
+#: ``BB``  beyond-the-block: same invisibility, but the straight corridor is
+#:        blocked by a building footprint, so the frontier direction is what has
+#:        to be got right.
+#: ``PH``  phantom: an ``LA`` cell plus a same-class distractor at the corridor
+#:        midpoint — inside the opening scan's range while the real target is
+#:        outside it. The distractor has no MuJoCo geometry, so it is a
+#:        detection with nothing behind it: a phantom, and committing to it is a
+#:        false arrival against K0's untouched region.
+V4S_AXIS_LOOK_AROUND = "LA"
+V4S_AXIS_BEYOND_BLOCK = "BB"
+V4S_AXIS_PHANTOM = "PH"
+V4S_SEARCH_AXES: tuple[str, ...] = (
+    V4S_AXIS_LOOK_AROUND,
+    V4S_AXIS_BEYOND_BLOCK,
+    V4S_AXIS_PHANTOM,
+)
 
 DEFAULT_EPISODE_SET_VERSION = EPISODE_SET_V1
 
@@ -268,6 +306,11 @@ class EpisodeSetSpec:
     #: v1/v2/v3's bare ``1.8``; ``"follow_hold_band"`` is v4's derivation from the
     #: controller's own hold band — see :data:`FOLLOW_OWNER_GOAL_RADIUS_M`.
     follow_goal_radius_reference: str = "frozen_literal"
+    #: Non-empty ONLY for an additive SEARCH tier (card VS-6's ``v4s``): the axes
+    #: its episodes are built along. Empty for every frozen ``vN`` baseline set,
+    #: which is what keeps this field off their manifests and out of their
+    #: digests — see :func:`write_episode_files` and :data:`V4S_SEARCH_AXES`.
+    search_axes: tuple[str, ...] = ()
 
 
 EPISODE_SETS: dict[str, EpisodeSetSpec] = {
@@ -316,6 +359,21 @@ EPISODE_SETS: dict[str, EpisodeSetSpec] = {
         next_to_band_reference="surface",
         follow_goal_radius_reference="follow_hold_band",
     ),
+    EPISODE_SET_V4S: EpisodeSetSpec(
+        version=EPISODE_SET_V4S,
+        landmark_section="derived",
+        word_boundary_class_match=True,
+        visible_instance_anchoring=True,
+        provenance=(
+            "2026-08-11 ADDITIVE search tier (card VS-6): new cells whose target "
+            "is beyond the opening scan's reach. Carries v4's corrections "
+            "(a) + (b) + (d) + (e) verbatim; adds no correction and re-freezes "
+            "nothing — v1-v4 are byte-untouched"
+        ),
+        next_to_band_reference="surface",
+        follow_goal_radius_reference="follow_hold_band",
+        search_axes=V4S_SEARCH_AXES,
+    ),
 }
 
 #: The ``follow_owner`` goal radius each episode-set version was frozen under.
@@ -352,6 +410,12 @@ def landmarks_for(spec: EpisodeSetSpec) -> dict[str, dict[str, Any]]:
 
     if spec.landmark_section == "transcribed":
         return _LANDMARKS
+    if spec.search_axes:
+        # v4s routes are long enough to meet buildings the frozen ids never
+        # name, so the search tier reads a WIDER slice of the same derived
+        # section — same artifact, same reshaping, more ids. No frozen set can
+        # see this table: their specs carry no search axes.
+        return derived_landmark_table(ids=V4S_LANDMARK_IDS)
     return derived_landmark_table()
 
 
@@ -453,6 +517,15 @@ def generate_episode_matrix(
     if per_family < EPISODES_PER_FAMILY_MIN:
         raise ValueError(f"per_family must be ≥ {EPISODES_PER_FAMILY_MIN}")
     spec = episode_set_spec(version)
+    if spec.search_axes:
+        # A search tier is not a family x tier matrix and must never be produced
+        # by the frozen entrypoint: silently returning the v4 matrix under a v4s
+        # label is exactly the "two rows that are not comparable" failure the
+        # version stamps exist to prevent.
+        raise ValueError(
+            f"{version!r} is an additive search tier, not a frozen matrix; "
+            "use generate_v4s_matrix()"
+        )
     if landmarks is None:
         landmarks = landmarks_for(spec)
     rng = _SeedSeq(seed)
@@ -529,6 +602,14 @@ def write_episode_files(
         manifest["word_boundary_class_match"] = spec.word_boundary_class_match
         manifest["visible_instance_anchoring"] = spec.visible_instance_anchoring
         manifest["provenance"] = spec.provenance
+        if spec.search_axes:
+            # Conditional, like ``navigator_flags`` on a ledger row: a frozen
+            # baseline manifest keeps the exact key set it was frozen with.
+            manifest["search_axes"] = list(spec.search_axes)
+            manifest["episodes_per_axis"] = {
+                axis: sum(1 for ep in episodes if ep.tier == axis)
+                for axis in spec.search_axes
+            }
     if seed is not None:
         manifest["seed"] = int(seed)
     (root / "manifest.json").write_text(
@@ -1082,6 +1163,557 @@ def _tier_note(tier: str, family: str, *, absent: bool) -> str:
         "D": "ambiguity_or_synonym",
         "E": "absent_unreachable",
     }[tier] + f"|{family}"
+
+
+# ---------------------------------------------------------------------------
+# v4s — the ADDITIVE search tier (card VS-6)
+#
+# WHY A NEW SET AT ALL.  Lane V-D measured the value-directed-search flag as a
+# structural no-op on the frozen matrix, and one leg of the diagnosis is that
+# the frozen cells cannot exercise a search: the GP-UCB look block only runs
+# AFTER the opening full turn, so any target the opening turn can see is already
+# found and every extra look is redundant by construction. A cell that can move
+# under a search rework therefore has to put the target OUTSIDE the opening
+# scan's reach. No frozen episode does that, and editing one to do it would move
+# a frozen digest. So the cells are new, and v1-v4 are byte-untouched.
+#
+# WHAT "OUTSIDE THE OPENING SCAN'S REACH" MEANS, EXACTLY.  The world reports
+# semantics through one frustum — range :data:`VISIBILITY_MAX_RANGE_M` and
+# half-FOV :data:`VISIBILITY_HALF_FOV_RAD`, both pinned equal to the world's own
+# by ``tests/test_nav_instruct_episodes_v2.py``. An in-place full turn sweeps
+# every bearing, so the ONLY thing it cannot overcome is range. Every v4s cell
+# therefore asserts BOTH halves: the target is out of the start frustum
+# (:func:`visible_from_start` false, so it is not visible at t=0) AND farther
+# than the frustum's range (so the opening turn does not find it either). That
+# is the whole of the "look-around-required beyond the initial scan pose"
+# property, stated as geometry rather than as a hope.
+# ---------------------------------------------------------------------------
+
+#: The owner the headless world places in EVERY nav_instruct episode. The runner
+#: resets with ``owner=None`` and the world still puts one here, which is what
+#: lane D-15 traced its regression to. It is the same point the ``follow_owner``
+#: and ``circle_owner`` goal discs are centred on above; pinned equal by
+#: ``tests/test_v4s_search_cells.py``.
+DEFAULT_OWNER_XY: tuple[float, float] = (2.0, -0.5)
+
+#: How far a v4s corridor and route stay from the default owner's CENTRE:
+#: :data:`FOLLOW_HOLD_BAND_OUTER_M`, the farthest distance at which a compliant
+#: follow controller may still hold — so a v4s corridor never comes closer to
+#: the owner than the follow stack's own outermost holding ring.
+#:
+#: WHY THAT RING.  D-15 is the lesson: an episode whose route runs into the
+#: reactive gate's owner ring measures the GATE, not the search (the robot
+#: hard-stopped every tick and the pipeline never saw a veto). 2.03 m from the
+#: owner's centre is 1.48 m of surface clearance, which clears both rings the
+#: gate applies to the owner — the slow band (``owner_slow_m`` = person_stop +
+#: the authority's stand-off margin = 1.30 m) and the predictive stop
+#: (``person_stop_m`` + cruise x reaction = 1.2 + 0.85 x 0.12 = 1.302 m). It is
+#: a generation-time filter, so being generous only removes candidate corridors.
+OWNER_CORRIDOR_KEEPOUT_M = FOLLOW_HOLD_BAND_OUTER_M
+
+#: The owner's entry in the blocking-disc set. Named because the axis rule turns
+#: on it: the owner ring blocks every axis equally (no v4s corridor may pass
+#: through it), so only BUILDINGS can put a cell on the beyond-the-block axis.
+V4S_OWNER_DISC_ID = "owner"
+
+#: Clearance every v4s point (start pose, phantom, route cell, corridor) keeps
+#: from a landmark disc: the robot's own body plus the obstacle gate's stop
+#: floor, both read from the authority. Standing or translating outside it means
+#: the obstacle branch of ``apply_reactive_safety`` does not bind — measured as
+#: needed: at bare-disc clearance a start pose 0.38 m from ``bldg_6``'s surface
+#: and a phantom placed against ``bldg_5``'s corner both produced stalls that
+#: measure the obstacle gate rather than the search.
+V4S_CLEARANCE_MARGIN_M = (
+    DEFAULT_SAFETY_ENVELOPE.footprint_radius_m
+    + DEFAULT_SAFETY_ENVELOPE.obstacle_stop_floor_m
+)
+
+#: Minimum angular separation between two admissible views — 2π / the full-turn
+#: scan's own stop count, consumed BY REFERENCE from
+#: ``instructnav.scan.full_turn_scan_spec``. §2.2(b) of the design record makes
+#: this the view-admission authority; v4s uses the same quantity, one level up,
+#: as the only start-heading offset it will apply, so the three headings a v4s
+#: cell can start at are exactly three of the opening scan's own stops.
+V4S_VIEW_SEPARATION_RAD = 2.0 * math.pi / float(full_turn_scan_spec().n_stops)
+
+#: Start-pose lattice: a half-integer grid, so no start coincides with a
+#: landmark centre or a scene obstacle's axis. Bounded by the A* grid the
+#: routability assertion runs on (:func:`_grid_astar_length_m` bounds), one
+#: lattice step inside it.
+V4S_START_LATTICE_STEP_M = 1.0
+V4S_START_LATTICE_LIMIT_M = 9.5
+
+#: The landmark ids v4s generates against: the v2 ten, plus every BUILDING the
+#: scene's derived truth knows about. The frozen sets name exactly one building
+#: (``bldg_1``) because no frozen route is long enough to meet another; a v4s
+#: route crosses the block, so "the straight corridor is clear" is only a true
+#: claim if it is checked against all of them. Read from the artifact, never
+#: transcribed: a scene edit that adds a building widens this list on its own.
+V4S_LANDMARK_IDS: tuple[str, ...] = V2_LANDMARK_IDS + tuple(
+    entity_id
+    for entity_id, entry in sorted(load_artifact()["derived"].items())
+    if entry.get("label") == "building" and entity_id not in V2_LANDMARK_IDS
+)
+
+#: v4s's own seed. A new set gets a new seed; nothing about it can reach v1-v4.
+V4S_SEED = 20260811
+#: Episodes per axis. The card's floor is 20; 60 is what VS-5's pre-registered
+#: statistics want (6 net paired flips = exact-McNemar p ≤ 0.031 makes +10pp
+#: detectable at n ≥ 60). Generation RAISES rather than silently shrinking when
+#: an axis cannot be filled — open question 8 is a STOP-and-report, not a
+#: margin to quietly lower.
+V4S_EPISODES_PER_AXIS = 60
+
+
+@dataclass(frozen=True)
+class V4sTarget:
+    """One v4s search target: what is asked for, and what it resolves to.
+
+    ``twin_entity_ids`` are the OTHER instances of the same class. They are
+    removed from the episode's perception specs (the tier-E ``remove_entities``
+    mechanism, unchanged) so "the tree" has exactly one referent. Without that a
+    v4s cell measures instance disambiguation — a different, already-owned
+    problem (§2.2(a)(i)) — instead of search.
+    """
+
+    entity_id: str
+    family: str
+    instruction: str
+    twin_entity_ids: tuple[str, ...] = ()
+
+
+#: Every instruction below is a string the frozen matrix already runs, so v4s
+#: adds ZERO new natural-language surface: the parser, the grounder vocabulary
+#: and the relation are all exercised identically to v1-v4.
+V4S_TARGETS: tuple[V4sTarget, ...] = (
+    V4sTarget("tree_1", "object_goal", "walk towards the tree", ("tree_2",)),
+    V4sTarget("tree_2", "object_goal", "walk towards the tree", ("tree_1",)),
+    V4sTarget(
+        "lamp_post_1", "object_goal", "walk towards the streetlight", ("lamp_post_2",)
+    ),
+    V4sTarget(
+        "lamp_post_2", "object_goal", "can you walk towards the lamppost", ("lamp_post_1",)
+    ),
+    V4sTarget("bench_1", "object_relative", "wait by the bench", ()),
+    V4sTarget("planter_1", "object_relative", "go next to the planter", ("planter_2",)),
+)
+
+
+def _v4s_blocking_discs(
+    landmarks: dict[str, dict[str, Any]],
+) -> tuple[tuple[str, float, float, float], ...]:
+    """``(id, x, y, radius)`` discs a v4s corridor and route may not cross.
+
+    The buildings at their landmark radius — the same convention
+    :func:`_blocked_cells` already uses for ``bldg_1``, widened to all of them
+    because a v4s route is long enough to meet any of them — plus the default
+    owner at :data:`OWNER_CORRIDOR_KEEPOUT_M`.
+    """
+
+    discs = [
+        (entity_id, float(entry["position"][0]), float(entry["position"][1]), float(entry["radius_m"]))
+        for entity_id, entry in sorted(landmarks.items())
+        if entry.get("kind") == "object" and entry.get("label") == "building"
+    ]
+    discs.append(
+        (
+            V4S_OWNER_DISC_ID,
+            DEFAULT_OWNER_XY[0],
+            DEFAULT_OWNER_XY[1],
+            OWNER_CORRIDOR_KEEPOUT_M,
+        )
+    )
+    return tuple(discs)
+
+
+def _v4s_point_is_free(
+    point: tuple[float, float],
+    discs: Sequence[tuple[str, float, float, float]],
+    *,
+    margin_m: float = V4S_CLEARANCE_MARGIN_M,
+) -> bool:
+    return all(
+        math.hypot(point[0] - x, point[1] - y) > radius + margin_m
+        for _, x, y, radius in discs
+    )
+
+
+def _v4s_segment_blockers(
+    start: tuple[float, float],
+    end: tuple[float, float],
+    discs: Sequence[tuple[str, float, float, float]],
+    *,
+    margin_m: float = 0.0,
+) -> tuple[str, ...]:
+    """Which discs the straight corridor ``start -> end`` passes through.
+
+    Bare disc by default. The landmark radius is the CIRCUMSCRIBED radius of a
+    box, so it already over-approximates every building by up to ~40% off the
+    diagonal; adding the placement margin on top rejects every clear corridor in
+    the scene (measured: LA yield 105 -> 0). The corridor test states which axis
+    a cell belongs to — whether the straight line to the target crosses the
+    block — not how close the robot may drive.
+    """
+
+    hits: list[str] = []
+    ax, ay = float(start[0]), float(start[1])
+    bx, by = float(end[0]), float(end[1])
+    dx, dy = bx - ax, by - ay
+    length_sq = dx * dx + dy * dy
+    for entity_id, cx, cy, radius in discs:
+        if length_sq <= 1e-12:
+            closest = (ax, ay)
+        else:
+            t = ((cx - ax) * dx + (cy - ay) * dy) / length_sq
+            t = min(1.0, max(0.0, t))
+            closest = (ax + t * dx, ay + t * dy)
+        if math.hypot(cx - closest[0], cy - closest[1]) <= radius + margin_m:
+            hits.append(entity_id)
+    return tuple(hits)
+
+
+def _v4s_route_length_m(
+    start: tuple[float, float],
+    goal: GoalRegion,
+    discs: Sequence[tuple[str, float, float, float]],
+    *,
+    resolution_m: float = 0.5,
+    bounds: tuple[float, float, float, float] = (-10.0, -10.0, 10.0, 10.0),
+) -> float | None:
+    """Grid route length from ``start`` INTO ``goal``, or ``None`` if unroutable.
+
+    Stronger than :func:`_approx_shortest_path_m`, deliberately: that one routes
+    to one sampled point and, when the sample lands on an obstacle, NUDGES the
+    goal cell to a free neighbour. A generation-time routability assertion may
+    not nudge. This one expands until it reaches a free cell the episode's own
+    ``GoalRegion`` predicate accepts — so "routable" means "a route into the
+    scored region exists", which is the claim the card asks for. Tier C's
+    measured ``no_path|obstacle_stop`` domination is what makes it worth
+    asserting per episode instead of assuming it.
+    """
+
+    min_x, min_y, max_x, max_y = bounds
+    res = float(resolution_m)
+    width = math.ceil((max_x - min_x) / res)
+    height = math.ceil((max_y - min_y) / res)
+
+    def centre(cell: tuple[int, int]) -> tuple[float, float]:
+        return (min_x + (cell[0] + 0.5) * res, min_y + (cell[1] + 0.5) * res)
+
+    def free(cell: tuple[int, int]) -> bool:
+        if not (0 <= cell[0] < width and 0 <= cell[1] < height):
+            return False
+        # Bare disc, no clearance margin: the same convention
+        # :func:`_blocked_cells` uses. A goal region may legitimately hug its
+        # anchor (``tree_2`` sits 0.16 m outside ``bldg_4``'s circumscribed
+        # disc), and this is an existence proof about the route, not a pose the
+        # robot is asked to stand at.
+        return _v4s_point_is_free(centre(cell), discs, margin_m=0.0)
+
+    start_cell = (
+        math.floor((start[0] - min_x) / res),
+        math.floor((start[1] - min_y) / res),
+    )
+    if not free(start_cell):
+        return None
+    open_heap: list[tuple[float, tuple[int, int]]] = [(0.0, start_cell)]
+    best: dict[tuple[int, int], float] = {start_cell: 0.0}
+    while open_heap:
+        cost, current = heapq.heappop(open_heap)
+        if cost > best.get(current, float("inf")) + 1e-12:
+            continue
+        point = centre(current)
+        if goal.contains(point[0], point[1], anchor_xy=goal.center):
+            return cost
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nxt = (current[0] + dx, current[1] + dy)
+            if not free(nxt):
+                continue
+            tentative = cost + res
+            if tentative + 1e-12 < best.get(nxt, float("inf")):
+                best[nxt] = tentative
+                heapq.heappush(open_heap, (tentative, nxt))
+    return None
+
+
+def _v4s_start_lattice(
+    discs: Sequence[tuple[str, float, float, float]],
+) -> tuple[tuple[float, float], ...]:
+    """Free half-integer lattice points inside the routability grid."""
+
+    step = V4S_START_LATTICE_STEP_M
+    limit = V4S_START_LATTICE_LIMIT_M
+    count = round(2.0 * limit / step) + 1
+    axis = [round(-limit + index * step, 6) for index in range(count)]
+    return tuple(
+        (x, y) for x in axis for y in axis if _v4s_point_is_free((x, y), discs)
+    )
+
+
+def _v4s_goal_for(
+    target: V4sTarget,
+    landmarks: dict[str, dict[str, Any]],
+) -> tuple[GoalRegion, float, str]:
+    """``(goal region, object radius, label)`` for one v4s target.
+
+    Built by the SAME K0 builders the frozen sets use, selected by the same
+    ``"towards"`` test as :func:`_object_goal` — v4s changes where the robot
+    starts and what it can see, never what arrival means.
+    """
+
+    landmark = landmarks[target.entity_id]
+    position: tuple[float, float] = (
+        float(landmark["position"][0]),
+        float(landmark["position"][1]),
+    )
+    radius_m = float(landmark["radius_m"])
+    label = str(landmark["label"])
+    if target.family == "object_relative":
+        goal = arrival_goal_region_for_relation(
+            "next_to",
+            center=position,
+            object_radius_m=radius_m,
+            entity_id=target.entity_id,
+            metadata={"radius_m": radius_m},
+        )
+    elif "towards" in target.instruction:
+        goal = object_towards_goal_region(position, entity_id=target.entity_id)
+    else:
+        goal = object_near_goal_region(
+            position, radius_m, label=label, entity_id=target.entity_id
+        )
+    return goal, radius_m, label
+
+
+def _v4s_synonym(instruction: str) -> str | None:
+    for token in ("streetlight", "lamp post", "pavement", "seat"):
+        if token in instruction:
+            return token
+    return None
+
+
+@dataclass(frozen=True)
+class _V4sCell:
+    """One admissible (axis, target, start) triple with its measured evidence."""
+
+    axis: str
+    target: V4sTarget
+    start_xy: tuple[float, float]
+    yaw_rad: float
+    range_m: float
+    route_length_m: float
+    blockers: tuple[str, ...]
+    phantom_xy: tuple[float, float] | None
+
+
+def _v4s_admissible_cells(
+    axis: str,
+    *,
+    starts: Sequence[tuple[float, float]],
+    discs: Sequence[tuple[str, float, float, float]],
+    landmarks: dict[str, dict[str, Any]],
+) -> list[_V4sCell]:
+    """Every (target, start) this axis admits, round-robin across targets.
+
+    Two ordering decisions, both declared here rather than discovered later:
+
+    * **Round-robin across targets**, not target-major, so that taking the first
+      ``per_axis`` of the list spreads the axis over every target instead of
+      exhausting one.
+    * **Nearest-first within a target.** Every admitted cell is beyond the
+      frustum's range by construction; among those, the ones just past the
+      threshold are the ones a better search can plausibly convert, and a target
+      19 m away tests the step budget rather than the search. This is a
+      difficulty rule fixed at generation time, applied uniformly to all three
+      axes, and chosen before any flag-on arm existed to tune it against.
+    """
+
+    per_target: list[list[_V4sCell]] = []
+    for target_index, target in enumerate(V4S_TARGETS):
+        goal, _radius_m, _label = _v4s_goal_for(target, landmarks)
+        landmark = landmarks[target.entity_id]
+        position = (float(landmark["position"][0]), float(landmark["position"][1]))
+        admitted: list[_V4sCell] = []
+        for start_index, start in enumerate(starts):
+            range_m = math.hypot(position[0] - start[0], position[1] - start[1])
+            # Beyond the opening full turn's reach: range is the only thing an
+            # in-place turn cannot beat.
+            if range_m <= VISIBILITY_MAX_RANGE_M:
+                continue
+            blockers = _v4s_segment_blockers(start, position, discs)
+            # The owner ring blocks EVERY axis: a corridor that runs through it
+            # measures the reactive gate, not the search (D-15). So the axis
+            # distinction is about buildings alone, and "beyond the block" means
+            # a BUILDING is in the way — never "a person is standing there".
+            if V4S_OWNER_DISC_ID in blockers:
+                continue
+            if axis == V4S_AXIS_BEYOND_BLOCK and not blockers:
+                continue
+            if axis in {V4S_AXIS_LOOK_AROUND, V4S_AXIS_PHANTOM} and blockers:
+                continue
+            phantom_xy: tuple[float, float] | None = None
+            if axis == V4S_AXIS_PHANTOM:
+                midpoint = (
+                    0.5 * (start[0] + position[0]),
+                    0.5 * (start[1] + position[1]),
+                )
+                # The phantom must be inside the opening scan's range while the
+                # real target is outside it — that asymmetry IS the cell.
+                if 0.5 * range_m > VISIBILITY_MAX_RANGE_M:
+                    continue
+                if not _v4s_point_is_free(midpoint, discs):
+                    continue
+                if goal.contains(midpoint[0], midpoint[1], anchor_xy=goal.center):
+                    continue
+                phantom_xy = midpoint
+            # Heading: face directly away from the target, offset by one of the
+            # opening scan's own stop separations.
+            bearing = math.atan2(position[1] - start[1], position[0] - start[0])
+            offset = (start_index + target_index) % 3 - 1
+            yaw = (
+                bearing + math.pi + offset * V4S_VIEW_SEPARATION_RAD + math.pi
+            ) % (2.0 * math.pi) - math.pi
+            if visible_from_start((start[0], start[1], yaw), position):
+                continue
+            route = _v4s_route_length_m(start, goal, discs)
+            if route is None:
+                continue
+            admitted.append(
+                _V4sCell(
+                    axis=axis,
+                    target=target,
+                    start_xy=start,
+                    yaw_rad=yaw,
+                    range_m=range_m,
+                    route_length_m=route,
+                    blockers=blockers,
+                    phantom_xy=phantom_xy,
+                )
+            )
+        admitted.sort(key=lambda cell: (cell.range_m, cell.start_xy))
+        per_target.append(admitted)
+
+    interleaved: list[_V4sCell] = []
+    depth = max((len(items) for items in per_target), default=0)
+    for index in range(depth):
+        for items in per_target:
+            if index < len(items):
+                interleaved.append(items[index])
+    return interleaved
+
+
+def _build_v4s_episode(
+    cell: _V4sCell,
+    *,
+    index: int,
+    rng: _SeedSeq,
+    landmarks: dict[str, dict[str, Any]],
+) -> EpisodeSpec:
+    ep_seed = rng.randint(0, 2**31 - 1)
+    target = cell.target
+    goal, radius_m, label = _v4s_goal_for(target, landmarks)
+    start_pose = (cell.start_xy[0], cell.start_xy[1], cell.yaw_rad)
+    placement: dict[str, Any] = {
+        "robot": {"x": start_pose[0], "y": start_pose[1], "yaw": start_pose[2]},
+    }
+    if target.twin_entity_ids:
+        placement["remove_entities"] = list(target.twin_entity_ids)
+    distractors: tuple[str, ...] = ()
+    evidence: dict[str, Any] = {
+        "axis": cell.axis,
+        "target_entity_id": target.entity_id,
+        "start_target_range_m": cell.range_m,
+        "beyond_scan_range": True,
+        "visible_from_start": False,
+        "corridor_blocked_by": list(cell.blockers),
+        "route_length_m": cell.route_length_m,
+        "detour_ratio": cell.route_length_m / cell.range_m,
+        "routability": "astar_into_goal_region",
+    }
+    if cell.phantom_xy is not None:
+        phantom_id = f"{target.entity_id}_phantom"
+        distractors = (phantom_id,)
+        placement["distractors"] = {
+            phantom_id: {
+                "x": cell.phantom_xy[0],
+                "y": cell.phantom_xy[1],
+                "label": label,
+                "radius_m": radius_m,
+            }
+        }
+        evidence["phantom_entity_id"] = phantom_id
+        evidence["phantom_range_from_start_m"] = 0.5 * cell.range_m
+        evidence["phantom_offset_from_target_m"] = 0.5 * cell.range_m
+    placement["search_cell"] = evidence
+    return EpisodeSpec(
+        episode_id=f"nav-{target.family}-{cell.axis}-{index:02d}-{ep_seed:08x}",
+        family=target.family,
+        tier=cell.axis,
+        instruction=target.instruction,
+        seed=ep_seed,
+        start_pose=start_pose,
+        goal=goal,
+        target_entity_id=target.entity_id,
+        shortest_path_m=cell.route_length_m,
+        distractors=distractors,
+        placement_overrides=placement,
+        synonym=_v4s_synonym(target.instruction),
+        absent_target=False,
+        notes=f"{_V4S_AXIS_NOTES[cell.axis]}|{target.family}",
+    )
+
+
+_V4S_AXIS_NOTES: dict[str, str] = {
+    V4S_AXIS_LOOK_AROUND: "search_beyond_opening_scan",
+    V4S_AXIS_BEYOND_BLOCK: "search_beyond_the_block_frontier",
+    V4S_AXIS_PHANTOM: "search_beyond_opening_scan_with_view_consistent_phantom",
+}
+
+
+def generate_v4s_matrix(
+    *,
+    seed: int = V4S_SEED,
+    per_axis: int = V4S_EPISODES_PER_AXIS,
+    landmarks: dict[str, dict[str, Any]] | None = None,
+) -> tuple[EpisodeSpec, ...]:
+    """The additive v4s search tier: ``per_axis`` episodes on each of three axes.
+
+    Every returned episode carries, in ``placement_overrides["search_cell"]``,
+    the measured evidence for the three claims the card makes about it: the
+    target's range from the start (> the frustum's range), which discs the
+    straight corridor crosses (none for ``LA``/``PH``, at least one for ``BB``),
+    and the grid route length INTO the goal region (never ``None`` — an
+    unroutable candidate is dropped at generation, never emitted).
+
+    Raises when an axis cannot be filled. That is deliberate: the pre-registered
+    n is what makes VS-5's effect measurable, and a silently smaller set would
+    turn a power failure into a null result.
+    """
+
+    spec = episode_set_spec(EPISODE_SET_V4S)
+    if landmarks is None:
+        landmarks = landmarks_for(spec)
+    if per_axis < 1:
+        raise ValueError("per_axis must be ≥ 1")
+    discs = _v4s_blocking_discs(landmarks)
+    starts = _v4s_start_lattice(discs)
+    rng = _SeedSeq(seed)
+    episodes: list[EpisodeSpec] = []
+    for axis in V4S_SEARCH_AXES:
+        admissible = _v4s_admissible_cells(
+            axis, starts=starts, discs=discs, landmarks=landmarks
+        )
+        if len(admissible) < per_axis:
+            raise ValueError(
+                f"v4s axis {axis!r} yields only {len(admissible)} routable "
+                f"episodes, below the pre-registered {per_axis} — STOP and "
+                "report (design record §8 open question 8), never shrink"
+            )
+        for index, cell in enumerate(admissible[:per_axis]):
+            episodes.append(
+                _build_v4s_episode(cell, index=index, rng=rng, landmarks=landmarks)
+            )
+    return tuple(episodes)
 
 
 def _matrix_digest(episodes: Sequence[EpisodeSpec]) -> str:

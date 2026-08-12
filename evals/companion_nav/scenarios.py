@@ -647,3 +647,113 @@ def scenario_by_id(scenario_id: str) -> Scenario:
             return scenario
     known = ", ".join(item.scenario_id for item in FOLLOW_BENCH_V1)
     raise KeyError(f"unknown FOLLOW_BENCH_V1 scenario {scenario_id!r} (known: {known})")
+
+
+# ---------------------------------------------------------------------------
+# FOLLOW_BENCH_YIELD_EXT — additive tier for card Y-3 (2026-08-11)
+# ---------------------------------------------------------------------------
+#
+# APPEND-ONLY, and separate on purpose: FOLLOW_BENCH_V1 above is frozen (its
+# rows are pinned by the ledger and by FOLLOW_BENCH_POST_SPEED), so a tier that
+# exists to measure a new flag gets its own tuple, its own bench id and its own
+# results namespace rather than a twelfth V1 row.
+#
+# Both cells sit in the open block east of x = 8 m, where every lane from
+# y = -3.0 to y = +3.4 is free (measured with ``truth_minimum_clearance``); the
+# obstacle cluster at x ~ 5.5-7.0 is deliberately behind the robot start.
+#
+# Why these two and not pedestrian_group: §4.1 of the design record measured
+# pedestrian_group as UNRECOVERABLE by any aim offset — holding band pace needs
+# 2.24 m of stranger clearance (1.2 + 0.8 x 1.3) and that corridor offers about
+# 1.7 m. So this tier asks the two questions that ARE answerable: does an aside
+# help where a free half-corridor exists (oncoming), and is band pace really
+# reachable once the geometry pays the 2.24 m (wide)?
+
+FOLLOW_BENCH_YIELD_EXT: tuple[Scenario, ...] = (
+    Scenario(
+        scenario_id="pedestrian_oncoming_group",
+        description=(
+            "Owner walks east down the middle of the open block while three "
+            "pedestrians walk west three-abreast THROUGH the owner's lane; the "
+            "south half of the corridor stays empty. Flag-off, the robot is "
+            "throttled by the stranger band inside the group's swept corridor "
+            "and falls out of the follow band; the yield-aside's question is "
+            "whether displacing into the free half restores it."
+        ),
+        seed=31,
+        robot_start=(8.0, 0.7, 0.0),
+        owner_waypoints=_path((0.0, 10.0, 0.7), (25.0, 17.5, 0.7)),
+        pedestrians=(
+            PedestrianScript(
+                agent_id="oncoming_inner",
+                radius_m=0.2,
+                waypoints=_path((0.0, 18.0, 0.3), (25.0, 8.0, 0.3)),
+            ),
+            PedestrianScript(
+                agent_id="oncoming_middle",
+                radius_m=0.2,
+                waypoints=_path((0.0, 18.6, 0.75), (25.0, 8.6, 0.75)),
+            ),
+            PedestrianScript(
+                agent_id="oncoming_outer",
+                radius_m=0.2,
+                waypoints=_path((0.0, 19.2, 1.2), (25.0, 9.2, 1.2)),
+            ),
+        ),
+        directive_kind="follow",
+        directive="follow me",
+        duration_s=25.0,
+        # Pre-registered from the STAGE A flag-off measurement (band 0.5040)
+        # plus the design record's +0.15 margin = 0.6540; see
+        # scrum/20260811/task_1/Y-3_STATUS.md. Recorded once, before any
+        # flag-on run, and not retuned afterwards.
+        min_band_fraction=0.654,
+        note=_PEDESTRIAN_SENSING_NOTE,
+    ),
+    Scenario(
+        scenario_id="pedestrian_group_wide",
+        description=(
+            "The pedestrian_group geometry with the flankers pulled apart to a "
+            "5.0 m gap, so the robot's stranger clearance (about 2.3 m of "
+            "surface) clears the 2.24 m that band pace (scale >= 0.8) needs. "
+            "This is the control for the pedestrian_group infeasibility claim: "
+            "the same controller, the same group, enough room."
+        ),
+        seed=32,
+        robot_start=(8.0, 0.0, 0.0),
+        owner_waypoints=_path((0.0, 10.0, 0.0), (21.4, 17.0, 0.0), (25.0, 17.0, 0.0)),
+        pedestrians=(
+            PedestrianScript(
+                agent_id="wide_north",
+                radius_m=0.2,
+                waypoints=_path((0.0, 13.0, 2.5), (25.0, 12.6, 2.6)),
+            ),
+            PedestrianScript(
+                agent_id="wide_north_far",
+                radius_m=0.2,
+                waypoints=_path((0.0, 15.2, 2.5), (25.0, 15.0, 2.6)),
+            ),
+            PedestrianScript(
+                agent_id="wide_south",
+                radius_m=0.2,
+                waypoints=_path((0.0, 14.0, -2.5), (25.0, 13.6, -2.55)),
+            ),
+        ),
+        directive_kind="follow",
+        directive="follow me",
+        duration_s=25.0,
+        # The design record's own gate for this cell (§6, card Y-3): the band
+        # pedestrian_group cannot reach at 1.7 m of clearance must be reachable
+        # here, where the geometry pays the derived 2.24 m.
+        min_band_fraction=0.75,
+        note=_PEDESTRIAN_SENSING_NOTE,
+    ),
+)
+
+
+def yield_ext_scenario_by_id(scenario_id: str) -> Scenario:
+    for scenario in FOLLOW_BENCH_YIELD_EXT:
+        if scenario.scenario_id == scenario_id:
+            return scenario
+    known = ", ".join(item.scenario_id for item in FOLLOW_BENCH_YIELD_EXT)
+    raise KeyError(f"unknown FOLLOW_BENCH_YIELD_EXT scenario {scenario_id!r} (known: {known})")

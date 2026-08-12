@@ -399,7 +399,12 @@ class BeliefInheritance:
 
 @runtime_checkable
 class ValueMapReader(Protocol):
-    """Minimal read surface (SemanticValueMap2D or test double)."""
+    """Minimal read surface (SemanticValueMap2D or test double).
+
+    ``evidence_count`` is VS-5's delegation key and is read off the object
+    defensively (``getattr``) rather than demanded here, so a pre-existing test
+    double that does not carry it keeps working unchanged.
+    """
 
     resolution_m: float
 
@@ -414,6 +419,18 @@ class ValueMapFrontierScorer:
 
     Drop-in for ``select_frontier(..., scorer=...)``. Zero runtime model calls —
     ``plan_prior`` and ``value_map`` are pre-populated / pure-math lookups.
+
+    **Empty-map delegation (card VS-5, ``FOLLOWUP_DESIGNS.md`` §2.2(d)).** When
+    the map carries no query-relevant evidence (``value_map.evidence_count ==
+    0``) this scorer DELEGATES to the flag-off scorer OBJECT — an actual
+    :class:`SemanticMinusGeodesicScorer` with this scorer's own weights, never a
+    re-implementation of its arithmetic — so a value-directed run with nothing
+    in its map returns float-identical scores to the run that never had a map.
+    That is what makes any measured delta attributable to actual evidence
+    instead of to the V_e / prior-blend / coverage terms firing on an empty
+    belief (the measured V-D no-op: §2.1(2), "the empty-map
+    ValueMapFrontierScorer is NOT the baseline scorer ... the 0-flip tie was
+    accidental").
     """
 
     value_map: ValueMapReader
@@ -426,6 +443,10 @@ class ValueMapFrontierScorer:
     prior_blend: float = 0.25
     coverage_weight: float = 0.45
     sensor_radius_m: float = 3.0
+    #: The flag-off scorer this delegates to on an evidence-free map. ``None``
+    #: builds :class:`SemanticMinusGeodesicScorer` with the weights
+    #: ``select_frontier`` would have used for the same call.
+    empty_map_delegate: FrontierScorer | None = None
 
     def __post_init__(self) -> None:
         for name, value in (
@@ -441,9 +462,32 @@ class ValueMapFrontierScorer:
         if self.prior_blend > 1.0:
             raise ValueError("prior_blend must be ≤ 1")
 
+    def baseline_scorer(self) -> FrontierScorer:
+        """The flag-off scorer OBJECT this delegates to on an empty map.
+
+        ``select_frontier`` builds exactly this object when no scorer is passed
+        (``prior_weight`` is its default 1.0), so delegating to it is the same
+        arithmetic on the same floats — not a copy of it.
+        """
+
+        if self.empty_map_delegate is not None:
+            return self.empty_map_delegate
+        return SemanticMinusGeodesicScorer(
+            travel_weight=self.travel_weight,
+            prior_weight=1.0,
+            coverage_weight=self.coverage_weight,
+        )
+
+    def has_evidence(self) -> bool:
+        """True iff the map holds at least one query-relevant evidence paint."""
+
+        return int(getattr(self.value_map, "evidence_count", 0) or 0) > 0
+
     def score(self, candidate: FrontierCandidate) -> float:
         if not isinstance(candidate, FrontierCandidate):
             raise TypeError("candidate must be FrontierCandidate")
+        if not self.has_evidence():
+            return float(self.baseline_scorer().score(candidate))
         map_v, map_c = self._sample_map(candidate.x, candidate.y)
         v_p = self.inheritance.value(map_v, map_c)
         v_e = self.existence.value_at(candidate.x, candidate.y) if self.existence else 0.0

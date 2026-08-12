@@ -1,0 +1,23 @@
+{
+  "artifact": "rm3-pair",
+  "cells_digest": "a23c802bbbf73cb3051149c73738342f7a5e55045b3681df594906672c3a064a",
+  "comparable": true,
+  "discordant": 0,
+  "flips": [],
+  "matcher_arm": "default",
+  "mcnemar_p_exact": 1.0,
+  "n": 60,
+  "net_flips": 0,
+  "off_artifact": "rm3-off-default-20260812T083551Z.json",
+  "on_artifact": "rm3-on-default-20260812T083551Z.json",
+  "pose_drift_profile": null,
+  "problems": [],
+  "sr_off": 0.11666666666666667,
+  "sr_on": 0.11666666666666667,
+  "table": {
+    "both_succeed": 7,
+    "neither": 53,
+    "off_only": 0,
+    "on_only": 0
+  }
+}

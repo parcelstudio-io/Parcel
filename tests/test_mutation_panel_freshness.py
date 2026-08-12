@@ -44,7 +44,14 @@ _CURRENT_FROZEN_EPISODE_SET = max(
     key=lambda version: int(version[1:]),
 )
 
-_EXPECTED_KILLED = 6
+#: The panel's six original defects. A FLOOR, not an expectation: card VS-6
+#: (2026-08-11) appends a seventh (``phantom_view_consistent``) and the panel is
+#: meant to keep growing, so pinning the exact count would turn every new
+#: mutant into a red build here — the opposite of what this file guards. What
+#: still cannot happen is a mutant DISAPPEARING, or one that is exercised but
+#: not killed: the assertion below is "every mutant in the payload was killed,
+#: and there are at least the original six".
+_MINIMUM_KILLED = 6
 
 
 def _assert_panel_payload_is_current_and_sensitive(payload: dict) -> None:
@@ -55,8 +62,9 @@ def _assert_panel_payload_is_current_and_sensitive(payload: dict) -> None:
     )
     assert payload["passed"] is True
     killed = [m for m in payload["mutants"] if m["verdict"] == "killed"]
-    assert len(killed) == _EXPECTED_KILLED, (
-        f"expected {_EXPECTED_KILLED} killed mutants, got {len(killed)}: "
+    assert len(killed) == len(payload["mutants"]) >= _MINIMUM_KILLED, (
+        f"expected every mutant killed and at least {_MINIMUM_KILLED} of them, "
+        f"got {len(killed)}/{len(payload['mutants'])}: "
         f"{[(m['mutation'], m['verdict']) for m in payload['mutants']]}"
     )
     # The no_false_arrival channel must be LIVE: green on the clean run (so a

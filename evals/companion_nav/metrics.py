@@ -59,6 +59,12 @@ class StepRecord:
     expression_producer: str = "none"
     # Label of the scripted gesture holding the base, if any.
     emote_label: str | None = None
+    # --- card J-C (additive, report-only) ----------------------------------
+    # Did this step take the shaper's hard-stop bypass? Recorded so the comfort
+    # metric can be split into "what the stop contract costs" and "what the
+    # smoothing costs" mechanically, instead of the two being re-argued from
+    # traces every time the mean moves (design record §3.2 part 3).
+    emergency: bool = False
 
 
 @dataclass(frozen=True)
@@ -99,6 +105,9 @@ class EpisodeMetrics:
     personal_space_time_s: float
     intimate_space_time_s: float
     rms_commanded_jerk_mps3: float
+    # Card J-C, additive and report-only: the same RMS over the windows that
+    # contain no emergency-bypass step. ``None`` when every window touches one.
+    rms_commanded_jerk_nominal_mps3: float | None
     path_irregularity_rad_per_m: float
     navigate_success: bool | None
     time_to_goal_s: float | None
@@ -223,6 +232,44 @@ def rms_commanded_jerk_mps3(
         total += jerk_x * jerk_x + jerk_y * jerk_y
         count += 1
     return math.sqrt(total / count) if count else 0.0
+
+
+def rms_commanded_jerk_nominal_mps3(
+    vx: Sequence[float],
+    vy: Sequence[float],
+    emergency: Sequence[bool],
+    dt_s: float,
+) -> float | None:
+    """Card J-C: the same RMS, over NON-emergency windows only.
+
+    Report-only and strictly additive — ``rms_commanded_jerk_mps3`` above is the
+    gated metric and is untouched. This variant exists because the diagnosis
+    behind the jerk re-pin (§3.1) found 96%+ of the summed squared jerk sitting
+    on emergency-ADJACENT ticks: without the split, a comfort ratchet would be
+    pressuring the hard-stop contract instead of the smoothing.
+
+    A window is the same three-sample second difference used above; it counts
+    only when NONE of its three samples is an emergency step, because the
+    discontinuity a hard stop introduces is visible from either side of it.
+    ``None`` means no window qualified — not zero.
+    """
+
+    if dt_s <= 0.0 or not math.isfinite(dt_s):
+        raise ValueError("dt_s must be positive and finite")
+    if not len(vx) == len(vy) == len(emergency):
+        raise ValueError("vx, vy and emergency sequences must have equal length")
+    if len(vx) < 3:
+        return None
+    total = 0.0
+    count = 0
+    for index in range(1, len(vx) - 1):
+        if emergency[index - 1] or emergency[index] or emergency[index + 1]:
+            continue
+        jerk_x = (vx[index + 1] - 2.0 * vx[index] + vx[index - 1]) / (dt_s * dt_s)
+        jerk_y = (vy[index + 1] - 2.0 * vy[index] + vy[index - 1]) / (dt_s * dt_s)
+        total += jerk_x * jerk_x + jerk_y * jerk_y
+        count += 1
+    return math.sqrt(total / count) if count else None
 
 
 def path_irregularity_rad_per_m(
@@ -603,6 +650,12 @@ def compute_episode_metrics(result: EpisodeResult, scenario) -> EpisodeMetrics:
         rms_commanded_jerk_mps3=rms_commanded_jerk_mps3(
             [item.command_vx for item in steps],
             [item.command_vy for item in steps],
+            dt,
+        ),
+        rms_commanded_jerk_nominal_mps3=rms_commanded_jerk_nominal_mps3(
+            [item.command_vx for item in steps],
+            [item.command_vy for item in steps],
+            [item.emergency for item in steps],
             dt,
         ),
         path_irregularity_rad_per_m=path_irregularity_rad_per_m(

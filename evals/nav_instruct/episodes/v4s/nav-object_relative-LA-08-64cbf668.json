@@ -1,0 +1,51 @@
+{
+  "absent_target": false,
+  "distractors": [],
+  "episode_id": "nav-object_relative-LA-08-64cbf668",
+  "family": "object_relative",
+  "goal": {
+    "anchor_entity": "bench_1",
+    "anchor_footprint_m": 0.733757,
+    "band_m": [
+      1.1337570000000001,
+      2.2337569999999998
+    ],
+    "center": [
+      -2.5,
+      3.045
+    ],
+    "kind": "relative_band",
+    "polygon": null,
+    "radius_m": null
+  },
+  "instruction": "wait by the bench",
+  "notes": "search_beyond_opening_scan|object_relative",
+  "placement_overrides": {
+    "robot": {
+      "x": 9.5,
+      "y": 1.5,
+      "yaw": -0.1280455821273243
+    },
+    "search_cell": {
+      "axis": "LA",
+      "beyond_scan_range": true,
+      "corridor_blocked_by": [],
+      "detour_ratio": 0.8678366891953984,
+      "routability": "astar_into_goal_region",
+      "route_length_m": 10.5,
+      "start_target_range_m": 12.099050582587049,
+      "target_entity_id": "bench_1",
+      "visible_from_start": false
+    }
+  },
+  "seed": 1691088488,
+  "shortest_path_m": 10.5,
+  "start_pose": [
+    9.5,
+    1.5,
+    -0.1280455821273243
+  ],
+  "synonym": null,
+  "target_entity_id": "bench_1",
+  "tier": "LA"
+}

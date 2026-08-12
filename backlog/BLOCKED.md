@@ -126,3 +126,79 @@ xargs -a "$LIST" rm -rf
 Low urgency: do it when convenient; nothing production-critical depends on it.
 Keep `experimental_all_ray_shield.py` until BARN v8 tests are retired — only
 the eager import was removed.
+
+---
+
+## B5 — Arrival honesty under a drifting MAP: the predicate has no pose-error reserve · **owner decision needed (2×2)**
+
+**Opened:** 2026-08-12 (Wave 2 of
+[../scrum/20260811/task_2/SLAM_M_PLAN.md](../scrum/20260811/task_2/SLAM_M_PLAN.md),
+card DR-2; full record in
+[../scrum/20260811/task_2/DR2_STATUS.md](../scrum/20260811/task_2/DR2_STATUS.md) §5/§5b
+and [../scrum/20260811/task_2/AUDIT_WAVE2_FABLE.md](../scrum/20260811/task_2/AUDIT_WAVE2_FABLE.md)).
+
+- **The defect, measured and 4-0 audit-confirmed (bit-for-bit reproduction):**
+  the arrival predicate consumes 100 % of the K0 band with no reserve for pose
+  error. On the `calibrated_go2_reanchoring` eval arm — the only arm where MAP
+  drift can reach the predicate — the controller stops 0.002–0.040 m inside the
+  2.5 m outer band edge *in its own MAP frame*, while claim-tick MAP error runs
+  0.007–0.239 m. Result: 3 of 7 arrivals stopped TRUE-outside the band
+  (−0.153 m / −0.043 m / −0.024 m); one exceeded the scorer's 0.05 m epsilon
+  and is the standing `false_arrival=1` red on the nightly
+  `pose-drift-arms:safety` hard gate. The honest rate is 3/61, not 1/61 — two
+  were absorbed as `tolerated_boundary`.
+- **Why no card could fix it:** neither existing guard can catch it — the
+  provider reports `HEALTHY` at the claim tick, and its covariance is 3.6×
+  optimistic by documented design (systematic biases excluded from `_var_xy`,
+  DR1_STATUS §9). The fix lives in the arrival predicate
+  (`pipeline.py` / K0 seam), and making arrival stricter moves EVERY frozen
+  eval row — frozen-row movement = STOP + 2×2 by global rule 2.
+- **Unblock action (owner):** decide the mechanism and authorize the re-freeze.
+  Candidate mechanisms recorded in DR2_STATUS §9 handoff 1 (e.g. an arrival
+  margin derived from distance-since-last-reanchor × the calibrated drift band,
+  or an owner-set fixed reserve), with the enumerated non-fixes (DEGRADED
+  gating, covariance gating, epsilon widening) and why each fails.
+- **Until then:** the nightly red is the record. Do not tune the band, the
+  scorer epsilon, or the arm to green it.
+- **Relations:** sharper, drift-induced sibling of the U32 false-success class
+  (that one was a 3.2 m verification disagreement; this one is frame trust);
+  U34's "MAP is a perfect reference" assumption is exactly what the
+  re-anchoring profile withdraws.
+
+---
+
+## B6 — The collision brake hard-stops on perpendicular obstacles at the stop radius · **owner decision needed (2×2)**
+
+**Opened:** 2026-08-12 (Wave 3 of
+[../scrum/20260811/task_2/SLAM_M_PLAN.md](../scrum/20260811/task_2/SLAM_M_PLAN.md),
+card RM-3; corrected localization in
+[../scrum/20260811/task_2/AUDIT_WAVE3_FABLE.md](../scrum/20260811/task_2/AUDIT_WAVE3_FABLE.md) —
+the RM3_STATUS §7.1 first draft blamed the grid controller; the audit proved
+by instrumentation, 8/8 refuter-confirmed, that the brake is the module).
+
+- **The defect, executed and reproduced bit-for-bit:** `apply_collision_brake`
+  under the SHIPPING config (`safety.stop_distance_m: 0.8` →
+  `CollisionPolicy(obstacle_stop_m=0.8, predictive_mode='projected_speed_cap')`)
+  zeroes any command whenever `nearest_obstacle_m ≤ 0.8` and the bearing has
+  ANY positive closing fraction — `cos(−1.53 rad) = 0.041 > 1e-9` passes the
+  relevance gate (`collision.py:135/152-155`). A static crate at exactly the
+  stop radius, **87.7° off the travel axis**, stops the robot dead for as long
+  as it stands there (measured: 63 brake calls zeroing 0.09–0.85 m/s requests
+  on one episode; 40 of 42 route-memory-armed eval cells failed wedge-like).
+  Reachable **flag-OFF** (executed) — a pre-existing product defect, not
+  route memory's; it is why RM-3's pre-registered McNemar gate nulled
+  (net flips 0, p = 1.0): memory supplies an aim point; an aim point cannot
+  restore a velocity the brake keeps zeroing.
+- **Why it needs the owner:** the fix changes hard-safety semantics (when may
+  a near-perpendicular, non-closing obstacle inside the stop radius NOT stop
+  the robot?) — "no safety weakening" territory — and any change moves every
+  frozen eval row: STOP + 2×2 by global rule 2. Candidate directions for the
+  2×2: bearing-scaled stop radius vs a closing-fraction floor above 1e-9 vs
+  lateral-clearance carve-out; each must re-prove the frozen collision=0 rows.
+- **Until then:** route memory cannot convert the bottleneck it was built for
+  (RM-3's honest null is the record), and `v4r`-class scenarios with wall-line
+  clutter will keep failing on both arms.
+- **Relations:** found because [B5](#b5)'s sibling wave put the first
+  flag-ON eval pressure on cluttered long-travel cells; the RM-2 wiring
+  itself is audited sound (chains arm, win arbitration, and drive — 4,892
+  chain ticks — the legs just cannot move through a braked tick).

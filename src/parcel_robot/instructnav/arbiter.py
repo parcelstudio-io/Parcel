@@ -174,6 +174,37 @@ class ProposerBus:
         }
         return committed
 
+    def flush_task(self, task_id: str) -> int:
+        """Drop this task's buffered proposals WITHOUT touching the revision ledger.
+
+        **P0-C contract amendment, card AF-2 (2026-08-11), provenance:**
+        ``scrum/20260811/task_1/AUDIT_WAVE2_FABLE.md`` — "BLOCKING — VS-4's
+        refusal flush usurps the revision authority". A proposer (the navigation
+        pipeline's lock-on refusal path) needs to withdraw its own buffered
+        proposal, but revision authority belongs to the EXECUTIVE: a proposer
+        that reached for :meth:`commit_revision` self-committed
+        ``plan_revision + 1`` into a ledger that never lowers, the runtime then
+        restamped the navigator with the executive's (lower) revision on the next
+        nav start / plan accept, and from then on every publish was stale, every
+        ``resolve`` returned ``None`` and the mission died ``arbiter_veto``
+        forever.
+
+        This is the revision-NEUTRAL purge that closes it: it clears the buffer
+        for ``task_id`` and leaves :class:`~parcel_robot.revision.CommittedRevisions`
+        exactly as it was, so the stale-drop semantics of REAL revisions (the
+        executive's corrections) are untouched. Returns how many buffered
+        proposals were dropped.
+
+        A proposal published again afterwards under the SAME revision buffers
+        normally — withdrawing a proposal is not a statement about the plan.
+        """
+
+        key = str(task_id)
+        dropped = [source for source, goal in self._latest.items() if str(goal.task_id) == key]
+        for source in dropped:
+            del self._latest[source]
+        return len(dropped)
+
     def committed_revision(self, task_id: str = "") -> int:
         return self._committed.committed(task_id)
 
@@ -247,6 +278,27 @@ class GoalArbiter:
         """
 
         return self._committed.commit(task_id=task_id, plan_revision=plan_revision)
+
+    def flush_task(self, task_id: str) -> int:
+        """Revision-neutral counterpart of :meth:`ProposerBus.flush_task`.
+
+        **P0-C contract amendment, card AF-2 (2026-08-11), provenance:**
+        ``scrum/20260811/task_1/AUDIT_WAVE2_FABLE.md`` (BLOCKING finding). It
+        exists so a proposer withdrawing its own proposal can purge BOTH sinks
+        uniformly without knowing which side buffers, instead of reaching for
+        :meth:`commit_revision` — which is the executive's authority and which,
+        used from the pipeline, permanently vetoed the task (see the ProposerBus
+        docstring for the measured failure).
+
+        Stated honestly: the arbiter holds no proposal buffer — it resolves over
+        the sequence it is handed — so today this drops nothing and returns 0.
+        It touches neither the committed-revision ledger nor the TTL/lethal veto
+        rules. Should the arbiter ever gain a buffer, this is the seam that must
+        clear it.
+        """
+
+        _ = str(task_id)
+        return 0
 
     def committed_revision(self, task_id: str = "") -> int:
         return self._committed.committed(task_id)

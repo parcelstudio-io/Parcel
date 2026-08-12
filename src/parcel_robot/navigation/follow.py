@@ -17,6 +17,11 @@ from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
     apply_reactive_safety,
 )
+from parcel_robot.navigation.yield_aside import (
+    YieldAsideLimits,
+    planar_free_range,
+    propose_yield_aside,
+)
 
 # ---------------------------------------------------------------------------
 # The owner stand-off family, DERIVED (owner-authorized person-clearance
@@ -125,6 +130,38 @@ class FollowPredictionConfig:
             return 0.0
         span = self.brake_full_confidence - self.brake_stop_confidence
         return (confidence - self.brake_stop_confidence) / span
+
+
+@dataclass(frozen=True)
+class FollowYieldConfig:
+    """Whether direct follow may rotate its aim around a stranger stream (card Y-2).
+
+    Deliberately one switch and nothing else, mirroring
+    :class:`FollowPredictionConfig`'s shape: every geometry the proposer uses is
+    DERIVED from ``FollowConfig`` and the safety authority
+    (``navigation.yield_aside``), so there is no threshold here to configure,
+    and therefore none to mis-configure. Default OFF; the flag-off path does not
+    even build the proposer's limits.
+    """
+
+    enabled: bool = False
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.enabled, bool):
+            raise TypeError("owner_follow.yield_aside.enabled must be a boolean")
+
+    @classmethod
+    def from_mapping(cls, raw: Mapping[str, Any]) -> FollowYieldConfig:
+        allowed = {item.name for item in fields(cls)}
+        unknown = set(raw) - allowed
+        if unknown:
+            raise ValueError(f"unknown owner_follow.yield_aside settings: {sorted(unknown)}")
+        values: dict[str, Any] = {}
+        for key, value in raw.items():
+            if key == "enabled" and not isinstance(value, bool):
+                raise TypeError("owner_follow.yield_aside.enabled must be a boolean")
+            values[key] = value
+        return cls(**values)
 
 
 @dataclass(frozen=True)
@@ -284,6 +321,13 @@ class FollowDecision:
     lead_x_m: float | None = None
     lead_y_m: float | None = None
     speed_scale: float = 1.0
+    # Yield-aside (card Y-2), additive and defaulted: a decision produced with
+    # the flag off is field-for-field what it was before the card.
+    yield_active: bool = False
+    yield_reason: str = "idle"
+    yield_side: int = 0
+    yield_offset_m: float | None = None
+    yield_clearance_m: float | None = None
 
 
 @dataclass(frozen=True)
@@ -312,6 +356,18 @@ _IDLE_PREDICTION_STATE: dict[str, object] = {
     "speed_scale": 1.0,
 }
 
+_IDLE_YIELD_STATE: dict[str, object] = {
+    "enabled": False,
+    "active": False,
+    "reason": "idle",
+    "side": 0,
+    "offset_m": None,
+    "baseline_clearance_m": None,
+    "aside_clearance_m": None,
+    "aim_x_m": None,
+    "aim_y_m": None,
+}
+
 
 class FollowOwnerController:
     """Fail-closed owner-follow controller over camera/LiDAR observations.
@@ -328,10 +384,15 @@ class FollowOwnerController:
         *,
         safety_policy: ReactiveSafetyPolicy | None = None,
         prediction: FollowPredictionConfig | None = None,
+        yield_aside: FollowYieldConfig | None = None,
     ):
         self.config = config or FollowConfig()
         self.prediction = prediction or FollowPredictionConfig()
+        self.yield_aside = yield_aside or FollowYieldConfig()
         self._prediction_state: dict[str, object] = _IDLE_PREDICTION_STATE
+        self._yield_state: dict[str, object] = _IDLE_YIELD_STATE
+        self._yield_side = 0
+        self._yield_engaged = False
         self._lock = threading.RLock()
         self._enabled = False
         self._mode = "direct"
@@ -364,6 +425,20 @@ class FollowOwnerController:
             raise ValueError(
                 "owner keepout must include the supplied safety policy's person envelope"
             )
+        # Built ONLY when the flag is on: the limits validate the closed-loop
+        # equilibrium precondition and would be a new construction-time failure
+        # mode on a path that is otherwise byte-identical to today's.
+        self._yield_limits: YieldAsideLimits | None = None
+        if self.yield_aside.enabled:
+            self._yield_limits = YieldAsideLimits(
+                desired_distance_m=self.config.desired_distance_m,
+                deadband_m=self.config.distance_deadband_m,
+                max_vx_mps=self.config.max_vx,
+                owner_keepout_m=self.config.owner_keepout_m,
+                obstacle_stop_m=self.config.obstacle_stop_m,
+                person_stop_m=self.config.person_stop_m,
+                person_slow_m=self.config.person_slow_m,
+            )
 
     @property
     def enabled(self) -> bool:
@@ -390,6 +465,9 @@ class FollowOwnerController:
             self._last_seen_at = None
             self._state = "acquiring" if mode == "direct" else "acquiring_heading"
             self._prediction_state = _IDLE_PREDICTION_STATE
+            self._yield_state = _IDLE_YIELD_STATE
+            self._yield_side = 0
+            self._yield_engaged = False
             # Passive camera history deliberately survives activation. A plan
             # admitted on a fresh heading must not throw that evidence away at
             # the exact moment it acquires the base resource.
@@ -437,6 +515,9 @@ class FollowOwnerController:
             self._stage_side = None
             self._active_behind_distance_m = self.config.behind_distance_m
             self._prediction_state = _IDLE_PREDICTION_STATE
+            self._yield_state = _IDLE_YIELD_STATE
+            self._yield_side = 0
+            self._yield_engaged = False
 
     def observe_owner(
         self,
@@ -633,6 +714,59 @@ class FollowOwnerController:
         self._prediction_state = state
         return clamped
 
+    def _yield_aim(
+        self,
+        observation: SimObservation,
+        aim_x: float,
+        aim_y: float,
+    ) -> tuple[float, float]:
+        """Offer the aim to the yield-aside proposer; return what direct follow chases.
+
+        Flag OFF is the whole story for today's behaviour: the guard below is
+        the first statement, nothing is computed, and the aim is returned
+        unchanged — the byte-identity claim in the card's gate rests on exactly
+        that. Flag ON, an ACTIVE proposal replaces the aim outright, which
+        deliberately discards ``_clamped_lead``'s anticipation budget for this
+        tick: that clamp polices LEAD-anticipation of a moving owner (standoff
+        minus keepout, ~0.10 m), not a commanded stance rotation at constant
+        owner distance. What replaces it is the proposer's unit-enforced
+        equilibrium precondition plus the untouched reactive gate's owner band;
+        that trade is recorded in the status doc's ``does_not_prove``.
+        """
+
+        limits = self._yield_limits
+        if limits is None:
+            return (aim_x, aim_y)
+        owner = observation.owner
+        proposal = propose_yield_aside(
+            robot_xy=(observation.robot.x, observation.robot.y),
+            owner_xy=(owner.x, owner.y),
+            tracks=_stranger_tracks(observation),
+            limits=limits,
+            free_range_m=_scan_free_range(observation),
+            latched_side=self._yield_side,
+            engaged=self._yield_engaged,
+        )
+        state = {
+            "enabled": True,
+            "active": proposal.active,
+            "reason": proposal.reason,
+            "side": proposal.side,
+            "offset_m": proposal.offset_m if proposal.active else None,
+            "baseline_clearance_m": proposal.baseline_clearance_m,
+            "aside_clearance_m": proposal.aside_clearance_m,
+            "aim_x_m": proposal.aim_x_m,
+            "aim_y_m": proposal.aim_y_m,
+        }
+        self._yield_state = state
+        if not proposal.active:
+            self._yield_engaged = False
+            self._yield_side = 0
+            return (aim_x, aim_y)
+        self._yield_engaged = True
+        self._yield_side = proposal.side
+        return (float(proposal.aim_x_m), float(proposal.aim_y_m))
+
     def _braked(self, decision: FollowDecision) -> FollowDecision:
         """Apply the uncertainty brake to translation, never to the yaw.
 
@@ -678,6 +812,12 @@ class FollowOwnerController:
         lead = self._clamped_lead(lead, observation, self.config.desired_distance_m)
         owner_x = owner.x if lead is None else lead.x
         owner_y = owner.y if lead is None else lead.y
+        # Card Y-2: the yield-aside PROPOSAL, immediately after the lead clamp
+        # and upstream of everything else. It replaces the aim point only; the
+        # command the law derives from it still goes through the untouched
+        # dispatch chain (smoother -> apply_reactive_safety -> TTC -> shaper),
+        # which remains the sole runtime disposer.
+        owner_x, owner_y = self._yield_aim(observation, owner_x, owner_y)
         dx = owner_x - observation.robot.x
         dy = owner_y - observation.robot.y
         distance = math.hypot(dx, dy)
@@ -1104,6 +1244,19 @@ class FollowOwnerController:
                 if self._prediction_state.get("lead_y_m") is None
                 else float(self._prediction_state["lead_y_m"])  # type: ignore[arg-type]
             ),
+            yield_active=bool(self._yield_state.get("active", False)),
+            yield_reason=str(self._yield_state.get("reason", "idle")),
+            yield_side=int(self._yield_state.get("side", 0)),  # type: ignore[arg-type]
+            yield_offset_m=(
+                None
+                if self._yield_state.get("offset_m") is None
+                else float(self._yield_state["offset_m"])  # type: ignore[arg-type]
+            ),
+            yield_clearance_m=(
+                None
+                if self._yield_state.get("aside_clearance_m") is None
+                else float(self._yield_state["aside_clearance_m"])  # type: ignore[arg-type]
+            ),
         )
 
     def _reset_motion_history(self) -> None:
@@ -1143,7 +1296,63 @@ class FollowOwnerController:
                 ),
                 "perception_basis": "camera_owner_track+robot_odometry+lidar",
                 "prediction": dict(self._prediction_state),
+                "yield_aside": dict(self._yield_state),
             }
+
+
+def _stranger_tracks(observation: SimObservation) -> tuple[object, ...]:
+    """The ``dynamic_agents`` set with the owner's own track removed.
+
+    A perception stack that publishes the owner as a person track would
+    otherwise have the follower yielding away from the person it is following.
+    "Is this track the owner?" is answered geometrically here, by the same
+    ``owner_collision_envelope_m`` the reactive gate uses to turn an owner
+    CENTER distance into a surface clearance: a track inside the owner's own
+    body envelope is the owner, and no stranger can be distinguished from him
+    at that range anyway.
+    """
+
+    owner = observation.owner
+    envelope = _OWNER_COLLISION_ENVELOPE_M
+    kept: list[object] = []
+    for track in observation.dynamic_agents:
+        if not all(
+            math.isfinite(value)
+            for value in (track.x, track.y, track.vx, track.vy, track.radius_m)
+        ):
+            continue
+        if math.hypot(track.x - owner.x, track.y - owner.y) <= envelope:
+            continue
+        kept.append(track)
+    return tuple(kept)
+
+
+def _scan_free_range(observation: SimObservation):
+    """Bind the observation's planar scan into the proposer's free-range query.
+
+    Returns ``None`` when no calibrated scan is available, which the proposer
+    treats as the fail-closed ``no_scan`` exit rather than as open space.
+    """
+
+    ranges = observation.lidar_ranges
+    increment = observation.lidar_angle_increment_rad
+    angle_min = observation.lidar_angle_min_rad
+    range_max = observation.lidar_range_max_m
+    if not ranges or increment is None or angle_min is None or range_max is None:
+        return None
+
+    def free_range(bearing_rad: float, span_m: float) -> float:
+        return planar_free_range(
+            ranges,
+            angle_min_rad=angle_min,
+            angle_increment_rad=increment,
+            range_max_m=range_max,
+            robot_yaw_rad=observation.robot.yaw,
+            bearing_rad=bearing_rad,
+            span_m=span_m,
+        )
+
+    return free_range
 
 
 def _finite_track(observation: SimObservation) -> bool:

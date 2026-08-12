@@ -265,8 +265,9 @@ def _panel():
     return module
 
 
-def test_the_panel_seeds_exactly_the_plans_six_defects() -> None:
-    assert set(_panel().MUTATIONS) == {
+#: Instrument 6's original six defects. None of them may disappear.
+PLAN_SIX_DEFECTS = frozenset(
+    {
         "arrival_radius_x2",
         "reactive_gate_disabled",
         "pose_offset_0m5",
@@ -274,6 +275,19 @@ def test_the_panel_seeds_exactly_the_plans_six_defects() -> None:
         "dropped_detections",
         "doubled_envelope",
     }
+)
+#: Defects added since, each by a named card. The set stays EXACT — a mutant may
+#: not appear without landing here — but growing the panel is the point of it,
+#: so a new defect is one line rather than a red build.
+ADDED_DEFECTS = {
+    # Card VS-6 (2026-08-11): a view-consistent phantom, i.e. perception
+    # inventing a persistent object the multi-view confirmer cannot reject.
+    "phantom_view_consistent": "VS-6",
+}
+
+
+def test_the_panel_seeds_exactly_the_defects_its_cards_declare() -> None:
+    assert set(_panel().MUTATIONS) == PLAN_SIX_DEFECTS | set(ADDED_DEFECTS)
 
 
 def test_every_mutation_restores_what_it_patched() -> None:
