@@ -7,9 +7,9 @@ import pytest
 
 from parcel_robot.core.input_health import (
     DEFAULT_REQUIRED_INPUTS,
+    EvidenceOrigin,
     HealthAction,
     InputEvidence,
-    InputOrigin,
     RequiredInput,
     evaluate_input_health,
 )
@@ -22,6 +22,10 @@ def _good(required_input: RequiredInput) -> InputEvidence:
     return InputEvidence(
         captured_at=NOW - spec.max_age_s / 2.0,
         frame_id=spec.frame_id,
+        # Card W0-A amendment: the origin used to be omitted here, because the
+        # default WAS ``PHYSICAL``. That default is the P0-2 defect (omission
+        # minted authority), so a healthy physical sample must now say so.
+        origin=EvidenceOrigin.PHYSICAL,
     )
 
 
@@ -49,9 +53,13 @@ def _state(required_input: RequiredInput, state: str) -> InputEvidence | None | 
         return InputEvidence(
             captured_at=NOW,
             frame_id=spec.frame_id,
-            origin=InputOrigin.PHYSICAL,
+            origin=EvidenceOrigin.PHYSICAL,
             fixture_label="should-not-label-physical",
         )
+    if state == "origin_unknown":
+        # Card W0-A / board D-3: an undeclared producer. This is what a
+        # default-constructed boundary object presents as.
+        return InputEvidence(captured_at=NOW, frame_id=spec.frame_id)
     raise AssertionError(state)
 
 
@@ -110,7 +118,7 @@ def test_explicitly_labeled_scan_fixture_is_the_only_admitted_stub_geometry() ->
     evidence[RequiredInput.SCAN] = InputEvidence(
         captured_at=NOW,
         frame_id="base_link",
-        origin=InputOrigin.SIM_FIXTURE,
+        origin=EvidenceOrigin.SIMULATION,
         fixture_label="unit-test-empty-room-v1",
     )
 
@@ -119,7 +127,7 @@ def test_explicitly_labeled_scan_fixture_is_the_only_admitted_stub_geometry() ->
     evidence[RequiredInput.SCAN] = InputEvidence(
         captured_at=NOW,
         frame_id="base_link",
-        origin=InputOrigin.SIM_FIXTURE,
+        origin=EvidenceOrigin.SIMULATION,
     )
     unlabeled = evaluate_input_health(evidence, now=NOW)
     assert unlabeled.action is HealthAction.LATCHED_STOP
@@ -137,7 +145,7 @@ def test_non_geometry_inputs_cannot_be_replaced_by_sim_fixture(
     evidence[required_input] = InputEvidence(
         captured_at=NOW,
         frame_id=DEFAULT_REQUIRED_INPUTS[required_input].frame_id,
-        origin=InputOrigin.SIM_FIXTURE,
+        origin=EvidenceOrigin.SIMULATION,
         fixture_label="forbidden-substitution",
     )
 
@@ -169,6 +177,8 @@ def test_malformed_decision_time_latches_stop(now: float) -> None:
         ("wrong_type", HealthAction.LATCHED_STOP),
         ("origin_malformed", HealthAction.LATCHED_STOP),
         ("physical_fixture_label", HealthAction.LATCHED_STOP),
+        # Card W0-A additions to the severity contract.
+        ("origin_unknown", HealthAction.LATCHED_STOP),
     ],
 )
 def test_hold_stop_severity_table(

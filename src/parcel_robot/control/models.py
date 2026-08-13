@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass, field
 from enum import Enum
 
+from parcel_robot.evidence_origin import EvidenceOrigin
 from parcel_robot.models import VelocityCommand
 
 
@@ -157,6 +158,19 @@ class RobotMotionState:
     foot_forces: tuple[float, ...] = ()
     fault_reason: FaultReason = FaultReason.NONE
     vendor_extra: tuple[tuple[str, str], ...] = ()
+    # Card W0-A provenance. Appended AFTER ``vendor_extra`` so every existing
+    # positional construction keeps its meaning.
+    #
+    # ``origin`` is declared by the producing source, never inferred from
+    # ``source`` (which is now only a label). ``received_at`` above remains the
+    # HOST monotonic receipt — the clock that authorizes watchdog freshness —
+    # and ``source_time_s`` retains the vendor/device clock reading alongside
+    # it, unconverted, for a later ``ClockMapper`` to fuse. ``session_epoch``
+    # identifies the producer's boot/session so ``sequence`` is only comparable
+    # within one epoch.
+    origin: EvidenceOrigin = EvidenceOrigin.UNKNOWN
+    source_time_s: float | None = None
+    session_epoch: str = ""
 
     def __post_init__(self) -> None:
         if not math.isfinite(self.received_at):
@@ -190,6 +204,16 @@ class RobotMotionState:
             raise ValueError("robot state error_code cannot be negative")
         if not self.source or len(self.source) > 80:
             raise ValueError("robot state source must be a short non-empty string")
+        if not isinstance(self.origin, EvidenceOrigin):
+            raise TypeError("robot state origin must be an EvidenceOrigin")
+        if self.source_time_s is not None and (
+            isinstance(self.source_time_s, bool)
+            or not isinstance(self.source_time_s, (int, float))
+            or not math.isfinite(float(self.source_time_s))
+        ):
+            raise ValueError("robot state source_time_s must be finite when present")
+        if not isinstance(self.session_epoch, str) or len(self.session_epoch) > 80:
+            raise ValueError("robot state session_epoch must be a short string")
 
 
 @dataclass(frozen=True)

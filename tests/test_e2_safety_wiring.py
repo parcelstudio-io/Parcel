@@ -28,13 +28,14 @@ from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.core.hard_stop import ZERO_COMMAND
 from parcel_robot.core.input_health import (
     DEFAULT_REQUIRED_INPUTS,
+    EvidenceOrigin,
     HealthAction,
     InputEvidence,
-    InputOrigin,
     RequiredInput,
     evaluate_input_health,
     evidence_origin,
     requirements_allowing_sim_fixtures,
+    requirements_requiring_physical_inputs,
 )
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.navigation.reactive_safety import (
@@ -140,8 +141,10 @@ modules: []
 def _seed(runtime: RobotRuntime, observation: SimObservation) -> SimObservation:
     with runtime._lock:
         runtime._observation = observation
-    if runtime._control_state_source is not None:
-        runtime._control_state_source.update_observation(observation)
+    # Card W0-A amendment: writing simulator observations is the
+    # ObservationSink seam, not the read-only RobotStateSource seam.
+    if runtime._observation_sink is not None:
+        runtime._observation_sink.update_observation(observation)
     return observation
 
 
@@ -246,11 +249,13 @@ def test_simulated_pose_and_feedback_carry_a_labeled_sim_fixture_origin(
             evidence_origin(runtime._control_state_source.latest().source),
         ):
             origin, label = sample
-            assert origin is InputOrigin.SIM_FIXTURE
+            assert origin is EvidenceOrigin.SIMULATION
             assert isinstance(label, str) and label.strip()
         scan = scan_evidence_from_observation(observation)
-        assert scan is not None and scan.origin is InputOrigin.SIM_FIXTURE
+        assert scan is not None and scan.origin is EvidenceOrigin.SIMULATION
         assert runtime.input_health_latch()["sim_fixture_inputs_allowed"] is True
+        # Card W0-A: the retained source is declared, not name-inferred.
+        assert runtime.input_health_latch()["state_source_origin"] == "simulation"
     finally:
         runtime.close()
 
@@ -262,7 +267,17 @@ def test_simulated_pose_latches_under_physical_commissioning(tmp_path: Path) -> 
     try:
         observation = _seed(runtime, _observation())
         assert runtime.input_health_latch()["sim_fixture_inputs_allowed"] is False
-        assert runtime._input_health_requirements is DEFAULT_REQUIRED_INPUTS
+        # Card W0-A / board D-2 amendment: this used to be
+        # ``is DEFAULT_REQUIRED_INPUTS``, and that WAS the gap — the default
+        # table is the simulator one and still admits fixture SCAN geometry, so
+        # a physically commissioned deployment was accepting stub geometry and
+        # relying on POSE/FEEDBACK to dominate the join. The physical table
+        # withdraws every fixture allowance, SCAN included.
+        assert runtime._input_health_requirements == requirements_requiring_physical_inputs()
+        assert all(
+            spec.sim_fixture_allowed is False
+            for spec in runtime._input_health_requirements.values()
+        )
         verdict = runtime._evaluate_dispatch_input_health(
             observation, now=time.monotonic()
         )
@@ -271,8 +286,10 @@ def test_simulated_pose_latches_under_physical_commissioning(tmp_path: Path) -> 
             fault.reason for fault in verdict.faults if fault.action is HealthAction.LATCHED_STOP
         }
         assert reasons == {"sim_fixture_forbidden"}
+        # SCAN now joins them: stub geometry is refused on its own account.
         assert {fault.required_input for fault in verdict.faults} == {
             RequiredInput.POSE,
+            RequiredInput.SCAN,
             RequiredInput.CONTROLLER_FEEDBACK,
         }
     finally:
@@ -286,7 +303,7 @@ def test_unlabeled_sim_fixture_pose_latches_even_where_fixtures_are_allowed() ->
             captured_at=now,
             frame_id="odom",
             payload_valid=True,
-            origin=InputOrigin.SIM_FIXTURE,
+            origin=EvidenceOrigin.SIMULATION,
             fixture_label="   ",
         ),
     }

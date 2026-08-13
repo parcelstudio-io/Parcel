@@ -1,10 +1,20 @@
 # Task 1 — production conversational companion convergence
 
-Date: 2026-08-12  
-Status: **design candidate; Fable must audit before product implementation**  
-Parent baseline: current dirty worktree plus `scrum/20260811/task_2/SLAM_M_PLAN.md`  
-Owners: Sol design/research; Fable independent refutation; implementation owners
-assigned only after verdict
+- **Date:** 2026-08-12
+- **Revision: r2** — folds every required change from `FABLE_VERDICT.md`
+  (`ACCEPT_WITH_REQUIRED_CHANGES`, 2026-08-12): RC-2..RC-6 and N-5..N-8. Each revised
+  passage names its verdict item inline; per-hunk traceability is in
+  `../task_2/P1_STATUS.md`.
+- **Status:** Iteration 3 accepted; Wave 0 accepted to begin now that the verdict's
+  required changes are folded in.
+- **Parent baseline (RC-6):** commit `7242660` — "Land route-memory arms, person-aware
+  yield/keepout, and 20260811–12 scrum closes.", 2026-08-12 — plus
+  `scrum/20260811/task_2/SLAM_M_PLAN.md`. r1 said "current dirty worktree"; that
+  worktree landed as `7242660` during the Fable review, so every Wave-0 card below is
+  re-baselined on `7242660` and r1's file-overlap stop condition is moot (verified: no
+  W0-owned file carried uncommitted edits at the landing).
+- **Owners:** Sol design/research; Fable independent refutation; implementation owners
+  assigned only after verdict.
 
 ## Owner directive
 
@@ -79,8 +89,8 @@ Accepted for design:
 | Desktop audio | No usable active capture/playback endpoint or attached XVF3800 on 2026-08-12 | Text input is the only honest live mode today |
 | Physical perception/localization | No production camera/L2 backend, owner re-ID, physical SLAM, or `map -> odom` correction | Blocking gap |
 | Unitree path | Good Sport adapter seam, but injected doubles only; current runtime drops its physical state source | Close to supervised first movement, not autonomy |
-| Test suite | Thousands of unit/sim tests and external-eval adapters; fresh commit gate passed 3,889 tests | Broad code regression coverage, weak physical/acoustic/ecological validity |
-| Dynamic-cost timing | Focused navigation run: 210/211 pass; a <2 ms vectorization micro-gate repeatedly measured about 3.07–3.47 ms | Profile/separate city-scale tracking and planning; not itself a 20 ms control-period miss |
+| Test suite | Thousands of unit/sim tests and external-eval adapters; the commit gate at `7242660` passes 3,943 default-suite tests (RC-6; r1's "3,889" was an unrepeatable mid-batch transient — disclosed in `VALIDATION.md`) | Broad code regression coverage, weak physical/acoustic/ecological validity |
+| Dynamic-cost timing | A <2 ms `test_cost_field_vectorization_performance` micro-gate repeatedly measured about 3.07–3.47 ms. The "210/211 focused run" that framed it recorded no test selection and is **unreproducible** (N-8); only the micro-gate measurement is evidence | Profile/separate city-scale tracking and planning; not itself a 20 ms control-period miss |
 
 Readiness depends on the claim:
 
@@ -114,7 +124,12 @@ These are blockers, not roadmap polish:
 8. The acoustic evaluator can produce failed gates without failing its process, and
    its virtual rig is not a through-air/audio-hardware test.
 9. The D0 duplex path performs synchronous serialization/file rotation/disk append
-   from the 50 Hz control step. Diagnostics must leave that path.
+   from the **10 Hz `RobotRuntime` semantic loop** (`loop_hz=10`, `frame_hz=10`) — the
+   loop that dispatches motion. r1 said "the 50 Hz control step"; executed, the 50 Hz
+   `ControlManager` thread does no duplex logging (RC-5). The defect and its fix
+   (W0-G) are unchanged in substance; only the rate figure and therefore the budget
+   arithmetic change — a blocking write competes with a 100 ms dispatch period, not a
+   20 ms one. Diagnostics must still leave that path.
 10. The current shared Llama.cpp provider has one active cancellation handle, so
     concurrent conversation/planning/summarization can cancel one another without an
     inference broker.
@@ -261,6 +276,36 @@ Decision: implement Iteration 3 now; preserve a contract-compatible path to
 Iteration 4. Do not implement Iteration 1 further on the physical path or begin the
 Iteration 2 rewrite.
 
+#### Abandonment criteria for the hybrid architecture itself (N-7)
+
+Brief question 12 asked what would falsify this architecture, and r1 answered only for
+components. The hybrid is abandoned — escalated to Iteration 4 (safety appliance) or
+reconsidered against Iteration 2 — if any of the following is *measured*, not argued:
+
+1. **Stop authority cannot be isolated.** The gateway's stop path cannot be made
+   independent of Python/ROS/GPU/logging liveness: any W0-C fault campaign shows a
+   stop initiation later than the ratified deadline while a Parcel-side component is
+   killed, frozen, or saturated, and no in-process fix closes it. → escalate to a
+   separate safety compute/MCU (Iteration 4) rather than adding supervision inside
+   the same failure domain.
+2. **Sole-writer exclusivity cannot be enforced** against the vendor app, a rogue DDS
+   participant, or a second local process on the shipped firmware. → the DDS trust
+   boundary is not achievable in software; hardware arming/interlock becomes a
+   precondition, not a later wave.
+3. **The contract seam costs more than the rewrite it avoided.** If Wave-0/1 shows the
+   evidence/snapshot boundary requires re-implementing localization, mapping, or
+   tracking on both sides of the seam (i.e. the ROS sidecars cannot be consumed as
+   sidecars), Iteration 2's cost model changes and is re-scored.
+4. **Python semantic-layer preservation stops paying.** If the retained Parcel
+   semantic suite must be rewritten anyway to satisfy the new contracts — the measure
+   is the fraction of the 23 required product tests that cannot be written against
+   existing Parcel code — the "preserve tested semantic behavior" 5 is wrong and the
+   comparison is re-run.
+
+Each criterion names the wave that can produce its evidence. None of them can be
+declared from design review; they are recorded now so the architecture is falsifiable
+later.
+
 ## Trust and authority model
 
 | Producer | May propose | May authorize |
@@ -304,10 +349,37 @@ feedback; a model cannot clear it.
 | Conversation generation | event-driven streaming | lowest physical priority model service |
 
 The gateway, collision field, localization, and owner tracker never wait for
-conversation. Load shedding order is: rendering/debug → optional TTS quality →
-conversation model size → open-vocabulary queries → learned navigation challenger.
-Tracking, geometry, control, and stop authority remain; if they cannot, translation
-holds.
+conversation.
+
+**Load shedding order, reconciled (N-6).** r1's order shed conversation model size
+*third* but the learned navigation challenger *last*, while the table above calls
+conversation generation the "lowest physical priority" service — the two statements
+read as a contradiction. They were measuring different things, and the fix is to say
+so and then to reorder:
+
+- *Physical priority* ranks a service by its authority over motion. Conversation is
+  lowest on that axis: it has none. That is a statement about what may be trusted,
+  not about what may be discarded.
+- *Shed order* ranks a service by product harm per unit of resource freed, subject to
+  the invariant that nothing with motion authority is ever shed.
+
+By that second rule a shadow challenger sheds before a user-facing function, because
+shedding a proposal-only component cannot change behavior by construction — it is the
+cheapest possible cut. The corrected order is:
+
+1. rendering/debug and non-essential telemetry;
+2. **learned navigation challenger and every other shadow/proposal-only model**
+   (MPPI-in-shadow, ViNT/NoMaD-class subgoal proposers) — no authority, so no
+   behavioral delta;
+3. optional TTS quality (fall back to the deterministic Piper path);
+4. conversation model size;
+5. open-vocabulary grounding queries — last of the shed-able set, because shedding it
+   removes the ability to admit *new* semantic goals; already-admitted tasks continue
+   on geometry and the deterministic baseline.
+
+Tracking, geometry, control, and stop authority are never shed; if they cannot be
+sustained, translation holds. A shed decision is recorded as evidence, and shedding
+past step 5 is a hold, not a degraded-autonomy mode.
 
 ## Versioned boundary contracts
 
@@ -410,12 +482,48 @@ epoch, and compensates with another stop if a late `Move` completes after a stop
 boundary. The AI/UI user IDs cannot open the robot NIC, DDS socket, or gateway admin
 endpoint.
 
-### `TerminalWitnessV2`
+### `TerminalWitnessV2` (REVISED per RC-2)
 
 Success is a fresh predicate over the requested relation/acceptance region, current
 semantic and geometric evidence, unchanged task/snapshot revisions, and consecutive
 settled feedback samples. “Command sent,” “path exhausted,” and “model said done” are
 not terminal truth.
+
+**Required: a localization-uncertainty reserve term.** r1's contract let the arrival
+predicate consume the entire acceptance band, which is exactly the defect this repo
+has already measured and 4-0 audit-confirmed in `backlog/BLOCKED.md` **B5**: on the
+`calibrated_go2_reanchoring` arm the controller stops 0.002–0.040 m inside the 2.5 m
+outer band edge *in its own MAP frame* while claim-tick MAP error runs 0.007–0.239 m,
+so 3 of 7 arrivals were TRUE-outside the band (−0.153 / −0.043 / −0.024 m). Neither
+existing guard catches it: the provider reports `HEALTHY` at the claim tick and its
+covariance is 3.6× optimistic by documented design. A contract that only requires
+"fresh geometry" reproduces the defect at the contract layer.
+
+`TerminalWitnessV2` therefore additionally requires, as a first-class field and not a
+consumer's optional check:
+
+- `pose_uncertainty_reserve_m` — the reserve withheld from the acceptance region for
+  localization error, with its derivation recorded (distance-since-last-reanchor ×
+  calibrated drift band, or an owner-set fixed reserve; the mechanism is B5's 2×2, the
+  *requirement that a reserve exists* is not);
+- the effective margin `region_margin_m − pose_uncertainty_reserve_m`, which must be
+  **> 0** for the witness to pass;
+- the claim-tick pose-error estimate and its provenance (which estimator, which frame,
+  which evidence IDs), so a witness can be re-adjudicated from the record;
+- an explicit statement that provider `HEALTHY` and reported covariance are **inputs
+  to** the reserve, never substitutes for it — B5 enumerates DEGRADED gating,
+  covariance gating, and epsilon widening as non-fixes with reasons.
+
+A witness whose reserve is unknown, non-finite, or larger than the available margin
+does not pass; it holds and reports insufficient localization confidence. Reserve
+consumption is recorded per arrival so the honest arrival rate is auditable.
+
+**Scope boundary.** This is the *contract*. Changing the shipping product's K0 arrival
+predicate moves every frozen eval row and is owner-gated by B5's 2×2 (global rule 2:
+frozen-row movement = STOP + 2×2). Wave 0 may land the contract, the spike fixture, and
+the regression test; it may not retune the shipping predicate, the K0 band, the scorer
+epsilon, or the eval arm. Until the owner decides, the standing nightly
+`pose-drift-arms:safety` red is the record and must not be greened.
 
 ## Conversation, intent, and behavior design
 
@@ -530,6 +638,35 @@ Record counterfactual progress, collision margin, disagreement, deadline miss, c
 and fallback rate. Promotion requires a preregistered held-out improvement with no
 regression in hard gates. Shadow models cannot share the gateway credential.
 
+#### Abandonment criteria for the RPP/DWPP baseline (N-7)
+
+r1 stated promotion criteria for the challengers but never stated what would retire the
+deterministic baseline, which makes "RPP first" unfalsifiable. RPP/DWPP is abandoned as
+the *baseline* (not merely supplemented in shadow) if, on the same preregistered
+held-out replay set and under identical safety inputs:
+
+1. **Structural infeasibility, not tuning.** RPP cannot satisfy a required behavior at
+   any parameter setting inside its documented envelope — the concrete candidates are
+   dynamic-obstacle avoidance requiring lateral evasion in a corridor narrower than the
+   turn-first preference permits, and social passing-side selection, neither of which
+   RPP represents. Two independent parameter sweeps must fail before this is claimed,
+   and the failing behavior must be named in advance.
+2. **A challenger wins on hard gates, not on progress.** MPPI or a learned proposer
+   shows a preregistered improvement with **zero** regression in collision margin,
+   false-terminal rate, deadline misses, and fallback rate — and the win survives on a
+   held-out set the challenger's tuning never saw.
+3. **The determinism argument stops holding.** If RPP's replay-determinism advantage is
+   lost in practice (nondeterministic costmap or transform inputs make its output
+   irreproducible run-to-run), then its main non-performance justification is gone and
+   the comparison is re-run on performance alone.
+4. **Deadline economics invert.** RPP cannot hold the 20–50 Hz local-navigation budget
+   on target compute while the challenger can.
+
+Failing 1–4, RPP stays the baseline even if a challenger looks better on progress or
+SPL; and in every case the deterministic fallback path must remain executable under
+model failure (Wave-3 exit already requires this). Retiring the baseline requires a
+recorded decision, not a benchmark table.
+
 ### RL decision
 
 Do not train a general end-to-end policy now. If failures later isolate a narrow stable
@@ -614,15 +751,62 @@ within a commissioned Sport gait envelope, and physically validated with spotter
 For pilot speed `v`, require at least:
 
 ```text
-clearance >= v * (sensor_age + compute_p99 + bridge_p99 + actuator_delay_p99)
-           + v^2 / (2 * verified_min_deceleration)
-           + geometry/localization uncertainty
-           + fixed risk margin
+clearance(theta) >= v * (sensor_age + compute_p99 + bridge_p99 + actuator_delay_p99)
+                  + v^2 / (2 * verified_min_deceleration)
+                  + geometry/localization uncertainty
+                  + fixed risk margin
 ```
 
 If measured clearance cannot satisfy this envelope, clamp or stop. The initial
 0.3–0.5 m/s pilot limit is a ceiling pending physical stop-envelope measurement, not
 an assertion of safety.
+
+#### Directional and closing relevance are part of the envelope (RC-3)
+
+`clearance` above is written `clearance(theta)` deliberately. r1 stated the envelope
+over a **bare scalar** nearest-obstacle distance, and a bare scalar reproduces a wedge
+class this repo has already measured and 8/8 refuter-confirmed —
+`backlog/BLOCKED.md` **B6**: under the shipping config
+(`safety.stop_distance_m: 0.8`) `apply_collision_brake` zeroes any command whenever
+`nearest_obstacle_m ≤ 0.8` and the bearing has *any* positive closing fraction, so
+`cos(−1.53 rad) = 0.041 > 1e-9` passes the relevance gate. A static crate at exactly
+the stop radius and **87.7° off the travel axis** stops the robot dead for as long as
+it stands there — 63 brake calls zeroing 0.09–0.85 m/s requests on one episode, and
+40 of 42 route-memory-armed eval cells failed wedge-like. It is reachable flag-OFF: a
+pre-existing product defect, not route memory's.
+
+The final governor's specification is therefore not "nearest obstacle < radius ⇒
+stop". It is:
+
+1. **Clearance is directional.** The braking constraint is evaluated per bearing
+   sector against the *swept footprint of the candidate*, not against a single
+   nearest-return scalar. An obstacle outside the swept corridor constrains the speed
+   at which the corridor may be widened, not the speed along it.
+2. **Relevance requires a real closing rate, not a nonzero one.** A closing-fraction
+   floor of `1e-9` is a floating-point test, not a physical one. The floor must be
+   derived from the measured worst-case combination of pose uncertainty, obstacle
+   position uncertainty, and one controller period of yaw authority — i.e. the
+   smallest closing rate that could actually consume the margin before the next
+   admissible correction — and it must be recorded with that derivation.
+3. **Time-to-collision, not distance alone.** The gate is
+   `ttc(theta) = clearance(theta) / max(closing_rate(theta), 0)` compared against the
+   stop envelope above; a non-closing obstacle has infinite TTC at any distance.
+4. **Lateral clearance is stated separately** from along-track clearance, so a path
+   that is clear along track cannot be zeroed by a perpendicular return, and a path
+   that is *not* laterally clear cannot be admitted by an along-track-only test.
+5. **Monotonicity is preserved.** None of the above may *raise* a disposition:
+   directional relevance can only decline to escalate a stop that a scalar test would
+   have raised spuriously. Where the directional evidence is missing, stale, or
+   ambiguous, the governor falls back to the conservative scalar test and holds. This
+   is the property that keeps RC-3 inside "no safety weakening".
+
+**Scope boundary.** As with RC-2, this is the *specification*. `apply_collision_brake`
+is owner-gated by B6's 2×2 — the fix changes hard-safety semantics (when may a
+near-perpendicular, non-closing obstacle inside the stop radius *not* stop the robot?)
+and moves every frozen eval row. B6 records the candidate directions
+(bearing-scaled stop radius vs a closing-fraction floor above `1e-9` vs a
+lateral-clearance carve-out); each must re-prove the frozen `collision=0` rows. Wave 0
+lands the spec and the regression test against the spec, not a product change.
 
 ## Audio and conversational embodiment
 
@@ -718,62 +902,93 @@ must not change Parcel behavior or benchmark success rules.
 These are starting prototype targets for Fable/risk review, not published standards.
 Physical limits must be ratified from measured stopping and the declared ODD.
 
+**Every numeric target in this section is `proposed pending hazard/ODD derivation`
+(N-7).** Brief question 11 is conceded without qualification: not one number below was
+derived from a hazard analysis or a declared operating domain. They are engineering
+placeholders chosen to be falsifiable, and each is superseded the moment the hazard log
+exists. Two consequences bind now: (a) no number here may be cited as a safety
+argument, in this repo or outside it; (b) a target may not be *relaxed* to make a gate
+pass — a missed target is evidence, and the hazard derivation is the only thing that
+may move it. The `100%`/`zero`/`100/100` items are proposed acceptance *thresholds*
+with the same status; "zero observed" is reported with a confidence bound, never as
+"zero probability". Latency targets marked ⟂ additionally owe the W0-C TTL/latency
+derivation (RC-4) before any constant is frozen.
+
 ### Safety/control
 
-- 100% reject malformed, non-finite, wrong-frame, stale, replayed, prior-epoch,
-  uncommissioned-origin, and unsupported-capability commands.
-- Sensor invalidation to issued zero target: p99 ≤100 ms.
-- Recognized emergency stop to issued zero target: p99 ≤150 ms.
-- Client/process/IPC/lease loss to gateway stop initiation: proposed p99 ≤150 ms;
+- Proposed: 100% reject malformed, non-finite, wrong-frame, stale, replayed,
+  prior-epoch, uncommissioned-origin, and unsupported-capability commands.
+- ⟂ Proposed: sensor invalidation to issued zero target, p99 ≤100 ms.
+- ⟂ Proposed: recognized emergency stop to issued zero target, p99 ≤150 ms.
+- ⟂ Proposed: client/process/IPC/lease loss to gateway stop initiation, p99 ≤150 ms;
   stationary time/distance recorded separately and within the commissioned envelope.
-- E-stop from every lifecycle state: 100/100, independent of AI/GPU/app network; clear
-  requires operator plus fresh stationary evidence.
-- Zero stale nonzero commands, unauthorized writers, false terminal credit, or automatic
-  resume across a two-hour full-stack soak and 10 km-equivalent simulation.
-- 50 Hz gateway: proposed p99 scheduling jitter <2 ms and zero deadline misses beyond
+- Proposed: E-stop from every lifecycle state, 100/100, independent of AI/GPU/app
+  network; clear requires operator plus fresh stationary evidence.
+- Proposed: zero stale nonzero commands, unauthorized writers, false terminal credit, or
+  automatic resume across a two-hour full-stack soak and 10 km-equivalent simulation.
+- ⟂ Proposed: 50 Hz gateway p99 scheduling jitter <2 ms and zero deadline misses beyond
   TTL on target compute, to be revised from measurements.
 
 ### Owner/navigation
 
-- Zero owner-ID transfers and pedestrian contacts in preregistered adversarial held-out
-  suites; publish confidence bounds rather than infer safety from zero observations.
-- Follow band ≥90% of unobstructed time; report loss/reacquisition, social intrusion,
-  closest approach, jerk, and stop distance.
-- Product semantic task suite moves from SR 0.24 toward ≥90% before field promotion,
-  with zero false-arrival credit and family/tier reporting.
-- Every accepted semantic terminal witness contains fresh geometry + semantics + settled
-  feedback at unchanged task/evidence revisions.
-- Map reanchor never causes a discontinuous local command.
+- Proposed: zero owner-ID transfers and pedestrian contacts in preregistered adversarial
+  held-out suites; publish confidence bounds rather than infer safety from zero
+  observations.
+- Proposed: follow band ≥90% of unobstructed time; report loss/reacquisition, social
+  intrusion, closest approach, jerk, and stop distance. **Conditioned on B6** (RC-3):
+  see the Wave-2 exit note — this number is not reachable while the collision brake
+  zeroes commands for perpendicular obstacles at the stop radius, so it may not be
+  scheduled as an exit gate until the B6 owner decision lands.
+- Proposed: product semantic task suite moves from SR 0.24 toward ≥90% before field
+  promotion, with zero false-arrival credit and family/tier reporting. **Conditioned on
+  B6** (RC-3) for the same reason, and its "zero false-arrival credit" clause is
+  conditioned on **B5** (RC-2): the honest current rate is 3/61, not 1/61, and the
+  arrival predicate cannot report zero false arrivals until a pose-error reserve exists.
+- Proposed: every accepted semantic terminal witness contains fresh geometry + semantics
+  + settled feedback at unchanged task/evidence revisions, **and a positive effective
+  margin after the RC-2 localization-uncertainty reserve**.
+- Proposed: map reanchor never causes a discontinuous local command.
 
 ### Conversation/audio
 
-- Updated 50–100-turn machine suite: ≥90% intent/plan validity plus human-rated
-  conversation target agreed before tournament; parse alone is insufficient.
-- Acoustic endpoint p50 ≤500 ms, p90 ≤1.0 s, cutoff ≤5%.
-- Barge detection p50 ≤400 ms; false barge <2%; acoustic stop p50 ≤520 ms.
-- First audible/detectable acknowledgement p50 ≤700 ms; no queue timestamp is labeled
-  audible.
-- 50 simultaneous follow+talk episodes: speech/model load worsens stop p99 <10% and
-  produces zero control TTL misses.
-- Through-air corpus covers multiple speakers/accents, 0.5–5 m, motion, robot playback,
-  wind/traffic/footsteps, double-talk, and AEC reference faults.
+- Proposed: updated 50–100-turn machine suite, ≥90% intent/plan validity plus a
+  human-rated conversation target agreed before the tournament; parse alone is
+  insufficient.
+- Proposed: acoustic endpoint p50 ≤500 ms, p90 ≤1.0 s, cutoff ≤5%.
+- Proposed: barge detection p50 ≤400 ms; false barge <2%; acoustic stop p50 ≤520 ms.
+- Proposed: first audible/detectable acknowledgement p50 ≤700 ms; no queue timestamp is
+  labeled audible.
+- ⟂ Proposed: across 50 simultaneous follow+talk episodes, speech/model load worsens
+  stop p99 <10% and produces zero control TTL misses.
+- Proposed: through-air corpus covers multiple speakers/accents, 0.5–5 m, motion, robot
+  playback, wind/traffic/footsteps, double-talk, and AEC reference faults.
 
 ### Reliability/resource/security
 
-- One-hour concurrent scenario followed by an eight-hour soak with no deadlock,
-  unbounded queue, stale motion, disk-corruption, or thermal-policy violation.
-- Full disk, blocked telemetry exporter, model OOM, GPU saturation, network loss, and
-  source-clock jumps do not delay local stop/watchdog behavior.
-- Update signature failure, interrupted install, incompatible schema/calibration, and
-  rollback are tested; every reboot starts disarmed.
-- Unauthenticated/replayed remote motion is denied; model/UI identities cannot access
-  the robot interface.
+- Proposed: one-hour concurrent scenario followed by an eight-hour soak with no
+  deadlock, unbounded queue, stale motion, disk-corruption, or thermal-policy violation.
+- Proposed: full disk, blocked telemetry exporter, model OOM, GPU saturation, network
+  loss, and source-clock jumps do not delay local stop/watchdog behavior.
+- Proposed: update signature failure, interrupted install, incompatible
+  schema/calibration, and rollback are tested; every reboot starts disarmed.
+- Proposed: unauthenticated/replayed remote motion is denied; model/UI identities cannot
+  access the robot interface.
 
 ## Suggested implementation design
 
 ### Wave 0 — accepted contracts and P0 truth (62–92 engineer-hours)
 
 This is the immediate implementation batch after Fable accepts/revises the design.
+
+**Base pointer for every W0 card: commit `7242660` (RC-6).** r1 baselined the cards on
+an unlanded dirty worktree; that worktree landed during the review. Each card's OWNS
+set, its "simulator behavior unmoved" claim, and its byte-identity proofs are stated
+against `7242660`, and any card re-run reports the commit it actually ran at. The r1
+stop condition "current route-memory/pose-drift work overlaps an owned file without a
+clean merge" is moot at this base: no W0-owned file (`control/base.py`,
+`control/models.py`, the `runtime.py` state-source wiring, `core/input_health.py`,
+`control/factory.py`, `unitree_control.py`, `providers.py`, `duplex/*`) carried
+uncommitted edits at the landing. `runtime.py` stays single-owner (W0-A).
 
 #### Card W0-A — physical feedback and typed provenance (8–12 h)
 
@@ -829,13 +1044,45 @@ heartbeat, status, stop confirmation, and fake service faults: delayed/no-reply 
 late completion, lease loss, stale/out-of-order state, unknown modes, clock jumps,
 process kill, writer conflict, and `StopMove` failure.
 
+**Pre-freeze deliverable: the TTL/latency derivation table (RC-4).** Brief question 7
+was never answered in r1. The live control TTL is **`command_timeout_s = 0.35 s`**
+(`src/parcel_robot/control/models.py:69`, `configs/robot.yaml:116`, and the
+`control/factory.py` default — verified in-tree at `7242660`), while the proposed p99
+gates above (sensor invalidation ≤100 ms, e-stop ≤150 ms, client/lease loss ≤150 ms,
+50 Hz jitter <2 ms) were stated without ever being reconciled against it. Two numbers
+that were never put in the same table cannot both be design constants.
+
+W0-C must publish, **before any protocol constant is frozen**, a table with one row per
+proposed deadline and these columns: the proposed p99 gate; the 50 Hz loop period
+(20 ms) and how many control periods the gate spans; the live 0.35 s TTL and how many
+periods *it* spans (17.5); the worst-case distance travelled at the 0.3–0.5 m/s pilot
+ceiling during each; whether the gate is dominated by the TTL (i.e. whether a stale
+command can outlive the deadline the gate promises); and the derivation or measurement
+each number rests on. The obvious tension to resolve on the record: a 150 ms
+client-loss stop-initiation gate sits inside a 350 ms window during which the last
+accepted setpoint remains valid, so "stop initiated" and "motion ended" are different
+events with different numbers, and the plan must say which one each gate measures.
+
+**Does Wave 0 retune `command_timeout_s`? Recommendation: no — derive first, retune
+only from measurement.** 0.35 s is the shipping simulator constant and every frozen
+eval row was produced under it; changing it in Wave 0 would move frozen behavior to
+satisfy a number that has no hazard derivation yet (global rules 3 and 6, and N-7's
+"proposed pending hazard/ODD derivation" marker applies to the gates, not to the live
+constant). W0-C publishes the table and pins it in a test; retuning is a separate,
+explicitly-justified change carrying stop-envelope measurement from L5, and if the
+table shows the TTL and a gate are actually irreconcilable, that is a STOP-and-report,
+not a quiet retune.
+
 Gates:
 
 - two clients cannot own motion;
 - kill/freeze/client loss stops locally and never auto-resumes;
 - prior-epoch/duplicate/out-of-order/non-finite/wrong-frame messages are rejected;
 - late `Move` across a stop boundary produces compensating stop;
-- fake send-success/no-motion is detected from feedback.
+- fake send-success/no-motion is detected from feedback;
+- the TTL/latency derivation table exists, is pinned by a test that fails if
+  `command_timeout_s`, the control rate, or any proposed gate moves out of agreement
+  with it, and no protocol constant is frozen before it lands (RC-4).
 
 #### Card W0-D — output/audio truth and evaluator semantics (6–10 h)
 
@@ -862,10 +1109,41 @@ off the control path.
 
 OWNS:
 
-- contract/property/fault tests, new Fable gate, run manifest.
+- contract/property/fault tests, the new authority-invariant CI gate defined below, run
+  manifest.
 
 Port accepted spike invariants to canonical product tests, add process-level fault
 campaigns, and ensure every evaluator returns nonzero on failed hard gates.
+
+**Definition of the "Fable gate" (N-5).** r1 named a gate without defining it. It is a
+new **hard** tier in `scripts/ci_gate.py` — call it `authority-invariants` — with this
+contract:
+
+- *What it gates:* the ported authority invariants, as product tests rather than spike
+  tests. Concretely: typed-provenance admission (no `UNKNOWN`/simulator/replay origin
+  satisfies a physical gate), boot-epoch refusal, fail-closed handling of
+  NaN/None/inf in every clock, timestamp, and TTL field, latch persistence across a
+  subsequent clean tick, monotone disposition composition, sole-writer exclusivity,
+  the RC-4 TTL/latency derivation pin, the RC-2 pose-reserve arrival regression, and
+  the RC-3 bearing-relevance brake regression. It also gates the mutation campaign:
+  the ported invariant set must kill 20/20 of the audit's invariant-killing mutants,
+  and the campaign's description must state its true class count.
+- *When it runs:* in the `commit` tier — not nightly. These are cheap deterministic
+  contract tests; an authority invariant that is only checked overnight is an
+  invariant that ships broken for a day. The mutation-kill sub-gate runs on the
+  `nightly` tier with a committed-vs-live freshness check, matching the existing
+  `mutation-panel-freshness` pattern.
+- *What reddens it:* any ported invariant test failing; the mutant kill count dropping
+  below 20/20; a new authority-relevant seam landing without a corresponding invariant
+  test (enforced by requiring the run manifest to enumerate the seams it covers, and
+  failing when a seam is added to the contract module without a manifest entry); the
+  derivation pin disagreeing with the live constants; or the manifest not reproducing.
+  Red is STOP-and-report, never a waiver — this gate exists precisely to be the thing
+  that cannot be tuned to green.
+- *What it does not do:* it owns no product behavior and may not modify any evaluator's
+  success rule. It is an observer with veto power over merge, nothing else. Naming it
+  after the auditor does not delegate the audit to CI: a green
+  `authority-invariants` is a precondition for a Fable review, not a substitute.
 
 #### Card W0-G — cognition/audio authority and scheduler isolation (8–12 h)
 
@@ -884,12 +1162,26 @@ Implement:
 - bounded nonblocking duplex/trace logging; diagnostics drop before control work;
 - personality artifacts generated from one policy authority so skill/eval drift fails CI.
 
+**Budget analysis uses the real loop (RC-5).** The synchronous duplex serialization /
+rotation / disk append this card removes runs in the **10 Hz `RobotRuntime` semantic
+loop** (`loop_hz=10`, `frame_hz=10`) — the loop that dispatches motion — not in the
+50 Hz `ControlManager` thread, which does no duplex logging. The card's aim is
+unchanged: a blocking disk write on the dispatch path is a defect at any rate. What
+changes is the arithmetic the card must show. The budget is the 100 ms semantic-loop
+period, and the quantity to bound is how long a blocked or rotating write can delay the
+*next dispatch*, measured against the 0.35 s `command_timeout_s` (RC-4) — i.e. the
+question is whether a stalled logger can let the previously issued setpoint expire
+before a fresh one is dispatched, not whether it can miss a 20 ms control tick. Any
+budget figure in this card that was computed from a 20 ms period is recomputed at
+100 ms before it is cited.
+
 Gates:
 
 - shuffled partial/final/correction events never execute a partial or stale result;
 - talk/chuckle/attention overlays do not alter the follow command trace;
 - posture/base reactions defer/expire during critical navigation;
-- inference/log/memory saturation produces zero control deadline changes;
+- inference/log/memory saturation produces zero control deadline changes, measured
+  against the 10 Hz dispatch period and the live 0.35 s command TTL (RC-5);
 - current text-only behavior and frozen task semantics remain intact.
 
 MUST NOT TOUCH in Wave 0:
@@ -898,8 +1190,17 @@ MUST NOT TOUCH in Wave 0:
 - route-memory or pose-drift batch under `scrum/20260811/task_2` except conflict
   resolution agreed with its owner;
 - collision thresholds or behavior to improve scores;
+- the **B5** product surface — the K0 arrival predicate, the K0 band, the scorer
+  epsilon, and the `calibrated_go2_reanchoring` arm — which is owner-gated (RC-2). The
+  standing `pose-drift-arms:safety` nightly red is the record and is not to be greened;
+- the **B6** product surface — `apply_collision_brake`, `safety.stop_distance_m`, and
+  the `CollisionPolicy` relevance gate — which is owner-gated (RC-3);
 - any physical auto-arm path;
 - low-level joint control.
+
+Wave 0 lands the RC-2 and RC-3 *contracts, specifications, fixtures, and regression
+tests*. It does not land the product changes those specifications imply; both wait on
+their 2×2.
 
 ### Wave 1 — sensor/localization spine (3–6 engineer-weeks)
 
@@ -927,6 +1228,19 @@ Parallel lanes:
 Exit: held-out identity/crowd/follow gates pass in sim/replay; then supervised low-speed
 hardware trials with independent stop.
 
+**This exit gate is conditioned on the B6 owner decision (RC-3).** The follow-band ≥90%
+target is not reachable while `apply_collision_brake` zeroes commands for any obstacle
+inside the 0.8 m stop radius with a closing fraction above `1e-9` — a static object
+87.7° off-axis holds the robot indefinitely, and 40 of 42 route-memory-armed eval cells
+already fail wedge-like, flag-OFF. Scheduling this exit before B6 is resolved would
+schedule a gate the product cannot pass for reasons unrelated to following, and the
+predictable failure mode is that someone relaxes the band rather than fixing the brake.
+Therefore: Wave 2 may run and may report the band, but the ≥90% gate is **not armed as
+an exit condition** until the B6 2×2 lands and the frozen `collision=0` rows are
+re-proved under whichever mechanism the owner selects. If the owner declines to change
+the brake, the band target is re-derived against the brake's actual behavior and
+restated — it is not left standing as an unreachable number.
+
 ### Wave 3 — semantic city/indoor navigation (3–6 engineer-weeks)
 
 - open-vocabulary referents with absent-target/uncertainty evidence;
@@ -938,6 +1252,17 @@ hardware trials with independent stop.
 
 Exit: preregistered ≥90% bounded task success, zero false terminals/contacts in held-out
 evidence, and deterministic baseline fallback under model failure.
+
+**Both halves of this exit gate are conditioned on owner decisions (RC-2, RC-3).** The
+≥90% success target is conditioned on **B6** for the same reason as Wave 2: `v4r`-class
+scenarios with wall-line clutter fail on both arms while the brake stands, so the
+suite's ceiling is set by the brake, not by semantics. The "zero false terminals" half
+is conditioned on **B5**: the arrival predicate has no pose-error reserve, the honest
+measured rate is 3/61 rather than 1/61, and a suite cannot certify zero false arrivals
+using the predicate that produces them. Neither half is armed as an exit condition
+until its 2×2 lands; both may be measured and reported meanwhile, labelled with the
+open defect. As in Wave 2, an owner decision not to change the product surface obliges
+a re-derived target, not a standing unreachable one.
 
 ### Wave 4 — terrain and deployment hardening (4–8+ engineer-weeks plus hardware)
 
@@ -979,12 +1304,21 @@ Safe independent work before hardware:
 
 ## Basic design tests completed in this task
 
-The isolated reference model executes 43 tests and a seeded 200-case corruption
-campaign. It currently passes:
+The isolated reference model executes 43 tests and **a seeded campaign of 200 draws
+over 12 single-fault evidence-corruption classes** — r1 called this a "200-case
+corruption campaign", which overstates its breadth by a factor the audit measured
+(verdict: CLAIMS THAT MUST BE DOWNGRADED). The r1 spike passed:
 
 ```text
 43 passed in 0.10s
 ```
+
+That figure is r1's. The spike is being hardened under card S-1 (RC-1: epoch
+enforcement, fail-closed malformed time, a stateful latch, 20/20 mutant kills, and the
+RC-2 B5 fixture), so both the test count and the campaign's class count are restated in
+`../task_2/S1_STATUS.md`; `VALIDATION.md` records which of the two this revision
+actually observed. The honest r1 claim is that 12 of 20 invariant-killing mutants
+survived the 43-test suite — the campaign demonstrates the seam, not its coverage.
 
 Covered properties:
 
@@ -1045,6 +1379,37 @@ canonical code and the spike deleted once redundant.
     cross-cancel, and closed stop/direct commands never wait for a model.
 23. Synchronous logging/memory failure, full queue, or blocked disk produces an
     identical control command/deadline trace.
+
+The verdict adds the following to this list. Items 24–27 are the named required tests;
+item 28 collects the missing failure cases that must be folded into the spike campaign
+and W0-F.
+
+24. **`test_terminal_witness_requires_pose_uncertainty_reserve`** (RC-2) — the
+    pose-reserve arrival regression, with B5's measured episode as the named fixture:
+    MAP margin 0.007 m against a claim-tick pose error of 0.239 m must **not** produce
+    a passing terminal witness. Seeded-failure proof required: removing the reserve
+    term must turn the test red. This is a contract/regression test; it does not modify
+    the shipping predicate, which stays owner-gated.
+25. **`test_collision_brake_relevance_is_bearing_and_closing_aware`** (RC-3) — the
+    bearing-relevance brake regression, with B6's measured geometry as the fixture: a
+    static obstacle at exactly the 0.8 m stop radius, 87.7° off the travel axis
+    (closing fraction 0.041), must not zero a laterally clear forward command under the
+    governor specification. The test must also assert the conservative direction:
+    missing, stale, or ambiguous directional evidence still stops.
+26. **TTL/latency derivation pinned** (RC-4) — a test that fails if
+    `command_timeout_s` (0.35 s), the 50 Hz control rate, or any proposed p99 gate
+    moves out of agreement with W0-C's published derivation table.
+27. **20/20 spike mutants killed** (RC-1d) — each of the audit's invariant-killing
+    mutants named by the test that kills it; the count is a gate, and a survivor is a
+    missing invariant, not a scoring detail.
+28. Missing failure cases to fold into the campaign and W0-F: prior-epoch lease;
+    NaN/None/inf in every clock, timestamp, and TTL field; latch persistence across a
+    subsequent clean tick; the B5 fixture (MAP margin < pose error at claim); the B6
+    fixture (perpendicular obstacle at the stop radius must not zero a laterally clear
+    path); bounded in-place search without fresh 360° collision evidence (N-1);
+    a composed physical-translation pipeline threading SIMULATION/REPLAY/UNKNOWN origin
+    at each stage (N-2); zero-gate dominant verdict must not return PASS, and at least
+    one gate must produce CLAMP (N-3).
 
 ## Stop conditions
 

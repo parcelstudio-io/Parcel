@@ -1,6 +1,13 @@
 # Research ledger — production conversational companion
 
-Checked 2026-08-12. This ledger prefers vendor documentation, official project
+Checked 2026-08-12. Revision **r2** — three "Local evidence reviewed" rows were
+corrected against `FABLE_VERDICT.md`: the duplex logging rate (RC-5), the
+"210/211 focused run" (N-8), and the Piper "service" claim (N-8). Each correction is
+marked inline in its row and keeps the original wording visible so the change is
+auditable. No primary-source row changed; all 24 externally checked claims were
+verified with zero mismatch.
+
+This ledger prefers vendor documentation, official project
 documentation/repositories, and primary research releases. Marketing claims are
 recorded as claims, not treated as evidence that an SDK contract or Parcel
 integration exists.
@@ -83,15 +90,15 @@ and controlled-route trials. No lane is allowed to stand in for a later rung.
 | `src/parcel_robot/pose.py` | Shipping physical localization seam has only simulator truth/placeholder behavior. | A real pose adapter and covariance/health contract block autonomous hardware translation. |
 | `src/parcel_robot/voice_audio.py` | Capture currently sends a completed utterance to Whisper; AEC/ducking seams exist but are not proven as the product wiring. | Partial ASR is non-authoritative; actual output preflight/device timestamps and through-air tests are required. |
 | `src/parcel_robot/providers.py:279` | The current Llama.cpp provider has one active cancellation handle. | Add a priority-aware inference broker before concurrent conversation/planning/summarization; direct commands bypass it. |
-| `src/parcel_robot/duplex/coordinator.py` and `duplex/session_log.py` | The 50 Hz duplex step can synchronously serialize, rotate, and append logs. | Move diagnostics/memory to bounded asynchronous writers and prove saturated logging does not affect control. |
+| `src/parcel_robot/duplex/coordinator.py` and `duplex/session_log.py` | The duplex step can synchronously serialize, rotate, and append logs. Corrected (RC-5): that step runs in the **10 Hz `RobotRuntime` semantic loop** (`loop_hz=10`, `frame_hz=10`) — the loop that dispatches motion — not in the 50 Hz `ControlManager` thread, which does no duplex logging. The r1 row said "50 Hz duplex step". | Move diagnostics/memory to bounded asynchronous writers and prove saturated logging does not affect control. Budget the delay against the 100 ms dispatch period and the live 0.35 s `command_timeout_s`, not a 20 ms control tick. |
 | Brain vs v1 resource contracts | The codebase currently has two resource vocabularies, and legacy reaction arbitration can veto non-base speech/attention whenever the base is busy. | Establish one canonical resource enum and arbitrate per track so safe speech can coexist without granting motion authority. |
 | Frozen `nav-instruct-v1` v4 result | 25 episodes, SR 0.24, SPL 0.1933, zero modeled collisions; failures: grounding 3, planning 6, refusal 6, termination 4. | Navigation is a research baseline, not field-ready; improve semantics/termination while preserving collision gates. |
 | Latest 11-case follow bench | Follow 7/9, navigation 2/2, band fraction 0.7088, zero kinematic hard collisions, RMS commanded jerk 1.2187 m/s³. | Useful regression evidence, but small scripted simulation cannot establish human tracking or physical comfort. |
-| Focused navigation test run | 210/211 passed; `test_cost_field_vectorization_performance` missed its <2 ms threshold at about 3.07–3.47 ms. | The result is not a 20 ms control-loop failure, but current per-tick dynamic cost/A* work should be profiled and separated before crowd scale increases. |
+| Focused navigation test run | `test_cost_field_vectorization_performance` repeatedly missed its <2 ms threshold at about 3.07–3.47 ms. **Correction (N-8): the "210/211 passed" framing is withdrawn as unreproducible** — no test selection was recorded for that run, so neither the denominator nor the pass count can be regenerated. Only the micro-gate measurement survives as evidence. | The result is not a 20 ms control-loop failure, but current per-tick dynamic cost/A* work should be profiled and separated before crowd scale increases. Any future focused run records its exact `pytest` selection with the count. |
 | Frozen Gemma conversation v1 | 6/10 machine cases, 10/10 parse; TTFT mean/p95 349/469 ms; no human review. | Preserve parser success, replace stale rubrics, and run a larger multi-turn/human-rated tournament. |
 | PersonalConvo live summarizer | 3/13 turns and 1/8 families passed; six families failed. | Current memory/persona/conversation behavior is not companion-grade. |
 | Latest synthetic acoustic loop | Failed 5/9 gates: endpoint p50 0.784 s, acoustic stop p50 0.78 s, false barge rate 1.0, ack p50 0.8 s, prosody-window 0.6429. | Do not claim duplex readiness; commission real transducers/AEC and fix evaluator exit semantics. |
-| 2026-08-12 desktop probe | No usable PipeWire capture/playback endpoint, no connected Bluetooth/USB array, Gemma is CPU-only; Whisper/Piper services answer health checks. | Text remains the honest prototype input today; no metric may label enqueued audio as audible speech. |
+| 2026-08-12 desktop probe | No usable PipeWire capture/playback endpoint, no connected Bluetooth/USB array, Gemma is CPU-only. **Correction (N-8): Piper is not a health-checked service** — it is invoked as a subprocess, so "Piper answers a health check" was never a true statement and no liveness evidence exists for it. Whisper is reachable as described. | Text remains the honest prototype input today; no metric may label enqueued audio as audible speech. A subprocess that exits nonzero is discovered at synthesis time, not at preflight — W0-D's output preflight is what would give the TTS path a real readiness signal. |
 
 ## Research decisions still requiring measured evidence
 

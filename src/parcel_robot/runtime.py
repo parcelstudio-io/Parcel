@@ -61,11 +61,17 @@ from parcel_robot.context import (
 )
 from parcel_robot.contracts.v1 import DialogueActV1
 from parcel_robot.control import (
-    BufferedRobotStateSource,
     ControlManager,
     ControlNotReadyError,
     FaultReason,
     build_backend_control_manager,
+)
+from parcel_robot.control.base import (
+    ObservationSink,
+    RobotStateSource,
+    as_observation_sink,
+    declared_origin,
+    is_robot_state_source,
 )
 from parcel_robot.core import (
     ActivityContext,
@@ -88,14 +94,15 @@ from parcel_robot.core.hard_stop import (
     finalize_command,
 )
 from parcel_robot.core.input_health import (
-    DEFAULT_REQUIRED_INPUTS,
+    SYNTHETIC_ORIGINS,
+    EvidenceOrigin,
     HealthAction,
     InputEvidence,
     RequiredInput,
     evaluate_input_health,
     evidence_origin,
-    is_simulated_source,
     requirements_allowing_sim_fixtures,
+    requirements_requiring_physical_inputs,
 )
 from parcel_robot.core.preemption import PreemptionTable
 from parcel_robot.core.resume import (
@@ -387,13 +394,32 @@ class RobotRuntime:
                 control_config,
                 self.store.safety_limits(),
             )
-            self._control_state_source: BufferedRobotStateSource | None = state_source
+            source: object = state_source
         else:
-            self._control_state_source = (
-                control_manager.state_source
-                if isinstance(control_manager.state_source, BufferedRobotStateSource)
-                else None
-            )
+            source = getattr(control_manager, "state_source", None)
+        # Card W0-A (P0-1). The retired retention was
+        # ``isinstance(BufferedRobotStateSource)``, which discarded a
+        # ``UnitreeSportStateSource`` outright — so the input-health feedback
+        # reads below saw NOTHING from the physical path — and conflated two
+        # different capabilities behind one predicate. Split them:
+        #   READ  any read-only RobotStateSource, whatever its class;
+        #   WRITE only through the simulator-only ObservationSink seam, which
+        #         a physical vendor source does not implement.
+        self._control_state_source: RobotStateSource | None = (
+            source if is_robot_state_source(source) else None
+        )
+        self._observation_sink: ObservationSink | None = as_observation_sink(source)
+        # Provenance is DECLARED, never inferred from a name (P0-2 / D-1).
+        # Feedback the runtime itself synthesizes from a SimObservation is
+        # SIMULATION *by construction* — that is a structural fact about this
+        # wiring, not a guess about a string. Anything else carries what its
+        # source declared, and an undeclared source stays UNKNOWN, which never
+        # reaches physical authority.
+        self._control_state_origin: EvidenceOrigin = (
+            EvidenceOrigin.SIMULATION
+            if self._observation_sink is not None
+            else declared_origin(source)
+        )
         self.control_manager = control_manager
         smoother_config = self.store.motion_config().get("smoothing") or {}
         if not isinstance(smoother_config, dict):
@@ -461,29 +487,38 @@ class RobotRuntime:
             raise ValueError("safety person distances must satisfy 0 < stop < slow")
         if not math.isfinite(self.telemetry_stale_s) or self.telemetry_stale_s <= 0:
             raise ValueError("safety telemetry_stale_s must be positive and finite")
-        # P0-B sim-fixture commissioning. Under DEFAULT_REQUIRED_INPUTS a
-        # SIM_FIXTURE pose or controller-feedback sample is a LATCHED_STOP —
-        # that is the check that catches stub geometry silently satisfying a
-        # physical-sensor requirement. A deployment explicitly commissioned
-        # against a simulator accepts those samples ONLY through the labeled
-        # fixture path (origin=SIM_FIXTURE + non-empty fixture_label); an
-        # unlabeled fixture still latches, and SCAN's rules are unchanged.
+        # P0-B sim-fixture commissioning. Under a physical requirements table a
+        # SIMULATION/REPLAY pose or controller-feedback sample is a
+        # LATCHED_STOP — that is the check that catches stub geometry silently
+        # satisfying a physical-sensor requirement. A deployment explicitly
+        # commissioned against a simulator accepts those samples ONLY through
+        # the labeled fixture path (a synthetic origin + non-empty
+        # fixture_label); an unlabeled fixture still latches.
         # ``safety.require_physical_inputs: true`` is the hardware-readiness
-        # switch that withdraws the allowance everywhere.
+        # switch that withdraws the allowance everywhere — and after card W0-A
+        # it also withdraws SCAN's, which the simulator default still grants.
         self._require_physical_inputs = bool(
             safety_config.get("require_physical_inputs", False)
         )
         # ``_synchronous_control_dispatch`` is True exactly when the control
         # manager came from config, where ``control.controller`` is required to
         # be "simulator" (hardware needs an explicitly injected manager).
+        #
+        # Card W0-A replaced ``is_simulated_source(backend.name)`` here. That
+        # test read a NAME, and its whitelist meant a backend called "unknown",
+        # "physical", or nothing at all was treated as hardware. The structural
+        # question is the one that actually matters and cannot be spelled
+        # wrong: is the runtime itself synthesizing this feedback from
+        # simulator observations? It is exactly when it holds the sink.
         self._sim_fixture_inputs_allowed = not self._require_physical_inputs and (
-            self._synchronous_control_dispatch
-            or is_simulated_source(getattr(self.backend, "name", None))
+            self._synchronous_control_dispatch or self._observation_sink is not None
         )
         self._input_health_requirements = (
             requirements_allowing_sim_fixtures()
             if self._sim_fixture_inputs_allowed
-            else DEFAULT_REQUIRED_INPUTS
+            # Board D-2: NOT ``DEFAULT_REQUIRED_INPUTS`` — that table is the
+            # simulator default and still admits fixture SCAN geometry.
+            else requirements_requiring_physical_inputs()
         )
         # Card W4. Supplements the geometric gate; validated strictly so a
         # mistyped brake threshold cannot silently disable the gate.
@@ -2690,6 +2725,10 @@ class RobotRuntime:
             "faults": list(self._input_health_latch_faults),
             "sim_fixture_inputs_allowed": bool(self._sim_fixture_inputs_allowed),
             "require_physical_inputs": bool(self._require_physical_inputs),
+            # Card W0-A: the DECLARED provenance of the retained feedback
+            # source, so an operator can see whether this deployment is reading
+            # a physical stream or a synthesized one.
+            "state_source_origin": EvidenceOrigin(self._control_state_origin).value,
         }
 
     def clear_input_health_latch(self, *, now: float | None = None) -> str:
@@ -4353,8 +4392,8 @@ class RobotRuntime:
             try:
                 observe_started = time.monotonic()
                 observation = self.backend.observe()
-                if self._control_state_source is not None:
-                    self._control_state_source.update_observation(observation)
+                if self._observation_sink is not None:
+                    self._observation_sink.update_observation(observation)
                 self.component_metrics.elapsed("SimulatorObserve", observe_started)
                 observe_recorded = True
                 self.component_metrics.observe_ms(
@@ -4558,6 +4597,21 @@ class RobotRuntime:
                 observation = self._observation
             if self._synchronous_control_dispatch:
                 self._ensure_compatibility_control_started()
+                # Card W0-A: this ONE write site deliberately keeps the read
+                # handle instead of ``_observation_sink``, and is byte-identical
+                # to its pre-W0-A form. ``_synchronous_control_dispatch`` is
+                # True only on the config-built simulator path, where
+                # ``control.controller`` is required to be "simulator"; there
+                # the source and the sink are the same BufferedRobotStateSource,
+                # and a physical source cannot reach here at all (hardware needs
+                # an explicitly injected manager, which sets this False). Every
+                # write site that a physical source CAN reach — the control loop
+                # and ``_collision_safe`` — goes through the sink.
+                #
+                # Keeping it identical keeps ``_dispatch_active`` inside
+                # ``STOPPING_PREDICATE_PIN`` (tests/test_nominal_stop_wiring.py)
+                # unmoved. This card has no business moving a stopping-predicate
+                # ratchet: it changes nothing about how stops are classified.
                 if observation is not None and self._control_state_source is not None:
                     state = self._control_state_source.latest()
                     if state is None or state.received_at < observation.timestamp:
@@ -5629,10 +5683,19 @@ class RobotRuntime:
         # Mirror the dispatch tick: refresh sim feedback from the observation
         # before the health join so direct _collision_safe callers share the
         # same pose/scan/feedback contract as _dispatch_active.
-        if observation is not None and self._control_state_source is not None:
-            state = self._control_state_source.latest()
+        if observation is not None and self._observation_sink is not None:
+            # Fable audit item 2: the two seams are independent, so a source
+            # that implements the sink but not the reader is protocol-violating
+            # but reachable — and reading it unconditionally turned that into an
+            # AttributeError here rather than a refresh. Absent reader == no
+            # prior sample, which is exactly the "refresh it" case.
+            state = (
+                self._control_state_source.latest()
+                if self._control_state_source is not None
+                else None
+            )
             if state is None or state.received_at < observation.timestamp:
-                self._control_state_source.update_observation(observation)
+                self._observation_sink.update_observation(observation)
         health = self._evaluate_dispatch_input_health(observation, now=decision_now)
         if health.stop_latched:
             # P0-B: LATCHED_STOP means latched. A single recovered tick must not
@@ -5702,16 +5765,25 @@ class RobotRuntime:
             else None
         )
         if state is not None:
-            # ``RobotMotionState.source`` is the controller/backend that
-            # produced the feedback (``observation.backend`` on the simulator
-            # path, the vendor channel name on hardware).
-            feedback_origin, feedback_label = evidence_origin(state.source)
+            # Card W0-A: provenance rides ON the datum. A source that declared
+            # an origin keeps it; otherwise this wiring's structural
+            # declaration applies (SIMULATION iff the runtime synthesized the
+            # feedback itself, else whatever the source declared, else
+            # UNKNOWN). ``RobotMotionState.source`` is now only a LABEL — it
+            # names the fixture and can no longer decide authority.
+            feedback_origin = (
+                state.origin
+                if state.origin is not EvidenceOrigin.UNKNOWN
+                else self._control_state_origin
+            )
             feedback = InputEvidence(
                 captured_at=state.received_at,
                 frame_id="base_link",
                 payload_valid=state.fault_reason is FaultReason.NONE,
                 origin=feedback_origin,
-                fixture_label=feedback_label,
+                fixture_label=(
+                    state.source if feedback_origin in SYNTHETIC_ORIGINS else None
+                ),
             )
 
         return evaluate_input_health(

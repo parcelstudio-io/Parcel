@@ -3,6 +3,11 @@
 The join uses one decision timestamp.  Pose, scan, and controller feedback
 must all be present, finite, fresh, payload-valid, and in their commissioned
 frames before translation is allowed.
+
+Provenance is DECLARED and typed (:class:`EvidenceOrigin`), never inferred from
+a producer's name.  Card W0-A retired the ``PHYSICAL_SOURCE_NAMES`` whitelist
+that let an unattributed producer mint physical authority; there is now no
+string, anywhere, that reaches :attr:`EvidenceOrigin.PHYSICAL`.
 """
 
 from __future__ import annotations
@@ -13,6 +18,8 @@ from dataclasses import dataclass, replace
 from enum import Enum, IntEnum
 from types import MappingProxyType
 
+from parcel_robot.evidence_origin import SYNTHETIC_ORIGINS, EvidenceOrigin
+
 
 class RequiredInput(str, Enum):
     POSE = "pose"
@@ -20,9 +27,12 @@ class RequiredInput(str, Enum):
     CONTROLLER_FEEDBACK = "controller_feedback"
 
 
-class InputOrigin(str, Enum):
-    PHYSICAL = "physical"
-    SIM_FIXTURE = "sim_fixture"
+# Card W0-A. ``EvidenceOrigin`` is DEFINED in the leaf module
+# :mod:`parcel_robot.evidence_origin` and re-exported here, so the boundary
+# layers (``control/``, and through them ``commissioning/``) can declare
+# provenance without importing ``parcel_robot.core.__init__`` — which
+# transitively pulls in ``brain`` and ``instructnav``. See that module's
+# docstring for the measurement behind the split.
 
 
 class HealthAction(IntEnum):
@@ -56,7 +66,11 @@ class InputEvidence:
     captured_at: object
     frame_id: object
     payload_valid: object = True
-    origin: object = InputOrigin.PHYSICAL
+    # Card W0-A: the default was ``PHYSICAL``. Omitting the origin therefore
+    # MINTED physical authority, which is the defect in its purest form. The
+    # default is now the fail-closed one: a sample nobody attributed is
+    # UNKNOWN, and UNKNOWN never authorizes anything.
+    origin: object = EvidenceOrigin.UNKNOWN
     fixture_label: object = None
 
 
@@ -97,40 +111,27 @@ DEFAULT_REQUIRED_INPUTS: Mapping[RequiredInput, RequiredInputSpec] = MappingProx
 )
 
 
-#: Provenance strings that name a *physical* (or unattributed) sample source.
-#: Everything else is a simulator / stub / fixture. The set is deliberately a
-#: whitelist of non-fixture names so an unrecognised producer fails CLOSED —
-#: it is stamped ``SIM_FIXTURE`` and therefore rejected wherever fixtures are
-#: not commissioned, rather than silently satisfying a physical-sensor
-#: requirement.
-PHYSICAL_SOURCE_NAMES: frozenset[str] = frozenset({"", "unknown", "physical"})
+def evidence_origin(producer_label: object) -> tuple[EvidenceOrigin, str | None]:
+    """``(origin, fixture_label)`` for a sample carried on a ``SimObservation``.
 
+    Board decision D-1 (``scrum/20260812/task_2/BOARD_DECISIONS.md``): authority
+    comes from the CARRIER TYPE, not from a producer name. ``SimObservation`` is
+    by definition the simulator observation contract, so every sample stamped
+    through this helper is :attr:`EvidenceOrigin.SIMULATION` and the argument
+    supplies ONLY the required non-empty ``fixture_label``. There is no string —
+    not ``"physical"``, not ``""``, not ``"unknown"`` — that reaches
+    :attr:`EvidenceOrigin.PHYSICAL` from here or from anywhere else.
 
-def is_simulated_source(source: object) -> bool:
-    """True when ``source`` names a simulator/stub rather than a physical sensor.
+    A physical pose/scan channel must therefore arrive as a typed source that
+    *declares* ``PHYSICAL`` (see ``control.base.CommissionedStateSource``);
+    migrating ``navigation/reactive_safety.py`` — the frozen consumer whose
+    signature this preserves — onto that seam is a W0-F/W1 follow-up.
 
-    Matching is exact — deliberately not case- or whitespace-normalised, so a
-    near-miss like ``"Physical"`` reads as an unrecognised producer and fails
-    CLOSED instead of being waved through as the real sensor.
+    An empty label is returned as-is rather than being repaired: it reads as an
+    UNLABELED fixture downstream, which latches.
     """
 
-    return str(source or "") not in PHYSICAL_SOURCE_NAMES
-
-
-def evidence_origin(source: object) -> tuple[InputOrigin, str | None]:
-    """``(origin, fixture_label)`` for a sample produced by ``source``.
-
-    Simulated producers get :attr:`InputOrigin.SIM_FIXTURE` plus the producer
-    name as the (required, non-empty) ``fixture_label``; physical producers get
-    :attr:`InputOrigin.PHYSICAL` and no label.  Every authority-bearing sample
-    must be stamped through this one helper so no channel can hard-code
-    ``PHYSICAL`` and defeat the fixture check.
-    """
-
-    name = str(source or "")
-    if is_simulated_source(name):
-        return InputOrigin.SIM_FIXTURE, name
-    return InputOrigin.PHYSICAL, None
+    return EvidenceOrigin.SIMULATION, str(producer_label or "")
 
 
 def requirements_allowing_sim_fixtures(
@@ -148,6 +149,33 @@ def requirements_allowing_sim_fixtures(
     return MappingProxyType(
         {
             required_input: replace(spec, sim_fixture_allowed=True)
+            for required_input, spec in requirements.items()
+        }
+    )
+
+
+def requirements_requiring_physical_inputs(
+    requirements: Mapping[RequiredInput, RequiredInputSpec] = DEFAULT_REQUIRED_INPUTS,
+) -> Mapping[RequiredInput, RequiredInputSpec]:
+    """``requirements`` with EVERY fixture allowance withdrawn, including SCAN.
+
+    Board decision D-2. :data:`DEFAULT_REQUIRED_INPUTS` is the *simulator*
+    default and deliberately keeps ``SCAN.sim_fixture_allowed=True`` — that is
+    the shipped behavior and it is preserved here untouched, to be migrated
+    only deliberately. But the physical branch used to reuse that same table,
+    so stub geometry was admitted on a physically commissioned deployment and
+    only POSE/FEEDBACK dominating the join blocked translation.
+
+    A physical deployment gets this table instead, on which no synthetic
+    origin satisfies any requirement. Missing calibrated geometry then holds
+    exactly (a recoverable ``HOLD``, from the missing branch) and *substituted*
+    geometry latches — so no missing-scan/geometry path can emit physical
+    translation on its own account rather than as a side effect.
+    """
+
+    return MappingProxyType(
+        {
+            required_input: replace(spec, sim_fixture_allowed=False)
             for required_input, spec in requirements.items()
         }
     )
@@ -221,9 +249,15 @@ def _fault_for(
         return InputFault(required_input, "payload_malformed", HealthAction.LATCHED_STOP)
     if not isinstance(sample.frame_id, str) or sample.frame_id != spec.frame_id:
         return InputFault(required_input, "frame_inconsistent", HealthAction.LATCHED_STOP)
-    if not isinstance(sample.origin, InputOrigin):
+    if not isinstance(sample.origin, EvidenceOrigin):
         return InputFault(required_input, "origin_malformed", HealthAction.LATCHED_STOP)
-    if sample.origin is InputOrigin.SIM_FIXTURE:
+    if sample.origin is EvidenceOrigin.UNKNOWN:
+        # Card W0-A / board D-3. An undeclared producer is not a physical one.
+        # This LATCHES rather than HOLDS: an authority-bearing sample nobody
+        # attributed is a boundary defect, not a transient gap, and a
+        # default-constructed boundary object must never satisfy a join.
+        return InputFault(required_input, "origin_unknown", HealthAction.LATCHED_STOP)
+    if sample.origin in SYNTHETIC_ORIGINS:
         if not spec.sim_fixture_allowed:
             return InputFault(required_input, "sim_fixture_forbidden", HealthAction.LATCHED_STOP)
         if not isinstance(sample.fixture_label, str) or not sample.fixture_label.strip():
@@ -245,16 +279,16 @@ def _global_latched_fault(reason: str) -> InputHealthVerdict:
 
 __all__ = [
     "DEFAULT_REQUIRED_INPUTS",
-    "PHYSICAL_SOURCE_NAMES",
+    "SYNTHETIC_ORIGINS",
+    "EvidenceOrigin",
     "HealthAction",
     "InputEvidence",
     "InputFault",
     "InputHealthVerdict",
-    "InputOrigin",
     "RequiredInput",
     "RequiredInputSpec",
     "evaluate_input_health",
     "evidence_origin",
-    "is_simulated_source",
     "requirements_allowing_sim_fixtures",
+    "requirements_requiring_physical_inputs",
 ]
