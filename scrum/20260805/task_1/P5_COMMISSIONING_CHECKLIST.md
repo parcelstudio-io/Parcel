@@ -1,12 +1,52 @@
 # P5 Commissioning checklist — DRAFT STUB ONLY
 
-**Date:** 2026-08-05 · **Status:** Draft stub (paperwork; not executed)  
-**Binding:** [ADJUDICATION.md](ADJUDICATION.md) Owner amendment; Sol H0 / L6–L8 content.  
-**Blocked on:** owner purchase decision → [P5_PROCUREMENT_BOM.md](P5_PROCUREMENT_BOM.md).
+> ## ⚠️ SUPERSEDED IN PART, 2026-08-13 — **Stage 0 is now live; Stages 1–3 are not**
+>
+> **From 2026-08-05 until 2026-08-13 this document opened with the banner:**
+>
+> > **DO NOT EXECUTE.** No robot, dock, or sensor has been procured for this
+> > program increment. This checklist is readiness paperwork so Phase 5 can
+> > run later without redesign. Completing a checkbox here is not validation.
+>
+> **That banner was correct and binding for that entire period, and it is
+> preserved here rather than deleted.** Its last sentence — *completing a
+> checkbox here is not validation* — is **not** superseded and still holds.
+>
+> **What changed.** The owner has reversed the standing *"hardware last, sim
+> throughout"* sequencing recorded at
+> [`backlog/NEXT.md:28-39`](../../../backlog/NEXT.md). Hardware is **on hand**
+> — Go2 **EDU** · add-on Unitree **L2** LiDAR · RealSense **D455** · Jetson
+> **Orin NX** (recording onboard) — and the first physical session is
+> imminent. **Superseding record:**
+> [`scrum/20260813/task_1/PHYSICAL_SESSION_PLAN.md`](../../20260813/task_1/PHYSICAL_SESSION_PLAN.md).
+>
+> **Scope of the supersession — read this precisely.**
+>
+> | Part of this checklist | Status from 2026-08-13 |
+> |---|---|
+> | **Stage 0 — Dry-run** (now `:91-109`) | **LIVE.** Instantiated, not replaced, by [`scrum/20260813/task_1/session/STAGE0_RUN_SHEET.md`](../../20260813/task_1/session/STAGE0_RUN_SHEET.md) |
+> | Preconditions P0–P6 (now `:63-73`) | **Ruled individually** in that run sheet §4. **P2 waived** (no flash today) and **P3 cannot be met** (BOM specifies two Orin docks; one is on hand) — each with a named consequence |
+> | Rule (now `:86-88`) (dual e-stop + comms-loss at **every** stage entry) | **UNCHANGED and enforced.** The run sheet verifies it at Stage-0 entry **and again** before any stand |
+> | **Stages 1, 2, 3** | **NOT superseded. Still DO NOT EXECUTE.** No sheet exists for them and none is authorised |
+> | Evidence templates (now `:165-212`) | **UNCHANGED and used verbatim** by the run sheet |
+>
+> **This document remains the ratified artifact.** The session pack
+> ([`scrum/20260813/task_1/session/`](../../20260813/task_1/session/README.md))
+> instantiates Stage 0 for one specific day; it adds **no checkbox** here,
+> changes **no** exit criterion, and closes **no** gate on its own.
+>
+> **Line numbers moved.** This banner shifted every line below it. Documents
+> written before 2026-08-13 cite the **pre-supersession** coordinates at base
+> `406f9d6` — e.g. Stage 0 as `:51-61`, the dual-e-stop rule as `:46-48`, the
+> run header as `:119-133`. Those are now `:91-109`, `:86-88` and `:167-181`.
+> The text they name is unchanged; only its coordinates are.
 
-> **DO NOT EXECUTE.** No robot, dock, or sensor has been procured for this
-> program increment. This checklist is readiness paperwork so Phase 5 can
-> run later without redesign. Completing a checkbox here is not validation.
+**Date:** 2026-08-05 · **Status:** Draft stub (paperwork; not executed) ·
+**Stage 0 superseded 2026-08-13, see banner above**  
+**Binding:** [ADJUDICATION.md](ADJUDICATION.md) Owner amendment; Sol H0 / L6–L8 content.  
+**Blocked on (as written 2026-08-05, retained as history):** owner purchase
+decision → [P5_PROCUREMENT_BOM.md](P5_PROCUREMENT_BOM.md). *Purchase is no
+longer the blocker; hardware is on hand.*
 
 Sources: Fable staged live protocol (stand → dry-run → gaze-only → leashed
 vx≤0.15 → free); Sol H0 (physical commissioning checklist, test course,
@@ -49,6 +89,14 @@ stage entry**. No stage begins with an unbounded learned controller.
 ---
 
 ## Stage 0 — Dry-run (motion disabled)
+
+> **Pointer (2026-08-13):** these seven checkboxes are **instantiated** —
+> not replaced — by
+> [`session/STAGE0_RUN_SHEET.md`](../../20260813/task_1/session/STAGE0_RUN_SHEET.md)
+> §7, where each one is mapped to the artifact or operator action that
+> produces its evidence, plus the mount-geometry, photograph, and mechanical
+> safety sheets this list assumes. The boxes below stay **unticked here**: they
+> are ticked on a per-run sheet, not in the ratified checklist.
 
 - [ ] Dock compose stack boots; safety+control container has **zero** network deps
 - [ ] Clock / TF / DDS segment firewalled (`192.168.123.0/24`); remote = tailnet only

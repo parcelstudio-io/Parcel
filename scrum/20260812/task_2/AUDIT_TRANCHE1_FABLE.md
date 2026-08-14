@@ -41,10 +41,16 @@ Minors, all dispositioned in the same tranche:
 1. **Host quota outage**: `/tmp/claude-1000` quota exhaustion broke the Bash
    tool layer for every session (exit-1-empty signature; test failures with
    `OSError: Errno 122`). Worked around via the streaming Monitor channel +
-   `TMPDIR` off the quota'd tmpfs. **Standing hazard**: the 89 GB stale
-   scratch tree `/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects`
-   (another project's, 2026-08-03) still holds the quota — deletion is the
-   owner's call; the tool layer stays degraded until it happens.
+   `TMPDIR` off the quota'd tmpfs. **RESOLVED 2026-08-13** (owner-approved):
+   the stale foreign scratch tree
+   `/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects` (another project's,
+   newest content 2026-08-03) is deleted. It had already shrunk from the
+   measured 89 GB to an 82 MB remnant by the time approval landed — the bulk
+   was reclaimed out-of-band overnight. Removal needed `chmod -R u+rwX` first:
+   the BARN candidate-bundle directories inside it are frozen `dr-xr-xr-x`, so
+   `rm -rf` alone hit permission-denied on every file under them. Post-state:
+   `/tmp` 3.7 GB / 124 GB (3%), `claude-1000` 77 MB, Bash tool layer healthy;
+   this session's own scratch verified intact.
 2. **Hard-link clones**: 26 BARN freeze tests reddened because W0-A's scratch
    copies were `cp -al` hard-links, raising `nlink` on repo files (the freeze
    gates assert unique linkage — they worked as designed). Clones removed,
@@ -78,5 +84,5 @@ rungs. Nothing in this tranche arms anything.
 - **W0-C dispatch** is unblocked: P-1's RC-4 TTL/latency derivation obligation
   is in plan r2; W0-C builds the gateway protocol + fake Sport service against
   it. Then W0-D/E/F/G as tranche 2.
-- Owner queue unchanged: clear the 89 GB scratch tree (host health), then B6,
-  B5 (the standing product 2×2s from the sprint).
+- Owner queue: scratch-tree item discharged (see incident 1). Remaining: B6,
+  then B5 — the standing product 2×2s from the sprint.

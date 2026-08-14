@@ -7,6 +7,8 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
+.tmp_ci/
+.tmp/
 .cache/external-evals/
 .cache/reasoner/
 .cache/speech/
@@ -32,3 +34,6 @@ MUJOCO_LOG.TXT
 # Nested clone of Sesame CSM (has its own .git)
 third_party/
 /usr/
+
+.tmp_ci/
+.tmp/

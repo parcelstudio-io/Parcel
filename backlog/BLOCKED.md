@@ -202,3 +202,60 @@ by instrumentation, 8/8 refuter-confirmed, that the brake is the module).
   flag-ON eval pressure on cluttered long-travel cells; the RM-2 wiring
   itself is audited sound (chains arm, win arbitration, and drive — 4,892
   chain ticks — the legs just cannot move through a braked tick).
+
+## B7 — A latched input-health stop still permits yaw · **owner decision needed (2×2)**
+
+**Opened:** 2026-08-13 (found during the pre-physical-session research of
+[../scrum/20260813/task_1/PHYSICAL_SESSION_PLAN.md](../scrum/20260813/task_1/PHYSICAL_SESSION_PLAN.md);
+spot-confirmed at source by Fable, not inferred from a report).
+
+- **The defect, read at source:** `runtime.py:5711-5712`. When the input-health
+  join denies translation — including the **latched** case, where
+  `self._input_health_latched` is set and only an operator ack can clear it —
+  the command is rebuilt as `command = VelocityCommand(vyaw=command.vyaw)`.
+  Translation is zeroed; **rotation survives untouched**. A robot whose sensor
+  inputs have latched-failed can still spin in place indefinitely, driven by
+  whatever last requested a yaw rate.
+- **Why it needs the owner:** the surrounding comment states the intent
+  plainly — "LATCHED_STOP means latched. A single recovered tick must not
+  silently re-authorize motion" — and the yaw passthrough is in tension with
+  it. But zeroing yaw is a hard-safety semantic change that moves frozen eval
+  rows (scan/search behaviours legitimately rotate to re-acquire), so it is
+  STOP + 2×2 by global rule 2. The 2×2 axes: does a latched health stop zero
+  yaw as well as translation, and if not, what bounds it (rate cap? duration?
+  only operator-originated yaw?).
+- **Consequence today:** this is the concrete refutation of the proposal to
+  build a `SENSOR_ONLY` runtime mode enforced at the health join — such a mode
+  would have inherited exactly this hole and shipped a "sensor-only" robot
+  that can still rotate. Recorded in the PS-1 verdict as the reason Sol 5.6's
+  item 5 was rejected for the pre-session day.
+- **Not blocking the first physical session:** nothing is armed, no vendor SDK
+  is installed, and `runtime.py:385-391` refuses any non-`"simulator"`
+  controller from config. This blocks arming, not recording.
+
+## B8 — The no-provider pose fallback fabricates confidence · **owner decision needed (2×2)**
+
+**Opened:** 2026-08-13 (same research pass; spot-confirmed at source).
+
+- **The defect, read at source:** `pose.py:945-954`. When no `PoseProvider` is
+  attached, `observation_pose` synthesises a `PoseEstimate` from
+  `observation.position` and stamps it `health=PoseHealth.HEALTHY`,
+  `covariance=ZERO_COVARIANCE`, `stamp_monotonic_s=0.0`. The fallback for
+  "we have no localizer" is therefore **maximal claimed confidence with a zero
+  timestamp** — fail-open by construction.
+- **Why it matters and why it needs the owner:** zero covariance is not a
+  neutral placeholder, it is an assertion of perfect knowledge, and it renders
+  inert precisely the gates that exist to catch bad localization (the
+  `pipeline.py` sigma-inflation path and the arrival-health check both
+  key off covariance). Any half-wired physical pose provider — the very next
+  thing Wave 1 builds — lands in this fallback and degrades to **confidently
+  wrong** rather than failing closed. Changing the fallback to
+  `health=UNKNOWN`/inflated covariance moves frozen eval rows that currently
+  run on the truth provider, hence 2×2.
+- **Relations:** compounds [B5](#b5) — B5 is the arrival predicate having no
+  pose-error reserve; B8 is the pose layer beneath it claiming there is no
+  pose error to reserve for. Fixing B5 without B8 leaves the reserve computed
+  from a fabricated zero.
+- **Not blocking the first physical session:** the session records sensors and
+  runs no localizer. This blocks the Wave-1 physical pose provider, which must
+  not be built until the fallback fails closed.
