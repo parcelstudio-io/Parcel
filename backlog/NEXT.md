@@ -628,3 +628,74 @@ The recording is for EVAL TRUSTWORTHINESS only — it does not make live audio I
 work (that is the same transducer + `wpctl` activation) and does not fix
 barge-in (N16/N17 need real output latency + attenuated echo). The
 PERSONAL_CONVO text tier and all synthetic-voice acoustic gates run without it.
+
+---
+
+## N23 — PE-D: freeze `SensorFrameV2` + first rosbag2 replay source · **days · after S-1**
+
+**Opened:** 2026-08-14 (deferred from REVISED_BOARD; was parallel PE-D).
+
+S-1's support-artifact / CameraInfo / TF / sync truth table is now gated in
+software (`S1_STATUS.md`). PE-D may start without waiting on Orin hardware.
+
+- **Build:** simulator-neutral `SensorFrameV2`/`SensorSource` carrying raw
+  image+CameraInfo, raw PointCloud2 (unknown vendor fields preserved), IMU,
+  source/host clocks + uncertainty, frame ID + TF/calibration digests, typed
+  provenance — **no** semantic IDs, true pose or collision truth on the agent
+  side. First deterministic rosbag2-MCAP replay adapter through that boundary.
+- **Tests:** live-shaped fixture ≡ normalized replay; drop/duplicate/reorder/
+  clock-step/missing-TF/bad-calibration/NaN/unknown-field fixtures fail or
+  degrade as specified; stale LiDAR never free space; stale camera blocks
+  semantic authority; oracle fields refused from agent input.
+- **Exit:** `PE_D_STATUS.md` + focused tests. Do not claim localization,
+  fusion or navigation improvement.
+- **Unblocks:** IS-F producer work once B13's supported host exists.
+
+## N24 — SG-E: bounded W0-C/W0-F gateway slice · **days · before any Parcel motion**
+
+**Opened:** 2026-08-14 (deferred from REVISED_BOARD; required before
+Parcel-driven motion, **not** before mounting).
+
+- **Slice:** TTL/latency derivation table; versioned gateway DTOs (boot epoch,
+  sequence, local TTL, hashes, ack/state/stop); fake Sport service with
+  delayed/no-reply Move, stale state, lease loss, writer conflict; process-
+  level proof that client death after a nonzero proposal → local stop, never
+  auto-resume, restart disarmed; start `authority-invariants` CI gate.
+- **Do not silently decide B5–B8** (owner 2×2). Fixtures/specs only until
+  authorized.
+- **Exit:** `SG_E_STATUS.md` naming which subset landed and which W0-C/F gates
+  remain. A partial slice is not a gateway.
+- **Hard rule:** no motion-auth product change in this card without owner
+  2×2; no vendor SDK in `.parcel`.
+
+## N25 — Camera plausibility samples for optical streams · **hours**
+
+**Opened:** 2026-08-14 (DOC-G residual from PS-N does_not_prove #6; was
+hidden only in 20260813 status).
+
+- **Defect:** `go2.front_camera` and the four D455 video rows carry
+  `ChannelClass.CAMERA`, but live decoders emit **no `ImageSample`**, so
+  `camera.non_degenerate` (lens-cap) never fires and those channels report
+  `camera.no_measurement → UNKNOWN` all session.
+- **Unblock:** emit attributable image/sample frames on the live camera decode
+  path (or a documented UNAVAILABLE reason per stream), then seed a lens-cap /
+  all-zero frame that reddens the plausibility pin. Fail closed and visible —
+  never silence the channel on FAIL (PS-J rule).
+- **Does not replace** S-1 CameraInfo/TF GO-RECORD gates; those are orthogonal.
+
+## N26 — Primary rosbag interior-loss attribution · **hours–days**
+
+**Opened:** 2026-08-14 (DOC-G residual; PS-B contrast vs CaptureRecorder).
+
+- **Defect:** a single global sequence stamped before write and incremented
+  after means a message never written leaves **no hole**, and one counter
+  cannot attribute a hole to a channel. Parcel's SECONDARY `CaptureRecorder`
+  path already mints per-channel receipt sequences and burns numbers on
+  `drop()` — the primary rosbag2 path does not yet expose equivalent
+  attribution.
+- **Unblock:** design a per-topic loss ledger for the rosbag2 primary path
+  (sidecar or companion artifact) that attributes drops without inventing
+  messages; seed a backpressure/truncation case that proves attribution; keep
+  fail-closed (unknown ≠ zero loss).
+- **Relation:** rehearsal SIGKILL/truncation tests prove bags stay readable;
+  they do not prove per-channel interior-loss attribution on the primary path.

@@ -1465,6 +1465,415 @@ for _field in PAYLOAD_FIELDS:  # pragma: no cover - import-time invariant
         )
 
 
+# ---------------------------------------------------------------------------
+# Support artifacts — card S-1 (scrum/20260814/task_1/REVISED_BOARD.md)
+# ---------------------------------------------------------------------------
+#
+# The verified P0 this class exists for, executed on 2026-08-14: the recording
+# plan carried FOUR optical image streams and NOT ONE ``camera_info``, no
+# ``/tf`` and no ``/tf_static``. A bag with ``color/image_raw`` and no
+# intrinsics or distortion model cannot feed any camera-involving SLAM or
+# fusion; without transforms there are no extrinsics between the sensors
+# either. The matrix enumerated *sensor* channels and never modelled
+# *calibration and transform support artifacts* as a class — the gap was in the
+# specification, so the fix is a specification object, not a prose note.
+#
+# A support artifact is NOT a channel. A channel is an independently-arriving,
+# independently-dropping sensor stream and mints its own payload sequence
+# space; a support artifact has no independent sensor arrival semantics — a
+# ``camera_info`` message is the driver restating a calibration table, and a
+# ``/tf_static`` message is a latched declaration. Minting a sequence space for
+# one would fabricate drop evidence, which is the exact defect the channel
+# table exists to prevent. So this class lives BESIDE :data:`CHANNELS`:
+# ``CHANNEL_MATRIX.md`` (immutable, 20260813) stays payload-only, and this
+# table is the machine-readable cross-reference that says what else a bag must
+# carry before its payload is usable.
+
+
+#: How many support artifacts this table declares. Pinned like
+#: :data:`CHANNEL_MATRIX_ROWS` so an edit that drops one reddens a gate
+#: instead of silently shrinking the completeness contract.
+SUPPORT_ARTIFACT_ROWS = 8
+
+
+class UnknownSupportArtifactError(CaptureError):
+    """A support id that is not in :data:`SUPPORT_ARTIFACTS`. Unknown is absent."""
+
+
+class SupportArtifactKind(str, Enum):
+    """What kind of support evidence an artifact is."""
+
+    #: ``sensor_msgs/msg/CameraInfo`` for one optical stream: intrinsics,
+    #: distortion model and coefficients, at the stream's own resolution.
+    CAMERA_INFO = "camera_info"
+    #: Dynamic transforms (``/tf``).
+    TF = "tf"
+    #: Static transforms (``/tf_static``) — the sensor mounting extrinsics.
+    TF_STATIC = "tf_static"
+    #: A SHA-256 over the canonical decoded calibration set, bound into the
+    #: sidecar so a one-byte change to any calibration payload is detectable.
+    CALIBRATION_DIGEST = "calibration_digest"
+
+
+class SupportNeed(str, Enum):
+    """What the absence of this artifact does to a run. Never permissive.
+
+    The members are ordered from hardest to softest, and the soft members
+    exist so that "cannot exist" and "may be absent" are different words from
+    "required": collapsing them is how the four camera_info topics went
+    unrecorded in the first place.
+    """
+
+    #: Absent or mismatched at reconciliation/finalize time = refusal.
+    REQUIRED = "required"
+    #: Required, but a machine-readable static-transform snapshot captured
+    #: before record start may stand in for the live topic — ``/tf_static`` is
+    #: transient-local, so a recorder started after the publisher may never
+    #: receive it. Neither captured nor snapshotted = refusal.
+    SNAPSHOT_SUBSTITUTABLE = "snapshot_substitutable"
+    #: Joins the recording plan; absence is a recorded finding, not a refusal.
+    #: For ``/tf``: a stationary rig with no odometry publisher legitimately
+    #: has no dynamic transforms, and refusing on that would gate the session
+    #: on evidence that cannot exist for it.
+    RECORDED_OPPORTUNISTIC = "recorded_opportunistic"
+    #: No publisher for this artifact exists at all (the Go2 front camera has
+    #: no CameraInfo source). The absence is recorded in the sidecar as a
+    #: does-not-prove line — never silently passed, never a refusal that would
+    #: push the operator to drop the stream from the recording.
+    UNAVAILABLE_DOCUMENTED = "unavailable_documented"
+
+
+class SupportScope(str, Enum):
+    """Which payload channels an artifact vouches for."""
+
+    #: Exactly the channels named in ``supports_channel_ids``.
+    PER_CHANNEL = "per_channel"
+    #: Every spatial channel of the rig (``supports_channel_ids`` empty by
+    #: construction; the set is derived from the channel table, not restated).
+    RIG_SPATIAL = "rig_spatial"
+
+
+@dataclass(frozen=True, slots=True)
+class SupportArtifact:
+    """One calibration/transform artifact a complete bag must account for.
+
+    Deliberately NOT a :class:`Channel`: it carries no ``rate_kind``, no
+    ``nominal_rate_hz``, no ``presence`` prior and no sequence space. Its
+    fields are transcriptions (``message_type``, topic derivation) plus this
+    card's decisions (``need``), all falsifiable at preflight reconciliation.
+    """
+
+    #: Stable dotted id under the ``support.`` prefix, so it can never collide
+    #: with a payload ``channel_id`` (those are ``<device>.<path>``).
+    support_id: str
+    kind: SupportArtifactKind
+    human_name: str
+    #: Payload channels this artifact vouches for (PER_CHANNEL scope only).
+    supports_channel_ids: tuple[str, ...]
+    need: SupportNeed
+    scope: SupportScope
+    #: Declared ROS interface type on the wire; ``None`` for artifacts that are
+    #: not topics (the calibration digest is derived, not subscribed).
+    message_type: str | None
+    confidence: Confidence
+    note: str
+
+    def __post_init__(self) -> None:
+        if not self.support_id or set(self.support_id) - _ID_ALPHABET:
+            raise CaptureError(
+                f"support_id must be lowercase [a-z0-9_.]: {self.support_id!r}"
+            )
+        if not self.support_id.startswith("support."):
+            raise CaptureError(
+                f"support_id must start with 'support.': {self.support_id!r} — the "
+                f"prefix is what keeps a support artifact out of the payload id space"
+            )
+        if not self.human_name.strip():
+            raise CaptureError(f"{self.support_id}: human_name must be non-empty")
+        if not self.note.strip():
+            raise CaptureError(f"{self.support_id}: note must be non-empty")
+        if not isinstance(self.kind, SupportArtifactKind):
+            raise CaptureError(
+                f"{self.support_id}: kind must be a SupportArtifactKind member, got "
+                f"{self.kind!r}"
+            )
+        if not isinstance(self.need, SupportNeed):
+            raise CaptureError(
+                f"{self.support_id}: need must be a SupportNeed member, got "
+                f"{self.need!r} — an undeclared need reads as optional, which is the "
+                f"fail-open this class exists to close"
+            )
+        if not isinstance(self.scope, SupportScope):
+            raise CaptureError(
+                f"{self.support_id}: scope must be a SupportScope member, got {self.scope!r}"
+            )
+        if not isinstance(self.confidence, Confidence):
+            raise CaptureError(
+                f"{self.support_id}: confidence must be a Confidence member, got "
+                f"{self.confidence!r}"
+            )
+        if self.scope is SupportScope.PER_CHANNEL and not self.supports_channel_ids:
+            raise CaptureError(
+                f"{self.support_id}: PER_CHANNEL scope requires supports_channel_ids — "
+                f"an artifact that vouches for nothing is prose, not a contract"
+            )
+        if self.scope is SupportScope.RIG_SPATIAL and self.supports_channel_ids:
+            raise CaptureError(
+                f"{self.support_id}: RIG_SPATIAL scope derives its channel set from the "
+                f"table; restating it here is a second list that can drift"
+            )
+        if self.message_type is not None and not self.message_type.strip():
+            raise CaptureError(
+                f"{self.support_id}: message_type must be None or non-empty — an empty "
+                f"string would read as 'any type matches' at reconciliation"
+            )
+
+    @property
+    def is_topic_backed(self) -> bool:
+        """True when this artifact arrives on a ROS topic at all."""
+
+        return self.message_type is not None
+
+
+#: Leaf basenames a camera image topic may end in, per the realsense2_camera /
+#: image_transport convention. Documentation-derived like every other name.
+_IMAGE_TOPIC_LEAVES = ("image_raw", "image_rect_raw", "image")
+
+
+def camera_info_topic_for(image_topic: str) -> str:
+    """The ``camera_info`` topic beside one image topic. Refuses to guess.
+
+    The D455 driver publishes ``CameraInfo`` per stream under the SAME
+    namespace as the stream's image topic (``.../color/image_raw`` →
+    ``.../color/camera_info``). Deriving the name here — from the image topic
+    the plan already carries — means a namespace change updates both names or
+    neither, and there is no second hand-written list to go stale.
+
+    Fail closed: a topic whose last segment is not a known image leaf is
+    refused rather than mangled, because a wrong ``camera_info`` name costs
+    nothing at record time (the recorder never subscribes) and everything at
+    calibration time.
+    """
+
+    if not image_topic.startswith("/") or image_topic.endswith("/"):
+        raise CaptureError(
+            f"camera_info derivation needs an absolute image topic, got {image_topic!r}"
+        )
+    namespace, _, leaf = image_topic.rpartition("/")
+    if leaf not in _IMAGE_TOPIC_LEAVES:
+        raise CaptureError(
+            f"{image_topic!r} does not end in an image leaf {_IMAGE_TOPIC_LEAVES}; "
+            f"deriving a camera_info name from it would be a guess, and a wrong "
+            f"support-topic name is silent at record time"
+        )
+    if not namespace:
+        raise CaptureError(
+            f"{image_topic!r} has no namespace to hang a camera_info topic under"
+        )
+    return f"{namespace}/camera_info"
+
+
+SUPPORT_ARTIFACTS: tuple[SupportArtifact, ...] = (
+    SupportArtifact(
+        support_id="support.d455.color.camera_info",
+        kind=SupportArtifactKind.CAMERA_INFO,
+        human_name="D455 colour intrinsics (CameraInfo)",
+        supports_channel_ids=("d455.color",),
+        need=SupportNeed.REQUIRED,
+        scope=SupportScope.PER_CHANNEL,
+        message_type="sensor_msgs/msg/CameraInfo",
+        confidence=Confidence.UNVERIFIED,
+        note=(
+            "Published by the realsense2_camera driver beside the image topic, at "
+            "the stream's own resolution. UNVERIFIED like every driver topic name: "
+            "H-2 measures it on the Orin. Without it the colour stream cannot feed "
+            "any camera-involving SLAM or camera-LiDAR fusion — the P0 this class "
+            "exists for."
+        ),
+    ),
+    SupportArtifact(
+        support_id="support.d455.depth.camera_info",
+        kind=SupportArtifactKind.CAMERA_INFO,
+        human_name="D455 depth intrinsics (CameraInfo)",
+        supports_channel_ids=("d455.depth",),
+        need=SupportNeed.REQUIRED,
+        scope=SupportScope.PER_CHANNEL,
+        message_type="sensor_msgs/msg/CameraInfo",
+        confidence=Confidence.UNVERIFIED,
+        note=(
+            "Depth reprojection is arithmetic on these intrinsics; a depth image "
+            "without them is a bitmap, not a point source."
+        ),
+    ),
+    SupportArtifact(
+        support_id="support.d455.infra1.camera_info",
+        kind=SupportArtifactKind.CAMERA_INFO,
+        human_name="D455 left-IR intrinsics (CameraInfo)",
+        supports_channel_ids=("d455.infra1",),
+        need=SupportNeed.REQUIRED,
+        scope=SupportScope.PER_CHANNEL,
+        message_type="sensor_msgs/msg/CameraInfo",
+        confidence=Confidence.UNVERIFIED,
+        note=(
+            "The IR pair is the only independent stereo baseline on the rig; the "
+            "baseline lives in the calibration, not in the pixels."
+        ),
+    ),
+    SupportArtifact(
+        support_id="support.d455.infra2.camera_info",
+        kind=SupportArtifactKind.CAMERA_INFO,
+        human_name="D455 right-IR intrinsics (CameraInfo)",
+        supports_channel_ids=("d455.infra2",),
+        need=SupportNeed.REQUIRED,
+        scope=SupportScope.PER_CHANNEL,
+        message_type="sensor_msgs/msg/CameraInfo",
+        confidence=Confidence.UNVERIFIED,
+        note="Second eye of the stereo pair; see support.d455.infra1.camera_info.",
+    ),
+    SupportArtifact(
+        support_id="support.go2.front_camera.camera_info",
+        kind=SupportArtifactKind.CAMERA_INFO,
+        human_name="Go2 front camera intrinsics — NO PUBLISHER EXISTS",
+        supports_channel_ids=("go2.front_camera", "go2.front_camera_h264"),
+        need=SupportNeed.UNAVAILABLE_DOCUMENTED,
+        scope=SupportScope.PER_CHANNEL,
+        message_type=None,
+        confidence=Confidence.CONFIRMED,
+        note=(
+            "The vendor stream (rows 9/24) carries JPEG/H.264 frames and nothing "
+            "publishes a CameraInfo for them anywhere in the vendor stack. Recorded "
+            "here so the absence is a stated property of the dataset — the front "
+            "camera is usable as imagery, not as a calibrated sensor — rather than "
+            "a silent gap a consumer discovers six months in."
+        ),
+    ),
+    SupportArtifact(
+        support_id="support.tf",
+        kind=SupportArtifactKind.TF,
+        human_name="Dynamic transforms (/tf)",
+        supports_channel_ids=(),
+        need=SupportNeed.RECORDED_OPPORTUNISTIC,
+        scope=SupportScope.RIG_SPATIAL,
+        message_type="tf2_msgs/msg/TFMessage",
+        confidence=Confidence.UNVERIFIED,
+        note=(
+            "Whatever publishes odom->base_link (if anything does) is unverified. "
+            "Recorded when present; a stationary rig with no odometry publisher "
+            "legitimately has none, so absence is a finding, never a refusal."
+        ),
+    ),
+    SupportArtifact(
+        support_id="support.tf_static",
+        kind=SupportArtifactKind.TF_STATIC,
+        human_name="Static transforms (/tf_static) — sensor mounting extrinsics",
+        supports_channel_ids=(),
+        need=SupportNeed.SNAPSHOT_SUBSTITUTABLE,
+        scope=SupportScope.RIG_SPATIAL,
+        message_type="tf2_msgs/msg/TFMessage",
+        confidence=Confidence.UNVERIFIED,
+        note=(
+            "TRANSIENT-LOCAL: published once, latched. A recorder started after "
+            "the publisher may receive it (transient-local re-delivery) or may "
+            "not, depending on QoS overrides — so the run must either capture it "
+            "in the bag or bind a machine-readable static-transform snapshot "
+            "taken before record start. Neither = the bag's frames are labels "
+            "with no geometry = refusal."
+        ),
+    ),
+    SupportArtifact(
+        support_id="support.calibration.digest",
+        kind=SupportArtifactKind.CALIBRATION_DIGEST,
+        human_name="Calibration digest over the decoded CameraInfo set",
+        supports_channel_ids=("d455.color", "d455.depth", "d455.infra1", "d455.infra2"),
+        need=SupportNeed.REQUIRED,
+        scope=SupportScope.PER_CHANNEL,
+        message_type=None,
+        confidence=Confidence.CONFIRMED,
+        note=(
+            "SHA-256 over the canonical decoded calibration set, computed from the "
+            "bag's own bytes and bound into the sidecar. Not a topic: it exists so "
+            "a one-byte change to any calibration payload after the session is a "
+            "verification failure, not a silent recalibration."
+        ),
+    ),
+)
+
+SUPPORT_ARTIFACTS_BY_ID: Mapping[str, SupportArtifact] = MappingProxyType(
+    {entry.support_id: entry for entry in SUPPORT_ARTIFACTS}
+)
+
+if len(SUPPORT_ARTIFACTS_BY_ID) != len(SUPPORT_ARTIFACTS):  # pragma: no cover
+    raise CaptureError("duplicate support_id in SUPPORT_ARTIFACTS")
+
+if len(SUPPORT_ARTIFACTS) != SUPPORT_ARTIFACT_ROWS:  # pragma: no cover
+    raise CaptureError(
+        f"SUPPORT_ARTIFACTS declares {len(SUPPORT_ARTIFACTS)} rows, the pinned count "
+        f"is {SUPPORT_ARTIFACT_ROWS}; change both together or not at all"
+    )
+
+for _support in SUPPORT_ARTIFACTS:  # pragma: no cover - import-time invariant
+    if _support.support_id in CHANNELS_BY_ID:
+        raise CaptureError(
+            f"{_support.support_id}: collides with a payload channel id — a support "
+            f"artifact must never be able to mint a payload sequence space"
+        )
+    for _cid in _support.supports_channel_ids:
+        if _cid not in CHANNELS_BY_ID:
+            raise CaptureError(
+                f"{_support.support_id}: supports unknown channel {_cid!r} — an "
+                f"artifact for a stream we do not record vouches for nothing"
+            )
+
+
+def support_artifact(support_id: str) -> SupportArtifact:
+    """Look up a support artifact, refusing anything not in the table."""
+
+    try:
+        return SUPPORT_ARTIFACTS_BY_ID[support_id]
+    except (KeyError, TypeError) as exc:
+        raise UnknownSupportArtifactError(
+            f"unknown support_id {support_id!r}; known ids: "
+            f"{', '.join(sorted(SUPPORT_ARTIFACTS_BY_ID))}"
+        ) from exc
+
+
+def support_artifacts_for(channel_id: str) -> tuple[SupportArtifact, ...]:
+    """Every support artifact that vouches for one payload channel.
+
+    RIG_SPATIAL artifacts apply to every spatial channel; PER_CHANNEL ones to
+    the channels they name. Refuses an unknown channel rather than returning an
+    empty tuple, for the same reason :func:`payload_fields_of` does.
+    """
+
+    entry = channel(channel_id)
+    out: list[SupportArtifact] = []
+    for item in SUPPORT_ARTIFACTS:
+        if item.scope is SupportScope.RIG_SPATIAL:
+            if entry.is_spatial:
+                out.append(item)
+        elif channel_id in item.supports_channel_ids:
+            out.append(item)
+    return tuple(out)
+
+
+def certified_optical_channel_ids() -> tuple[str, ...]:
+    """The optical streams whose CameraInfo is REQUIRED — the GO-RECORD set.
+
+    Derived from the support table, never restated: a stream is in this set
+    exactly when a REQUIRED CAMERA_INFO artifact vouches for it. The Go2 front
+    camera is deliberately not here (no publisher exists; its absence is
+    documented, not gated).
+    """
+
+    out: list[str] = []
+    for item in SUPPORT_ARTIFACTS:
+        if item.kind is SupportArtifactKind.CAMERA_INFO and item.need is SupportNeed.REQUIRED:
+            for cid in item.supports_channel_ids:
+                if cid not in out:
+                    out.append(cid)
+    return tuple(out)
+
+
 def channel(channel_id: str) -> Channel:
     """Look up a channel, refusing anything not in the matrix.
 
@@ -1605,6 +2014,9 @@ __all__ = [
     "PAYLOAD_FIELDS",
     "PAYLOAD_FIELDS_BY_ID",
     "PAYLOAD_FIELD_ROWS",
+    "SUPPORT_ARTIFACTS",
+    "SUPPORT_ARTIFACTS_BY_ID",
+    "SUPPORT_ARTIFACT_ROWS",
     "CaptureError",
     "Channel",
     "ChannelPresence",
@@ -1614,14 +2026,23 @@ __all__ = [
     "RateKind",
     "SourceClock",
     "SourceDevice",
+    "SupportArtifact",
+    "SupportArtifactKind",
+    "SupportNeed",
+    "SupportScope",
     "Transport",
     "UnknownChannelError",
     "UnknownPayloadFieldError",
+    "UnknownSupportArtifactError",
     "WireNaming",
+    "camera_info_topic_for",
+    "certified_optical_channel_ids",
     "channel",
     "channel_ids",
     "payload_field",
     "payload_fields_of",
     "select_channels",
     "subscribe_name",
+    "support_artifact",
+    "support_artifacts_for",
 ]

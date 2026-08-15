@@ -39,14 +39,22 @@ if str(REPO) not in sys.path:
 
 from parcel_robot.bags.schema import SCHEMA_VERSION, validate_manifest, validate_topic
 from parcel_robot.capture import CHANNELS, Transport, channel
-from parcel_robot.capture.channels import Confidence, WireNaming, subscribe_name
+from parcel_robot.capture.channels import (
+    SUPPORT_ARTIFACTS_BY_ID,
+    Confidence,
+    WireNaming,
+    camera_info_topic_for,
+    subscribe_name,
+)
 from parcel_robot.evidence_origin import EvidenceOrigin
 from scripts.parcel_capture import rosbag2 as rb
+from scripts.parcel_capture import sidecar as sidecar_mod
 from scripts.parcel_capture.record import read_mcap
 from scripts.parcel_capture.sidecar import (
     SIDECAR_EXTRA_KEY,
     BagFormat,
     ChannelVerdict,
+    GoRecordRefusedError,
     RecorderRole,
     SidecarRefusedError,
     build_rosbag2_sidecar,
@@ -55,6 +63,7 @@ from scripts.parcel_capture.sidecar import (
     verify_rosbag2_sidecar,
     verify_sidecar,
 )
+from scripts.parcel_capture.syncevents import build_selftest_fit, sync_fit_digest
 
 LOWSTATE = "/lowstate"
 CLOUD = "/utlidar/cloud"
@@ -1173,3 +1182,1032 @@ def test_the_cli_can_clear_the_argv_against_a_saved_help_file(tmp_path: Path, ca
     assert rb.main(["--verify-help", str(saved), "--distro", "jazzy"]) == 2
     assert "--topics" in capsys.readouterr().err
     assert rb.main(["--verify-help", str(tmp_path / "absent.txt")]) == 3
+
+
+# ---------------------------------------------------------------------------
+# S-1 — support artifacts, the GO-RECORD gate, and real bytes
+# ---------------------------------------------------------------------------
+#
+# The verified P0 (AU-H, executed 2026-08-14): the recording plan carried four
+# optical image streams and NO camera_info, NO /tf, NO /tf_static. The tests
+# below gate the fix: support topics on the plan, derived names, the sidecar
+# GO-RECORD gate with every board-named seeded refusal, the sync-fit binding,
+# and — following the PS-M precedent — REAL rosbag2 bags written by the real
+# writer (rosbag2_py.SequentialWriter -> librosbag2_storage_mcap.so ->
+# libmcap, ROS 2 Jazzy sandbox, rclpy CDR serialization), embedded here
+# zlib+base64 with their digests, so the refusals are proven against bytes no
+# module of ours produced.
+
+#: Real rosbag2 bags written inside the Jazzy sandbox by write_gate_bags.py
+#: (see scrum/20260814/task_1/S1_STATUS.md for the recipe and transcript):
+#: 20 Image messages (848x480, rgb8) on /camera/camera/color/image_raw, plus
+#: per-bag: matching 848x480 CameraInfo + /tf_static (complete); no CameraInfo
+#: at all (missing_ci); a 1280x720 CameraInfo against the 848x480 stream
+#: (mismatch). name -> (sha256 of the raw .mcap, zlib+base64 bytes).
+REAL_S1_BAGS: dict[str, tuple[str, str]] = {
+    "bag_complete": (
+        "e15540c578cb150ba2547bb4198925ee5f47e084d18ca714176334ed35ba6b3a",
+        (
+            "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"
+            "S4RrFxql9aL1FxulxYOzLzVKmeQLG41SWvHipUYpx7RxuVFKOLxypVGafV55rVGaily91ijh0tdfb5RAyltvNkoRa+vtRsl9"
+            "vbPVKNmyuz0hzkMlcf7xZ8ri/PPTZXH+xVpZnB8+VxbnXz1fFue3zpbF+Xfny+L8+xfK4vyHi2Vx/uPLZXH+8y+Vxfmvr5TF"
+            "+e1Xy+L8j82yOL9ztSzO/7xeFuf33iiL8wdvlcX5X58ri/OHv6zE+VlF50jjJxuFOB9+WN595L2jqlzD/M7H8Oi+v/Nx9eg9"
+            "/s7H0yunluh1F7/3sbykX5M/83Fi+da/87Eoj48yzS9+JANYsuLQX3Ub9+qusdm/XqGKaJlQ78wPh3h+op7P2hK8Zr6bsbVt"
+            "cerIg6hiooQ7hOm3Rmb8YMfy7Xtym33Lpf7tfwzbR9jHlaWDddIcCXbLLm4MP1oNQu8+br83Yw262/7MTDGoZ/T99Mptf2/m"
+            "U0etcFqfUl2fUl2fUl2fUl2fUl2fUl1/X7L+vmT9fcn/M9+XrM9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9z"
+            "rs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrs9zrvcn1PsT6v0Jle9P+FpT73XHXe+z"
+            "N3JbexPeg+IagsuSxjKvybGztc0yfSutyuZu3QRtenrs4eJzZg0gcLNTWRO5HOiYwXJMa3OqpDcIQr9jlvZU/NTLg4qOHLjH"
+            "ZoAQDF3aA8lZEBR6DqbgMDNYnzP2LzyzBa/No3YiQkS87bgNKmrPPQ9/n2u7z+tldrSsaxzoZ+AKhJcPwQyKDSJDQUmFYvnc"
+            "LNpP9AWaF3FMeLnJmJyf76vFT1Ha3CldI97Ri6cTrrQAFLgzPPK4ASlGD9q94iqT3j2BeXcV5/SYlDIvxp9attVozk1VRsDw"
+            "0euq5BYNN2ef9d8pNhrEoWCKhJrlaQtDkuk442fLsjROO5R6QJdv8rbQl9VFa00EF23LmiAjnbBJp1lEgUKMD3aEaYM2ziYt"
+            "a7VI/ozE1NChxCBOxRntRAIdvwEYQiSrsr6UVPO13MU1PpSTFtiD6WTBeEYvYT4gcOtKocGiI/jpZtFqaW86JwRT5iXzfmy9"
+            "37Pej9jyg+mjEvisDrIdejalowI/pXzoRplCnzL1y3HnwMAlnITDwaEFCk0p1VNeN/IGAqGk8pZyO4OjZ1a2e8ZKMUzvZTzV"
+            "rWrR8occ68ooMBOrI6xVy5Z8IfdC6jVerfFqjVc/tr8/0jNfHj/UeKKxz++PmF2S9/rrIw/8506OXjXfPT1C3zcvvnF5r6Qf"
+            "1l+vXbBYFF+RP2R91VV/I/YJevaYEfljpqb+9vwn9Zf5J6seV+evOPLABSJ1pPF9T5P6Slezft2V7/70cPGNth+9U74++rh6"
+            "8KQucGjqO7imzE/78vqb09/T/Ymf0j34itLsd07Iq3ly9Lf/QL559tDEk4c//EP5Rn9t2zz55M//kXzTn3zy6JfUk5e1qLUM"
+            "dQP+WhX46pXvfvD+5QvnNpcebf4vb625MQ=="
+        ),
+    ),
+    "bag_missing_ci": (
+        "53cdb8fba354337963f5de6f59457fb5c6ca0e36e309e8f3c832f65ad2b83c53",
+        (
+            "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"
+            "USYA/wLZSWOaMIdr74vS5XYJ7etgp9eAUqmleEFr/jLsLrYj63xxGPPNspDzhV7ajnmQbUcJe6yyiK5xgzJ6iY3LnosXEdMG"
+            "GOtpxjG1s27Rg5jT664as0vRV45In4fA3lZEdO2mNGD+97qJcmE6Zh3wLBPFNQSAjYoIcamjel9GMDZBGsS9kDWKk1sP5Lvm"
+            "qh6lsKdE8wxEj/SpcTdlYQbfANXC/q1P3EKq93uz5HVwB+gGwWEOcIRU52Kusnx3qQ0Lg4YYGgDg8ZhAuEyF0gxqeo6BuufW"
+            "6FwCp5KLrgDET/k6ixWZm4NNDU0SgDkwkxKoBBAnYULrbwrY9ba0L73FErMHQlMjv0jYDK53EferLW3Kk2Aff5UDnAo5CGls"
+            "qApAJK8760yvMpaWWLqkt7OiD9ZMOuAVwMPqAKCBGWB5xRAqdKBB1gOzgwUkX9e1Rmgc+RlN/lntbEcqQFoB0gqQfmIBabvm"
+            "oNlU7QsISA0UyRPEgjY0Sdr/yCD1G/lwW4FU92wDSHf+Htq+DPw8gsCxs3qyCDlHhjl34+6ZYjqhYb7zuztni+mEhvkgeut8"
+            "MZ3QMLV/rl8opROyzRvpxWI6KdvsjJ4vppOyzXv+5WI6Kds8dfPFUjoh2/zka1eK6aRsM3/pajGdlG3eP/NKMZ2UbS4ev15K"
+            "J2Sb386+WkwnZZvXvnSzmE7KNn84+FoxnZRtkseXS+mEbPOht1JMJ2Wbt6f9Yjop29h3sC79uIbZeWnKDXNuaogBfravVlq0"
+            "n9hfK62ub9q8W/7+ZPNunXrpiVppYfm5zbvIf+DJWilUv2XzLpb+2eZd0Ltqry246PQLm3dh5OkDtdK8/57Nu4n5V5t3M+ja"
+            "wVrJ5X9p884nyVO1khO9a/POyn+3eWeOV+2r8J378/O/zxYg1a5d9rzvRzNjdyu+P7Pl3YrbMx/xbsWJ5tK8fh7gjsXCvHtG"
+            "r1Y0F+59t2KOGLDp2B9eSoAhyfCQ1RYjJm2RzW8L2CZOJ1q6/LIGYF9bvxn0beUnAssrhZF82MwEkqeaEiJhfb9jkwsSC9tL"
+            "ck90XpJu01PW/6FwzflP5PWXgk9ue+tl6PObyH+sue31l8d2FMJjdWheHZpXh+bVoXl1aF4dmleH5tWheXVo/n9zaF7dOq5u"
+            "HVe3jqtbx9Wt4+rWcXXruMKrFV6t8Gp1ySO/5DHBS867vmpJ7ysMMbz2PLXJTwf36vK9eSv39urRG7XNf2t41FL8m32xsld3"
+            "63zRqfBJYt/XTI3/HtGle9xLnWed5qfH3r7kbd6xpH88/obmM59zp8FLXzZfXrSS5DU73j5lxaiN1Ox6qWX7jNY8+gNbszJa"
+            "s+dftuYFpzCnOcfAaXNTp3bgP53v3rE/7f0v5H3zwg=="
+        ),
+    ),
+    "bag_mismatch": (
+        "e0e2a21bd25b3016e70cce9a79f61bb6d752e88b3b52a5da7c6e314f2ab88371",
+        (
+            "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"
+            "jRcapcWDMy82Spnk85uNUlrx4qVGKce0eblRSji8fKVRmn1eebVRmopcvdYo4dLXXmuUQMqbbzRKEWv7rUbJfb293SjZsrcz"
+            "Ic5DJXH+6WfL4vzLU2Vx/tV6WZwfPlcW518/Xxbnt8+Uxfn358ri/IcLZXH+48WyOP/ppbI4/+VXyuL8t5fL4vzOK2Vx/sdW"
+            "WZzfvVoW539eL4vz+6+XxfnDN8vi/K/Pl8X5o1/V4vycpnOk8dONQpwPPaTuPvzeUV2uYX/nY3h039/5uHr0Ln/n4+nVk8v0"
+            "+gi/97GybF6TP/NxYuXWv/OxqI6Pss0vfiQDWLLi0F99G/fqrrPZv16hixiZUO/sD4f4Qaqfz9oSvG6/m7G943DqqIOoEqKE"
+            "O4Tpt0Zm/GDHyu17cpt9y6X+7X8M28fYx9Xlg3XSHgl2yy5uDj9eDULvPmm/N+MMutv+zEwxqGf0/dTqbX9v5tNHnXBan1Jd"
+            "n1Jdn1Jdn1Jdn1Jdn1Jdf1+y/r5k/X3J/zPfl6zPc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67P"
+            "c67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc67Pc673J9T7E+r9CZXvT/h60+x1x13vszdyO3sT3oPi"
+            "BoKrktYyr6mxs73DMnNLVmVzt26CMT0z9nDxOXMGELjZqayJWg5s28FyzGhzqqQ/CKOgY5f2dPw0y4Oajhq4x2aAEAxdxgOp"
+            "WRAUeg6m4DAz2Jiz9i98uwVvicdLqYgQ8S4lS6Cipbnn4e9zS97zZpkdLesaB/oZuALh50Mwg2KDyFBQUqFYPreL9hN9gebF"
+            "HBNeXjom5xcEevFTlDZ3KteId8zi6YQrLQAF7gyPfW5BitWDca+4ymR2T2DeXcc5MyaVzIvxp5dtDZrzpM4IWD5mXZXcouXW"
+            "3mf9d4qNAXEomCKh5njawpBUOs762bIsrdOOlB7Q5du8LfRlbdFZE8FF27ImyEgnbLLdLKJAIcb7O8KMQVtnI8taLZI/IzE1"
+            "dCgxiFNxRjuRQMevA4YQ6ZqqryTVfDX3cI0P5WQEdn86WTCe0UuYDwjculJosOgIfnq3aLWyN5MTginzsn0/dt7fdN6P2Mr9"
+            "6aMW+KwOsl16NqWjAj9JPvTiTKNPlfrluHNg4BFOwuHQpgUKQ0maKa8X+wOBUFJ7S7WdoW1mVq57xkoJTO9VPDWtatHyhxrr"
+            "2igwE2sirFPLlXwh90LqNV6t8WqNVz+xvz/Ss18eP9R4vLHP74/YXZJ3++sj9/3nTo5etd89PULfNy++cXm3pB8yX69dcFgU"
+            "X5E/5HzV1Xwj9nF69qgV+aO2pvn2/KfMl/knqx7X56+01YELROpI4we+IfXVrmH9mqfe/fnh4httP367fH3kMf3gCVPg0NR3"
+            "cG2Znw3U9benv6f7Uz9jevBVrdnvnlBX++To7/6RevPsoYknD334x+qN+dq2ffKpX/wT9aY/+eSRL+snLxlRGxmaBvyNLvC1"
+            "K9/74P3L589uLT/S/F/v4LPX"
+        ),
+    ),
+}
+
+
+def _real_bag_dir(tmp_path: Path, name: str) -> Path:
+    """Materialise one embedded real bag as a rosbag2 directory, digest-checked."""
+
+    digest, b64 = REAL_S1_BAGS[name]
+    raw = zlib.decompress(base64.b64decode(b64))
+    import hashlib
+
+    assert hashlib.sha256(raw).hexdigest() == digest, "embedded bag corrupted"
+    directory = tmp_path / name
+    directory.mkdir(parents=True)
+    (directory / f"{name}_0.mcap").write_bytes(raw)
+    (directory / "metadata.yaml").write_text(
+        "rosbag2_bagfile_information:\n"
+        "  storage_identifier: mcap\n"
+        "  relative_file_paths:\n"
+        f"    - {name}_0.mcap\n",
+        encoding="utf-8",
+    )
+    return directory
+
+
+# -- CDR fixture encoders ----------------------------------------------------
+#
+# Test-local encoders for the fixture-bag legs. Padding is written as 0xCC on
+# purpose: real rclpy output leaves CDR padding uninitialised, so a decoder
+# that reads padding instead of skipping it passes against zeroed fixtures and
+# fails in the field. The real-bytes legs below are the independent witness
+# that these encoders (our code) agree with the real serializer.
+
+
+class _CdrWriter:
+    def __init__(self) -> None:
+        self.buf = bytearray()
+
+    def _align(self, size: int) -> None:
+        while len(self.buf) % size:
+            self.buf += b"\xcc"
+
+    def u8(self, value: int) -> None:
+        self.buf += struct.pack("<B", value)
+
+    def u32(self, value: int) -> None:
+        self._align(4)
+        self.buf += struct.pack("<I", value)
+
+    def i32(self, value: int) -> None:
+        self._align(4)
+        self.buf += struct.pack("<i", value)
+
+    def f64(self, value: float) -> None:
+        self._align(8)
+        self.buf += struct.pack("<d", value)
+
+    def string(self, value: str) -> None:
+        raw = value.encode("utf-8") + b"\x00"
+        self.u32(len(raw))
+        self.buf += raw
+
+    def header(self, frame_id: str) -> None:
+        self.i32(1)
+        self.u32(0)
+        self.string(frame_id)
+
+    def payload(self) -> bytes:
+        return b"\x00\x01\x00\x00" + bytes(self.buf)
+
+
+def _image_payload(width: int, height: int, frame_id: str) -> bytes:
+    writer = _CdrWriter()
+    writer.header(frame_id)
+    writer.u32(height)
+    writer.u32(width)
+    writer.string("rgb8")
+    writer.u8(0)          # is_bigendian
+    writer.u32(0)         # step
+    writer.u32(0)         # data: empty sequence
+    return writer.payload()
+
+
+def _camera_info_payload(
+    width: int, height: int, frame_id: str, *, d0: float = 0.1
+) -> bytes:
+    writer = _CdrWriter()
+    writer.header(frame_id)
+    writer.u32(height)
+    writer.u32(width)
+    writer.string("plumb_bob")
+    writer.u32(5)
+    for value in (d0, -0.05, 0.001, 0.002, 0.0):
+        writer.f64(value)
+    for value in (640.0, 0.0, width / 2.0, 0.0, 640.0, height / 2.0, 0.0, 0.0, 1.0):
+        writer.f64(value)
+    for value in (1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0):
+        writer.f64(value)
+    for value in (640.0, 0.0, width / 2.0, 0.0, 0.0, 640.0, height / 2.0, 0.0, 0.0, 0.0, 1.0, 0.0):
+        writer.f64(value)
+    writer.u32(0)         # binning_x
+    writer.u32(0)         # binning_y
+    for _ in range(4):    # roi x_offset/y_offset/height/width
+        writer.u32(0)
+    writer.u8(0)          # roi.do_rectify
+    return writer.payload()
+
+
+def _tf_payload(transforms: list[tuple[str, str, tuple, tuple]]) -> bytes:
+    writer = _CdrWriter()
+    writer.u32(len(transforms))
+    for parent, child, xyz, quat in transforms:
+        writer.header(parent)
+        writer.string(child)
+        for value in xyz:
+            writer.f64(value)
+        for value in quat:
+            writer.f64(value)
+    return writer.payload()
+
+
+_S1_IMG = "/camera/camera/color/image_raw"
+_S1_CI = "/camera/camera/color/camera_info"
+_S1_TF_STATIC = "/tf_static"
+_S1_FRAME = "camera_color_optical_frame"
+_S1_TYPES = {
+    _S1_IMG: "sensor_msgs/msg/Image",
+    _S1_CI: "sensor_msgs/msg/CameraInfo",
+    _S1_TF_STATIC: "tf2_msgs/msg/TFMessage",
+}
+_S1_SNAPSHOT = {
+    "schema": sidecar_mod.STATIC_TF_SNAPSHOT_SCHEMA,
+    "captured_at_utc": "2026-08-14T08:00:00Z",
+    "source": "ros2 topic echo --qos-durability transient_local /tf_static, before record start",
+    "transforms": [
+        {
+            "parent_frame": "camera_link",
+            "child_frame": _S1_FRAME,
+            "translation_m": [0.011, 0.0, 0.0],
+            "rotation_xyzw": [0.0, 0.0, 0.0, 1.0],
+        }
+    ],
+}
+
+
+def _optical_bag(
+    tmp_path: Path,
+    name: str,
+    *,
+    images: int = 20,
+    camera_infos: int = 20,
+    ci_size: tuple[int, int] = (848, 480),
+    tf_transforms: list | None = None,
+) -> Path:
+    """A fixture rosbag2 directory with an 848x480 optical stream."""
+
+    messages = []
+    for index in range(images):
+        stamp = 1_000_000_000 + index * 33_000_000
+        messages.append((_S1_IMG, stamp, _image_payload(848, 480, _S1_FRAME)))
+    for index in range(camera_infos):
+        stamp = 1_000_000_000 + index * 33_000_000
+        messages.append(
+            (_S1_CI, stamp, _camera_info_payload(ci_size[0], ci_size[1], _S1_FRAME))
+        )
+    if tf_transforms is not None:
+        messages.append((_S1_TF_STATIC, 1_000_000_000, _tf_payload(tf_transforms)))
+    directory = tmp_path / name
+    directory.mkdir(parents=True)
+    rb.write_fixture_bag(directory / f"{name}_0.mcap", messages, types=_S1_TYPES)
+    (directory / "metadata.yaml").write_text(
+        "rosbag2_bagfile_information:\n"
+        "  storage_identifier: mcap\n"
+        "  relative_file_paths:\n"
+        f"    - {name}_0.mcap\n",
+        encoding="utf-8",
+    )
+    return directory
+
+
+_S1_GOOD_TF = [("camera_link", _S1_FRAME, (0.011, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0))]
+
+
+def _go_block(manifest: dict) -> dict:
+    return manifest[SIDECAR_EXTRA_KEY]["go_record"]
+
+
+# -- the plan carries the support topics -------------------------------------
+
+
+def test_every_required_camera_info_topic_is_derived_and_on_the_plan() -> None:
+    """The P0's direct negation: camera_info per optical stream, /tf and
+    /tf_static are all on RECORDED_TOPICS, and the CameraInfo names are DERIVED
+    from the image topic names, never a second hand-written list."""
+
+    support_names = {item.topic for item in rb.SUPPORT_TOPICS}
+    for image_topic in (
+        "/camera/camera/color/image_raw",
+        "/camera/camera/depth/image_rect_raw",
+        "/camera/camera/infra1/image_rect_raw",
+        "/camera/camera/infra2/image_rect_raw",
+    ):
+        assert camera_info_topic_for(image_topic) in support_names
+    assert "/tf" in support_names
+    assert "/tf_static" in support_names
+    plan = rb.plan_for_session("/tmp/x")
+    assert support_names <= set(plan.topic_names)
+    for item in rb.SUPPORT_TOPICS:
+        assert item.support_id is not None
+        assert item.channel_id is None
+        assert item.support_id in SUPPORT_ARTIFACTS_BY_ID
+
+
+def test_seeded_failure_a_topic_cannot_be_both_payload_and_support() -> None:
+    with pytest.raises(rb.Rosbag2RefusedError, match="payload or support"):
+        rb.RecordedTopic(
+            "/camera/camera/color/camera_info",
+            "sensor_msgs/msg/CameraInfo",
+            rb.TopicSource.DRIVER_NODE,
+            "d455.color",
+            Confidence.UNVERIFIED,
+            "mutant",
+            support_id="support.d455.color.camera_info",
+        )
+    with pytest.raises(rb.Rosbag2RefusedError, match="unknown support_id"):
+        rb.RecordedTopic(
+            "/camera/camera/color/camera_info",
+            "sensor_msgs/msg/CameraInfo",
+            rb.TopicSource.DRIVER_NODE,
+            None,
+            Confidence.UNVERIFIED,
+            "mutant",
+            support_id="support.not.a.row",
+        )
+
+
+def test_seeded_failure_excluding_camera_info_under_a_live_stream_is_refused() -> None:
+    """Hand-recreating the P0 must now be impossible: a plan that keeps the
+    colour stream while excluding its calibration is a refusal, and excluding
+    both together is allowed."""
+
+    with pytest.raises(rb.Rosbag2RefusedError, match="cannot certify GO-RECORD"):
+        rb.plan_for_session("/tmp/x", exclude=("/camera/camera/color/camera_info",))
+    paired = rb.plan_for_session(
+        "/tmp/x",
+        exclude=("/camera/camera/color/camera_info", "/camera/camera/color/image_raw"),
+    )
+    assert "/camera/camera/color/image_raw" not in paired.topic_names
+    lean = rb.plan_for_session("/tmp/x", include_driver_nodes=False)
+    assert not any("camera_info" in name for name in lean.topic_names)
+
+
+# -- CDR decoding ------------------------------------------------------------
+
+
+def test_the_cdr_decoders_read_profiles_and_transforms_and_skip_garbage_padding() -> None:
+    """Padding in these fixtures is 0xCC, as hostile as real rclpy's
+    uninitialised padding. A decoder that reads padding fails here."""
+
+    image = rb.decode_image_meta(_image_payload(848, 480, _S1_FRAME))
+    assert (image.width, image.height, image.frame_id) == (848, 480, _S1_FRAME)
+    info = rb.decode_camera_info(_camera_info_payload(1280, 720, _S1_FRAME))
+    assert (info.width, info.height) == (1280, 720)
+    assert info.distortion_model == "plumb_bob"
+    assert len(info.d) == 5 and len(info.k) == 9 and len(info.r) == 9 and len(info.p) == 12
+    assert info.k[2] == 640.0
+    transforms = rb.decode_tf_message(_tf_payload(_S1_GOOD_TF))
+    assert len(transforms) == 1
+    assert transforms[0].parent_frame == "camera_link"
+    assert transforms[0].child_frame == _S1_FRAME
+    assert transforms[0].translation_m[0] == 0.011
+
+
+def test_seeded_failure_foreign_or_truncated_cdr_is_refused_never_guessed() -> None:
+    with pytest.raises(rb.CdrDecodeError, match="encapsulation"):
+        rb.decode_camera_info(b"\x00\x00\x00\x00" + b"\x00" * 64)
+    with pytest.raises(rb.CdrDecodeError):
+        rb.decode_camera_info(_camera_info_payload(848, 480, _S1_FRAME)[:40])
+    with pytest.raises(rb.CdrDecodeError, match="zero dimension"):
+        rb.decode_image_meta(_image_payload(848, 480, _S1_FRAME).replace(
+            struct.pack("<I", 480), struct.pack("<I", 0), 1
+        ))
+
+
+# -- the GO-RECORD gate, fixture legs ----------------------------------------
+
+
+def test_a_bag_with_no_camera_info_cannot_finalize_go_record(tmp_path: Path) -> None:
+    bag = _optical_bag(tmp_path, "no_ci", camera_infos=0, tf_transforms=_S1_GOOD_TF)
+    manifest = build_rosbag2_sidecar(bag_id="s1", bag_dir=bag)
+    block = _go_block(manifest)
+    assert block["status"] == "REFUSED" and not block["certified"]
+    assert any("NO CameraInfo" in reason for reason in block["refusals"])
+    with pytest.raises(GoRecordRefusedError, match="NO CameraInfo"):
+        finalize_rosbag2(bag, bag_id="s1", require_go_record=True)
+    assert not sidecar_mod.rosbag2_sidecar_path_for(bag).exists(), (
+        "a refused GO-RECORD finalize must write NOTHING"
+    )
+    # The recovery pass still documents the refusal honestly.
+    manifest2, path = finalize_rosbag2(bag, bag_id="s1")
+    assert path.exists()
+    assert any("GO-RECORD REFUSED" in line for line in manifest2["does_not_prove"])
+
+
+def test_a_profile_mismatch_848x480_stream_1280x720_calibration_is_refused(
+    tmp_path: Path,
+) -> None:
+    """The board's named seeded case, verbatim."""
+
+    bag = _optical_bag(
+        tmp_path, "mismatch", ci_size=(1280, 720), tf_transforms=_S1_GOOD_TF
+    )
+    block = _go_block(build_rosbag2_sidecar(bag_id="s1", bag_dir=bag))
+    assert not block["certified"]
+    assert any(
+        "848x480" in reason and "1280x720" in reason for reason in block["refusals"]
+    )
+
+
+def test_a_camera_info_that_does_not_track_the_stream_rate_is_refused(
+    tmp_path: Path,
+) -> None:
+    """Matching is width/height AND rate: one lonely CameraInfo against a
+    20-frame stream is not the driver restating calibration per frame."""
+
+    bag = _optical_bag(tmp_path, "rate", camera_infos=1, tf_transforms=_S1_GOOD_TF)
+    block = _go_block(build_rosbag2_sidecar(bag_id="s1", bag_dir=bag))
+    assert not block["certified"]
+    assert any("rate profile" in reason for reason in block["refusals"])
+
+
+# -- FX-2 F3: the short-bag rate leg used to fail OPEN ----------------------
+
+
+@pytest.mark.parametrize(
+    ("images", "camera_infos", "certifies"),
+    [
+        (1, 1, True),    # no deficit at all
+        (2, 2, True),
+        (2, 1, False),   # 50% deficit — GO-RECORD on the shipped code
+        (3, 2, False),   # 33% deficit — GO-RECORD on the shipped code
+        (3, 3, True),
+        (4, 3, False),   # 25% deficit
+        (4, 4, True),
+        (5, 4, False),   # 20% deficit
+        (5, 5, True),
+        (6, 5, False),   # 17% deficit
+        (6, 6, True),
+    ],
+)
+def test_no_count_is_small_enough_to_certify_a_camera_info_deficit(
+    tmp_path: Path, images: int, camera_infos: int, certifies: bool
+) -> None:
+    """The boundary sweep FX-2 F3 asks for, images 1..6.
+
+    ``allowance = max(1.0, image_count * tolerance)`` put a floor of one whole
+    message under the check, and that floor only ever bit where it was wrong:
+    below ten images it let a deficit of 50% certify GO-RECORD through
+    ``require_go_record=True``. The allowance is proportional now, so a ratio
+    outside the rate profile is outside it at every count.
+    """
+
+    bag = _optical_bag(
+        tmp_path,
+        f"n{images}x{camera_infos}",
+        images=images,
+        camera_infos=camera_infos,
+        tf_transforms=_S1_GOOD_TF,
+    )
+    block = _go_block(build_rosbag2_sidecar(bag_id="s1", bag_dir=bag))
+    assert block["certified"] is certifies, block["refusals"]
+    if certifies:
+        manifest, _path = finalize_rosbag2(bag, bag_id="s1", require_go_record=True)
+        assert _go_block(manifest)["status"] == "GO-RECORD"
+        assert any("below 10" in item for item in _go_block(manifest)["findings"]), (
+            "a bag this short must still SAY that the rate leg proves little"
+        )
+    else:
+        assert any("rate profile" in reason for reason in block["refusals"])
+        with pytest.raises(GoRecordRefusedError, match="rate profile"):
+            finalize_rosbag2(bag, bag_id="s1", require_go_record=True)
+
+
+def test_the_ordinary_off_by_one_at_a_real_take_length_still_certifies(
+    tmp_path: Path,
+) -> None:
+    """The control for the test above: 40 images / 39 CameraInfo is the tail of
+    a real recording, well inside the 10% profile, and must keep passing."""
+
+    bag = _optical_bag(
+        tmp_path, "tail", images=40, camera_infos=39, tf_transforms=_S1_GOOD_TF
+    )
+    manifest, _path = finalize_rosbag2(bag, bag_id="s1", require_go_record=True)
+    block = _go_block(manifest)
+    assert block["status"] == "GO-RECORD"
+    assert not any("below 10" in item for item in block["findings"])
+
+
+def test_tf_static_neither_captured_nor_snapshotted_is_refused(tmp_path: Path) -> None:
+    bag = _optical_bag(tmp_path, "no_tf", tf_transforms=None)
+    block = _go_block(build_rosbag2_sidecar(bag_id="s1", bag_dir=bag))
+    assert not block["certified"]
+    assert any("neither captured" in reason for reason in block["refusals"])
+
+
+def test_a_pre_record_snapshot_substitutes_for_the_transient_local_topic(
+    tmp_path: Path,
+) -> None:
+    bag = _optical_bag(tmp_path, "snap", tf_transforms=None)
+    manifest = build_rosbag2_sidecar(
+        bag_id="s1", bag_dir=bag, static_transform_snapshot=_S1_SNAPSHOT
+    )
+    block = _go_block(manifest)
+    assert block["certified"], block["refusals"]
+    assert block["snapshot_sha256"] == sidecar_mod.static_transform_snapshot_digest(
+        _S1_SNAPSHOT
+    )
+    assert block["transforms"]["snapshot_bound"] is True
+
+
+def test_seeded_failure_a_malformed_snapshot_is_refused_not_recorded(
+    tmp_path: Path,
+) -> None:
+    bag = _optical_bag(tmp_path, "badsnap", tf_transforms=None)
+    for mutant, match in (
+        ({**_S1_SNAPSHOT, "source": "  "}, "source"),
+        ({**_S1_SNAPSHOT, "transforms": []}, "non-empty"),
+        ({**_S1_SNAPSHOT, "schema": "v0"}, "schema"),
+        (
+            {
+                **_S1_SNAPSHOT,
+                "transforms": [
+                    {**_S1_SNAPSHOT["transforms"][0], "rotation_xyzw": [0, 0, 0, 0.5]}
+                ],
+            },
+            "norm",
+        ),
+    ):
+        with pytest.raises(SidecarRefusedError, match=match):
+            build_rosbag2_sidecar(
+                bag_id="s1", bag_dir=bag, static_transform_snapshot=mutant
+            )
+
+
+def test_two_competing_parents_for_one_frame_are_ambiguous_and_refused(
+    tmp_path: Path,
+) -> None:
+    bag = _optical_bag(
+        tmp_path,
+        "ambig",
+        tf_transforms=_S1_GOOD_TF
+        + [("base_link", _S1_FRAME, (0.2, 0.0, 0.1), (0.0, 0.0, 0.0, 1.0))],
+    )
+    block = _go_block(build_rosbag2_sidecar(bag_id="s1", bag_dir=bag))
+    assert not block["certified"]
+    assert any("competing parents" in reason for reason in block["refusals"])
+
+
+def test_two_disagreeing_declarations_of_one_extrinsic_are_refused(
+    tmp_path: Path,
+) -> None:
+    bag = _optical_bag(tmp_path, "twovals", tf_transforms=_S1_GOOD_TF)
+    disagreeing = {
+        **_S1_SNAPSHOT,
+        "transforms": [
+            {
+                "parent_frame": "camera_link",
+                "child_frame": _S1_FRAME,
+                "translation_m": [0.5, 0.0, 0.0],
+                "rotation_xyzw": [0.0, 0.0, 0.0, 1.0],
+            }
+        ],
+    }
+    block = _go_block(
+        build_rosbag2_sidecar(
+            bag_id="s1", bag_dir=bag, static_transform_snapshot=disagreeing
+        )
+    )
+    assert not block["certified"]
+    assert any("competing declarations" in reason for reason in block["refusals"])
+
+
+def test_a_missing_sensor_frame_parent_is_refused(tmp_path: Path) -> None:
+    """tf_static present but about some OTHER frame: the optical frame still
+    has no parent, and presence-of-the-topic must not read as coverage."""
+
+    bag = _optical_bag(
+        tmp_path,
+        "wrongframe",
+        tf_transforms=[("base_link", "l2_lidar_link", (0.1, 0.0, 0.2), (0.0, 0.0, 0.0, 1.0))],
+    )
+    block = _go_block(build_rosbag2_sidecar(bag_id="s1", bag_dir=bag))
+    assert not block["certified"]
+    assert any("sensor transform absent" in reason for reason in block["refusals"])
+
+
+def test_a_complete_bag_certifies_and_the_calibration_digest_binds(
+    tmp_path: Path,
+) -> None:
+    bag = _optical_bag(tmp_path, "complete", tf_transforms=_S1_GOOD_TF)
+    manifest, _path = finalize_rosbag2(bag, bag_id="s1", require_go_record=True)
+    block = _go_block(manifest)
+    assert block["status"] == "GO-RECORD"
+    assert block["calibration_sha256"] and len(block["calibration_sha256"]) == 64
+    ok, failures = sidecar_mod.verify_calibration_digest(manifest, bag)
+    assert ok, failures
+    # Support topics are classified as support, never as unmapped channels.
+    rosbag2_block = manifest[SIDECAR_EXTRA_KEY]["rosbag2"]
+    assert _S1_CI in rosbag2_block["support_topics"]
+    assert _S1_TF_STATIC in rosbag2_block["support_topics"]
+    assert _S1_CI not in rosbag2_block["unmapped_topics"]
+
+
+def test_seeded_failure_one_perturbed_calibration_byte_fails_verification(
+    tmp_path: Path,
+) -> None:
+    bag = _optical_bag(tmp_path, "perturb", tf_transforms=_S1_GOOD_TF)
+    manifest, _path = finalize_rosbag2(bag, bag_id="s1", require_go_record=True)
+    mcap = bag / "perturb_0.mcap"
+    data = bytearray(mcap.read_bytes())
+    payloads, _findings = rb.collect_topic_payloads(mcap, [_S1_CI], max_per_topic=1)
+    at = data.find(payloads[_S1_CI][0])
+    assert at > 0
+    data[at + 80] ^= 0x01  # one byte inside the distortion coefficients
+    mcap.write_bytes(bytes(data))
+    ok, failures = sidecar_mod.verify_calibration_digest(manifest, bag)
+    assert not ok
+    assert any("calibration digest mismatch" in item for item in failures)
+
+
+# -- FX-2 F4: the digest covered only the FIRST CameraInfo per topic ---------
+
+
+def _drifting_optical_bag(tmp_path: Path, name: str, *, at: int = 15) -> Path:
+    """A bag whose CameraInfo changes intrinsics part-way through the take."""
+
+    messages = []
+    for index in range(20):
+        stamp = 1_000_000_000 + index * 33_000_000
+        messages.append((_S1_IMG, stamp, _image_payload(848, 480, _S1_FRAME)))
+    for index in range(20):
+        stamp = 1_000_000_000 + index * 33_000_000
+        distortion = 0.1 if index < at else 0.4  # a recalibration mid-stream
+        messages.append(
+            (_S1_CI, stamp, _camera_info_payload(848, 480, _S1_FRAME, d0=distortion))
+        )
+    messages.append((_S1_TF_STATIC, 1_000_000_000, _tf_payload(_S1_GOOD_TF)))
+    directory = tmp_path / name
+    directory.mkdir(parents=True)
+    rb.write_fixture_bag(directory / f"{name}_0.mcap", messages, types=_S1_TYPES)
+    (directory / "metadata.yaml").write_text(
+        "rosbag2_bagfile_information:\n"
+        "  storage_identifier: mcap\n"
+        "  relative_file_paths:\n"
+        f"    - {name}_0.mcap\n",
+        encoding="utf-8",
+    )
+    return directory
+
+
+def test_a_perturbed_byte_in_a_LATER_camera_info_breaks_the_digest(
+    tmp_path: Path,
+) -> None:
+    """FX-2 F4. The seeded byte goes into the LAST CameraInfo, not the first.
+
+    On the shipped code the digest was derived from ``payloads[0]`` alone and
+    ``verify_calibration_digest`` re-derived with ``max_per_topic=1``, so this
+    mutation verified GREEN while the calibration the bag actually carried had
+    changed.
+    """
+
+    bag = _optical_bag(tmp_path, "late", tf_transforms=_S1_GOOD_TF)
+    manifest, _path = finalize_rosbag2(bag, bag_id="s1", require_go_record=True)
+    mcap = bag / "late_0.mcap"
+    data = bytearray(mcap.read_bytes())
+    payloads, _findings = rb.collect_topic_payloads(mcap, [_S1_CI], max_per_topic=64)
+    assert len(payloads[_S1_CI]) == 20
+    at = data.rfind(payloads[_S1_CI][-1])
+    assert at > 0
+    data[at + 80] ^= 0x01  # one byte inside the distortion coefficients
+    mcap.write_bytes(bytes(data))
+
+    ok, failures = sidecar_mod.verify_calibration_digest(manifest, bag)
+    assert not ok
+    assert any("calibration digest mismatch" in item for item in failures)
+
+
+def test_a_calibration_that_changes_mid_stream_is_a_named_finding(
+    tmp_path: Path,
+) -> None:
+    """Drift is bound into the digest AND said out loud, per topic."""
+
+    bag = _drifting_optical_bag(tmp_path, "drift")
+    manifest, _path = finalize_rosbag2(bag, bag_id="s1", require_go_record=True)
+    block = _go_block(manifest)
+    drift = [item for item in block["findings"] if "DIFFERENT calibrations" in item]
+    assert len(drift) == 1
+    assert _S1_CI in drift[0]
+    assert "changed field(s): d" in drift[0]
+    ok, failures = sidecar_mod.verify_calibration_digest(manifest, bag)
+    assert ok, failures
+
+
+def test_the_drift_digest_differs_from_the_same_bag_without_the_drift(
+    tmp_path: Path,
+) -> None:
+    """The binding is comparing something: same first message, different digest.
+
+    Both bags open with the identical CameraInfo, so a digest derived from the
+    first payload alone is IDENTICAL for the two — which is precisely the hole.
+    """
+
+    steady = _optical_bag(tmp_path, "steady", tf_transforms=_S1_GOOD_TF)
+    drifting = _drifting_optical_bag(tmp_path, "drifting")
+    steady_block = _go_block(build_rosbag2_sidecar(bag_id="s1", bag_dir=steady))
+    drift_block = _go_block(build_rosbag2_sidecar(bag_id="s1", bag_dir=drifting))
+
+    first_steady, _f = rb.collect_topic_payloads(
+        steady / "steady_0.mcap", [_S1_CI], max_per_topic=1
+    )
+    first_drift, _f2 = rb.collect_topic_payloads(
+        drifting / "drifting_0.mcap", [_S1_CI], max_per_topic=1
+    )
+    assert first_steady[_S1_CI][0] == first_drift[_S1_CI][0], "same opening calibration"
+    assert steady_block["calibration_sha256"] != drift_block["calibration_sha256"]
+    assert not any("DIFFERENT calibrations" in item for item in steady_block["findings"])
+
+
+def test_a_calibration_digest_cannot_verify_against_a_sidecar_without_one(
+    tmp_path: Path,
+) -> None:
+    bag = _bag(tmp_path)  # no optical stream at all
+    manifest = build_rosbag2_sidecar(bag_id="s1", bag_dir=bag)
+    ok, failures = sidecar_mod.verify_calibration_digest(manifest, bag)
+    assert not ok
+    assert any("no calibration digest" in item for item in failures)
+
+
+# -- sync binding (board item 4) ---------------------------------------------
+
+
+def test_a_run_claiming_recoverable_time_without_a_sync_fit_cannot_certify(
+    tmp_path: Path,
+) -> None:
+    bag = _optical_bag(tmp_path, "timeclaim", tf_transforms=_S1_GOOD_TF)
+    block = _go_block(
+        build_rosbag2_sidecar(
+            bag_id="s1", bag_dir=bag, claims_recoverable_time=True
+        )
+    )
+    assert not block["certified"]
+    assert any("no sync fit is bound" in reason for reason in block["refusals"])
+
+
+def test_a_bound_sync_fit_lands_in_the_sidecar_by_digest(tmp_path: Path) -> None:
+    """Item 4: sidecar_sync_block wired into the REAL finalize path, not
+    proven only in isolation."""
+
+    fit = build_selftest_fit()
+    bag = _optical_bag(tmp_path, "syncbound", tf_transforms=_S1_GOOD_TF)
+    manifest = build_rosbag2_sidecar(
+        bag_id="s1",
+        bag_dir=bag,
+        origin=EvidenceOrigin.SIMULATION,
+        sync_fit=fit,
+        claims_recoverable_time=True,
+    )
+    block = _go_block(manifest)
+    assert block["certified"], block["refusals"]
+    sync_block = manifest[SIDECAR_EXTRA_KEY]["sync"]
+    assert sync_block["status"] == "present"
+    assert sync_block["sync_fit_sha256"] == sync_fit_digest(fit)
+    ok, failures = sidecar_mod.verify_sync_fit_binding(manifest, fit)
+    assert ok, failures
+    # A sidecar with no bound fit refuses to verify any fit against itself.
+    bare = build_rosbag2_sidecar(bag_id="s1", bag_dir=bag)
+    ok2, failures2 = sidecar_mod.verify_sync_fit_binding(bare, fit)
+    assert not ok2 and any("binds no sync fit" in item for item in failures2)
+
+
+def test_seeded_failure_a_rehearsal_fit_cannot_enter_a_physical_sidecar(
+    tmp_path: Path,
+) -> None:
+    fit = build_selftest_fit()  # origin SIMULATION, fixture-labelled
+    bag = _optical_bag(tmp_path, "fitorigin", tf_transforms=_S1_GOOD_TF)
+    with pytest.raises(SidecarRefusedError, match="rehearsal fit"):
+        build_rosbag2_sidecar(
+            bag_id="s1", bag_dir=bag, origin=EvidenceOrigin.PHYSICAL, sync_fit=fit
+        )
+
+
+def test_seeded_failure_a_tampered_sync_digest_fails_the_binding(
+    tmp_path: Path,
+) -> None:
+    fit = build_selftest_fit()
+    bag = _optical_bag(tmp_path, "synctamper", tf_transforms=_S1_GOOD_TF)
+    manifest = build_rosbag2_sidecar(
+        bag_id="s1", bag_dir=bag, origin=EvidenceOrigin.SIMULATION, sync_fit=fit
+    )
+    tampered = json.loads(json.dumps(manifest))
+    tampered[SIDECAR_EXTRA_KEY]["sync"]["sync_fit_sha256"] = "0" * 64
+    ok, failures = sidecar_mod.verify_sync_fit_binding(tampered, fit)
+    assert not ok
+    assert any("digest mismatch" in item for item in failures)
+
+
+# -- the VENDOR_VIDEO dependency (board item 5) -------------------------------
+
+
+def test_the_rtp_video_path_needs_a_media_stack_never_the_motion_sdk() -> None:
+    """PS-H handoff finding 1, closed: the only VENDOR_VIDEO channel is an RTP
+    H.264 stream. Its declared dependency is a media tool; the vendor motion
+    SDK must never be the printed remedy for a capture path."""
+
+    from parcel_robot.capture import Transport as T
+    from scripts.parcel_capture.record import (
+        INSTALL_HINTS,
+        TRANSPORT_DEPENDENCIES,
+        TRANSPORT_EXECUTABLES,
+    )
+
+    assert TRANSPORT_DEPENDENCIES[T.VENDOR_VIDEO] == ()
+    assert TRANSPORT_EXECUTABLES[T.VENDOR_VIDEO] == ("ffmpeg",)
+    assert "unitree_sdk2py" not in TRANSPORT_DEPENDENCIES[T.VENDOR_VIDEO]
+    assert "never the vendor motion SDK" in INSTALL_HINTS["ffmpeg"]
+    # The UWB vendor path legitimately still declares the vendor SDK; the fix
+    # must not have widened into it.
+    assert TRANSPORT_DEPENDENCIES[T.VENDOR_UWB] == ("unitree_sdk2py",)
+
+
+# -- real bytes: the two board-named refusals against the real writer ---------
+
+
+def test_real_bag_with_no_camera_info_is_refused_on_real_bytes(
+    tmp_path: Path,
+) -> None:
+    """REAL bytes: rosbag2_py.SequentialWriter -> librosbag2_storage_mcap.so,
+    rclpy CDR. 20 real Image messages, no CameraInfo. The gate must refuse."""
+
+    bag = _real_bag_dir(tmp_path, "bag_missing_ci")
+    manifest = build_rosbag2_sidecar(bag_id="s1-real", bag_dir=bag)
+    block = _go_block(manifest)
+    assert not block["certified"]
+    assert any("NO CameraInfo" in reason for reason in block["refusals"])
+    with pytest.raises(GoRecordRefusedError):
+        finalize_rosbag2(bag, bag_id="s1-real", require_go_record=True)
+
+
+def test_real_bag_with_mismatched_calibration_is_refused_on_real_bytes(
+    tmp_path: Path,
+) -> None:
+    """REAL bytes: the 848x480 stream carries a 1280x720 CameraInfo, both
+    decoded out of real rclpy CDR by the stdlib decoder."""
+
+    bag = _real_bag_dir(tmp_path, "bag_mismatch")
+    block = _go_block(build_rosbag2_sidecar(bag_id="s1-real", bag_dir=bag))
+    assert not block["certified"]
+    assert any(
+        "848x480" in reason and "1280x720" in reason for reason in block["refusals"]
+    )
+    stream = block["streams"]["/camera/camera/color/image_raw"]
+    assert stream["image_profile"]["width"] == 848
+    assert stream["camera_info_profile"]["width"] == 1280
+
+
+def test_real_complete_bag_certifies_and_one_real_byte_breaks_the_digest(
+    tmp_path: Path,
+) -> None:
+    """REAL bytes, positive control: the same writer with matching CameraInfo
+    and /tf_static certifies GO-RECORD, and one flipped byte inside the real
+    CameraInfo payload fails the calibration digest."""
+
+    bag = _real_bag_dir(tmp_path, "bag_complete")
+    manifest, _path = finalize_rosbag2(bag, bag_id="s1-real", require_go_record=True)
+    block = _go_block(manifest)
+    assert block["status"] == "GO-RECORD"
+    ok, failures = sidecar_mod.verify_calibration_digest(manifest, bag)
+    assert ok, failures
+    mcap = bag / "bag_complete_0.mcap"
+    data = bytearray(mcap.read_bytes())
+    payloads, _findings = rb.collect_topic_payloads(
+        mcap, ["/camera/camera/color/camera_info"], max_per_topic=1
+    )
+    at = data.find(payloads["/camera/camera/color/camera_info"][0])
+    data[at + 80] ^= 0x01
+    mcap.write_bytes(bytes(data))
+    ok2, failures2 = sidecar_mod.verify_calibration_digest(manifest, bag)
+    assert not ok2
+    assert any("calibration digest mismatch" in item for item in failures2)

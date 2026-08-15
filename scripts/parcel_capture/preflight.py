@@ -3365,6 +3365,230 @@ def probe_builtin_lidar(
 
 
 # ---------------------------------------------------------------------------
+# Support-artifact reconciliation — card S-1 (scrum/20260814/task_1)
+# ---------------------------------------------------------------------------
+#
+# The verified P0 behind this section: four optical streams were on the
+# recording plan with no ``camera_info``, no ``/tf`` and no ``/tf_static``.
+# The plan now carries those support topics (``rosbag2.SUPPORT_TOPICS``), and
+# this is the run-time reconciliation: the observed graph — ``ros2 topic list
+# -t``, the one command the run-sheet already opens with — is checked against
+# every support topic the plan requires. The semantics are the same honest
+# fail-closed semantics sensor channels get: unknown is ABSENT, a REQUIRED
+# support topic that is absent or type-mismatched at run time is a REFUSAL,
+# and nothing here can declare a topic present without the graph showing it.
+
+try:  # pragma: no cover - exercised only on a checkout without an install
+    from scripts.parcel_capture.rosbag2 import SUPPORT_TOPICS, RecordedTopic
+except ImportError:  # pragma: no cover - Orin runs this straight from a checkout
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from scripts.parcel_capture.rosbag2 import SUPPORT_TOPICS, RecordedTopic
+
+from parcel_robot.capture.channels import (  # after the bootstrap above
+    SUPPORT_ARTIFACTS_BY_ID,
+    SupportNeed,
+)
+
+#: One line of ``ros2 topic list -t``: ``/topic [pkg/msg/Type]`` — or several
+#: types in one bracket when the graph disagrees with itself about the topic.
+_TOPIC_LIST_LINE = re.compile(r"^(?P<topic>/\S+)\s+\[(?P<types>[^\]]+)\]\s*$")
+
+
+class SupportTopicStatus(str, Enum):
+    """What the observed graph says about one support topic. Never permissive."""
+
+    #: On the graph, carrying the declared type.
+    PRESENT = "present"
+    #: Not on the graph. Unknown is absent; absent is not a default.
+    ABSENT = "absent"
+    #: On the graph under a different message type — affirmative evidence of a
+    #: misconfiguration, which is worse than absence and never less than one.
+    TYPE_MISMATCH = "type_mismatch"
+
+
+def parse_topic_list(text: str) -> dict[str, tuple[str, ...]]:
+    """Parse ``ros2 topic list -t`` output, refusing anything not understood.
+
+    A line this parser cannot read is a refusal, not a skip: a skipped line
+    could be exactly the support topic whose absence would otherwise refuse
+    the run, and "parse failure" must never be able to impersonate "topic
+    missing" or vice versa.
+    """
+
+    observed: dict[str, list[str]] = {}
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        match = _TOPIC_LIST_LINE.match(line.strip())
+        if match is None:
+            raise PreflightError(
+                f"unparseable `ros2 topic list -t` line: {line.strip()!r}; capture "
+                f"the list with exactly `ros2 topic list -t` and pass it verbatim"
+            )
+        types = [item.strip() for item in match.group("types").split(",") if item.strip()]
+        if not types:
+            raise PreflightError(
+                f"topic {match.group('topic')!r} carries an empty type list; an "
+                f"empty bracket is not an observation"
+            )
+        slot = observed.setdefault(match.group("topic"), [])
+        for item in types:
+            if item not in slot:
+                slot.append(item)
+    return {topic: tuple(types) for topic, types in observed.items()}
+
+
+@dataclass(frozen=True, slots=True)
+class SupportTopicCheck:
+    """One support topic reconciled against the observed graph."""
+
+    support_id: str
+    topic: str
+    need: str
+    expected_type: str
+    observed_types: tuple[str, ...]
+    status: SupportTopicStatus
+    #: True when this check alone forbids proceeding to record.
+    refusal: bool
+    detail: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "support_id": self.support_id,
+            "topic": self.topic,
+            "need": self.need,
+            "expected_type": self.expected_type,
+            "observed_types": list(self.observed_types),
+            "status": self.status.value,
+            "refusal": self.refusal,
+            "detail": self.detail,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class SupportReconciliation:
+    """Every support topic's verdict, with the refusals called out."""
+
+    checks: tuple[SupportTopicCheck, ...]
+    refusals: tuple[str, ...]
+    findings: tuple[str, ...]
+
+    @property
+    def ok(self) -> bool:
+        return not self.refusals
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema": "parcel.capture.support_reconciliation.v1",
+            "ok": self.ok,
+            "checks": [check.to_dict() for check in self.checks],
+            "refusals": list(self.refusals),
+            "findings": list(self.findings),
+        }
+
+
+def reconcile_support_topics(
+    observed: str | Mapping[str, Sequence[str]],
+    *,
+    support_topics: Sequence[RecordedTopic] = SUPPORT_TOPICS,
+) -> SupportReconciliation:
+    """Reconcile the observed graph against the plan's support topics.
+
+    ``observed`` is either the verbatim ``ros2 topic list -t`` output or an
+    already-parsed ``topic -> types`` mapping. Refusal rules:
+
+    * a REQUIRED support topic absent from the graph → refusal;
+    * ``/tf_static`` (snapshot-substitutable) absent from the graph → refusal
+      too: the snapshot is CAPTURED FROM this topic before record start, so a
+      graph with no ``/tf_static`` publisher has nothing to snapshot either;
+    * any support topic present under the wrong type → refusal — affirmative
+      evidence of misconfiguration outranks absence;
+    * an opportunistic support topic absent → finding, never a refusal (a
+      stationary rig with no odometry publisher legitimately has no ``/tf``).
+    """
+
+    graph = parse_topic_list(observed) if isinstance(observed, str) else {
+        str(topic): tuple(str(item) for item in types)
+        for topic, types in observed.items()
+    }
+    checks: list[SupportTopicCheck] = []
+    refusals: list[str] = []
+    findings: list[str] = []
+    for item in support_topics:
+        if item.support_id is None:  # pragma: no cover - contract guard
+            raise PreflightError(
+                f"{item.topic} is not a support topic; reconcile_support_topics "
+                f"takes rosbag2.SUPPORT_TOPICS rows only"
+            )
+        artifact = SUPPORT_ARTIFACTS_BY_ID[item.support_id]
+        required = artifact.need in (
+            SupportNeed.REQUIRED,
+            SupportNeed.SNAPSHOT_SUBSTITUTABLE,
+        )
+        observed_types = graph.get(item.topic, ())
+        if not observed_types:
+            detail = (
+                f"{item.topic} is not on the observed graph; "
+                + (
+                    "a REQUIRED support topic that is missing at run time is a "
+                    "refusal — the bag it would have completed cannot certify"
+                    if required
+                    else "recorded-opportunistic: absence is a finding, not a fault"
+                )
+            )
+            status = SupportTopicStatus.ABSENT
+            refusal = required
+        elif item.message_type not in observed_types:
+            detail = (
+                f"{item.topic} is on the graph as {list(observed_types)} but the "
+                f"plan records it as {item.message_type}; a type mismatch is "
+                f"affirmative evidence of misconfiguration and refuses regardless "
+                f"of need"
+            )
+            status = SupportTopicStatus.TYPE_MISMATCH
+            refusal = True
+        else:
+            detail = f"{item.topic} observed with the declared type"
+            status = SupportTopicStatus.PRESENT
+            refusal = False
+        checks.append(
+            SupportTopicCheck(
+                support_id=item.support_id,
+                topic=item.topic,
+                need=artifact.need.value,
+                expected_type=item.message_type,
+                observed_types=observed_types,
+                status=status,
+                refusal=refusal,
+                detail=detail,
+            )
+        )
+        if refusal:
+            refusals.append(detail)
+        elif status is SupportTopicStatus.ABSENT:
+            findings.append(detail)
+    return SupportReconciliation(
+        checks=tuple(checks), refusals=tuple(refusals), findings=tuple(findings)
+    )
+
+
+def reconcile_support_topics_or_raise(
+    observed: str | Mapping[str, Sequence[str]],
+    *,
+    support_topics: Sequence[RecordedTopic] = SUPPORT_TOPICS,
+) -> SupportReconciliation:
+    """The gate form: raise on any refusal, listing every one."""
+
+    result = reconcile_support_topics(observed, support_topics=support_topics)
+    if not result.ok:
+        raise PreflightError(
+            f"support-artifact reconciliation refused "
+            f"({len(result.refusals)} refusal(s)): " + " | ".join(result.refusals)
+        )
+    return result
+
+
+# ---------------------------------------------------------------------------
 # The report
 # ---------------------------------------------------------------------------
 

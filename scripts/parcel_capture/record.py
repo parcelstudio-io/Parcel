@@ -1363,7 +1363,13 @@ class CaptureRecorder:
 TRANSPORT_DEPENDENCIES: Mapping[Transport, tuple[str, ...]] = {
     Transport.DDS: ("rclpy",),
     Transport.UNILIDAR_SDK2: ("unilidar_sdk2",),
-    Transport.VENDOR_VIDEO: ("unitree_sdk2py",),
+    # Card S-1, from PS-H's handoff finding 1: the only VENDOR_VIDEO channel is
+    # the front camera's RTP-over-multicast H.264 elementary stream. Reading it
+    # is a MEDIA-STACK job (ffmpeg, see TRANSPORT_EXECUTABLES), not a robot-SDK
+    # job — declaring unitree_sdk2py here granted the vendor motion SDK
+    # authority over a path that never needed it, and "install the motion SDK"
+    # is the one remedy a capture refusal must never print.
+    Transport.VENDOR_VIDEO: (),
     Transport.REALSENSE: ("pyrealsense2",),
     Transport.PLATFORM_TOOL: (),
     Transport.SERIAL: ("serial",),
@@ -1377,7 +1383,9 @@ TRANSPORT_DEPENDENCIES: Mapping[Transport, tuple[str, ...]] = {
 TRANSPORT_EXECUTABLES: Mapping[Transport, tuple[str, ...]] = {
     Transport.DDS: (),
     Transport.UNILIDAR_SDK2: (),
-    Transport.VENDOR_VIDEO: (),
+    # An RTP H.264 elementary stream is captured by a media tool, and ffmpeg is
+    # a binary, not a module — same argument as tegrastats below.
+    Transport.VENDOR_VIDEO: ("ffmpeg",),
     Transport.REALSENSE: (),
     Transport.PLATFORM_TOOL: ("tegrastats",),
     Transport.SERIAL: (),
@@ -1388,6 +1396,11 @@ TRANSPORT_EXECUTABLES: Mapping[Transport, tuple[str, ...]] = {
 INSTALL_HINTS: Mapping[str, str] = {
     "rclpy": "Orin only: source /opt/ros/humble/setup.bash (JetPack 6.2.x ships it)",
     "tegrastats": "Orin only: ships with JetPack; absent on any non-Jetson host",
+    "ffmpeg": (
+        "Orin only: apt install ffmpeg in the deploy environment — a media tool "
+        "for the RTP H.264 stream, never the vendor motion SDK, and never into "
+        ".parcel/"
+    ),
     "unilidar_sdk2": "Orin only: build unitree unilidar_sdk2 and put it on PYTHONPATH",
     "unitree_sdk2py": (
         "Orin only, and NEVER into .parcel/ — its absence from the Parcel venv is the "

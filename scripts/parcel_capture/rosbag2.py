@@ -80,8 +80,29 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+# sys.path bootstrap, following budget.py / orin_rehearsal.py / preflight.py.
+# This module has to work three ways: as `python -m scripts.parcel_capture.rosbag2`
+# inside this venv, as `python3 scripts/parcel_capture/rosbag2.py` from a bare
+# checkout on the Orin where `parcel_robot` is not installed, and from any cwd.
+# The operator sheets mark the `--verify-help` row MANDATORY-and-first, so a
+# ModuleNotFoundError here is the session's very first command dying on a
+# traceback instead of clearing the recorder argv (AU-F FX-1 / F4).
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+for _entry in (str(_REPO_ROOT), str(_REPO_ROOT / "src")):
+    if _entry not in sys.path:
+        sys.path.insert(0, _entry)
+
 from parcel_robot.capture import CHANNELS, Transport
-from parcel_robot.capture.channels import Confidence, WireNaming, subscribe_name
+from parcel_robot.capture.channels import (
+    SUPPORT_ARTIFACTS,
+    SUPPORT_ARTIFACTS_BY_ID,
+    Confidence,
+    SupportArtifactKind,
+    SupportNeed,
+    WireNaming,
+    camera_info_topic_for,
+    subscribe_name,
+)
 
 # --------------------------------------------------------------------------
 # Wire constants
@@ -219,6 +240,11 @@ class RecordedTopic:
     #: What must already be running for this topic to exist. Empty for the
     #: recorder's own events.
     prerequisite: str = ""
+    #: The support artifact this topic carries (card S-1), or ``None`` for a
+    #: payload/event topic. A topic is either payload (``channel_id``) or
+    #: support (``support_id``), never both: a support topic has no independent
+    #: sensor arrival semantics and must not mint a payload sequence space.
+    support_id: str | None = None
 
     def __post_init__(self) -> None:
         if not self.topic.startswith("/"):
@@ -234,6 +260,18 @@ class RecordedTopic:
             )
         if not self.note.strip():
             raise Rosbag2RefusedError(f"{self.topic}: note must be non-empty")
+        if self.support_id is not None:
+            if self.channel_id is not None:
+                raise Rosbag2RefusedError(
+                    f"{self.topic}: carries both channel_id {self.channel_id!r} and "
+                    f"support_id {self.support_id!r} — a topic is payload or support, "
+                    f"never both, or a calibration restatement would mint drop evidence"
+                )
+            if self.support_id not in SUPPORT_ARTIFACTS_BY_ID:
+                raise Rosbag2RefusedError(
+                    f"{self.topic}: unknown support_id {self.support_id!r}; a support "
+                    f"topic must name a row of channels.SUPPORT_ARTIFACTS"
+                )
 
 
 def _dds_topics() -> tuple[RecordedTopic, ...]:
@@ -391,12 +429,81 @@ EVENT_TOPICS: tuple[RecordedTopic, ...] = (
     ),
 )
 
-RECORDED_TOPICS: tuple[RecordedTopic, ...] = _dds_topics() + DRIVER_TOPICS + EVENT_TOPICS
+def _support_topics() -> tuple[RecordedTopic, ...]:
+    """The calibration/TF support topics — card S-1's addition to the plan.
+
+    The CameraInfo names are DERIVED from the image topic names already on the
+    plan, by :func:`parcel_robot.capture.channels.camera_info_topic_for` — the
+    D455 driver publishes ``camera_info`` per stream under the same namespace
+    as the stream's image topic. Documentation-derived and UNVERIFIED like the
+    image names themselves: nothing here proves the driver actually publishes
+    under these names — that is H-2's measurement on the Orin, and preflight
+    reconciliation (``preflight.reconcile_support_topics``) is what turns a
+    wrong name into a refusal instead of a silent gap.
+    """
+
+    image_topic_by_channel = {
+        item.channel_id: item for item in DRIVER_TOPICS if item.channel_id
+    }
+    out: list[RecordedTopic] = []
+    for artifact in SUPPORT_ARTIFACTS:
+        if artifact.kind is SupportArtifactKind.CAMERA_INFO:
+            if artifact.need is not SupportNeed.REQUIRED:
+                # No publisher exists (the front camera). Nothing to record.
+                continue
+            for channel_id in artifact.supports_channel_ids:
+                image_row = image_topic_by_channel[channel_id]
+                out.append(
+                    RecordedTopic(
+                        topic=camera_info_topic_for(image_row.topic),
+                        message_type=artifact.message_type or "",
+                        source=TopicSource.DRIVER_NODE,
+                        channel_id=None,
+                        confidence=Confidence.UNVERIFIED,
+                        note=(
+                            f"{artifact.human_name}. REQUIRED support artifact: an "
+                            f"optical stream recorded without it cannot certify "
+                            f"GO-RECORD. Name derived from {image_row.topic}."
+                        ),
+                        prerequisite=image_row.prerequisite,
+                        support_id=artifact.support_id,
+                    )
+                )
+        elif artifact.kind in (SupportArtifactKind.TF, SupportArtifactKind.TF_STATIC):
+            topic = "/tf" if artifact.kind is SupportArtifactKind.TF else "/tf_static"
+            out.append(
+                RecordedTopic(
+                    topic=topic,
+                    message_type=artifact.message_type or "",
+                    source=TopicSource.DRIVER_NODE,
+                    channel_id=None,
+                    confidence=artifact.confidence,
+                    note=f"{artifact.human_name}. {artifact.note}",
+                    prerequisite=(
+                        "a driver or robot node that publishes transforms "
+                        "(realsense2_camera publishes /tf_static for its own frames); "
+                        "confirm with `ros2 topic list -t` at preflight"
+                    ),
+                    support_id=artifact.support_id,
+                )
+            )
+    return tuple(out)
+
+
+SUPPORT_TOPICS: tuple[RecordedTopic, ...] = _support_topics()
+
+RECORDED_TOPICS: tuple[RecordedTopic, ...] = (
+    _dds_topics() + DRIVER_TOPICS + SUPPORT_TOPICS + EVENT_TOPICS
+)
 
 TOPICS_BY_NAME: Mapping[str, RecordedTopic] = {item.topic: item for item in RECORDED_TOPICS}
 
 CHANNEL_BY_TOPIC: Mapping[str, str] = {
     item.topic: item.channel_id for item in RECORDED_TOPICS if item.channel_id
+}
+
+SUPPORT_BY_TOPIC: Mapping[str, str] = {
+    item.topic: item.support_id for item in RECORDED_TOPICS if item.support_id
 }
 
 
@@ -425,7 +532,40 @@ def topics_for(
         chosen.append(item)
     if not chosen:
         raise Rosbag2RefusedError("a recording with no topics records nothing")
+    _refuse_orphaned_payload(chosen, exclude)
     return tuple(chosen)
+
+
+def _refuse_orphaned_payload(
+    chosen: Sequence[RecordedTopic], exclude: Sequence[str]
+) -> None:
+    """An exclusion must not strip a REQUIRED support topic from under a
+    payload stream that stays on the plan.
+
+    The failure this closes is the P0 itself, re-creatable by hand: a plan that
+    records ``.../color/image_raw`` and excludes ``.../color/camera_info``
+    produces a bag whose colour stream can never certify — and at record time
+    the omission is silent. Excluding the image topic AND its camera_info
+    together is fine; keeping the payload while dropping its calibration is a
+    refusal.
+    """
+
+    chosen_channels = {item.channel_id for item in chosen if item.channel_id}
+    for topic in exclude:
+        support_id = SUPPORT_BY_TOPIC.get(topic)
+        if support_id is None:
+            continue
+        artifact = SUPPORT_ARTIFACTS_BY_ID[support_id]
+        if artifact.need is not SupportNeed.REQUIRED:
+            continue
+        orphaned = sorted(set(artifact.supports_channel_ids) & chosen_channels)
+        if orphaned:
+            raise Rosbag2RefusedError(
+                f"excluding {topic} strips REQUIRED support artifact {support_id} "
+                f"from under still-recorded stream(s) {orphaned}; a bag recorded "
+                f"that way cannot certify GO-RECORD, and the omission would be "
+                f"silent at record time. Exclude the image stream too, or neither"
+            )
 
 
 # --------------------------------------------------------------------------
@@ -1419,6 +1559,355 @@ def _reconcile_counts(state: _ScanState, walked_any: bool) -> tuple[dict[str, in
     for entry in state.channels.values():
         counts.setdefault(entry.topic, 0)
     return counts, CountBasis.UNAVAILABLE_COMPRESSED
+
+
+# --------------------------------------------------------------------------
+# CDR decoding of support payloads — card S-1
+# --------------------------------------------------------------------------
+#
+# The GO-RECORD gate has to read three things OUT OF THE BAG'S OWN BYTES: the
+# recorded image profile (``sensor_msgs/msg/Image`` height/width), the
+# calibration (``sensor_msgs/msg/CameraInfo``), and the static transforms
+# (``tf2_msgs/msg/TFMessage``). Declaring the profile instead of reading it
+# would let a sidecar certify a calibration against a stream nobody checked.
+#
+# This is a MINIMAL XCDR1 little-endian decoder for exactly those three
+# message types and nothing else. The layout was verified against bytes
+# produced by ``rclpy.serialization.serialize_message`` in the repo's ROS 2
+# Jazzy sandbox (empty CameraInfo = 309 bytes, field-by-field; Image and
+# TFMessage walked by hand from hex dumps — alignment is relative to the start
+# of the payload after the 4-byte encapsulation header, and padding bytes are
+# uninitialised garbage, never assumed zero). Anything this decoder does not
+# understand is a refusal, never a guess.
+
+#: XCDR1 little-endian encapsulation identifier (first two of the four header
+#: bytes). Big-endian CDR exists in the spec and is refused here: no machine in
+#: this rig produces it, and silently mis-decoding widths would be worse than
+#: an honest refusal.
+CDR_LE_ENCAPSULATION = b"\x00\x01"
+
+_F64 = struct.Struct("<d")
+_I32 = struct.Struct("<i")
+
+
+class CdrDecodeError(Rosbag2ReadError):
+    """CDR bytes that could not be decoded. Never a partial guess."""
+
+
+class _CdrCursor:
+    """Bounded XCDR1 reader. Alignment is relative to the post-header origin."""
+
+    __slots__ = ("_data", "_pos")
+
+    def __init__(self, payload: bytes) -> None:
+        if len(payload) < 4:
+            raise CdrDecodeError(
+                f"CDR payload is {len(payload)} byte(s); even the encapsulation "
+                f"header needs 4"
+            )
+        if payload[:2] != CDR_LE_ENCAPSULATION:
+            raise CdrDecodeError(
+                f"unsupported CDR encapsulation {payload[:2].hex()!r}; only "
+                f"little-endian XCDR1 (0001) is decoded here, and guessing the "
+                f"byte order would silently transpose every width field"
+            )
+        self._data = payload[4:]
+        self._pos = 0
+
+    def _take(self, count: int, name: str) -> bytes:
+        end = self._pos + count
+        if end > len(self._data):
+            raise CdrDecodeError(
+                f"CDR field {name} wants {count} byte(s), "
+                f"{len(self._data) - self._pos} remain"
+            )
+        chunk = self._data[self._pos : end]
+        self._pos = end
+        return chunk
+
+    def _align(self, size: int) -> None:
+        remainder = self._pos % size
+        if remainder:
+            # Padding bytes are uninitialised in real rclpy output; skip, never read.
+            self._pos += size - remainder
+
+    def u8(self, name: str) -> int:
+        return self._take(1, name)[0]
+
+    def u32(self, name: str) -> int:
+        self._align(4)
+        return _U32.unpack(self._take(4, name))[0]
+
+    def i32(self, name: str) -> int:
+        self._align(4)
+        return _I32.unpack(self._take(4, name))[0]
+
+    def f64(self, name: str) -> float:
+        self._align(8)
+        return _F64.unpack(self._take(8, name))[0]
+
+    def f64_array(self, count: int, name: str) -> tuple[float, ...]:
+        return tuple(self.f64(f"{name}[{index}]") for index in range(count))
+
+    def f64_sequence(self, name: str) -> tuple[float, ...]:
+        return self.f64_array(self.u32(f"len({name})"), name)
+
+    def string(self, name: str) -> str:
+        length = self.u32(f"len({name})")
+        if length < 1:
+            raise CdrDecodeError(
+                f"CDR string {name} declares length {length}; the length includes "
+                f"the NUL terminator and can never be 0"
+            )
+        raw = self._take(length, name)
+        if raw[-1] != 0:
+            raise CdrDecodeError(f"CDR string {name} is not NUL-terminated")
+        try:
+            return raw[:-1].decode("utf-8")
+        except UnicodeDecodeError as error:
+            raise CdrDecodeError(f"CDR string {name} is not UTF-8: {error}") from error
+
+    def header_frame_id(self, name: str) -> str:
+        """``std_msgs/Header``: Time stamp (i32 sec, u32 nanosec) + frame_id."""
+
+        self.i32(f"{name}.stamp.sec")
+        self.u32(f"{name}.stamp.nanosec")
+        return self.string(f"{name}.frame_id")
+
+
+@dataclass(frozen=True, slots=True)
+class ImageMeta:
+    """The profile fields of one ``sensor_msgs/msg/Image``, read off the wire."""
+
+    frame_id: str
+    height: int
+    width: int
+    encoding: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "frame_id": self.frame_id,
+            "height": self.height,
+            "width": self.width,
+            "encoding": self.encoding,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class CameraInfoView:
+    """One decoded ``sensor_msgs/msg/CameraInfo``. Every calibration field."""
+
+    frame_id: str
+    height: int
+    width: int
+    distortion_model: str
+    d: tuple[float, ...]
+    k: tuple[float, ...]
+    r: tuple[float, ...]
+    p: tuple[float, ...]
+    binning_x: int
+    binning_y: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "frame_id": self.frame_id,
+            "height": self.height,
+            "width": self.width,
+            "distortion_model": self.distortion_model,
+            "d": list(self.d),
+            "k": list(self.k),
+            "r": list(self.r),
+            "p": list(self.p),
+            "binning_x": self.binning_x,
+            "binning_y": self.binning_y,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TransformView:
+    """One ``geometry_msgs/msg/TransformStamped`` out of a TFMessage."""
+
+    parent_frame: str
+    child_frame: str
+    translation_m: tuple[float, float, float]
+    rotation_xyzw: tuple[float, float, float, float]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "parent_frame": self.parent_frame,
+            "child_frame": self.child_frame,
+            "translation_m": list(self.translation_m),
+            "rotation_xyzw": list(self.rotation_xyzw),
+        }
+
+
+def decode_image_meta(payload: bytes) -> ImageMeta:
+    """Height/width/encoding of a CDR ``sensor_msgs/msg/Image``, no pixels."""
+
+    cursor = _CdrCursor(payload)
+    frame_id = cursor.header_frame_id("image.header")
+    height = cursor.u32("image.height")
+    width = cursor.u32("image.width")
+    encoding = cursor.string("image.encoding")
+    if height == 0 or width == 0:
+        raise CdrDecodeError(
+            f"image declares {width}x{height}; a zero dimension is not a profile"
+        )
+    return ImageMeta(frame_id=frame_id, height=height, width=width, encoding=encoding)
+
+
+def decode_camera_info(payload: bytes) -> CameraInfoView:
+    """A full CDR ``sensor_msgs/msg/CameraInfo``, refusing anything malformed."""
+
+    cursor = _CdrCursor(payload)
+    frame_id = cursor.header_frame_id("camera_info.header")
+    height = cursor.u32("camera_info.height")
+    width = cursor.u32("camera_info.width")
+    model = cursor.string("camera_info.distortion_model")
+    d = cursor.f64_sequence("camera_info.d")
+    k = cursor.f64_array(9, "camera_info.k")
+    r = cursor.f64_array(9, "camera_info.r")
+    p = cursor.f64_array(12, "camera_info.p")
+    binning_x = cursor.u32("camera_info.binning_x")
+    binning_y = cursor.u32("camera_info.binning_y")
+    if height == 0 or width == 0:
+        raise CdrDecodeError(
+            f"camera_info declares {width}x{height}; a zero dimension is not a "
+            f"calibration"
+        )
+    return CameraInfoView(
+        frame_id=frame_id,
+        height=height,
+        width=width,
+        distortion_model=model,
+        d=d,
+        k=k,
+        r=r,
+        p=p,
+        binning_x=binning_x,
+        binning_y=binning_y,
+    )
+
+
+def decode_tf_message(payload: bytes) -> tuple[TransformView, ...]:
+    """Every transform in a CDR ``tf2_msgs/msg/TFMessage``."""
+
+    cursor = _CdrCursor(payload)
+    count = cursor.u32("tf.transforms.count")
+    out: list[TransformView] = []
+    for index in range(count):
+        parent = cursor.header_frame_id(f"tf[{index}].header")
+        child = cursor.string(f"tf[{index}].child_frame_id")
+        translation = cursor.f64_array(3, f"tf[{index}].translation")
+        rotation = cursor.f64_array(4, f"tf[{index}].rotation")
+        out.append(
+            TransformView(
+                parent_frame=parent,
+                child_frame=child,
+                translation_m=(translation[0], translation[1], translation[2]),
+                rotation_xyzw=(rotation[0], rotation[1], rotation[2], rotation[3]),
+            )
+        )
+    return tuple(out)
+
+
+def collect_topic_payloads(
+    path: Path | str,
+    topics: Sequence[str],
+    *,
+    max_per_topic: int = 4,
+) -> tuple[dict[str, list[bytes]], tuple[str, ...]]:
+    """The first ``max_per_topic`` raw payloads per named topic, plus findings.
+
+    Streams the file with the same record framing as :func:`read_rosbag2_mcap`;
+    walks uncompressed chunks; records a compressed chunk as a finding rather
+    than a guess (no decompressor exists here). Returns every requested topic
+    as a key, so "no payload extracted" is an empty list a caller must face,
+    never a missing key that reads as "not asked".
+    """
+
+    wanted = set(topics)
+    payloads: dict[str, list[bytes]] = {topic: [] for topic in topics}
+    findings: list[str] = []
+    channels_by_id: dict[int, str] = {}
+
+    def _walk_records(data: bytes, *, inside_chunk: bool) -> None:
+        cursor = _Cursor(data)
+        while cursor.remaining:
+            if cursor.remaining < _RECORD_HEADER.size:
+                raise Rosbag2ReadError("record stream ends inside a record header")
+            opcode = cursor.u8("record.opcode")
+            length = cursor.u64("record.length")
+            body = cursor.take(length, "record.body")
+            _handle(opcode, body, inside_chunk=inside_chunk)
+
+    def _handle(opcode: int, body: bytes, *, inside_chunk: bool) -> None:
+        if opcode == OP_CHANNEL:
+            inner = _Cursor(body)
+            mcap_id = inner.u16("channel.id")
+            inner.u16("channel.schema_id")
+            channels_by_id.setdefault(mcap_id, inner.string("channel.topic"))
+        elif opcode == OP_MESSAGE:
+            inner = _Cursor(body)
+            mcap_id = inner.u16("message.channel_id")
+            inner.u32("message.sequence")
+            inner.u64("message.log_time")
+            inner.u64("message.publish_time")
+            topic = channels_by_id.get(mcap_id)
+            if topic in wanted and len(payloads[topic]) < max_per_topic:
+                payloads[topic].append(inner.rest())
+        elif opcode == OP_CHUNK and not inside_chunk:
+            inner = _Cursor(body)
+            inner.u64("chunk.message_start_time")
+            inner.u64("chunk.message_end_time")
+            inner.u64("chunk.uncompressed_size")
+            inner.u32("chunk.uncompressed_crc")
+            compression = inner.string("chunk.compression")
+            records = inner.blob64("chunk.records")
+            if compression:
+                findings.append(
+                    f"a {compression!r}-compressed chunk was not walked (no "
+                    f"decompressor here); payloads inside it were not extracted"
+                )
+                return
+            _walk_records(records, inside_chunk=True)
+
+    path = Path(path)
+    with path.open("rb") as handle:
+        magic = handle.read(len(MCAP_MAGIC))
+        if magic != MCAP_MAGIC:
+            raise NotAnMcapFileError(
+                f"{path} does not begin with the MCAP magic (got {magic!r})"
+            )
+        while True:
+            head = handle.read(_RECORD_HEADER.size)
+            if len(head) < _RECORD_HEADER.size:
+                break
+            opcode, length = _RECORD_HEADER.unpack(head)
+            if length > MAX_RECORD_BYTES:
+                findings.append(
+                    f"record opcode 0x{opcode:02x} declares {length} bytes, above the "
+                    f"ceiling; extraction stopped at that record"
+                )
+                break
+            content = handle.read(length)
+            if len(content) < length:
+                findings.append(
+                    f"file truncated inside record opcode 0x{opcode:02x}; extraction "
+                    f"stopped there"
+                )
+                break
+            try:
+                _handle(opcode, content, inside_chunk=False)
+            except Rosbag2ReadError as error:
+                findings.append(
+                    f"record opcode 0x{opcode:02x} did not decode ({error}); "
+                    f"extraction stopped there"
+                )
+                break
+            if opcode == OP_DATA_END:
+                break
+    return payloads, tuple(findings)
 
 
 # --------------------------------------------------------------------------

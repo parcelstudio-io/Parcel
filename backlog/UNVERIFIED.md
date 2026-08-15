@@ -1080,3 +1080,33 @@ untouched and is the whole of what remains. Record:
   config, so the sweep needs no code change.
 - **Risk:** an impatient default abandons goals a person was about to clear; a
   patient one wastes the owner's time. Nothing currently says which.
+
+## U37 — S-1 support topic names and Orin publishers · **critical · hardware**
+
+**Opened:** 2026-08-14 (S-1 `does_not_prove` durable copy for AU-F).
+
+- **Claim:** the recording plan's four `/camera/camera/<stream>/camera_info`
+  topics, `/tf` and `/tf_static` will be present under those names on the Orin.
+- **Reality:** names are documentation-derived. S-1 gates refuse missing /
+  mismatched support at preflight and GO-RECORD on **fixtures + Jazzy sandbox
+  bytes**. Nothing has been observed on Humble or the Orin (H-1 unread, H-2
+  NOT RUN).
+- **To verify:** B9 then B10 — `ros2 topic list -t` and rates on the real
+  drivers; preflight `reconcile_support_topics` against that graph; one
+  10-minute bag that finalizes GO-RECORD on the Orin record target.
+- **Risk:** treating green S-1 software as Stage-0 readiness
+  (`READY_FOR_STATIONARY_STAGE0` requires H-2 evidence).
+
+## U38 — Humble `ros2 topic list -t` line format · **major**
+
+**Opened:** 2026-08-14.
+
+- **Claim:** `preflight.parse_topic_list` accepts the Orin's Humble output.
+- **Reality:** parser is pinned to the Jazzy sandbox form
+  (`/topic [pkg/msg/Type]`). Humble is assumed identical; unparseable lines
+  refuse (fail closed) rather than skip.
+- **To verify:** capture verbatim `ros2 topic list -t` on the Orin (H-2) and
+  run `reconcile_support_topics` against it; if the format differs, fix the
+  parser with a seeded Humble fixture — never widen by silently skipping.
+- **Risk:** a format mismatch blocks the session loudly (correct) until fixed;
+  operators must not hand-edit the list to make it parse.

@@ -1451,3 +1451,147 @@ def test_seeded_failure_the_dual_python_gate_catches_a_311_only_edit() -> None:
         ast.parse(mutant, feature_version=(3, 10))  # syntax alone says nothing
         symbols, _literals = _symbols_and_literals(mutant)
         assert symbols & POST_310_SYMBOLS, f"surface gate missed {mutant!r}"
+
+
+# ---------------------------------------------------------------------------
+# S-1 — the support-artifact class beside the payload matrix
+# ---------------------------------------------------------------------------
+#
+# The verified P0 (AU-H, 2026-08-14): the matrix enumerated sensor channels
+# and never modelled calibration/transform SUPPORT ARTIFACTS as a class, so
+# four optical streams were planned with no camera_info, no /tf and no
+# /tf_static. These cells pin the new class: BESIDE the 28 payload channels,
+# never among them, never minting a payload sequence space, and with the
+# CameraInfo topic names DERIVED from image topic names rather than kept as a
+# second hand-written list.
+
+from parcel_robot.capture.channels import (
+    SUPPORT_ARTIFACT_ROWS,
+    SUPPORT_ARTIFACTS,
+    SUPPORT_ARTIFACTS_BY_ID,
+    SupportArtifact,
+    SupportArtifactKind,
+    SupportNeed,
+    SupportScope,
+    UnknownSupportArtifactError,
+    camera_info_topic_for,
+    certified_optical_channel_ids,
+    support_artifact,
+    support_artifacts_for,
+)
+
+
+def test_support_artifacts_live_beside_the_matrix_never_inside_it() -> None:
+    """The payload matrix stays payload-only: still 28 channels, still 25 rows,
+    and not one support id can collide with a channel id — a support artifact
+    must never be able to mint a payload sequence space."""
+
+    assert len(CHANNELS) == 28
+    assert len(SUPPORT_ARTIFACTS) == SUPPORT_ARTIFACT_ROWS == 8
+    for artifact in SUPPORT_ARTIFACTS:
+        assert artifact.support_id.startswith("support.")
+        assert artifact.support_id not in CHANNELS_BY_ID
+        # No arrival semantics: the class has no rate, no presence prior, no
+        # sequence space — structurally, not by convention.
+        assert not hasattr(artifact, "nominal_rate_hz")
+        assert not hasattr(artifact, "presence")
+        for channel_id in artifact.supports_channel_ids:
+            assert channel_id in CHANNELS_BY_ID
+
+
+def test_every_required_optical_stream_has_a_camera_info_artifact() -> None:
+    """The four D455 optical streams are the GO-RECORD certification set; the
+    Go2 front camera is deliberately NOT in it — no CameraInfo publisher
+    exists, and that absence is documented rather than gated or ignored."""
+
+    assert certified_optical_channel_ids() == (
+        "d455.color", "d455.depth", "d455.infra1", "d455.infra2",
+    )
+    front = support_artifact("support.go2.front_camera.camera_info")
+    assert front.need is SupportNeed.UNAVAILABLE_DOCUMENTED
+    assert front.message_type is None  # not a topic: nothing publishes it
+    assert "NO PUBLISHER" in front.human_name
+    # tf_static is snapshot-substitutable; dynamic tf is opportunistic.
+    assert support_artifact("support.tf_static").need is SupportNeed.SNAPSHOT_SUBSTITUTABLE
+    assert support_artifact("support.tf").need is SupportNeed.RECORDED_OPPORTUNISTIC
+
+
+def test_camera_info_topics_are_derived_from_image_topics_never_guessed() -> None:
+    assert (
+        camera_info_topic_for("/camera/camera/color/image_raw")
+        == "/camera/camera/color/camera_info"
+    )
+    assert (
+        camera_info_topic_for("/camera/camera/depth/image_rect_raw")
+        == "/camera/camera/depth/camera_info"
+    )
+    # Fail closed: a leaf that is not an image topic is refused, not mangled —
+    # a wrong support-topic name is silent at record time.
+    for hostile in (
+        "/camera/camera/color/points",
+        "relative/image_raw",
+        "/camera/camera/color/image_raw/",
+        "/image_raw",
+    ):
+        with pytest.raises(CaptureError):
+            camera_info_topic_for(hostile)
+
+
+def test_support_artifacts_for_joins_per_channel_and_rig_spatial_scopes() -> None:
+    for_color = {item.support_id for item in support_artifacts_for("d455.color")}
+    assert for_color == {
+        "support.d455.color.camera_info",
+        "support.calibration.digest",
+        "support.tf",
+        "support.tf_static",
+    }
+    # A non-spatial channel gets no rig-spatial transform artifacts.
+    for_tegrastats = {item.support_id for item in support_artifacts_for("orin.tegrastats")}
+    assert "support.tf_static" not in for_tegrastats
+    with pytest.raises(UnknownChannelError):
+        support_artifacts_for("not.a.channel")
+
+
+def test_seeded_failure_the_support_table_refuses_malformed_rows() -> None:
+    good = {
+        "support_id": "support.mutant.camera_info",
+        "kind": SupportArtifactKind.CAMERA_INFO,
+        "human_name": "mutant",
+        "supports_channel_ids": ("d455.color",),
+        "need": SupportNeed.REQUIRED,
+        "scope": SupportScope.PER_CHANNEL,
+        "message_type": "sensor_msgs/msg/CameraInfo",
+        "confidence": Confidence.UNVERIFIED,
+        "note": "mutant row",
+    }
+    SupportArtifact(**good)  # the baseline construction is legal
+
+    mutants: tuple[tuple[str, object, str], ...] = (
+        ("support_id", "d455.color", "support."),
+        ("need", "required", "SupportNeed"),
+        ("kind", "camera_info", "SupportArtifactKind"),
+        ("scope", "per_channel", "SupportScope"),
+        ("supports_channel_ids", (), "PER_CHANNEL"),
+        ("message_type", "", "non-empty"),
+        ("note", " ", "non-empty"),
+    )
+    for field_name, value, match in mutants:
+        with pytest.raises(CaptureError, match=match):
+            SupportArtifact(**{**good, field_name: value})
+    # RIG_SPATIAL restating its channel set is a second list that can drift.
+    with pytest.raises(CaptureError, match="derives its channel set"):
+        SupportArtifact(
+            **{
+                **good,
+                "scope": SupportScope.RIG_SPATIAL,
+                "kind": SupportArtifactKind.TF,
+            }
+        )
+
+
+def test_seeded_failure_an_unknown_support_id_is_absent_not_new() -> None:
+    with pytest.raises(UnknownSupportArtifactError, match="unknown support_id"):
+        support_artifact("support.d455.color.camerainfo")  # typo'd id
+    assert set(SUPPORT_ARTIFACTS_BY_ID) == {
+        item.support_id for item in SUPPORT_ARTIFACTS
+    }

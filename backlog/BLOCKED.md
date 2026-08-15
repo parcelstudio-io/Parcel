@@ -259,3 +259,88 @@ spot-confirmed at source by Fable, not inferred from a report).
 - **Not blocking the first physical session:** the session records sensors and
   runs no localizer. This blocks the Wave-1 physical pose provider, which must
   not be built until the fallback fails closed.
+
+---
+
+## B9 — Orin identity unread (H-1) · **operator · blocks S-2 finalize + H-2**
+
+**Opened:** 2026-08-14 (DOC-G / AU-F prep from
+[`scrum/20260814/task_1/REVISED_BOARD.md`](../scrum/20260814/task_1/REVISED_BOARD.md)).
+
+- **Claim someone might assume:** the Orin is JetPack 6 / Ubuntu 22.04 / Humble
+  and yesterday's recorder argv is safe to copy.
+- **Reality:** H-1 has not run. Distro, JetPack, `/opt/ros`, free disk and
+  Python are **UNREAD**. S-2 templates exist for Humble *and* Jazzy but
+  **FINALIZE is BLOCKED** (`STAGE0_COMMAND_ADDENDUM.md` header).
+- **Unblock (operator, first 30 min on the Orin, bench LAN — not robot LAN):**
+
+  ```bash
+  cat /etc/nv_tegra_release; lsb_release -a; uname -r
+  ls /opt/ros; python3 --version; lsblk; df -h
+  ```
+
+  Record the exact output in the run header of
+  `scrum/20260813/task_1/session/STAGE0_RUN_SHEET.md`. JetPack 6.x / 22.04 /
+  Humble → continue TONIGHT_CHECKLIST N1→N7. Anything else → **STOP**; report
+  exact output; do not flash the single dock.
+- **What it unblocks:** H-2 rehearsal; S-2 argv finalize from
+  `Rosbag2Plan(distro=<observed>)` after `--verify-help`.
+
+## B10 — No-dog Orin rehearsal NOT RUN (H-2) · **operator + Sol · after B9**
+
+**Opened:** 2026-08-14.
+
+- **Claim:** drivers, topics, recorder and preflight are session-ready.
+- **Reality:** `NOT RUN` on the actual Orin. Desktop fixtures and Jazzy-sandbox
+  bags are not Orin evidence (working agreement / Fable brief Q8).
+- **Unblock:** after B9's distro answer — launch RealSense + L2 drivers;
+  `ros2 topic list -t` + `ros2 topic hz`; render argv via
+  `Rosbag2Plan(distro=<observed>)` with `--verify-help`; 10-minute D455 bag on
+  the real record target; measure sustained write; run preflight end-to-end
+  including `reconcile_support_topics`. Exit: measured evidence in
+  `MRB_STATUS.md` / H-2 status, or a named blocker.
+- **What it unblocks:** any `READY_FOR_STATIONARY_STAGE0` claim; next-session
+  MR-C staffing decision.
+
+## B11 — Mount + measure the rig on the dog (H-3) · **operator · today, software-independent**
+
+**Opened:** 2026-08-14.
+
+- **Claim:** mount geometry and FOV overlap are known.
+- **Reality:** not executed. Independent of H-1/H-2/S-1/S-2.
+- **Unblock:** follow REVISED_BOARD H-3 — SAFETY_BRIEF pre-reads; mount
+  bracket/Orin/D455/L2 with strain relief; pre-torque geometric FOV gate;
+  fill `MOUNT_GEOMETRY_SHEET.md` completely (tape + uncertainty, never
+  calibrated TF); photograph per `PHOTO_LIST.md`. No stand without two people;
+  no robot LAN before firmware pin.
+- **What it unblocks:** deliberate `DEGRADE_MMP_ONLY` evidence path; geometry
+  input for later extrinsic work. Durable even if every software card fails.
+
+## B12 — S-2 Stage-0 command addendum FINALIZE · **blocked on B9 (H-1)**
+
+**Opened:** 2026-08-14.
+
+- **Claim:** T7–T10 are the commands of record for tomorrow's session.
+- **Reality:** both-distro templates are drafted under
+  `scrum/20260814/task_1/STAGE0_COMMAND_ADDENDUM.md` (Sol-owned renderer).
+  Header correctly says **FINALIZE BLOCKED ON H-1**. Picking one argv before
+  `/opt/ros/<distro>` is read would re-introduce the Humble
+  `--disable-keyboard-controls` class of defect.
+- **Unblock:** complete B9; then regenerate/finalize from
+  `Rosbag2Plan(distro=<observed>)` after `--verify-help` against the installed
+  recorder help. Do not hand-copy historical 20260813 sheets.
+- **Owner:** Sol / S-2 lane (argv renderer). Do not edit-war with capture S-1.
+
+## B13 — Isaac RTX sensor lane (IS-F) · **blocked on supported host/container**
+
+**Opened:** 2026-08-14 (deferred from REVISED_BOARD; was P2 stretch).
+
+- **Claim:** Isaac can smoke the PE-D sensor contract on this workstation.
+- **Reality:** this desktop is **Ubuntu 26.04**, outside Isaac Sim's supported
+  host matrix. Docker/ROS/Isaac are absent; `.parcel` must not gain vendor SDKs.
+- **Unblock:** provision an Ubuntu **22.04 or 24.04** host or container; pin an
+  Isaac Sim release/image **by digest**; run a single-GPU headless
+  compatibility check without mutating the unsupported host into an untracked
+  environment. Then implement an Isaac producer behind the PE-D
+  `SensorFrameV2` contract (scorer-only oracle fields).
+- **What it unblocks:** IS-F smoke only — never physical sensing claims.

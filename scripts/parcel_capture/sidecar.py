@@ -85,6 +85,12 @@ from parcel_robot.capture import (
     RateKind,
     channel,
 )
+from parcel_robot.capture.channels import (
+    SUPPORT_ARTIFACTS,
+    SupportNeed,
+    camera_info_topic_for,
+    certified_optical_channel_ids,
+)
 from parcel_robot.evidence_origin import EvidenceOrigin
 
 from .record import (
@@ -97,14 +103,23 @@ from .record import (
 )
 from .rosbag2 import (
     CHANNEL_BY_TOPIC,
+    SUPPORT_BY_TOPIC,
+    CameraInfoView,
+    CdrDecodeError,
     CountBasis,
     Rosbag2Directory,
     Rosbag2Info,
     Rosbag2Scan,
+    TransformView,
+    collect_topic_payloads,
+    decode_camera_info,
+    decode_image_meta,
+    decode_tf_message,
     discover_bag,
     read_rosbag2_mcap,
 )
 from .rosbag2 import ScanTermination as Rosbag2Termination
+from .syncevents import SyncFitV1, sidecar_sync_block, sync_fit_digest
 
 #: Wire identifier of the capture block inside the manifest's ``extra``.
 SIDECAR_SCHEMA = "parcel.capture.sidecar.v1"
@@ -1506,6 +1521,674 @@ def _observe_rosbag2_channel(
     )
 
 
+# --------------------------------------------------------------------------
+# The GO-RECORD gate — card S-1 (scrum/20260814/task_1/REVISED_BOARD.md)
+# --------------------------------------------------------------------------
+#
+# The verified P0: four optical streams recorded, no camera_info, no /tf, no
+# /tf_static. This gate is what makes that state unable to certify. A bag
+# CANNOT finalize GO-RECORD when:
+#
+#   (a) an active optical stream lacks a matching CameraInfo — matching means
+#       the SAME width/height and the same delivery rate as the recorded
+#       stream, both read out of the bag's own bytes, never declared;
+#   (b) sensor transforms are absent or ambiguous — a frame with two competing
+#       parents, or two competing declarations of one extrinsic, is ambiguous;
+#   (c) the transient-local /tf_static published before record start was
+#       neither captured in the bag nor bound as a machine-readable
+#       static-transform snapshot;
+#   (d) the run claims recoverable cross-device time without a certifiable
+#       sync fit bound by digest (the PS-I fit, wired here rather than proven
+#       only in isolation).
+#
+# Refusal here does not suppress the sidecar: the sidecar is a recovery pass
+# and always records what happened, including a REFUSED certification with its
+# reasons. What refusal forbids is the CLAIM: ``finalize_rosbag2`` with
+# ``require_go_record=True`` raises instead of writing a certified manifest.
+
+#: Wire identifier of a static-transform snapshot taken before record start.
+STATIC_TF_SNAPSHOT_SCHEMA = "parcel.capture.static_tf_snapshot.v1"
+
+_SNAPSHOT_REQUIRED_KEYS = ("schema", "captured_at_utc", "source", "transforms")
+
+#: Two declarations of one parent->child extrinsic that differ by more than
+#: this are COMPETING declarations, which is ambiguity, which is a refusal.
+_TRANSFORM_EPSILON = 1e-9
+
+#: How far a CameraInfo topic's delivered count may drift from its image
+#: stream's before the pair no longer shares a rate profile. Wider than the
+#: channel-rate tolerance on purpose: the driver publishes CameraInfo per
+#: frame, but the two subscriptions start at slightly different instants.
+CAMERA_INFO_RATE_TOLERANCE = 0.10
+
+#: Below this many images the rate leg cannot certify anything: a single
+#: missing CameraInfo is already outside the tolerance, so a bag this short is
+#: recorded as a finding rather than being waved through by a rounding floor.
+#: Derived from the tolerance, never a second hand-set number (FX-2 F3).
+CAMERA_INFO_RATE_MIN_MESSAGES = round(1.0 / CAMERA_INFO_RATE_TOLERANCE)
+
+#: Payloads to pull per topic when reading calibration and transforms back out
+#: of the bag. Transforms need many (one TFMessage per publisher); an image
+#: needs one message for the profile; calibration keeps the whole collected
+#: window so a CameraInfo that changes after the first message is seen at all
+#: (FX-2 F4 — and see :func:`calibration_digest_of` for what that does NOT
+#: cover).
+_TF_STATIC_PAYLOADS = 64
+_OPTICAL_PAYLOADS = 4
+_CALIBRATION_PAYLOADS = 64
+
+
+class GoRecordRefusedError(SidecarRefusedError):
+    """A run asked for GO-RECORD certification and the bag cannot carry it."""
+
+
+@dataclass(frozen=True)
+class GoRecordAssessment:
+    """The certification verdict, with every refusal named and its evidence."""
+
+    certified: bool
+    refusals: tuple[str, ...]
+    findings: tuple[str, ...]
+    streams: Mapping[str, Any]
+    transforms: Mapping[str, Any]
+    calibration_sha256: str | None
+    snapshot_sha256: str | None
+    sync: Mapping[str, Any]
+
+    @property
+    def status(self) -> str:
+        return "GO-RECORD" if self.certified else "REFUSED"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "status": self.status,
+            "certified": self.certified,
+            "refusals": list(self.refusals),
+            "findings": list(self.findings),
+            "streams": {key: dict(value) for key, value in sorted(self.streams.items())},
+            "transforms": dict(self.transforms),
+            "calibration_sha256": self.calibration_sha256,
+            "snapshot_sha256": self.snapshot_sha256,
+            "sync": dict(self.sync),
+        }
+
+
+def validate_static_transform_snapshot(
+    snapshot: Mapping[str, Any],
+) -> tuple[TransformView, ...]:
+    """A machine-readable snapshot, or a refusal. Prose is not a snapshot.
+
+    The snapshot exists for the transient-local gap: ``/tf_static`` is
+    published once and latched, so a recorder started after the publisher may
+    never receive it. Capturing it BEFORE record start (``ros2 topic echo``
+    into a file, or the driver's own declaration) and binding it here is the
+    only honest substitute — and only if it is strict enough to be used
+    downstream without a human interpreting it.
+    """
+
+    if not isinstance(snapshot, Mapping):
+        raise SidecarRefusedError(
+            f"a static-transform snapshot must be a mapping, got "
+            f"{type(snapshot).__name__}"
+        )
+    missing = [key for key in _SNAPSHOT_REQUIRED_KEYS if key not in snapshot]
+    if missing:
+        raise SidecarRefusedError(
+            f"static-transform snapshot is missing {missing}; a snapshot without "
+            f"provenance is indistinguishable from a guess"
+        )
+    if snapshot["schema"] != STATIC_TF_SNAPSHOT_SCHEMA:
+        raise SidecarRefusedError(
+            f"static-transform snapshot schema is {snapshot['schema']!r}, expected "
+            f"{STATIC_TF_SNAPSHOT_SCHEMA!r}"
+        )
+    captured_at = snapshot["captured_at_utc"]
+    if not isinstance(captured_at, str) or not _ISO_UTC.match(captured_at):
+        raise SidecarRefusedError(
+            f"snapshot captured_at_utc must be ISO-8601 Z, got {captured_at!r}"
+        )
+    source = snapshot["source"]
+    if not isinstance(source, str) or not source.strip():
+        raise SidecarRefusedError(
+            "snapshot source must say how the transforms were obtained (e.g. the "
+            "`ros2 topic echo /tf_static` invocation run before record start)"
+        )
+    raw = snapshot["transforms"]
+    if not isinstance(raw, Sequence) or isinstance(raw, (str, bytes)) or not raw:
+        raise SidecarRefusedError(
+            "snapshot transforms must be a non-empty sequence; an empty snapshot "
+            "snapshots nothing and must not satisfy the tf_static gate"
+        )
+    out: list[TransformView] = []
+    for index, entry in enumerate(raw):
+        if not isinstance(entry, Mapping):
+            raise SidecarRefusedError(f"snapshot transform [{index}] must be a mapping")
+        for key in ("parent_frame", "child_frame"):
+            value = entry.get(key)
+            if not isinstance(value, str) or not value.strip():
+                raise SidecarRefusedError(
+                    f"snapshot transform [{index}] needs a non-empty {key}"
+                )
+        translation = _triple(entry.get("translation_m"), f"snapshot[{index}].translation_m")
+        rotation = entry.get("rotation_xyzw")
+        if isinstance(rotation, (str, bytes)) or not isinstance(rotation, (list, tuple)) or len(rotation) != 4:
+            raise SidecarRefusedError(
+                f"snapshot transform [{index}] needs rotation_xyzw as 4 numbers"
+            )
+        quat = tuple(
+            _finite(item, f"snapshot[{index}].rotation_xyzw[{position}]")
+            for position, item in enumerate(rotation)
+        )
+        norm = math.sqrt(math.fsum(item * item for item in quat))
+        if abs(norm - 1.0) > 1e-6:
+            raise SidecarRefusedError(
+                f"snapshot transform [{index}] rotation has norm {norm:.9f}; a "
+                f"non-unit quaternion is not an orientation and must not enter the "
+                f"transform record"
+            )
+        out.append(
+            TransformView(
+                parent_frame=str(entry["parent_frame"]),
+                child_frame=str(entry["child_frame"]),
+                translation_m=(translation[0], translation[1], translation[2]),
+                rotation_xyzw=(quat[0], quat[1], quat[2], quat[3]),
+            )
+        )
+    return tuple(out)
+
+
+def static_transform_snapshot_digest(snapshot: Mapping[str, Any]) -> str:
+    """SHA-256 over the canonical snapshot JSON, for the sidecar to bind."""
+
+    canonical = json.dumps(
+        _jsonable(snapshot), sort_keys=True, separators=(",", ":"), allow_nan=False
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _jsonable(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {str(key): _jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(item) for item in value]
+    return value
+
+
+def calibration_digest_of(
+    views: Mapping[str, Sequence[CameraInfoView]],
+) -> str:
+    """SHA-256 over the canonical decoded calibration set, per camera_info topic.
+
+    What this covers, exactly (corrected in FX-2 F4, where the previous wording
+    claimed more than the code did):
+
+    * Every DISTINCT decoded calibration seen in the collected window for each
+      topic, in first-seen order — not merely the first message. A stream that
+      re-publishes different intrinsics inside that window moves the digest and
+      is reported as drift by :func:`assess_go_record`.
+    * The decoded CALIBRATION CONTENT, not the raw bytes. Two payloads that
+      differ only in their header stamp or in CDR padding decode to the same
+      :class:`CameraInfoView` and hash the same, by design: the digest names
+      the calibration, and every raw byte of the bag is already covered by the
+      per-file ``sha256`` the sidecar records and ``verify_rosbag2_sidecar``
+      recomputes.
+    * NOT a calibration that first changes after the collected window
+      (``_CALIBRATION_PAYLOADS`` per split file). That window is bounded on
+      purpose — extending it to the whole bag costs a second full parse of a
+      take that is ~100 GiB — and the gap is named rather than papered over.
+    """
+
+    canonical = json.dumps(
+        {
+            topic: [view.to_dict() for view in sequence]
+            for topic, sequence in sorted(views.items())
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        allow_nan=False,
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _calibration_difference(first: CameraInfoView, second: CameraInfoView) -> str:
+    """Name the calibration fields that moved, so the finding is actionable."""
+
+    left, right = first.to_dict(), second.to_dict()
+    moved = [key for key in sorted(left) if left[key] != right[key]]
+    return "changed field(s): " + ", ".join(moved) if moved else "identical fields"
+
+
+def _distinct_calibrations(
+    payloads: Sequence[bytes], topic: str, failures: list[str]
+) -> list[CameraInfoView]:
+    """Every distinct decoded CameraInfo in ``payloads``, in first-seen order.
+
+    Identical calibrations collapse to one entry — the normal case is a driver
+    republishing the same intrinsics per frame — so the digest stays a name for
+    the calibration and grows only when the calibration itself changes.
+    """
+
+    seen: list[CameraInfoView] = []
+    for payload in payloads:
+        try:
+            view = decode_camera_info(payload)
+        except CdrDecodeError as error:
+            failures.append(f"{topic}: CameraInfo no longer decodes: {error}")
+            return seen
+        if view not in seen:
+            seen.append(view)
+    return seen
+
+
+def _collect_support_payloads(
+    files: Sequence[Path],
+    optical_topics: Mapping[str, str],
+) -> tuple[dict[str, list[bytes]], list[str]]:
+    """Image/CameraInfo/tf_static payloads across every split file."""
+
+    wanted: list[str] = ["/tf_static"]
+    info_topics = set()
+    for image_topic, info_topic in optical_topics.items():
+        wanted.extend((image_topic, info_topic))
+        info_topics.add(info_topic)
+    merged: dict[str, list[bytes]] = {topic: [] for topic in wanted}
+    findings: list[str] = []
+    per_call = max(_TF_STATIC_PAYLOADS, _CALIBRATION_PAYLOADS, _OPTICAL_PAYLOADS)
+    for path in files:
+        per_file, file_findings = collect_topic_payloads(
+            path, wanted, max_per_topic=per_call
+        )
+        findings.extend(f"{path.name}: {item}" for item in file_findings)
+        for topic, payloads in per_file.items():
+            if topic == "/tf_static":
+                ceiling = _TF_STATIC_PAYLOADS
+            elif topic in info_topics:
+                # Keep the whole collected window rather than one message: the
+                # extra retention is free (these payloads were already read),
+                # and it is what lets a mid-window calibration change be seen.
+                ceiling = _CALIBRATION_PAYLOADS
+            else:
+                ceiling = _OPTICAL_PAYLOADS
+            for payload in payloads:
+                if len(merged[topic]) < ceiling:
+                    merged[topic].append(payload)
+    return merged, findings
+
+
+def assess_go_record(
+    bag_dir: Path | str,
+    *,
+    counts: Mapping[str, int],
+    files: Sequence[Path] | None = None,
+    static_transform_snapshot: Mapping[str, Any] | None = None,
+    sync_fit: SyncFitV1 | None = None,
+    claims_recoverable_time: bool = False,
+    camera_info_rate_tolerance: float = CAMERA_INFO_RATE_TOLERANCE,
+) -> GoRecordAssessment:
+    """Judge one recorded bag against the GO-RECORD completeness gate.
+
+    Every input to the verdict is either read out of the bag's bytes (image
+    profiles, CameraInfo, /tf_static) or bound by digest (the snapshot, the
+    sync fit). ``counts`` is the per-topic count map the caller already built
+    from the scans; a topic absent from it is a topic that recorded nothing.
+    """
+
+    if files is None:
+        files = discover_bag(bag_dir).files
+    refusals: list[str] = []
+    findings: list[str] = []
+
+    # -- which certified-optical streams are ACTIVE in this bag ------------
+    topic_by_channel = {value: key for key, value in CHANNEL_BY_TOPIC.items()}
+    optical_topics: dict[str, str] = {}
+    active_channels: list[str] = []
+    for channel_id in certified_optical_channel_ids():
+        image_topic = topic_by_channel.get(channel_id)
+        if image_topic is None:  # pragma: no cover - table invariant
+            raise SidecarRefusedError(
+                f"certified optical channel {channel_id} has no recorded topic"
+            )
+        if counts.get(image_topic, 0) > 0:
+            optical_topics[image_topic] = camera_info_topic_for(image_topic)
+            active_channels.append(channel_id)
+    if not active_channels:
+        findings.append(
+            "no active certified-optical stream in this bag; the camera-calibration "
+            "legs of GO-RECORD are vacuous here and certify nothing about optics"
+        )
+
+    payloads, payload_findings = _collect_support_payloads(files, optical_topics)
+    findings.extend(payload_findings)
+
+    # -- (a) matching CameraInfo per active optical stream ------------------
+    streams: dict[str, dict[str, Any]] = {}
+    calibration_views: dict[str, list[CameraInfoView]] = {}
+    for image_topic, info_topic in sorted(optical_topics.items()):
+        record: dict[str, Any] = {
+            "camera_info_topic": info_topic,
+            "image_messages": counts.get(image_topic, 0),
+            "camera_info_messages": counts.get(info_topic, 0),
+        }
+        streams[image_topic] = record
+        if counts.get(info_topic, 0) <= 0:
+            refusals.append(
+                f"active optical stream {image_topic} recorded "
+                f"{counts.get(image_topic, 0)} image(s) with NO CameraInfo on "
+                f"{info_topic}; without intrinsics and a distortion model this "
+                f"stream cannot feed camera SLAM or camera-LiDAR fusion, and no "
+                f"post-session effort can recover them"
+            )
+            continue
+        image_meta = _decode_first(
+            payloads.get(image_topic, ()), decode_image_meta, image_topic, refusals
+        )
+        info_view = _decode_first(
+            payloads.get(info_topic, ()), decode_camera_info, info_topic, refusals
+        )
+        if image_meta is None or info_view is None:
+            continue
+        record["image_profile"] = image_meta.to_dict()
+        record["camera_info_profile"] = {
+            "width": info_view.width,
+            "height": info_view.height,
+            "distortion_model": info_view.distortion_model,
+            "frame_id": info_view.frame_id,
+        }
+        if (image_meta.width, image_meta.height) != (info_view.width, info_view.height):
+            refusals.append(
+                f"{image_topic} records a {image_meta.width}x{image_meta.height} "
+                f"stream but {info_topic} carries a "
+                f"{info_view.width}x{info_view.height} calibration; a mismatched "
+                f"profile is a calibration for a stream that was not recorded"
+            )
+            continue
+        image_count = counts.get(image_topic, 0)
+        info_count = counts.get(info_topic, 0)
+        # PROPORTIONAL, with no floor. The old `max(1.0, ...)` floor only ever
+        # applied where it was wrong — below CAMERA_INFO_RATE_MIN_MESSAGES
+        # images — and there it certified deficits of 50% and more (FX-2 F3:
+        # 2 images / 1 CameraInfo reached GO-RECORD). At larger counts the
+        # proportional allowance already exceeds 1.0, so nothing that used to
+        # pass on the strength of the tolerance stops passing.
+        allowance = image_count * camera_info_rate_tolerance
+        if abs(image_count - info_count) > allowance:
+            refusals.append(
+                f"{info_topic} delivered {info_count} CameraInfo message(s) against "
+                f"{image_count} image(s) on {image_topic}; outside the "
+                f"{camera_info_rate_tolerance:.0%} rate profile, so the calibration "
+                f"stream did not track the image stream it claims to describe"
+            )
+            continue
+        if image_count < CAMERA_INFO_RATE_MIN_MESSAGES:
+            findings.append(
+                f"{image_topic} recorded only {image_count} image(s): below "
+                f"{CAMERA_INFO_RATE_MIN_MESSAGES} a single missing CameraInfo is "
+                f"already outside the {camera_info_rate_tolerance:.0%} rate profile, "
+                f"so this leg passing says the two counts match, not that the "
+                f"calibration stream was observed to track a real take"
+            )
+        drift = _distinct_calibrations(payloads.get(info_topic, ()), info_topic, refusals)
+        if len(drift) > 1:
+            findings.append(
+                f"{info_topic} published {len(drift)} DIFFERENT calibrations inside "
+                f"the first {_CALIBRATION_PAYLOADS} message(s) of each split file "
+                f"({_calibration_difference(drift[0], drift[1])}); every one of them "
+                f"is bound into the calibration digest, and a take whose intrinsics "
+                f"move mid-stream cannot be rectified with any single one of them"
+            )
+        calibration_views[info_topic] = drift or [info_view]
+
+    # -- (b)/(c) sensor transforms -----------------------------------------
+    bag_tf_static = counts.get("/tf_static", 0)
+    transform_sources: dict[str, tuple[TransformView, ...]] = {}
+    decoded_static: list[TransformView] = []
+    for payload in payloads.get("/tf_static", ()):
+        try:
+            decoded_static.extend(decode_tf_message(payload))
+        except CdrDecodeError as error:
+            refusals.append(f"/tf_static payload did not decode: {error}")
+    if decoded_static:
+        transform_sources["bag:/tf_static"] = tuple(decoded_static)
+    snapshot_digest: str | None = None
+    if static_transform_snapshot is not None:
+        transform_sources["snapshot"] = validate_static_transform_snapshot(
+            static_transform_snapshot
+        )
+        snapshot_digest = static_transform_snapshot_digest(static_transform_snapshot)
+
+    parents_by_child: dict[str, dict[str, tuple[TransformView, str]]] = {}
+    for source, views in transform_sources.items():
+        for view in views:
+            slot = parents_by_child.setdefault(view.child_frame, {})
+            existing = slot.get(view.parent_frame)
+            if existing is None:
+                slot[view.parent_frame] = (view, source)
+            else:
+                previous, previous_source = existing
+                if _transforms_disagree(previous, view):
+                    refusals.append(
+                        f"two competing declarations of {view.parent_frame}->"
+                        f"{view.child_frame} (from {previous_source} and {source}) "
+                        f"disagree; an extrinsic with two values is ambiguous, and "
+                        f"choosing one silently would poison every fusion result"
+                    )
+    for child, slots in sorted(parents_by_child.items()):
+        if len(slots) > 1:
+            refusals.append(
+                f"frame {child!r} has {len(slots)} competing parents "
+                f"({', '.join(sorted(slots))}); the transform tree is ambiguous "
+                f"and no consumer may resolve the tie silently"
+            )
+
+    if active_channels:
+        if bag_tf_static <= 0 and static_transform_snapshot is None:
+            refusals.append(
+                "transient-local /tf_static was neither captured in the bag "
+                f"({bag_tf_static} message(s)) nor bound as a static-transform "
+                "snapshot taken before record start; the bag's frames are labels "
+                "with no geometry"
+            )
+        else:
+            for image_topic in sorted(optical_topics):
+                frame = _stream_frame(streams.get(image_topic, {}))
+                if frame is None:
+                    continue  # already refused above for this stream
+                if frame not in parents_by_child:
+                    refusals.append(
+                        f"sensor transform absent: optical frame {frame!r} "
+                        f"({image_topic}) has no parent in /tf_static or the "
+                        f"snapshot; the stream cannot be placed on the rig"
+                    )
+    elif bag_tf_static <= 0 and static_transform_snapshot is None:
+        findings.append(
+            "no /tf_static in the bag and no snapshot bound; nothing relates this "
+            "bag's frames to one another (finding, not a refusal: no optical "
+            "stream is active to certify)"
+        )
+
+    # -- calibration digest -------------------------------------------------
+    calibration_sha256 = (
+        calibration_digest_of(calibration_views) if calibration_views else None
+    )
+
+    # -- (d) sync binding ---------------------------------------------------
+    if sync_fit is None:
+        sync_block: dict[str, Any] = {
+            "status": "absent",
+            "certifiable": False,
+            "note": (
+                "no sync fit is bound to this bag; cross-device time is not "
+                "recoverable from it alone (PS-I)"
+            ),
+        }
+        if claims_recoverable_time:
+            refusals.append(
+                "the run claims recoverable cross-device time but no sync fit is "
+                "bound to the sidecar; a claim without the digest-bound evidence "
+                "must not certify"
+            )
+    else:
+        sync_block = {"status": "present", **sidecar_sync_block(sync_fit)}
+        if claims_recoverable_time and not sync_fit.is_certifiable:
+            refusals.append(
+                "the run claims recoverable cross-device time but the bound sync "
+                f"fit is not certifiable: {'; '.join(sync_fit.shortfalls)}"
+            )
+
+    transforms_block = {
+        "bag_tf_static_messages": bag_tf_static,
+        "bag_tf_messages": counts.get("/tf", 0),
+        "sources": {
+            source: [view.to_dict() for view in views]
+            for source, views in sorted(transform_sources.items())
+        },
+        "snapshot_bound": static_transform_snapshot is not None,
+    }
+
+    return GoRecordAssessment(
+        certified=not refusals,
+        refusals=tuple(refusals),
+        findings=tuple(findings),
+        streams=streams,
+        transforms=transforms_block,
+        calibration_sha256=calibration_sha256,
+        snapshot_sha256=snapshot_digest,
+        sync=sync_block,
+    )
+
+
+def _decode_first(payloads: Sequence[bytes], decoder, topic: str, refusals: list[str]):
+    """First decodable payload, or a refusal recorded. Unreadable ≠ passed."""
+
+    if not payloads:
+        refusals.append(
+            f"{topic} recorded messages but not one payload could be read back out "
+            f"of the bag's bytes (compressed chunks or damage); a profile that "
+            f"cannot be read cannot be certified"
+        )
+        return None
+    try:
+        return decoder(payloads[0])
+    except CdrDecodeError as error:
+        refusals.append(f"{topic} payload did not decode: {error}")
+        return None
+
+
+def _stream_frame(record: Mapping[str, Any]) -> str | None:
+    info = record.get("camera_info_profile")
+    if isinstance(info, Mapping) and info.get("frame_id"):
+        return str(info["frame_id"])
+    image = record.get("image_profile")
+    if isinstance(image, Mapping) and image.get("frame_id"):
+        return str(image["frame_id"])
+    return None
+
+
+def _transforms_disagree(first: TransformView, second: TransformView) -> bool:
+    deltas = [
+        abs(a - b) for a, b in zip(first.translation_m, second.translation_m)
+    ] + [abs(a - b) for a, b in zip(first.rotation_xyzw, second.rotation_xyzw)]
+    return max(deltas) > _TRANSFORM_EPSILON
+
+
+def verify_calibration_digest(
+    sidecar: Mapping[str, Any], bag_dir: Path | str
+) -> tuple[bool, tuple[str, ...]]:
+    """Re-derive the calibration digest from the bag and compare.
+
+    Re-derivation walks the SAME window :func:`assess_go_record` bound — up to
+    ``_CALIBRATION_PAYLOADS`` CameraInfo per split file, deduplicated to the
+    distinct decoded calibrations — so any CameraInfo in that window whose
+    decoded content changed re-derives to a different digest and the mismatch
+    names itself. What it does not re-derive is stated on
+    :func:`calibration_digest_of`: raw bytes that decode identically, and a
+    calibration that first changes past the window. A sidecar with no recorded
+    digest fails: absence of the binding is not a passing state of the binding.
+    """
+
+    failures: list[str] = []
+    block = sidecar.get(SIDECAR_EXTRA_KEY)
+    go_block = block.get("go_record") if isinstance(block, Mapping) else None
+    if not isinstance(go_block, Mapping):
+        return False, ("sidecar carries no capture.go_record block to verify",)
+    recorded = go_block.get("calibration_sha256")
+    if not isinstance(recorded, str) or not _HEX64.match(recorded):
+        return False, (
+            (
+                f"sidecar records no calibration digest (got {recorded!r}); an "
+                f"absent binding cannot verify"
+            ),
+        )
+    streams = go_block.get("streams")
+    info_topics = sorted(
+        str(value.get("camera_info_topic"))
+        for value in (streams or {}).values()
+        if isinstance(value, Mapping) and value.get("camera_info_topic")
+    )
+    if not info_topics:
+        return False, ("sidecar go_record names no camera_info topics to re-derive from",)
+    files = discover_bag(bag_dir).files
+    payloads: dict[str, list[bytes]] = {topic: [] for topic in info_topics}
+    for path in files:
+        extracted, _findings = collect_topic_payloads(
+            path, info_topics, max_per_topic=_CALIBRATION_PAYLOADS
+        )
+        for topic, blobs in extracted.items():
+            for blob in blobs:
+                if len(payloads[topic]) < _CALIBRATION_PAYLOADS:
+                    payloads[topic].append(blob)
+    views: dict[str, list[CameraInfoView]] = {}
+    for topic in info_topics:
+        decoded = _distinct_calibrations(payloads[topic], topic, failures)
+        if decoded:
+            views[topic] = decoded
+    if failures:
+        return False, tuple(failures)
+    if set(views) != set(info_topics):
+        missing = sorted(set(info_topics) - set(views))
+        return False, (
+            (
+                f"camera_info payload(s) for {missing} are no longer extractable "
+                f"from the bag"
+            ),
+        )
+    computed = calibration_digest_of(views)
+    if computed != recorded:
+        return False, (
+            (
+                f"calibration digest mismatch: sidecar records {recorded}, the "
+                f"bag's decoded calibration set hashes to {computed}"
+            ),
+        )
+    return True, ()
+
+
+def verify_sync_fit_binding(
+    sidecar: Mapping[str, Any], fit: SyncFitV1
+) -> tuple[bool, tuple[str, ...]]:
+    """Is this fit provably the one the sidecar bound? Digest decides."""
+
+    block = sidecar.get(SIDECAR_EXTRA_KEY)
+    sync_block = block.get("sync") if isinstance(block, Mapping) else None
+    if not isinstance(sync_block, Mapping) or sync_block.get("status") != "present":
+        return False, (
+            (
+                "sidecar binds no sync fit; a fit supplied after the fact is not "
+                "the session's fit until a digest says so"
+            ),
+        )
+    recorded = sync_block.get("sync_fit_sha256")
+    computed = sync_fit_digest(fit)
+    if recorded != computed:
+        return False, (
+            (
+                f"sync fit digest mismatch: sidecar records {recorded}, the "
+                f"supplied fit hashes to {computed}"
+            ),
+        )
+    return True, ()
+
+
 def build_rosbag2_sidecar(
     *,
     bag_id: str,
@@ -1520,6 +2203,9 @@ def build_rosbag2_sidecar(
     extra_does_not_prove: Sequence[str] = (),
     rate_tolerance: float = RATE_TOLERANCE,
     origin: EvidenceOrigin = EvidenceOrigin.PHYSICAL,
+    static_transform_snapshot: Mapping[str, Any] | None = None,
+    sync_fit: SyncFitV1 | None = None,
+    claims_recoverable_time: bool = False,
 ) -> dict[str, Any]:
     """Build a ``parcel.bag.v1`` sidecar for a rosbag2 MCAP recording.
 
@@ -1544,6 +2230,16 @@ def build_rosbag2_sidecar(
         raise SidecarRefusedError(
             f"origin must be a declared EvidenceOrigin, got {origin!r} — a recording that "
             f"declares nothing must never pass for a physical measurement"
+        )
+    if (
+        sync_fit is not None
+        and origin is EvidenceOrigin.PHYSICAL
+        and sync_fit.origin is not EvidenceOrigin.PHYSICAL
+    ):
+        raise SidecarRefusedError(
+            f"a bag declared PHYSICAL cannot bind a sync fit of origin "
+            f"{sync_fit.origin.value!r}; a rehearsal fit stamped into a session "
+            f"sidecar would certify recoverable time the session never measured"
         )
     directory: Rosbag2Directory = discover_bag(bag_dir)
     scans = [read_rosbag2_mcap(path) for path in directory.files]
@@ -1615,7 +2311,15 @@ def build_rosbag2_sidecar(
     rates = _validated_rates(configured_rates)
     observations: dict[str, ChannelObservation] = {}
     unmapped: dict[str, int] = {}
+    support_counts: dict[str, dict[str, Any]] = {}
     for topic, count in sorted(counts.items()):
+        support_id = SUPPORT_BY_TOPIC.get(topic)
+        if support_id is not None:
+            # A support topic is not a payload channel: it gets no sequence
+            # space, no rate verdict, and never lands in "unmapped" — the
+            # GO-RECORD block below is where its adequacy is judged.
+            support_counts[topic] = {"support_id": support_id, "messages": count}
+            continue
         channel_id = CHANNEL_BY_TOPIC.get(topic)
         if channel_id is None:
             unmapped[topic] = count
@@ -1647,6 +2351,15 @@ def build_rosbag2_sidecar(
     mount_block = _mount_geometry_block(mount_geometry)
     entries = tuple(observation_entry(key) for key in sorted(observations))
 
+    go_record = assess_go_record(
+        directory.path,
+        counts=counts,
+        files=directory.files,
+        static_transform_snapshot=static_transform_snapshot,
+        sync_fit=sync_fit,
+        claims_recoverable_time=claims_recoverable_time,
+    )
+
     capture: dict[str, Any] = {
         "schema": SIDECAR_SCHEMA,
         "envelope_schema": ENVELOPE_SCHEMA,
@@ -1663,8 +2376,11 @@ def build_rosbag2_sidecar(
             "topics_recorded": sorted(topics_seen),
             "topic_schemas": dict(sorted(topics_seen.items())),
             "unmapped_topics": dict(sorted(unmapped.items())),
+            "support_topics": dict(sorted(support_counts.items())),
             "storage_id": "mcap",
         },
+        "go_record": go_record.to_dict(),
+        "sync": dict(go_record.sync),
         "origin": {
             "observed": [origin.value],
             "basis": "declared_by_caller",
@@ -1727,6 +2443,21 @@ def build_rosbag2_sidecar(
         capture=capture,
         extra=[*ROSBAG2_DOES_NOT_PROVE, *extra_does_not_prove],
     )
+    if not go_record.certified:
+        does_not_prove.append(
+            f"GO-RECORD REFUSED ({len(go_record.refusals)} reason(s)): "
+            + " | ".join(go_record.refusals)
+        )
+    for artifact in SUPPORT_ARTIFACTS:
+        if artifact.need is not SupportNeed.UNAVAILABLE_DOCUMENTED:
+            continue
+        affected = sorted(set(artifact.supports_channel_ids) & set(observations))
+        if affected:
+            does_not_prove.append(
+                f"{artifact.human_name}: no publisher for this support artifact "
+                f"exists, so stream(s) {', '.join(affected)} are recorded as "
+                f"imagery only, never as a calibrated sensor."
+            )
     if unmapped:
         does_not_prove.append(
             f"{len(unmapped)} recorded topic(s) map to no channel of the matrix "
@@ -1882,17 +2613,31 @@ def finalize_rosbag2(
     *,
     bag_id: str,
     sidecar_path: Path | str | None = None,
+    require_go_record: bool = False,
     **kwargs: Any,
 ) -> tuple[dict[str, Any], Path]:
     """Build, validate and durably write a sidecar for the primary recording.
 
     The one call an operator makes after a take — including after a take that
     ended in a flat battery, which is the case this whole module exists for.
+    A recovery sidecar is always written and records the GO-RECORD verdict
+    honestly, refusals included. ``require_go_record=True`` is the session
+    path: when the gate refuses, NOTHING is written and the refusal reasons
+    are raised — a certified manifest for an uncertifiable bag must not exist
+    on disk even transiently.
     """
 
     try:
         sidecar = build_rosbag2_sidecar(bag_id=bag_id, bag_dir=bag_dir, **kwargs)
     except BagSchemaError as error:
         raise SidecarRefusedError(f"manifest rejected by bags/schema.py: {error}") from error
+    if require_go_record:
+        go_block = sidecar[SIDECAR_EXTRA_KEY]["go_record"]
+        if not go_block["certified"]:
+            raise GoRecordRefusedError(
+                f"bag {bag_dir} cannot finalize GO-RECORD "
+                f"({len(go_block['refusals'])} refusal(s)): "
+                + " | ".join(go_block["refusals"])
+            )
     target = Path(sidecar_path) if sidecar_path is not None else rosbag2_sidecar_path_for(bag_dir)
     return sidecar, write_sidecar(sidecar, target)

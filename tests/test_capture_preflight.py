@@ -3134,3 +3134,134 @@ def test_the_m_entry_point_does_not_load_this_module_twice(tmp_path: Path) -> No
     # report the operator actually reads.
     assert set(probe["plausibility"]["classes"]) == {"imu", "foot_force"}
     assert probe["plausibility"]["samples_assessed"] > 0
+
+
+# ---------------------------------------------------------------------------
+# S-1 — support-artifact reconciliation (scrum/20260814/task_1)
+# ---------------------------------------------------------------------------
+#
+# The verified P0: four optical streams on the plan, no camera_info, no /tf,
+# no /tf_static. The plan now carries the support topics; these cells pin the
+# RUN-TIME reconciliation against the observed graph — the same fail-closed
+# semantics sensor channels get. Unknown is ABSENT; a REQUIRED support topic
+# absent or type-mismatched at run time is a refusal, never a default.
+
+_S1_FULL_GRAPH = """\
+/camera/camera/color/image_raw [sensor_msgs/msg/Image]
+/camera/camera/color/camera_info [sensor_msgs/msg/CameraInfo]
+/camera/camera/depth/camera_info [sensor_msgs/msg/CameraInfo]
+/camera/camera/infra1/camera_info [sensor_msgs/msg/CameraInfo]
+/camera/camera/infra2/camera_info [sensor_msgs/msg/CameraInfo]
+/tf [tf2_msgs/msg/TFMessage]
+/tf_static [tf2_msgs/msg/TFMessage]
+"""
+
+
+def test_a_graph_carrying_every_support_topic_reconciles_clean() -> None:
+    result = pf.reconcile_support_topics(_S1_FULL_GRAPH)
+    assert result.ok
+    assert len(result.checks) == 6  # four camera_info + /tf + /tf_static
+    assert all(
+        check.status is pf.SupportTopicStatus.PRESENT for check in result.checks
+    )
+    assert result.to_dict()["schema"] == "parcel.capture.support_reconciliation.v1"
+
+
+def test_a_missing_required_camera_info_topic_is_a_refusal() -> None:
+    """The P0 replayed through the new gate: the graph is exactly yesterday's
+    plan (images, no camera_info) and reconciliation must refuse."""
+
+    graph = "/camera/camera/color/image_raw [sensor_msgs/msg/Image]\n/tf_static [tf2_msgs/msg/TFMessage]\n"
+    result = pf.reconcile_support_topics(graph)
+    assert not result.ok
+    absent = {
+        check.topic: check
+        for check in result.checks
+        if check.status is pf.SupportTopicStatus.ABSENT
+    }
+    # All four camera_info topics are absent, every one a refusal.
+    for topic in (
+        "/camera/camera/color/camera_info",
+        "/camera/camera/depth/camera_info",
+        "/camera/camera/infra1/camera_info",
+        "/camera/camera/infra2/camera_info",
+    ):
+        assert absent[topic].refusal, topic
+    with pytest.raises(pf.PreflightError, match="reconciliation refused"):
+        pf.reconcile_support_topics_or_raise(graph)
+
+
+def test_absent_tf_is_a_finding_but_absent_tf_static_is_a_refusal() -> None:
+    """/tf is recorded-opportunistic: a stationary rig with no odometry
+    publisher legitimately has none. /tf_static is where the sensor mounting
+    extrinsics live, and the pre-record snapshot is CAPTURED FROM that topic —
+    a graph with no /tf_static publisher has nothing to snapshot either."""
+
+    no_tf = _S1_FULL_GRAPH.replace("/tf [tf2_msgs/msg/TFMessage]\n", "")
+    result = pf.reconcile_support_topics(no_tf)
+    assert result.ok
+    assert any("/tf is not on the observed graph" in item for item in result.findings)
+
+    no_tf_static = _S1_FULL_GRAPH.replace("/tf_static [tf2_msgs/msg/TFMessage]\n", "")
+    result2 = pf.reconcile_support_topics(no_tf_static)
+    assert not result2.ok
+    assert any("/tf_static" in item for item in result2.refusals)
+
+
+def test_seeded_failure_a_type_mismatch_refuses_regardless_of_need() -> None:
+    """A support topic present under the wrong type is affirmative evidence of
+    misconfiguration — worse than absence, and never less than one. Even the
+    opportunistic /tf refuses on it."""
+
+    mismatched = _S1_FULL_GRAPH.replace(
+        "/tf [tf2_msgs/msg/TFMessage]", "/tf [std_msgs/msg/String]"
+    )
+    result = pf.reconcile_support_topics(mismatched)
+    assert not result.ok
+    check = next(item for item in result.checks if item.topic == "/tf")
+    assert check.status is pf.SupportTopicStatus.TYPE_MISMATCH
+    assert check.refusal
+    assert "std_msgs/msg/String" in check.detail
+
+
+def test_seeded_failure_an_unparseable_topic_list_line_is_a_refusal() -> None:
+    """A skipped line could be exactly the support topic whose absence would
+    refuse the run; parse failure must never impersonate topic-missing."""
+
+    with pytest.raises(pf.PreflightError, match="unparseable"):
+        pf.parse_topic_list("/tf_static tf2_msgs/msg/TFMessage")  # no brackets
+    with pytest.raises(pf.PreflightError, match="unparseable"):
+        pf.reconcile_support_topics(_S1_FULL_GRAPH + "garbage line\n")
+
+
+def test_unknown_is_absent_for_a_mapping_input_too() -> None:
+    graph = {"/tf_static": ("tf2_msgs/msg/TFMessage",)}
+    result = pf.reconcile_support_topics(graph)
+    assert not result.ok  # the four camera_info topics are absent
+    by_topic = {check.topic: check for check in result.checks}
+    assert by_topic["/tf_static"].status is pf.SupportTopicStatus.PRESENT
+    assert by_topic["/tf"].status is pf.SupportTopicStatus.ABSENT
+    assert not by_topic["/tf"].refusal
+
+
+def test_a_topic_advertising_two_types_passes_only_if_ours_is_among_them() -> None:
+    doubled = _S1_FULL_GRAPH.replace(
+        "/tf_static [tf2_msgs/msg/TFMessage]",
+        "/tf_static [tf2_msgs/msg/TFMessage, std_msgs/msg/String]",
+    )
+    result = pf.reconcile_support_topics(doubled)
+    check = next(item for item in result.checks if item.topic == "/tf_static")
+    assert check.status is pf.SupportTopicStatus.PRESENT
+    assert len(check.observed_types) == 2
+
+
+def test_seeded_failure_a_payload_topic_is_not_a_support_row() -> None:
+    """The reconciliation contract takes SUPPORT_TOPICS rows only; handing it
+    a payload topic must refuse, not silently reconcile the wrong class."""
+
+    from scripts.parcel_capture.rosbag2 import DRIVER_TOPICS
+
+    with pytest.raises(pf.PreflightError, match="not a support topic"):
+        pf.reconcile_support_topics(
+            _S1_FULL_GRAPH, support_topics=[DRIVER_TOPICS[0]]
+        )
