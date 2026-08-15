@@ -6,7 +6,7 @@ import os
 import random
 import threading
 import time
-from collections import deque
+from collections import OrderedDict, deque
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,6 +16,13 @@ from urllib.request import urlopen
 
 from parcel_robot.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
 from parcel_robot.attention.stimuli import StimulusKind
+from parcel_robot.audio_arming import (
+    CODE_ARMED,
+    MicArmingDecision,
+    capture_identity,
+    decide_microphone_arming,
+    resolve_allow_monitor_capture,
+)
 from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import SimObservation, SimulatorBackend
@@ -219,6 +226,17 @@ from parcel_robot.voice_pipeline import (
 )
 
 logger = logging.getLogger(__name__)
+
+#: FIX-A/F3 transcript provenance. A turn's text either came off the capture
+#: loop's recognizer or was typed into the panel; the duplex log could not tell
+#: them apart, which is exactly what made the 2026-08-11 self-talk storm
+#: unreconstructable after the fact.
+TRANSCRIPT_ORIGIN_MIC = "mic"
+TRANSCRIPT_ORIGIN_PANEL = "panel_text"
+TRANSCRIPT_ORIGINS = frozenset({TRANSCRIPT_ORIGIN_MIC, TRANSCRIPT_ORIGIN_PANEL})
+#: Live turns only: entries are consumed when the turn's outcome is recorded.
+#: The cap bounds a leak if a turn never reaches ``turn_complete``/``error``.
+_TRANSCRIPT_MEMORY_TURNS = 64
 
 #: The ``last_detail`` the executive writes when the closed-intent PAUSE cap
 #: parks a task. RESUME reads it to tell its own paused work apart from work an
@@ -960,6 +978,14 @@ class RobotRuntime:
         self._duplex_latest_turn_id = 0
         # Per-turn duplex outcome bookkeeping for the D1 session log.
         self._duplex_turn_meta: dict[int, dict[str, object]] = {}
+        # FIX-A/F3. The session log recorded what the ROBOT said and never what
+        # it heard, so the transcripts that triggered the 2026-08-11 self-talk
+        # storm were unrecoverable (the chat deque aged out and the log
+        # rotated). Keep the final transcript and its origin per live turn;
+        # they are written into the turn_outcome record under the existing
+        # ``duplex.logging`` kill switch and dropped as soon as the turn ends.
+        self._turn_transcripts: OrderedDict[int, tuple[str, str]] = OrderedDict()
+        self._transcript_lock = threading.Lock()
         if self.prompting.composer is not None:
             # Fresh tool output stays visible to the next turn without
             # permanently bloating conversation history.
@@ -1017,13 +1043,31 @@ class RobotRuntime:
         neural_vad, endpointer, self._endpointing_detail = self._build_endpointing(
             speech_config
         )
-        if self.speech_stack.recognizer is not None:
+        # FIX-A/F1. Arming used to be gated on STT reachability alone, which is
+        # why a host with a Dummy Output sink and ZERO sources still opened a
+        # capture stream — onto the monitor of its own speaker — and answered
+        # its own fillers for 669 turns. The runtime's audio probe knew; nobody
+        # asked it. Ask it here, fail closed, and say why in one line.
+        self._mic_arming: MicArmingDecision = decide_microphone_arming(
+            recognizer_available=self.speech_stack.recognizer is not None,
+            audio_status=self.audio_status,
+            identity=capture_identity(
+                audio_status=self.audio_status,
+                device_detail=self._input_device_detail,
+                device_index=input_index,
+            ),
+            allow_monitor_capture=resolve_allow_monitor_capture(speech_config),
+        )
+        if self._mic_arming.armed:
             self._microphone_loop = MicrophoneVoiceLoop(
                 recognizer=self.speech_stack.recognizer,
                 # The guarded entry point, not the raw session: spoken
                 # emergency phrases must latch the E-stop synchronously
                 # instead of queueing behind a committed slow action.
-                submit_text=self.submit_voice_text,
+                # Wrapped so the transcript's ORIGIN reaches the duplex log
+                # (FIX-A/F3): a mic final and a typed command are otherwise
+                # indistinguishable once they are inside the voice session.
+                submit_text=self._submit_microphone_text,
                 barge_in=self.voice_session.barge_in,
                 playback_active=(
                     (lambda: self._speaker_sink.playback_active)
@@ -1039,6 +1083,10 @@ class RobotRuntime:
                 endpointer=endpointer,
                 on_turn_commit=self._record_turn_commit,
             )
+        # FIX-A/F2: one startup summary of what the speech stack ACTUALLY
+        # resolved to. A missing --config silently swapped the tuned semantic
+        # endpointer for the energy default and nothing said so.
+        self._speech_stack_detail = self._report_speech_stack(speech_config)
         self._voice_query_end_by_turn: dict[int, float] = {}
         # Acoustic-ack fan-in (N19). The capture loop, the STT provider and the
         # speaker sink each already measure their own clock; nothing joined
@@ -4124,9 +4172,28 @@ class RobotRuntime:
         self._chat_item("assistant", reply)
         return reply
 
-    def submit_voice_text(self, text: str, *, is_final: bool = True) -> int | None:
+    def _submit_microphone_text(self, text: str, *, is_final: bool = True) -> int | None:
+        """Microphone entry point: identical policy, but a labelled origin.
+
+        The capture loop and the panel both land in ``submit_voice_text``; once
+        inside the voice session the two are indistinguishable. FIX-A/F3 needs
+        that distinction in the log, so the mic gets its own thin wrapper
+        rather than a mutable "who called last" flag.
+        """
+
+        return self.submit_voice_text(text, is_final=is_final, origin=TRANSCRIPT_ORIGIN_MIC)
+
+    def submit_voice_text(
+        self,
+        text: str,
+        *,
+        is_final: bool = True,
+        origin: str = TRANSCRIPT_ORIGIN_PANEL,
+    ) -> int | None:
         """Accept a partial/final transcript without ever executing partial text."""
 
+        if origin not in TRANSCRIPT_ORIGINS:
+            raise ValueError(f"unknown transcript origin: {origin!r}")
         clean = " ".join(str(text).split())
         if not clean:
             raise ValueError("voice text is empty")
@@ -4154,6 +4221,7 @@ class RobotRuntime:
             return None
         turn_id = self.voice_session.submit_text(clean, is_final=is_final)
         if turn_id is not None:
+            self._remember_turn_transcript(turn_id, clean, origin)
             with self._lock:
                 # The worker can complete before this thread reacquires the
                 # lock. Preserve that terminal state rather than regressing it.
@@ -4320,6 +4388,10 @@ class RobotRuntime:
                     if self._speaker_sink is not None
                     else False
                 ),
+                # FIX-A/F1+F2. Why the mic is (not) armed, and what the speech
+                # stack actually resolved to at startup.
+                "mic_arming": self._mic_arming.as_dict(),
+                "stack": dict(self._speech_stack_detail),
             },
             "perception": self.perception.snapshot(self.maps),
             "voice": voice,
@@ -5956,10 +6028,25 @@ class RobotRuntime:
     def _duplex_has_tts_path(self) -> bool:
         return self._speaker_sink is not None
 
+    def _remember_turn_transcript(self, turn_id: int, transcript: str, origin: str) -> None:
+        """Hold one turn's final transcript until its outcome is written."""
+
+        with self._transcript_lock:
+            self._turn_transcripts[int(turn_id)] = (transcript, origin)
+            while len(self._turn_transcripts) > _TRANSCRIPT_MEMORY_TURNS:
+                self._turn_transcripts.popitem(last=False)
+
+    def _take_turn_transcript(self, turn_id: int) -> tuple[str, str] | None:
+        with self._transcript_lock:
+            return self._turn_transcripts.pop(int(turn_id), None)
+
     def _duplex_record_turn_outcome(self, turn_id: int, *, barge_in: bool = False) -> None:
         if not self.duplex.enabled:
             return
         meta = self._duplex_turn_meta.pop(int(turn_id), {})
+        # Always release the held transcript, even when logging is off, so the
+        # kill switch cannot turn a bounded buffer into a slow leak.
+        remembered = self._take_turn_transcript(turn_id)
         if barge_in:
             meta["barge_in"] = True
         outcome = {
@@ -5970,6 +6057,28 @@ class RobotRuntime:
             "filler_audible": bool(meta.get("filler_audible", False)),
             "barge_in": bool(meta.get("barge_in", False)),
         }
+        # FIX-A/F3, additive and governed by the SAME switch as the rest of the
+        # session log: with ``duplex.logging: false`` the fields are not
+        # produced at all, so they cannot reach the JSONL or the snapshot.
+        if self.duplex.log.enabled:
+            transcript, origin = remembered or (
+                # Fallback source: the query_end stage, which carries the same
+                # committed text. Reached when a turn's text never passed
+                # through submit_voice_text (test harnesses, future producers),
+                # and in the vanishingly small window where a turn completes on
+                # the voice worker before the submitting thread has recorded
+                # its origin. The lock is deliberately NOT held across
+                # ``voice_session.submit_text`` to close that window: the
+                # worker takes session locks and then this one, so holding this
+                # one across a call that waits on a session lock would invert
+                # the order and deadlock. The TRANSCRIPT is preserved either
+                # way; only the origin label degrades, and it degrades to an
+                # honest "unknown" rather than to a guess.
+                str(meta.get("transcript", "")),
+                str(meta.get("transcript_origin", "unknown")),
+            )
+            outcome["transcript"] = transcript
+            outcome["transcript_origin"] = origin
         self.duplex.record_turn_outcome(outcome)
 
     def _duplex_on_voice_stage(self, stage: VoiceStage) -> None:
@@ -5982,6 +6091,10 @@ class RobotRuntime:
             self._duplex_turn_meta[int(stage.turn_id)] = {
                 "query_end_s": float(stage.timestamp),
                 "barge_in": False,
+                # Fallback copy of what was heard/typed: the stage carries the
+                # committed text even for turns injected without going through
+                # submit_voice_text.
+                "transcript": stage.transcript,
             }
         elif stage.name in {"tts_first_chunk", "audio_first_playback"}:
             # First token on the TTS / audible path cancels the watchdog.
@@ -6394,6 +6507,90 @@ class RobotRuntime:
         detail = f"semantic: {endpointer.detail} + {vad_detail}"
         self._emit("voice", f"Endpointing: {detail}", "info")
         return neural_vad, endpointer, detail
+
+    def _report_speech_stack(self, speech_config: dict) -> dict[str, object]:
+        """FIX-A/F2: say out loud what the speech stack actually resolved to.
+
+        The 2026-08-11 storm ran under ``configs/robot.yaml`` because the panel
+        was launched without ``--config``: energy endpointing, no AEC, none of
+        the semantic models B2 tuned. Every one of those facts was knowable at
+        startup and none of them was reported. This emits them once and parks
+        them in ``/api/state`` so "which stack am I actually running" is never
+        again a question you answer by reading YAML after the fact.
+        """
+
+        requested_endpointing = str(speech_config.get("endpointing", "energy")).strip().lower()
+        vad_model = speech_config.get("vad_model")
+        turn_model = speech_config.get("turn_model")
+        semantic_loaded = requested_endpointing == "semantic" and self._endpointing_detail.startswith(
+            "semantic"
+        )
+        # "Present on disk" is checked at the paths the config names when it
+        # names them, and at the conventional directory otherwise, so a config
+        # that simply omits the keys still trips the warning below.
+        model_dir = Path("models/endpointing")
+        candidates = {
+            "vad_model": Path(str(vad_model)) if vad_model else model_dir / "silero_vad_v6.onnx",
+            "turn_model": Path(str(turn_model))
+            if turn_model
+            else model_dir / "smart_turn_v3.onnx",
+        }
+        present = {name: path.is_file() for name, path in candidates.items()}
+        detail: dict[str, object] = {
+            "config_path": str(self.store.path),
+            "mode": self.speech_stack.mode,
+            "stt": self.speech_stack.stt_detail,
+            "tts": self.speech_stack.tts_detail,
+            "endpointing": {
+                "requested": requested_endpointing,
+                "resolved": self._endpointing_detail,
+                "semantic_loaded": semantic_loaded,
+                "models": {name: str(path) for name, path in candidates.items()},
+                "models_present": present,
+            },
+            "aec": {
+                "constructed": False,
+                # Stated rather than inferred: the runtime never passes an
+                # AecStage to MicrophoneVoiceLoop, so the capture path is the
+                # raw frame path on every config that exists today.
+                "detail": "no AEC stage is wired into the capture loop on any config path",
+            },
+            "capture_device": self._mic_arming.identity.as_dict(),
+            "mic_arming": self._mic_arming.as_dict(),
+        }
+        self._emit(
+            "voice",
+            (
+                f"Speech stack: config={self.store.path}; mode={self.speech_stack.mode}; "
+                f"endpointing={self._endpointing_detail}; aec=absent; "
+                f"capture={self._mic_arming.identity.name} "
+                f"(monitor={self._mic_arming.identity.is_monitor})"
+            ),
+            "info",
+        )
+        self._emit(
+            "voice",
+            self._mic_arming.reason,
+            "info" if self._mic_arming.code == CODE_ARMED else "warning",
+        )
+        if self._mic_arming.override or not self._mic_arming.armed:
+            # Both are operator-facing: a refusal explains a dead microphone,
+            # an override explains a microphone that is deliberately unsafe.
+            logger.warning("%s", self._mic_arming.reason)
+        # One WARNING when the tuned semantic stack exists on disk but is not
+        # the stack that loaded, and audio capture is demanded or live.
+        audio_path_live = self.speech_stack.mode == "audio" or self._mic_arming.armed
+        if audio_path_live and any(present.values()) and not semantic_loaded:
+            message = (
+                "Semantic endpointing models are present on disk "
+                f"({', '.join(str(candidates[name]) for name, ok in present.items() if ok)}) "
+                f"but the loaded endpointing stack is '{self._endpointing_detail}' "
+                f"(speech.endpointing={requested_endpointing}, config={self.store.path}). "
+                "The tuned turn-taking stack is NOT running."
+            )
+            logger.warning("%s", message)
+            self._emit("voice", message, "warning")
+        return detail
 
     def _record_turn_commit(self, latency_s: float) -> None:
         self.component_metrics.observe_ms("TurnCommitLatency", latency_s * 1000.0)

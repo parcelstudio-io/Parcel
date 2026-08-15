@@ -24,6 +24,12 @@ class AudioDeviceStatus:
     bluetooth_connected: bool = False
     bluetooth_duplex_ready: bool = False
     transport: str = "none"
+    #: True when the DEFAULT capture endpoint is the monitor of a playback
+    #: sink — i.e. a capture stream would record the machine's own output.
+    #: Decided from PipeWire node/device metadata, never from a name alone
+    #: (see ``_monitor_signal``); ``input_identity`` names the deciding signal.
+    input_is_monitor: bool = False
+    input_identity: str = "unknown"
 
     def as_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -36,6 +42,9 @@ class _PipeWireEndpoint:
     bluetooth: bool = False
     headset_profile: bool = False
     a2dp_profile: bool = False
+    #: Monitor-of-a-sink capture endpoint, plus the metadata key that decided.
+    monitor: bool = False
+    identity: str = "unknown"
 
 
 def detect_audio_devices() -> AudioDeviceStatus:
@@ -139,6 +148,8 @@ def detect_audio_devices() -> AudioDeviceStatus:
             bluetooth_connected,
             bluetooth_duplex,
             transport,
+            default_input.monitor,
+            default_input.identity,
         )
     detail = (
         "ALSA hardware and drivers are installed, but no microphone/speaker endpoint "
@@ -158,6 +169,8 @@ def detect_audio_devices() -> AudioDeviceStatus:
         bluetooth_connected,
         bluetooth_duplex,
         transport,
+        default_input.monitor,
+        default_input.identity,
     )
 
 
@@ -208,15 +221,25 @@ def _inspect_pipewire_endpoints(
             cache[object_id] = _command_output([wpctl, "inspect", object_id])
         return cache[object_id]
 
-    def endpoint(node_id: str | None) -> _PipeWireEndpoint:
+    def endpoint(node_id: str | None, *, capture: bool = False) -> _PipeWireEndpoint:
+        # ``capture`` gates the monitor verdict: "this object is a sink" is only
+        # damning for the endpoint we would RECORD from. The playback default is
+        # supposed to be a sink.
         if node_id is None or not node_id.isdecimal():
-            return _PipeWireEndpoint()
+            return _PipeWireEndpoint(identity="no default node")
         node = inspect(node_id)
+        if not node:
+            return _PipeWireEndpoint(node_id=node_id, identity="node not inspectable")
         device_id = _inspect_property(node, "device.id")
         if device_id is None or not device_id.isdecimal():
-            return _PipeWireEndpoint(node_id=node_id)
+            monitor, identity = _monitor_signal(node)
+            return _PipeWireEndpoint(
+                node_id=node_id, monitor=monitor and capture, identity=identity
+            )
         device = inspect(device_id)
         combined = f"{node}\n{device}"
+        monitor, identity = _monitor_signal(combined)
+        monitor = monitor and capture
         device_api = _inspect_property(device, "device.api") or _inspect_property(
             node, "device.api"
         )
@@ -252,9 +275,48 @@ def _inspect_pipewire_endpoints(
             bluetooth=bluetooth,
             headset_profile=headset_profile,
             a2dp_profile=bluetooth and "a2dp" in normalized_profiles,
+            monitor=monitor,
+            identity=identity,
         )
 
-    return endpoint(input_id), endpoint(output_id)
+    return endpoint(input_id, capture=True), endpoint(output_id)
+
+
+def _monitor_signal(inspection: str) -> tuple[bool, str]:
+    """Decide monitor-ness from PipeWire object metadata, not from a name.
+
+    Checked in decreasing order of trust: ``device.class=monitor``, then a
+    ``media.class`` ending in ``/sink`` (reached through the *source* default,
+    that object's capture side is the sink's monitor ports), then the explicit
+    ``stream.monitor`` / ``port.monitor`` booleans. ``node.name`` is consulted
+    LAST and only as a suffix, because it is the one field an operator can
+    name arbitrarily.
+
+    Returns ``(is_monitor, signal)`` where ``signal`` names the exact property
+    that decided, so the runtime can report *why* it refused to arm instead of
+    asserting an unfalsifiable "looks like a monitor".
+    """
+
+    device_class = _inspect_property(inspection, "device.class")
+    if device_class and device_class.casefold() == "monitor":
+        return True, "device.class=monitor"
+    media_class = _inspect_property(inspection, "media.class")
+    if media_class and media_class.casefold().endswith("/sink"):
+        # Reached as the default *source*, yet the object is a sink: the
+        # capture side of it is the sink's monitor ports.
+        return True, f"media.class={media_class}"
+    for key in ("stream.monitor", "port.monitor"):
+        value = _inspect_property(inspection, key)
+        if value and value.casefold() in {"true", "1", "yes"}:
+            return True, f"{key}={value}"
+    node_name = _inspect_property(inspection, "node.name")
+    if node_name and node_name.casefold().endswith(".monitor"):
+        return True, f"node.name={node_name}"
+    if media_class:
+        return False, f"media.class={media_class}"
+    if node_name:
+        return False, f"node.name={node_name}"
+    return False, "no monitor metadata"
 
 
 def _inspect_property(inspection: str, key: str) -> str | None:

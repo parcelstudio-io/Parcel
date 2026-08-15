@@ -1272,6 +1272,9 @@ _ALLOWED_SPEECH_KEYS = frozenset(
         "echo_guard_scale",
         "input_device",
         "output_device",
+        # FIX-A/F1: opt back into capturing a sink monitor (loopback rigs).
+        # Read by the runtime's arming gate, not by build_speech_stack.
+        "allow_monitor_capture",
         "endpointing",
         "vad_model",
         "turn_model",

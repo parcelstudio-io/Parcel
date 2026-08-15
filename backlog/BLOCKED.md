@@ -344,3 +344,58 @@ spot-confirmed at source by Fable, not inferred from a report).
   environment. Then implement an Isaac producer behind the PE-D
   `SensorFrameV2` contract (scorer-only oracle fields).
 - **What it unblocks:** IS-F smoke only — never physical sensing claims.
+
+## B14 — Window blur / tab-hide cancels an admitted navigation mission · **owner decision needed (2×2)**
+
+**Opened:** 2026-08-15 (the "go to the sidewalk" incident investigation;
+verdict record in the 20260815 debug session — 4 investigators, cross-examined,
+link PROVEN).
+
+- **The behaviour, proven at source:** the panel UI's `clearMotionInputs()`
+  (`src/parcel_robot/ui/index.html:1609-1613`) queues a `{0,0,0}` **manual**
+  motion, and it is wired to **window blur**, `visibilitychange`, Stop and
+  Space (`:1667-1675`). A manual zero acquires the base
+  (`manual_motion` → `_interrupt_brain("manual", ...)`,
+  `runtime.py:2587-2593`) and preempts the navigation channel
+  (`stop_motion` → `preempt("manual", targets=("spatial",))`,
+  `runtime.py:2622-2625`), writing `navigation_disabled`. In the incident,
+  BOTH admitted "go to the sidewalk" NavigateTo missions died exactly this way
+  ("manual stop acquired the base") — the owner switching windows stopped the
+  robot, and the UI gives no indication why.
+- **Why it needs the owner:** blur-as-deadman may be *intentional* for
+  held-key manual driving (release-on-focus-loss is a real safety property).
+  The 2×2: does a blur-originated zero cancel an **autonomous admitted
+  mission** it did not start, or only release **manual** authority? Candidate
+  mechanisms: only queue zeros on blur when a manual input was actually held;
+  or tag blur-originated zeros so `manual_motion` releases manual authority
+  without preempting spatial. Any change moves a stop pathway = STOP + 2×2 by
+  global rule 2.
+- **Until then (operator workaround):** keep the panel window focused while a
+  navigation mission runs.
+
+## B15 — Echo/junk-transcript defense for real-mic rigs · **owner decision needed (2×2 stack)**
+
+**Opened:** 2026-08-15 (same investigation). The self-talk storm exposed that
+the voice input path has **no post-STT sanity layer**: whisper's
+`[BLANK_AUDIO]` marker is submitted as a command verbatim; fragments of the
+robot's own TTS ("Just", "him.", "Give") become commands; nothing compares
+incoming transcripts against the words the robot is currently speaking
+(`_finish_utterance`, `voice_audio.py:754-769`, submits every non-empty
+transcript unconditionally); and "Hang/Hold on"-class mishearings parse as
+`ClosedIntent.PAUSE` (`voice/closed_intents.py:29`) — the robot's own voice
+can pause its navigation.
+
+- **Candidate mechanisms (each needs the owner because each touches frozen
+  surfaces):** self-echo transcript rejection against the robot's recent TTS
+  words (emergency phrases exempt); a minimum-utterance-duration gate for
+  speech that began during playback; whisper-marker filtering; a
+  playback-aware confidence floor. All sit on the N16/N17 barge-in surface
+  ("unprovable on the null-sink rig") and interact with the B2-frozen ep50
+  endpointing eval — moving them re-opens those freezes = 2×2.
+- **Hardware dependency:** honest tuning requires the real echo path — the
+  XVF3800 (B3, still the standing blocker) wired per its own amp-output
+  constraint. Until then any constants are guesses; the FIX-A arming gate
+  (landed separately) prevents the *digital* self-loop, which is what made
+  this catastrophic on the desktop.
+- **Relations:** [B3](#b3) (the transducer), N16/N17 (barge-in freezes),
+  [B14](#b14) (the other half of the incident).

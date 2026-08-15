@@ -215,14 +215,22 @@ When enabled, D0 synchronously appends compact JSONL from the control loop:
 
 ```json
 {"type":"frame","t":42,"epoch":3,"text":"there","act":"<idle>","context":{"activity":null,"follow_enabled":false,"expression":{},"owner":{"x_m":1.2,"y_m":0.4,"visible":true}},"wall_s":0.0}
-{"type":"turn_outcome","turn_id":7,"ttft_s":0.31,"filler_used":null,"filler_reason":null,"filler_audible":false,"barge_in":false,"wall_s":0.0}
+{"type":"turn_outcome","turn_id":7,"ttft_s":0.31,"filler_used":null,"filler_reason":null,"filler_audible":false,"barge_in":false,"transcript":"go to the sidewalk","transcript_origin":"panel_text","wall_s":0.0}
 ```
 
-The log includes reply-derived text and potentially precise owner coordinates.
-It does not currently include the user transcript, model/provider identity,
-accepted task result, audio timestamps, sensor provenance, or a stable schema
-version, so it is not by itself a complete D1 supervised example. Joinability
-with other ledgers is also not defined.
+`transcript` / `transcript_origin` were added by card FIX-A (2026-08-15) after a
+self-talk storm could not be reconstructed: the log recorded what the robot
+SAID and never what it heard, and the panel chat deque had aged out.
+`transcript_origin` is `mic` or `panel_text`. Both fields are additive — every
+pre-existing key keeps its name, type and meaning — and both are governed by
+the same `duplex.logging` kill switch as the rest of the log: with logging off
+they are not produced at all, not even into the `/api/state` snapshot.
+
+The log includes reply-derived text, the user transcript, and potentially
+precise owner coordinates. It does not currently include model/provider
+identity, accepted task result, audio timestamps, sensor provenance, or a
+stable schema version, so it is not by itself a complete D1 supervised example.
+Joinability with other ledgers is also not defined.
 
 Rotation keeps the current file plus one `.1` generation, deleting the older
 `.1` on the next rotation. `log_rotate_bytes: 2000000` is a per-file rotation
