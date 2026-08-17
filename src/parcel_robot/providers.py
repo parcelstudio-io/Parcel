@@ -1192,6 +1192,40 @@ def _sentences_with_emotes(
     return sentences
 
 
+_CLAUSE_BOUNDARY = re.compile(r"[,;:]|\s+(?:and|but|so|then|because|while|though)\b", re.IGNORECASE)
+
+#: Below this the opening flush buys no latency and only sounds clipped.
+#: 4 admits the natural "Okay," / "Sure," lead-in, which is the common case.
+_MIN_LEADING_CLAUSE_CHARS = 4
+
+
+def _split_leading_clause(
+    chunks: list[tuple[str, list[tuple[str, float]]]], *, budget: int
+) -> list[tuple[str, list[tuple[str, float]]]]:
+    """Split only the FIRST chunk at its earliest clause boundary.
+
+    Time-to-first-audio is set by how long the first chunk takes to synthesize,
+    so a shorter opening clause is audible sooner while every later chunk keeps
+    its sentence shape. A first chunk that carries emote tags is left whole: the
+    tags are anchored per word, and re-anchoring them across a split is how a
+    gesture lands on the wrong words (card W8), so the latency win is declined
+    rather than paid for with a mistimed gesture.
+    """
+
+    if not chunks:
+        return chunks
+    head_text, head_emotes = chunks[0]
+    if head_emotes or len(head_text) <= budget:
+        return chunks
+    match = _CLAUSE_BOUNDARY.search(head_text)
+    if match is None or not _MIN_LEADING_CLAUSE_CHARS <= match.end() <= budget:
+        return chunks
+    lead, rest = head_text[: match.end()].strip(), head_text[match.end() :].strip()
+    if not lead or not rest:
+        return chunks
+    return [(lead, []), (rest, [])] + chunks[1:]
+
+
 class SentenceChunkedSynthesizer:
     """Adapt any blocking synthesizer into a cancellable streaming one.
 
@@ -1206,11 +1240,15 @@ class SentenceChunkedSynthesizer:
         synthesizer: SpeechSynthesizer,
         *,
         max_chars: int = 220,
+        first_clause_chars: int | None = None,
     ):
         if not 40 <= max_chars <= 2000:
             raise ValueError("sentence chunk size must be between 40 and 2000 characters")
+        if first_clause_chars is not None and not _MIN_LEADING_CLAUSE_CHARS <= first_clause_chars <= max_chars:
+            raise ValueError("first clause budget must be between 4 chars and the sentence budget")
         self._synthesizer = synthesizer
         self._max_chars = max_chars
+        self._first_clause_chars = first_clause_chars
 
     def synthesize(self, text: str) -> SpeechChunk:
         spoken, emotes = strip_emote_tags(text)
@@ -1223,7 +1261,10 @@ class SentenceChunkedSynthesizer:
         cancel_event: threading.Event | None = None,
         on_sentence: Callable[[str], None] | None = None,
     ) -> Iterator[SpeechChunk]:
-        for sentence, emotes in _sentences_with_emotes(text, max_chars=self._max_chars):
+        chunks = _sentences_with_emotes(text, max_chars=self._max_chars)
+        if self._first_clause_chars is not None:
+            chunks = _split_leading_clause(chunks, budget=self._first_clause_chars)
+        for sentence, emotes in chunks:
             if cancel_event is not None and cancel_event.is_set():
                 return
             if on_sentence is not None:
@@ -1280,6 +1321,10 @@ _ALLOWED_SPEECH_KEYS = frozenset(
         "turn_model",
         "complete_silence_s",
         "incomplete_silence_s",
+        # V1-A: opening-clause flush budget in characters. Unset/null keeps the
+        # sentence-granular stream byte-identical. Read by the runtime, not by
+        # build_speech_stack.
+        "first_clause_chars",
     }
 )
 

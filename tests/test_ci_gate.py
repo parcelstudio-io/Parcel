@@ -26,10 +26,12 @@ import pytest
 from scripts.ci_gate import (
     DIGEST_SENTINELS,
     MODEL_OFF_NODE_IDS,
+    RELEASE_PARITY_MANIFEST,
     evaluate_frozen_digest_sentinels,
     evaluate_hard_safety,
     evaluate_latency_ledger,
     evaluate_latency_ratchet,
+    evaluate_release_parity,
     evaluate_ruff,
     run_pytest,
 )
@@ -513,3 +515,76 @@ def test_model_off_gate_reddens_on_flag_off_drift() -> None:
 def test_model_off_selection_is_wired_and_collectable() -> None:
     proc = run_pytest(["--collect-only", *MODEL_OFF_NODE_IDS], timeout=300)
     assert proc.returncode == 0, proc.stdout[-2000:]
+
+
+# ---------------------------------------------------------------------------
+# RELEASE PARITY (N27)
+#
+# At HEAD 8473a51 the packaged navigation config carried max_vx 0.45 against
+# source 0.9, timeout_steps 400 against 200, align_enter_deg 28.0 against 55.0,
+# and omitted the perception:/route_memory: blocks — while the asset test suite
+# was green, because it only asserted the files EXIST. Every seed below is the
+# class of regression that shipped, injected into a COPY of the tree.
+# ---------------------------------------------------------------------------
+
+
+def _parity_fixture(tmp_path: Path) -> tuple[Path, Path]:
+    """Copy the packaged tree and the source files its manifest points at."""
+
+    import shutil
+
+    root = tmp_path / "repo"
+    packaged = root / "src" / "parcel_robot" / "runtime_assets"
+    packaged.parent.mkdir(parents=True)
+    shutil.copytree(RELEASE_PARITY_MANIFEST.parent, packaged)
+    manifest = json.loads((packaged / "MANIFEST.json").read_text(encoding="utf-8"))
+    for entry in manifest["assets"]:
+        if entry["source"] is None:
+            continue
+        target = root / entry["source"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(packaged / entry["packaged"], target)
+    for entry in manifest["side_mirrors"]:
+        for relpath in (entry["target"], entry["source"]):
+            target = root / relpath
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(REPO / relpath, target)
+    return root, packaged
+
+
+def test_release_parity_is_green_on_the_committed_tree() -> None:
+    result = evaluate_release_parity()
+    assert result.status == "pass", result.detail
+    # LITERAL, per the sentinel convention: 90 packaged assets + 1 side mirror.
+    assert result.extra["checked"] == 91
+
+
+def test_release_parity_reddens_when_a_packaged_asset_drifts_from_source(tmp_path: Path) -> None:
+    root, packaged = _parity_fixture(tmp_path)
+    source = root / "configs" / "navigation" / "default.yaml"
+    source.write_text(source.read_text(encoding="utf-8") + "\n# seeded source edit\n", encoding="utf-8")
+    result = evaluate_release_parity(manifest=packaged / "MANIFEST.json", root=root)
+    assert result.status == "fail"
+    assert "configs/navigation/default.yaml" in result.detail
+
+
+def test_release_parity_reddens_on_an_unlisted_packaged_file(tmp_path: Path) -> None:
+    root, packaged = _parity_fixture(tmp_path)
+    (packaged / "configs" / "navigation" / "models" / "rogue.yaml").write_text("id: rogue\n")
+    result = evaluate_release_parity(manifest=packaged / "MANIFEST.json", root=root)
+    assert result.status == "fail"
+    assert "rogue.yaml" in result.detail and "not in the manifest" in result.detail
+
+
+def test_release_parity_reddens_when_the_side_mirror_drifts(tmp_path: Path) -> None:
+    root, packaged = _parity_fixture(tmp_path)
+    mirror = root / "src" / "parcel_robot" / "config" / "robot.yaml"
+    mirror.write_text(mirror.read_text(encoding="utf-8") + "\n# seeded\n", encoding="utf-8")
+    result = evaluate_release_parity(manifest=packaged / "MANIFEST.json", root=root)
+    assert result.status == "fail"
+    assert "side mirror" in result.detail
+
+
+def test_release_parity_errors_when_the_manifest_is_absent(tmp_path: Path) -> None:
+    result = evaluate_release_parity(manifest=tmp_path / "MANIFEST.json", root=tmp_path)
+    assert result.status == "error"

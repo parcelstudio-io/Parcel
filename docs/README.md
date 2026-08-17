@@ -2,13 +2,15 @@
 
 Start with the status and decision records. They distinguish what is working in
 this checkout from target architecture and research proposals. This index was
-amended on **2026-08-09** for the navigation and embodied-expression review.
-The broader operational snapshot remains dated in `CURRENT_STATUS.md` and must
-not be inferred from this index date.
+amended on **2026-08-16** for the integrated conversational-autonomy review.
+`CURRENT_STATUS.md` remains a 2026-08-04 historical snapshot; current claims
+must be checked against code, executable evidence, and the dated audit in the
+high-level design.
 
 | Doc | Role |
 | --- | --- |
-| [CURRENT_STATUS.md](CURRENT_STATUS.md) | **Operational source of truth:** implemented vs wired vs verified, current blockers, and inert configuration surface |
+| [CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) | **Integrated architecture:** code-grounded current state, target conversational/navigation design, rationale, tradeoffs, contracts, failure behavior, and delivery gates |
+| [CURRENT_STATUS.md](CURRENT_STATUS.md) | **Historical operational snapshot (2026-08-04):** implemented vs wired vs verified at that date; later code and evidence supersede stale claims |
 | [../backlog/](../backlog/) | **The work queue that drains it:** unverified claims, blocked work, and what to pick up next |
 | [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) | Crucial choices, advantages, limitations, and evidence required to revisit them |
 | [REDESIGN_2026_ASSESSMENT.md](REDESIGN_2026_ASSESSMENT.md) | Why the 2026 redesign happened and what was adjudicated |
@@ -25,8 +27,9 @@ not be inferred from this index date.
 | [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md) | Living-city MuJoCo scene and social action policy |
 | [EMBODIED_EXPRESSION.md](EMBODIED_EXPRESSION.md) | Simulator pose/gesture palette, reaction arbitration, and physical Unitree commissioning boundary |
 | [DEVELOPMENT_STACK.md](DEVELOPMENT_STACK.md) | Local voice + sim development profile |
-| [CI.md](CI.md) | **CI / eval-runner gate:** per-commit + nightly tiers over the existing harnesses, the three hard regression gates (model-off / latency-tail / hard-safety), how to run locally, and the self-test |
+| [CI.md](CI.md) | **Versioned CI/eval runner definition:** commit/nightly tiers, hard regression gates, local commands, and self-test; hosted GitHub execution is not yet verified |
 | [VOICE_AI_MODELS.md](VOICE_AI_MODELS.md) | STT/TTS/reasoner model choices and trust boundary |
+| [VOICE_PROVIDER_ARCHITECTURE.md](VOICE_PROVIDER_ARCHITECTURE.md) | **Current voice-provider decision:** public benchmark/review evidence, normalized pricing, robot-specific scorecard, shortlist, and replaceable provider contracts |
 | [AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md) | Latency metrics and owner-relative spatial commands |
 | [ACOUSTIC_BRINGUP_PLAN.md](ACOUSTIC_BRINGUP_PLAN.md) | No-root audio bring-up, the Tier-1 virtual-rig acoustic baseline, the AEC ladder, and the owner runbook for everything transducer-gated |
 | [IMPLEMENTATION_SKILLS_CITY_RL.md](IMPLEMENTATION_SKILLS_CITY_RL.md) | Skills catalog, city scene, `Dog` API |
@@ -47,8 +50,10 @@ not be inferred from this index date.
 ## Reading rules
 
 - When documents disagree, inspect current code/configuration and executable
-  tests first, then [CURRENT_STATUS.md](CURRENT_STATUS.md), then decision
-  records. Roadmaps describe direction and never override runtime evidence.
+  tests first, then the evidence-dated audit in
+  [CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md),
+  then historical snapshots and decision records. Roadmaps describe direction
+  and never override runtime evidence.
 - **Implemented** means code exists. **Wired** means a normal entry point reaches
   it. **Verified** names a repeatable test or measurement. **Operational** means
   the required service/device is available in the audited environment.
@@ -56,7 +61,8 @@ not be inferred from this index date.
   and environment; **experimental** and **planned** paths are not admitted
   product capabilities.
 - A roadmap is not an implementation claim. Look for its implementation-status
-  note, then confirm against [CURRENT_STATUS.md](CURRENT_STATUS.md).
+  note, then confirm against current code/executable evidence and the dated HLD.
+  Use [CURRENT_STATUS.md](CURRENT_STATUS.md) only for its 2026-08-04 history.
 - A simulator success is not physical hardware evidence.
 - A BARN/Habitat result is an external proxy, not a companion-product score.
 - Paths and commands are relative to the repository root unless stated

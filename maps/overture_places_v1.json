@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "fixture_id": "overture-places-v1-sim",
+  "source": "authored_fixture",
+  "tile_id": "sim-tile-0",
+  "bbox": {"min_x": -10.0, "min_y": -20.0, "max_x": 60.0, "max_y": 20.0},
+  "does_not_prove": [
+    "Cached Overture places fixture is not a live Overture Maps download.",
+    "Brand fields are authored for OCR cascade tests, not CDLA field truth."
+  ],
+  "places": [
+    {
+      "id": "plc_coffee_1",
+      "name": "Parcel Roast",
+      "brand": "Parcel Roast",
+      "category": "cafe",
+      "x": 8.0,
+      "y": 7.5,
+      "aliases": ["parcel roast coffee", "roast cafe"]
+    },
+    {
+      "id": "plc_market_1",
+      "name": "Corner Market",
+      "brand": null,
+      "category": "convenience_store",
+      "x": 42.0,
+      "y": 7.0,
+      "aliases": ["corner market", "the market"]
+    },
+    {
+      "id": "plc_pharmacy_1",
+      "name": "Green Cross Pharmacy",
+      "brand": "Green Cross",
+      "category": "pharmacy",
+      "x": 42.0,
+      "y": -7.0,
+      "aliases": ["green cross", "pharmacy"]
+    }
+  ]
+}

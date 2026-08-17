@@ -1,10 +1,78 @@
 # Next up
 
-**Opened:** 2026-08-04 · Conventions in [README.md](README.md).
+**Opened:** 2026-08-04 · **Refreshed:** 2026-08-16 from the
+[conversational-autonomy HLD](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
+· Conventions in [README.md](README.md).
 
-Unblocked work, ranked by impact per effort. Nothing here waits on hardware,
-an install, or a decision — it can start now. Roadmap rationale lives in
-[../docs/RESEARCH_2026_ROADMAPS.md](../docs/RESEARCH_2026_ROADMAPS.md).
+The detailed `N` cards are repository work that is either ready now or waits only on
+another `N` card. The portfolio map also references `B` decisions/evidence at their
+required point, but those cards remain in `BLOCKED.md` and are not made executable by
+appearing here. Roadmap rationale lives in
+[../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md).
+
+## Prioritized delivery and dependency map — 2026-08-16
+
+This table is the current portfolio front door. Only `N` rows marked `READY` are
+active repository work; `AFTER` rows have repository-internal predecessors. `B` rows
+are shown only to make decisions and physical evidence occur at the right point in
+the dependency graph—their executable unblock actions remain in
+[BLOCKED.md](BLOCKED.md). Detailed cards follow below; older landed or superseded
+cards are retained only as history.
+
+| Rank | HLD lane | Task | State and hard predecessor |
+| ---: | --- | --- | --- |
+| 1A | P0 physical authority | **N24** gateway protocol/fake-Sport slice | **LANDED 2026-08-16**; bounded software/fake/process evidence, explicitly not the complete gateway |
+| 1B | P0 release truth | **N27** source/package parity | **READY**, parallel with N24 |
+| 1C | P0 admission truth | **N29** strict configuration/capability admission | **READY** to start; exit waits for N27's manifest |
+| 1D | P1 sensor truth | **N23**, **N25**, **N26** sensor/replay/plausibility/loss slices | **READY**, parallel; N23 no longer waits on S-1 hardware |
+| 1E | Early owner semantics | **B5, B6, revised B7, B8, B14, B18, B19, B22, B23** | **OWNER-BLOCKED**; decide in parallel so implementation/promotion does not stall later |
+| 2A | P0 physical authority | **N28** gateway process, launcher, credential isolation, commissioning client, fault campaign | **READY** for native/product process substrate after N24; generated contract/envelope integration exit after N29 |
+| 2B | Early physical evidence | **B16** gateway bench/single-axis HIL | **AFTER N28 + N29** and hardware/operator unblock; explicitly before advanced navigation |
+| 3A | P0–P4 evidence | **N42** base causal envelope, nonblocking recorder and refutation runner | **READY**; full-chain exit integrates later contracts |
+| 3B | P1 world evidence | **N30** live/replay sources + `WorldModel` + `WorldSnapshotV2` + `NavigationSnapshotV2` | **AFTER N23** |
+| 3C | P1 real sensor evidence | **B25** executed Stage-0 capture/calibration artifact | Capture **AFTER N23/N25/N26 + B9–B12** and hardware/operator unblock; N30 consumes it before B17 |
+| 4A | P1 localization | **N31** fail-closed provider and timestamped `T_map_odom` software seam | **AFTER N30**; canonical fallback activation needs B8 |
+| 4B | P1 localization evidence | **B17** physical localizer commissioning | Offline bake-off **AFTER N31 + B25**; physical-profile exit also needs B8 implementation + N43 |
+| 4C | P1 actuation admission | **N43** minimal sole product gateway client + `SafetyDispositionV1` final governor | **AFTER N28 + N29 + N30** |
+| 4D | P1 navigation substrate | **N44** fail-closed observed-space planner/grid seam | Substrate **AFTER N29 + N30 + N31**; integration exit after N43; product policy promotion needs B6/B7 |
+| 4E | P1 product-client evidence | **B30** N43 TTL/stop HIL rerun | **AFTER N43 + B16** and hardware/operator unblock |
+| 4F | P1 observed-space evidence | **B31** bounded N44 static-obstacle run | **AFTER N44 + B17 + B30** and hardware/operator unblock |
+| 5A | P2 interaction | **N32** committed-turn/command-authority/turn-disposition contracts and dialogue sequencer | Base **AFTER N29**; world/task reference+narration integration after N30/N33/N36 |
+| 5B | P2 inference | **N35** inference broker + bounded read-only tool synthesis | **AFTER N29**, parallel with N32 |
+| 6 | P2 task authority | **N33** `PlanSketch` default, deadlines/retries, certified checkpoints, one consequential-action lifecycle | **AFTER N30 + N32 + N43** |
+| 7A | P2 closed-loop autonomy | **N34** bounded `MissionSupervisor` + typed navigation intent/grounding/execution goals | Contract work after N30 + N33 base; navigation/terminal exit also needs N31; full promotion needs B5/B22 and B23 if restore is admitted |
+| 7B | P2 memory | **N36** governed dialogue/episodic/profile retrieval and world-model projections | **AFTER N30 + N35 + N32 base**, parallel with N34 |
+| 7C | P2 audio | **N37** priority speech, duck/restore, streaming partial-ASR software lane | **AFTER N32**; broker integration follows N35, acoustic/AEC promotion remains B3/B15 |
+| 7D | P2 human evidence | **B29** held-out companion review | **EXTERNAL/OWNER-BLOCKED** after the evaluated N32/N35–N37 slice |
+| 8 | P3 identity | **N38** evidence-independence-safe perception + `OwnerBeliefV1`/re-ID | **AFTER N30 + N31**; bounded robot evidence is B26 |
+| 9 | P3 navigation | **N39** behavior-scoped goals, moving formation, social recovery and shadow challengers | Generic work **AFTER N31 + N34 + N44**; formation integration exit also needs N38; promotion needs B6/B7 |
+| 10A | P3 spatial continuity | **N40** map-versioned place/semantic memory and geofence/drop-off/traversability constraints | **AFTER N31 + N39** for replay/spec; terminal/collision promotion needs B5/B6 |
+| 10B | P3 fault isolation | **N41** migrate local maps/tracking/controller into the N43 sidecar | **AFTER N39 + N43**; it does not create a second gateway client/governor |
+| 10C | Interleaved robot evidence | **B26–B28** identity/follow, local-nav/governor, terminal/geofence/terrain rungs | Run immediately after each owning software seam and external unblock |
+| 11 | P4 integrated commissioning | **B24** repeated first-ODD mission campaign | **AFTER** its named software, policy, early-HIL, localization and staged field gates |
+| Ops | Hosted execution proof | **B20** GitHub Actions enablement/run evidence | Parallel repository-admin action; not by itself a physical P4 gate |
+
+Physical execution is deliberately absent from `NEXT`: B16/B17/B25–B31 interleave
+hardware evidence with software, and B24 owns final integrated commissioning.
+Phase-5 learned navigation remains absent until N42 records a repeatable residual
+that beats the deterministic baseline in shadow/replay.
+
+Each applicable N28–N44 slice must also reduce, not grow, the current concentration in
+`RobotRuntime` and `DirectiveNavigator`: extract the named state owner behind its
+typed port, wire it from one composition root, and retain the existing behavior as a
+tested rollback path. No card is permission for a whole-runtime rewrite or another
+parallel mutable state store.
+
+### Lower-priority existing cards
+
+These remain useful, but they are not predecessors of the first-ODD architecture:
+
+| Card | Disposition |
+| --- | --- |
+| N5 full BARN and N9 Follow-Bench | Run after N38/N39/N42 as external proxy comparisons; never promote from proxy scores alone. |
+| N7 emote schema | Run after N28/N33 so physical clips use the admitted `GatewayActionV1` lifecycle; simulator schema work may proceed earlier. |
+| N21 temperament block | Run after N36 and only promote mappings supported by U36 measurement. |
+| N22 system-utterance acoustic case | Absorbed by N37 software behavior and N42's versioned evaluation runner. |
 
 > **Landed 2026-08-04:** N1 (W8, closed U6), N6 (W7, opened U11),
 > N2/N3/N4 (W1–W6), and N8 (W9).
@@ -23,7 +91,11 @@ an install, or a decision — it can start now. Roadmap rationale lives in
 
 ---
 
-## N10 — Kickoff board K0–K2′ of the adjudicated program plan · **hours–days** · supersedes ad-hoc sequencing
+## N10 — Kickoff board K0–K2′ · **CLOSED; sequencing superseded 2026-08-16**
+
+Not active. K0, K1, K2, and the Phase-1 gate have landed status records under
+`scrum/20260805/task_1/`. The “hardware last” ordering is superseded by the HLD's
+early gateway HIL and interleaved physical evidence. Retained below as history.
 
 The 2026-08-05 final plan
 ([scrum/20260805/task_1/ADJUDICATION.md](../scrum/20260805/task_1/ADJUDICATION.md),
@@ -38,7 +110,7 @@ hardware-readiness ledger (every place sim stands in for hardware gets a
 named re-run gate for the final hardware phase). Hardware procurement moved
 to the final phase by owner decision.
 
-## N11 — Traffic-aware goal placement + yield-advance pacing · **FINAL-APPROACH HALF CLOSED 2026-08-07** · traffic xfail still did NOT flip
+## N11 — Traffic-aware goal placement · **LANDED PORTION CLOSED; policy residual moved to B22**
 
 ### 2026-08-07 (card F-1, scrum/20260807/task_2/NAV_FINISH_STATUS.md)
 
@@ -215,7 +287,7 @@ that resolve differently is the D5 disagreement class.
 
 </details>
 
-## N13 — "sit next to X" never sits · **CLOSED FOR THE LAMPPOST 2026-08-07; the bench is a K0/sidecar decision, not a nav defect**
+## N13 — "sit next to X" · **LANDED PORTION CLOSED; affordance/band residual moved to B22**
 
 **2026-08-07 (card F-1).** The lamppost half is a **hard gate**: the dog walks
 to `lamp_post_1`, stops 1.493 m from it (inside the K0 `next_to` band, miss
@@ -357,7 +429,12 @@ plus `..._survives_a_control_tick_between_pause_and_resume`,
 product-path layer (real `RobotRuntime`, fake backend, entered at
 `handle_text`), which is where the composition is real but the physics is not.
 
-## N15 — The localization seam has no `map` → `odom` transform · **days** · blocked on a real localizer
+## N15 — `map` → `odom` gap · **SPLIT 2026-08-16 into N31 + B17**
+
+Not active as one card. N31 owns the unblocked fail-closed transform contract,
+golden replay, covariance/health, and jump semantics. B17 owns physical-localizer
+selection, installation, real-bag integration, and commissioning. The original
+finding remains below as historical context.
 
 **Recorded 2026-08-07** from Lane B hand-off 3, so it lives somewhere other
 than a code comment. `grid_navigator` is ODOM-bound while `mission.goal` is a
@@ -375,7 +452,7 @@ string is how "halt" got lost (U33). The shared home is `navigation/base.py`
 next to `MAP_FRAME`/`ODOM_FRAME`; it was not made because that file belongs to
 another lane.
 
-## N16 — Barge-in keeps talking for ~0.6 s after it stops · **hours** · found by acoustic_loop_v1
+## N16 — Barge-in acoustic stop · **software landed; physical proof tracked by N37 + B3/B15**
 
 `SpeakerSink.interrupt()` sets the latch and stops **writing** at the next
 ~50 ms block, but samples already handed to PortAudio still play out. Measured
@@ -405,7 +482,7 @@ interrupt+0.12 s, then spurious 1-frame owner-residual spikes at +0.5–0.7 s se
 `acoustic_end`). `abort()` needs a real output device to validate →
 `does_not_prove` on the null-sink tier. **Still OPEN as a rig-measurable gate.**
 
-## N17 — Echo guard fragments the neural VAD's input · **hours** · found by acoustic_loop_v1
+## N17 — Echo/self-capture diagnosis · **software landed; physical proof tracked by N37 + B3/B15**
 
 False barge-in rate **1.00** against a 0.02 bar on the frozen noise set. Silero
 is not at fault — probed directly it rates those fixtures at max p = 0.21/0.23
@@ -440,7 +517,7 @@ fix, `append/new only` barred this lane) or real AEC (N18). The decision-gating
 code is correct for a real *attenuated* echo, which this tier cannot create →
 `does_not_prove`. **Still OPEN as a rig-measurable gate.**
 
-## N18 — Owner-gated acoustic cards · **blocked on B3** · runbook is written
+## N18 — Owner-gated acoustic cards · **MOVED to B3/B15; not active NEXT work**
 
 Four cards are fully prepared and cannot be gated without a transducer:
 `device-activation-snapshot`, `acoustic-hello-smoke`
@@ -451,7 +528,7 @@ commands, expected output and gates:
 
 Nothing here needs re-derivation — it needs a mic plugged in.
 
-## N19 — Fan the acoustic clocks into the latency ledger · **hours** · runtime lane
+## N19 — Fan acoustic clocks into the latency ledger · **ABSORBED by N42**
 
 The measurement surfaces landed (`WhisperCppProvider.last_metrics`,
 `MicrophoneVoiceLoop.last_turn_clocks`,
@@ -483,13 +560,13 @@ whose `_audio_chunk_started` is shared with the gesture/emote lane. The
 nor the sink/recognizer/turn-token). Remaining diff = §3 of
 `docs/ACOUSTIC_BRINGUP_PLAN.md`, now unblocked, for the runtime lane.
 
-## N5 — Extend the BARN harness to all 300 public worlds · **days**
+## N5 — Extend the BARN harness to all 300 public worlds · **DEFERRED after N39/N42 · proxy only**
 
 Today's honest 2%→44% figure is from a 50-world proxy subset. Running the full
 public set produces an externally comparable score distribution with zero ROS
 work — the cheapest step toward the primary external benchmark.
 
-## N7 — Emote YAML schema upgrade · **week** · reduces U10 risk · absorbs the intensity no-op
+## N7 — Emote YAML schema upgrade · **after N28/N33 · week** · reduces U10 risk
 
 Note (2026-08-04 sprint review): Gesture `intensity` is validated end-to-end
 (0.5–1.5) and travels with the dispatch, but nothing scales the clip yet —
@@ -506,7 +583,7 @@ clips into many perceptibly distinct expressions with zero ML.
 
 Doing this *before* growing the catalog avoids re-authoring later.
 
-## N9 — Self-run Follow-Bench comparison · **1–2 weeks**
+## N9 — Self-run Follow-Bench comparison · **DEFERRED after N38/N39/N42 · proxy only**
 
 Port `FollowOwnerController` into the MIT-licensed, pure-Python, no-ROS
 Follow-Bench harness and report success/jerk/personal-zone against its
@@ -560,7 +637,7 @@ tick is the D5 defect class, which is exactly what the single
 the runtime's only honest options are the three shipped ones (`ask_for_help`,
 `wait`, `give_up_honestly`).
 
-## N21 — Give every personality a numeric temperament block · **hours**
+## N21 — Give every personality a numeric temperament block · **DEFERRED after N36/U36 · hours**
 
 `configs/personality.yaml` is the first place a personality carries **numbers**
 rather than prompt text, and today it carries exactly one family
@@ -578,7 +655,7 @@ exist, so this is wiring rather than design: move the factor vector into
 `patience` scalar if the sweep in U36 says the mapping is real, and keep
 `/api/social` honest about which numbers came from where.
 
-## N22 — Land the system-utterance case in the acoustic pack · **hours** · needs a runner_version bump
+## N22 — Land the system-utterance case in the acoustic pack · **ABSORBED by N37/N42**
 
 `speak_system` (2026-08-09, U35,
 [../scrum/20260808/task_5/VOCALIZE_AUDIBLE_STATUS.md](../scrum/20260808/task_5/VOCALIZE_AUDIBLE_STATUS.md))
@@ -606,7 +683,7 @@ sink and asserts acoustic onset plus a non-trivial peak, and a gate of the form
 the new runner version in the same commit, or the determinism contract is
 broken in a second way. The probe body is in the U35 record.
 
-## N-AUDIO-REC — Record the eval audio corpus (OWNER, hardware-gated) · **owner task**
+## N-AUDIO-REC — Record the eval audio corpus · **MOVED to B21**
 
 Audio-hardware finding (2026-08-09, coordinator): the workstation has an
 **onboard analog mic input** (ALSA `card 1: HD-Audio Generic, ALC1220 Analog`,
@@ -631,7 +708,7 @@ PERSONAL_CONVO text tier and all synthetic-voice acoustic gates run without it.
 
 ---
 
-## N23 — PE-D: freeze `SensorFrameV2` + first rosbag2 replay source · **days · after S-1**
+## N23 — PE-D: freeze `SensorFrameV2` + first rosbag2 replay source · **READY · days**
 
 **Opened:** 2026-08-14 (deferred from REVISED_BOARD; was parallel PE-D).
 
@@ -651,16 +728,27 @@ software (`S1_STATUS.md`). PE-D may start without waiting on Orin hardware.
   fusion or navigation improvement.
 - **Unblocks:** IS-F producer work once B13's supported host exists.
 
-## N24 — SG-E: bounded W0-C/W0-F gateway slice · **days · before any Parcel motion**
+## N24 — SG-E: W0-C/W0-F gateway contract/fake slice · **LANDED 2026-08-16 · not the complete gateway**
 
 **Opened:** 2026-08-14 (deferred from REVISED_BOARD; required before
 Parcel-driven motion, **not** before mounting).
+
+**Landed subset:** strict bounded V1 gateway DTOs, executable RC-4 table plus
+W0-B H2 companion derivation, deterministic fake-Sport faults, per-boot epoch/
+sequence/local-TTL/stop-epoch substrate, a real separate-process client-`SIGKILL`
+stop and restart-disarmed proof, and frozen N24 invariant/failure-seed inventories.
+Measured status and exact remaining W0-C/F gates:
+[scrum/20260816/task_1/SG_E_STATUS.md](../scrum/20260816/task_1/SG_E_STATUS.md).
+N28 remains the native credential-isolated product gateway; N42 remains the shared
+`authority-invariants` evaluator/CI owner; B16 remains physical evidence.
 
 - **Slice:** TTL/latency derivation table; versioned gateway DTOs (boot epoch,
   sequence, local TTL, hashes, ack/state/stop); fake Sport service with
   delayed/no-reply Move, stale state, lease loss, writer conflict; process-
   level proof that client death after a nonzero proposal → local stop, never
-  auto-resume, restart disarmed; start `authority-invariants` CI gate.
+  auto-resume, restart disarmed. Freeze the gateway invariant list and seeded
+  failure fixtures here; N42 owns assembly/evaluator behavior of the shared
+  `authority-invariants` CI gate.
 - **Do not silently decide B5–B8** (owner 2×2). Fixtures/specs only until
   authorized.
 - **Exit:** `SG_E_STATUS.md` naming which subset landed and which W0-C/F gates
@@ -699,3 +787,501 @@ hidden only in 20260813 status).
   fail-closed (unknown ≠ zero loss).
 - **Relation:** rehearsal SIGKILL/truncation tests prove bags stay readable;
   they do not prove per-channel interior-loss attribution on the primary path.
+
+---
+
+## N27 — HLD P0: source/package release parity · **READY · hours–days**
+
+- **Opened / priority:** 2026-08-16 · P0 release integrity.
+- **Depends on:** none; run in parallel with N24.
+- **Build:** make canonical config, prompt, skill, schema, and map assets the one
+  source for `runtime_assets`; generate a manifest with paths and digests. Remove
+  hand-maintained deploy copies. In particular, eliminate the verified navigation
+  drift: packaged timeout 400 vs source 200, `max_vx` 0.45 vs 0.9, grid alignment
+  28° vs 55°, and missing perception/route-memory/predictive/person-band blocks.
+- **Tests / refutation:** zero-diff and digest tests for every packaged tree; build a
+  wheel, install it in an empty temporary environment, resolve every default asset,
+  and run a source-vs-wheel behavior smoke with identical config hashes.
+- **Exit:** CI fails on any source/package drift and the installed wheel reports the
+  same effective navigation/prompt/capability configuration as the source checkout.
+- **Does not prove:** that any numeric limit is safe on hardware or that the wheel
+  has a production sensor/gateway path.
+
+## N28 — HLD P0: complete software gateway and physical-effect authority · **READY for process substrate; integration exit after N29 · days–weeks**
+
+- **Opened / priority:** 2026-08-16 · P0; completion card for N24's contract/fake
+  slice, not permission to skip it.
+- **Depends on:** N24's landed process/fake substrate; N29 for generated gateway
+  validators and immutable safety-envelope integration. B5–B8/B14 may land fixtures/
+  specifications in parallel; this card must not silently choose their product
+  semantics. Physical promotion is B16.
+- **Build:** versioned `RobotGatewayV1`, `GatewayCommandV1`, `ActionRequestV1`,
+  `GatewayActionV1`, and `GatewayFeedbackV1`; bounded local IPC; native sole vendor
+  writer with peer-credential checks; restart-disarmed boot epoch; sequence/TTL/
+  lease/limits/stop/stationary witness; capability-admitting launcher. Route
+  allowlisted physical posture and gesture through the gateway's local envelope and
+  capability checks. Add one explicit operator-scoped, non-product commissioning/
+  fault client for B16. Revoke robot-network/vendor-command access from legacy ROS
+  JSON, direct/debug Dog, UI, and Python paths before any HIL motion; N43 later
+  becomes the sole product client without changing the gateway protocol.
+- **Tests / refutation:** kill/SIGSTOP/restart, prior epoch, duplicate/reordered
+  sequence, expiry, malformed/oversized IPC, late Move, lease loss, two writers,
+  feedback loss, action cancellation, and command/action conflict. Safety reductions
+  bypass comfortable slew and exact zero remains exact at the fake vendor write.
+  Generated DTO/version or N29 envelope-ID mismatch hard-refuses at the gateway.
+- **Exit:** only the authenticated, capability-scoped commissioning client can reach
+  the fake robot service; no product runtime path or other repository path can write
+  a physical effect. Client death or TTL expiry stops and restart never auto-resumes.
+- **Does not prove:** robot SDK compatibility, physical stopping distance, balance,
+  gesture feasibility, or commissioning. Those are B16.
+
+## N29 — HLD P0: strict configuration and capability admission · **READY · days**
+
+- **Opened / priority:** 2026-08-16 · P0 startup truth.
+- **Depends on:** none to start; N27 is required for the source/package manifest and
+  therefore for this card's exit.
+- **Build:** a versioned strict root runtime schema with unknown-key rejection,
+  migrations, source provenance, and derived configuration. Define capability
+  requirements for sensors, frames, calibration, localization, gateway, maps,
+  actions, models, and ODD. Validate feature dependencies (for example lock-on
+  cannot start without verification-on-approach). Admit local/remote voice and
+  inference provider profiles by versioned capability, exact model/version, region,
+  data/retention class, codec/session limits, and credential **reference**; secrets
+  never enter YAML, manifests, logs, or snapshots. Maintain one compatibility
+  registry for gateway, snapshot, authority, action, invariant-lease/admission, and
+  telemetry contracts and generate native/Python validators and fixtures. The
+  invariant-lease schema carries task/revision, invariant/monitor IDs, issuer class,
+  issue/expiry/renewal sequence, capability/envelope hashes, reset obligations, and
+  signature; N29 generates schemas/validators, never live lease instances. Produce
+  and verify a signed
+  release/config/model/map/calibration/capability manifest; physical profiles fail
+  closed when incomplete. Derive one immutable, hashed `RobotProfile` ×
+  `SpeedRegime` × `SafetyEnvelope` artifact from the effective config; planner,
+  N43 governor, gateway, scorer, and telemetry consume that same ID rather than
+  re-deriving limits.
+- **Tests / refutation:** unknown/inert keys, conflicting duplicated limits, unsafe
+  flag combinations, missing capability, mismatched hash/version, uncommissioned
+  action, incompatible process versions, tampered/unknown-signing-key manifest, and
+  simulator oracle field in a physical profile all refuse startup. A planner/
+  governor/gateway envelope-ID mismatch is a hard refusal, not a warning.
+- **Exit:** the runtime prints one effective, attributable configuration and cannot
+  arm a physical profile with an incomplete or contradictory capability manifest.
+- **Does not prove:** the declared capabilities work; commissioning evidence remains
+  separate.
+
+## N30 — HLD P1: evidence-enveloped `WorldModel` and revisioned snapshots · **after N23 · days–weeks**
+
+- **Opened / priority:** 2026-08-16 · P1 world-evidence spine.
+- **Depends on:** N23 `SensorFrameV2`/replay; N25/N26 strengthen its inputs.
+- **Build:** bounded live ROS 2 `SensorSource` adapters for CameraInfo/Image,
+  PointCloud2, IMU, TF, controller/`GatewayFeedback`, and timing evidence, plus
+  simulator and rosbag replay adapters through the same N23 contract. Add versioned
+  evidence envelopes; one `WorldModel` owner for belief/history
+  association and immutable `WorldSnapshotV2` projections; a direct bounded
+  high-rate `NavigationSnapshotV2` projection for local motion. Preserve capture and
+  receive clocks, unique sequence/view identity, frame/transform/calibration
+  revisions, covariance, origin, expiry, and source evidence. Physical profiles do
+  not expose truth/oracle fields.
+- **Tests / refutation:** deterministic replay snapshot hashes; drop/duplicate/
+  reorder/clock-step/missing-TF/bad-calibration/NaN fixtures; incompatible revisions
+  are detected; the same cached observation cannot become independent evidence;
+  ROS discovery/source loss expires the affected projection; persistence,
+  association, logging, UI, and GPU stalls cannot block the high-rate projection.
+- **Exit:** live-shaped and replay sources produce the same coherent revisioned
+  projection; dialogue/planning/semantic verification can cite it while local
+  control consumes the bounded direct path. No authority-bearing `extras`/metadata
+  field is required. B25 supplies real capture evidence; N43 proves expiry reaches
+  the gateway stop chain.
+- **Does not prove:** physical perception, localization accuracy, or useful semantic
+  beliefs.
+
+## N31 — HLD P1: localization and `T_map_odom` software contract · **after N30 · days**
+
+- **Opened / priority:** 2026-08-16 · unblocked software half of former N15.
+- **Depends on:** N30. B8 controls the frozen no-provider behavior change; N31 can
+  build the explicit adapters/contract/golden replay before that decision. Physical
+  promotion is B17.
+- **Build:** timestamped MAP and ODOM poses, `T_map_odom` lookup, covariance/health,
+  provider loss, relocalization/jump events, transform epochs, and goal conversion at
+  one timestamp. Keep simulator/eval truth as an explicit adapter with pinned
+  behavior; specify no-provider as unavailable/unknown rather than synthesized truth,
+  and activate that canonical fallback only after B8.
+- **Tests / refutation:** golden `map -> odom -> base_link`, yaw/sign/axis cases,
+  delayed transforms, provider loss, covariance growth, reanchor jumps, and no local
+  command discontinuity from mixing epochs. Pose loss expires positive authority.
+- **Exit:** replayed MAP goals reach the ODOM controller only through a healthy
+  timestamp-compatible transform, and jump/provider-loss behavior is explicit.
+- **Does not prove:** which localizer wins, physical drift, or map quality; B17 owns
+  real-bag bake-off and commissioning.
+
+## N32 — HLD P2: committed-turn and command-authority plane · **base after N29 · days**
+
+- **Opened / priority:** 2026-08-16 · P2 interaction authority.
+- **Depends on:** N29 version/capability registry. B18 governs the eventual
+  principal/enrollment/privacy product policy; use a conservative test principal now.
+- **Build:** `CommittedTurnV1` with immutable text/reference, hash, normalization,
+  source/epoch and `authority_ref`; `CommandAuthorityV1` with principal, scope,
+  expiry/revocation; `TurnDispositionV1` for routed, planning-failed, clarification,
+  unsupported, rejected, and admitted outcomes. Add one dialogue-act sequencer:
+  “heard/working” is noncommittal and only admitted task events can say started or
+  completed.
+- **Tests / refutation:** partial/final/correction shuffles, late generations,
+  revoked/expired/wrong principals, echo/junk origins, validation rejection before a
+  task exists, and concurrent narration. No partial, tool result, or untrusted
+  principal can authorize positive motion or claim task completion.
+- **Base exit:** every spoken action disposition cites a committed turn and typed
+  authority/task outcome; stale narration is discarded by revision.
+- **Narration/reference integration after N30/N33/N36:** implement one
+  `DialogueNarrator`/reference resolver over exact committed discourse state, a
+  compatible `WorldSnapshotV2`, and typed `TaskEventV2` progress. It emits a typed
+  resolved referent or clarification—not guessed geometry—and supplies typed task
+  state to prompts instead of summary strings. Test pronouns, “there/that one/continue,”
+  changed/disappeared entities, conflicting memory, stale task revisions, delayed
+  narration, and explanation claims. B29 evaluates human-perceived quality.
+- **Does not prove:** speaker recognition, real-microphone authorization, or policy
+  consent; those require B18/B15 evidence.
+
+## N33 — HLD P2: one consequential-action task lifecycle · **after N30/N32/N43 · days–weeks**
+
+- **Opened / priority:** 2026-08-16 · P2 executive authority.
+- **Depends on:** N30 snapshots, N32 turn authority, and N43 product action admission.
+  B23 governs any post-disruption restore; the fail-closed no-auto-resume default is
+  implementable before that policy decision.
+- **Build:** add `TaskTransactionV2`, then make `plan_sketch_v1` the default and align
+  the planner prompt; keep the
+  compiler as sole author of resources, success, invariants, retries, and timeouts.
+  Replace `max_attempts=1` with system-owned per-skill policy. Add distinct admission,
+  grounding, resource-wait, execution, and mission deadlines; certified
+  `ControllerCheckpointV1`; durable `TaskEventV2`. N33 is the sole product issuer/
+  renewer and monitor owner for lease instances conforming to N29's generated
+  per-task/revision invariant-lease schema; N43 only validates/enforces them. Route
+  every consequential walk,
+  pose, gesture, follow, and navigation request through `TaskExecutive`; keep STOP
+  independent. Add task/revision-scoped invariant leases with one monitor registry
+  through terminal state. Permit disjoint-resource task concurrency under explicit
+  priority/fairness/starvation policy; critical locomotion phases veto conflicting
+  overlays/actions. Implement a `BehaviorCoordinator` that routes bounded voice/gaze
+  and simulator/decorative-expression reactions with revision/TTL and no locomotion
+  ownership. Physical expression stays shadow-only/unsupported unless N28 admits a
+  specific `GatewayActionV1` profile; N37 owns speech delivery.
+- **Tests / refutation:** recovery is reachable only within budget; resources cannot
+  wait forever; delayed step/attempt/revision reports are rejected; only a settled
+  controller-certified checkpoint permits replacement/restore; disjoint tasks make
+  fair progress, resource conflicts obey priority, critical-phase veto is dominant,
+  invariant monitors cannot be replaced by another task/revision, stale reactions
+  expire, and no direct consequential action bypass remains.
+- **Base exit:** one `TaskTransactionV2` ledger explains admission, ownership,
+  progress, correction, pause/resume, cancellation, failure, and completion
+  disposition. Before N34, navigation remains non-complete/unsupported at its terminal
+  seam; other actions complete only from admitted gateway/controller feedback.
+- **Integration gate after N34:** enable navigation `completed` only from a compatible
+  `TerminalWitnessV2`. This later gate does not make N34 a predecessor of N33's base
+  contract/lifecycle exit.
+- **Does not prove:** autonomous mission repair quality or physical action safety.
+
+## N34 — HLD P2: bounded mission repair + typed navigation lifecycle · **after N30/N33 base; integration after N31 · days–weeks**
+
+- **Opened / priority:** 2026-08-16 · P2 closed-loop semantic autonomy.
+- **Depends on:** N30 evidence projections and N33's base task transaction/event/
+  resource contract for scaffolding; N31's timestamped transform/pose contract is
+  required for metric navigation and terminal-witness integration/exit. B5 governs
+  the selected pose-error reserve, B22 the remaining `next_to`/region/yield semantics,
+  and B23 any post-disruption mission restore.
+- **Build:** add `NavigationTaskV2` around unresolved `NavigationIntentV2`, evidence-
+  backed `GroundedGoalV2`, and metric `ExecutionGoalV2`. Add `TerminalWitnessV2`
+  with a typed completion/termination policy for every supported goal class,
+  independent semantic/geometric evidence, pose/covariance reserve, settled
+  controller/gateway
+  feedback, and explicit `NOT_ARRIVED`/`UNCERTAIN` outcomes. Continuous moving-
+  formation tasks never reuse arrival; they end only by their explicit task condition,
+  cancellation, expiry, identity loss, or failure. Build a deterministic-first
+  `MissionSupervisor` with shared budgets for
+  attempts, replans, time, distance, energy, and model calls. Split navigation into
+  the typed stages above; stop reparsing validated free text. Consume typed blocked
+  causes and choose deterministic retry/scan/alternate approach or instance, bounded
+  plan revision, clarification, or honest termination. Every model revision
+  recompiles and revalidates against a compatible fresh snapshot and certified
+  checkpoint.
+- **Tests / refutation:** changed-world, ambiguous referent, target absence, exhausted
+  local recovery, late model repair, correction during planning, and nested-budget
+  double-spend cases; every finite point/region/relation goal has positive, negative,
+  stale, correlated-evidence, pose-error, and unsettled-feedback terminal cases, and
+  continuous formation cannot report arrival. Text is audit/explanation data, not
+  the downstream control contract.
+- **Exit:** an admitted mission can recover or explain why it cannot without an LLM
+  entering a control loop or waiving an invariant, and no goal class can report
+  success without a compatible `TerminalWitnessV2`.
+- **Does not prove:** grounding accuracy, navigation success, or physical autonomy.
+
+## N35 — HLD P2: inference broker and bounded read-only tool synthesis · **after N29 · days**
+
+- **Opened / priority:** 2026-08-16 · P2 model fault isolation.
+- **Depends on:** N29 model/config identity. Integrates with N32/N34 when available.
+- **Build — N35-A text/model provider registry:** replace front-door-specific model
+  construction with one registry used by web, CLI, and ROS. Add versioned
+  `ConversationProviderV1`/`PlanningProviderV1` lifecycle, capabilities, health,
+  model/config/region identity, structured text/tool proposal events, and generation
+  fencing. Then add role-scoped queues/endpoints for conversation, planning, summarization,
+  embeddings, and perception; per-role deadlines, cancellation, concurrency, circuit
+  breaker, overload disposition, hashes, budgets, and one bounded structured-output
+  repair. Add a maximum-two-pass read-only tool loop (select, then grounded synthesis)
+  with source/trust labels. Local inference is the first-ODD default; remote use is
+  optional, privacy-governed, and never a safety dependency.
+- **Tests / refutation:** conversation cancellation cannot cancel planning or memory;
+  saturation/OOM/timeout/fallback leaves the control trace unchanged; tool prompt
+  injection, stale results, excess calls, and physical-truth/authority claims are
+  refused.
+- **Exit:** each model role has independent lifecycle and measured overload behavior;
+  deterministic closed intents/tasks remain available without inference.
+- **Does not prove:** model quality or acceptable human-perceived latency.
+
+## N36 — HLD P2: governed conversational, episodic, profile, and spatial memory · **after N30/N35/N32 base · days–weeks**
+
+- **Opened / priority:** 2026-08-16 · P2 continuity/privacy.
+- **Depends on:** N30 world evidence, N35 inference isolation, and N32's base
+  committed-turn schema. B18 supplies the owner consent/retention policy before
+  promotion.
+- **Build:** query-aware deadline-bounded retrieval; asynchronous writes,
+  summarization, distillation, and indexing; separate working dialogue, episodic
+  task, explicit owner profile, and evidence-backed spatial/semantic stores. Add
+  confidence, source, frame/revision, expiry, edit/export/delete, retention, and a
+  logging/memory kill switch. Model-proposed profile facts require deterministic
+  policy; model text can never establish a physical fact. Expose committed discourse
+  references and typed retrieval results to N32's resolver without copying current
+  world/task truth into a second mutable store.
+- **Tests / refutation:** actual current query reaches retrieval; timeout degrades to
+  no memory; session separation; stale/contradicted spatial belief; consent revoke;
+  delete/export; poisoned summary; synchronous summarization cannot delay response or
+  control.
+- **Exit:** memory improves a held-out follow-up only when its cited source remains
+  valid, and privacy controls deterministically remove it.
+- **Does not prove:** human personalization quality or long-term field correctness.
+
+## N37 — HLD P2: real-time voice interaction software lane · **after N32 · days**
+
+- **Opened / priority:** 2026-08-16 · P2 acoustic software; absorbs the open software
+  surface of N16/N17/N18/N22.
+- **Depends on:** N32 turn authority. Queue/ducking/partial-ASR work can land without
+  N35; model-backed ASR scheduling must use N35 when integrated. Real acoustic/AEC
+  tuning remains B3+B15; human corpus recording is B21.
+- **Build — N37-A voice/media provider contracts:** add `AudioFormatV1`,
+  `AudioFrameV1`, `ProviderCapabilitiesV1`, `StreamingRecognizerV1`,
+  `StreamingSynthesizerV1`, and an optional `ManagedVoiceSessionAdapterV1` over one
+  normalized PCM/media boundary. Managed adapters emit only transcript, reply/audio,
+  usage/fault, and tool **proposal** events into N32; they never execute robot tools
+  or mint authority. Require sequence/generation fencing, exactly one terminal event,
+  bounded backpressure, cancel acknowledgement/no post-cancel audio, codec/rate/
+  channel normalization, and shared adapter conformance tests. Also build the
+  priority-aware system speech queue, duck/restore, audible-start
+  disposition, capture identity, streaming partial-ASR adapter for display/
+  preparation/interruption only, and an AEC stage interface. Preserve final-only
+  physical authorization. Filter typed non-speech markers and carry echo/playback
+  evidence without guessing real-device thresholds.
+- **Tests / refutation:** busy-speaker safety message, superseded filler, partial
+  emergency lookahead without execution, echo/junk origin, queue overload, AEC
+  absent/degraded, and zero changes to model-off motion traces.
+- **Exit:** the software path cannot lose a priority system utterance or execute a
+  partial; through-air gates are ready to run unchanged when B3/B15 unblock them.
+- **Does not prove:** AEC, real barge-in, speaker authorization, or audible hardware.
+
+## N38 — HLD P3: evidence-safe perception and identity-locked owner belief · **after N30/N31 · weeks**
+
+- **Opened / priority:** 2026-08-16 · P3 identity-safe following.
+- **Depends on:** N30 evidence identity and N31 transforms. B18 owns enrollment,
+  consent, and identity-retention policy; B7 governs any search rotation. Physical
+  promotion is B26 after B17/B25, and follow translation also needs N39/N43.
+- **Build:** live/replay camera/depth/LiDAR detector/tracker adapters with unique capture
+  identity and independence groups (time, view/parallax, source/model correlation,
+  track lineage). Add `OwnerBeliefV1`: enrolled identity, LOCKED/OCCLUDED/SEARCHING/
+  AMBIGUOUS/LOST, covariance, expiry, and evidence. Only healthy LOCKED permits first-
+  ODD translation; no nearest-person fallback. Search rotation is a separate admitted
+  sensing intent; occlusion does not authorize predicted translation.
+- **Tests / refutation:** cached-frame replay cannot satisfy M-of-N or arrival;
+  twins/crossing tracks/occlusion/reappearance/stranger-nearer cases; stale or
+  ambiguous belief holds; identity never changes without enrollment authority.
+- **Exit:** held-out replay maintains owner identity or stops/clarifies honestly, with
+  every state transition attributable to independent evidence.
+- **Does not prove:** physical re-ID quality, crowd comfort, or follow success.
+
+## N39 — HLD P3: behavior-scoped goals, moving formation, social recovery, and shadow challengers · **after N31/N34/N44 · weeks**
+
+- **Opened / priority:** 2026-08-16 · P3 deterministic navigation baseline.
+- **Depends on:** N31 transforms, N34 typed goal/mission contract, and N44's
+  fail-closed observed-space baseline. N38 is required for the identity-aware moving-
+  formation integration exit; generic GoalManager/social fixtures can start earlier.
+  Product promotion is conditioned on B6/B7; specs/replay work can begin before those
+  decisions.
+- **Build:** task/preemption selects the behavior owner, then a behavior-scoped
+  `GoalManager` consumes typed `GoalProposalV2` from system-calibrated route-memory,
+  exploration, recovery, and operator sources; proposal fields never self-assert
+  priority/confidence/capability. Preserve a distinct versioned moving-formation
+  contract with owner-band/side/behind geometry, identity/covariance/occlusion state,
+  and freshness rather than turning it into static waypoint churn. Add uncertainty-
+  aware people tracks, social bands, yield/pass choices, and cause-aware recovery.
+  Local micro-recovery and mission repair share one budget ledger and typed blocked
+  causes; no blind reverse. Evaluate regulated tracking and MPPI/learned trajectory
+  challengers in shadow/replay only against N44's deterministic baseline.
+- **Tests / refutation:** singleton/proposer competition, calibrated-confidence
+  attacks, stale revision/TTL, crossing people, owner occlusion/ambiguity, changing
+  formation side, yield/pass deadlock, unknown-space deadlock, frontier/recovery
+  bypass, planner unavailable, and budget exhaustion. Challenger output cannot
+  actuate or weaken a constraint.
+- **Exit:** every goal proposal and translation candidate cites task/revision, goal
+  owner, transform/envelope, evidence, and expiry; moving formation remains identity-
+  and uncertainty-aware; failure degrades to HOLD/blocked; challengers publish paired
+  deltas without actuation authority.
+- **Does not prove:** global localization, physical clearance, or learned superiority.
+
+## N40 — HLD P3: map-versioned spatial memory and geofence/traversability constraints · **after N31/N39 · weeks**
+
+- **Opened / priority:** 2026-08-16 · P3 spatial continuity and hard environment
+  constraints.
+- **Depends on:** N31 localization and N39 local baseline. B5/B6/B7/B17/B19 and
+  applicable B22 decisions gate physical promotion.
+- **Build:** persist semantic/place nodes against map/submap IDs, transform revisions,
+  covariance, evidence, and change history; route memory proposes topology but never
+  free space. Produce signed, revisioned private-ODD geofence/road/terrain constraints
+  at goal/corridor connected-component admission and for planner/final-governor
+  consumers; N43/N41 alone compose/enforce the final command constraint. Add
+  elevation, curb/stair/drainage/drop-off/traversability evidence and capability
+  requirements. Crossing stays disabled in the first ODD.
+- **Tests / refutation:** loop closure/reanchor invalidation, moved landmark/blocked
+  edge, stale map, off-road goal whose corridor crosses a road, localization
+  covariance touching a geofence, negative obstacle, missing low-viewpoint evidence,
+  and route memory facing a new obstacle.
+- **Exit:** remembered topology can improve a route but cannot authorize current
+  geometry, terminal success, a keepout crossing, or unsupported terrain.
+- **Does not prove:** physical negative-obstacle/drop-off sensing, geofence or
+  terminal/collision enforcement, or outdoor/stair/public-road capability; B28 owns
+  bounded robot evidence.
+
+## N41 — HLD P3: migrate local navigation into the N43 sidecar · **after N39/N43 · weeks**
+
+- **Opened / priority:** 2026-08-16 · P3 timing/fault isolation; completion of N43,
+  not a second client or governor.
+- **Depends on:** N39 behavior baseline and N43's already-sole product gateway client.
+- **Build:** move deadline-critical 20–50 Hz local maps, people tracking, route
+  tracking, micro-recovery candidate generation, and deterministic controller into
+  the existing N43 C++/ROS 2/native process. Preserve N43's `MotionCandidateV2` →
+  `SafetyDispositionV1` → gateway authority boundary and client identity. The current
+  Python grid/controller remains a replay rollback baseline.
+- **Tests / refutation:** deterministic Python-vs-sidecar replay, latency tails,
+  process kill/stall/restart, ROS discovery loss, logger/GPU/UI failure, snapshot
+  expiry, malformed candidate/action, envelope reduction, and rollback. These are
+  fake/replay tests; B27 owns the post-migration physical kill/TTL/stopping rerun.
+- **Exit:** local navigation deadlines and the unchanged N43 safety/gateway lease are
+  independent of Python interaction/model/storage liveness, with an equivalent
+  deterministic rollback trace and no client handover at promotion.
+- **Does not prove:** real sensor latency, robot stopping, or public safety.
+
+## N42 — HLD cross-cutting: causal observability, refutation, and promotion ledger · **READY in slices · days–weeks**
+
+- **Opened / priority:** 2026-08-16 · P0–P4 evidence plane; absorbs N19's runtime
+  fan-in and provides the versioned evaluation home for N22.
+- **Depends on:** none for the base envelope/recorder/runner. Full-chain exit depends
+  on N28/N30/N32/N33/N34/N43; each producer card owns its typed adapter while N42
+  owns the shared schema, recorder, runner, and promotion ledger.
+- **P0 promotion checkpoint:** the base recorder does not close Phase 0. Its promotion
+  row closes only after N27/N28/N29, B16's bounded hardware evidence, and implemented/
+  re-frozen B5–B8/B14 decisions for every enabled capability all cite compatible
+  release/capability hashes. Early single-axis B16 may still run with excluded
+  capabilities disabled.
+- **Build:** one causal envelope from release/run/session/turn/generation through
+  task/revision/step/attempt, world/evidence sequence, goal/motion/action candidate,
+  safety disposition, gateway epoch/sequence/feedback, and terminal witness. Include
+  config/model/map/calibration/capability hashes and monotonic/wall mapping. Move all
+  serialization/rotation/storage to bounded nonblocking queues with drop accounting;
+  the gateway retains only its local command/action/fault ring. Add the
+  `authority-invariants` CI/refutation gate, contract compatibility/fuzzing, product
+  scorecard, evidence-dated capability matrix, evidence ladder, confidence intervals,
+  and `does_not_prove` fields. Make the durable docs index point to this HLD/current
+  executable evidence, banner obsolete snapshots as historical, and validate backlog
+  IDs plus local links as part of the docs gate. Build the preregistered, blinded
+  held-out human companion-review protocol/harness for coherence/helpfulness,
+  correction/reference accuracy, interruption, explanation truth, memory
+  correctness/forgetting, and comfort; B29 owns participant/reviewer execution.
+  Automated parsing/safety packs remain separate.
+  **N42-A provider comparison:** add normalized provider/model/config/region/session/
+  request, usage, cost, latency, cancel, and fault fields to the causal envelope and
+  a versioned `evals/companion/provider_swap_v1/` runner. The credential-free fake/
+  recorded-replay lane may gate CI; credentialed and live-microphone/chassis lanes
+  report separately. Use the hard gates and scorecard in
+  [VOICE_PROVIDER_ARCHITECTURE.md](../docs/VOICE_PROVIDER_ARCHITECTURE.md), preserve
+  exact endpoint manifests, and report invoice per committed turn and successful
+  task rather than a component price alone.
+- **Tests / refutation:** logger/storage failure changes no control bytes; causal IDs
+  reject mismatched revisions; seeded hard-gate/evaluator failure makes the runner
+  nonzero; kill/clock/drop/reorder campaigns reproduce from a pinned manifest;
+  unique backlog IDs and local doc links validate. Refresh stale `docs/CI.md` counts
+  without claiming hosted CI (B20).
+- **Exit:** the base slice proves nonblocking recording and seeded evaluator failure;
+  the full-chain gate then requires every refusal, clamp, retry, correction, action,
+  and terminal claim to replay to its evidence and release manifest. The human-review
+  harness is deterministic and versioned; B29 results are reported separately. Hard
+  safety cannot be averaged away by task/conversation scores.
+- **Does not prove:** hosted CI, HIL, acoustic hardware, or first-ODD readiness.
+
+## N43 — HLD P1: sole product actuation-admission client and final governor · **after N28/N29/N30 · days–weeks**
+
+- **Opened / priority:** 2026-08-16 · P1 deadline/failure isolation, promoted ahead
+  of advanced navigation so the Phase-1 stop chain is testable.
+- **Depends on:** N28 gateway protocol/process, N29 compatibility/capability
+  admission, and N30 bounded `NavigationSnapshotV2`/controller feedback.
+- **Build:** a minimal deterministic C++/ROS 2/native actuation-admission process that
+  is the sole product `RobotGatewayV1` client. It accepts untrusted
+  `MotionCandidateV2`/`ActionRequestV1`, validates task/revision/snapshot/transform/
+  envelope ID/TTL/capability/invariant leases, composes axis/lifecycle constraints,
+  and emits typed
+  `SafetyDispositionV1` plus `GatewayCommandV1`/`GatewayActionV1`. The final governor
+  may preserve or reduce a candidate but never increase an axis; HOLD/STOP are exact
+  zero and bypass comfort smoothing. Commissioning and product credentials/profiles
+  are mutually exclusive, so N28's temporary client cannot become a second writer.
+  For pre-N33 HIL only, also build a test-only `HilSessionV1` fixture emitter using
+  the N29-generated schemas. It mints signed, short-lived task/revision/candidate IDs
+  plus a bounded metric test-goal ID and narrowly scoped invariant leases under an
+  operator-approved one-axis/course manifest; it has no gateway socket/credential,
+  is absent/refused in product
+  profiles, and does not replace N33 as the sole product lease issuer/monitor owner.
+- **Tests / refutation:** stale/mixed revision, missing/malformed candidate/action,
+  lifecycle loss, expiry, stop dominance, nonzero CLAMP after shaping, and independent
+  exact-zero finalization. Kill/stall ROS sources so evidence authority expires,
+  positive refresh ceases, and the gateway TTL stops; separately kill GPU, Python
+  models, UI, logger, and storage and prove the admitted control/gateway path remains
+  deadline-bounded. Include process kill/restart and credential/writer-conflict cases.
+  Expired, overbroad, wrong-envelope, wrong-revision, unsigned, or product-profile
+  `HilSessionV1`/test leases must be rejected.
+- **Exit:** the Phase-1 chain `source loss -> snapshot expiry -> no positive refresh
+  -> gateway TTL stop` is deterministic, and no Python/model/UI/storage process is a
+  product motion writer or a liveness dependency. N41 can move local maps/controller
+  into this same process without changing client identity or final safety ownership.
+- **Does not prove:** physical sensor timing, braking distance, navigation quality, or
+  action feasibility; B16 proves the gateway commissioning client, B30 the N43
+  product-client TTL/stop chain, and B27 the post-N41 navigation rerun.
+
+## N44 — HLD P1/P3: fail-closed observed-space local-planning substrate · **after N29/N30/N31 · days–weeks**
+
+- **Opened / priority:** 2026-08-16 · early safety substrate extracted from N39 so a
+  malformed scan cannot wait on the conversational mission stack.
+- **Depends on:** N29's immutable safety-envelope artifact, N30 navigation snapshots,
+  and N31 transforms for the substrate; N43 is required for the monotonic final-
+  admission integration/exit. B6/B7 govern promoted directional-collision and
+  sensing-rotation semantics; fixtures can land first.
+- **Build:** unify grid/reactive validity for missing, stale, malformed, wrong-frame,
+  future, uncalibrated, and NaN scans; invalid evidence yields typed exact HOLD. Add
+  the deterministic observed-first receding-horizon baseline: execute only to the
+  furthest currently observed/reachable frontier, reobserve, and preserve the true
+  goal. Consume the same N29 envelope ID as N43/gateway/scorer; never re-derive
+  footprint or limits. Route every translation-bearing local/recovery frontier
+  through this seam;
+  prohibit point-goal and blind-reverse fallbacks. Keep the current Python path as
+  the replay baseline until N41 migration.
+- **Tests / refutation:** every invalid-input class and axis; unknown-space deadlock;
+  cached-frame, frontier, micro-recovery, direct-follow, and route-memory bypass;
+  transform epoch change; planner unavailable; and stop/clamp monotonicity through
+  N43. Mutants that reinterpret unknown as free or bypass the planner must be killed.
+- **Exit:** all translation candidates cite fresh observed free space and a compatible
+  transform/snapshot or become HOLD/blocked; no conversational/task feature is needed
+  to exercise this contract.
+- **Does not prove:** physical clearance, directional-collision policy, social
+  navigation, global localization, or learned-planner superiority; B31 owns the
+  bounded physical observed-space/static-obstacle rung.

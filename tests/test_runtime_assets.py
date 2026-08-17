@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
-
-import yaml
 
 from parcel_robot.config import ConfigStore
 from parcel_robot.paths import (
@@ -36,16 +35,29 @@ def test_resolve_helpers_find_canonical_checkout_assets() -> None:
     assert resolve_config_yaml().is_file()
 
 
-def test_package_fallback_robot_yaml_matches_canonical_speech_contract() -> None:
-    canonical = yaml.safe_load((REPO / "configs" / "robot.yaml").read_text(encoding="utf-8"))
-    fallback = yaml.safe_load(
-        (REPO / "src" / "parcel_robot" / "config" / "robot.yaml").read_text(encoding="utf-8")
+def test_package_fallback_robot_yaml_is_byte_identical_to_canonical() -> None:
+    """The in-package fallback is a declared side mirror, not a licensed fork.
+
+    This assertion replaces a key-by-key "speech contract" check (N27). That
+    check asserted only that a few keys were absent from the fallback, which
+    encoded *permission* for the third copy to diverge — and it was vacuous
+    besides, because those keys had been removed from canonical on 2026-08-04.
+    All five console scripts read this copy in a wheel without going through
+    ``parcel_robot.paths``, so it must be byte-equal or the released artifact
+    runs a different configuration than the checkout it was cut from.
+    """
+
+    canonical = (REPO / "configs" / "robot.yaml").read_bytes()
+    fallback = (REPO / "src" / "parcel_robot" / "config" / "robot.yaml").read_bytes()
+    assert fallback == canonical
+
+    manifest = json.loads(
+        (packaged_assets_root() / "MANIFEST.json").read_text(encoding="utf-8")
     )
-    assert "navigation" in fallback
-    assert "fish_streaming" not in (fallback.get("speech") or {})
-    assert "barge_in" not in (fallback.get("speech") or {})
-    assert fallback["speech"]["mode"] == canonical["speech"]["mode"]
-    assert "endpointing" in fallback["speech"]
+    mirrors = {entry["target"]: entry["source"] for entry in manifest["side_mirrors"]}
+    assert mirrors["src/parcel_robot/config/robot.yaml"] == "configs/robot.yaml", (
+        "the fallback must stay under the release-parity manifest, not hand-synced outside it"
+    )
 
 
 def test_config_store_skills_and_prompts_resolve_via_paths(tmp_path: Path, monkeypatch) -> None:

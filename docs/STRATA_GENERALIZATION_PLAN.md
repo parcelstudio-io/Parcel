@@ -77,7 +77,8 @@ drift; N11 traffic xfail flips on the final-approach work.
 3. **Language lanes:** deterministic grammar stays for reflexes; the
    verb-gate gains a fallback-to-clarification (novel verbs get "I don't
    know how to do that yet" instead of silence); schema-constrained LLM
-   decode + SigLIP unstub (U25) is the open-vocab step, Wave 2.
+   decode + the now-landed real SigLIP path is the open-vocab step, Wave 2
+   ([historical evidence](../scrum/20260809/task_5/SIGLIP_REAL_STATUS.md)).
 
 **Effort: weeks.** **Gate:** N12 + both N13 xfails flip; every
 ClosedIntent gains a product-path case (closes U33); paraphrase variants

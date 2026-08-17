@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "scope": "deterministic_n24_seed_inventory",
+  "cases": [
+    {"id": "GWF-001", "seed": 24001, "fault": "prior_boot_epoch", "expected": "acquire_rejected_disarmed"},
+    {"id": "GWF-002", "seed": 24002, "fault": "duplicate_or_regressed_sequence_within_same_boot", "expected": "latched_stop_or_reacquire_refusal"},
+    {"id": "GWF-003", "seed": 24003, "fault": "bool_zero_or_overbound_duration_ttl", "expected": "schema_refused"},
+    {"id": "GWF-004", "seed": 24004, "fault": "nan_inf_or_bool_numeric_command", "expected": "schema_refused"},
+    {"id": "GWF-005", "seed": 24005, "fault": "wrong_body_frame", "expected": "schema_refused"},
+    {"id": "GWF-006", "seed": 24006, "fault": "compatibility_hash_mismatch", "expected": "latched_stop"},
+    {"id": "GWF-007", "seed": 24007, "fault": "sigkill_client_after_nonzero", "expected": "local_stop_disarmed"},
+    {"id": "GWF-008", "seed": 24008, "fault": "delayed_move_crosses_stop_epoch", "expected": "compensating_stop_last"},
+    {"id": "GWF-009", "seed": 24009, "fault": "move_applies_then_never_replies", "expected": "independent_local_stop"},
+    {"id": "GWF-010", "seed": 24010, "fault": "stale_state", "expected": "stop"},
+    {"id": "GWF-011", "seed": 24011, "fault": "out_of_order_state", "expected": "latched_stop"},
+    {"id": "GWF-012", "seed": 24012, "fault": "sport_lease_loss", "expected": "stop"},
+    {"id": "GWF-013", "seed": 24013, "fault": "second_writer", "expected": "latched_stop"},
+    {"id": "GWF-014", "seed": 24014, "fault": "stop_move_failure", "expected": "unconfirmed_latched_stop"},
+    {"id": "GWF-015", "seed": 24015, "fault": "gateway_restart", "expected": "new_epoch_disarmed_no_resume"},
+    {"id": "GWF-016", "seed": 24016, "fault": "oversized_packet_overlong_string_or_unknown_version", "expected": "wire_refused"},
+    {"id": "GWF-017", "seed": 24017, "fault": "admission_ack_misread_as_motion_truth", "expected": "ack_scope_gateway_admission_only"},
+    {"id": "GWF-018", "seed": 24018, "fault": "valid_duration_ttl_reaches_receiver_local_expiry_before_refresh_or_query", "expected": "local_ttl_expired_stop"},
+    {"id": "GWF-019", "seed": 24019, "fault": "fake_evidence_sink_blocks_raises_or_loses_events", "expected": "identical_stop_and_nonzero_evidence_exit"}
+  ]
+}

@@ -194,6 +194,16 @@ from parcel_robot.providers import (
     build_speech_stack,
     strip_emote_tags,
 )
+from parcel_robot.realtime.config import RealtimeConfig, default_realtime_config
+from parcel_robot.realtime.ingress import (
+    KIND_CLOSED_INTENT,
+    KIND_EMERGENCY,
+    KIND_FOLLOW,
+    KIND_HOLD,
+    RealtimeTranscriptOutcome,
+)
+from parcel_robot.realtime.ingress import scan as scan_realtime_transcript
+from parcel_robot.realtime.lane import RealtimeLane, build_instructions
 from parcel_robot.robot_profile import RobotProfile
 from parcel_robot.runtime_channels import (
     ActivitiesChannel,
@@ -233,7 +243,13 @@ logger = logging.getLogger(__name__)
 #: unreconstructable after the fact.
 TRANSCRIPT_ORIGIN_MIC = "mic"
 TRANSCRIPT_ORIGIN_PANEL = "panel_text"
-TRANSCRIPT_ORIGINS = frozenset({TRANSCRIPT_ORIGIN_MIC, TRANSCRIPT_ORIGIN_PANEL})
+#: Card R1. A hosted Realtime session's transcripts are a THIRD provenance:
+#: transcribed in the cloud by a separate ASR pass, so approximate, and never
+#: routed through ``submit_voice_text`` — see ``submit_realtime_transcript``.
+TRANSCRIPT_ORIGIN_REALTIME = "realtime"
+TRANSCRIPT_ORIGINS = frozenset(
+    {TRANSCRIPT_ORIGIN_MIC, TRANSCRIPT_ORIGIN_PANEL, TRANSCRIPT_ORIGIN_REALTIME}
+)
 #: Live turns only: entries are consumed when the turn's outcome is recorded.
 #: The cap bounds a leak if a turn never reaches ``turn_complete``/``error``.
 _TRANSCRIPT_MEMORY_TURNS = 64
@@ -1020,7 +1036,13 @@ class RobotRuntime:
             self._speaker_sink = SpeakerSink(
                 device=output_index, on_chunk_start=self._audio_chunk_started
             )
-            synthesizer = SentenceChunkedSynthesizer(self.speech_stack.synthesizer)
+            raw_first_clause = speech_config.get("first_clause_chars")
+            synthesizer = SentenceChunkedSynthesizer(
+                self.speech_stack.synthesizer,
+                first_clause_chars=(
+                    None if raw_first_clause is None else int(raw_first_clause)
+                ),
+            )
             # Analyze each chunk before it is queued, then let the sink tell
             # us when it actually starts playing: prosody is known ahead of
             # playback, which is the lookahead a live-reactive system cannot
@@ -1087,6 +1109,32 @@ class RobotRuntime:
         # resolved to. A missing --config silently swapped the tuned semantic
         # endpointer for the energy default and nothing said so.
         self._speech_stack_detail = self._report_speech_stack(speech_config)
+        # Card R1. The hosted Realtime lane is flag-gated on a NEW optional
+        # file, ``configs/realtime.yaml``. With that file absent — the shipped
+        # default — the config reads disabled, the lane is never constructed,
+        # and this constructor does exactly what it did before. Nothing was
+        # added to configs/robot.yaml, which is hash-locked.
+        self.realtime_config: RealtimeConfig = default_realtime_config()
+        self.realtime_lane: RealtimeLane | None = None
+        if self.realtime_config.enabled:
+            self.realtime_lane = RealtimeLane(
+                config=self.realtime_config,
+                instructions=build_instructions(
+                    personality=personality.instruction,
+                    reply_style=personality.reply_style,
+                ),
+                sink=self._speaker_sink,
+                # NEVER submit_voice_text: that is the local agent's front door.
+                ingress=self.submit_realtime_transcript,
+                ledger=self.agent.memory,
+                memory_tail=lambda: self.agent.memory.realtime_turns(limit=20),
+                # The same field ``speak_system`` consults to decide it is busy;
+                # the sink is an ordered queue and cannot tell two owners apart.
+                duplex_output_active=(
+                    lambda: getattr(self.voice_session, "_active_output", None) is not None
+                ),
+                transcript_origin=TRANSCRIPT_ORIGIN_REALTIME,
+            )
         self._voice_query_end_by_turn: dict[int, float] = {}
         # Acoustic-ack fan-in (N19). The capture loop, the STT provider and the
         # speaker sink each already measure their own clock; nothing joined
@@ -4194,6 +4242,18 @@ class RobotRuntime:
 
         if origin not in TRANSCRIPT_ORIGINS:
             raise ValueError(f"unknown transcript origin: {origin!r}")
+        if origin == TRANSCRIPT_ORIGIN_REALTIME:
+            # Card R1, binding constraint 1. This method is not a thin latch —
+            # it is the front door to the entire local agent (planner,
+            # conversation model) and to DuplexVoiceSession.submit_text, whose
+            # unconditional barge-in interrupt-latches the speaker sink. A
+            # hosted transcript arriving here would produce a second reply over
+            # the hosted audio, execute grammar-matched commands twice, and mute
+            # hosted playback. The hosted lane has its own restricted ingress.
+            raise ValueError(
+                "hosted realtime transcripts must use submit_realtime_transcript(); "
+                "submit_voice_text is the local agent's front door"
+            )
         clean = " ".join(str(text).split())
         if not clean:
             raise ValueError("voice text is empty")
@@ -4232,6 +4292,122 @@ class RobotRuntime:
                         "partial": "",
                     }
         return turn_id
+
+    def submit_realtime_transcript(
+        self,
+        text: str,
+        *,
+        item_id: str | None = None,
+        session_id: str | None = None,
+    ) -> RealtimeTranscriptOutcome:
+        """The hosted lane's ingress: a safety scan, not a second agent.
+
+        Card R1, binding constraints 1 and 2. Exactly four things happen, in
+        this order, and nothing else:
+
+        1. **Normalize punctuation.** A hosted transcriber writes ``"Stop."``
+           and every phrase set in this repo is exact-match and unpunctuated.
+           Without this line the emergency latch, the closed intents and the
+           follow/hold sets all silently stop matching on hosted audio.
+        2. **Emergency latch**, the same synchronous actions FIX-A wired at the
+           ``submit_voice_text`` fast path: ``engage_emergency_stop`` →
+           ``emergency_stop`` → ``barge_in``.
+        3. **Closed intents + follow/hold only**, through the SAME runtime
+           handlers the router path uses (``_apply_closed_intent`` for the
+           executive caps, ``set_behavior`` for follow/hold/come). No planner,
+           no grammars, no conversation model, no ``DuplexVoiceSession``, and
+           therefore no speech-epoch bump and no barge-in side effects.
+        4. **Ledger the owner's side** through the lane's dedicated writer.
+
+        Honest scope note: a spoken stop reaching this method has already
+        travelled through the cloud to become text. The panel STOP button, the
+        operator stop and the local watchdogs are the cloud-independent
+        guarantees, and this card does not touch them.
+        """
+
+        found = scan_realtime_transcript(text)
+        clean = found.normalized
+        # The ledger keeps the owner's sentence as spoken — punctuation and all.
+        # Normalization exists to make MATCHING work, not to rewrite the record.
+        ledger_text = " ".join(str(text).split())
+        if not clean:
+            raise ValueError("realtime transcript is empty")
+        if len(clean) > 2000:
+            raise ValueError("realtime transcript is too long")
+
+        reply = ""
+        executed = False
+        error = ""
+        try:
+            if found.kind == KIND_EMERGENCY:
+                # Latch before anything else can queue: identical actions to
+                # runtime.py's voice fast path, on the NORMALIZED text.
+                self.agent.safety.engage_emergency_stop()
+                self.emergency_stop()
+                self.voice_session.barge_in()
+                reply = "Stopping."
+                executed = True
+            elif found.kind == KIND_CLOSED_INTENT and found.intent is ClosedIntent.COME:
+                # COME's cap is a system PlanSketch the agent admits; the hosted
+                # lane may not reach PlanIR admission in R1 (that is R4), so it
+                # takes the same behaviour door the agent uses without a local
+                # planner: set_behavior("follow").
+                reply = self.set_behavior("follow")
+                executed = True
+            elif found.kind == KIND_CLOSED_INTENT and found.intent is not None:
+                directive = resolve_cap(found.intent, current_pace=self._pace_cap.scale)
+                reply = self._apply_closed_intent(found.intent, directive)
+                executed = True
+            elif found.kind == KIND_FOLLOW:
+                reply = self.set_behavior("follow")
+                executed = True
+            elif found.kind == KIND_HOLD:
+                reply = self.set_behavior("stay")
+                executed = True
+        except (RuntimeError, TypeError, ValueError) as failure:
+            error = str(failure)
+            executed = False
+            self._emit("realtime", f"{found.name} refused: {failure}", "warning")
+
+        self._write_realtime_ledger(
+            "owner",
+            ledger_text,
+            item_id=item_id,
+            session_id=session_id,
+        )
+        if executed:
+            self._emit("realtime", f"{found.name}: {clean}", "info")
+        return RealtimeTranscriptOutcome(
+            kind=found.kind,
+            name=found.name,
+            transcript=clean,
+            reply=reply,
+            executed=executed,
+            item_id=item_id,
+            session_id=session_id,
+            error=error,
+        )
+
+    def _write_realtime_ledger(
+        self,
+        speaker: str,
+        text: str,
+        *,
+        item_id: str | None,
+        session_id: str | None,
+    ) -> None:
+        """Both-sides ledger write; never allowed to take down a turn."""
+
+        try:
+            self.agent.memory.write_realtime_turn(
+                session_id=session_id,
+                speaker=speaker,
+                text=text,
+                origin=TRANSCRIPT_ORIGIN_REALTIME,
+                provider_item_id=item_id,
+            )
+        except (AttributeError, RuntimeError, TypeError, ValueError) as error:
+            self._emit("realtime", f"ledger write failed: {error}", "warning")
 
     def cancel_reasoning(self) -> None:
         self.agent.cancel_reasoning()

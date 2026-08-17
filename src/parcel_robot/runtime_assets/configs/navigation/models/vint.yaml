@@ -1,0 +1,14 @@
+id: vint_v1
+type: vint
+version: "1.0.0"
+description: ViNT foundation model for cross-embodiment visual navigation.
+homepage: https://visualnav-transformer.github.io/
+checkpoint: models/nav/vint_v1.pt
+device: cuda
+rl:
+  enabled: true
+  trainable: true
+  algo: finetune
+  obs_keys: [rgb, goal_image]
+  action_space: mid_level_velocity
+  reward: social_nav_v1

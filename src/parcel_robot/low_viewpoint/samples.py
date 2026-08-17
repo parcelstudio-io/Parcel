@@ -17,7 +17,7 @@ from parcel_robot.low_viewpoint.gates import (
     all_passed,
     evaluate_all_gates,
 )
-from parcel_robot.paths import packaged_assets_root
+from parcel_robot.paths import resolve_asset
 
 DEFAULT_SAMPLES_REL = Path("configs/perception/low_viewpoint_samples.yaml")
 
@@ -52,7 +52,7 @@ class SampleSmokeResult:
 
 
 def default_samples_path() -> Path:
-    return packaged_assets_root() / DEFAULT_SAMPLES_REL
+    return resolve_asset(*DEFAULT_SAMPLES_REL.parts, kind="file")
 
 
 def load_sample_pack(path: Path | str | None = None) -> SamplePack:

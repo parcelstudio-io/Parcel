@@ -244,9 +244,17 @@ speech:
   # Turn segmentation. "energy" is the VAD-hangover default; "semantic" adds
   # Silero v6 framing + Smart Turn commit decisions and needs onnxruntime
   # plus the weights below (it degrades loudly to energy without them).
-  endpointing: energy
-  # vad_model: models/endpointing/silero_vad_v6.onnx
-  # turn_model: models/endpointing/smart_turn_v3.onnx
+  # energy->semantic (2026-08-16, owner-authorized re-freeze): the Silero v6 +
+  # Smart Turn v3 weights have been on disk since 2026-08-07 and were never
+  # switched on, so every turn waited out the 2.5 s incomplete-silence fallback
+  # instead of committing at 0.20 s once the turn read as complete. This is the
+  # single largest latency win in the Voice Spine plan and it costs no code.
+  # Both halves still degrade LOUDLY to the energy path (a warning event plus
+  # `speech.stack` in /api/state) if onnxruntime or a weight file goes missing,
+  # so this is not a new silent-failure surface.
+  endpointing: semantic
+  vad_model: models/endpointing/silero_vad_v6.onnx
+  turn_model: models/endpointing/smart_turn_v3.onnx
   # Without acoustic echo cancellation, barge-in during robot speech requires
   # the microphone to hear the owner this many times louder than the VAD
   # threshold. Hardware AEC (XVF3800-class mic array) is the planned fix.

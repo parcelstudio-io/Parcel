@@ -6,8 +6,13 @@ it survives when `scrum/<date>/task_<n>/` folders go quiet.
 | File | Holds |
 |---|---|
 | [UNVERIFIED.md](UNVERIFIED.md) | Things the code claims but nobody has confirmed. The register that keeps "implemented" from being read as "works". |
-| [BLOCKED.md](BLOCKED.md) | Ready work waiting on something external — an install, a package, hardware in the post. |
-| [NEXT.md](NEXT.md) | Unblocked work, ranked. What to pick up when there is time. |
+| [BLOCKED.md](BLOCKED.md) | Decisions/promotion/evidence waiting on an explicit owner, hardware, account, install, or external action; cards may also name internal predecessors. |
+| [NEXT.md](NEXT.md) | Repository work that is ready now or sequenced only behind another `N` card, prioritized by the delivery map. |
+
+The prioritized delivery/dependency map at the top of `NEXT.md` is the current front
+door; its `B` rows are references to external gates, not duplicate task definitions.
+Older detailed cards remain below it for traceability, but a card marked landed,
+superseded, or moved is not active work.
 
 ## Why UNVERIFIED exists
 
@@ -43,11 +48,30 @@ Add an item whenever a handoff says "not verified", whenever you ship behind
 a config flag you have not exercised, and whenever a test uses a stub in place
 of a real dependency.
 
+## Task-card conventions
+
+New `NEXT.md` cards use a stable unique ID and name:
+
+- **Opened / priority** — when it entered the durable queue and its HLD phase.
+- **Depends on** — other backlog IDs or landed contracts, never an implicit
+  sequencing assumption.
+- **Build** — the smallest product slice with one authority owner.
+- **Tests / refutation** — executable success and seeded failure cases.
+- **Exit** — the evidence that removes the card from the active board.
+- **Does not prove** — the capability readers must not infer from a green card.
+
+`NEXT.md` contains repository work that can begin without a new owner decision,
+install, account, or physical device. If only the software half is unblocked, split
+the physical promotion into `BLOCKED.md`. Landed and superseded cards leave the
+active board; their sprint/status records remain historical evidence.
+
 ## Related
 
-- [../docs/CURRENT_STATUS.md](../docs/CURRENT_STATUS.md) — the capability
-  matrix: what is implemented vs wired vs verified *right now*. Read it first;
-  this backlog is the work queue that drains it.
+- [../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
+  — the 2026-08-15 code-grounded current/target architecture and the source for
+  the HLD delivery map in `NEXT.md`.
+- [../docs/CURRENT_STATUS.md](../docs/CURRENT_STATUS.md) — a historical
+  2026-08-04 capability snapshot, not current authority.
 - [../docs/RESEARCH_2026_ROADMAPS.md](../docs/RESEARCH_2026_ROADMAPS.md) —
   where the larger roadmap items come from.
 - `../scrum/<date>/task_<n>/README.md` — per-sprint handoffs, the usual source of new

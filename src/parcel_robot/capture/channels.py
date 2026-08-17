@@ -1072,7 +1072,7 @@ CHANNELS: tuple[Channel, ...] = (
         matrix_row=18,
         note=(
             "BOM optional B, usually ships with the Go2. The owner-tracking "
-            "evidence UNVERIFIED.md:571-598 (U28) says is uncharacterised. "
+            "evidence in backlog/UNVERIFIED.md U39 says is uncharacterised. "
             "This row is the VENDOR path and row 25 is the DDS topic; they are "
             "two candidate paths to ONE measurement, so if both deliver they "
             "are not two independent observations. Protocol and rate both "

@@ -1,6 +1,8 @@
 # Unverified claims register
 
-**Opened:** 2026-08-04 · Conventions in [README.md](README.md).
+**Opened:** 2026-08-04 · **Refreshed:** 2026-08-16 against the
+[conversational-autonomy HLD](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
+· Conventions in [README.md](README.md).
 
 Everything here is code that exists and passes tests, but whose behaviour
 nobody has confirmed against the thing it models. Ordered by how badly a wrong
@@ -11,15 +13,18 @@ assumption would hurt.
 ## U1 — Nothing has ever moved a real motor · **critical**
 
 - **Claim:** Parcel navigates, follows, poses, and gestures.
-- **Reality:** every number in this repository comes from simulation. The
-  Unitree Sport supervisor has never run against hardware: SDK absent, NIC
-  unconfigured, axes and frames uncommissioned, `allowed_modes` deliberately
-  empty.
-- **To verify:** velocity + E-stop bring-up on a physical Go2 through
-  `ControlManager` only — never the joint path first. Confirm commanded vs
-  measured SE2 velocity, and that a latched E-stop is feedback-confirmed.
-- **Risk:** every latency, clearance, and success rate in the docs is a
-  simulation result. Treat all of them as unvalidated until this closes.
+- **Reality:** no autonomous physical-motion or robot-dynamics metric is
+  commissioned. The Unitree Sport supervisor has never run against hardware:
+  SDK absent, NIC unconfigured, axes and frames uncommissioned, `allowed_modes`
+  deliberately empty. Live software/model latency, virtual-acoustic, and external-
+  proxy measurements elsewhere in the repository remain valid only at their stated
+  evidence tiers.
+- **To verify:** the B16 velocity + independent-stop bring-up on a physical Go2
+  through the native `RobotGatewayV1` sole-writer path—never a direct Python,
+  legacy ROS, or joint path. Confirm commanded vs measured SE2 velocity and a
+  feedback-confirmed exact stop.
+- **Risk:** simulator clearance, stopping, balance, locomotion, and mission-success
+  results must not be read as robot evidence until this closes.
 
 ## U2 — The simulator is kinematic, not dynamic · **critical**
 
@@ -42,37 +47,23 @@ assumption would hurt.
   no scored prosody corpus. Recall measured 50–75% on synthetic speech-like
   signals with varying F0, ~25% when F0 is constant (the acceptance rule is
   relative: "F0 above median **or** onset in top quartile").
-- **To verify:** install Piper (blocked, see [BLOCKED.md](BLOCKED.md) B1),
-  synthesize ~20 varied sentences, and check accent times against hand-marked
-  stressed syllables. Target: accents land on perceptually stressed syllables
-  at 1–3/s.
+- **To verify:** use the installed/pinned Piper path to synthesize ~20 varied
+  sentences, then check accent times against hand-marked stressed syllables.
+  Target: accents land on perceptually stressed syllables at 1–3/s. N37 owns
+  the software voice lane; B21 can contribute consented human speech.
 - **Risk:** nod timing could be systematically wrong on real TTS while every
   test stays green. The 3.46 ms `ApexToAccentError` is *scheduler* accuracy —
   it says nothing about whether the accents themselves are right.
 
-## U4 — Semantic endpointing has never run a real model · **major**
-
-- **Claim:** `speech.endpointing: semantic` gives ~200 ms turn commits.
-- **Reality:** `onnxruntime` is not installed and neither model file exists.
-  Every test drives `TurnEndpointer` through an injected `_infer`. Real
-  Silero v6 / Smart Turn v3 accuracy and on-device latency are unknown. The
-  config therefore ships defaulted to `energy`.
-- **To verify:** `pip install onnxruntime`, fetch both weights, set
-  `speech.endpointing: semantic`, and measure `TurnCommitLatency` over ~30
-  real turns; compare false-commit rate against the energy path.
-- **Risk:** the headline "~200 ms commit vs 500–800 ms fixed tail" win is
-  projected from the model's published behaviour, not measured here.
-
 ## U5 — No audio device has ever been opened · **major**
 
 - **Claim:** device selection by name/index works (`speech.input_device`).
-- **Reality:** `libportaudio2` is absent, so `sounddevice` cannot import.
-  Resolution logic is unit-tested against a stubbed device table only; the
-  *unset* path and the loud-failure path are confirmed on this desktop, but no
-  `InputStream` or `OutputStream` has ever been constructed.
-- **To verify:** after the apt install (B1), run
-  `.parcel/bin/python -c "import sounddevice; print(sounddevice.query_devices())"`,
-  then start the panel in `speech.mode: audio` and confirm
+- **Reality:** the no-root PortAudio path imports and enumerates devices, and the
+  virtual acoustic rig has run, but no physical microphone/speaker stream has
+  completed the product path. Device negotiation against real hardware remains
+  unverified.
+- **To verify:** after B3 or B21 provides a physical transducer, start the panel
+  in `speech.mode: audio` and confirm
   `/api/state → speech.input_device_detail` names the intended device.
 - **Risk:** frame size, dtype, and blocksize negotiation with a real PortAudio
   backend is untested; a mismatch would surface only at first capture.
@@ -299,21 +290,6 @@ assumption would hurt.
 - **Risk:** the sim-side `set_expression` overlay could be applying to the
   wrong joints in a way the unit tests' profile round-trip does not catch.
 
-## U9 — B2 installer downloads were never fetched · **minor**
-
-- **Claim:** `scripts/install_speech_services.sh` installs pinned, checksummed
-  artifacts.
-- **Reality:** pins and sizes come from GitHub/HuggingFace *metadata* APIs; no
-  URL was actually retrieved. The one exception is `ggml-base.en.bin`, whose
-  SHA256 was confirmed against the copy already in this repo. The Piper
-  tarball layout is from documentation, not inspection, and its checksum is
-  reported rather than enforced (rhasspy publishes none). The whisper.cpp
-  build was never compiled. `shellcheck` is not installed, so the scripts were
-  hand-checked against its rules.
-- **To verify:** run the installer end to end once the toolchain exists (B1)
-  and confirm every checksum gate passes.
-- **Risk:** a moved URL or changed archive layout fails at first real use.
-
 ## U10 — Gestures have never executed on hardware · **minor**
 
 - **Claim:** the curated emote catalog is safe to run.
@@ -326,39 +302,6 @@ assumption would hurt.
   1.5 with a spotter, logging measured joint velocity against limits.
 - **Risk:** an authored keyframe could demand a velocity the real actuators
   cannot deliver safely.
-
----
-
-## Closed
-
-### U6 — Emote tags fire at synthesis time, not playback time · closed 2026-08-04
-
-Emotes no longer fire from `SentenceChunkedSynthesizer`. The synthesizer yields
-`SpeechChunk` — audio that carries the emotes authored in its own sentence —
-and `RobotRuntime._enqueue_speech_chunk` puts them on the `SpeakerSink`
-playback-start token as `(track, epoch, emotes)`, the same anchor `BeatLayer`
-already used. `_audio_chunk_started` fires them only when the token's epoch is
-still current, so barge-in cancels pending gestures with the audio they belong
-to. Text mode has no playback clock, so `_fire_text_mode_emotes` keeps firing
-on reply.
-
-Evidence (`tests/test_emote_skill.py`):
-
-- `test_emote_fires_at_playback_start_not_at_synthesis` — enqueue fires
-  nothing; the gesture appears only when `_audio_chunk_started` runs.
-- `test_superseded_sentence_fires_no_emote` — a queued sentence whose epoch was
-  superseded fires no emote at all.
-- `test_text_only_path_fires_emotes_immediately` and
-  `test_a_superseded_text_reply_fires_no_emote` — the no-audio path still lands
-  on reply, and still respects supersession.
-- `test_playback_start_survives_an_inadmissible_emote` — a rejected gesture
-  costs the sentence neither its speech nor its nods.
-- `test_streaming_attaches_each_emote_to_its_own_chunk` and
-  `test_blocking_synthesize_strips_tags_and_keeps_their_emotes` — the tags
-  travel with their sentence rather than firing at synthesis.
-
-Still unverified: the *perceptual* claim that a gesture now looks synchronized
-with the words. That needs real audio output, which U5 blocks.
 
 ## U18 — Go2 Euler/BodyHeight composition is unmeasured · **major**
 
@@ -489,73 +432,6 @@ with the words. That needs real audio output, which U5 blocks.
 - **Risk:** PlanIR admission looks complete while only navigator-internal
   recovery actually moves the base.
 
-## U25 — SigLIP-2 weights missing; matcher degrades in grounder · **major** · closed 2026-08-09 (real ONNX weights landed)
-
-- **Claim (task_6 N-C1):** SigLIP-2 B/16 is Grounder v2 embedding glue.
-- **Reality:** `SigLIP2Matcher` is wired into `ObservationSemanticMap` and
-  `GrounderV2`, but weights are not downloaded. Missing weights log a loud
-  warning and the matcher falls back to string/alias match — not true cosine
-  class matching. Do not treat synonym cells as embedding-solved.
-- **To verify:** place Apache-2.0 SigLIP-2 B/16 under
-  `~/.cache/parcel/siglip2-b16/` and re-run synonym / Tier D cells.
-- **Risk:** synonym grounding looks solved in design while still string-only.
-- **REAL PATH LANDED, WEIGHTS STILL ABSENT 2026-08-09 (card `siglip-real-embeddings`,
-  A1+A2; `scrum/20260809/task_5/SIGLIP_REAL_STATUS.md`).** `siglip.py` no longer
-  stubs the "available" branch with a char-hash: `SigLIP2Matcher` now does real
-  `embed_text`/`embed_image` + neural cosine when `google/siglip2-base-patch16`
-  (Apache-2.0, 768-dim) loads, and `available` means *a real embedder actually
-  loaded*, not that a file exists. A2 routed it through
-  `grounding._rank_candidates` and `semantic_map._matches` and **deleted the
-  cross-class substring accept path** — but every real-path branch is gated
-  behind `matcher.available`, so with weights absent the fallback is
-  byte-identical to the old stub (proven: same-budget candidate-v3 minival A/B =
-  0/25 per-episode trace mismatches, `episode_digest 919a0fea…` unchanged, 82
-  frozen pins + the 997 embodied row green, ratchet green). **Still absent on
-  this machine** (no cache, and `torch`/`transformers`/`PIL` not installed —
-  offline, cannot fetch), so the neural path is exercised only through a
-  synthetic embedding fixture. On that fixture: the two Wave-2 cross-class
-  `false_arrival`s (`object_goal-B-05` streetlight→tree, `object_goal-D-15`
-  tree→lamppost) are rejected and `streetlamp`→lamppost grounds **without an
-  alias row**; provisional real-path threshold `SIGLIP2_MATCH_THRESHOLD = 0.30`
-  (the `0.24` hash-era gate is retired), with `calibrate_threshold` as the
-  FAR/TAR harness.
-- **RESOLVED 2026-08-09 — real ONNX weights landed on THIS machine (card
-  `siglip-real-embeddings` follow-up; `scrum/20260809/task_5/SIGLIP_REAL_STATUS.md`
-  §"ONNX real-weight run").** The prior deferral targeted torch/transformers
-  (absent); the real fix runs the SigLIP-2 int8 ONNX encoders under
-  **onnxruntime** (already in `.parcel`), exactly how the audio stack runs
-  Silero/smart-turn — no torch, no sudo. `scripts/fetch_siglip2.sh` (sha-pinned)
-  landed `text_model_int8.onnx` (283 MB) + `vision_model_int8.onnx` (94 MB) +
-  tokenizer under `~/.cache/parcel/siglip2-b16`; new module
-  `instructnav/siglip2_onnx.py` tokenizes with the `tokenizers` rust wheel
-  (pip-installed, no torch) and preprocesses images in numpy (no PIL). The real
-  path is **opt-in behind `PARCEL_SIGLIP2_ONNX`** so merely landing weights never
-  flips the suite/mission onto a ~28 ms/query model.
-  - **Real calibration (scene vocab, int8):** SigLIP text↔text cosines cluster
-    HIGH & overlapping (present [0.844, 0.991] vs cross-class [0.759, 0.927]) — the
-    old `0.30` provisional would accept everything. Recalibrated
-    `SIGLIP2_MATCH_THRESHOLD = 0.90` (sits above streetlight/tree 0.869 &
-    tree/lamppost 0.872 → both refused, below streetlight/lamppost 0.962 → kept).
-    FAR/TAR curve in the status doc.
-  - **Deferred gate RAN with weights (candidate v3 minival, real ONNX):**
-    **false_arrival 2 → 0** (both `object_goal-B-05` & `object_goal-D-15`);
-    overall **SR 0.20 → 0.28**, SPL 0.160 → 0.240, **no regressions, no new
-    false_arrivals**; differential-authority instrument shows verification NOT
-    weakened (agreement 17→20, authority_disagreement 6→5, false_arrival 2→0).
-    Tier-D headline SR flat 0.20→0.20 (D-15's wrong-object commitment becomes an
-    honest `planning_error`, not a success — grounding fixed; its planning miss is
-    a separate concern).
-  - **Weights-absent / opt-out path byte-identical:** env-off candidate-v3 minival
-    reproduces the frozen baseline exactly (`episode_digest 919a0fea…`, sr 0.20,
-    spl 0.16016, false_arrival 2, authority histogram) and the frozen v2/v3 + 997
-    embodied pins stay green.
-  - **Honest boundary:** onnxruntime is CPU-only here (no CUDA provider);
-    ~28 ms/query warm (label embeddings cached), ~990 s for the 25-episode minival
-    vs ~25 s string — so grounding stays OFF the 10 Hz hot path (discrete
-    grounding decision, async), never in-loop. Weak generic synonyms (seat≡bench
-    0.873) are below 0.90 and rely on the curated alias table upstream, not the
-    neural gate.
-
 ## U26 — Eval panel live mode does not re-place entities · **minor**
 
 - **Claim (task_6 N-O4):** live mode adopts the episode (places entities, injects
@@ -584,7 +460,7 @@ with the words. That needs real audio output, which U5 blocks.
 - **Risk:** route-memory latency budget could double, or a license could
   block product use.
 
-## U28 — UWB owner channel is an uncharacterized hypothesis · **major**
+## U39 — UWB owner channel is an uncharacterized hypothesis · **major**
 
 - **Claim:** the final plan treats `rt/uwbstate` as the primary owner channel
   with ReID confirmation.

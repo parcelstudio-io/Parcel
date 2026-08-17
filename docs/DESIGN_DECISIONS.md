@@ -377,6 +377,32 @@ beats D0 on identical duplex and product-navigation scenarios. Promotion still
 requires PlanIR/admissibility, epoch atomicity, collision, latency, and
 interruption gates; a model token never bypasses the existing authority chain.
 
+## D15. Voice providers are optional adapters, not conversation or motion owners
+
+**Decision:** retain the local typed STT -> brain -> TTS cascade as the first-ODD
+rollback while allowing modular and native speech-to-speech services through one
+provider-neutral registry and normalized media/session contracts. A managed provider
+may emit transcripts, reply audio, usage, state, and tool proposals; it cannot mint a
+`CommittedTurnV1`, `CommandAuthorityV1`, task event, terminal witness, or gateway
+command. Provider/model/session IDs remain evidence fields rather than domain
+identity. See [VOICE_PROVIDER_ARCHITECTURE.md](VOICE_PROVIDER_ARCHITECTURE.md).
+
+**Advantages:** OpenAI, Gemini, Grok, Qwen, Hume, managed cascades, and the local
+stack can be compared or replaced without rewriting authority, memory, tools, audio
+playback, or safety. One conformance suite catches cancellation, codec, sequence,
+backpressure, and reconnect differences. A cloud outage does not remove local STOP
+or text/typed control.
+
+**Limitations:** normalization cannot erase real capability differences; native
+sessions may hide endpointing, transcripts, context, or token use; transcoding and
+an extra abstraction add latency and implementation work. Supporting several
+providers multiplies credentials, privacy reviews, failure modes, and live test cost.
+
+**Revisit when:** a provider-neutral adapter has exact on-chassis evidence that a
+vendor-specific capability cannot be represented without a material quality loss.
+Even then, add an optional capability extension rather than granting a vendor SDK
+authority or making its event IDs durable product state.
+
 ## Change discipline
 
 For a decision-changing pull request:

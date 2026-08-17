@@ -35,7 +35,7 @@
     },
     "robot_config": {
       "path": "configs/robot.yaml",
-      "sha256": "aff691130b2513cfa5c09e2b01843221c05220f13d5d6b1681c7f7fa8b9bc7b4"
+      "sha256": "f7b57dcdf0b5981537ced874b63e010b4f0d6090de7a18118613e13f2990d6c1"
     },
     "result_schema": {
       "path": "evals/companion/embodied_plan_v1/result.schema.json",

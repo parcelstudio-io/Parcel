@@ -2,6 +2,7 @@
 # Binding: ADJUDICATION P3 — real perception models on synthetic pixels (HR-4).
 # Fake OCR reads expected_text from this manifest; optional PP-OCR runs on
 # rendered placard RGB. Does not prove wild storefront precision.
+# Prefer parcel_robot.storefront.fixtures.load_manifest() for resolution.
 
 schema_version: 1
 does_not_prove:

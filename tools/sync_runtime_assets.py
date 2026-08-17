@@ -1,79 +1,275 @@
 #!/usr/bin/env python3
-"""Sync repo ``configs/`` + ``prompts/`` into the packaged runtime_assets tree.
+"""Build the packaged ``runtime_assets`` tree from canonical repo-root assets.
 
-Run from the repository root after changing skills/navigation/prompt assets::
+Repo-root ``configs/``, ``prompts/``, ``maps/`` and ``fixtures/`` are the ONE
+source. ``src/parcel_robot/runtime_assets/`` is a pure build product: it is
+rebuilt wholesale by this script and must never be hand-edited. A wheel ships
+only the packaged tree, so any drift between the two is a released artifact
+that behaves differently from the checkout it was cut from (N27).
 
-    .parcel/bin/python tools/sync_runtime_assets.py
+Two files inside the packaged tree are generated rather than mirrored:
+``README.md`` (the do-not-edit marker) and ``MANIFEST.json`` (the parity
+record: every packaged path, its source path, and its digest).
+
+``src/parcel_robot/config/robot.yaml`` is a declared *side mirror* rather than
+a packaged asset: the console scripts read that third copy directly in a wheel,
+so it is written by the same run and covered by the same manifest.
+
+Usage::
+
+    tools/sync_runtime_assets.py --check              # 0 clean, 1 drift, 2 rule error
+    tools/sync_runtime_assets.py --write              # rebuild in place
+    tools/sync_runtime_assets.py --write --dest DIR   # rebuild into DIR
 """
 
 from __future__ import annotations
 
-import shutil
+import argparse
+import hashlib
+import json
 import sys
+from fnmatch import fnmatchcase
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 DEST = REPO / "src" / "parcel_robot" / "runtime_assets"
-PACKAGE_CONFIG = REPO / "src" / "parcel_robot" / "config" / "robot.yaml"
+SIDE_MIRRORS: tuple[tuple[str, str], ...] = (
+    # (source relpath, repo-relative target) — read by the console scripts,
+    # none of which import parcel_robot.paths.
+    ("configs/robot.yaml", "src/parcel_robot/config/robot.yaml"),
+)
 
-# Curated subset required for headless/CI authority-loop smoke (not experiments).
-NAV_FILES = (
-    "default.yaml",
-    "cities/demo_pois.yaml",
-    "models/grid.yaml",
-    "models/stub.yaml",
+MANIFEST_NAME = "MANIFEST.json"
+README_NAME = "README.md"
+SCHEMA_VERSION = 1
+
+# Assets the product resolves at runtime. Each entry is (glob, reason); every
+# match is copied byte-for-byte to runtime_assets/<same relative path>.
+INCLUDE: tuple[tuple[str, str], ...] = (
+    ("configs/robot.yaml", "root runtime config"),
+    ("configs/personality.yaml", "personality/temperament policy"),
+    ("configs/skills/**/*.yaml", "bounded skill catalog and clips"),
+    ("configs/navigation/default.yaml", "navigation defaults and safety block"),
+    ("configs/navigation/pose.yaml", "pose provider config (load_pose_config)"),
+    ("configs/navigation/cities/*.yaml", "POI tables"),
+    ("configs/navigation/models/*.yaml", "navigator model registry"),
+    ("configs/perception/*.yaml", "low-viewpoint sample pack"),
+    ("configs/scenes/*.semantics.yaml", "scene semantic sidecars"),
+    ("prompts/**/*", "prompt library: system, functions, personalities, schemas"),
+    ("maps/*.json", "place graph and cached Overture tiles"),
+    ("fixtures/storefronts/manifest.yaml", "P3 OCR fixture pack"),
+    ("fixtures/storefronts/README.md", "P3 OCR fixture provenance"),
+    ("fixtures/storefronts/*.png", "committed placard textures"),
+)
+
+# Applied after INCLUDE. A path reachable from an INCLUDE glob that lands here
+# is a rule bug: the generator aborts rather than silently dropping it.
+EXCLUDE: tuple[str, ...] = (
+    "configs/navigation/experiments/*",  # BARN eval sweeps, bind-mounted separately
+    "configs/scenes/generated/*",  # generated val_unseen scenes
+    "*.truth.json",  # ground-truth oracles never ship inside the product
+    "configs/reasoner/*",  # host provisioning profiles
+    "configs/robot.acoustic.yaml",  # generated operator variant
+    "configs/*.xml",  # scene geometry ships via its own package-data glob
+    "*/__pycache__/*",
+    "*.pyc",
 )
 
 
-def _copy_tree(src: Path, dst: Path) -> int:
-    if dst.exists():
-        shutil.rmtree(dst)
-    shutil.copytree(src, dst)
-    return sum(1 for p in dst.rglob("*") if p.is_file())
+def _excluded(relpath: str) -> bool:
+    return any(fnmatchcase(relpath, pattern) for pattern in EXCLUDE)
 
 
-def main() -> int:
-    if not (REPO / "configs").is_dir() or not (REPO / "prompts").is_dir():
+def _sha256(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
+
+
+def build_plan(repo: Path) -> list[str]:
+    """Expand INCLUDE, drop EXCLUDE, and return sorted source relpaths."""
+
+    selected: set[str] = set()
+    rejected: list[str] = []
+    for pattern, _reason in INCLUDE:
+        for path in sorted(repo.glob(pattern)):
+            if not path.is_file():
+                continue
+            relpath = path.relative_to(repo).as_posix()
+            if _excluded(relpath):
+                rejected.append(relpath)
+                continue
+            selected.add(relpath)
+    if rejected:
+        raise ValueError(
+            "ship-set rule bug: INCLUDE reached EXCLUDE-listed paths: " + ", ".join(sorted(rejected))
+        )
+    if not selected:
+        raise ValueError("ship set is empty; run from a Parcel checkout")
+    return sorted(selected)
+
+
+def render(repo: Path) -> dict[str, bytes]:
+    """Return the complete desired packaged tree, keyed by packaged relpath."""
+
+    plan = build_plan(repo)
+    desired: dict[str, bytes] = {relpath: (repo / relpath).read_bytes() for relpath in plan}
+
+    readme = (
+        b"# Packaged runtime assets\n\n"
+        b"Generated by `tools/sync_runtime_assets.py`. Do not edit by hand: edit the\n"
+        b"canonical repo-root `configs/`, `prompts/`, `maps/` and `fixtures/` trees and\n"
+        b"re-run `tools/sync_runtime_assets.py --write`.\n\n"
+        b"`MANIFEST.json` is the parity record; `--check` and the `release-parity` CI\n"
+        b"gate fail if any packaged file drifts from its source.\n"
+        b"MuJoCo meshes under `third_party/` are **not** packaged here.\n"
+    )
+    desired[README_NAME] = readme
+
+    assets = [
+        {
+            "packaged": relpath,
+            "source": relpath,
+            "sha256": _sha256(desired[relpath]),
+            "size": len(desired[relpath]),
+            "mode": "0755" if (repo / relpath).stat().st_mode & 0o111 else "0644",
+            "origin": "mirror",
+        }
+        for relpath in plan
+    ]
+    assets.append(
+        {
+            "packaged": README_NAME,
+            "source": None,
+            "sha256": _sha256(readme),
+            "size": len(readme),
+            "mode": "0644",
+            "origin": "generated",
+        }
+    )
+    assets.sort(key=lambda entry: entry["packaged"])
+
+    side_mirrors = [
+        {
+            "target": target,
+            "source": source,
+            "sha256": _sha256((repo / source).read_bytes()),
+        }
+        for source, target in SIDE_MIRRORS
+    ]
+
+    lines = [f"{entry['sha256']}  {entry['packaged']}" for entry in assets]
+    lines += [f"{entry['sha256']}  {entry['target']}" for entry in side_mirrors]
+
+    manifest = {
+        "schema_version": SCHEMA_VERSION,
+        "generator": "tools/sync_runtime_assets.py",
+        "count": len(assets),
+        "tree_digest": _sha256("\n".join(lines).encode("utf-8")),
+        "assets": assets,
+        "side_mirrors": side_mirrors,
+    }
+    desired[MANIFEST_NAME] = (
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    return desired
+
+
+def _on_disk(dest: Path) -> dict[str, bytes]:
+    if not dest.is_dir():
+        return {}
+    return {
+        path.relative_to(dest).as_posix(): path.read_bytes()
+        for path in sorted(dest.rglob("*"))
+        if path.is_file()
+    }
+
+
+def apply(desired: dict[str, bytes], dest: Path, repo: Path) -> tuple[int, int]:
+    """Write only what differs; remove packaged files no longer in the ship set."""
+
+    current = _on_disk(dest)
+    written = 0
+    for relpath, payload in sorted(desired.items()):
+        if current.get(relpath) == payload:
+            continue
+        target = dest / relpath
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
+        written += 1
+
+    removed = 0
+    for relpath in sorted(set(current) - set(desired)):
+        (dest / relpath).unlink()
+        removed += 1
+    for directory in sorted(dest.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        if directory.is_dir() and not any(directory.iterdir()):
+            directory.rmdir()
+
+    for source, target in SIDE_MIRRORS:
+        payload = (repo / source).read_bytes()
+        mirror = repo / target
+        if not mirror.is_file() or mirror.read_bytes() != payload:
+            mirror.parent.mkdir(parents=True, exist_ok=True)
+            mirror.write_bytes(payload)
+            written += 1
+    return written, removed
+
+
+def check(desired: dict[str, bytes], dest: Path, repo: Path) -> list[str]:
+    """Return every parity problem between the desired tree and what is on disk."""
+
+    current = _on_disk(dest)
+    problems: list[str] = []
+    for relpath, payload in sorted(desired.items()):
+        actual = current.get(relpath)
+        if actual is None:
+            problems.append(f"{relpath}: missing from the packaged tree")
+        elif actual != payload:
+            problems.append(f"{relpath}: packaged bytes != source")
+    for relpath in sorted(set(current) - set(desired)):
+        problems.append(f"{relpath}: packaged file is not in the ship set")
+    for source, target in SIDE_MIRRORS:
+        mirror = repo / target
+        if not mirror.is_file():
+            problems.append(f"{target}: side mirror missing")
+        elif mirror.read_bytes() != (repo / source).read_bytes():
+            problems.append(f"{target}: side mirror != {source}")
+    return problems
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--check", action="store_true", help="report drift; write nothing")
+    mode.add_argument("--write", action="store_true", help="rebuild the packaged tree")
+    parser.add_argument("--dest", type=Path, default=None, help="alternate destination tree")
+    args = parser.parse_args(argv)
+
+    repo = REPO
+    if not (repo / "configs").is_dir() or not (repo / "prompts").is_dir():
         print("error: run from a Parcel checkout with configs/ and prompts/", file=sys.stderr)
         return 2
 
-    DEST.mkdir(parents=True, exist_ok=True)
+    try:
+        desired = render(repo)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
 
-    skills_count = _copy_tree(REPO / "configs" / "skills", DEST / "configs" / "skills")
-    prompts_count = _copy_tree(REPO / "prompts", DEST / "prompts")
+    dest = args.dest if args.dest is not None else DEST
+    if args.check:
+        problems = check(desired, dest, repo)
+        if problems:
+            print(f"release parity FAILED ({len(problems)} problem(s)):", file=sys.stderr)
+            for problem in problems:
+                print(f"  {problem}", file=sys.stderr)
+            return 1
+        print(f"release parity OK: {len(desired)} packaged file(s) match source")
+        return 0
 
-    nav_dest = DEST / "configs" / "navigation"
-    if nav_dest.exists():
-        shutil.rmtree(nav_dest)
-    copied_nav = 0
-    for relative in NAV_FILES:
-        src = REPO / "configs" / "navigation" / relative
-        if not src.is_file():
-            print(f"error: missing {src}", file=sys.stderr)
-            return 2
-        target = nav_dest / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, target)
-        copied_nav += 1
-
-    shutil.copy2(REPO / "configs" / "robot.yaml", DEST / "configs" / "robot.yaml")
-    # Keep the in-package fallback aligned with the canonical robot config so
-    # legacy `FALLBACK_CONFIG` paths stop rejecting current speech keys.
-    PACKAGE_CONFIG.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(REPO / "configs" / "robot.yaml", PACKAGE_CONFIG)
-
-    marker = DEST / "README.md"
-    marker.write_text(
-        "# Packaged runtime assets\n\n"
-        "Generated by `tools/sync_runtime_assets.py`. Do not edit by hand;\n"
-        "edit repo-root `configs/` / `prompts/` and re-sync.\n"
-        "MuJoCo meshes under `third_party/` are **not** packaged here.\n",
-        encoding="utf-8",
-    )
-
+    written, removed = apply(desired, dest, repo)
     print(
-        f"synced runtime_assets: skills={skills_count} prompts={prompts_count} "
-        f"nav={copied_nav} + robot.yaml → package fallback"
+        f"synced runtime_assets -> {dest}: {len(desired)} file(s) in ship set, "
+        f"{written} written, {removed} removed"
     )
     return 0
 

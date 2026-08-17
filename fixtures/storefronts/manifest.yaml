@@ -1,6 +1,7 @@
-# Repo-root mirror of packaged storefront fixtures (P3 OCR sim).
-# Canonical packaged copy:
-#   src/parcel_robot/runtime_assets/fixtures/storefronts/manifest.yaml
+# P3 storefront / OCR sim fixture pack
+# Binding: ADJUDICATION P3 — real perception models on synthetic pixels (HR-4).
+# Fake OCR reads expected_text from this manifest; optional PP-OCR runs on
+# rendered placard RGB. Does not prove wild storefront precision.
 # Prefer parcel_robot.storefront.fixtures.load_manifest() for resolution.
 
 schema_version: 1
@@ -14,7 +15,9 @@ storefronts:
     brand: Nike
     expected_text: NIKE
     placard_file: nike.png
+    # Normalized placard rect in the composite frame (x0,y0,x1,y1) ∈ [0,1]
     roi_norm: [0.30, 0.08, 0.70, 0.28]
+    # Approximate SE2 pose of the storefront face relative to robot at capture
     bearing_rad: 0.0
     range_m: 4.5
     bg_rgb: [20, 20, 20]

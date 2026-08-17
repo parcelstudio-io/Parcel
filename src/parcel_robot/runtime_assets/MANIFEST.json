@@ -1,0 +1,735 @@
+{
+  "assets": [
+    {
+      "mode": "0644",
+      "origin": "generated",
+      "packaged": "README.md",
+      "sha256": "195245a85f85cdf5d92fef26abc279f0af70b3fc760a7ae3ce94bd41dabf7fce",
+      "size": 421,
+      "source": null
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/cities/demo_pois.yaml",
+      "sha256": "b9ffac97902835116582016ed09651049c854369cbae302268866f3f6989ca5a",
+      "size": 1048,
+      "source": "configs/navigation/cities/demo_pois.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/default.yaml",
+      "sha256": "5351a09780c139ebcbee5bf67ff939317fdea87d34becec320da62c965f2a4b0",
+      "size": 5723,
+      "source": "configs/navigation/default.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/citywalker.yaml",
+      "sha256": "0b26fa09892ad7cd435a33891a8d238c19d7ad788994618ac505d88f826ea8c4",
+      "size": 432,
+      "source": "configs/navigation/models/citywalker.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid.yaml",
+      "sha256": "61c04eaa7869d764223a28f3cb1d77be01d00c9c9f6b3aee661ff78b7a141bc7",
+      "size": 1758,
+      "source": "configs/navigation/models/grid.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid_clearance.yaml",
+      "sha256": "65c6764c19fa517d2c5ce6bc97780674a2f35b0005bc48f8c94ae6b9bd25b969",
+      "size": 1271,
+      "source": "configs/navigation/models/grid_clearance.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid_frontier_cached_v3.yaml",
+      "sha256": "be6ac7b282a05d8071547e41fcff1200162c542685c8037ce59b4c149fed7b16",
+      "size": 1363,
+      "source": "configs/navigation/models/grid_frontier_cached_v3.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid_frontier_detour_v4.yaml",
+      "sha256": "3515a398ff2dea35a3e20ccb663e8934dd72a5fefd467fe54366b53d5973abf0",
+      "size": 1525,
+      "source": "configs/navigation/models/grid_frontier_detour_v4.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid_frontier_v2.yaml",
+      "sha256": "64b3ccf2a127b66e36327eac25d45c8c6717830196b5c6052547328697c9cb40",
+      "size": 1450,
+      "source": "configs/navigation/models/grid_frontier_v2.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid_recovery_reverse_v2.yaml",
+      "sha256": "d61dc4a98cf913bfc7aa9b5e622cd94b7d5d2cc3d7eb168f707bfe3702484f96",
+      "size": 919,
+      "source": "configs/navigation/models/grid_recovery_reverse_v2.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid_safe_valley_guard_v6.yaml",
+      "sha256": "1da5a6633ea0759e4303a5fa21cfd83a7291056eb45ee67c3142e7699465edc2",
+      "size": 1513,
+      "source": "configs/navigation/models/grid_safe_valley_guard_v6.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid_safe_valley_v5.yaml",
+      "sha256": "a27f09ba6f8f9d6f745825b688f985afc6ff304f744181068b98f085cba47e20",
+      "size": 1473,
+      "source": "configs/navigation/models/grid_safe_valley_v5.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/grid_window_v2.yaml",
+      "sha256": "50fbd2d486b05f29ac04e609b37726e6da48139c5b66b536f9a440f8d2e58db7",
+      "size": 1058,
+      "source": "configs/navigation/models/grid_window_v2.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/navila.yaml",
+      "sha256": "ee7008a41e6eb5b6b465c658bd684796441153fb07c6fe58cbee6153777a158d",
+      "size": 378,
+      "source": "configs/navigation/models/navila.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/nomad.yaml",
+      "sha256": "cca45ac4ab2697cd47e9495f3808f1d62c5971db1e0d775caf29ee9dc6098c50",
+      "size": 379,
+      "source": "configs/navigation/models/nomad.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/stub.yaml",
+      "sha256": "47746536aa1c46ae11651a74c94bed4f05619266be5a20605f390b323efd3ad4",
+      "size": 536,
+      "source": "configs/navigation/models/stub.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/models/vint.yaml",
+      "sha256": "fcb14dbc2f6275a02ffda7cf882e6597e79848a1b347c17f21016b6f270039d0",
+      "size": 357,
+      "source": "configs/navigation/models/vint.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/navigation/pose.yaml",
+      "sha256": "c7c8273555fbcc5e6f63027264a5d02ae44152b8d4d9a4b8372651e0a0c132ba",
+      "size": 13174,
+      "source": "configs/navigation/pose.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/perception/low_viewpoint_samples.yaml",
+      "sha256": "8a2590aa327508d4e88bfeb13ebdb72d876f79abb063e70a4a8ff071bca8906c",
+      "size": 2372,
+      "source": "configs/perception/low_viewpoint_samples.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/personality.yaml",
+      "sha256": "46ad02614bfafc96fa77b35d3e5a0ded31f8ca7762b2b5569467a6b8b35f553c",
+      "size": 6057,
+      "source": "configs/personality.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/robot.yaml",
+      "sha256": "f7b57dcdf0b5981537ced874b63e010b4f0d6090de7a18118613e13f2990d6c1",
+      "size": 13009,
+      "source": "configs/robot.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/scenes/city_block.semantics.yaml",
+      "sha256": "aa94dc4033e95d082646a1153595b694372a96466cd36d3059a9f841ea6e2a0a",
+      "size": 8304,
+      "source": "configs/scenes/city_block.semantics.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/catalog.yaml",
+      "sha256": "28a4014abcab0afa86d2e4727feaa88c158e894314395f937ba8378e36344bee",
+      "size": 498,
+      "source": "configs/skills/catalog.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/gaits/crawl.yaml",
+      "sha256": "acb829a3d76dce494c98eb06ed9dae5823d6a432fe3ecae01cbb278500f3b1f2",
+      "size": 269,
+      "source": "configs/skills/gaits/crawl.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/gaits/run.yaml",
+      "sha256": "93e49f0612aaa410f42d21f213646352e1f81737ca54e9cdc33780b4650f6ea1",
+      "size": 273,
+      "source": "configs/skills/gaits/run.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/gaits/trot.yaml",
+      "sha256": "67e25084fbe88be6da97bf633b326350dd52b0b4552108965891f8434fe63b9f",
+      "size": 266,
+      "source": "configs/skills/gaits/trot.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/attentive_stand.yaml",
+      "sha256": "48a5c22b3d3bfe5f3ca52fa057e69ef402871c7d0c8d3af767cc1b4a1b75e3a6",
+      "size": 518,
+      "source": "configs/skills/poses/attentive_stand.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/bow.yaml",
+      "sha256": "55757f1fa3d4559d314093ddd7e7d9248352163031dddf71b61834edd0c1c1bc",
+      "size": 452,
+      "source": "configs/skills/poses/bow.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/crouch.yaml",
+      "sha256": "de918161bebde0ce5af26dfa46bdf828b5208f166543156f862a15dbe5f1d6bf",
+      "size": 465,
+      "source": "configs/skills/poses/crouch.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/hello_pose.yaml",
+      "sha256": "98031fa8933cf3b3daf25ecd1ecf89c61edc61c8fe0d112e07a26e927455fef0",
+      "size": 467,
+      "source": "configs/skills/poses/hello_pose.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/lie_down.yaml",
+      "sha256": "e9a8228b15ce6bcaa01cf06bd91dbb6a263e951db55d8cf19b951afedaed3e79",
+      "size": 460,
+      "source": "configs/skills/poses/lie_down.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/look_left.yaml",
+      "sha256": "4ced0543862bc80d7600f902e7902730ace9d14e9a893bf7a08d6e2a56e80c4c",
+      "size": 468,
+      "source": "configs/skills/poses/look_left.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/look_right.yaml",
+      "sha256": "2e9518aa8f6811cdca98cd5310b724b38dbd3ca9dea626fe02f3da7b6d551b6b",
+      "size": 470,
+      "source": "configs/skills/poses/look_right.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/relaxed_crouch.yaml",
+      "sha256": "51bf90a8b83cddd1074c764cabe1aa9c6c86723ae48f3eac7277e27b97bbd899",
+      "size": 510,
+      "source": "configs/skills/poses/relaxed_crouch.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/sit.yaml",
+      "sha256": "cc75c78fcba5ff612ce4c3b66fd2352433e391b7a59d85c08964c6f23e8c463c",
+      "size": 450,
+      "source": "configs/skills/poses/sit.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/stand.yaml",
+      "sha256": "06999ac308d7d195902055181dc25c51db34ceca61b6db696a0b7cdd6ee1a2c8",
+      "size": 457,
+      "source": "configs/skills/poses/stand.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/poses/stretch.yaml",
+      "sha256": "a2ca5bd653f1594298c88d3a30f81b0e4904e3281c1ed52662ce89f149c74244",
+      "size": 460,
+      "source": "configs/skills/poses/stretch.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/attentive_nod.yaml",
+      "sha256": "c3fa72bbeb6f003ba81a3983e1df43106e2765eb2f5b48e112c35d5a8bb251bb",
+      "size": 983,
+      "source": "configs/skills/trajectories/attentive_nod.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/chuckle.yaml",
+      "sha256": "8cf49d510f6237932ab7df945dce78c73a7688dc8b90ba129683c43e3bf1fa8b",
+      "size": 1387,
+      "source": "configs/skills/trajectories/chuckle.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/comfort_bow.yaml",
+      "sha256": "fd5fe7ea3733407ecad2fd7300e6a1b5c390ed10fb2af51cef0d0ee23fa0f4ca",
+      "size": 951,
+      "source": "configs/skills/trajectories/comfort_bow.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/confused_head_tilt.yaml",
+      "sha256": "9c927aa3db8f40582d23b625089bcfa0149293974e295c0d692125960586801d",
+      "size": 1007,
+      "source": "configs/skills/trajectories/confused_head_tilt.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/curious_look.yaml",
+      "sha256": "0cd03061014ca77d059b96c71bdbb8009dc6b8f30208148f69268e1efee156f8",
+      "size": 936,
+      "source": "configs/skills/trajectories/curious_look.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/excited_paw_taps.yaml",
+      "sha256": "72ace4a41970a5b63f055cbeec4a6f4d32730f38b47a816d3ec5548698034729",
+      "size": 1122,
+      "source": "configs/skills/trajectories/excited_paw_taps.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/happy_wiggle.yaml",
+      "sha256": "bd0d6495f3496d1aa8f514257771e468f1f8ee308162a0c7434998c8906e7f03",
+      "size": 1529,
+      "source": "configs/skills/trajectories/happy_wiggle.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/head_nod.yaml",
+      "sha256": "81d3387a61d98cd170552c10c9e51ffd1135d32b4f757568bbbd2a0017ab9f0d",
+      "size": 1012,
+      "source": "configs/skills/trajectories/head_nod.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/head_shake.yaml",
+      "sha256": "91f2c68304ce8fb64693f0d065a6767edb5d245af10cd7fe6a68c3921264cc68",
+      "size": 1328,
+      "source": "configs/skills/trajectories/head_shake.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/hop.yaml",
+      "sha256": "408bf8a9afca63be0d57883270f415e09dcbbdd38b001dc3cb541093c61c1a9c",
+      "size": 1136,
+      "source": "configs/skills/trajectories/hop.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/jump.yaml",
+      "sha256": "e02f0725498a6793a638ff644c9439e5190aab4a14f6800d9fbacb698070698f",
+      "size": 1138,
+      "source": "configs/skills/trajectories/jump.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/kick_front.yaml",
+      "sha256": "723b763d9cf4770539733390390cf00860ceeb5d0796b8078f7f74c99f7a8865",
+      "size": 1146,
+      "source": "configs/skills/trajectories/kick_front.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/kick_side.yaml",
+      "sha256": "b4089092e9326471f9987f66e464f4a1e2b568141792e0c93ba7829b5ef209d0",
+      "size": 1144,
+      "source": "configs/skills/trajectories/kick_side.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/observing_head_tilt.yaml",
+      "sha256": "674e46ac29658851fccdef9a6b09e694ff21c6eb5f9d1dc9aeedb78707c9dc64",
+      "size": 1426,
+      "source": "configs/skills/trajectories/observing_head_tilt.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/paw_wave.yaml",
+      "sha256": "ca57d4ab2c85ee31b6f84baef418002055a18be6f64025803facfbbd180f48f5",
+      "size": 1441,
+      "source": "configs/skills/trajectories/paw_wave.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/play_bow.yaml",
+      "sha256": "122ee172f9c042a3bc1cfbdefe4240099666bb729e30effb5aacbbc41b9aa688",
+      "size": 844,
+      "source": "configs/skills/trajectories/play_bow.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/recover_standup.yaml",
+      "sha256": "3d296d6326b3d31c76fff33ec6ead68dda046d55ebf3928755d183d221d62824",
+      "size": 1113,
+      "source": "configs/skills/trajectories/recover_standup.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/shake.yaml",
+      "sha256": "12285cf86386d45f376b661669ae14be796d2f5d53e499b5a446716682ed657f",
+      "size": 1436,
+      "source": "configs/skills/trajectories/shake.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/trajectories/shrug.yaml",
+      "sha256": "1eddd61048aaec0adcefeeed7302b8595a43b7ba7346e06835ed2d0858109aff",
+      "size": 965,
+      "source": "configs/skills/trajectories/shrug.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/velocity/strafe_left.yaml",
+      "sha256": "ff64ffda6d0031a18fe0d8026272fc890c67ce155cf480b039dfddbef9339f5a",
+      "size": 254,
+      "source": "configs/skills/velocity/strafe_left.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/velocity/strafe_right.yaml",
+      "sha256": "6fd1ac5506b9327560a850e412fac0575d64fcc2fcb894b4b460b6c5dc4f0699",
+      "size": 257,
+      "source": "configs/skills/velocity/strafe_right.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/velocity/turn_left.yaml",
+      "sha256": "38936826c2dedef6e73ab02920955e954e296010364502522a61701d2c031ffc",
+      "size": 250,
+      "source": "configs/skills/velocity/turn_left.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/velocity/turn_right.yaml",
+      "sha256": "1b77c02d723df7a7b765557618bff42b2d467ad347756a058db4c5026455a908",
+      "size": 253,
+      "source": "configs/skills/velocity/turn_right.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/velocity/walk_backward.yaml",
+      "sha256": "4556139fdefc217665e03dd75534310ffdbd96cc5437a6ff31da5ed5dca18b1a",
+      "size": 260,
+      "source": "configs/skills/velocity/walk_backward.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "configs/skills/velocity/walk_forward.yaml",
+      "sha256": "6959ced3ed70a856ec11976153bf67713e14261f80b7916817d9b16303c94cc6",
+      "size": 256,
+      "source": "configs/skills/velocity/walk_forward.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "fixtures/storefronts/README.md",
+      "sha256": "0b2c1ed9a3304088ae0d766d24f0ee3d994f49cdf4d3a2a48887eaeb7a85c589",
+      "size": 474,
+      "source": "fixtures/storefronts/README.md"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "fixtures/storefronts/blue_bottle.png",
+      "sha256": "96d49a083844fd91a333433474efa8326a61d1e814d066f3d8f08e4085bcaa9f",
+      "size": 1177,
+      "source": "fixtures/storefronts/blue_bottle.png"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "fixtures/storefronts/manifest.yaml",
+      "sha256": "9530720abad07bc1701af0c3c546480deaefb419c9ff88e171e67ad06da1f943",
+      "size": 1546,
+      "source": "fixtures/storefronts/manifest.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "fixtures/storefronts/nike.png",
+      "sha256": "35fda7b47818264514f7f3a95bf90b8d675c706b1c3b82eca2a5605ae7dcc204",
+      "size": 1639,
+      "source": "fixtures/storefronts/nike.png"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "fixtures/storefronts/parcel_cafe.png",
+      "sha256": "3cfbf11450a2df851190274515bfb48ab469f95de7d0ecf316dc55c27d17aaaf",
+      "size": 1185,
+      "source": "fixtures/storefronts/parcel_cafe.png"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "maps/neighborhood_v1.json",
+      "sha256": "20e2b7c4683f288e2bb733689a7c7252ea9b47f7d2da37b034d2f1962355c457",
+      "size": 2480,
+      "source": "maps/neighborhood_v1.json"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "maps/overture_places_v1.json",
+      "sha256": "edf72a444144eff27c74900ba05fe48547e3e7a1beffc02c4912135e1be7767e",
+      "size": 1048,
+      "source": "maps/overture_places_v1.json"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/dynamic/runtime_context.md.tmpl",
+      "sha256": "c78fd9d7276d24450cbdd0c505d8eb59a3782013b432a50f7f882103a8427321",
+      "size": 368,
+      "source": "prompts/dynamic/runtime_context.md.tmpl"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/functions/companion.yaml",
+      "sha256": "2d04e0da7d174b10fa164287dfc385f4119ac4cd8806768c85da498e8657df79",
+      "size": 809,
+      "source": "prompts/functions/companion.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/functions/manual_assistant.yaml",
+      "sha256": "d774ab6d01775da66ce67791092224acb867fcb390bad1dde1b38af5c623640f",
+      "size": 217,
+      "source": "prompts/functions/manual_assistant.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/functions/navigator.yaml",
+      "sha256": "8ab7cf17f4cc9c5ca804f53d8c699b963ddc4f4d7008ab07df349fdea4966bf0",
+      "size": 661,
+      "source": "prompts/functions/navigator.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/functions/patrol.yaml",
+      "sha256": "3f2ec292854d19edf5b297421183cb6e084000545f2cbca3105d7d58bc1e4a9c",
+      "size": 205,
+      "source": "prompts/functions/patrol.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/functions/spatial_reasoner.yaml",
+      "sha256": "17a5c135c3d5d2a4068d1096a1b41e82ab43ede4872f776814b20597410fa965",
+      "size": 671,
+      "source": "prompts/functions/spatial_reasoner.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/personalities/calm_guardian.yaml",
+      "sha256": "4ac26a70b748b803f44bf0ff07022d9dfe8dcbfd05897327dba403572dfd26cd",
+      "size": 462,
+      "source": "prompts/personalities/calm_guardian.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/personalities/gentle_companion.yaml",
+      "sha256": "4a428d838573c1581f2e0a87019164c0732672e23ceefd2e1c6ae838ab833c32",
+      "size": 450,
+      "source": "prompts/personalities/gentle_companion.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/personalities/playful_companion.yaml",
+      "sha256": "c0ff0a64f7c98e7ecff28a0f3281ee8f40cabe4f758185fc60968fe0775c9eae",
+      "size": 469,
+      "source": "prompts/personalities/playful_companion.yaml"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/schemas/agent_decision.schema.json",
+      "sha256": "0505bc7e869cf7806cce3c6edd5080af45a16ce2010367c2c724d3b347427f5f",
+      "size": 1513,
+      "source": "prompts/schemas/agent_decision.schema.json"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/schemas/execution_result_v1.schema.json",
+      "sha256": "782dbf16e32f7010579d90953c1363ed7fab868c54c4c9b8b3c235d46c4303fa",
+      "size": 2238,
+      "source": "prompts/schemas/execution_result_v1.schema.json"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/schemas/intent_frame_v1.schema.json",
+      "sha256": "25e8f90f5affd765948a05f4c57253bcb879522310a05d88645e5b649d225f57",
+      "size": 2310,
+      "source": "prompts/schemas/intent_frame_v1.schema.json"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/schemas/observation_snapshot_v1.schema.json",
+      "sha256": "e28071ead2a2bafb7334ded216d3770a10e453b83458930baf5fcb26e94d3940",
+      "size": 5302,
+      "source": "prompts/schemas/observation_snapshot_v1.schema.json"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/schemas/plan_ir_v1.schema.json",
+      "sha256": "a4bb6d64cbf92716d3590e46e385a518f815eda0c3a3a121fd98e1a00b1218ba",
+      "size": 10240,
+      "source": "prompts/schemas/plan_ir_v1.schema.json"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/schemas/plan_sketch_v1.schema.json",
+      "sha256": "82cf50b2a99476edac7af12e09804482275a38e5299c31180fc7061f5b1ad0be",
+      "size": 6074,
+      "source": "prompts/schemas/plan_sketch_v1.schema.json"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/system/action_policy.md",
+      "sha256": "1f3e4258d8ba3779f8d8816523e82184483eb8b40f24f6775d362d1453ba0a1c",
+      "size": 2722,
+      "source": "prompts/system/action_policy.md"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/system/core.md",
+      "sha256": "fdf3ea28a8a18ec56a885b2ab8ad729ab9ce6b2192dfdff14a49d51daaef624e",
+      "size": 2296,
+      "source": "prompts/system/core.md"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/system/planner.md",
+      "sha256": "52e3636ae1e4f3042d8cbd9839b6cd0b41883ecc7744d223a2b724796743f44e",
+      "size": 3960,
+      "source": "prompts/system/planner.md"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/system/planner_sketch.md",
+      "sha256": "609259572b17d976d3bf999010da0228ff891bb48dd8f396218901734cbefae3",
+      "size": 2373,
+      "source": "prompts/system/planner_sketch.md"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/system/planner_v1.md",
+      "sha256": "9144e227115c16419e4208debae74939b23dac57e6b5db62a17ddef25be6ca21",
+      "size": 2707,
+      "source": "prompts/system/planner_v1.md"
+    },
+    {
+      "mode": "0644",
+      "origin": "mirror",
+      "packaged": "prompts/system/planner_v2.md",
+      "sha256": "4ca75618d5765d4e6812c3d18826dc77ec989969064290d4a336db496896914c",
+      "size": 3045,
+      "source": "prompts/system/planner_v2.md"
+    }
+  ],
+  "count": 90,
+  "generator": "tools/sync_runtime_assets.py",
+  "schema_version": 1,
+  "side_mirrors": [
+    {
+      "sha256": "f7b57dcdf0b5981537ced874b63e010b4f0d6090de7a18118613e13f2990d6c1",
+      "source": "configs/robot.yaml",
+      "target": "src/parcel_robot/config/robot.yaml"
+    }
+  ],
+  "tree_digest": "82b5691178c75cc9484e986ec94c8808ceebf087d79666f0c634e4845ed1c66a"
+}

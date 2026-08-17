@@ -1,0 +1,14 @@
+id: navila_v1
+type: navila
+version: "1.0.0"
+description: RSS 2025 NaVILA vision-language-action navigator for legged robots (Go2).
+homepage: https://navila-bot.github.io/
+checkpoint: models/nav/navila_v1/
+device: cuda
+rl:
+  enabled: true
+  trainable: true
+  algo: vla_finetune
+  obs_keys: [rgb, language_goal, proprio]
+  action_space: mid_level_language
+  reward: social_nav_v1

@@ -4,6 +4,16 @@ Last checked against the repository, installed artifacts, and retained
 evaluation records on **2026-08-04**. This document separates implemented code
 from the active host profile and from research proposals.
 
+**2026-08-16 addendum:** semantic Silero/Smart Turn endpointing is now the
+owner-authorized canonical default and its ONNX runtime/weights resolve on this
+host; it still has no live-microphone latency or cutoff evidence. N27 also restored
+byte parity between canonical and packaged assets, although its real wheel-install
+test remains unexecuted. Current external voice-provider research, pricing, and the
+replaceable adapter decision now live in
+[VOICE_PROVIDER_ARCHITECTURE.md](VOICE_PROVIDER_ARCHITECTURE.md); that dated record
+supersedes vendor-selection conclusions in this older snapshot without weakening
+the local text/typed-action trust boundary below.
+
 ## The implemented architecture
 
 ```text
@@ -48,8 +58,8 @@ compilation, task admission, collision response, and E-stop.
 | Structured model output | Implemented | JSON-schema constrained, parsed, then safety-validated |
 | Dynamic prompt composition | Implemented and active | Owner profile, current situation, emote policy, and stub weather tool are composed under character budgets |
 | whisper.cpp | Provider, server binary, and `base.en` weights installed | Server was not running in this audit; no microphone endpoint connected |
-| Energy endpointing | Implemented and default | Becomes active only when STT is healthy and capture starts |
-| Silero v6 + Smart Turn v3 | Implemented and runtime-wired | ONNX artifacts and `onnxruntime` absent; not active |
+| Energy endpointing | Implemented fallback | No longer the canonical default; remains the loud degradation path |
+| Silero v6 + Smart Turn v3 | Implemented, runtime-wired, and canonical default | ONNX artifacts and `onnxruntime` resolve; no live microphone or observed latency/cutoff evidence |
 | Piper | Provider and install/run scripts implemented | Configured default, but binary and voice absent |
 | Fish S2 | Provider and isolated service implemented | Optional; not the configured default and not running |
 | Duplex cancellation | Implemented | Browser-tested; acoustic barge-in awaits a device/AEC integration |
@@ -295,8 +305,8 @@ license.
 is modular and local, but the call re-decodes the utterance after endpointing;
 it is not incremental streaming ASR.
 
-The default runtime segmenter is dependency-free `EnergyVad`. The optional
-semantic mode is already implemented and wired:
+The canonical runtime segmenter is now the semantic Silero/Smart Turn path. The
+dependency-free `EnergyVad` remains its explicit fallback. Semantic mode provides:
 
 - stateful Silero v6 probability on exact 512-sample/16 kHz frames;
 - Smart Turn v3 over the last eight seconds with Whisper-Tiny-compatible
@@ -305,10 +315,13 @@ semantic mode is already implemented and wired:
   turn; and
 - explicit warnings and fixed-timeout/energy fallbacks when models fail.
 
-It is not active on this desktop: the runtime ONNX weights and `onnxruntime`
-are missing, and the effective config remains energy endpointing. See [Audio,
-latency, expression, and spatial intelligence](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md)
-for the precise fallback and configuration behavior.
+The runtime ONNX weights and `onnxruntime` resolve on this desktop, and the
+effective canonical configuration selects semantic endpointing. That establishes
+startup availability, not the expected 2.5 s -> 0.20 s user-visible improvement:
+the path has not run through a live microphone, and premature cutoff on the owner's
+voice is unmeasured. See the
+[2026-08-16 re-freeze record](../scrum/20260816/task_5/ENDPOINTING_REFREEZE_STATUS.md)
+and [Audio, latency, expression, and spatial intelligence](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md).
 
 Official references:
 
@@ -329,6 +342,10 @@ Fish S2 Pro remains the expressive docked/GPU option in an isolated Python
 tokens inside the service and exposes only text-in/audio-bytes-out. This is the
 right safety boundary: the action brain gains nothing from codec tokens and
 would become harder to validate if they entered its vocabulary.
+
+This provider targets Parcel's **local self-host Fish Speech service**. It is not
+the hosted Fish Audio Core API and not Fish Agents; those products need separate
+adapters, credentials, retention policy, pricing evidence, and conformance tests.
 
 Although the Fish adapter implements its native streaming endpoint,
 `RobotRuntime` currently wraps all synthesizers in
@@ -436,11 +453,12 @@ scripts/launch_fish_speech.sh
 keeps text control available. `speech.mode: audio` requires both roles and
 fails startup if either is unavailable. The default `configs/robot.yaml` now
 places supported audio settings under `speech:`. `fish_reference_id` is a real
-Fish-provider input. `fish_streaming` and `barge_in` are absent from that
-canonical file and survive only in the divergent packaged fallback
-`src/parcel_robot/config/robot.yaml`; current fail-closed validation rejects
-them. Barge-in is wired by microphone-loop construction rather than a boolean
-toggle. Do not assume a visible YAML key is effective without a consumer and
+local-Fish-provider input. `fish_streaming` and `barge_in` are absent from the
+canonical schema; barge-in is wired by microphone-loop construction rather than a
+boolean toggle. N27 now generates and byte-checks both the packaged assets and the
+`src/parcel_robot/config/robot.yaml` side mirror from canonical source. Its
+in-process parity gate is green, while the build/install-wheel nightly remains
+unverified. Do not assume a visible YAML key is effective without a consumer and
 contract test.
 
 Keep every model service on loopback unless authentication, authorization, and

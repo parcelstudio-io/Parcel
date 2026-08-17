@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "scope": "n24_fake_gateway_contract_only",
+  "owner": "N24",
+  "evaluator_owner": "N42",
+  "invariants": [
+    {
+      "id": "GWI-001",
+      "statement": "Every gateway boot mints a new epoch and starts DISARMED.",
+      "fixture_ids": ["GWF-001", "GWF-015"]
+    },
+    {
+      "id": "GWI-002",
+      "statement": "A prior boot epoch never acquires or commands authority.",
+      "fixture_ids": ["GWF-001"]
+    },
+    {
+      "id": "GWI-003",
+      "statement": "At most one writer owns the fake Sport service; conflict stops and latches.",
+      "fixture_ids": ["GWF-013"]
+    },
+    {
+      "id": "GWI-004",
+      "statement": "Authority-bearing client sequences increase strictly across the entire gateway boot, including reacquisition after disconnect.",
+      "fixture_ids": ["GWF-002", "GWF-015"]
+    },
+    {
+      "id": "GWI-005",
+      "statement": "Only a bounded duration TTL crosses the wire; the gateway derives expiry on its local clock.",
+      "fixture_ids": ["GWF-003", "GWF-007", "GWF-018"]
+    },
+    {
+      "id": "GWI-006",
+      "statement": "Client loss after a nonzero admission initiates local StopMove and cannot auto-resume.",
+      "fixture_ids": ["GWF-007", "GWF-015"]
+    },
+    {
+      "id": "GWI-007",
+      "statement": "Lease loss or stale/out-of-order fake feedback removes positive authority and stops.",
+      "fixture_ids": ["GWF-010", "GWF-011", "GWF-012"]
+    },
+    {
+      "id": "GWI-008",
+      "statement": "A delayed Move completing across a stop epoch is followed by a compensating StopMove.",
+      "fixture_ids": ["GWF-008", "GWF-009"]
+    },
+    {
+      "id": "GWI-009",
+      "statement": "Protocol version, packet/string/integer/TTL bounds, frame, finite numeric values, and compatibility hashes fail closed; velocity-envelope admission remains outside N24.",
+      "fixture_ids": ["GWF-003", "GWF-004", "GWF-005", "GWF-006", "GWF-016"]
+    },
+    {
+      "id": "GWI-010",
+      "statement": "An admission ACK never claims vendor motion or stationary truth.",
+      "fixture_ids": ["GWF-017"]
+    },
+    {
+      "id": "GWI-011",
+      "statement": "Stop confirmation requires successful StopMove plus a fresh later stationary fake-state sample.",
+      "fixture_ids": ["GWF-014"]
+    },
+    {
+      "id": "GWI-012",
+      "statement": "A blocked, raising, full, or incomplete fake evidence sink cannot delay or change stop control; incomplete process evidence exits nonzero.",
+      "fixture_ids": ["GWF-019"]
+    }
+  ]
+}

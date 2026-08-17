@@ -264,9 +264,12 @@ waits for Enter between cases, `--list` prints the plan without running. It is a
 viewer over `pytest tests/test_voice_nav_e2e.py`, not a second harness: one
 subprocess per case, and the verdicts are pytest's own.
 
-Run these commands from this source checkout/editable install. The wheel is not
-relocatable: runtime prompts and skill/navigation YAML remain repository assets,
-and the packaged fallback config has drifted from `configs/robot.yaml`.
+Run these commands from this source checkout/editable install. N27 now generates
+and byte-checks the deployable prompt/config/fixture assets from canonical source,
+including `configs/robot.yaml`; the previously divergent copies are equal and
+guarded by the `release-parity` gate. A build/install-wheel smoke is versioned but
+has not run on this host, so relocatability in a clean installed environment remains
+unverified rather than assumed.
 
 ## What is not production-ready
 

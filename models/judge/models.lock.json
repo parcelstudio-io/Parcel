@@ -1,0 +1,17 @@
+{
+  "models": {
+    "qwen3_32b_q4_k_m_judge": {
+      "activation": "evaluation_only_never_a_runtime_or_motion_authority",
+      "filename": "Qwen3-32B-Q4_K_M.gguf",
+      "license": "Apache-2.0",
+      "role": "offline_autorater_judge_only",
+      "sha256": "efd971561896866f0e910cce52761ca77b1b138090c7f15fe284676d57d1f689",
+      "size_bytes": 19762149024,
+      "source": "https://huggingface.co/Qwen/Qwen3-32B-GGUF",
+      "source_commit": "938a7432affaec9157f883a87164e2646ae17555",
+      "upstream_filename": "Qwen3-32B-Q4_K_M.gguf",
+      "url": "https://huggingface.co/Qwen/Qwen3-32B-GGUF/resolve/938a7432affaec9157f883a87164e2646ae17555/Qwen3-32B-Q4_K_M.gguf?download=true"
+    }
+  },
+  "schema_version": 1
+}

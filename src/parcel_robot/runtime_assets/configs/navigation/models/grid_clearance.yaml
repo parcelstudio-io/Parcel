@@ -1,0 +1,41 @@
+id: grid_clearance_v2
+type: grid
+version: "2.0.0-experimental"
+description: Eval-only sensor grid with hard footprint inflation and a traversable comfort-cost band.
+checkpoint: ""
+device: cpu
+controller:
+  cruise_vx: 0.60
+  align_enter_deg: 28.0
+  align_exit_deg: 7.0
+  max_yaw_rate: 0.90
+  min_align_yaw_rate: 0.20
+  yaw_gain: 1.40
+  slowdown_radius_m: 2.0
+  control_dt_s: 0.1
+  max_linear_accel: 0.9
+  max_yaw_accel: 1.8
+  grid_resolution_m: 0.10
+  grid_size_cells: 161
+  # The native evaluator approximates a 0.32 m-radius Jackal. This separate,
+  # non-deployable model uses a 0.03 m hard margin and retains the former
+  # 0.10 m envelope as a soft A* preference rather than a lethal obstacle.
+  map_hard_safety_margin_m: 0.03
+  map_comfort_safety_margin_m: 0.10
+  comfort_cost_weight: 8.0
+  lidar_range_cap_m: 12.0
+  unknown_cost: 2.5
+  lookahead_m: 0.90
+  recovery_yaw_rate: 0.35
+  recovery_reverse_vx: -0.12
+  recovery_scan_steps: 30
+  # The 270-degree LiDAR has a rear blind wedge. Recovery remains scan-only;
+  # this experiment adds no reverse, lateral, or VFH behavior.
+  recovery_reverse_steps: 0
+  replan_interval_steps: 5
+  lidar_stride: 2
+rl:
+  enabled: false
+  trainable: false
+  obs_keys: [goal_delta, odometry, lidar]
+  action_space: mid_level_velocity

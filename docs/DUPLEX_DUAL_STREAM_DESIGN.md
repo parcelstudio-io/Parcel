@@ -197,9 +197,11 @@ discovered later.
 
 The active microphone path remains turn-based: VAD/endpointing buffers a whole
 utterance, whisper.cpp returns one final transcript, and that final enters the
-same guarded voice session as typed input. The canonical endpoint is energy
-VAD; Silero + Smart Turn is optional but its artifacts are absent on this host.
-Only browser/future recognizer partials currently exercise text-partial
+same guarded voice session as typed input. The canonical endpoint is now the
+owner-authorized semantic Silero + Smart Turn path and its artifacts/runtime resolve
+on this host; Energy VAD remains the explicit fallback. This availability does not
+prove live-microphone latency or that 0.20 s completion avoids clipping the owner's
+speech. Only browser/future recognizer partials currently exercise text-partial
 cancellation.
 
 Every final/partial input bumps the speech epoch as appropriate and cooperatively

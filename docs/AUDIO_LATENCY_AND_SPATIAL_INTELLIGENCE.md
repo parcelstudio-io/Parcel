@@ -1,10 +1,12 @@
 # Audio, latency, expression, and local spatial intelligence
 
-Last checked against the repository and this desktop on **2026-08-04**. In this
-document, **active** means selected by `configs/robot.yaml` and usable on this
-host, **wired** means connected through `RobotRuntime` but dependent on optional
-artifacts or hardware, **fallback** means deliberately degraded behavior, and
-**planned** means no runtime path exists yet.
+The host/audio audit was performed on **2026-08-04**; the endpointing and
+release-package state was rechecked on **2026-08-16**. In this document,
+**active** means selected by `configs/robot.yaml` and usable in the software
+runtime, **wired** means connected through `RobotRuntime` but dependent on
+optional artifacts or hardware, **fallback** means deliberately degraded
+behavior, and **planned** means no runtime path exists yet. “Active” is not a
+claim of live-microphone or on-robot acoustic evidence.
 
 ## Current status at a glance
 
@@ -12,8 +14,8 @@ artifacts or hardware, **fallback** means deliberately degraded behavior, and
 | --- | --- | --- |
 | Browser partial/final text | **Active** | Partials interrupt but never execute; finals enter the same guarded turn path as ASR text. |
 | Microphone capture and speaker playback | **Wired, inactive on this host** | `MicrophoneVoiceLoop` and `SpeakerSink` use `sounddevice`/PortAudio. Native `libportaudio2` is absent and no default PipeWire input or output endpoint was connected in the audit. |
-| Default endpointing | **Active when a microphone runs** | Adaptive `EnergyVad`, using 30 ms frames and a 12-frame (about 360 ms) silence hangover. |
-| Silero v6 + Smart Turn v3 | **Wired, not active** | The semantic path is selectable, but the required ONNX files and `onnxruntime` are not installed. The installed whisper.cpp Silero `.bin` is a different format and cannot be used by `SileroVad`. |
+| Default endpointing | **Semantic path selected; no live-mic proof** | The canonical profile selects Silero v6 plus Smart Turn v3. The models resolve and `onnxruntime` loads; obviously complete turns use the configured 0.20 s decision and incomplete turns may wait up to 2.5 s. Those are thresholds, not measured acoustic latency. |
+| Energy endpointing | **Fallback** | Adaptive `EnergyVad` remains the dependency-free degrade path and historical segmenter. The runtime reports degradation rather than silently claiming the semantic stack. |
 | whisper.cpp STT | **Adapter and weights installed; service stopped** | The runtime submits a completed WAV to `/inference`. This is utterance-level, not streaming ASR. |
 | Piper TTS | **Configured, not installed** | The configured binary and voice files are absent. `speech.mode: auto` therefore degrades without failing the simulator. |
 | Fish S2 TTS | **Optional service/adapter installed** | The provider exposes streaming, but the runtime's sentence wrapper currently calls blocking `synthesize()` once per sentence, so cancellation and first audio are sentence-granular. |
@@ -73,18 +75,21 @@ The final command is expected to fail on the audited host until
 
 ### Current configuration semantics
 
-The audio group in `configs/robot.yaml` is now under `speech:`, matching the
-runtime. Supported keys that reach their consumers are `fish_url`, device
+The audio group in `configs/robot.yaml` is under `speech:`, matching the
+runtime. Supported keys that reach their consumers include `fish_url`, device
 selectors, `endpointing`, `vad_model`, `turn_model`, `echo_guard_scale`, and
 `fish_reference_id` (used when `tts_provider: fish_s2`). The canonical config
-chooses energy endpointing, leaves devices on the system default, and selects
-Piper rather than Fish.
+now chooses semantic endpointing, leaves devices on the system default, and
+selects Piper rather than Fish. Silero v6 and Smart Turn v3 were present and
+loadable when that default was owner-authorized on 2026-08-16; the first live
+microphone session and measured cutoff/latency evidence are still outstanding.
 
-The canonical config does **not** contain `fish_streaming` or `barge_in`.
-Those stale keys remain only in the divergent packaged fallback at
-`src/parcel_robot/config/robot.yaml`; the current fail-closed speech builder
-does not allow them, so that fallback must be reconciled before use. Barge-in is
-enabled by construction when a microphone loop exists, not by a YAML toggle.
+The canonical config does **not** contain `fish_streaming` or `barge_in` because
+the strict speech schema does not accept them. Barge-in is enabled by
+construction when a microphone loop exists, not by a YAML toggle. N27 replaced
+the previously divergent deployable copies with generated, byte-equal runtime
+assets and a release-parity gate. That proves source/package equality for the
+checked assets, not a built-wheel installation or working acoustic device.
 
 ## Audio path and endpointing choices
 
