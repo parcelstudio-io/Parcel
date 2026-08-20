@@ -1,0 +1,669 @@
+{
+  "scenario": "whisperer-discipline",
+  "began_utc": "2026-08-20T07:44:12.214914+00:00",
+  "ended_utc": "2026-08-20T07:47:27.255873+00:00",
+  "runtime_events": [
+    {
+      "id": 71,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-9bc9dae1cc3d4bf8f2335bb4 revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:44:12.216702+00:00",
+      "t_s": 312.337
+    },
+    {
+      "id": 72,
+      "role": "navigation",
+      "text": "Navigating to sidewalk.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:44:12.262102+00:00",
+      "t_s": 312.337
+    },
+    {
+      "id": 73,
+      "role": "navigation",
+      "text": "Stopping at sidewalk; checking position and motion feedback",
+      "level": "info",
+      "timestamp": "2026-08-20T07:44:20.773729+00:00",
+      "t_s": 321.351
+    },
+    {
+      "id": 74,
+      "role": "navigation",
+      "text": "Arrived at sidewalk",
+      "level": "success",
+      "timestamp": "2026-08-20T07:44:20.968324+00:00",
+      "t_s": 321.351
+    },
+    {
+      "id": 75,
+      "role": "brain",
+      "text": "parcel-task-9bc9dae1cc3d4bf8f2335bb4: task_succeeded",
+      "level": "success",
+      "timestamp": "2026-08-20T07:44:20.968715+00:00",
+      "t_s": 321.351
+    },
+    {
+      "id": 76,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-6f91605ab75cd9ba614f410d revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:44:21.218614+00:00",
+      "t_s": 321.351
+    },
+    {
+      "id": 77,
+      "role": "navigation",
+      "text": "Navigating to bench.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:44:21.263922+00:00",
+      "t_s": 321.351
+    },
+    {
+      "id": 78,
+      "role": "safety",
+      "text": "Slowing near an obstacle (+1 more proximity changes in the last few seconds)",
+      "level": "info",
+      "timestamp": "2026-08-20T07:44:35.684370+00:00",
+      "t_s": 336.363
+    },
+    {
+      "id": 79,
+      "role": "navigation",
+      "text": "Navigation failed for bench: semantic_target_unreachable",
+      "level": "error",
+      "timestamp": "2026-08-20T07:44:59.206840+00:00",
+      "t_s": 359.383
+    },
+    {
+      "id": 80,
+      "role": "brain",
+      "text": "parcel-task-6f91605ab75cd9ba614f410d: task_failed",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:44:59.207214+00:00",
+      "t_s": 359.383
+    },
+    {
+      "id": 81,
+      "role": "safety",
+      "text": "Obstacle clearance restored",
+      "level": "success",
+      "timestamp": "2026-08-20T07:44:59.207412+00:00",
+      "t_s": 359.383
+    },
+    {
+      "id": 82,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-735ffccecdf6f941b48df255 revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:45:00.221225+00:00",
+      "t_s": 360.396
+    },
+    {
+      "id": 83,
+      "role": "navigation",
+      "text": "Navigating to crosswalk.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:45:00.328755+00:00",
+      "t_s": 360.396
+    },
+    {
+      "id": 84,
+      "role": "navigation",
+      "text": "Arrived at crosswalk",
+      "level": "success",
+      "timestamp": "2026-08-20T07:45:09.514834+00:00",
+      "t_s": 369.416
+    },
+    {
+      "id": 85,
+      "role": "brain",
+      "text": "parcel-task-735ffccecdf6f941b48df255: task_succeeded",
+      "level": "success",
+      "timestamp": "2026-08-20T07:45:09.515454+00:00",
+      "t_s": 369.416
+    },
+    {
+      "id": 86,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-d2f5a9f12e4a471bbd70a141 revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:45:12.227872+00:00",
+      "t_s": 372.419
+    },
+    {
+      "id": 87,
+      "role": "navigation",
+      "text": "Navigating to lamppost.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:45:12.319663+00:00",
+      "t_s": 372.419
+    },
+    {
+      "id": 88,
+      "role": "safety",
+      "text": "Slowing near an obstacle",
+      "level": "info",
+      "timestamp": "2026-08-20T07:45:22.734827+00:00",
+      "t_s": 383.428
+    },
+    {
+      "id": 89,
+      "role": "navigation",
+      "text": "Stopping at lamppost; checking position and motion feedback",
+      "level": "info",
+      "timestamp": "2026-08-20T07:45:27.134137+00:00",
+      "t_s": 387.431
+    },
+    {
+      "id": 90,
+      "role": "safety",
+      "text": "Slowing near an obstacle (+1 more proximity changes in the last few seconds)",
+      "level": "info",
+      "timestamp": "2026-08-20T07:45:30.548986+00:00",
+      "t_s": 390.439
+    },
+    {
+      "id": 91,
+      "role": "safety",
+      "text": "Slowing near an obstacle (+1 more proximity changes in the last few seconds)",
+      "level": "info",
+      "timestamp": "2026-08-20T07:45:44.364069+00:00",
+      "t_s": 404.451
+    },
+    {
+      "id": 92,
+      "role": "navigation",
+      "text": "Stopping at lamppost; checking position and motion feedback",
+      "level": "info",
+      "timestamp": "2026-08-20T07:45:50.559208+00:00",
+      "t_s": 410.456
+    },
+    {
+      "id": 93,
+      "role": "navigation",
+      "text": "Navigation failed for lamppost: semantic_arrival_verification_failed",
+      "level": "error",
+      "timestamp": "2026-08-20T07:45:50.760593+00:00",
+      "t_s": 411.457
+    },
+    {
+      "id": 94,
+      "role": "brain",
+      "text": "parcel-task-d2f5a9f12e4a471bbd70a141: task_failed",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:45:50.761053+00:00",
+      "t_s": 411.457
+    },
+    {
+      "id": 95,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-579dd677a20ab70a5a869625 revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:45:51.235914+00:00",
+      "t_s": 411.457
+    },
+    {
+      "id": 96,
+      "role": "navigation",
+      "text": "Navigating to sidewalk.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:45:51.263093+00:00",
+      "t_s": 411.457
+    },
+    {
+      "id": 97,
+      "role": "safety",
+      "text": "Slowing near an obstacle (+1 more proximity changes in the last few seconds)",
+      "level": "info",
+      "timestamp": "2026-08-20T07:45:59.075469+00:00",
+      "t_s": 419.464
+    },
+    {
+      "id": 98,
+      "role": "safety",
+      "text": "Obstacle clearance restored",
+      "level": "success",
+      "timestamp": "2026-08-20T07:46:11.190271+00:00",
+      "t_s": 431.474
+    },
+    {
+      "id": 99,
+      "role": "navigation",
+      "text": "Stopping at sidewalk; checking position and motion feedback",
+      "level": "info",
+      "timestamp": "2026-08-20T07:46:31.113984+00:00",
+      "t_s": 451.495
+    },
+    {
+      "id": 100,
+      "role": "navigation",
+      "text": "Arrived at sidewalk",
+      "level": "success",
+      "timestamp": "2026-08-20T07:46:31.309096+00:00",
+      "t_s": 451.495
+    },
+    {
+      "id": 101,
+      "role": "brain",
+      "text": "parcel-task-579dd677a20ab70a5a869625: task_succeeded",
+      "level": "success",
+      "timestamp": "2026-08-20T07:46:31.309482+00:00",
+      "t_s": 451.495
+    },
+    {
+      "id": 102,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-33e936bc1ab3c2110155de5d revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:46:33.238655+00:00",
+      "t_s": 453.496
+    },
+    {
+      "id": 103,
+      "role": "navigation",
+      "text": "Navigating to bench.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:46:33.310711+00:00",
+      "t_s": 453.496
+    },
+    {
+      "id": 104,
+      "role": "safety",
+      "text": "Slowing near an obstacle",
+      "level": "info",
+      "timestamp": "2026-08-20T07:46:48.032142+00:00",
+      "t_s": 468.51
+    },
+    {
+      "id": 105,
+      "role": "navigation",
+      "text": "Navigation failed for bench: semantic_target_unreachable",
+      "level": "error",
+      "timestamp": "2026-08-20T07:47:11.256485+00:00",
+      "t_s": 491.533
+    },
+    {
+      "id": 106,
+      "role": "brain",
+      "text": "parcel-task-33e936bc1ab3c2110155de5d: task_failed",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:47:11.256887+00:00",
+      "t_s": 491.533
+    },
+    {
+      "id": 107,
+      "role": "safety",
+      "text": "Obstacle clearance restored",
+      "level": "success",
+      "timestamp": "2026-08-20T07:47:11.257113+00:00",
+      "t_s": 491.533
+    },
+    {
+      "id": 108,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-0124b68cf40f3af49d4b9c71 revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:47:12.254073+00:00",
+      "t_s": 492.534
+    },
+    {
+      "id": 109,
+      "role": "navigation",
+      "text": "Navigating to crosswalk.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:47:12.379689+00:00",
+      "t_s": 492.534
+    },
+    {
+      "id": 110,
+      "role": "navigation",
+      "text": "Arrived at crosswalk",
+      "level": "success",
+      "timestamp": "2026-08-20T07:47:21.666434+00:00",
+      "t_s": 501.56
+    },
+    {
+      "id": 111,
+      "role": "brain",
+      "text": "parcel-task-0124b68cf40f3af49d4b9c71: task_succeeded",
+      "level": "success",
+      "timestamp": "2026-08-20T07:47:21.666839+00:00",
+      "t_s": 501.56
+    },
+    {
+      "id": 112,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-1cefbe4664f6cc6b58c61493 revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:47:24.255632+00:00",
+      "t_s": 504.563
+    },
+    {
+      "id": 113,
+      "role": "navigation",
+      "text": "Navigating to lamppost.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:47:24.269474+00:00",
+      "t_s": 504.563
+    }
+  ],
+  "mission_log": [
+    {
+      "kind": "started",
+      "goal": "sidewalk",
+      "state": "running",
+      "reason": "semantic_target_resolved",
+      "level": "info",
+      "text": "Navigating to sidewalk.",
+      "timestamp": "2026-08-20T07:44:12.262093+00:00",
+      "id": 5,
+      "t_s": 312.337
+    },
+    {
+      "kind": "ended",
+      "goal": "sidewalk",
+      "state": "arrived",
+      "reason": "arrived_verified",
+      "level": "success",
+      "text": "Arrived at sidewalk.",
+      "timestamp": "2026-08-20T07:44:20.968317+00:00",
+      "id": 6,
+      "t_s": 321.351
+    },
+    {
+      "kind": "started",
+      "goal": "bench",
+      "state": "searching",
+      "reason": "semantic_replan_after_unreachable_pose",
+      "level": "info",
+      "text": "Navigating to bench.",
+      "timestamp": "2026-08-20T07:44:21.263915+00:00",
+      "id": 7,
+      "t_s": 321.351
+    },
+    {
+      "kind": "ended",
+      "goal": "bench",
+      "state": "failed",
+      "reason": "semantic_target_unreachable",
+      "level": "warning",
+      "text": "Mission to bench ended (failed): semantic_target_unreachable.",
+      "timestamp": "2026-08-20T07:44:59.206833+00:00",
+      "id": 8,
+      "t_s": 359.383
+    },
+    {
+      "kind": "started",
+      "goal": "crosswalk",
+      "state": "running",
+      "reason": "grid_align err=-110.6 route=2 status=planned|obstacle_stop",
+      "level": "info",
+      "text": "Navigating to crosswalk.",
+      "timestamp": "2026-08-20T07:45:00.328745+00:00",
+      "id": 9,
+      "t_s": 360.396
+    },
+    {
+      "kind": "blocked",
+      "goal": "crosswalk",
+      "state": "blocked",
+      "reason": "grid_align err=-110.6 route=2 status=planned|obstacle_stop",
+      "level": "warning",
+      "text": "Waiting: something is blocking the way to crosswalk.",
+      "timestamp": "2026-08-20T07:45:00.427791+00:00",
+      "id": 10,
+      "t_s": 360.396
+    },
+    {
+      "kind": "ended",
+      "goal": "crosswalk",
+      "state": "arrived",
+      "reason": "arrived",
+      "level": "success",
+      "text": "Arrived at crosswalk.",
+      "timestamp": "2026-08-20T07:45:09.514828+00:00",
+      "id": 11,
+      "t_s": 369.416
+    },
+    {
+      "kind": "started",
+      "goal": "lamppost",
+      "state": "running",
+      "reason": "semantic_target_resolved",
+      "level": "info",
+      "text": "Navigating to lamppost.",
+      "timestamp": "2026-08-20T07:45:12.319655+00:00",
+      "id": 12,
+      "t_s": 372.419
+    },
+    {
+      "kind": "blocked",
+      "goal": "lamppost",
+      "state": "blocked",
+      "reason": "grid_track err=-0.1 goal=6.2 route=4 status=planned|obstacle_stop",
+      "level": "warning",
+      "text": "Waiting: something is blocking the way to lamppost.",
+      "timestamp": "2026-08-20T07:45:31.651526+00:00",
+      "id": 13,
+      "t_s": 392.44
+    },
+    {
+      "kind": "ended",
+      "goal": "lamppost",
+      "state": "failed",
+      "reason": "semantic_arrival_verification_failed",
+      "level": "warning",
+      "text": "Mission to lamppost ended (failed): semantic_arrival_verification_failed.",
+      "timestamp": "2026-08-20T07:45:50.760579+00:00",
+      "id": 14,
+      "t_s": 411.457
+    },
+    {
+      "kind": "started",
+      "goal": "sidewalk",
+      "state": "searching",
+      "reason": "semantic_search_scan",
+      "level": "info",
+      "text": "Navigating to sidewalk.",
+      "timestamp": "2026-08-20T07:45:51.263085+00:00",
+      "id": 15,
+      "t_s": 411.457
+    },
+    {
+      "kind": "blocked",
+      "goal": "sidewalk",
+      "state": "blocked",
+      "reason": "grid_track err=0.0 goal=0.5 route=2 status=planned|obstacle_stop",
+      "level": "warning",
+      "text": "Waiting: something is blocking the way to sidewalk.",
+      "timestamp": "2026-08-20T07:46:11.391945+00:00",
+      "id": 16,
+      "t_s": 431.474
+    },
+    {
+      "kind": "ended",
+      "goal": "sidewalk",
+      "state": "arrived",
+      "reason": "arrived_verified",
+      "level": "success",
+      "text": "Arrived at sidewalk.",
+      "timestamp": "2026-08-20T07:46:31.309090+00:00",
+      "id": 17,
+      "t_s": 451.495
+    },
+    {
+      "kind": "started",
+      "goal": "bench",
+      "state": "searching",
+      "reason": "semantic_replan_after_unreachable_pose",
+      "level": "info",
+      "text": "Navigating to bench.",
+      "timestamp": "2026-08-20T07:46:33.310702+00:00",
+      "id": 18,
+      "t_s": 453.496
+    },
+    {
+      "kind": "ended",
+      "goal": "bench",
+      "state": "failed",
+      "reason": "semantic_target_unreachable",
+      "level": "warning",
+      "text": "Mission to bench ended (failed): semantic_target_unreachable.",
+      "timestamp": "2026-08-20T07:47:11.256478+00:00",
+      "id": 19,
+      "t_s": 491.533
+    },
+    {
+      "kind": "started",
+      "goal": "crosswalk",
+      "state": "running",
+      "reason": "grid_align err=-113.5 route=2 status=planned|obstacle_stop",
+      "level": "info",
+      "text": "Navigating to crosswalk.",
+      "timestamp": "2026-08-20T07:47:12.379676+00:00",
+      "id": 20,
+      "t_s": 492.534
+    },
+    {
+      "kind": "blocked",
+      "goal": "crosswalk",
+      "state": "blocked",
+      "reason": "grid_align err=-113.5 route=2 status=planned|obstacle_stop",
+      "level": "warning",
+      "text": "Waiting: something is blocking the way to crosswalk.",
+      "timestamp": "2026-08-20T07:47:12.479628+00:00",
+      "id": 21,
+      "t_s": 492.534
+    },
+    {
+      "kind": "ended",
+      "goal": "crosswalk",
+      "state": "arrived",
+      "reason": "arrived",
+      "level": "success",
+      "text": "Arrived at crosswalk.",
+      "timestamp": "2026-08-20T07:47:21.666428+00:00",
+      "id": 22,
+      "t_s": 501.56
+    },
+    {
+      "kind": "started",
+      "goal": "lamppost",
+      "state": "running",
+      "reason": "semantic_target_resolved",
+      "level": "info",
+      "text": "Navigating to lamppost.",
+      "timestamp": "2026-08-20T07:47:24.269465+00:00",
+      "id": 23,
+      "t_s": 504.563
+    }
+  ],
+  "measurements": {
+    "window_target_s": 195.0,
+    "missions_issued_locally": [
+      {
+        "t_s": 312.091,
+        "local_text": "go to the sidewalk",
+        "reply": "Okay—I'll move onto sidewalk and verify it."
+      },
+      {
+        "t_s": 321.093,
+        "local_text": "go to the bench",
+        "reply": "Okay—I'll go wait near bench safely."
+      },
+      {
+        "t_s": 360.095,
+        "local_text": "go to the crosswalk",
+        "reply": "Okay—I'll move onto crosswalk and verify it."
+      },
+      {
+        "t_s": 372.102,
+        "local_text": "go to the lamppost",
+        "reply": "Okay—I'll go wait near lamppost safely."
+      },
+      {
+        "t_s": 411.11,
+        "local_text": "go to the sidewalk",
+        "reply": "Okay—I'll move onto sidewalk and verify it."
+      },
+      {
+        "t_s": 453.113,
+        "local_text": "go to the bench",
+        "reply": "Okay—I'll go wait near bench safely."
+      },
+      {
+        "t_s": 492.128,
+        "local_text": "go to the crosswalk",
+        "reply": "Okay—I'll move onto crosswalk and verify it."
+      },
+      {
+        "t_s": 504.13,
+        "local_text": "go to the lamppost",
+        "reply": "Okay—I'll go wait near lamppost safely."
+      }
+    ],
+    "whisperer_before": {
+      "enabled": true,
+      "max_updates_per_minute": 2,
+      "min_gap_s": 15.0,
+      "updates_this_minute": 0,
+      "folded": 0,
+      "forwarded": 3,
+      "suppressed": 99,
+      "suppressed_by_rule": {
+        "never_band": 99
+      },
+      "forwarded_by_rule": {
+        "critical_bypass": 3
+      },
+      "schema_version": 1,
+      "last": {
+        "seq": 102,
+        "at_s": 368524.391791325,
+        "kind": "position",
+        "key": "position",
+        "band": "never",
+        "forwarded": false,
+        "rule": "never_band",
+        "text": "",
+        "folded": 0,
+        "updates_this_minute": 0,
+        "schema_version": 1
+      }
+    },
+    "whisperer_after": {
+      "enabled": true,
+      "max_updates_per_minute": 2,
+      "min_gap_s": 15.0,
+      "updates_this_minute": 3,
+      "folded": 0,
+      "forwarded": 11,
+      "suppressed": 200,
+      "suppressed_by_rule": {
+        "never_band": 191,
+        "block_debounce_holding": 4,
+        "clear_without_forwarded_block": 3,
+        "budget_exhausted": 2
+      },
+      "forwarded_by_rule": {
+        "critical_bypass": 10,
+        "block_debounce_elapsed": 1
+      },
+      "schema_version": 1,
+      "last": {
+        "seq": 211,
+        "at_s": 368751.647111099,
+        "kind": "nav_tick",
+        "key": "nav_tick",
+        "band": "never",
+        "forwarded": false,
+        "rule": "never_band",
+        "text": "",
+        "folded": 0,
+        "updates_this_minute": 3,
+        "schema_version": 1
+      }
+    }
+  }
+}

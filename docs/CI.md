@@ -1,12 +1,13 @@
 # CI / eval-runner gate
 
-Parcel has 220+ test files and rich eval harnesses (nav_instruct + mutation
+Parcel has a large test surface and rich eval harnesses (nav_instruct + mutation
 panel, follow-bench, acoustic loop, planner/conversation packs, metamorphic
-suite). Until now it had **no runner and no scheduler**: no `.github/workflows`,
-an empty crontab. Every promotion gate was therefore manual, and Design A's
-*model-off non-inferiority* guarantee was unfalsifiable — nothing enforced it,
-so it could silently bit-rot. This document describes the runner that closes
-that gap.
+suite). The executable runner and versioned workflow definition below close the
+historical gap where every promotion gate was manual. The latest recorded local
+commit-tier run, on 2026-08-20, passed 6,933 tests with 9 skipped and 42
+deselected; all hard gates were green. The workflow declares push, pull-request,
+scheduled, and manual triggers, but hosted GitHub Actions execution/enabling
+remains unverified until a GitHub run is recorded.
 
 The runner does **not** add new evals. It wraps the harnesses that already
 exist and turns the aspirational promotion gates into one exit-coded command.
@@ -41,15 +42,15 @@ printed but never change the exit code.
 | `commit` | every push / PR | `commit-gate` job in `ci.yml` |
 | `nightly` | 08:00 UTC daily (cron) + manual dispatch | `nightly-gate` job in `ci.yml` |
 
-Even though the repo is not yet wired to GitHub Actions, `ci.yml` is the
-canonical, versioned record of what must run and when; the gate logic lives in
-`ci_gate.py` so CI and a laptop run the identical gate.
+`ci.yml` is the canonical, versioned record of what must run and when; the gate
+logic lives in `ci_gate.py` so a hosted runner and a laptop invoke the same
+gate. Local execution is verified; hosted execution remains unverified.
 
 ## What the commit tier enforces (all hard, all offline)
 
 | Gate | Wraps | Reddens when |
 | --- | --- | --- |
-| `default-suite` | `pytest -m "not slow"` (3097-passing) | any default-gate test fails |
+| `default-suite` | `pytest -m "not slow"` (latest recorded: 6,933 passed) | any default-gate test fails |
 | `ruff` | `ruff check` ratcheted vs baseline | a **new** `(file, rule)` violation appears |
 | `frozen-digest-integrity` | nav_instruct v3, embodied plan, conversation_quality, personal_convo manifest-sha tests | a byte drifts in any frozen pack |
 | `frozen-digest-sentinels` | independent sha over the immutable frozen manifests | a pinned manifest's bytes move |
@@ -69,9 +70,10 @@ demands. Any of them red fails the commit.
   that with the model OFF the path is byte-identical to its deterministic
   string/oracle fallback. The gate collects all of those cells into one place so
   A cannot silently bit-rot.
-- **Latency-tail:** no P95/P99 regression on the latency series that exist
-  today. See the HANDOFF below — there is no persisted product latency ledger
-  yet, so the authoritative pins are the committed percentile tests.
+- **Latency-tail:** no P95/P99 regression on the committed percentile pins or
+  the persisted append-only latency ledger. The ledger is wired into the gate,
+  but its current rows do not cover every real acoustic/device stage; see the
+  handoff below.
 - **Hard-safety:** zero hard collisions on every product artifact (the
   frozen-baseline nav row, the mutation-panel clean run, every follow-bench row)
   and no new false_arrival on the frozen baseline (pinned at 0).
@@ -83,7 +85,7 @@ Everything in the commit tier (re-run), plus:
 | Gate | Wraps | Gating? |
 | --- | --- | --- |
 | `mutation-panel` | `scripts/mutation_panel.py` run in-process | hard — fails if any mutant survives (must be 6/6 killed) |
-| `nav-instruct-candidate:collisions` | candidate v3 minival run | hard — collisions must be 0 |
+| `nav-instruct-candidate:collisions` | candidate v4 minival run | hard — collisions must be 0 |
 | `nav-instruct-candidate:differential` | same run | report — SR, authority histogram, false_arrival |
 | `slow-suite` | `pytest -m slow` (`PARCEL_NIGHTLY=1`, live-sim e2e + acoustic rig + nightly metamorphic) | hard |
 | `metamorphic` | `pytest -m slow tests/test_nav_metamorphic.py` | report (already inside slow-suite; carries measured xfails) |
@@ -129,24 +131,22 @@ rule the mutation panel follows.
 These are real gaps surfaced while wiring the gate. The runner works today
 without them; closing them strengthens the named gate.
 
-1. **No persisted product latency ledger.** The product path computes p50/p95/p99
-   in-memory for the `/latency` dashboard (`observability.py::_aggregate`,
-   `runtime.py::latency_snapshot`) but never writes a committed artifact. The
-   latency-tail gate therefore rides the committed percentile *pins*
-   (`test_beat_sync` p95, `test_observability_planning` p99). The runner already
-   contains the ratchet (`evaluate_latency_ratchet`, self-tested) ready to read a
-   real ledger. **Ask:** dump `latency_snapshot()` to an append-only
-   `evals/latency/ledger.jsonl` so the tail can be ratcheted on real turn
-   latency, not only the scheduling/component pins.
-2. **Ruff debt (42 fingerprints / 53 raw violations)** in modules this card does
-   not own (`storefront`, `uwb`, `route_memory`, `camera_channel`, `bags`,
-   `detection_adapter/sim_bridge`, `low_viewpoint`, `voice`, and a few tests +
-   `tools/`). The gate ratchets against `scripts/ci_ruff_baseline.json` so these
-   do not block commits, but they should be **burned down to zero**; re-pin with
+1. **Acoustic latency coverage is incomplete.** The product now appends
+   turn-bearing rows to `evals/latency/ledger.jsonl`, and
+   `evaluate_latency_ledger` ratchets the latest row against the pinned
+   baseline. Current duplex rows are text-path measurements, however, so a
+   latest row can omit microphone, endpointing, and playback-device stages.
+   Keep the percentile-pin checks and add a real capture/playback writer before
+   treating a green ledger gate as hardware acoustic evidence.
+2. **Ruff debt (7 fingerprints)** remains in `camera_channel` and
+   `detection_adapter`. The gate ratchets against
+   `scripts/ci_ruff_baseline.json` so this inherited debt does not block
+   commits, but it should be burned down to zero; re-pin with
    `ci_gate.py --update-ruff-baseline` after each cleanup.
-3. **walk_with_me records no collision field**, so it cannot join the hard-safety
-   gate; its ledger row is a stub. **Ask:** have `run_walk_with_me` emit
-   `hard_collision_total` like follow-bench does.
+3. **One legacy walk_with_me row lacks a collision field.** The current
+   field-bearing row participates in hard-safety and is green, while the older
+   stub cannot. Require `hard_collision_total` on every future row and retire
+   or migrate the legacy record before claiming complete ledger coverage.
 4. **Acoustic loop needs a host PipeWire rig** (`pw-cli`/`pw-play`/…); it is
    offline but not drop-in headless, so it is not in the commit tier. It runs in
    the nightly `slow-suite` only where the rig is present.

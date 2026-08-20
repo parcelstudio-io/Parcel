@@ -136,7 +136,7 @@ class NavigationChannel:
         navigator: DirectiveNavigator,
         *,
         is_enabled: Callable[[], bool],
-        stop_fn: Callable[[], None],
+        stop_fn: Callable[[str], None],
         detail_fn: Callable[[], dict[str, object]],
     ) -> None:
         self._navigator = navigator
@@ -148,8 +148,24 @@ class NavigationChannel:
         return self._is_enabled()
 
     def stop(self, reason: str) -> None:
-        del reason
-        self._stop_fn()
+        """Hand the caller's reason to the terminal write. Card R12.
+
+        This was ``del reason``. Navigation is the one channel whose stop is
+        also a MISSION TERMINAL — a mission-log row, a panel event and a
+        narrated sentence, all built from ``reason`` — and throwing the reason
+        away here made every one of them read ``navigation_disabled``, the
+        detail dataclass's default, whatever had actually ended the mission.
+        The owner's emergency stop was the case that made it unacceptable
+        (AUDIT_R9_FABLE owner-gated finding 2): a latched e-stop reached the
+        log as ``ended (idle): navigation_disabled``.
+
+        The reason is the preempting caller's fact, not this adapter's, so it
+        is passed through unaltered — no defaulting, no relabelling. A channel
+        that substituted its own word here would be the same defect with a
+        better vocabulary.
+        """
+
+        self._stop_fn(reason)
 
     def snapshot(self) -> dict[str, object]:
         detail = dict(self._detail_fn())

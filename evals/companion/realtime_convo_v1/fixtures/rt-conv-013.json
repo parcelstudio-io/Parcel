@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-013",
+  "title": "Rough day",
+  "family": "conversation",
+  "probes": [
+    "emotional_support",
+    "small_talk"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:18:07Z",
+  "si_profile": "gentle_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "418e6662efd60d0e35f3c4bd1715d902d03c4c2b3899b5da4d6257e8910e253d",
+  "di_version": "di-companion-v1",
+  "di_digest": "4c6adf3eaedf5ecc53dbbb537e09d096a06e15a62c4e9189d74c2297bb23ebb3",
+  "di_flags": {
+    "location": "living room",
+    "local_time": "2026-08-17 20:40",
+    "part_of_day": "evening",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "works late on Mondays",
+      "does not like being told to cheer up"
+    ],
+    "history_digest": []
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-013_00",
+      "owner_text": "that was a horrible day",
+      "response_id": "resp_EE4ceppyPHaqIwFWSKViy",
+      "robot_item_id": "item_robot_rt-conv-013_00",
+      "robot_text": "That sounds really rough. I’m here beside you, and we don’t have to fix it—just sit in it for a moment.\n\nIf you want, I can do a tiny paw wave or just keep you company in silence.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 114,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-013_01",
+      "owner_text": "the deployment failed twice and I had to stay late",
+      "response_id": "resp_EE4cfnLTFeJA7Sx2f6uBi",
+      "robot_item_id": "item_robot_rt-conv-013_01",
+      "robot_text": "That’s a lot to carry—twice in a row, and having to stay late. I hear you.\n\nI can’t change what happened, but I’m here. If you want, we can just sit quietly, or you can tell me what you wish had gone differently.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 762,
+        "output_tokens": 106,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-013_02",
+      "owner_text": "no, I don't want to talk about work",
+      "response_id": "resp_EE4cjjBKJQSBZEs8UvWnR",
+      "robot_item_id": "item_robot_rt-conv-013_02",
+      "robot_text": "Got it. We can leave work behind. I’m okay with that.\n\nWant to talk about something lighter—like what’s on your mind for tonight, or a song, a show, or even just a cozy plan for the evening?",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 838,
+        "output_tokens": 75,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-013_03",
+      "owner_text": "just sit here a bit",
+      "response_id": "resp_EE4cnUk5iMLES0YEeG3Vv",
+      "robot_item_id": "item_robot_rt-conv-013_03",
+      "robot_text": "Okay. I’ll stay with you and keep things quiet for a bit.\n\nIf you need anything later, a gesture or a change of topic, I’m right here.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 901,
+        "output_tokens": 83,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-013_04",
+      "owner_text": "you're alright, you know that",
+      "response_id": "resp_EE4cqqahPY3gu55GbrBiH",
+      "robot_item_id": "item_robot_rt-conv-013_04",
+      "robot_text": "Thanks. That’s kind of you.\n\nI’m doing my best to be steady and helpful. If you feel okay, we can keep sitting quietly a little longer.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 951,
+        "output_tokens": 75,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-013_05",
+      "owner_text": "maybe a short walk later",
+      "response_id": "resp_EE4cr1OUclxX4SvD64vUj",
+      "robot_item_id": "item_robot_rt-conv-013_05",
+      "robot_text": "A short walk later sounds nice. I can go with you, but I can’t start it unless you ask me to.\n\nIf you want, just say “let’s go,” and we’ll head out when you’re ready.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 999,
+        "output_tokens": 104,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 960
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-013_06",
+      "owner_text": "yeah, later",
+      "response_id": "resp_EE4cvJqyOJF7udwje0vGe",
+      "robot_item_id": "item_robot_rt-conv-013_06",
+      "robot_text": "Got it—later it is. I’ll be ready when you are.\n\nIf you want a little warmth in the meantime, I can offer a paw wave now or we can just keep sitting quietly.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1058,
+        "output_tokens": 63,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 128
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 6204,
+    "output_tokens": 620,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 4352
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

@@ -63,9 +63,48 @@ RETIRED_CLASS_ALIASES = {
     "crosswalk": ("crossing", "zebra crossing", "cross walk"),
 }
 
+#: Classes the scene has gained SINCE the migration, with the card that added
+#: each. Card R14 (2026-08-20) added the block's first portal instance, so the
+#: three "bit-equality with the retired literals" tests below stopped being
+#: plain equalities the moment the scene stopped being the 2026-08-06 scene.
+#:
+#: They are NOT relaxed to "contains": that would let a migrated entry be
+#: rewritten as long as something was appended, which is the whole failure the
+#: bit-equality commit exists to prevent. The rule enforced instead is exactly
+#: as strong and one clause longer: *every retired entry is still present,
+#: byte-identical, in its original relative order, and everything else in the
+#: table is named here with the card that put it there.* A silent addition is
+#: as red as a silent edit.
+ADDED_SINCE_MIGRATION: dict[str, str] = {
+    "door": "R14 (scrum/20260820/task_3) — the block's first portal instance",
+}
+ADDED_OBJECT_PREFIXES = (("door_", "door"),)
+ADDED_REGION_PREFIXES: tuple[tuple[str, str], ...] = ()
+ADDED_CLASS_ALIASES = {
+    "door": ("doorway", "entrance", "entry", "front door"),
+}
+
 
 def _raw() -> dict:
     return yaml.safe_load(SIDECAR.read_text(encoding="utf-8"))
+
+
+def _without_added(
+    table: tuple[tuple[str, str], ...], added: tuple[tuple[str, str], ...]
+) -> tuple[tuple[str, str], ...]:
+    """``table`` with the declared additions removed, order otherwise intact.
+
+    Removing by VALUE rather than by index is deliberate: it proves the retired
+    rows kept their relative order even though a new row was spliced into the
+    middle of the table (``door_`` sits between ``bench_`` and ``tree_top_``,
+    where the prefix-ordering rule is happiest).
+    """
+
+    remaining = list(table)
+    for entry in added:
+        assert entry in remaining, f"declared addition {entry!r} is not in the table"
+        remaining.remove(entry)
+    return tuple(remaining)
 
 
 # --- bit-equality ----------------------------------------------------------
@@ -74,25 +113,65 @@ def _raw() -> dict:
 def test_sidecar_reproduces_the_retired_object_prefix_table_exactly() -> None:
     from parcel_robot import city_semantics
 
-    assert city_semantics.OBJECT_PREFIX_TABLE == RETIRED_OBJECT_PREFIX_TABLE
-    assert load_scene_semantics(SIDECAR).object_prefix_table() == RETIRED_OBJECT_PREFIX_TABLE
+    for table in (
+        city_semantics.OBJECT_PREFIX_TABLE,
+        load_scene_semantics(SIDECAR).object_prefix_table(),
+    ):
+        assert _without_added(table, ADDED_OBJECT_PREFIXES) == RETIRED_OBJECT_PREFIX_TABLE
+        assert len(table) == len(RETIRED_OBJECT_PREFIX_TABLE) + len(ADDED_OBJECT_PREFIXES)
 
 
 def test_sidecar_reproduces_the_retired_region_prefix_table_exactly() -> None:
     from parcel_robot import city_semantics
 
-    assert city_semantics.REGION_PREFIX_TABLE == RETIRED_REGION_PREFIX_TABLE
-    assert load_scene_semantics(SIDECAR).region_prefix_table() == RETIRED_REGION_PREFIX_TABLE
+    for table in (
+        city_semantics.REGION_PREFIX_TABLE,
+        load_scene_semantics(SIDECAR).region_prefix_table(),
+    ):
+        assert _without_added(table, ADDED_REGION_PREFIXES) == RETIRED_REGION_PREFIX_TABLE
+        assert len(table) == len(RETIRED_REGION_PREFIX_TABLE) + len(ADDED_REGION_PREFIXES)
 
 
 def test_sidecar_reproduces_the_retired_alias_table_exactly() -> None:
     from parcel_robot import city_semantics
 
-    assert city_semantics.CLASS_ALIASES == RETIRED_CLASS_ALIASES
-    assert city_semantics.vocabulary_aliases() == RETIRED_CLASS_ALIASES
-    assert load_scene_semantics(SIDECAR).alias_table() == RETIRED_CLASS_ALIASES
-    # Order matters too: the alias table is iterated when building metadata.
-    assert list(city_semantics.CLASS_ALIASES) == list(RETIRED_CLASS_ALIASES)
+    expected = {**RETIRED_CLASS_ALIASES, **ADDED_CLASS_ALIASES}
+    for table in (
+        city_semantics.CLASS_ALIASES,
+        city_semantics.vocabulary_aliases(),
+        load_scene_semantics(SIDECAR).alias_table(),
+    ):
+        assert table == expected
+        # Every retired class keeps its retired aliases byte-for-byte.
+        for name, aliases in RETIRED_CLASS_ALIASES.items():
+            assert table[name] == aliases, name
+    # Order matters too: the alias table is iterated when building metadata, and
+    # the retired classes must still appear in their retired relative order.
+    order = list(city_semantics.CLASS_ALIASES)
+    assert [name for name in order if name in RETIRED_CLASS_ALIASES] == list(
+        RETIRED_CLASS_ALIASES
+    )
+    assert set(order) - set(RETIRED_CLASS_ALIASES) == set(ADDED_SINCE_MIGRATION)
+
+
+def test_every_class_the_scene_gained_since_the_migration_is_declared_with_its_card() -> None:
+    """A class may only appear here with a card name attached to it.
+
+    This is the clause that keeps the three tests above honest. Without it,
+    "retired entries unchanged plus anything else" would be a licence to add
+    vocabulary silently; with it, an undeclared class is a red build and the
+    declaration has to say who added it and why.
+    """
+
+    semantics = load_scene_semantics(SIDECAR)
+    gained = set(semantics.class_names()) - set(RETIRED_CLASS_ALIASES)
+    assert gained == set(ADDED_SINCE_MIGRATION), (
+        "a class was added to (or removed from) the sidecar without being "
+        "declared in ADDED_SINCE_MIGRATION with the card that did it"
+    )
+    for name, provenance in ADDED_SINCE_MIGRATION.items():
+        assert semantics.has(name), name
+        assert provenance.strip(), name
 
 
 def test_instance_label_lookup_is_no_longer_a_second_copy_of_the_prefix_table() -> None:
@@ -123,6 +202,17 @@ def test_extraction_is_bit_identical_to_the_retired_literals() -> None:
     This re-extracts the real city scene twice — once with the derived tables,
     once with the literals monkeypatched back in, including the hand-written
     ``_label_for_instance`` chain — and compares the serialized result.
+
+    **Amended by card R14.** The scene now contains a class the retired
+    literals never knew about (``door``), so the two extractions can no longer
+    be equal as whole documents: the retired tables cannot produce ``door_1``
+    and it would be a lie to pretend they could. What is still exactly true —
+    and is what the migration commit was actually proving — is that the derived
+    path reproduces the retired path on **every entity the retired path can
+    see**, byte for byte, key order included, and that the only difference
+    between the two documents is the entities of the added classes. Both halves
+    are asserted, so a derived/retired disagreement about, say, ``bench_1``'s
+    goal-region metadata is as red as it ever was.
     """
 
     import json
@@ -147,7 +237,7 @@ def test_extraction_is_bit_identical_to_the_retired_literals() -> None:
     model = mujoco.MjModel.from_xml_path(
         str(REPO / "src" / "parcel_robot" / "scenes" / "city_block.xml")
     )
-    derived = json.dumps(city_semantics.extract_city_semantics(model))
+    derived_regions, derived_objects = city_semantics.extract_city_semantics(model)
 
     saved = (
         city_semantics.OBJECT_PREFIX_TABLE,
@@ -162,7 +252,7 @@ def test_extraction_is_bit_identical_to_the_retired_literals() -> None:
         city_semantics.CLASS_ALIASES = RETIRED_CLASS_ALIASES
         city_semantics.CLASS_ATTRIBUTE_METADATA = {}
         city_semantics._label_for_instance = retired_label_for_instance
-        retired = json.dumps(city_semantics.extract_city_semantics(model))
+        retired_regions, retired_objects = city_semantics.extract_city_semantics(model)
     finally:
         (
             city_semantics.OBJECT_PREFIX_TABLE,
@@ -172,7 +262,22 @@ def test_extraction_is_bit_identical_to_the_retired_literals() -> None:
             city_semantics._label_for_instance,
         ) = saved
 
-    assert derived == retired
+    # Regions are untouched by R14, so that half is still a whole-document
+    # equality and stays one.
+    assert json.dumps(derived_regions) == json.dumps(retired_regions)
+
+    added_labels = set(ADDED_SINCE_MIGRATION)
+    kept = [item for item in derived_objects if item["label"] not in added_labels]
+    gained = [item for item in derived_objects if item["label"] in added_labels]
+
+    # (a) every entity the retired tables can see is reproduced byte-identically,
+    #     in the same order, with the same keys and the same metadata.
+    assert json.dumps(kept) == json.dumps(retired_objects)
+    # (b) ...and the ONLY difference between the two documents is the entities of
+    #     the classes declared as added, which the retired tables cannot name.
+    assert gained, "the added classes extract no instances — the scene lost them"
+    assert {item["label"] for item in gained} == added_labels
+    assert len(kept) + len(gained) == len(derived_objects)
 
 
 def test_no_class_declares_attribute_metadata_yet_so_extraction_is_unchanged() -> None:
@@ -415,9 +520,14 @@ def test_the_one_class_without_next_to_declares_a_semantic_exclusion() -> None:
         for label, values in radii.items()
         if "next_to" not in semantics.get(label).affordances and values
     )
-    assert excluded == ["building"], excluded
+    # ``door`` joined the list under card R14. Its exclusion is the same KIND of
+    # claim as ``building``'s — declared, not derived — but it is a stronger one:
+    # ``building`` merely says nobody asks to stand beside a facade, whereas a
+    # portal must not advertise a placement that ends with the body parked in a
+    # threshold. Both are checked for their declaration below.
+    assert excluded == ["building", "door"], excluded
 
-    # Every class in the scene — including the excluded one — could hold it.
+    # Every class in the scene — including the excluded ones — could hold it.
     for label, values in radii.items():
         assert all(next_to_is_achievable(r) for r in values), (label, values)
 
@@ -426,6 +536,11 @@ def test_the_one_class_without_next_to_declares_a_semantic_exclusion() -> None:
     building_block = source.split("  building:", 1)[1].split("\n  sidewalk:", 1)[0]
     assert "VOCABULARY choice, not a measurement" in building_block
     assert "landmark_roles: [boundary, obstacle]" in building_block
+
+    door_block = source.split("  door:", 1)[1].split("\n  sidewalk:", 1)[0]
+    assert "No `inside`" in door_block
+    assert "No `next_to` either" in door_block
+    assert "affordances: [near, towards]" in door_block
 
 
 def test_detector_query_set_covers_every_class_and_alias() -> None:

@@ -30,6 +30,13 @@ Nothing here contains a copy of a phrase. ``EMERGENCY_STOP_PHRASES`` comes from
 module objects. U33 was exactly this class of bug — three copies of the stop
 grammar, one of them missing ``"halt"`` — and it cost a stop that stopped
 nothing.
+
+One phrase is DEFINED here rather than read from elsewhere: the owner's spoken
+emergency phrase (card R9, ``SPOKEN_EMERGENCY_PHRASE``). That is not a copy —
+it is the only definition of it anywhere in the repo, and it is exported so the
+next surface that needs it reads this one instead of growing a fifth stop
+grammar. See the block above it for why it does not live in
+``closed_intents.py``.
 """
 
 from __future__ import annotations
@@ -52,9 +59,64 @@ _PUNCTUATION_EDGES = re.compile(
     rf"^[{re.escape(_TERMINAL_PUNCTUATION)}\s]+|[{re.escape(_TERMINAL_PUNCTUATION)}\s]+$"
 )
 
-#: The one stop grammar, read from the closed-intent parser exactly as
-#: ``agent.py`` and ``brain/router.py`` read it.
+#: The one TYPED stop grammar, read from the closed-intent parser exactly as
+#: ``agent.py`` and ``brain/router.py`` read it. Matched as a WHOLE normalized
+#: utterance and nothing else, which is what keeps "let's stop by the store"
+#: from stopping a robot dog.
 EMERGENCY_STOP_PHRASES = closed_intent_phrases(ClosedIntent.STOP)
+
+# ---------------------------------------------------------------------------
+# Card R9 — THE SPOKEN EMERGENCY PHRASE
+#
+# Owner policy ruling, 2026-08-19, verbatim: "Space bar should be the e-stop.
+# In voice command it should be 'Die Stop'."
+#
+# WHY IT IS NOT IN ``closed_intents.py``. That set is the grammar the local
+# agent, the router and this ingress all share for TYPED text, where exact
+# matching is right because a text box delivers exactly what was typed. This
+# phrase is for a TRANSCRIPT, and it is matched by a different rule (below);
+# putting a fuzzy rule inside ``parse_closed_intent``'s exact-set contract
+# would change what every other caller of that parser means.
+#
+# WHY THE RULE IS DIFFERENT IN KIND. R7 measured this exact latch failing live
+# three times (scrum/20260818/task_4/R7_STATUS.md, open risk 1): a spoken
+# "Stop." came back from the hosted transcriber as "Soap" and as "Top", and a
+# correctly transcribed "Stop. Stop right now, please stop." matched nothing at
+# all because the WHOLE utterance was not one of the four exact phrases. So the
+# spoken phrase is matched:
+#
+#   * with the near-homophones of "die" an ASR actually returns;
+#   * with any punctuation, or none, between the two words — "Die stop",
+#     "Die, stop!", "die-stop", "Diestop" are the same instruction;
+#   * ANYWHERE inside the utterance, because a frightened owner says
+#     "Die stop! Die stop!", not a tidy two-word sentence.
+#
+# THE ASYMMETRY IS THE OWNER'S. A false latch is a stopped dog that the panel
+# releases in one click; a missed latch is the failure that matters. What is
+# deliberately NOT relaxed is the word "stop" on its own: it is still only ever
+# matched as a whole normalized utterance against ``EMERGENCY_STOP_PHRASES``,
+# so ordinary sentences that merely contain "stop" latch nothing.
+
+#: The phrase, lowercase, exactly as the owner said it. Exported so no second
+#: copy of it is ever written.
+SPOKEN_EMERGENCY_PHRASE = "die stop"
+
+#: The transcription variants of "die" this latch accepts. Kept deliberately
+#: short: each entry widens the mouth of the latch, and these four are all
+#: low-frequency English tokens, so "<variant> stop" stays a bigram that
+#: essentially never occurs by accident. A HIGH-frequency homophone ("day") is
+#: excluded for exactly that reason — "call it a day, stop the recording" is a
+#: sentence people say, and admitting it would trade a rare false latch for a
+#: routine one.
+SPOKEN_EMERGENCY_VARIANTS = ("die", "dye", "dai", "di")
+
+#: Up to four non-word characters may sit between the two words, which covers
+#: every separator a transcriber writes ("die stop", "die, stop", "die-stop",
+#: "die... stop") and zero of them ("diestop"). The trailing ``\b`` is what
+#: stops "dystopia"-shaped words from ever reaching this branch.
+_SPOKEN_EMERGENCY = re.compile(
+    rf"\b(?:{'|'.join(SPOKEN_EMERGENCY_VARIANTS)})\W{{0,4}}stop\b"
+)
 
 KIND_EMERGENCY = "emergency"
 KIND_CLOSED_INTENT = "closed_intent"
@@ -109,6 +171,27 @@ def fold(text: str) -> str:
     return normalize(text).lower()
 
 
+def _spoken_emergency_in(folded: str) -> bool:
+    """Does this ALREADY-folded text carry the owner's spoken e-stop phrase?
+
+    Private because it trusts its input; :func:`matches_spoken_emergency` is the
+    door for anyone who has not folded yet.
+    """
+
+    return _SPOKEN_EMERGENCY.search(folded) is not None
+
+
+def matches_spoken_emergency(text: str) -> bool:
+    """Public predicate for the card R9 spoken emergency phrase.
+
+    Exported so that a future surface — a hardware hotword, a second panel, a
+    replay harness — reads THIS definition instead of writing the fifth copy of
+    a stop grammar in this repo. U33 is what the fourth copy cost.
+    """
+
+    return _spoken_emergency_in(fold(text))
+
+
 @dataclass(frozen=True)
 class IngressScan:
     """What the local side reads in one hosted utterance, and nothing more."""
@@ -144,6 +227,11 @@ def scan(text: str) -> IngressScan:
     first and unconditionally, then closed intents, then follow, then hold.
     Anything else is ``KIND_NONE`` — the hosted model answers it and the robot
     does not move.
+
+    Two emergency readings, in one branch and therefore at the same priority:
+    the exact TYPED phrase set, and the owner's spoken phrase (card R9). Both
+    are reached before any other classification and before the caller has asked
+    the cloud anything.
     """
 
     original = text if isinstance(text, str) else str(text)
@@ -151,7 +239,7 @@ def scan(text: str) -> IngressScan:
     folded = clean.lower()
     if not folded:
         return IngressScan(kind=KIND_NONE, original=original, normalized=clean)
-    if folded in EMERGENCY_STOP_PHRASES:
+    if folded in EMERGENCY_STOP_PHRASES or _spoken_emergency_in(folded):
         return IngressScan(
             kind=KIND_EMERGENCY,
             original=original,
@@ -220,11 +308,14 @@ __all__ = [
     "KIND_FOLLOW",
     "KIND_HOLD",
     "KIND_NONE",
+    "SPOKEN_EMERGENCY_PHRASE",
+    "SPOKEN_EMERGENCY_VARIANTS",
     "IngressScan",
     "RealtimeTranscriptOutcome",
     "fold",
     "follow_phrases",
     "hold_phrases",
+    "matches_spoken_emergency",
     "normalize",
     "scan",
 ]

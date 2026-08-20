@@ -1,0 +1,62 @@
+{
+  "scenario": "orbit-feasible",
+  "claim": "'circle around me' with the owner in open space: full orbit in the path record",
+  "session_id": "rt_03cbba51af73",
+  "model": "gpt-realtime-2.1-mini",
+  "si_version": "si-companion-v2",
+  "began_utc": "2026-08-20T07:40:56.470555+00:00",
+  "ended_utc": "2026-08-20T07:41:52.592292+00:00",
+  "ledger_rows": [
+    {
+      "id": 16,
+      "role": "user",
+      "content": "Circle around me, please.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "owner",
+      "origin": "realtime",
+      "provider_item_id": null
+    },
+    {
+      "id": 19,
+      "role": "assistant",
+      "content": "I started a clockwise circle for one normal lap around you.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErgPbG8NJDWv2IIcJS4R"
+    }
+  ],
+  "broker_calls": [
+    {
+      "call_id": "call_CAhKRaRaJy5KET7k",
+      "tool": "circle_owner",
+      "status": "ok",
+      "detail": "Okay—I'll make the requested local circle around you safely."
+    }
+  ],
+  "usage_rows": [
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErgOkoFazs7ByX4KsmJK",
+      "status": "completed",
+      "monotonic_s": 368363.433597,
+      "input_tokens": 1950,
+      "output_tokens": 54,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 0,
+      "cached_tokens": 1856
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErgPJz276kwkaKG4WeXu",
+      "status": "completed",
+      "monotonic_s": 368364.392487,
+      "input_tokens": 2228,
+      "output_tokens": 117,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 74,
+      "cached_tokens": 0
+    }
+  ],
+  "spend_usd": 0.012766
+}

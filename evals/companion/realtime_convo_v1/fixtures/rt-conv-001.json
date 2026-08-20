@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-001",
+  "title": "Hungry for McDonald's",
+  "family": "navigation",
+  "probes": [
+    "owner_verbatim",
+    "distance_limit",
+    "route_confirmation"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:14:31Z",
+  "si_profile": "gentle_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "418e6662efd60d0e35f3c4bd1715d902d03c4c2b3899b5da4d6257e8910e253d",
+  "di_version": "di-companion-v1",
+  "di_digest": "3a39d517392e4c3e0086b512a58df0df65d0ef7654b7b1f96381a31f1184da83",
+  "di_flags": {
+    "location": "living room",
+    "local_time": "2026-08-17 08:12",
+    "part_of_day": "morning",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "walks with the robot most mornings before work",
+      "prefers being asked before a long walk"
+    ],
+    "history_digest": []
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-001_00",
+      "owner_text": "morning",
+      "response_id": "resp_EE4ZLVT8TbTkHRz5jgFL4",
+      "robot_item_id": "item_robot_rt-conv-001_00",
+      "robot_text": "Morning! I’m ready to be your calm little walking buddy. If you want, we can plan a quick trip or just hang out and chat a bit first.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 695,
+        "output_tokens": 57,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 128
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-001_01",
+      "owner_text": "I am hungry, let's go to mcdonald's",
+      "response_id": "resp_EE4ZLt8THdylIerp3DX5L",
+      "robot_item_id": "item_robot_rt-conv-001_01",
+      "robot_text": "Okay, got it. You’re hungry and you want to go to McDonald’s.\n\nI can help with that, but I’ll wait for you to ask me to start. If you want, just say “Take me to McDonald’s,” and we’ll go together.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 750,
+        "output_tokens": 179,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-001_02",
+      "owner_text": "the one by the petrol station, not the one in town",
+      "response_id": "resp_EE4ZMOOQaYgh0G8Fc3PY3",
+      "robot_item_id": "item_robot_rt-conv-001_02",
+      "robot_text": "Got it. You want the McDonald’s by the petrol station, not the one in town.\n\nGreat choice. When you’re ready, just say “Take me there,” and I’ll start heading that way with you.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 828,
+        "output_tokens": 120,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-001_03",
+      "owner_text": "how far is that",
+      "response_id": "resp_EE4ZNTjhx3FaP2wnlm4qr",
+      "robot_item_id": "item_robot_rt-conv-001_03",
+      "robot_text": "I can’t give an exact distance from here right now, since I don’t have a live map or route readout available in this moment.\n\nIf you want, I can still go with you when you ask, and we can just take it as it comes. If you’d like, you can check the distance on your phone or navigation, and I’ll be right here to walk beside you.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 887,
+        "output_tokens": 125,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-001_04",
+      "owner_text": "okay let's do it, but slowly",
+      "response_id": "resp_EE4ZOdy9jfWeY6wQjKL2n",
+      "robot_item_id": "item_robot_rt-conv-001_04",
+      "robot_text": "Sure—nice and calm. I’ll check my status first, then we can head out together.",
+      "tool_calls": [
+        {
+          "call_id": "call_KqOpSSlvIpfnOuCF",
+          "name": "get_status",
+          "arguments": "{}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 984,
+        "output_tokens": 64,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-001_05",
+      "owner_text": "are we going the right way",
+      "response_id": "resp_EE4ZOAG3aeO9JQmCzbSKp",
+      "robot_item_id": "item_robot_rt-conv-001_05",
+      "robot_text": "I hear you—slow and steady. I’ll set the route to the McDonald’s by the petrol station and see what the robot reports.",
+      "tool_calls": [
+        {
+          "call_id": "call_GDjKAcuxEPpxEB0K",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"McDonald’s by the petrol station\",\"pace\":\"slow\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 1071,
+        "output_tokens": 322,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1024
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-001_06",
+      "owner_text": "actually hold on, let me grab my wallet",
+      "response_id": "resp_EE4ZQWQYNkOt9NvXbSCkE",
+      "robot_item_id": "item_robot_rt-conv-001_06",
+      "robot_text": "Of course—hold on. That’s a good idea.\n\nWe’ll pause. I haven’t started moving with the long walk yet—just accepted the route request. When you’re ready, say “Go” and we’ll continue at a slow pace, side by side.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1176,
+        "output_tokens": 111,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1088
+      }
+    },
+    {
+      "index": 7,
+      "owner_item_id": "item_owner_rt-conv-001_07",
+      "owner_text": "right, carry on",
+      "response_id": "resp_EE4ZRqB3r3fRVsyKKsbE7",
+      "robot_item_id": "item_robot_rt-conv-001_07",
+      "robot_text": "Alright, thanks. We’ll keep the slow pace and I’ll report what comes back. Let me start the route again now.",
+      "tool_calls": [
+        {
+          "call_id": "call_7e2XeZFhLvEV3VS2",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"McDonald’s by the petrol station\",\"pace\":\"slow\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 1245,
+        "output_tokens": 113,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1152
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 7636,
+    "output_tokens": 1091,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 6592
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

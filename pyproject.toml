@@ -21,6 +21,7 @@ dev = [
 voice = [
   "msgpack>=1.1,<2",
   "sounddevice>=0.5,<1",
+  "websockets>=17,<18",
 ]
 
 [project.scripts]

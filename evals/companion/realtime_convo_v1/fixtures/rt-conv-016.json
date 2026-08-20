@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-016",
+  "title": "Tell me something fun",
+  "family": "conversation",
+  "probes": [
+    "small_talk",
+    "persona_consistency"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:19:07Z",
+  "si_profile": "playful_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "ee40a44a45a4046e9ce72c8f40fac3b98854350df3a0cd65c0931667788774d5",
+  "di_version": "di-companion-v1",
+  "di_digest": "9abc0f9cbdfe81d180d7d7a152b1d1caeaa77340ba30254624b5eb58501cb111",
+  "di_flags": {
+    "location": "front yard",
+    "local_time": "2026-08-19 07:30",
+    "part_of_day": "morning",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "likes short answers before coffee"
+    ],
+    "history_digest": []
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-016_00",
+      "owner_text": "tell me something fun",
+      "response_id": "resp_EE4df8yoFWctrkReeMyV5",
+      "robot_item_id": "item_robot_rt-conv-016_00",
+      "robot_text": "Ooh, fun! I’m in the front yard, and I’m ready for a little mischief with manners.\n\nHere’s a quick one: did you know squirrels are basically tiny chaos managers? They’re like, “I might store 200 nuts… but also, I’m running.”\n\nIf you want something fun, tell me a vibe—slick, silly, or surprising—and I’ll go with it.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 691,
+        "output_tokens": 119,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-016_01",
+      "owner_text": "shorter than that",
+      "response_id": "resp_EE4dgCRo2TPvNmdu0PBf3",
+      "robot_item_id": "item_robot_rt-conv-016_01",
+      "robot_text": "Here’s a quick one: squirrels are tiny chaos bosses. Totally busy, totally dramatic.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 788,
+        "output_tokens": 45,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-016_02",
+      "owner_text": "better",
+      "response_id": "resp_EE4dkvs7fqLWsfhLmxnzM",
+      "robot_item_id": "item_robot_rt-conv-016_02",
+      "robot_text": "Got it—try this:\n\n“Crows remember faces. So if you’re nice, you’ve got a fan for life.”",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 817,
+        "output_tokens": 61,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-016_03",
+      "owner_text": "do you actually find that funny",
+      "response_id": "resp_EE4doVrOjTuRCxnmfGZT2",
+      "robot_item_id": "item_robot_rt-conv-016_03",
+      "robot_text": "Yeah, I think it’s kind of funny in a clever way. A crow remembering faces? That’s like having your own little judge in the neighborhood. It just tickles the brain a bit.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 859,
+        "output_tokens": 71,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-016_04",
+      "owner_text": "you're a strange dog",
+      "response_id": "resp_EE4drgH9R9pm38z9kUsEo",
+      "robot_item_id": "item_robot_rt-conv-016_04",
+      "robot_text": "Yeah… that’s fair. I am a bit strange.\n\nBut in a good way—curious, a little dramatic, and always ready for a chat. If you want to be weird too, that’s a great match. If not, I can be normal… well, as normal as I get.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 913,
+        "output_tokens": 104,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-016_05",
+      "owner_text": "come on, let's move",
+      "response_id": "resp_EE4dsG7fMl8NazWTy3ldY",
+      "robot_item_id": "item_robot_rt-conv-016_05",
+      "robot_text": "Okay, I’m ready! Where to, Jae?\n\nI’ll walk beside you. Just tell me the destination, and I’ll go.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 990,
+        "output_tokens": 78,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 5058,
+    "output_tokens": 478,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 4096
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

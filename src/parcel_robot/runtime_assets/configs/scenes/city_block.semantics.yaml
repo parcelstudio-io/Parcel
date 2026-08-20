@@ -32,6 +32,12 @@ scene: src/parcel_robot/scenes/city_block.xml
 geom_prefixes:
   - {prefix: lamp_post_, class: lamppost}
   - {prefix: bench_, class: bench}
+  # Card R14. The block's first portal instance. The entry wall's two stubs
+  # (`entry_wall_1`, `entry_wall_2`) deliberately carry NO prefix: they are
+  # scene furniture like `window_*` and `curb`, and giving them one would make
+  # each of them its own rival `door` candidate — `_instance_id` files every
+  # geom of an unlisted class under its own name.
+  - {prefix: door_, class: door}
   - {prefix: tree_top_, class: tree}   # canopy geoms fold into the tree instance
   - {prefix: tree_, class: tree}
   - {prefix: planter_, class: planter}
@@ -151,6 +157,40 @@ classes:
         Facade boxes; derived radii run 1.84-2.41 m. Since the next_to band is
         surface-anchored the radius no longer decides the affordance — see the
         note above for why the exclusion stands anyway.
+    metadata: {}
+
+  door:
+    # Card R14. The class the E1 `door-etiquette` scenario could not find,
+    # because until now no shipped scene contained one.
+    #
+    # `kind: object` is NOT a judgement that a door is furniture — it is the
+    # only kind this schema HAS. `scene_semantics.CLASS_KINDS` is
+    # {object, region} and there is no third prefix table, so a sidecar cannot
+    # say "portal" today. The portal SEMANTICS live one layer up, in
+    # `navigation/arrival_semantics.ARRIVAL_TABLE`, which classifies the word
+    # rather than the scene entry. Read R14_STATUS.md §3 before assuming the
+    # two agree: they do not, and the disagreement is a reported defect, not a
+    # property of this file.
+    #
+    # No `inside`: a doorway is a thing you stop AT, never a region you occupy.
+    # That exclusion is the sidecar half of the do-not-cross policy and it is
+    # declared here rather than measured, exactly like `building`'s missing
+    # `next_to`. No `next_to` either — you do not stand socially beside a door.
+    kind: object
+    aliases: [doorway, entrance, entry, front door]
+    affordances: [near, towards]
+    landmark_roles: [waypoint, boundary]
+    size:
+      source: geom_radius_m
+      note: >-
+        One leaf geom set into the entry wall at the north sidewalk's west end;
+        the two wall stubs beside it carry no prefix and so are not instances of
+        anything. Derived radius 0.404475 m (the box's horizontal circumscribed
+        radius). NO COORDINATES HERE, deliberately: where the leaf stands and
+        how wide its K0 `near` band comes out are read from the MJCF at
+        extraction time and recorded in the generated scene_truth.json. The
+        reachability of that band was measured, not assumed — see
+        R14_STATUS.md.
     metadata: {}
 
   sidewalk:

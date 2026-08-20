@@ -1,14 +1,15 @@
 # Voice-enabled robot dog development stack
 
-This is the implemented development profile for Parcel on the current desktop.
-It keeps probabilistic AI outside the final motor-safety boundary and makes the
-simulator replaceable when the project moves from local development to richer
-urban training or a physical Go2.
+This is the implemented **local-cascade development profile** for Parcel. As of
+2026-08-18, `scripts/launch_stack.sh` makes the hosted GPT Realtime lane the
+explicit production conversational path and requires `--legacy` to select the
+profile described here. The local cascade remains the rollback/E2E-test path;
+both paths keep probabilistic AI outside the final motor-safety boundary.
 
-Read [CURRENT_STATUS.md](CURRENT_STATUS.md) before setup: it records which
-pieces are merely implemented, which are wired, and which are actually usable
-on this desktop. [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) explains the
-advantages and limitations behind the split below.
+Read the [documentation index](README.md) before setup; `CURRENT_STATUS.md` is
+an August 4 historical snapshot. [VOICE_PROVIDER_ARCHITECTURE.md](VOICE_PROVIDER_ARCHITECTURE.md)
+records the provider boundary, while [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md)
+explains the advantages and limitations behind the split below.
 
 ## Architecture
 
@@ -189,11 +190,12 @@ use the array's own playback/DAC path so its AEC receives the reference signal.
 
 ## Run it
 
-The standard stack starts the CPU reasoner, MuJoCo, and the browser control deck:
+The explicit local-cascade stack starts the CPU reasoner, MuJoCo, and the
+browser control deck:
 
 ```bash
 cd /home/jaewoo-jang/Desktop/Projects/Parcel
-./scripts/launch_stack.sh
+./scripts/launch_stack.sh --legacy
 ```
 
 Open <http://127.0.0.1:8765> if the browser does not open automatically. The
@@ -207,15 +209,15 @@ Optional services:
 
 ```bash
 # ASR service (useful after PortAudio and a microphone endpoint are available)
-./scripts/launch_stack.sh --whisper
+./scripts/launch_stack.sh --legacy --whisper
 
 # Start Fish S2 Pro only (review its license; reserves most of the GPU).
 # This does NOT select it; use an experimental config with
 # speech.tts_provider: fish_s2.
-./scripts/launch_stack.sh --fish
+./scripts/launch_stack.sh --legacy --fish
 
 # Deterministic command parser, without Gemma
-./scripts/launch_stack.sh --no-reasoner
+./scripts/launch_stack.sh --legacy --no-reasoner
 ```
 
 Services can also be launched independently. Each long-running launcher below

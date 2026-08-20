@@ -1,0 +1,84 @@
+{"t_s": 0.0, "x": -6.95, "y": 1.2, "heading_rad": 1.5708, "owner_x": -5.4, "owner_y": 1.0, "phase": "searching", "note": "semantic_search_scan"}
+{"t_s": 0.1, "x": -6.95, "y": 1.212, "heading_rad": 1.5708, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "semantic_target_resolved"}
+{"t_s": 0.2, "x": -6.95, "y": 1.212, "heading_rad": 1.5708, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=24.2 route=2 status=planned|clear"}
+{"t_s": 0.3, "x": -6.95, "y": 1.212, "heading_rad": 1.5888, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=23.1 route=2 status=planned|clear"}
+{"t_s": 0.4, "x": -6.95, "y": 1.212, "heading_rad": 1.6248, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=21.1 route=2 status=planned|clear"}
+{"t_s": 0.5, "x": -6.95, "y": 1.212, "heading_rad": 1.67625, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=18.1 route=2 status=planned|clear"}
+{"t_s": 0.6, "x": -6.95, "y": 1.212, "heading_rad": 1.72051, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=15.6 route=2 status=planned|clear"}
+{"t_s": 0.7, "x": -6.95, "y": 1.212, "heading_rad": 1.75856, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=13.4 route=2 status=planned|clear"}
+{"t_s": 0.8, "x": -6.95, "y": 1.212, "heading_rad": 1.79129, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=11.5 route=2 status=planned|clear"}
+{"t_s": 0.9, "x": -6.95, "y": 1.212, "heading_rad": 1.81944, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=9.9 route=2 status=planned|clear"}
+{"t_s": 1.0, "x": -6.95, "y": 1.212, "heading_rad": 1.84365, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=8.5 route=2 status=planned|clear"}
+{"t_s": 1.1, "x": -6.95, "y": 1.212, "heading_rad": 1.86446, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_align err=7.3 route=2 status=planned|clear"}
+{"t_s": 1.2, "x": -6.95, "y": 1.212, "heading_rad": 1.88446, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=6.2 goal=1.5 route=2 status=planned|clear"}
+{"t_s": 1.3, "x": -6.9528, "y": 1.2205, "heading_rad": 1.89957, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=5.4 goal=1.5 route=2 status=planned|clear"}
+{"t_s": 1.4, "x": -6.9587, "y": 1.2375, "heading_rad": 1.91264, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=4.7 goal=1.5 route=2 status=planned|clear"}
+{"t_s": 1.5, "x": -6.9679, "y": 1.2629, "heading_rad": 1.92404, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=4.1 goal=1.5 route=2 status=planned|clear"}
+{"t_s": 1.6, "x": -6.9805, "y": 1.2967, "heading_rad": 1.93405, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=3.6 goal=1.4 route=2 status=planned|clear"}
+{"t_s": 1.7, "x": -6.9967, "y": 1.3387, "heading_rad": 1.9429, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=3.2 goal=1.4 route=2 status=planned|clear"}
+{"t_s": 1.8, "x": -7.0165, "y": 1.3889, "heading_rad": 1.95079, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=2.9 goal=1.3 route=2 status=planned|clear"}
+{"t_s": 1.9, "x": -7.0376, "y": 1.4412, "heading_rad": 1.95789, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=2.6 goal=1.3 route=2 status=planned|clear"}
+{"t_s": 2.0, "x": -7.0581, "y": 1.491, "heading_rad": 1.9643, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=2.4 goal=1.2 route=2 status=planned|clear"}
+{"t_s": 2.1, "x": -7.078, "y": 1.5386, "heading_rad": 1.97009, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=2.1 goal=1.2 route=2 status=planned|clear"}
+{"t_s": 2.2, "x": -7.0973, "y": 1.5841, "heading_rad": 1.97533, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=1.9 goal=1.1 route=2 status=planned|clear"}
+{"t_s": 2.3, "x": -7.1159, "y": 1.6274, "heading_rad": 1.98005, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=1.7 goal=1.1 route=2 status=planned|clear"}
+{"t_s": 2.4, "x": -7.134, "y": 1.6688, "heading_rad": 1.98432, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=1.6 goal=1.0 route=2 status=planned|clear"}
+{"t_s": 2.5, "x": -7.1514, "y": 1.7083, "heading_rad": 1.98818, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=1.4 goal=1.0 route=2 status=planned|clear"}
+{"t_s": 2.6, "x": -7.1682, "y": 1.746, "heading_rad": 1.99166, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=1.3 goal=1.0 route=2 status=planned|clear"}
+{"t_s": 2.7, "x": -7.1844, "y": 1.7821, "heading_rad": 1.99481, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=1.2 goal=0.9 route=2 status=planned|clear"}
+{"t_s": 2.8, "x": -7.2, "y": 1.8165, "heading_rad": 1.99765, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=1.1 goal=0.9 route=2 status=planned|clear"}
+{"t_s": 2.9, "x": -7.215, "y": 1.8493, "heading_rad": 2.00023, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=1.0 goal=0.8 route=2 status=planned|clear"}
+{"t_s": 3.0, "x": -7.2294, "y": 1.8807, "heading_rad": 2.00255, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.9 goal=0.8 route=2 status=planned|clear"}
+{"t_s": 3.1, "x": -7.2432, "y": 1.9107, "heading_rad": 2.00465, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.8 goal=0.8 route=2 status=planned|clear"}
+{"t_s": 3.2, "x": -7.2565, "y": 1.9393, "heading_rad": 2.00654, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.7 goal=0.7 route=2 status=planned|clear"}
+{"t_s": 3.3, "x": -7.2693, "y": 1.9667, "heading_rad": 2.00826, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.6 goal=0.7 route=2 status=planned|clear"}
+{"t_s": 3.4, "x": -7.2816, "y": 1.9929, "heading_rad": 2.0098, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.6 goal=0.7 route=2 status=planned|clear"}
+{"t_s": 3.5, "x": -7.2933, "y": 2.0178, "heading_rad": 2.0112, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.5 goal=0.7 route=2 status=planned|clear"}
+{"t_s": 3.6, "x": -7.3044, "y": 2.0414, "heading_rad": 2.01247, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.5 goal=0.6 route=2 status=planned|clear"}
+{"t_s": 3.7, "x": -7.3146, "y": 2.0628, "heading_rad": 2.01361, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.4 goal=0.6 route=2 status=planned|clear"}
+{"t_s": 3.8, "x": -7.3239, "y": 2.0826, "heading_rad": 2.01464, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.4 goal=0.6 route=2 status=planned|clear"}
+{"t_s": 3.9, "x": -7.3326, "y": 2.1008, "heading_rad": 2.01557, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.3 goal=0.6 route=2 status=planned|clear"}
+{"t_s": 4.0, "x": -7.3406, "y": 2.1176, "heading_rad": 2.0164, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.3 goal=0.6 route=2 status=planned|clear"}
+{"t_s": 4.1, "x": -7.3481, "y": 2.1331, "heading_rad": 2.01714, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.3 goal=0.5 route=2 status=planned|clear"}
+{"t_s": 4.2, "x": -7.355, "y": 2.1476, "heading_rad": 2.01781, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.2 goal=0.5 route=2 status=planned|clear"}
+{"t_s": 4.3, "x": -7.3615, "y": 2.1611, "heading_rad": 2.0184, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.2 goal=0.5 route=2 status=planned|clear"}
+{"t_s": 4.4, "x": -7.3676, "y": 2.1738, "heading_rad": 2.01894, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.2 goal=0.5 route=2 status=planned|clear"}
+{"t_s": 4.5, "x": -7.3732, "y": 2.1856, "heading_rad": 2.01941, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.2 goal=0.5 route=2 status=planned|clear"}
+{"t_s": 4.6, "x": -7.3786, "y": 2.1967, "heading_rad": 2.01983, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.2 goal=0.5 route=2 status=planned|clear"}
+{"t_s": 4.7, "x": -7.3838, "y": 2.2075, "heading_rad": 2.02021, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.5 route=2 status=planned|clear"}
+{"t_s": 4.8, "x": -7.389, "y": 2.2183, "heading_rad": 2.02054, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.4 route=2 status=planned|clear"}
+{"t_s": 4.9, "x": -7.3942, "y": 2.2291, "heading_rad": 2.02084, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.4 route=2 status=planned|clear"}
+{"t_s": 5.0, "x": -7.3995, "y": 2.2399, "heading_rad": 2.0211, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.4 route=2 status=planned|clear"}
+{"t_s": 5.1, "x": -7.4047, "y": 2.2507, "heading_rad": 2.02134, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.4 route=2 status=planned|clear"}
+{"t_s": 5.2, "x": -7.4099, "y": 2.2615, "heading_rad": 2.02155, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.4 route=2 status=planned|clear"}
+{"t_s": 5.3, "x": -7.4151, "y": 2.2723, "heading_rad": 2.02174, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.4 route=2 status=planned|clear"}
+{"t_s": 5.4, "x": -7.4204, "y": 2.2831, "heading_rad": 2.02191, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.4 route=2 status=planned|clear"}
+{"t_s": 5.5, "x": -7.4256, "y": 2.2939, "heading_rad": 2.02206, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.4 route=2 status=planned|clear"}
+{"t_s": 5.6, "x": -7.4308, "y": 2.3047, "heading_rad": 2.0222, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.1 goal=0.3 route=2 status=planned|clear"}
+{"t_s": 5.7, "x": -7.4361, "y": 2.3155, "heading_rad": 2.02232, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.3 route=2 status=planned|clear"}
+{"t_s": 5.8, "x": -7.4413, "y": 2.3263, "heading_rad": 2.02244, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.3 route=2 status=planned|clear"}
+{"t_s": 5.9, "x": -7.4465, "y": 2.3371, "heading_rad": 2.02254, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.3 route=2 status=planned|clear"}
+{"t_s": 6.0, "x": -7.4518, "y": 2.3479, "heading_rad": 2.02263, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.3 route=2 status=planned|clear"}
+{"t_s": 6.1, "x": -7.457, "y": 2.3587, "heading_rad": 2.02271, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.3 route=2 status=planned|clear"}
+{"t_s": 6.2, "x": -7.4623, "y": 2.3695, "heading_rad": 2.02279, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.3 route=2 status=planned|clear"}
+{"t_s": 6.3, "x": -7.4675, "y": 2.3803, "heading_rad": 2.02286, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.3 route=2 status=planned|clear"}
+{"t_s": 6.4, "x": -7.4727, "y": 2.3911, "heading_rad": 2.02292, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 6.5, "x": -7.478, "y": 2.4019, "heading_rad": 2.02298, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 6.6, "x": -7.4832, "y": 2.4127, "heading_rad": 2.02304, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 6.7, "x": -7.4885, "y": 2.4235, "heading_rad": 2.02309, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 6.8, "x": -7.4937, "y": 2.4343, "heading_rad": 2.02314, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 6.9, "x": -7.499, "y": 2.4451, "heading_rad": 2.02318, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 7.0, "x": -7.5042, "y": 2.4559, "heading_rad": 2.02323, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 7.1, "x": -7.5095, "y": 2.4667, "heading_rad": 2.02327, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 7.2, "x": -7.5147, "y": 2.4775, "heading_rad": 2.02331, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.2 route=2 status=planned|clear"}
+{"t_s": 7.3, "x": -7.52, "y": 2.4882, "heading_rad": 2.02335, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.1 route=2 status=planned|clear"}
+{"t_s": 7.4, "x": -7.5252, "y": 2.499, "heading_rad": 2.02339, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.1 route=2 status=planned|clear"}
+{"t_s": 7.5, "x": -7.5304, "y": 2.5098, "heading_rad": 2.02344, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "grid_track err=0.0 goal=0.1 route=2 status=planned|clear"}
+{"t_s": 7.6, "x": -7.5357, "y": 2.5206, "heading_rad": 2.02349, "owner_x": -5.4, "owner_y": 1.0, "phase": "verifying", "note": "semantic_stop_requested"}
+{"t_s": 7.7, "x": -7.5357, "y": 2.5206, "heading_rad": 2.02349, "owner_x": -5.4, "owner_y": 1.0, "phase": "searching", "note": "semantic_replan_after_verification_failure"}
+{"t_s": 7.8, "x": -7.5357, "y": 2.5206, "heading_rad": 2.02349, "owner_x": -5.4, "owner_y": 1.0, "phase": "searching", "note": "semantic_search_scan"}
+{"t_s": 7.9, "x": -7.5357, "y": 2.5206, "heading_rad": 1.98849, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "semantic_target_resolved"}
+{"t_s": 8.0, "x": -7.5357, "y": 2.5206, "heading_rad": 1.98849, "owner_x": -5.4, "owner_y": 1.0, "phase": "searching", "note": "semantic_replan_after_verification_failure"}
+{"t_s": 8.1, "x": -7.5357, "y": 2.5206, "heading_rad": 1.98849, "owner_x": -5.4, "owner_y": 1.0, "phase": "searching", "note": "semantic_search_scan"}
+{"t_s": 8.2, "x": -7.5357, "y": 2.5206, "heading_rad": 1.95349, "owner_x": -5.4, "owner_y": 1.0, "phase": "running", "note": "semantic_target_resolved"}
+{"t_s": 8.3, "x": -7.5357, "y": 2.5206, "heading_rad": 1.95349, "owner_x": -5.4, "owner_y": 1.0, "phase": "failed", "note": "semantic_arrival_verification_failed"}

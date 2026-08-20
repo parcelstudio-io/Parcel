@@ -90,6 +90,7 @@ source .parcel/bin/activate
 | --- | --- |
 | sounddevice | `>=0.5,<1` |
 | msgpack | `>=1.1,<2` |
+| websockets | `>=17,<18` |
 
 **Native OS note:** the Python `sounddevice` package is installed, but its
 import currently fails because `libportaudio2` is absent. Install the native
@@ -111,6 +112,7 @@ from `pip freeze` after install). Key versions at last install:
 | ruff | 0.16.1 |
 | msgpack | 1.2.1 |
 | sounddevice | 0.5.5 |
+| websockets | 17.0.1 |
 | parcel-robot-dog | 0.1.0 (editable) |
 
 MuJoCo pulls transitive deps: `absl-py`, `etils`, `glfw`, `PyOpenGL`, `fsspec`, etc.

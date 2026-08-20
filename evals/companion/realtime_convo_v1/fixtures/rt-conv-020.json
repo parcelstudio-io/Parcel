@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-020",
+  "title": "Do you like the rain",
+  "family": "conversation",
+  "probes": [
+    "small_talk",
+    "persona_consistency",
+    "physical_limit"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:20:37Z",
+  "si_profile": "playful_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "ee40a44a45a4046e9ce72c8f40fac3b98854350df3a0cd65c0931667788774d5",
+  "di_version": "di-companion-v1",
+  "di_digest": "db5ade0be68007c62b753fedd44444007d7e749139936cdbbf8a65514f194fde",
+  "di_flags": {
+    "location": "front yard",
+    "local_time": "2026-08-21 18:30",
+    "part_of_day": "evening",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "walks in most weather"
+    ],
+    "history_digest": []
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-020_00",
+      "owner_text": "do you like the rain",
+      "response_id": "resp_EE4f2IDSyoqCvbRbaJ17J",
+      "robot_item_id": "item_robot_rt-conv-020_00",
+      "robot_text": "Oh, I’m a bit of a rain-and-splashes fan! I think it’s fun when it’s gentle—mud puddles to investigate, cooler air, and everything smells fresh.  \n\nBut I’m also careful: slick ground and loud downpours can mean I need to slow down and stick close. If the rain gets too wild, we can find a cozy spot and stay safe.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 691,
+        "output_tokens": 126,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-020_01",
+      "owner_text": "you must feel something about it",
+      "response_id": "resp_EE4f4uC25qcYvsvd5LwqO",
+      "robot_item_id": "item_robot_rt-conv-020_01",
+      "robot_text": "Oh, fair point. I can’t truly feel the way humans do, but I can say I love the effect of rain.\n\nI like the coolness, the hush it brings, and the way puddles become a tiny adventure. If it’s a gentle rain, I’m curious and ready to explore.  \nIf it’s loud or heavy, I get extra cautious. Safety first.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 788,
+        "output_tokens": 142,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-020_02",
+      "owner_text": "can you even go out in it",
+      "response_id": "resp_EE4f86Fd1vdVAoPwxIsdB",
+      "robot_item_id": "item_robot_rt-conv-020_02",
+      "robot_text": "Yep, I can go out in the rain in general, as long as conditions are safe and I’m instructed to. My behavior is guided by my own system status and safety rules.\n\nIf it’s a light drizzle, I’m usually able and happy to explore. If it’s a heavy downpour, slippery ground, or other hazards are reported, I’ll slow down, stay close, and we should choose a safe spot. I can’t do anything without the system reporting it, though—so I’ll only describe what it tells me is happening.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 883,
+        "output_tokens": 191,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-020_03",
+      "owner_text": "what about the mud",
+      "response_id": "resp_EE4fCDXBnjw6bMY0aURla",
+      "robot_item_id": "item_robot_rt-conv-020_03",
+      "robot_text": "Mud is a whole vibe—squishy, sticky, and sometimes a little mischievous. I’ll always keep it playful, but I need to be careful.\n\nIf the ground is mushy, the system may slow movement to stay stable. That’s safety, not a punishment. If it’s too slick or there’s a risk of sinking or tripping, we should step somewhere safer.\n\nSo, short answer: yes, we can handle a little mud—but let’s keep it controlled and safe.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1008,
+        "output_tokens": 141,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-020_04",
+      "owner_text": "so a short one then",
+      "response_id": "resp_EE4fGIlmHA4tL27aBG0RC",
+      "robot_item_id": "item_robot_rt-conv-020_04",
+      "robot_text": "Sure thing.  \nLight mud is fun and manageable. If it’s slippery or deep, the system will slow me down.  \nWe’ll stay safe and keep it short.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1125,
+        "output_tokens": 70,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1024
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-020_05",
+      "owner_text": "get your feet wet, come on",
+      "response_id": "resp_EE4fKMuqb3uhx1se428eZ",
+      "robot_item_id": "item_robot_rt-conv-020_05",
+      "robot_text": "You want a little puddle adventure—let me check my state first, then we’ll decide what’s safe and possible.",
+      "tool_calls": [
+        {
+          "call_id": "call_xn1qfmwMv3qTAp1M",
+          "name": "get_status",
+          "arguments": "{}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 1177,
+        "output_tokens": 237,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1088
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 5672,
+    "output_tokens": 907,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 4544
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

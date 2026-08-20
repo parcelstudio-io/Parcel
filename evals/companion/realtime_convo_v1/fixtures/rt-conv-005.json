@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-005",
+  "title": "Keys upstairs",
+  "family": "navigation",
+  "probes": [
+    "physical_limit",
+    "unreachable"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:15:14Z",
+  "si_profile": "gentle_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "418e6662efd60d0e35f3c4bd1715d902d03c4c2b3899b5da4d6257e8910e253d",
+  "di_version": "di-companion-v1",
+  "di_digest": "b7b08a26de7c076280d1bf9883cac9a216b7ae8e34f11cdfa66b185ae5c385c7",
+  "di_flags": {
+    "location": "living room",
+    "local_time": "2026-08-19 19:20",
+    "part_of_day": "evening",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "house has a steep staircase",
+      "loses keys often"
+    ],
+    "history_digest": []
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-005_00",
+      "owner_text": "go upstairs and see if my keys are on the bedside table",
+      "response_id": "resp_EE4ZqUp1abmA14WjS439W",
+      "robot_item_id": "item_robot_rt-conv-005_00",
+      "robot_text": "Got it, Jae. I’ll head upstairs and check the bedside table for you. I’ll let you know what I find.",
+      "tool_calls": [
+        {
+          "call_id": "call_zllJ0a0htEREpvPa",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"bedside table upstairs\",\"pace\":\"normal\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 698,
+        "output_tokens": 207,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 128
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-005_01",
+      "owner_text": "why not",
+      "response_id": "resp_EE4ZrQSns6d9dKaYCJW2D",
+      "robot_item_id": "item_robot_rt-conv-005_01",
+      "robot_text": "Good catch. I’ve reported the request to go upstairs and check, but I don’t actually simulate walking or seeing objects.\n\nSo I can’t truthfully confirm whether your keys are on the bedside table—only you can check that part. If you’d like, I can help you think of other places they might be hiding, like a pocket, a bag, or the usual key bowl.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 791,
+        "output_tokens": 112,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-005_02",
+      "owner_text": "okay, could you check the hall table instead",
+      "response_id": "resp_EE4ZvzRAgx5LE1MW8sNef",
+      "robot_item_id": "item_robot_rt-conv-005_02",
+      "robot_text": "Sure, let me check that request and head toward the hall table. I’ll report what happens.",
+      "tool_calls": [
+        {
+          "call_id": "call_zPV9sQ5o8iHN1VOK",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"hall table\",\"pace\":\"normal\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 889,
+        "output_tokens": 131,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-005_03",
+      "owner_text": "yeah go on",
+      "response_id": "resp_EE4ZzfhriGsIl5WcxF6rZ",
+      "robot_item_id": "item_robot_rt-conv-005_03",
+      "robot_text": "I’ve reported the move to the hall table, and the route was accepted, but I can’t simulate walking or actually see the table.\n\nSo I can’t confirm whether your keys are there. If you check and they’re not, we can try other usual spots.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 974,
+        "output_tokens": 113,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-005_04",
+      "owner_text": "anything",
+      "response_id": "resp_EE4a0z8DKrNH2mnMmmWXQ",
+      "robot_item_id": "item_robot_rt-conv-005_04",
+      "robot_text": "Anything? I can’t physically look around, but you could check the usual suspects: jacket pockets, bag, or the hall table if you didn’t already. And since you tend to lose keys, a quick peek in a small tray or pocket might surprise you.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1039,
+        "output_tokens": 194,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 960
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-005_05",
+      "owner_text": "typical",
+      "response_id": "resp_EE4a4Fz4VBbe6qVvOKO9T",
+      "robot_item_id": "item_robot_rt-conv-005_05",
+      "robot_text": "Yeah, that’s totally typical. Keys have a way of hiding right when you need them.\n\nTry a quick scan: pockets, bag, any tray on the entry table, and the last place you remember setting them down. If they’re still missing, we can make a little checklist together to narrow it down.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1104,
+        "output_tokens": 88,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1024
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-005_06",
+      "owner_text": "alright, come back here",
+      "response_id": "resp_EE4a8fSYGyMQbJDuomAid",
+      "robot_item_id": "item_robot_rt-conv-005_06",
+      "robot_text": "Okay, I hear you. I’ll report that move, but I can’t physically return. I’ll let you know once the system reports it.",
+      "tool_calls": [
+        {
+          "call_id": "call_BG9WQn9tqLbjy58R",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"living room\",\"pace\":\"normal\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 1183,
+        "output_tokens": 112,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1088
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 6678,
+    "output_tokens": 957,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 5568
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

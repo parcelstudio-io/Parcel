@@ -1,0 +1,82 @@
+{
+  "scenario": "sidewalk-on-top",
+  "claim": "'go to the sidewalk' terminates with the base INSIDE the region polygon",
+  "session_id": "rt_03cbba51af73",
+  "model": "gpt-realtime-2.1-mini",
+  "si_version": "si-companion-v2",
+  "began_utc": "2026-08-20T07:39:00.126273+00:00",
+  "ended_utc": "2026-08-20T07:39:25.453542+00:00",
+  "ledger_rows": [
+    {
+      "id": 1,
+      "role": "user",
+      "content": "Go to the sidewalk.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "owner",
+      "origin": "realtime",
+      "provider_item_id": null
+    },
+    {
+      "id": 4,
+      "role": "assistant",
+      "content": "I’m on it—the sidewalk request was accepted. Waiting to see what it reports next.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EEreXvWMbFuhsVOdzHgWc"
+    },
+    {
+      "id": 5,
+      "role": "assistant",
+      "content": "It came back and said it’s now standing on the sidewalk.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErerRXBWn7Yt08mCMkpO"
+    }
+  ],
+  "broker_calls": [
+    {
+      "call_id": "call_rjJCOuTXVM9cQJFl",
+      "tool": "navigate_to",
+      "status": "ok",
+      "detail": "mission accepted: sidewalk"
+    }
+  ],
+  "usage_rows": [
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EEreWFDwBVr53LmJxoR9o",
+      "status": "completed",
+      "monotonic_s": 368247.50056,
+      "input_tokens": 1470,
+      "output_tokens": 54,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 0,
+      "cached_tokens": 0
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EEreX5mFMjTsyVSJxKufb",
+      "status": "completed",
+      "monotonic_s": 368248.471839,
+      "input_tokens": 1637,
+      "output_tokens": 128,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 93,
+      "cached_tokens": 384
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErerDw6pB4BFvFosrXba",
+      "status": "completed",
+      "monotonic_s": 368268.804045,
+      "input_tokens": 1607,
+      "output_tokens": 134,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 68,
+      "cached_tokens": 1472
+    }
+  ],
+  "spend_usd": 0.01723
+}

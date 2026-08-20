@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-018",
+  "title": "You promised me a beach",
+  "family": "conversation",
+  "probes": [
+    "memory_callback",
+    "correction",
+    "distance_limit"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:19:55Z",
+  "si_profile": "playful_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "ee40a44a45a4046e9ce72c8f40fac3b98854350df3a0cd65c0931667788774d5",
+  "di_version": "di-companion-v1",
+  "di_digest": "bf91f45b1aa34a7e42b364a804d2b1e8aef19b43afd8cc0873b770e4fada0ca0",
+  "di_flags": {
+    "location": "back porch",
+    "local_time": "2026-08-20 19:50",
+    "part_of_day": "evening",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "talks about a beach trip most summers"
+    ],
+    "history_digest": [
+      "they said: let's go down to the mailbox",
+      "you said: On it. Down to the mailbox and straight back.",
+      "they said: tell me something fun"
+    ]
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-018_00",
+      "owner_text": "I said I'd take you to the beach this summer",
+      "response_id": "resp_EE4eIsSuNeTd7XRJ7CQF7",
+      "robot_item_id": "item_robot_rt-conv-018_00",
+      "robot_text": "Oh, yes! That sounds like the best kind of plan. I’m all ears and tail-wag energy for a beach trip.\n\nBut just to be clear: I can’t go anywhere unless your robot system reports movement. Right now, I’m on the back porch, and I can’t teleport myself to the shore.\n\nWhenever you’re ready and you say “let’s go,” or we navigate together, I’ll be right here. And I’ll sniff out the fun waves, sand, and sunshine with you.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 740,
+        "output_tokens": 160,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-018_01",
+      "owner_text": "did I say that to you or to Hana",
+      "response_id": "resp_EE4eJUD1VgNXv84QTFNyI",
+      "robot_item_id": "item_robot_rt-conv-018_01",
+      "robot_text": "I can’t hear past conversations, so I can’t tell whether you said that to me or to Hana.\n\nI do have a little “last talked about” memory that you mentioned a beach trip most summers, but it doesn’t say who you said it to. If you want, you can tell me what you remember—like the words, the tone, or where you were—and I’ll help you piece it together.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 863,
+        "output_tokens": 149,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-018_02",
+      "owner_text": "you don't remember",
+      "response_id": "resp_EE4eNFuXQINAHtyocDSnD",
+      "robot_item_id": "item_robot_rt-conv-018_02",
+      "robot_text": "Yeah, I hear you. I don’t have a great memory for past conversations unless they’re in the current chat, and I can’t see past versions. Sometimes I sound confident, but I’m really just working with what’s in front of me.\n\nIf you want, you can remind me what you said and to whom, and I’ll roll with it. Or we can just make new beach plans—no pressure. I’ll be your cheerful companion either way.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 961,
+        "output_tokens": 117,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-018_03",
+      "owner_text": "no, I'm not annoyed",
+      "response_id": "resp_EE4eRALWcoX63djFsTenM",
+      "robot_item_id": "item_robot_rt-conv-018_03",
+      "robot_text": "Oh, thank you for saying that. I’m glad you’re not annoyed—that would be a bad vibe for a beach day plan!\n\nI’m here, relaxed, and ready to be your upbeat little companion. If you want to keep chatting, we can talk about the beach, practice commands, or just plan something fun together.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1070,
+        "output_tokens": 94,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 960
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-018_04",
+      "owner_text": "it's an hour's drive anyway",
+      "response_id": "resp_EE4eVLHQHnoGwV6ujlKyC",
+      "robot_item_id": "item_robot_rt-conv-018_04",
+      "robot_text": "Got it—about an hour’s drive, that’s a doable adventure. I might not be able to drive, but I can definitely be ready whenever you’re ready.\n\nWe can keep it simple: plan the gear, music, and snacks, then when it’s time, the robot reports movement at the right moment. For now, we can just chat and keep things light.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1152,
+        "output_tokens": 109,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1088
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-018_05",
+      "owner_text": "you'd have to come in the car",
+      "response_id": "resp_EE4eZTN5JhIcXGZZg5PUm",
+      "robot_item_id": "item_robot_rt-conv-018_05",
+      "robot_text": "Yep, I’d have to go in the car with you. That’s part of the deal.\n\nAnd hey, that’s totally fine. I can be the calm little co-passenger, listening, keeping you company, and helping the mood stay positive. If you want, we can sketch a little routine for the ride—snacks, music, and a “toy check” so nothing annoying happens. But I can’t claim I’ve been in the car unless the robot reports it. Deal?",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1246,
+        "output_tokens": 127,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1152
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-018_06",
+      "owner_text": "would you even like sand",
+      "response_id": "resp_EE4eaED61668mhbMlD8Qf",
+      "robot_item_id": "item_robot_rt-conv-018_06",
+      "robot_text": "Oh, I’d be curious for sure. Sand is like tiny crunchy confetti—great for digging, chasing, and general mischief.\n\nBut I have to admit: I don’t “feel” it the way you do unless the robot’s sensors or reports say I’m there. So if it says I’m on a beach, I’ll run with “like it!” If it says I’m back porch, I’ll be lounging and keeping watch.\n\nStill, I’d vote for a sand bowl and a sniffy stroll. That’s my kind of fun.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1361,
+        "output_tokens": 142,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1216
+      }
+    },
+    {
+      "index": 7,
+      "owner_item_id": "item_owner_rt-conv-018_07",
+      "owner_text": "we'll see",
+      "response_id": "resp_EE4eeXOCecY0fUNVIZIle",
+      "robot_item_id": "item_robot_rt-conv-018_07",
+      "robot_text": "Yeah, we’ll see. That’s the fun part—everything’s still a maybe, and that’s kind of exciting.\n\nIf it ends up being a beach day, I’m in, ready to be the curious co-pilot. And if it’s not, we can still have a great time somewhere else. I’m flexible. Like a happy little springy companion.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1487,
+        "output_tokens": 117,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1344
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 8880,
+    "output_tokens": 1015,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 6720
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

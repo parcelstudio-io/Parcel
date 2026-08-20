@@ -1,0 +1,159 @@
+{
+  "scenario": "door-etiquette",
+  "began_utc": "2026-08-20T07:39:43.454924+00:00",
+  "ended_utc": "2026-08-20T07:40:38.468996+00:00",
+  "runtime_events": [
+    {
+      "id": 17,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-fe8eb1be9dae518e9f397f40 revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:39:44.398767+00:00",
+      "t_s": 45.049
+    },
+    {
+      "id": 18,
+      "role": "realtime",
+      "text": "tool navigate_to: ok — mission accepted: door",
+      "level": "info",
+      "timestamp": "2026-08-20T07:39:44.398858+00:00",
+      "t_s": 45.049
+    },
+    {
+      "id": 19,
+      "role": "navigation",
+      "text": "Navigating to door.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:39:44.473135+00:00",
+      "t_s": 45.049
+    },
+    {
+      "id": 20,
+      "role": "safety",
+      "text": "Slowing near an obstacle (+1 more proximity changes in the last few seconds)",
+      "level": "info",
+      "timestamp": "2026-08-20T07:39:57.581891+00:00",
+      "t_s": 58.063
+    },
+    {
+      "id": 21,
+      "role": "safety",
+      "text": "Proximity stop: obstacle too close",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:40:09.596044+00:00",
+      "t_s": 70.074
+    },
+    {
+      "id": 22,
+      "role": "safety",
+      "text": "Proximity stop: obstacle too close (+1 more proximity changes in the last few seconds)",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:40:09.793345+00:00",
+      "t_s": 70.074
+    },
+    {
+      "id": 23,
+      "role": "safety",
+      "text": "Proximity stop: obstacle too close (+1 more proximity changes in the last few seconds)",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:40:09.994635+00:00",
+      "t_s": 70.074
+    },
+    {
+      "id": 24,
+      "role": "safety",
+      "text": "Proximity stop: obstacle too close (+1 more proximity changes in the last few seconds)",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:40:10.596868+00:00",
+      "t_s": 71.075
+    },
+    {
+      "id": 25,
+      "role": "navigation",
+      "text": "Navigation failed for door: semantic_target_not_found",
+      "level": "error",
+      "timestamp": "2026-08-20T07:40:22.308416+00:00",
+      "t_s": 83.088
+    },
+    {
+      "id": 26,
+      "role": "brain",
+      "text": "parcel-task-fe8eb1be9dae518e9f397f40: task_failed",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:40:22.308875+00:00",
+      "t_s": 83.088
+    },
+    {
+      "id": 27,
+      "role": "safety",
+      "text": "Obstacle clearance restored",
+      "level": "success",
+      "timestamp": "2026-08-20T07:40:22.309116+00:00",
+      "t_s": 83.088
+    }
+  ],
+  "mission_log": [
+    {
+      "kind": "started",
+      "goal": "door",
+      "state": "searching",
+      "reason": "scan_behavior_rotate",
+      "level": "info",
+      "text": "Navigating to door.",
+      "timestamp": "2026-08-20T07:39:44.473126+00:00",
+      "id": 3,
+      "t_s": 45.049
+    },
+    {
+      "kind": "ended",
+      "goal": "door",
+      "state": "failed",
+      "reason": "semantic_target_not_found",
+      "level": "warning",
+      "text": "Mission to door ended (failed): semantic_target_not_found.",
+      "timestamp": "2026-08-20T07:40:22.308407+00:00",
+      "id": 4,
+      "t_s": 83.088
+    }
+  ],
+  "measurements": {
+    "scene_regions": [
+      "sidewalk",
+      "pavement",
+      "safe region",
+      "crosswalk",
+      "crossing",
+      "zebra crossing",
+      "cross walk"
+    ],
+    "scene_objects": [
+      "building",
+      "planter",
+      "tree",
+      "lamppost",
+      "lamp post",
+      "streetlight",
+      "street light",
+      "lamp",
+      "bench",
+      "seat",
+      "park bench",
+      "bench seat",
+      "trees",
+      "street tree",
+      "plant pot",
+      "flower box",
+      "pot",
+      "bldg",
+      "storefront",
+      "building face"
+    ],
+    "door_in_vocabulary": false,
+    "arrival_fact_for_the_door": "The robot's navigation system reports: You have stopped just short of the door, without going through it. You are turned back to face your owner. Now ask the owner what they would like to do next.",
+    "arrival_fact_forwarded": true,
+    "mission_started": true,
+    "nav_state": "failed",
+    "nav_reason": "semantic_target_not_found",
+    "nav_goal": "door"
+  }
+}

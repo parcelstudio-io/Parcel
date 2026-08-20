@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-008",
+  "title": "The other park",
+  "family": "navigation",
+  "probes": [
+    "correction",
+    "ambiguous_target",
+    "distance_limit"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:16:26Z",
+  "si_profile": "playful_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "ee40a44a45a4046e9ce72c8f40fac3b98854350df3a0cd65c0931667788774d5",
+  "di_version": "di-companion-v1",
+  "di_digest": "fd1e8e00ff9f998ccdda375f1a9eb89fbf104b1f1d6e8edd3f95af08c58c35f2",
+  "di_flags": {
+    "location": "front yard",
+    "local_time": "2026-08-20 18:10",
+    "part_of_day": "evening",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "two parks nearby, one small and one large"
+    ],
+    "history_digest": []
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-008_00",
+      "owner_text": "let's go to the park",
+      "response_id": "resp_EE4av6xa270QhK2T0wLKy",
+      "robot_item_id": "item_robot_rt-conv-008_00",
+      "robot_text": "Absolutely! I’m ready. But I need a little clue first: which park do you want to go to, the small one or the large one?\n\nTell me which you prefer, and I’ll walk with you toward it.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 697,
+        "output_tokens": 92,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-008_01",
+      "owner_text": "no wait, the other park",
+      "response_id": "resp_EE4azF5xRaFMIQ5XlsMZU",
+      "robot_item_id": "item_robot_rt-conv-008_01",
+      "robot_text": "Got it—“other park” means we’re switching. I just need one tiny detail: is the other park the small one or the large one?\n\nTell me which, and I’ll adjust the plan with you.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 759,
+        "output_tokens": 160,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-008_02",
+      "owner_text": "the big one with the pond",
+      "response_id": "resp_EE4b0mtRpmwgUIp1NBCZ4",
+      "robot_item_id": "item_robot_rt-conv-008_02",
+      "robot_text": "Nice choice—big park with a pond sounds lovely. I’ll set a course for that with you now.",
+      "tool_calls": [
+        {
+          "call_id": "call_9R1PFpQtrv6POetI",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"big park with the pond\",\"pace\":\"normal\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 819,
+        "output_tokens": 99,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-008_03",
+      "owner_text": "how far is that from here",
+      "response_id": "resp_EE4b4pm7QPUMJXBuY64Ca",
+      "robot_item_id": "item_robot_rt-conv-008_03",
+      "robot_text": "I can’t actually measure distance from here with the info I have. My route was accepted, but I don’t have a built-in way to see miles or minutes directly.\n\nIf you want, we can check it on a map together on your phone or just start walking and I’ll report what the robot says about motion or battery if you ask.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 912,
+        "output_tokens": 157,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-008_04",
+      "owner_text": "hmm, that's a bit much this late",
+      "response_id": "resp_EE4b8f1mBjyMRAQyvfFAN",
+      "robot_item_id": "item_robot_rt-conv-008_04",
+      "robot_text": "Totally fair. Even a short walk can feel like a lot when it’s late and you’re tired.\n\nWe could switch to the small park instead, or I can just stay here with you in the front yard and we can call it a chill evening. No rush.\n\nIf you want, tell me “small park” or “back to the yard,” and we’ll stick with that.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1001,
+        "output_tokens": 124,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-008_05",
+      "owner_text": "let's do the small one instead",
+      "response_id": "resp_EE4bCUrp20S4kIMan7eVw",
+      "robot_item_id": "item_robot_rt-conv-008_05",
+      "robot_text": "Got it—small it is. I’ll set things up for that direction now.",
+      "tool_calls": [
+        {
+          "call_id": "call_LGH1YBhMIw4KlcVM",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"small park\",\"pace\":\"normal\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 1097,
+        "output_tokens": 47,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 960
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-008_06",
+      "owner_text": "yes, the one at the end of our road",
+      "response_id": "resp_EE4bGSodPI6x1tSsoB8mn",
+      "robot_item_id": "item_robot_rt-conv-008_06",
+      "robot_text": "Perfect—yes, that small park at the end of the road. I heard your confirmation.\n\nI don’t physically walk myself, though. The route was accepted in the robot’s system, but nothing is truly simulated as moving. If you’re walking, I’ll stay with you in spirit and chat as we go.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1186,
+        "output_tokens": 112,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1152
+      }
+    },
+    {
+      "index": 7,
+      "owner_item_id": "item_owner_rt-conv-008_07",
+      "owner_text": "off we go",
+      "response_id": "resp_EE4bHqrQz9hqWPQtHQM5S",
+      "robot_item_id": "item_robot_rt-conv-008_07",
+      "robot_text": "Alright, let’s go. I’m right here with you as we head that way, and I’ll keep the mood light and safe.\n\nTell me if you spot anything interesting—pond sketches, squirrels, anything—and I’ll react with you.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1263,
+        "output_tokens": 78,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1152
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 7734,
+    "output_tokens": 869,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 6528
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

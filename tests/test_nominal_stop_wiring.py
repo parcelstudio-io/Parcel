@@ -833,10 +833,21 @@ def _symbol_digest(source: str, symbol: str) -> str:
 #:   and the whole safety-adjacent selection green. The re-gate is half the
 #:   stopping predicate, so both machines' ``_regate*`` methods and the three
 #:   threshold helpers that read their output are now pinned too.
+#: * 2026-08-18 (card R4-lite, task_1) — MOVED ``_dispatch_active`` only. The
+#:   proximity TRANSITION EVENT — three ``_emit`` calls plus the
+#:   ``_proximity_state`` assignment — was lifted verbatim into
+#:   ``_emit_proximity_change`` so the slow/clear pair can be rate-limited and
+#:   coalesced: a threshold flapping at the 10 Hz control rate was flushing the
+#:   100-slot event deque and taking mission terminals out with it. Nothing
+#:   about WHICH stops may ramp changed. ``proximity_state`` still comes from
+#:   the same ``_collision_safe`` call, is still assigned on every transition,
+#:   and every predicate below that line — ``emergency_stopping``,
+#:   ``zero_intent``, ``stopping``, ``nominal_ramp`` — is untouched. Only the
+#:   event TEXT moved. Reason recorded in scrum/20260818/task_1/R4L_STATUS.md.
 STOPPING_PREDICATE_PIN: dict[str, dict[str, str]] = {
     "src/parcel_robot/runtime.py": {
         "RobotRuntime._dispatch_active": (
-            "687308dd4041e3c2442edb300eb0329e12c9e54997b077c821e718089661d233"
+            "7a830d4cb4927127d174481fd40298829dccff5b71e2c45b05789d9baabba8b2"
         ),
         "RobotRuntime._finalize_for_actuator": (
             "e8d737068343a2945a2484a542d241d2ec0a737dcd6be1d69e1cb8c936769e7a"

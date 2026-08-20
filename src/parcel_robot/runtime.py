@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import logging
 import math
 import os
@@ -7,7 +8,7 @@ import random
 import threading
 import time
 from collections import OrderedDict, deque
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,7 @@ from parcel_robot.audio_arming import (
 )
 from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
-from parcel_robot.backends.base import SimObservation, SimulatorBackend
+from parcel_robot.backends.base import DynamicAgentTrack, SimObservation, SimulatorBackend
 from parcel_robot.brain import (
     FrozenDict,
     GoalSpec,
@@ -83,6 +84,7 @@ from parcel_robot.control.base import (
 from parcel_robot.core import (
     ActivityContext,
     ActivityCoordinator,
+    ActivityRecord,
     CommandArbiter,
     MotionIntent,
     MotionShapingConfig,
@@ -146,6 +148,11 @@ from parcel_robot.expression import (
 from parcel_robot.memory import ConversationMemory
 from parcel_robot.models import ActionProposal, Pose, SpatialIntent, VelocityCommand
 from parcel_robot.motion import build_motion_router
+from parcel_robot.navigation.arrival_semantics import (
+    arrival_fact,
+    arrival_policy,
+    classify_place,
+)
 from parcel_robot.navigation.dynamic_layer import (
     TimeToCollisionConfig,
     time_to_collision_verdict,
@@ -157,7 +164,7 @@ from parcel_robot.navigation.follow import (
     FollowPredictionConfig,
     FollowYieldConfig,
 )
-from parcel_robot.navigation.goals import pace_from_directive
+from parcel_robot.navigation.goals import navigation_directive_from_text, pace_from_directive
 from parcel_robot.navigation.owner_prediction import OwnerMotionPredictor, PredictedPath
 from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
@@ -171,7 +178,11 @@ from parcel_robot.navigation.semantic_map import (
     lidar_payload_from_observation,
     semantic_candidates_from_observation,
 )
-from parcel_robot.navigation.spatial import SpatialBehaviorConfig, SpatialBehaviorController
+from parcel_robot.navigation.spatial import (
+    SpatialBehaviorConfig,
+    SpatialBehaviorController,
+    parse_spatial_intent,
+)
 from parcel_robot.navigation.velocity_shaping import SCurveVelocityShaper
 from parcel_robot.observability import (
     ComponentMetrics,
@@ -194,7 +205,10 @@ from parcel_robot.providers import (
     build_speech_stack,
     strip_emote_tags,
 )
+from parcel_robot.realtime.browser_sink import BrowserSink, DiscardSink
 from parcel_robot.realtime.config import RealtimeConfig, default_realtime_config
+from parcel_robot.realtime.cost import realtime_spend_usd
+from parcel_robot.realtime.driver import RealtimeDriver
 from parcel_robot.realtime.ingress import (
     KIND_CLOSED_INTENT,
     KIND_EMERGENCY,
@@ -203,7 +217,28 @@ from parcel_robot.realtime.ingress import (
     RealtimeTranscriptOutcome,
 )
 from parcel_robot.realtime.ingress import scan as scan_realtime_transcript
-from parcel_robot.realtime.lane import RealtimeLane, build_instructions
+from parcel_robot.realtime.lane import RealtimeLane, RealtimeLaneError
+from parcel_robot.realtime.prompting import (
+    MAX_HISTORY_LINES,
+    UNKNOWN_OWNER,
+    DeveloperContext,
+    InstructionSource,
+    history_digest_from_turns,
+)
+from parcel_robot.realtime.tool_broker import (
+    NAVIGATE_DIRECTIVE_TEMPLATE,
+    TOOL_RECALL_MEMORY,
+    RealtimeToolBroker,
+    ToolDoors,
+)
+from parcel_robot.realtime.whisperer import (
+    KIND_MISSION_ARRIVED,
+    KIND_MISSION_ENDED,
+    KIND_REFUSAL,
+    StateDigest,
+    StateEvent,
+    Whisperer,
+)
 from parcel_robot.robot_profile import RobotProfile
 from parcel_robot.runtime_channels import (
     ActivitiesChannel,
@@ -220,7 +255,12 @@ from parcel_robot.voice.amendment import AMEND_SUSPEND_REASON, begin_goal_amend
 from parcel_robot.voice.closed_intents import ClosedIntent
 from parcel_robot.voice.dialogue_state import DialogueStateChannel
 from parcel_robot.voice.executive_caps import CapDirective, PaceCap, resolve_cap
-from parcel_robot.voice.local_plans import SETTLE_POSE_PHRASES
+from parcel_robot.voice.local_plans import (
+    SETTLE_POSE_PHRASES,
+    sketch_follow,
+    sketch_navigate,
+    sketch_spatial,
+)
 from parcel_robot.voice.reaction_bridge import SocialReactionBridge
 from parcel_robot.voice.yield_speech import yield_dialogue_act
 from parcel_robot.voice_audio import (
@@ -266,6 +306,73 @@ CLOSED_INTENT_SUSPEND_DETAIL = f"suspended:{CLOSED_INTENT_PAUSE_REASON}"
 #: ``navigation/pipeline.py`` (and ``evals/walk_with_me/runner.py``) because
 #: both live in trees this lane does not own; the shared home is a hand-off.
 POSE_LOST_HOLD_NOTE = "pose_lost_hold"
+
+#: Card R4-lite, task_1 — Defect B. How many mission lifecycle rows the runtime
+#: keeps. Small on purpose: this ring answers "what happened to my missions?",
+#: and a ring that also tried to hold telemetry would have the same eviction
+#: problem the event deque has.
+MISSION_LOG_MAX = 20
+#: Mission lifecycle kinds. ``blocked`` is an ENTRY row (edge-triggered, one per
+#: episode of being blocked), never a per-tick sample.
+MISSION_LOG_STARTED = "started"
+MISSION_LOG_BLOCKED = "blocked"
+MISSION_LOG_ENDED = "ended"
+#: What a blocked EPISODE is keyed on. Deliberately NOT the navigation note:
+#: the note carries live telemetry (``grid_track err=9.6 goal=0.8 route=2 …``)
+#: whose numbers change on every 10 Hz tick, so keying an "edge" on the note
+#: makes every tick an edge. That is not a hypothetical — the 2026-08-18 live
+#: proof filled the whole ring with 20 blocked rows in two seconds and drove 69
+#: model narrations from a single owner turn. The CLASS is what changes when
+#: the situation changes.
+MISSION_BLOCK_PERSON = "person"
+MISSION_BLOCK_OBSTACLE = "obstacle"
+#: Minimum spacing between blocked/clear rows, seconds. Even keyed on the class,
+#: a pedestrian stream flips person → clear → obstacle → person for real, and the
+#: 2026-08-18 live proof still spent 18 of 20 slots on it. The log is the mission
+#: HISTORY; "blocked right now" is the panel's live status line, which reads
+#: navigation.state directly and is never stale. Suppressed transitions are
+#: counted and folded into the next row that is written.
+MISSION_BLOCK_MIN_INTERVAL_S = 10.0
+#: Hard ceiling on how much of the ring blocked rows may occupy. Whatever else
+#: happens, half the ring stays available for starts and terminals — the facts
+#: this whole card exists to keep visible. Without it a long enough block still
+#: pushes the terminal out, which is the original bug wearing a new hat.
+MISSION_LOG_BLOCKED_MAX = MISSION_LOG_MAX // 2
+
+#: Card R11. How often the control loop hands the whisperer a state digest.
+#: Conversational cadence, not motion cadence — the fastest rule inside the
+#: whisperer is the 8 s block debounce, so a second of resolution is ample and a
+#: 10 Hz digest would only fill its decision ring with duplicates.
+WHISPERER_TICK_INTERVAL_S = 1.0
+#: Card R19, mechanism D. The status
+#: :meth:`~parcel_robot.core.activities.ActivityCoordinator._expire` stamps on a
+#: proposal that sat in the queue past its TTL. Named here rather than in
+#: ``core/activities.py`` because that module is not this card's to touch; the
+#: string is pinned against the coordinator's own behaviour by test, so a rename
+#: there fails loudly instead of silently switching this narration off.
+ACTIVITY_STATUS_EXPIRED = "expired"
+#: Terminal states that mean the robot got where it was going.
+MISSION_ARRIVED_STATES = frozenset({"arrived"})
+#: Card R12. The terminal reasons that mean an EMERGENCY STOP ended the mission
+#: — the owner's (Space, the spoken phrase ``realtime/ingress.py`` owns, the
+#: panel button, ``/api/action emergency_stop``, all of which land on
+#: :meth:`RobotRuntime.emergency_stop`; the phrase is deliberately not spelled
+#: here, because it has exactly one definition and U33 was three)
+#: and the simulator's, adopted by the observe loop. Both reach the navigation
+#: channel as a ``preempt("safety", …)`` reason, so this set is matched against
+#: the reason the channel was handed, never against a substring of a navigator
+#: telemetry note. It exists ONLY to choose the narrated wording: the mission
+#: log row and the panel event carry the raw reason either way, and a reason
+#: outside this set is narrated with its own words rather than being rounded up
+#: to an e-stop.
+EMERGENCY_STOP_TERMINAL_REASONS = frozenset({"emergency_stop", "simulator_emergency_stop"})
+#: Card R4-lite, task_1 — Defect C. The proximity slow/clear pair is edge
+#: triggered, but the edge itself can flap at the 10 Hz control rate when the
+#: robot hovers on the threshold — ~10 events/s, which flushes the 100-slot
+#: event deque in ten seconds and takes every other source's history with it.
+#: Transitions inside this window are COUNTED and folded into the next line
+#: rather than dropped: the information survives, the flood does not.
+PROXIMITY_EVENT_MIN_INTERVAL_S = 5.0
 #: What the robot says when it loses localization. Same sentence the
 #: walk_with_me trace has carried, unspoken, since Lane B: it states what
 #: happened and what the robot did, and claims nothing about recovery.
@@ -367,6 +474,368 @@ def _dynamic_agent_payload(
     )
 
 
+def _polygon_centre(
+    polygon: tuple[tuple[float, float], ...],
+) -> tuple[float, float] | None:
+    """Vertex mean of a semantic region, used only for nearest-first ORDERING."""
+
+    points = [
+        (float(point[0]), float(point[1]))
+        for point in polygon or ()
+        if len(point) >= 2 and math.isfinite(float(point[0])) and math.isfinite(float(point[1]))
+    ]
+    if not points:
+        return None
+    return (
+        sum(point[0] for point in points) / len(points),
+        sum(point[1] for point in points) / len(points),
+    )
+
+
+# ===================================================================== card R18
+# SCENE ANSWERABILITY — what the robot may say about its surroundings.
+#
+# live_run_1 (2026-08-20) re-cut F3 from a prompt defect into a MISSING-TOOL
+# defect: `state.realtime.broker.tools` held seven tools and not one of them
+# could answer "what do you see around you". In the same snapshot the robot was
+# holding a 360-ray LiDAR scan, eight `dynamic_agents`, a `nearest_person` at
+# 1.73 m and a live `obstacle_distance_m` of 1.4276 — and it had already told
+# this owner three times that someone was in the way. Person data reached the
+# mission-log narrator and never the conversation lane.
+#
+# Everything below is deterministic and reads ONLY what perception already
+# holds. There is no model here, no clock, and above all no other source: the
+# scene block is built from `observation.semantic_regions`,
+# `observation.semantic_objects`, `observation.dynamic_agents` and the nearest
+# obstacle, and from nothing else. In particular it must NEVER fall back to the
+# scene CLASS VOCABULARY the way `_realtime_places` deliberately does — that
+# fallback is right for "is this a place I could be asked to walk to" and is a
+# fabrication for "what is around me right now".
+
+#: The eight-point body-relative direction table, stated rather than computed
+#: from a locale or a compass. Bearings are body-relative and CCW-positive
+#: (``_wrap(atan2(dy, dx) - robot_heading)``, mujoco_lidar.py:251/362), so
+#: positive is the robot's LEFT.
+#:
+#: The wording is the robot's own frame ("on my left"), never the owner's: the
+#: two disagree whenever they are not facing the same way, and a companion that
+#: says "on your left" while meaning its own left has told the owner to look at
+#: the wrong thing.
+SCENE_BEARING_WORDS: tuple[tuple[float, str], ...] = (
+    (22.5, "straight ahead"),
+    (67.5, "ahead on my left"),
+    (112.5, "on my left"),
+    (157.5, "behind me on my left"),
+    (180.0, "behind me"),
+)
+
+#: How many nearby labelled things the scene block names. Enough to describe a
+#: place, few enough to stay one spoken sentence.
+SCENE_MAX_REGIONS = 4
+
+#: What the robot's perception actually is, named in the result so the model
+#: cannot narrate it as eyesight. owner_session_1's F3 was the model inventing a
+#: camera it does not have ("I can't actually see anything around me without a
+#: camera feed"); this is the same fact stated the true way round.
+SCENE_SENSORS: tuple[str, ...] = ("lidar", "semantic_map", "person_tracks")
+
+#: Said in the result itself, every time. The bench's standing finding is that
+#: the model narrates whatever it is given, so the honesty rule has to be IN the
+#: thing it reads rather than only in a prompt it may or may not still be
+#: carrying twenty turns later.
+SCENE_HONESTY_NOTE = (
+    "these came from LiDAR ranges and a semantic map, not from a camera: the "
+    "robot has no eyes, so say what its SENSORS detect and never describe "
+    "colours, faces, text, or how anything looks"
+)
+
+#: The honest answer when perception has produced nothing at all yet. NOT a
+#: blindness claim — the robot is not blind, it has no reading — and the
+#: difference is the whole of F3.
+SCENE_NO_OBSERVATION = "the robot's perception has no reading yet"
+
+
+def scene_bearing_words(bearing_rad: float) -> str:
+    """Body-relative bearing → the words the robot may use for it.
+
+    Symmetric by construction: the table is written for the left half and the
+    right half is its mirror, so "on my left" and "on my right" can never drift
+    apart into two separately-maintained lists.
+    """
+
+    if not math.isfinite(float(bearing_rad)):
+        return ""
+    wrapped = math.degrees(float(bearing_rad))
+    wrapped = (wrapped + 180.0) % 360.0 - 180.0
+    magnitude = abs(wrapped)
+    words = SCENE_BEARING_WORDS[-1][1]
+    for bound, name in SCENE_BEARING_WORDS:
+        if magnitude <= bound:
+            words = name
+            break
+    if wrapped < 0 and "left" in words:
+        return words.replace("left", "right")
+    return words
+
+
+#: Card R18. Distances are rounded to ONE decimal before the model ever sees
+#: them, and the live proof is why. Handed ``"distance_m": 0.48`` the mini tier
+#: said **"zero meters straight ahead"** — a number the owner cannot act on and
+#: does not believe, from a reading that was perfectly good. One decimal is also
+#: exactly what :func:`scene_fact_lines` renders, so the structured field and
+#: the sentence can no longer disagree in the third character.
+SCENE_DISTANCE_DECIMALS = 1
+
+#: What the nearest LiDAR return is, said honestly. It is a range with a bearing
+#: and no name — the semantic map did not label it — and calling it "an object"
+#: would be inventing a class for it.
+SCENE_UNLABELLED = "something my LiDAR ranged but the map has no label for"
+
+#: A person, said as a person. Never a description of one: the tracks carry a
+#: position and a radius, and nothing about who anybody is.
+SCENE_PERSON = "a person"
+
+
+def _scene_distance(value: float) -> float:
+    return round(float(value), SCENE_DISTANCE_DECIMALS)
+
+
+def _scene_thing(label: str, distance_m: float, bearing_rad: float) -> dict[str, object]:
+    return {
+        "label": " ".join(str(label).split()),
+        "distance_m": _scene_distance(distance_m),
+        "direction": scene_bearing_words(bearing_rad),
+    }
+
+
+def scene_report(
+    observation: SimObservation | None,
+    *,
+    max_regions: int = SCENE_MAX_REGIONS,
+) -> dict[str, object]:
+    """A deterministic fact block about the robot's surroundings.
+
+    PURE. Takes the observation, returns JSON-shaped facts; no runtime, no lock,
+    no clock, no catalog. That is what lets the whole of card R18's scene half be
+    tested against hand-built observations, which is what card item 3 asks for.
+
+    ``things`` names only labels perception is actually holding this instant.
+    ``people`` counts only tracks whose ``kind`` is a person. ``clearance_m`` is
+    the nearest obstacle the LiDAR returned. Any of them may be absent, and an
+    absent fact is stated as absent rather than filled in.
+    """
+
+    if observation is None:
+        return {
+            "sensors": list(SCENE_SENSORS),
+            "observed": False,
+            "summary": SCENE_NO_OBSERVATION,
+            "things": [],
+            "people": {"count": 0, "nearest": None},
+            "clearance_m": None,
+            # Present and null, not absent. Both arms of this function return
+            # the SAME KEYS, so a reader that has checked ``observed`` and a
+            # reader that has not both get an answer instead of a KeyError.
+            "closest": None,
+            "note": SCENE_HONESTY_NOTE,
+        }
+
+    robot = observation.robot
+    candidates: list[tuple[float, dict[str, object]]] = []
+
+    def _offer(label: object, x: float, y: float) -> None:
+        clean = " ".join(str(label or "").split())
+        if not clean:
+            return
+        dx, dy = float(x) - robot.x, float(y) - robot.y
+        if not (math.isfinite(dx) and math.isfinite(dy)):
+            return
+        distance = math.hypot(dx, dy)
+        bearing = math.atan2(dy, dx) - float(robot.yaw)
+        candidates.append((distance, _scene_thing(clean, distance, bearing)))
+
+    for region in observation.semantic_regions:
+        centre = _polygon_centre(region.polygon)
+        if centre is not None:
+            _offer(region.label, centre[0], centre[1])
+    for item in observation.semantic_objects:
+        position = item.position
+        if len(position) >= 2:
+            _offer(item.label, float(position[0]), float(position[1]))
+
+    things: list[dict[str, object]] = []
+    seen: set[str] = set()
+    for _distance, thing in sorted(candidates, key=lambda row: (row[0], str(row[1]["label"]))):
+        key = str(thing["label"]).lower()
+        if key in seen:
+            # Nearest instance of a label wins; a second "sidewalk" four metres
+            # further on is the same answer said twice.
+            continue
+        seen.add(key)
+        things.append(thing)
+        if len(things) >= max(1, int(max_regions)):
+            break
+
+    people = [track for track in observation.dynamic_agents if _is_person_track(track)]
+    nearest_person: dict[str, object] | None = None
+    if observation.nearest_person_m is not None:
+        nearest_person = _scene_thing(
+            SCENE_PERSON,
+            observation.nearest_person_m,
+            observation.nearest_person_bearing_rad or 0.0,
+        )
+        nearest_person.pop("label", None)
+        if observation.nearest_person_bearing_rad is None:
+            # A distance with no bearing is a distance, not a direction.
+            nearest_person["direction"] = ""
+
+    clearance = observation.nearest_obstacle_m
+    report: dict[str, object] = {
+        "sensors": list(SCENE_SENSORS),
+        "observed": True,
+        "things": things,
+        "people": {
+            # A person the LiDAR ranged but that produced no track still counts:
+            # `nearest_person_m` is itself evidence that somebody is there.
+            "count": max(len(people), 1 if nearest_person is not None else 0),
+            "nearest": nearest_person,
+        },
+        "clearance_m": None if clearance is None else _scene_distance(clearance),
+        "closest": _scene_closest(observation, things, nearest_person),
+        "note": SCENE_HONESTY_NOTE,
+    }
+    report["summary"] = "; ".join(scene_fact_lines(report)) or SCENE_NO_OBSERVATION
+    return report
+
+
+def _scene_closest(
+    observation: SimObservation,
+    things: Sequence[Mapping[str, object]],
+    nearest_person: Mapping[str, object] | None,
+) -> dict[str, object] | None:
+    """Card R18 — the single nearest thing, whatever KIND of thing it is.
+
+    Corpus query 29 is "What's the closest thing to you?", and the live proof is
+    why it gets a field of its own rather than being left as an inference over
+    three others: handed ``things``, ``people`` and ``clearance_m`` separately,
+    the mini tier answered it from the person track and said "the closest thing
+    is zero meters behind me" while the LiDAR clearance was 1.1 m. Three numbers
+    to choose between is a choice; one field is an answer.
+
+    The three candidates are the three things perception can be nearest to — a
+    labelled place, a tracked person, and an unlabelled LiDAR return — and the
+    unlabelled one is NAMED as unlabelled rather than given a class it does not
+    have.
+    """
+
+    candidates: list[tuple[float, dict[str, object]]] = []
+    if things:
+        first = dict(things[0])
+        candidates.append((float(first["distance_m"]), {"what": first["label"], **first}))
+    if nearest_person is not None and nearest_person.get("distance_m") is not None:
+        candidates.append(
+            (float(nearest_person["distance_m"]), {"what": SCENE_PERSON, **dict(nearest_person)})
+        )
+    if observation.nearest_obstacle_m is not None:
+        bearing = observation.nearest_obstacle_bearing_rad
+        candidates.append(
+            (
+                float(observation.nearest_obstacle_m),
+                {
+                    "what": SCENE_UNLABELLED,
+                    "distance_m": _scene_distance(observation.nearest_obstacle_m),
+                    "direction": "" if bearing is None else scene_bearing_words(bearing),
+                },
+            )
+        )
+    if not candidates:
+        return None
+    closest = min(candidates, key=lambda row: row[0])[1]
+    closest.pop("label", None)
+    return closest
+
+
+def _is_person_track(track: DynamicAgentTrack) -> bool:
+    """Only a track the perception stack itself called a person counts as one."""
+
+    return str(getattr(track, "kind", "")).strip().lower() in {"person", "pedestrian", "human"}
+
+
+def scene_fact_lines(report: Mapping[str, object]) -> tuple[str, ...]:
+    """The fact block as short lines — for the DI, and for ``summary``.
+
+    Deliberately the SAME renderer for both, so the sentence the model reads at
+    a session boundary and the sentence it reads out of ``get_status`` cannot
+    describe the world in two different vocabularies.
+    """
+
+    if not report.get("observed"):
+        return (SCENE_NO_OBSERVATION,)
+    lines: list[str] = []
+    for thing in report.get("things") or ():
+        if not isinstance(thing, Mapping):
+            continue
+        where = str(thing.get("direction") or "").strip()
+        distance = thing.get("distance_m")
+        label = str(thing.get("label") or "").strip()
+        if not label or distance is None:
+            continue
+        lines.append(f"{label} {float(distance):.1f} m {where}".rstrip())
+    if not lines:
+        # Perception ran and labelled nothing. That is a real answer and it is
+        # NOT the same sentence as "no reading yet" — stated here rather than
+        # only at the end, so that a scan holding people but no labelled places
+        # still says both halves.
+        lines.append("nothing labelled within range")
+    people = report.get("people")
+    if isinstance(people, Mapping):
+        count = int(people.get("count") or 0)
+        nearest = people.get("nearest")
+        if count and isinstance(nearest, Mapping) and nearest.get("distance_m") is not None:
+            where = str(nearest.get("direction") or "").strip()
+            noun = "person" if count == 1 else "people"
+            lines.append(
+                f"{count} {noun} tracked, nearest "
+                f"{float(nearest['distance_m']):.1f} m {where}".rstrip()
+            )
+        elif count:
+            noun = "person" if count == 1 else "people"
+            lines.append(f"{count} {noun} tracked")
+        else:
+            lines.append("no people tracked")
+    closest = report.get("closest")
+    if isinstance(closest, Mapping) and closest.get("distance_m") is not None:
+        where = str(closest.get("direction") or "").strip()
+        lines.append(
+            f"closest of all: {closest.get('what')} at "
+            f"{float(closest['distance_m']):.1f} m {where}".rstrip()
+        )
+    clearance = report.get("clearance_m")
+    if clearance is not None:
+        lines.append(f"nearest obstacle {float(clearance):.1f} m")
+    return tuple(lines)
+
+
+def _place_matches(place: str, labels: tuple[str, ...]) -> bool:
+    """Is ``place`` one of ``labels`` (head noun or whole phrase)?
+
+    Card R10: this is the LOCAL EVIDENCE that gates a model relation hint's
+    refinement. ``inside`` is only ever admitted for an unknown class when the
+    place matches something the map actually holds as a region — otherwise a
+    sentence would have manufactured a region goal, which is the LM-Nav
+    failure mode ``res_semnav.md`` §1 describes.
+    """
+
+    phrase = " ".join(str(place).split()).lower()
+    if not phrase:
+        return False
+    known = {" ".join(str(label).split()).lower() for label in labels}
+    if phrase in known:
+        return True
+    words = phrase.split()
+    return bool(words) and words[-1] in known
+
+
 def _is_zero_command(command: VelocityCommand) -> bool:
     return all(abs(value) <= 1e-9 for value in (command.vx, command.vy, command.vyaw))
 
@@ -381,6 +850,41 @@ def _command_translates(command: VelocityCommand) -> bool:
     """Mirror of the reactive gate's own translation test (1e-6, by value)."""
 
     return math.hypot(command.vx, command.vy) > 1e-6
+
+
+class _RealtimeLedgerMirror:
+    """The lane's ledger, plus the panel chat (card R1.6 §C).
+
+    The lane writes the robot's half of every hosted turn through its
+    ``LedgerLike``. In ``mode: text`` the owner is looking at the panel, not
+    listening to a speaker, so that half has to appear in the chat pane too or
+    the manual test is a conversation with a silent database. This wrapper adds
+    exactly that mirror and forwards everything else untouched — the ledger
+    write happens first and its return value is the one the lane sees, so a
+    failing mirror can never change what was recorded.
+    """
+
+    def __init__(self, runtime: RobotRuntime) -> None:
+        self._runtime = runtime
+
+    def write_realtime_turn(
+        self,
+        *,
+        session_id: str | None,
+        speaker: str,
+        text: str,
+        origin: str,
+        provider_item_id: str | None = None,
+    ) -> int:
+        row = self._runtime.agent.memory.write_realtime_turn(
+            session_id=session_id,
+            speaker=speaker,
+            text=text,
+            origin=origin,
+            provider_item_id=provider_item_id,
+        )
+        self._runtime.mirror_realtime_chat(speaker, text)
+        return row
 
 
 class RobotRuntime:
@@ -711,6 +1215,27 @@ class RobotRuntime:
         self._events: deque[dict[str, object]] = deque(maxlen=100)
         self._chat: deque[dict[str, object]] = deque(maxlen=80)
         self._event_id = 0
+        # Card R4-lite, task_1 — Defect B. Mission lifecycle gets its OWN ring.
+        # `_events` is 100 slots shared with every chatty source in the runtime,
+        # and the live incident is what that costs: a mission ended and the
+        # terminal was nowhere to be found. Lifecycle facts are rare — a handful
+        # per mission — so 20 slots hold several complete missions no matter how
+        # loud proximity, perception or the model get.
+        self._mission_log: deque[dict[str, object]] = deque(maxlen=MISSION_LOG_MAX)
+        self._mission_log_id = 0
+        #: Edge-detection for blocked-entry rows. A mission that sits blocked
+        #: behind a person for a minute is ONE entry, not 600.
+        self._mission_block_note: str | None = None
+        #: Rate limit for blocked/clear rows. Its own monotonic seam rather
+        #: than the yield tracker's: these are two unrelated clocks and a test
+        #: that drives one must not be able to move the other.
+        self._mission_clock: Callable[[], float] = time.monotonic
+        self._mission_block_emit_at_s: float | None = None
+        self._mission_block_coalesced = 0
+        #: Proximity chatter throttle (Defect C). Monotonic, like all control
+        #: timing here; `None` means "nothing emitted yet this process".
+        self._proximity_emit_at_s: float | None = None
+        self._proximity_coalesced = 0
         metrics_config = self.store.section("metrics")
         self.latency = LatencyTracker(max_turns=int(metrics_config.get("max_turns", 200)))
         self.component_metrics = ComponentMetrics(
@@ -1116,24 +1641,211 @@ class RobotRuntime:
         # added to configs/robot.yaml, which is hash-locked.
         self.realtime_config: RealtimeConfig = default_realtime_config()
         self.realtime_lane: RealtimeLane | None = None
+        #: Card R2-C. The SI+DI prompt plane, re-renderable. ``None`` whenever
+        #: the lane is not constructed, so it is never a half-built object.
+        self.realtime_instructions: InstructionSource | None = None
+        #: Card R3 / R1.6. All four stay ``None`` when the lane is not built,
+        #: so "flag off" remains "nothing new exists", not "something inert".
+        self.realtime_broker: RealtimeToolBroker | None = None
+        self.realtime_driver: RealtimeDriver | None = None
+        self.realtime_gateway: object | None = None
+        self._realtime_panel_token: str | None = None
+        #: Card R16. Facts the robot wanted to narrate while the lane was HUNG
+        #: UP. Counted at ``_narrate_mission``'s door rather than in the lane,
+        #: because that is where the refusal happens: ``_narratable`` turns a
+        #: closed lane away before the lane is asked, and it must, or the
+        #: whisperer would be what re-opens a session the owner walked away
+        #: from. The number is what stops that refusal being invisible; the
+        #: facts themselves still reach the mission log and the event ring,
+        #: which are upstream of the lane entirely.
+        self._narrations_into_closed_lane = 0
+        #: Fresh turn ids for router calls made on the broker's behalf. Never
+        #: reused: ``_accept_plan`` matches ``PlanIR.source_turn_id`` against
+        #: the frame's, so a recycled id would let one admission answer another.
+        self._realtime_turn_sequence = 0
+        #: Card R10. The pace ``follow_owner`` was last asked for. RECORDED, not
+        #: applied — R11's pace_intent is the consumer. Kept here so the value
+        #: exists for it, and so ``/api/state`` can show that the robot heard
+        #: "run" even though nothing has changed speed yet.
+        self._realtime_last_pace = ""
+        #: Card R11 — THE CONSUMER R10 was waiting for. The pace the owner asked
+        #: for, and when. It is read by the whisperer's pace watcher and by
+        #: nothing else; it never reaches a controller, and the follow safety
+        #: caps are not a function of it (see ``_whisperer_digest``).
+        self._realtime_pace_intent = ""
+        self._realtime_pace_intent_at_s: float | None = None
+        #: Was the follow controller running on the previous digest? The pace
+        #: declaration is cleared on the falling edge of this, never on "not
+        #: following" — see ``_whisperer_digest``.
+        self._whisperer_was_following = False
+        #: Card R11. One counter per block EPISODE, so a clear can prove which
+        #: block it closes and the whisperer's clear-only-after-a-forwarded-block
+        #: rule has an identity to key on.
+        self._mission_block_episode = 0
+        #: Card R11. The whisperer runs on the control loop; this throttles it to
+        #: a conversational cadence rather than the 10 Hz motion cadence.
+        self._whisperer_tick_at_s: float | None = None
+        #: The last route the deterministic router returned for a hosted tool
+        #: call. Its own record, never ``agent.last_intent_frame``.
+        self._realtime_last_route: dict[str, object] | None = None
+        #: Card R15 — WHO IS OWED AN ENDING.
+        #:
+        #: "Done" may only be said from a terminal event, so the terminals have
+        #: to reach the model. They must NOT all reach it: ``_speech_emote``
+        #: runs ``_brain_gesture`` for every inline ``[emote:...]`` tag the
+        #: robot authors in its own sentences, and narrating those endings would
+        #: have the dog interrupting itself to announce a nod it never mentioned
+        #: starting — a billed response per tag.
+        #:
+        #: So a terminal is narratable only when the OWNER asked for the
+        #: activity through the conversation surface. These two fields are that
+        #: mark, set on the hosted doors and claimed once by the terminal.
+        #: ``str``/``bool`` rather than an activity id because the coordinator's
+        #: id is not returned through ``propose_action`` — the name is what both
+        #: ends can see, and a mismatch fails toward silence.
+        self._narratable_activity = ""
+        self._narratable_orbit = False
+        #: Card R19, mechanism D. Coordinator activity ids whose ending has
+        #: already been looked at. ``ActivityCoordinator._expire`` retires a
+        #: TTL'd proposal straight into ``_recent`` from inside ``submit`` /
+        #: ``start_ready`` / ``snapshot`` — it returns nothing and calls nobody,
+        #: so an expiry is the ONE terminal R15 could not wire, because it never
+        #: passes through ``_step_activities``. live_run_1 q20/q21: the owner
+        #: said "Sit down" and "Take a bow", the broker answered ``executed``,
+        #: and both proposals died on their 20 s TTL — ``status: expired,
+        #: detail: proposal_ttl_elapsed`` — without one word to the owner.
+        #: Polled here rather than fixed in the coordinator because
+        #: ``core/activities.py`` is not this card's to touch, and polling is
+        #: read-only: the set only ever grows by ids the coordinator has already
+        #: retired.
+        self._seen_activity_endings: set[int] = set()
+        #: Card R11. Built UNCONDITIONALLY, and deliberately so: the whisperer is
+        #: a pure decision object with no thread, no socket and no cost, and the
+        #: alternative — constructing it only inside the ``realtime_config.enabled``
+        #: branch — would leave a state where a lane exists and nothing gates what
+        #: reaches it. Every robot-initiated fact goes through this object, so a
+        #: build in which it can be missing is a build in which the owner's cost
+        #: knob has a hole.
+        self.realtime_whisperer = Whisperer(
+            config=self.realtime_config.whisperer,
+            clock=time.monotonic,
+        )
         if self.realtime_config.enabled:
+            # SI is the personality + companion guardrails, versioned and
+            # digest-pinned in ``realtime/prompting.py``. DI is a deterministic
+            # render of injected runtime flags. ``current().text`` is the
+            # session-OPEN render; the lane re-sends ``self.instructions`` at
+            # every rollover and reconnect, so a driver that calls
+            # ``realtime_instructions.refresh(lane)`` before ``lane.tick()``
+            # gets fresh DI at each session boundary and never mid-session
+            # (a mid-session rewrite would bust the provider's prompt cache).
+            self.realtime_instructions = InstructionSource(
+                # Owner directive 2026-08-18: personality is authorable as plain
+                # prose. ``persona_text`` (from configs/realtime.yaml) replaces
+                # the profile block verbatim; ``None`` — the shipped default —
+                # takes the preset-profile path byte-for-byte, which is why the
+                # SI_DIGESTS pins still hold. ``si_profile`` overrides which
+                # preset is used, and falls back to the runtime's personality.
+                persona_text=self.realtime_config.persona_text,
+                profile_id=self.realtime_config.si_profile or self._personality,
+                context=DeveloperContext(
+                    # Injected, not read inside the renderer: a corpus fixture
+                    # replays byte-identically only if the clock is a seam.
+                    clock=datetime.now,
+                    # No location provider yet. Nothing in this runtime names a
+                    # ROOM: ``_location_context`` is map coordinates and
+                    # ``_scene_context`` is visible semantic regions, and
+                    # neither is a place a companion can talk about. DI reads
+                    # "unknown" rather than inventing one; wiring a real place
+                    # source is an R3 handoff.
+                    owner_name=str(agent_config.get("owner_name", UNKNOWN_OWNER)),
+                    history=lambda: history_digest_from_turns(
+                        self.agent.memory.realtime_turns(limit=MAX_HISTORY_LINES * 2)
+                    ),
+                    # Card R18, work item 1(b). The scene block the DI carries
+                    # at every session boundary, from the same
+                    # ``scene_report`` the ``get_status`` answer is built
+                    # from. It is a SNAPSHOT and the DI header says so: the
+                    # tool is what answers "right now".
+                    scene=self._realtime_scene_lines,
+                ),
+                library=self.prompt_library,
+            )
+            # Card R3. The broker replaces R1's refuse-every-call stub. It is
+            # built BEFORE the lane so the lane can declare its tool surface in
+            # the same breath as its instructions, and its two read-only tools
+            # join the supervisor's exact-name allowlist — the documented
+            # mechanism for read-only conversation tools (safety.py:40-42),
+            # which is why ``recall_memory`` validates instead of falling into
+            # the fail-closed "Tool is not allowed" arm.
+            self.agent.safety.information_tools = frozenset(
+                self.agent.safety.information_tools | {TOOL_RECALL_MEMORY}
+            )
+            self.realtime_broker = RealtimeToolBroker(
+                ToolDoors(
+                    validate=self.agent.safety.validate,
+                    status=self._realtime_status_digest,
+                    recall=self._realtime_recall,
+                    # Card R15. The SAME door, with the terminal marked as one
+                    # the owner is owed an ending for. ``_brain_gesture`` is
+                    # still what runs; the wrapper adds nothing to the
+                    # admission chain and cannot refuse anything.
+                    gesture=self._realtime_gesture,
+                    pose=self._realtime_pose,
+                    navigate=self._realtime_navigate,
+                    # Card R10 — the two doors that close the tool-surface hole,
+                    # plus the place vocabulary the junk-place refusal names.
+                    places=self._realtime_places,
+                    orbit=self._realtime_orbit,
+                    follow=self._realtime_follow,
+                    gesture_names=lambda: tuple(self._emote_catalog),
+                    pose_names=self._realtime_pose_names,
+                    on_dispatch=self._realtime_thinking_pose,
+                    note=lambda message: self._emit("realtime", message, "info"),
+                )
+            )
             self.realtime_lane = RealtimeLane(
                 config=self.realtime_config,
-                instructions=build_instructions(
-                    personality=personality.instruction,
-                    reply_style=personality.reply_style,
-                ),
-                sink=self._speaker_sink,
+                instructions=self.realtime_instructions.current().text,
+                sink=self._build_realtime_sink(),
                 # NEVER submit_voice_text: that is the local agent's front door.
                 ingress=self.submit_realtime_transcript,
-                ledger=self.agent.memory,
+                ledger=_RealtimeLedgerMirror(self),
                 memory_tail=lambda: self.agent.memory.realtime_turns(limit=20),
-                # The same field ``speak_system`` consults to decide it is busy;
-                # the sink is an ordered queue and cannot tell two owners apart.
-                duplex_output_active=(
-                    lambda: getattr(self.voice_session, "_active_output", None) is not None
-                ),
+                # Card R7. R1.5's sink-ownership law is "two speakers must not
+                # share one ordered queue", and this callable is how the lane is
+                # told the local half is busy. It used to report the local
+                # duplex session's state unconditionally — which is only the
+                # right answer when the lane and the duplex session are writing
+                # to the SAME SpeakerSink. They never are here:
+                # ``_build_realtime_sink`` returns a DiscardSink or a BrowserSink
+                # and deliberately never a local SpeakerSink, so the lane's audio
+                # goes to /dev/null or to the browser while local speech goes to
+                # PortAudio. Reporting "busy" for those was a false positive that
+                # raised SinkOwnershipError out of ``_on_audio`` into ``pump()``
+                # — R4L open risk 6, the three `pump failed: … DuplexVoiceSession
+                # output is live` lines in live session 1, in TEXT mode where
+                # there is no contention at all. In audio mode the same false
+                # positive would drop hosted speech mid-utterance whenever the
+                # robot happened to be talking locally. The law is unchanged and
+                # still asserted: this now says "busy" exactly when the two
+                # really do share a queue.
+                duplex_output_active=self._realtime_shares_local_speaker,
                 transcript_origin=TRANSCRIPT_ORIGIN_REALTIME,
+                tool_handler=self.realtime_broker,
+                transport_factory=self._realtime_transport_factory(),
+                # Card R16. The lane hangs itself up when nobody is talking to
+                # it; this is how the browser's microphone button learns about
+                # it, because the lane is not allowed to know what a microphone
+                # is. See ``_realtime_idle_closed``.
+                on_idle_close=self._realtime_idle_closed,
+            )
+            # The crank. Nothing in R1/R1.5/R2 ever called ``pump()``/``tick()``;
+            # without this the session hears nothing and never rolls over.
+            self.realtime_driver = RealtimeDriver(
+                self.realtime_lane,
+                instructions=self.realtime_instructions,
+                on_event=lambda message: self._emit("realtime", message, "info"),
             )
         self._voice_query_end_by_turn: dict[int, float] = {}
         # Acoustic-ack fan-in (N19). The capture loop, the STT provider and the
@@ -1197,7 +1909,7 @@ class RobotRuntime:
         self._channels.register(ActivitiesChannel(self.activities), pausable=False)
 
     def _stop_navigation_channel(
-        self, *, reason: str = "navigation_disabled", state: str = "idle"
+        self, reason: str = "navigation_disabled", *, state: str = "idle"
     ) -> None:
         """Channel-level navigation stop (no re-entrant preempt).
 
@@ -1206,15 +1918,26 @@ class RobotRuntime:
         would have to stop first and overwrite the detail afterwards, and the
         executive polls between those two writes — it would read
         ``navigation_disabled`` and attribute the failure to nothing.
+
+        Card R12: ``reason`` is positional-or-keyword so this method IS the
+        ``BehaviorChannel.stop(reason)`` shape and ``NavigationChannel`` can
+        hand its reason straight through. Every existing caller passes it by
+        keyword and is unaffected. ``navigation_disabled`` survives as the
+        default for the callers that genuinely do not know why (and as the
+        floor for a caller that passes an empty one) — it is an honest "no
+        reason given", which is a different claim from a wrong reason.
         """
 
+        reason = reason or "navigation_disabled"
         with self._lock:
             self._generation.bump("navigation")
             self._behavior_generation += 1
             was_enabled = self._navigation_directive is not None
             self._navigation_directive = None
             self._yield_tracker.reset()
+            goal = ""
             if was_enabled:
+                goal = str(self._navigation_detail.get("goal", ""))
                 self._navigation_detail = NavigationDetail.from_dict(
                     {
                         **self._navigation_detail,
@@ -1223,6 +1946,25 @@ class RobotRuntime:
                         "reason": reason,
                     }
                 ).as_dict()
+        if was_enabled:
+            # Card R4-lite, task_1 — Defect B, root cause. This is the ONE place
+            # every non-arrival mission terminal passes through: preempt, the
+            # executive's task teardown, a behavior switch, an owner stop, the
+            # yield policy's honest give-up. It wrote `enabled: False` into the
+            # detail and told NOBODY — which is exactly how the owner's mission
+            # ended with `goal: sidewalk, reason: navigation_disabled` and not a
+            # single event to explain it.
+            self._log_mission_terminal(state=state, goal=goal, reason=reason)
+            self._emit(
+                "navigation",
+                (
+                    f"Mission to {goal} ended ({state}): {reason}"
+                    if goal
+                    else f"Navigation stopped ({state}): {reason}"
+                ),
+                "info" if state in MISSION_ARRIVED_STATES else "warning",
+            )
+            self._narrate_mission_terminal(state=state, goal=goal, reason=reason)
         self.arbiter.cancel("navigation")
         self._restore_directive_pace()
         if was_enabled:
@@ -2403,7 +3145,7 @@ class RobotRuntime:
                 self.task_executive.report(immediate)
         self.component_metrics.elapsed("ExecutiveTick", started)
 
-    def _reconcile_semantic_tasks(self) -> None:
+    def _reconcile_semantic_tasks(self, *, stop_reason: str = "task_no_longer_active") -> None:
         executive = self.task_executive.snapshot()
         suspended_ids: set[str] = set()
         valid = []
@@ -2441,7 +3183,18 @@ class RobotRuntime:
         if to_pause:
             self._pause_semantic_dispatches(to_pause, "task_suspended")
         if to_stop:
-            self._stop_semantic_dispatches(to_stop, "task_no_longer_active")
+            # Card R12, from the live proof. ``task_no_longer_active`` is the
+            # right word when a plan step genuinely ended on its own — the tick
+            # callers keep it. It is the WRONG word when this reconciliation is
+            # running because the owner just latched the emergency stop: the
+            # interrupting caller tears the task down here and preempts its own
+            # channels one line later, so the teardown wins the race, writes the
+            # mission terminal, and the caller's ``preempt("safety",
+            # reason="emergency_stop")`` then finds nothing left to stop. That
+            # is why a live e-stop still read ``ended (idle):
+            # task_no_longer_active`` with the channel propagation already in
+            # place. The cause travels WITH the interrupt.
+            self._stop_semantic_dispatches(to_stop, stop_reason)
 
     def _pause_semantic_dispatches(self, dispatches, reason: str) -> None:
         """Release leases via channel pause + ResumeIntent (≠ destructive stop)."""
@@ -2513,7 +3266,20 @@ class RobotRuntime:
             if targets:
                 self.preempt("manual", reason=reason, targets=tuple(targets))
 
-    def _interrupt_brain(self, source: str, reason: str) -> None:
+    def _interrupt_brain(
+        self, source: str, reason: str, *, stop_reason: str = "task_no_longer_active"
+    ) -> None:
+        """Interrupt the executive, and tell it what it is being interrupted FOR.
+
+        Card R12: ``stop_reason`` is the word the resulting channel teardown
+        records — the mission-log row, the panel event and the narrated fact all
+        come from it. Callers pass the reason their own following ``preempt``
+        uses, so the two cannot disagree about why the same mission ended;
+        callers with no such preempt (and the executive's own tick-side
+        reconciliation) keep the default, which is the executive's honest word
+        for a plan step that is simply gone.
+        """
+
         if not self._brain_enabled:
             return
         self.task_executive.request_interrupt(
@@ -2526,7 +3292,7 @@ class RobotRuntime:
         # The executive, not the caller, decides whether this source may stop
         # immediately or must wait for a checkpoint. Reconciliation removes
         # only work whose executive record is actually no longer active.
-        self._reconcile_semantic_tasks()
+        self._reconcile_semantic_tasks(stop_reason=stop_reason)
 
     def start(self) -> None:
         if self._closed:
@@ -2587,7 +3353,9 @@ class RobotRuntime:
                 self._closed = True
                 self._stop_event.set()
                 with self._command_lock:
-                    self._interrupt_brain("system_recovery", "runtime_closed")
+                    self._interrupt_brain(
+                        "system_recovery", "runtime_closed", stop_reason="runtime_closed"
+                    )
                     self.preempt(
                         "safety",
                         reason="runtime_closed",
@@ -2604,6 +3372,24 @@ class RobotRuntime:
                     self.velocity_smoother.reset()
                     self._reset_motion_shaper()
             auxiliary_error: BaseException | None = None
+            # Card R1.6: stop pumping before anything else is torn down, so a
+            # driver thread can never touch a half-closed lane, then hang up the
+            # hosted session (a live socket left open keeps billing).
+            if self.realtime_driver is not None:
+                try:
+                    self.realtime_driver.stop()
+                except BaseException as error:  # noqa: BLE001 - teardown must continue
+                    auxiliary_error = error
+            if self.realtime_gateway is not None:
+                try:
+                    self.realtime_gateway.stop()
+                except BaseException as error:  # noqa: BLE001 - teardown must continue
+                    auxiliary_error = error
+            if self.realtime_lane is not None:
+                try:
+                    self.realtime_lane.close()
+                except BaseException as error:  # noqa: BLE001 - teardown must continue
+                    auxiliary_error = error
             if self._camera_ingress is not None:
                 try:
                     self._camera_ingress.stop()
@@ -2691,7 +3477,9 @@ class RobotRuntime:
         # already crossed the dispatch boundary this waits for it, then manual
         # control becomes authoritative before returning to the operator.
         with self._command_lock:
-            self._interrupt_brain("manual", "manual control acquired the base")
+            self._interrupt_brain(
+                "manual", "manual control acquired the base", stop_reason="manual_control"
+            )
             self.preempt(
                 "manual",
                 reason="manual_control",
@@ -2707,7 +3495,11 @@ class RobotRuntime:
         """Give an explicit locomotion command clean ownership of the body."""
 
         with self._command_lock:
-            self._interrupt_brain("correction", "owner issued a direct motion command")
+            self._interrupt_brain(
+                "correction",
+                "owner issued a direct motion command",
+                stop_reason="voice_motion_started",
+            )
             self.preempt(
                 "voice",
                 reason="voice_motion_started",
@@ -2766,7 +3558,9 @@ class RobotRuntime:
 
     def emergency_stop(self) -> None:
         with self._command_lock:
-            self._interrupt_brain("emergency", "emergency stop latched")
+            self._interrupt_brain(
+                "emergency", "emergency stop latched", stop_reason="emergency_stop"
+            )
             self.preempt(
                 "safety",
                 reason="emergency_stop",
@@ -3366,11 +4160,18 @@ class RobotRuntime:
                 "goal": place,
                 "reason": command.note,
             }
+        # Card R4-lite, task_1 — Defect B. Every one of these four branches is a
+        # mission lifecycle fact, and three of them are TERMINALS taken before
+        # the mission ever moved. "Already at the sidewalk" is an arrival and
+        # must say so; "I couldn't reach it" is a failure and must say so.
         if command.stop and mission.status == "arrived":
             with self._lock:
                 self._navigation_directive = None
             self._restore_directive_pace()
             message = f"Already at {place}."
+            self._log_mission_terminal(
+                state="arrived", goal=place, reason=command.note or "already_there"
+            )
         elif command.stop and mission.status == "verifying":
             self._request_navigation_terminal_stop()
             message = f"Stopping at {place} and verifying the final position."
@@ -3380,8 +4181,22 @@ class RobotRuntime:
                 self._navigation_detail["enabled"] = False
             self._restore_directive_pace()
             message = f"I couldn't find or safely reach {place}."
+            self._log_mission_terminal(
+                state="failed", goal=place, reason=command.note or "unreachable"
+            )
         else:
             message = f"Navigating to {place}."
+            self._mission_block_note = None
+            self._mission_block_emit_at_s = None
+            self._mission_block_coalesced = 0
+            self._log_mission(
+                MISSION_LOG_STARTED,
+                goal=place,
+                state=str(mission.status),
+                reason=command.note or "accepted",
+                level="info",
+                text=message,
+            )
         self._emit(
             "navigation",
             message,
@@ -3611,6 +4426,13 @@ class RobotRuntime:
         previous = self.spatial.snapshot()
         self.spatial.stop()
         self.arbiter.cancel("spatial")
+        # Card R15. An orbit cancelled from OUTSIDE — an e-stop, a new command,
+        # a manual preempt — is dropped from the narration mark rather than
+        # narrated: every one of those paths already reaches the owner through
+        # its own channel (the e-stop's own critical fact, or the sentence they
+        # just spoke), and a stale mark would otherwise be claimed by whatever
+        # spatial behaviour ended next. Clearing it fails toward silence.
+        self._narratable_orbit = False
         with self._lock:
             self._spatial_detail = {
                 **previous,
@@ -3628,7 +4450,11 @@ class RobotRuntime:
             return self.set_behavior("stay")
         if name == "stop":
             with self._command_lock:
-                self._interrupt_brain("explicit_stop", "owner explicitly stopped motion")
+                self._interrupt_brain(
+                    "explicit_stop",
+                    "owner explicitly stopped motion",
+                    stop_reason="operator_stop",
+                )
                 self.preempt(
                     "manual",
                     reason="operator_stop",
@@ -3763,6 +4589,12 @@ class RobotRuntime:
         )
 
     def _step_activities(self) -> None:
+        # Card R19, mechanism D. FIRST, and outside every early return below: an
+        # activity can expire while a different one is running, which is exactly
+        # what live_run_1 recorded when "Sit down" and "Take a bow" arrived 54 ms
+        # apart. No lock is held here and none is taken until the narration
+        # itself, which is the same rule R15's terminals follow.
+        self._narrate_expired_activities()
         now = time.monotonic()
         running = self.activities.running()
         if running is not None:
@@ -3781,6 +4613,9 @@ class RobotRuntime:
                         f"{finished.proposal.name} preempted by {preemptor}",
                         "warning",
                     )
+                    self._narrate_finished_activity(
+                        finished, completed=False, reason=f"{preemptor} took over"
+                    )
                 return
             if now >= self._activity_complete_at:
                 finished = self.activities.finish(
@@ -3795,11 +4630,21 @@ class RobotRuntime:
                         f"Completed {finished.proposal.name}",
                         "success",
                     )
+                    # Card R15. THE moment "I waved" becomes a true sentence.
+                    # The broker answered "started: the paw_wave gesture is
+                    # running on the robot's body" seconds ago; this is the
+                    # movement actually being over.
+                    self._narrate_finished_activity(
+                        finished, completed=True, reason="duration_elapsed"
+                    )
             return
 
         record = self.activities.start_ready(self._activity_context(), now=now)
         if record is None:
             return
+        #: Card R15. Same rule as ``_step_spatial``: collect the terminal under
+        #: the command lock, narrate it after the lock is released.
+        aborted: tuple[ActivityRecord, str] | None = None
         # ``start_ready`` and physical dispatch are separate operations so that
         # coordinator callbacks never run while its lock is held. Revalidate
         # under the command lock: Stop/Stay/E-stop/manual/navigation use this
@@ -3814,28 +4659,146 @@ class RobotRuntime:
                 or self._closed
             ):
                 if current is not None and current.activity_id == record.activity_id:
-                    self.activities.finish(
+                    cancelled = self.activities.finish(
                         success=False,
                         detail=f"dispatch_cancelled_by_{context.busy_reason or 'runtime'}",
                         now=now,
                     )
+                    if cancelled is not None:
+                        aborted = (
+                            cancelled,
+                            (
+                                f"{context.busy_reason or 'the runtime'} cancelled "
+                                "it before it could start"
+                            ),
+                        )
                 self._activity_complete_at = 0.0
-                return
-            try:
-                self._activity_dispatch_active = True
+                # Card R15 turned this arm's ``return`` into an ``else``. Same
+                # control flow to the byte — the dispatch below is skipped
+                # exactly when it was skipped before — but the method now has
+                # one exit, which is what lets the narration happen after the
+                # command lock is released instead of inside it.
+            else:
                 try:
-                    result = self.dog.execute(record.proposal.name)
-                finally:
-                    self._activity_dispatch_active = False
-                if not result.accepted:
-                    raise RuntimeError(result.message)
-                duration = result.effective_duration_s
-                self._activity_complete_at = now + max(0.1, min(30.15, duration + 0.15))
-                self._emit("activity", f"Executing {record.proposal.name}", "success")
-            except (KeyError, OSError, RuntimeError, TypeError, ValueError) as error:
-                self.activities.finish(success=False, detail=str(error), now=now)
-                self._activity_complete_at = 0.0
-                self._emit("activity", f"Action failed: {error}", "error")
+                    self._activity_dispatch_active = True
+                    try:
+                        result = self.dog.execute(record.proposal.name)
+                    finally:
+                        self._activity_dispatch_active = False
+                    if not result.accepted:
+                        raise RuntimeError(result.message)
+                    duration = result.effective_duration_s
+                    self._activity_complete_at = now + max(0.1, min(30.15, duration + 0.15))
+                    self._emit("activity", f"Executing {record.proposal.name}", "success")
+                except (KeyError, OSError, RuntimeError, TypeError, ValueError) as error:
+                    failed = self.activities.finish(success=False, detail=str(error), now=now)
+                    self._activity_complete_at = 0.0
+                    self._emit("activity", f"Action failed: {error}", "error")
+                    if failed is not None:
+                        aborted = (failed, f"the robot could not run it: {error}")
+        if aborted is not None:
+            self._narrate_finished_activity(aborted[0], completed=False, reason=aborted[1])
+
+    def _narrate_finished_activity(
+        self,
+        record: ActivityRecord,
+        *,
+        completed: bool,
+        reason: str,
+    ) -> bool:
+        """Card R15. Narrate an activity terminal, but only if it was ASKED FOR.
+
+        The claim is one-shot and keyed on the proposal name, so the inline
+        ``[emote:...]`` tags the robot authors in its own speech — dozens per
+        conversation, none of them announced — end in silence, while the wave
+        the owner asked for out loud gets its ending said.
+
+        The label reads ``"paw wave movement"`` rather than the bare skill id:
+        the fact template already says the robot started it for the owner, and
+        a catalog name on its own ("the sit has now FINISHED") is not a phrase
+        anyone would say out loud.
+        """
+
+        name = str(record.proposal.name)
+        if not self._claim_narratable_activity(name):
+            return False
+        return self._narrate_activity_terminal(
+            activity=f"{name.replace('_', ' ')} movement",
+            completed=completed,
+            reason=reason,
+        )
+
+    def _narrate_expired_activities(self) -> bool:
+        """Card R19, mechanism D. An activity that TIMED OUT never gets a tick.
+
+        `broker.executed` does not mean "the robot did it" — live_run_1 headline
+        6, and the sharpest single instance in the whole run:
+
+            owner   14:27:38  "Sit down"
+            broker  set_pose  →  executed  →  "started: the robot is settling
+                                               into the sit pose"
+            state.activities.recent id=2  →  {"status": "expired",
+                                              "detail": "proposal_ttl_elapsed"}
+
+        The dog said nothing, sat down never, and the owner was told the pose
+        had started. R15 gave every activity a second half, but only for the
+        endings that pass through :meth:`_step_activities`;
+        :meth:`ActivityCoordinator._expire` retires a proposal from inside
+        whichever method happened to call it and returns nothing, so an expiry
+        is invisible to the runtime's control flow. This polls for it instead.
+
+        Two properties inherited deliberately from R15 rather than reinvented:
+        only an activity the OWNER asked for through the hosted surface is
+        narrated (``_claim_narratable_activity``, one-shot), and the claim fails
+        toward silence. So the bow of q20 — which never produced a broker call
+        at all and therefore never carried a mark — stays silent here; its own
+        defect is upstream of this one and is named in the status doc.
+
+        Returns whether anything was said, for the tests and for symmetry with
+        :meth:`_narrate_activity_terminal`.
+        """
+
+        try:
+            recent = self.activities.snapshot().get("recent") or ()
+        except (AttributeError, KeyError, RuntimeError, TypeError, ValueError):
+            return False
+        spoke = False
+        visible: set[int] = set()
+        endings: list[tuple[str, str]] = []
+        for row in recent:
+            try:
+                activity_id = int(row["id"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            visible.add(activity_id)
+            if activity_id in self._seen_activity_endings:
+                continue
+            self._seen_activity_endings.add(activity_id)
+            if str(row.get("status", "")) != ACTIVITY_STATUS_EXPIRED:
+                # Every other ending already has a reporter: R15 wired the
+                # completed, preempted and dispatch-cancelled arms through
+                # ``_step_activities``. Marking it seen is all this loop owes it.
+                continue
+            endings.append((str(row.get("name", "")), str(row.get("detail", "")) or "it timed out"))
+        # Bounded by construction: ids are unique and monotonic, so one the
+        # coordinator's 20-deep ``recent`` window has already evicted can never
+        # come back and asking about it again is not a risk worth the memory.
+        self._seen_activity_endings &= visible
+        for name, detail in endings:
+            if not self._claim_narratable_activity(name):
+                continue
+            spoke = (
+                self._narrate_activity_terminal(
+                    activity=f"{name.replace('_', ' ')} movement",
+                    completed=False,
+                    started=False,
+                    reason=(
+                        f"it waited in the queue until the request timed out ({detail})"
+                    ),
+                )
+                or spoke
+            )
+        return spoke
 
     def _render_system_prompt(self) -> str:
         with self._lock:
@@ -4259,6 +5222,39 @@ class RobotRuntime:
             raise ValueError("voice text is empty")
         if len(clean) > 2000:
             raise ValueError("voice text is too long")
+        # Card R5 (owner directive, 2026-08-18): the hosted lane is the
+        # production path and the legacy voice agent is the E2E TEST baseline.
+        # VISIBILITY, NOT PROHIBITION — this deliberately does not refuse:
+        #   * the microphone/STT capture loop still lands here until the browser
+        #     audio gateway (§A) exists, so refusing would mute the only voice
+        #     input that works today;
+        #   * the e2e suites ARE the legacy path's remaining customer, and their
+        #     whole value is that they exercise the unchanged baseline.
+        # What was missing was any way to notice. A stack that looks live in the
+        # panel while every sentence goes to the local agent is the failure this
+        # event exists to make loud, and it is the shape of the incident this
+        # card was written for.
+        #
+        # ``is_final`` only: partial hypotheses arrive per keystroke from the
+        # panel's input handler, and one warning per keystroke would flush the
+        # 100-slot event deque and bury the very line it is trying to show.
+        if is_final and self.realtime_lane is not None:
+            lane_active = bool(getattr(self.realtime_lane, "active", False))
+            self._emit(
+                "realtime",
+                "legacy voice path handled a turn while the live lane is up — "
+                f"e2e testing only (origin={origin}, "
+                f"live session {'active' if lane_active else 'idle'}). "
+                "Typed turns should go to the hosted lane; untick nothing in the "
+                "panel unless you are running an e2e test.",
+                "warning",
+                detail={
+                    "path": "legacy_voice",
+                    "origin": origin,
+                    "lane_constructed": True,
+                    "lane_active": lane_active,
+                },
+            )
         if is_final and clean.lower() in EMERGENCY_STOP_PHRASES:
             # Latch the safety boundary before touching the voice coordinator;
             # a committed slow action must not delay an emergency request on
@@ -4376,8 +5372,17 @@ class RobotRuntime:
             session_id=session_id,
         )
         if executed:
-            self._emit("realtime", f"{found.name}: {clean}", "info")
-        return RealtimeTranscriptOutcome(
+            if found.kind == KIND_EMERGENCY:
+                # Card R9. An emergency latch has to be findable in the panel
+                # log by someone who does not know which lane latched it, and it
+                # has to name the words that did it. ``realtime | stop: Die
+                # stop`` at INFO level was neither: it reads as a routing note,
+                # and it sits next to a generic ``safety | Emergency stop
+                # latched`` that says nothing about where the stop came from.
+                self._emit("safety", f"Emergency stop latched by voice: {clean!r}", "error")
+            else:
+                self._emit("realtime", f"{found.name}: {clean}", "info")
+        outcome = RealtimeTranscriptOutcome(
             kind=found.kind,
             name=found.name,
             transcript=clean,
@@ -4387,6 +5392,13 @@ class RobotRuntime:
             session_id=session_id,
             error=error,
         )
+        # Card R3, one authority per utterance: the broker must know that this
+        # sentence has already been acted on before the model's tool call for
+        # the same sentence arrives.
+        broker = self.realtime_broker
+        if broker is not None:
+            broker.note_ingress(outcome)
+        return outcome
 
     def _write_realtime_ledger(
         self,
@@ -4408,6 +5420,831 @@ class RobotRuntime:
             )
         except (AttributeError, RuntimeError, TypeError, ValueError) as error:
             self._emit("realtime", f"ledger write failed: {error}", "warning")
+        self.mirror_realtime_chat(speaker, text)
+
+    def mirror_realtime_chat(self, speaker: str, text: str) -> None:
+        """Show a hosted turn in the panel's chat pane (card R1.6, section C).
+
+        The ledger is the product memory; the chat pane is what the owner sees
+        while testing. Only the two conversational speakers are mirrored —
+        ``system`` rows are session bookkeeping ("[session rollover] …") and
+        putting them in the chat would read as the robot talking. A no-op when
+        the lane was never constructed, so flag-off panels are unchanged.
+        """
+
+        if self.realtime_lane is None:
+            return
+        role = {"owner": "user", "robot": "assistant"}.get(str(speaker), "")
+        if not role or not str(text).strip():
+            return
+        self._chat_item(role, str(text))
+
+    def submit_realtime_text(self, text: str) -> dict[str, object]:
+        """Panel text box → the LIVE hosted session (card R1.6, section C).
+
+        This is the manual-test path the owner asked for: with
+        ``mode: text`` a bare ``./scripts/launch_stack.sh --realtime`` plus a
+        browser is a real end-to-end conversation with the hosted model and no
+        audio hardware anywhere. The lane opens on the first message, because
+        opening a paid session at boot for a panel nobody has typed into yet is
+        exactly the cost bug the arming gate exists to prevent.
+        """
+
+        lane = self.realtime_lane
+        if lane is None:
+            raise RuntimeError(
+                "the realtime lane is not constructed: configs/realtime.yaml is "
+                "absent or realtime.enabled is false"
+            )
+        clean = " ".join(str(text).split())
+        if not clean:
+            raise ValueError("realtime text is empty")
+        if len(clean) > 2000:
+            raise ValueError("realtime text is too long")
+        token = self._realtime_panel_token
+        if not token and not lane.active:
+            raise RuntimeError(
+                "the realtime lane has no panel handshake token; the panel "
+                "server binds one at startup (fail-closed arming)"
+            )
+        # Card R4-lite, task_1 — Defect A. This used to be `if not lane.active:
+        # lane.open_session(...)`, and reading `active` from this thread is
+        # exactly the race that lost a turn: a reconnect makes `active` False
+        # for the length of its backoff, so the panel concluded there was no
+        # session and opened a competing one. The lane then finished its
+        # reconnect, swapped the transport, and the socket holding this turn was
+        # orphaned. `ensure_session` takes that decision while holding the lane.
+        # The owner typing into the live box IS the per-connection gesture:
+        # deliberate, local, and not "the service was reachable".
+        before = lane.session_id
+        session_id = lane.ensure_session(handshake_token=token, mic_gesture=True)
+        if session_id != before:
+            self._emit("realtime", f"hosted session opened: {session_id}", "success")
+        lane.send_text(clean)
+        driver = self.realtime_driver
+        if driver is not None and not driver.running:
+            driver.start()
+        return {
+            "accepted": True,
+            "session_id": lane.session_id,
+            "mode": self.realtime_config.mode,
+        }
+
+    def bind_panel_token(self, token: str) -> None:
+        """Hand the lane the panel's per-process CSRF token.
+
+        The panel HTTP server mints the token in its own constructor, after the
+        runtime exists, so the runtime cannot read it and the arming gate must
+        not invent one. This is the one wire between them; without it the lane
+        refuses to arm (``no_handshake_token``), which is the correct
+        fail-closed answer for a runtime with no panel.
+        """
+
+        clean = str(token).strip()
+        self._realtime_panel_token = clean or None
+        gateway = self.realtime_gateway
+        if gateway is not None and clean:
+            gateway.bind_token(clean)
+
+    # -------------------------------------------------- realtime tool doors
+    def _realtime_transport_factory(self) -> Callable[[], object] | None:
+        """The live WebSocket factory, or ``None`` when there is no credential.
+
+        Resolved once at construction and deliberately not retried: a lane
+        built without a key must refuse to arm (``no_transport``) rather than
+        appear armed and fail at the socket. ``ws_transport`` is imported here
+        rather than at module scope because it imports ``websockets``, which is
+        an optional dependency — a build without it must still boot a runtime.
+        """
+
+        try:
+            from parcel_robot.realtime.ws_transport import (
+                DEFAULT_API_KEY_ENV,
+                websocket_transport_factory,
+            )
+        except ImportError as error:
+            self._emit("realtime", f"live transport unavailable: {error}", "warning")
+            return None
+        env_name = os.environ.get("PARCEL_REALTIME_KEY_ENV", "").strip() or DEFAULT_API_KEY_ENV
+        if not os.environ.get(env_name, "").strip():
+            self._emit(
+                "realtime",
+                f"no realtime credential in ${env_name}; the lane will not arm",
+                "warning",
+            )
+            return None
+        return websocket_transport_factory(model=self.realtime_config.model, api_key_env=env_name)
+
+    def _build_realtime_sink(self) -> object | None:
+        """The mouth. ``text`` mode discards audio; ``audio`` mode uses the browser.
+
+        A local ``SpeakerSink`` is never chosen here even when one exists: this
+        host has no PortAudio output, and R1's playback bridge would raise into
+        the pump on the first audio delta. Text mode therefore takes a sink that
+        drops bytes and counts them, which is honest — the transcript is the
+        product in text mode, and the discarded byte count says so out loud.
+
+        Card R7: ``mode: audio`` no longer raises here. The gateway it builds is
+        ARMED BUT IDLE — a websocket endpoint that will authenticate a panel and
+        deliver hosted audio to it, with the microphone shut until the owner's
+        own per-connection gesture opens it. Constructing it never opens a paid
+        session and never touches audio hardware, which is why it is safe to do
+        at boot on a host with neither.
+        """
+
+        if not self.realtime_config.audio:
+            return DiscardSink()
+        try:
+            from parcel_robot.realtime.audio_gateway import BrowserAudioGateway
+        except ImportError as error:
+            # ``mode: audio`` names a capability this build does not have. Fail
+            # LOUDLY at construction rather than silently downgrading to text:
+            # an operator who asked for a microphone and got a text box with no
+            # message would discover it mid-conversation. Reachable again only
+            # in a build without the optional ``websockets`` dependency.
+            raise RuntimeError(
+                "realtime.mode is 'audio' but the browser audio gateway is not "
+                "available in this build; set mode: text in "
+                f"{self.realtime_config.source} to use the panel text path ({error})"
+            ) from None
+        # Card R17. The one wiring line the config-gated audio tee needs: the
+        # loader owns the schema and the gateway owns the tee, and neither can
+        # reach the other without this. Default OFF — an absent or disabled
+        # ``capture:`` block passes ``None`` and every audio path below is
+        # byte-for-byte what R7 shipped.
+        capture = None
+        capture_config = getattr(self.realtime_config, "capture", None)
+        if capture_config is not None and getattr(capture_config, "enabled", False):
+            from parcel_robot.realtime.audio_gateway import SessionAudioCapture
+            from parcel_robot.realtime.config import resolve_capture_dir
+
+            capture = SessionAudioCapture(
+                root=resolve_capture_dir(capture_config.dir),
+                max_minutes=capture_config.max_minutes,
+                owner_gap_s=capture_config.owner_gap_s,
+                on_event=lambda message: self._emit("realtime", message, "info"),
+            )
+        gateway = BrowserAudioGateway(
+            on_audio=self._realtime_owner_audio,
+            on_mic=self._realtime_mic_gesture,
+            on_event=lambda message: self._emit("realtime", message, "info"),
+            capture=capture,
+        )
+        self.realtime_gateway = gateway
+        if self._realtime_panel_token:
+            gateway.bind_token(self._realtime_panel_token)
+        gateway.start()
+        return BrowserSink(gateway)
+
+    def _realtime_shares_local_speaker(self) -> bool:
+        """Does the lane's sink write to the SAME queue local speech does?
+
+        R1.5's sink-ownership law, evaluated instead of assumed. ``BrowserSink``
+        writes to the browser and ``DiscardSink`` writes nowhere; neither can
+        interleave with ``DuplexVoiceSession``'s PortAudio queue, so neither is
+        a reason for the lane to refuse to speak. Only a lane holding the local
+        speaker contends, and then the local session's own busy flag is the
+        answer. See the comment at the ``duplex_output_active=`` wiring.
+
+        Fail-closed in the direction the law points: anything this method does
+        not RECOGNISE as a non-speaker sink (a future build's own sink, or a
+        lane still resolving one through ``sink_factory``) falls through to the
+        pre-R7 behaviour and reports the duplex session's state, so a new sink
+        has to be added here deliberately rather than inheriting a free pass.
+        """
+
+        lane = self.realtime_lane
+        sink = None if lane is None else getattr(lane, "_sink", None)
+        if isinstance(sink, (BrowserSink, DiscardSink)):
+            return False
+        return getattr(self.voice_session, "_active_output", None) is not None
+
+    def _realtime_mic_gesture(self, open_: bool) -> None:
+        """The owner pressed (or released) the microphone in their browser.
+
+        Opening the microphone is what opens the hosted session in ``mode:
+        audio`` — exactly as typing into the live box is what opens it in
+        ``mode: text``. Nothing here is allowed to succeed quietly: if the lane
+        refuses to arm (no panel token, no credential, budget spent) the
+        exception propagates back through the gateway, the microphone stays
+        shut, and the browser is told the reason.
+
+        Closing the microphone deliberately does NOT close the session. The
+        session is the conversation; the microphone is whether the owner is
+        talking into it, and hanging up the provider on a released button would
+        throw away the context the next sentence is about to need.
+        """
+
+        lane = self.realtime_lane
+        if lane is None:
+            raise RuntimeError(
+                "the realtime lane is not constructed: configs/realtime.yaml is "
+                "absent or realtime.enabled is false"
+            )
+        if not open_:
+            self._emit("realtime", "microphone closed; the session stays open", "info")
+            return
+        token = self._realtime_panel_token
+        if not token and not lane.active:
+            raise RuntimeError(
+                "the realtime lane has no panel handshake token; the panel "
+                "server binds one at startup (fail-closed arming)"
+            )
+        before = lane.session_id
+        session_id = lane.ensure_session(handshake_token=token, mic_gesture=True)
+        if session_id != before:
+            self._emit("realtime", f"hosted session opened: {session_id}", "success")
+        driver = self.realtime_driver
+        if driver is not None and not driver.running:
+            driver.start()
+
+    def _realtime_idle_closed(self, idle_for: float) -> None:
+        """The lane hung up on an idle session. Card R16, work item 3.
+
+        Two things have to happen here and neither of them is "re-open it".
+
+        **The panel says so** — one event in the ring that ``/api/state``
+        renders, because a session ending is a fact about the product the owner
+        is entitled to find later. (The ledger row is the lane's own; this is
+        the line a person watching the panel sees.)
+
+        **The browser's microphone goes back to un-armed**, when there is one.
+        The gateway keeps running, keeps its token and keeps accepting
+        connections; only the ear closes. That is the whole of "the gateway stays
+        armed but idle": a page that kept saying "🔴 Listening" would be streaming
+        PCM into a session that no longer exists and the owner would be talking
+        to nobody, whereas an un-armed button re-opens the session on ONE click
+        through exactly the path a first-ever gesture takes
+        (``_realtime_mic_gesture`` → ``ensure_session``).
+
+        Nothing here touches the driver: the driver stopped itself when ``tick``
+        told it the lane had closed, and the same gesture that re-opens the
+        session restarts it.
+        """
+
+        self._emit(
+            "realtime",
+            f"hosted session hung up after {idle_for:.0f}s with nobody talking; "
+            "the next thing you say opens a fresh one with the same memory",
+            "info",
+        )
+        gateway = self.realtime_gateway
+        if gateway is None:
+            return
+        try:
+            gateway.close_mic("the session hung up after a long silence; click to start again")
+        except (OSError, RuntimeError, TypeError, ValueError) as error:  # pragma: no cover
+            # A gateway that will not close its microphone must not undo the
+            # hang-up: the session is already gone either way.
+            self._emit("realtime", f"microphone not closed after hang-up: {error}", "warning")
+
+    def _realtime_owner_audio(self, pcm: bytes) -> None:
+        """Owner microphone frames arriving from the browser, going up."""
+
+        lane = self.realtime_lane
+        if lane is None or not lane.active:
+            return
+        try:
+            lane.send_audio(pcm)
+        except (RealtimeLaneError, RuntimeError) as error:
+            self._emit("realtime", f"microphone frame dropped: {error}", "warning")
+
+    def _realtime_status_digest(self) -> dict[str, object]:
+        """What ``get_status`` tells the model. Small, factual, no free text.
+
+        Card R18 adds ``scene``. live_run_1 root-caused F3 as a missing tool —
+        the model had no route from "what do you see around you" to anything the
+        robot could sense — and the card's answer is deliberately NOT an eighth
+        tool: the robot's own current state and the robot's own surroundings are
+        the same question asked twice, and one tool that answers both is one
+        fewer thing for the model to choose wrong. The tool DESCRIPTION says so
+        (``build_tool_specs``), which is the half that makes the model reach for
+        it, and the result carries the sensor list and the no-camera note, which
+        is the half that keeps the answer honest.
+        """
+
+        arbitration = self.arbiter.snapshot()
+        battery = self._battery_snapshot()
+        with self._lock:
+            navigation = dict(self._navigation_detail)
+        running = self.activities.running()
+        return {
+            "emergency_stopped": bool(arbitration["emergency_stopped"]),
+            "active_source": arbitration["active_source"],
+            "battery_percent": round(float(battery.percent), 1),
+            "battery_state": battery.state,
+            "navigating": bool(navigation.get("enabled")),
+            "navigation_state": str(navigation.get("state", "idle")),
+            "following": bool(self.follow.enabled),
+            "gesture_running": None if running is None else running.proposal.name,
+            "personality": self._personality,
+            "scene": self._realtime_scene_report(),
+        }
+
+    def _realtime_scene_report(self) -> dict[str, object]:
+        """Card R18 — the surroundings, from perception only, right now."""
+
+        with self._lock:
+            observation = self._observation
+        return scene_report(observation)
+
+    def _realtime_scene_lines(self) -> tuple[str, ...]:
+        """The same facts as DI lines, for the session boundary.
+
+        Read through the SAME :func:`scene_report` the tool answer uses, so the
+        boundary block and the tool answer can never describe two different
+        worlds. Never raises: :class:`DeveloperContext` treats this as a sensor,
+        and a sensor that fails must render no block rather than a made-up one.
+        """
+
+        report = self._realtime_scene_report()
+        if not report.get("observed"):
+            return ()
+        return scene_fact_lines(report)
+
+    def _realtime_recall(self, query: str) -> str:
+        """A deterministic read of what was actually said. No model, no clock.
+
+        CARD R18, WORK ITEM 2 — and the three things that were wrong with the
+        version this replaces are stated in R18_STATUS §0.2, measured against the
+        owner's real 2,882-row store:
+
+        1. it read ``realtime_turns()``, whose ``speaker IS NOT NULL`` filter is
+           load-bearing for history injection and catastrophic for recall —
+           2,618 of the owner's 2,882 conversation rows are local-origin and
+           were invisible to it;
+        2. it matched the WHOLE query as a substring, so "what do you remember
+           about the willow?" could not find the row that says "willow" (R19
+           scene C, live);
+        3. it returned ``"speaker: content"`` with no instant attached, so even
+           a hit could not be said with provenance.
+
+        The retrieval and the provenance rendering live in
+        :mod:`parcel_robot.memory`, beside the rows, and are unit-tested against
+        an in-memory store. This method is the wiring plus the sentence.
+        """
+
+        # Naive local, deliberately: the DI's clock on this same runtime is
+        # ``datetime.now`` and recall's provenance words have to agree with it,
+        # or the robot says "yesterday" about two different days in one turn.
+        recalled = self.agent.memory.recall(query, now=datetime.now())  # noqa: DTZ005
+        if recalled:
+            return " | ".join(item.as_sentence() for item in recalled)
+        # Fall back to the tiered store's own deterministic retrieval, which is
+        # where turns go once they age out of the verbatim window. Unchanged
+        # from before this card, including having no instant to attach: these
+        # are distilled summaries, not turns, and dating a summary would be an
+        # invented provenance rather than a recovered one.
+        memory = self.prompting.memory
+        if memory is not None:
+            retrieval = memory.retrieve(query)
+            hits = [str(summary.text) for summary in getattr(retrieval, "summaries", ())]
+            if hits:
+                return " | ".join(f"from an earlier summary: {text}" for text in hits[-5:])
+        return ""
+
+    def _realtime_pose_names(self) -> tuple[str, ...]:
+        """Catalog skills whose kind is literally ``pose``. Nothing else."""
+
+        try:
+            return tuple(sorted(skill.id for skill in self.dog.catalog.list() if skill.kind == "pose"))
+        except (AttributeError, KeyError, RuntimeError, TypeError, ValueError):
+            return ()
+
+    def _realtime_pose(self, name: str) -> str:
+        """``set_pose`` — the ACTIVITY door, never the recovery door.
+
+        Card wording is ``propose_action(kind="pose")``; ``propose_action``
+        refuses any ``kind`` but ``"skill"`` (runtime.py:3763), so calling it
+        literally that way would raise on every hosted pose. The card's intent —
+        *the pose door, and never ``ReturnToSafePose``* — is honoured exactly:
+        the name must be a catalog skill whose own ``kind`` is ``pose``, and it
+        goes through ``propose_action``, so navigation, follow and e-stop
+        outrank it by the coordinator's existing arbitration rather than by
+        anything written here.
+        """
+
+        clean = str(name).strip()
+        if clean not in self._realtime_pose_names():
+            raise ValueError(f"unknown pose: {clean!r}")
+        detail = self.propose_action(
+            ActionProposal(
+                kind="skill",
+                name=clean,
+                trigger="explicit_command",
+                timing_preference="now",
+                interruption_request="safe_checkpoint",
+                reason="hosted voice pose request",
+            )
+        )
+        self._mark_narratable_activity(clean, detail)
+        return detail
+
+    def _realtime_gesture(self, name: str, intensity: float = 1.0) -> str:
+        """``play_gesture`` — card R15's marking wrapper around the same door.
+
+        ``_brain_gesture`` is unchanged and still does all the work; every
+        refusal it raises still propagates untouched. The only thing added is
+        the note that THIS gesture is one the owner asked for out loud, which is
+        what makes its ending worth a sentence. An inline ``[emote:...]`` the
+        robot authored in its own speech goes through ``_brain_gesture``
+        directly and is therefore never marked, so it ends in silence — which is
+        the whole point of the mark.
+        """
+
+        detail = self._brain_gesture(name, intensity)
+        self._mark_narratable_activity(str(name).strip(), detail)
+        return detail
+
+    def _mark_narratable_activity(self, name: str, detail: str) -> None:
+        """Remember that the owner is owed the ending of ``name``.
+
+        Only for a request the coordinator actually took: a rejected or skipped
+        proposal has no ending to report, and leaving the mark set would hand
+        the next unrelated activity's terminal to the model.
+        """
+
+        clean = " ".join(str(name).split())
+        if clean and str(detail).strip().startswith(("Accepted", "Deferred")):
+            self._narratable_activity = clean
+
+    def _claim_narratable_activity(self, name: str) -> bool:
+        """One-shot: was THIS ending asked for out loud? Clears the mark."""
+
+        clean = " ".join(str(name).split())
+        if clean and clean == self._narratable_activity:
+            self._narratable_activity = ""
+            return True
+        return False
+
+    def _realtime_places(self) -> tuple[str, ...]:
+        """The place vocabulary ``navigate_to`` is validated against — card R10.
+
+        Nearest-first, and deliberately a UNION of two sources:
+
+        * every semantic instance the robot can currently see, by label — so a
+          real thing in front of the dog is never refused as junk;
+        * the scene's declared class vocabulary — so a place the robot knows how
+          to look for but cannot see yet ("the door") is admitted and then fails
+          honestly at grounding ("I looked and couldn't find it"), which is a
+          true sentence, rather than being refused as a fabrication, which is
+          not.
+
+        Never raises: an empty list makes the broker defer to the router, which
+        is the layer that decided this before R10 and still runs next.
+        """
+
+        with self._lock:
+            observation = self._observation
+        names: list[str] = []
+        seen: set[str] = set()
+
+        def _add(label: object) -> None:
+            clean = " ".join(str(label or "").split())
+            key = clean.lower()
+            if clean and key not in seen:
+                seen.add(key)
+                names.append(clean)
+
+        if observation is not None:
+            robot = observation.robot
+            visible: list[tuple[float, str]] = []
+            for region in observation.semantic_regions:
+                centre = _polygon_centre(region.polygon)
+                if centre is None:
+                    continue
+                visible.append((math.dist((robot.x, robot.y), centre), str(region.label)))
+            for item in observation.semantic_objects:
+                position = item.position
+                visible.append(
+                    (
+                        math.dist((robot.x, robot.y), (float(position[0]), float(position[1]))),
+                        str(item.label),
+                    )
+                )
+            for _distance, label in sorted(visible, key=lambda row: (row[0], row[1])):
+                _add(label)
+        try:
+            from parcel_robot.city_semantics import CLASS_ALIASES
+
+            for class_label in sorted(CLASS_ALIASES):
+                _add(class_label)
+        except (ImportError, RuntimeError, ValueError):
+            pass
+        return tuple(names)
+
+    def _realtime_orbit(self, direction: str, size: str, revolutions: float) -> str:
+        """``circle_owner`` — the ROUTER still decides, exactly as navigate does.
+
+        The broker renders the model's arguments into the plainest phrasing the
+        deterministic spatial grammar already accepts, routes THAT, and proceeds
+        only when the router itself returns ``direct_skill`` on its own
+        ``orbit_owner`` rule. No ``SpatialIntent`` and no ``PlanSketch`` is
+        fabricated here — the intent comes back out of ``parse_spatial_intent``,
+        the same parser a typed sentence goes through.
+
+        Feasibility is checked BEFORE admission and its refusal is raised as a
+        ``ValueError`` carrying the validator's own sentence, so what the model
+        says out loud is what the geometry found.
+        """
+
+        intent, frame, directive_text = self._realtime_spatial_intent(
+            direction=direction, size=size, revolutions=revolutions
+        )
+        observation = self._fresh_observation_for_owner_relative()
+        verdict = self.spatial.assess_orbit(
+            intent, observation, obstacle_stop_m=self.obstacle_stop_m
+        )
+        if not verdict.feasible:
+            self._emit("spatial", f"orbit refused: {verdict.cause}", "warning")
+            raise ValueError(
+                self.spatial.last_refusal_sentence
+                or "I can't walk around you here — there isn't room."
+            )
+        if not self.agent._local_plan_ready():
+            raise RuntimeError("the robot's plan admission is not available right now")
+        reply = self.agent._admit_local_sketch(
+            sketch_spatial(intent),
+            frame,
+            directive_text,
+            None,
+            reply="Okay—I'll walk a circle around you.",
+        )
+        if self.agent.last_reasoning_source != "local_plan_sketch":
+            raise RuntimeError(reply)
+        # Card R15. The lap is now the owner's, and its ending is theirs to
+        # hear: a circle takes tens of seconds and the broker answer says only
+        # that it started. Set AFTER admission, so a refused orbit leaves no
+        # mark behind for the next spatial behaviour's terminal to claim.
+        self._narratable_orbit = True
+        return reply
+
+    def _realtime_spatial_intent(
+        self,
+        *,
+        direction: str,
+        size: str,
+        revolutions: float,
+    ) -> tuple[SpatialIntent, Any, str]:
+        """Render → route → parse. Raises ValueError if the router declines."""
+
+        # The spatial grammar's size alternation is ``small|tight|wide`` — there
+        # is no literal "normal", because a circle with no adjective IS the
+        # normal one. Rendering "walk in a normal counterclockwise circle around
+        # me" therefore matched nothing and the router answered
+        # ``ambiguous_physical_request``, which the broker correctly turned into
+        # a refusal — i.e. the brand-new circle_owner tool refused every default
+        # request. Caught by the live proof, not by a unit test, because the
+        # broker and the grammar were each individually right.
+        adjective = f"{size} " if size and size != "normal" else ""
+        directive_text = f"walk in a {adjective}{direction} circle around me"
+        self._realtime_turn_sequence += 1
+        sequence = self._realtime_turn_sequence
+        frame = self.agent.intent_router.route(
+            directive_text,
+            turn_id=f"turn-realtime-{sequence}",
+            original_transcript_ref=f"realtime-tool:{sequence}:final",
+        )
+        self._realtime_last_route = {
+            "turn_id": frame.turn_id,
+            "route": frame.route,
+            "rule": frame.matched_rule,
+            "directive": directive_text,
+            "router_version": frame.router_version,
+        }
+        if frame.route != "direct_skill" or frame.matched_rule != "orbit_owner":
+            raise ValueError(
+                "the robot's spatial grammar does not recognize that circle "
+                f"(router rule: {frame.matched_rule})"
+            )
+        intent = parse_spatial_intent(directive_text)
+        if intent is None:  # pragma: no cover - the router just matched it
+            raise ValueError("the robot cannot compile that circle")
+        # ``revolutions`` is the model's only numeric argument; the supervisor has
+        # already clamped it to [0.25, 1.0] and the controller clamps again.
+        return (
+            dataclasses.replace(intent, revolutions=float(revolutions)),
+            frame,
+            directive_text,
+        )
+
+    def _fresh_observation_for_owner_relative(self) -> SimObservation:
+        """A fresh observation for an owner-relative admission check.
+
+        Same contract ``_start_brain_spatial_behavior`` uses for owner-relative
+        behaviours: device I/O, outside any command lock, and a stale or missing
+        read is a refusal rather than a guess about where the owner is.
+        """
+
+        started = time.monotonic()
+        try:
+            observation = self.backend.observe()
+        except (ConnectionError, OSError, RuntimeError, TypeError, ValueError) as error:
+            raise RuntimeError(f"fresh camera/LiDAR perception is unavailable: {error}") from error
+        finally:
+            self.component_metrics.elapsed("SpatialCommandObserve", started)
+        if time.monotonic() - observation.timestamp > self.telemetry_stale_s:
+            raise RuntimeError("camera/LiDAR perception is stale")
+        return observation
+
+    def _realtime_follow(self, pace: str) -> str:
+        """``follow_owner(pace)`` — routed through the router's own follow rule.
+
+        ``pace`` is recorded and reported; it does NOT change a commanded speed
+        here. R11 owns pace_intent, and a pace this layer pretended to apply
+        would be the B2 over-claim the bench measured. The recorded value is
+        what R11 will consume.
+        """
+
+        clean = " ".join(str(pace).split()).lower() or "walk"
+        directive_text = "follow me"
+        self._realtime_turn_sequence += 1
+        sequence = self._realtime_turn_sequence
+        frame = self.agent.intent_router.route(
+            directive_text,
+            turn_id=f"turn-realtime-{sequence}",
+            original_transcript_ref=f"realtime-tool:{sequence}:final",
+        )
+        self._realtime_last_route = {
+            "turn_id": frame.turn_id,
+            "route": frame.route,
+            "rule": frame.matched_rule,
+            "directive": directive_text,
+            "router_version": frame.router_version,
+        }
+        if frame.route != "direct_skill" or frame.matched_rule != "follow_owner":
+            raise ValueError(
+                "the robot's follow grammar did not recognize that "
+                f"(router rule: {frame.matched_rule})"
+            )
+        if not self.agent._local_plan_ready():
+            raise RuntimeError("the robot's plan admission is not available right now")
+        self._realtime_last_pace = clean
+        # Card R11 — pace_intent. THE ONLY THING THIS VALUE DOES. It is recorded
+        # as a declaration the owner made, read by the whisperer's pace watcher,
+        # and never written to a controller: no follow speed, no clearance, no
+        # cap anywhere is a function of it. "Run with me" therefore still gets an
+        # honest follow at the robot's own pace (R10's ``pace_applied: false``),
+        # and what R11 adds is that the robot NOTICES the mismatch and asks about
+        # it instead of pretending it adapted.
+        self._realtime_pace_intent = clean
+        self._realtime_pace_intent_at_s = time.monotonic()
+        reply = self.agent._admit_local_sketch(
+            sketch_follow(behind=False),
+            frame,
+            directive_text,
+            None,
+            reply="Okay—I'll come along with you.",
+        )
+        if self.agent.last_reasoning_source != "local_plan_sketch":
+            raise RuntimeError(reply)
+        return reply
+
+    def _realtime_navigate(self, place: str, relation: str = "") -> str:
+        """``navigate_to`` — R4-lite: the ROUTER decides, the broker only renders.
+
+        The ``_accept_plan`` invariant is that routes come from the versioned
+        deterministic router and never from a model. So this method renders the
+        model's place name into plain directive text, routes THAT through the
+        same ``DeterministicIntentRouter`` a typed sentence takes (fresh turn
+        id, final transcript), and proceeds only when the router itself returns
+        ``direct_skill`` on its ``navigation_directive`` rule. Anything else —
+        an unrecognized place, a compound, a blocked mention — comes back as a
+        refusal with the router's own rule name in it, which the model then says
+        out loud. No ``IntentFrame`` is ever constructed here.
+        """
+
+        clean = " ".join(str(place).split())
+        if not clean:
+            raise ValueError("navigate_to needs a place")
+        directive_text = NAVIGATE_DIRECTIVE_TEMPLATE.format(place=clean)
+        self._realtime_turn_sequence += 1
+        sequence = self._realtime_turn_sequence
+        frame = self.agent.intent_router.route(
+            directive_text,
+            turn_id=f"turn-realtime-{sequence}",
+            original_transcript_ref=f"realtime-tool:{sequence}:final",
+        )
+        # Recorded on the runtime rather than written onto ``agent.last_intent_frame``:
+        # that field means "what the local agent last routed for a TYPED turn"
+        # and half the panel reads it. A hosted tool call is a different
+        # provenance and gets its own visible record.
+        self._realtime_last_route = {
+            "turn_id": frame.turn_id,
+            "route": frame.route,
+            "rule": frame.matched_rule,
+            "directive": directive_text,
+            "router_version": frame.router_version,
+        }
+        if frame.route != "direct_skill" or frame.matched_rule != "navigation_directive":
+            raise ValueError(
+                f"the robot's navigation does not recognize {clean!r} as a place "
+                f"(router rule: {frame.matched_rule})"
+            )
+        nav_directive = navigation_directive_from_text(directive_text.lower())
+        if nav_directive is None:  # pragma: no cover - the router just matched it
+            raise ValueError(f"the robot cannot compile a route to {clean!r}")
+        if not self.agent._local_plan_ready():
+            raise RuntimeError("the robot's plan admission is not available right now")
+        # Card R10 — the hybrid relation. The hint travels as a HINT: the local
+        # arrival table validates it inside ``semantic_goal_from_directive`` and
+        # overrides it on any conflict, and ``region_support``/``person_support``
+        # are read off the live scene here (the only layer that can see it), so
+        # a refinement is impossible unless the map actually backs it.
+        region_labels, object_labels = self._realtime_scene_vocabulary()
+        reply = self.agent._admit_local_sketch(
+            sketch_navigate(
+                nav_directive,
+                relation_hint=str(relation or "") or None,
+                region_labels=region_labels,
+                object_labels=object_labels,
+                region_support=_place_matches(clean, region_labels),
+                person_support=False,
+            ),
+            frame,
+            directive_text,
+            None,
+            reply=f"Okay—I'll navigate toward {nav_directive} safely.",
+        )
+        if self.agent.last_reasoning_source != "local_plan_sketch":
+            # ``_admit_local_sketch`` swallows admission failures into an honest
+            # refusal sentence; surface it as a refusal rather than an "ok".
+            raise RuntimeError(reply)
+        return reply
+
+    def _realtime_scene_vocabulary(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        """(region labels, object labels) the arrival table may classify against.
+
+        Live instances first, then the scene's declared classes and aliases.
+        This is what lets the local table classify a place whose noun is not in
+        any hard-coded word list — the sidecar is the scene's vocabulary and this
+        reads it rather than transcribing any of it.
+        """
+
+        with self._lock:
+            observation = self._observation
+        regions: list[str] = []
+        objects: list[str] = []
+        if observation is not None:
+            regions.extend(str(region.label) for region in observation.semantic_regions)
+            objects.extend(str(item.label) for item in observation.semantic_objects)
+        try:
+            from parcel_robot.scene_semantics import scene_semantics
+
+            for scene_class in scene_semantics().classes:
+                bucket = regions if scene_class.kind == "region" else objects
+                bucket.append(str(scene_class.name))
+                bucket.extend(str(alias) for alias in scene_class.aliases)
+        except (AttributeError, ImportError, RuntimeError, ValueError):
+            pass
+        return tuple(dict.fromkeys(regions)), tuple(dict.fromkeys(objects))
+
+    def _realtime_thinking_pose(self) -> None:
+        """Visible "I heard you" the moment a tool is dispatched, not after."""
+
+        self.expression.reactions.on_turn_pending(time.monotonic())
+
+    def realtime_snapshot(self) -> dict[str, object]:
+        """Lane + arming + broker + driver state for ``/api/state``."""
+
+        lane = self.realtime_lane
+        whisperer = self.realtime_whisperer
+        # Card R11. The knob has to be visible whether or not a lane exists —
+        # "how often may the robot start a billed exchange with me" is a fact
+        # about the configuration, not about the socket.
+        whisperer_snapshot = None if whisperer is None else whisperer.snapshot()
+        if lane is None:
+            return {
+                "enabled": False,
+                "constructed": False,
+                "mode": self.realtime_config.mode,
+                "config": self.realtime_config.as_dict(),
+                "whisperer": whisperer_snapshot,
+            }
+        broker = self.realtime_broker
+        driver = self.realtime_driver
+        gateway = self.realtime_gateway
+        return {
+            "enabled": True,
+            "constructed": True,
+            "mode": self.realtime_config.mode,
+            "config": self.realtime_config.as_dict(),
+            "lane": lane.snapshot(),
+            "broker": None if broker is None else broker.snapshot(),
+            "driver": None if driver is None else driver.snapshot(),
+            "gateway": None if gateway is None else gateway.snapshot(),
+            "whisperer": whisperer_snapshot,
+            "spend_usd": round(realtime_spend_usd(lane.usage_rows), 6),
+            # Card R16. Robot-initiated facts this door refused because the lane
+            # had hung up. Beside the lane's own ``narrations_skipped_closed``,
+            # which counts the same thing for anyone who asks the lane directly.
+            "narrations_into_closed_lane": self._narrations_into_closed_lane,
+            "panel_token_bound": self._realtime_panel_token is not None,
+            "pace_intent": self._realtime_pace_intent,
+            "last_route": (
+                None if self._realtime_last_route is None else dict(self._realtime_last_route)
+            ),
+        }
 
     def cancel_reasoning(self) -> None:
         self.agent.cancel_reasoning()
@@ -4427,6 +6264,7 @@ class RobotRuntime:
         with self._lock:
             observation = self._observation
             events = list(self._events)
+            mission_log = [dict(row) for row in self._mission_log]
             chat = list(self._chat)
             follow = dict(self._follow_detail)
             navigation = dict(self._navigation_detail)
@@ -4602,7 +6440,9 @@ class RobotRuntime:
             "motion": arbitration,
             "control": self.control_manager.snapshot().as_dict(),
             "activities": self.activities.snapshot(),
+            "realtime": self.realtime_snapshot(),
             "events": events,
+            "mission_log": mission_log,
             "chat": chat,
         }
 
@@ -4654,7 +6494,11 @@ class RobotRuntime:
                     self._sim_error = ""
                 if observation.emergency_stopped and not self.arbiter.emergency_stopped:
                     with self._command_lock:
-                        self._interrupt_brain("emergency", "simulator emergency stop adopted")
+                        self._interrupt_brain(
+                            "emergency",
+                            "simulator emergency stop adopted",
+                            stop_reason="simulator_emergency_stop",
+                        )
                         self.preempt(
                             "safety",
                             reason="simulator_emergency_stop",
@@ -4765,6 +6609,10 @@ class RobotRuntime:
             duplex_started = time.monotonic()
             self._step_duplex(observation)
             self.component_metrics.elapsed("DuplexProducer", duplex_started)
+            # Card R11. Last in the loop, after every subsystem has published its
+            # state for this tick, so the digest is a snapshot of a settled tick
+            # rather than of one halfway through.
+            self._step_whisperer(observation)
             elapsed = time.monotonic() - started
             self.component_metrics.observe_ms("ControlLoopWork", elapsed * 1000.0)
             self.component_metrics.observe_ms(
@@ -4936,13 +6784,7 @@ class RobotRuntime:
                 ),
             )
             if proximity_state != self._proximity_state:
-                if proximity_state == "stopped":
-                    self._emit("safety", "Proximity stop: obstacle too close", "warning")
-                elif proximity_state == "slowing":
-                    self._emit("safety", "Slowing near an obstacle", "info")
-                elif self._proximity_state != "clear":
-                    self._emit("safety", "Obstacle clearance restored", "success")
-                self._proximity_state = proximity_state
+                self._emit_proximity_change(proximity_state, now)
             should_refresh = now - self._last_send_at >= 0.2
             # The optional simulator socket may not exist at UI startup. Until
             # one observation proves that transport is present, retain intent
@@ -5452,6 +7294,12 @@ class RobotRuntime:
                     "goal": place,
                     "reason": command.note,
                 }
+                # Card R4-lite, task_1 — Defect B.2. ENTRY into a blocked
+                # episode, edge-triggered on the note: a dog that waits a full
+                # minute for someone to pass records one row, not six hundred.
+                # This is a visibility row only — it changes no gate, no
+                # patience, and no command (owner-gated B22).
+                self._note_mission_block(goal=place, note=command.note, blocked=state == "blocked")
                 # Card P-1, the yield policy. A person-gate tick is the ONLY
                 # thing routed here (exact `person_stop` segment); the decision
                 # is taken under the lock and acted on outside it, exactly like
@@ -5503,14 +7351,17 @@ class RobotRuntime:
                 )
             return
         if command.stop:
+            reason = command.note or mission_status
+            self._log_mission_terminal(state=mission_status, goal=place, reason=reason)
             if mission_status == "arrived":
                 self._emit("navigation", f"Arrived at {place}", "success")
             else:
                 self._emit(
                     "navigation",
-                    f"Navigation failed for {place}: {command.note or mission_status}",
+                    f"Navigation failed for {place}: {reason}",
                     "error",
                 )
+            self._narrate_mission_terminal(state=mission_status, goal=place, reason=reason)
             return
 
     def _announce_pose_health(self, *, lost: bool) -> None:
@@ -5870,6 +7721,12 @@ class RobotRuntime:
 
     def _step_spatial(self, observation: SimObservation | None) -> None:
         event: tuple[str, str] | None = None
+        #: Card R15. (activity label, completed, reason) for the ONE terminal
+        #: this pass produced, or ``None``. Collected under the command lock and
+        #: narrated after it is released: the narration path takes the lane's
+        #: lock, and a control-loop step must never hold the command lock across
+        #: another subsystem's.
+        terminal: tuple[str, bool, str] | None = None
         with self._command_lock:
             if not self.spatial.active:
                 return
@@ -5877,6 +7734,9 @@ class RobotRuntime:
                 observation is None
                 or time.monotonic() - observation.timestamp > self.telemetry_stale_s
             ):
+                terminal = self._claim_orbit_terminal(
+                    self.spatial.snapshot(), completed=False, reason="perception_unavailable"
+                )
                 self.preempt(
                     "manual",
                     reason="perception_unavailable",
@@ -5887,6 +7747,14 @@ class RobotRuntime:
                 decision = self.spatial.step(observation)
                 if decision.done:
                     previous = self.spatial.snapshot()
+                    # Card R15 — the orbit terminal, claimed BEFORE the
+                    # controller is stopped, because ``snapshot()`` is what says
+                    # which behaviour this was and ``stop()`` clears the intent.
+                    terminal = self._claim_orbit_terminal(
+                        previous,
+                        completed=decision.state == "completed",
+                        reason=str(decision.reason),
+                    )
                     self.spatial.stop()
                     self.arbiter.cancel("spatial")
                     with self._lock:
@@ -5917,6 +7785,35 @@ class RobotRuntime:
                         pass
         if event is not None:
             self._emit("spatial", event[0], event[1])
+        if terminal is not None:
+            label, completed, reason = terminal
+            self._narrate_activity_terminal(
+                activity=label, completed=completed, reason=reason
+            )
+
+    def _claim_orbit_terminal(
+        self,
+        snapshot: Mapping[str, object],
+        *,
+        completed: bool,
+        reason: str,
+    ) -> tuple[str, bool, str] | None:
+        """Card R15. Is THIS spatial terminal one the owner is owed a word about?
+
+        Two noes, either of which means stay quiet: the behaviour that just
+        ended is not the orbit the hosted lane started (a relative move, a
+        typed circle), or the mark was never set / has already been claimed.
+        One-shot, so a second terminal cannot re-narrate the first.
+        """
+
+        if not self._narratable_orbit:
+            return None
+        intent = snapshot.get("intent")
+        behavior = str(intent.get("behavior", "")) if isinstance(intent, Mapping) else ""
+        if behavior != "orbit_owner":
+            return None
+        self._narratable_orbit = False
+        return ("circle around you", bool(completed), " ".join(str(reason).split()))
 
     def _collision_safe(
         self,
@@ -6136,6 +8033,580 @@ class RobotRuntime:
             if detail is not None:
                 event["detail"] = dict(detail)
             self._events.append(event)
+
+    # ------------------------------------------------------------ mission log
+    def _log_mission(
+        self,
+        kind: str,
+        *,
+        goal: str = "",
+        state: str = "",
+        reason: str = "",
+        level: str = "info",
+        text: str = "",
+    ) -> dict[str, object]:
+        """Record one mission lifecycle FACT and return the row.
+
+        Card R4-lite, task_1 — Defect B. Separate from ``_emit`` on purpose,
+        and additive to it: a terminal still emits a panel event, but the fact
+        that a mission ENDED, when, and why now also lives somewhere the event
+        deque cannot evict it. The owner's incident was a mission that started,
+        ran, and finished with nothing to show for it anywhere.
+
+        The caller may already hold ``self._lock`` (``_stop_navigation_channel``
+        does); it is an RLock, so this is safe from inside or outside.
+        """
+
+        row: dict[str, object] = {
+            "kind": str(kind),
+            "goal": str(goal),
+            "state": str(state),
+            "reason": str(reason),
+            "level": str(level),
+            "text": str(text),
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+        with self._lock:
+            self._mission_log_id += 1
+            row["id"] = self._mission_log_id
+            if kind == MISSION_LOG_BLOCKED:
+                # Blocked rows are the chatty kind, so they evict each other
+                # before they evict anything else. A mission that spends a
+                # minute behind a pedestrian stream must still be able to show
+                # that it started and how it ended.
+                blocked = [
+                    existing
+                    for existing in self._mission_log
+                    if existing["kind"] == MISSION_LOG_BLOCKED
+                ]
+                if len(blocked) >= MISSION_LOG_BLOCKED_MAX:
+                    self._mission_log.remove(blocked[0])
+            self._mission_log.append(row)
+        return row
+
+    def _log_mission_terminal(self, *, state: str, goal: str, reason: str) -> None:
+        """The one call every mission terminal makes, whatever ended it.
+
+        Also closes the blocked-entry edge, so the next mission that gets
+        blocked records its own entry rather than being swallowed by the last
+        one's note.
+        """
+
+        arrived = str(state) in MISSION_ARRIVED_STATES
+        # A new mission starts with a clean slate: its first block is a fact
+        # about IT, and must not be swallowed by the previous mission's rate
+        # limit or attributed to the previous mission's block class.
+        self._mission_block_note = None
+        self._mission_block_emit_at_s = None
+        self._mission_block_coalesced = 0
+        self._log_mission(
+            MISSION_LOG_ENDED,
+            goal=goal,
+            state=state,
+            reason=reason,
+            level="success" if arrived else "warning",
+            text=(
+                f"Arrived at {goal}."
+                if arrived
+                else f"Mission to {goal} ended ({state}): {reason or 'no reason given'}."
+            ),
+        )
+
+    def _emit_proximity_change(self, proximity_state: str, now: float) -> None:
+        """One proximity transition, coalesced (card R4-lite, task_1 — Defect C).
+
+        The transition is still edge-triggered and the state still advances on
+        every edge — nothing here changes a gate, a stop, or a speed. What
+        changes is the EVENT: a robot hovering on the slow/clear threshold used
+        to flip at the 10 Hz control rate and push ~10 events a second into a
+        100-slot deque, flushing every other source's history — including a
+        mission terminal — in about ten seconds.
+
+        Transitions inside the window are counted, not discarded, and the count
+        rides on the next line that does go out. A transition INTO ``stopped``
+        is a hard safety fact and is never withheld; it flushes the window so
+        the count it carries is honest.
+        """
+
+        previous = self._proximity_state
+        self._proximity_state = proximity_state
+        if proximity_state == "stopped":
+            message = "Proximity stop: obstacle too close"
+            level = "warning"
+        elif proximity_state == "slowing":
+            message = "Slowing near an obstacle"
+            level = "info"
+        elif previous != "clear":
+            message = "Obstacle clearance restored"
+            level = "success"
+        else:
+            return
+        last = self._proximity_emit_at_s
+        quiet = last is not None and (now - last) < PROXIMITY_EVENT_MIN_INTERVAL_S
+        if quiet and proximity_state != "stopped":
+            self._proximity_coalesced += 1
+            return
+        folded = self._proximity_coalesced
+        self._proximity_coalesced = 0
+        self._proximity_emit_at_s = now
+        if folded:
+            message = f"{message} (+{folded} more proximity changes in the last few seconds)"
+        self._emit("safety", message, level)
+
+    # ------------------------------------------------- model-side narration
+    def _narratable(self) -> RealtimeLane | None:
+        """The lane, only if it is genuinely free to be told something.
+
+        Card R4-lite, task_1 — Defect B.3, and the floor gate the card names.
+        Four independent noes, any one of which means stay quiet:
+
+        * no lane, or no open session — nothing to tell;
+        * the lane is mid-reconnect — a system item posted into a session that
+          is being replaced is a system item nobody will ever read;
+        * a hosted response is in flight — the model is SPEAKING, and pushing a
+          new item under it is how you get two voices in one mouth;
+        * the owner has the floor (a response is outstanding) — the robot does
+          not interrupt the person who just asked it something.
+        """
+
+        lane = self.realtime_lane
+        if lane is None or not lane.active or lane.recovering:
+            return None
+        if lane.playback_owned:
+            return None
+        return lane
+
+    def _narrate_mission(self, text: str) -> bool:
+        """Hand ONE sentence of fact to the model to say in its own words.
+
+        Never a command and never speech: this posts a system item and asks for
+        a response. The model narrates what the robot's own systems reported —
+        it does not decide anything, which is the lane's standing guardrail.
+        """
+
+        lane = self._narratable()
+        if lane is None:
+            # Card R16, work item 3. ``_narratable`` turns a HUNG-UP lane away
+            # before the lane is ever asked, which is the right answer — the
+            # whisperer must never be what re-opens a paid session the owner
+            # walked away from — but a silent refusal would leave "the robot
+            # spent the night narrating into a session that had ended" looking
+            # exactly like "the robot had nothing to say". So the refusal is
+            # COUNTED here, at the door where it actually happens, rather than
+            # by handing the sentence to a lane this method has just decided
+            # must not receive it.
+            existing = self.realtime_lane
+            if existing is not None and not existing.active:
+                self._narrations_into_closed_lane += 1
+            return False
+        try:
+            # Card R11: the lane's own answer is the answer. It says False when
+            # its floor gate refused (the model has the mouth, a turn is owed),
+            # and the whisperer needs to know that so it does not spend the
+            # owner's per-minute budget on a sentence nobody heard.
+            return bool(lane.narrate_event(text))
+        except (RuntimeError, TypeError, ValueError) as error:
+            # Narration is a nicety. It must never take down a mission
+            # terminal, which is the fact this whole card exists to preserve.
+            self._emit("realtime", f"mission narration skipped: {error}", "info")
+            return False
+
+    def _whisper(self, event: StateEvent) -> bool:
+        """Offer ONE classified fact to the whisperer; narrate only if it says so.
+
+        Card R11. This is the only way a robot-initiated fact reaches the hosted
+        session from here on. Every offer is recorded in the whisperer's decision
+        log — forward AND suppression, with the rule that fired — so "why did the
+        dog say that" and "why did it stay quiet" both have exact answers.
+
+        With no whisperer (no lane, or the realtime feature off) there is nothing
+        to say anything to, and this is a no-op rather than a fallback to the
+        ungated narration path: a fallback would mean the owner's cost knob had
+        an off-by-configuration hole in it.
+        """
+
+        whisperer = self.realtime_whisperer
+        if whisperer is None:
+            return False
+        decision = whisperer.offer(event)
+        if not decision.forwarded:
+            return False
+        if self._narrate_mission(decision.text):
+            return True
+        # The lane's floor gate refused it (no session, mid-reconnect, the model
+        # already has the mouth). Nothing was said and nothing was billed, so the
+        # owner's budget slot goes back; the attempt stays in the decision log.
+        whisperer.undeliver(decision)
+        return False
+
+    def _narrate_mission_terminal(self, *, state: str, goal: str, reason: str) -> None:
+        arrived = str(state) in MISSION_ARRIVED_STATES
+        if arrived:
+            # The arrival fact composes its own ask from R10's arrival table —
+            # the SAME row the planner used to choose the terminal — so the
+            # whisperer must not append a second speech-act hint on top of it.
+            self._whisper(
+                StateEvent(
+                    kind=KIND_MISSION_ARRIVED,
+                    key=f"mission_arrived:{goal}",
+                    fact=self._arrival_fact_for(goal),
+                    hint_carried=True,
+                    detail={"goal": str(goal), "state": str(state)},
+                )
+            )
+            return
+        if str(reason) in EMERGENCY_STOP_TERMINAL_REASONS:
+            # Card R12. Before the reason was propagated this branch could not
+            # exist: every e-stop terminal arrived here as
+            # ``navigation_disabled`` and was narrated as a mission that ended
+            # "because of: navigation_disabled" — true of nothing the owner did.
+            # The wording names the latch because the latch is the fact, and it
+            # is deliberately not "the robot stopped": the trip ended.
+            fact = (
+                f"The robot's navigation system reports the trip to {goal} ended "
+                "because the emergency stop was latched."
+            )
+        elif person_blocked_from_note(reason):
+            fact = (
+                f"The robot's navigation system reports it gave up on {goal} "
+                "because a person stayed in the way."
+            )
+        else:
+            fact = (
+                f"The robot's navigation system reports the trip to {goal} ended "
+                f"({state}) because of: {reason}."
+            )
+        self._whisper(
+            StateEvent(
+                kind=KIND_MISSION_ENDED,
+                key=f"mission_ended:{goal}:{state}",
+                fact=fact,
+                detail={"goal": str(goal), "state": str(state), "reason": str(reason)},
+            )
+        )
+
+    def _narrate_activity_terminal(
+        self,
+        *,
+        activity: str,
+        completed: bool,
+        reason: str,
+        started: bool = True,
+    ) -> bool:
+        """Card R15. The ONE place a completed physical action may be reported.
+
+        THE ASYMMETRY THIS CLOSES. Navigation has always had both halves: the
+        broker says "the robot is walking to the sidewalk", and tens of seconds
+        later ``_narrate_mission_terminal`` says how the trip ended. Orbits and
+        gestures had only the first half. So the model had a sentence saying the
+        circle had been asked for, no sentence saying it was over, and an owner
+        waiting — and on 2026-08-20 it filled the gap itself, one second in:
+        "Done—I made a small circle around you, and it was okay."
+
+        Both outcomes go through the whisperer's existing critical band, which
+        is what makes them audible without spending the owner's per-minute
+        budget on them. NO NEW EVENT CLASS: the whisperer's band table is not
+        this card's to touch, and an activity terminal is exactly the "terminal"
+        class that table already declares critical. A completed activity is a
+        :data:`~parcel_robot.realtime.whisperer.KIND_MISSION_ENDED` carrying its
+        own speech act (``hint_carried``) because the generic mission-ended hint
+        — "tell the owner you stopped and why" — is the wrong sentence for a lap
+        that went perfectly. One that stopped short is a refusal, which is what
+        it is from the owner's side: they asked for a whole circle.
+
+        Returns whether anything was said, so a caller can tell "narrated" from
+        "the floor was taken" without reading the whisperer's log.
+        """
+
+        label = " ".join(str(activity).split()) or "activity"
+        if not started:
+            # Card R19. R15's two arms both say "it STOPPED before it finished",
+            # which is a sentence about a body that moved. An expired proposal
+            # is a body that never moved at all, and R15's own tense discipline
+            # is the reason this is a third fact rather than a reused one: the
+            # broker already told the model the pose had STARTED, so the only
+            # correction that helps the owner is the one that says it did not.
+            return self._whisper_refusal(
+                f"The robot's own systems report that the {label} you asked for NEVER "
+                f"RAN: {reason}. Nothing moved. Tell the owner it did not happen — and "
+                "do not say it is done.",
+                subject=label,
+            )
+        if completed:
+            return self._whisper(
+                StateEvent(
+                    kind=KIND_MISSION_ENDED,
+                    key=f"activity_finished:{label}",
+                    fact=(
+                        f"The robot's own systems report that the {label} it started "
+                        "for you has now FINISHED. This is the moment it is true to "
+                        "say it is done — tell the owner it is done."
+                    ),
+                    hint_carried=True,
+                    detail={"activity": label, "state": "completed", "reason": str(reason)},
+                )
+            )
+        return self._whisper_refusal(
+            f"The robot's own systems report that the {label} it started for you "
+            f"STOPPED before it finished: {reason}. It is not done.",
+            subject=label,
+        )
+
+    def _whisperer_digest(self, observation: SimObservation | None, now: float) -> StateDigest:
+        """One versioned snapshot of the robot for the whisperer. READS ONLY.
+
+        Every value here is read from a subsystem's own snapshot; nothing in
+        this method or anywhere downstream of it writes a controller parameter.
+        In particular ``follow.config.max_vx`` is READ — it is the number the
+        pace-mismatch item quotes so the model cannot claim a gait change that
+        did not happen — and the follow safety caps are not a function of the
+        pace the owner asked for. That is the whole of R11's relationship with
+        the follow controller and it is pinned by test.
+        """
+
+        with self._lock:
+            navigation = dict(self._navigation_detail)
+            proximity = self._proximity_state
+            block_class = self._mission_block_note or ""
+            block_episode = self._mission_block_episode
+            pace_intent = self._realtime_pace_intent
+        battery = self._battery_snapshot()
+        follow = self.follow
+        following = bool(follow.enabled)
+        if self._whisperer_was_following and not following and pace_intent:
+            # A follow that ENDED takes its pace declaration with it. Otherwise
+            # a later "follow me" spoken with no pace at all would inherit the
+            # last "run" and the watcher would ask about a run nobody requested.
+            #
+            # Keyed on the falling EDGE, not on "not following": the tool call
+            # records the intent and the controller starts a beat later on the
+            # behaviour channel, and clearing it in that window would throw away
+            # the declaration between the owner making it and the body acting.
+            with self._lock:
+                self._realtime_pace_intent = ""
+                self._realtime_pace_intent_at_s = None
+            pace_intent = ""
+        self._whisperer_was_following = following
+        follow_snapshot = follow.snapshot()
+        distance = follow_snapshot.get("distance_m")
+        owner_speed = follow_snapshot.get("owner_speed_mps")
+        # Card R13. ``owner_speed_mps`` is ``None`` whenever the follow
+        # controller's passive owner-heading estimator has not accumulated
+        # enough fresh updates — E1 measured a continuous 10 s of that across a
+        # run→walk transition, and a whole 58.8 s window in the recorded run.
+        # The status is the controller's own last word on the owner track and is
+        # carried READ-ONLY so the whisperer's ``pace_unknown`` row can name it.
+        # Nothing here changes an estimator parameter or a follow cap; this
+        # method reads, and R11 seed S21 attacks that from the other side.
+        owner_speed_status = follow_snapshot.get("heading_track_status")
+        if observation is None:
+            position = (0, 0)
+        else:
+            robot = observation.robot
+            position = (round(robot.x * 10.0), round(robot.y * 10.0))
+        return StateDigest(
+            at_s=float(now),
+            emergency_stopped=bool(self.arbiter.emergency_stopped),
+            proximity_state=str(proximity),
+            navigating=bool(navigation.get("enabled")),
+            nav_state=str(navigation.get("state", "idle")),
+            nav_goal=str(navigation.get("goal", "")),
+            mission_blocked=bool(block_class),
+            mission_block_class=str(block_class),
+            mission_block_episode=int(block_episode),
+            position_dm=position,
+            battery_percent=round(float(battery.percent), 1),
+            battery_state=str(battery.state),
+            following=following,
+            follow_pace_intent=str(pace_intent),
+            follow_distance_dm=0 if distance is None else round(float(distance) * 10.0),
+            owner_speed_mps=None if owner_speed is None else float(owner_speed),
+            owner_speed_status="" if owner_speed_status is None else str(owner_speed_status),
+            # The gait the BODY is in. R10 records the requested pace and R11
+            # reads it, but NOTHING applies it: the follow controller runs at its
+            # own cap, and saying so in the item is the honesty guard the bench
+            # demanded after the model claimed "I'm matching your slower pace"
+            # while the injected gait was still RUN.
+            robot_pace="its own steady follow pace",
+            robot_speed_cap_mps=float(follow.config.max_vx),
+        )
+
+    def _step_whisperer(
+        self, observation: SimObservation | None, now: float | None = None
+    ) -> None:
+        """Offer the robot's own state to the whisperer, once a second.
+
+        Throttled off the 10 Hz motion cadence on purpose: the whisperer's
+        subject is a conversation, and a 10 Hz digest would fill its decision
+        ring with ten identical never-band rows a second for no extra fidelity.
+        One second is still far faster than any rule in it — the shortest is the
+        8 s block debounce.
+
+        ``now`` is injectable so a test can drive an eight-second debounce in
+        eight function calls instead of eight seconds.
+        """
+
+        whisperer = self.realtime_whisperer
+        if whisperer is None:
+            return
+        now = time.monotonic() if now is None else float(now)
+        last = self._whisperer_tick_at_s
+        if last is not None and (now - last) < WHISPERER_TICK_INTERVAL_S:
+            return
+        self._whisperer_tick_at_s = now
+        try:
+            decisions = whisperer.observe(self._whisperer_digest(observation, now))
+        except (AttributeError, KeyError, RuntimeError, TypeError, ValueError) as error:
+            # A digest that cannot be built is a companion problem, never a
+            # motion problem. It must not take the control loop with it.
+            self._emit("realtime", f"whisperer tick skipped: {error}", "info")
+            return
+        for decision in decisions:
+            if not decision.forwarded:
+                continue
+            if not self._narrate_mission(decision.text):
+                whisperer.undeliver(decision)
+
+    def _whisper_refusal(self, fact: str, *, subject: str = "") -> bool:
+        """A refusal of the OWNER's own request, forwarded as a critical fact.
+
+        Critical band: it bypasses the owner's per-minute budget, because a
+        refusal the owner never hears looks exactly like a robot that ignored
+        them. Kept as its own door rather than folded into the mission terminals
+        so that a refusal which is not a mission (a pose, an orbit) has a home.
+
+        R11 BUILT THIS WITH NO CALLER, on purpose, and named the caller it was
+        waiting for: "the refusals that have no tool call in flight — a
+        mid-behaviour safety abort is the obvious next one". Card R15 is that
+        caller. :meth:`_narrate_activity_terminal` routes every activity that
+        STOPPED short of finishing through here — the mid-orbit annulus abort
+        R10 built the detection for, a gesture preempted by navigation, a pose
+        the dispatch cancelled. The tool call that started them answered
+        seconds ago and said only "started"; without this the owner would be
+        left with a promise and silence.
+
+        Refusals that DO have a tool call in flight still do not come through
+        here: a ``rejected`` broker result is the case ``lane._beat_reason``
+        refuses to go quiet on, so the model already says it in the same turn,
+        and saying it twice was never the fix.
+        """
+
+        return self._whisper(
+            StateEvent(
+                kind=KIND_REFUSAL,
+                key=f"refusal:{subject}" if subject else "",
+                fact=" ".join(str(fact).split()),
+                detail={"subject": str(subject)},
+            )
+        )
+
+    def _arrival_fact_for(self, goal: str) -> str:
+        """The arrival item, carrying the table's ask-hint INLINE — card R10 item 4.
+
+        The bench is unambiguous that "reach the door → turn back → ask what's
+        next" does not emerge from the model: 0/12 on the chat probe, 0/6 on the
+        injected-arrival probe, both tiers. So the ask has to travel WITH the
+        fact. R11 owns the structured hint mechanism; the card's instruction if
+        R11 has not landed is to put the hint text inline, which is what this
+        does — the channel (R8's wire fix) exists either way, and this is the
+        one seam every non-arrival and arrival terminal already passes through.
+
+        The policy is read from the arrival table by the goal's own class, so
+        the sentence the model hears is generated from the SAME row the planner
+        used to choose the terminal — not a second opinion about the same door.
+        """
+
+        label = " ".join(str(goal).split())
+        region_labels, object_labels = self._realtime_scene_vocabulary()
+        place_class = classify_place(
+            label, region_labels=region_labels, object_labels=object_labels
+        )
+        policy = arrival_policy(place_class)
+        try:
+            owner_name = str(self.store.agent_config().get("owner_name", "") or "")
+        except (AttributeError, KeyError, RuntimeError, TypeError, ValueError):
+            owner_name = ""
+        if owner_name == UNKNOWN_OWNER:
+            owner_name = ""
+        body = arrival_fact(place=label, policy=policy, owner_name=owner_name)
+        return f"The robot's navigation system reports: {body}"
+
+    def _note_mission_block(self, *, goal: str, note: str, blocked: bool) -> None:
+        """One row per blocked EPISODE, and one when the way clears again.
+
+        Called from the 10 Hz navigation step, so the edge is everything: the
+        row is written when the block CLASS changes, never while it holds. A
+        mission blocked behind a person for a minute is two rows — "blocked"
+        and "clear" — not six hundred.
+
+        Two guards, both learned the hard way from the 2026-08-18 live proof:
+        the class key (not the raw note, which carries per-tick telemetry), and
+        a minimum interval, because a real pedestrian stream flips the class
+        for real. Suppressed transitions are counted, never silently dropped.
+
+        CARD R11 — WHAT MOVED OUT OF HERE. Until this card, a person-block edge
+        called ``_narrate_mission_block`` and went straight to the model. It no
+        longer does: a block is a MIDDLE-band fact and has to survive an 8 s
+        debounce first (bench B2), and its clear is only spoken if the block
+        itself was. Both machines live in the whisperer and are driven by the
+        digest, which is why all this method now does is advance the episode
+        counter that pairs a block with its closure. The MISSION LOG is
+        untouched — this is about what the robot SAYS, never about what it
+        records.
+        """
+
+        previous = self._mission_block_note
+        person = person_blocked_from_note(note)
+        current = (MISSION_BLOCK_PERSON if person else MISSION_BLOCK_OBSTACLE) if blocked else None
+        if current == previous:
+            return
+        if current is not None and previous is None:
+            # A new blocked EPISODE begins. Numbered so the whisperer's
+            # clear-only-after-a-forwarded-block rule has an identity to key on;
+            # a class change inside one episode (person -> obstacle) is the same
+            # wait and keeps the same number.
+            self._mission_block_episode += 1
+        self._mission_block_note = current
+        now = self._mission_clock()
+        last = self._mission_block_emit_at_s
+        if last is not None and (now - last) < MISSION_BLOCK_MIN_INTERVAL_S:
+            self._mission_block_coalesced += 1
+            return
+        folded = self._mission_block_coalesced
+        self._mission_block_coalesced = 0
+        self._mission_block_emit_at_s = now
+        suffix = f" (+{folded} more changes in the last few seconds)" if folded else ""
+        if current is None:
+            self._log_mission(
+                MISSION_LOG_BLOCKED,
+                goal=goal,
+                state="navigating",
+                reason="clear",
+                level="success",
+                text=f"The way to {goal} is clear again; carrying on.{suffix}",
+            )
+            return
+        self._log_mission(
+            MISSION_LOG_BLOCKED,
+            goal=goal,
+            state="blocked",
+            # The row keeps the FULL note from the tick the episode began on —
+            # that is the diagnostic value — while the edge is keyed on the
+            # class above, which is the only part that means anything stable.
+            reason=str(note),
+            level="warning",
+            text=(
+                f"Waiting: someone is in the way near {goal}.{suffix}"
+                if person
+                else f"Waiting: something is blocking the way to {goal}.{suffix}"
+            ),
+        )
+
+    def mission_log(self) -> list[dict[str, object]]:
+        """The lifecycle ring, oldest first. What ``/api/state`` publishes."""
+
+        with self._lock:
+            return [dict(row) for row in self._mission_log]
 
     def _chat_item(self, role: str, text: str) -> None:
         with self._lock:

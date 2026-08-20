@@ -1,9 +1,10 @@
 # Current implementation status
 
-**Snapshot:** 2026-08-04. This page is the operational truth for the current
-checkout and desktop. Architecture and research documents explain where Parcel
-is going; this page distinguishes code that exists from code that is wired,
-configured, and verified on the available hardware.
+**Historical snapshot:** 2026-08-04. This page records the operational truth as
+of that date; it is not the authority for the current checkout. Use the
+[documentation index](README.md), current code and executable evidence for
+later claims. The terms and capability distinctions below remain useful when
+reading this historical record.
 
 **2026-08-09 navigation audit correction:** the environmental proximity/TTC
 gate is shared across motion sources, but it precedes the final S-curve shaper.

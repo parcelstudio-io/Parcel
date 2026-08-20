@@ -1,0 +1,213 @@
+# Parcel — hosted Realtime companion lane (cards R1 … R1.6/R3).
+#
+# COPY THIS FILE TO configs/realtime.yaml TO SATISFY THE DEFAULT LAUNCHER.
+#
+# The real configs/realtime.yaml is deliberately NOT in the repository. The
+# production launcher nevertheless requires it and a credential; absence makes
+# `scripts/launch_stack.sh` refuse before starting any service. Only an explicit
+# `--legacy` launch selects the local cascade. Every key below is validated on
+# load — an unknown key, a wrong type, a non-positive number or an unknown mode
+# is a REFUSAL, never a silent default (a typo'd `enabled: ture` reading as false
+# would be a bad day; a typo'd budget reading as "unlimited" would be worse).
+#
+# THE CREDENTIAL IS NOT IN THIS FILE AND NEVER WILL BE.
+# It lives outside the repository, mode 600, and is loaded into the environment
+# before the process starts:
+#
+#     install -m 600 /dev/null ~/.config/parcel/realtime.env
+#     printf 'OPENAI_API_KEY=sk-...\n' > ~/.config/parcel/realtime.env
+#     set -a; . ~/.config/parcel/realtime.env; set +a
+#
+# scripts/launch_stack.sh sources that file and refuses loudly if the key is
+# missing. `--realtime` remains an accepted no-op because Realtime is already
+# the default.
+
+# Consent to the FEATURE. Not consent to a session: the lane still needs the
+# panel's handshake token and an explicit owner gesture before it opens one.
+enabled: true
+
+# PERSONALITY IS JUST PROMPT TEXT (owner directive, 2026-08-18).
+# Write who the robot is, in plain prose. It is handed to the model verbatim in
+# place of the personality-profile block — no YAML profile to author, no file to
+# add. Everything that is NOT personality rides along regardless: the companion
+# preamble, the voice guardrails ("never claim to have arrived anywhere"), and
+# the developer-note contract. A persona cannot prompt those away.
+#
+# Editing this line changes the session's SI digest, which is recorded per
+# session and in every corpus fixture — so a transcript is always attributable
+# to the exact words that produced it. That is the whole discipline; there is no
+# version to bump for free text.
+#
+# Delete the key entirely to fall back to a preset profile (see si_profile);
+# leaving it BLANK is a refusal, not a fallback.
+persona: "You are a lively conversational agent that likes to go around New York."
+
+# Preset personality id from prompts/personalities, used ONLY when `persona` is
+# absent. Delete it to inherit the runtime's own personality setting.
+# si_profile: gentle_companion
+
+# text  — the manual-testing path: the panel's text box talks to the live
+#         session, replies land in the chat pane and the ledger, no microphone,
+#         no speaker, no audio gateway. It remains the cheapest setup default.
+# audio — additionally starts the loopback audio gateway and serves the panel's
+#         microphone button; the browser becomes both mouth and ear. This path
+#         uses browser capture/playback and does not require Python PortAudio.
+mode: text
+
+# gpt-realtime-2.1-mini is the cheap one and is what every live run in the
+# status docs used. gpt-realtime-2.1 is the full-size sibling.
+model: gpt-realtime-2.1-mini
+
+# Hosted voice id.
+voice: cedar
+
+# The watchdog: seconds of provider silence, while a response is expected,
+# before the lane reconnects. Not a latency budget — a liveness bound.
+stall_timeout_s: 8.0
+
+# Hard session cap. The provider bills per session and the lane's memory tail
+# is re-injected on every reconnect, so a rollover is invisible to the owner.
+session_max_s: 3600.0
+
+# HOW LONG A SESSION NOBODY IS TALKING TO STAYS OPEN (card R16).
+#
+# On 2026-08-20 a conversation ended at 05:39, nobody said anything else until
+# 14:11, and the lane sat there the whole time renewing itself once an hour —
+# seven `[session rollover]` rows between 06:23 and 12:23 with not one word
+# between them, because a rollover renews whatever it finds and nothing in the
+# product had an opinion about a conversation that had plainly ended.
+#
+# Past this many seconds of CONVERSATIONAL silence the lane hangs up: the
+# socket closes, a
+# `[idle hang-up after Ns]` row goes in the ledger, the driver stops pumping and
+# — in `mode: audio` — the browser's microphone button goes back to "Enable
+# microphone".
+#
+# Nothing is lost by hanging up. The conversation lives in the ledger, not in
+# the provider, so the next thing you say opens a fresh session with the same
+# memory tail replayed into it, exactly as a rollover always did.
+#
+# "Conversational" is the load-bearing word, and it means four things and no
+# others: you typed, the provider's own voice-activity detector heard you start
+# or finish speaking, the robot narrated a fact the model actually took, or a
+# reply completed. An OPEN MICROPHONE IS NOT A CONVERSATION — an armed mic in an
+# empty room streams audio frames (and bills for them) forever, which is the
+# most expensive way there is to be idle, so frames alone will not hold the lane
+# open. You will not be cut off mid-sentence: speech detection resets the clock
+# at the first syllable, and a turn that is still waiting for its answer is
+# never idle at all.
+#
+# There is deliberately no "off" value. Zero and negatives are refused, exactly
+# as a whisperer cap of zero is: a silent off switch on a session that bills by
+# the minute is the defect this key exists to remove. Write a big number if you
+# genuinely want a session that never hangs itself up.
+idle_close_after_s: 600.0
+
+# The arming gate refuses to open a session once this month's estimated spend
+# reaches this number. Estimated at ASSUMED rates (realtime/cost.py) — it is a
+# guard rail, not an invoice.
+monthly_budget_usd: 25.0
+
+# ---------------------------------------------------------------------------
+# THE SITUATIONAL WHISPERER (card R11) — the owner's cost knob.
+#
+# The robot notices things about itself: it arrived, it is waiting behind
+# someone, its battery went low, you asked to run and you are walking. Each of
+# those it decides to SAY becomes a `response.create` on the hosted session, and
+# the 2026-08-19 bench measured gpt-realtime-2.1-mini speaking on essentially
+# every injected state item (0-2 silences in ~20). So one forwarded fact is one
+# spoken line and one billed response, and `max_updates_per_minute` is the cost
+# control and the politeness control at the same time.
+#
+# THIS BLOCK ONLY GOVERNS WHAT THE ROBOT STARTS. Talking to it — the panel's
+# text box, the microphone, every voice command — is a different door and is
+# not affected by anything here.
+#
+# Delete the whole block to accept the defaults shown.
+whisperer:
+  # false = no state updates at all. The robot still answers you; it just never
+  # starts a conversation about itself.
+  enabled: true
+
+  # THE KNOB. A hard cap on robot-initiated (billed) queries per rolling
+  # minute. Anything held back is not thrown away — it is folded into the next
+  # item that does go out as "+N more", so you can always see the knob working
+  # (/api/state shows `updates_this_minute` and `folded`).
+  #
+  # Four facts BYPASS this cap, because delaying them failed the bench
+  # disqualifyingly (judge-everything delayed an emergency stop by 9.8 s and
+  # lost the resume-clear outright): an emergency stop and its release, a
+  # mission terminal, a reroute, and a refusal of something YOU asked for.
+  max_updates_per_minute: 2
+
+  # Spacing inside the budget, in seconds. Terminal-like events are exempt —
+  # the bench caught a reroute silently swallowed by a min-gap that a
+  # "way is clear again" was holding.
+  min_gap_s: 15.0
+
+# ---------------------------------------------------------------------------
+# SESSION AUDIO CAPTURE (card R17) — DEFAULT OFF, and off is the shipped answer.
+#
+# On 2026-08-20 the owner spoke a 52-query corpus to the live robot. It cost
+# real money and produced the most informative eval this project has. The
+# gateway moved 3,605 microphone frames up and 296 speech frames down and wrote
+# NONE of it to disk, so every ASR failure in that run — a Korean TV sign-off
+# attributed to the owner, the spoken emergency phrase transcribed as "Dice
+# out!" and never matched, a code-switched sentence normalised away — is
+# permanently unreproducible. The transcripts survived.
+# The sound did not.
+#
+# With this block on, each gateway run writes:
+#
+#     <dir>/<session_id>/owner.wav   exactly the microphone audio the provider
+#                                    heard (mono PCM16 at the session rate)
+#     <dir>/<session_id>/robot.wav   exactly the hosted speech the robot was
+#                                    asked to play, unwrapped from its
+#                                    per-chunk RIFF into one continuous stream
+#     <dir>/<session_id>/index.json  the tiling of both files into segments —
+#                                    owner turns cut on silence, robot audio cut
+#                                    on each hosted utterance — so a single turn
+#                                    can be sliced out by byte range and dropped
+#                                    into a corpus as a fixture. Times are
+#                                    DERIVED from byte offsets, never measured,
+#                                    so the index cannot drift from the audio.
+#
+# THIS RECORDS A HOUSEHOLD MICROPHONE TO DISK. That is why it is off unless you
+# write it down here yourself, and why the folder is created lazily — a stack
+# that boots with capture on and is never spoken to leaves nothing behind.
+#
+# The tee can never slow the conversation down or break it: frames are handed
+# to a bounded queue and written by a background thread, a full queue drops and
+# counts rather than waiting for the disk, and a tee that fails disables itself
+# instead of raising into the audio relay.
+#
+# Delete the whole block for the defaults shown (i.e. off).
+capture:
+  # The opt-in. Nothing below has any effect while this is false.
+  enabled: false
+
+  # Where per-session folders are created. Relative paths resolve against the
+  # repo root and NEVER against the current directory, so `recordings` means one
+  # place regardless of where the stack was launched from.
+  #
+  # A directory inside `evals/` is REFUSED at config load: those are reviewed,
+  # frozen fixtures that runs are scored against, and a live tee appending into
+  # that tree could rewrite the record while it is being graded.
+  dir: recordings
+
+  # Hard bound on ONE session's recording, per stream. Reaching it stops
+  # CAPTURE — it logs once, finalizes both WAVs and writes the index — and
+  # leaves the conversation completely untouched. An audio tee is a
+  # convenience; it is never a reason to end a session. Zero is refused, the
+  # same way a whisperer cap of zero is: `enabled: false` is the off switch,
+  # and it is visible.
+  #
+  # 30 minutes of 24 kHz mono PCM16 is ~86 MB per stream.
+  max_minutes: 30.0
+
+  # Silence between microphone frames that cuts a new OWNER segment in the
+  # index. The robot half is delimited by the lane's own utterance boundaries;
+  # the owner half has no such marker, so the index cuts on a gap. The default
+  # is longer than any capture buffer and shorter than the pause between two
+  # spoken corpus queries.
+  owner_gap_s: 0.75

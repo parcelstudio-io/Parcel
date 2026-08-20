@@ -17,6 +17,30 @@ parcel_memory.sqlite3
 # Duplex D0/D1 aligned-stream corpus (local transcripts; do not commit)
 logs/duplex/
 
+# Hosted-session and mutation scratch exports (durable evidence lives in evals/scrum)
+/live_stream.json
+/seed_table.md
+
+# Hosted Realtime credentials, local configuration, and captured household audio
+/.env
+/.env.*
+/realtime.env
+/configs/realtime.yaml
+/recordings/
+/capture/
+/evals/20260820/voice_corpus_v1/*.wav
+/evals/20260820/voice_corpus_v1/*.flac
+/evals/20260820/voice_corpus_v1/*.mp3
+/evals/20260820/voice_corpus_v1/*.opus
+
+# Human-session evidence stays local until it is explicitly consent-reviewed and
+# redacted.  Durable task records contain the conclusions without uploading the
+# raw conversation store, household transcript, or host-specific replay dump.
+/evals/20260820/owner_session_1/
+/evals/20260820/shadow_assertions_run_1/
+/evals/20260820/voice_corpus_v1/live_run_1/
+/evals/20260820/voice_corpus_v1/replay_run_1/
+
 # Local model downloads (fetch from Hugging Face; do not commit weights)
 models/**/.cache/
 models/**/*.pt

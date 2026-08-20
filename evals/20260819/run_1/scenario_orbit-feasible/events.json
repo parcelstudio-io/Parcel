@@ -1,0 +1,85 @@
+{
+  "scenario": "orbit-feasible",
+  "began_utc": "2026-08-20T07:40:56.470555+00:00",
+  "ended_utc": "2026-08-20T07:41:52.592292+00:00",
+  "runtime_events": [
+    {
+      "id": 30,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-0a7395d4ff788957403ca59d revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:40:57.063825+00:00",
+      "t_s": 117.119
+    },
+    {
+      "id": 31,
+      "role": "realtime",
+      "text": "tool circle_owner: ok — Okay—I'll make the requested local circle around you safely.",
+      "level": "info",
+      "timestamp": "2026-08-20T07:40:57.063932+00:00",
+      "t_s": 117.119
+    },
+    {
+      "id": 32,
+      "role": "spatial",
+      "text": "I'll make one normal clockwise circle around you.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:40:57.144306+00:00",
+      "t_s": 117.119
+    },
+    {
+      "id": 33,
+      "role": "safety",
+      "text": "Slowing near an obstacle",
+      "level": "info",
+      "timestamp": "2026-08-20T07:41:14.862469+00:00",
+      "t_s": 135.141
+    },
+    {
+      "id": 34,
+      "role": "safety",
+      "text": "Obstacle clearance restored (+2 more proximity changes in the last few seconds)",
+      "level": "success",
+      "timestamp": "2026-08-20T07:41:27.776219+00:00",
+      "t_s": 148.154
+    },
+    {
+      "id": 35,
+      "role": "spatial",
+      "text": "orbit complete",
+      "level": "success",
+      "timestamp": "2026-08-20T07:41:50.399147+00:00",
+      "t_s": 171.179
+    },
+    {
+      "id": 36,
+      "role": "brain",
+      "text": "parcel-task-0a7395d4ff788957403ca59d: task_succeeded",
+      "level": "success",
+      "timestamp": "2026-08-20T07:41:50.399378+00:00",
+      "t_s": 171.179
+    }
+  ],
+  "mission_log": [],
+  "measurements": {
+    "behaviour_started": true,
+    "spatial_state": "completed",
+    "spatial_reason": "orbit_complete",
+    "spatial_progress": 1.0,
+    "spatial_detail": {
+      "enabled": false,
+      "state": "completed",
+      "intent": {
+        "behavior": "orbit_owner",
+        "direction": "clockwise",
+        "steps": 0,
+        "size": "normal",
+        "revolutions": 1.0
+      },
+      "target_distance_m": 0.0,
+      "orbit_radius_m": 1.6,
+      "progress": 1.0,
+      "reason": "orbit_complete"
+    }
+  }
+}

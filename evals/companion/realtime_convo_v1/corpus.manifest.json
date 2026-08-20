@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "suite_id": "parcel-realtime-convo-v1",
+  "runner_version": "realtime-convo-scrape-v1",
+  "generated_at_utc": "2026-08-18T03:23:30Z",
+  "frozen_note": "Deliberately NOT frozen. The live capture landed 2026-08-18 (25/25 threads), but human review of corpus quality has not happened and the manifest says human_review_required. Freezing is an owner decision taken after that review; when taken, add the manifest to DIGEST_SENTINELS in scripts/ci_gate.py in the same commit.",
+  "model": "gpt-realtime-2.1-mini",
+  "si_version": "si-companion-v1",
+  "di_version": "di-companion-v1",
+  "si_digests": {
+    "calm_guardian": "008dd8ea80140d81869d293495a277cf4384b885727322102f78cbf9cac432ef",
+    "gentle_companion": "418e6662efd60d0e35f3c4bd1715d902d03c4c2b3899b5da4d6257e8910e253d",
+    "playful_companion": "ee40a44a45a4046e9ce72c8f40fac3b98854350df3a0cd65c0931667788774d5"
+  },
+  "scrape": {
+    "status": "captured",
+    "model": "gpt-realtime-2.1-mini",
+    "checked_utc_date": "2026-08-18",
+    "card_date_local": "2026-08-17",
+    "threads_requested": 25,
+    "threads_captured": 25,
+    "measured_spend_usd": 0.5,
+    "note": "Captured live 2026-08-18 UTC after account credit landed (third key), on the SECOND full run. The first full run was silently damaged: rate limiting closed 103/174 responses as status=failed with zero usage, and the scraper trusted response.done without checking status. Fixed with status verification + bounded retry (RESPONSE_ATTEMPTS/RETRY_BACKOFF_S); the second run captured 174/174 turns non-empty. Day spend across all attempts about $0.79. The first attempt failed on a session.update shape the GA API refuses (missing session.type; turn_detection moved under audio.input) — fixed from wire evidence, then 25/25 threads captured in one run. The 3 hand-authored seed fixtures shared thread ids with real scenarios and were OVERWRITTEN by live captures; the replay pipeline they proved is now exercised by real model output instead. Prior blocked record: 429 credit_balance_exhausted, 2026-08-18 UTC, zero sockets opened."
+  },
+  "scenario_count": 25,
+  "scenario_families": {
+    "conversation": 9,
+    "navigation": 9,
+    "perception": 3,
+    "punt": 4
+  },
+  "owner_turn_count": 174,
+  "fixture_count": 25,
+  "fixture_sources": {
+    "live_scrape": 25
+  },
+  "usage_totals": {
+    "input_tokens": 164446,
+    "output_tokens": 18730,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 126464
+  },
+  "budget_ceiling_usd": 5.0,
+  "human_review_required": true,
+  "requires_audio": false,
+  "requires_model_server": false,
+  "locked_files": [
+    {
+      "path": "evals/companion/realtime_convo_v1/scenarios.json",
+      "sha256": "d549355fee482009027468edd3ba4b05b0f807cfeb0e37fefa1c4e35b4c7f9d9"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-001.json",
+      "sha256": "d1d2beb1b7e6dd147d7e54b8da687ed330366b814b3231013bf5e1941d5fb80c"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-002.json",
+      "sha256": "0c8bc0fbe4842ced40905b114cb14e837d42d3a279034f08c9844e661eaef729"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-003.json",
+      "sha256": "d2397fabb535a30aa43bb5f622717da63ee48a3f7e7b996c84aa4683658d4061"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-004.json",
+      "sha256": "e0166ce534031fb3dadb5dcec965fafc7f13b642091be2f8989fa0c03dd84748"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-005.json",
+      "sha256": "4277f2ffd905e0eb9b9a38b972c7d7339e6e868ea0596df0ced25004d4730667"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-006.json",
+      "sha256": "6ff2819ebe6bafcf1bd97589f1cca113decd4a27c4b5c2f59d01c135c08c7103"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-007.json",
+      "sha256": "c75c722b2771a4566576b64e9f9dcfbbb9073d154c6d7f0287de093becc9c869"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-008.json",
+      "sha256": "e9b2d1afacf1ffcd27ac4f1f1acc31ebe8a0c162ecbef083ba9c75d3feba24e4"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-009.json",
+      "sha256": "3f6109abf8f4af08d421a882f2e434934f2626af597b5adf1b925ed4b78fae65"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-010.json",
+      "sha256": "db5a2a1917aa65bba9bbb1012543fef7bd8986acf904e7d7aaa87d12d046d8b8"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-011.json",
+      "sha256": "d5a33bcbbde2beb8ed7c7105405ec31cdaca74aedb92592d1be2bfb0e7864452"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-012.json",
+      "sha256": "a51d13ce05a4bad2f05189dc02b2e42cc83b45dc3aea3a31901ebd8337b8abd3"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-013.json",
+      "sha256": "810aec1212e2fbbaf8f0767bc79e26add3decb8877f16a0a9ec5fdbb4f8106d4"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-014.json",
+      "sha256": "8c6ba229a2edb85a9b309b7cc0ffc07e31de7615513088c9f7022caeb0930ec9"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-015.json",
+      "sha256": "325d83ed8311534d2fa77cb047c791ec505c5b575fad0c64901547afc3139ba4"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-016.json",
+      "sha256": "b14f5d53ecf7568ea6204fbddbbc60aec0528f6d7c51c6805d66f0da78fe5c32"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-017.json",
+      "sha256": "9629b60755e204b835d9200b389cb08bca4b623512620767a72c30676dc6d11c"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-018.json",
+      "sha256": "8714618cacf96b36f0c364cc4d845e8c485fd8fdb3c22648bedb027cacdccac9"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-019.json",
+      "sha256": "042fe7b8a4fdc896526375726ff8135f7b3d662dbad5d5bad04099e17f211315"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-020.json",
+      "sha256": "839b6e9d63254377fa02c300054a1b9f041e7cf80f65a825104a8556606ab6bc"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-021.json",
+      "sha256": "1492354be0cfd3041a6642e490ef54c04485705321f82fce7f0a249f4f2aad2c"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-022.json",
+      "sha256": "1773006f6e9b72b9c229bd6d34cf0e59401788a0069b7a822bb39044467b945f"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-023.json",
+      "sha256": "47830304a9ab1f324ce8875255032290c8c0833f213bcad90d21eda582ac2624"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-024.json",
+      "sha256": "d3e158e7a8c2e0968d2dd719032bd1134667d9b324b4f47cb217990efc70f035"
+    },
+    {
+      "path": "evals/companion/realtime_convo_v1/fixtures/rt-conv-025.json",
+      "sha256": "cc058c2ba05b67355521b7ce5fb0d0b4d81f179954d2674f7ca510ad12236c6d"
+    }
+  ]
+}

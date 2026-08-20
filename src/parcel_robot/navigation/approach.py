@@ -107,14 +107,51 @@ def safe_approach_pose(
                     candidate.polygon, robot_xy, inset_m=approach_clearance
                 )
             except ValueError:
-                return None
-            ranked = _rank_approach_point(
-                (point,),
+                point = None
+            if point is not None:
+                ranked = _rank_approach_point(
+                    (point,),
+                    robot_xy,
+                    tracks,
+                    traffic_weight=active_traffic_weight,
+                    veto_out=cost_out,
+                )
+        if ranked is None:
+            # Card R10 tier 3 — the in-region resample. Root cause of the live
+            # ``semantic_target_unreachable``: tiers 1 and 2 above BOTH require
+            # the straight ROBOT->POINT segment to be clear
+            # (``_segment_clear_of_observed_obstacles``), so one pedestrian
+            # standing between the robot and the sidewalk disqualifies every
+            # interior sample at once and the whole region reports "unreachable"
+            # — while ``_fallback_near_arrival_pose`` in the pipeline is gated to
+            # near/next_to and never runs for a region goal. The resampler keeps
+            # every POINT clearance at full strength (containment, edge
+            # clearance, footprint-to-surface clearance from every observed
+            # surface, and person keepout discs the old path never consulted)
+            # and drops only the straight-line precondition, which is a route
+            # heuristic the grid planner and the reactive gate already own.
+            attempts: list[dict[str, Any]] = []
+            resampled = resample_inside_region(
+                candidate.polygon,
                 robot_xy,
-                tracks,
-                traffic_weight=active_traffic_weight,
-                veto_out=cost_out,
+                approach_clearance=approach_clearance,
+                obstacle_clearance=obstacle_clearance,
+                blocked_points=blocked_points,
+                keepouts=_person_keepout_discs(tracks),
+                footprint_clearance_m=footprint_clearance_m,
+                attempts_out=attempts,
             )
+            if cost_out is not None:
+                cost_out["inside_resample_attempts"] = attempts
+                cost_out["inside_resample_candidates"] = len(resampled)
+            if resampled:
+                ranked = _rank_approach_point(
+                    tuple(resampled),
+                    robot_xy,
+                    tracks,
+                    traffic_weight=active_traffic_weight,
+                    veto_out=cost_out,
+                )
         if ranked is None:
             # Every admissible pose sits in the pedestrian stream. Saying so is
             # the point of a fail-closed veto.
@@ -428,6 +465,181 @@ def _safe_polygon_point(
     return _rank_approach_point(
         valid, robot, tracks, traffic_weight=traffic_weight, veto_out=veto_out
     )
+
+
+#: Inset ladder for the in-region resample, as MULTIPLES of the requested
+#: approach clearance. The last rung is pinned to the footprint radius by
+#: :func:`resample_inside_region` and never goes below it: at the footprint
+#: radius the body is exactly contained by the region, which is the whole
+#: meaning of an ``inside`` terminal. Relaxing the INSET is legitimate (it is a
+#: comfort margin off the region edge); relaxing the obstacle clearance is not,
+#: and this ladder never touches it.
+INSIDE_RESAMPLE_INSET_STEPS: tuple[float, ...] = (1.0, 0.75, 0.5)
+
+#: Grid spacing cap for the resample, in metres. Finer than
+#: ``_safe_polygon_point``'s 0.25 m floor, because this tier only runs when the
+#: coarse pass already failed and a 2 m-wide sidewalk deserves a closer look.
+INSIDE_RESAMPLE_SPACING_M = 0.12
+
+#: Hard cap on samples evaluated per inset rung. Bounded work in a 10 Hz tick.
+INSIDE_RESAMPLE_MAX_SAMPLES = 900
+
+
+def resample_inside_region(
+    polygon: tuple[tuple[float, float], ...],
+    robot: tuple[float, float],
+    *,
+    approach_clearance: float,
+    obstacle_clearance: float,
+    blocked_points: tuple[tuple[str | None, float, float], ...] = (),
+    keepouts: tuple[tuple[str, float, float, float], ...] = (),
+    footprint_clearance_m: float | None = None,
+    attempts_out: list[dict[str, Any]] | None = None,
+) -> tuple[tuple[float, float], ...]:
+    """Keepout-aware in-region goal resampling — card R10 work item 1.
+
+    Returns admissible interior points, nearest-to-robot first, for the ranker to
+    veto or accept. Empty means the region genuinely has no admissible pose, and
+    ``attempts_out`` then NAMES what was tried: one row per inset rung with the
+    sample count and the count each filter rejected, which is what turns "give
+    up" into "give up, and here is what I tried" (card: *the give-up names the
+    candidates tried*).
+
+    What it never relaxes, in one place so an auditor can check it:
+
+    * ``obstacle_clearance`` — the full centre-to-surface distance the reactive
+      gate enforces — is applied at EVERY accepted point, unchanged, at every
+      rung;
+    * ``keepouts`` (person discs) veto absolutely, at any clearance;
+    * containment is exact ``_inside`` plus an edge clearance that never drops
+      below the robot footprint radius, so an accepted point always has the
+      whole body inside the region.
+
+    What it does relax, and why: the straight ROBOT->POINT segment test. The
+    robot does not drive straight lines — ``grid_planner`` routes and
+    ``apply_reactive_safety`` disposes — so using an occlusion test as an
+    arrival-POSE admissibility test conflates "can I get there" with "is this
+    pose safe", and only the second belongs to this function.
+    """
+
+    if len(polygon) < 3:
+        if attempts_out is not None:
+            attempts_out.append({"rung": "n/a", "rejected": "polygon_degenerate"})
+        return ()
+    floor = (
+        DEFAULT_STAND_OFF_ENVELOPE.footprint_radius_m
+        if footprint_clearance_m is None
+        else float(footprint_clearance_m)
+    )
+    base = float(approach_clearance)
+    if not math.isfinite(base) or base <= 0.0:
+        base = floor
+    obstacle = float(obstacle_clearance)
+    if not math.isfinite(obstacle) or obstacle < 0.0:
+        obstacle = 0.0
+
+    min_x = min(point[0] for point in polygon)
+    max_x = max(point[0] for point in polygon)
+    min_y = min(point[1] for point in polygon)
+    max_y = max(point[1] for point in polygon)
+    span = max(max_x - min_x, max_y - min_y)
+    spacing = max(INSIDE_RESAMPLE_SPACING_M, span / 60.0)
+
+    insets: list[float] = []
+    for step in INSIDE_RESAMPLE_INSET_STEPS:
+        value = max(floor, base * float(step))
+        if not any(abs(value - existing) < 1e-9 for existing in insets):
+            insets.append(value)
+    if not any(abs(floor - existing) < 1e-9 for existing in insets):
+        insets.append(floor)
+
+    for inset in insets:
+        considered = 0
+        outside = 0
+        too_close_to_edge = 0
+        blocked_by_surface = 0
+        blocked_by_person = 0
+        admitted: list[tuple[float, float]] = []
+        x = min_x
+        while x <= max_x + 1e-9 and considered < INSIDE_RESAMPLE_MAX_SAMPLES:
+            y = min_y
+            while y <= max_y + 1e-9 and considered < INSIDE_RESAMPLE_MAX_SAMPLES:
+                point = (x, y)
+                considered += 1
+                y += spacing
+                if not _inside(point, polygon):
+                    outside += 1
+                    continue
+                if not _has_clearance(point, polygon, inset):
+                    too_close_to_edge += 1
+                    continue
+                if not _clear_of_observed_obstacles(point, blocked_points, obstacle):
+                    blocked_by_surface += 1
+                    continue
+                if _inside_any_keepout(point, keepouts):
+                    blocked_by_person += 1
+                    continue
+                admitted.append(point)
+            x += spacing
+        if attempts_out is not None:
+            attempts_out.append(
+                {
+                    "inset_m": round(inset, 3),
+                    "obstacle_clearance_m": round(obstacle, 3),
+                    "spacing_m": round(spacing, 3),
+                    "considered": considered,
+                    "outside_region": outside,
+                    "too_close_to_region_edge": too_close_to_edge,
+                    "blocked_by_observed_surface": blocked_by_surface,
+                    "blocked_by_person_keepout": blocked_by_person,
+                    "admitted": len(admitted),
+                }
+            )
+        if admitted:
+            admitted.sort(key=lambda item: (math.dist(robot, item), item[0], item[1]))
+            return tuple(admitted)
+    return ()
+
+
+def _inside_any_keepout(
+    point: tuple[float, float],
+    keepouts: tuple[tuple[str, float, float, float], ...],
+) -> bool:
+    return any(
+        math.hypot(point[0] - x, point[1] - y) < radius for _label, x, y, radius in keepouts
+    )
+
+
+def _person_keepout_discs(
+    tracks: Sequence[object],
+) -> tuple[tuple[str, float, float, float], ...]:
+    """Dynamic tracks as keepout discs, from the tracks already in hand.
+
+    Fail-safe on kind: a track that declares a NON-person kind (a car) is left
+    to the LiDAR surfaces that already describe it, but a track with no declared
+    kind — which is what ``coerce_tracks`` produces for the ``TrackState`` form,
+    since it carries no ``kind`` field — is treated as a PERSON. Guessing
+    "probably not a person" about a moving body would be the wrong direction to
+    be wrong in, and this is the case the proxemics literature (and the live
+    sidewalk mission) says a goal pose must never be planted on top of.
+    """
+
+    from .traffic_aware import coerce_tracks
+
+    try:
+        validated = coerce_tracks(tracks)
+    except ValueError:
+        return ()
+    discs: list[tuple[str, float, float, float]] = []
+    for track in validated:
+        kind = str(getattr(track, "kind", "") or "").lower()
+        if kind and kind not in {"person", "pedestrian", "human", "owner"}:
+            continue
+        radius = float(getattr(track, "radius_m", 0.0) or 0.0)
+        if radius <= 0.0:
+            continue
+        discs.append((kind or "someone", float(track.x), float(track.y), radius))
+    return tuple(discs)
 
 
 def point_in_polygon(point: tuple[float, float], polygon: tuple[tuple[float, float], ...]) -> bool:

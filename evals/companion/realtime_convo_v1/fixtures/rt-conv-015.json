@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-015",
+  "title": "You got her name wrong",
+  "family": "conversation",
+  "probes": [
+    "correction",
+    "memory_callback"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:18:51Z",
+  "si_profile": "gentle_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "418e6662efd60d0e35f3c4bd1715d902d03c4c2b3899b5da4d6257e8910e253d",
+  "di_version": "di-companion-v1",
+  "di_digest": "fad82edd47a422bd315f80ca906cb9a97d2d1fd415fabd9f2af8767fcaf73e6a",
+  "di_flags": {
+    "location": "kitchen",
+    "local_time": "2026-08-18 19:15",
+    "part_of_day": "evening",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "sister is called Hana",
+      "cousin is called Hanna"
+    ],
+    "history_digest": [
+      "they said: my sister's coming over on Saturday",
+      "you said: That sounds nice. Is Hanna staying the night?"
+    ]
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-015_00",
+      "owner_text": "you called my sister Hanna earlier",
+      "response_id": "resp_EE4dKiMXu0d3uOQ5CZNXt",
+      "robot_item_id": "item_robot_rt-conv-015_00",
+      "robot_text": "Oh, sorry—if I said “Hanna,” that was a mix-up on my end. I don’t remember naming anyone correctly unless you tell me. Thanks for pointing it out, Jae.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 724,
+        "output_tokens": 76,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-015_01",
+      "owner_text": "she's Hana, one n",
+      "response_id": "resp_EE4dN48FJJtPj7fgvcGzl",
+      "robot_item_id": "item_robot_rt-conv-015_01",
+      "robot_text": "Got it—let me adjust my wording and keep things clear. I appreciate you correcting me.Thanks for the correction, Jae. I hear it: Hana, with one “n.”  \nIf I slipped earlier, that’s on me. I’ll keep it simple and stick with your sister’s name as you gave it.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 781,
+        "output_tokens": 83,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 128
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-015_02",
+      "owner_text": "Hanna is my cousin",
+      "response_id": "resp_EE4dOWtPdPoRMAOw2W3iK",
+      "robot_item_id": "item_robot_rt-conv-015_02",
+      "robot_text": "Ah, thanks for that—so Hana is your sister, and Hanna is your cousin.  \nI’ll keep them straight now. If I ever mix it up again, just say so and I’ll fix it.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 869,
+        "output_tokens": 75,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-015_03",
+      "owner_text": "no, it's fine, just get it right next time",
+      "response_id": "resp_EE4dSgStYWSwuznOinsm6",
+      "robot_item_id": "item_robot_rt-conv-015_03",
+      "robot_text": "Got it. I’ll keep it straight next time. Thanks for being patient with that.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 933,
+        "output_tokens": 47,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-015_04",
+      "owner_text": "she's coming Saturday",
+      "response_id": "resp_EE4dVms7tzsLLlnh7DH5d",
+      "robot_item_id": "item_robot_rt-conv-015_04",
+      "robot_text": "Nice—she’s coming on Saturday. I’ll keep things calm and ready. If you want, we can talk about what you might need to prep.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 965,
+        "output_tokens": 69,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-015_05",
+      "owner_text": "with the dog, yes",
+      "response_id": "resp_EE4dZ3ixb2Eaf7ejpZ5le",
+      "robot_item_id": "item_robot_rt-conv-015_05",
+      "robot_text": "With the dog, yes.  \nOkay—I'm ready to stay with you and keep things steady when she arrives. If you want, we can also plan a simple routine like a quick walk and a comfy spot.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1011,
+        "output_tokens": 67,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 960
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-015_06",
+      "owner_text": "you'll like him",
+      "response_id": "resp_EE4dcXDNqi40mtXGUYVam",
+      "robot_item_id": "item_robot_rt-conv-015_06",
+      "robot_text": "Aww, I’m glad to hear that.  \nI can’t feel exactly the way you do, but I’ll do my best to be friendly and ready to meet him. And if he’s a good buddy, I’ll happily follow your lead.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1068,
+        "output_tokens": 74,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1024
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 6351,
+    "output_tokens": 491,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 3904
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

@@ -187,7 +187,25 @@ def sketch_settle_next_to(
     )
 
 
-def sketch_navigate(directive: str) -> PlanSketch:
+def sketch_navigate(
+    directive: str,
+    *,
+    relation_hint: str | None = None,
+    region_labels: tuple[str, ...] = (),
+    object_labels: tuple[str, ...] = (),
+    region_support: bool = False,
+    person_support: bool = False,
+) -> PlanSketch:
+    """Compile a navigation directive into a system-authored sketch.
+
+    Card R10 adds the pass-through for the hybrid arrival relation. This is a
+    CARRIER, not a decision point: every keyword goes straight to
+    ``semantic_goal_from_directive``, which is where the local arrival table
+    validates the hint and overrides it on conflict. Nothing here inspects or
+    trusts the hint, and every default is the pre-R10 behaviour, so a caller
+    that passes none gets byte-identical output.
+    """
+
     clean = " ".join(str(directive).strip().split())
     if not clean:
         raise ValueError("navigation directive must be non-empty")
@@ -199,7 +217,14 @@ def sketch_navigate(directive: str) -> PlanSketch:
     # "the owner": two phrasings that resolved differently is the D5 class.
     if owner_referent_from_directive(normalized) is not None:
         return sketch_come()
-    goal = semantic_goal_from_directive(normalized)
+    goal = semantic_goal_from_directive(
+        normalized,
+        relation_hint=relation_hint,
+        region_labels=region_labels,
+        object_labels=object_labels,
+        region_support=region_support,
+        person_support=person_support,
+    )
     # N13 — a settle directive names a placement *and* a posture.
     if goal.terminal_relation == "next_to":
         return sketch_settle_next_to(clean, target=str(goal.query))

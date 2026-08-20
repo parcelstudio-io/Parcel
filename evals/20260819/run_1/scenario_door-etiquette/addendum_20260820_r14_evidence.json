@@ -1,0 +1,111 @@
+{
+  "stamp": "20260820T163017Z",
+  "model": "gpt-realtime-2.1-mini",
+  "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+  "A_body": {
+    "directive": "go to the door",
+    "start": [
+      -6.95,
+      1.2,
+      1.5707963267948966
+    ],
+    "owner": [
+      -5.4,
+      1.0
+    ],
+    "status": "failed",
+    "reason": "semantic_arrival_verification_failed",
+    "target_id": "door_1",
+    "terminal_relation": "near",
+    "path_samples": 84,
+    "path_file": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/799cb356-4cb4-445b-a784-306b6c6fd4a6/scratchpad/r14/r14-door-mission-20260820T163017Z.jsonl",
+    "final_xy": [
+      -7.5357,
+      2.5206
+    ],
+    "final_heading_deg": 111.93,
+    "distance_to_door_centre_m": 1.7032,
+    "closest_approach_to_door_m": 1.7033,
+    "ever_inside_the_threshold": false,
+    "crossed_to_the_far_side_of_the_leaf": false
+  },
+  "B_seam": {
+    "method": "runtime._arrival_fact_for (shipping)",
+    "scene_object_vocabulary_contains_door": true,
+    "object_vocabulary": [
+      "lamppost",
+      "lamp post",
+      "streetlight",
+      "street light",
+      "lamp",
+      "bench",
+      "seat",
+      "park bench",
+      "bench seat",
+      "tree",
+      "trees",
+      "street tree",
+      "planter",
+      "plant pot",
+      "flower box",
+      "pot",
+      "building",
+      "bldg",
+      "storefront",
+      "building face",
+      "door",
+      "doorway",
+      "entrance",
+      "entry",
+      "front door"
+    ],
+    "fact_for_semantic_query_'door'": "The robot's navigation system reports: You have arrived beside door. You are turned back to face your owner.",
+    "fact_for_phrase_'the door'": "The robot's navigation system reports: You have stopped just short of the door, without going through it. You are turned back to face your owner. Now ask the owner what they would like to do next.",
+    "same_door_two_facts": true
+  },
+  "C_model": {
+    "session": "rt_e8aa002ab432",
+    "turns": [
+      {
+        "case": "C1 owner asks for the door",
+        "owner_said": "Go to the door.",
+        "injected_fact": null,
+        "tool_calls": [
+          {
+            "tool": "navigate_to",
+            "place": "door",
+            "relation": "near"
+          }
+        ],
+        "robot_said": "Okay—heading toward the door safely.",
+        "reply_contains_a_question": false
+      },
+      {
+        "case": "C2 the LOCAL lane's portal fact (what the arrival table composes)",
+        "owner_said": null,
+        "injected_fact": "The robot's navigation system reports: You have stopped just short of the door, without going through it. You are turned back to face your owner. Now ask the owner what they would like to do next.",
+        "tool_calls": [],
+        "robot_said": "I’ve stopped just short of the door and turned back to face you. So what would you like to do next—go through it, wait, or move somewhere else?",
+        "reply_contains_a_question": true
+      },
+      {
+        "case": "C3 the HOSTED lane's fact for the same door (R14-D1's consequence)",
+        "owner_said": null,
+        "injected_fact": "The robot's navigation system reports: You have arrived beside door. You are turned back to face your owner.",
+        "tool_calls": [],
+        "robot_said": "Okay, got it. I’m now beside the door, facing you, and ready for whatever you want to do next. You can step through together, have me wait, turn around, or head somewhere else—it’s totally up to you.",
+        "reply_contains_a_question": false
+      },
+      {
+        "case": "C4 the real terminal this run actually produced",
+        "owner_said": null,
+        "injected_fact": "The robot's navigation system reports: The mission to the door ended (failed): semantic_arrival_verification_failed.",
+        "tool_calls": [],
+        "robot_said": "Aw, darn, that one didn’t go as expected. The system says the mission to the door failed, so it didn’t verify the arrival. I’m still facing you and ready—what would you like to try next? Should we go around it, try again, or head to another spot?",
+        "reply_contains_a_question": true
+      }
+    ],
+    "spend_usd": 0.033827
+  },
+  "elapsed_s": 30.71
+}

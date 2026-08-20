@@ -5,8 +5,13 @@ import re
 import time
 from dataclasses import asdict, dataclass
 
+from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import SimObservation
 from parcel_robot.models import SpatialIntent, VelocityCommand
+from parcel_robot.navigation.orbit_feasibility import (
+    OrbitFeasibility,
+    evaluate_orbit_annulus,
+)
 
 NUMBER_WORDS = {
     "once": 1,
@@ -45,6 +50,11 @@ class SpatialBehaviorConfig:
     owner_confidence_min: float = 0.6
     stall_timeout_s: float = 20.0
     timeout_s: float = 120.0
+    #: Card R10. How far AHEAD along the ring the mid-orbit feasibility check
+    #: looks, in degrees. 60 deg at the 1.6 m default radius is 1.68 m of arc —
+    #: about six seconds at the 0.28 m/s orbit speed, which is enough warning to
+    #: stop and SAY something rather than stall into ``spatial_stalled``.
+    orbit_lookahead_deg: float = 60.0
 
     def __post_init__(self) -> None:
         positive = (
@@ -65,6 +75,8 @@ class SpatialBehaviorConfig:
         )
         if any(not math.isfinite(value) or value <= 0.0 for value in positive):
             raise ValueError("spatial behavior limits must be positive and finite")
+        if not math.isfinite(self.orbit_lookahead_deg) or not 0.0 < self.orbit_lookahead_deg <= 360.0:
+            raise ValueError("spatial orbit_lookahead_deg must be within (0, 360]")
         if self.max_steps <= 0:
             raise ValueError("spatial max_steps must be positive")
         if not self.min_orbit_radius_m <= self.default_orbit_radius_m <= self.max_orbit_radius_m:
@@ -280,10 +292,108 @@ class SpatialBehaviorController:
         self._aligning = True
         self._last_motion_at = 0.0
         self._last_motion_pose = (0.0, 0.0, 0.0)
+        #: Card R10. The last infeasibility verdict, admission or mid-orbit, so
+        #: the runtime can NARRATE why the circle stopped instead of the owner
+        #: watching the dog give up in silence.
+        self._last_refusal: OrbitFeasibility | None = None
+        self._last_refusal_sentence = ""
 
     @property
     def active(self) -> bool:
         return self._intent is not None
+
+    @property
+    def last_refusal_sentence(self) -> str:
+        return self._last_refusal_sentence
+
+    # ------------------------------------------------------- feasibility (R10)
+    def orbit_radius_for(self, intent: SpatialIntent) -> float:
+        """The ring radius ``start`` would pick for this intent. Pure."""
+
+        requested = {
+            "small": self.config.min_orbit_radius_m,
+            "normal": self.config.default_orbit_radius_m,
+            "wide": self.config.max_orbit_radius_m,
+        }.get(str(intent.size or "normal"), self.config.default_orbit_radius_m)
+        return min(
+            self.config.max_orbit_radius_m,
+            max(self.config.min_orbit_radius_m, requested),
+        )
+
+    def assess_orbit(
+        self,
+        intent: SpatialIntent,
+        observation: SimObservation,
+        *,
+        obstacle_stop_m: float,
+    ) -> OrbitFeasibility:
+        """Admission-time affordance test for an owner orbit — card R10 item 5.
+
+        Called BEFORE :meth:`start`, so an impossible circle is refused with a
+        sentence the owner can act on instead of being started and abandoned.
+        This is SayCan's "Can" half computed locally: once ``circle_owner``
+        exists on the hosted tool surface, "I can't walk around you here" has to
+        be produced by geometry, because the bench measured the model both
+        fabricating capability and falsely denying it.
+
+        Never raises, never moves anything, never relaxes a keepout: it reports.
+        """
+
+        if intent.behavior != "orbit_owner":
+            return OrbitFeasibility(feasible=True)
+        owner = observation.owner
+        centre: tuple[float, float] | None = None
+        if owner.visible and owner.confidence >= self.config.owner_confidence_min:
+            centre = (float(owner.x), float(owner.y))
+        radius = self.orbit_radius_for(intent)
+        verdict = evaluate_orbit_annulus(
+            centre=centre,
+            radius_m=radius,
+            clearance_m=self._ring_clearance_m(),
+            blocked_points=_surface_points(observation, exclude=centre),
+            keepouts=_keepout_discs(observation, exclude=centre),
+            arc_sweep_deg=360.0 * min(1.0, float(intent.revolutions or 1.0)),
+            arc_start_deg=_ring_start_deg(observation, centre),
+        )
+        self._remember_refusal(verdict, observation, centre)
+        return verdict
+
+    def _ring_clearance_m(self) -> float:
+        """Centre-to-surface clearance a ring sample must keep: DOES THE BODY FIT.
+
+        Deliberately the FIT distance (footprint radius + the config's own orbit
+        clearance margin) and deliberately NOT the reactive gate's stopping
+        distance. The distinction is load-bearing and was measured, not guessed:
+        the first draft of this check used the gate's brake distance and aborted
+        ``test_orbit_the_owner_completes_one_revolution`` at 32% progress — an
+        orbit the live sim completes with zero collisions. The gate is a speed
+        governor; it slows the body near surfaces and that is correct behaviour,
+        not an impossibility. Refusing every orbit the gate would slow for is a
+        FALSE refusal, and a false "I can't walk around you here" is exactly the
+        dishonesty this validator exists to prevent — the bench caught the model
+        making that same false claim (``bench_navmodel.md`` §6, A3).
+
+        So: refuse only when the body physically cannot occupy the ring.
+        """
+
+        return (
+            DEFAULT_SAFETY_ENVELOPE.footprint_radius_m + self.config.orbit_clearance_margin_m
+        )
+
+    def _remember_refusal(
+        self,
+        verdict: OrbitFeasibility,
+        observation: SimObservation,
+        centre: tuple[float, float] | None,
+    ) -> None:
+        if verdict.feasible:
+            self._last_refusal = None
+            self._last_refusal_sentence = ""
+            return
+        self._last_refusal = verdict
+        self._last_refusal_sentence = verdict.refusal_sentence(
+            reference_deg=_owner_reference_deg(observation, centre)
+        )
 
     def start(
         self,
@@ -492,6 +602,23 @@ class SpatialBehaviorController:
         ):
             return SpatialDecision(VelocityCommand(), True, "completed", "orbit_complete", 1.0)
 
+        # Card R10 item 5 — mid-orbit abort WITH narration. The ring the orbit is
+        # about to walk is re-tested every tick over a bounded lookahead arc. A
+        # person who steps into the path used to produce nothing but a silent
+        # 20 s ``spatial_stalled`` timeout; now it ends the behaviour with a
+        # cause and a sentence the runtime can say. The check only ever STOPS
+        # motion — it can never widen the ring, weaken a keepout, or continue an
+        # orbit the geometry refuses.
+        ahead = self._lookahead_feasibility(observation, angle, direction_sign)
+        if ahead is not None and not ahead.feasible:
+            return SpatialDecision(
+                VelocityCommand(),
+                True,
+                "failed",
+                ahead.cause or "orbit_annulus_blocked",
+                fraction,
+            )
+
         lookahead_angle = angle + direction_sign * 0.34
         target_x = self._center[0] + self._orbit_radius * math.cos(lookahead_angle)
         target_y = self._center[1] + self._orbit_radius * math.sin(lookahead_angle)
@@ -510,6 +637,41 @@ class SpatialBehaviorController:
             decision.reason,
             fraction,
         )
+
+    def _lookahead_feasibility(
+        self,
+        observation: SimObservation,
+        angle: float,
+        direction_sign: float,
+    ) -> OrbitFeasibility | None:
+        """Feasibility of the arc immediately ahead, or ``None`` when unknowable.
+
+        ``None`` (rather than "infeasible") when there is nothing to test — no
+        surfaces and no tracks — so a sensor-quiet tick never manufactures a
+        refusal. Absence of evidence is reported as absence, which is the same
+        polarity ``_pose_uncertainty_m`` uses one module over.
+        """
+
+        centre = self._center
+        surfaces = _surface_points(observation, exclude=centre)
+        keepouts = _keepout_discs(observation, exclude=centre)
+        if not surfaces and not keepouts:
+            return None
+        sweep = float(self.config.orbit_lookahead_deg)
+        start = math.degrees(angle)
+        if direction_sign < 0.0:
+            start -= sweep
+        verdict = evaluate_orbit_annulus(
+            centre=centre,
+            radius_m=self._orbit_radius,
+            clearance_m=self._ring_clearance_m(),
+            blocked_points=surfaces,
+            keepouts=keepouts,
+            arc_start_deg=start,
+            arc_sweep_deg=sweep,
+        )
+        self._remember_refusal(verdict, observation, centre)
+        return verdict
 
     def _track_point(
         self,
@@ -593,6 +755,108 @@ class SpatialBehaviorController:
             raise ValueError("unsupported orbit size")
         if not 0.25 <= intent.revolutions <= self.config.max_revolutions:
             raise ValueError("orbit revolutions are outside the safe range")
+
+
+#: How close a surface/track has to be to the orbit centre to be treated as the
+#: OWNER rather than an obstacle. The owner is the thing being circled; counting
+#: their own body as a blocker would refuse every orbit ever requested.
+_OWNER_MATCH_M = 0.6
+
+
+def _surface_points(
+    observation: SimObservation,
+    *,
+    exclude: tuple[float, float] | None,
+) -> tuple[tuple[str, float, float], ...]:
+    """Polar LiDAR returns lifted into MAP-frame surface points."""
+
+    robot = observation.robot
+    points: list[tuple[str, float, float]] = []
+    for item in observation.lidar_obstacles[:64]:
+        try:
+            distance = float(item.distance_m)
+            bearing = float(item.bearing_rad)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(distance) or not math.isfinite(bearing) or distance < 0.0:
+            continue
+        # The LiDAR contract reports FOOTPRINT-to-surface clearance, not range
+        # from the body centre — the same lift ``approach._observed_obstacle_points``
+        # performs. Omitting it put every surface 0.32 m too close to the robot
+        # and was half of why the first draft of this check false-refused a
+        # perfectly good orbit.
+        ray = distance + DEFAULT_SAFETY_ENVELOPE.footprint_radius_m
+        theta = robot.yaw + bearing
+        x = robot.x + ray * math.cos(theta)
+        y = robot.y + ray * math.sin(theta)
+        if exclude is not None and math.hypot(x - exclude[0], y - exclude[1]) <= _OWNER_MATCH_M:
+            continue
+        points.append((str(item.obstacle_id or "something"), x, y))
+    return tuple(points)
+
+
+def _keepout_discs(
+    observation: SimObservation,
+    *,
+    exclude: tuple[float, float] | None,
+) -> tuple[tuple[str, float, float, float], ...]:
+    """Dynamic agents as keepout discs. People are never ring surface."""
+
+    discs: list[tuple[str, float, float, float]] = []
+    for track in observation.dynamic_agents[:32]:
+        try:
+            x = float(track.x)
+            y = float(track.y)
+            radius = float(track.radius_m)
+        except (TypeError, ValueError):
+            continue
+        if not (math.isfinite(x) and math.isfinite(y) and math.isfinite(radius)):
+            continue
+        if radius <= 0.0:
+            continue
+        if exclude is not None and math.hypot(x - exclude[0], y - exclude[1]) <= _OWNER_MATCH_M:
+            continue
+        label = "someone" if str(track.kind or "").lower() in {"person", "pedestrian"} else "something"
+        discs.append((label, x, y, radius))
+    return tuple(discs)
+
+
+def _ring_start_deg(
+    observation: SimObservation,
+    centre: tuple[float, float] | None,
+) -> float:
+    """Where the ring sweep begins: the robot's own bearing about the centre."""
+
+    if centre is None:
+        return 0.0
+    robot = observation.robot
+    dx = robot.x - centre[0]
+    dy = robot.y - centre[1]
+    if math.hypot(dx, dy) <= 1e-6:
+        return 0.0
+    return math.degrees(math.atan2(dy, dx))
+
+
+def _owner_reference_deg(
+    observation: SimObservation,
+    centre: tuple[float, float] | None,
+) -> float | None:
+    """The heading "on your left" is measured from.
+
+    ``OwnerTrack`` carries no yaw, so the honest reference is the bearing from
+    the owner to the robot — the direction they are being spoken to from. When
+    even that is unavailable the refusal drops the side word rather than
+    inventing a direction (see ``OrbitFeasibility.refusal_sentence``).
+    """
+
+    if centre is None:
+        return None
+    robot = observation.robot
+    dx = robot.x - centre[0]
+    dy = robot.y - centre[1]
+    if math.hypot(dx, dy) <= 1e-6:
+        return None
+    return math.degrees(math.atan2(dy, dx))
 
 
 def _step_count(value: str | None, *, default: int) -> int | None:

@@ -11,7 +11,11 @@ import yaml
 
 from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
 
-from .approach import point_in_polygon_with_clearance, safe_approach_pose
+from .approach import (
+    point_in_polygon,
+    point_in_polygon_with_clearance,
+    safe_approach_pose,
+)
 from .base import GoalPose, MidLevelCommand, Mission, NavObservation
 from .collision import CollisionPolicy, apply_collision_brake
 from .goals import (
@@ -82,6 +86,22 @@ try:
     from parcel_robot.pose import p_inside_polygon
 except ImportError:  # pragma: no cover — frozen BARN bundle path
     p_inside_polygon = None  # type: ignore[assignment]
+
+# Card R10 arrival table. Soft for the SAME reason as the import above, and it
+# is not a theoretical concern: this file is one of the three the BARN v8 policy
+# bundle REPLACES into a frozen historical ``parcel_robot`` tree
+# (``evals/external/barn_v8_policy_bundle.py`` V8_REPLACEMENTS), and that tree
+# predates ``navigation/arrival_semantics.py``. A hard import here reddened
+# ``test_barn_v8_policy_bundle`` with
+# ``ModuleNotFoundError: No module named 'parcel_robot.navigation.arrival_semantics'``
+# from inside the policy sidecar. Adding the module to the bundle was not an
+# option — the bundle's file counts and digests are pinned and frozen. The
+# constant is a string, so the fallback is the string, and a bundle run simply
+# never has an owner-facing terminal to orient for.
+try:
+    from .arrival_semantics import FACE_OWNER as ARRIVAL_FACE_OWNER
+except ImportError:  # pragma: no cover — frozen BARN bundle path
+    ARRIVAL_FACE_OWNER = "owner"
 
 if TYPE_CHECKING:
     from .experimental_all_ray_shield import V8AllRayShieldConfig
@@ -2961,6 +2981,8 @@ class DirectiveNavigator:
             # not a hallucination: we only reach here for a candidate already
             # grounded, confirmed, reachable, and frustum-visible.
             pose = self._fallback_near_arrival_pose(semantic_goal, result, observation)
+        if pose is not None:
+            pose = self._apply_arrival_etiquette(semantic_goal, result, observation, pose)
         if pose is None:
             # "No admissible approach pose for THIS instance" is a fact about
             # one instance, not about the directive. Failing the mission on it
@@ -2975,6 +2997,14 @@ class DirectiveNavigator:
             # genuinely boxed in and the honest release stands.
             self.mission.metadata["grounding_outcome"] = grounding_outcome
             self.mission.metadata["unreachable_pose_candidate"] = str(result.candidate_id)
+            # Card R10: the give-up NAMES the candidates it tried. Without this
+            # the live failure was a bare ``semantic_target_unreachable`` with
+            # nothing to read — an owner heard "I couldn't get there" and an
+            # engineer got one enum. The rows come from the resampler's own
+            # bookkeeping, so they cannot drift from what it actually did.
+            attempts = approach_costs.get("inside_resample_attempts")
+            if attempts:
+                self.mission.metadata["inside_resample_attempts"] = attempts
             return self._release_unreachable_candidate(
                 str(result.candidate_id),
                 note="semantic_replan_after_unreachable_pose",
@@ -2993,6 +3023,14 @@ class DirectiveNavigator:
                 "target_polygon": result.polygon,
                 "terminal_relation": semantic_goal.terminal_relation,
                 "terminal_behavior": semantic_goal.terminal_behavior,
+                # Card R10 — the arrival table's local half, recorded on the
+                # mission so the terminal narration reads the SAME row the
+                # planner used instead of re-deriving it from the goal string.
+                "place_class": getattr(semantic_goal, "place_class", "object"),
+                "arrival_face": getattr(semantic_goal, "face", "goal"),
+                "arrival_do_not_cross": bool(getattr(semantic_goal, "do_not_cross", False)),
+                "arrival_ask_hint": getattr(semantic_goal, "ask_hint", ""),
+                "arrival_relation_source": getattr(semantic_goal, "relation_source", "table"),
                 "candidate_position": (result.x, result.y, result.z),
                 "candidate_radius_m": _metadata_float(
                     result.metadata, "radius_m", default=0.0, minimum=0.0, maximum=5.0
@@ -3124,6 +3162,74 @@ class DirectiveNavigator:
             vyaw=0.0,
             note=self._lock_on_telemetry_note("semantic_target_resolved"),
         )
+
+    def _apply_arrival_etiquette(
+        self,
+        semantic_goal: Any,
+        result: SemanticCandidate,
+        observation: NavObservation,
+        pose: GoalPose,
+    ) -> GoalPose | None:
+        """Local terminal etiquette from the arrival table — card R10 item 4.
+
+        Two rules, both LOCAL, neither reachable from a hosted argument:
+
+        * ``do_not_cross`` (portals): a terminal pose inside the target's own
+          polygon means the robot planned to stand IN the doorway. That is
+          refused here, which sends the instance down the SAME unreachable
+          release every other proved-impossible pose takes rather than growing a
+          second failure path. Stopping in a threshold is the social-competency
+          violation the Francis et al. principles name, and it is also how a
+          companion ends up blocking the one route the owner needs.
+        * ``face == owner``: the terminal heading points back at the owner. The
+          bench measured the model answering ``face=goal`` for the door 6/6 on
+          both tiers, so this cannot be a hint; and REALM's last-3-metre result
+          is that no distance criterion induces a final orientation — it has to
+          be written down. Falls back to the pose's own heading when the owner
+          is not tracked, because a heading toward a guess is worse than none.
+        """
+
+        face = str(getattr(semantic_goal, "face", "") or "")
+        do_not_cross = bool(getattr(semantic_goal, "do_not_cross", False))
+        if do_not_cross and result.polygon and point_in_polygon((pose.x, pose.y), result.polygon):
+            if self.mission is not None:
+                self.mission.metadata["arrival_refused_reason"] = "portal_terminal_inside_threshold"
+            return None
+        if face != ARRIVAL_FACE_OWNER:
+            return pose
+        owner = self._owner_xy(observation)
+        if owner is None:
+            if self.mission is not None:
+                self.mission.metadata["arrival_face_applied"] = "unavailable"
+            return pose
+        heading = math.degrees(math.atan2(owner[1] - pose.y, owner[0] - pose.x))
+        if self.mission is not None:
+            self.mission.metadata["arrival_face_applied"] = ARRIVAL_FACE_OWNER
+        return replace(pose, heading_deg=float(heading))
+
+    @staticmethod
+    def _owner_xy(observation: NavObservation) -> tuple[float, float] | None:
+        """The owner's map position from the navigator's own owner channel.
+
+        ``extras["owner_track"]`` is the runtime's W4 payload: a tuple that is
+        EMPTY when the owner is not visible, so "no rows" already means "not
+        tracked" and there is no second visibility flag to disagree with.
+        """
+
+        rows = observation.extras.get("owner_track") or ()
+        if not isinstance(rows, (list, tuple)) or not rows:
+            return None
+        row = rows[0]
+        if not isinstance(row, dict):
+            return None
+        try:
+            x = float(row["x"])
+            y = float(row["y"])
+        except (KeyError, TypeError, ValueError):
+            return None
+        if not math.isfinite(x) or not math.isfinite(y):
+            return None
+        return (x, y)
 
     def _fallback_near_arrival_pose(
         self,

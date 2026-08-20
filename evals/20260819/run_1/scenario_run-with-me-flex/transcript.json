@@ -1,0 +1,62 @@
+{
+  "scenario": "run-with-me-flex",
+  "claim": "follow with run intent; scripted owner runs then walks a sustained window; transcript shows the model asking whether to walk; path shows both pace phases; follow safety caps provably never exceeded",
+  "session_id": "rt_03cbba51af73",
+  "model": "gpt-realtime-2.1-mini",
+  "si_version": "si-companion-v2",
+  "began_utc": "2026-08-20T07:42:55.403685+00:00",
+  "ended_utc": "2026-08-20T07:43:54.213316+00:00",
+  "ledger_rows": [
+    {
+      "id": 26,
+      "role": "user",
+      "content": "Come on, run with me!",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "owner",
+      "origin": "realtime",
+      "provider_item_id": null
+    },
+    {
+      "id": 29,
+      "role": "assistant",
+      "content": "It tried to run with you, but it’s staying at its own safe pace instead. Want to try again with a different pace?",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EEriK6s8yE590hIZhpS5H"
+    }
+  ],
+  "broker_calls": [
+    {
+      "call_id": "call_uVgmfXZ5agKNv0oV",
+      "tool": "follow_owner",
+      "status": "ok",
+      "detail": "Okay—I'll follow you safely."
+    }
+  ],
+  "usage_rows": [
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EEriJqW9F439I1IEfh7ON",
+      "status": "completed",
+      "monotonic_s": 368482.381076,
+      "input_tokens": 2189,
+      "output_tokens": 47,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 0,
+      "cached_tokens": 2048
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EEriKCxPh62tELO4GGZCp",
+      "status": "completed",
+      "monotonic_s": 368483.742259,
+      "input_tokens": 2461,
+      "output_tokens": 215,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 130,
+      "cached_tokens": 0
+    }
+  ],
+  "spend_usd": 0.015419
+}

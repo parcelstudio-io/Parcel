@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-017",
+  "title": "Nervous about the appointment",
+  "family": "conversation",
+  "probes": [
+    "emotional_support",
+    "memory_callback"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:19:30Z",
+  "si_profile": "gentle_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "418e6662efd60d0e35f3c4bd1715d902d03c4c2b3899b5da4d6257e8910e253d",
+  "di_version": "di-companion-v1",
+  "di_digest": "d05622cf64feb60860e217544dad19906964a3a4c8c553a0a7c8b3db327853e2",
+  "di_flags": {
+    "location": "living room",
+    "local_time": "2026-08-20 08:15",
+    "part_of_day": "morning",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "anxious about vet trips",
+      "cat is called Mochi"
+    ],
+    "history_digest": [
+      "they said: we're taking Mochi to the vet in a bit",
+      "they said: I hate these appointments"
+    ]
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-017_00",
+      "owner_text": "I barely slept",
+      "response_id": "resp_EE4dvionogTfzyrMJoVSl",
+      "robot_item_id": "item_robot_rt-conv-017_00",
+      "robot_text": "Oh, that sounds really rough. I’m here with you—no need to rush, just tell me what would feel easiest right now.\n\nIf you’d like, we can take a slow moment together, or I can help with a small plan for the morning.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 720,
+        "output_tokens": 98,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 128
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-017_01",
+      "owner_text": "it's the vet thing",
+      "response_id": "resp_EE4dzu5tUWFJj7Hgv8D8E",
+      "robot_item_id": "item_robot_rt-conv-017_01",
+      "robot_text": "I hear you. Vet appointments can feel heavy, especially when you’re tired.\n\nI can’t carry the big worry for you, but I can stay with you and keep it steady. If you want, we can go slowly and you can talk it through, one small step at a time.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 787,
+        "output_tokens": 110,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-017_02",
+      "owner_text": "last time they found something and I wasn't ready for it",
+      "response_id": "resp_EE4e3WODLy6ifXoiQk2Ca",
+      "robot_item_id": "item_robot_rt-conv-017_02",
+      "robot_text": "That’s a lot to carry, especially after not being ready. I’m sorry—you had to face that.\n\nI can stay with you and keep things gentle. If it helps, we can do a slow moment before anything else.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 867,
+        "output_tokens": 99,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-017_03",
+      "owner_text": "I know, I know",
+      "response_id": "resp_EE4e4zsJ59wifridfIq2N",
+      "robot_item_id": "item_robot_rt-conv-017_03",
+      "robot_text": "It makes sense you’d feel that way—knowing doesn’t erase the weight. You don’t have to solve it right now.\n\nI’m here, and we can just sit with it for a second. No rush.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 928,
+        "output_tokens": 64,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-017_04",
+      "owner_text": "just say something normal",
+      "response_id": "resp_EE4e7Dm6MuyQ9BbAvpUw8",
+      "robot_item_id": "item_robot_rt-conv-017_04",
+      "robot_text": "Got it. You want something normal, just us chatting.\n\nOkay! I’ll keep it simple: I’m here, we’re in the living room, and we can take a little moment to breathe. If you want, we can talk about anything—music, food, a funny memory, or even nothing at all.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 987,
+        "output_tokens": 95,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-017_05",
+      "owner_text": "that helps actually",
+      "response_id": "resp_EE4eBV1Gih90lGM7h7a8V",
+      "robot_item_id": "item_robot_rt-conv-017_05",
+      "robot_text": "I’m glad. Really.\n\nYou’ve got this—one small thing at a time. And if you ever want a quick distraction, I’m ready with a light chat or a wagging vibe.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1065,
+        "output_tokens": 55,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 960
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-017_06",
+      "owner_text": "right, let's get it over with",
+      "response_id": "resp_EE4eFzJ0I24W41Oxt30NL",
+      "robot_item_id": "item_robot_rt-conv-017_06",
+      "robot_text": "Okay, you’re ready. Let’s get moving together—slow and steady, and we’ll take it one moment at a time. I’ll head toward the place you asked for now.",
+      "tool_calls": [
+        {
+          "call_id": "call_qtNqlHbrAy5vnaIh",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"vet clinic\",\"pace\":\"slow\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 1122,
+        "output_tokens": 112,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1024
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 6476,
+    "output_tokens": 633,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 5312
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

@@ -56,6 +56,29 @@ classes:
     size:
       note: Four `xw*` stripes merge into one crosswalk region at extraction.
       source: polygon
+  door:
+    affordances:
+    - near
+    - towards
+    aliases:
+    - doorway
+    - entrance
+    - entry
+    - front door
+    kind: object
+    landmark_roles:
+    - waypoint
+    - boundary
+    metadata: {}
+    size:
+      note: "One leaf geom set into the entry wall at the north sidewalk's west end;\
+        \ the two wall stubs beside it carry no prefix and so are not instances of\
+        \ anything. Derived radius 0.404475 m (the box's horizontal circumscribed\
+        \ radius). NO COORDINATES HERE, deliberately: where the leaf stands and how\
+        \ wide its K0 `near` band comes out are read from the MJCF at extraction time\
+        \ and recorded in the generated scene_truth.json. The reachability of that\
+        \ band was measured, not assumed \u2014 see R14_STATUS.md."
+      source: geom_radius_m
   lamppost:
     affordances:
     - near
@@ -131,6 +154,8 @@ geom_prefixes:
   prefix: lamp_post_
 - class: bench
   prefix: bench_
+- class: door
+  prefix: door_
 - class: tree
   prefix: tree_top_
 - class: tree

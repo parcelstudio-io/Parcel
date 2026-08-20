@@ -7,9 +7,11 @@ open-weight reasoning, and a browser control deck. Engine-neutral backend and
 ROS boundaries keep the same intent layer usable for richer simulators and a
 later physical dog.
 
-Start with [current implementation status](docs/CURRENT_STATUS.md) for verified
-desktop capabilities and blockers, then [crucial design decisions](docs/DESIGN_DECISIONS.md)
+Start with the [documentation index](docs/README.md) for the evidence-dated
+implementation records and blockers, then [crucial design decisions](docs/DESIGN_DECISIONS.md)
 for the advantages, limitations, and revisit criteria behind the architecture.
+[`CURRENT_STATUS.md`](docs/CURRENT_STATUS.md) is an August 4 historical snapshot,
+not the authority for this checkout.
 
 > Current host note: this machine is Ubuntu 26.04 with Python 3.14 and does not
 > currently have ROS 2 installed. Unitree documents Ubuntu 22.04 + ROS 2 Humble
@@ -19,22 +21,35 @@ for the advantages, limitations, and revisit criteria behind the architecture.
 
 ## Quick start
 
-The Gemma weights and reasoner runtime are installed in ignored local
-directories. Start the CPU reasoner, MuJoCo window, and browser panel together:
+The production launcher now requires the hosted GPT Realtime lane and refuses
+before starting anything if its local config or credential is absent. Create the
+ignored local files once, then start the Realtime lane, Gemma reasoner, MuJoCo,
+and browser panel together:
 
 ```bash
 cd /home/jaewoo-jang/Desktop/Projects/Parcel
+install -m 600 /dev/null ~/.config/parcel/realtime.env
+printf '%s\n' 'OPENAI_API_KEY=replace-me' > ~/.config/parcel/realtime.env
+cp configs/realtime.yaml.example configs/realtime.yaml
 ./scripts/launch_stack.sh
 ```
+
+Replace the placeholder key before launching. The example defaults to hosted
+text mode; select `mode: audio` in the ignored local YAML to expose the browser
+microphone gateway. To exercise the local STT/Gemma/TTS cascade deliberately,
+use `./scripts/launch_stack.sh --legacy`; it is the rollback and E2E-test path,
+not a silent fallback.
 
 The panel opens at <http://127.0.0.1:8765>. The city now includes seeded moving
 pedestrians and a cyclist. Try manual hold-to-drive controls, move the simulated
 owner, then send `follow me`, `navigate to the crosswalk`, `I am feeling sad`,
-or `I am very happy`. The text box sends partial hypotheses to
-`/api/voice/text` but executes only the final submission. Fish S2 and
-whisper.cpp services are optional. This desktop currently has no connected
-microphone/speaker endpoint, no native PortAudio runtime, and no Piper
-installation:
+or `I am very happy`. The hosted route sends only the final text submission to
+`/api/realtime/text`; the explicit legacy route may send partial hypotheses to
+`/api/voice/text`, but executes only its final submission. In hosted audio mode,
+the browser supplies microphone capture and playback without requiring native
+PortAudio in the Python process. Fish S2 and whisper.cpp remain optional parts
+of the explicit legacy/local path; that path still has no commissioned local
+microphone/speaker endpoint or Piper installation.
 
 To visually inspect every bounded pose and gesture without starting the
 reasoning or audio services, launch the simulator commissioning gallery:
@@ -154,6 +169,7 @@ currently contains the editable project plus:
 - `PyYAML`
 - `msgpack`
 - `sounddevice`
+- `websockets`
 - `pytest`
 - `ruff`
 
@@ -182,9 +198,10 @@ python -m pip install -e ".[dev,voice]"
 ```
 
 `COLCON_IGNORE` prevents colcon from searching the virtual environment.
-This is currently a source-checkout/editable deployment: prompt, skill, and
-navigation assets are not all packaged into a relocatable wheel. See the
-[packaging boundary](docs/CURRENT_STATUS.md#packaging-boundary).
+Development normally uses a source checkout/editable install. The curated
+runtime config, prompt, skill, and navigation assets are now package-parity
+gated; third-party MuJoCo meshes remain source-checkout assets. See the dated
+release-integrity records linked from the [documentation index](docs/README.md).
 
 ## Skills catalog, city scene, and Dog API
 

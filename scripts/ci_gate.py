@@ -4,19 +4,19 @@
 Why this exists
 ---------------
 The independent verdict (``scrum/20260808/task_1/INDEPENDENT_VERDICT_FABLE.md``)
-and the productionization audit (``scrum/20260809/task_1``) both flag the same
-load-bearing hole: 222 test files and rich eval harnesses exist, but there is
-**no runner and no scheduler** — no ``.github/workflows``, an empty crontab. So
-every promotion gate is manual, and Design A's *model-off non-inferiority*
-guarantee is unfalsifiable because nothing enforces it. This module is the
-missing runner. It does **not** invent new evals; it *wraps the harnesses that
-already exist* and turns the aspirational promotion gates into an executable,
-exit-coded gate.
+and the productionization audit (``scrum/20260809/task_1``) identified a
+historical load-bearing hole: rich eval harnesses existed without an executable
+runner or a versioned workflow. This module closes the runner half of that gap;
+``.github/workflows/ci.yml`` now declares the hosted cadence, although hosted
+execution remains unverified until a GitHub run is recorded. This module does
+**not** invent new evals; it *wraps the harnesses that already exist* and turns
+the aspirational promotion gates into an executable, exit-coded gate.
 
 What it enforces (tiered by cost)
 ---------------------------------
 ``--tier commit`` (fast, offline, deterministic — no network, no model server):
-  * the default gate ``pytest -m "not slow"`` (the 3097-passing suite);
+  * the default gate ``pytest -m "not slow"`` (latest recorded local run:
+    6,933 passed on 2026-08-20);
   * ``ruff`` — ratcheted against a pinned baseline so pre-existing debt in
     modules this card does not own cannot block a commit, while any *new*
     violation reddens (see ``scripts/ci_ruff_baseline.json``);
@@ -176,6 +176,29 @@ LATENCY_TAIL_NODE_IDS: tuple[str, ...] = (
 #:   locked input and every byte of layout is untouched. Full 2x2 attribution in
 #:   ``scrum/20260809/task_15/E5_PERSON_CLEARANCE_STATUS.md``.
 #:
+#: * ``embodied_plan_v1/manifest.json`` ``1725a246…`` -> ``88fa9fb5…``,
+#:   2026-08-20, card R14 (``scrum/20260820/task_3``), whose work item 2
+#:   instructs the packaged/digest-pinned scene change and whose DoD requires
+#:   this gate green after it. The owner's explicit 2026-08-20 instruction to
+#:   commit and upload the audited full wave authorizes this mechanical re-pin;
+#:   the authorization is recorded in ``R14_STATUS.md``.
+#:   **Nothing about the eval changed.** Identical in kind to the 2026-08-10
+#:   entry above: this manifest SHA-locks
+#:   ``src/parcel_robot/scenes/city_block.xml`` as ``locked_inputs.city_scene``,
+#:   R14 added the block's first portal to that scene (one ``door_1`` leaf geom
+#:   plus two unclassified entry-wall stubs at the north sidewalk's west end),
+#:   so the lock had to be refreshed ``bbb4d6e7…`` -> ``bb7f8e02…`` and the
+#:   manifest's own sha moved MECHANICALLY with it. Only that one sha string
+#:   differs; every other locked input and every byte of layout is untouched.
+#:   The suite's BEHAVIOUR is unmoved and was re-measured against a scratch copy
+#:   of the manifest BEFORE the committed file was touched: 997 simulator steps,
+#:   0 collisions, 0 timeouts, minimum clearance 0.883147 m, per-case
+#:   200/260/64/389/84, 4 passed / 1 unsupported — bit-identical to the frozen
+#:   row, and to the row the 2026-08-20T16:06Z pre-change gate had just proved.
+#:   It is unmoved for a reason and not by luck: the leaf stands at the block's
+#:   west end and no case's route, goal or frustum reaches it. Attribution in
+#:   ``scrum/20260820/task_3/R14_STATUS.md`` §4.
+#:
 #: * ``nav_instruct/episodes/v4/manifest.json`` **ADDED** (not moved) as
 #:   ``b2945444…``, 2026-08-11, lane E8, EXPLICIT OWNER AUTHORIZATION (re-freeze
 #:   the episodes to v4 so the follow goal radii match the retuned stand-off,
@@ -202,7 +225,12 @@ DIGEST_SENTINELS: dict[str, str] = {
     # and acoustic_loop_v1 builds its endpointer from hardcoded model paths
     # rather than from robot.yaml, so its ep50/ep90 rows are untouched too.
     # Previous pin: 22736f6e0e4b106c0d130b9f7f425feca465a73b20da1431dfd5e2e3b1ce9389
-    "evals/companion/embodied_plan_v1/manifest.json": "1725a246dd00de63e8574d401927ba206fd48424221d98cffca40c22f721d470",
+    # Re-pinned 2026-08-20 (card R14): the only locked input that moved is
+    # src/parcel_robot/scenes/city_block.xml, which gained the block's first
+    # portal. No eval OUTPUT moved — 997/0/0/0.883147 and the per-case row are
+    # bit-identical, measured on a scratch manifest before this line changed.
+    # Previous pin: 1725a246dd00de63e8574d401927ba206fd48424221d98cffca40c22f721d470
+    "evals/companion/embodied_plan_v1/manifest.json": "88fa9fb581d0714e725841340475eafad5ac9f8e1195c055d8e368dd7e2b02e9",
     "evals/companion/personal_convo_v1/manifest.json": "d338f3352cd9597aeb9977f75c139d926bdfba1fe1d6b036b9a3ace08a1cf114",
 }
 
@@ -1101,7 +1129,7 @@ def run_commit_tier() -> list[GateResult]:
     results.append(_pytest_gate("mutation-panel-freshness", tier, MUTATION_FRESHNESS_NODE_IDS, timeout=600))
     # Percentile-pin pytest stays; ledger source switch is evaluate_latency_ledger above.
     results.append(_pytest_gate("latency-tail", tier, LATENCY_TAIL_NODE_IDS, timeout=600))
-    # The full default gate last (the 3097-passing suite).
+    # The full default gate last (latest recorded: 6,933 passed on 2026-08-20).
     results.append(
         _pytest_gate("default-suite", tier, (), markers="not slow", timeout=1800)
     )

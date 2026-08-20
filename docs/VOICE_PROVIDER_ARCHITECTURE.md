@@ -1,8 +1,16 @@
 # Voice-agent evaluation, selection, and replaceable provider architecture
 
-**Evidence date:** 2026-08-16  
-**Scope:** conversational voice for the Parcel robot dog; research and target
-design, not a claim that a cloud provider is wired or commissioned.
+**Research evidence date:** 2026-08-16
+**Implementation update:** 2026-08-20
+
+The research comparison below remains the provider-selection record. Since it
+was written, a `gpt-realtime-2.1-mini` WebSocket adapter, browser audio gateway,
+typed tool broker, reconnect/idle controls, and provider-neutral local
+admission path have landed. The production launcher now selects that hosted
+lane by default and fails closed when its ignored local config or credential is
+absent; `--legacy` explicitly selects the local cascade. This is an integration
+status change, not evidence that Mini beats the full GPT Realtime model or any
+challenger in conversational quality.
 
 This document answers three separate questions:
 
@@ -23,9 +31,10 @@ expensive than Gemini Live.
 
 Therefore:
 
-- keep Parcel's local, typed STT -> brain -> TTS cascade as the rollback/control
-  baseline for the first ODD;
-- implement GPT-Realtime-2.1 first as an opt-in, conversation-only managed adapter;
+- keep Parcel's local, typed STT -> brain -> TTS cascade as the explicit
+  rollback and provider-replacement baseline;
+- operate the landed GPT Realtime adapter as the default conversational lane,
+  while keeping every model/tool result proposal-only;
 - run Grok Voice and Gemini Live as the capability and cost challengers on exactly
   the same captured turns;
 - keep Qwen Audio 3.0 Plus as a research challenger until region, latency, privacy,
@@ -145,7 +154,7 @@ authority.
 
 | Candidate | Capability reading | Integration / replacement reading | Recommended role |
 | --- | --- | --- | --- |
-| **GPT-Realtime-2.1** | Strong current index, duplex behavior, configurable reasoning, and tool use. Official model page reports improved noise, silence, alphanumeric, and interruption behavior. | Named model and WebRTC/WebSocket protocols are favorable; token/context billing and provider-specific events still require an adapter. | First managed adapter and provisional quality ceiling; opt-in conversation only until Parcel gates pass. |
+| **GPT-Realtime-2.1** | Strong current index, duplex behavior, configurable reasoning, and tool use. Official model page reports improved noise, silence, alphanumeric, and interruption behavior. | Named model and WebRTC/WebSocket protocols are favorable; token/context billing and provider-specific events still require an adapter. Parcel currently runs the cheaper `gpt-realtime-2.1-mini`, so full-model benchmark scores do not transfer. | Landed managed lane and provisional bake-off baseline; proposal-only, with the full model still an unmeasured upgrade candidate. |
 | **Grok Voice** | Highest globally interesting result in the current index and fastest of the four rows above. | Official API starts at $0.05/min and supports realtime tools, but documents `grok-voice-latest`; equivalence to the benchmark's Think Fast 2.0 High configuration must be demonstrated. | Capability challenger; never compare an unpinned moving alias as if it were the benchmark row. |
 | **Gemini Live** | Strong audio reasoning and low cost, but the evaluated High configuration trails on conversational dynamics and grounded tasks. | Native Live API and function calling are usable; current selected model is a preview and must be fenced by capability/version checks. | Cost challenger and failover experiment. |
 | **Qwen Audio 3.0 Realtime Plus** | Current index leader, including the strongest conversational-dynamics score. | Official realtime service/pricing currently documents mainland-China deployment, creating region, latency, governance, and procurement questions for this robot. | Research challenger only until those questions are closed. |
@@ -412,14 +421,17 @@ The dated execution handoff is
 
 ## 7. What this does not prove
 
-- No cloud credential, SDK, provider session, or live API call was used.
-- No current provider has passed Parcel's adapter conformance or hard authority
-  gates.
-- No microphone, speaker, AEC, chassis-noise, human-preference, or billed-cost
-  measurement was collected.
+- The research ranking itself did not promote a provider. Subsequent GPT
+  Realtime Mini live/simulator sessions prove integration, not a paired quality
+  win over the local cascade or another provider.
+- No provider has passed the complete provider-swap bake-off, physical-robot
+  commissioning, or all target adapter-conformance gates.
+- Browser microphone/playback evidence does not prove calibrated AEC,
+  chassis-noise robustness, human-preference superiority, or production SLA.
 - External composite scores are not physical safety, companion quality, privacy,
   uptime, or first-ODD evidence.
 - The proposed latency/error targets are preregistration candidates, not achieved
   values.
-- “First adapter” does not mean “production default,” and the local cascade remains
-  the rollback path until a later evidence-backed decision explicitly changes it.
+- “Production conversational default” does not grant motion authority. The
+  local cascade remains the explicit rollback path, and both lanes terminate at
+  the same local typed admission and safety stack.

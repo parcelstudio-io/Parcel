@@ -1,0 +1,568 @@
+{
+  "artifact_version": 1,
+  "pack": "evals/20260819/run_1",
+  "card": "scrum/20260819/task_5/README.md",
+  "status_doc": "scrum/20260819/task_5/E1_STATUS.md",
+  "generated_utc": "2026-08-20T08:03:16.869050+00:00",
+  "run_stamp": "20260820T073858Z",
+  "what_this_is": "Six recorded common-sense scenarios run against the REAL hosted model on the REAL sim in ONE process. Trajectory medium is the timestamped path record plus a hand-rendered top-down SVG; video is owner-gated and adds nothing over paths + transcripts.",
+  "models": {
+    "hosted_realtime": "gpt-realtime-2.1-mini",
+    "local_language_model": null,
+    "local_judge": null,
+    "judge_note": "There is no judge in the forwarding path. R11's bench rejected the drafted judge band (deterministic B2: 11/12 gold, 0 spam; judge-everything delayed an e-stop 9.8 s), so v1 ships with no LLM in the forwarding path and whisperer_log.jsonl records deterministic RULE firings instead of judge decisions. The card's layout block carries the same revision."
+  },
+  "system_instruction": {
+    "version": "si-companion-v2",
+    "profile": "gentle_companion",
+    "pinned_digest": "da7bcb0d0c7cd142d49e903692cbf94050478eadc69d312feb736128c251ca00",
+    "digest_source": "parcel_robot.realtime.prompting.SI_DIGESTS",
+    "stale_note": "SI v2 does not mention circle_owner or follow_owner; the model discovers them from the tool schemas alone (R10 open risk 5, owner-gated)."
+  },
+  "realtime_config": {
+    "enabled": true,
+    "mode": "text",
+    "persona": "",
+    "si_profile": "",
+    "model": "gpt-realtime-2.1-mini",
+    "voice": "cedar",
+    "stall_timeout_s": 8.0,
+    "session_max_s": 3600.0,
+    "monthly_budget_usd": 25.0,
+    "whisperer": {
+      "enabled": true,
+      "max_updates_per_minute": 2,
+      "min_gap_s": 15.0
+    },
+    "source": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/799cb356-4cb4-445b-a784-306b6c6fd4a6/scratchpad/livework/realtime_e1_20260820T073858Z.yaml"
+  },
+  "whisperer_knob": {
+    "enabled": true,
+    "max_updates_per_minute": 2,
+    "min_gap_s": 15.0,
+    "updates_this_minute": 3,
+    "folded": 0,
+    "forwarded": 12,
+    "suppressed": 200,
+    "suppressed_by_rule": {
+      "never_band": 191,
+      "block_debounce_holding": 4,
+      "clear_without_forwarded_block": 3,
+      "budget_exhausted": 2
+    },
+    "forwarded_by_rule": {
+      "critical_bypass": 11,
+      "block_debounce_elapsed": 1
+    },
+    "schema_version": 1,
+    "last": {
+      "seq": 212,
+      "at_s": 368753.626411064,
+      "kind": "mission_ended",
+      "key": "mission_ended:lamppost:idle",
+      "band": "always",
+      "forwarded": true,
+      "rule": "critical_bypass",
+      "text": "The robot's navigation system reports the trip to lamppost ended (idle) because of: navigation_disabled. Tell the owner you stopped and why, then ask what they want to do instead.",
+      "folded": 0,
+      "updates_this_minute": 4,
+      "schema_version": 1
+    }
+  },
+  "clock_provenance": {
+    "t0_utc": "2026-08-20T07:39:00.125860+00:00",
+    "t0_monotonic": 368246.495275489,
+    "path_t_s_is": "seconds since t0_monotonic, one clock for the whole run",
+    "path_jsonl_fields": [
+      "t_s (seconds since t0_monotonic)",
+      "t_utc (wall clock, ISO-8601 UTC)"
+    ],
+    "whisperer_log_at_s": "time.monotonic() as the runtime's own clock reads it — the same clock the whisperer's debounce and min-gap run on. It shares an origin with the process, not with t0_monotonic; compare rows against each other, and use t_utc for wall-clock alignment.",
+    "sample_hz": 10.0
+  },
+  "determinism": {
+    "sim_spawn": "python -m parcel_robot.sim --socket <scratch>.sock --static-city",
+    "scene": "src/parcel_robot/scenes/city_block.xml (static city)",
+    "rng_seed": null,
+    "seed_note": "No RNG seed is set: the static-city scene and the deterministic router/planner reproduce the setup from the spawn line above. Live hosted replies vary run to run by construction — the verdicts are scored on tool routing, geometry and the decision log, never on exact wording.",
+    "owner_script": "scenario_run-with-me-flex drives the owner mocap through backend.move_owner at 10 Hz, bouncing between x=-5.5 and x=5.5 at the owner's own y: 2.2 m/s for 12 s, then 1.0 m/s for 22 s.",
+    "injections": {
+      "scenario_orbit-refused": "6 person tracks on a 1.45 m ring around the owner, injected at backend.observe (the perception seam). Everything below the seam is shipping code.",
+      "scenario_door-etiquette": "the portal arrival fact is offered to the REAL whisperer on the shipping path with key 'mission_arrived:the door (E1 injected arrival)' because no shipped scene contains a door."
+    },
+    "harness": {
+      "e1_pack.py": {
+        "bytes": 27820,
+        "sha256": "b3c99ea98bc503a87d40e96645ec32240d72f91a6eba2e03f3c744803092c6f8"
+      },
+      "e1_render.py": {
+        "bytes": 22515,
+        "sha256": "1c774b7b39109d7350cf9af13d3a8baf7bc679fd148aaba3ed37553d1eb0f2f9"
+      },
+      "e1_manifest.py": {
+        "bytes": 10114,
+        "sha256": "25297a0c4641c98ed71de7d6f96b732a2b4a8d24a25010eecdbc3543d51bb475"
+      },
+      "e1_smoke.py": {
+        "bytes": 2989,
+        "sha256": "258f4f64b7889190e5a47517dfc394657e91209c9411dd81b753d21c3fc09346"
+      },
+      "e1_pace_probe.py": {
+        "bytes": 4476,
+        "sha256": "9b1d9fdd4cccad759965f663b09379e4b572d301932b4ea8b3ce2953d07cf5c1"
+      },
+      "e1_pace_rerun.py": {
+        "bytes": 4121,
+        "sha256": "97c63229ae64d2dc6b9948eb76146ea3e7bc46d336519d691bcb849888b61f27"
+      }
+    },
+    "harness_location": "executor scratchpad (not committed): /tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/799cb356-4cb4-445b-a784-306b6c6fd4a6/scratchpad/e1"
+  },
+  "input_digests": {
+    "evals/nav_instruct/scene_truth.json": "43688b1c1e710af677cf1f5936b2049e45c0eec009d701c5bd5687839a523e6f",
+    "src/parcel_robot/scenes/city_block.xml": "bbb4d6e75d92294fa5bc59db0b6b0810482bb475a5e3b6afd489596338184426",
+    "configs/scenes/city_block.semantics.yaml": "aa94dc4033e95d082646a1153595b694372a96466cd36d3059a9f841ea6e2a0a",
+    "configs/robot.yaml": "f7b57dcdf0b5981537ced874b63e010b4f0d6090de7a18118613e13f2990d6c1",
+    "src/parcel_robot/realtime/whisperer.py": "4b026e08aee548128e29a96f53afd47ba0f2c828e4ad4af01db8f6df349abdaa",
+    "src/parcel_robot/navigation/arrival_semantics.py": "ea72e8b482a454179efa185fb3b9111ae7c690b0e3584347e9bfdd614c9942b0",
+    "src/parcel_robot/navigation/orbit_feasibility.py": "687381cacfc1896bf95656d16c9c1123aceef32fead68ce5b840c6ed886b36b8",
+    "src/parcel_robot/realtime/tool_broker.py": "649c617516d2d8baa78f463958f86cd75ec06b2da18dbe52e4ebacb588e297a6"
+  },
+  "costs": {
+    "currency": "USD",
+    "estimator": "parcel_robot.realtime.cost.realtime_spend_usd (assumed rates)",
+    "per_scenario_usd": {
+      "sidewalk-on-top": 0.01723,
+      "door-etiquette": 0.016089,
+      "orbit-feasible": 0.012766,
+      "orbit-refused": 0.014776,
+      "run-with-me-flex": 0.015419,
+      "whisperer-discipline": 0.038913
+    },
+    "run_total_usd": 0.120762,
+    "preflight_smoke_usd": 0.008752,
+    "total_usd": 0.129514,
+    "cap_usd": 2.0,
+    "uninstrumented": "One diagnostic re-run of scenario 5's conditions against the real provider (e1_pace_rerun.py --hosted, two turns) did not record its usage rows. At the rates measured across the 21 receipted rows here it is worth roughly $0.02-0.03; it is NOT included in total_usd, which is the receipted figure only."
+  },
+  "lane_snapshot_at_close": {
+    "enabled": true,
+    "active": true,
+    "recovering": false,
+    "dropped_sends": 0,
+    "narrations": 12,
+    "narrations_skipped": 0,
+    "narrations_refused": 0,
+    "server_errors": 0,
+    "recent_server_errors": [],
+    "items_refused": 0,
+    "voice_turn_owed": false,
+    "voice_turns_owed": 0,
+    "voice_turn_repays": 0,
+    "session_id": "rt_03cbba51af73",
+    "provider_session_id": "sess_EEreWR91uTve9P2P4sPcd",
+    "arming": {
+      "armed": true,
+      "code": "armed",
+      "reason": "Realtime lane armed on gpt-realtime-2.1-mini (voice=cedar); handshake token supplied and microphone gesture given."
+    },
+    "reconnects": 0,
+    "turn_repays": 0,
+    "turn_repays_abandoned": 0,
+    "tool_beats_requested": 4,
+    "tool_beats_suppressed": 1,
+    "stalls": 0,
+    "rollovers": 0,
+    "disconnects": 0,
+    "refused_tool_calls": [],
+    "protocol_errors": [],
+    "usage_rows": 21,
+    "audio_frames_sent": 0,
+    "tail_items_injected": 0,
+    "tools_enabled": true,
+    "response_provenance": "owner",
+    "system_initiated_responses": 12,
+    "system_initiated_tool_calls": 0,
+    "brokered_tool_calls": [
+      "navigate_to",
+      "navigate_to",
+      "circle_owner",
+      "circle_owner",
+      "follow_owner"
+    ],
+    "text_turns": 5,
+    "backoff_waits_s": []
+  },
+  "broker_snapshot_at_close": {
+    "tools": [
+      "get_status",
+      "recall_memory",
+      "play_gesture",
+      "set_pose",
+      "navigate_to",
+      "circle_owner",
+      "follow_owner"
+    ],
+    "calls": 5,
+    "executed": 4,
+    "dropped": 0,
+    "rejected": 1,
+    "utterance_sequence": 5,
+    "utterance_claim": "",
+    "response_provenance": "owner",
+    "system_initiated_motion_refusals": 0,
+    "last": {
+      "call_id": "call_uVgmfXZ5agKNv0oV",
+      "tool": "follow_owner",
+      "status": "ok",
+      "detail": "Okay—I'll follow you safely."
+    }
+  },
+  "scenarios": [
+    {
+      "name": "sidewalk-on-top",
+      "folder": "scenario_sidewalk-on-top",
+      "claim": "'go to the sidewalk' terminates with the base INSIDE the region polygon",
+      "verdict": "PASS",
+      "verdict_one_line": "Base ended at (1.388, 2.523) — centre and footprint inside the sidewalk polygon by scene truth; nav arrived_verified.",
+      "began_utc": "2026-08-20T07:39:00.126273+00:00",
+      "ended_utc": "2026-08-20T07:39:25.453542+00:00",
+      "window_s": 25.33,
+      "path_samples": 252,
+      "ledger_rows": 3,
+      "whisperer_rows": 14,
+      "broker_calls": 1,
+      "spend_usd": 0.01723,
+      "session_id": "rt_03cbba51af73",
+      "files": [
+        "transcript.json",
+        "path.jsonl",
+        "path.svg",
+        "events.json",
+        "whisperer_log.jsonl",
+        "verdict.md"
+      ]
+    },
+    {
+      "name": "door-etiquette",
+      "folder": "scenario_door-etiquette",
+      "claim": "'go to the door' ends near the door WITHOUT crossing, dog faces the owner, transcript shows the model asking what to do next",
+      "verdict": "FAIL",
+      "verdict_one_line": "No shipped scene contains a door; the mission failed semantic_target_not_found. The ask-what's-next half passed on both the real failure and the injected portal arrival.",
+      "began_utc": "2026-08-20T07:39:43.454924+00:00",
+      "ended_utc": "2026-08-20T07:40:38.468996+00:00",
+      "window_s": 55.01,
+      "path_samples": 550,
+      "ledger_rows": 4,
+      "whisperer_rows": 15,
+      "broker_calls": 1,
+      "spend_usd": 0.016089,
+      "session_id": "rt_03cbba51af73",
+      "files": [
+        "transcript.json",
+        "path.jsonl",
+        "path.svg",
+        "events.json",
+        "whisperer_log.jsonl",
+        "verdict.md"
+      ]
+    },
+    {
+      "name": "orbit-feasible",
+      "folder": "scenario_orbit-feasible",
+      "claim": "'circle around me' with the owner in open space: full orbit in the path record",
+      "verdict": "PASS",
+      "verdict_one_line": "circle_owner routed from the model; 354.7 degrees swept around the owner, orbit_complete at progress 1.0.",
+      "began_utc": "2026-08-20T07:40:56.470555+00:00",
+      "ended_utc": "2026-08-20T07:41:52.592292+00:00",
+      "window_s": 56.12,
+      "path_samples": 560,
+      "ledger_rows": 2,
+      "whisperer_rows": 47,
+      "broker_calls": 1,
+      "spend_usd": 0.012766,
+      "session_id": "rt_03cbba51af73",
+      "files": [
+        "transcript.json",
+        "path.jsonl",
+        "path.svg",
+        "events.json",
+        "whisperer_log.jsonl",
+        "verdict.md"
+      ]
+    },
+    {
+      "name": "orbit-refused",
+      "folder": "scenario_orbit-refused",
+      "claim": "same request with the owner boxed in (scripted obstacles): no orbit motion beyond approach, transcript shows the model SAYING it can't walk around, refusal in events",
+      "verdict": "PASS",
+      "verdict_one_line": "Boxed in by six scripted person tracks, the validator refused with the blocked arcs named; 0.0 m/s and 0.0 degrees of sweep, and the model told the owner why.",
+      "began_utc": "2026-08-20T07:42:10.593767+00:00",
+      "ended_utc": "2026-08-20T07:42:37.402090+00:00",
+      "window_s": 26.81,
+      "path_samples": 268,
+      "ledger_rows": 2,
+      "whisperer_rows": 1,
+      "broker_calls": 1,
+      "spend_usd": 0.014776,
+      "session_id": "rt_03cbba51af73",
+      "files": [
+        "transcript.json",
+        "path.jsonl",
+        "path.svg",
+        "events.json",
+        "whisperer_log.jsonl",
+        "verdict.md"
+      ]
+    },
+    {
+      "name": "run-with-me-flex",
+      "folder": "scenario_run-with-me-flex",
+      "claim": "follow with run intent; scripted owner runs then walks a sustained window; transcript shows the model asking whether to walk; path shows both pace phases; follow safety caps provably never exceeded",
+      "verdict": "FAIL",
+      "verdict_one_line": "follow_owner routed with pace intent and the speed caps held (max 0.3534 m/s at 1 s vs a 0.35 m/s cap), but pace_mismatch never fired and the model never asked about walking.",
+      "began_utc": "2026-08-20T07:42:55.403685+00:00",
+      "ended_utc": "2026-08-20T07:43:54.213316+00:00",
+      "window_s": 58.81,
+      "path_samples": 587,
+      "ledger_rows": 2,
+      "whisperer_rows": 24,
+      "broker_calls": 1,
+      "spend_usd": 0.015419,
+      "session_id": "rt_03cbba51af73",
+      "files": [
+        "transcript.json",
+        "path.jsonl",
+        "path.svg",
+        "events.json",
+        "whisperer_log.jsonl",
+        "verdict.md"
+      ]
+    },
+    {
+      "name": "whisperer-discipline",
+      "folder": "scenario_whisperer-discipline",
+      "claim": "a quiet 3-minute session with telemetry churn: forwarded-item count stays at the always-band events only; the decision log accounts for every suppression",
+      "verdict": "PASS",
+      "verdict_one_line": "195 s with the navigator flapping: 92 telemetry offers, 0 telemetry forwards, 109 decision rows = 8 forwarded + 101 suppressed, every row carrying its rule.",
+      "began_utc": "2026-08-20T07:44:12.214914+00:00",
+      "ended_utc": "2026-08-20T07:47:27.255873+00:00",
+      "window_s": 195.04,
+      "path_samples": 1948,
+      "ledger_rows": 8,
+      "whisperer_rows": 109,
+      "broker_calls": 0,
+      "spend_usd": 0.038913,
+      "session_id": "rt_03cbba51af73",
+      "files": [
+        "transcript.json",
+        "path.jsonl",
+        "path.svg",
+        "events.json",
+        "whisperer_log.jsonl",
+        "verdict.md"
+      ]
+    }
+  ],
+  "verdict_table": {
+    "sidewalk-on-top": "PASS",
+    "door-etiquette": "FAIL",
+    "orbit-feasible": "PASS",
+    "orbit-refused": "PASS",
+    "run-with-me-flex": "FAIL",
+    "whisperer-discipline": "PASS"
+  },
+  "inventory": [
+    {
+      "path": "README.md",
+      "bytes": 11850,
+      "sha256": "7b01937eecfc4d195d84663be21ec81727055efffa0a8cc3b4964d4dcf241989"
+    },
+    {
+      "path": "scenario_door-etiquette/events.json",
+      "bytes": 4306,
+      "sha256": "f9d21c524f9b9a8263501305514e5df462152147c5cbd8975f2d02b23fd03e26"
+    },
+    {
+      "path": "scenario_door-etiquette/path.jsonl",
+      "bytes": 224300,
+      "sha256": "f7f27e805f95e4629a57d75c9ff7d245b034ac26ce144bbdbb8b5524ae6ff2ac"
+    },
+    {
+      "path": "scenario_door-etiquette/path.svg",
+      "bytes": 24201,
+      "sha256": "b462edd1e84658c58fcab9a73bdb90199734f936b4f7fa8adeffa7da4303380c"
+    },
+    {
+      "path": "scenario_door-etiquette/transcript.json",
+      "bytes": 2894,
+      "sha256": "f890b5ecca01137340181750e08e67f4068edb4fbf9e78729870ea4bddff54a8"
+    },
+    {
+      "path": "scenario_door-etiquette/verdict.md",
+      "bytes": 4520,
+      "sha256": "761f4d7fa0dce7336013630aa30044b679ad219b3bad784f3367aaee76451080"
+    },
+    {
+      "path": "scenario_door-etiquette/whisperer_log.jsonl",
+      "bytes": 3617,
+      "sha256": "4565ffb84f294d3182e2f0ce329c7608752e4e7fcb2ecd0a823a615d15321df1"
+    },
+    {
+      "path": "scenario_orbit-feasible/events.json",
+      "bytes": 2285,
+      "sha256": "0935d86c6373bb8474570be302a92b566afd66197a18b2a44960a9519b3094e1"
+    },
+    {
+      "path": "scenario_orbit-feasible/path.jsonl",
+      "bytes": 245445,
+      "sha256": "99fccba43fbb4215790adbba3257f49f378036d211f9878c6e423a2f7dcc5cf9"
+    },
+    {
+      "path": "scenario_orbit-feasible/path.svg",
+      "bytes": 22628,
+      "sha256": "ef33e0364109149a45dc68ac2c3ce4b5f34aa4660e5239e3c155bc9025ba66cb"
+    },
+    {
+      "path": "scenario_orbit-feasible/transcript.json",
+      "bytes": 1750,
+      "sha256": "3823a77806d65b4a48952abc69f5d05ab433313050d6d2174816f6a1e52ce51d"
+    },
+    {
+      "path": "scenario_orbit-feasible/verdict.md",
+      "bytes": 2865,
+      "sha256": "dc1c8ee63467ad70f81332c3c47674456c2304cf90c03ff326e77c63cfb5257d"
+    },
+    {
+      "path": "scenario_orbit-feasible/whisperer_log.jsonl",
+      "bytes": 9829,
+      "sha256": "f83f171e2d5b622bfc2e1f7e4e1941e6af827c0bda2b566d29624b23568dd1fa"
+    },
+    {
+      "path": "scenario_orbit-refused/events.json",
+      "bytes": 2362,
+      "sha256": "84976ffce37df4f3d00506b5496a662d60bccedf20488d60fc97cc1c47aadf96"
+    },
+    {
+      "path": "scenario_orbit-refused/path.jsonl",
+      "bytes": 115209,
+      "sha256": "1daf8eaf246d54272b80c0ba4bf487c37dc5982fbf96bc9ea256a1e6881c896c"
+    },
+    {
+      "path": "scenario_orbit-refused/path.svg",
+      "bytes": 15453,
+      "sha256": "4131b461df2dc5f0ce4c4efb35615a45bf4ba6c0582576ebbc91853912139f4d"
+    },
+    {
+      "path": "scenario_orbit-refused/transcript.json",
+      "bytes": 1935,
+      "sha256": "d0e2647091ee4521cc50b0e0d669f67ca404cad648e7a41f8eb84ad107f04bc6"
+    },
+    {
+      "path": "scenario_orbit-refused/verdict.md",
+      "bytes": 3284,
+      "sha256": "94ac2e1eae013164520de2b113bbc9222c45df94b13bf0de24d10d27c5bff8eb"
+    },
+    {
+      "path": "scenario_orbit-refused/whisperer_log.jsonl",
+      "bytes": 222,
+      "sha256": "f77968dbcb041e45c56c140c3c73cab756e702f9dc820cfbe6f8742695d676c1"
+    },
+    {
+      "path": "scenario_run-with-me-flex/events.json",
+      "bytes": 6361,
+      "sha256": "de3d952e7b539bc53aacd8e004c37ec0072681eb6871bd55b765cbb09a4e9dca"
+    },
+    {
+      "path": "scenario_run-with-me-flex/path.jsonl",
+      "bytes": 252892,
+      "sha256": "aa23a083e773062aa75ba6efc96f3bef9422da4283bbc08375a72e8a22de4dec"
+    },
+    {
+      "path": "scenario_run-with-me-flex/path.svg",
+      "bytes": 26234,
+      "sha256": "5fa1aadd64fef50d559ad2f4b365ac71dd62e4c1e761502ea0ad9f9938c8ed4c"
+    },
+    {
+      "path": "scenario_run-with-me-flex/transcript.json",
+      "bytes": 1892,
+      "sha256": "7b84751c2146dd0d0bc04f1e64bb0cc102cfead0f43033b22b2baa292f33dc6b"
+    },
+    {
+      "path": "scenario_run-with-me-flex/verdict.md",
+      "bytes": 7061,
+      "sha256": "fdba106cb9f01acb564770a7184e4e0464d908a09833b2a19b3824877a4df885"
+    },
+    {
+      "path": "scenario_run-with-me-flex/whisperer_log.jsonl",
+      "bytes": 5019,
+      "sha256": "b91e1acb0219b4fc6969530127f4488589c3ba93c0657d33c36a11b39570af6e"
+    },
+    {
+      "path": "scenario_sidewalk-on-top/events.json",
+      "bytes": 3320,
+      "sha256": "84d85e0240483ce4a81a9b52cab6cd9620c5e7d29846f6590c3cd70f8fa984ec"
+    },
+    {
+      "path": "scenario_sidewalk-on-top/path.jsonl",
+      "bytes": 106281,
+      "sha256": "5e2a8963956004d5a4854d04654439a3e17ec45381e454cd1babcd80cb84a953"
+    },
+    {
+      "path": "scenario_sidewalk-on-top/path.svg",
+      "bytes": 13010,
+      "sha256": "5bcdcf653b48097326fdd2db544024faf79bac422018d5ac0ac73de5bfd85c0f"
+    },
+    {
+      "path": "scenario_sidewalk-on-top/transcript.json",
+      "bytes": 2320,
+      "sha256": "69ff1a851ae52e665e79de7051de49f052378e7c7d10b911512410099d0e855a"
+    },
+    {
+      "path": "scenario_sidewalk-on-top/verdict.md",
+      "bytes": 2640,
+      "sha256": "bb5b18db9a55519f6d59d5c5a657fa4aa5981bc05e735a1c4358d8d7d58a2a4b"
+    },
+    {
+      "path": "scenario_sidewalk-on-top/whisperer_log.jsonl",
+      "bytes": 3032,
+      "sha256": "6ccf51eb97bdb5474ec40cbb31239c2b18394f63bef395e1ca662d85c7c71357"
+    },
+    {
+      "path": "scenario_whisperer-discipline/events.json",
+      "bytes": 18370,
+      "sha256": "9ddcfcfe791eafaf999f5ac037ef14456ef1fcd469635833428bd2a009c392d1"
+    },
+    {
+      "path": "scenario_whisperer-discipline/path.jsonl",
+      "bytes": 880823,
+      "sha256": "2ab65c0f8b214552ab65c2993e8fec59c642ea2a1b0c97670e26d949370144d6"
+    },
+    {
+      "path": "scenario_whisperer-discipline/path.svg",
+      "bytes": 64455,
+      "sha256": "8d87415948b5d81d80b4d2fdd992e8ca6e9770e4384601786c2d0cef626545b9"
+    },
+    {
+      "path": "scenario_whisperer-discipline/transcript.json",
+      "bytes": 5808,
+      "sha256": "6c511c992a97628ff9c4a06009dce7ecea23c8453f3922a789d8f7fbd539db9e"
+    },
+    {
+      "path": "scenario_whisperer-discipline/verdict.md",
+      "bytes": 5391,
+      "sha256": "4c3b26b260c216f7ee46c049b545e36b5d9318ea084531d65f1d68c057981085"
+    },
+    {
+      "path": "scenario_whisperer-discipline/whisperer_log.jsonl",
+      "bytes": 24747,
+      "sha256": "0054be5c9774ac9a8fd5dda68d302438f9cc4705d26e8959eb9265e4f63a73ad"
+    }
+  ],
+  "inventory_note": "manifest.json is excluded from its own inventory. Verify with: cd evals/20260819/run_1 && python -c \"import hashlib,json;m=json.load(open('manifest.json'));print(all(hashlib.sha256(open(r['path'],'rb').read()).hexdigest()==r['sha256'] for r in m['inventory']))\"",
+  "frozen_surfaces_untouched": [
+    "evals/companion/** (SI-v1 corpus, frozen manifests)",
+    "evals/nav_instruct/** (read-only: scene truth was READ, never written)",
+    "every digest sentinel and the release-parity set"
+  ]
+}

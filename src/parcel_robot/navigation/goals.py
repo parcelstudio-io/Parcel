@@ -4,6 +4,15 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
+from parcel_robot.navigation.arrival_semantics import (
+    CLASS_OBJECT,
+    FACE_GOAL,
+    RELATION_INSIDE,
+    arrival_policy,
+    classify_place,
+    planner_relation,
+    resolve_relation,
+)
 from parcel_robot.navigation.relation_registry import RELATIONS
 
 GoalKind = Literal["object", "region", "relative"]
@@ -141,6 +150,17 @@ class SemanticGoal:
     superlative: str | None = None
     attributes: tuple[str, ...] = ()
     pace: str | None = None
+    # --- arrival semantics (card R10) --------------------------------------
+    # Additive, defaulted to the pre-R10 behaviour, and all four come from the
+    # LOCAL arrival table (``navigation.arrival_semantics``) — never from a
+    # hosted tool argument. ``relation_source`` records whether a model hint
+    # contributed, so "did the hint matter?" is a query, not an anecdote.
+    place_class: str = CLASS_OBJECT
+    face: str = FACE_GOAL
+    do_not_cross: bool = False
+    standoff_m: float | None = None
+    ask_hint: str = ""
+    relation_source: str = "table"
 
 
 _NEGATED_OR_HYPOTHETICAL = re.compile(
@@ -271,7 +291,35 @@ def owner_referent_from_directive(directive: str) -> str | None:
     return query if query in OWNER_REFERENT_TABLE else None
 
 
-def semantic_goal_from_directive(directive: str) -> SemanticGoal:
+def semantic_goal_from_directive(
+    directive: str,
+    *,
+    relation_hint: str | None = None,
+    region_labels: tuple[str, ...] = (),
+    object_labels: tuple[str, ...] = (),
+    region_support: bool = False,
+    person_support: bool = False,
+) -> SemanticGoal:
+    """Compile a directive into a goal, with R10's hybrid arrival relation.
+
+    Every pre-R10 branch below is UNCHANGED in the relation and kind it emits;
+    the arrival table only adds ``face``/``do_not_cross``/``ask_hint`` alongside
+    them. One thing is genuinely new, and only in the FINAL default branch: a
+    place the region-noun grammar does not recognize but the arrival table
+    classifies as a region ("the rug", "the kitchen") now terminates INSIDE
+    instead of near, and an accepted model hint may refine an otherwise-unknown
+    place the same way. Explicit owner phrasing always outranks both — "wait BY
+    the lamppost" stays ``near`` no matter what any table or model says, because
+    that is the owner's own word for the relation they want.
+
+    ``relation_hint`` is the hosted model's optional ``navigate_to.relation``
+    argument. It is validated by :func:`arrival_semantics.resolve_relation` and
+    can only ever agree with the table or refine a genuinely unknown class that
+    the local map supports — ``region_support``/``person_support`` are that
+    local evidence, and both default False so an unsupported refinement is
+    refused by construction rather than by remembering to check.
+    """
+
     text = " ".join(directive.strip().lower().split())
     if not text:
         raise ValueError("empty navigation directive")
@@ -292,6 +340,25 @@ def semantic_goal_from_directive(directive: str) -> SemanticGoal:
         "attributes": attributes,
         "pace": pace_from_directive(text),
     }
+    place_class = classify_place(
+        query, region_labels=region_labels, object_labels=object_labels
+    )
+    decision = resolve_relation(
+        place_class,
+        relation_hint,
+        region_support=region_support,
+        person_support=person_support,
+    )
+    policy = arrival_policy(place_class)
+    # The table's local half. NOTHING here is reachable from a tool argument.
+    etiquette: dict[str, object] = {
+        "place_class": place_class,
+        "face": policy.face,
+        "do_not_cross": policy.do_not_cross,
+        "standoff_m": policy.standoff_m,
+        "ask_hint": policy.ask_hint,
+        "relation_source": decision.source,
+    }
     region = _region_query(query)
     if region:
         return SemanticGoal(
@@ -300,6 +367,7 @@ def semantic_goal_from_directive(directive: str) -> SemanticGoal:
             terminal_relation="inside",
             terminal_behavior="hold" if near_relation else "stop",
             **modifiers,  # type: ignore[arg-type]
+            **etiquette,  # type: ignore[arg-type]
         )
     if towards_relation:
         return SemanticGoal(
@@ -308,6 +376,7 @@ def semantic_goal_from_directive(directive: str) -> SemanticGoal:
             terminal_relation="towards",
             terminal_behavior="stop",
             **modifiers,  # type: ignore[arg-type]
+            **etiquette,  # type: ignore[arg-type]
         )
     if sit_relation and (_NEXT_TO_RELATION.search(normalized) or near_relation):
         return SemanticGoal(
@@ -316,21 +385,35 @@ def semantic_goal_from_directive(directive: str) -> SemanticGoal:
             terminal_relation="next_to",
             terminal_behavior="hold",
             **modifiers,  # type: ignore[arg-type]
+            **etiquette,  # type: ignore[arg-type]
         )
     if near_relation:
+        # The owner said "by"/"beside"/"at". Their word wins over every table.
         return SemanticGoal(
             query=query,
             kind="object",
             terminal_relation="near",
             terminal_behavior="hold",
             **modifiers,  # type: ignore[arg-type]
+            **etiquette,  # type: ignore[arg-type]
+        )
+    if planner_relation(decision.relation) == RELATION_INSIDE:
+        # A region the region-noun grammar missed, or a supported refinement.
+        return SemanticGoal(
+            query=query,
+            kind="region",
+            terminal_relation="inside",
+            terminal_behavior="stop",
+            **modifiers,  # type: ignore[arg-type]
+            **etiquette,  # type: ignore[arg-type]
         )
     return SemanticGoal(
         query=query,
         kind="object",
         terminal_relation="near",
-        terminal_behavior="hold" if near_relation else "stop",
+        terminal_behavior="stop",
         **modifiers,  # type: ignore[arg-type]
+        **etiquette,  # type: ignore[arg-type]
     )
 
 

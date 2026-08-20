@@ -288,6 +288,47 @@ def test_the_memory_tail_goes_up_before_any_audio_does() -> None:
     assert rig.lane.tail_items_injected == 2
 
 
+def test_the_replayed_tail_carries_BOTH_halves_of_the_conversation() -> None:
+    """Card R8 — the headline defect, pinned end to end at the lane.
+
+    ``_inject_tail`` always SELECTED the assistant rows and always sent them.
+    The provider always refused them, because every non-``user`` item carried
+    ``{"type": "text"}`` — a content type it accepts for no role at all. So from
+    R1 to R7 every session open and every reconnect replayed the owner's
+    sentences with the robot's answers missing from between them, silently,
+    while ``tail_items_injected`` counted a full tail.
+
+    The consequence was not academic: R6's live session 2 repaid a turn onto a
+    session whose replayed history had no assistant turns in it, and the model
+    answered a different, stale question. This test is the reason that cannot
+    happen again without a test going red.
+    """
+
+    tail = [
+        {"role": "user", "content": "I liked the bench by the water"},
+        {"role": "assistant", "content": "The one under the willow."},
+    ]
+    rig = _Rig(handshake() + happy_turn(), memory_tail=lambda: tail)
+    rig.open()
+
+    transport = rig.lane.transport
+    assert transport is not None
+    items = [
+        frame
+        for frame in transport.sent  # type: ignore[attr-defined]
+        if frame.get("type") == "conversation.item.create"
+    ]
+    assert [frame["item"]["role"] for frame in items] == ["user", "assistant"], (
+        "both halves of the conversation must go up, in order"
+    )
+    # And each half in the content type the provider actually accepts for it —
+    # live-verified 2026-08-19. Getting this wrong is not a degraded replay, it
+    # is a refused item and a missing turn.
+    assert items[0]["item"]["content"][0]["type"] == "input_text"
+    assert items[1]["item"]["content"][0]["type"] == "output_text"
+    assert items[1]["item"]["content"][0]["text"] == "The one under the willow."
+
+
 def test_both_sides_of_a_turn_reach_the_ledger_with_provenance() -> None:
     memory = ConversationMemory(":memory:")
     rig = _Rig(handshake() + happy_turn(), ledger=memory)
@@ -425,16 +466,33 @@ def test_the_watchdog_fires_on_a_silent_stall_and_reinjects_the_tail() -> None:
 
 
 def test_the_watchdog_does_not_fire_while_nothing_is_expected() -> None:
-    """An idle session is not a dead one; reconnecting it would be churn."""
+    """An idle session is not a dead one; RECONNECTING it would be churn.
+
+    Card R16 sharpened this test rather than changing what it claims. The
+    watchdog's rule is unchanged and is asserted twice here — before AND after
+    the idle window, ``reconnects`` stays at zero, because a session nobody is
+    waiting on has not stalled no matter how long it sits. What R16 adds is the
+    other half of the sentence: past ``idle_close_after_s`` the lane does not sit
+    there either. It hangs up. The one thing that must never happen — a silent
+    session being reconnected by the stall watchdog — is what both halves pin.
+    """
 
     rig = _Rig(
         handshake() + silent_stall(),
-        config=RealtimeConfig(enabled=True, stall_timeout_s=2.0, source="test"),
+        config=RealtimeConfig(
+            enabled=True, stall_timeout_s=2.0, idle_close_after_s=600.0, source="test"
+        ),
     )
     rig.open()
-    rig.clock.advance(600.0)
-    assert rig.lane.tick() is None
+    rig.clock.advance(599.0)
+    assert rig.lane.tick() is None, "300x the stall timeout, and nothing was expected"
     assert rig.lane.reconnects == 0
+
+    rig.clock.advance(2.0)
+    assert rig.lane.tick() == "idle", "past the idle window the lane hangs up (card R16)"
+    assert rig.lane.reconnects == 0, "a hang-up is not a reconnect"
+    assert rig.lane.stalls == 0
+    assert rig.lane.active is False
 
 
 def test_a_disconnect_mid_turn_is_survived_by_the_same_reconnect_path() -> None:

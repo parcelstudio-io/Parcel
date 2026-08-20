@@ -1,0 +1,1464 @@
+"""The tool broker: hosted proposals in, deterministic admission out (card R3).
+
+WHAT CHANGED, AND WHAT DID NOT
+------------------------------
+R1 answered every ``response.function_call_arguments.done`` with a refusal
+string. This module is the thing that replaces that stub — and it replaces it
+by *adding a seam*, not by moving authority. The voice model still decides
+nothing. It proposes a name and arguments; every proposal is turned into a
+:class:`~parcel_robot.models.ToolCall` and put through
+``SafetySupervisor.validate`` BEFORE any runtime door is touched, and only then
+handed to the same doors a typed command reaches (``ToolResult.accepted``):
+
+===============  ==========================  ==================================
+broker tool      validated as                door
+===============  ==========================  ==================================
+``get_status``   ``get_status``              the runtime's own snapshot digest
+``recall_memory````recall_memory`` (info)    a deterministic ledger read
+``play_gesture`` ``run_skill``               ``_brain_gesture`` → coordinator
+``set_pose``     ``run_pose``                ``propose_action`` (never recovery)
+``navigate_to``  ``navigate``                router → the local-sketch admission
+===============  ==========================  ==================================
+
+That table is the R1 audit's carry-forward made structural: *"R3's tool broker
+must route through ``ToolCall`` + ``SafetySupervisor.validate`` rather than
+inheriting the ingress's direct-call style — uniformity matters more once the
+MODEL proposes the action."* There is no path through :meth:`RealtimeToolBroker.handle`
+that reaches a door without an accepted ``ToolResult`` first, and the
+emergency-stop refusals live inside the supervisor, so a latched e-stop refuses
+a hosted pose for exactly the reason it refuses a typed one.
+
+ONE AUTHORITY PER UTTERANCE
+---------------------------
+The deterministic ingress (``runtime.submit_realtime_transcript``) already acts
+on a closed set of phrases: emergency, closed intents, follow, hold. If the
+owner says "follow me" the robot is ALREADY following by the time the model
+gets a chance to propose anything. A broker that then also admitted a
+``navigate_to`` would execute one sentence twice through two authorities. So
+the runtime reports each ingress outcome here (:meth:`note_ingress`) and the
+broker drops motion proposals for the rest of that utterance, with a reason the
+model can say out loud. Read-only tools are unaffected: answering "what is your
+status" is never a second authority.
+
+WHY A DICT OF CALLABLES AND NOT THE RUNTIME OBJECT
+--------------------------------------------------
+:class:`ToolDoors` is the entire surface this module may touch. It is built by
+``runtime.py`` from bound methods, which means (a) this module imports nothing
+from the runtime and stays unit-testable against fakes, and (b) an auditor can
+read the door list and know that nothing else is reachable — there is no
+``self._runtime`` here to reach through.
+
+WHAT THE MODEL IS TOLD AFTERWARDS
+---------------------------------
+Every result is JSON with a ``status`` of ``ok`` / ``deferred`` / ``dropped`` /
+``rejected`` and a human sentence. The lane sends it back as a
+``function_call_output`` and then a ``response.create``, so the model NARRATES
+what the robot actually did instead of predicting it. A dropped gesture
+("cooling down") is a fact the companion can answer gracefully; a rejected pose
+("motion is disabled by emergency stop") is a fact it must not paper over.
+
+AND IT NARRATES IT IN A TENSE (card R15)
+----------------------------------------
+Narrating what the robot did turns out to need one more thing than the fact: it
+needs to say WHEN. Owner session 1 (2026-08-20, F2) is the proof. The broker
+answered ``circle_owner`` with the runtime's own acknowledgement — "Okay—I'll
+make the requested local circle around you safely." — and one second later, with
+the dog barely a quarter of the way round, the model said **"Done—I made a small
+circle around you, and it was okay."** A promise, read as a receipt.
+
+So every :data:`ACTIVITY_TOOLS` result now opens with its tense: ``started:``,
+``waiting:`` or ``not started:``, carries ``finished: False``, and never carries
+a word from :data:`COMPLETION_LANGUAGE`. Completion is not this module's to
+report at all: it belongs to the runtime's terminal events (orbit complete,
+gesture done, aborted), which reach the model through the whisperer's
+floor-gated narration channel exactly as navigation terminals already do. The
+broker's job is to say the body has STARTED; the body's job is to say it stopped.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any, ClassVar
+
+from parcel_robot.models import ToolCall, ToolResult
+
+from .ingress import RealtimeTranscriptOutcome
+from .protocol import SESSION_OBJECT_TYPE, ClientEvent
+
+#: Broker-side clamp for ``play_gesture``. ``_brain_gesture`` raises outside
+#: this range; the broker clamps first so a model that says "intensity 3" gets a
+#: strong wave rather than a refusal, and says so in the result detail.
+MIN_INTENSITY = 0.5
+MAX_INTENSITY = 1.5
+DEFAULT_INTENSITY = 1.0
+
+#: Result vocabulary. ``ok``/``deferred`` mean the robot took the request;
+#: ``dropped`` means arbitration declined a well-formed request; ``rejected``
+#: means the request never became admissible in the first place.
+STATUS_OK = "ok"
+STATUS_DEFERRED = "deferred"
+STATUS_DROPPED = "dropped"
+STATUS_REJECTED = "rejected"
+
+TOOL_GET_STATUS = "get_status"
+TOOL_RECALL_MEMORY = "recall_memory"
+TOOL_PLAY_GESTURE = "play_gesture"
+TOOL_SET_POSE = "set_pose"
+TOOL_NAVIGATE_TO = "navigate_to"
+#: Card R10. The two tools that close the surface hole. ``OrbitOwner`` and
+#: ``FollowFormation`` have always been admitted skills the ingress can run —
+#: they simply had no hosted surface, and the 2026-08-19 bench measured what a
+#: model does with that gap: the mini tier fabricated
+#: ``navigate_to({"place": "with owner"})`` / ``("run route")`` / ``("run path")``
+#: 5/6, and realtime-mini instead DENIED the ability outright ("I can't do a
+#: full circle around you with the controls I have right now") — a false
+#: statement about its own body. The surface must match the body.
+TOOL_CIRCLE_OWNER = "circle_owner"
+TOOL_FOLLOW_OWNER = "follow_owner"
+
+#: The tools that commit the body. These are the ones the utterance-scoped
+#: dedupe drops when the deterministic ingress already acted, and the ones the
+#: system-initiated gate below refuses outright.
+MOTION_TOOLS = frozenset(
+    {
+        TOOL_PLAY_GESTURE,
+        TOOL_SET_POSE,
+        TOOL_NAVIGATE_TO,
+        TOOL_CIRCLE_OWNER,
+        TOOL_FOLLOW_OWNER,
+    }
+)
+
+#: Card R11, design point 5 — WHO ASKED FOR THE RESPONSE THIS CALL CAME IN.
+#:
+#: ``owner`` means the owner typed or spoke and the provider is answering them.
+#: ``system`` means the ROBOT started the exchange by posting one of its own
+#: state facts (``lane.narrate_event``) and asking for a reply.
+#:
+#: The distinction exists because the bench measured what happens without it:
+#: a single telemetry item injected into ``gpt-5-mini`` fired a spurious
+#: ``navigate_to("picnic spot by the big oak")`` in **2 of 3** forced-response
+#: trials (``bench_navmodel.md`` §4, finding C1). No utterance existed, so the
+#: utterance-scoped dedupe two dozen lines above could not see it — the robot
+#: would have driven off because it told itself something. Only owner utterances
+#: may start motion.
+RESPONSE_FROM_OWNER = "owner"
+RESPONSE_FROM_SYSTEM = "system"
+
+#: The machine-readable half of the refusal, so a transcript auditor (and the
+#: eval pack) can count these without matching prose.
+REFUSAL_SYSTEM_INITIATED_MOTION = "system_initiated_motion"
+
+#: The sentence the model reads back. It states the RULE, not just the no: the
+#: bench's whole downstream finding is that the model narrates whatever it is
+#: given, so giving it the reason is what makes the refusal say something true.
+SYSTEM_INITIATED_MOTION_DETAIL = (
+    "this reply was triggered by the robot's own status update, not by anything the "
+    "owner said, and the robot only starts moving when its owner asks it to"
+)
+
+#: Every tool this broker will answer. Anything else is refused by name.
+BROKER_TOOLS = (
+    TOOL_GET_STATUS,
+    TOOL_RECALL_MEMORY,
+    TOOL_PLAY_GESTURE,
+    TOOL_SET_POSE,
+    TOOL_NAVIGATE_TO,
+    TOOL_CIRCLE_OWNER,
+    TOOL_FOLLOW_OWNER,
+)
+
+#: Card R15 — "done" MEANS DONE.
+#:
+#: The tools whose ``ok`` answer means *the robot has begun something that takes
+#: real seconds*. Owner session 1 (2026-08-20, F2) is why this set exists: the
+#: model was handed ``"Okay—I'll make the requested local circle around you
+#: safely."`` and said **"Done—I made a small circle around you, and it was
+#: okay"** ONE SECOND later — a completion claim for a lap that had barely
+#: started. R8's audit had already flagged the mild form of the same thing
+#: ("Accepted paw_wave for the next control tick" → "I waved. My paw moved").
+#:
+#: Identical to :data:`MOTION_TOOLS` today and deliberately NOT an alias of it:
+#: the two sets answer different questions. ``MOTION_TOOLS`` asks *may this
+#: proposal commit the body* (authority); this one asks *does this result
+#: describe work that is still happening* (tense). A future read-only tool that
+#: nevertheless starts something — or a motion tool that is genuinely
+#: instantaneous — would belong to one and not the other.
+ACTIVITY_TOOLS = frozenset(
+    {
+        TOOL_PLAY_GESTURE,
+        TOOL_SET_POSE,
+        TOOL_NAVIGATE_TO,
+        TOOL_CIRCLE_OWNER,
+        TOOL_FOLLOW_OWNER,
+    }
+)
+
+#: Card R19 — THE SILENT COMPANION.
+#:
+#: The tools whose result IS the answer to a question the owner just asked.
+#: There is no mission log, no terminal event and no ``narrate_event`` coming
+#: later to say a battery percentage or a recalled memory: if the beat that
+#: carries this result does not speak, nothing ever does.
+#:
+#: The exact complement of :data:`ACTIVITY_TOOLS` today, and — like that set —
+#: deliberately not expressed as one. "Does this describe work still happening"
+#: and "is this result the answer" are different questions, and a future
+#: perception tool (live_run_1 re-cut F3 as exactly that missing tool) would be
+#: an ANSWER tool that is not an activity, while a hypothetical
+#: ``stop_and_report`` would be both.
+ANSWER_TOOLS = frozenset({TOOL_GET_STATUS, TOOL_RECALL_MEMORY})
+
+#: The key :data:`ANSWER_TOOLS` results carry so the LANE never has to know the
+#: tool surface. ``parcel_robot.realtime.lane.ANSWER_RESULT_KEY`` is the reader;
+#: the two modules do not import each other (the lane holds this one behind a
+#: Protocol), and a classification that travels inside the result is the one
+#: coupling that cannot go stale when a tool is added.
+ANSWER_RESULT_KEY = "answer"
+
+#: The three tenses an activity result may be in. There is no fourth, and in
+#: particular there is no "finished": no broker answer can ever report a
+#: completed physical action, because the broker returns while the body is still
+#: moving. Completion has exactly one reporter — the runtime's own terminal
+#: event, narrated through the whisperer/lane channel.
+TENSE_STARTED = "started"
+TENSE_WAITING = "waiting"
+TENSE_NOT_STARTED = "not started"
+
+TENSE_BY_STATUS: Mapping[str, str] = {
+    STATUS_OK: TENSE_STARTED,
+    STATUS_DEFERRED: TENSE_WAITING,
+    STATUS_DROPPED: TENSE_NOT_STARTED,
+    STATUS_REJECTED: TENSE_NOT_STARTED,
+}
+
+#: Said alongside every ``started``/``waiting`` result, because the bench's
+#: standing finding is that the model narrates whatever it is given: telling it
+#: who WILL report the ending is what stops it inventing the ending itself.
+COMPLETION_NOTE = (
+    "this has NOT finished; the robot's own systems report the ending "
+    "separately, and only then may you say it is done"
+)
+
+#: Words that assert a physical action ALREADY HAPPENED. An activity detail
+#: containing one of these is the F2 defect, in the one place the model reads.
+#: Word-boundary tokens, not substrings: "finishes" (a promise about the future)
+#: is not "finished" (a claim about the past).
+COMPLETION_LANGUAGE: frozenset[str] = frozenset(
+    {
+        "arrived",
+        "bowed",
+        "circled",
+        "complete",
+        "completed",
+        "danced",
+        "did",
+        "done",
+        "finished",
+        "made",
+        "nodded",
+        "performed",
+        "sat",
+        "successfully",
+        "walked",
+        "waved",
+    }
+)
+
+#: The other half of the same rule (card R4-lite, Defect C, kept honest here).
+#: The detail is a FACT the model reads, never a script it recites. A sentence
+#: in the robot's own first person — "Okay—I'll walk a circle around you." — is
+#: a promise, and a promise one second old is what the model turned into "Done".
+SCRIPT_LANGUAGE: frozenset[str] = frozenset({"i'll", "i've", "i'm", "let", "okay"})
+
+#: Closed enums for the new tools. Every value is checked here AND again by the
+#: supervisor's existing ``run_spatial_behavior`` / ``set_behavior`` arms, which
+#: is where the authority actually lives.
+ORBIT_DIRECTIONS = ("clockwise", "counterclockwise")
+ORBIT_SIZES = ("small", "normal", "wide")
+DEFAULT_ORBIT_DIRECTION = "counterclockwise"
+DEFAULT_ORBIT_SIZE = "normal"
+DEFAULT_ORBIT_REVOLUTIONS = 1.0
+MIN_ORBIT_REVOLUTIONS = 0.25
+MAX_ORBIT_REVOLUTIONS = 1.0
+
+#: ``pace`` exists so "run with me" stops becoming a fabricated ``navigate_to``.
+#: R11's pace_intent is what will consume it; until then the broker records it
+#: and the door reports it, and NOTHING here changes a commanded speed — an
+#: accepted pace the body did not act on would be the over-claim class the bench
+#: found in B2 ("I'm matching your slower pace" while the gait was still RUN).
+FOLLOW_PACES = ("walk", "run")
+DEFAULT_FOLLOW_PACE = "walk"
+
+#: How many valid places a place refusal names back to the model. Enough to be
+#: useful, few enough to stay one short spoken sentence.
+REFUSAL_PLACE_LIMIT = 5
+
+#: How a hosted place name becomes a directive the deterministic router can
+#: recognize. Deliberately the plainest phrasing in the router's navigation
+#: grammar — the broker renders text for the router, it never fabricates a
+#: route, an ``IntentFrame`` or a plan.
+NAVIGATE_DIRECTIVE_TEMPLATE = "go to {place}"
+
+#: Maximum characters accepted for any free-text argument.
+MAX_ARGUMENT_CHARS = 200
+
+
+class ToolBrokerError(RuntimeError):
+    """A broker refusal that is not a door's fault. Never silent."""
+
+
+@dataclass(frozen=True)
+class SessionToolsUpdate(ClientEvent):
+    """Declare the tool surface on an open session.
+
+    A separate event from R1's :class:`~parcel_robot.realtime.protocol.SessionUpdate`
+    rather than a new field on it: ``protocol.py`` is audited and frozen for this
+    card, and ``session.update`` is defined by the provider to replace only the
+    fields it carries. Sending instructions first and tools second therefore ends
+    in exactly the session state one combined event would have produced, with a
+    zero-line diff to the audited codec.
+    """
+
+    TYPE: ClassVar[str] = "session.update"
+
+    tools: tuple[Mapping[str, Any], ...] = ()
+    tool_choice: str = "auto"
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "type": self.TYPE,
+            "session": {
+                # Same provider requirement the instructions frame hit: a
+                # session object without its discriminator is refused whole,
+                # and a refused tools frame means the model never learns the
+                # robot has a body. Read from protocol.py so there is one copy.
+                "type": SESSION_OBJECT_TYPE,
+                "tools": [dict(tool) for tool in self.tools],
+                "tool_choice": self.tool_choice,
+            },
+        }
+
+
+def build_tool_specs(
+    *,
+    gestures: Sequence[str] = (),
+    poses: Sequence[str] = (),
+) -> tuple[dict[str, Any], ...]:
+    """The provider-facing schemas, with the catalog inlined as enums.
+
+    Inlining the real names is what keeps the model from inventing
+    ``play_gesture("do a backflip")``: the enum is the robot's actual emote
+    allowlist and pose catalog, read from the runtime at session open. It is a
+    hint, not the gate — every name is still validated by the supervisor.
+    """
+
+    gesture_names = [str(name) for name in gestures if str(name).strip()]
+    pose_names = [str(name) for name in poses if str(name).strip()]
+    gesture_schema: dict[str, Any] = {"type": "string", "description": "Gesture name."}
+    if gesture_names:
+        gesture_schema = {"type": "string", "enum": sorted(set(gesture_names))}
+    pose_schema: dict[str, Any] = {"type": "string", "description": "Pose name."}
+    if pose_names:
+        pose_schema = {"type": "string", "enum": sorted(set(pose_names))}
+    return (
+        {
+            "type": "function",
+            "name": TOOL_GET_STATUS,
+            # Card R18. live_run_1 root-caused F3 as a MISSING TOOL: asked "what
+            # do you see around you", the model emitted two filler beats 3 ms
+            # apart and then gave up, because none of the seven tools it had
+            # could answer a question about the world. The answer exists —
+            # ``_realtime_status_digest`` now carries a ``scene`` block built
+            # from the LiDAR, the semantic map and the person tracks — and this
+            # description is what routes the question to it. Both halves of the
+            # honesty rule are here, because this text is what the model reads
+            # when it decides whether it is able to answer at all: the robot
+            # DOES sense its surroundings (owner_session_1's "I can't actually
+            # see anything around me" is false), and it senses them without eyes
+            # (so nothing visual may be described).
+            "description": (
+                "Read the robot's own current state AND what its sensors detect "
+                "around it right now: battery, emergency stop, what it is doing, "
+                "plus the nearby labelled places with their distance and "
+                "direction, how many people are tracked and how far the nearest "
+                "one is, and the clearance to the nearest obstacle. CALL THIS "
+                "whenever the owner asks what is around you, what you can "
+                "detect, whether anyone is nearby, what the closest thing is, or "
+                "how you are doing — you are never blind and must never say you "
+                "cannot sense anything. The readings come from LiDAR and a "
+                "semantic map: the robot has NO camera, so report what it "
+                "detects and never describe colours, faces, text or how "
+                "anything looks. Never guess any of it."
+            ),
+            "parameters": {"type": "object", "properties": {}, "required": []},
+        },
+        {
+            "type": "function",
+            "name": TOOL_RECALL_MEMORY,
+            # Card R18. The result now carries WHEN each memory was said, so the
+            # description has to ask for it back: a remembered fact the owner
+            # cannot place is a fact they cannot check.
+            "description": (
+                "Search everything ever said between you and the owner — every "
+                "conversation, from every device, going back as far as the "
+                "record goes. CALL THIS whenever the owner asks what you "
+                "remember, what you know about them, or what you talked about "
+                "before; you have a real memory and must never say you have "
+                "none without looking. Each memory comes back with when it was "
+                "said — say that too ('yesterday you told me…'). If it comes "
+                "back empty, say plainly that you have nothing recorded."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        # Card R18, from the live proof: asked "What do you
+                        # remember about me?" the mini tier sent
+                        # {"query": "owner"} — inventing a topic for a question
+                        # that had none, and matching five typed test commands.
+                        # The instruction is therefore about what NOT to invent.
+                        "description": (
+                            "The topic to look for, in the owner's own words. "
+                            "If they asked a general question about themselves "
+                            "or about a past day, pass their question through "
+                            "as they said it — do NOT invent a topic word like "
+                            "'owner' or 'user', which searches for the wrong "
+                            "thing."
+                        ),
+                    }
+                },
+                "required": ["query"],
+            },
+        },
+        {
+            "type": "function",
+            "name": TOOL_PLAY_GESTURE,
+            "description": (
+                "Perform one expressive gesture with your real body. You HAVE a "
+                "body: when the owner asks you to wave, nod, bow or dance, CALL "
+                "this tool — describing the movement in words instead of calling "
+                "it means nothing actually moved. The robot decides whether it is "
+                "safe and may decline; read the result before saying it happened. "
+                "The result says the movement has STARTED, never that it is over: "
+                "never say you have waved, bowed or danced. The robot tells you "
+                "when the movement actually ends."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": gesture_schema,
+                    "intensity": {
+                        "type": "number",
+                        "description": "0.5 (subtle) to 1.5 (big).",
+                    },
+                },
+                "required": ["name"],
+            },
+        },
+        {
+            "type": "function",
+            "name": TOOL_SET_POSE,
+            "description": (
+                "Settle your real body into one bounded pose (for example "
+                "sitting). Asked to sit, lie down or stand? CALL this tool. The "
+                "robot may decline while it is busy; read the result. The result "
+                "says the robot has STARTED settling, never that it is settled — "
+                "the robot tells you when it has finished moving."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"name": pose_schema},
+                "required": ["name"],
+            },
+        },
+        {
+            "type": "function",
+            "name": TOOL_NAVIGATE_TO,
+            "description": (
+                "Walk to a named place nearby. Whenever the owner asks you to go "
+                "somewhere, to head over to something, or to come along to a "
+                "place, CALL this tool with that place — agreeing in words alone "
+                "leaves the robot standing still. Only places the robot's own "
+                "navigation understands are accepted; a refusal comes back with "
+                "the reason, which you should say plainly. Never say you have "
+                "arrived: this only starts the trip."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "place": {"type": "string", "description": "A place name."},
+                    # Card R10, the HYBRID half. The bench measured relation
+                    # hints at 36/36 on both tiers, so reading one is cheap and
+                    # good; the local arrival table still validates it and still
+                    # wins every conflict. Note what is NOT here: no "face", no
+                    # standoff, no stopping rule. Those are owner policy the
+                    # model answered wrong 6/6, and a parameter it cannot send
+                    # is a parameter it cannot get wrong.
+                    "relation": {
+                        "type": "string",
+                        "enum": ["inside", "near", "social"],
+                        "description": (
+                            "Optional: how the owner means you to end up — ON it "
+                            "(inside, e.g. a sidewalk or a rug), BESIDE it (near, "
+                            "e.g. a door or a bench), or a polite distance from a "
+                            "person (social). A guess is fine; the robot checks it "
+                            "and uses its own answer if they disagree."
+                        ),
+                    },
+                },
+                "required": ["place"],
+            },
+        },
+        {
+            "type": "function",
+            "name": TOOL_CIRCLE_OWNER,
+            "description": (
+                "Walk a circle around the owner with your real body. You CAN do "
+                "this — when the owner asks you to circle them, walk around them "
+                "or do a lap, CALL this tool. Saying you are unable to is false. "
+                "The robot checks there is room and may refuse with the reason; "
+                "read the result and say that reason plainly. A lap takes tens "
+                "of seconds: the result only ever says the circle has STARTED, "
+                "so say you are walking it now and NEVER that you have made it. "
+                "The robot tells you when the lap is actually finished."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "direction": {"type": "string", "enum": list(ORBIT_DIRECTIONS)},
+                    "size": {"type": "string", "enum": list(ORBIT_SIZES)},
+                    "revolutions": {
+                        "type": "number",
+                        "description": "0.25 to 1.0 laps.",
+                    },
+                },
+                "required": [],
+            },
+        },
+        {
+            "type": "function",
+            "name": TOOL_FOLLOW_OWNER,
+            "description": (
+                "Walk along WITH the owner, keeping station on them. Asked to "
+                "come along, follow, heel, or run with them? CALL this tool — do "
+                "NOT call navigate_to with a place like 'with owner' or 'run "
+                "route'; those are not places and will be refused. Use pace to "
+                "say whether they asked to walk or to run. Following has no "
+                "ending of its own: say you are walking with them now, never "
+                "that you have followed them."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "pace": {
+                        "type": "string",
+                        "enum": list(FOLLOW_PACES),
+                        "description": "The pace the owner asked for.",
+                    }
+                },
+                "required": [],
+            },
+        },
+    )
+
+
+def _no_op() -> None:
+    return None
+
+
+def _no_note(message: str) -> None:
+    del message
+
+
+def _unwired(*_args: object, **_kwargs: object) -> str:
+    """Default for a door the host did not wire. Refuses; never pretends."""
+
+    raise ValueError("this robot has not wired that ability up")
+
+
+@dataclass(frozen=True)
+class ToolDoors:
+    """Every runtime affordance the broker is allowed to touch. Nothing else.
+
+    ``validate`` is first in the list because it runs first in every path; the
+    rest are the doors a typed command already uses. The R10 additions default
+    to :func:`_unwired`, so a host that has not connected them gets an honest
+    refusal rather than a broker that silently drops the call.
+    """
+
+    validate: Callable[[ToolCall], ToolResult]
+    status: Callable[[], Mapping[str, object]]
+    recall: Callable[[str], str]
+    gesture: Callable[[str, float], str]
+    pose: Callable[[str], str]
+    navigate: Callable[[str, str], str]
+    gesture_names: Callable[[], Sequence[str]] = tuple
+    pose_names: Callable[[], Sequence[str]] = tuple
+    on_dispatch: Callable[[], None] = _no_op
+    note: Callable[[str], None] = _no_note
+    #: Card R10. ``places`` is the ordered, nearest-first place vocabulary the
+    #: navigation stack will actually accept; it is what makes a junk-place
+    #: refusal name real alternatives instead of just saying no.
+    places: Callable[[], Sequence[str]] = tuple
+    orbit: Callable[[str, str, float], str] = _unwired
+    follow: Callable[[str], str] = _unwired
+
+
+@dataclass
+class _Utterance:
+    """What the deterministic ingress already did for the utterance in flight."""
+
+    sequence: int = 0
+    executed: str = ""
+
+    def claim(self) -> str:
+        return self.executed
+
+
+class RealtimeToolBroker:
+    """Answers hosted function calls. One admission chain, no shortcuts."""
+
+    def __init__(
+        self,
+        doors: ToolDoors,
+        *,
+        tool_choice: str = "auto",
+    ) -> None:
+        self._doors = doors
+        self._tool_choice = tool_choice
+        self._utterance = _Utterance()
+        #: Card R11. Who asked for the response the current call belongs to. The
+        #: lane sets this before every dispatch; it defaults to the owner because
+        #: that is what every call was before this card and because a response
+        #: nobody tagged is, on the wire, one the owner's voice produced.
+        self._provenance = RESPONSE_FROM_OWNER
+        self.calls: list[dict[str, object]] = []
+        self.dropped = 0
+        self.rejected = 0
+        self.executed = 0
+        #: Motion proposals refused because the robot, not the owner, started
+        #: the exchange. This is the C1 defect being caught, counted.
+        self.system_initiated_motion_refusals = 0
+
+    # ----------------------------------------------------------- lane surface
+    def session_events(self) -> tuple[ClientEvent, ...]:
+        """Sent by the lane right after ``session.update``, every session."""
+
+        specs = build_tool_specs(
+            gestures=self._doors.gesture_names(),
+            poses=self._doors.pose_names(),
+        )
+        return (SessionToolsUpdate(tools=specs, tool_choice=self._tool_choice),)
+
+    def handle(self, *, name: str, call_id: str, arguments: str) -> str:
+        """Answer exactly one function call. Always returns JSON, never raises.
+
+        The lane sends this string back as the call's ``function_call_output``.
+        A broker that raised would leave a call unanswered, and an unanswered
+        call wedges the provider's turn — so every failure mode here is a
+        ``rejected`` result with the reason in it.
+        """
+
+        result = self._dispatch(name=str(name), arguments=str(arguments))
+        # Card R15. The LAST thing that happens to an activity answer, so there
+        # is no return path in this class that can hand the model an untensed
+        # one — including the refusals raised before any argument is read.
+        if str(name) in ACTIVITY_TOOLS:
+            result = _tensed(result)
+        # Card R19, and the same "one stamp, one place" rule R15 established
+        # above it: every return path in this class — including the refusals
+        # raised before an argument is read — hands the lane a result that says
+        # for itself whether it is an ANSWER. Stamped regardless of status,
+        # because a ``get_status`` that FAILED is still the owner's question
+        # going unanswered and still the one thing that must never go quiet.
+        if str(name) in ANSWER_TOOLS:
+            result[ANSWER_RESULT_KEY] = True
+        row = {
+            "call_id": str(call_id),
+            "tool": str(name),
+            "status": str(result.get("status", STATUS_REJECTED)),
+            "detail": str(result.get("detail", "")),
+        }
+        self.calls.append(row)
+        status = row["status"]
+        if status in {STATUS_OK, STATUS_DEFERRED}:
+            self.executed += 1
+        elif status == STATUS_DROPPED:
+            self.dropped += 1
+        else:
+            self.rejected += 1
+        self._doors.note(f"tool {name}: {status} — {row['detail']}")
+        return json.dumps(result, sort_keys=True)
+
+    # ------------------------------------------------------- runtime surface
+    def note_ingress(self, outcome: RealtimeTranscriptOutcome) -> None:
+        """Record what the deterministic ingress did with this utterance."""
+
+        self._utterance = _Utterance(
+            sequence=self._utterance.sequence + 1,
+            executed=(outcome.name if outcome.executed else ""),
+        )
+
+    # ------------------------------------------------------------ lane surface
+    def note_response_provenance(self, provenance: str) -> None:
+        """Card R11. The lane says who asked for the response now being answered.
+
+        Unrecognised values fail CLOSED — anything that is not literally
+        ``owner`` is treated as system-initiated, so a future lane that grows a
+        third provenance cannot accidentally hand the model the body.
+        """
+
+        clean = str(provenance or "").strip().lower()
+        self._provenance = RESPONSE_FROM_OWNER if clean == RESPONSE_FROM_OWNER else (
+            RESPONSE_FROM_SYSTEM
+        )
+
+    def snapshot(self) -> dict[str, object]:
+        return {
+            "tools": list(BROKER_TOOLS),
+            "calls": len(self.calls),
+            "executed": self.executed,
+            "dropped": self.dropped,
+            "rejected": self.rejected,
+            "utterance_sequence": self._utterance.sequence,
+            "utterance_claim": self._utterance.claim(),
+            # Card R11. The gate, from outside.
+            "response_provenance": self._provenance,
+            "system_initiated_motion_refusals": self.system_initiated_motion_refusals,
+            "last": dict(self.calls[-1]) if self.calls else None,
+        }
+
+    # --------------------------------------------------------------- routing
+    def _dispatch(self, *, name: str, arguments: str) -> dict[str, object]:
+        if name not in BROKER_TOOLS:
+            return _refused(name, f"{name!r} is not a tool this robot has")
+
+        # Card R11, design point 5. FIRST, before the arguments are even read:
+        # a response the robot started may not move the body, whatever it asks
+        # for and however well-formed the request is. Placed ahead of every
+        # other check so there is no ordering in which a motion proposal from a
+        # system-initiated response reaches a door — including ahead of the
+        # utterance-scoped drop, which cannot see this case at all because there
+        # is no utterance in flight (bench_navmodel.md §4, C1).
+        if name in MOTION_TOOLS and self._provenance != RESPONSE_FROM_OWNER:
+            self.system_initiated_motion_refusals += 1
+            body = _refused(name, SYSTEM_INITIATED_MOTION_DETAIL)
+            body["refusal"] = REFUSAL_SYSTEM_INITIATED_MOTION
+            body["provenance"] = self._provenance
+            return body
+
+        try:
+            payload = _arguments(arguments)
+        except (TypeError, ValueError) as error:
+            return _refused(name, str(error))
+
+        if name in MOTION_TOOLS:
+            claim = self._utterance.claim()
+            if claim:
+                # One utterance, one authority. The robot already moved for this
+                # sentence through the deterministic ingress.
+                return _dropped(
+                    name,
+                    f"the robot already acted on this request as {claim!r}; "
+                    "a second authority for one sentence is refused",
+                )
+
+        if name == TOOL_GET_STATUS:
+            return self._get_status()
+        if name == TOOL_RECALL_MEMORY:
+            return self._recall(payload)
+        if name == TOOL_PLAY_GESTURE:
+            return self._play_gesture(payload)
+        if name == TOOL_SET_POSE:
+            return self._set_pose(payload)
+        if name == TOOL_CIRCLE_OWNER:
+            return self._circle_owner(payload)
+        if name == TOOL_FOLLOW_OWNER:
+            return self._follow_owner(payload)
+        return self._navigate_to(payload)
+
+    # ----------------------------------------------------------------- tools
+    def _get_status(self) -> dict[str, object]:
+        allowed = self._validated(ToolCall(TOOL_GET_STATUS, {}), TOOL_GET_STATUS)
+        if allowed is not None:
+            return allowed
+        try:
+            digest = dict(self._doors.status())
+        except (KeyError, RuntimeError, TypeError, ValueError) as error:
+            return _refused(TOOL_GET_STATUS, f"status is unavailable: {error}")
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_GET_STATUS,
+            "detail": "current robot state",
+            "state": digest,
+        }
+
+    def _recall(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        try:
+            query = _text(payload, "query")
+        except ValueError as error:
+            return _refused(TOOL_RECALL_MEMORY, str(error))
+        allowed = self._validated(
+            ToolCall(TOOL_RECALL_MEMORY, {"query": query}), TOOL_RECALL_MEMORY
+        )
+        if allowed is not None:
+            return allowed
+        try:
+            found = self._doors.recall(query)
+        except (KeyError, RuntimeError, TypeError, ValueError) as error:
+            return _refused(TOOL_RECALL_MEMORY, f"memory is unavailable: {error}")
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_RECALL_MEMORY,
+            "detail": found or "nothing recorded about that yet",
+            "query": query,
+        }
+
+    def _play_gesture(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        try:
+            name = _text(payload, "name")
+        except ValueError as error:
+            return _refused(TOOL_PLAY_GESTURE, str(error))
+        intensity, clamped = _intensity(payload.get("intensity"))
+        # ``run_skill`` is the supervisor's name for a catalog skill; the emote
+        # allowlist is narrower still and is checked behind the door.
+        allowed = self._validated(ToolCall("run_skill", {"name": name}), TOOL_PLAY_GESTURE)
+        if allowed is not None:
+            return allowed
+        self._doors.on_dispatch()
+        try:
+            detail = self._doors.gesture(name, intensity)
+        except ValueError as error:
+            return _refused(TOOL_PLAY_GESTURE, str(error))
+        except RuntimeError as error:
+            # The activity coordinator declined a well-formed request: cooldown,
+            # already running, queue full, or a busier channel owns the body.
+            return _dropped(TOOL_PLAY_GESTURE, _reason(str(error)))
+        return _from_disposition(
+            TOOL_PLAY_GESTURE,
+            detail,
+            # Card R15. On the ``ok`` arm the runtime's own sentence is
+            # "Accepted paw_wave for the next control tick" — an ACCEPTANCE the
+            # model read as an accomplishment ("I waved. My paw moved", R5
+            # session 1, endorsed as a defect by that card's audit). The fact
+            # replaces it in ``detail``; the acceptance sentence is kept beside
+            # it so the record loses nothing. The non-ok arms keep the runtime's
+            # reason, which is the only thing that says WHY.
+            started=f"the {name} gesture is running on the robot's body",
+            extra={
+                "name": name,
+                "intensity": round(intensity, 3),
+                "intensity_clamped": clamped,
+            },
+        )
+
+    def _set_pose(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        try:
+            name = _text(payload, "name")
+        except ValueError as error:
+            return _refused(TOOL_SET_POSE, str(error))
+        allowed = self._validated(ToolCall("run_pose", {"name": name}), TOOL_SET_POSE)
+        if allowed is not None:
+            return allowed
+        self._doors.on_dispatch()
+        try:
+            detail = self._doors.pose(name)
+        except ValueError as error:
+            return _refused(TOOL_SET_POSE, str(error))
+        except RuntimeError as error:
+            return _dropped(TOOL_SET_POSE, _reason(str(error)))
+        return _from_disposition(
+            TOOL_SET_POSE,
+            detail,
+            started=f"the robot is settling into the {name} pose",
+            extra={"name": name},
+        )
+
+    def _navigate_to(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        try:
+            place = _text(payload, "place")
+        except ValueError as error:
+            return _refused(TOOL_NAVIGATE_TO, str(error))
+        # Card R10 — the place-noun gate. ``place`` must be a NAME, not a
+        # directive fragment. The bench's three verbatim fabrications
+        # ("with owner", "run route", "run path") each carry a function word or
+        # an unknown head noun, and each would otherwise have rendered the junk
+        # directive "go to with owner" straight into the router. Refused HERE,
+        # before the router, with the reason and real alternatives in the result
+        # so the model can say something true instead of guessing.
+        try:
+            known = tuple(str(name) for name in self._doors.places())
+        except (KeyError, RuntimeError, TypeError, ValueError):
+            known = ()
+        verdict = validate_place(place, known)
+        if not verdict.valid:
+            nearest = verdict.nearest or tuple(known[:REFUSAL_PLACE_LIMIT])
+            detail = (
+                f"{place!r} describes an action, not a place; if the owner wants "
+                "you to come along use follow_owner, and if they want a lap "
+                "around them use circle_owner"
+            )
+            if nearest:
+                detail = f"{detail}. Places the robot does know: {', '.join(nearest)}"
+            refusal = _refused(TOOL_NAVIGATE_TO, detail)
+            refusal.update(
+                {
+                    "place": place,
+                    "valid_places": list(nearest),
+                    "reason": verdict.reason,
+                }
+            )
+            return refusal
+        relation = _enum(payload.get("relation"), RELATION_HINTS_TUPLE, default="")
+        directive = NAVIGATE_DIRECTIVE_TEMPLATE.format(place=place)
+        allowed = self._validated(ToolCall("navigate", {"directive": directive}), TOOL_NAVIGATE_TO)
+        if allowed is not None:
+            return allowed
+        self._doors.on_dispatch()
+        try:
+            detail = self._doors.navigate(place, relation)
+        except ValueError as error:
+            return _refused(TOOL_NAVIGATE_TO, str(error))
+        except RuntimeError as error:
+            return _dropped(TOOL_NAVIGATE_TO, _reason(str(error)))
+        # Card R4-lite, task_1 — Defect C. ``detail`` is what the MODEL reads and
+        # then says out loud, and until now it was whatever sentence the local
+        # admission path happened to return ("Okay—I'll navigate toward … safely."),
+        # the last survival of the legacy reply template on the realtime path.
+        # The model does not need the robot's script; it needs the fact. The
+        # admission reply is kept alongside so nothing is lost from the record.
+        # Card R15 sharpens the same sentence. "mission accepted: the sidewalk"
+        # was tense-NEUTRAL: accepted by whom, and is the robot walking yet? The
+        # fact the model needs is that the trip is happening right now and has
+        # not ended, in the one field it reads.
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_NAVIGATE_TO,
+            "detail": f"the robot is walking to {place}",
+            "admitted": detail,
+            "place": place,
+            "directive": directive,
+            "relation_hint": relation,
+        }
+
+    def _circle_owner(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        """``circle_owner`` — card R10 item 3, half of the surface hole.
+
+        Routed through the supervisor's EXISTING ``run_spatial_behavior`` arm,
+        which already knows ``orbit_owner`` and already enforces the direction /
+        size / revolutions enums and the e-stop. No new authority is created
+        here: the broker validates the shape, the supervisor validates the
+        request, and the runtime door is the same one a typed "walk in a circle
+        around me" reaches.
+        """
+
+        direction = _enum(
+            payload.get("direction"), ORBIT_DIRECTIONS, default=DEFAULT_ORBIT_DIRECTION
+        )
+        size = _enum(payload.get("size"), ORBIT_SIZES, default=DEFAULT_ORBIT_SIZE)
+        revolutions = _revolutions(payload.get("revolutions"))
+        allowed = self._validated(
+            ToolCall(
+                "run_spatial_behavior",
+                {
+                    "behavior": "orbit_owner",
+                    "direction": direction,
+                    "size": size,
+                    "revolutions": revolutions,
+                },
+            ),
+            TOOL_CIRCLE_OWNER,
+        )
+        if allowed is not None:
+            return allowed
+        self._doors.on_dispatch()
+        try:
+            detail = self._doors.orbit(direction, size, revolutions)
+        except ValueError as error:
+            # The feasibility validator's refusal arrives here. It is a REJECT,
+            # not a drop: the request was well-formed and the robot genuinely
+            # cannot do it right now, and the sentence explains why so the model
+            # narrates a true reason instead of inventing one.
+            return _refused(TOOL_CIRCLE_OWNER, str(error))
+        except RuntimeError as error:
+            return _dropped(TOOL_CIRCLE_OWNER, _reason(str(error)))
+        # Card R15 — THE F2 LINE. Until this card ``detail`` was the runtime's
+        # own acknowledgement, verbatim: "Okay—I'll make the requested local
+        # circle around you safely." Owner session 1 has the model answering
+        # that with "Done—I made a small circle around you, and it was okay"
+        # ONE SECOND later, while the dog was still on its first quarter. The
+        # promise is kept on the record as ``admitted``; what the model reads is
+        # the fact, and the fact is in the present progressive.
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_CIRCLE_OWNER,
+            "detail": (
+                f"the robot is walking a {direction} circle around you, "
+                f"{revolutions:g} of a lap"
+            ),
+            "admitted": _reason(str(detail)),
+            "direction": direction,
+            "size": size,
+            "revolutions": revolutions,
+        }
+
+    def _follow_owner(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        """``follow_owner(pace)`` — the other half of the surface hole.
+
+        Routed through the supervisor's existing ``set_behavior`` arm with mode
+        ``follow``, i.e. the same validation "follow me" already takes.
+
+        ``pace`` is CARRIED, not acted on: R11 owns pace_intent. The result says
+        so explicitly, because the bench's B2 finding was the model announcing
+        an adaptation that had not happened ("I'm matching your slower pace"
+        while the injected gait was still RUN). A pace the body did not change
+        must never come back as though it had.
+        """
+
+        pace = _enum(payload.get("pace"), FOLLOW_PACES, default=DEFAULT_FOLLOW_PACE)
+        allowed = self._validated(
+            ToolCall("set_behavior", {"mode": "follow"}), TOOL_FOLLOW_OWNER
+        )
+        if allowed is not None:
+            return allowed
+        self._doors.on_dispatch()
+        try:
+            detail = self._doors.follow(pace)
+        except ValueError as error:
+            return _refused(TOOL_FOLLOW_OWNER, str(error))
+        except RuntimeError as error:
+            return _dropped(TOOL_FOLLOW_OWNER, _reason(str(error)))
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_FOLLOW_OWNER,
+            # Card R15. Follow is the one activity with no ending of its own —
+            # it runs until something stops it — so its tense is the whole of
+            # its truth: the robot is doing this NOW, and there is no moment at
+            # which "I followed you" becomes a true thing to volunteer.
+            "detail": "the robot is keeping station on you and walking with you",
+            "admitted": _reason(str(detail)),
+            "pace": pace,
+            "pace_applied": False,
+            "pace_note": (
+                "the robot is keeping station on you at its own safe pace; it has "
+                "not changed speed for this request"
+            ),
+        }
+
+    # ------------------------------------------------------------- plumbing
+    def _validated(self, call: ToolCall, tool: str) -> dict[str, object] | None:
+        """``None`` means the supervisor allowed it. Anything else is the answer."""
+
+        try:
+            result = self._doors.validate(call)
+        except (RuntimeError, TypeError, ValueError) as error:  # pragma: no cover
+            return _refused(tool, f"safety validation failed: {error}")
+        if not getattr(result, "accepted", False):
+            return _refused(tool, str(getattr(result, "message", "refused")))
+        return None
+
+
+def _reason(text: str) -> str:
+    """Strip the runtime's disposition prefix; the status field carries it."""
+
+    clean = str(text).strip()
+    for prefix in ("Rejected:", "Skipped:", "Deferred:", "Accepted:"):
+        if clean.startswith(prefix):
+            return clean[len(prefix) :].strip()
+    return clean
+
+
+def _from_disposition(
+    tool: str,
+    detail: str,
+    *,
+    started: str = "",
+    extra: Mapping[str, object] | None = None,
+) -> dict[str, object]:
+    """Map ``propose_action``'s status prefix onto the result vocabulary.
+
+    ``started`` (card R15) is the FACT to hand the model when the coordinator
+    took the request — the activity is now under way, and the runtime's
+    acceptance sentence goes to ``admitted`` instead of into the model's mouth.
+    Only the ``ok`` arm is replaced: a deferral or a drop is carried by the
+    runtime's own reason, which is the half that explains itself.
+    """
+
+    clean = str(detail).strip()
+    reason = _reason(clean) or clean
+    body: dict[str, object] = {"tool": tool, "detail": reason}
+    body.update(dict(extra or {}))
+    if clean.startswith("Deferred:"):
+        body["status"] = STATUS_DEFERRED
+        return body
+    if clean.startswith(("Rejected:", "Skipped:")):
+        body["status"] = STATUS_DROPPED
+        return body
+    body["status"] = STATUS_OK
+    if started:
+        body["detail"] = started
+        body["admitted"] = reason
+    return body
+
+
+def _detail_words(detail: str) -> tuple[str, ...]:
+    """Lowercase word tokens, apostrophes kept so ``I'll`` survives as one word."""
+
+    word: list[str] = []
+    words: list[str] = []
+    for char in str(detail).lower():
+        if char.isalnum() or char == "'":
+            word.append(char)
+        elif word:
+            words.append("".join(word))
+            word = []
+    if word:
+        words.append("".join(word))
+    return tuple(words)
+
+
+def detail_tense_violation(detail: str) -> str:
+    """Card R15. Why this activity detail may not be shown to the model, or ``""``.
+
+    THE RULE, EXECUTABLE. Three things are checked, in the order they cost the
+    owner something:
+
+    1. it must open with a tense marker, so the model cannot be in any doubt
+       about whether the body is moving;
+    2. it must contain no completion word, because a broker answer is returned
+       while the movement is still happening and there is nothing it could
+       truthfully be reporting the end of;
+    3. it must not speak in the robot's first person, because a promise
+       ("Okay—I'll walk a circle around you") is what the model compressed into
+       "Done—I made a small circle around you" one second later.
+
+    DELIBERATELY A PREDICATE AND NOT A SANITISER. A broker that quietly rewrote
+    a bad detail would make the regression invisible: the seed that puts
+    completion language back would come back GREEN and the tests would be
+    pinning the scrubber instead of the wording. The rule is enforced by tests
+    over every tool × every disposition, which is where a wording rule belongs.
+    """
+
+    clean = " ".join(str(detail).split())
+    if not clean:
+        return "empty detail"
+    tense = next(
+        (name for name in (TENSE_NOT_STARTED, TENSE_STARTED, TENSE_WAITING)
+         if clean.startswith(f"{name}: ")),
+        "",
+    )
+    if not tense:
+        return "missing tense marker"
+    body = clean[len(tense) + 2 :]
+    for word in _detail_words(body):
+        if word in COMPLETION_LANGUAGE:
+            return f"completion language: {word!r}"
+        if word in SCRIPT_LANGUAGE:
+            return f"speaks in the robot's own voice: {word!r}"
+    return ""
+
+
+def _tensed(body: dict[str, object]) -> dict[str, object]:
+    """Stamp an activity-class result with the tense the model must narrate in.
+
+    Applied in ONE place — :meth:`RealtimeToolBroker.handle` — rather than at
+    each tool's return, so a tool added to :data:`ACTIVITY_TOOLS` tomorrow
+    cannot be the one that forgets. ``finished`` is unconditionally ``False``
+    because it is unconditionally true that it is: see :data:`TENSE_BY_STATUS`.
+    """
+
+    status = str(body.get("status", STATUS_REJECTED))
+    tense = TENSE_BY_STATUS.get(status, TENSE_NOT_STARTED)
+    detail = " ".join(str(body.get("detail", "")).split())
+    body["detail"] = f"{tense}: {detail}" if detail else tense
+    body["tense"] = tense
+    body["finished"] = False
+    if status in {STATUS_OK, STATUS_DEFERRED}:
+        body["completion_note"] = COMPLETION_NOTE
+    return body
+
+
+def _refused(tool: str, reason: str) -> dict[str, object]:
+    return {"status": STATUS_REJECTED, "tool": tool, "detail": str(reason)}
+
+
+def _dropped(tool: str, reason: str) -> dict[str, object]:
+    return {"status": STATUS_DROPPED, "tool": tool, "detail": str(reason)}
+
+
+def _arguments(raw: str) -> Mapping[str, Any]:
+    text = str(raw).strip()
+    if not text:
+        return {}
+    try:
+        parsed = json.loads(text)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"tool arguments are not valid JSON: {error}") from None
+    if not isinstance(parsed, Mapping):
+        raise TypeError("tool arguments must be a JSON object")
+    return parsed
+
+
+def _text(payload: Mapping[str, Any], key: str) -> str:
+    value = payload.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{key} must be a non-empty string")
+    clean = " ".join(value.split())
+    if len(clean) > MAX_ARGUMENT_CHARS:
+        raise ValueError(f"{key} is too long")
+    return clean
+
+
+def _enum(value: object, allowed: Sequence[str], *, default: str) -> str:
+    """Coerce an enum argument, falling back to ``default`` rather than failing.
+
+    A model that sends ``size="medium"`` gets a normal circle and a robot that
+    moves; the supervisor still sees only a value from the closed set. Junk
+    never reaches a door, and a near-miss never costs the owner their request.
+    """
+
+    if not isinstance(value, str):
+        return default
+    clean = " ".join(value.split()).lower()
+    return clean if clean in tuple(allowed) else default
+
+
+def _revolutions(value: object) -> float:
+    """Clamp laps into the supervisor's own [0.25, 1.0] window."""
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return DEFAULT_ORBIT_REVOLUTIONS
+    number = float(value)
+    if not math.isfinite(number):
+        return DEFAULT_ORBIT_REVOLUTIONS
+    return min(MAX_ORBIT_REVOLUTIONS, max(MIN_ORBIT_REVOLUTIONS, number))
+
+
+#: Why a place was refused.
+REASON_NOT_A_PLACE_NAME = "not_a_place_name"
+REASON_UNKNOWN_PLACE = "unknown_place"
+
+#: Function words that never appear in a place NAME. A place is a noun phrase;
+#: a directive fragment carries one of these. This closed set is what separates
+#: the bench's fabrications ("**with** owner", "**run** path") from a real
+#: multi-word place ("the big oak tree"), WITHOUT refusing ordinary adjectives —
+#: refusing those would be a capability regression against today's grammar,
+#: which happily peels "big" and grounds "oak tree".
+PLACE_FUNCTION_WORDS: frozenset[str] = frozenset(
+    {
+        "about",
+        "across",
+        "after",
+        "along",
+        "alongside",
+        "around",
+        "at",
+        "before",
+        "behind",
+        "beside",
+        "between",
+        "beyond",
+        "by",
+        "down",
+        "during",
+        "for",
+        "from",
+        "into",
+        "of",
+        "off",
+        "onto",
+        "or",
+        "over",
+        "past",
+        "through",
+        "toward",
+        "towards",
+        "under",
+        "until",
+        "up",
+        "upon",
+        "via",
+        "while",
+        "with",
+        "without",
+        # NOT conjunctions. "the sidewalk and then sit" is a compound, and the
+        # ROUTER has always been the thing that refuses compounds — pinned by
+        # ``test_navigate_to_refuses_what_the_router_does_not_call_a_navigation``.
+        # Catching it here would move that refusal into a second grammar and
+        # change the reason the owner hears for no reason at all.
+        # Motion verbs. "run path" and "run route" are directives wearing a
+        # noun's clothes; a place is never named after the gait used to get to it.
+        "chase",
+        "come",
+        "follow",
+        "go",
+        "head",
+        "jog",
+        "move",
+        "run",
+        "running",
+        "sprint",
+        "trot",
+        "walk",
+        "walking",
+    }
+)
+
+#: Article/positional/size modifiers that may decorate a place name.
+PLACE_MODIFIERS: frozenset[str] = frozenset(
+    {
+        "a",
+        "ahead",
+        "an",
+        "big",
+        "closest",
+        "east",
+        "far",
+        "front",
+        "large",
+        "left",
+        "little",
+        "main",
+        "my",
+        "nearby",
+        "nearest",
+        "next",
+        "north",
+        "other",
+        "right",
+        "safe",
+        "safer",
+        "small",
+        "south",
+        "tall",
+        "that",
+        "the",
+        "this",
+        "west",
+        "your",
+    }
+)
+
+RELATION_HINTS_TUPLE = ("inside", "near", "social")
+
+
+@dataclass(frozen=True)
+class PlaceVerdict:
+    valid: bool
+    reason: str = ""
+    #: Real places to offer back when the answer is no, nearest first.
+    nearest: tuple[str, ...] = ()
+
+
+def validate_place(place: str, known: Sequence[str]) -> PlaceVerdict:
+    """Is ``place`` a place NAME at all? — card R10's junk-place gate.
+
+    THE SCOPE IS DELIBERATELY NARROW, and the narrowness is the design.
+
+    Only one thing is refused here: a string that is not a place name — a
+    directive fragment carrying a preposition or a motion verb. That is exactly
+    the class the bench measured the mini tier fabricating, verbatim:
+    ``{"place": "with owner"}`` (preposition), ``{"place": "run route"}`` and
+    ``{"place": "run path"}`` (motion verb). Each would otherwise have rendered
+    "go to with owner" into the router as a real directive.
+
+    A perfectly good noun the robot has never heard of — "narnia" — is NOT
+    refused. It is admitted, routed, and allowed to fail honestly at grounding,
+    because that is precisely what a typed "go to narnia" does, and
+    ``test_navigate_to_grants_exactly_what_a_typed_sentence_grants`` pins that
+    authority parity for a good reason: a broker stricter than the typed path
+    would be the hosted lane growing its own private grammar. The verdict still
+    reports ``unknown_place`` so the difference is visible, but it stays valid.
+    """
+
+    phrase = " ".join(str(place).split()).lower()
+    if not phrase:
+        return PlaceVerdict(False, REASON_NOT_A_PLACE_NAME)
+    vocabulary = {" ".join(str(name).split()).lower(): str(name) for name in known}
+    if phrase in vocabulary:
+        return PlaceVerdict(True)
+    words = phrase.replace(",", " ").split()
+    if any(word in PLACE_FUNCTION_WORDS for word in words):
+        return PlaceVerdict(False, REASON_NOT_A_PLACE_NAME, _nearest_places(vocabulary))
+    nouns = [word for word in words if word not in PLACE_MODIFIERS]
+    if not nouns:
+        # Modifiers only ("the nearest") names nothing at all.
+        return PlaceVerdict(False, REASON_NOT_A_PLACE_NAME, _nearest_places(vocabulary))
+    if " ".join(nouns) in vocabulary or nouns[-1] in vocabulary:
+        # Whole phrase or head noun: "the big oak tree" is the tree it knows.
+        return PlaceVerdict(True)
+    return PlaceVerdict(True, REASON_UNKNOWN_PLACE, _nearest_places(vocabulary))
+
+
+def _nearest_places(vocabulary: Mapping[str, str]) -> tuple[str, ...]:
+    """The places to offer back. Order preserved — the door sorts by distance."""
+
+    return tuple(vocabulary.values())[:REFUSAL_PLACE_LIMIT]
+
+
+def _intensity(value: object) -> tuple[float, bool]:
+    """Clamp into [0.5, 1.5]. Returns the value and whether it was clamped."""
+
+    if value is None:
+        return DEFAULT_INTENSITY, False
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return DEFAULT_INTENSITY, True
+    number = float(value)
+    if not math.isfinite(number):
+        return DEFAULT_INTENSITY, True
+    clamped = min(MAX_INTENSITY, max(MIN_INTENSITY, number))
+    return clamped, clamped != number
+
+
+__all__ = [
+    "ACTIVITY_TOOLS",
+    "ANSWER_RESULT_KEY",
+    "ANSWER_TOOLS",
+    "BROKER_TOOLS",
+    "COMPLETION_LANGUAGE",
+    "COMPLETION_NOTE",
+    "FOLLOW_PACES",
+    "MAX_INTENSITY",
+    "MIN_INTENSITY",
+    "MOTION_TOOLS",
+    "NAVIGATE_DIRECTIVE_TEMPLATE",
+    "ORBIT_DIRECTIONS",
+    "ORBIT_SIZES",
+    "PLACE_FUNCTION_WORDS",
+    "REASON_NOT_A_PLACE_NAME",
+    "REASON_UNKNOWN_PLACE",
+    "REFUSAL_PLACE_LIMIT",
+    "REFUSAL_SYSTEM_INITIATED_MOTION",
+    "RESPONSE_FROM_OWNER",
+    "RESPONSE_FROM_SYSTEM",
+    "SCRIPT_LANGUAGE",
+    "STATUS_DEFERRED",
+    "STATUS_DROPPED",
+    "STATUS_OK",
+    "STATUS_REJECTED",
+    "SYSTEM_INITIATED_MOTION_DETAIL",
+    "TENSE_BY_STATUS",
+    "TENSE_NOT_STARTED",
+    "TENSE_STARTED",
+    "TENSE_WAITING",
+    "TOOL_CIRCLE_OWNER",
+    "TOOL_FOLLOW_OWNER",
+    "TOOL_GET_STATUS",
+    "TOOL_NAVIGATE_TO",
+    "TOOL_PLAY_GESTURE",
+    "TOOL_RECALL_MEMORY",
+    "TOOL_SET_POSE",
+    "PlaceVerdict",
+    "RealtimeToolBroker",
+    "SessionToolsUpdate",
+    "ToolBrokerError",
+    "ToolDoors",
+    "build_tool_specs",
+    "detail_tense_violation",
+    "validate_place",
+]

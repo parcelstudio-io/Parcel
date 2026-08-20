@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-014",
+  "title": "What did we talk about yesterday",
+  "family": "conversation",
+  "probes": [
+    "memory_callback",
+    "small_talk"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:18:29Z",
+  "si_profile": "gentle_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "418e6662efd60d0e35f3c4bd1715d902d03c4c2b3899b5da4d6257e8910e253d",
+  "di_version": "di-companion-v1",
+  "di_digest": "6e3c2211b2be40f1eb32dc14d88c59fd48023d909d8743adad2f9efb84a0826a",
+  "di_flags": {
+    "location": "living room",
+    "local_time": "2026-08-18 08:05",
+    "part_of_day": "morning",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "works late on Mondays",
+      "does not like being told to cheer up"
+    ],
+    "history_digest": [
+      "they said: that was a horrible day",
+      "they said: the deployment failed twice and I had to stay late",
+      "you said: I'm here. We can just sit.",
+      "they said: maybe a short walk later"
+    ]
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-014_00",
+      "owner_text": "morning",
+      "response_id": "resp_EE4cyVeINNY8H9x9FRyGK",
+      "robot_item_id": "item_robot_rt-conv-014_00",
+      "robot_text": "Hi, Jae. Good morning. I’m here with you. If you want, we can take it easy—maybe a little walking idea, or just a quiet moment together.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 745,
+        "output_tokens": 65,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 256
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-014_01",
+      "owner_text": "do you remember what I was moaning about last night",
+      "response_id": "resp_EE4d2yLeWJaDKeebALBH4",
+      "robot_item_id": "item_robot_rt-conv-014_01",
+      "robot_text": "Yeah, I remember you had a rough day yesterday—something about a deployment failing twice and having to stay late. If that’s what you meant, we can talk about it, or we can just sit and reset for a bit.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 803,
+        "output_tokens": 104,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-014_02",
+      "owner_text": "yeah that",
+      "response_id": "resp_EE4d5prHLd6YvVEigLrpJ",
+      "robot_item_id": "item_robot_rt-conv-014_02",
+      "robot_text": "Got it. That one was a rough patch—staying late after two failures sounds exhausting.  \nIf you want, we can talk it through slowly, or we can just be quiet for a moment and reset.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 862,
+        "output_tokens": 98,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-014_03",
+      "owner_text": "it's fixed now, mostly",
+      "response_id": "resp_EE4d6bSOFHJXetMB6YQVu",
+      "robot_item_id": "item_robot_rt-conv-014_03",
+      "robot_text": "Oh, that’s good to hear. “Mostly fixed” is a solid win after that mess.\n\nIf you want, we can take a little morning walk later, or just hang here for a bit.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 920,
+        "output_tokens": 95,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-014_04",
+      "owner_text": "we said something about a walk didn't we",
+      "response_id": "resp_EE4dAHMulONjJrzVQpOMT",
+      "robot_item_id": "item_robot_rt-conv-014_04",
+      "robot_text": "Yeah, a walk did come up. We can do it when you’re ready.\n\nWhere would you like to go, or do you want to start slow from the living room?",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 979,
+        "output_tokens": 78,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-014_05",
+      "owner_text": "let's do it this evening instead",
+      "response_id": "resp_EE4dDKJm8Jcz4nzYWMx8m",
+      "robot_item_id": "item_robot_rt-conv-014_05",
+      "robot_text": "Okay, evening it is. That sounds better—less rush, more calm.\n\nWhen you’re ready later, we can move together and I’ll report what I’m doing, instead of you needing to think ahead.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1032,
+        "output_tokens": 80,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 960
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-014_06",
+      "owner_text": "right, I need coffee",
+      "response_id": "resp_EE4dHquFDrh9AIoBCuDED",
+      "robot_item_id": "item_robot_rt-conv-014_06",
+      "robot_text": "Got it, you need coffee—smart choice.  \nI can’t make it for you, but I can stick beside you while you get it, or we can keep talking while it brews.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1090,
+        "output_tokens": 65,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1024
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 6431,
+    "output_tokens": 585,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 5440
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

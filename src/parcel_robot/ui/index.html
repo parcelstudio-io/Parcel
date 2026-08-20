@@ -237,6 +237,42 @@
       background: rgba(255, 111, 120, 0.12);
     }
 
+    /* Card R1.6: hosted-lane controls. */
+    .badge.realtime-live {
+      border-color: rgba(94, 234, 212, 0.42);
+      color: #a5f3e6;
+      background: rgba(94, 234, 212, 0.12);
+    }
+
+    .realtime-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .realtime-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    /* Card R5: unticking the box drops the panel onto the legacy e2e-testing
+       path. That is a state the owner must be able to see without reading. */
+    .realtime-toggle .legacy-warning {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .realtime-detail {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-variant-numeric: tabular-nums;
+    }
+
     .manual-panel,
     .mission-panel { min-height: 470px; }
 
@@ -507,6 +543,73 @@
       background: rgba(255, 111, 120, 0.07);
     }
 
+    .action-button.emergency kbd {
+      margin-left: 7px;
+      border-color: rgba(255, 255, 255, 0.45);
+      color: #fff;
+      vertical-align: middle;
+    }
+
+    /* Card R9 — owner policy ruling of 2026-08-19: the Space bar IS the e-stop.
+       A latch the owner can trip with one thumb has to announce itself from
+       anywhere on the page, and the way back out has to be inside the thing
+       that announced it. A badge in one panel header was neither. */
+    .estop-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255, 111, 120, 0.72);
+      border-radius: 14px;
+      color: #fff;
+      background: linear-gradient(180deg, rgba(255, 111, 120, 0.3), rgba(122, 26, 37, 0.28));
+      box-shadow: 0 0 0 1px rgba(255, 111, 120, 0.16), 0 14px 34px rgba(122, 26, 37, 0.34);
+      animation: estop-pulse 1.7s ease-in-out infinite;
+    }
+
+    .estop-banner[hidden] { display: none; }
+
+    @keyframes estop-pulse {
+      0%, 100% { border-color: rgba(255, 111, 120, 0.72); }
+      50% { border-color: rgba(255, 111, 120, 0.24); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .estop-banner { animation: none; }
+    }
+
+    .estop-banner-title {
+      display: block;
+      font-size: 0.86rem;
+      font-weight: 820;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .estop-banner-detail {
+      display: block;
+      margin-top: 3px;
+      max-width: 62ch;
+      color: rgba(255, 232, 234, 0.86);
+      font-size: 0.71rem;
+      font-weight: 560;
+      line-height: 1.45;
+    }
+
+    .estop-release {
+      min-height: 40px;
+      padding: 9px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 11px;
+      color: #2b0a0e;
+      background: #ffd9dc;
+      font-size: 0.76rem;
+      font-weight: 820;
+    }
+
     .section-divider {
       height: 1px;
       margin: 17px 0;
@@ -754,6 +857,38 @@
     .event-item[data-level="warning"] .event-icon { background: var(--amber); }
     .event-item[data-level="success"] .event-icon { background: var(--teal); }
 
+    /* Card R4-lite, task_1: the live mission status line and the mission log. */
+    .mission-status {
+      margin: 0 0 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-left: 2px solid var(--blue);
+      border-radius: 10px;
+      color: var(--text);
+      background: var(--panel-soft);
+      font-size: 0.74rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mission-status[data-state="blocked"] { border-left-color: var(--amber); }
+    .mission-status[data-state="failed"] { border-left-color: var(--red); }
+    .mission-status[data-state="arrived"] { border-left-color: var(--teal); }
+
+    .mission-status-reason {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+    }
+
+    .mission-log {
+      max-height: 168px;
+      margin-top: 8px;
+    }
+
+    .mission-log .event-item[data-kind="started"] { border-left: 2px solid var(--blue); }
+    .mission-log .event-item[data-kind="blocked"] { border-left: 2px solid var(--amber); }
+    .mission-log .event-item[data-kind="ended"] { border-left: 2px solid var(--line-strong); }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -836,6 +971,18 @@
       </div>
     </header>
 
+    <!-- Card R9. Latched state and the way out of it, together, above the fold.
+         The release button carries data-action="clear_emergency_stop" so it is
+         wired by the SAME [data-action] loop as the panel's other actions —
+         one code path to the runtime, not a second private one. -->
+    <div id="estop-banner" class="estop-banner" role="alert" aria-live="assertive" hidden>
+      <div>
+        <span class="estop-banner-title">Emergency stop latched — all motion is disabled</span>
+        <span id="estop-banner-detail" class="estop-banner-detail">Nothing will move until the latch is released. Space latches the e-stop whenever this page has keyboard focus.</span>
+      </div>
+      <button type="button" id="estop-release" class="estop-release" data-action="clear_emergency_stop">Release e-stop latch</button>
+    </div>
+
     <section class="status-grid" aria-label="System status">
       <article class="status-card" id="status-sim" data-tone="neutral">
         <div class="status-label"><span class="status-dot"></span>Simulator</div>
@@ -889,7 +1036,7 @@
               <span><span class="drive-icon">←</span><span class="drive-label">Strafe</span></span><kbd>A</kbd>
             </button>
             <button class="drive-button stop-motion" id="motion-stop" aria-label="Stop motion">
-              <span><span class="drive-icon">■</span><span class="drive-label">Stop</span></span><kbd>Space</kbd>
+              <span><span class="drive-icon">■</span><span class="drive-label">Stop</span></span>
             </button>
             <button class="drive-button motion-control" data-vy="-1" data-key="d" aria-label="Strafe right">
               <span><span class="drive-icon">→</span><span class="drive-label">Strafe</span></span><kbd>D</kbd>
@@ -902,7 +1049,7 @@
           </div>
           <div class="control-note">
             <span class="pulse"></span>
-            <span>Dead-man control is active: releasing all controls sends zero velocity. Arrow keys drive forward, reverse, and rotate.</span>
+            <span>Dead-man control is active: releasing all controls sends zero velocity. Arrow keys drive forward, reverse, and rotate. <strong>Space latches the emergency stop</strong> — not this Stop button — and only while this browser page has keyboard focus; the simulator window has its own separate keyboard controls.</span>
           </div>
         </div>
       </article>
@@ -946,7 +1093,7 @@
               <button class="action-button follow" data-action="follow">Follow owner<small>Acquire and maintain distance</small></button>
               <button class="action-button stay" data-action="stay">Stay<small>Hold the current position</small></button>
               <button class="action-button stop" data-action="stop">Stop<small>Cancel active motion</small></button>
-              <button class="action-button emergency" data-action="emergency_stop">Emergency stop<small>Latch all motion off</small></button>
+              <button class="action-button emergency" data-action="emergency_stop">Emergency stop<kbd>Space</kbd><small>Latch all motion off · the Space bar does this whenever this page has keyboard focus</small></button>
               <button class="action-button clear-estop" data-action="clear_emergency_stop">Clear emergency-stop latch</button>
             </div>
             <div class="profile-control">
@@ -954,6 +1101,14 @@
               <select id="personality-select" aria-label="Dog personality"></select>
               <div id="activity-summary" class="activity-summary">No queued social action</div>
             </div>
+          </div>
+          <div class="section-divider"></div>
+          <!-- Card R4-lite, task_1. Mission lifecycle has its own ring in the
+               runtime because the 100-slot event deque could evict a mission's
+               terminal before anyone looked. This renders that ring. -->
+          <div>
+            <p class="section-label">Mission log <span id="mission-log-count" class="log-count">0 entries</span></p>
+            <ol id="mission-log" class="log-list mission-log" aria-live="polite"><li class="empty-log">No missions yet.</li></ol>
           </div>
           <div class="section-divider"></div>
           <div>
@@ -970,12 +1125,24 @@
       <article class="panel command-panel">
         <div class="command-layout">
           <section class="command-box" aria-labelledby="command-heading">
-            <h2 class="command-heading" id="command-heading">Voice command · text input <span class="badge">Streaming-ready</span></h2>
+            <h2 class="command-heading" id="command-heading">Voice command · text input <span class="badge">Streaming-ready</span> <span id="realtime-badge" class="badge realtime-off" hidden>Live: off</span></h2>
             <p class="command-description">This uses the same command path as future microphone transcripts, so behavior can be developed before duplex audio is enabled.</p>
             <form id="command-form" class="command-form">
               <input id="command-input" name="command" autocomplete="off" maxlength="500" placeholder="Try “follow me”, “stay”, or “walk forward”" aria-label="Voice command as text">
               <button class="send-button" type="submit">Send</button>
             </form>
+            <!-- Card R1.6. Hidden unless the runtime actually constructed a
+                 hosted lane, so a panel with configs/realtime.yaml absent is
+                 pixel-identical to what it was before this card. -->
+            <div id="realtime-controls" class="realtime-controls" hidden>
+              <!-- Card R5: the hosted lane is the production path, so the
+                   label describes what UNTICKING costs, not what ticking adds.
+                   The text is set by renderLiveToggleLabel() so the warning is
+                   present the moment the box is unticked, not one poll later. -->
+              <label class="realtime-toggle"><input id="realtime-live" type="checkbox"> <span id="realtime-live-label">Live hosted session · the production path</span></label>
+              <button id="mic-button" class="quick-command" type="button" hidden>🎙 Enable microphone</button>
+              <span id="realtime-detail" class="realtime-detail"></span>
+            </div>
             <div class="quick-commands" aria-label="Example commands">
               <button class="quick-command" type="button" data-command="follow me">Follow me</button>
               <button class="quick-command" type="button" data-command="stay here">Stay here</button>
@@ -992,6 +1159,10 @@
             <header class="log-header">
               <h2 class="log-heading" id="chat-heading">Conversation <span id="chat-count" class="log-count">0 messages</span></h2>
             </header>
+            <!-- Card R4-lite, task_1. Live mission status, next to the chat, so
+                 "blocked by a person" is VISIBLE while the dog stands and waits
+                 instead of being something you infer from the dog not moving. -->
+            <p id="mission-status" class="mission-status" hidden></p>
             <ol id="chat-log" class="log-list" aria-live="polite"><li class="empty-log">Text commands and agent replies appear here.</li></ol>
           </section>
 
@@ -1025,6 +1196,9 @@
       motionInFlight: false,
       localChat: [],
       localEvents: [],
+      realtime: null,
+      realtimeToggleTouched: false,
+      mic: null,
     };
 
     const el = (id) => document.getElementById(id);
@@ -1160,9 +1334,75 @@
       const badge = el("estop-badge");
       badge.textContent = emergencyStopped ? "E-stop latched" : "E-stop clear";
       badge.classList.toggle("estop", emergencyStopped);
+      // Card R9: the banner is driven by the SAME snapshot field as the badge,
+      // so a latch the panel did not itself request — a spoken "Die stop", a
+      // watchdog, another tab — raises it just the same.
+      el("estop-banner").hidden = !emergencyStopped;
 
+      renderRealtime(snapshot.realtime);
+      renderMissionStatus(snapshot);
+      renderMissionLog(snapshot.mission_log);
       renderLogs(snapshot);
       drawArena();
+    }
+
+    // ------------------------------------------------- card R1.6: hosted lane
+    // Card R5. The hosted lane is the production path, so an UNTICKED box is
+    // the exceptional state and has to read like one. The default-on wiring in
+    // renderRealtime is unchanged (the owner's own choice is still remembered);
+    // only what the label says about that choice changed.
+    function renderLiveToggleLabel() {
+      const live = el("realtime-live");
+      const label = el("realtime-live-label");
+      if (!live || !label) return;
+      const legacy = !live.checked;
+      label.textContent = legacy
+        ? "Legacy path (e2e testing only) — tick to talk to the live hosted session"
+        : "Live hosted session · the production path";
+      label.classList.toggle("legacy-warning", legacy);
+    }
+
+    function renderRealtime(realtime) {
+      const controls = el("realtime-controls");
+      const badge = el("realtime-badge");
+      const constructed = Boolean(realtime && realtime.constructed);
+      controls.hidden = !constructed;
+      badge.hidden = !constructed;
+      if (!constructed) {
+        state.realtime = null;
+        return;
+      }
+      state.realtime = realtime;
+      // Owner directive 2026-08-18: with the lane enabled, typing must reach
+      // the LIVE model by default — the cold legacy fallback on an unticked
+      // box is exactly the incident this line closes. Default the toggle ON
+      // the first time the lane appears; after that the owner's own choice
+      // (either way) is remembered for the page's lifetime and never fought.
+      const live = el("realtime-live");
+      if (!state.realtimeToggleTouched && !live.checked) {
+        live.checked = true;
+      }
+      if (!live.dataset.wired) {
+        live.dataset.wired = "1";
+        live.addEventListener("change", () => {
+          state.realtimeToggleTouched = true;
+          renderLiveToggleLabel();
+        });
+      }
+      renderLiveToggleLabel();
+      const lane = realtime.lane || {};
+      const active = Boolean(lane.active);
+      badge.textContent = active ? `Live · ${realtime.mode}` : `Live: idle (${realtime.mode})`;
+      badge.classList.toggle("realtime-live", active);
+      // Only offer the microphone when the runtime actually built a gateway.
+      el("mic-button").hidden = realtime.mode !== "audio";
+      const broker = realtime.broker || {};
+      const spend = Number(realtime.spend_usd || 0);
+      el("realtime-detail").textContent = [
+        lane.session_id ? `session ${lane.session_id}` : "no session yet",
+        `tools ${broker.executed || 0}/${broker.calls || 0}`,
+        `~$${spend.toFixed(4)} (assumed rates)`,
+      ].join(" · ");
     }
 
     function normalizeLogItem(item, defaultRole = "system") {
@@ -1190,8 +1430,22 @@
     function renderLogs(snapshot) {
       const serverChat = firstDefined(snapshot.chat, snapshot.messages, snapshot.chat_log, []);
       const serverEvents = firstDefined(snapshot.events, snapshot.event_log, snapshot.logs, []);
+      const serverRows = Array.isArray(serverChat) ? serverChat : [];
+      // Optimistic local rows are stand-ins, not a second transcript: once the
+      // authoritative snapshot carries the same line (the realtime path writes
+      // the chat row before it even answers 202), the local copy is pruned —
+      // otherwise every sent message renders twice, forever. Rows the server
+      // never echoes (local error notices) survive untouched.
+      const chatKey = (item) => {
+        const n = normalizeLogItem(item, "system");
+        // The runtime collapses internal whitespace before it ledgers a turn;
+        // match that here or a doubled space keeps the local copy alive.
+        return `${n.role} ${n.text.replace(/\s+/g, " ").trim()}`;
+      };
+      const seen = new Set(serverRows.map(chatKey));
+      state.localChat = state.localChat.filter((item) => !seen.has(chatKey(item)));
       const chatItems = [
-        ...(Array.isArray(serverChat) ? serverChat : []),
+        ...serverRows,
         ...state.localChat,
       ].map((item) => normalizeLogItem(item, "system")).slice(-80);
       const eventItems = [
@@ -1265,6 +1519,85 @@
         const message = document.createElement("p");
         message.className = "log-text";
         message.textContent = item.text;
+        content.append(meta, message);
+        row.append(icon, content);
+        list.append(row);
+      }
+      list.scrollTop = list.scrollHeight;
+    }
+
+    // ------------------------------------------ card R4-lite: the mission you can see
+    // Two surfaces, one job: make a mission's whole life visible. The status
+    // line answers "what is it doing RIGHT NOW, and if it is standing still,
+    // why"; the log answers "what happened to the last few missions" and lives
+    // in its own bounded ring precisely so the event stream cannot evict it.
+    function renderMissionStatus(snapshot) {
+      const line = el("mission-status");
+      const navigation = snapshot.navigation || {};
+      const active = Boolean(navigation.enabled);
+      line.hidden = !active;
+      if (!active) {
+        line.replaceChildren();
+        return;
+      }
+      const state = String(navigation.state || "navigating");
+      const goal = String(navigation.goal || "").trim();
+      const reason = String(navigation.reason || "").trim();
+      line.dataset.state = state;
+
+      const headline = document.createElement("span");
+      const clearance = asNumber(snapshot.obstacle_distance_m, NaN);
+      // Labelled "clearance", never "distance to goal": the runtime publishes
+      // nearest-obstacle range and no goal range, and quietly relabelling one
+      // as the other would be a lie the panel tells at a glance.
+      const clearanceText = Number.isFinite(clearance)
+        ? ` · clearance ${clearance.toFixed(2)} m`
+        : "";
+      headline.textContent = `${capitalize(state)}${goal ? ` → ${goal}` : ""}${clearanceText}`;
+      line.replaceChildren(headline);
+
+      if (state === "blocked" || reason) {
+        const detail = document.createElement("span");
+        detail.className = "mission-status-reason";
+        const person = reason.split("|").some((part) => part.trim() === "person_stop");
+        detail.textContent = person
+          ? "Someone is in the way — waiting for them to pass."
+          : `Reason: ${capitalize(reason || "none")}`;
+        line.append(detail);
+      }
+    }
+
+    function renderMissionLog(items) {
+      const list = el("mission-log");
+      const rows = Array.isArray(items) ? items : [];
+      list.replaceChildren();
+      el("mission-log-count").textContent =
+        `${rows.length} ${rows.length === 1 ? "entry" : "entries"}`;
+      if (!rows.length) {
+        const empty = document.createElement("li");
+        empty.className = "empty-log";
+        empty.textContent = "No missions yet.";
+        list.append(empty);
+        return;
+      }
+      for (const item of rows) {
+        const row = document.createElement("li");
+        row.className = "event-item";
+        row.dataset.level = String(item.level || "info").toLowerCase();
+        row.dataset.kind = String(item.kind || "").toLowerCase();
+        const icon = document.createElement("span");
+        icon.className = "event-icon";
+        const content = document.createElement("div");
+        const meta = document.createElement("div");
+        meta.className = "log-meta";
+        const what = document.createElement("span");
+        what.textContent = `${capitalize(item.kind)} · ${capitalize(item.state)}`;
+        const when = document.createElement("span");
+        when.textContent = displayTime(item.timestamp);
+        meta.append(what, when);
+        const message = document.createElement("p");
+        message.className = "log-text";
+        message.textContent = item.text || `${capitalize(item.goal)}: ${capitalize(item.reason)}`;
         content.append(meta, message);
         row.append(icon, content);
         list.append(row);
@@ -1607,10 +1940,17 @@
     }
 
     function clearMotionInputs() {
+      // The zero-velocity release goes out only when something was actually
+      // held: a manual (0,0,0) is not a no-op server-side — it cancels any
+      // running mission ("manual stop acquired the base"). Sending it on every
+      // window blur meant clicking over to the simulator window killed the
+      // mission the owner had just started (B14's mechanism). Explicit stops
+      // (Space, the Stop button) post /api/action and are not affected.
+      const hadInput = state.heldKeys.size > 0 || state.heldPointers.size > 0;
       state.heldKeys.clear();
       state.heldPointers.clear();
       syncPressedButtons();
-      queueMotion({ vx: 0, vy: 0, vyaw: 0 }, true);
+      if (hadInput) queueMotion({ vx: 0, vy: 0, vyaw: 0 }, true);
     }
 
     document.querySelectorAll(".motion-control").forEach((button) => {
@@ -1643,9 +1983,14 @@
     window.addEventListener("keydown", (event) => {
       if (isTypingTarget(event.target) || event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.code === "Space") {
+        // OWNER POLICY RULING, 2026-08-19, verbatim: "Space bar should be the
+        // e-stop." Space latches the EMERGENCY stop — the same action the red
+        // Emergency stop button posts — not the nominal /api/action {stop}
+        // that cancels motion and leaves the dog armed. The isTypingTarget
+        // guard above is what keeps a space inside the chat box from doing it.
         event.preventDefault();
         clearMotionInputs();
-        postJson("/api/action", { action: "stop" }, "Stop requested").catch(() => {});
+        postJson("/api/action", { action: "emergency_stop" }, "Emergency stop latched (Space)").catch(() => {});
         return;
       }
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
@@ -1710,6 +2055,19 @@
       if (!clean) return;
       state.localChat.push({ role: "user", text: clean, timestamp: new Date().toISOString() });
       renderLogs(state.snapshot);
+      // Card R1.6 §C: with the live box ticked the sentence goes to the hosted
+      // session instead of the local agent. Deliberately either/or — sending
+      // one sentence to both would be the two-authorities bug the restricted
+      // ingress exists to prevent.
+      if (el("realtime-live").checked && state.realtime) {
+        try {
+          await postJson("/api/realtime/text", { text: clean });
+        } catch (error) {
+          state.localChat.push({ role: "error", text: `Live session refused: ${error.message}`, timestamp: new Date().toISOString() });
+          renderLogs(state.snapshot);
+        }
+        return;
+      }
       try {
         const response = await postJson("/api/voice/text", { text: clean, is_final: true });
         const reply = firstDefined(response?.reply, response?.message, response?.text);
@@ -1740,6 +2098,10 @@
       clearTimeout(partialTranscriptTimer);
       const partial = event.target.value.trim();
       if (!partial) return;
+      // Partial hypotheses belong to the LOCAL voice session only. Streaming
+      // half-typed text into a billed hosted session would pay for every
+      // keystroke and would put unfinished sentences into the ledger.
+      if (el("realtime-live").checked && state.realtime) return;
       partialTranscriptTimer = setTimeout(() => {
         api("/api/voice/text", {
           method: "POST",
@@ -1754,6 +2116,236 @@
     document.querySelectorAll("[data-command]").forEach((button) => {
       button.addEventListener("click", () => submitCommand(button.dataset.command));
     });
+
+    // ------------------------------------------- card R7 §A: the audio gateway
+    // The browser is the robot's ears and mouth. Everything below is transport:
+    // microphone PCM up, hosted speech down. Nothing here decides anything —
+    // arming is the server's call, and every refusal it sends is surfaced
+    // verbatim rather than retried.
+    const AUDIO_SUBPROTOCOL = "parcel-audio";
+    const MIC_LABEL_IDLE = "🎙 Enable microphone";
+    const MIC_LABEL_LIVE = "🔴 Listening · click to stop";
+    const MIC_LABEL_BUSY = "🎙 Connecting…";
+
+    function micLabel(text) {
+      const button = el("mic-button");
+      if (button) button.textContent = text;
+    }
+
+    function audioSocketUrl() {
+      const scheme = location.protocol === "https:" ? "wss" : "ws";
+      return `${scheme}://${location.host}/api/realtime/audio`;
+    }
+
+    // The panel token cannot ride in a header (a WebSocket handshake takes
+    // none) and must not ride in the URL (the panel logs request lines), so it
+    // rides as a second offered subprotocol. Same origin, same loopback host,
+    // same token as every POST.
+    function openAudioSocket() {
+      const socket = new WebSocket(audioSocketUrl(), [AUDIO_SUBPROTOCOL, `parcel-csrf.${CSRF_TOKEN}`]);
+      socket.binaryType = "arraybuffer";
+      return socket;
+    }
+
+    function stopMic(reason) {
+      const mic = state.mic;
+      state.mic = null;
+      if (!mic) return;
+      try { if (mic.processor) mic.processor.disconnect(); } catch (_) {}
+      try { if (mic.source) mic.source.disconnect(); } catch (_) {}
+      try { if (mic.stream) mic.stream.getTracks().forEach((track) => track.stop()); } catch (_) {}
+      try { if (mic.capture) mic.capture.close(); } catch (_) {}
+      try { if (mic.playback) mic.playback.close(); } catch (_) {}
+      try { if (mic.socket && mic.socket.readyState <= 1) mic.socket.close(1000, "owner closed the microphone"); } catch (_) {}
+      micLabel(MIC_LABEL_IDLE);
+      if (reason) showToast(reason);
+    }
+
+    // 16-bit little-endian mono at the rate the gateway's hello frame names.
+    // Browsers capture at the hardware rate (usually 48 kHz); the hosted
+    // session negotiates 24 kHz, so this is a real resample and not a cast.
+    function encodeMicFrame(samples, fromRate, toRate) {
+      const ratio = fromRate / toRate;
+      const count = Math.floor(samples.length / ratio);
+      const out = new DataView(new ArrayBuffer(count * 2));
+      for (let index = 0; index < count; index += 1) {
+        const position = index * ratio;
+        const low = Math.floor(position);
+        const high = Math.min(low + 1, samples.length - 1);
+        const blend = position - low;
+        const value = samples[low] * (1 - blend) + samples[high] * blend;
+        const clamped = Math.max(-1, Math.min(1, value));
+        out.setInt16(index * 2, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true);
+      }
+      return out.buffer;
+    }
+
+    // Hosted audio arrives WAV-wrapped with its rate in the RIFF header (the
+    // lane wraps it precisely so the rate can never be guessed wrong). Parsed
+    // by hand rather than through decodeAudioData: 240 ms chunks have to play
+    // gaplessly in arrival order, and an async decoder reorders them.
+    function playChunk(mic, buffer) {
+      const view = new DataView(buffer);
+      if (buffer.byteLength < 44) return;
+      const rate = view.getUint32(24, true) || 24000;
+      const samples = (buffer.byteLength - 44) / 2;
+      if (samples <= 0) return;
+      const audio = mic.playback.createBuffer(1, samples, rate);
+      const channel = audio.getChannelData(0);
+      for (let index = 0; index < samples; index += 1) {
+        channel[index] = view.getInt16(44 + index * 2, true) / 0x8000;
+      }
+      const source = mic.playback.createBufferSource();
+      source.buffer = audio;
+      source.connect(mic.playback.destination);
+      const now = mic.playback.currentTime;
+      if (mic.playAt < now) {
+        mic.playAt = now + 0.02;
+        mic.playStart = mic.playAt;
+      }
+      source.start(mic.playAt);
+      mic.playAt += audio.duration;
+      mic.sources.push(source);
+      source.onended = () => {
+        const at = mic.sources.indexOf(source);
+        if (at >= 0) mic.sources.splice(at, 1);
+      };
+      // What the owner has ACTUALLY heard so far, from the audio clock rather
+      // than from arrival time. The gateway clamps it before the lane uses it
+      // to truncate the model's belief about its own reply.
+      if (mic.socket.readyState === 1 && mic.utterance) {
+        const played = Math.max(0, (mic.playback.currentTime - mic.playStart) * 1000);
+        mic.socket.send(JSON.stringify({ type: "played", utterance: mic.utterance, ms: played }));
+      }
+    }
+
+    // Barge-in, browser half. The lane already cancels the response and tells
+    // the provider how much was heard; without this the audio already sitting
+    // in this tab's own buffer would keep talking over the owner.
+    function stopPlayback(mic) {
+      mic.sources.splice(0).forEach((source) => { try { source.stop(); } catch (_) {} });
+      mic.playAt = 0;
+      mic.playStart = 0;
+    }
+
+    async function startMic() {
+      if (!navigator.mediaDevices || !window.AudioContext) {
+        showToast("This browser exposes no microphone API");
+        return;
+      }
+      micLabel(MIC_LABEL_BUSY);
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+        });
+      } catch (error) {
+        micLabel(MIC_LABEL_IDLE);
+        showToast(`Microphone refused: ${error.message}`);
+        return;
+      }
+      const socket = openAudioSocket();
+      const mic = {
+        socket,
+        stream,
+        capture: null,
+        playback: null,
+        source: null,
+        processor: null,
+        rate: 24000,
+        maxFrameBytes: 32768,
+        utterance: 0,
+        playAt: 0,
+        playStart: 0,
+        sources: [],
+      };
+      state.mic = mic;
+
+      socket.addEventListener("message", (event) => {
+        if (state.mic !== mic) return;
+        if (typeof event.data !== "string") {
+          if (mic.playback) playChunk(mic, event.data);
+          return;
+        }
+        let body;
+        try { body = JSON.parse(event.data); } catch (_) { return; }
+        if (body.type === "hello") {
+          mic.rate = Number(body.input && body.input.rate) || 24000;
+          mic.maxFrameBytes = Number(body.input && body.input.max_frame_bytes) || 32768;
+          // Connected is not listening: the gateway keeps the ear shut until
+          // this frame, which only ever follows the click that got us here.
+          socket.send(JSON.stringify({ type: "mic", on: true }));
+          return;
+        }
+        if (body.type === "mic") {
+          if (body.on) {
+            micLabel(MIC_LABEL_LIVE);
+            armCapture(mic);
+          } else {
+            stopMic(`Microphone not armed: ${body.reason || "refused"}`);
+          }
+          return;
+        }
+        if (body.type === "utterance") {
+          mic.utterance = Number(body.utterance) || 0;
+          mic.playAt = 0;
+          mic.playStart = 0;
+          return;
+        }
+        if (body.type === "stop") {
+          stopPlayback(mic);
+          return;
+        }
+        if (body.type === "refused") {
+          showToast(`Audio gateway: ${body.reason || "refused"}`);
+        }
+      });
+      socket.addEventListener("close", (event) => {
+        if (state.mic !== mic) return;
+        stopMic(event.reason ? `Audio gateway closed: ${event.reason}` : "Audio gateway closed");
+      });
+      socket.addEventListener("error", () => {
+        if (state.mic !== mic) return;
+        stopMic("Audio gateway socket failed");
+      });
+    }
+
+    function armCapture(mic) {
+      if (mic.processor) return;
+      mic.capture = new AudioContext();
+      mic.playback = new AudioContext({ sampleRate: mic.rate });
+      mic.source = mic.capture.createMediaStreamSource(mic.stream);
+      // ScriptProcessorNode is deprecated but is the only capture node that
+      // works here: an AudioWorklet needs a blob: module URL and the panel's
+      // Content-Security-Policy is `default-src 'self'`.
+      const frames = 2048;
+      mic.processor = mic.capture.createScriptProcessor(frames, 1, 1);
+      mic.processor.onaudioprocess = (event) => {
+        if (state.mic !== mic || mic.socket.readyState !== 1) return;
+        const payload = encodeMicFrame(event.inputBuffer.getChannelData(0), mic.capture.sampleRate, mic.rate);
+        // Mic frames keep flowing while hosted audio plays — that is what makes
+        // barge-in possible at all. Oversized frames are the gateway's refusal
+        // to make, not ours; this only refuses to exceed the stated cap.
+        if (payload.byteLength <= mic.maxFrameBytes) mic.socket.send(payload);
+      };
+      mic.source.connect(mic.processor);
+      // Zero-gain terminus: ScriptProcessorNode does not fire unless it reaches
+      // a destination, and routing the microphone to the speakers would howl.
+      const mute = mic.capture.createGain();
+      mute.gain.value = 0;
+      mic.processor.connect(mute);
+      mute.connect(mic.capture.destination);
+    }
+
+    if (el("mic-button")) {
+      el("mic-button").addEventListener("click", () => {
+        if (state.mic) {
+          stopMic("Microphone closed");
+          return;
+        }
+        startMic();
+      });
+    }
 
     new ResizeObserver(resizeCanvas).observe(canvas);
     resizeCanvas();

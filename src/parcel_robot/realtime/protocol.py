@@ -30,12 +30,61 @@ import base64
 import binascii
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any, ClassVar
 
 #: Sample rate the provider emits and accepts for ``pcm16`` audio. The local
 #: ``SpeakerSink`` infers its rate from the first RIFF header and otherwise
 #: assumes 16 kHz, so this number has to travel with the bytes.
 PCM16_SAMPLE_RATE_HZ = 24_000
+
+#: Discriminator the provider requires inside every ``session.update`` object.
+#: Verified live 2026-08-18: a ``session`` without it is refused whole with
+#: ``missing_required_parameter``, which means the instructions, the voice and
+#: the tool surface in that frame all silently do not apply. Named here so both
+#: this module's :class:`SessionUpdate` and the tool broker's session frame read
+#: it from one place.
+SESSION_OBJECT_TYPE = "realtime"
+
+#: Wire name of the PCM16 audio format object. Paired with
+#: :data:`PCM16_SAMPLE_RATE_HZ` inside ``session.audio.output.format``.
+PCM16_FORMAT_TYPE = "audio/pcm"
+
+#: Content type each conversation-item ROLE must carry, per role. Card R8.
+#:
+#: Verified live 2026-08-19 against ``gpt-realtime-2.1-mini`` by sending all
+#: nine ``(role x content type)`` pairs down one socket, each tagged with its
+#: own client ``event_id``, and reading the refusals back. The provider is
+#: exact, it is loud, and it is NOT symmetric:
+#:
+#: ===========  ==============  =====================================================
+#: role         accepted        what the provider says about the other two
+#: ===========  ==============  =====================================================
+#: ``user``     ``input_text``  "Supported values are: 'input_text' and 'input_audio'"
+#: ``system``   ``input_text``  "Invalid value: 'text'. Value must be 'input_text'"
+#: ``assistant`` ``output_text`` "Invalid value: 'text'. Value must be 'output_text'"
+#: ===========  ==============  =====================================================
+#:
+#: Before this table every non-``user`` item this lane sent carried ``"text"``
+#: and was therefore REFUSED WHOLE. The consequences were silent and had been
+#: running since R1: every session open and every reconnect replayed the
+#: owner's half of the conversation and none of the robot's, and
+#: ``narrate_event`` — the entire delivery channel for mission narration — was
+#: a no-op on the wire while the lane still counted a narration. R6 found it in
+#: a live trace (``scrum/20260818/task_3/R6_STATUS.md``, "two live findings")
+#: and R8 is the card that fixed it.
+#:
+#: A mapping rather than a conditional expression on purpose: the role list and
+#: the content-type list are then the same list, so a fourth role cannot be
+#: admitted by ``__post_init__`` without someone stating what it puts on the
+#: wire.
+CONTENT_TYPE_BY_ROLE: Mapping[str, str] = MappingProxyType(
+    {
+        "user": "input_text",
+        "system": "input_text",
+        "assistant": "output_text",
+    }
+)
 
 
 class RealtimeProtocolError(ValueError):
@@ -80,16 +129,45 @@ class SessionUpdate(ClientEvent):
 
     def to_payload(self) -> dict[str, Any]:
         session: dict[str, Any] = {
+            # 2026-08-18, found live on the FIRST session that checked: without
+            # this the provider answers `error{code: missing_required_parameter,
+            # message: "Missing required parameter: 'session.type'."}` and
+            # DISCARDS the whole frame. R1.5's live test only asserted that a
+            # reply arrived, so a session that was running with no instructions
+            # at all looked green. See SESSION_OBJECT_TYPE.
+            "type": SESSION_OBJECT_TYPE,
             "model": self.model,
-            "voice": self.voice,
             "instructions": self.instructions,
             "output_modalities": ["audio"],
-            "audio": {"output": {"format": "pcm16", "sample_rate_hz": PCM16_SAMPLE_RATE_HZ}},
-            "turn_detection": {"type": self.turn_detection},
+            "audio": {
+                # 2026-08-18, live: BOTH ``session.voice`` and
+                # ``session.turn_detection`` are refused at the top level with
+                # `unknown_parameter`. Every session before this ran on the
+                # provider's default voice and default VAD while believing it
+                # had set them. They belong to the audio input/output objects.
+                "input": {
+                    "turn_detection": {"type": self.turn_detection},
+                    # Same relocation, same reason. Without transcription the
+                    # owner's half of every spoken conversation never reaches
+                    # the ledger, so a silently-discarded switch here is the
+                    # most expensive of the three.
+                    "transcription": (
+                        {"model": "whisper-1"} if self.input_audio_transcription else None
+                    ),
+                },
+                # ``format`` is an OBJECT carrying its own rate, not the string
+                # "pcm16" beside a ``sample_rate_hz`` sibling — both of those
+                # were refused live on 2026-08-18 (`invalid_type` and
+                # `unknown_parameter`). :data:`PCM16_SAMPLE_RATE_HZ` is still
+                # the number the lane WAV-wraps with, which is where it was
+                # always load-bearing: the sink reads the rate from the RIFF
+                # header and otherwise plays hosted audio 50% slow.
+                "output": {
+                    "format": {"type": PCM16_FORMAT_TYPE, "rate": PCM16_SAMPLE_RATE_HZ},
+                    "voice": self.voice,
+                },
+            },
         }
-        session["input_audio_transcription"] = (
-            {"model": "whisper-1"} if self.input_audio_transcription else None
-        )
         return {"type": self.TYPE, "session": session}
 
 
@@ -107,32 +185,42 @@ class InputAudioBufferAppend(ClientEvent):
 
 @dataclass(frozen=True)
 class ConversationItemCreate(ClientEvent):
-    """A synthetic history item: memory tail, or a post-hoc action report."""
+    """A synthetic history item: memory tail, or a post-hoc action report.
+
+    ``event_id`` is optional and is the lane's handle on its own frame. The
+    provider echoes it inside the ``error`` frame it sends when it refuses an
+    item (``error.event_id``, verified live 2026-08-19), which is what turns "a
+    server error happened at some point" into "the narration you counted was
+    dropped, and here it is". Nothing on the wire requires it, so it is only
+    emitted when a caller asks for one.
+    """
 
     TYPE: ClassVar[str] = "conversation.item.create"
 
     role: str
     text: str
     item_id: str | None = None
+    event_id: str | None = None
 
     def __post_init__(self) -> None:
-        if self.role not in {"user", "assistant", "system"}:
+        if self.role not in CONTENT_TYPE_BY_ROLE:
             raise RealtimeProtocolError(f"unsupported conversation item role: {self.role!r}")
 
     def to_payload(self) -> dict[str, Any]:
         item: dict[str, Any] = {
             "type": "message",
             "role": self.role,
-            "content": [
-                {
-                    "type": "input_text" if self.role == "user" else "text",
-                    "text": self.text,
-                }
-            ],
+            # Card R8, live-verified per role. This was ``input_text`` for user
+            # and ``"text"`` for everything else, and ``"text"`` is accepted for
+            # no role at all — see :data:`CONTENT_TYPE_BY_ROLE`.
+            "content": [{"type": CONTENT_TYPE_BY_ROLE[self.role], "text": self.text}],
         }
         if self.item_id is not None:
             item["id"] = self.item_id
-        return {"type": self.TYPE, "item": item}
+        payload: dict[str, Any] = {"type": self.TYPE, "item": item}
+        if self.event_id is not None:
+            payload["event_id"] = self.event_id
+        return payload
 
 
 @dataclass(frozen=True)
@@ -230,6 +318,49 @@ class SessionCreated(ServerEvent):
     TYPE: ClassVar[str] = "session.created"
 
     session_id: str
+
+
+@dataclass(frozen=True)
+class LifecycleEvent(ServerEvent):
+    """A frame the provider narrates but the lane does not act on.
+
+    Added 2026-08-17 from the FIRST live session (`gpt-realtime-2.1-mini`).
+    R1's codec was written from documentation and knew only the frames the lane
+    consumes, so real traffic refused ten frames across eight types before a
+    single word was spoken. Every one is response/item lifecycle bookkeeping —
+    the content arrives in the transcript, audio and ``response.done`` frames
+    the lane already handles.
+
+    Recognizing them is NOT a relaxation of the fail-closed rule. A genuinely
+    unknown ``type`` still raises :class:`UnknownEventType`; this list is
+    exactly the set observed on the wire, each named so a reader can see why it
+    is ignorable. ``_dispatch`` has no branch for this class, so it falls
+    through as a deliberate no-op.
+    """
+
+    TYPE: ClassVar[str] = ""
+
+    type_name: str
+
+
+#: Observed live 2026-08-17; capture in the session record. Ignorable because
+#: the lane reads content from the transcript/audio/response.done frames.
+LIFECYCLE_EVENT_TYPES: tuple[str, ...] = (
+    "conversation.item.added",  # an item appeared in the conversation
+    "conversation.item.done",  # …and finished
+    "response.created",  # a response began; response.done carries the usage
+    "response.output_item.added",  # output item envelope open
+    "response.output_item.done",  # …closed
+    "response.content_part.added",  # content part envelope open
+    "response.content_part.done",  # …closed
+    "rate_limits.updated",  # quota headroom; not a conversational fact
+    # Observed live 2026-08-18, on the first session whose ``session.update``
+    # was actually ACCEPTED (see SESSION_OBJECT_TYPE) and the first session
+    # that ever declared tools. Neither could appear before those two fixes,
+    # which is why R1.5's capture did not contain them.
+    "session.updated",  # the provider's ack of our own session.update
+    "response.function_call_arguments.delta",  # argument fragments; .done is the event
+)
 
 
 @dataclass(frozen=True)
@@ -337,10 +468,24 @@ class ResponseDone(ServerEvent):
 
 @dataclass(frozen=True)
 class ErrorEvent(ServerEvent):
+    """A refusal. ``event_id`` says WHICH of our frames it is about.
+
+    Card R8. The provider echoes the client ``event_id`` of the offending frame
+    inside the nested error object — verified live 2026-08-19, where nine
+    tagged ``conversation.item.create`` frames produced six refusals and every
+    one of them named its own probe. Deliberately read from ``error.event_id``
+    and never from the frame's own top-level ``event_id``, which is the id of
+    the ERROR and would attribute every refusal to itself.
+
+    Defaults to ``""`` so an error frame that carries no echo — and every error
+    frame this codec parsed before R8 — is unchanged.
+    """
+
     TYPE: ClassVar[str] = "error"
 
     code: str
     message: str
+    event_id: str = ""
 
 
 # ------------------------------------------------------------------- parsing
@@ -421,9 +566,15 @@ def _parse_session_created(payload: Mapping[str, Any]) -> SessionCreated:
 def _parse_error(payload: Mapping[str, Any]) -> ErrorEvent:
     raw = payload.get("error")
     detail = raw if isinstance(raw, Mapping) else payload
+    # ONLY from the nested error object (card R8). The top-level ``event_id``
+    # on an error frame identifies the error itself, so reading it here would
+    # hand every refusal a unique id that matches nothing the lane ever sent —
+    # attribution that is always wrong is worse than none.
+    echoed = _text(raw, "event_id", required=False) if isinstance(raw, Mapping) else ""
     return ErrorEvent(
         code=_text(detail, "code", required=False) or "unknown",
         message=_text(detail, "message", required=False) or "no message",
+        event_id=echoed,
     )
 
 
@@ -471,6 +622,15 @@ _SERVER_PARSERS: dict[str, Callable[[Mapping[str, Any]], ServerEvent]] = {
     ErrorEvent.TYPE: _parse_error,
 }
 
+# Lifecycle frames parse to a no-op event rather than raising. Registered from
+# LIFECYCLE_EVENT_TYPES so the list above stays the single place a reader looks.
+_SERVER_PARSERS.update(
+    {
+        name: (lambda p, _name=name: LifecycleEvent(type_name=_name))
+        for name in LIFECYCLE_EVENT_TYPES
+    }
+)
+
 SERVER_EVENT_TYPES = frozenset(_SERVER_PARSERS)
 
 
@@ -506,8 +666,11 @@ def parse_client_event_type(payload: object) -> str:
 
 __all__ = [
     "CLIENT_EVENT_TYPES",
+    "CONTENT_TYPE_BY_ROLE",
+    "LIFECYCLE_EVENT_TYPES",
     "PCM16_SAMPLE_RATE_HZ",
     "SERVER_EVENT_TYPES",
+    "SESSION_OBJECT_TYPE",
     "ClientEvent",
     "ConversationItemCreate",
     "ConversationItemTruncate",
@@ -516,6 +679,7 @@ __all__ = [
     "FunctionCallOutput",
     "InputAudioBufferAppend",
     "InputTranscriptionCompleted",
+    "LifecycleEvent",
     "MalformedEvent",
     "OutputAudioDelta",
     "OutputAudioDone",

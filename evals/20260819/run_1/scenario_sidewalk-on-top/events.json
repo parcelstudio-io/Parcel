@@ -1,0 +1,131 @@
+{
+  "scenario": "sidewalk-on-top",
+  "began_utc": "2026-08-20T07:39:00.126273+00:00",
+  "ended_utc": "2026-08-20T07:39:25.453542+00:00",
+  "runtime_events": [
+    {
+      "id": 6,
+      "role": "realtime",
+      "text": "hosted session opened: rt_03cbba51af73",
+      "level": "success",
+      "timestamp": "2026-08-20T07:39:00.395723+00:00",
+      "t_s": 1.002
+    },
+    {
+      "id": 7,
+      "role": "realtime",
+      "text": "realtime driver started at 20 Hz",
+      "level": "info",
+      "timestamp": "2026-08-20T07:39:00.396257+00:00",
+      "t_s": 1.002
+    },
+    {
+      "id": 8,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-1a09eae50389b3581e8f8d56 revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:39:01.130699+00:00",
+      "t_s": 2.004
+    },
+    {
+      "id": 9,
+      "role": "realtime",
+      "text": "tool navigate_to: ok — mission accepted: sidewalk",
+      "level": "info",
+      "timestamp": "2026-08-20T07:39:01.130833+00:00",
+      "t_s": 2.004
+    },
+    {
+      "id": 10,
+      "role": "navigation",
+      "text": "Navigating to sidewalk.",
+      "level": "success",
+      "timestamp": "2026-08-20T07:39:01.253918+00:00",
+      "t_s": 2.004
+    },
+    {
+      "id": 11,
+      "role": "safety",
+      "text": "Slowing near an obstacle",
+      "level": "info",
+      "timestamp": "2026-08-20T07:39:14.845887+00:00",
+      "t_s": 15.024
+    },
+    {
+      "id": 12,
+      "role": "navigation",
+      "text": "Stopping at sidewalk; checking position and motion feedback",
+      "level": "info",
+      "timestamp": "2026-08-20T07:39:21.154268+00:00",
+      "t_s": 21.029
+    },
+    {
+      "id": 13,
+      "role": "navigation",
+      "text": "Arrived at sidewalk",
+      "level": "success",
+      "timestamp": "2026-08-20T07:39:21.348492+00:00",
+      "t_s": 22.03
+    },
+    {
+      "id": 14,
+      "role": "brain",
+      "text": "parcel-task-1a09eae50389b3581e8f8d56: task_succeeded",
+      "level": "success",
+      "timestamp": "2026-08-20T07:39:21.348985+00:00",
+      "t_s": 22.03
+    }
+  ],
+  "mission_log": [
+    {
+      "kind": "started",
+      "goal": "sidewalk",
+      "state": "searching",
+      "reason": "scan_behavior_rotate",
+      "level": "info",
+      "text": "Navigating to sidewalk.",
+      "timestamp": "2026-08-20T07:39:01.253908+00:00",
+      "id": 1,
+      "t_s": 2.004
+    },
+    {
+      "kind": "ended",
+      "goal": "sidewalk",
+      "state": "arrived",
+      "reason": "arrived_verified",
+      "level": "success",
+      "text": "Arrived at sidewalk.",
+      "timestamp": "2026-08-20T07:39:21.348485+00:00",
+      "id": 2,
+      "t_s": 22.03
+    }
+  ],
+  "measurements": {
+    "mission_started": true,
+    "final_xy": [
+      1.3880781842814656,
+      2.5234962731136332
+    ],
+    "nav_state": "arrived",
+    "nav_reason": "arrived_verified",
+    "nav_goal": "sidewalk",
+    "containment_scene_truth": [
+      {
+        "region": "crosswalk",
+        "centre_inside": false,
+        "footprint_inside": false
+      },
+      {
+        "region": "sidewalk",
+        "centre_inside": true,
+        "footprint_inside": true
+      },
+      {
+        "region": "sidewalk_south",
+        "centre_inside": false,
+        "footprint_inside": false
+      }
+    ],
+    "containment_source": "evals/nav_instruct/scene_truth.json"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "scenario": "orbit-refused",
+  "began_utc": "2026-08-20T07:42:10.593767+00:00",
+  "ended_utc": "2026-08-20T07:42:37.402090+00:00",
+  "runtime_events": [
+    {
+      "id": 39,
+      "role": "safety",
+      "text": "Slowing near an obstacle",
+      "level": "info",
+      "timestamp": "2026-08-20T07:42:10.623408+00:00",
+      "t_s": 191.201
+    },
+    {
+      "id": 40,
+      "role": "spatial",
+      "text": "orbit refused: orbit_annulus_blocked",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:42:13.355622+00:00",
+      "t_s": 194.204
+    },
+    {
+      "id": 41,
+      "role": "realtime",
+      "text": "tool circle_owner: rejected — I can't walk around you here — someone is in the way; there isn't room on your right.",
+      "level": "info",
+      "timestamp": "2026-08-20T07:42:13.355655+00:00",
+      "t_s": 194.204
+    }
+  ],
+  "mission_log": [],
+  "measurements": {
+    "crowd_ring_m": 1.45,
+    "crowd_size": 6,
+    "injected_at": "backend.observe (perception seam)",
+    "spatial_state": "completed",
+    "spatial_reason": "orbit_complete",
+    "spatial_progress": 1.0,
+    "feasibility_probe": {
+      "feasible": false,
+      "cause": "orbit_annulus_blocked",
+      "blocked": [
+        {
+          "start_deg": 348.7,
+          "end_deg": 368.7,
+          "width_deg": 20.0,
+          "label": "someone",
+          "clearance_m": 0.196
+        },
+        {
+          "start_deg": 48.7,
+          "end_deg": 68.7,
+          "width_deg": 20.0,
+          "label": "someone",
+          "clearance_m": 0.196
+        },
+        {
+          "start_deg": 108.7,
+          "end_deg": 128.7,
+          "width_deg": 20.0,
+          "label": "someone",
+          "clearance_m": 0.196
+        },
+        {
+          "start_deg": 168.7,
+          "end_deg": 188.7,
+          "width_deg": 20.0,
+          "label": "someone",
+          "clearance_m": 0.196
+        },
+        {
+          "start_deg": 228.7,
+          "end_deg": 248.7,
+          "width_deg": 20.0,
+          "label": "someone",
+          "clearance_m": 0.196
+        },
+        {
+          "start_deg": 288.7,
+          "end_deg": 308.7,
+          "width_deg": 20.0,
+          "label": "someone",
+          "clearance_m": 0.196
+        }
+      ],
+      "refusal_sentence": "I can't walk around you here — someone is in the way; there isn't room on your right."
+    }
+  }
+}

@@ -30,6 +30,14 @@ EVALS_UI_PATH = Path(__file__).with_name("ui") / "evals.html"
 POSE_REVIEW_UI_PATH = Path(__file__).with_name("ui") / "poses.html"
 MAX_REQUEST_BYTES = 65_536
 
+#: Card R7 §A. The browser audio gateway's single endpoint. It is a GET that
+#: never returns a body: the handler upgrades the connection to a WebSocket and
+#: hands the raw socket to ``realtime.audio_gateway``. Kept on the panel's own
+#: port and origin deliberately — the loopback Host check, the same-origin check
+#: and the per-process CSRF token are already the panel's, and a second listener
+#: would have been a second, weaker front door.
+REALTIME_AUDIO_PATH = "/api/realtime/audio"
+
 #: Ordered (prefix, class) pairs; the first matching prefix wins, so longer
 #: prefixes ("tree_top_") must appear before their shorter siblings ("tree_").
 SEMANTIC_GEOM_PREFIXES: tuple[tuple[str, str], ...] = (
@@ -189,6 +197,16 @@ class RuntimeHTTPServer(ThreadingHTTPServer):
         self.scene_path = scene_path
         self.pose_review_enabled = pose_review_enabled
         self.csrf_token = secrets.token_urlsafe(32)
+        # Card R1.6. The realtime lane's arming gate wants "an authenticated
+        # handshake token", and the only token in this process is minted right
+        # above — after the runtime was built, which is why the runtime cannot
+        # read it and must be handed it. Without this line the lane refuses to
+        # arm (`no_handshake_token`), which is the correct answer for a runtime
+        # with no panel; a lane that invented its own token would be arming on
+        # nothing at all.
+        bind = getattr(runtime, "bind_panel_token", None)
+        if callable(bind):
+            bind(self.csrf_token)
         super().__init__(address, RuntimeRequestHandler)
 
 
@@ -232,6 +250,9 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
                 "__PARCEL_CSRF_TOKEN__", self.server.csrf_token
             )
             self._send_bytes(body.encode(), "text/html; charset=utf-8")
+            return
+        if path == REALTIME_AUDIO_PATH:
+            self._serve_realtime_audio()
             return
         if path == "/api/scene":
             try:
@@ -313,6 +334,15 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
                         "state": self.server.runtime.snapshot(),
                     },
                     HTTPStatus.ACCEPTED if turn_id is not None else HTTPStatus.OK,
+                )
+                return
+            if path == "/api/realtime/text":
+                # Card R1.6 §C. The LIVE hosted session, not the local agent:
+                # deliberately a separate route from /api/voice/text, which
+                # refuses the realtime origin outright (binding constraint 1).
+                self._send_json(
+                    self.server.runtime.submit_realtime_text(self._string(payload, "text")),
+                    HTTPStatus.ACCEPTED,
                 )
                 return
             if path == "/api/voice/barge-in":
@@ -425,6 +455,84 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
         except (ConnectionError, FileNotFoundError, OSError, RuntimeError) as error:
             self._send_json({"detail": str(error)}, HTTPStatus.CONFLICT)
 
+    # ------------------------------------------------- card R7: audio gateway
+    def _serve_realtime_audio(self) -> None:
+        """Upgrade this GET to the browser audio websocket, or refuse in HTTP.
+
+        Three gates before a single byte of audio moves, in this order, and all
+        three are the panel's existing ones rather than new inventions:
+
+        * **loopback Host** — the same ``_valid_host`` every other route uses;
+        * **same origin** — mandatory here in a way it is not for POST, because
+          a WebSocket handshake is exempt from CORS: any page on the machine
+          could otherwise open this socket. An absent ``Origin`` is a non-browser
+          client (the headless proof client), which the loopback + token gates
+          already cover;
+        * **the panel token** — carried as a second offered subprotocol, because
+          a browser cannot set a header on a handshake and a query parameter
+          would be printed by ``log_message``. The comparison happens inside the
+          gateway, constant-time, against the token this server minted.
+
+        A runtime with no gateway (``mode: text``, or the lane not constructed)
+        answers 404: the endpoint does not exist rather than existing and idling.
+        """
+
+        # Imported here, not at module scope: ``websockets`` is an optional
+        # dependency and a build without it must still serve the whole panel.
+        from websockets.datastructures import Headers
+        from websockets.http11 import Request
+
+        from parcel_robot.realtime.audio_gateway import (
+            BrowserAudioGateway,
+            serve_websocket,
+        )
+
+        if not self._valid_host():
+            self._send_json({"detail": "invalid Host header"}, HTTPStatus.FORBIDDEN)
+            return
+        gateway = getattr(self.server.runtime, "realtime_gateway", None)
+        if not isinstance(gateway, BrowserAudioGateway):
+            self._send_json(
+                {"detail": "the realtime audio gateway is not constructed (mode is not audio)"},
+                HTTPStatus.NOT_FOUND,
+            )
+            return
+        if "websocket" not in self.headers.get("Upgrade", "").lower():
+            self._send_json(
+                {"detail": "this endpoint requires a WebSocket upgrade"},
+                HTTPStatus.UPGRADE_REQUIRED,
+            )
+            return
+        origin = self.headers.get("Origin")
+        if origin and not self._same_origin(origin):
+            self._send_json(
+                {"detail": "cross-origin audio sockets are forbidden"}, HTTPStatus.FORBIDDEN
+            )
+            return
+
+        # From here the socket stops being HTTP. Nothing may write to it through
+        # BaseHTTPRequestHandler again, which is what ``close_connection`` says.
+        self.close_connection = True
+        headers = Headers()
+        for name, value in self.headers.items():
+            headers[name] = value
+        request = Request(self.path, headers)
+        try:
+            serve_websocket(gateway, self.connection, request)
+        except (OSError, RuntimeError, ValueError) as error:  # pragma: no cover - defensive
+            print(f"parcel-panel: audio gateway socket ended: {error}")
+
+    def _same_origin(self, origin: str) -> bool:
+        origin_url = urlsplit(origin)
+        host_url = urlsplit(f"http://{self.headers.get('Host', '')}")
+        origin_port = origin_url.port or (443 if origin_url.scheme == "https" else 80)
+        host_port = host_url.port or 80
+        return (
+            origin_url.scheme in {"http", "https"}
+            and origin_url.hostname == host_url.hostname
+            and origin_port == host_port
+        )
+
     def do_OPTIONS(self) -> None:
         if not self._valid_host():
             self._send_json({"detail": "invalid Host header"}, HTTPStatus.FORBIDDEN)
@@ -457,17 +565,8 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
         if not hmac.compare_digest(supplied, self.server.csrf_token):
             raise PermissionError("missing or invalid control token")
         origin = self.headers.get("Origin")
-        if origin:
-            origin_url = urlsplit(origin)
-            host_url = urlsplit(f"http://{self.headers.get('Host', '')}")
-            origin_port = origin_url.port or (443 if origin_url.scheme == "https" else 80)
-            host_port = host_url.port or 80
-            if (
-                origin_url.scheme not in {"http", "https"}
-                or origin_url.hostname != host_url.hostname
-                or origin_port != host_port
-            ):
-                raise PermissionError("cross-origin control requests are forbidden")
+        if origin and not self._same_origin(origin):
+            raise PermissionError("cross-origin control requests are forbidden")
 
     def _valid_host(self) -> bool:
         host = urlsplit(f"http://{self.headers.get('Host', '')}").hostname

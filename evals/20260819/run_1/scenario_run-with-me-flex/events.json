@@ -1,0 +1,254 @@
+{
+  "scenario": "run-with-me-flex",
+  "began_utc": "2026-08-20T07:42:55.403685+00:00",
+  "ended_utc": "2026-08-20T07:43:54.213316+00:00",
+  "runtime_events": [
+    {
+      "id": 45,
+      "role": "brain",
+      "text": "Accepted plan parcel-task-95410ab662d183d3a1f8767b revision 1",
+      "level": "success",
+      "timestamp": "2026-08-20T07:42:56.011254+00:00",
+      "t_s": 236.252
+    },
+    {
+      "id": 46,
+      "role": "realtime",
+      "text": "tool follow_owner: ok — Okay—I'll follow you safely.",
+      "level": "info",
+      "timestamp": "2026-08-20T07:42:56.011369+00:00",
+      "t_s": 236.252
+    },
+    {
+      "id": 47,
+      "role": "behavior",
+      "text": "Owner-follow enabled",
+      "level": "success",
+      "timestamp": "2026-08-20T07:42:56.075750+00:00",
+      "t_s": 236.252
+    },
+    {
+      "id": 48,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:42:56.175370+00:00",
+      "t_s": 236.252
+    },
+    {
+      "id": 49,
+      "role": "brain",
+      "text": "parcel-task-95410ab662d183d3a1f8767b: task_succeeded",
+      "level": "success",
+      "timestamp": "2026-08-20T07:42:56.175646+00:00",
+      "t_s": 236.252
+    },
+    {
+      "id": 50,
+      "role": "follow",
+      "text": "following: tracking_owner",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:00.579184+00:00",
+      "t_s": 241.258
+    },
+    {
+      "id": 51,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:05.885394+00:00",
+      "t_s": 246.263
+    },
+    {
+      "id": 52,
+      "role": "follow",
+      "text": "blocked: obstacle_stop",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:43:06.385080+00:00",
+      "t_s": 246.263
+    },
+    {
+      "id": 53,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:06.685532+00:00",
+      "t_s": 247.264
+    },
+    {
+      "id": 54,
+      "role": "follow",
+      "text": "following: tracking_owner",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:07.483294+00:00",
+      "t_s": 248.266
+    },
+    {
+      "id": 55,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:09.889070+00:00",
+      "t_s": 250.268
+    },
+    {
+      "id": 56,
+      "role": "follow",
+      "text": "blocked: obstacle_stop",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:43:10.389674+00:00",
+      "t_s": 250.268
+    },
+    {
+      "id": 57,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:10.891774+00:00",
+      "t_s": 251.269
+    },
+    {
+      "id": 58,
+      "role": "follow",
+      "text": "following: tracking_owner",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:11.491560+00:00",
+      "t_s": 252.271
+    },
+    {
+      "id": 59,
+      "role": "safety",
+      "text": "Slowing near an obstacle",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:17.399817+00:00",
+      "t_s": 257.276
+    },
+    {
+      "id": 60,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:18.800490+00:00",
+      "t_s": 259.278
+    },
+    {
+      "id": 61,
+      "role": "follow",
+      "text": "blocked: obstacle_stop",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:43:19.796895+00:00",
+      "t_s": 260.279
+    },
+    {
+      "id": 62,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:20.700709+00:00",
+      "t_s": 261.28
+    },
+    {
+      "id": 63,
+      "role": "follow",
+      "text": "following: tracking_owner",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:22.700766+00:00",
+      "t_s": 263.282
+    },
+    {
+      "id": 64,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:29.013982+00:00",
+      "t_s": 269.29
+    },
+    {
+      "id": 65,
+      "role": "follow",
+      "text": "blocked: obstacle_stop",
+      "level": "warning",
+      "timestamp": "2026-08-20T07:43:30.010634+00:00",
+      "t_s": 270.291
+    },
+    {
+      "id": 66,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:31.114643+00:00",
+      "t_s": 271.292
+    },
+    {
+      "id": 67,
+      "role": "follow",
+      "text": "following: tracking_owner",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:33.214970+00:00",
+      "t_s": 273.294
+    },
+    {
+      "id": 68,
+      "role": "follow",
+      "text": "holding: at_follow_distance",
+      "level": "info",
+      "timestamp": "2026-08-20T07:43:38.123900+00:00",
+      "t_s": 278.299
+    }
+  ],
+  "mission_log": [],
+  "measurements": {
+    "follow_started": true,
+    "pace_intent_recorded": "run",
+    "pace_intent_after": "run",
+    "follow_max_vx_mps": 0.35,
+    "phases": [
+      {
+        "phase": "run",
+        "commanded_mps": 2.2,
+        "seconds": 12.04,
+        "began_t_s": 239.979,
+        "ended_t_s": 252.017
+      },
+      {
+        "phase": "walk",
+        "commanded_mps": 1.0,
+        "seconds": 22.07,
+        "began_t_s": 252.017,
+        "ended_t_s": 274.087
+      }
+    ],
+    "follow_snapshot": {
+      "enabled": true,
+      "state": "holding",
+      "mode": "direct",
+      "desired_distance_m": 1.85,
+      "heading_available": false,
+      "owner_heading_rad": null,
+      "owner_speed_mps": null,
+      "heading_track_status": "duplicate",
+      "stage_side": null,
+      "perception_basis": "camera_owner_track+robot_odometry+lidar",
+      "prediction": {
+        "enabled": true,
+        "active": true,
+        "reason": "predicted_lead_point",
+        "confidence": 1.0,
+        "lead_x_m": -1.7600000000000011,
+        "lead_y_m": -0.5,
+        "speed_scale": 1.0
+      },
+      "yield_aside": {
+        "enabled": false,
+        "active": false,
+        "reason": "idle",
+        "side": 0,
+        "offset_m": null,
+        "baseline_clearance_m": null,
+        "aside_clearance_m": null,
+        "aim_x_m": null,
+        "aim_y_m": null
+      }
+    }
+  }
+}

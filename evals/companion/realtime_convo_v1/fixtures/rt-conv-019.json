@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-019",
+  "title": "Tuesday, not Thursday",
+  "family": "conversation",
+  "probes": [
+    "correction",
+    "memory_callback"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:20:16Z",
+  "si_profile": "gentle_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "418e6662efd60d0e35f3c4bd1715d902d03c4c2b3899b5da4d6257e8910e253d",
+  "di_version": "di-companion-v1",
+  "di_digest": "84c3c1536a6091db2a13255e28fa2a49b337f499aae5e96151bb49a23c605491",
+  "di_flags": {
+    "location": "kitchen",
+    "local_time": "2026-08-21 08:45",
+    "part_of_day": "morning",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "keeps the calendar on the fridge"
+    ],
+    "history_digest": [
+      "they said: the engineer is coming about the boiler",
+      "you said: Thursday, then. I'll remember."
+    ]
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-019_00",
+      "owner_text": "the boiler man is coming Tuesday",
+      "response_id": "resp_EE4ehKe455xHHGoCz6bky",
+      "robot_item_id": "item_robot_rt-conv-019_00",
+      "robot_text": "Got it, Jae—Tuesday it is. I’ll keep that in mind, and we can plan around it together. If you want, we can also just keep things steady and relaxed that morning.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 717,
+        "output_tokens": 82,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 128
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-019_01",
+      "owner_text": "no, I said Tuesday, not Thursday",
+      "response_id": "resp_EE4el4fNcP0NXMQXBcuZx",
+      "robot_item_id": "item_robot_rt-conv-019_01",
+      "robot_text": "Right, thank you for catching that. Tuesday, not Thursday—got it. I’ll remember that.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 776,
+        "output_tokens": 43,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-019_02",
+      "owner_text": "you said Thursday back to me",
+      "response_id": "resp_EE4eo4CkZHJI2tEtDjgDi",
+      "robot_item_id": "item_robot_rt-conv-019_02",
+      "robot_text": "Oh, you’re right—I did say Thursday. Sorry about that, Jae. I’ll stick with Tuesday and keep it simple.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 813,
+        "output_tokens": 55,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-019_03",
+      "owner_text": "it's fine, just Tuesday",
+      "response_id": "resp_EE4es3R4EBbo5FhR3C8U2",
+      "robot_item_id": "item_robot_rt-conv-019_03",
+      "robot_text": "Okay, just Tuesday. I hear you. If anything comes up, we can adjust, but for now, Tuesday it is.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 855,
+        "output_tokens": 44,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-019_04",
+      "owner_text": "morning slot",
+      "response_id": "resp_EE4esfvtgQ29g5T1zDh7f",
+      "robot_item_id": "item_robot_rt-conv-019_04",
+      "robot_text": "Okay, a morning slot. I hear that—Tuesday morning is the plan. I’ll keep it in mind.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 894,
+        "output_tokens": 66,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 832
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-019_05",
+      "owner_text": "I'll write it on the fridge anyway",
+      "response_id": "resp_EE4ewK1HaekJzYV8dBwVX",
+      "robot_item_id": "item_robot_rt-conv-019_05",
+      "robot_text": "That’s a smart plan. If it’s on the fridge, I’ll be reminded by it too. Thanks for keeping everything steady.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 934,
+        "output_tokens": 48,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-019_06",
+      "owner_text": "safer that way",
+      "response_id": "resp_EE4ezkQZ5JqOIR0s4p0AM",
+      "robot_item_id": "item_robot_rt-conv-019_06",
+      "robot_text": "Yeah, safer is smart. I like that—keep things easy to see. If you need help walking through the day or just staying calm, I’m here.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 975,
+        "output_tokens": 57,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 5964,
+    "output_tokens": 395,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 5056
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

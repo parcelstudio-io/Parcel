@@ -9,12 +9,25 @@ usage() {
   cat <<'EOF'
 Usage: scripts/launch_stack.sh [stack options] [launch_sim options]
 
-Default: start/reuse Gemma reasoning, then launch MuJoCo + the browser panel.
+Default: the hosted GPT Realtime lane, Gemma reasoning, MuJoCo + the panel.
+
+The hosted Realtime lane is the PRODUCTION path and is ON by default (owner
+directive, 2026-08-18). A bare `scripts/launch_stack.sh` loads
+~/.config/parcel/realtime.env and requires the lane; if the credential or the
+config file is missing it refuses loudly and starts nothing. That refusal is
+the contract: a stack that comes up silently on the legacy voice path looks
+identical in the panel and is only discovered one typed sentence later.
 
 Stack options:
   --fish             Also start/reuse Fish Audio S2 Pro on port 8091
   --whisper          Also start/reuse whisper.cpp ASR on port 8178
-  --no-reasoner      Do not start Gemma; force deterministic panel commands
+  --no-reasoner      Do not start Gemma. The hosted lane remains active unless
+                     combined with --legacy for deterministic panel commands.
+  --legacy           E2E TESTING ONLY. Disable the hosted lane and come up on
+                     the local legacy voice path. Prints a banner; never the
+                     default, never silent.
+  --realtime         Accepted and ignored: the hosted lane is already the
+                     default. Kept so existing muscle memory keeps working.
   -h, --help         Show this help
 
 All other options are forwarded to scripts/launch_sim.sh, for example:
@@ -25,6 +38,11 @@ Environment equivalents:
   PARCEL_ENABLE_REASONER=0|1 (default 1)
   PARCEL_ENABLE_FISH=0|1     (default 0; opt-in for GPU/license reasons)
   PARCEL_ENABLE_WHISPER=0|1  (default 0; useful after an audio endpoint exists)
+  PARCEL_ENABLE_REALTIME=0|1 (default 1 — the prod path; the hosted lane costs
+                             real money, and that is the accepted cost of the
+                             production path being the one that is tested)
+  PARCEL_REALTIME_ENV=<path> (default ~/.config/parcel/realtime.env, mode 600)
+  PARCEL_REALTIME_CONFIG=<path> (the lane's YAML; usually set by realtime.env)
 
 Services that were already healthy are reused and are not stopped on exit.
 Only processes started by this invocation are cleaned up.
@@ -46,6 +64,14 @@ is_true() {
 ENABLE_REASONER="${PARCEL_ENABLE_REASONER:-1}"
 ENABLE_FISH="${PARCEL_ENABLE_FISH:-0}"
 ENABLE_WHISPER="${PARCEL_ENABLE_WHISPER:-0}"
+# The hosted GPT Realtime lane is the production path (owner directive,
+# 2026-08-18). Default 1: a bare launch is a REAL launch, and a machine without
+# the credential/config refuses instead of quietly falling back to the legacy
+# voice path. Only --legacy (or PARCEL_ENABLE_REALTIME=0) turns it off, and
+# both say so out loud.
+ENABLE_REALTIME="${PARCEL_ENABLE_REALTIME:-1}"
+REALTIME_ENV="${PARCEL_REALTIME_ENV:-$HOME/.config/parcel/realtime.env}"
+LEGACY_REQUESTED=0
 SIM_ARGS=()
 PANEL_LLM_ARG=0
 
@@ -54,6 +80,10 @@ while [[ $# -gt 0 ]]; do
     --fish) ENABLE_FISH=1; shift ;;
     --whisper) ENABLE_WHISPER=1; shift ;;
     --no-reasoner) ENABLE_REASONER=0; shift ;;
+    # Accepted no-op: the hosted lane is already the default. Kept so that
+    # every note, doc and habit that says `--realtime` keeps working.
+    --realtime) ENABLE_REALTIME=1; shift ;;
+    --legacy) ENABLE_REALTIME=0; LEGACY_REQUESTED=1; shift ;;
     --llm)
       ENABLE_REASONER=1
       PANEL_LLM_ARG=1
@@ -77,6 +107,65 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -x "$PYTHON" ]] || die "missing Parcel environment: $PYTHON"
+
+# The hosted lane: fail LOUDLY and before anything else starts. A stack that
+# comes up with a silently disabled lane is the worst outcome here, because the
+# panel looks identical and the owner discovers it one typed sentence later.
+if is_true "$ENABLE_REALTIME"; then
+  KEY_ENV="${PARCEL_REALTIME_KEY_ENV:-OPENAI_API_KEY}"
+  if [[ -f "$REALTIME_ENV" ]]; then
+    echo "Loading realtime credential from $REALTIME_ENV (value never printed)"
+    set -a
+    # shellcheck disable=SC1090
+    . "$REALTIME_ENV"
+    set +a
+  fi
+  if [[ -z "${!KEY_ENV:-}" ]]; then
+    die "the hosted Realtime lane is the production path and it needs a credential:
+       \$$KEY_ENV is unset and $REALTIME_ENV does not define it.
+       Put the key in that file (mode 600, outside the repo):
+         install -m 600 /dev/null $REALTIME_ENV
+         printf '%s=sk-...\\n' "$KEY_ENV" > $REALTIME_ENV
+       For local e2e testing of the legacy voice path only: scripts/launch_stack.sh --legacy"
+  fi
+  REALTIME_YAML="${PARCEL_REALTIME_CONFIG:-$ROOT/configs/realtime.yaml}"
+  if [[ ! -f "$REALTIME_YAML" ]]; then
+    die "the hosted Realtime lane is the production path and it needs $REALTIME_YAML,
+       which is absent (the repo deliberately ships no configs/realtime.yaml).
+       Copy the documented example and edit it, or point PARCEL_REALTIME_CONFIG
+       at your own copy outside the repo (realtime.env usually does this):
+         cp $ROOT/configs/realtime.yaml.example $REALTIME_YAML
+       For local e2e testing of the legacy voice path only: scripts/launch_stack.sh --legacy"
+  fi
+  if ! grep -Eq '^[[:space:]]*enabled:[[:space:]]*true[[:space:]]*$' "$REALTIME_YAML"; then
+    die "$REALTIME_YAML does not set 'enabled: true', so the hosted lane would never
+       be constructed. Set it, or launch the legacy path deliberately with --legacy."
+  fi
+  # The launcher validated THIS file; hand the runtime the same one rather than
+  # letting it re-resolve and possibly pick a different path.
+  export PARCEL_REALTIME_CONFIG="$REALTIME_YAML"
+  echo "Realtime lane: enabled (production path), config $REALTIME_YAML, credential \$$KEY_ENV present"
+else
+  # Never silent. The legacy voice path is the E2E TEST baseline, not a product
+  # configuration, and a stack running on it must say so unmissably.
+  echo "=============================================================================="
+  echo "  LEGACY VOICE PATH — E2E TESTING ONLY"
+  echo ""
+  echo "  The hosted GPT Realtime lane is DISABLED for this launch, so typed and"
+  echo "  spoken turns go to the local legacy voice agent. That path exists to keep"
+  echo "  the e2e suites honest; it is NOT the production path and its behavior is"
+  echo "  not what the owner is testing when they talk to the dog."
+  if (( LEGACY_REQUESTED )); then
+    echo ""
+    echo "  Reason: --legacy was passed."
+  else
+    echo ""
+    echo "  Reason: PARCEL_ENABLE_REALTIME=$ENABLE_REALTIME in the environment."
+  fi
+  echo ""
+  echo "  Drop the flag (or unset PARCEL_ENABLE_REALTIME) to launch the prod path."
+  echo "=============================================================================="
+fi
 for script in launch_reasoner.sh launch_whisper.sh launch_fish_speech.sh launch_sim.sh; do
   [[ -x "$ROOT/scripts/$script" ]] || die "missing executable script: $ROOT/scripts/$script"
 done

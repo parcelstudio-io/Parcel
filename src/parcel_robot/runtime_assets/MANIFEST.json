@@ -172,8 +172,8 @@
       "mode": "0644",
       "origin": "mirror",
       "packaged": "configs/scenes/city_block.semantics.yaml",
-      "sha256": "aa94dc4033e95d082646a1153595b694372a96466cd36d3059a9f841ea6e2a0a",
-      "size": 8304,
+      "sha256": "6ef1b5eccba81ab59b274b1050af14975a0d081fdbf940e06ede657783b5d68a",
+      "size": 10493,
       "source": "configs/scenes/city_block.semantics.yaml"
     },
     {
@@ -731,5 +731,5 @@
       "target": "src/parcel_robot/config/robot.yaml"
     }
   ],
-  "tree_digest": "82b5691178c75cc9484e986ec94c8808ceebf087d79666f0c634e4845ed1c66a"
+  "tree_digest": "86ddbbb92cd9829709770c07a758e5fc4adf7e5dad5cd766d8e3385248c27895"
 }

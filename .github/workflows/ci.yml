@@ -1,14 +1,16 @@
 # Parcel CI — the declarative record of the promotion gate.
 #
-# This repo is not yet wired to GitHub Actions; this file IS the canonical,
-# versioned statement of what must run and when. The gate logic lives in
+# This is the canonical, versioned statement of what must run and when. It
+# declares push, pull-request, schedule, and manual triggers; hosted execution
+# remains unverified until a GitHub run is recorded. The gate logic lives in
 # scripts/ci_gate.py so it runs identically here and on a developer's machine
 # (`.parcel/bin/python scripts/ci_gate.py --tier commit`). CI only provisions an
 # environment and invokes the runner — it holds no gate logic of its own.
 #
 # Tiers (see docs/CI.md):
 #   commit  — every push / PR. Fast, offline, deterministic. No model server,
-#             no network. The 3097-passing default suite + ruff ratchet + frozen
+#             no network. The default suite (latest local record: 6,933 passed)
+#             + ruff ratchet + frozen
 #             digests + mutation-panel freshness + the three hard regression
 #             gates (model-off / latency-tail / hard-safety).
 #   nightly — scheduled. Everything above + the slow suite (live-sim e2e +

@@ -1,0 +1,175 @@
+{
+  "scenario": "whisperer-discipline",
+  "claim": "a quiet 3-minute session with telemetry churn: forwarded-item count stays at the always-band events only; the decision log accounts for every suppression",
+  "session_id": "rt_03cbba51af73",
+  "model": "gpt-realtime-2.1-mini",
+  "si_version": "si-companion-v2",
+  "began_utc": "2026-08-20T07:44:12.214914+00:00",
+  "ended_utc": "2026-08-20T07:47:27.255873+00:00",
+  "ledger_rows": [
+    {
+      "id": 36,
+      "role": "assistant",
+      "content": "I’m standing on the sidewalk now. It kept adjusting to a safe pace, so I’m not running, just keeping close.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErjgFjlBwLZ3hMoPZ8im"
+    },
+    {
+      "id": 39,
+      "role": "assistant",
+      "content": "I tried to reach the bench, but it’s not reachable, so I had to stop. Do you want me to head somewhere else, or try a different target?",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErkJTTgEFvQ7pfaPvhbu"
+    },
+    {
+      "id": 40,
+      "role": "assistant",
+      "content": "I’m now standing in the crosswalk. I can’t move past it unless something changes. Do you want me to try somewhere different?",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErkTsnW1IOgskYuiEKMt"
+    },
+    {
+      "id": 45,
+      "role": "assistant",
+      "content": "I tried to reach the lamppost, but it didn’t verify arrival, so I stopped. What would you like me to try next?",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErl8L6bUCMJWfBmT1dbV"
+    },
+    {
+      "id": 46,
+      "role": "assistant",
+      "content": "The sidewalk is blocked by something, so I’ve stopped and I’m waiting right here. Whenever it clears, just let me know what you’d like to do next.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErlcOl27hJbWVdoMyD0Q"
+    },
+    {
+      "id": 47,
+      "role": "assistant",
+      "content": "All set—I’m on the sidewalk now. Just let me know what you’d like to do next, and we’ll take it from there.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErlnGNIbIVASyZo3fqI3"
+    },
+    {
+      "id": 52,
+      "role": "assistant",
+      "content": "I tried to get to the bench, but it’s not reachable, so I stopped. What would you like to do next?",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErmRfeq8toH6FCIb37H0"
+    },
+    {
+      "id": 53,
+      "role": "assistant",
+      "content": "I’m standing in the crosswalk right now. Just tell me where you’d like to go or what you want to do next.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErmbrgZDo2ThmR8tRHby"
+    }
+  ],
+  "broker_calls": [],
+  "usage_rows": [
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErjgTDVVTKpX5GG3pGw1",
+      "status": "completed",
+      "monotonic_s": 368568.614825,
+      "input_tokens": 2334,
+      "output_tokens": 218,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 122,
+      "cached_tokens": 2176
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErkJCYqNE4o952lln6lf",
+      "status": "completed",
+      "monotonic_s": 368607.103067,
+      "input_tokens": 2412,
+      "output_tokens": 249,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 161,
+      "cached_tokens": 2304
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErkTWWdZehvodNeu2STE",
+      "status": "completed",
+      "monotonic_s": 368617.140361,
+      "input_tokens": 2474,
+      "output_tokens": 192,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 120,
+      "cached_tokens": 2368
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErl8DQmbDG2iZacUA867",
+      "status": "completed",
+      "monotonic_s": 368658.254479,
+      "input_tokens": 2578,
+      "output_tokens": 178,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 124,
+      "cached_tokens": 2432
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErlcMZRhUzJjuVcKOs5B",
+      "status": "completed",
+      "monotonic_s": 368687.86488,
+      "input_tokens": 2665,
+      "output_tokens": 258,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 155,
+      "cached_tokens": 2560
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErlnw1YB4sDkFpZGjUWn",
+      "status": "completed",
+      "monotonic_s": 368699.000418,
+      "input_tokens": 2746,
+      "output_tokens": 193,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 111,
+      "cached_tokens": 2624
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErmRaarhytpZijy8HwIv",
+      "status": "completed",
+      "monotonic_s": 368739.031332,
+      "input_tokens": 2827,
+      "output_tokens": 215,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 113,
+      "cached_tokens": 2752
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErmbNbikfespqTtQ1qMK",
+      "status": "completed",
+      "monotonic_s": 368749.317593,
+      "input_tokens": 2881,
+      "output_tokens": 207,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 112,
+      "cached_tokens": 2816
+    }
+  ],
+  "spend_usd": 0.038913
+}

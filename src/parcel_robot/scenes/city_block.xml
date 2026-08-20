@@ -30,6 +30,8 @@
     <material name="city_grass" rgba="0.22 0.42 0.2 1"/>
     <material name="city_glass" rgba="0.2 0.42 0.56 1" reflectance="0.35"/>
     <material name="city_metal" rgba="0.16 0.18 0.2 1"/>
+    <material name="entry_wall" rgba="0.58 0.54 0.48 1"/>
+    <material name="door_leaf" rgba="0.42 0.24 0.14 1"/>
   </asset>
 
   <worldbody>
@@ -76,6 +78,26 @@
     <geom name="planter_2" type="cylinder" pos="5.0 3.1 0.18" size="0.45 0.18" material="city_grass"/>
     <geom name="tree_2" type="cylinder" pos="5.0 3.1 0.9" size="0.10 0.75" rgba="0.32 0.2 0.1 1"/>
     <geom name="tree_top_2" type="sphere" pos="5.0 3.1 1.85" size="0.58" rgba="0.18 0.48 0.19 1"/>
+
+    <!-- Card R14: the block's one PORTAL. An entry wall runs west from bldg_1's
+         west corner along the north sidewalk's inner edge, and `door_1` is the
+         leaf set into it. Only `door_1` carries a semantic prefix; the two wall
+         stubs are unclassified scene furniture exactly like `window_*`/`curb`,
+         so the class extracts as ONE instance (city_semantics._instance_id
+         gives every geom of an unlisted class its own instance id, so a
+         multi-geom door would ground as several rival candidates).
+         Sited at the block's west end on purpose: `default_dynamic_agent_specs`
+         sends no pedestrian route west of x=-3.8 on the north sidewalk, so the
+         approach band is clear of the crowd churn. The leaf sits at y=4.12,
+         INSIDE the derived sidewalk polygon (y 2.2..4.2), so the threshold is
+         standable ground and "do not stop in the doorway" is a claim about
+         reachable geometry rather than about a wall. -->
+    <geom name="entry_wall_1" type="box" pos="-7.625 4.12 1.17" size="0.275 0.08 1.05"
+      material="entry_wall"/>
+    <geom name="door_1" type="box" pos="-6.95 4.12 1.17" size="0.4 0.06 1.05"
+      material="door_leaf"/>
+    <geom name="entry_wall_2" type="box" pos="-6.425 4.12 1.17" size="0.125 0.08 1.05"
+      material="entry_wall"/>
 
     <!-- Street furniture / crossing signals. -->
     <geom name="lamp_post_1" type="cylinder" pos="0.2 3.15 1.35" size="0.06 1.35" material="city_metal"/>

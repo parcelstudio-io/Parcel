@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "thread_id": "rt-conv-006",
+  "title": "Meet me at the corner",
+  "family": "navigation",
+  "probes": [
+    "route_confirmation",
+    "correction"
+  ],
+  "source": "live_scrape",
+  "model": "gpt-realtime-2.1-mini",
+  "captured_at": "2026-08-18T03:15:42Z",
+  "si_profile": "playful_companion",
+  "si_version": "si-companion-v1",
+  "si_digest": "ee40a44a45a4046e9ce72c8f40fac3b98854350df3a0cd65c0931667788774d5",
+  "di_version": "di-companion-v1",
+  "di_digest": "7408c2b8ae3d09e007df3aa7ded9d9a5cfce1b5fc54501648a50fc3b9625fd31",
+  "di_flags": {
+    "location": "sidewalk near home",
+    "local_time": "2026-08-20 07:55",
+    "part_of_day": "morning",
+    "owner_name": "Jae",
+    "owner_notes": [
+      "jogs ahead and lets the robot catch up"
+    ],
+    "history_digest": []
+  },
+  "declared_tools": [
+    "navigate_to",
+    "get_status",
+    "play_gesture"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "owner_item_id": "item_owner_rt-conv-006_00",
+      "owner_text": "I'm going to run ahead, meet me at the corner",
+      "response_id": "resp_EE4aBZDuCIQoALnOvCz2Q",
+      "robot_item_id": "item_robot_rt-conv-006_00",
+      "robot_text": "Okay, I hear you. I’ll follow your lead and head toward the corner, and I’ll report back what my movement system says.",
+      "tool_calls": [
+        {
+          "call_id": "call_0LXYBacvvtWEm6Ue",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"corner\",\"pace\":\"normal\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 703,
+        "output_tokens": 103,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 1,
+      "owner_item_id": "item_owner_rt-conv-006_01",
+      "owner_text": "the far corner, by the postbox",
+      "response_id": "resp_EE4aE7YrqF0p9fVy5ybwQ",
+      "robot_item_id": "item_robot_rt-conv-006_01",
+      "robot_text": "Alright, thanks for the clarification. I’ll aim for that far corner by the postbox and then report what my movement system says.",
+      "tool_calls": [
+        {
+          "call_id": "call_FpXQCR8RTFCKGf71",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"far corner by the postbox\",\"pace\":\"normal\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 800,
+        "output_tokens": 105,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 704
+      }
+    },
+    {
+      "index": 2,
+      "owner_item_id": "item_owner_rt-conv-006_02",
+      "owner_text": "no, the other end of the street",
+      "response_id": "resp_EE4aFIICylWdAtsiTo6OK",
+      "robot_item_id": "item_robot_rt-conv-006_02",
+      "robot_text": "Got it—other end of the street. I’ll reroute there and report what my movement status shows.",
+      "tool_calls": [
+        {
+          "call_id": "call_kBnOKffbiPfKS48y",
+          "name": "navigate_to",
+          "arguments": "{\"place\":\"other end of the street\",\"pace\":\"normal\"}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 901,
+        "output_tokens": 101,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 64
+      }
+    },
+    {
+      "index": 3,
+      "owner_item_id": "item_owner_rt-conv-006_03",
+      "owner_text": "yes that one",
+      "response_id": "resp_EE4aJZHwrso5x6g2jBocd",
+      "robot_item_id": "item_robot_rt-conv-006_03",
+      "robot_text": "Got it, thanks for confirming. I’ll check my status and then explain what it reports.",
+      "tool_calls": [
+        {
+          "call_id": "call_2EWkQcPyqRtvASsL",
+          "name": "get_status",
+          "arguments": "{}"
+        }
+      ],
+      "usage": {
+        "input_tokens": 991,
+        "output_tokens": 93,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 896
+      }
+    },
+    {
+      "index": 4,
+      "owner_item_id": "item_owner_rt-conv-006_04",
+      "owner_text": "don't cross anything",
+      "response_id": "resp_EE4aNantAvBVCiNuE7L1H",
+      "robot_item_id": "item_robot_rt-conv-006_04",
+      "robot_text": "Got it. I’m staying put and won’t cross anything.\n\nRight now, my status shows I’m not moving, and it’s a fixed system reading from this environment view, so I can’t actually guarantee what’s physically in front of me.\n\nSafety first: if you want, I can keep calm, wait, and report anything it says like a stop, or a turn—even if it’s just the system’s status.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1074,
+        "output_tokens": 138,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 960
+      }
+    },
+    {
+      "index": 5,
+      "owner_item_id": "item_owner_rt-conv-006_05",
+      "owner_text": "see you in a minute",
+      "response_id": "resp_EE4aRar8lrRjcTSktWdFU",
+      "robot_item_id": "item_robot_rt-conv-006_05",
+      "robot_text": "See you soon. I can’t physically meet you, but I can keep the conversation going right here while you move ahead.\n\nIf you check back, I’ll report what my status says, and we’ll plan the next step together.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1175,
+        "output_tokens": 73,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 768
+      }
+    },
+    {
+      "index": 6,
+      "owner_item_id": "item_owner_rt-conv-006_06",
+      "owner_text": "you took your time",
+      "response_id": "resp_EE4aV2XCzZhXFD8YHvQHj",
+      "robot_item_id": "item_robot_rt-conv-006_06",
+      "robot_text": "Yeah, I did. That’s a bit on me in this “virtual leash” world.\n\nI’m not really moving on the sidewalk, I’m waiting for your next comes-through. If it felt slow, I can try to be snappier with updates—just say the word and I’ll keep it tight.",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1236,
+        "output_tokens": 100,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1152
+      }
+    },
+    {
+      "index": 7,
+      "owner_item_id": "item_owner_rt-conv-006_07",
+      "owner_text": "come on then",
+      "response_id": "resp_EE4aZ4TnHWq4EZKtRxOBK",
+      "robot_item_id": "item_robot_rt-conv-006_07",
+      "robot_text": "Got it—let’s keep going together. I’m ready.\n\nBut I need a clear place or a direction. Where would you like me to aim for next? A street corner, across the park, or a specific landmark?",
+      "tool_calls": [],
+      "usage": {
+        "input_tokens": 1313,
+        "output_tokens": 158,
+        "input_audio_tokens": 0,
+        "output_audio_tokens": 0,
+        "cached_tokens": 1216
+      }
+    }
+  ],
+  "usage_totals": {
+    "input_tokens": 8193,
+    "output_tokens": 871,
+    "input_audio_tokens": 0,
+    "output_audio_tokens": 0,
+    "cached_tokens": 5824
+  },
+  "notes": "Captured live. Tool results were synthetic; no robot moved."
+}

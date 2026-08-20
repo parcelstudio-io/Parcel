@@ -1,0 +1,62 @@
+{
+  "scenario": "orbit-refused",
+  "claim": "same request with the owner boxed in (scripted obstacles): no orbit motion beyond approach, transcript shows the model SAYING it can't walk around, refusal in events",
+  "session_id": "rt_03cbba51af73",
+  "model": "gpt-realtime-2.1-mini",
+  "si_version": "si-companion-v2",
+  "began_utc": "2026-08-20T07:42:10.593767+00:00",
+  "ended_utc": "2026-08-20T07:42:37.402090+00:00",
+  "ledger_rows": [
+    {
+      "id": 22,
+      "role": "user",
+      "content": "Circle around me now.",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "owner",
+      "origin": "realtime",
+      "provider_item_id": null
+    },
+    {
+      "id": 23,
+      "role": "assistant",
+      "content": "It was rejected—there isn’t room on your right because someone or something is in the way. What would you like to try instead?",
+      "session_id": "rt_03cbba51af73",
+      "speaker": "robot",
+      "origin": "realtime",
+      "provider_item_id": "item_EErhdKEamouBqhVgrxJIy"
+    }
+  ],
+  "broker_calls": [
+    {
+      "call_id": "call_DML7je7fmSEzm6A4",
+      "tool": "circle_owner",
+      "status": "rejected",
+      "detail": "I can't walk around you here — someone is in the way; there isn't room on your right."
+    }
+  ],
+  "usage_rows": [
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErhcbVjdrtYsbk4rML5a",
+      "status": "completed",
+      "monotonic_s": 368439.725359,
+      "input_tokens": 2067,
+      "output_tokens": 73,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 0,
+      "cached_tokens": 1920
+    },
+    {
+      "session_id": "rt_03cbba51af73",
+      "response_id": "resp_EErhdhhAMEdQum4L11OL1",
+      "status": "completed",
+      "monotonic_s": 368441.592437,
+      "input_tokens": 2331,
+      "output_tokens": 183,
+      "input_audio_tokens": 0,
+      "output_audio_tokens": 119,
+      "cached_tokens": 0
+    }
+  ],
+  "spend_usd": 0.014776
+}
