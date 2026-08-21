@@ -16,10 +16,24 @@ raises on a non-boolean. A typo'd ``enabled: ture`` that silently read as false
 would be a bad day; a typo'd ``monthly_budget_usd`` that silently read as
 "unlimited" would be a worse one. Unknown keys raise, wrong types raise, and
 negative budgets raise.
+
+``+inf`` USED TO READ AS "UNLIMITED" (card R25, closing R23's registered gap)
+----------------------------------------------------------------------------
+The paragraph above was aspirational for one value. :func:`_positive` tested
+``not number > 0.0``, which refuses NaN (``nan > 0`` is False) but ACCEPTS
+``float("inf")`` — and YAML spells that ``.inf``. In this file ``+inf`` meant an
+infinite stall timeout, an unbounded session, a microphone that never
+idle-closes and *precisely* the "unlimited budget" this docstring says must not
+be possible. Card R23 measured it, could not fix it (the realtime package was
+outside its OWNS list) and pinned it as a registered gap
+(``scrum/20260821/task_2/R23_STATUS.md`` §7.2). Card R25 owns this file's
+validation and owns the budget, so the gap is closed here: every positive and
+non-negative number in this file must now be FINITE.
 """
 
 from __future__ import annotations
 
+import math
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -61,6 +75,7 @@ ALLOWED_KEYS = frozenset(
         "monthly_budget_usd",
         "whisperer",
         "capture",
+        "voice_identity",
     }
 )
 
@@ -74,6 +89,30 @@ WHISPERER_ALLOWED_KEYS = frozenset({"enabled", "max_updates_per_minute", "min_ga
 #: a refusal, because a mistyped ``max_minutes`` silently reading as the default
 #: would let a session that meant to record for two minutes record for thirty.
 CAPTURE_ALLOWED_KEYS = frozenset({"enabled", "dir", "max_minutes", "owner_gap_s"})
+
+#: The nested ``voice_identity:`` block — speaker verification for command
+#: arming (card F1-SI). Same refusal discipline again, and here it matters more
+#: than anywhere else in this file: a mistyped ``treshold`` silently reading as
+#: the default would make a config that meant to be strict merely look strict,
+#: and the only symptom would be a robot that obeys a television.
+VOICE_IDENTITY_ALLOWED_KEYS = frozenset(
+    {
+        "enabled",
+        "threshold",
+        "profile",
+        "model",
+        "min_utterance_s",
+        "budget_ms",
+        "narration_interval_s",
+        "doa",
+        "rejected_sector",
+    }
+)
+
+#: Decision 1's starting threshold: the midpoint of the worst-case gap measured
+#: on THIS host's own microphone array (``bench_doa.md`` Bench B — max impostor
+#: pair 0.431, min genuine pair 0.640, zero overlap on 378 pairs).
+DEFAULT_VOICE_THRESHOLD = 0.55
 
 #: Where recordings land when the config does not say. Repo-relative, created
 #: lazily, and deliberately NOT under ``evals/``: an eval corpus is a reviewed,
@@ -202,6 +241,83 @@ class CaptureConfig:
 
 
 @dataclass(frozen=True)
+class VoiceIdentityConfig:
+    """Whether an unrecognised voice may COMMAND the robot (card F1-SI).
+
+    THE DEFECT THIS EXISTS BECAUSE OF
+    ---------------------------------
+    A television commanded the robot twice, across two owner sessions, on
+    2026-08-20. Acoustic echo cancellation does not defend against that — it
+    cancels the robot's own loudspeaker, and a TV is an independent source in
+    the room — and the transcript-level Unicode-script check only catches the
+    cross-language case. The defence has to be about who is speaking.
+
+    THE ONE THING THIS BLOCK CANNOT DO
+    ----------------------------------
+    It cannot gate the emergency latch. There is no key here that reaches it,
+    because ``realtime/voice_identity.gates_kind`` answers the emergency class
+    before it looks at any configuration at all. Anyone in the room may stop the
+    dog; only commands need the owner's voice.
+
+    DEFAULT ON, AND WHY THAT IS NOT RECKLESS
+    ----------------------------------------
+    ``enabled: true`` is the default and it changes NOTHING on a host with no
+    enrolled profile: with no profile the gate reports ``verify_disabled`` and
+    the runtime behaves exactly as it did before this card, loudly, in the
+    snapshot. The switch that actually turns verification on is the existence of
+    an enrolled profile — an owner action, taken once, with their own voice.
+    Defaulting the block to ``false`` would mean an owner who enrolled still had
+    to find a second key before anything happened.
+    """
+
+    enabled: bool = True
+    #: Cosine at or above which a turn is the owner. Config, per decision 1.
+    threshold: float = DEFAULT_VOICE_THRESHOLD
+    #: Absolute path to the enrolled profile. Empty ⇒ beside the realtime config
+    #: (``voice_identity.default_profile_path``), which is outside the repo.
+    profile: str = ""
+    #: Absolute path to the embedding model. Empty ⇒ the vendored
+    #: ``models/speaker_id/`` copy named by the provenance lock.
+    model: str = ""
+    #: Buffered speech that triggers the PROVISIONAL verify of a turn. Raised
+    #: from 0.6 s by measurement: at 0.6 s the FAR/FRR run over this host's own
+    #: gold set returned FRR 38.5 % (FAR 0 %), because a fragment of a sentence
+    #: is not the sentence. See ``voice_identity.DEFAULT_MIN_UTTERANCE_S``.
+    min_utterance_s: float = 1.2
+    #: Added-latency budget in milliseconds. Measured and counted, not enforced
+    #: as a timeout: half an embedding is worse than a slow one.
+    budget_ms: float = 50.0
+    #: How often a refusal may become a SPOKEN sentence. Every refusal is
+    #: counted and logged regardless; this rate-limits only the narration.
+    narration_interval_s: float = 60.0
+    #: Open the XVF3800 vendor control interface and read ``DOA_VALUE``.
+    #: Default OFF: on this host the read path is blocked by a udev permission
+    #: only the owner can grant, and a feature that logs an Errno 13 on every
+    #: turn is worse than one that is off and says so.
+    doa: bool = False
+    #: ``[start_deg, end_deg]`` the television sits in, or ``None``. A turn from
+    #: inside this sector is refused UNLESS the embedding verify passes.
+    rejected_sector: tuple[float, float] | None = None
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "enabled": self.enabled,
+            "threshold": self.threshold,
+            # A path, not a secret — and knowing WHERE the profile is expected
+            # is exactly what an operator debugging "why is verify off" needs.
+            "profile": self.profile,
+            "model": self.model,
+            "min_utterance_s": self.min_utterance_s,
+            "budget_ms": self.budget_ms,
+            "narration_interval_s": self.narration_interval_s,
+            "doa": self.doa,
+            "rejected_sector": (
+                None if self.rejected_sector is None else list(self.rejected_sector)
+            ),
+        }
+
+
+@dataclass(frozen=True)
 class RealtimeConfig:
     """The lane's entire configuration surface."""
 
@@ -233,6 +349,9 @@ class RealtimeConfig:
     whisperer: WhispererConfig = WhispererConfig()
     #: Card R17. Session audio capture. Default OFF; the owner opts in.
     capture: CaptureConfig = CaptureConfig()
+    #: Card F1-SI. Speaker verification for command arming. Inert until an
+    #: owner profile is enrolled; never reaches the emergency latch.
+    voice_identity: VoiceIdentityConfig = VoiceIdentityConfig()
     source: str = "absent"
 
     @property
@@ -270,6 +389,7 @@ class RealtimeConfig:
             "monthly_budget_usd": self.monthly_budget_usd,
             "whisperer": self.whisperer.as_dict(),
             "capture": self.capture.as_dict(),
+            "voice_identity": self.voice_identity.as_dict(),
             "source": self.source,
         }
 
@@ -333,10 +453,24 @@ def _optional_text(mapping: Mapping[str, Any], key: str, *, max_chars: int = 0) 
 
 
 def _positive(mapping: Mapping[str, Any], key: str, default: float) -> float:
+    """A finite number greater than zero. ``.inf`` is a refusal, not a licence.
+
+    Card R25, closing card R23's registered gap. ``not number > 0.0`` refused
+    NaN by accident of IEEE comparison and accepted ``+inf`` by the same
+    accident; ``math.isfinite`` refuses both on purpose, and says which.
+    """
+
     value = mapping.get(key, default)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise RealtimeConfigError(f"realtime.{key} must be a number, got {value!r}")
     number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.{key} must be a finite number, got {number}. A non-finite "
+            f"value here is not 'no limit' — it is a limit that permits every "
+            f"finite value, which for monthly_budget_usd is an unlimited bill "
+            f"and for session_max_s is a session that never rolls over."
+        )
     if not number > 0.0:
         raise RealtimeConfigError(f"realtime.{key} must be greater than zero, got {number}")
     return number
@@ -360,7 +494,12 @@ def _whole_number(mapping: Mapping[str, Any], key: str, default: int) -> int:
 
 
 def _non_negative(mapping: Mapping[str, Any], key: str, default: float) -> float:
-    """Seconds. Zero is meaningful ("no extra spacing"); negative is a typo."""
+    """Seconds. Zero is meaningful ("no extra spacing"); negative is a typo.
+
+    Card R25: non-finite is a typo too. An infinite ``min_gap_s`` is a
+    whisperer that forwards its first fact and then never speaks again — a
+    silent off switch, which this block already refuses to have.
+    """
 
     value = mapping.get(key, default)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -368,6 +507,10 @@ def _non_negative(mapping: Mapping[str, Any], key: str, default: float) -> float
             f"realtime.whisperer.{key} must be a number, got {value!r}"
         )
     number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.{key} must be a finite number, got {number}"
+        )
     if number < 0.0:
         raise RealtimeConfigError(
             f"realtime.whisperer.{key} must not be negative, got {number}"
@@ -504,6 +647,158 @@ def capture_config_from_mapping(mapping: Mapping[str, Any] | None) -> CaptureCon
     )
 
 
+def _sector(value: Any) -> tuple[float, float] | None:
+    """Validate ``rejected_sector: [start, end]``. Absent / null ⇒ ``None``.
+
+    Degrees, azimuth, wrap allowed: ``[350, 10]`` is the twenty degrees around
+    due north. Both ends are required — a one-element sector is a half-written
+    thought, and guessing which half was meant would point the prefilter at a
+    direction the owner never named.
+    """
+
+    if value is None:
+        return None
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        raise RealtimeConfigError(
+            "realtime.voice_identity.rejected_sector must be a two-element "
+            f"[start_deg, end_deg] list, got {value!r}"
+        )
+    numbers: list[float] = []
+    for item in value:
+        if isinstance(item, bool) or not isinstance(item, (int, float)):
+            raise RealtimeConfigError(
+                f"realtime.voice_identity.rejected_sector holds a non-number: {item!r}"
+            )
+        angle = float(item)
+        if not 0.0 <= angle <= 360.0:
+            raise RealtimeConfigError(
+                "realtime.voice_identity.rejected_sector angles must be degrees in "
+                f"[0, 360], got {angle}"
+            )
+        numbers.append(angle)
+    return (numbers[0], numbers[1])
+
+
+def voice_identity_config_from_mapping(
+    mapping: Mapping[str, Any] | None,
+) -> VoiceIdentityConfig:
+    """Validate the nested ``voice_identity:`` block. Absent ⇒ documented defaults.
+
+    Two refusals here are not shared with the other blocks and are worth naming:
+
+    * a **threshold outside (0, 1]** is refused rather than clamped. Cosine
+      similarity lives in [-1, 1] and every admissible operating point measured
+      on this host lives in (0, 1]; a ``threshold: 0`` would arm on any sound at
+      all while every surface still reported a threshold, and a ``threshold:
+      55`` (the percentage somebody meant) would refuse the owner forever.
+    * a **rejected sector with no DoA reader** is refused. It is the one
+      combination that silently does nothing: the operator has named the
+      television's azimuth and nothing will ever read an azimuth to compare it
+      against.
+    """
+
+    if mapping is None:
+        return VoiceIdentityConfig()
+    if not isinstance(mapping, Mapping):
+        raise RealtimeConfigError(
+            f"realtime.voice_identity must be a mapping, got {type(mapping).__name__}"
+        )
+    unknown = sorted(str(key) for key in mapping if str(key) not in VOICE_IDENTITY_ALLOWED_KEYS)
+    if unknown:
+        raise RealtimeConfigError(
+            f"unknown realtime.voice_identity key(s): {', '.join(unknown)}; "
+            f"allowed: {', '.join(sorted(VOICE_IDENTITY_ALLOWED_KEYS))}"
+        )
+    enabled = mapping.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise RealtimeConfigError(
+            f"realtime.voice_identity.enabled must be a boolean, got {enabled!r}"
+        )
+    doa = mapping.get("doa", False)
+    if not isinstance(doa, bool):
+        raise RealtimeConfigError(f"realtime.voice_identity.doa must be a boolean, got {doa!r}")
+    threshold = mapping.get("threshold", DEFAULT_VOICE_THRESHOLD)
+    if isinstance(threshold, bool) or not isinstance(threshold, (int, float)):
+        raise RealtimeConfigError(
+            f"realtime.voice_identity.threshold must be a number, got {threshold!r}"
+        )
+    threshold = float(threshold)
+    if not 0.0 < threshold <= 1.0:
+        raise RealtimeConfigError(
+            "realtime.voice_identity.threshold is a cosine similarity and must be "
+            f"in (0, 1]; got {threshold}. The measured operating point on this "
+            f"host is {DEFAULT_VOICE_THRESHOLD} (impostor max 0.431, genuine min 0.640)."
+        )
+    sector = _sector(mapping.get("rejected_sector"))
+    if sector is not None and not doa:
+        raise RealtimeConfigError(
+            "realtime.voice_identity.rejected_sector names a direction and "
+            "realtime.voice_identity.doa is false, so nothing will ever read one. "
+            "Set doa: true (it needs the udev rule from bench_doa.md) or remove "
+            "the sector."
+        )
+    for key in ("profile", "model"):
+        value = mapping.get(key, "")
+        if not isinstance(value, str):
+            raise RealtimeConfigError(
+                f"realtime.voice_identity.{key} must be a string path, got {value!r}"
+            )
+    return VoiceIdentityConfig(
+        enabled=enabled,
+        threshold=threshold,
+        profile=str(mapping.get("profile", "")).strip(),
+        model=str(mapping.get("model", "")).strip(),
+        min_utterance_s=_voice_positive(mapping, "min_utterance_s", 1.2),
+        budget_ms=_voice_positive(mapping, "budget_ms", 50.0),
+        narration_interval_s=_voice_non_negative(mapping, "narration_interval_s", 60.0),
+        doa=doa,
+        rejected_sector=sector,
+    )
+
+
+def _voice_positive(mapping: Mapping[str, Any], key: str, default: float) -> float:
+    """Card R25: finite, then positive — the same rule as :func:`_positive`.
+
+    Fixed alongside its sibling rather than left for a later card: an
+    ``+inf`` speaker-identity ``budget_ms`` is a latency ceiling that permits
+    every delay, and a partial fix in one file is how a doctrine becomes folklore.
+    """
+
+    value = mapping.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RealtimeConfigError(
+            f"realtime.voice_identity.{key} must be a number, got {value!r}"
+        )
+    number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.voice_identity.{key} must be a finite number, got {number}"
+        )
+    if not number > 0.0:
+        raise RealtimeConfigError(
+            f"realtime.voice_identity.{key} must be greater than zero, got {number}"
+        )
+    return number
+
+
+def _voice_non_negative(mapping: Mapping[str, Any], key: str, default: float) -> float:
+    value = mapping.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RealtimeConfigError(
+            f"realtime.voice_identity.{key} must be a number, got {value!r}"
+        )
+    number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.voice_identity.{key} must be a finite number, got {number}"
+        )
+    if number < 0.0:
+        raise RealtimeConfigError(
+            f"realtime.voice_identity.{key} must not be negative, got {number}"
+        )
+    return number
+
+
 def realtime_config_from_mapping(
     mapping: Mapping[str, Any] | None,
     *,
@@ -536,6 +831,7 @@ def realtime_config_from_mapping(
         monthly_budget_usd=_positive(mapping, "monthly_budget_usd", 25.0),
         whisperer=whisperer_config_from_mapping(mapping.get("whisperer")),
         capture=capture_config_from_mapping(mapping.get("capture")),
+        voice_identity=voice_identity_config_from_mapping(mapping.get("voice_identity")),
         source=source,
     )
 
@@ -588,15 +884,18 @@ __all__ = [
     "DEFAULT_CAPTURE_DIR",
     "DEFAULT_CAPTURE_MAX_MINUTES",
     "DEFAULT_CAPTURE_OWNER_GAP_S",
+    "DEFAULT_VOICE_THRESHOLD",
     "MAX_PERSONA_CHARS",
     "MODE_AUDIO",
     "MODE_TEXT",
     "REALTIME_CONFIG_ENV",
     "REALTIME_CONFIG_RELATIVE",
+    "VOICE_IDENTITY_ALLOWED_KEYS",
     "WHISPERER_ALLOWED_KEYS",
     "CaptureConfig",
     "RealtimeConfig",
     "RealtimeConfigError",
+    "VoiceIdentityConfig",
     "WhispererConfig",
     "capture_config_from_mapping",
     "default_realtime_config",
@@ -604,5 +903,6 @@ __all__ = [
     "realtime_config_from_mapping",
     "resolve_capture_dir",
     "resolve_realtime_config_path",
+    "voice_identity_config_from_mapping",
     "whisperer_config_from_mapping",
 ]

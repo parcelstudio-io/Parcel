@@ -27,7 +27,7 @@ from .models import (
     VelocityCommand,
 )
 from .motion import MotionRouter
-from .navigation.goals import navigation_directive_from_text
+from .navigation.goals import PlaceAdmission, navigation_directive_from_text
 from .navigation.spatial import parse_spatial_intent, spatial_intent_from_arguments
 from .providers import LanguageModel
 from .safety import SafetyLimits, SafetySupervisor
@@ -114,6 +114,7 @@ class VoiceAgent:
         slow_path_hook: Callable[[str], None] | None = None,
         closed_intent_handler: ClosedIntentHandler | None = None,
         pace_scale_provider: Callable[[], float] | None = None,
+        place_admission: Callable[[str], PlaceAdmission] | None = None,
     ):
         if not 1 <= conversation_history_messages <= 64:
             raise ValueError("conversation history messages must be between 1 and 64")
@@ -154,6 +155,12 @@ class VoiceAgent:
         self.planner_output_adapter = planner_output_adapter
         self.closed_intent_handler = closed_intent_handler
         self.pace_scale_provider = pace_scale_provider
+        #: Card R20. "May this directive become a goal?", answered by the host
+        #: against the live place vocabulary. ``None`` — the default, and what
+        #: every agent built without a runtime gets — means no vocabulary is
+        #: reachable, and the pre-R20 behaviour stands: the router decides and
+        #: an unresolvable place fails honestly at grounding.
+        self.place_admission = place_admission
         self._turn_sequence = 0
         self.last_intent_frame: IntentFrame | None = None
         self.last_brain_metrics: dict[str, object] = {}
@@ -436,6 +443,20 @@ class VoiceAgent:
                         ),
                     ),
                 )
+            # Card R20 — the unknown-place ask, in the same place and the same
+            # shape as the dangling-pronoun ask above it. "go to narnia" used to
+            # compile a mission whose target was a place that cannot exist,
+            # behind the confident "Okay—I'll go wait near narnia safely."
+            # Asking which real place they meant is honest; accepting the
+            # command and rotating on the spot until something preempts it is
+            # not. Only GOAL phrasing is gated: "look for a mailbox" is an
+            # explicit search and still searches (``admit_navigation_place``).
+            unknown_place = self._unknown_place_reply(nav_directive)
+            if unknown_place is not None:
+                return self._commit(
+                    commit,
+                    lambda: self._remember(original, lambda: unknown_place),
+                )
             if self._local_plan_ready():
                 return self._admit_local_sketch(
                     sketch_navigate(nav_directive),
@@ -637,6 +658,28 @@ class VoiceAgent:
             and self.planner_output_adapter is not None
         )
 
+    def _unknown_place_reply(self, directive: str) -> str | None:
+        """Card R20 — the ask for a place nothing can resolve, else ``None``.
+
+        ``None`` is the important half twice over. With no ``place_admission``
+        provider there is no vocabulary to judge against and the pre-R20 path
+        stands untouched; and a provider that raises is treated as no answer
+        rather than as a refusal, because an honesty gate that fails closed
+        would take navigation down over a map that failed to load.
+        """
+
+        if self.place_admission is None:
+            return None
+        try:
+            verdict = self.place_admission(directive)
+        except (AttributeError, KeyError, RuntimeError, TypeError, ValueError) as error:
+            self.last_brain_metrics["place_admission_error"] = str(error)[:120]
+            return None
+        if verdict.admitted:
+            return None
+        self.last_brain_metrics["unknown_place"] = verdict.query
+        return verdict.reply()
+
     def conversation_tool_definitions(self) -> list[dict[str, Any]]:
         """Schemas for the conversation lane — physical tools stripped."""
 
@@ -704,6 +747,18 @@ class VoiceAgent:
         # referent this route has no context to resolve — that is precisely what
         # the planner is for, so it takes the honest reply, not a guess.
         anaphoric = re.search(r"\b(?:other|another|same)\b", remainder.lower()) is not None
+        # Card R20. A retarget is a goal admission like any other: "actually, go
+        # to narnia" must not become a mission either, and it gets the same ask
+        # rather than the generic "give me the new command on its own", which
+        # would send the owner round the loop to be refused again.
+        if nav_directive is not None and not anaphoric:
+            unknown_place = self._unknown_place_reply(nav_directive)
+            if unknown_place is not None:
+                self.last_brain_metrics["goal_amend_replan"] = "unknown_place_refused"
+                return self._commit(
+                    commit,
+                    lambda: self._remember(transcript, lambda: unknown_place),
+                )
         if (
             nav_directive is not None
             and self.dog is not None

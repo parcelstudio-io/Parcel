@@ -114,6 +114,13 @@ class GrounderV2:
     match_threshold: float = SIGLIP2_MATCH_THRESHOLD
     ambiguity_margin: float = 0.05
     distance_ambiguity_m: float = 0.75
+    #: Card PG-3 calibrated abstention, **OFF by default**. ``None`` consults the
+    #: process-default policy, which ships disabled; a disabled policy is
+    #: short-circuited before any field is read, so the shipping path is the
+    #: pre-PG-3 path by construction. ``detector_support`` is the label head's
+    #: own answer for the query term and is required when the policy is on —
+    #: absent, it refuses, because not asking is not evidence of absence.
+    abstention: Any = None
 
     def ground(
         self,
@@ -124,6 +131,7 @@ class GrounderV2:
         robot_xy: tuple[float, float] | None = None,
         robot_yaw_rad: float = 0.0,
         interchangeable: bool = False,
+        detector_support: Mapping[str, Any] | None = None,
     ) -> GroundingResult:
         """Score live detections then memory; UNSEEN when neither matches."""
 
@@ -152,13 +160,75 @@ class GrounderV2:
             robot_xy=robot_xy,
             robot_yaw_rad=robot_yaw_rad,
         )
-        return resolve_grounding(
+        result = resolve_grounding(
             frustum=frustum,
             memory=mem,
             ambiguity_margin=self.ambiguity_margin,
             distance_ambiguity_m=self.distance_ambiguity_m,
             interchangeable=interchangeable,
         )
+        return _abstain_if_unsupported(
+            self.abstention, q, result, frustum + mem, detector_support
+        )
+
+
+def _abstain_if_unsupported(
+    policy: Any,
+    query: str,
+    result: GroundingResult,
+    candidates: Sequence[Mapping[str, Any]],
+    detector_support: Mapping[str, Any] | None,
+) -> GroundingResult:
+    """PG-3: turn a resolved-but-unsupported grounding into an honest UNSEEN.
+
+    Only ever makes the outcome *more* conservative: a RESOLVED or MEMORY_HIT
+    that perception cannot support becomes UNSEEN, whose recovery is the ask.
+    AMBIGUOUS and UNSEEN are returned untouched — this gate answers "is there
+    anything of this kind here at all", and it has nothing to add to "there are
+    two of them" or "there are none".
+    """
+
+    if result.outcome not in (GroundingOutcome.RESOLVED, GroundingOutcome.MEMORY_HIT):
+        return result
+    try:
+        from parcel_robot.perception_abstention import (
+            active_abstention_policy,
+            assess_place_query,
+            detector_prompts_for,
+            detector_support_from_mapping,
+            place_evidence_from_mapping,
+        )
+    except ImportError:  # pragma: no cover — frozen BARN bundle path
+        return result
+    active = policy if policy is not None else active_abstention_policy()
+    if not getattr(active, "enabled", False):
+        return result
+    prompts = detector_prompts_for(query)
+    support = detector_support_from_mapping(detector_support, prompts)
+    places = []
+    for index, item in enumerate(candidates):
+        meta = item.get("metadata") if isinstance(item.get("metadata"), Mapping) else item
+        places.append(
+            place_evidence_from_mapping(
+                meta,
+                support.term,
+                place_id=str(item.get("id") or f"candidate:{index}"),
+                label=str(item.get("label") or item.get("class_id") or "place"),
+                x=float(item.get("x") or 0.0),
+                y=float(item.get("y") or 0.0),
+                z=float(item.get("z") or 0.0),
+                similarity=float(item.get("confidence") or 0.0),
+            )
+        )
+    verdict = assess_place_query(query, support=support, places=places, policy=active)
+    if verdict.admitted:
+        return result
+    return GroundingResult(
+        outcome=GroundingOutcome.UNSEEN,
+        candidate=None,
+        candidates=(),
+        detail=f"abstained:{verdict.reason}",
+    )
 
 
 def _rank_candidates(

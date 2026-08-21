@@ -1,0 +1,6 @@
+{"seq": 1, "stream": "marker", "wall": "2026-08-20 11:59:59.000000", "kind": "log_opened", "schema": "parcel.session_evidence.v1", "session_id": "rt_fixture_now", "max_bytes": 67108864}
+{"seq": 2, "stream": "event", "wall": "2026-08-20 12:00:00.600000", "id": 1, "role": "realtime", "text": "tool get_status: ok — current robot state", "level": "info", "timestamp": "2026-08-20 12:00:00.600000"}
+{"seq": 3, "stream": "safety", "wall": "2026-08-20 12:00:30.000000", "id": 1, "kind": "latched", "source": "voice", "phrase": "die stop", "rule": "spoken_phrase", "door": "", "level": "warning", "text": "Emergency stop latched by voice. Owner said: \"die stop\"", "count": 1, "timestamp": "2026-08-20 12:00:30.000000"}
+{"seq": 4, "stream": "event", "wall": "2026-08-20 12:01:00.400000", "id": 2, "role": "realtime", "text": "tool navigate_to: rejected — motion is disabled by emergency stop", "level": "info", "timestamp": "2026-08-20 12:01:00.400000"}
+{"seq": 5, "stream": "safety", "wall": "2026-08-20 12:01:00.500000", "id": 2, "kind": "rejected", "source": "voice", "phrase": "", "rule": "", "door": "tool navigate_to", "level": "warning", "text": "Refused tool navigate_to while emergency-stopped.", "count": 1, "timestamp": "2026-08-20 12:01:00.500000"}
+{"seq": 6, "stream": "marker", "wall": "2026-08-20 14:46:40.000000", "kind": "log_closed", "reason": "runtime closed"}

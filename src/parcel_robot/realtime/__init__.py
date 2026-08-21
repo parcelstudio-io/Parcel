@@ -47,7 +47,22 @@ from .protocol import (
     UnknownEventType,
     parse_server_event,
 )
+from .spend_ledger import (
+    SPEND_LEDGER_NAME,
+    MonthToDateSpend,
+    SpendLedger,
+    month_key,
+    resolve_spend_ledger_path,
+)
 from .transport import Transport, TransportClosed, transport_pair
+from .voice_identity import (
+    VoiceArmingDecision,
+    VoiceIdentityError,
+    VoiceIdentityGate,
+    VoiceVerdict,
+    gate_decision,
+    gates_kind,
+)
 
 __all__ = [
     "GUARDRAILS",
@@ -56,9 +71,11 @@ __all__ = [
     "KIND_FOLLOW",
     "KIND_HOLD",
     "KIND_NONE",
+    "SPEND_LEDGER_NAME",
     "TOOL_REFUSAL_OUTPUT",
     "IngressScan",
     "MalformedEvent",
+    "MonthToDateSpend",
     "RealtimeArmingDecision",
     "RealtimeConfig",
     "RealtimeConfigError",
@@ -67,17 +84,26 @@ __all__ = [
     "RealtimeProtocolError",
     "RealtimeTranscriptOutcome",
     "SinkOwnershipError",
+    "SpendLedger",
     "Transport",
     "TransportClosed",
     "UnknownEventType",
+    "VoiceArmingDecision",
+    "VoiceIdentityError",
+    "VoiceIdentityGate",
+    "VoiceVerdict",
     "build_instructions",
     "decide_realtime_arming",
     "default_realtime_config",
+    "gate_decision",
+    "gates_kind",
     "load_realtime_config",
+    "month_key",
     "normalize",
     "parse_server_event",
     "realtime_config_from_mapping",
     "resolve_realtime_config_path",
+    "resolve_spend_ledger_path",
     "scan",
     "transport_pair",
 ]

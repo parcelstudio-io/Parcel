@@ -104,9 +104,15 @@ class _FakeLane:
         self.recovering = False
         self.playback_owned = False
         self.narrated: list[str] = []
+        self.narrated_critical: list[bool] = []
 
-    def narrate_event(self, text: str) -> bool:
+    def narrate_event(self, text: str, *, critical: bool = False) -> bool:
+        # Card R25 widened the lane's narration door with a cost-ceiling
+        # exemption flag; a double that does not accept it makes every
+        # narration raise TypeError into `_narrate_mission`'s catch, which
+        # reads as "the robot had nothing to say".
         self.narrated.append(text)
+        self.narrated_critical.append(bool(critical))
         return True
 
     def snapshot(self) -> dict[str, object]:

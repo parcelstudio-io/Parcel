@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import threading
 import time
 from dataclasses import dataclass
@@ -11,7 +12,7 @@ from dataclasses import dataclass
 # and tests/test_import_order_no_cycle.py — do not move it back here.
 from parcel_robot.lethal_veto import waypoints_trigger_lethal_veto
 from parcel_robot.models import VelocityCommand
-from parcel_robot.safety import SafetyLimits
+from parcel_robot.safety import SafetyLimits, is_usable_limit
 
 from .commands import MotionIntent
 
@@ -106,10 +107,33 @@ class CommandArbiter:
             }
 
     def _limit_violation(self, command: VelocityCommand) -> str | None:
-        if abs(command.vx) > self.limits.max_vx:
-            return "vx exceeds the configured safe limit"
-        if abs(command.vy) > self.limits.max_vy:
-            return "vy exceeds the configured safe limit"
-        if abs(command.vyaw) > self.limits.max_vyaw:
-            return "vyaw exceeds the configured safe limit"
+        """Fail-closed magnitude check — card R23.
+
+        Both operands are checked before they are compared. A non-finite or
+        non-positive limit is not a loose clamp, it is the absence of one
+        (``abs(v) > nan`` is False for every v), and a non-finite command
+        value defeats the comparison from the other side. ``MotionIntent``
+        already refuses non-finite commands and ``SafetyLimits`` already
+        refuses unusable limits; this is the layer that holds when one of
+        those is bypassed. No threshold changes here — only the verdict on
+        operands that cannot be compared.
+        """
+
+        # Both operands, on every axis, BEFORE any magnitude test: one broken
+        # clamp means this arbiter cannot do its job at all, and saying so is
+        # more useful than reporting whichever axis happened to be compared
+        # first.
+        for axis in ("vx", "vy", "vyaw"):
+            limit = getattr(self.limits, f"max_{axis}", None)
+            if not is_usable_limit(limit):
+                return f"max_{axis} is not a usable clamp ({limit!r}); motion refused"
+        for axis in ("vx", "vy", "vyaw"):
+            value = getattr(command, axis, None)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return f"{axis} command is not a number ({value!r}); motion refused"
+            if not math.isfinite(float(value)):
+                return f"{axis} command is not a finite number ({value!r}); motion refused"
+        for axis in ("vx", "vy", "vyaw"):
+            if abs(float(getattr(command, axis))) > float(getattr(self.limits, f"max_{axis}")):
+                return f"{axis} exceeds the configured safe limit"
         return None

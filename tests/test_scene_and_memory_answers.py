@@ -1012,7 +1012,13 @@ def test_a_read_only_store_still_answers_the_owners_question(tmp_path: Path) -> 
     writable.connection.close()
 
     reader = ConversationMemory(path, read_only=True)
-    found = reader.recall("river", now=PINNED_NOW)
+    # The only test here that writes through the REAL add() path, so its row
+    # carries SQLite's own CURRENT_TIMESTAMP and its recall must be dated by the
+    # real clock too. Recalling it against the fixed PINNED_NOW made the row look
+    # future-stamped the instant the calendar passed that pin — and
+    # provenance_phrase rightly refuses to date a future row — so this assertion
+    # began failing every run after 2026-08-20 and would have failed forever.
+    found = reader.recall("river", now=datetime.now())  # noqa: DTZ005
     assert [item.text for item in found] == ["I walk by the river most evenings"]
     assert found[0].when_phrase, "a real store's rows are dated"
 

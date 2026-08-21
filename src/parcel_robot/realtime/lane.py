@@ -88,6 +88,7 @@ from .protocol import (
     ResponseCancel,
     ResponseCreate,
     ResponseDone,
+    RetainedEvent,
     ServerEvent,
     SessionCreated,
     SessionUpdate,
@@ -102,6 +103,12 @@ from .transport import Transport, TransportClosed
 #: returns no accents at all, so a smaller coalesce would silently cost the
 #: hosted voice its beat nods.
 DEFAULT_COALESCE_MS = 240.0
+
+#: Card R22, work item 1. How many dispatch-failure LINES are kept. The counts
+#: (``dispatch_failure_count`` / ``dispatch_failure_types``) stay exact; this
+#: only bounds the text, because a lane failing every frame at 20 Hz must not
+#: grow an unbounded list inside the process the firewall is protecting.
+DISPATCH_FAILURE_LOG_LIMIT = 200
 
 #: Every function call in R1 gets exactly this. Still the answer whenever no
 #: ``tool_handler`` is wired — a build with no broker refuses, it never guesses.
@@ -509,9 +516,20 @@ class RealtimeArmingDecision:
     armed: bool
     code: str
     reason: str
+    #: Card R25. Facts the owner must see even when the answer is "armed".
+    #: Today there is exactly one producer: an unreadable spend ledger, which
+    #: fails OPEN (see :func:`decide_realtime_arming`) and therefore has no
+    #: other way to be heard. A refusal carries its reason; a *degraded yes*
+    #: had nowhere to put one until this field existed.
+    warnings: tuple[str, ...] = ()
 
     def as_dict(self) -> dict[str, object]:
-        return {"armed": self.armed, "code": self.code, "reason": self.reason}
+        return {
+            "armed": self.armed,
+            "code": self.code,
+            "reason": self.reason,
+            "warnings": list(self.warnings),
+        }
 
 
 def decide_realtime_arming(
@@ -521,6 +539,9 @@ def decide_realtime_arming(
     mic_gesture: bool,
     transport_available: bool = True,
     spend_usd: float = 0.0,
+    spend_readable: bool = True,
+    spend_month: str = "",
+    spend_note: str = "",
 ) -> RealtimeArmingDecision:
     """Fail closed. Three independent yeses are required, plus a budget.
 
@@ -528,7 +549,44 @@ def decide_realtime_arming(
     proof the caller is the local panel; the mic gesture is the owner's
     per-connection act. None of the three substitutes for another, and none of
     them is "the service answered".
+
+    THE BUDGET, AND WHY IT USED TO DO NOTHING (card R25, audit §Ops-2)
+    ------------------------------------------------------------------
+    The ``spend_usd >= config.monthly_budget_usd`` comparison below is
+    unchanged since R1. What changed is that somebody now passes a number.
+    ``RealtimeLane.arm`` defaulted it to ``0.0`` for the whole of R1-R24, so
+    the owner's documented ceiling — "the arming gate refuses to open a session
+    once this month's estimated spend reaches this number", in the owner's own
+    ``realtime.yaml`` — compared zero against twenty-five, every time, forever.
+    A documented safety control that does not exist is worse than an absent one.
+
+    ``spend_readable`` is the fail-**open** half, and it is the one deliberate
+    inversion of this file's fail-closed doctrine. A ledger that cannot be read
+    yields ``readable=False`` and this gate does NOT refuse: it arms, and
+    attaches a warning naming the ledger and the fact that the ceiling is not
+    being enforced. The doctrine is about the CONFIG (a typo'd budget must
+    refuse to load, and still does); a *measurement* that fails closed is a
+    robot grounded by a read-only disk. See
+    :mod:`parcel_robot.realtime.spend_ledger`.
+
+    THERE IS DELIBERATELY NO SAFETY EXEMPTION *HERE* (card R25 work item 4)
+    -----------------------------------------------------------------------
+    The asymmetry the card asks for — SAFETY-class facts outrank the cost
+    ceiling — is real, and it lives in :meth:`RealtimeLane.narrate_event`, not
+    in this function. The reason is card R16's older and stronger rule: a
+    robot-initiated fact may never OPEN a paid session. A latch announced into
+    a session the owner walked away from an hour ago is spend with no listener,
+    so a closed lane stays closed for every class of fact, at every budget.
+    Nothing safety-related therefore ever reaches this gate, and giving it an
+    exemption would have been a parameter no caller could pass.
+
+    What the ceiling gates here is exactly one thing: the owner pressing the
+    microphone button to start a new billed conversation.
     """
+
+    warnings: list[str] = []
+    if not spend_readable and spend_note:
+        warnings.append(spend_note)
 
     if not config.enabled:
         return RealtimeArmingDecision(
@@ -538,6 +596,7 @@ def decide_realtime_arming(
                 "Realtime lane not armed: realtime.enabled is false "
                 f"(config source: {config.source})."
             ),
+            warnings=tuple(warnings),
         )
     if not handshake_token:
         return RealtimeArmingDecision(
@@ -548,6 +607,7 @@ def decide_realtime_arming(
                 "listener requires the panel's per-process CSRF token, exactly as "
                 "_authorize_post does."
             ),
+            warnings=tuple(warnings),
         )
     if not mic_gesture:
         return RealtimeArmingDecision(
@@ -557,15 +617,21 @@ def decide_realtime_arming(
                 "Realtime lane not armed: the owner has not pressed the microphone "
                 "button for this connection. A reachable service is not consent."
             ),
+            warnings=tuple(warnings),
         )
-    if spend_usd >= config.monthly_budget_usd:
+    if spend_readable and spend_usd >= config.monthly_budget_usd:
         return RealtimeArmingDecision(
             armed=False,
             code=CODE_BUDGET_EXHAUSTED,
             reason=(
-                f"Realtime lane not armed: ${spend_usd:.2f} of this month's "
-                f"${config.monthly_budget_usd:.2f} budget is already spent."
+                "Realtime lane not armed: "
+                + _budget_sentence(spend_usd=spend_usd, config=config, month=spend_month)
+                + " Raise realtime.monthly_budget_usd in your realtime.yaml (or wait "
+                "for the 1st of next month, UTC) to open a session. Safety-class "
+                "narrations on a session that is already open are never gated by "
+                "this ceiling."
             ),
+            warnings=tuple(warnings),
         )
     if not transport_available:
         return RealtimeArmingDecision(
@@ -576,6 +642,7 @@ def decide_realtime_arming(
                 "in-process fake transport only; the live WebSocket transport is R1.5 "
                 "and needs `websockets` plus a key."
             ),
+            warnings=tuple(warnings),
         )
     return RealtimeArmingDecision(
         armed=True,
@@ -584,6 +651,33 @@ def decide_realtime_arming(
             f"Realtime lane armed on {config.model} (voice={config.voice}); "
             "handshake token supplied and microphone gesture given."
         ),
+        warnings=tuple(warnings),
+    )
+
+
+def _budget_sentence(*, spend_usd: float, config: RealtimeConfig, month: str) -> str:
+    """The figure, the period, and the config source — in one sentence.
+
+    Card R25 asks the refusal to name "the figure, the period, and how to raise
+    it". Split out of the refusal so the same sentence can be asserted by test
+    without matching on the surrounding advice, and so the panel and the log
+    can never quote a different number from the one the gate refused on.
+    """
+
+    period = f" in {month}" if month else " this month"
+    budget = float(config.monthly_budget_usd)
+    # ONE precision for BOTH figures, chosen off the smaller of them. Two
+    # decimals is right for a $25 ceiling and useless for a $0.001 one: the
+    # live proof's first refusal read "an estimated $0.00 has reached the $0.00
+    # ceiling", which names a figure the owner cannot act on and is the
+    # "refusal reason silent" failure this card exists to prevent. Formatting
+    # the two numbers independently would be worse still — "$0.01 has reached
+    # the $0.0052 ceiling" reads like a bug.
+    places = 2 if min(abs(spend_usd), abs(budget)) >= 0.10 else 4
+    return (
+        f"an estimated ${spend_usd:.{places}f}{period} has reached the "
+        f"${budget:.{places}f} realtime.monthly_budget_usd ceiling "
+        f"(config source: {config.source}; rates are ASSUMED, not billed)."
     )
 
 
@@ -654,6 +748,37 @@ class LedgerLike(Protocol):
     ) -> int: ...
 
 
+class MonthToDateSpendLike(Protocol):
+    """The four fields the lane reads off a month-to-date total (card R25).
+
+    Structural rather than an import of
+    :class:`parcel_robot.realtime.spend_ledger.MonthToDateSpend` so the lane
+    keeps knowing nothing about money beyond "a number, and whether it is real".
+    ``readable`` is the fail-open contract: False means the number is a floor of
+    zero produced by a broken file, and the gate must let the session open.
+    """
+
+    month: str
+    usd: float
+    readable: bool
+    note: str
+
+
+class SpendLedgerLike(Protocol):
+    """The part of ``SpendLedger`` the lane uses. Both methods must never raise.
+
+    ``record`` is called from the pump thread (card R22's entire subject was an
+    exception on that thread killing the crank) and ``month_to_date`` from the
+    arming path and the narration gate.
+    """
+
+    def record(
+        self, row: Mapping[str, object], *, session_id: str | None = None
+    ) -> bool: ...
+
+    def month_to_date(self) -> MonthToDateSpendLike: ...
+
+
 def _never() -> bool:
     return False
 
@@ -689,6 +814,7 @@ class RealtimeLane:
         memory_tail: Callable[[], Sequence[Mapping[str, str]]] | None = None,
         clock: Callable[[], float] = time.monotonic,
         cost_log_path: Path | None = None,
+        spend_ledger: SpendLedgerLike | None = None,
         duplex_output_active: Callable[[], bool] = _never,
         coalesce_ms: float = DEFAULT_COALESCE_MS,
         sample_rate_hz: int = PCM16_SAMPLE_RATE_HZ,
@@ -709,6 +835,7 @@ class RealtimeLane:
         item_trace_limit: int = DEFAULT_ITEM_TRACE_LIMIT,
         server_error_window: int = DEFAULT_SERVER_ERROR_WINDOW,
         on_idle_close: Callable[[float], None] | None = None,
+        retention_sink: Callable[[str, Mapping[str, Any]], None] | None = None,
     ) -> None:
         self.config = config
         self.instructions = instructions
@@ -723,6 +850,13 @@ class RealtimeLane:
         self._memory_tail = memory_tail
         self._clock = clock
         self._cost_log_path = cost_log_path
+        #: Card R25. The DURABLE month-to-date spend, on disk, beside the
+        #: recordings. ``None`` keeps every pre-R25 behaviour byte-for-byte —
+        #: no ceiling is consulted and no narration is budget-gated — which is
+        #: what every test that does not care about money gets by default. The
+        #: lane still knows nothing about prices: it hands rows to this object
+        #: and reads one number back.
+        self._spend_ledger = spend_ledger
         self._duplex_output_active = duplex_output_active
         self._sample_rate_hz = int(sample_rate_hz)
         self._bytes_per_ms = (self._sample_rate_hz * 2) / 1000.0
@@ -762,6 +896,16 @@ class RealtimeLane:
         #: streaming into a session that is gone. A hook that raises is noted and
         #: swallowed: the hang-up has already happened.
         self._on_idle_close = on_idle_close
+        #: Card R22, work item 5 — EV-1's open risk §10.3, closed. Where a
+        #: :class:`RetainedEvent` goes. Called ``(type_name, fields)`` and
+        #: wired by the runtime to the SESSION EVIDENCE LOG's sink, which is an
+        #: unbounded on-disk JSONL stream. EV-1 named the alternative and
+        #: refused it in writing: routing 44 ASR deltas per session through
+        #: ``_note`` would put 44 more rows per session into the 100-slot panel
+        #: ring, which is the exact resource that card exists to stop
+        #: overflowing. ``None`` keeps the pre-R22 behaviour byte-for-byte — the
+        #: frames are parsed, counted and dropped.
+        self._retention_sink = retention_sink
         #: One lane, one socket, one thread at a time. Re-entrant because the
         #: watchdog reaches ``_reconnect`` from inside ``tick``/``pump``.
         self._lock = threading.RLock()
@@ -780,6 +924,27 @@ class RealtimeLane:
         self.backoff_waits: list[float] = []
         self.truncations: list[dict[str, object]] = []
         self.protocol_errors: list[str] = []
+        #: Card R22, work item 1. Frames the lane UNDERSTOOD and then failed to
+        #: handle, kept apart from ``protocol_errors`` on purpose: a protocol
+        #: refusal is the provider saying something new, a dispatch failure is
+        #: this process breaking. Counted by exception TYPE because §Safety-1 is
+        #: a story about a type that was not on a list.
+        self.dispatch_failures: list[str] = []
+        self.dispatch_failure_count = 0
+        self.dispatch_failure_types: dict[str, int] = {}
+        #: Card R22, work item 4. Ledger writes that failed and were degraded to
+        #: a note rather than being allowed to take the turn — and now the pump
+        #: thread — down with them.
+        self.ledger_failures = 0
+        self.ledger_failure_types: dict[str, int] = {}
+        self.last_ledger_failure: str | None = None
+        #: Card R22, work item 5 (EV-1 §10.3). Retained ASR/boundary frames
+        #: handed to the evidence log's own sink, by type, plus the handoffs
+        #: that failed. Never routed through ``_note``: 44 deltas a session
+        #: through the panel ring is the exact flood EV-1 exists to relieve.
+        self.retained_events = 0
+        self.retained_event_types: dict[str, int] = {}
+        self.retention_failures = 0
         self.server_errors: list[ErrorEvent] = []
         self.events: list[str] = []
         self.reconnects = 0
@@ -801,6 +966,21 @@ class RealtimeLane:
         #: locally — the mission log, the event ring and every local watchdog are
         #: upstream of the lane and are untouched by a hang-up.
         self.narrations_skipped_closed = 0
+        #: Card R25. The two halves of the cost-ceiling asymmetry, counted so it
+        #: is a NUMBER on ``/api/state`` rather than a claim in a doc.
+        #: ``narrations_skipped_budget`` is non-safety chatter this month's
+        #: ceiling silenced on an already-open session (a subset of
+        #: ``narrations_skipped``); ``narrations_over_budget`` is SAFETY-class
+        #: facts that were spoken anyway. The second number rising while the
+        #: first one does is the asymmetry working; the second one being
+        #: permanently zero while the first climbs is the over-correction.
+        self.narrations_skipped_budget = 0
+        self.narrations_over_budget = 0
+        #: Card R25. Spend-ledger appends this lane degraded to a note rather
+        #: than letting them end a turn, beside ``ledger_failures`` for the
+        #: conversation ledger. Kept apart because the two answer different
+        #: questions: one loses a transcript, the other loses the ceiling.
+        self.spend_ledger_failures = 0
         #: Card R8. Narrations the PROVIDER refused after the lane counted them.
         #: ``narrations`` has always meant "a narration frame left this process";
         #: until R8 nothing could tell you whether the provider kept it, and for
@@ -995,13 +1175,65 @@ class RealtimeLane:
         return self._response.enqueued_ms
 
     # ------------------------------------------------------------- lifecycle
+    def month_to_date_spend(self) -> MonthToDateSpendLike | None:
+        """This month's durable estimated spend, or ``None`` with no ledger.
+
+        Card R25. Never raises: a ledger whose read blows up is the same
+        situation as a ledger that cannot be read, and both fail OPEN. The
+        exception is counted so "the ceiling quietly stopped working" is a
+        number rather than a silence.
+        """
+
+        ledger = self._spend_ledger
+        if ledger is None:
+            return None
+        try:
+            return ledger.month_to_date()
+        except Exception as error:  # noqa: BLE001 - the ceiling may never brick the lane
+            self.spend_ledger_failures += 1
+            self._note(f"month-to-date spend unreadable ({type(error).__name__}: {error})")
+            return None
+
+    def _over_monthly_budget(self) -> bool:
+        """True only when a READABLE ledger says the ceiling has been reached.
+
+        The narration gate's half of card R25's asymmetry. Unreadable, absent
+        or unwired ⇒ False: the same fail-open direction the arming gate takes,
+        written once so the two cannot drift into disagreeing about what "over
+        budget" means.
+        """
+
+        total = self.month_to_date_spend()
+        if total is None or not total.readable:
+            return False
+        return float(total.usd) >= float(self.config.monthly_budget_usd)
+
     def arm(self, *, handshake_token: str | None, mic_gesture: bool) -> RealtimeArmingDecision:
+        """Card R25: this is where the owner's monthly ceiling became real.
+
+        For R1-R24 this method called the gate WITHOUT a spend figure, so the
+        gate compared its ``0.0`` default against the configured budget and the
+        documented ceiling never once fired. The number now comes from the
+        durable on-disk ledger rather than from ``self.usage_rows``: that list
+        is emptied by every process restart, and a ceiling that resets on reboot
+        is not a ceiling.
+        """
+
+        total = self.month_to_date_spend()
         decision = decide_realtime_arming(
             config=self.config,
             handshake_token=handshake_token,
             mic_gesture=mic_gesture,
             transport_available=self._transport_factory is not None,
+            spend_usd=0.0 if total is None else float(total.usd),
+            # No ledger wired at all is NOT "unreadable": it is a lane nobody
+            # asked to meter, and it arms exactly as it did before this card.
+            spend_readable=True if total is None else bool(total.readable),
+            spend_month="" if total is None else str(total.month),
+            spend_note="" if total is None else str(total.note),
         )
+        for warning in decision.warnings:
+            self._note(warning)
         self.arming = decision
         return decision
 
@@ -1262,7 +1494,7 @@ class RealtimeLane:
             self._send(ResponseCreate(), required=True)
             return clean
 
-    def narrate_event(self, text: str) -> bool:
+    def narrate_event(self, text: str, *, critical: bool = False) -> bool:
         """Tell the model one FACT the robot's own systems reported.
 
         Card R4-lite, task_1 — Defect B.3. The design's §4 defer/rejoin applied
@@ -1298,6 +1530,35 @@ class RealtimeLane:
         was dropped". Read ``narrations_refused`` beside ``narrations`` in the
         snapshot; the two agreeing is what "the narration was heard" looks like
         from ``/api/state``.
+
+        ``critical`` — THE COST-CEILING ASYMMETRY (card R25, work item 4)
+        ----------------------------------------------------------------
+        A FIFTH no, and the only one a caller can be exempt from: once this
+        month's durable estimated spend has reached ``monthly_budget_usd``, a
+        non-critical robot-initiated fact is no longer worth a billed
+        ``response.create``. Battery state, a pace mismatch, a rejected voice —
+        those wait for next month or for a raised ceiling.
+
+        SAFETY-class facts do not wait. ``critical=True`` — the caller passes
+        it for exactly ``whisperer.CRITICAL_KINDS``: the emergency latch and its
+        clear, a refusal of the owner's own command, a mission terminal — spends
+        past the ceiling and is counted in ``narrations_over_budget``. This is
+        the same asymmetry those classes already have against the whisperer's
+        ``max_updates_per_minute``, for the same reason C's bench measured
+        disqualifyingly: a robot that will not say "I have stopped" because of a
+        money knob is the failure the knob was supposed to prevent. Tenths of a
+        cent per fact is not a budget question.
+
+        Note the direction of the two gates. The ceiling REFUSES TO OPEN a new
+        session (``decide_realtime_arming``) but never hangs up an open one: the
+        owner is mid-conversation and being cut off mid-sentence over a
+        rounding error is worse than the overshoot, which is bounded by
+        ``session_max_s`` anyway. What it does to an open session is exactly
+        this — it stops the ROBOT from starting billed exchanges the owner did
+        not ask for, while leaving every turn the owner does ask for alone.
+
+        With no spend ledger wired (``spend_ledger=None``) this gate never
+        fires, and the method behaves exactly as it did before card R25.
         """
 
         clean = " ".join(str(text).split())
@@ -1328,6 +1589,25 @@ class RealtimeLane:
             if self._response.playing or self._responses_pending > 0 or self._voice_turn_owed:
                 self.narrations_skipped += 1
                 return False
+            # Card R25. The ceiling, and the one class of fact that outranks it.
+            # Checked LAST of the noes so the cheaper, session-shaped refusals
+            # above still take precedence: a narration the floor gate would have
+            # dropped anyway must not be attributed to the owner's budget.
+            if self._over_monthly_budget():
+                if not critical:
+                    self.narrations_skipped += 1
+                    self.narrations_skipped_budget += 1
+                    self._note(
+                        "narration held back by this month's realtime.monthly_budget_usd "
+                        f"ceiling (${self.config.monthly_budget_usd:.2f}); safety facts "
+                        f"are not held back: {clean}"
+                    )
+                    return False
+                self.narrations_over_budget += 1
+                self._note(
+                    "safety narration spent PAST this month's "
+                    f"${self.config.monthly_budget_usd:.2f} ceiling, as designed: {clean}"
+                )
             self._send_item(role="system", text=clean, purpose=ITEM_PURPOSE_NARRATION)
             # Card R11, design point 5. THE TAG, set BEFORE the frame goes up:
             # the provider can answer faster than this method returns, and a
@@ -1363,6 +1643,23 @@ class RealtimeLane:
             self._lock.release()
 
     def _pump_locked(self) -> int:
+        """Drain the socket, dispatching each frame behind its own firewall.
+
+        **Card R22, work item 1.** ``_dispatch`` used to run bare. Everything
+        downstream of it rides this one call — the ledger write (raw sqlite),
+        the sink, the broker, the ingress, the barge-in arithmetic — and any
+        exception from any of them left this method, left ``pump()``, and (until
+        R22's driver firewall) killed the pump thread outright. The refuter's
+        MRO walk on ``sqlite3.Error`` is the reason this is a broad catch and
+        not one more type list: the next blindspot would be the next type
+        nobody thought to name.
+
+        The frame is COUNTED as handled either way. A frame that was received,
+        parsed and then blew up in dispatch is not a frame that failed to
+        arrive, and pretending otherwise would make ``handled`` lie to the
+        driver about whether the socket had traffic on it.
+        """
+
         if self.transport is None:
             return 0
         handled = 0
@@ -1386,7 +1683,10 @@ class RealtimeLane:
                 self.protocol_errors.append(str(error))
                 self._note(f"protocol refusal: {error}")
                 continue
-            self._dispatch(event)
+            try:
+                self._dispatch(event)
+            except Exception as error:  # noqa: BLE001 - see the docstring above
+                self._record_dispatch_failure(event, error)
 
     def tick(self) -> str | None:
         """Idle hang-up + rollover + watchdog. Returns what the lane DID.
@@ -1603,6 +1903,57 @@ class RealtimeLane:
         if isinstance(event, ErrorEvent):
             self._on_server_error(event)
             return
+        if isinstance(event, RetainedEvent):
+            # Card R22, work item 5 — EV-1 §10.3, the last hole between the
+            # typed codec and the evidence stream. EV-1 taught the codec to KEEP
+            # these payloads (the 88 ASR frames of live_run_1, the only surviving
+            # trace of how the owner's words were transcribed) and then had
+            # nowhere to put them: its card scoped it to ``protocol.py`` and
+            # listed this file under MUST NOT TOUCH, so they were parsed and
+            # dropped. This is the three lines that closes it.
+            #
+            # Still a no-op for the CONVERSATION: nothing here marks activity,
+            # arms a turn, touches the sink or writes the ledger. The lane's
+            # behaviour is byte-identical; only the record survives.
+            self._retain(event)
+            return
+
+    def _retain(self, event: RetainedEvent) -> None:
+        """Hand one retained frame to the evidence log. Card R22, work item 5.
+
+        Never raises and never notes. A retention sink that breaks costs a
+        counter, because these frames are evidence about the session and the
+        session must not be able to die of its own bookkeeping.
+        """
+
+        name = str(event.type_name)
+        self.retained_events += 1
+        self.retained_event_types[name] = self.retained_event_types.get(name, 0) + 1
+        sink = self._retention_sink
+        if sink is None:
+            return
+        try:
+            sink(name, dict(event.fields))
+        except Exception:  # noqa: BLE001 - evidence never kills a conversation
+            self.retention_failures += 1
+
+    def _record_dispatch_failure(self, event: ServerEvent, error: Exception) -> None:
+        """One understood frame that blew up while being handled. Card R22.
+
+        Bounded like every other list on this object, counted exactly, and
+        broken out by exception type so the next §Safety-1 is a number somebody
+        can read off ``/api/state`` instead of a thread that is simply gone.
+        """
+
+        name = type(error).__name__
+        label = type(event).__name__
+        message = f"dispatch failed for {label}: {name}: {error}"
+        self.dispatch_failure_count += 1
+        self.dispatch_failure_types[name] = self.dispatch_failure_types.get(name, 0) + 1
+        self.dispatch_failures.append(message)
+        if len(self.dispatch_failures) > DISPATCH_FAILURE_LOG_LIMIT:
+            del self.dispatch_failures[:-DISPATCH_FAILURE_LOG_LIMIT]
+        self._note(message)
 
     # ------------------------------------------------------- refused by the provider
     def _on_server_error(self, event: ErrorEvent) -> None:
@@ -2252,16 +2603,31 @@ class RealtimeLane:
         Chosen over a sqlite table so that "invoice / committed turns" stays a
         one-file query and a cost-log write can never take a lock the
         conversation ledger needs mid-turn.
+
+        Card R25 adds the second destination: the DURABLE month-to-date spend
+        ledger the arming gate reads. ``cost_log_path`` is a per-run debugging
+        dump nobody wires in production and it holds raw token counts; the spend
+        ledger is priced, month-keyed and the thing the owner's ceiling stands
+        on. Both are fed from here because this is the one place a response's
+        usage is known, and neither may take the pump thread down with it — this
+        runs inside ``pump()`` (card R22, §Safety-1).
         """
 
-        if self._cost_log_path is None:
+        if self._cost_log_path is not None:
+            try:
+                self._cost_log_path.parent.mkdir(parents=True, exist_ok=True)
+                with self._cost_log_path.open("a", encoding="utf-8") as handle:
+                    handle.write(json.dumps(dict(row), sort_keys=True) + "\n")
+            except OSError as error:  # pragma: no cover - disk boundary
+                self._note(f"cost row not written: {error}")
+        ledger = self._spend_ledger
+        if ledger is None:
             return
         try:
-            self._cost_log_path.parent.mkdir(parents=True, exist_ok=True)
-            with self._cost_log_path.open("a", encoding="utf-8") as handle:
-                handle.write(json.dumps(dict(row), sort_keys=True) + "\n")
-        except OSError as error:  # pragma: no cover - disk boundary
-            self._note(f"cost row not written: {error}")
+            ledger.record(row, session_id=self.session_id)
+        except Exception as error:  # noqa: BLE001 - a cost row may never end a turn
+            self.spend_ledger_failures += 1
+            self._note(f"spend ledger row not written ({type(error).__name__}: {error})")
 
     # ------------------------------------------------------- session recovery
     def _on_disconnect(self) -> None:
@@ -2549,6 +2915,21 @@ class RealtimeLane:
         self._last_event_at = self._clock()
 
     def _write_ledger(self, speaker: str, text: str, *, item_id: str | None) -> None:
+        """Both sides of every hosted turn. A failure here is a NOTE. Card R22.
+
+        This is the call site the full audit named (AUDIT_FULL_FABLE §Safety-1,
+        ``lane.py:1389`` at the time). It sits on the pump thread, it reaches
+        raw sqlite two frames later, and until R22 it caught exactly
+        ``RuntimeError``/``TypeError``/``ValueError``. ``sqlite3.Error``
+        subclasses ``Exception`` and none of those three, so a disk-full or a
+        locked database on the owner's store raised straight through here, out
+        of ``_dispatch``, out of ``pump()`` and out of the pump thread — taking
+        the spoken e-stop relay with it for the rest of the session.
+
+        The rule was never wrong, only unenforced: **a ledger write must never
+        take down a turn.** Now it cannot take down anything at all.
+        """
+
         if self._ledger is None or not text.strip():
             return
         try:
@@ -2559,13 +2940,42 @@ class RealtimeLane:
                 origin=self._transcript_origin,
                 provider_item_id=item_id,
             )
-        except (RuntimeError, TypeError, ValueError) as error:
-            # A ledger write must never take down a turn (runtime.py:5996 keeps
-            # the same rule for the tiered store).
-            self._note(f"ledger write failed: {error}")
+        except Exception as error:  # noqa: BLE001 - see the docstring above
+            name = type(error).__name__
+            self.ledger_failures += 1
+            self.ledger_failure_types[name] = self.ledger_failure_types.get(name, 0) + 1
+            self.last_ledger_failure = f"{name}: {error}"
+            self._note(f"ledger write failed: {name}: {error}")
 
     def _note(self, message: str) -> None:
         self.events.append(message)
+
+    def _month_to_date_snapshot(self) -> dict[str, object] | None:
+        """The ledger's own dict, or ``None`` when no ledger is wired.
+
+        ``None`` is a meaningful answer and not a missing one: it says "this
+        lane is not metered", which is what every non-runtime construction of
+        :class:`RealtimeLane` is. The panel renders that as "no ledger" rather
+        than as "$0.00 spent", because the two are not the same claim.
+        """
+
+        total = self.month_to_date_spend()
+        if total is None:
+            return None
+        fallback: dict[str, object] = {
+            "month": str(total.month),
+            "usd": round(float(total.usd), 6),
+            "readable": bool(total.readable),
+            "note": str(total.note),
+        }
+        as_dict = getattr(total, "as_dict", None)
+        if not callable(as_dict):
+            return fallback
+        try:
+            return dict(as_dict())
+        except Exception as error:  # noqa: BLE001 - a snapshot may never raise
+            fallback["note"] = f"{total.note} (snapshot degraded: {type(error).__name__})".strip()
+            return fallback
 
     def snapshot(self) -> dict[str, object]:
         """What ``/api/state`` would show about the lane."""
@@ -2587,6 +2997,10 @@ class RealtimeLane:
             "narrations": self.narrations,
             "narrations_skipped": self.narrations_skipped,
             "narrations_skipped_closed": self.narrations_skipped_closed,
+            # Card R25. The cost-ceiling asymmetry as two numbers: chatter this
+            # month's ceiling silenced, and safety facts that outranked it.
+            "narrations_skipped_budget": self.narrations_skipped_budget,
+            "narrations_over_budget": self.narrations_over_budget,
             # Card R8, work item 2. ``narrations`` counts what left this process;
             # this counts what the provider threw away. A gap between them is
             # the R6 defect happening again, and it is now visible from
@@ -2629,7 +3043,31 @@ class RealtimeLane:
             "disconnects": self.disconnects,
             "refused_tool_calls": list(self.refused_tool_calls),
             "protocol_errors": list(self.protocol_errors),
+            # Card R22, work item 1. Frames the lane understood and could not
+            # handle. Beside ``protocol_errors`` and never folded into it: one
+            # is the provider changing, the other is this process breaking, and
+            # an operator reading a rising number needs to know which.
+            "dispatch_failures": self.dispatch_failure_count,
+            "dispatch_failure_types": dict(self.dispatch_failure_types),
+            "recent_dispatch_failures": list(self.dispatch_failures[-3:]),
+            # Card R22, work item 4. Ledger writes degraded to a note.
+            "ledger_failures": self.ledger_failures,
+            "ledger_failure_types": dict(self.ledger_failure_types),
+            "last_ledger_failure": self.last_ledger_failure,
+            # Card R22, work item 5 / EV-1 §10.3. Retained ASR + boundary frames
+            # handed to the evidence log, by type.
+            "retained_events": self.retained_events,
+            "retained_event_types": dict(self.retained_event_types),
+            "retention_failures": self.retention_failures,
+            "retention_wired": self._retention_sink is not None,
             "usage_rows": len(self.usage_rows),
+            # Card R25. The durable ceiling, from the lane's own point of view:
+            # what this month has cost, whether that number came from a file we
+            # could actually read, and the ceiling it is measured against. The
+            # panel answers "how close am I?" off this without reading files.
+            "month_to_date": self._month_to_date_snapshot(),
+            "monthly_budget_usd": self.config.monthly_budget_usd,
+            "spend_ledger_failures": self.spend_ledger_failures,
             "audio_frames_sent": self._audio_sent_this_session,
             "tail_items_injected": self.tail_items_injected,
             "tools_enabled": self._tool_handler is not None,
@@ -2686,11 +3124,13 @@ __all__ = [
     "TOOL_REFUSAL_OUTPUT",
     "TOOL_STATUS_OK",
     "LedgerLike",
+    "MonthToDateSpendLike",
     "RealtimeArmingDecision",
     "RealtimeLane",
     "RealtimeLaneError",
     "SinkLike",
     "SinkOwnershipError",
+    "SpendLedgerLike",
     "ToolHandlerLike",
     "build_instructions",
     "clause_is_filler",

@@ -59,6 +59,23 @@ so a disk that blocks for 200 ms would become 200 ms of microphone latency and
 a disk that raised would become ``pump failed``. Handing bytes to the tee is
 therefore a bounded, lock-free-shaped enqueue that drops and counts when the
 writer thread falls behind — never a write, never a wait, never an exception.
+
+THE SIXTH RULE, ADDED BY CARD F1-SI: THE EAR LEARNS WHOSE VOICE IT IS
+---------------------------------------------------------------------
+:class:`~parcel_robot.realtime.voice_identity.VoiceIdentityGate` hangs off the
+same ``accept_audio`` the tee does and computes ONE speaker embedding per owner
+turn (~27 ms measured, once, not per frame). It obeys the tee's law — never
+raise into the relay, never grow without a bound — with one deliberate
+exception: it is allowed to be *slow once per turn*, because that is the card's
+whole latency budget and the alternative is a verdict that arrives after the
+transcript it was supposed to gate.
+
+**What it does NOT do here is refuse audio.** Every accepted frame still goes
+up to the provider, whoever spoke it, because the emergency latch is built out
+of the transcript that comes back and a stranger must always be able to stop the
+dog. This module records who is speaking; ``runtime.submit_realtime_transcript``
+is where that fact turns into "may this sentence move the robot", and only for
+the non-emergency classes.
 """
 
 from __future__ import annotations
@@ -911,6 +928,7 @@ class BrowserAudioGateway:
         max_outbound_frames: int = DEFAULT_MAX_OUTBOUND_FRAMES,
         max_outbound_bytes: int = DEFAULT_MAX_OUTBOUND_BYTES,
         capture: SessionAudioCapture | None = None,
+        voice_identity: Any | None = None,
     ) -> None:
         self._on_audio = on_audio
         self._on_mic = on_mic
@@ -918,6 +936,10 @@ class BrowserAudioGateway:
         #: Card R17. The optional tee. ``None`` is the shipped default and means
         #: every audio path here is byte-for-byte what R7 shipped.
         self._capture = capture
+        #: Card F1-SI. The optional speaker-identity gate. ``None`` — and a gate
+        #: with no enrolled profile — both mean every audio path here is
+        #: byte-for-byte what R7/R17 shipped, and the gate says which it is.
+        self._voice_identity = voice_identity
         self._clock = clock
         self._sample_rate_hz = int(sample_rate_hz)
         self._bytes_per_ms = (self._sample_rate_hz * 2) / 1000.0
@@ -982,7 +1004,26 @@ class BrowserAudioGateway:
             capture.start()
         self._note("audio gateway armed (idle; no microphone until the owner asks)")
 
+    def _end_voice_turn(self) -> None:
+        """Card F1-SI. The microphone shut, so the owner turn in flight is over.
+
+        Settles the gate's current turn instead of leaving it open across a
+        silence the gate will never see frames for. Without it a turn that ended
+        because the owner released the button would keep its ``pending`` verdict
+        until the next turn's first frame — and a transcript that arrived in
+        between would refuse to arm for the wrong reason.
+
+        Best-effort by construction: the gate swallows its own failures, and
+        this method exists on the shutdown path where nothing may raise.
+        """
+
+        with self._lock:
+            identity = self._voice_identity
+        if identity is not None:
+            identity.end_turn()
+
     def stop(self) -> None:
+        self._end_voice_turn()
         with self._lock:
             self._running = False
             conn = self._conn
@@ -1080,6 +1121,7 @@ class BrowserAudioGateway:
         conn.closed.set()
         conn.wake.set()
         if was_open:
+            self._end_voice_turn()
             self._report_mic(False)
         self._note(f"audio gateway: panel disconnected ({conn.close_reason or 'closed'})")
 
@@ -1153,6 +1195,7 @@ class BrowserAudioGateway:
             self.frames_in += 1
             self.bytes_in += size
             capture = self._capture
+            identity = self._voice_identity
         frame = bytes(payload)
         # Card R17: tee BEFORE the lane, and outside the lock. Before, because
         # ``_on_audio`` is a synchronous hop into the lane on this same socket
@@ -1161,6 +1204,19 @@ class BrowserAudioGateway:
         # the counters the snapshot reads.
         if capture is not None:
             capture.offer_owner(frame)
+        # Card F1-SI: the verify hook, POST-VAD in the only sense this side of
+        # the wire has one — the browser sends frames only while the owner's
+        # microphone is open, and the gate cuts turns on the same silence gap
+        # the tee cuts segments on. It runs BEFORE the lane for the same reason
+        # the tee does (a busy lane must not delay the verdict a transcript is
+        # about to need) and it never decides whether the frame goes up: it
+        # cannot, because a stranger's spoken emergency phrase has to reach the
+        # transcriber for the latch to fire at all. (The phrase itself has one
+        # literal in this source tree, in ``realtime/ingress.py``, and
+        # ``test_the_spoken_phrase_exists_exactly_once_in_the_source_tree``
+        # keeps it that way — it caught this very comment.)
+        if identity is not None:
+            identity.observe_frame(frame)
         self._on_audio(frame)
         return True
 
@@ -1199,6 +1255,7 @@ class BrowserAudioGateway:
         if not want_open and already:
             with self._lock:
                 conn.mic_open = False
+            self._end_voice_turn()
             self._report_mic(False)
             self._send_control(conn, {"type": SERVER_MIC, "on": False, "reason": "closed by owner"})
             self._note("audio gateway: microphone closed by owner")
@@ -1231,6 +1288,7 @@ class BrowserAudioGateway:
                 return False
             conn.mic_open = False
             self.mic_closes_by_runtime += 1
+        self._end_voice_turn()
         self._send_control(conn, {"type": SERVER_MIC, "on": False, "reason": str(reason)})
         self._note(
             f"audio gateway: microphone closed by the runtime ({reason}); the gateway "
@@ -1420,10 +1478,25 @@ class BrowserAudioGateway:
         except (RuntimeError, TypeError, ValueError):  # pragma: no cover - defensive
             pass
 
+    @property
+    def voice_identity(self) -> Any | None:
+        """The speaker-identity gate this gateway feeds, if any.
+
+        Read by ``runtime.submit_realtime_transcript`` at the moment a hosted
+        transcript needs to know whose turn it belonged to. Exposed as a
+        property rather than passed around so there is exactly one gate per
+        gateway and no second one can be constructed by accident — two gates
+        would mean two turn segmentations and a verdict about the wrong audio.
+        """
+
+        with self._lock:
+            return self._voice_identity
+
     def snapshot(self) -> dict[str, object]:
         with self._lock:
             conn = self._conn
             capture = self._capture
+            identity = self._voice_identity
             return {
                 "kind": "browser_audio",
                 # Card R17. ``{"enabled": false}`` when the owner has not opted
@@ -1431,6 +1504,21 @@ class BrowserAudioGateway:
                 # than an absent key a reader has to interpret.
                 "capture": (
                     {"enabled": False} if capture is None else capture.snapshot()
+                ),
+                # Card F1-SI. Same rule, and it matters more here: "no gate" and
+                # "a gate with nobody enrolled" both mean any voice can command
+                # the robot, and a reader must be able to see that rather than
+                # infer it from an absent key.
+                "voice_identity": (
+                    {
+                        "enabled": False,
+                        "reason": (
+                            "no speaker-identity gate is wired to this gateway: any "
+                            "voice in the room can arm a command"
+                        ),
+                    }
+                    if identity is None
+                    else identity.snapshot()
                 ),
                 "running": self._running,
                 "token_bound": self._token is not None,

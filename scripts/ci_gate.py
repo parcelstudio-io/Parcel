@@ -16,7 +16,7 @@ What it enforces (tiered by cost)
 ---------------------------------
 ``--tier commit`` (fast, offline, deterministic — no network, no model server):
   * the default gate ``pytest -m "not slow"`` (latest recorded local run:
-    6,933 passed on 2026-08-20);
+    7,715 passed on 2026-08-21);
   * ``ruff`` — ratcheted against a pinned baseline so pre-existing debt in
     modules this card does not own cannot block a commit, while any *new*
     violation reddens (see ``scripts/ci_ruff_baseline.json``);
@@ -29,13 +29,22 @@ What it enforces (tiered by cost)
         byte-equal cells, wired into one gate so Design A cannot silently rot;
     (b) LATENCY-TAIL — the committed p95/p99 percentile pins;
     (c) HARD-SAFETY — zero hard collisions on every product artifact and no new
-        false_arrival, read from the existing harness ledgers.
+        false_arrival, read from the existing harness ledgers;
+  * ASSERTION-EVALS (card EV-1, ``scrum/20260820/task_11``) — the eleven
+    programmatic session assertions over a frozen fixture set, the harness
+    self-test (a null / always-claims-success / random-tool agent must FAIL
+    every suite and a clean control must PASS), pass^k on the e-stop (k=1 here,
+    k=3 nightly), and the pinned findings of any committed run folder that is
+    present. Logic lives in ``evals/assertions/gate.py``; this file stays the
+    register of WHICH gates exist.
 
 ``--tier nightly`` (slow, scheduled): everything above, plus the slow suite
   (live-sim e2e + acoustic rig via ``-m slow``), the nav_instruct minival
-  candidate run, the mutation panel (6/6 kills), and the metamorphic suite.
-  Numeric eval outputs are reported; only the pre-registered hard invariants
-  (collisions, false_arrival, mutation survivors) gate.
+  candidate run, every registered mutation-panel case (latest recorded: 7/7),
+  and the metamorphic suite. Numeric eval outputs are reported unless their row
+  is explicitly hard: candidate collisions and mutation survivors gate, while
+  the candidate differential row (including candidate false-arrival) reports.
+  The frozen baseline's no-new-false-arrival invariant remains hard separately.
 
 Any hard gate red ==> non-zero exit. Report-only gates never change the exit
 code; they are printed so a human sees the trend.
@@ -126,6 +135,40 @@ RELEASE_PARITY_NODE_IDS: tuple[str, ...] = (
     "tests/test_release_parity.py::test_ship_set_excludes_dev_only_and_ground_truth",
     "tests/test_release_parity.py::test_every_default_asset_resolves_under_the_packaged_root",
     "tests/test_release_parity.py::test_effective_config_is_equal_under_source_and_packaged_roots",
+)
+
+#: Card R26. THE MARKER EXPRESSIONS THAT DEFINE THE TIERS. These are constants
+#: and not string literals at the call sites for one reason: the
+#: ``tier-coverage`` gate below reads THESE, so an edit that narrows what the
+#: nightly runs ("slow and not e2e", say) is compared against what the commit
+#: tier deselects and reddens, instead of quietly deleting a tier.
+#:
+#: The full audit's finding was that the 42 tests the commit tier deselects —
+#: the entire voice-to-nav e2e tier among them — had never been run by anything.
+#: A tier nobody runs is not a tier; it is a directory.
+COMMIT_MARKERS = "not slow"
+NIGHTLY_SLOW_MARKERS = "slow"
+
+#: Card R27 — THE OWNER'S CONVERSATION STORE IS NOT REACHABLE FROM A TEST.
+#:
+#: Pinned as explicit node ids, and that is the whole point of the entry rather
+#: than a stylistic choice. These tests already run inside ``default-suite``, so
+#: as a *behaviour* gate this is a duplicate; as a *deletion* gate it is not.
+#: Deleting ``tests/test_owner_store_isolation.py`` makes ``default-suite``
+#: quietly smaller and still green, while a named selection **errors** — which
+#: is the difference between a guard and a guard nobody can remove.
+#:
+#: The trigger: 256 synthetic rows in the owner's real ``parcel_memory.sqlite3``
+#: written by four consecutive card-chains, one of whose vectors
+#: (``test_shipped_config_still_launches``) shipped in this repo and ran on
+#: every commit gate. See ``scrum/20260821/task_9/R27_STATUS.md``.
+OWNER_STORE_NODE_IDS: tuple[str, ...] = (
+    "tests/test_owner_store_isolation.py::test_a_repo_root_in_process_runtime_cannot_reach_the_owner_store",
+    "tests/test_owner_store_isolation.py::test_no_shipped_config_can_be_launched_onto_the_owner_store",
+    "tests/test_owner_store_isolation.py::test_a_test_process_cannot_declare_itself_the_owner",
+    "tests/test_owner_store_isolation.py::test_no_harness_names_the_owner_store_outside_the_allowlist",
+    "tests/test_owner_store_isolation.py::test_quarantine_defaults_to_dry_run_and_never_deletes",
+    "tests/test_owner_store_isolation.py::test_quarantine_apply_is_refused_against_the_owner_store",
 )
 
 #: The mutation panel's anti-rot guards (both fast enough for the commit tier).
@@ -335,12 +378,43 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+#: Card R26. Credential variables scrubbed from the OFFLINE tiers' subprocesses.
+#:
+#: Found by the first recorded nightly, 2026-08-21. The nightly has to load a
+#: credential for EV-1's judge stage, and with one in the environment
+#: ``tests/test_realtime_lane.py::test_flag_on_constructs_the_lane_and_wires_it
+#: _to_the_restricted_ingress`` flipped from green to red — deterministically,
+#: because ``RobotRuntime._realtime_transport_factory`` builds a live transport
+#: whenever the key is non-empty, so the lane armed instead of refusing with
+#: ``no_transport``. That test is fixed to state its own premise, but the class
+#: is the point: this file documents the commit tier as "fast, offline,
+#: deterministic", and a tier whose result depends on what the operator happens
+#: to have exported in their shell is none of those things.
+#:
+#: The scrub is SKIPPED when ``PARCEL_REALTIME_LIVE=1`` — that is the explicit
+#: opt-in for the two live-provider cells, and silently starving them of a key
+#: would turn a deliberate live run into a silent skip.
+CREDENTIAL_ENV_VARS: tuple[str, ...] = (
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "PARCEL_REALTIME_KEY_ENV",
+)
+LIVE_OPT_IN_ENV = "PARCEL_REALTIME_LIVE"
+
+
 def _base_env() -> dict[str, str]:
     env = dict(os.environ)
     # MuJoCo runs headless offscreen; egl matches how the default gate is run
     # here. No network, no display, no model server needed for the commit tier.
     env.setdefault("MUJOCO_GL", "egl")
     env.setdefault("PYTHONUNBUFFERED", "1")
+    if env.get(LIVE_OPT_IN_ENV, "").strip() != "1":
+        # Also scrub whatever PARCEL_REALTIME_KEY_ENV was pointing at, or the
+        # indirection would carry a credential straight past this list.
+        indirect = (env.get("PARCEL_REALTIME_KEY_ENV") or "").strip()
+        for name in (*CREDENTIAL_ENV_VARS, indirect):
+            if name:
+                env.pop(name, None)
     return env
 
 
@@ -938,12 +1012,108 @@ def update_ruff_baseline(*, baseline_path: Path = RUFF_BASELINE) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Card R26 — tier coverage: every collected test belongs to a tier that RUNS it
+# ---------------------------------------------------------------------------
+
+
+def _collect_ids(markers: str | None, *, timeout: int = 600) -> tuple[set[str], str]:
+    """Node ids pytest would select under ``markers`` (collection only)."""
+
+    # NOT ``--collect-only -q``: ``run_pytest`` already passes ``-q``, and a
+    # second one is ``-qq``, which suppresses the node-id list entirely and
+    # leaves this gate parsing an empty set. Learned the hard way, 2026-08-21.
+    proc = run_pytest((), markers=markers, extra_args=["--collect-only"], timeout=timeout)
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"collection under -m {markers!r} failed (rc={proc.returncode}): "
+            + ((proc.stdout or "") + (proc.stderr or "")).strip()[-400:]
+        )
+    ids = {
+        line.strip()
+        for line in (proc.stdout or "").splitlines()
+        if "::" in line and not line.startswith(("FAILED", "ERROR", "<"))
+    }
+    tail = [ln for ln in (proc.stdout or "").strip().splitlines() if "collected" in ln]
+    return ids, (tail[-1] if tail else "")
+
+
+def evaluate_tier_coverage(
+    *,
+    commit_markers: str = COMMIT_MARKERS,
+    nightly_markers: str = NIGHTLY_SLOW_MARKERS,
+    tier: str = "commit",
+    collector: Callable[[str | None], tuple[set[str], str]] | None = None,
+) -> GateResult:
+    """Every collected test is run by the commit tier or by the nightly tier.
+
+    The audit's §Tests-1 in one executable sentence. It compares three
+    collections — everything, what the commit tier selects, what the nightly's
+    slow selection selects — and reddens on either failure mode:
+
+    * **orphaned**: a test in neither tier. That is the "42 deselected tests
+      nothing ever runs" finding; it can reappear the moment a marker expression
+      is narrowed or a third marker is invented.
+    * **double-counted**: a test in both. Harmless for coverage, but it means the
+      tier boundary is not a partition and the deselected count in a gate line
+      stops meaning what a reader thinks it means.
+
+    ``collector`` is the seam the self-test seeds: a narrowed nightly selection
+    must redden here, which is what makes this gate more than a tautology.
+    """
+
+    name = "tier-coverage"
+    collect = collector or (lambda markers: _collect_ids(markers))
+    try:
+        every, every_line = collect(None)
+        commit_ids, _ = collect(commit_markers)
+        nightly_ids, _ = collect(nightly_markers)
+    except RuntimeError as exc:
+        return GateResult(name, tier, True, "error", str(exc))
+    if not every:
+        return GateResult(name, tier, True, "error", "collection returned no node ids")
+
+    orphaned = sorted(every - commit_ids - nightly_ids)
+    doubled = sorted(commit_ids & nightly_ids)
+    problems: list[str] = []
+    if orphaned:
+        problems.append(
+            f"{len(orphaned)} test(s) run by NEITHER tier: {orphaned[:8]}"
+            + (" ..." if len(orphaned) > 8 else "")
+        )
+    if doubled:
+        problems.append(
+            f"{len(doubled)} test(s) selected by BOTH tiers: {doubled[:8]}"
+            + (" ..." if len(doubled) > 8 else "")
+        )
+    extra = {
+        "collected": len(every),
+        "commit_selected": len(commit_ids),
+        "nightly_selected": len(nightly_ids),
+        "orphaned": orphaned,
+        "doubled": doubled,
+        "commit_markers": commit_markers,
+        "nightly_markers": nightly_markers,
+        "collected_line": every_line,
+    }
+    if problems:
+        return GateResult(name, tier, True, "fail", "; ".join(problems), extra=extra)
+    return GateResult(
+        name, tier, True, "pass",
+        (
+            f"{len(every)} collected = {len(commit_ids)} commit (-m {commit_markers!r}) "
+            f"+ {len(nightly_ids)} nightly (-m {nightly_markers!r}), no orphans, no overlap"
+        ),
+        extra=extra,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Nightly-only harness runs (offline, in-process where possible)
 # ---------------------------------------------------------------------------
 
 
 def evaluate_mutation_panel(tier: str = "nightly") -> GateResult:
-    """Run the mutation panel in-process: 6/6 kills, no survivors (hard)."""
+    """Run every registered mutation in-process; no survivor is allowed."""
 
     try:
         from scripts.mutation_panel import run_panel
@@ -959,6 +1129,28 @@ def evaluate_mutation_panel(tier: str = "nightly") -> GateResult:
     if survivors or not payload.get("passed"):
         return GateResult("mutation-panel", tier, True, "fail", detail)
     return GateResult("mutation-panel", tier, True, "pass", detail)
+
+
+def evaluate_assertion_evals(*, tier: str = "commit", k: int = 1) -> GateResult:
+    """Card EV-1 — the session-assertion suite, its self-test and pass^k.
+
+    Delegates to ``evals.assertions.gate`` for the same reason
+    ``evaluate_mutation_panel`` delegates to ``scripts.mutation_panel``: this
+    module is the list of gates, not the place their logic lives. ``k`` is the
+    only thing the two tiers disagree about — 1 here for cost, 3 nightly —
+    because pass^k is fail-closed and a k it cannot afford would redden every
+    commit rather than measure anything.
+    """
+
+    try:
+        from evals.assertions.gate import run_assertion_gate
+    except Exception as exc:  # noqa: BLE001
+        return GateResult("assertion-evals", tier, True, "error", f"import failed: {exc}")
+    try:
+        status, detail, extra = run_assertion_gate(k=k)
+    except Exception as exc:  # noqa: BLE001
+        return GateResult("assertion-evals", tier, True, "error", f"{type(exc).__name__}: {exc}")
+    return GateResult("assertion-evals", tier, True, status, detail, extra=extra)
 
 
 def evaluate_pose_drift_arms(
@@ -1122,6 +1314,10 @@ def run_commit_tier() -> list[GateResult]:
     results.append(evaluate_release_parity(tier=tier))
     results.append(evaluate_latency_ledger(tier=tier))
     results.append(evaluate_followbench_jerk_ledger(tier=tier))
+    results.append(evaluate_assertion_evals(tier=tier, k=1))
+    # Card R26: cheap (three collections, no execution) and it is the only gate
+    # that can see a whole tier going dark.
+    results.append(evaluate_tier_coverage(tier=tier))
     # Targeted hard-gate pytest selections (small, fast).
     results.append(_pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900))
     results.append(_pytest_gate("frozen-digest-integrity", tier, FROZEN_DIGEST_NODE_IDS, timeout=900))
@@ -1129,11 +1325,20 @@ def run_commit_tier() -> list[GateResult]:
     results.append(_pytest_gate("mutation-panel-freshness", tier, MUTATION_FRESHNESS_NODE_IDS, timeout=600))
     # Percentile-pin pytest stays; ledger source switch is evaluate_latency_ledger above.
     results.append(_pytest_gate("latency-tail", tier, LATENCY_TAIL_NODE_IDS, timeout=600))
-    # The full default gate last (latest recorded: 6,933 passed on 2026-08-20).
+    results.append(_pytest_gate("owner-store-isolation", tier, OWNER_STORE_NODE_IDS, timeout=900))
+    # The full default gate last (latest recorded: 7,715 passed on 2026-08-21).
     results.append(
         _pytest_gate("default-suite", tier, (), markers="not slow", timeout=1800)
     )
     return results
+
+
+#: Card R26. Environment the nightly's pytest subprocesses run under.
+#: ``PARCEL_LOAD_GUARD=off`` is the other half of the load guard: the guarded
+#: wall-clock tests skip under contention in the COMMIT tier and are forced to
+#: run here, where load is controlled. A guard that could skip in every tier
+#: would be a delete button with a friendly message.
+NIGHTLY_ENV: dict[str, str] = {"PARCEL_NIGHTLY": "1", "PARCEL_LOAD_GUARD": "off"}
 
 
 def run_nightly_tier() -> list[GateResult]:
@@ -1146,28 +1351,42 @@ def run_nightly_tier() -> list[GateResult]:
     results.append(evaluate_release_parity(tier=tier))
     results.append(evaluate_latency_ledger(tier=tier))
     results.append(evaluate_followbench_jerk_ledger(tier=tier))
+    # Same gate, k=3: SYNTHESIS_EVAL decision 4 asks for k>=3 wherever it can be
+    # afforded, and nightly is where it can.
+    results.append(evaluate_assertion_evals(tier=tier, k=3))
     results.append(_pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900))
     results.append(_pytest_gate("frozen-digest-integrity", tier, FROZEN_DIGEST_NODE_IDS, timeout=900))
     results.append(_pytest_gate("release-parity-integrity", tier, RELEASE_PARITY_NODE_IDS, timeout=600))
     results.append(_pytest_gate("mutation-panel-freshness", tier, MUTATION_FRESHNESS_NODE_IDS, timeout=600))
     results.append(_pytest_gate("latency-tail", tier, LATENCY_TAIL_NODE_IDS, timeout=600))
-    results.append(_pytest_gate("default-suite", tier, (), markers="not slow", timeout=1800))
+    results.append(_pytest_gate("owner-store-isolation", tier, OWNER_STORE_NODE_IDS, timeout=900))
+    results.append(evaluate_tier_coverage(tier=tier))
+    results.append(
+        _pytest_gate(
+            "default-suite", tier, (), markers=COMMIT_MARKERS,
+            env_extra=NIGHTLY_ENV, timeout=1800,
+        )
+    )
     # Nightly-only: the slow harnesses.
     results.append(evaluate_mutation_panel(tier=tier))
     results.extend(evaluate_nav_instruct_candidate(tier=tier))
     # Card DR-2: the standing degraded-pose arms.
     results.extend(evaluate_pose_drift_arms(tier=tier))
+    # THE DESELECTED TIER. ``NIGHTLY_SLOW_MARKERS`` rather than a literal so the
+    # tier-coverage gate above and this runner cannot disagree about what the
+    # nightly is for (card R26).
     results.append(
         _pytest_gate(
-            "slow-suite", tier, (), markers="slow",
-            env_extra={"PARCEL_NIGHTLY": "1"}, timeout=5400,
+            "slow-suite", tier, (), markers=NIGHTLY_SLOW_MARKERS,
+            env_extra=NIGHTLY_ENV, timeout=5400,
         )
     )
     # Report the metamorphic suite distinctly (already inside slow-suite).
     results.append(
         _pytest_gate(
-            "metamorphic", tier, ("tests/test_nav_metamorphic.py",), markers="slow",
-            hard=False, env_extra={"PARCEL_NIGHTLY": "1"}, timeout=1800,
+            "metamorphic", tier, ("tests/test_nav_metamorphic.py",),
+            markers=NIGHTLY_SLOW_MARKERS,
+            hard=False, env_extra=NIGHTLY_ENV, timeout=1800,
         )
     )
     return results

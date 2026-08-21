@@ -79,6 +79,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
+from .memory_path import resolve_memory_path
+
 logger = logging.getLogger(__name__)
 
 #: Where a turn came from. ``realtime`` = the hosted Realtime lane;
@@ -323,12 +325,26 @@ class SqliteConversationStore:
         path: str | Path = ":memory:",
         *,
         clock: Callable[[], float] = utc_now,
+        purpose: str | None = None,
     ) -> None:
+        """Card R27: this store's path goes through the same refusal as the ledger.
+
+        The raw-conversation store is not wired into the runtime yet (see the
+        module docstring's honesty boundary), so it has never polluted anything.
+        That is exactly why the guard belongs here NOW: the moment a config gains
+        a ``conversation_store.path`` it will be relative — every other path in
+        ``robot.yaml`` is — and this card would otherwise have fixed one ledger
+        and left its designated replacement carrying the original defect.
+        """
+
         self._clock = clock
         self._lock = threading.RLock()
         self._closed = False
-        self.path = str(path)
-        self.connection = sqlite3.connect(path, check_same_thread=False)
+        #: The resolved decision, same shape and same rules as
+        #: ``ConversationMemory.store``.
+        self.store = resolve_memory_path(path, purpose=purpose)
+        self.path = self.store.path
+        self.connection = sqlite3.connect(self.store.path, check_same_thread=False)
         with self._lock:
             # WAL lets readers run while the single writer commits. An
             # in-memory database has no write-ahead log to enable and reports
@@ -737,11 +753,11 @@ def parse_sqlite_utc(value: object) -> float | None:
 
 
 def open_store(
-    path: str | Path, *, clock: Callable[[], float] = utc_now
+    path: str | Path, *, clock: Callable[[], float] = utc_now, purpose: str | None = None
 ) -> SqliteConversationStore:
     """Construct the default backend. One call site to change when it changes."""
 
-    return SqliteConversationStore(path, clock=clock)
+    return SqliteConversationStore(path, clock=clock, purpose=purpose)
 
 
 __all__ = [

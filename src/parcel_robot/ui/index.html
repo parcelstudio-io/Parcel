@@ -889,6 +889,83 @@
     .mission-log .event-item[data-kind="blocked"] { border-left: 2px solid var(--amber); }
     .mission-log .event-item[data-kind="ended"] { border-left: 2px solid var(--line-strong); }
 
+    /* Card R21. The safety ring renders beside the mission log because they are
+       the same kind of artifact: a small eviction-proof record of the events an
+       owner has to be able to reconstruct after the fact. */
+    .safety-log {
+      max-height: 168px;
+      margin-top: 8px;
+    }
+
+    .safety-log .event-item[data-kind="latched"] { border-left: 2px solid var(--red); }
+    .safety-log .event-item[data-kind="released"] { border-left: 2px solid var(--teal); }
+    .safety-log .event-item[data-kind="rejected"] { border-left: 2px solid var(--amber); }
+    /* Card R22. A dead pump is the same severity as a latch and reads as one. */
+    .safety-log .event-item[data-kind="pump_died"] { border-left: 2px solid var(--red); }
+    .safety-log .event-item[data-kind="pump_revived"] { border-left: 2px solid var(--amber); }
+
+    /* Card R22, work item 2. The death alarm, BESIDE the safety log because the
+       finding (AUDIT_FULL_FABLE §Safety-1) is about silence: a pump that dies
+       takes the spoken e-stop relay, the stall watchdog, the rollover and the
+       idle close with it while the microphone stays open. A counter in a JSON
+       blob nobody opens is the defect, not the fix — this banner is hidden
+       whenever the pump is healthy or deliberately stopped, and impossible to
+       miss when it is not. */
+    .pump-alarm {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--red);
+      border-left-width: 3px;
+      border-radius: 4px;
+      background: rgba(220, 60, 60, 0.10);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .pump-alarm[data-state="dead"],
+    .pump-alarm[data-state="stale"],
+    .pump-alarm[data-state="revived"] { display: block; }
+
+    .pump-alarm[data-state="revived"] {
+      border-color: var(--amber);
+      background: rgba(220, 160, 40, 0.10);
+    }
+
+    .pump-alarm .pump-alarm-title {
+      display: block;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .pump-alarm .pump-alarm-detail {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .safety-log .log-phrase {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-style: italic;
+      overflow-wrap: anywhere;
+    }
+
+    .estop-banner-source {
+      display: block;
+      margin-top: 4px;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .estop-banner-source:empty { display: none; }
+
     .toast {
       position: fixed;
       right: 18px;
@@ -979,6 +1056,11 @@
       <div>
         <span class="estop-banner-title">Emergency stop latched — all motion is disabled</span>
         <span id="estop-banner-detail" class="estop-banner-detail">Nothing will move until the latch is released. Space latches the e-stop whenever this page has keyboard focus.</span>
+        <!-- Card R21. WHICH DOOR latched it and how long ago, from
+             snapshot.safety_latch. live_run_1 could not answer either question
+             from its artifacts, and the owner spent 84 seconds giving orders to
+             a robot that had already stopped. -->
+        <span id="estop-banner-source" class="estop-banner-source"></span>
       </div>
       <button type="button" id="estop-release" class="estop-release" data-action="clear_emergency_stop">Release e-stop latch</button>
     </div>
@@ -1109,6 +1191,23 @@
           <div>
             <p class="section-label">Mission log <span id="mission-log-count" class="log-count">0 entries</span></p>
             <ol id="mission-log" class="log-list mission-log" aria-live="polite"><li class="empty-log">No missions yet.</li></ol>
+          </div>
+          <div class="section-divider"></div>
+          <!-- Card R21. Safety lifecycle has its own ring in the runtime for the
+               same reason the mission log does, one class of event more
+               important: on 2026-08-20 the latch event was evicted from the
+               100-slot event deque fourteen seconds after it fired, and the run
+               could not afterwards prove WHICH utterance stopped the robot. -->
+          <div>
+            <p class="section-label">Safety log <span id="safety-log-count" class="log-count">0 entries</span></p>
+            <ol id="safety-log" class="log-list safety-log" aria-live="polite"><li class="empty-log">No emergency stops yet.</li></ol>
+            <!-- Card R22, work item 2. The hosted-lane pump's own liveness, put
+                 HERE and nowhere else because the things that stop when it stops
+                 are the things this panel is about: the spoken emergency stop,
+                 the stall watchdog, the session rollover and the idle close.
+                 aria-live="assertive": this is the one line in the panel that a
+                 screen-reader user must be interrupted for. -->
+            <div id="pump-alarm" class="pump-alarm" role="alert" aria-live="assertive" hidden></div>
           </div>
           <div class="section-divider"></div>
           <div>
@@ -1338,10 +1437,16 @@
       // so a latch the panel did not itself request — a spoken "Die stop", a
       // watchdog, another tab — raises it just the same.
       el("estop-banner").hidden = !emergencyStopped;
+      renderEstopSource(snapshot.safety_latch);
 
       renderRealtime(snapshot.realtime);
       renderMissionStatus(snapshot);
       renderMissionLog(snapshot.mission_log);
+      renderSafetyLog(snapshot.safety_log);
+      // Card R22, work item 2. Rendered from the SNAPSHOT and not from the
+      // realtime block's own poll, so the alarm cannot go stale independently
+      // of the safety log it sits beside.
+      renderPumpAlarm(snapshot.realtime);
       renderLogs(snapshot);
       drawArena();
     }
@@ -1402,7 +1507,31 @@
         lane.session_id ? `session ${lane.session_id}` : "no session yet",
         `tools ${broker.executed || 0}/${broker.calls || 0}`,
         `~$${spend.toFixed(4)} (assumed rates)`,
-      ].join(" · ");
+        realtimeBudgetLabel(realtime.month_to_date),
+      ].filter(Boolean).join(" · ");
+    }
+
+    // Card R25. "How close am I to the monthly ceiling?" answered from the
+    // panel instead of from a file. Three distinct states, kept distinct
+    // because collapsing them is how a documented control becomes fiction:
+    //   * no ledger armed        -> say so; NOT "$0.00 this month"
+    //   * ledger unreadable      -> the ceiling is NOT being enforced (fail-open)
+    //   * ledger readable        -> month-to-date against the ceiling
+    function realtimeBudgetLabel(monthToDate) {
+      if (!monthToDate || typeof monthToDate !== "object") {
+        return "no spend ledger (monthly ceiling not enforced)";
+      }
+      const budget = Number(monthToDate.budget_usd || 0);
+      const month = String(monthToDate.month || "this month");
+      if (monthToDate.readable === false) {
+        return `spend ledger UNREADABLE — monthly ceiling not enforced`;
+      }
+      const used = Number(monthToDate.usd || 0);
+      if (!(budget > 0)) return `${month} ~$${used.toFixed(2)} (no ceiling set)`;
+      const pct = Math.round((used / budget) * 100);
+      const over = monthToDate.over_budget === true;
+      const tail = over ? " — CEILING REACHED, new sessions refused" : "";
+      return `${month} ~$${used.toFixed(2)} of $${budget.toFixed(2)} (${pct}%)${tail}`;
     }
 
     function normalizeLogItem(item, defaultRole = "system") {
@@ -1599,6 +1728,164 @@
         message.className = "log-text";
         message.textContent = item.text || `${capitalize(item.goal)}: ${capitalize(item.reason)}`;
         content.append(meta, message);
+        row.append(icon, content);
+        list.append(row);
+      }
+      list.scrollTop = list.scrollHeight;
+    }
+
+    // --------------------------------------------------- card R21: safety ring
+    // The panel half of "safety events don't evaporate". Same shape as the
+    // mission log because it is the same kind of record; the one addition is
+    // the owner's VERBATIM words on a spoken latch, which is the line that
+    // makes a latch attributable instead of merely visible.
+    const SAFETY_SOURCE_LABELS = {
+      voice: "Voice",
+      typed: "Typed",
+      panel: "Panel / Space",
+      api: "In-process",
+      simulator: "Simulator",
+      runtime_close: "Shutdown",
+    };
+
+    function safetySourceLabel(source) {
+      const key = String(source || "");
+      return SAFETY_SOURCE_LABELS[key] || (key ? capitalize(key) : "Unknown source");
+    }
+
+    // Card R22. Without these two entries `capitalize(kind)` renders the wire
+    // value and the most important row in the log reads "Pump_died".
+    const SAFETY_KIND_LABELS = {
+      pump_died: "Pump dead",
+      pump_revived: "Pump revived",
+    };
+
+    function safetyKindLabel(kind) {
+      const key = String(kind || "");
+      return SAFETY_KIND_LABELS[key] || capitalize(key);
+    }
+
+    // Card R22, work item 2. How stale a heartbeat may get before the panel
+    // calls it stale. The pump wakes at 20 Hz, so two seconds is forty missed
+    // passes; anything under that is scheduling noise on a loaded machine.
+    const PUMP_HEARTBEAT_STALE_S = 2.0;
+
+    function renderPumpAlarm(realtime) {
+      const box = el("pump-alarm");
+      if (!box) return;
+      const pump = realtime && realtime.pump ? realtime.pump : null;
+      box.replaceChildren();
+      // Three quiet states and they are NOT the same: no lane at all, a pump
+      // nobody has started (there is no session before the owner's first
+      // gesture), and a pump that is alive with a fresh heartbeat. Shouting
+      // about the first two is how an alarm gets ignored when it matters.
+      if (!pump || !pump.armed) {
+        box.hidden = true;
+        box.removeAttribute("data-state");
+        return;
+      }
+      const age = Number(pump.heartbeat_age_s);
+      const stale = Number.isFinite(age) && age > PUMP_HEARTBEAT_STALE_S;
+      let state = "";
+      let title = "";
+      let detail = "";
+      if (!pump.alive) {
+        state = "dead";
+        title = "Hosted pump is DEAD";
+        detail =
+          (pump.death_reason ? `${pump.death_reason}. ` : "") +
+          "The spoken emergency stop, the stall watchdog, the session rollover " +
+          "and the idle close are all stopped until it restarts. The panel " +
+          "emergency stop, the Space bar and a typed stop are unaffected.";
+      } else if (stale) {
+        state = "stale";
+        title = "Hosted pump is not responding";
+        detail =
+          `No pump pass for ${age.toFixed(1)} s (it should wake 20 times a second). ` +
+          "Treat the spoken emergency stop as unavailable until this clears.";
+      } else if (Number(pump.deaths) > 0 || Number(pump.revivals) > 0) {
+        state = "revived";
+        title = "Hosted pump recovered";
+        detail =
+          `${Number(pump.deaths) || 0} death(s), ${Number(pump.revivals) || 0} revival(s) ` +
+          "this session. The pump is turning now; the safety log below has each event.";
+      } else {
+        box.hidden = true;
+        box.removeAttribute("data-state");
+        return;
+      }
+      if (pump.revivals_exhausted) {
+        detail += " Automatic revival is exhausted; a new microphone or typed " +
+          "gesture is what starts a fresh pump.";
+      }
+      box.dataset.state = state;
+      box.hidden = false;
+      const titleNode = document.createElement("span");
+      titleNode.className = "pump-alarm-title";
+      titleNode.textContent = title;
+      const detailNode = document.createElement("span");
+      detailNode.className = "pump-alarm-detail";
+      // textContent, never innerHTML: `death_reason` carries an exception
+      // message straight off a provider frame or a sqlite driver.
+      detailNode.textContent = detail;
+      box.append(titleNode, detailNode);
+    }
+
+    function renderEstopSource(latch) {
+      const line = el("estop-banner-source");
+      if (!line) return;
+      if (!latch || !latch.latched) {
+        line.textContent = "";
+        return;
+      }
+      const held = Number(latch.seconds_latched);
+      const heldText = Number.isFinite(held) ? ` · latched ${held.toFixed(0)} s ago` : "";
+      line.textContent = `Latched by: ${safetySourceLabel(latch.source)}${heldText}`;
+    }
+
+    function renderSafetyLog(items) {
+      const list = el("safety-log");
+      if (!list) return;
+      const rows = Array.isArray(items) ? items : [];
+      list.replaceChildren();
+      el("safety-log-count").textContent =
+        `${rows.length} ${rows.length === 1 ? "entry" : "entries"}`;
+      if (!rows.length) {
+        const empty = document.createElement("li");
+        empty.className = "empty-log";
+        empty.textContent = "No emergency stops yet.";
+        list.append(empty);
+        return;
+      }
+      for (const item of rows) {
+        const row = document.createElement("li");
+        row.className = "event-item";
+        row.dataset.level = String(item.level || "warning").toLowerCase();
+        row.dataset.kind = String(item.kind || "").toLowerCase();
+        const icon = document.createElement("span");
+        icon.className = "event-icon";
+        const content = document.createElement("div");
+        const meta = document.createElement("div");
+        meta.className = "log-meta";
+        const what = document.createElement("span");
+        const count = Number(item.count);
+        const repeated = Number.isFinite(count) && count > 1 ? ` ×${count}` : "";
+        what.textContent = `${safetyKindLabel(item.kind)} · ${safetySourceLabel(item.source)}${repeated}`;
+        const when = document.createElement("span");
+        when.textContent = displayTime(item.timestamp);
+        meta.append(what, when);
+        const message = document.createElement("p");
+        message.className = "log-text";
+        message.textContent = item.text || safetyKindLabel(item.kind);
+        content.append(meta, message);
+        // textContent, never innerHTML: this line is an owner utterance
+        // straight off a hosted transcriber and is never treated as markup.
+        if (item.phrase) {
+          const said = document.createElement("span");
+          said.className = "log-phrase";
+          said.textContent = `“${item.phrase}”`;
+          content.append(said);
+        }
         row.append(icon, content);
         list.append(row);
       }
@@ -2011,7 +2298,16 @@
 
     window.addEventListener("blur", clearMotionInputs);
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) clearMotionInputs();
+      if (document.hidden) {
+        clearMotionInputs();
+        return;
+      }
+      // Card R21. The state poll below is gated on !document.hidden, so a
+      // backgrounded tab freezes the e-stop banner at whatever it last saw.
+      // That is exactly the audio-mode case — the owner is talking, not
+      // looking — so the moment they look back, re-read before the next
+      // interval tick rather than showing them a stale safety state.
+      pollState();
     });
 
     el("motion-stop").addEventListener("click", () => {

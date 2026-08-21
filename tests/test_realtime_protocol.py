@@ -26,6 +26,7 @@ from parcel_robot.realtime.protocol import (
     CONTENT_TYPE_BY_ROLE,
     LIFECYCLE_EVENT_TYPES,
     PCM16_SAMPLE_RATE_HZ,
+    RETAINED_EVENT_TYPES,
     SERVER_EVENT_TYPES,
     ConversationItemCreate,
     ConversationItemTruncate,
@@ -44,6 +45,7 @@ from parcel_robot.realtime.protocol import (
     ResponseCancel,
     ResponseCreate,
     ResponseDone,
+    RetainedEvent,
     SessionCreated,
     SessionUpdate,
     SpeechStarted,
@@ -90,11 +92,27 @@ def test_the_frozen_event_surface_is_exactly_what_r1_needs() -> None:
     feature depends on, ``LIFECYCLE_EVENT_TYPES`` are events the provider
     narrates and the lane deliberately does nothing with. An unknown type is
     still refused; that is pinned directly below.
+
+    Card EV-1 added a THIRD category and this pin is what forced it to be
+    written down. ``RETAINED_EVENT_TYPES`` are frames the lane also does
+    nothing with, whose PAYLOAD is kept anyway: the 88 ASR frames
+    ``live_run_1`` refused as unknown are that run's only surviving trace of
+    how the owner's words were transcribed, and lifecycle treatment would have
+    thrown the fragments away along with the refusal. All three sets are
+    disjoint and their union is the whole surface.
     """
 
-    assert SERVER_EVENT_TYPES == REQUIRED_SERVER_EVENTS | set(LIFECYCLE_EVENT_TYPES)
+    assert SERVER_EVENT_TYPES == (
+        REQUIRED_SERVER_EVENTS | set(LIFECYCLE_EVENT_TYPES) | set(RETAINED_EVENT_TYPES)
+    )
     assert not REQUIRED_SERVER_EVENTS & set(LIFECYCLE_EVENT_TYPES), (
         "an event cannot be both consumed and ignored"
+    )
+    assert not REQUIRED_SERVER_EVENTS & set(RETAINED_EVENT_TYPES), (
+        "an event cannot be both consumed and merely retained"
+    )
+    assert not set(LIFECYCLE_EVENT_TYPES) & set(RETAINED_EVENT_TYPES), (
+        "a frame is envelope bookkeeping OR retained content, never both"
     )
     assert CLIENT_EVENT_TYPES == REQUIRED_CLIENT_EVENTS
 
@@ -106,6 +124,19 @@ def test_every_live_observed_lifecycle_event_parses_to_a_no_op() -> None:
         event = parse_server_event({"type": name, "extra": "ignored"})
         assert isinstance(event, LifecycleEvent)
         assert event.type_name == name
+
+
+def test_every_retained_event_is_a_no_op_that_keeps_its_payload() -> None:
+    """Card EV-1. Same no-op treatment, opposite decision about the content."""
+
+    for name, keys in RETAINED_EVENT_TYPES.items():
+        event = parse_server_event(
+            {"type": name, "extra": "ignored", **{key: f"v-{key}" for key in keys}}
+        )
+        assert isinstance(event, RetainedEvent)
+        assert event.type_name == name
+        assert dict(event.fields) == {key: f"v-{key}" for key in keys}
+        assert "extra" not in event.fields
 
 
 # ------------------------------------------------------------- fail-closed

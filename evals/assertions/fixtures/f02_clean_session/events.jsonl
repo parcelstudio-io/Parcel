@@ -1,0 +1,7 @@
+{"seq": 1, "stream": "marker", "wall": "2026-08-20 11:59:59.000000", "kind": "log_opened", "schema": "parcel.session_evidence.v1", "session_id": "rt_fixture_now", "max_bytes": 67108864}
+{"seq": 2, "stream": "event", "wall": "2026-08-20 12:00:00.400000", "id": 1, "role": "realtime", "text": "tool navigate_to: ok — started: the robot is walking to bench", "level": "info", "timestamp": "2026-08-20 12:00:00.400000"}
+{"seq": 3, "stream": "mission", "wall": "2026-08-20 12:00:00.500000", "id": 1, "kind": "started", "goal": "bench", "state": "running", "reason": "", "level": "info", "text": "Mission to bench started.", "timestamp": "2026-08-20 12:00:00.500000"}
+{"seq": 4, "stream": "event", "wall": "2026-08-20 12:00:40.400000", "id": 2, "role": "realtime", "text": "tool get_status: ok — current robot state", "level": "info", "timestamp": "2026-08-20 12:00:40.400000"}
+{"seq": 5, "stream": "event", "wall": "2026-08-20 12:01:20.300000", "id": 3, "role": "realtime", "text": "tool get_status: ok — current robot state", "level": "info", "timestamp": "2026-08-20 12:01:20.300000"}
+{"seq": 6, "stream": "mission", "wall": "2026-08-20 12:01:35.000000", "id": 2, "kind": "ended", "goal": "bench", "state": "arrived", "reason": "arrived", "level": "success", "text": "Arrived at bench.", "timestamp": "2026-08-20 12:01:35.000000"}
+{"seq": 7, "stream": "marker", "wall": "2026-08-20 14:46:40.000000", "kind": "log_closed", "reason": "runtime closed"}

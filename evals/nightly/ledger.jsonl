@@ -1,0 +1,1 @@
+{"elapsed_s": 3001.879, "exit_code": 1, "folder": "evals/nightly/20260821T102132Z", "gating_red": ["default-suite", "slow-suite", "future-clock-sweep"], "git_dirty": true, "git_head": "2c274967b4927f2de4295fde9cfa9508ce633576", "run": "20260821T102132Z", "soft_red": [], "started_at": "2026-08-21T10:21:32.971000+00:00", "verdict": "FAIL"}

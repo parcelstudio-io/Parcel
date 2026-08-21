@@ -593,14 +593,36 @@ def test_the_lane_refuses_to_enqueue_while_a_duplex_output_is_live() -> None:
     ``SpeakerSink`` is an ordered queue with no notion of who filled it, and
     ``speak_system``'s busy check cannot see hosted playback — two concurrent
     enqueuers would interleave sentences chunk by chunk.
+
+    Card R22 moved where the refusal is OBSERVED and not whether it happens.
+    The law is still a raise — asserted directly below — but ``_dispatch`` is
+    now firewalled, so the raise no longer travels out of ``pump()`` and up the
+    pump thread. That escape was never the guarantee; it was the §Safety-1
+    defect wearing a useful hat (runtime.py's R7 note records three
+    ``pump failed: … DuplexVoiceSession output is live`` lines in live session
+    1 from exactly this path). What the refusal must be is LOUD and never a
+    silent no-op, and all three of those are asserted here now: nothing was
+    enqueued, the refusal is counted and typed on the lane, and the pump lived.
     """
 
     rig = _Rig(handshake() + happy_turn(), duplex_output_active=lambda: True)
     rig.open()
+    # The law itself, unchanged and still an exception.
     with pytest.raises(SinkOwnershipError):
-        rig.speak()
+        rig.lane.assert_sink_free("hosted response")
+
+    rig.speak()
     assert rig.sink.chunks == []
     assert rig.sink.begin_calls == 0
+    # Not silent: the frame is recorded as an understood-but-unhandled dispatch,
+    # by exception type, and it is NOT laundered into ``protocol_errors``.
+    assert rig.lane.dispatch_failure_count >= 1
+    assert rig.lane.dispatch_failure_types.get("SinkOwnershipError", 0) >= 1
+    assert any("SinkOwnershipError" in note for note in rig.lane.events)
+    assert rig.lane.protocol_errors == []
+    # And the pump kept its promise: the session is still usable afterwards.
+    assert rig.lane.active is True
+    assert rig.lane.snapshot()["dispatch_failures"] >= 1
 
 
 def test_the_duplex_lane_is_refused_while_the_hosted_lane_owns_the_sink() -> None:
@@ -970,16 +992,47 @@ def test_flag_off_leaves_the_lane_unconstructed(
 def test_flag_on_constructs_the_lane_and_wires_it_to_the_restricted_ingress(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Card R26, found by the first recorded nightly.
+
+    This test used to read the operator's shell. Its comment said "No transport
+    exists in R1, so the gate refuses", which was true when it was written and
+    stopped being true when the live WebSocket transport landed:
+    ``RobotRuntime._realtime_transport_factory`` returns a real factory whenever
+    ``$OPENAI_API_KEY`` (or ``$PARCEL_REALTIME_KEY_ENV``'s target) is non-empty,
+    so on a machine with a credential exported the lane **arms** and this
+    assertion fails — deterministically, not flakily:
+
+        without a credential -> 1 passed
+        with a credential    -> AssertionError: assert True is False
+                                RealtimeArmingDecision(armed=True, code='armed', ...)
+
+    That is why it reddened the nightly twice (`default-suite` and
+    `future-clock-sweep` inside ``evals/nightly/20260821T102132Z``) and passed
+    every standalone re-run: the nightly has to load a credential for EV-1's
+    judge stage, and nothing else this session did. Any developer with
+    ``realtime.env`` sourced in their shell would have hit it on an unrelated
+    card and spent an afternoon on it.
+
+    The fix is to state the premise instead of inheriting it: the no-transport
+    refusal is a claim about an environment with **no** credential, so the test
+    now removes one. Nothing about the product changed, and the arming gate's
+    behaviour with a credential is covered by its own tests.
+    """
+
     config = tmp_path / "realtime.yaml"
     config.write_text("enabled: true\nvoice: marin\n", encoding="utf-8")
     monkeypatch.setenv(REALTIME_CONFIG_ENV, str(config))
+    # Pin the premise: no credential anywhere the factory looks.
+    monkeypatch.delenv("PARCEL_REALTIME_KEY_ENV", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
     runtime = _runtime(tmp_path)
     try:
         lane = runtime.realtime_lane
         assert lane is not None
         assert lane.config.voice == "marin"
         assert lane._ingress == runtime.submit_realtime_transcript
-        # No transport exists in R1, so the gate refuses — fail closed, loudly.
+        # With no credential there is no transport, so the gate refuses — fail
+        # closed, loudly, and for a reason that names the missing thing.
         decision = lane.arm(handshake_token="csrf", mic_gesture=True)
         assert decision.armed is False
         assert decision.code == CODE_NO_TRANSPORT

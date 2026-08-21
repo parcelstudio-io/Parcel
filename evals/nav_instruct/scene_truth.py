@@ -29,6 +29,42 @@ neither grow nor be silently adopted.
 — and every pure consumer of the transcribed table — stays free of the sim
 dependency.
 
+THE SURFACE CONVENTION (artifact v2, card PG-2)
+----------------------------------------------
+``derived`` and ``transcribed`` describe every object as a **centre plus a
+circumscribed radius**. No RGB-D sensor can measure that. The 2026-08-21 mapping
+bench built a semantic map from 120 rendered RGB-D frames and found building
+entries landing **1–3 cm from the visible facade and 1.2–1.7 m from the geom
+centre — 6/6 in the oracle arm, 5/6 in the open-vocab arm**
+(`scrum/20260821/perception/bench_mapping.md`). That is not an error; a depth
+camera sees surfaces and never centroids. Graded against ``derived``, a working
+pipeline scores 1.2–1.7 m and fails.
+
+So the artifact gained a third, sibling table:
+
+``surfaces``
+    Per entity, the **sensor-measurable target**: for a ``near``-class place the
+    nearest-surface set (one footprint primitive per constituent geom, the
+    thing a depth ray can actually land on); for an ``inside``-class place the
+    interior polygon, byte-identical to that entity's ``derived`` polygon.
+``surface_convention``
+    The versioned rules — what each measure means, what the per-class scoring
+    rule is, and the requirement that every localization claim carry a null
+    control. Scoring lives in ``evals/nav_instruct/surface_scoring.py``.
+
+**Why a sibling table and not a field inside ``derived``.** ``derived`` exists to
+be compared field-by-field with ``transcribed`` (see
+``tests/test_nav_instruct_scene_truth.py``, which asserts three ``derived`` rows
+are *equal* to their hand-typed counterparts). Adding a key to one side of that
+comparison would break the equality half of the proof for no benefit. A sibling
+section leaves every existing consumer — the generator, the frozen minival
+digest, ``derived_landmark_table`` — reading exactly the bytes it read before.
+
+**Which class is measured how is NOT decided here.** It is read from
+``parcel_robot.navigation.arrival_semantics.localization_target``, the table that
+already owns what arrival means per class, so the answer key and the robot
+cannot come to disagree about what "the building" is.
+
 Usage::
 
     .parcel/bin/python -m evals.nav_instruct.scene_truth --check
@@ -53,7 +89,32 @@ SCENE_PATH = REPO_ROOT / SCENE_RELPATH
 #: Checked-in generated artifact. Never hand-edit — regenerate.
 ARTIFACT_PATH = Path(__file__).resolve().parent / "scene_truth.json"
 
-ARTIFACT_VERSION = 1
+#: Bumped 1 -> 2 by card PG-2, which ADDED the ``surfaces`` and
+#: ``surface_convention`` sections. Nothing in ``derived`` / ``transcribed`` /
+#: ``transcription_deltas`` moved by a byte, so a v1 reader that ignores unknown
+#: top-level keys keeps working unchanged; the bump exists so a consumer that
+#: needs a surface can *require* it instead of discovering its absence at
+#: runtime.
+ARTIFACT_VERSION = 2
+
+#: Version of the surface convention itself, independent of the artifact
+#: envelope: bump this when what a surface MEANS changes (a new primitive, a
+#: different measure per class), not when the scene moves.
+SURFACE_CONVENTION_VERSION = 1
+
+#: Footprint primitives a surface part may be. Closed on purpose — a geom type
+#: the derivation has never seen is an error, never a silently dropped surface,
+#: because a missing surface would grade as "this place has no measurable
+#: target" and quietly re-open the defect this card closed.
+SURFACE_SHAPE_RECT = "rect"
+SURFACE_SHAPE_CIRCLE = "circle"
+SURFACE_SHAPES: tuple[str, ...] = (SURFACE_SHAPE_RECT, SURFACE_SHAPE_CIRCLE)
+
+#: Largest deviation from the identity quaternion a box geom may carry and still
+#: have an axis-aligned footprint. Every box in ``city_block.xml`` is unrotated
+#: today; a rotated one would make the 4-corner rect below a LIE, so the
+#: derivation raises rather than emitting a wrong answer key.
+_QUAT_IDENTITY_TOL = 1e-9
 
 #: Decimal places every derived float is rounded to before it lands in the
 #: artifact. 1e-6 m is four orders of magnitude below the smallest arrival band
@@ -126,6 +187,264 @@ def derive_scene_truth(scene: str | Path = SCENE_PATH) -> dict[str, Any]:
             "radius_m": _round(item["metadata"]["radius_m"]),
         }
     return dict(sorted(table.items()))
+
+
+class SurfaceDerivationError(ValueError):
+    """A scene whose surfaces cannot be derived honestly. Never a warning."""
+
+
+def derive_scene_surfaces(scene: str | Path = SCENE_PATH) -> dict[str, Any]:
+    """Compute the sensor-measurable target for every semantic entity.
+
+    Returns ``entity_id -> record``, where a record is::
+
+        {
+          "kind":          "object" | "region",   # the geometry kind
+          "label":         "building",            # the scene class
+          "place_class":   "object",              # arrival_semantics class
+          "measure":       "surface" | "interior",
+          "parts":         [...],                 # objects: nearest-surface set
+          "interior_polygon": [[x, y], ...],      # regions: the graded interior
+        }
+
+    ``kind`` and ``place_class`` are deliberately two fields: ``door_1`` is an
+    *object* geometrically and a *portal* to arrival, and it is the portal row
+    that decides how a perception answer for it is measured.
+
+    Objects carry ``parts`` — one footprint primitive per constituent geom, in
+    ``associated_lidar_ids`` order. That set, not a single polygon, is what a
+    depth camera can land on: the bench is four separate boxes and a ray hits
+    whichever one faces the robot. Regions carry ``interior_polygon`` and no
+    parts; see the module docstring for why.
+    """
+
+    import mujoco  # local: keeps the pure eval path free of the sim dependency
+
+    from parcel_robot.city_semantics import extract_city_semantics
+    from parcel_robot.navigation.arrival_semantics import (
+        LOCALIZATION_INTERIOR,
+        classify_place,
+        localization_target,
+    )
+    from parcel_robot.scene_semantics import scene_semantics
+
+    model = mujoco.MjModel.from_xml_path(str(scene))
+    regions, objects = extract_city_semantics(model)
+
+    sidecar = scene_semantics()
+    region_labels = tuple(
+        word
+        for item in sidecar.classes
+        if item.kind == "region"
+        for word in (item.name, *item.aliases)
+    )
+    object_labels = tuple(
+        word
+        for item in sidecar.classes
+        if item.kind == "object"
+        for word in (item.name, *item.aliases)
+    )
+
+    def _classified(label: str) -> tuple[str, str]:
+        place_class = classify_place(
+            label, region_labels=region_labels, object_labels=object_labels
+        )
+        return place_class, localization_target(place_class)
+
+    table: dict[str, Any] = {}
+
+    for region in regions:
+        label = str(region["label"])
+        place_class, measure = _classified(label)
+        if measure != LOCALIZATION_INTERIOR:
+            raise SurfaceDerivationError(
+                f"region {region['id']!r} classified as {place_class!r}, whose "
+                f"localization target is {measure!r}; a region the arrival table "
+                f"does not measure by containment would change `inside` arrival"
+            )
+        table[str(region["id"])] = {
+            "kind": "region",
+            "label": label,
+            "place_class": place_class,
+            "measure": measure,
+            # Byte-identical to the same entity's ``derived`` polygon. That
+            # equality IS the "inside-class arrival is unaffected" guarantee,
+            # and tests/test_scene_surface_truth.py asserts it entity by entity.
+            "interior_polygon": [[_round(p[0]), _round(p[1])] for p in region["polygon"]],
+        }
+
+    for item in objects:
+        label = str(item["label"])
+        place_class, measure = _classified(label)
+        if measure == LOCALIZATION_INTERIOR:
+            raise SurfaceDerivationError(
+                f"object {item['id']!r} classified as {place_class!r}, which is "
+                f"measured by containment; an RGB-D sensor cannot see inside a "
+                f"solid, so this entity would have no measurable target"
+            )
+        geom_names = list(item["metadata"].get("associated_lidar_ids") or ())
+        if not geom_names:
+            raise SurfaceDerivationError(
+                f"object {item['id']!r} lists no constituent geoms, so it has no "
+                f"surface a sensor could measure"
+            )
+        table[str(item["id"])] = {
+            "kind": "object",
+            "label": label,
+            "place_class": place_class,
+            "measure": measure,
+            "parts": [_geom_footprint(model, name) for name in geom_names],
+        }
+
+    return dict(sorted(table.items()))
+
+
+def _geom_footprint(model: Any, geom_name: str) -> dict[str, Any]:
+    """One geom's ground-plane footprint primitive.
+
+    The footprint is the horizontal cross-section outline: what a depth ray
+    travelling parallel to the ground can hit. Boxes give a rectangle, cylinders
+    and spheres give a circle. Any other geom type raises — a scene that grows
+    one needs a deliberate convention decision, not a guess.
+    """
+
+    import mujoco
+
+    geom_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, geom_name)
+    if geom_id < 0:
+        raise SurfaceDerivationError(f"scene has no geom named {geom_name!r}")
+    geom_type = int(model.geom_type[geom_id])
+    x = float(model.geom_pos[geom_id, 0])
+    y = float(model.geom_pos[geom_id, 1])
+    size = model.geom_size[geom_id]
+
+    if geom_type == int(mujoco.mjtGeom.mjGEOM_BOX):
+        quat = [float(v) for v in model.geom_quat[geom_id]]
+        if abs(quat[0] - 1.0) > _QUAT_IDENTITY_TOL or any(
+            abs(v) > _QUAT_IDENTITY_TOL for v in quat[1:]
+        ):
+            raise SurfaceDerivationError(
+                f"geom {geom_name!r} is a rotated box (quat={quat}); its footprint "
+                f"is not the axis-aligned rectangle this derivation would emit"
+            )
+        sx, sy = float(size[0]), float(size[1])
+        return {
+            "geom": geom_name,
+            "shape": SURFACE_SHAPE_RECT,
+            "polygon": [
+                [_round(x - sx), _round(y - sy)],
+                [_round(x + sx), _round(y - sy)],
+                [_round(x + sx), _round(y + sy)],
+                [_round(x - sx), _round(y + sy)],
+            ],
+        }
+    if geom_type in {
+        int(mujoco.mjtGeom.mjGEOM_CYLINDER),
+        int(mujoco.mjtGeom.mjGEOM_SPHERE),
+    }:
+        return {
+            "geom": geom_name,
+            "shape": SURFACE_SHAPE_CIRCLE,
+            "center": [_round(x), _round(y)],
+            "radius_m": _round(float(size[0])),
+        }
+    raise SurfaceDerivationError(
+        f"geom {geom_name!r} has type {geom_type}, for which no footprint "
+        f"primitive is defined; add one deliberately rather than dropping the "
+        f"surface"
+    )
+
+
+def surface_convention() -> dict[str, Any]:
+    """The versioned rules, carried in the artifact so it is self-describing.
+
+    An answer key that ships its own grading contract is one a reader months
+    from now can audit without finding this module first. Every literal here is
+    imported from the authority that owns it — nothing is re-typed.
+    """
+
+    from evals.nav_instruct.surface_scoring import (
+        MIN_NULL_DRAWS,
+        NULL_ALPHA,
+        REGION_EVIDENCE_MAJORITY,
+        SURFACE_BUDGET_M,
+    )
+    from parcel_robot.navigation.arrival_semantics import (
+        LOCALIZATION_INTERIOR,
+        LOCALIZATION_SURFACE,
+    )
+
+    return {
+        "version": SURFACE_CONVENTION_VERSION,
+        "why": (
+            "scene_truth's centre+radius convention is unmeasurable by any RGB-D "
+            "sensor: the 2026-08-21 mapping bench put building entries 1-3 cm "
+            "from the visible facade and 1.2-1.7 m from the geom centre, 6/6 in "
+            "the oracle arm and 5/6 in the open-vocab arm. Grading perception "
+            "against the centre fails a working pipeline."
+        ),
+        "authority": (
+            "which class is measured how is read from "
+            "parcel_robot.navigation.arrival_semantics.localization_target; this "
+            "artifact holds no class -> metric map of its own"
+        ),
+        "scoring_module": "evals/nav_instruct/surface_scoring.py",
+        "measures": {
+            LOCALIZATION_SURFACE: {
+                "applies_to": "near-class places (object, portal, person, unknown)",
+                "target": "the nearest-surface set in `parts`",
+                "statistic": "surface_error_m = min over parts of |distance to that part's footprint outline|",
+                "passes_when": f"surface_error_m <= {SURFACE_BUDGET_M}",
+                "note": (
+                    "unsigned: a point deep INSIDE a solid is as wrong as one "
+                    "outside it, because no sensor could have produced it"
+                ),
+            },
+            LOCALIZATION_INTERIOR: {
+                "applies_to": "inside-class places (region)",
+                "target": "`interior_polygon`, byte-identical to the entity's `derived` polygon",
+                "statistic": (
+                    "containment of the answer point PLUS evidence_inside_fraction "
+                    "over the answering entry's own supporting points"
+                ),
+                "passes_when": (
+                    f"the point is contained AND evidence_inside_fraction >= "
+                    f"{REGION_EVIDENCE_MAJORITY}"
+                ),
+                "note": (
+                    "bare containment is UNINFORMATIVE for large regions: the "
+                    "bench measured sidewalk and crosswalk at 0.00 m against a "
+                    "RANDOM map (p=1.00, p=0.52). The evidence fraction is what "
+                    "a random map cannot pass, and the null control is what "
+                    "proves it in any particular scene."
+                ),
+            },
+        },
+        "null_control": {
+            "required": True,
+            "rule": (
+                "EVERY localization claim carries a null control. A number "
+                "without one is not a result; the scorer cannot construct a "
+                "claim without it."
+            ),
+            "procedure": (
+                "re-scatter the same population uniformly over the mapped area, "
+                "recompute the same statistic, report p = P(null at least as "
+                "good as observed)"
+            ),
+            "min_draws": MIN_NULL_DRAWS,
+            "alpha": NULL_ALPHA,
+            "verdicts": {
+                "pass": "the statistic passed AND beat the null at alpha",
+                "fail": "the statistic did not pass",
+                "uninformative": (
+                    "the statistic passed but did NOT beat the null — the metric "
+                    "could not discriminate here, so this may not be reported as "
+                    "a pass"
+                ),
+            },
+        },
+    }
 
 
 def transcribed_table() -> dict[str, dict[str, Any]]:
@@ -249,6 +568,8 @@ def build_artifact(scene: str | Path = SCENE_PATH) -> dict[str, Any]:
         "derived": derived,
         "transcribed": transcribed,
         "transcription_deltas": transcription_deltas(derived, transcribed),
+        "surface_convention": surface_convention(),
+        "surfaces": derive_scene_surfaces(scene),
     }
 
 
@@ -300,6 +621,28 @@ def derived_landmark_table(
     if missing:
         raise KeyError(f"scene-truth artifact has no derived entry for: {missing}")
     return _native_table({key: derived[key] for key in ids})
+
+
+def surface_table(path: str | Path = ARTIFACT_PATH) -> dict[str, dict[str, Any]]:
+    """The checked-in ``surfaces`` section. No mujoco, no scene parse.
+
+    Refuses an artifact older than the convention rather than returning ``{}``:
+    an empty surface table and a missing surface table look identical to a
+    scorer, and one of them means "grade against the centre again".
+    """
+
+    artifact = load_artifact(path)
+    version = artifact.get("artifact_version")
+    if not isinstance(version, int) or version < 2:
+        raise KeyError(
+            f"scene-truth artifact is v{version!r}, which predates the surface "
+            f"convention; regenerate with: .parcel/bin/python -m "
+            f"evals.nav_instruct.scene_truth --regenerate"
+        )
+    surfaces = artifact.get("surfaces")
+    if not isinstance(surfaces, Mapping) or not surfaces:
+        raise KeyError("scene-truth artifact carries no surfaces section")
+    return {str(key): dict(value) for key, value in surfaces.items()}
 
 
 def _native_table(section: Mapping[str, Mapping[str, Any]]) -> dict[str, dict[str, Any]]:

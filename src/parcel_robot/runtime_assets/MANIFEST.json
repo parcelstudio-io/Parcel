@@ -20,8 +20,8 @@
       "mode": "0644",
       "origin": "mirror",
       "packaged": "configs/navigation/default.yaml",
-      "sha256": "5351a09780c139ebcbee5bf67ff939317fdea87d34becec320da62c965f2a4b0",
-      "size": 5723,
+      "sha256": "4787ac08e5772985b3c3e4ec2a596541117ae6da221be2131cac65d04e5a6662",
+      "size": 8538,
       "source": "configs/navigation/default.yaml"
     },
     {
@@ -731,5 +731,5 @@
       "target": "src/parcel_robot/config/robot.yaml"
     }
   ],
-  "tree_digest": "86ddbbb92cd9829709770c07a758e5fc4adf7e5dad5cd766d8e3385248c27895"
+  "tree_digest": "5bf16ff58ddc98c34e27f9cfef4435316b2bf08a9b901ad5f7bfc4188b1468fa"
 }

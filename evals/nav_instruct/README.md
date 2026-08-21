@@ -51,6 +51,60 @@ nothing feeding the orbit ring moved. v1/v2/v3 keep the 1.8 m literal through
 `generator.FOLLOW_GOAL_RADIUS_BY_REFERENCE`, so every row ever measured against
 them still means what it meant.
 
+## Surface ground truth (artifact v2)
+
+`scene_truth.json` describes every object as a **centre plus a circumscribed
+radius**. No RGB-D sensor can measure that. The 2026-08-21 mapping bench
+(`scrum/20260821/perception/bench_mapping.md`) built a semantic map from 120
+rendered RGB-D frames and found building entries landing **1–3 cm from the
+visible facade and 1.2–1.7 m from the geom centre, 6/6** in its oracle arm. A
+depth camera sees surfaces, never centroids — so grading a *correct* pipeline
+against the centre fails it. This is the same reasoning the v3 re-freeze already
+accepted for `next_to` bands (`instructnav.scoring.next_to_band_from_centre`),
+carried into the answer key.
+
+Artifact v2 therefore adds two sibling sections. `derived`, `transcribed`,
+`transcription_deltas` and every frozen digest are **untouched**.
+
+| section | what |
+|---|---|
+| `surfaces` | per entity: `near`-class places get `parts`, the nearest-surface set (one footprint primitive — `rect` or `circle` — per constituent geom); `inside`-class places get `interior_polygon`, byte-identical to that entity's `derived` polygon |
+| `surface_convention` | the versioned rules: what each measure means, the per-class pass rule, and the null-control requirement |
+
+**Which class is measured how** is read from
+`parcel_robot.navigation.arrival_semantics.localization_target` — the table that
+already owns what arrival means per class — so the answer key and the robot
+cannot disagree about what "the building" is. Regions are `interior`; everything
+else is `surface`.
+
+**Every localization claim carries a null control.** The same bench disclosed
+that its own containment metric was uninformative for large regions: sidewalk
+and crosswalk scored **0.00 m against a *random* map** (p=1.00, p=0.52).
+`surface_scoring.LocalizationClaim` therefore cannot be constructed without a
+`NullControl`, and `verdict` is a property, not a field:
+
+| verdict | meaning |
+|---|---|
+| `pass` | the statistic passed **and** beat the null at α=0.05 |
+| `fail` | the statistic did not pass |
+| `uninformative` | the statistic passed but did **not** beat the null — may not be reported as a pass |
+
+Per-class rules:
+
+* **`surface`** — `surface_error_m` = min unsigned distance from the answer point
+  to any part's footprint outline; passes at `RECOGNITION_LOCALIZATION_BUDGET_M`
+  (0.30 m, imported from `cam_detector.py`, never re-typed). Unsigned: a point
+  buried inside a solid is as wrong as one outside it.
+* **`interior`** — containment of the answer point (the unchanged R10 arrival
+  predicate) **plus** `evidence_inside_fraction ≥ 0.5` over the answering
+  entry's own supporting points. The second term is what a random map cannot
+  pass; a single point never can, because a random point is inside a large
+  region with probability equal to its area share.
+
+`also_satisfied_by` widens both the statistic and the null to the other
+instances of the queried class ("the building" is six buildings): a null that
+may only hit one acceptable answer understates how easy the question was.
+
 ## Files
 
 - `generator.py` — seeded episode matrix, both versions. Its landmark table is
@@ -59,6 +113,11 @@ them still means what it meant.
   (instrument 6). Regenerate with
   `.parcel/bin/python -m evals.nav_instruct.scene_truth --regenerate`;
   `--check` exits non-zero on drift. Hand edits are a red build.
+  **Artifact v2** additionally carries `surfaces` + `surface_convention` — see
+  [Surface ground truth](#surface-ground-truth-artifact-v2) below.
+- `surface_scoring.py` — the per-class perception scoring rules and the
+  **required** null control (card PG-2). Pure stdlib; nothing in `src/` imports
+  it, and `tests/test_scene_surface_truth.py` reddens if anything starts to.
 - `episodes/v1/` … `episodes/v4/` — the frozen episode sets, written out, one
   JSON per episode plus a manifest carrying the digest and the corrections the
   set carries. A file that differs from a fresh generation is a red build.

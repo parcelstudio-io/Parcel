@@ -10,6 +10,7 @@ and asserts the gate reddens — then asserts it is green on a clean input:
 * LATENCY-TAIL               <- a p95/p99 spike past the ratchet ceiling
 * FROZEN-DIGEST INTEGRITY    <- a byte-changed frozen manifest
 * RUFF RATCHET               <- a new (file, rule) fingerprint
+* TIER COVERAGE (card R26)   <- a narrowed nightly selection that orphans a tier
 
 Seeds are injected into *copies* / synthetic inputs or via runtime monkeypatch —
 never a committed source or frozen artifact edit (the mutation-panel rule).
@@ -24,8 +25,10 @@ from types import SimpleNamespace
 import pytest
 
 from scripts.ci_gate import (
+    COMMIT_MARKERS,
     DIGEST_SENTINELS,
     MODEL_OFF_NODE_IDS,
+    NIGHTLY_SLOW_MARKERS,
     RELEASE_PARITY_MANIFEST,
     evaluate_frozen_digest_sentinels,
     evaluate_hard_safety,
@@ -33,6 +36,9 @@ from scripts.ci_gate import (
     evaluate_latency_ratchet,
     evaluate_release_parity,
     evaluate_ruff,
+    evaluate_tier_coverage,
+    run_commit_tier,
+    run_nightly_tier,
     run_pytest,
 )
 
@@ -588,3 +594,174 @@ def test_release_parity_reddens_when_the_side_mirror_drifts(tmp_path: Path) -> N
 def test_release_parity_errors_when_the_manifest_is_absent(tmp_path: Path) -> None:
     result = evaluate_release_parity(manifest=tmp_path / "MANIFEST.json", root=tmp_path)
     assert result.status == "error"
+
+
+# ---------------------------------------------------------------------------
+# TIER COVERAGE (card R26) — the gate that can see a whole tier go dark
+# ---------------------------------------------------------------------------
+
+
+def _fake_collector(all_ids: set[str], commit_ids: set[str], nightly_ids: set[str]):
+    def collect(markers):
+        if markers is None:
+            return set(all_ids), f"{len(all_ids)} tests collected"
+        if markers == COMMIT_MARKERS:
+            return set(commit_ids), ""
+        if markers == NIGHTLY_SLOW_MARKERS:
+            return set(nightly_ids), ""
+        # Any OTHER expression is a narrowed selection: model it as a subset.
+        return {tid for tid in nightly_ids if "e2e" not in tid}, ""
+
+    return collect
+
+
+def test_tier_coverage_is_green_on_a_clean_partition() -> None:
+    result = evaluate_tier_coverage(
+        collector=_fake_collector(
+            {"a::t1", "b::t2", "tests/test_voice_nav_e2e.py::t3"},
+            {"a::t1", "b::t2"},
+            {"tests/test_voice_nav_e2e.py::t3"},
+        )
+    )
+    assert result.status == "pass", result.detail
+    assert result.extra["orphaned"] == [] and result.extra["doubled"] == []
+
+
+def test_tier_coverage_reddens_when_the_nightly_selection_is_narrowed() -> None:
+    """The card's named seed: a deselected test silently dropped from the nightly.
+
+    ``nightly_markers`` is narrowed to something that no longer covers the e2e
+    file — exactly the edit that would leave the audit's 42 tests unrun again.
+    """
+
+    result = evaluate_tier_coverage(
+        nightly_markers="slow and not e2e",
+        collector=_fake_collector(
+            {"a::t1", "tests/test_voice_nav_e2e.py::t3"},
+            {"a::t1"},
+            {"tests/test_voice_nav_e2e.py::t3"},
+        ),
+    )
+    assert result.status == "fail"
+    assert "NEITHER tier" in result.detail
+    assert "tests/test_voice_nav_e2e.py::t3" in result.detail
+
+
+def test_tier_coverage_reddens_when_a_test_is_in_both_tiers() -> None:
+    result = evaluate_tier_coverage(
+        collector=_fake_collector({"a::t1"}, {"a::t1"}, {"a::t1"})
+    )
+    assert result.status == "fail"
+    assert "BOTH tiers" in result.detail
+
+
+def test_tier_coverage_errors_rather_than_passing_on_an_empty_collection() -> None:
+    result = evaluate_tier_coverage(collector=_fake_collector(set(), set(), set()))
+    assert result.status == "error"
+
+
+def test_tier_coverage_is_green_against_the_real_tree() -> None:
+    """Not a mock: the actual three collections over the actual test suite."""
+
+    result = evaluate_tier_coverage()
+    assert result.status == "pass", result.detail
+    assert result.extra["nightly_selected"] > 0, (
+        "the nightly tier selects nothing — the deselected tier is dark again"
+    )
+    assert (
+        result.extra["commit_selected"] + result.extra["nightly_selected"]
+        == result.extra["collected"]
+    )
+
+
+def test_both_tiers_carry_the_tier_coverage_gate_and_the_commit_tier_keeps_every_hard_entry() -> None:
+    """Card R26 OWNS ``ci_gate.py`` "tier plumbing only — the commit tier's HARD
+    gate list must not lose an entry". This is that constraint, executable.
+
+    The names are listed literally rather than derived, so DELETING a gate is a
+    visible edit to this list and not a silently smaller loop.
+    """
+
+    import inspect
+
+    commit_source = inspect.getsource(run_commit_tier)
+    nightly_source = inspect.getsource(run_nightly_tier)
+    required = (
+        "evaluate_ruff",
+        "evaluate_hard_safety",
+        "evaluate_frozen_digest_sentinels",
+        "evaluate_release_parity",
+        "evaluate_latency_ledger",
+        "evaluate_followbench_jerk_ledger",
+        "evaluate_assertion_evals",
+        "evaluate_tier_coverage",
+        "model-off-non-inferiority",
+        "frozen-digest-integrity",
+        "release-parity-integrity",
+        "mutation-panel-freshness",
+        "latency-tail",
+        # Card R27: the owner's store must stay unreachable from a test.
+        "owner-store-isolation",
+        "default-suite",
+    )
+    for entry in required:
+        assert entry in commit_source, f"the commit tier lost its {entry} gate"
+        assert entry in nightly_source, f"the nightly tier lost its {entry} gate"
+    for entry in ("evaluate_mutation_panel", "evaluate_nav_instruct_candidate",
+                  "evaluate_pose_drift_arms", "slow-suite", "metamorphic"):
+        assert entry in nightly_source, f"the nightly tier lost its {entry} gate"
+
+
+# ---------------------------------------------------------------------------
+# CREDENTIAL HERMETICITY (card R26) — the offline tiers do not read the
+# operator's shell. Found by the first recorded nightly; see R26_STATUS.md §3.5.
+# ---------------------------------------------------------------------------
+
+
+def test_the_offline_tiers_scrub_credentials(monkeypatch) -> None:
+    from scripts.ci_gate import CREDENTIAL_ENV_VARS, LIVE_OPT_IN_ENV, _base_env
+
+    for name in CREDENTIAL_ENV_VARS:
+        monkeypatch.setenv(name, "sk-seeded-not-a-real-key")
+    monkeypatch.delenv(LIVE_OPT_IN_ENV, raising=False)
+    env = _base_env()
+    for name in CREDENTIAL_ENV_VARS:
+        assert name not in env, f"{name} leaked into an offline-tier subprocess"
+
+
+def test_the_key_env_indirection_is_scrubbed_too(monkeypatch) -> None:
+    """``PARCEL_REALTIME_KEY_ENV`` names ANOTHER variable; follow it."""
+
+    from scripts.ci_gate import LIVE_OPT_IN_ENV, _base_env
+
+    monkeypatch.setenv("PARCEL_REALTIME_KEY_ENV", "MY_HOUSE_KEY")
+    monkeypatch.setenv("MY_HOUSE_KEY", "sk-seeded-not-a-real-key")
+    monkeypatch.delenv(LIVE_OPT_IN_ENV, raising=False)
+    env = _base_env()
+    assert "MY_HOUSE_KEY" not in env
+    assert "PARCEL_REALTIME_KEY_ENV" not in env
+
+
+def test_the_explicit_live_opt_in_keeps_its_credential(monkeypatch) -> None:
+    """Starving a deliberate live run of its key would be a silent skip."""
+
+    from scripts.ci_gate import LIVE_OPT_IN_ENV, _base_env
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-seeded-not-a-real-key")
+    monkeypatch.setenv(LIVE_OPT_IN_ENV, "1")
+    assert _base_env()["OPENAI_API_KEY"] == "sk-seeded-not-a-real-key"
+
+
+def test_the_lane_arming_test_states_its_own_premise() -> None:
+    """The specific test the nightly caught must not read ambient credentials.
+
+    Source-level because the failure it guards against is environmental: on a
+    machine WITHOUT a credential the broken and the fixed versions are
+    indistinguishable, so an outcome assertion here would pass either way.
+    """
+
+    source = (REPO / "tests" / "test_realtime_lane.py").read_text(encoding="utf-8")
+    start = source.index("def test_flag_on_constructs_the_lane_and_wires_it_to_the_restricted_ingress")
+    body = source[start : source.index("\ndef ", start + 10)]
+    assert 'monkeypatch.setenv("OPENAI_API_KEY", "")' in body
+    assert 'monkeypatch.delenv("PARCEL_REALTIME_KEY_ENV"' in body

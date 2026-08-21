@@ -1,0 +1,42 @@
+[
+ {
+  "id": 1,
+  "role": "user",
+  "content": "How's your battery?",
+  "created_at": "2026-08-20 12:00:00.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000001"
+ },
+ {
+  "id": 2,
+  "role": "assistant",
+  "content": "Let me check what I can safely report and then we'll go from there.",
+  "created_at": "2026-08-20 12:00:01.400000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000002"
+ },
+ {
+  "id": 3,
+  "role": "user",
+  "content": "Go to the bench.",
+  "created_at": "2026-08-20 12:01:00.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000003"
+ },
+ {
+  "id": 4,
+  "role": "assistant",
+  "content": "Okay, let me figure out how to get you there.",
+  "created_at": "2026-08-20 12:01:01.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000004"
+ }
+]

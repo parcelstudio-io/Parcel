@@ -461,12 +461,39 @@ def _live_ingress_available() -> tuple[bool, str]:
 
 @pytest.mark.slow
 def test_camera_ingress_live_owlv2_localizes_object() -> None:
+    """B4 guarded live cell — real OWLv2 weights, real EGL render.
+
+    Card R26, found by the first recorded nightly. This cell used to CRASH
+    rather than run or skip, and had done so in every ad-hoc slow sweep on
+    record (R20 §6.1 attributed the same red as environmental):
+    ``_live_ingress_available`` gates on ``owlv2_weights_present()``, but
+    ``CameraIngress.from_model_data`` loads the detector through
+    ``load_owlv2_detector(require_env=True)`` — the opt-in ``PARCEL_OWLV2_ONNX``
+    switch. On a machine where the weights ARE fetched and the switch is simply
+    off (the normal state of this repo: the switch is default-off by Design A,
+    and the commit tier's model-off gate exists to keep it that way), the guard
+    said "available", the loader said ``None``, and the constructor raised
+    ``RuntimeError: camera ingress requested but the OWLv2 detector is
+    unavailable`` — so the ONE test that exercises the real detector could never
+    pass and was permanently misfiled as "environmental".
+
+    The fix is the seam the loader documents: a test that has already decided to
+    run the real model builds it with ``require_env=False`` and hands it in.
+    Nothing about the default-off env gate changes — this is the caller opting
+    in, not the switch flipping.
+    """
+
     ok, why = _live_ingress_available()
     if not ok:
         pytest.skip(why)
     import mujoco
 
     from parcel_robot.camera_channel.channel import CameraChannelSpec
+    from parcel_robot.detection_adapter.owlv2_onnx import load_owlv2_detector
+
+    detector = load_owlv2_detector(threshold=0.05, require_env=False)
+    if detector is None:
+        pytest.skip("OWLv2 weights present but the detector would not load (runtime deps absent)")
 
     spec = CameraChannelSpec.d455_go2_nominal()
     # A red ball 3 m ahead of the robot at the origin.
@@ -481,7 +508,7 @@ def test_camera_ingress_live_owlv2_localizes_object() -> None:
     data = mujoco.MjData(model)
     mujoco.mj_forward(model, data)
     ingress = CameraIngress.from_model_data(
-        model, data, spec=spec, threshold=0.05, class_ids=("bg", "obj")
+        model, data, spec=spec, detector=detector, threshold=0.05, class_ids=("bg", "obj")
     )
     try:
         ingress.set_query("red ball")

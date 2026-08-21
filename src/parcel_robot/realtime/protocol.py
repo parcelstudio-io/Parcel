@@ -364,6 +364,76 @@ LIFECYCLE_EVENT_TYPES: tuple[str, ...] = (
 
 
 @dataclass(frozen=True)
+class RetainedEvent(ServerEvent):
+    """A frame the lane does not act on, whose CONTENT is worth keeping.
+
+    Card EV-1, work item 1. :class:`LifecycleEvent` is the right answer for
+    envelope bookkeeping — ``response.created`` says nothing a reader wants
+    later, so keeping only its name is complete. These are the other kind: the
+    frame is still a no-op for the lane, but throwing its payload away throws
+    away the only signal an eval has about HOW a transcript was produced.
+
+    THE MEASUREMENT THIS EXISTS BECAUSE OF
+    --------------------------------------
+    ``evals/20260820/voice_corpus_v1/live_run_1`` recorded 95 protocol refusals
+    in ``state.realtime.lane.protocol_errors``, and they are three types:
+
+    ====================================================  =====  ============
+    type                                                  count  what it is
+    ====================================================  =====  ============
+    ``conversation.item.input_audio_transcription.delta``    44  ASR, streaming
+    ``input_audio_buffer.committed``                         44  ASR, boundary
+    ``conversation.item.truncated``                           7  barge-in ack
+    ====================================================  =====  ============
+
+    The 88 ASR frames are the run's only surviving trace of how the owner's
+    words were transcribed, and that run's two most expensive findings are both
+    about transcription: a Korean broadcast sign-off attributed to the owner,
+    and a spoken emergency phrase rendered "Dice out!" and never matched. Both
+    were unattributable afterwards because the transcript arrives as ONE
+    finished string (:class:`InputTranscriptionCompleted`) with no record of
+    what it was assembled from. The deltas are that record.
+
+    WHAT THIS IS NOT
+    ----------------
+    Not a relaxation of the fail-closed rule: a genuinely unknown ``type``
+    still raises :class:`UnknownEventType`. Not a lane change either —
+    ``_dispatch`` has no branch for this class, exactly as it has none for
+    :class:`LifecycleEvent`, so these frames remain a deliberate no-op. What
+    changes is that they stop being counted as protocol REFUSALS (they are
+    understood, not rejected) and that their payload survives parsing, so the
+    card that teaches the lane to persist them has something to persist.
+    """
+
+    TYPE: ClassVar[str] = ""
+
+    type_name: str
+    #: Everything the frame carried that this codec understands. Deliberately a
+    #: plain mapping rather than a per-type dataclass: the provider adds fields
+    #: to ASR frames between releases, and a retained event that silently drops
+    #: the new one would be the same defect one layer down.
+    fields: Mapping[str, Any] = MappingProxyType({})
+
+
+#: Observed live 2026-08-20 (``live_run_1``), refused as unknown until EV-1.
+#: The value is the tuple of payload keys retained for that type; a key that is
+#: absent from the frame is simply absent from ``fields``.
+RETAINED_EVENT_TYPES: Mapping[str, tuple[str, ...]] = MappingProxyType(
+    {
+        # The streaming ASR transcript. ``delta`` is the fragment; ``item_id``
+        # joins it to the ledger row the completed transcript becomes.
+        "conversation.item.input_audio_transcription.delta": ("item_id", "delta", "content_index"),
+        # The utterance boundary server VAD chose. Pairs with the audio-capture
+        # index: this is where the provider decided one turn ended.
+        "input_audio_buffer.committed": ("item_id", "previous_item_id"),
+        # The lane's own truncate, echoed. R7's barge-in arithmetic is only
+        # checkable against this.
+        "conversation.item.truncated": ("item_id", "audio_end_ms", "content_index"),
+    }
+)
+
+
+@dataclass(frozen=True)
 class SpeechStarted(ServerEvent):
     """Server VAD heard the owner start talking. The barge-in trigger."""
 
@@ -631,6 +701,22 @@ _SERVER_PARSERS.update(
     }
 )
 
+
+def _retain(payload: Mapping[str, Any], name: str, keys: tuple[str, ...]) -> RetainedEvent:
+    kept = {key: payload[key] for key in keys if key in payload}
+    return RetainedEvent(type_name=name, fields=MappingProxyType(kept))
+
+
+# Card EV-1. Same registration shape as the lifecycle block above, one line
+# lower, so both lists stay the single place a reader looks for "frames the
+# lane does not act on". The difference is only what survives parsing.
+_SERVER_PARSERS.update(
+    {
+        name: (lambda p, _name=name, _keys=keys: _retain(p, _name, _keys))
+        for name, keys in RETAINED_EVENT_TYPES.items()
+    }
+)
+
 SERVER_EVENT_TYPES = frozenset(_SERVER_PARSERS)
 
 
@@ -669,6 +755,7 @@ __all__ = [
     "CONTENT_TYPE_BY_ROLE",
     "LIFECYCLE_EVENT_TYPES",
     "PCM16_SAMPLE_RATE_HZ",
+    "RETAINED_EVENT_TYPES",
     "SERVER_EVENT_TYPES",
     "SESSION_OBJECT_TYPE",
     "ClientEvent",
@@ -689,6 +776,7 @@ __all__ = [
     "ResponseCancel",
     "ResponseCreate",
     "ResponseDone",
+    "RetainedEvent",
     "ServerEvent",
     "SessionCreated",
     "SessionUpdate",

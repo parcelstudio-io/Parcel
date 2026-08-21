@@ -32,6 +32,7 @@ from parcel_robot.navigation.spatial import SpatialDecision
 from parcel_robot.runtime import RobotRuntime
 from parcel_robot.safety import SafetyLimits
 from parcel_robot.voice_pipeline import VoiceStage
+from scripts import load_guard
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -857,6 +858,32 @@ def test_runtime_streaming_text_executes_only_final_transcript(
     runtime_config: Path,
     audio_status: AudioDeviceStatus,
 ) -> None:
+    """Card R26: the third load-sensitive entry the full audit named.
+
+    It is the ODD one of the three — the assertion is behavioural, not a
+    performance pin; the only wall-clock in it is the deadline on a worker-thread
+    join. So it does NOT get ``load_sensitive`` (skipping a behaviour test to
+    dodge a timing flake deletes coverage). It gets a deadline that scales with
+    measured contention instead: on a quiet machine ``load_guard.deadline`` hands
+    back exactly the 2.0 s the author wrote, so nothing is relaxed where the
+    number means something.
+
+    ``AUDIT_R12_R16_FABLE.md`` §"Register additions" filed this as an inherited
+    flake at **6/10 in isolation**. R26 re-measured on 2026-08-21: **30/30 in
+    isolation** and **8/8 at file level** on an idle host — but it DID fail once
+    in a full 7,500-test run, and not on the deadline: the failure was
+    ``assert runtime.follow.enabled`` -> ``False`` after ``_step_brain()``, with
+    every earlier assertion (status, transcript, chat roles) green.
+
+    So the deadline above is **not** what fixes this one. The remaining failure is
+    a race in the follow-admission path that only appears under full-suite
+    conditions, and R26 deliberately did NOT paper over it with a bounded poll:
+    whether enabling is meant to be synchronous after ``_step_brain()`` is a
+    question about the product, and answering it by widening the test would hide
+    the answer. Carried as an open risk in ``R26_STATUS.md`` §9 with the new
+    evidence, which is strictly better than the register's entry.
+    """
+
     backend = FakeSimulatorBackend(_observation(0.0))
     runtime = RobotRuntime(runtime_config, backend, audio_status=audio_status)
     _seed_owner_track(runtime)
@@ -866,7 +893,7 @@ def test_runtime_streaming_text_executes_only_final_transcript(
         assert runtime.snapshot()["chat"] == []
 
         assert runtime.submit_voice_text("follow me", is_final=True) == 1
-        assert runtime.voice_session.wait_until_idle(2.0)
+        assert runtime.voice_session.wait_until_idle(load_guard.deadline(2.0))
         runtime._step_brain()
         snapshot = runtime.snapshot()
         assert snapshot["voice"]["status"] == "completed"

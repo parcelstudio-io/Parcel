@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
 
@@ -189,6 +190,21 @@ _GAIT_VERB_ALTERNATION = (
     "trotting|trots|trot|jogging|jogs|jog|scooting|scoots|scoot|"
     "ambling|ambles|amble|wander\\s+over|wandering|wanders|wander"
 )
+#: Locate-and-approach: the semantic resolution ladder already IS a search
+#: (frustum → memory → scan → SearchEntity → honest refusal), so "find the
+#: nearest lamppost" is a navigation directive, not a separate verb class.
+#: ``find out ...`` is a question and must not become motion authority.
+#:
+#: Card R20 gives this pattern a NAME because it is now load-bearing twice: it
+#: is still one of the destination patterns, and it is also the boundary of the
+#: unknown-place gate. "Go to narnia" names a goal and is refused when nothing
+#: can resolve it; "look for a mailbox" *asks the robot to look*, and an
+#: exploration the owner explicitly requested is not a fabricated goal. One
+#: regex, used by both, so the boundary cannot drift from the grammar.
+_EXPLICIT_SEARCH_PATTERN = re.compile(
+    r"^(?:find|locate|look\s+for|search\s+for)(?:\s+me)?\s+(?!out\b)(?P<destination>.+)$"
+)
+
 _DESTINATION_PATTERNS = (
     re.compile(
         r"^(?:go|navigate|walk|move|head|drive|take\s+me"
@@ -204,14 +220,7 @@ _DESTINATION_PATTERNS = (
         r"^(?:wait|stand|stay|sit|go|walk|move)(?:\s+over)?\s+"
         rf"(?:{_PROXIMITY_PREPOSITIONS})\s+(?P<destination>.+)$"
     ),
-    # Locate-and-approach: the semantic resolution ladder already IS a search
-    # (frustum → memory → scan → SearchEntity → honest refusal), so "find the
-    # nearest lamppost" is a navigation directive, not a separate verb class.
-    # ``find out ...`` is a question and must not become motion authority.
-    re.compile(
-        r"^(?:find|locate|look\s+for|search\s+for)(?:\s+me)?\s+"
-        r"(?!out\b)(?P<destination>.+)$"
-    ),
+    _EXPLICIT_SEARCH_PATTERN,
 )
 _RATIONALE_BOUNDARY = re.compile(
     r"\s+(?:so\s+that|because|since|so\s+(?:i|you|we)|in\s+order\s+to|to\s+avoid)\b"
@@ -327,14 +336,10 @@ def semantic_goal_from_directive(
     near_relation = bool(_PROXIMITY_RELATION.search(normalized))
     towards_relation = bool(_TOWARDS_RELATION.search(normalized))
     sit_relation = bool(re.search(r"\bsit\b", normalized))
-    query = normalized
-    for pattern in _DESTINATION_PATTERNS:
-        match = pattern.fullmatch(normalized)
-        if match is not None:
-            query = _clean_destination(match.group("destination"))
-            break
-    query = re.sub(r"^(?:the|a|an)\s+", "", query).strip(" .?!") or text
-    query, superlative, attributes = _split_noun_phrase(query)
+    # Card R20. The noun, the superlative and the attributes come from the one
+    # helper the admission gate also calls, so "which word will the grounder be
+    # asked for?" has exactly one answer for both. See ``_destination_noun``.
+    query, superlative, attributes = _destination_noun(text)
     modifiers: dict[str, object] = {
         "superlative": superlative,
         "attributes": attributes,
@@ -415,6 +420,230 @@ def semantic_goal_from_directive(
         **modifiers,  # type: ignore[arg-type]
         **etiquette,  # type: ignore[arg-type]
     )
+
+
+# --- card R20: unknown-place goal admission ---------------------------------
+#
+# live_run_1 (2026-08-20, §d): "Go to Narnia." and "Take me to the moon." were
+# admitted as ``navigate_to`` goals and ran as missions — 4.25 s and 10.7 s of
+# ``state=searching reason=scan_behavior_rotate``, the robot turning on the spot
+# hunting for a place that cannot exist — while "let's go home" got a textbook
+# ask. R10's ``validate_place`` catches junk ARGUMENT SHAPES ("with owner",
+# "run route") and deliberately admits an unheard-of noun for authority parity
+# with the typed panel. Both lanes were therefore wrong in the same way, and
+# that is why the fix is HERE, in the grammar both lanes compile through,
+# instead of in the hosted broker: parity is preserved by making the typed path
+# refuse too, not by making the hosted path stricter than it.
+#
+# Two things this gate is NOT:
+#
+# * It is not a safety gate. Nothing it refuses was dangerous; the missions it
+#   stops were harmless rotations. It is an HONESTY gate, and the failure it
+#   prevents is the robot committing out loud ("Okay—I'll go wait near narnia
+#   safely.") to something it has no way to do.
+# * It is not a ban on exploration. ``_EXPLICIT_SEARCH_PATTERN`` above is the
+#   boundary: an owner who says "look for a mailbox" has asked for a search and
+#   gets one, unknown noun or not. Only *goal* phrasing — "go to X", "take me
+#   to X" — has to name something the robot can resolve.
+
+#: Verdict reasons. Every one of them is reported, including the admissions, so
+#: "why did this go through?" is a field rather than an inference.
+PLACE_ADMITTED = "known_place"
+PLACE_EXPLICIT_SEARCH = "explicit_search"
+PLACE_OWNER_REFERENT = "owner_referent"
+PLACE_NO_VOCABULARY = "no_vocabulary"
+PLACE_NOT_A_DIRECTIVE = "not_a_navigation_directive"
+PLACE_UNKNOWN = "unknown_place"
+
+#: How many real places a refusal offers back. Three is the most a spoken
+#: sentence carries without turning into a list the owner stops listening to.
+PLACE_OFFER_LIMIT = 3
+
+
+@dataclass(frozen=True)
+class PlaceAdmission:
+    """May this directive become a goal, and what to say when it may not."""
+
+    admitted: bool
+    query: str = ""
+    reason: str = ""
+    #: Real places to offer instead, nearest first. Empty when the robot's map
+    #: has nothing to offer — which is a different sentence, not a shorter one.
+    alternatives: tuple[str, ...] = ()
+
+    def fact(self) -> str:
+        """The refusal as a FACT, for the hosted model to read and paraphrase.
+
+        Third person and present tense on purpose. R15's rule is that a broker
+        detail may not speak in the robot's own voice, because a first-person
+        promise is what the model compressed into "Done—I made a small circle
+        around you"; the same rule applies to a first-person refusal, which a
+        model will happily re-voice as something it decided rather than
+        something its map says.
+        """
+
+        if not self.alternatives:
+            return (
+                f"the robot's map has no place called {self.query!r}, and it has no "
+                "mapped places to offer instead; ask the owner where they want to go"
+            )
+        return (
+            f"the robot's map has no place called {self.query!r}; the places it does "
+            f"know nearby are {_join_places(self.alternatives)}; ask the owner which "
+            "of those they mean, or which real place they want"
+        )
+
+    def reply(self) -> str:
+        """The refusal as a SENTENCE, for the typed lane to say as itself."""
+
+        if not self.alternatives:
+            return (
+                f'I don\'t know a place called "{self.query}", and I have no mapped '
+                "places to offer instead. Could you name somewhere I can see?"
+            )
+        return (
+            f'I don\'t know a place called "{self.query}" — the ones I do know nearby '
+            f"are {_join_places(self.alternatives)}. Which would you like?"
+        )
+
+
+def admit_navigation_place(
+    directive: str,
+    known: Sequence[str] = (),
+    *,
+    offer: Sequence[str] = (),
+) -> PlaceAdmission:
+    """May ``directive`` become a navigation goal against this vocabulary?
+
+    ``known`` is the RESOLUTION set — every label, class name and alias the
+    grounder could match, in any order. ``offer`` is the OFFER list — real
+    places nearest first, which is what makes "the ones I do know nearby are…"
+    a true sentence rather than an alphabetical dump. They are separate
+    arguments because they answer different questions and come from different
+    places; ``offer`` falls back to ``known`` so a caller with only one list
+    still gets a refusal that names something.
+
+    **Fail-open on an empty vocabulary, deliberately.** A robot whose map has
+    not loaded knows no places at all, and a gate that refused everything then
+    would take the whole navigation surface down over a missing sidecar. R10's
+    ``_realtime_places`` already made the same call for the same reason. The
+    verdict says ``no_vocabulary`` so the difference is visible in the record
+    rather than looking like an admission.
+    """
+
+    text = " ".join(str(directive).strip().lower().split())
+    if not text or navigation_directive_is_blocked(text):
+        return PlaceAdmission(True, "", PLACE_NOT_A_DIRECTIVE)
+    # JURISDICTION, and it is narrow on purpose. This gate only judges strings
+    # the destination grammar itself calls a directive. "go to here" and "go to
+    # forward" are excluded destinations that ``navigation_directive_from_text``
+    # already returns ``None`` for, and the router refuses them by name — an
+    # answer that says which rule declined is better than "I don't know a place
+    # called 'here'", and two layers refusing the same string for two different
+    # reasons is how a refusal stops meaning anything.
+    normalized = navigation_directive_from_text(text)
+    if normalized is None:
+        return PlaceAdmission(True, "", PLACE_NOT_A_DIRECTIVE)
+    if _EXPLICIT_SEARCH_PATTERN.fullmatch(normalized):
+        return PlaceAdmission(True, _destination_noun(text)[0], PLACE_EXPLICIT_SEARCH)
+    query = _destination_noun(text)[0]
+    if not query:
+        return PlaceAdmission(True, "", PLACE_NOT_A_DIRECTIVE)
+    if query in OWNER_REFERENT_TABLE:
+        # N12: the owner is a tracked entity on the owner channel and never a
+        # semantic-map label, so "go to me" is resolvable precisely because it
+        # is NOT in the place vocabulary. Refusing it here would break the
+        # approach lane over a list it was never meant to appear on.
+        return PlaceAdmission(True, query, PLACE_OWNER_REFERENT)
+    vocabulary = tuple(
+        dict.fromkeys(
+            " ".join(str(name).split()).lower() for name in known if str(name).strip()
+        )
+    )
+    if not vocabulary:
+        return PlaceAdmission(True, query, PLACE_NO_VOCABULARY)
+    if _place_is_known(query, vocabulary):
+        return PlaceAdmission(True, query, PLACE_ADMITTED)
+    return PlaceAdmission(False, query, PLACE_UNKNOWN, _place_offers(offer or known))
+
+
+def place_query_from_directive(directive: str) -> str:
+    """The noun a directive will hand the grounder, or ``""``.
+
+    Public because the admission verdict names it out loud and callers (and
+    tests) need the same answer the compiler will reach.
+    """
+
+    text = " ".join(str(directive).strip().lower().split())
+    return _destination_noun(text)[0] if text else ""
+
+
+def _place_is_known(query: str, vocabulary: Sequence[str]) -> bool:
+    """Can anything in ``vocabulary`` plausibly be what ``query`` names?
+
+    DELIBERATELY PERMISSIVE, because the two errors are not symmetric. Admitting
+    a place the grounder then fails to find costs the owner an honest "I looked
+    and couldn't find it" — the behaviour that already existed. Refusing a place
+    the robot can actually reach costs them the robot. So a match is whole
+    phrase, head noun, or either string containing the other as a whole-word
+    phrase: "coffee shop" is found inside "coffee shop at 42nd street", and
+    "bench" is found inside "the big oak bench".
+    """
+
+    if not query:
+        return False
+    for entry in vocabulary:
+        if entry == query or _phrase_within(query, entry) or _phrase_within(entry, query):
+            return True
+    return False
+
+
+def _phrase_within(needle: str, haystack: str) -> bool:
+    if not needle or len(needle) > len(haystack):
+        return False
+    return re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", haystack) is not None
+
+
+def _place_offers(names: Sequence[str]) -> tuple[str, ...]:
+    """The first :data:`PLACE_OFFER_LIMIT` distinct places, order preserved."""
+
+    seen: list[str] = []
+    for name in names:
+        clean = " ".join(str(name).split())
+        if clean and clean.lower() not in {item.lower() for item in seen}:
+            seen.append(clean)
+        if len(seen) >= PLACE_OFFER_LIMIT:
+            break
+    return tuple(seen)
+
+
+def _join_places(names: Sequence[str]) -> str:
+    articled = [f"the {name}" for name in names]
+    if len(articled) == 1:
+        return articled[0]
+    return f"{', '.join(articled[:-1])} and {articled[-1]}"
+
+
+def _destination_noun(text: str) -> tuple[str, str | None, tuple[str, ...]]:
+    """``(noun query, superlative, attributes)`` for an already-normalized text.
+
+    Lifted verbatim out of :func:`semantic_goal_from_directive` so card R20's
+    admission gate and the goal compiler cannot read the directive differently.
+    A gate that refused one noun while the compiler searched for another would
+    be the worst of both worlds: it would refuse real places and still admit
+    fabricated ones. Sharing the function makes that structurally impossible
+    rather than a thing tests have to keep noticing.
+    """
+
+    normalized = navigation_directive_from_text(text) or text
+    query = normalized
+    for pattern in _DESTINATION_PATTERNS:
+        match = pattern.fullmatch(normalized)
+        if match is not None:
+            query = _clean_destination(match.group("destination"))
+            break
+    query = re.sub(r"^(?:the|a|an)\s+", "", query).strip(" .?!") or text
+    return _split_noun_phrase(query)
 
 
 def _strip_leading_prefixes(clean: str, *, strip_pace_adverb: bool = True) -> str:

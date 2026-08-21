@@ -1,0 +1,32 @@
+CI GATE — tier=nightly  (2026-08-21T11:06:18Z)
+==============================================================================
+[  PASS] HARD  ruff                                 7 violation(s), baseline 7, new 0
+[  PASS] HARD  hard-safety                          nav frozen baseline nav-instruct-v1-baseline-v4-20260811T070536Z: collisions=0 false_arrival=0 | mutation panel clean: collisions=0 no_false_arrival=True | mutation panel freshness: committed fields reproduce live = True | follow-bench: 7 row(s), hard_collision_total all 0 = True | walk_with_me: 1/2 row(s) with hard_collision_total, all 0 = True
+[  PASS] HARD  frozen-digest-sentinels              4 immutable manifest(s) byte-identical to pin
+[  PASS] HARD  release-parity                       91 packaged asset(s) byte-identical to canonical source
+[  PASS] HARD  latency-tail-ledger                  latest row latency-20260810T082415Z-4d83035f: 6 metric series within 1.2x tail ceiling (rows=5, window=5)
+[  PASS] HARD  follow-bench-jerk-ratchet            latest shipped row follow-bench-v1-20260811023618Z-93eba090.json: 1.2187 <= 1.46244 (baseline 1.2187 x 1.2)
+[  PASS] HARD  assertion-evals                      5 frozen fixture(s) reproduce 20 pinned finding(s) byte-identically; harness self-test 4/4 (3 broken agents failed, clean control passed); pass^3 green on f03_estop_pass_k; 3/3 committed run folder(s) present
+[  PASS] HARD  model-off-non-inferiority            23 passed in 0.49s
+[  PASS] HARD  frozen-digest-integrity              6 passed, 1 warning in 0.41s
+[  PASS] HARD  release-parity-integrity             10 passed in 0.74s
+[  PASS] HARD  mutation-panel-freshness             2 passed, 3 warnings in 4.29s
+[  PASS] HARD  latency-tail                         6 passed, 2 warnings in 0.41s
+[  PASS] HARD  tier-coverage                        7539 collected = 7497 commit (-m 'not slow') + 42 nightly (-m 'slow'), no orphans, no overlap
+[  FAIL] HARD  default-suite                        1 failed, 7487 passed, 9 skipped, 42 deselected, 5 warnings in 296.31s (0:04:56)
+    FAILED tests/test_realtime_lane.py::test_flag_on_constructs_the_lane_and_wires_it_to_the_restricted_ingress
+[  PASS] HARD  mutation-panel                       7/7 killed, survivors=[]
+[  PASS] HARD  nav-instruct-candidate:collisions    collision_total=0 (report nav-instruct-v1-candidate-v4-20260821T102746Z)
+[report] soft  nav-instruct-candidate:differential  sr=0.28 authority={'agreement': 18, 'authority_disagreement': 6, 'false_arrival': 1, 'tolerated_boundary': 0, 'unknown': 0} false_arrival=1
+[  PASS] HARD  pose-drift-arms:safety               collisions=0 false_arrival=0 across 7 arm(s) on 61 cell(s)
+[  PASS] HARD  pose-drift-arms:non-vacuity          176/176 episode(s) in band; SR truth=0.180, calibrated_go2=0.148, go2_aggressive=0.098, go2_degraded=0.033, calibrated_go2_lost=0.115, go2_degraded_lost=0.049, calibrated_go2_reanchoring=0.082
+[  PASS] HARD  pose-drift-arms:floors               6 arm(s) at or above their Stage-B floor
+[  FAIL] HARD  slow-suite                           1 failed, 27 passed, 7 skipped, 7498 deselected, 4 xfailed, 3 warnings, 3 errors in 742.10s (0:12:22)
+    FAILED tests/test_voice_nav_e2e.py::test_go_to_the_lamppost_grounds_plans_and_arrives
+    ERROR tests/test_release_parity_wheel.py::test_wheel_imports_the_previously_broken_modules
+    ERROR tests/test_release_parity_wheel.py::test_every_default_asset_resolves_inside_the_installed_wheel
+    ERROR tests/test_release_parity_wheel.py::test_wheel_effective_config_equals_the_source_checkout
+[  PASS] soft  metamorphic                          5 passed, 11 deselected, 2 xfailed, 3 warnings in 47.80s
+==============================================================================
+RESULT: FAIL — 2 hard gate(s) red: default-suite, slow-suite
+  elapsed 2685.0s

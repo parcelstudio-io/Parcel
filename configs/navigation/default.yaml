@@ -67,6 +67,54 @@ perception:
   # from the known-absent trials is recorded in LANE_D_STATUS.md.
   arrival_confidence_threshold: null
 
+  # Card PG-3 (scrum/20260821/task_8/PG3_STATUS.md) — CALIBRATED ABSTENTION.
+  #
+  # R20 refuses "go to Narnia" because the chain checks a CLOSED LABEL SET from
+  # the simulator's scene sidecar. Delete the labeled world and that honesty
+  # disappears with it: the 2026-08-21 mapping bench measured SigLIP-2 text->
+  # place cosine at 0.049-0.135 for present queries and 0.054-0.107 for absent
+  # ones, so NO threshold separates them and "Narnia" would send the robot to
+  # (-3.19, 4.10). This block is the perception-side replacement — a verdict
+  # earned from detector-label agreement, evidence count, navigability and a
+  # ranking margin instead of from a list the world file happened to declare.
+  #
+  # OFF, and it must stay off until the world work lands. Every threshold below
+  # was fitted on a held-out split of an UNTEXTURED scene in which three
+  # detectors score 0/69 person recall (SYNTHESIS.md 2), so the numbers are
+  # provisional and the measured false-reject rate is 73% (11/15 EVAL present
+  # queries) — every one of them a class the detector could not see, not a
+  # failure of the gate. Turning this on today would refuse almost everything.
+  #
+  # Turning it on is a config change, not a code change: that is the point.
+  # Unknown keys under this block are a hard error, because a typo'd safety
+  # flag that reads as "default" looks exactly like a gate that never fires.
+  abstention:
+    enabled: false
+    # Peak PER-QUERY detector probability before a term counts as observed.
+    # The per-query column, never the argmax label: argmax moves when someone
+    # edits the prompt vocabulary (measured, "a person" 10 -> 2 firing frames
+    # when 17 prompts were added); the per-query column does not (max |delta|
+    # 0.0012 over 20 shared terms x 120 frames).
+    min_label_probability: 0.25
+    min_label_frames: 1
+    # Share of a place's own detections that must carry the queried term.
+    min_label_purity: 0.5
+    # Independent observations (distinct frames) a place needs.
+    min_evidence_frames: 7
+    # Share of a place's depth returns inside `ground_band_m`. A destination is
+    # somewhere you can STAND: this is what refuses corpus row 12, because the
+    # detector calls an untextured lamp head "the moon" 23 times out of 23 with
+    # 100% of its returns 2.7 m overhead.
+    min_ground_evidence_fraction: 0.08
+    # Robust z-score of the top similarity against the map's own background.
+    # Not an absolute cosine: cosine has no absolute scale across queries.
+    min_ranking_margin: 1.0
+    # DERIVED, not fitted: the Go2's own eye height, camera_channel.d455
+    # MOUNT_HEIGHT_M. Changing it is a claim about the robot, not a tuning knob.
+    ground_band_m: 0.35
+    # How many real places a refusal names. R20's PLACE_OFFER_LIMIT.
+    offer_limit: 3
+
 # Card RM-2 (scrum/20260811/task_2/SLAM_M_PLAN.md). Route memory on the product
 # path: the robot remembers routes it has actually driven (a MAP-frame place
 # graph of recorded edges) and, when the global planner has PROVED it cannot

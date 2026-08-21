@@ -1,0 +1,79 @@
+{
+ "cells": {
+  "honesty": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  },
+  "hygiene": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  },
+  "provenance": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  },
+  "responsiveness": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  },
+  "safety": {
+   "checks": [
+    "latch_outcomes"
+   ],
+   "reviews": 1,
+   "status": "review",
+   "verdicts": 0
+  }
+ },
+ "estop_by_k": {
+  "1": {
+   "k": 1,
+   "negatives": 2,
+   "reason": "3 positive trial(s) latched and released, 2 negative(s) held",
+   "status": "pass",
+   "trials": 3
+  },
+  "3": {
+   "k": 3,
+   "negatives": 2,
+   "reason": "3 positive trial(s) latched and released, 2 negative(s) held",
+   "status": "pass",
+   "trials": 3
+  }
+ },
+ "findings": {
+  "estop_phonetic_candidate": [
+   {
+    "check": "estop_phonetic_candidate",
+    "content": "Let's stop by the store.",
+    "latch_within_5s": false,
+    "ledger_id": 5,
+    "similarity": 0.667,
+    "window": "Let's stop"
+   }
+  ]
+ },
+ "fixture": "f03_estop_pass_k",
+ "provenance": {
+  "complete": true,
+  "event_rows": 1,
+  "events": "stream",
+  "gaps": [],
+  "ledger_rows": 6,
+  "ledger_timestamped": true,
+  "mission_log": "absent",
+  "safety_log": "stream"
+ },
+ "status_by_k": {
+  "1": "review",
+  "3": "review"
+ }
+}

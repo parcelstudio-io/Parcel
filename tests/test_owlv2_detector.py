@@ -22,13 +22,21 @@ from parcel_robot.detection_adapter import (
     owlv2_weights_present,
 )
 from parcel_robot.detection_adapter.owlv2_onnx import (
+    FAST_PREPROCESS_ENV,
     OWLV2_TEXT_SEQ_LEN,
+    SAFETY_RELEVANT_LABELS,
+    SOURCE_MAX_EDGE_ENV,
     _iou,
     _nms,
     _normalize_phrases,
+    fast_preprocess_enabled,
     onnx_enabled,
+    resolve_owlv2_provider,
+    source_max_edge,
 )
 from parcel_robot.detection_adapter.pixel_detections import PixelDetection
+from parcel_robot.perception_contention import PerceptionContentionGuard
+from parcel_robot.perception_providers import PROVIDER_CPU_INT8, PROVIDER_CUDA_FP16
 
 # ---------------------------------------------------------------------------
 # loud degrade / additive-opt-in
@@ -209,6 +217,291 @@ def test_preprocess_pads_to_square_and_normalizes() -> None:
     # padded region was 0.5 -> normalize (0.5-0.5)/0.5 = 0.0. Bottom rows sample padding.
     assert out[0, 0, 0, 0] == pytest.approx(1.0, abs=1e-3)
     assert out[0, 0, -1, 0] == pytest.approx(0.0, abs=1e-2)
+
+
+# ---------------------------------------------------------------------------
+# PG-1 — preprocessing: what is bit-identical, and what is honestly NOT
+# ---------------------------------------------------------------------------
+
+#: Real camera resolutions plus adversarial shapes. The 640x480 / 320x240 /
+#: 641x361 rows matter: their long edge is under 960, so the model UP-samples and
+#: the content/pad seam does not land on an output-pixel boundary — the case the
+#: fast path must detect and decline.
+_PREPROCESS_SHAPES = [
+    (720, 1280, 3),   # D455 nominal — the resolution that actually ships
+    (1080, 1920, 3),  # 1080p
+    (480, 640, 3),    # up-sampled: seam straddles
+    (240, 320, 3),    # up-sampled: seam straddles
+    (361, 641, 3),    # odd, up-sampled
+    (541, 961, 3),    # odd, barely down-sampled
+    (1000, 1000, 3),  # already square
+    (960, 960, 3),    # exactly the model input
+    (64, 64, 3),      # tiny square
+    (100, 37, 3),     # extreme portrait
+    (37, 100, 3),     # extreme landscape
+    (720, 1280, 4),   # RGBA input (alpha dropped)
+]
+
+
+def _preprocess_shell() -> OwlV2Detector:
+    """A detector with ONLY preprocessing state — no session, no weights, no ORT."""
+
+    det = object.__new__(OwlV2Detector)
+    det._np = np
+    det._img_h = 960
+    det._img_w = 960
+    det._img_mean = np.asarray([0.48145466, 0.4578275, 0.40821073], dtype=np.float32)
+    det._img_std = np.asarray([0.26862954, 0.26130258, 0.27577711], dtype=np.float32)
+    det._rescale = 1.0 / 255.0
+    det._pad_value = 0.5
+    return det
+
+
+def _image(shape: tuple[int, int, int], seed: int = 0) -> np.ndarray:
+    return np.random.default_rng(seed).integers(0, 256, shape, dtype=np.uint8)
+
+
+@pytest.mark.parametrize("shape", _PREPROCESS_SHAPES)
+def test_the_fast_preprocess_is_bit_identical_to_the_reference(shape) -> None:
+    """The whole justification for the fast path: the model sees the SAME tensor.
+
+    Not "close", not "within tolerance" — ``np.array_equal`` on the float32
+    tensor. If this ever needs a tolerance, the optimisation has become a
+    behaviour change and must be re-argued as one.
+    """
+
+    det = _preprocess_shell()
+    img = _image(shape, seed=hash(shape) % 1000)
+    reference = det._preprocess_reference(img)
+    fast = det._preprocess_fast(img)
+    assert fast.shape == (1, 3, 960, 960)
+    assert fast.dtype == reference.dtype == np.float32
+    assert np.array_equal(fast, reference), (
+        f"{shape}: fast preprocess drifted; max|delta|="
+        f"{np.abs(fast.astype(np.float64) - reference.astype(np.float64)).max()}"
+    )
+
+
+def test_the_fast_path_declines_exactly_when_the_seam_would_straddle() -> None:
+    """The guard is not decorative: it is False precisely for the up-sampled shapes.
+
+    A seam check that returned True everywhere would still pass the bit-identity
+    test above (the fallback would simply never fire) *only* because it is checked
+    here that the two branches are actually both exercised.
+    """
+
+    det = _preprocess_shell()
+
+    def clean(h: int, w: int) -> bool:
+        side = max(h, w)
+        return det._seam_is_clean(h, w, side, 960 * h // side, 960 * w // side)
+
+    # down-sampling from a >=960 long edge with an exact boundary: fast path lives
+    assert clean(720, 1280) is True
+    assert clean(1080, 1920) is True
+    assert clean(1000, 1000) is True
+    assert clean(960, 960) is True
+    assert clean(64, 64) is True  # square: no seam at all
+    # up-sampling: the boundary output pixel legitimately blends content with pad
+    assert clean(480, 640) is False
+    assert clean(240, 320) is False
+    assert clean(361, 641) is False
+    assert clean(37, 100) is False
+
+
+def test_both_preprocess_branches_are_exercised_by_the_shape_matrix() -> None:
+    """Guards the test above from becoming vacuous if the matrix ever shrinks."""
+
+    det = _preprocess_shell()
+    outcomes = set()
+    for h, w, _ in _PREPROCESS_SHAPES:
+        side = max(h, w)
+        outcomes.add(det._seam_is_clean(h, w, side, 960 * h // side, 960 * w // side))
+    assert outcomes == {True, False}
+
+
+def test_the_separable_resize_is_bit_identical_to_the_reference_resize() -> None:
+    det = _preprocess_shell()
+    rng = np.random.default_rng(5)
+    for in_shape, out in (
+        ((720, 1280, 3), (540, 960)),
+        ((1280, 1280, 3), (960, 960)),
+        ((97, 53, 3), (960, 960)),
+        ((960, 960, 3), (480, 480)),
+    ):
+        arr = rng.random(in_shape, dtype=np.float32)
+        assert np.array_equal(
+            det._bilinear_resize(arr, *out), det._bilinear_resize_separable(arr, *out)
+        ), f"{in_shape} -> {out}"
+
+
+def test_source_downscale_is_NOT_bit_identical_and_is_off_by_default() -> None:
+    """The inherited claim, tested rather than trusted.
+
+    PG-1 arrived with "halving the input edge is a free 2.8x with bit-identical
+    tensors". Against this module's own preprocessor that is FALSE, and this test
+    is the record of it: the downscale genuinely changes what the model sees. It
+    is therefore an explicit, default-off, documented-lossy knob — and if someone
+    ever flips its default to on, this test tells them exactly what they bought.
+    """
+
+    det = _preprocess_shell()
+    det.fast_preprocess = True
+    det.source_max_edge = 0
+    img = _image((720, 1280, 3), seed=42)
+
+    full = det._preprocess_image(img)
+    det.source_max_edge = 640
+    halved = det._preprocess_image(img)
+
+    assert not np.array_equal(halved, full), (
+        "if this ever passes, the downscale has become lossless and the module "
+        "docstring's central caveat must be rewritten"
+    )
+    delta = np.abs(halved.astype(np.float64) - full.astype(np.float64))
+    assert delta.max() > 0.1, "the change is material, not a rounding artefact"
+    assert (halved != full).sum() > 10_000
+
+
+def test_the_downscale_leaves_a_source_already_within_the_budget_alone() -> None:
+    det = _preprocess_shell()
+    det.fast_preprocess = True
+    img = _image((360, 640, 3), seed=7)
+    det.source_max_edge = 0
+    untouched = det._preprocess_image(img)
+    det.source_max_edge = 640  # long edge is already 640
+    assert np.array_equal(det._preprocess_image(img), untouched)
+
+
+def test_the_preprocess_knob_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(FAST_PREPROCESS_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_MAX_EDGE_ENV, raising=False)
+    assert fast_preprocess_enabled() is True, "the lossless path is on by default"
+    assert source_max_edge() == 0, "the LOSSY path is off by default"
+
+    monkeypatch.setenv(FAST_PREPROCESS_ENV, "0")
+    assert fast_preprocess_enabled() is False
+    monkeypatch.setenv(SOURCE_MAX_EDGE_ENV, "640")
+    assert source_max_edge() == 640
+    # a malformed value disables rather than guesses a resolution
+    monkeypatch.setenv(SOURCE_MAX_EDGE_ENV, "wide")
+    assert source_max_edge() == 0
+    monkeypatch.setenv(SOURCE_MAX_EDGE_ENV, "-4")
+    assert source_max_edge() == 0
+
+
+def test_class_defaults_keep_the_lossy_knob_off_for_shells() -> None:
+    """``object.__new__`` shells must not silently inherit a downscale."""
+
+    assert OwlV2Detector.source_max_edge == 0
+    assert OwlV2Detector.fast_preprocess is True
+    assert OwlV2Detector.provider == PROVIDER_CPU_INT8
+
+
+# ---------------------------------------------------------------------------
+# PG-1 — provider plumbing behind the unchanged Detector protocol
+# ---------------------------------------------------------------------------
+
+
+def test_the_detector_resolves_through_the_shared_fallback_order(tmp_path) -> None:
+    (tmp_path / "model_int8.onnx").write_bytes(b"x")
+    (tmp_path / "model_fp16.onnx").write_bytes(b"x")
+
+    cpu = resolve_owlv2_provider(
+        tmp_path, available_execution_providers=("CPUExecutionProvider",)
+    )
+    assert cpu.selected == PROVIDER_CPU_INT8
+    assert cpu.model_file.name == "model_int8.onnx"
+
+    gpu = resolve_owlv2_provider(
+        tmp_path,
+        available_execution_providers=("CUDAExecutionProvider", "CPUExecutionProvider"),
+    )
+    assert gpu.selected == PROVIDER_CUDA_FP16
+    assert gpu.model_file.name == "model_fp16.onnx"
+
+
+def test_an_fp16_only_install_counts_as_weights_present(tmp_path) -> None:
+    (tmp_path / "tokenizer.json").write_text("{}")
+    assert owlv2_weights_present(tmp_path) is False
+    (tmp_path / "model_fp16.onnx").write_bytes(b"x")
+    assert owlv2_weights_present(tmp_path) is True
+
+
+def test_a_pinned_but_unavailable_provider_makes_the_loader_return_none(
+    tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Refuse, do not degrade — and still return None rather than raising."""
+
+    (tmp_path / "tokenizer.json").write_text("{}")
+    (tmp_path / "model_int8.onnx").write_bytes(b"x")
+    monkeypatch.setenv("PARCEL_OWLV2_ONNX", "1")
+    monkeypatch.setenv("PARCEL_OWLV2_DIR", str(tmp_path))
+    monkeypatch.setenv("PARCEL_PERCEPTION_PROVIDER", "cuda_fp16")
+    assert load_owlv2_detector() is None
+
+
+# ---------------------------------------------------------------------------
+# PG-1 item 4 — the safety lease, wired into the detector
+# ---------------------------------------------------------------------------
+
+
+def test_a_person_query_holds_a_lease_for_the_duration_of_the_inference() -> None:
+    """A scene description cannot START underneath a person query."""
+
+    guard = PerceptionContentionGuard()
+    det = _mock_detector(
+        np.array([[[-9.0]]], dtype=np.float32), np.zeros((1, 1, 4), np.float32)
+    )
+    det.guard = guard
+    det.safety_labels = SAFETY_RELEVANT_LABELS
+
+    seen: list[bool] = []
+    original = det._detect_unguarded
+
+    def spy(rgb, phrases):
+        seen.append(guard.try_admit_generation(estimated_ms=500.0).admitted)
+        return original(rgb, phrases)
+
+    det._detect_unguarded = spy
+    rgb = np.zeros((64, 64, 3), np.uint8)
+
+    det.detect(rgb=rgb, depth=None, seg=None, query="person")
+    assert seen == [False], "a person query must block generation while it runs"
+
+    seen.clear()
+    det.detect(rgb=rgb, depth=None, seg=None, query="lamppost")
+    assert seen == [True], "a non-safety query must not block speech"
+
+    # and the lease never leaks past the call
+    assert guard.active_leases() == ()
+    assert guard.try_admit_generation(estimated_ms=500.0).admitted is True
+
+
+def test_safety_relevance_matches_whole_words_across_the_query_list() -> None:
+    det = _mock_detector(np.zeros((1, 1, 1), np.float32), np.zeros((1, 1, 4), np.float32))
+    det.safety_labels = SAFETY_RELEVANT_LABELS
+    assert det.is_safety_relevant(["person"]) is True
+    assert det.is_safety_relevant(["a person standing"]) is True
+    assert det.is_safety_relevant(["lamppost", "pedestrian"]) is True
+    assert det.is_safety_relevant(["lamppost", "tree"]) is False
+    # substring must NOT match: "personal locker" is not a person
+    assert det.is_safety_relevant(["personal locker"]) is False
+
+
+def test_the_safety_label_set_covers_the_person_yield_vocabulary() -> None:
+    assert {"person", "pedestrian", "human", "owner"} <= SAFETY_RELEVANT_LABELS
+
+
+def test_a_detector_without_a_guard_still_detects() -> None:
+    """The guard is additive: removing it degrades scheduling, never detection."""
+
+    logits = np.array([[[5.0]]], dtype=np.float32)
+    boxes = np.array([[[0.25, 0.25, 0.1, 0.1]]], dtype=np.float32)
+    det = _mock_detector(logits, boxes)
+    det.guard = None
+    out = det.detect(rgb=np.zeros((720, 1280, 3), np.uint8), depth=None, seg=None, query="person")
+    assert len(out) == 1 and out[0].label == "person"
 
 
 # ---------------------------------------------------------------------------

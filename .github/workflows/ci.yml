@@ -9,13 +9,21 @@
 #
 # Tiers (see docs/CI.md):
 #   commit  — every push / PR. Fast, offline, deterministic. No model server,
-#             no network. The default suite (latest local record: 6,933 passed)
-#             + ruff ratchet + frozen
-#             digests + mutation-panel freshness + the three hard regression
-#             gates (model-off / latency-tail / hard-safety).
+#             no network. The default suite + ruff ratchet + frozen
+#             digests + mutation-panel freshness + tier-coverage + the three
+#             hard regression gates (model-off / latency-tail / hard-safety).
 #   nightly — scheduled. Everything above + the slow suite (live-sim e2e +
-#             acoustic rig), the candidate minival, the mutation panel (6/6),
-#             and the metamorphic suite.
+#             acoustic rig), the candidate minival, every registered mutation
+#             panel case (latest recorded: 7/7),
+#             the metamorphic suite, the future-clock time-bomb sweep, and
+#             EV-1's judge/review-queue runner.
+#
+# Card R26 (scrum/20260821/task_5): the nightly job now invokes
+# scripts/run_nightly.py rather than ci_gate.py directly, and uploads the dated
+# run folder it writes. The reason is the whole point of that card — this cron
+# had existed since 2026-08-09 and had never produced a RECORDED run anywhere,
+# so the 42 tests the commit tier deselects had never been executed by any gate.
+# A tier whose only output is terminal scrollback cannot be shown to have run.
 
 name: ci
 
@@ -79,4 +87,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev,voice]"
       - name: Nightly-tier gate
-        run: python scripts/ci_gate.py --tier nightly --json
+        # run_nightly.py wraps ci_gate --tier nightly, adds the future-clock
+        # sweep and EV-1's review queue, and — the part CI needs — writes a
+        # dated evidence folder. Its exit code is the gate's; --allow-red is
+        # deliberately NOT used here.
+        run: python scripts/run_nightly.py
+      - name: Upload the nightly run folder
+        # always(): a RED nightly is exactly the run whose evidence matters.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-run
+          path: |
+            evals/nightly/
+          if-no-files-found: error
+          retention-days: 90

@@ -5,6 +5,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="$ROOT/.parcel/bin/python"
 
+# Card R27 — the owner declaration; see scripts/launch_stack.sh for the full
+# reasoning. It is repeated here rather than only in launch_stack.sh because
+# README.md:246 and :292 document `./scripts/launch_sim.sh` as a standalone
+# owner command, and a guard that breaks a documented launch is a guard the
+# owner switches off. The process this starts (parcel_robot.web_panel ->
+# RobotRuntime) is the one that opens the store.
+export PARCEL_MEMORY_PURPOSE="${PARCEL_MEMORY_PURPOSE:-owner}"
+
 usage() {
   cat <<'EOF'
 Usage: scripts/launch_sim.sh [options]

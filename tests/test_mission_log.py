@@ -538,10 +538,16 @@ class _FakeLane:
         self.recovering = recovering
         self.playback_owned = playing
         self.narrated: list[str] = []
+        self.narrated_critical: list[bool] = []
         self.closed = 0
 
-    def narrate_event(self, text: str) -> bool:
+    def narrate_event(self, text: str, *, critical: bool = False) -> bool:
+        # Card R25 widened the lane's narration door with a cost-ceiling
+        # exemption flag; a double that does not accept it makes every
+        # narration raise TypeError into `_narrate_mission`'s catch, which
+        # reads as "the robot had nothing to say".
         self.narrated.append(text)
+        self.narrated_critical.append(bool(critical))
         return True
 
     def close(self) -> None:
@@ -654,7 +660,7 @@ def test_a_narration_failure_never_takes_down_the_terminal(runtime: RobotRuntime
     """The mission log is the guarantee; narration is the nicety."""
 
     class _AngryLane(_FakeLane):
-        def narrate_event(self, text: str) -> bool:
+        def narrate_event(self, text: str, *, critical: bool = False) -> bool:
             raise RuntimeError("provider said no")
 
     runtime.realtime_lane = _AngryLane()  # type: ignore[assignment]

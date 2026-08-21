@@ -1,0 +1,182 @@
+[
+ {
+  "id": 1,
+  "role": "user",
+  "content": "My name is Sam and I like the willow by the river.",
+  "created_at": "2026-08-20 11:00:00.000000",
+  "session_id": "rt_fixture_prior",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000001"
+ },
+ {
+  "id": 2,
+  "role": "assistant",
+  "content": "Got it, Sam — the willow by the river.",
+  "created_at": "2026-08-20 11:00:01.000000",
+  "session_id": "rt_fixture_prior",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000002"
+ },
+ {
+  "id": 3,
+  "role": "assistant",
+  "content": "[session rollover] reconnected",
+  "created_at": "2026-08-20 11:10:00.000000",
+  "session_id": "rt_fixture_prior",
+  "speaker": null,
+  "origin": null,
+  "provider_item_id": null
+ },
+ {
+  "id": 4,
+  "role": "assistant",
+  "content": "[session rollover] reconnected",
+  "created_at": "2026-08-20 11:20:00.000000",
+  "session_id": "rt_fixture_prior",
+  "speaker": null,
+  "origin": null,
+  "provider_item_id": null
+ },
+ {
+  "id": 5,
+  "role": "assistant",
+  "content": "[session rollover] reconnected",
+  "created_at": "2026-08-20 11:30:00.000000",
+  "session_id": "rt_fixture_prior",
+  "speaker": null,
+  "origin": null,
+  "provider_item_id": null
+ },
+ {
+  "id": 6,
+  "role": "assistant",
+  "content": "[session rollover] reconnected",
+  "created_at": "2026-08-20 11:40:00.000000",
+  "session_id": "rt_fixture_prior",
+  "speaker": null,
+  "origin": null,
+  "provider_item_id": null
+ },
+ {
+  "id": 7,
+  "role": "user",
+  "content": "Make a small circle around me.",
+  "created_at": "2026-08-20 12:00:00.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000007"
+ },
+ {
+  "id": 8,
+  "role": "assistant",
+  "content": "Done—I made a small circle around you, and it was fine.",
+  "created_at": "2026-08-20 12:00:00.800000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000008"
+ },
+ {
+  "id": 9,
+  "role": "user",
+  "content": "What can you see around you?",
+  "created_at": "2026-08-20 12:00:40.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000009"
+ },
+ {
+  "id": 10,
+  "role": "assistant",
+  "content": "I can't actually see anything around me without a camera feed.",
+  "created_at": "2026-08-20 12:00:41.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000010"
+ },
+ {
+  "id": 11,
+  "role": "user",
+  "content": "What do you remember about me?",
+  "created_at": "2026-08-20 12:01:10.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000011"
+ },
+ {
+  "id": 12,
+  "role": "assistant",
+  "content": "There's no memory of what I know about you yet.",
+  "created_at": "2026-08-20 12:01:11.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000012"
+ },
+ {
+  "id": 13,
+  "role": "assistant",
+  "content": "So the plan is to head over to the [interrupted after 0 ms]",
+  "created_at": "2026-08-20 12:01:40.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000013"
+ },
+ {
+  "id": 14,
+  "role": "user",
+  "content": "오늘 날씨가 참 좋네요.",
+  "created_at": "2026-08-20 12:01:40.500000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000014"
+ },
+ {
+  "id": 15,
+  "role": "assistant",
+  "content": "Sure, I can do that.",
+  "created_at": "2026-08-20 12:02:10.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_zzz900"
+ },
+ {
+  "id": 16,
+  "role": "user",
+  "content": "Can you sit down?",
+  "created_at": "2026-08-20 12:02:11.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_aaa100"
+ },
+ {
+  "id": 17,
+  "role": "user",
+  "content": "Go to Narnia.",
+  "created_at": "2026-08-20 12:02:40.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000017"
+ },
+ {
+  "id": 18,
+  "role": "assistant",
+  "content": "Okay—I'll go wait near narnia safely.",
+  "created_at": "2026-08-20 12:02:41.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": null,
+  "origin": null,
+  "provider_item_id": null
+ }
+]

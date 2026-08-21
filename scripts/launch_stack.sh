@@ -5,6 +5,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="$ROOT/.parcel/bin/python"
 
+# Card R27 — THE OWNER DECLARATION, and the only place in the tree that makes it.
+#
+# `memory.path` in robot.yaml is relative, and sqlite resolves a relative path
+# against the process CWD, so for years "the shipped config" meant "the owner's
+# real conversation memory" for anything started from the repo root — tests and
+# in-process runtimes included. 256 synthetic rows are the measured cost.
+#
+# src/parcel_robot/memory_path.py now REFUSES that file to any process that has
+# not declared itself the owner's stack. This line is that declaration. It lives
+# in the launcher and not in the library on purpose: an executor who imports the
+# runtime cannot accidentally acquire it, which is the entire mechanism. Under
+# pytest it is ignored outright.
+#
+# Already-set values are respected so PARCEL_MEMORY_PATH=/tmp/... still isolates
+# a live proof launched through this script.
+export PARCEL_MEMORY_PURPOSE="${PARCEL_MEMORY_PURPOSE:-owner}"
+
 usage() {
   cat <<'EOF'
 Usage: scripts/launch_stack.sh [stack options] [launch_sim options]

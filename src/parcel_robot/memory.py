@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 import sqlite3
 import threading
@@ -9,6 +10,9 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from .conversation_store import ConversationStore, mirror_realtime_turn, parse_sqlite_utc
+from .memory_path import ResolvedStore, resolve_memory_path
+
+logger = logging.getLogger(__name__)
 
 #: Columns added for the Realtime lane's both-sides turn ledger (card R1).
 #: Every one is NULLABLE with no default, so the ALTER TABLE below is purely
@@ -21,6 +25,26 @@ REALTIME_COLUMNS: tuple[tuple[str, str], ...] = (
     ("origin", "TEXT"),
     ("provider_item_id", "TEXT"),
 )
+
+#: Card R27 work item 2 — WHO WROTE THIS ROW, as a class of process.
+#:
+#: Kept as its own tuple rather than appended to ``REALTIME_COLUMNS`` because
+#: that constant is the *Realtime lane's* annotation set and a test asserts its
+#: membership (``tests/test_realtime_lane.py``); this column is about the
+#: writing process, not about the lane, and conflating them would make a future
+#: reader think ``writer`` is a hosted-turn field.
+#:
+#: Nullable with no default, exactly like R1's four, so the migration stays
+#: purely additive over the owner's 3,138 existing rows. **Backfill is not
+#: attempted and must not be**: every pre-R27 row would have to be *guessed* at,
+#: and a guessed provenance column is worse than an honest NULL — it would make
+#: the next pollution audit trust a fabricated answer. NULL here means "written
+#: before this column existed", which is a true statement about every one of
+#: them.
+PROVENANCE_COLUMNS: tuple[tuple[str, str], ...] = (("writer", "TEXT"),)
+
+#: Every column this class migrates in, in application order.
+MIGRATED_COLUMNS: tuple[tuple[str, str], ...] = REALTIME_COLUMNS + PROVENANCE_COLUMNS
 
 #: Who said it → the role the existing schema already understands. The lane
 #: needs the distinction (a hosted reply is not a local one), but inventing a
@@ -251,38 +275,92 @@ class RecalledTurn:
 class ConversationMemory:
     """Small local audit/conversation store; no raw audio is retained."""
 
-    def __init__(self, path: str | Path = ":memory:", *, read_only: bool = False):
+    def __init__(
+        self,
+        path: str | Path = ":memory:",
+        *,
+        read_only: bool = False,
+        purpose: str | None = None,
+    ):
         """``read_only=True`` opens the file so that SQLite itself refuses writes.
 
-        Card R18. The card's live proof has to read the OWNER's conversation
-        database, and "never open it for writing" is a promise a script can
-        break silently — the class's own constructor creates a table and runs an
-        ``ALTER TABLE`` migration on the way in. This makes the promise
-        executable: the connection is opened ``mode=ro`` through SQLite's URI
-        form, so a write raises ``sqlite3.OperationalError`` from the engine
-        rather than depending on the caller's discipline, and the schema
-        statements are skipped because they are writes.
+        CARD R27 — THE PATH IS NO LONGER TAKEN ON TRUST
+        -----------------------------------------------
+        ``path`` used to go straight to ``sqlite3.connect``, which resolves a
+        relative name against the **process CWD**. The shipped config's
+        ``memory.path: parcel_memory.sqlite3`` therefore meant "the owner's real
+        conversation memory" for every process started from the repo root —
+        tests, harnesses and in-process runtimes included — and 256 synthetic
+        rows are the measured cost. It is now resolved by
+        :func:`~parcel_robot.memory_path.resolve_memory_path`, which refuses
+        rather than guesses; see that module for the three rules and the reason
+        each one is shaped the way it is.
+
+        This constructor is the chokepoint deliberately. Putting the guard in
+        ``runtime.py`` beside the config read would have protected the runtime
+        and left ``ConversationMemory("parcel_memory.sqlite3")`` — one line in
+        any test — wide open, which is precisely the class of hole this card
+        exists to close.
+
+        ``purpose`` lets a deliberate maintenance tool name itself (``"tool"``).
+        It cannot promote a pytest process to the owner.
+
+        CARD R18 — WHY ``read_only`` EXISTS, AND WHY R27 LEAVES IT ALONE
+        ---------------------------------------------------------------
+        R18's live proof has to read the OWNER's conversation database, and
+        "never open it for writing" is a promise a script can break silently —
+        this constructor creates a table and runs an ``ALTER TABLE`` migration
+        on the way in. ``read_only=True`` makes the promise executable: the
+        connection is opened ``mode=ro`` through SQLite's URI form, so a write
+        raises ``sqlite3.OperationalError`` from the engine rather than
+        depending on the caller's discipline, and the schema statements are
+        skipped because they are writes.
+
+        R27's refusals do not apply to that mode, and the reason is that it is
+        the one mode in which the defect cannot happen. Two live consumers need
+        it — R18's recall proof and
+        ``tools/quarantine_synthetic_memory.py --dry-run`` — and routing them
+        through a copy of the store would weaken the evidence without making
+        the file any safer.
 
         Reads are unaffected: every query in this class is a ``SELECT``.
         """
 
         self._lock = threading.RLock()
         self.read_only = bool(read_only)
+        #: Card R27. The resolved decision — which file, and what class of
+        #: process is writing to it. Kept as an attribute so a caller (and the
+        #: guard test) can ask a live store what it decided, instead of
+        #: re-deriving it and hoping the two agree.
+        self.store: ResolvedStore = resolve_memory_path(
+            path, purpose=purpose, read_only=self.read_only
+        )
+        #: The ``messages.writer`` stamp for every row THIS connection writes.
+        self.writer: str = self.store.writer
+        #: Card R22, work item 4. Realtime ledger writes the sqlite engine
+        #: refused, by exception type, and the most recent reason. Set before
+        #: the connection is opened so a read-only store answers the health
+        #: question too — a ``mode=ro`` connection is the one configuration in
+        #: which every hosted write is GUARANTEED to fail, and the pump must
+        #: survive that as calmly as it survives a full disk.
+        self.realtime_write_failures = 0
+        self.realtime_write_failure_types: dict[str, int] = {}
+        self.last_realtime_write_error: str | None = None
         if self.read_only:
             self.connection = sqlite3.connect(
-                f"file:{Path(path).as_posix()}?mode=ro", uri=True, check_same_thread=False
+                f"file:{self.store.path}?mode=ro", uri=True, check_same_thread=False
             )
             return
-        self.connection = sqlite3.connect(path, check_same_thread=False)
+        self.connection = sqlite3.connect(self.store.path, check_same_thread=False)
         with self._lock:
             self.connection.execute(
                 "CREATE TABLE IF NOT EXISTS messages "
                 "(id INTEGER PRIMARY KEY, role TEXT NOT NULL, content TEXT NOT NULL, "
                 "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"
             )
-            self._migrate_realtime_columns()
+            self._migrate_columns()
 
-    def _migrate_realtime_columns(self) -> None:
+    def _migrate_columns(self) -> None:
         """Add the annotation columns to an EXISTING database, once.
 
         Guarded by ``PRAGMA table_info`` rather than a version counter: the live
@@ -294,18 +372,28 @@ class ConversationMemory:
         existing = {
             str(row[1]) for row in self.connection.execute("PRAGMA table_info(messages)").fetchall()
         }
-        for column, sql_type in REALTIME_COLUMNS:
+        for column, sql_type in MIGRATED_COLUMNS:
             if column in existing:
                 continue
             self.connection.execute(f"ALTER TABLE messages ADD COLUMN {column} {sql_type}")
         self.connection.commit()
 
     def add(self, role: str, content: str) -> None:
+        """The LEGACY write path — the panel/voice one that wrote all 2,618.
+
+        Card R27 work item 2: this now stamps ``writer``. It is the path that
+        produced every polluted row (all 256 arrived through a runtime built on
+        the shipped config), so leaving it unstamped while annotating only the
+        Realtime lane would have instrumented the one writer that was never the
+        problem.
+        """
+
         if role not in {"user", "assistant", "tool"}:
             raise ValueError(f"unsupported memory role: {role}")
         with self._lock:
             self.connection.execute(
-                "INSERT INTO messages(role, content) VALUES (?, ?)", (role, content)
+                "INSERT INTO messages(role, content, writer) VALUES (?, ?, ?)",
+                (role, content, self.writer),
             )
             self.connection.commit()
 
@@ -347,6 +435,36 @@ class ConversationMemory:
         mirror is attempted, and losing a mirror costs a logged warning — the
         same never-kill-a-turn rule ``lane._write_ledger`` already applies to
         this method.
+
+        CARD R22 — THE PRIMARY WRITE IS NOW FIREWALLED TOO
+        --------------------------------------------------
+        The paragraph above was half true and the missing half is
+        AUDIT_FULL_FABLE §Safety-1. The *mirror* half caught ``Exception``
+        (``conversation_store.mirror_realtime_turn``); the *primary* half — the
+        ``INSERT`` and ``commit()`` below — caught nothing at all, and it runs
+        on the realtime pump thread. ``sqlite3.Error`` subclasses ``Exception``
+        and none of the types the two callers were catching, so a disk-full, a
+        locked database, a read-only file or a corrupted page raised through
+        every guard between here and the thread and killed the pump — taking
+        the spoken e-stop relay, the stall watchdog, the rollover and the idle
+        close with it, with the microphone still open.
+
+        So the engine's own failures are now caught HERE, at the source:
+
+        * ``ValueError`` for a bad speaker or empty text still raises. That is
+          argument validation, it is deterministic, three callers depend on it,
+          and a caller that passes garbage has a bug rather than a full disk.
+        * ``sqlite3.Error`` — the whole family, by base class rather than by a
+          list of subclasses, which is the entire lesson of the finding —
+          degrades to a counted note and **returns row id 0**. The counters
+          (:attr:`realtime_write_failures`, :attr:`realtime_write_failure_types`,
+          :attr:`last_realtime_write_error`) are the record; ``0`` is the
+          documented "no row was written", and no caller in the tree treats the
+          return value as anything but an opaque correlation id.
+
+        A caller that must know can read the counter or compare the row id to
+        zero. A caller that must merely not die — which is every caller on the
+        pump thread — now cannot.
         """
 
         role = _SPEAKER_ROLES.get(speaker)
@@ -354,21 +472,42 @@ class ConversationMemory:
             raise ValueError(f"unsupported realtime speaker: {speaker!r}")
         if not isinstance(text, str) or not text.strip():
             raise ValueError("realtime turn text must be non-empty")
-        with self._lock:
-            cursor = self.connection.execute(
-                "INSERT INTO messages(role, content, session_id, speaker, origin, "
-                "provider_item_id) VALUES (?, ?, ?, ?, ?, ?)",
-                (
-                    role,
-                    text,
-                    None if session_id is None else str(session_id),
-                    speaker,
-                    str(origin),
-                    None if provider_item_id is None else str(provider_item_id),
-                ),
+        try:
+            with self._lock:
+                cursor = self.connection.execute(
+                    "INSERT INTO messages(role, content, session_id, speaker, origin, "
+                    "provider_item_id, writer) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        role,
+                        text,
+                        None if session_id is None else str(session_id),
+                        speaker,
+                        str(origin),
+                        None if provider_item_id is None else str(provider_item_id),
+                        self.writer,
+                    ),
+                )
+                self.connection.commit()
+                row_id = int(cursor.lastrowid or 0)
+        except sqlite3.Error as error:
+            # THE blindspot. Caught on the base class deliberately: the finding
+            # was a type list that a real subclass fell through, and naming
+            # subclasses here would rebuild it one layer down.
+            name = type(error).__name__
+            self.realtime_write_failures += 1
+            self.realtime_write_failure_types[name] = (
+                self.realtime_write_failure_types.get(name, 0) + 1
             )
-            self.connection.commit()
-            row_id = int(cursor.lastrowid or 0)
+            self.last_realtime_write_error = f"{name}: {error}"
+            logger.warning(
+                "realtime ledger write failed for speaker=%s origin=%s item=%s: %s: %s",
+                speaker,
+                origin,
+                provider_item_id,
+                name,
+                error,
+            )
+            return 0
         # Outside the lock: the ledger row is durable, and a slow or wedged
         # store must not hold the writer that every hosted turn queues behind.
         if store is not None:

@@ -46,6 +46,30 @@ registry's registered relations and keep their existing K0 goal regions;
 ``social`` is the person stand-off expressed as a ``near`` terminal with an
 explicit stand-off, so it reaches the same single arrival authority rather than
 growing a second one. :func:`planner_relation` is the one-line translation.
+
+WHAT A PERCEPTION ANSWER FOR THIS CLASS IS MEASURED AGAINST (card PG-2)
+----------------------------------------------------------------------
+:attr:`ArrivalPolicy.localization_target` is the one new field, and it is the
+*only* thing this card added here. It says, per class, which part of the place a
+depth sensor can actually put a number on:
+
+``surface``
+    The exterior. A ``near`` terminal is a stand-off from a thing you stop
+    BESIDE, and an RGB-D camera only ever sees that thing's outward faces.
+    Measured 2026-08-21 on 120 rendered frames: building entries land **1–3 cm
+    from the visible facade and 1.2–1.7 m from the geom centre, 6/6** in the
+    oracle arm (`scrum/20260821/perception/bench_mapping.md`). Grading such an
+    answer against the centre marks a correct pipeline wrong.
+``interior``
+    The inside. An ``inside`` terminal succeeds by footprint containment, so
+    the region's own area *is* the measurable target and nothing changes.
+
+The field exists here rather than in the eval because "what does arrival mean
+for this class" already has an authority, and a perception scorer that spelled
+its own class -> metric map would be a second one free to drift from it.
+``evals/nav_instruct/surface_scoring.py`` reads THIS table and holds no map of
+its own. Nothing in the navigator, the planner or the goal builder reads this
+field: it changes what a measurement is compared to, never where the robot goes.
 """
 
 from __future__ import annotations
@@ -66,6 +90,9 @@ __all__ = [
     "FACE_GOAL",
     "FACE_OWNER",
     "FACE_TRAVEL",
+    "LOCALIZATION_INTERIOR",
+    "LOCALIZATION_SURFACE",
+    "LOCALIZATION_TARGETS",
     "PLACE_CLASSES",
     "PORTAL_WORDS",
     "RELATION_HINTS",
@@ -78,6 +105,7 @@ __all__ = [
     "arrival_fact",
     "arrival_policy",
     "classify_place",
+    "localization_target",
     "planner_relation",
     "resolve_relation",
 ]
@@ -96,6 +124,17 @@ RELATION_HINTS: frozenset[str] = frozenset(
 FACE_GOAL = "goal"
 FACE_OWNER = "owner"
 FACE_TRAVEL = "travel"
+
+#: What a perception answer for a class is MEASURED against (card PG-2). Two
+#: values because a depth camera can return exactly two kinds of ground-truth
+#: fact about a place: a point on its outside, or a point in its inside.
+#: LOCAL ONLY, like ``face`` — never settable from a tool argument, and read by
+#: the eval scorer rather than by anything on the robot's control path.
+LOCALIZATION_SURFACE = "surface"
+LOCALIZATION_INTERIOR = "interior"
+LOCALIZATION_TARGETS: frozenset[str] = frozenset(
+    {LOCALIZATION_SURFACE, LOCALIZATION_INTERIOR}
+)
 
 CLASS_REGION = "region"
 CLASS_PORTAL = "portal"
@@ -135,6 +174,12 @@ class ArrivalPolicy:
     standoff_m: float | None = None
     #: The terminal speech act the local side wants, verbatim, or "".
     ask_hint: str = ""
+    #: Which part of the place a perception answer for this class is scored
+    #: against — :data:`LOCALIZATION_SURFACE` or :data:`LOCALIZATION_INTERIOR`.
+    #: Defaults to the surface because that is the fail-safe: measuring an
+    #: unknown place's exterior can only ever be conservative, while assuming
+    #: an interior asserts a containment nobody established.
+    localization_target: str = LOCALIZATION_SURFACE
     #: Hints that may REFINE this entry when the local map supports them. Only
     #: the fail-safe UNKNOWN row has any: a positively classified place is a
     #: judgement the local side has already made.
@@ -150,6 +195,7 @@ class ArrivalPolicy:
             "do_not_cross": self.do_not_cross,
             "standoff_m": self.standoff_m,
             "ask_hint": self.ask_hint,
+            "localization_target": self.localization_target,
         }
 
 
@@ -160,9 +206,12 @@ ARRIVAL_TABLE: dict[str, ArrivalPolicy] = {
         place_class=CLASS_REGION,
         relation=RELATION_INSIDE,
         face=FACE_TRAVEL,
+        localization_target=LOCALIZATION_INTERIOR,
         rationale=(
             "a region goal succeeds by footprint containment, not by range to a "
-            "sampled point (ObjectNav Revisited; CoNVOI surface masks)"
+            "sampled point (ObjectNav Revisited; CoNVOI surface masks); the "
+            "sensor sees the region's own top surface, so its interior IS the "
+            "measurable target and PG-2 changed nothing here"
         ),
     ),
     CLASS_PORTAL: ArrivalPolicy(
@@ -171,6 +220,7 @@ ARRIVAL_TABLE: dict[str, ArrivalPolicy] = {
         face=FACE_OWNER,
         do_not_cross=True,
         ask_hint="ask the owner what they would like to do next",
+        localization_target=LOCALIZATION_SURFACE,
         rationale=(
             "stopping IN a doorway violates the social-navigation competency "
             "convention; the owner's terminal is turn-back-and-ask, which the "
@@ -181,10 +231,13 @@ ARRIVAL_TABLE: dict[str, ArrivalPolicy] = {
         place_class=CLASS_OBJECT,
         relation=RELATION_NEAR,
         face=FACE_OWNER,
+        localization_target=LOCALIZATION_SURFACE,
         rationale=(
             "an object terminal is an errand the owner asked for; ending it "
             "turned back toward them is the F-formation the approach studies "
-            "name, and it is the orientation the model never proposes"
+            "name, and it is the orientation the model never proposes; the "
+            "sensor sees the object's outward faces and never its centroid, so "
+            "a perception answer is measured to the surface (PG-2)"
         ),
     ),
     CLASS_PERSON: ArrivalPolicy(
@@ -192,6 +245,7 @@ ARRIVAL_TABLE: dict[str, ArrivalPolicy] = {
         relation=RELATION_SOCIAL,
         face=FACE_GOAL,
         standoff_m=SOCIAL_STANDOFF_M,
+        localization_target=LOCALIZATION_SURFACE,
         rationale="social-zone near edge, facing the person, never looming",
     ),
     CLASS_UNKNOWN: ArrivalPolicy(
@@ -199,6 +253,7 @@ ARRIVAL_TABLE: dict[str, ArrivalPolicy] = {
         relation=RELATION_NEAR,
         face=FACE_OWNER,
         refinements=frozenset({RELATION_INSIDE, RELATION_SOCIAL}),
+        localization_target=LOCALIZATION_SURFACE,
         rationale=(
             "an unclassified place gets the fail-safe near terminal — never a "
             "guess; this is the ONE row a supported model hint may refine"
@@ -374,6 +429,18 @@ def arrival_policy(place_class: str) -> ArrivalPolicy:
     """The table row for a class. Unknown/blank/garbage -> the fail-safe row."""
 
     return ARRIVAL_TABLE.get(str(place_class), ARRIVAL_TABLE[CLASS_UNKNOWN])
+
+
+def localization_target(place_class: str) -> str:
+    """What a perception answer for this class is scored against (card PG-2).
+
+    The single authority the perception scorer reads. Returns
+    :data:`LOCALIZATION_SURFACE` or :data:`LOCALIZATION_INTERIOR`; an unknown
+    class falls through :func:`arrival_policy` to the fail-safe row, which is
+    ``surface``.
+    """
+
+    return arrival_policy(place_class).localization_target
 
 
 # --- hybrid relation --------------------------------------------------------

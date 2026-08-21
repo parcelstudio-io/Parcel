@@ -1,0 +1,55 @@
+{
+ "run": "f03_estop_trials",
+ "results": [
+  {
+   "id": "32",
+   "category": "estop-pos",
+   "verdict": "PASS",
+   "latch": {
+    "fired_during_turn": true,
+    "still_latched_after_turn": true,
+    "released_by_runner": true
+   }
+  },
+  {
+   "id": "33",
+   "category": "estop-pos",
+   "verdict": "PASS",
+   "latch": {
+    "fired_during_turn": true,
+    "still_latched_after_turn": true,
+    "released_by_runner": true
+   }
+  },
+  {
+   "id": "34",
+   "category": "estop-pos",
+   "verdict": "PASS",
+   "latch": {
+    "fired_during_turn": true,
+    "still_latched_after_turn": true,
+    "released_by_runner": true
+   }
+  },
+  {
+   "id": "35",
+   "category": "estop-neg",
+   "verdict": "PASS",
+   "latch": {
+    "fired_during_turn": false,
+    "still_latched_after_turn": false,
+    "released_by_runner": false
+   }
+  },
+  {
+   "id": "36",
+   "category": "estop-neg",
+   "verdict": "PASS",
+   "latch": {
+    "fired_during_turn": false,
+    "still_latched_after_turn": false,
+    "released_by_runner": false
+   }
+  }
+ ]
+}

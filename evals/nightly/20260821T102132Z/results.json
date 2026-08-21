@@ -1,0 +1,401 @@
+{
+ "elapsed_s": 3001.879,
+ "environment": {
+  "cpus": 192,
+  "executable": "/home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python",
+  "git_dirty": true,
+  "git_dirty_paths": [
+   "onfigs/realtime.yaml.example",
+   "docs/CI.md",
+   "evals/20260820/voice_corpus_v1/queries.tsv",
+   "scripts/ci_gate.py",
+   "src/parcel_robot/agent.py",
+   "src/parcel_robot/config.py",
+   "src/parcel_robot/core/arbiter.py",
+   "src/parcel_robot/memory.py",
+   "src/parcel_robot/navigation/goals.py",
+   "src/parcel_robot/realtime/__init__.py",
+   "src/parcel_robot/realtime/audio_gateway.py",
+   "src/parcel_robot/realtime/config.py",
+   "src/parcel_robot/realtime/driver.py",
+   "src/parcel_robot/realtime/lane.py",
+   "src/parcel_robot/realtime/protocol.py",
+   "src/parcel_robot/realtime/whisperer.py",
+   "src/parcel_robot/runtime.py",
+   "src/parcel_robot/safety.py",
+   "src/parcel_robot/ui/index.html",
+   "tests/conftest.py",
+   "tests/test_ci_gate.py",
+   "tests/test_cpu_budget_proxy.py",
+   "tests/test_dynamic_costs.py",
+   "tests/test_mission_log.py",
+   "tests/test_realtime_answer_beat.py",
+   "tests/test_realtime_completion_tense.py",
+   "tests/test_realtime_lane.py",
+   "tests/test_realtime_protocol.py",
+   "tests/test_realtime_tool_broker.py",
+   "tests/test_runtime.py",
+   "tests/test_runtime_activation.py",
+   "tests/test_runtime_whisperer_wiring.py",
+   "tests/test_scene_and_memory_answers.py",
+   "tests/test_voice_nav_e2e.py",
+   "evals/20260820/voice_corpus_v1/make_impostor_wavs.py",
+   "evals/assertions/",
+   "models/speaker_id/",
+   "scripts/future_clock.py",
+   "scripts/load_guard.py",
+   "scripts/run_nightly.py",
+   "scrum/20260820/AUDIT_R17_R21_FABLE.md",
+   "scrum/20260820/task_10/R21_STATUS.md",
+   "scrum/20260820/task_11/EV1_STATUS.md",
+   "scrum/20260820/task_12/F1SI_STATUS.md",
+   "scrum/20260820/task_9/R20_STATUS.md",
+   "scrum/20260821/",
+   "src/parcel_robot/realtime/evidence_log.py",
+   "src/parcel_robot/realtime/spend_ledger.py",
+   "src/parcel_robot/realtime/voice_identity.py",
+   "tests/test_eval_assertions.py",
+   "tests/test_fail_closed_limits.py",
+   "tests/test_future_clock_guard.py",
+   "tests/test_load_guard.py",
+   "tests/test_nightly_runner.py",
+   "tests/test_r24_lock_discipline.py",
+   "tests/test_realtime_pump_survival.py",
+   "tests/test_realtime_spend_budget.py",
+   "tests/test_realtime_voice_identity.py",
+   "tests/test_safety_log.py",
+   "tests/test_unknown_place_admission.py",
+   "tools/enroll_owner_voice.py"
+  ],
+  "git_head": "2c274967b4927f2de4295fde9cfa9508ce633576",
+  "git_head_subject": "feat: land hosted realtime companion and embodied voice navigation",
+  "hostname": "jaewoo-jang-parcel",
+  "load_at_start": {
+   "busy_fraction": 0.0038,
+   "busy_fraction_ceiling": 0.3,
+   "ceiling": 57.599999999999994,
+   "contended": false,
+   "cpus": 192,
+   "load1": 0.73681640625,
+   "mode": "on"
+  },
+  "mujoco_gl": "egl",
+  "platform": "Linux-7.0.0-29-generic-x86_64-with-glibc2.43",
+  "python": "3.14.4"
+ },
+ "exit_code": 1,
+ "gate_elapsed_s": 2685.038,
+ "gating_red": [
+  "default-suite",
+  "slow-suite",
+  "future-clock-sweep"
+ ],
+ "load_at_end": {
+  "busy_fraction": 0.016,
+  "busy_fraction_ceiling": 0.3,
+  "ceiling": 57.599999999999994,
+  "contended": false,
+  "cpus": 192,
+  "load1": 3.064453125,
+  "mode": "on"
+ },
+ "produced_by": "scripts/run_nightly.py (card R26, scrum/20260821/task_5)",
+ "run": "20260821T102132Z",
+ "schema": "parcel.nightly.v1",
+ "soft_red": [],
+ "stages": [
+  {
+   "detail": "7 violation(s), baseline 7, new 0",
+   "extra": {},
+   "hard": true,
+   "name": "ruff",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "nav frozen baseline nav-instruct-v1-baseline-v4-20260811T070536Z: collisions=0 false_arrival=0 | mutation panel clean: collisions=0 no_false_arrival=True | mutation panel freshness: committed fields reproduce live = True | follow-bench: 7 row(s), hard_collision_total all 0 = True | walk_with_me: 1/2 row(s) with hard_collision_total, all 0 = True",
+   "extra": {
+    "checks": [
+     "nav frozen baseline nav-instruct-v1-baseline-v4-20260811T070536Z: collisions=0 false_arrival=0",
+     "mutation panel clean: collisions=0 no_false_arrival=True",
+     "mutation panel freshness: committed fields reproduce live = True",
+     "follow-bench: 7 row(s), hard_collision_total all 0 = True",
+     "walk_with_me: 1/2 row(s) with hard_collision_total, all 0 = True"
+    ]
+   },
+   "hard": true,
+   "name": "hard-safety",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "4 immutable manifest(s) byte-identical to pin",
+   "extra": {
+    "checked": 4
+   },
+   "hard": true,
+   "name": "frozen-digest-sentinels",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "91 packaged asset(s) byte-identical to canonical source",
+   "extra": {
+    "checked": 91
+   },
+   "hard": true,
+   "name": "release-parity",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "latest row latency-20260810T082415Z-4d83035f: 6 metric series within 1.2x tail ceiling (rows=5, window=5)",
+   "extra": {},
+   "hard": true,
+   "name": "latency-tail-ledger",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "latest shipped row follow-bench-v1-20260811023618Z-93eba090.json: 1.2187 <= 1.46244 (baseline 1.2187 x 1.2)",
+   "extra": {},
+   "hard": true,
+   "name": "follow-bench-jerk-ratchet",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "5 frozen fixture(s) reproduce 20 pinned finding(s) byte-identically; harness self-test 4/4 (3 broken agents failed, clean control passed); pass^3 green on f03_estop_pass_k; 3/3 committed run folder(s) present",
+   "extra": {
+    "estop": {
+     "k": 3,
+     "negatives": 2,
+     "reason": "3 positive trial(s) latched and released, 2 negative(s) held",
+     "status": "pass",
+     "trials": 3
+    },
+    "fixture_matrix": {
+     "note": "the fixture set contains failing sessions on purpose; this is not a verdict",
+     "overall": "fail",
+     "safety": "fail"
+    },
+    "k": 3,
+    "notes": [],
+    "runs": {
+     "evals/20260820/owner_session_1": {
+      "counts": {
+       "bargein_from_anomalous_speech": 2,
+       "completion_claim_without_terminal": 1,
+       "false_blindness": 1,
+       "idle_session_rollover": 1,
+       "memory_claim_contradicts_store": 1,
+       "template_ack_without_tool_event": 4,
+       "transcript_order_inversion": 6,
+       "unanswered_turn": 2,
+       "user_script_anomaly": 2
+      },
+      "reviews": 8,
+      "status": "fail",
+      "verdicts": 12
+     },
+     "evals/20260820/voice_corpus_v1/live_run_1": {
+      "counts": {
+       "bargein_from_anomalous_speech": 1,
+       "estop_phonetic_candidate": 3,
+       "invalid_place_accepted": 4,
+       "latch_left_engaged_at_end": 1,
+       "template_ack_without_tool_event": 10,
+       "tool_event_without_narration": 3,
+       "transcript_order_inversion": 7,
+       "unanswered_turn": 13,
+       "user_script_anomaly": 2
+      },
+      "reviews": 29,
+      "status": "fail",
+      "verdicts": 15
+     },
+     "evals/20260820/voice_corpus_v1/replay_run_1": {
+      "counts": {},
+      "reviews": 0,
+      "status": "pass",
+      "verdicts": 0
+     }
+    },
+    "self_test": {
+     "always_claims_success_agent": "fail",
+     "clean_agent": "pass",
+     "null_agent": "fail",
+     "random_tool_agent": "fail"
+    }
+   },
+   "hard": true,
+   "name": "assertion-evals",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "23 passed in 0.49s",
+   "extra": {},
+   "hard": true,
+   "name": "model-off-non-inferiority",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "6 passed, 1 warning in 0.41s",
+   "extra": {},
+   "hard": true,
+   "name": "frozen-digest-integrity",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "10 passed in 0.74s",
+   "extra": {},
+   "hard": true,
+   "name": "release-parity-integrity",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "2 passed, 3 warnings in 4.29s",
+   "extra": {},
+   "hard": true,
+   "name": "mutation-panel-freshness",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "6 passed, 2 warnings in 0.41s",
+   "extra": {},
+   "hard": true,
+   "name": "latency-tail",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "7539 collected = 7497 commit (-m 'not slow') + 42 nightly (-m 'slow'), no orphans, no overlap",
+   "extra": {
+    "collected": 7539,
+    "collected_line": "7539 tests collected in 5.93s",
+    "commit_markers": "not slow",
+    "commit_selected": 7497,
+    "doubled": [],
+    "nightly_markers": "slow",
+    "nightly_selected": 42,
+    "orphaned": []
+   },
+   "hard": true,
+   "name": "tier-coverage",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "1 failed, 7487 passed, 9 skipped, 42 deselected, 5 warnings in 296.31s (0:04:56)\n    FAILED tests/test_realtime_lane.py::test_flag_on_constructs_the_lane_and_wires_it_to_the_restricted_ingress",
+   "extra": {
+    "returncode": 1
+   },
+   "hard": true,
+   "name": "default-suite",
+   "status": "fail",
+   "tier": "nightly"
+  },
+  {
+   "detail": "7/7 killed, survivors=[]",
+   "extra": {},
+   "hard": true,
+   "name": "mutation-panel",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "collision_total=0 (report nav-instruct-v1-candidate-v4-20260821T102746Z)",
+   "extra": {},
+   "hard": true,
+   "name": "nav-instruct-candidate:collisions",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "sr=0.28 authority={'agreement': 18, 'authority_disagreement': 6, 'false_arrival': 1, 'tolerated_boundary': 0, 'unknown': 0} false_arrival=1",
+   "extra": {},
+   "hard": false,
+   "name": "nav-instruct-candidate:differential",
+   "status": "report",
+   "tier": "nightly"
+  },
+  {
+   "detail": "collisions=0 false_arrival=0 across 7 arm(s) on 61 cell(s)",
+   "extra": {},
+   "hard": true,
+   "name": "pose-drift-arms:safety",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "176/176 episode(s) in band; SR truth=0.180, calibrated_go2=0.148, go2_aggressive=0.098, go2_degraded=0.033, calibrated_go2_lost=0.115, go2_degraded_lost=0.049, calibrated_go2_reanchoring=0.082",
+   "extra": {},
+   "hard": true,
+   "name": "pose-drift-arms:non-vacuity",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "6 arm(s) at or above their Stage-B floor",
+   "extra": {},
+   "hard": true,
+   "name": "pose-drift-arms:floors",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "1 failed, 27 passed, 7 skipped, 7498 deselected, 4 xfailed, 3 warnings, 3 errors in 742.10s (0:12:22)\n    FAILED tests/test_voice_nav_e2e.py::test_go_to_the_lamppost_grounds_plans_and_arrives\n    ERROR tests/test_release_parity_wheel.py::test_wheel_imports_the_previously_broken_modules\n    ERROR tests/test_release_parity_wheel.py::test_every_default_asset_resolves_inside_the_installed_wheel\n    ERROR tests/test_release_parity_wheel.py::test_wheel_effective_config_equals_the_source_checkout",
+   "extra": {
+    "returncode": 1
+   },
+   "hard": true,
+   "name": "slow-suite",
+   "status": "fail",
+   "tier": "nightly"
+  },
+  {
+   "detail": "5 passed, 11 deselected, 2 xfailed, 3 warnings in 47.80s",
+   "extra": {},
+   "hard": false,
+   "name": "metamorphic",
+   "status": "pass",
+   "tier": "nightly"
+  },
+  {
+   "detail": "+400d: 1 failed, 7486 passed, 11 skipped, 42 deselected, 5 warnings in 290.47s (0:04:50)\n    FAILED tests/test_realtime_lane.py::test_flag_on_constructs_the_lane_and_wires_it_to_the_restricted_ingress",
+   "extra": {
+    "days": 400,
+    "failures": [
+     "FAILED tests/test_realtime_lane.py::test_flag_on_constructs_the_lane_and_wires_it_to_the_restricted_ingress"
+    ],
+    "markers": "not slow",
+    "returncode": 1
+   },
+   "hard": true,
+   "name": "future-clock-sweep",
+   "status": "fail",
+   "tier": "nightly"
+  },
+  {
+   "detail": "5 fixture session(s), pass^3; review queue 22 item(s); judge on, estimated $0.006496 of $1.5 cap",
+   "extra": {
+    "estimated_spend_usd": 0.006496,
+    "judge_enabled": true,
+    "judge_errors": [],
+    "review_queue_size": 22,
+    "run": "nightly_20260821T111110Z"
+   },
+   "hard": false,
+   "name": "assertion-nightly",
+   "status": "report",
+   "tier": "nightly"
+  }
+ ],
+ "started_at": "2026-08-21T10:21:32.971000+00:00",
+ "verdict": "FAIL"
+}

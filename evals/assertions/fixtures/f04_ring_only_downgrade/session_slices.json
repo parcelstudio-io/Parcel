@@ -1,0 +1,13 @@
+{
+ "mission_log": [],
+ "events": [
+  {
+   "id": 1,
+   "role": "realtime",
+   "text": "tool play_gesture: ok — wave",
+   "level": "info",
+   "timestamp": "2026-08-20 12:05:00.000000"
+  }
+ ],
+ "chat": []
+}

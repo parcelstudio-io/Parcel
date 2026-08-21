@@ -100,7 +100,12 @@ from .config import WhispererConfig
 #:   both hold logs recorded under 1, and a reader that finds
 #:   ``owner_speed_status`` missing must know it is reading an older schema
 #:   rather than conclude the follow controller said nothing.
-STATE_DIGEST_VERSION = 2
+#: * **3** — R21 adds :attr:`StateDigest.emergency_stop_source`. The same rule
+#:   applies twice over here: ``evals/20260820/voice_corpus_v1/live_run_1`` was
+#:   recorded under 2 and it is the run where a latch could not be attributed,
+#:   so a reader that finds the field missing must conclude "this recording
+#:   could not name the door", never "the latch had no door".
+STATE_DIGEST_VERSION = 3
 
 # --------------------------------------------------------------- event kinds
 #: Safety.
@@ -118,6 +123,16 @@ KIND_MISSION_BLOCK_CLEAR = "mission_block_clear"
 #: Always band, non-critical.
 KIND_BATTERY_STATE = "battery_state"
 KIND_PACE_MISMATCH = "pace_mismatch"
+#: Card F1-SI. A turn the speaker-identity gate refused to arm — someone who is
+#: not the enrolled owner told the robot to do something. Always band, because a
+#: security refusal the owner never hears is a robot that looks broken; NOT
+#: critical, because the critical set exists to bypass the owner's own cost
+#: budget for facts about the owner's own requests, and this is by construction a
+#: fact about somebody else's. The rate limiting that keeps a talkative
+#: television from becoming a talkative robot lives in
+#: ``voice_identity.VoiceIdentityGate.note_rejection`` (once per minute), and the
+#: COUNT and the panel event are unconditional either way.
+KIND_VOICE_REJECTED = "voice_rejected"
 #: Never band — the telemetry the bench proved must never reach the session.
 KIND_NAV_TICK = "nav_tick"
 KIND_FOLLOW_TICK = "follow_tick"
@@ -132,6 +147,20 @@ KIND_POSITION = "position"
 #: robot announcing its own instrumentation once per hole). It is written to the
 #: decision log, and the decision log alone.
 KIND_PACE_UNKNOWN = "pace_unknown"
+
+#: Card R21. How each latch door reads inside the emergency-stop FACT. Keyed on
+#: :attr:`StateDigest.emergency_stop_source`; an unknown or empty class falls
+#: through to no clause at all, which is the R11 discipline — a digest that
+#: cannot name the door says nothing about the door rather than guessing one.
+#: The panel entry names both of its controls because the runtime cannot
+#: separate them (``runtime.SAFETY_SOURCE_PANEL`` says why).
+ESTOP_SOURCE_PHRASES = {
+    "voice": " because the owner said the emergency stop phrase out loud",
+    "typed": " because the owner typed the stop command",
+    "panel": " from the control panel (the Space bar or the emergency-stop button)",
+    "simulator": " adopted from the simulator",
+    "runtime_close": " while the robot software was shutting down",
+}
 
 BAND_ALWAYS = "always"
 BAND_NEVER = "never"
@@ -151,6 +180,7 @@ ALWAYS_BAND: frozenset[str] = frozenset(
         KIND_REFUSAL,
         KIND_BATTERY_STATE,
         KIND_PACE_MISMATCH,
+        KIND_VOICE_REJECTED,
     }
 )
 
@@ -316,6 +346,11 @@ HINTS: Mapping[str, str] = {
         "Say what gait you are actually in right now, then ask the owner whether "
         "they would rather just walk."
     ),
+    KIND_VOICE_REJECTED: (
+        "Tell the owner, plainly and without alarm, that someone who is not them "
+        "asked you to do something and you did not do it. Do NOT claim you cannot "
+        "be stopped by other people — anyone may still stop you."
+    ),
 }
 
 
@@ -337,6 +372,18 @@ class StateDigest:
 
     # safety
     emergency_stopped: bool = False
+    #: WHICH DOOR latched it — card R21. A CLASS name from the runtime's closed
+    #: source vocabulary (``voice``, ``typed``, ``panel``, ``api``,
+    #: ``simulator``, ``runtime_close``), never the owner's words: the verbatim
+    #: utterance is free text and this dataclass deliberately holds none, so it
+    #: lives on the safety-log row and stays out of the differ. Empty whenever
+    #: the robot is not latched.
+    #:
+    #: It exists because ``emergency_stopped`` alone cannot tell the owner what
+    #: they most need to hear. 2026-08-20 live_run_1 latched the robot from an
+    #: unknown door and the fact reached the owner once, sixty-six seconds late,
+    #: inside an answer about the robot's mood.
+    emergency_stop_source: str = ""
     proximity_state: str = "clear"
 
     # mission
@@ -384,6 +431,7 @@ class StateDigest:
             "schema_version": self.schema_version,
             "at_s": self.at_s,
             "emergency_stopped": self.emergency_stopped,
+            "emergency_stop_source": self.emergency_stop_source,
             "proximity_state": self.proximity_state,
             "navigating": self.navigating,
             "nav_state": self.nav_state,
@@ -685,13 +733,20 @@ class Whisperer:
         events: list[StateEvent] = []
 
         if after.emergency_stopped and not before.emergency_stopped:
+            # Card R21. The class carries its door. A latch the owner caused
+            # with their own voice and a latch the simulator raised on its own
+            # are the same boolean and completely different news, and the fact
+            # is the only thing the model is allowed to build a sentence from.
+            origin = ESTOP_SOURCE_PHRASES.get(after.emergency_stop_source, "")
             events.append(
                 StateEvent(
                     kind=KIND_EMERGENCY_STOP,
                     fact=(
                         "The robot's safety system reports it has latched an emergency "
-                        "stop and is not moving."
+                        f"stop{origin} and is not moving. It cannot move again until "
+                        "the emergency stop is released."
                     ),
+                    detail={"source": after.emergency_stop_source},
                 )
             )
         elif before.emergency_stopped and not after.emergency_stopped:
@@ -1239,6 +1294,7 @@ __all__ = [
     "CRITICAL_KINDS",
     "DECISION_LOG_MAX",
     "DEDUP_TTL_S",
+    "ESTOP_SOURCE_PHRASES",
     "HINTS",
     "KIND_BATTERY_PCT",
     "KIND_BATTERY_STATE",
@@ -1257,6 +1313,7 @@ __all__ = [
     "KIND_PROXIMITY_CHURN",
     "KIND_REFUSAL",
     "KIND_REROUTE",
+    "KIND_VOICE_REJECTED",
     "MIDDLE_BAND",
     "MIN_GAP_EXEMPT_KINDS",
     "NEVER_BAND",

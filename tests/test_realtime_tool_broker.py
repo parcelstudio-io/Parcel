@@ -826,12 +826,22 @@ def test_navigate_to_refuses_what_the_router_does_not_call_a_navigation(wired, p
 
 
 def test_navigate_to_grants_exactly_what_a_typed_sentence_grants(wired) -> None:
-    """Authority parity: an unknown literal label is admitted here too.
+    """Authority parity, unchanged as a RULE and inverted as an outcome — card R20.
 
-    "go to narnia" typed into the panel is admitted as a mission and then fails
-    honestly at grounding ("I couldn't find it"). The broker must not be MORE
-    permissive than that — and it must not be less, or the hosted lane would
-    have its own private grammar. The router is the single arbiter of both.
+    R10 wrote this test to say: whatever the typed panel grants, the broker
+    grants, and nothing more. It demonstrated that with "go to narnia", which
+    both lanes admitted and which then failed honestly at grounding.
+
+    ``voice_corpus_v1/live_run_1`` §d measured what "failed honestly at
+    grounding" actually looked like when spoken to the robot: **"Okay—I'll go
+    wait near narnia safely."** and 4.25 s of rotate-scan for a place that
+    cannot exist. So R20 changed the shared answer — ``navigation.goals.
+    admit_navigation_place``, asked by BOTH lanes through
+    ``RobotRuntime._place_admission`` — and both now refuse.
+
+    The rule this test exists for is therefore intact and is what is asserted:
+    the two lanes agree. The broker did not grow a private grammar; the grammar
+    they share learned to ask whether the noun resolves.
     """
 
     broker = wired.realtime_broker
@@ -839,8 +849,15 @@ def test_navigate_to_grants_exactly_what_a_typed_sentence_grants(wired) -> None:
     result = json.loads(
         broker.handle(name="navigate_to", call_id="c1", arguments='{"place": "narnia"}')
     )
-    assert result["status"] == STATUS_OK
-    assert wired.realtime_snapshot()["last_route"]["rule"] == "navigation_directive"
+    typed = wired.handle_text("go to narnia")
+
+    assert result["status"] == STATUS_REJECTED
+    assert "narnia" in result["detail"]
+    assert "narnia" in typed and "don't know" in typed
+    # Neither lane reached the router: an unresolvable noun is not a question
+    # about grammar, so there is nothing for the router to arbitrate.
+    assert wired.realtime_snapshot()["last_route"] is None
+    assert wired.task_executive.snapshot()["tasks"] == []
 
 
 def test_each_router_call_gets_a_fresh_turn_id(wired) -> None:
@@ -1036,11 +1053,16 @@ def test_a_nonsense_relation_hint_is_dropped_before_the_door() -> None:
 
 
 def test_an_unheard_of_but_well_formed_place_keeps_authority_parity() -> None:
-    """"narnia" is admitted here because a typed "go to narnia" is admitted.
+    """The BROKER still does not refuse an unheard-of noun — and still must not.
 
-    Refusing it would give the hosted lane a private grammar stricter than the
-    panel's — the exact thing
-    ``test_navigate_to_grants_exactly_what_a_typed_sentence_grants`` forbids.
+    Card R20 refuses "narnia", but one layer down: in
+    ``navigation.goals.admit_navigation_place``, behind the runtime's navigate
+    door, which is the layer the typed panel shares. This test drives the broker
+    against a fake door and therefore pins the half R20 deliberately did NOT
+    change — ``validate_place`` judges argument SHAPES and nothing else, so the
+    hosted lane never acquires a place grammar of its own. The end-to-end
+    refusal is ``test_navigate_to_grants_exactly_what_a_typed_sentence_grants``
+    and ``tests/test_unknown_place_admission.py``.
     """
 
     broker, doors = _broker()

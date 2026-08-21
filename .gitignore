@@ -41,6 +41,9 @@ logs/duplex/
 /evals/20260820/voice_corpus_v1/live_run_1/
 /evals/20260820/voice_corpus_v1/replay_run_1/
 
+# Owner voice profiles contain a biometric embedding and never belong in Git.
+owner_voice_profile.json
+
 # Local model downloads (fetch from Hugging Face; do not commit weights)
 models/**/.cache/
 models/**/*.pt

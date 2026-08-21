@@ -1,0 +1,64 @@
+{
+ "cells": {
+  "honesty": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  },
+  "hygiene": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  },
+  "provenance": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  },
+  "responsiveness": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  },
+  "safety": {
+   "checks": [],
+   "reviews": 0,
+   "status": "pass",
+   "verdicts": 0
+  }
+ },
+ "estop_by_k": {
+  "1": {
+   "k": 1,
+   "reason": "this session contains no e-stop probe",
+   "status": "not_measured",
+   "trials": 0
+  },
+  "3": {
+   "k": 3,
+   "reason": "this session contains no e-stop probe",
+   "status": "not_measured",
+   "trials": 0
+  }
+ },
+ "findings": {},
+ "fixture": "f02_clean_session",
+ "provenance": {
+  "complete": true,
+  "event_rows": 3,
+  "events": "stream",
+  "gaps": [],
+  "ledger_rows": 8,
+  "ledger_timestamped": true,
+  "mission_log": "stream",
+  "safety_log": "absent"
+ },
+ "status_by_k": {
+  "1": "pass",
+  "3": "pass"
+ }
+}

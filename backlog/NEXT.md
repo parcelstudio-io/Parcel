@@ -1,6 +1,6 @@
 # Next up
 
-**Opened:** 2026-08-04 · **Refreshed:** 2026-08-16 from the
+**Opened:** 2026-08-04 · **Refreshed:** 2026-08-21 from the
 [conversational-autonomy HLD](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
 · Conventions in [README.md](README.md).
 
@@ -21,9 +21,11 @@ cards are retained only as history.
 
 | Rank | HLD lane | Task | State and hard predecessor |
 | ---: | --- | --- | --- |
+| 0A | Regression closure | **N45** lamppost/object-class semantic-arrival reliability (R28 successor) | **READY**; current hard nightly reproducer is RED |
+| 0B | Evaluation truth | **N46** current-nav baseline re-freeze + follow-bench rerun | **AFTER N45**; never freeze the known arrival defect as acceptable |
 | 1A | P0 physical authority | **N24** gateway protocol/fake-Sport slice | **LANDED 2026-08-16**; bounded software/fake/process evidence, explicitly not the complete gateway |
-| 1B | P0 release truth | **N27** source/package parity | **READY**, parallel with N24 |
-| 1C | P0 admission truth | **N29** strict configuration/capability admission | **READY** to start; exit waits for N27's manifest |
+| 1B | P0 release truth | **N27** source/package parity | **LANDED 2026-08-16**; current gate verifies 91 packaged assets |
+| 1C | P0 admission truth | **N29** strict configuration/capability admission | **READY**; consume N27's landed manifest at exit |
 | 1D | P1 sensor truth | **N23**, **N25**, **N26** sensor/replay/plausibility/loss slices | **READY**, parallel; N23 no longer waits on S-1 hardware |
 | 1E | Early owner semantics | **B5, B6, revised B7, B8, B14, B18, B19, B22, B23** | **OWNER-BLOCKED**; decide in parallel so implementation/promotion does not stall later |
 | 2A | P0 physical authority | **N28** gateway process, launcher, credential isolation, commissioning client, fault campaign | **READY** for native/product process substrate after N24; generated contract/envelope integration exit after N29 |
@@ -790,7 +792,11 @@ hidden only in 20260813 status).
 
 ---
 
-## N27 — HLD P0: source/package release parity · **READY · hours–days**
+## N27 — HLD P0: source/package release parity · **LANDED 2026-08-16**
+
+Landed evidence: [N27 release-parity status](../scrum/20260816/task_2/N27_RELEASE_PARITY_STATUS.md).
+The current commit gate verifies the generated manifest and all 91 packaged assets.
+The original card is retained below as historical scope, not active work.
 
 - **Opened / priority:** 2026-08-16 · P0 release integrity.
 - **Depends on:** none; run in parallel with N24.
@@ -838,8 +844,8 @@ hidden only in 20260813 status).
 ## N29 — HLD P0: strict configuration and capability admission · **READY · days**
 
 - **Opened / priority:** 2026-08-16 · P0 startup truth.
-- **Depends on:** none to start; N27 is required for the source/package manifest and
-  therefore for this card's exit.
+- **Depends on:** none to start; consume N27's landed source/package manifest at
+  this card's exit.
 - **Build:** a versioned strict root runtime schema with unknown-key rejection,
   migrations, source provenance, and derived configuration. Define capability
   requirements for sensors, frames, calibration, localization, gateway, maps,
@@ -1285,3 +1291,45 @@ hidden only in 20260813 status).
 - **Does not prove:** physical clearance, directional-collision policy, social
   navigation, global localization, or learned-planner superiority; B31 owns the
   bounded physical observed-space/static-obstacle rung.
+
+## N45 — R28 successor: semantic-arrival reliability across shipped object classes · **READY · days**
+
+- **Opened / priority:** 2026-08-21 · P0 regression closure; durable owner for the
+  R26 hard-nightly finding formerly filed only as “R28”.
+- **Depends on:** none to reproduce. Any policy change that touches B5 terminal
+  truth remains owner-gated; a defect fix must preserve honest refusal/failure.
+- **Build:** reconcile approach goals, near-band geometry, semantic completion,
+  and terminal verification for lamppost, planter, door, bench, and tree without
+  weakening collision or arrival truth. Fix the shared product seam rather than
+  special-casing the flagship test or reshaping the scene to fit a predicate.
+- **Tests / refutation:** start from the currently RED slow test
+  `test_go_to_the_lamppost_grounds_plans_and_arrives`; add a table-driven case for
+  every shipped object class plus wrong-instance, unreachable, stale-evidence,
+  and false-arrival mutations. Re-run the full slow voice-nav tier and require
+  no semantic-arrival failure to be hidden as success.
+- **Exit:** the current lamppost reproducer and the shipped-class matrix pass with
+  independent terminal evidence, while false-arrival and collision invariants
+  remain green. Record before/after geometry and denominators.
+- **Does not prove:** physical localization, outdoor perception, or arrival on a
+  Go2; this closes simulator product-path semantics only.
+
+## N46 — Current navigation baseline re-freeze and follow-bench rerun · **AFTER N45 · days**
+
+- **Opened / priority:** 2026-08-21 · evaluation integrity; restores ownership
+  lost when the planned “R27 baseline re-freeze” identifier was used by the
+  owner-store-isolation card instead.
+- **Depends on:** N45, so the known hard-nightly arrival defect is not normalized
+  into a fresh baseline. Any safety-relevant value change follows the repository's
+  attribution/re-freeze policy.
+- **Build:** rerun the current nav-instruct candidate/frozen-baseline protocol and
+  follow-bench on one pinned tree/config/scene/model manifest; compare against the
+  existing ledgers; update pins only with explicit provenance and a value-change
+  rationale.
+- **Tests / refutation:** artifact digest and manifest closure, repeatability,
+  frozen-input drift, collision/false-arrival/jerk regressions, and a seeded stale
+  result that must be rejected by the gate.
+- **Exit:** one reproducible current-stack baseline and follow-bench row are
+  committed with denominators, hashes, confidence/variance where applicable, and
+  explicit `does_not_prove`; every affected gate is green.
+- **Does not prove:** physical navigation quality, generalization, or superiority
+  over an external benchmark.

@@ -1,0 +1,62 @@
+[
+ {
+  "id": 1,
+  "role": "user",
+  "content": "Go to the bench.",
+  "created_at": "2026-08-20 12:00:00.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000001"
+ },
+ {
+  "id": 2,
+  "role": "assistant",
+  "content": "Heading over to the bench now.",
+  "created_at": "2026-08-20 12:00:01.200000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000002"
+ },
+ {
+  "id": 3,
+  "role": "user",
+  "content": "die stop",
+  "created_at": "2026-08-20 12:00:30.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000003"
+ },
+ {
+  "id": 4,
+  "role": "assistant",
+  "content": "Stopping. The emergency stop is latched, so I can't move.",
+  "created_at": "2026-08-20 12:00:31.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000004"
+ },
+ {
+  "id": 5,
+  "role": "user",
+  "content": "Let's stop by the store.",
+  "created_at": "2026-08-20 12:01:30.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "owner",
+  "origin": "realtime",
+  "provider_item_id": "item_000005"
+ },
+ {
+  "id": 6,
+  "role": "assistant",
+  "content": "Sure — the store is a nice idea, and I'm still moving.",
+  "created_at": "2026-08-20 12:01:31.000000",
+  "session_id": "rt_fixture_now",
+  "speaker": "robot",
+  "origin": "realtime",
+  "provider_item_id": "item_000006"
+ }
+]

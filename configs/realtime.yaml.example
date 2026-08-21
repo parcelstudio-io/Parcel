@@ -106,6 +106,36 @@ idle_close_after_s: 600.0
 # The arming gate refuses to open a session once this month's estimated spend
 # reaches this number. Estimated at ASSUMED rates (realtime/cost.py) — it is a
 # guard rail, not an invoice.
+#
+# Card R25 made that sentence TRUE. It was documented here from R1 and the
+# arming gate never read it: the gate's comparison existed, nothing passed it a
+# figure, and the ceiling compared 0.00 against this number every time for
+# twenty-four cards. What changed:
+#
+#   * "this month" is UTC, measured from a durable append-only ledger at
+#     <capture.dir>/spend.jsonl (default: recordings/spend.jsonl) — one priced
+#     row per hosted response, so the ceiling survives a restart. Delete the
+#     file to reset the month; move it with PARCEL_REALTIME_SPEND_LEDGER.
+#   * The refusal names the figure, the period and this key. Raise the number
+#     (or wait for the 1st, UTC) to open a session again.
+#   * A session ALREADY OPEN is never hung up mid-sentence by the ceiling; what
+#     the ceiling does to it is stop the ROBOT from starting billed exchanges
+#     you did not ask for. Your own turns are never gated.
+#   * SAFETY-class facts — the emergency latch and its clear, a refusal of your
+#     own command, a mission terminal — are spoken PAST the ceiling, exactly as
+#     they already bypass the whisperer's max_updates_per_minute below. A robot
+#     that will not say "I have stopped" because of a money knob is the failure
+#     the knob exists to prevent. A voice rejection is deliberately NOT in that
+#     set: it is a fact about somebody else's request, and a talkative
+#     television must not be able to spend past your ceiling.
+#   * If the ledger cannot be READ, the lane arms anyway and says so loudly in
+#     the panel. That is the one deliberately fail-OPEN control in this file: a
+#     broken spend file must not brick the robot. Everything else here still
+#     fails closed — including this key itself, which now refuses .inf as well
+#     as zero, negatives and non-numbers.
+#
+# The figure is a LOWER BOUND: a response the provider billed whose completion
+# frame never arrived is spend the ledger never saw.
 monthly_budget_usd: 25.0
 
 # ---------------------------------------------------------------------------
@@ -211,3 +241,91 @@ capture:
   # is longer than any capture buffer and shorter than the pause between two
   # spoken corpus queries.
   owner_gap_s: 0.75
+
+# ---------------------------------------------------------------------------
+# SPEAKER IDENTITY FOR COMMAND ARMING (card F1-SI)
+#
+# THE DEFECT THIS BLOCK EXISTS BECAUSE OF. On 2026-08-20 a television commanded
+# the robot, twice, across two owner sessions. Acoustic echo cancellation does
+# not defend against that (it cancels the robot's OWN speaker; a TV is an
+# independent source in the room) and the transcript-level Unicode-script check
+# only catches the cross-LANGUAGE case. A same-language TV defeats every
+# transcript-level layer there is, so the defence has to be about who is
+# speaking.
+#
+# THE SAFETY ASYMMETRY, AND IT IS NOT CONFIGURABLE. **The emergency stop is
+# never identity-gated.** Anyone in the room may stop the dog — a visitor, a
+# child, a voice the robot has never heard. There is no key in this block that
+# reaches the latch, by construction. What identity gates is ARMING: turning a
+# sentence into motion.
+#
+# NOTHING HERE DOES ANYTHING UNTIL YOU ENROLL. With no enrolled profile the gate
+# reports `verify_disabled`, says so in /api/state and in the event log, and the
+# robot behaves exactly as it did before this card. Enrollment is one command,
+# once, with your own voice:
+#
+#     tools/enroll_owner_voice.py --wav a.wav b.wav c.wav d.wav e.wav
+#     tools/enroll_owner_voice.py --show      # where is it, is it sane
+#
+# It writes ONE json file at mode 0600 beside this config — outside the
+# repository, like the credential. It holds an averaged voice embedding, not
+# audio, and re-running it overwrites cleanly.
+voice_identity:
+  # The feature switch. `true` is the default and is inert without a profile.
+  enabled: true
+
+  # Cosine similarity at or above which a turn is you. Measured on THIS host's
+  # own microphone array (scrum/20260820/research/bench_doa.md, Bench B): the
+  # worst impostor pair scored 0.431 and the weakest genuine pair 0.640, with
+  # zero overlap across 378 pairs, so 0.55 is the midpoint of the measured gap.
+  #
+  # Raise it to be stricter (more "I didn't recognise that voice" for you);
+  # lower it to be more permissive. A value outside (0, 1] is REFUSED rather
+  # than clamped — `threshold: 55` is the percentage somebody meant, and it
+  # would lock you out of your own robot forever.
+  threshold: 0.55
+
+  # Where the enrolled profile lives. Empty = beside this file. Never put it in
+  # the repository; the enroller refuses to.
+  # profile: /home/you/.config/parcel/owner_voice_profile.json
+
+  # The embedding model. Empty = the vendored models/speaker_id/ copy named by
+  # models/speaker_id/models.lock.json.
+  # model: /path/to/nemo_en_titanet_small.onnx
+
+  # How much speech is buffered before the first (provisional) check of a turn.
+  # Raised from 0.6 to 1.2 by measurement: at 0.6 s the false-reject rate over
+  # this host's gold set was 38.5 %, because a fragment of a sentence is not the
+  # sentence. The whole turn is checked again when you stop speaking.
+  min_utterance_s: 1.2
+
+  # Added-latency budget in milliseconds, MEASURED and reported in /api/state,
+  # not enforced as a timeout — half an embedding is worse than a slow one.
+  # Measured end to end on this host: median 18 ms, p95 33 ms per turn.
+  budget_ms: 50.0
+
+  # How often a refusal may become a SPOKEN sentence ("someone who isn't you
+  # asked me to…"). Every refusal is counted and logged regardless; this only
+  # stops a talkative television from becoming a talkative robot.
+  narration_interval_s: 60.0
+
+  # THE DIRECTION-OF-ARRIVAL PREFILTER, and it needs a udev rule you must grant.
+  # The reSpeaker XVF3800 reports the azimuth a sound came from on a vendor USB
+  # interface that is separate from the audio streams, so reading it cannot
+  # disturb capture. Until the rule below exists every read fails with a
+  # permission error and the prefilter contributes nothing (it never refuses on
+  # its own absence).
+  #
+  #   sudo tee /etc/udev/rules.d/99-respeaker-xvf3800.rules <<< 'SUBSYSTEM=="usb", ATTRS{idVendor}=="2886", ATTRS{idProduct}=="001a", MODE="0660", GROUP="plugdev", TAG+="uaccess"'
+  #   sudo udevadm control --reload && sudo udevadm trigger --action=change /sys/bus/usb/devices/3-1
+  #
+  # (A udev trigger re-applies node permissions; it does not reset the device.)
+  doa: false
+
+  # The television's azimuth, in degrees, as [start, end]. Wrap is allowed:
+  # [350, 10] is the twenty degrees around due north. A turn arriving from
+  # inside this sector is refused UNLESS the voice check passes — belt and
+  # suspenders, in that order, and the voice check is always the authority.
+  # Setting this while `doa: false` is REFUSED: nothing would ever read an
+  # azimuth to compare it against.
+  # rejected_sector: [80, 110]

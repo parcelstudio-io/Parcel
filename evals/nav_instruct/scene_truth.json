@@ -1,5 +1,5 @@
 {
-  "artifact_version": 1,
+  "artifact_version": 2,
   "derived": {
     "bench_1": {
       "kind": "object",
@@ -210,6 +210,540 @@
   "scene": {
     "path": "src/parcel_robot/scenes/city_block.xml",
     "sha256": "bb7f8e02a7e6b63862293dae427b4980ff7509344e2996337caa3885b99be7ec"
+  },
+  "surface_convention": {
+    "authority": "which class is measured how is read from parcel_robot.navigation.arrival_semantics.localization_target; this artifact holds no class -> metric map of its own",
+    "measures": {
+      "interior": {
+        "applies_to": "inside-class places (region)",
+        "note": "bare containment is UNINFORMATIVE for large regions: the bench measured sidewalk and crosswalk at 0.00 m against a RANDOM map (p=1.00, p=0.52). The evidence fraction is what a random map cannot pass, and the null control is what proves it in any particular scene.",
+        "passes_when": "the point is contained AND evidence_inside_fraction >= 0.5",
+        "statistic": "containment of the answer point PLUS evidence_inside_fraction over the answering entry's own supporting points",
+        "target": "`interior_polygon`, byte-identical to the entity's `derived` polygon"
+      },
+      "surface": {
+        "applies_to": "near-class places (object, portal, person, unknown)",
+        "note": "unsigned: a point deep INSIDE a solid is as wrong as one outside it, because no sensor could have produced it",
+        "passes_when": "surface_error_m <= 0.3",
+        "statistic": "surface_error_m = min over parts of |distance to that part's footprint outline|",
+        "target": "the nearest-surface set in `parts`"
+      }
+    },
+    "null_control": {
+      "alpha": 0.05,
+      "min_draws": 200,
+      "procedure": "re-scatter the same population uniformly over the mapped area, recompute the same statistic, report p = P(null at least as good as observed)",
+      "required": true,
+      "rule": "EVERY localization claim carries a null control. A number without one is not a result; the scorer cannot construct a claim without it.",
+      "verdicts": {
+        "fail": "the statistic did not pass",
+        "pass": "the statistic passed AND beat the null at alpha",
+        "uninformative": "the statistic passed but did NOT beat the null \u2014 the metric could not discriminate here, so this may not be reported as a pass"
+      }
+    },
+    "scoring_module": "evals/nav_instruct/surface_scoring.py",
+    "version": 1,
+    "why": "scene_truth's centre+radius convention is unmeasurable by any RGB-D sensor: the 2026-08-21 mapping bench put building entries 1-3 cm from the visible facade and 1.2-1.7 m from the geom centre, 6/6 in the oracle arm and 5/6 in the open-vocab arm. Grading perception against the centre fails a working pipeline."
+  },
+  "surfaces": {
+    "bench_1": {
+      "kind": "object",
+      "label": "bench",
+      "measure": "surface",
+      "parts": [
+        {
+          "geom": "bench_back",
+          "polygon": [
+            [
+              -3.2,
+              3.13
+            ],
+            [
+              -1.8,
+              3.13
+            ],
+            [
+              -1.8,
+              3.23
+            ],
+            [
+              -3.2,
+              3.23
+            ]
+          ],
+          "shape": "rect"
+        },
+        {
+          "geom": "bench_leg_l",
+          "polygon": [
+            [
+              -3.1,
+              2.82
+            ],
+            [
+              -3.0,
+              2.82
+            ],
+            [
+              -3.0,
+              3.18
+            ],
+            [
+              -3.1,
+              3.18
+            ]
+          ],
+          "shape": "rect"
+        },
+        {
+          "geom": "bench_leg_r",
+          "polygon": [
+            [
+              -2.0,
+              2.82
+            ],
+            [
+              -1.9,
+              2.82
+            ],
+            [
+              -1.9,
+              3.18
+            ],
+            [
+              -2.0,
+              3.18
+            ]
+          ],
+          "shape": "rect"
+        },
+        {
+          "geom": "bench_seat",
+          "polygon": [
+            [
+              -3.2,
+              2.78
+            ],
+            [
+              -1.8,
+              2.78
+            ],
+            [
+              -1.8,
+              3.22
+            ],
+            [
+              -3.2,
+              3.22
+            ]
+          ],
+          "shape": "rect"
+        }
+      ],
+      "place_class": "object"
+    },
+    "bldg_1": {
+      "kind": "object",
+      "label": "building",
+      "measure": "surface",
+      "parts": [
+        {
+          "geom": "bldg_1",
+          "polygon": [
+            [
+              -6.3,
+              4.0
+            ],
+            [
+              -2.7,
+              4.0
+            ],
+            [
+              -2.7,
+              7.0
+            ],
+            [
+              -6.3,
+              7.0
+            ]
+          ],
+          "shape": "rect"
+        }
+      ],
+      "place_class": "object"
+    },
+    "bldg_2": {
+      "kind": "object",
+      "label": "building",
+      "measure": "surface",
+      "parts": [
+        {
+          "geom": "bldg_2",
+          "polygon": [
+            [
+              -2.4,
+              4.6
+            ],
+            [
+              0.4,
+              4.6
+            ],
+            [
+              0.4,
+              7.0
+            ],
+            [
+              -2.4,
+              7.0
+            ]
+          ],
+          "shape": "rect"
+        }
+      ],
+      "place_class": "object"
+    },
+    "bldg_3": {
+      "kind": "object",
+      "label": "building",
+      "measure": "surface",
+      "parts": [
+        {
+          "geom": "bldg_3",
+          "polygon": [
+            [
+              0.7,
+              4.2
+            ],
+            [
+              3.7,
+              4.2
+            ],
+            [
+              3.7,
+              7.0
+            ],
+            [
+              0.7,
+              7.0
+            ]
+          ],
+          "shape": "rect"
+        }
+      ],
+      "place_class": "object"
+    },
+    "bldg_4": {
+      "kind": "object",
+      "label": "building",
+      "measure": "surface",
+      "parts": [
+        {
+          "geom": "bldg_4",
+          "polygon": [
+            [
+              3.9,
+              3.9
+            ],
+            [
+              7.1,
+              3.9
+            ],
+            [
+              7.1,
+              6.9
+            ],
+            [
+              3.9,
+              6.9
+            ]
+          ],
+          "shape": "rect"
+        }
+      ],
+      "place_class": "object"
+    },
+    "bldg_5": {
+      "kind": "object",
+      "label": "building",
+      "measure": "surface",
+      "parts": [
+        {
+          "geom": "bldg_5",
+          "polygon": [
+            [
+              -7.2,
+              -5.9
+            ],
+            [
+              -3.8,
+              -5.9
+            ],
+            [
+              -3.8,
+              -3.1
+            ],
+            [
+              -7.2,
+              -3.1
+            ]
+          ],
+          "shape": "rect"
+        }
+      ],
+      "place_class": "object"
+    },
+    "bldg_6": {
+      "kind": "object",
+      "label": "building",
+      "measure": "surface",
+      "parts": [
+        {
+          "geom": "bldg_6",
+          "polygon": [
+            [
+              3.2,
+              -6.6
+            ],
+            [
+              6.8,
+              -6.6
+            ],
+            [
+              6.8,
+              -3.4
+            ],
+            [
+              3.2,
+              -3.4
+            ]
+          ],
+          "shape": "rect"
+        }
+      ],
+      "place_class": "object"
+    },
+    "crosswalk": {
+      "interior_polygon": [
+        [
+          2.35,
+          -0.4
+        ],
+        [
+          3.85,
+          -0.4
+        ],
+        [
+          3.85,
+          2.0
+        ],
+        [
+          2.35,
+          2.0
+        ]
+      ],
+      "kind": "region",
+      "label": "crosswalk",
+      "measure": "interior",
+      "place_class": "region"
+    },
+    "door_1": {
+      "kind": "object",
+      "label": "door",
+      "measure": "surface",
+      "parts": [
+        {
+          "geom": "door_1",
+          "polygon": [
+            [
+              -7.35,
+              4.06
+            ],
+            [
+              -6.55,
+              4.06
+            ],
+            [
+              -6.55,
+              4.18
+            ],
+            [
+              -7.35,
+              4.18
+            ]
+          ],
+          "shape": "rect"
+        }
+      ],
+      "place_class": "object"
+    },
+    "lamp_post_1": {
+      "kind": "object",
+      "label": "lamppost",
+      "measure": "surface",
+      "parts": [
+        {
+          "center": [
+            0.2,
+            3.15
+          ],
+          "geom": "lamp_post_1",
+          "radius_m": 0.06,
+          "shape": "circle"
+        }
+      ],
+      "place_class": "object"
+    },
+    "lamp_post_2": {
+      "kind": "object",
+      "label": "lamppost",
+      "measure": "surface",
+      "parts": [
+        {
+          "center": [
+            -6.7,
+            -2.9
+          ],
+          "geom": "lamp_post_2",
+          "radius_m": 0.06,
+          "shape": "circle"
+        }
+      ],
+      "place_class": "object"
+    },
+    "planter_1": {
+      "kind": "object",
+      "label": "planter",
+      "measure": "surface",
+      "parts": [
+        {
+          "center": [
+            -5.0,
+            3.15
+          ],
+          "geom": "planter_1",
+          "radius_m": 0.45,
+          "shape": "circle"
+        }
+      ],
+      "place_class": "object"
+    },
+    "planter_2": {
+      "kind": "object",
+      "label": "planter",
+      "measure": "surface",
+      "parts": [
+        {
+          "center": [
+            5.0,
+            3.1
+          ],
+          "geom": "planter_2",
+          "radius_m": 0.45,
+          "shape": "circle"
+        }
+      ],
+      "place_class": "object"
+    },
+    "sidewalk": {
+      "interior_polygon": [
+        [
+          -8.0,
+          2.2
+        ],
+        [
+          8.0,
+          2.2
+        ],
+        [
+          8.0,
+          4.2
+        ],
+        [
+          -8.0,
+          4.2
+        ]
+      ],
+      "kind": "region",
+      "label": "sidewalk",
+      "measure": "interior",
+      "place_class": "region"
+    },
+    "sidewalk_south": {
+      "interior_polygon": [
+        [
+          -8.0,
+          -3.75
+        ],
+        [
+          8.0,
+          -3.75
+        ],
+        [
+          8.0,
+          -2.25
+        ],
+        [
+          -8.0,
+          -2.25
+        ]
+      ],
+      "kind": "region",
+      "label": "sidewalk",
+      "measure": "interior",
+      "place_class": "region"
+    },
+    "tree_1": {
+      "kind": "object",
+      "label": "tree",
+      "measure": "surface",
+      "parts": [
+        {
+          "center": [
+            -5.0,
+            3.15
+          ],
+          "geom": "tree_1",
+          "radius_m": 0.1,
+          "shape": "circle"
+        },
+        {
+          "center": [
+            -5.0,
+            3.15
+          ],
+          "geom": "tree_top_1",
+          "radius_m": 0.58,
+          "shape": "circle"
+        }
+      ],
+      "place_class": "object"
+    },
+    "tree_2": {
+      "kind": "object",
+      "label": "tree",
+      "measure": "surface",
+      "parts": [
+        {
+          "center": [
+            5.0,
+            3.1
+          ],
+          "geom": "tree_2",
+          "radius_m": 0.1,
+          "shape": "circle"
+        },
+        {
+          "center": [
+            5.0,
+            3.1
+          ],
+          "geom": "tree_top_2",
+          "radius_m": 0.58,
+          "shape": "circle"
+        }
+      ],
+      "place_class": "object"
+    }
   },
   "transcribed": {
     "bench_1": {

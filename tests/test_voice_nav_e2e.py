@@ -1013,66 +1013,51 @@ def test_go_to_the_lamppost_grounds_plans_and_arrives(live: _LiveRuntime) -> Non
         )
 
 
-def test_go_to_the_fountain_searches_then_reports_honestly(
+def test_go_to_the_fountain_is_asked_about_rather_than_searched_for(
     live: _LiveRuntime,
 ) -> None:
-    """An absent target must produce a bounded search and an honest failure.
+    """CONTRACT CHANGED BY CARD R20 (was
+    ``test_go_to_the_fountain_searches_then_reports_honestly``).
 
-    There is no fountain anywhere in the city. Admission still succeeds by
-    design — NavigateTo deliberately does not require ``target_grounded``,
-    because refusing every unknown label would make the robot unable to go
-    looking for anything. What must hold is everything after: a bounded
-    search, a terminal FAILURE (never a silent stall), no arrival claim
-    anywhere, and a report that names the thing it could not find. This is the
-    other half of the U32 rule — a claim without a predicate is a failure, and
-    so is silence about a failure.
+    There is still no fountain anywhere in the city, and the old version of this
+    test asserted that "go to the fountain" was ADMITTED and then failed
+    honestly after a bounded search. Its stated reason was that "refusing every
+    unknown label would make the robot unable to go looking for anything."
+
+    ``evals/20260820/voice_corpus_v1/live_run_1`` §d is what that costs when the
+    unknown label is not a plausible city fixture: "Go to Narnia." and "Take me
+    to the moon." were admitted the same way, the robot committed out loud to
+    *"Okay—I'll go wait near narnia safely."*, and it rotated on the spot for
+    4.25 s and 10.7 s looking for them.
+
+    R20's answer to the old objection is the test immediately below this one:
+    the robot can still go looking for anything — through the search verb class,
+    which is what an owner who wants a search actually says. **This pair is the
+    boundary.** Goal phrasing must name something the map can resolve; search
+    phrasing searches. Neither half means anything without the other, so they
+    are deliberately adjacent and deliberately about the same absent noun.
     """
 
-    result = _run_command_to_terminal(live, "go to the fountain")
+    reply = live.runtime.handle_text("go to the fountain")
 
-    assert result["states"], "no task recorded"
-    assert all(state == "failed" for state in result["states"]), (
-        f"an absent target must fail, not succeed or stall: "
-        f"states={result['states']} details={result['details']}"
+    # The ask, not an acknowledgement and not the generic dead-end.
+    assert GENERIC_REFUSAL not in reply, f"the ask must be specific: {reply!r}"
+    assert "fountain" in reply.lower(), f"the refusal must name what was asked for: {reply!r}"
+    assert "don't know a place" in reply.lower(), f"expected the unknown-place ask: {reply!r}"
+    # It offers somewhere real instead — the card's "nearest I know are …".
+    assert any(place in reply.lower() for place in ("bench", "sidewalk", "lamppost", "tree")), (
+        f"a refusal that names no real alternative is just a no: {reply!r}"
     )
 
-    navigation = result["navigation"]
-    assert str(navigation.get("goal")) == "fountain", f"navigation={navigation}"
-    assert str(navigation.get("state")) == "failed", f"navigation={navigation}"
-    assert "not_found" in str(navigation.get("reason")), (
-        f"failure must be attributed to the missing target, not something "
-        f"else: navigation={navigation}"
-    )
-    assert not navigation.get("enabled"), f"navigation lane left running: {navigation}"
-
-    # It looked: a bounded search ran rather than an instant give-up.
-    assert result["elapsed_s"] > 5.0, (
-        f"no bounded search happened ({result['elapsed_s']:.1f} s to terminal)"
-    )
-
-    # The system authority itself made no arrival claim (instrument 5).
-    assert result["system_arrival"] is False, (
-        f"an absent target must not produce a system arrival claim: "
-        f"states={result['states']}"
-    )
-
-    # No arrival claim, anywhere the operator can read.
-    spoken = " ".join(str(item.get("text", "")) for item in result["chat"]).lower()
-    reported = " ".join(str(item.get("text", "")) for item in result["events"]).lower()
-    for claim in ("arrived", "already at", "i'm at the fountain", "verified it"):
-        assert claim not in spoken, f"arrival claim in chat: {spoken!r}"
-        assert claim not in reported, f"arrival claim in events: {reported!r}"
-
-    # And it said so: the honest report names the target and the reason.
-    failure_events = [
-        str(item.get("text", ""))
-        for item in result["events"]
-        if str(item.get("level")) == "error"
-    ]
-    assert any(
-        "fountain" in text.lower() and "not_found" in text.lower()
-        for text in failure_events
-    ), f"no honest not-found report for the fountain: events={failure_events}"
+    # And nothing moved: no plan, no task, no mission, no rotate-scan.
+    assert live.runtime.agent.last_reasoning_source != "local_plan_sketch"
+    time.sleep(2.0)
+    assert not live.tasks(), f"an unresolvable goal became a task: {live.tasks()}"
+    navigation = dict(live.runtime.snapshot().get("navigation") or {})
+    assert not navigation.get("enabled"), f"navigation lane started: {navigation}"
+    assert not [
+        row for row in live.runtime.mission_log() if "fountain" in str(row.get("goal", "")).lower()
+    ], "a mission was logged for a place the map does not have"
 
 
 # ---------------------------------------------------------------------------
@@ -1169,14 +1154,22 @@ def test_paraphrase_head_towards_the_lamppost_resolves_the_same_way(
 def test_paraphrase_find_the_fountain_still_reports_honestly(
     live: _LiveRuntime,
 ) -> None:
-    """Paraphrase of ``go to the fountain`` through the ``find`` verb class.
+    """The exploration half of card R20's boundary, and the older SUP-1 rule.
 
     ``find`` became a destination verb with the superlative work (SUP-1) on the
     argument that the semantic resolution ladder already *is* a search. The
-    invariant this asserts is that the new verb inherits the honest-refusal
+    invariant this asserts is that the verb inherits the honest-refusal
     behaviour too: an absent target must still produce a bounded search, a
     terminal failure, and a report that names what was not found — never a
     softer outcome because the phrasing was softer.
+
+    R20 gave the same sentence a second job. The test above now shows that
+    "go to the fountain" — GOAL phrasing for a place the map cannot resolve —
+    gets an ask instead of a mission. **This one is why that is not a
+    capability loss:** the owner who wants the robot to go looking says so, and
+    the robot goes looking, exactly as it always did. If this test ever has to
+    be weakened, R20's gate has stopped being a gate on goal admission and has
+    become a ban on exploration, which it was explicitly not allowed to be.
     """
 
     result = _run_command_to_terminal(live, "find the fountain")

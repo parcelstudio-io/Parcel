@@ -17,6 +17,24 @@ unless ``PARCEL_SIGLIP2_ONNX`` is truthy, so merely landing the weights on disk
 never flips the whole test suite / mission path onto a ~N-ms/query neural model.
 The gate run sets the env var; everything else stays byte-identical to the
 string fallback. This is the honest "don't silently make it in-loop" lever.
+
+Execution provider (card PG-1, item 3)
+--------------------------------------
+The execution provider is resolved by :mod:`parcel_robot.perception_providers`
+with the same documented fallback order as the detector — ``cuda_fp16 ->
+cpu_int8`` — and logged once at construction. A machine with no
+``CUDAExecutionProvider`` resolves to ``cpu_int8``: the same artifacts, the same
+execution provider, and the same numbers as before this card. The 2026-08-21
+bench measured the image encoder at **49.3 ms CPU int8 vs 4.07 ms GPU fp16**.
+
+Text and vision resolve **independently**, because they are separate ONNX files
+and a weights directory can legitimately hold one precision of each. Whichever
+each resolves to is recorded on :attr:`_OnnxSigLIP2Embedder.resolution` /
+``vision_resolution``.
+
+Preprocessing shares the detector's bit-identical separable resize. SigLIP-2 does
+NOT pad to a square (it resizes straight to 224x224), so the detector's
+content/pad seam analysis does not apply here and is deliberately not copied.
 """
 
 from __future__ import annotations
@@ -26,6 +44,15 @@ import logging
 import os
 from pathlib import Path
 from typing import Any
+
+from parcel_robot.perception_providers import (
+    PROVIDER_CPU_INT8,
+    ProviderResolution,
+    assert_provider_honoured,
+    log_resolution,
+    prepare_cuda_runtime,
+    resolve_provider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +71,14 @@ ONNX_ENABLE_ENV = "PARCEL_SIGLIP2_ONNX"
 _TEXT_ONNX_CANDIDATES = ("text_model_int8.onnx", "text_model_quantized.onnx", "text_model.onnx")
 _VISION_ONNX_CANDIDATES = ("vision_model_int8.onnx", "vision_model_quantized.onnx", "vision_model.onnx")
 
+#: fp16 artifacts for the CUDA path — same onnx-community export repo, same
+#: upstream checkpoint, different precision.
+_TEXT_ONNX_FP16_CANDIDATES = ("text_model_fp16.onnx",)
+_VISION_ONNX_FP16_CANDIDATES = ("vision_model_fp16.onnx",)
+
+#: onnxruntime input type string -> numpy dtype name, for the feed-boundary cast.
+_ORT_TO_NUMPY: dict[str, str] = {"tensor(float)": "float32", "tensor(float16)": "float16"}
+
 
 def onnx_enabled() -> bool:
     """True when the opt-in env switch selects the real ONNX path."""
@@ -59,26 +94,51 @@ def _first_present(weights_dir: Path, names: tuple[str, ...]) -> Path | None:
     return None
 
 
+def resolve_text_provider(weights_dir: Path, **kwargs: Any) -> ProviderResolution:
+    """Which (execution provider, artifact) pair the TEXT encoder would run on."""
+
+    return resolve_provider(
+        weights_dir,
+        int8_candidates=_TEXT_ONNX_CANDIDATES,
+        fp16_candidates=_TEXT_ONNX_FP16_CANDIDATES,
+        **kwargs,
+    )
+
+
+def resolve_vision_provider(weights_dir: Path, **kwargs: Any) -> ProviderResolution:
+    """Which (execution provider, artifact) pair the VISION encoder would run on."""
+
+    return resolve_provider(
+        weights_dir,
+        int8_candidates=_VISION_ONNX_CANDIDATES,
+        fp16_candidates=_VISION_ONNX_FP16_CANDIDATES,
+        **kwargs,
+    )
+
+
 def load_onnx_embedder(weights_dir: Path) -> Any | None:
     """Load the ONNX SigLIP-2 embedder, or ``None`` if disabled / unavailable.
 
     Returns ``None`` (never raises) when the env switch is off, a required file
-    is missing, or ``onnxruntime`` / ``tokenizers`` are absent — the matcher then
-    degrades loudly to the string fallback exactly as before.
+    is missing, no execution provider in the documented fallback order is
+    available, an explicitly pinned provider is unavailable, or ``onnxruntime`` /
+    ``tokenizers`` are absent — the matcher then degrades loudly to the string
+    fallback exactly as before.
     """
 
     if not onnx_enabled():
         return None
-    text_onnx = _first_present(weights_dir, _TEXT_ONNX_CANDIDATES)
+    resolution = resolve_text_provider(weights_dir)
     tokenizer_json = weights_dir / "tokenizer.json"
-    if text_onnx is None or not tokenizer_json.is_file():
+    if resolution.selected is None or not tokenizer_json.is_file():
+        log_resolution(resolution, model="siglip2-text")
         logger.warning(
-            "SigLIP-2 ONNX enabled but files missing under %s (text=%s tokenizer=%s)",
-            weights_dir, text_onnx is not None, tokenizer_json.is_file(),
+            "SigLIP-2 ONNX enabled but unavailable under %s (provider=%s tokenizer=%s)",
+            weights_dir, resolution.selected, tokenizer_json.is_file(),
         )
         return None
     try:
-        return _OnnxSigLIP2Embedder(weights_dir, text_onnx)
+        return _OnnxSigLIP2Embedder(weights_dir, resolution.model_file, resolution=resolution)
     except Exception as exc:  # noqa: BLE001 — any load failure => degrade, never crash grounding
         logger.warning("SigLIP-2 ONNX load failed (%s: %s) — string fallback", type(exc).__name__, exc)
         return None
@@ -87,13 +147,30 @@ def load_onnx_embedder(weights_dir: Path) -> Any | None:
 class _OnnxSigLIP2Embedder:
     """onnxruntime-backed SigLIP-2 text+image encoder (L2-normalized output)."""
 
-    def __init__(self, weights_dir: Path, text_onnx: Path) -> None:
+    #: Class-level defaults, mirroring the detector: they document the defaults in
+    #: one place and keep ``object.__new__`` shells (used by preprocessing tests)
+    #: working without a session.
+    provider: str = PROVIDER_CPU_INT8
+    resolution: ProviderResolution | None = None
+    vision_resolution: ProviderResolution | None = None
+
+    def __init__(
+        self,
+        weights_dir: Path,
+        text_onnx: Path,
+        *,
+        resolution: ProviderResolution | None = None,
+    ) -> None:
         import numpy as np
         import onnxruntime as ort
         from tokenizers import Tokenizer
 
         self._np = np
         self._weights_dir = weights_dir
+        if resolution is None:
+            resolution = resolve_text_provider(weights_dir)
+        self.resolution = resolution
+        self.provider = resolution.selected or PROVIDER_CPU_INT8
 
         # Tokenizer: the SigLIP GemmaTokenizer straight from tokenizer.json (the
         # rust fast tokenizer). Its baked normalizer does NOT lowercase, but the
@@ -117,7 +194,18 @@ class _OnnxSigLIP2Embedder:
         opts.intra_op_num_threads = int(os.environ.get("PARCEL_SIGLIP2_THREADS", "0") or 0)
         self._ort = ort
         self._session_options = opts
-        self._text_session = ort.InferenceSession(str(text_onnx), sess_options=opts, providers=["CPUExecutionProvider"])
+        providers = list(resolution.execution_providers) or ["CPUExecutionProvider"]
+        prepare_cuda_runtime(resolution)  # must precede the session, see its docstring
+        self._text_session = ort.InferenceSession(
+            str(text_onnx), sess_options=opts, providers=providers
+        )
+        honoured = tuple(self._text_session.get_providers())
+        log_resolution(resolution, model="siglip2-text")
+        logger.info("[siglip2-text] onnxruntime honoured providers=%s", honoured)
+        self.honoured_providers = honoured
+        # Fail closed: a CUDA session ORT silently ran on the CPU is worse than
+        # no session at all, because the caller sizes its budget on the label.
+        assert_provider_honoured(resolution, honoured, model="siglip2-text")
         self._text_input = self._text_session.get_inputs()[0].name
 
         out_dim = self._text_session.get_outputs()[-1].shape[-1]
@@ -174,17 +262,35 @@ class _OnnxSigLIP2Embedder:
     def _ensure_vision(self) -> None:
         if self._vision_session is not None:
             return
-        vision_onnx = _first_present(self._weights_dir, _VISION_ONNX_CANDIDATES)
-        if vision_onnx is None:
-            raise FileNotFoundError(f"no vision_model onnx under {self._weights_dir}")
+        # Vision resolves INDEPENDENTLY of text: they are separate ONNX files and
+        # a weights dir may legitimately hold one precision of each.
+        resolution = resolve_vision_provider(self._weights_dir)
+        if resolution.selected is None:
+            log_resolution(resolution, model="siglip2-vision")
+            raise FileNotFoundError(
+                f"no usable vision_model onnx under {self._weights_dir}: {resolution.reason}"
+            )
+        self.vision_resolution = resolution
+        prepare_cuda_runtime(resolution)
         self._vision_session = self._ort.InferenceSession(
-            str(vision_onnx), sess_options=self._session_options, providers=["CPUExecutionProvider"]
+            str(resolution.model_file),
+            sess_options=self._session_options,
+            providers=list(resolution.execution_providers) or ["CPUExecutionProvider"],
         )
-        self._vision_input = self._vision_session.get_inputs()[0].name
+        honoured = tuple(self._vision_session.get_providers())
+        log_resolution(resolution, model="siglip2-vision")
+        logger.info("[siglip2-vision] onnxruntime honoured providers=%s", honoured)
+        assert_provider_honoured(resolution, honoured, model="siglip2-vision")
+        vision_input = self._vision_session.get_inputs()[0]
+        self._vision_input = vision_input.name
+        self._pixel_dtype = self._np.dtype(_ORT_TO_NUMPY.get(vision_input.type, "float32"))
 
     def embed_image(self, image: Any) -> tuple[float, ...]:
         self._ensure_vision()
         pixels = self._preprocess_image(image)  # (1, 3, H, W) float32
+        want = getattr(self, "_pixel_dtype", None)
+        if want is not None and pixels.dtype != want:
+            pixels = pixels.astype(want)
         out = self._vision_session.run(None, {self._vision_input: pixels})
         vec = self._np.asarray(out[-1])[0].astype(self._np.float32)  # pooler_output
         return self._l2(vec)
@@ -212,22 +318,52 @@ class _OnnxSigLIP2Embedder:
         chw = np.transpose(resized, (2, 0, 1))  # HWC -> CHW
         return chw[None, ...].astype(np.float32)
 
-    def _bilinear_resize(self, arr: Any, out_h: int, out_w: int) -> Any:
+    def _axis_samples(self, in_n: int, out_n: int) -> tuple[Any, Any, Any]:
         np = self._np
+        zs = (np.arange(out_n, dtype=np.float32) + 0.5) * (in_n / out_n) - 0.5
+        zs = np.clip(zs, 0, in_n - 1)
+        z0 = np.floor(zs).astype(np.int64)
+        z1 = np.minimum(z0 + 1, in_n - 1)
+        return zs, z0, z1
+
+    def _bilinear_resize_reference(self, arr: Any, out_h: int, out_w: int) -> Any:
+        """The original resize, kept verbatim as the numeric DEFINITION.
+
+        :meth:`_bilinear_resize` is pinned bit-identical against this in
+        ``tests/test_siglip_real_embeddings.py``; keeping the reference in the
+        tree means the equivalence test cannot drift along with the optimisation
+        it is checking.
+        """
+
         in_h, in_w = arr.shape[0], arr.shape[1]
         if in_h == out_h and in_w == out_w:
             return arr
         # half-pixel-centered sampling (align_corners=False), matching PIL/HF bilinear
-        ys = (np.arange(out_h, dtype=np.float32) + 0.5) * (in_h / out_h) - 0.5
-        xs = (np.arange(out_w, dtype=np.float32) + 0.5) * (in_w / out_w) - 0.5
-        ys = np.clip(ys, 0, in_h - 1)
-        xs = np.clip(xs, 0, in_w - 1)
-        y0 = np.floor(ys).astype(np.int64); y1 = np.minimum(y0 + 1, in_h - 1)
-        x0 = np.floor(xs).astype(np.int64); x1 = np.minimum(x0 + 1, in_w - 1)
+        ys, y0, y1 = self._axis_samples(in_h, out_h)
+        xs, x0, x1 = self._axis_samples(in_w, out_w)
         wy = (ys - y0)[:, None, None]; wx = (xs - x0)[None, :, None]
         top = arr[y0][:, x0] * (1 - wx) + arr[y0][:, x1] * wx
         bot = arr[y1][:, x0] * (1 - wx) + arr[y1][:, x1] * wx
         return top * (1 - wy) + bot * wy
+
+    def _bilinear_resize(self, arr: Any, out_h: int, out_w: int) -> Any:
+        """Bit-identical to :meth:`_bilinear_resize_reference`, with half the gathers.
+
+        The reference expression writes ``arr[y0]`` and ``arr[y1]`` twice each, so
+        numpy materialises four ``out_h x in_w x 3`` row-gathers. Blending
+        horizontally first over all ``in_h`` rows computes the *same* per-element
+        expression with two narrow gathers instead:
+        ``H[y] = arr[y][x0]*(1-wx) + arr[y][x1]*wx``, then ``top, bot = H[y0], H[y1]``.
+        """
+
+        in_h, in_w = arr.shape[0], arr.shape[1]
+        if in_h == out_h and in_w == out_w:
+            return arr
+        ys, y0, y1 = self._axis_samples(in_h, out_h)
+        xs, x0, x1 = self._axis_samples(in_w, out_w)
+        wy = (ys - y0)[:, None, None]; wx = (xs - x0)[None, :, None]
+        horiz = arr[:, x0] * (1 - wx) + arr[:, x1] * wx  # (in_h, out_w, 3)
+        return horiz[y0] * (1 - wy) + horiz[y1] * wy
 
     def _l2(self, vec: Any) -> tuple[float, ...]:
         np = self._np

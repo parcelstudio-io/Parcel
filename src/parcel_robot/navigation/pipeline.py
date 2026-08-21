@@ -859,6 +859,40 @@ class DirectiveNavigator:
                 abs_tol=1e-12,
             ):
                 raise ValueError("all-ray and collision stop distances must match exactly")
+        # Card PG-3: install the calibrated abstention policy the config asks
+        # for. `perception.abstention.enabled` ships FALSE and a disabled policy
+        # is short-circuited before any field is read, so this line cannot move
+        # the shipping path; it exists so the cutover is a config change and not
+        # a new piece of safety logic written under time pressure. Unknown keys
+        # in that block raise — a typo'd safety flag must not read as "default".
+        #
+        # Imported HERE, not at module scope, for two independent reasons:
+        #
+        # 1. `perception_abstention` reads R20's refusal sentence out of
+        #    `navigation.goals`, so a top-level import would close a cycle and
+        #    make `import parcel_robot.perception_abstention` fail on a cold
+        #    interpreter. Found by card PG-3's own seed canary, which is the
+        #    only thing in the tree that imports that module first.
+        # 2. The frozen BARN v8 policy bundle REPLACES this file into a
+        #    `parcel_robot` tree that predates the module
+        #    (`evals/external/barn_v8_policy_bundle.py::V8_REPLACEMENTS`), so a
+        #    hard dependency here breaks the isolated policy sidecar. Same
+        #    reason `navigation/semantic_map.py::_active_chain` guards its own
+        #    import, and the same fail-safe: a tree with no abstention module
+        #    has no abstention, which IS the pre-PG-3 path.
+        try:
+            from parcel_robot.perception_abstention import (
+                AbstentionPolicy,
+                use_abstention_policy,
+            )
+        except ImportError:  # pragma: no cover — frozen BARN bundle path
+            pass
+        else:
+            use_abstention_policy(
+                AbstentionPolicy.from_mapping(
+                    (data.get("perception") or {}).get("abstention")
+                )
+            )
         return cls(
             registry=registry,
             grounder=grounder,

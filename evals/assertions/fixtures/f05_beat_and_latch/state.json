@@ -1,0 +1,23 @@
+{
+ "perception": {
+  "spatial_sensors": [
+   "camera",
+   "lidar"
+  ]
+ },
+ "emergency_stopped": true,
+ "realtime": {
+  "lane": {
+   "session_id": "rt_fixture_now",
+   "tool_beats_requested": 2,
+   "tool_beats_suppressed": 0,
+   "tool_beats_refused": 3,
+   "tool_beats_deferred": 1,
+   "tool_beats_lost": 2,
+   "brokered_tool_calls": [
+    "get_status",
+    "navigate_to"
+   ]
+  }
+ }
+}

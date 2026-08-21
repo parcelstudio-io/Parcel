@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -51,8 +52,19 @@ class SemanticMap(Protocol):
     def query(self, goal: SemanticGoal, observation: NavObservation) -> list[SemanticCandidate]: ...
 
 
+@dataclass(frozen=True)
 class ObservationSemanticMap:
-    """Read validated semantic candidates produced by an on-robot perception adapter."""
+    """Read validated semantic candidates produced by an on-robot perception adapter.
+
+    ``abstention`` is card PG-3's calibrated abstention gate and is **OFF by
+    default** — ``None`` consults the process-default policy, which ships
+    disabled, and a disabled policy is short-circuited before a single field is
+    read, so the shipping path is the pre-PG-3 path by construction rather than
+    by measurement. See :mod:`parcel_robot.perception_abstention` for why a
+    cosine ranking cannot say "I don't know" and what replaces it.
+    """
+
+    abstention: Any = None
 
     def query(self, goal: SemanticGoal, observation: NavObservation) -> list[SemanticCandidate]:
         raw = observation.extras.get("semantic_candidates", [])
@@ -69,7 +81,7 @@ class ObservationSemanticMap:
             ):
                 candidates.append(candidate)
         robot_x, robot_y = observation.position[:2]
-        return sorted(
+        ordered = sorted(
             candidates,
             key=lambda item: (
                 -item.confidence,
@@ -77,6 +89,81 @@ class ObservationSemanticMap:
                 item.candidate_id,
             ),
         )
+        return _abstention_filtered(self.abstention, goal, observation, ordered)
+
+
+def _abstention_filtered(
+    policy: Any,
+    goal: SemanticGoal,
+    observation: NavObservation,
+    candidates: list[SemanticCandidate],
+) -> list[SemanticCandidate]:
+    """PG-3: refuse rather than return a place perception cannot support.
+
+    Fail-CLOSED and empty-handed: a refusal returns ``[]``, which is exactly the
+    UNSEEN the ladder already knows how to answer honestly (R20's ask). The
+    verdict is recorded on ``observation.extras['abstention_verdict']`` so the
+    reason is auditable rather than being inferred from an empty list.
+    """
+
+    try:
+        from parcel_robot.perception_abstention import (
+            active_abstention_policy,
+            assess_place_query,
+            detector_prompts_for,
+            detector_support_from_mapping,
+            place_evidence_from_mapping,
+        )
+    except ImportError:  # pragma: no cover — frozen BARN bundle path
+        return candidates
+    active = policy if policy is not None else active_abstention_policy()
+    if not getattr(active, "enabled", False):
+        return candidates
+    prompts = detector_prompts_for(goal.query)
+    support = detector_support_from_mapping(
+        observation.extras.get("detector_support"), prompts
+    )
+    places = [
+        place_evidence_from_mapping(
+            candidate.metadata,
+            support.term,
+            place_id=candidate.candidate_id,
+            label=candidate.label,
+            x=candidate.x,
+            y=candidate.y,
+            z=candidate.z,
+            similarity=candidate.confidence,
+        )
+        for candidate in candidates
+    ]
+    # The ranking margin's background is the WHOLE map, not the label-matching
+    # subset. Scoring a query against only the candidates that already matched
+    # it would ask "does this stand out from things like itself", which a single
+    # match answers trivially and which is not the question.
+    background: list[float] = []
+    for item in observation.extras.get("semantic_candidates", []) or []:
+        if isinstance(item, Mapping):
+            value = item.get("confidence", item.get("score"))
+        else:
+            value = getattr(item, "confidence", None)
+        try:
+            background.append(float(value))
+        except (TypeError, ValueError):
+            continue
+    verdict = assess_place_query(
+        goal.query,
+        support=support,
+        places=places,
+        policy=active,
+        map_similarities=background or None,
+    )
+    try:
+        observation.extras["abstention_verdict"] = verdict.as_dict()
+    except (AttributeError, TypeError):  # pragma: no cover — read-only extras
+        pass
+    if not verdict.admitted:
+        return []
+    return [c for c in candidates if c.candidate_id == verdict.place_id] or candidates
 
 
 def semantic_candidates_from_observation(
