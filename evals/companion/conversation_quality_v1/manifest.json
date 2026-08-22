@@ -34,15 +34,15 @@
     },
     {
       "path": "prompts/personalities/calm_guardian.yaml",
-      "sha256": "4ac26a70b748b803f44bf0ff07022d9dfe8dcbfd05897327dba403572dfd26cd"
+      "sha256": "c607edbc5f25974c3f50a104bdc6c17e42e3994b325a4076db5d35f78816c23b"
     },
     {
       "path": "prompts/personalities/gentle_companion.yaml",
-      "sha256": "4a428d838573c1581f2e0a87019164c0732672e23ceefd2e1c6ae838ab833c32"
+      "sha256": "4524d3665f076ec400bc2a476f27266f220388f15eac75620956cb1e2b4b255c"
     },
     {
       "path": "prompts/personalities/playful_companion.yaml",
-      "sha256": "c0ff0a64f7c98e7ecff28a0f3281ee8f40cabe4f758185fc60968fe0775c9eae"
+      "sha256": "2cc7cdb47f951922065bf34be486927828641b942f077aa93e1142a5a5a0b994"
     }
   ]
 }

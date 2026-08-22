@@ -76,6 +76,9 @@ recorded frames.
 | **P2-A** owner facts | `task_10/` | `owner_facts` + real distiller + `owner_notes`, `remember_fact` with consent, full-ledger replay; refuses un-quarantined synthetic rows | none |
 | **P2-B** the dog notices you | `task_11/` | identity as a label per row, hosted-lane affect via `_hosted_affect`, whisperer owner-event bands, voice-tier A/B script | none |
 | **P1-E** social zone is a config | `task_12/` | `SafetyEnvelope.person_social_zone_m` from config with a named hard floor; planner inflation from the same number; overlay lands 0.7 m indoor (P0-A blocker, E2-D2's cousin) | none (MOVE-1 standoff arm re-run) |
+| **FZ-1** frozen historical prompts | `task_13/` | historical SI versions render from per-version frozen snapshots, not the live persona files; removes the two `xfail(strict)` markers the owner's 02:10 edit forced | none |
+| **XD-1** 52-second commit tier | `task_14/` | classify P0-E's seven xdist divergences (`load_sensitive` serial phase, per-worker tmp), flip default-suite to `-n auto` | none |
+| **HY-1** no test leaks a sim | `task_15/` | `test_voice_nav_e2e.py` teardown on setup error, session sim-guard, `launch_sim.sh --pidfile`, `tools/list_parcel_procs.py` | none |
 
 Owner actions this wave unlocks: plug in a camera (P1-A/P1-C live rows);
 `tools/enroll_owner_voice.py` (1 min) and the appearance enrollment (10 s);

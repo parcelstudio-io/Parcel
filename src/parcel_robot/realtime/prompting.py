@@ -92,7 +92,13 @@ SI_V2 = "si-companion-v2"
 
 #: Bumped by hand whenever any SI ingredient changes. Registered in
 #: :data:`SI_DIGESTS`; an unregistered version is a refusal, not a default.
-SI_VERSION = SI_V2
+#: 2026-08-22: the owner added a one-line identity prelude ("You are a calm
+#: guardian." etc.) to each personality in ``prompts/personalities``. Everything
+#: else — preamble, guardrails, DI contract — is unchanged from v2. Registered as
+#: v3 per this module's own rule (bump + pin land together); v1/v2 rows stay so
+#: recorded sessions remain attributable to the text that produced them.
+SI_V3 = "si-companion-v3"
+SI_VERSION = SI_V3
 
 #: Bumped by hand whenever the DI *layout* changes. Flag VALUES change every
 #: session and are not a version event; the shape of the note is.
@@ -323,7 +329,7 @@ def si_guardrails(version: str = SI_VERSION) -> str:
 
     if version == SI_V1:
         return GUARDRAILS
-    if version == SI_V2:
+    if version in (SI_V2, SI_V3):  # v3 = v2 wording; only the persona files moved (2026-08-22)
         return _supersede(
             _supersede(
                 GUARDRAILS,
@@ -338,7 +344,7 @@ def si_guardrails(version: str = SI_VERSION) -> str:
     raise PromptPlaneError(
         f"si_version {version!r} has no guardrails text. From v2 on the version "
         f"SELECTS the SI wording, so a new version must register its text here "
-        f"and its digests in SI_DIGESTS; registered: {SI_V1}, {SI_V2}"
+        f"and its digests in SI_DIGESTS; registered: {SI_V1}, {SI_V2}, {SI_V3}"
     )
 
 
@@ -423,6 +429,11 @@ SI_DIGESTS: Mapping[str, Mapping[str, str]] = {
         "calm_guardian": "0268e2086f130bca0a29330454828e6b52883ec92779c0f6dbf782f76bbe6b17",
         "gentle_companion": "da7bcb0d0c7cd142d49e903692cbf94050478eadc69d312feb736128c251ca00",
         "playful_companion": "d0505f07a47ec41cfcffae6d019d5ee62079e8cf9992d1e0745d9f55ab543008",
+    },
+    SI_V3: {
+        "calm_guardian": "010afd82d1c051d033f8c30bb7970c8920d224be589d7903774aa6e04b45a40f",
+        "gentle_companion": "7340c7225c175f8fce704b909a46d038536d496ea3a8d14146c0e3fca9591644",
+        "playful_companion": "92d42939621730ba7cfa0eff215f05c1fe2beb33019112e3c5fe90c1e6bef266",
     },
 }
 
@@ -824,6 +835,7 @@ __all__ = [
     "SI_DIGESTS",
     "SI_V1",
     "SI_V2",
+    "SI_V3",
     "SI_VERSION",
     "SUPERSEDED_ABILITY_RULE",
     "SUPERSEDED_ACK_RULE",

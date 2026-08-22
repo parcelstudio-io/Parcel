@@ -313,6 +313,7 @@ def test_every_fixture_is_tied_to_the_exact_prompt_that_produced_it(fixture: Fix
     assert tuple(fixture.declared_tools) == DECLARED_TOOLS
 
 
+@pytest.mark.xfail(strict=True, reason="FZ-1 (scrum/20260822/task_13): the owner edited prompts/personalities on 2026-08-22; historical SI versions render from the LIVE persona files, so v1/v2 text is no longer reproducible from source until frozen per-version snapshots land. Digests stay registered so recorded sessions remain attributable. strict: flips to a failure the day FZ-1 restores it.")
 def test_the_corpus_capture_version_is_still_rendered_by_this_tree() -> None:
     """A v1 pin is only evidence while v1 is still reproducible from source.
 
