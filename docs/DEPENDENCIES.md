@@ -10,6 +10,20 @@ and (optionally) MetaUrban on this machine.
 > device in this guide. In particular, an artifact being present is not evidence
 > of a live service, a usable audio stream, or a physical robot capability.
 
+> **Release-integrity warning from the current-code audit.** `pyproject.toml`
+> advertises Python `>=3.10`, but CI exercises only 3.12. On Python 3.11.15,
+> `realtime/protocol.py` fails dataclass import at `RetainedEvent.fields`, causing
+> 69 collection errors and leaving 2,634 current test nodes absent relative to the
+> 8,701-node Python 3.14 collection. The voice extra shown below also requires
+> `websockets>=17`, whose interpreter floor conflicts with Python 3.10. Treat the
+> supported-version claim as red until IG-2 defines and proves the matrix; the
+> `.parcel` lock is a 3.14 host snapshot, not cross-Python evidence.
+>
+> A second independent blocker is the ignored `third_party/unitree_mujoco` tree.
+> Required Go2 scene assets are neither tracked nor fetched by CI, so a clean
+> checkout cannot run the aggregate gate. See the
+> [integrity TODO](../scrum/20260822/INTEGRITY_GATES_TODO.md).
+
 ## Host snapshot (checked 2026-08-04)
 
 | Item | Value |
@@ -98,6 +112,11 @@ source .parcel/bin/activate
 | sounddevice | `>=0.5,<1` |
 | msgpack | `>=1.1,<2` |
 | websockets | `>=17,<18` |
+
+This table reports the current metadata, not a working Python-3.10 resolution.
+The corrective design either uses interpreter markers for compatible WebSocket
+branches or narrows the declared extra; every supported branch then needs real
+install/import/loopback tests.
 
 **Native OS note:** the Python `sounddevice` package is installed, but its
 import currently fails because `libportaudio2` is absent. Install the native

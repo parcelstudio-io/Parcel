@@ -7,10 +7,11 @@ open-weight reasoning, and a browser control deck. Engine-neutral backend and
 ROS boundaries keep the same intent layer usable for richer simulators and a
 later physical dog.
 
-Start with the [engineering handbook](docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
-for the executive design, current quality snapshot, robotics foundations,
-tradeoffs, and roadmap. The [documentation index](docs/README.md) routes to
-specialist designs and evidence, while [crucial design decisions](docs/DESIGN_DECISIONS.md)
+Start with the [ten-page engineering executive summary](docs/ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md)
+for the decision, current quality snapshot, hardware-readiness judgment, principal
+tradeoffs, and next gates. Continue into the [engineering handbook](docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
+for the full architecture and robotics textbook. The [documentation index](docs/README.md)
+routes to specialist designs and evidence, while [crucial design decisions](docs/DESIGN_DECISIONS.md)
 records advantages, limitations, and revisit criteria. New learners can use the
 [physics and robotics curricula](edu/INTRO.md) alongside the handbook.
 
@@ -90,13 +91,13 @@ circle around me` are documented in [Audio, latency, and spatial intelligence](d
 Architecture, model choices, audio-device findings, and limitations are in
 [Voice-enabled development stack](docs/DEVELOPMENT_STACK.md).
 
-**2026 redesign:** the full assessment, adjudicated decisions, and the
-seven-layer portable architecture (registry-based vendor HAL, occlusion-true
-raycast LiDAR feeding the grid planner as the production default, real
-STT/TTS/VAD voice transport, live brain safety wiring, second-vendor
-portability proof) are documented for the team in
-[REDESIGN_2026_ASSESSMENT.md](docs/REDESIGN_2026_ASSESSMENT.md) and
-[REDESIGN_2026_ARCHITECTURE.md](docs/REDESIGN_2026_ARCHITECTURE.md).
+**Current architecture:** the decision-oriented version is the
+[engineering executive summary](docs/ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md); the
+canonical as-built/target design, quality and procurement judgment, robotics
+textbook, tradeoffs and gates are in the [engineering handbook](docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md).
+The [2026 redesign assessment](docs/REDESIGN_2026_ASSESSMENT.md) remains dated
+historical rationale; its former seven-layer status page has been retired because
+the code and quality baseline have materially changed.
 The city simulator has a live 2.5D viewer at <http://127.0.0.1:8765/viewer>,
 and the companion-navigation integration eval lives in `evals/companion_nav/`.
 
@@ -211,9 +212,12 @@ python -m pip install -e ".[dev,voice]"
 
 `COLCON_IGNORE` prevents colcon from searching the virtual environment.
 Development normally uses a source checkout/editable install. The curated
-runtime config, prompt, skill, and navigation assets are now package-parity
-gated; third-party MuJoCo meshes remain source-checkout assets. See the dated
-release-integrity records linked from the [documentation index](docs/README.md).
+runtime config, prompt, skill, and navigation assets have an internal parity gate.
+However, the required `third_party/unitree_mujoco` Go2 assets are currently ignored,
+not tracked/fetched, and make a clean-checkout commit gate abort before the test
+suite. Treat release integrity as red until the
+[integrity-gate TODO](scrum/20260822/INTEGRITY_GATES_TODO.md) is closed; local ignored
+meshes are workstation state, not repository reproducibility.
 
 ## Skills catalog, city scene, and Dog API
 
@@ -222,9 +226,10 @@ See [Skills / city / RL implementation](docs/IMPLEMENTATION_SKILLS_CITY_RL.md).
 Hierarchical companion navigation (PlanIR → grid_v1 → safety → ControlManager),
 product eval policy, and the offline BARN/Habitat research boundary are in
 [Companion navigation architecture](docs/COMPANION_NAVIGATION_ARCHITECTURE.md).
-The redesign rationale and seven-layer map are in
-[REDESIGN_2026_ASSESSMENT.md](docs/REDESIGN_2026_ASSESSMENT.md) and
-[REDESIGN_2026_ARCHITECTURE.md](docs/REDESIGN_2026_ARCHITECTURE.md).
+The dated redesign rationale is in
+[REDESIGN_2026_ASSESSMENT.md](docs/REDESIGN_2026_ASSESSMENT.md); current architecture
+and implementation status live in the
+[engineering handbook](docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md).
 Doc index: [docs/README.md](docs/README.md).
 
 The frozen live semantic-planning gate and its append-only run history are in

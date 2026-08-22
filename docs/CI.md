@@ -5,34 +5,36 @@ panel, follow-bench, acoustic loop, planner/conversation packs, metamorphic
 suite). The executable runner and versioned workflow definition below close the
 historical gap where every promotion gate was manual.
 
-**Current audit delta (2026-08-22, baseline `71b39a1` plus the visible worktree):**
-the exact commit tier is **RED**: 1 failed, 7,970 passed, 9 skipped and 42
-deselected. Every dedicated hard stage passed; the default-suite failure is the
-held-out-evidence allowlist rejecting an untracked MOVE-1 status document that
-names the protected scene identifier without a seat. This is a promotion-blocking
-evidence-governance failure, not a runtime failure. Raw Ruff is also not clean:
-12 findings map to the seven grandfathered baseline fingerprints, so the ratchet
-passes with zero new fingerprints.
+**Current integrity notice (2026-08-22, committed baseline `904edd2` plus the
+visible experimental worktree): the aggregate gate is RED and nonfunctional from
+a clean checkout.** `.gitignore` excludes `third_party/`, Git tracks no Unitree
+MuJoCo pack/submodule, and the workflow fetches nothing. A tracked-only archive
+exits in about 0.40 seconds when the first mutation/hard stage compiles a city scene
+whose Go2 XML is absent. The exception escapes before the summary, JSON, later
+independent gates, or pytest. A developer's ignored Unitree checkout does not make
+the repository hermetic.
 
-The direct local slow suite under nightly variables currently reports 11 passed,
-7 skipped, 4 xfailed and 20 setup errors: three clean-wheel cells lack Python
-3.14 venv/`ensurepip`, and 17
-voice-navigation cells are refused because the nightly environment does not
-declare a scratch memory path. With `PARCEL_MEMORY_PATH=:memory:` the voice slice
-reaches behavior and reports 16 passed, 1 xfailed and 1 real failure
-(`semantic_arrival_verification_failed` for the lamppost mission).
-The seven skips are material coverage boundaries: five collected closed-loop
-Follow-Bench cases require the additional `PARCEL_FOLLOW_BENCH_SLOW=1` opt-in,
-and two live-provider cases require explicit live/spend opt-in and a credential.
-The four xfails pin measured capability gaps (half-scale embodiment covariance,
-two region-goal transforms, and pedestrian-stream navigation); they are not
-environmental skips.
+Current collection on CPython 3.14.4 is **8,701 nodes**: 8,620 in the commit
+selection and 81 slow. This is inventory, not a passing gate. On declared-supported
+Python 3.11.15, `realtime/protocol.py` is rejected for a direct
+`MappingProxyType({})` dataclass default: 6,067 nodes collect with 69 errors, leaving
+2,634 current nodes absent relative to 3.14. CI runs only Python 3.12; the voice
+extra's `websockets>=17` also conflicts with the advertised Python 3.10 floor.
 
-The first and only recorded nightly ran on 2026-08-21 —
-`evals/nightly/20260821T102132Z` — and is RED. It was the first time the 42
-deselected tests were executed by a gate. The workflow declares push,
-pull-request, scheduled and manual triggers, but hosted GitHub Actions
-execution/enabling remains unverified until a GitHub run is recorded.
+Direct Ruff evaluation of the current worktree finds 16 fingerprints: seven
+grandfathered baseline rows and nine new rows in untracked evidence scripts. A
+partial serial default-suite run was stopped honestly at roughly 17% after 402 s:
+1,542 passed, three environment-coupled `pyrealsense2` expectation tests failed,
+and 81 were deselected. This is not a suite verdict. `tests/test_ci_gate.py` itself
+reports 45 passed/one warning, but does not cover clean-checkout missing assets or
+per-stage exception containment.
+
+The last recorded nightly remains the red 2026-08-21 row at
+`evals/nightly/20260821T102132Z`. Hosted GitHub Actions execution and required
+branch protection remain unverified. The authoritative corrective plan is
+[`scrum/20260822/INTEGRITY_GATES_TODO.md`](../scrum/20260822/INTEGRITY_GATES_TODO.md);
+the canonical quality interpretation is in the
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md).
 
 The runner does **not** add new evals. It wraps the harnesses that already
 exist and turns the aspirational promotion gates into one exit-coded command.
@@ -44,6 +46,10 @@ exist and turns the aspirational promotion gates into one exit-coded command.
 - Ruff debt baseline: [`scripts/ci_ruff_baseline.json`](../scripts/ci_ruff_baseline.json)
 
 ## Run it locally
+
+These are the intended commands. On a tracked-only checkout they currently exit
+with the missing-Unitree-asset traceback described above. Do not bootstrap an
+unrecorded local clone and report the result as clean evidence; close IG-1 first.
 
 ```bash
 # per-commit gate (offline; deterministic under its declared host capabilities)
@@ -57,8 +63,9 @@ scripts/ci_gate.sh commit
 scripts/ci_gate.sh commit --json      # also emit machine-readable JSON
 ```
 
-Exit code is `0` iff every **hard** gate is green. Report-only (soft) gates are
-printed but never change the exit code.
+The intended contract is exit code `0` iff every **hard** gate is green, with
+report-only gates visible. The current implementation violates the reporting half
+when an evaluator raises: it exits nonzero but omits the remaining results/JSON.
 
 ## Cadence
 
@@ -67,17 +74,20 @@ printed but never change the exit code.
 | `commit` | every push / PR | `commit-gate` job in `ci.yml` |
 | `nightly` | 08:00 UTC daily (cron) + manual dispatch | `nightly-gate` job in `ci.yml` |
 
-`ci.yml` is the canonical, versioned record of what must run and when; the gate
+`ci.yml` is the canonical, versioned record of what is intended to run and when; the gate
 logic lives in `ci_gate.py` so a hosted runner and a laptop invoke the same
 gate logic. The runner has been exercised locally and the current local verdict
 is red; hosted execution remains unverified. Python, resolved dependencies,
 host packages, GL support and credentials can still differ between environments.
 
-## What the commit tier enforces (all hard, all offline)
+## What the commit tier intends to enforce (all hard, all offline)
+
+This roster describes the designed stages. It is not a claim that the present
+aggregate reaches or reports them from a clean checkout.
 
 | Gate | Wraps | Reddens when |
 | --- | --- | --- |
-| `default-suite` | `pytest -m "not slow"` (2026-08-22 worktree audit: 7,970 passed, 1 failed) | any default-gate test fails |
+| `default-suite` | `pytest -m "not slow"` (current selection: 8,620 nodes; no complete current result) | any default-gate test fails |
 | `ruff` | `ruff check` ratcheted vs baseline | a **new** `(file, rule)` violation appears |
 | `release-parity` | generated runtime-asset manifest | a canonical/deployable asset differs or disappears |
 | `assertion-evals` | five frozen EV-1 fixtures reproducing 20 expected findings + seeded harness self-test | findings drift or a deliberately broken evaluator passes |
@@ -200,8 +210,9 @@ rule the mutation panel follows.
 
 The full audit could not answer this from the repo, and the answer turned out to
 matter: the nightly tier existed, the cron declared it, and **no nightly had ever
-produced a recorded run**, so the 42 deselected tests — the entire voice-to-nav
-end-to-end tier — had never been executed by any gate. Card R26
+produced a recorded run**, so the 42 slow nodes present at that historical cutoff
+had never been executed by any gate. The current partition has 81 slow nodes; this
+history must not be read as the current denominator. Card R26
 (`scrum/20260821/task_5/R26_STATUS.md`) stood it up. This section is the map.
 
 | Tier | Command | Selection | Cadence | Evidence it leaves |

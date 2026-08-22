@@ -1,15 +1,11 @@
 # Dynamic city, smooth navigation, and social actions
 
-Implementation snapshot: 2026-08-04, with emotion-palette and navigation
-safety-ordering corrections audited on 2026-08-09. Living-city simulator and
-social-action policy for Parcel. Architecture context:
-[REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) and
-[NAVIGATION_CITY.md](NAVIGATION_CITY.md).
-
-Targeted correction (2026-08-22): the committed final-stop boundary and current
-speed limits were rechecked. A visible, uncommitted pixel-perception/online-map
-wave is called out separately from the metadata-derived default; none of these
-updates is physical robot commissioning.
+**Authority:** dated simulator specialist record, not current implementation
+status. It began on 2026-08-04 and received narrow safety corrections. Its former
+“uncommitted perception/map wave” wording is superseded. See the current
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) and the dated
+[city navigation detail](NAVIGATION_CITY.md). None of the simulator behavior below
+is physical robot commissioning.
 
 Short version:
 

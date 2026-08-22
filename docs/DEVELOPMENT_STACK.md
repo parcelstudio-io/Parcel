@@ -1,10 +1,13 @@
 # Voice-enabled robot dog development stack
 
-This is the implemented **local-cascade development profile** for Parcel. As of
-2026-08-18, `scripts/launch_stack.sh` makes the hosted GPT Realtime lane the
-explicit production conversational path and requires `--legacy` to select the
-profile described here. The local cascade remains the rollback/E2E-test path;
-both paths keep probabilistic AI outside the final motor-safety boundary.
+This is the implemented **local-cascade development profile** for Parcel.
+`scripts/launch_stack.sh` intends the hosted GPT Realtime lane as its normal
+conversational path and requires `--legacy` to select the profile described here.
+However, `configs/realtime.yaml` is intentionally untracked/absent in a clean
+checkout; the hosted lane is disabled until an operator creates that config and
+declares credentials. “Intended launcher path” is not an always-enabled default.
+The local cascade remains the rollback/E2E-test path; both paths keep probabilistic
+AI outside the final motor-safety boundary.
 
 > **2026-08-22 reconciliation.** Piper's binary, voice and metadata, plus the
 > semantic endpointing artifacts, are present on this workstation. The
@@ -51,8 +54,10 @@ browser text  and/or  MicrophoneVoiceLoop (VAD → STT)
         SimulatorBackend (MuJoCo) / Unitree Sport
 ```
 
-See [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) for the
-speech-stack wiring (`build_speech_stack`, VAD, echo-guard barge-in).
+See the current [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
+for authoritative speech/task/motion wiring. The former redesign-architecture
+snapshot is retired; `build_speech_stack`, VAD and echo-guard details here remain a
+focused development reference only.
 
 Every velocity command has a short lease. Manual control has priority over
 voice, owner-follow, and autonomous navigation; the persistent emergency-stop

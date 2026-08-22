@@ -1,14 +1,13 @@
 # Crucial design decisions
 
 This is Parcel's lightweight architecture-decision record. It complements the
-[redesign assessment](REDESIGN_2026_ASSESSMENT.md) and the
-[target architecture](REDESIGN_2026_ARCHITECTURE.md) by stating the choices
+dated [redesign assessment](REDESIGN_2026_ASSESSMENT.md) and the current
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) by stating the choices
 that must remain visible during refactors: why each choice exists, what it buys,
 what it costs, and what evidence would justify changing it.
 
 For the difference between implemented, wired, and operational, and for the
-current evidence-dated quality snapshot, see the living
-[high-level design](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md). The former
+current evidence-dated quality snapshot, see that living handbook. The former
 [implementation-status snapshot](archive/LEGACY_IMPLEMENTATION_STATUS_2026-08-04_TO_09.md)
 is historical rather than the current authority.
 
@@ -163,18 +162,18 @@ real perception; planar LiDAR misses important 3-D hazards; localization,
 calibration, occlusion, identity continuity, and sensor disagreement are not
 solved by the contract alone.
 
-**2026-08-22 worktree evidence:** the committed/default semantic source remains
-the simulator-metadata `oracle`. A visible, uncommitted C-1/C-2/C-3 chain adds a
-config-gated EGL + OWLv2 camera stream, an online semantic map, and
-`oracle`/`learned_map`/`shadow` source selection. It is not an admitted
-replacement: C-1 measured about 562 ms capture-to-publish age against a 300 ms
-TTL, C-2 admitted 0/5 live-corpus queries and exposed a persisted-crop defect,
-and C-3 retained `oracle` as the default while measuring shadow agreement of
-0/18 and no admission flips. Treat the stream as diagnostic and the cutover as
-in-flight until freshness, ranking, persistence, held-out, and mission gates
-close. See the dated [C-1](../scrum/20260821/task_11b/C1_STATUS.md),
+**2026-08-22 current-code evidence:** the committed/default semantic source remains
+the simulator-metadata `oracle`; C-1/C-2/C-3 are now committed. The active P1-B
+worktree installs, feeds and persists the online map when an effective learned/
+shadow navigation profile is selected. That corrects the former “no runtime feed”
+gap, but the robot prototype overlay does not itself select that profile. P1-A adds
+UVC/RealSense/recorded sources and a detector daemon, while the normal runtime
+camera factory still builds MuJoCo/synthetic input. Physical freshness, calibration,
+map precision/duplicates and owner perception remain unproved. Treat learned
+semantics as experimental/shadow until those gates close. See the earlier dated
+[C-1](../scrum/20260821/task_11b/C1_STATUS.md),
 [C-2](../scrum/20260821/task_12b/C2_STATUS.md), and
-[C-3](../scrum/20260821/task_13/C3_STATUS.md) records.
+[C-3](../scrum/20260821/task_13/C3_STATUS.md) records and the current handbook.
 
 **Revisit when:** hardware sensors land. Add uncertainty, timestamps, calibration
 health, and 3-D/elevation observations without exposing simulator-only state.

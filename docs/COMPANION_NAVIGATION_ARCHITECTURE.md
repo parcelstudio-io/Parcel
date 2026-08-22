@@ -1,16 +1,12 @@
 # Companion navigation and instruction-following architecture
 
-Current implementation snapshot (2026-08-04), with the navigation
-safety-ordering correction audited on 2026-08-09, aligned with
-[REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md). This document
-describes the default implemented code path, not a target architecture or a
-claim of physical deployment.
-
-Targeted correction (2026-08-22): the speed envelope and landed final-stop
-boundary below were rechecked against committed code/config. Perception notes
-also distinguish the visible, uncommitted C-1/C-2/C-3 worktree from the
-metadata-oracle default; the challenger is diagnostic/in-flight, not shipped or
-physically commissioned.
+**Authority:** dated specialist design, not current implementation status. The
+algorithmic/navigation detail below began on 2026-08-04 and received a narrow
+2026-08-22 correction; its C-1/C-2/C-3 worktree wording is now superseded because
+that wave is committed and later P1/P2 work exists. Use the current
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) for the
+as-built path, integrity/quality snapshot, SLAM gap, physical composition,
+tradeoffs and roadmap. Nothing below is a physical-deployment claim.
 
 ## Decision
 

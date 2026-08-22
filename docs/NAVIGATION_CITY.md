@@ -1,15 +1,12 @@
 # City navigation: current pipeline, design choices, and backend path
 
-Implementation snapshot: 2026-08-04. Canonical authority context:
-[COMPANION_NAVIGATION_ARCHITECTURE.md](COMPANION_NAVIGATION_ARCHITECTURE.md)
-and [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md). Living-city
-scene details: [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md).
-
-Targeted correction (2026-08-22): speed limits and the landed post-shaper stop
-boundary below were rechecked against committed code/config. The perception
-section also records the visible, uncommitted C-1/C-2/C-3 worktree separately
-from the default oracle path; that work is diagnostic/in-flight, not shipped or
-physically commissioned capability.
+**Authority:** dated city/navigation specialist record, not current implementation
+status. The 2026-08-04 body and narrow 2026-08-22 safety correction predate the
+committed perception wave and current experimental P1/P2 tree. Canonical context is
+the [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md); stable
+specialist background remains in
+[COMPANION_NAVIGATION_ARCHITECTURE.md](COMPANION_NAVIGATION_ARCHITECTURE.md), with
+scene detail in [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md).
 
 ## Reality check
 

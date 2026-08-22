@@ -1,19 +1,22 @@
 # Parcel documentation
 
-Start with the engineering handbook. It is the current executive design,
-implementation/quality audit, robotics textbook, tradeoff record, and roadmap for
-this checkout. This index was reconciled on **2026-08-22** against committed
-baseline `71b39a1` plus the visible in-flight perception/map/patrol worktree.
+Executives should start with the ten-page engineering summary, then use the
+engineering handbook for the canonical architecture and textbook detail. Together
+they provide the current decision brief, implementation/quality audit, robotics
+foundations, tradeoff record, and roadmap for this checkout. This index was
+reconciled on **2026-08-22** against committed
+baseline `904edd2` plus the visible experimental P1-A–P1-E and P2-A/P2-B worktree.
 Specialist pages retain their original audit dates; a dated design or evidence
 record does not become current merely because it is linked here.
 
 | Doc | Authority | Role |
 | --- | --- | --- |
+| [ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md](ROBOT_ENGINEERING_EXECUTIVE_SUMMARY.md) | **Living/current summary** | Approximately ten-page decision brief covering the product verdict, architecture, quality, Unitree readiness, tradeoffs, risks, procurement gate and delivery sequence |
 | [CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) | **Living/current** | Canonical executive architecture, worktree-aware capability and quality snapshot, robotics foundations, tradeoffs, risks and delivery gates |
 | [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md) | **Living decision record** | Crucial choices, advantages, limitations and evidence required to revisit them |
 | [../backlog/](../backlog/) | **Operational queue** | Unverified claims, blocked work and ready repository cards; dated/closed material below its front door is history |
 | [REDESIGN_2026_ASSESSMENT.md](REDESIGN_2026_ASSESSMENT.md) | **Dated rationale** | Why the 2026 redesign happened and what was adjudicated; later implementation facts defer to the handbook |
-| [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) | **Target design record** | Seven-layer portable target architecture; current wiring claims defer to the handbook |
+| [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) | **Retired redirect** | Former seven-layer status/design body removed as stale; path retained for historical links and redirects to current authorities |
 | [archive/LEGACY_IMPLEMENTATION_STATUS_2026-08-04_TO_09.md](archive/LEGACY_IMPLEMENTATION_STATUS_2026-08-04_TO_09.md) | **Archived history** | Retired status matrix begun August 4 and amended through August 9; intentionally removed from the live current-status surface |
 
 ## Learning tracks
@@ -33,13 +36,13 @@ the handbook is the current product authority.
 | Doc | Role |
 | --- | --- |
 | [MOTION.md](MOTION.md) | Closed-loop `ControlManager` and Unitree Sport commissioning |
-| [COMPANION_NAVIGATION_ARCHITECTURE.md](COMPANION_NAVIGATION_ARCHITECTURE.md) | Hierarchical companion navigation / instruction-following; specialist detail beneath the current handbook |
+| [COMPANION_NAVIGATION_ARCHITECTURE.md](COMPANION_NAVIGATION_ARCHITECTURE.md) | Dated hierarchical-navigation specialist detail; current wiring/status defers to the handbook |
 | [NAVIGATION_ALGORITHM_2026.md](NAVIGATION_ALGORITHM_2026.md) | **Current navigation research decision:** detailed algorithms, interfaces, controller/model placement, phases, and promotion gates |
-| [NAVIGATION_CITY.md](NAVIGATION_CITY.md) | City navigation registry, `grid_v1` default, MetaUrban path |
-| [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md) | Living-city MuJoCo scene and social action policy |
+| [NAVIGATION_CITY.md](NAVIGATION_CITY.md) | Dated city-navigation registry/MetaUrban detail; current wiring/status defers to the handbook |
+| [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md) | Dated living-city MuJoCo and social-action specialist record |
 | [EMBODIED_EXPRESSION.md](EMBODIED_EXPRESSION.md) | Simulator pose/gesture palette, reaction arbitration, and physical Unitree commissioning boundary |
-| [DEVELOPMENT_STACK.md](DEVELOPMENT_STACK.md) | Explicit legacy/local voice + simulator profile; hosted Realtime is the production launcher default |
-| [CI.md](CI.md) | **Versioned CI/eval runner definition:** commit/nightly tiers, hard regression gates, local commands, and self-test; hosted GitHub execution is not yet verified |
+| [DEVELOPMENT_STACK.md](DEVELOPMENT_STACK.md) | Simulator/local-development profile; hosted Realtime is implemented but an unconfigured checkout has no active `configs/realtime.yaml` |
+| [CI.md](CI.md) | **Operational reference needing integrity reconciliation:** intended commit/nightly tiers and commands; current clean-checkout abort and hosted status defer to the handbook/integrity TODO |
 | [VOICE_AI_MODELS.md](VOICE_AI_MODELS.md) | STT/TTS/reasoner model choices and trust boundary |
 | [VOICE_PROVIDER_ARCHITECTURE.md](VOICE_PROVIDER_ARCHITECTURE.md) | **Current voice-provider decision:** public benchmark/review evidence, normalized pricing, robot-specific scorecard, shortlist, and replaceable provider contracts |
 | [AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md) | Latency metrics and owner-relative spatial commands |
@@ -53,8 +56,8 @@ the handbook is the current product authority.
 | [YIELD_POLICY.md](YIELD_POLICY.md) | Blocked-by-a-person yield policy: the first per-personality *numeric* temperament knob, its defaults, the truthfulness rules on what a yielding dog may say, and what it may never touch |
 | [DUPLEX_DUAL_STREAM_DESIGN.md](DUPLEX_DUAL_STREAM_DESIGN.md) | Always-streaming dual-head duplex agent: frame contract, filler policy, D0→D2 staging |
 | [INSTRUCTION_NAV_HILLCLIMB.md](INSTRUCTION_NAV_HILLCLIMB.md) | Language-grounded navigation hillclimb: layer plan, model shortlist (VLFM/NaVILA/SigLIP-2), experiment ladder, eval spec |
-| [HARDWARE_PORTABILITY_AUDIT.md](HARDWARE_PORTABILITY_AUDIT.md) | How Go2-coupled the code is (~2% vendor code behind proven seams), the leak list, and the custom-hardware migration bill |
-| [NAV_GENERALIZATION_AUDIT.md](NAV_GENERALIZATION_AUDIT.md) | How hardcoded the navigation stack is: ~43% config-exposed / ~56% baked / ~1% profile-derived, the 12 drift-capable constant families, and the 5-scenario stress test |
+| [HARDWARE_PORTABILITY_AUDIT.md](HARDWARE_PORTABILITY_AUDIT.md) | **Retired redirect:** stale 127-file/~2% body removed; current physical/portability judgment lives in the handbook |
+| [NAV_GENERALIZATION_AUDIT.md](NAV_GENERALIZATION_AUDIT.md) | **Dated audit:** historical hardcoding ratios/stress results; current implementation claims defer to the handbook and strata plan |
 | [STRATA_GENERALIZATION_PLAN.md](STRATA_GENERALIZATION_PLAN.md) | Researched plan to fix the five hardcoded strata (pose seam, classical tracking, relation/vocab registries, authority triple) + the six-instrument robust eval program |
 | [PAUSE_SEMANTICS.md](PAUSE_SEMANTICS.md) | Cross-channel pause, stop, resume, and time-freeze conventions |
 | [RUNTIME_CONCURRENCY_AND_CLOCKS.md](RUNTIME_CONCURRENCY_AND_CLOCKS.md) | Process/thread ownership, queues, cancellation, clock domains, and real-time limitations |
@@ -77,6 +80,8 @@ the handbook is the current product authority.
   note, then confirm against current code/executable evidence and the handbook.
 - The archived legacy matrix is historical evidence only. New operational changes
   update the handbook's quality/capability snapshot, not the archive.
+- Retired redirect pages deliberately contain no old status body. Git history keeps
+  provenance while live readers are routed to the current handbook.
 - A simulator success is not physical hardware evidence.
 - A BARN/Habitat result is an external proxy, not a companion-product score.
 - Paths and commands are relative to the repository root unless stated

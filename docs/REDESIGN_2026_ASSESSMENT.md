@@ -1,7 +1,8 @@
 # Parcel redesign 2026: assessment, rationale, and decisions
 
-**Date:** 2026-08-03 · **Status:** implemented (see companion doc
-[REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md)) · **Method:**
+**Date:** 2026-08-03 · **Status:** dated rationale; implementation/status claims
+are superseded by the current
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) · **Method:**
 8 independent subsystem audits + 2 independent online research passes (12
 research agents across two model families) + 3 adversarial architecture
 proposals, adjudicated, with every load-bearing claim verified against source.
