@@ -49,13 +49,27 @@ import logging
 import math
 import threading
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
 from parcel_robot.authority import DEFAULT_STAND_OFF_ENVELOPE
 
 logger = logging.getLogger(__name__)
+
+#: Card C-1. Detection freshness budget, mirroring
+#: ``contracts.freshness.DEFAULT_DETECTION_TTL_NS`` (300 ms) and
+#: ``perception_contention.DETECTION_TTL_MS``. Imported as a plain constant so
+#: this module stays importable without the contracts package, exactly as the
+#: contention guard does it. A frame published later than this after its own
+#: capture STARTED is expired on arrival — and says so about itself rather than
+#: being silently treated as current.
+DEFAULT_DETECTION_TTL_NS = 300_000_000
+
+#: Hard ceiling on detections retained per frame. The queue is bounded in
+#: frames; without a per-frame cap one pathological frame could still carry an
+#: unbounded row count into the runtime and the evidence log.
+MAX_RETAINED_DETECTIONS = 256
 
 #: Default worker cadence floor. OWLv2 detect itself is ~559 ms, so the effective
 #: rate is detector-bound; this only caps the *minimum* gap between polls so the
@@ -65,6 +79,21 @@ DEFAULT_MIN_POLL_INTERVAL_S = 0.25
 #: Candidate source tag so downstream logging / the arbiter can tell a pixel
 #: proposal apart from the GT-frustum oracle.
 PIXEL_SOURCE = "pixel_detector"
+
+#: The detector query the camera channel may never stop asking. Card P0-D.
+#:
+#: ``CameraStreamConfig.from_section`` already refuses a configured batch that
+#: does not name the whole word "person": a camera that never asks about people
+#: must not claim the person-relevant admission path (PG-1's safety lease), and
+#: ``patrol/mission.py`` requires it. That check guards the CONFIG. It did not
+#: guard :meth:`CameraIngress.set_query`, which *replaced* the batch — so one
+#: navigation directive ("go to the bench") took the lease away at runtime,
+#: measured and reported by card MOVE-1. The pin below is that same rule,
+#: applied where the batch is actually set.
+#:
+#: Matched as a WHOLE WORD, exactly as the config check matches it, so a batch
+#: that already says "a person" is satisfied and "personnel carrier" is not.
+SAFETY_LEASE_QUERY = "person"
 
 #: Arrival / clearance metadata stamped on pixel candidates.
 #:
@@ -188,6 +217,388 @@ def _front_surface_world_xy(
     return (float(world[0]), float(world[1]), front_d)
 
 
+def _bounded_text(value: object, name: str, *, limit: int = 128) -> str:
+    text = str(value)
+    if not text:
+        raise ValueError(f"{name} must be non-empty")
+    if len(text) > limit:
+        raise ValueError(f"{name} exceeds {limit} characters")
+    return text
+
+
+def _finite_float(value: object, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(f"{name} must be numeric")
+    result = float(value)
+    if not math.isfinite(result):
+        raise ValueError(f"{name} must be finite")
+    return result
+
+
+def _nonneg_int(value: object, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError(f"{name} must be an integer")
+    if value < 0:
+        raise ValueError(f"{name} must be non-negative")
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class CameraDetectionRecord:
+    """One localized open-vocab detection, as the runtime stream carries it.
+
+    Card C-1. This is deliberately NOT the navigator's candidate dict: that
+    shape exists to be consumed as *grounding authority*, and C-1 publishes
+    *observations*. Keeping them separate types is what stops a diagnostic
+    stream from being mistaken for a map fact by a later reader.
+    """
+
+    label: str
+    score: float
+    box: tuple[float, float, float, float]
+    world_x: float
+    world_y: float
+    world_z: float
+    range_m: float
+    bearing_rad: float
+    depth_m: float
+    sigma_range_m: float
+    inlier_pixels: int
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "label", _bounded_text(self.label, "label", limit=64))
+        score = _finite_float(self.score, "score")
+        if not 0.0 <= score <= 1.0:
+            raise ValueError("score must be within [0, 1]")
+        object.__setattr__(self, "score", score)
+        box = tuple(_finite_float(v, "box") for v in self.box)
+        if len(box) != 4:
+            raise ValueError("box must be (u0, v0, u1, v1)")
+        object.__setattr__(self, "box", box)
+        for name in (
+            "world_x",
+            "world_y",
+            "world_z",
+            "range_m",
+            "bearing_rad",
+            "depth_m",
+            "sigma_range_m",
+        ):
+            object.__setattr__(self, name, _finite_float(getattr(self, name), name))
+        if self.range_m < 0.0 or self.depth_m < 0.0 or self.sigma_range_m < 0.0:
+            raise ValueError("range/depth/sigma must be non-negative")
+        object.__setattr__(
+            self, "inlier_pixels", _nonneg_int(self.inlier_pixels, "inlier_pixels")
+        )
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "label": self.label,
+            "score": round(self.score, 6),
+            "box": [round(v, 3) for v in self.box],
+            "world_x": round(self.world_x, 4),
+            "world_y": round(self.world_y, 4),
+            "world_z": round(self.world_z, 4),
+            "range_m": round(self.range_m, 4),
+            "bearing_rad": round(self.bearing_rad, 4),
+            "depth_m": round(self.depth_m, 4),
+            "sigma_range_m": round(self.sigma_range_m, 4),
+            "inlier_pixels": self.inlier_pixels,
+        }
+
+    @classmethod
+    def from_mapping(cls, value: Mapping[str, Any]) -> CameraDetectionRecord:
+        if not isinstance(value, Mapping):
+            raise TypeError("detection record must be a mapping")
+        expected = {
+            "label",
+            "score",
+            "box",
+            "world_x",
+            "world_y",
+            "world_z",
+            "range_m",
+            "bearing_rad",
+            "depth_m",
+            "sigma_range_m",
+            "inlier_pixels",
+        }
+        unknown = set(value) - expected
+        if unknown:
+            raise ValueError(f"unknown detection keys: {sorted(unknown)}")
+        missing = expected - set(value)
+        if missing:
+            raise ValueError(f"missing detection keys: {sorted(missing)}")
+        box = value["box"]
+        if not isinstance(box, (list, tuple)) or len(box) != 4:
+            raise ValueError("box must be a 4-sequence")
+        return cls(
+            label=str(value["label"]),
+            score=float(value["score"]),
+            box=(float(box[0]), float(box[1]), float(box[2]), float(box[3])),
+            world_x=float(value["world_x"]),
+            world_y=float(value["world_y"]),
+            world_z=float(value["world_z"]),
+            range_m=float(value["range_m"]),
+            bearing_rad=float(value["bearing_rad"]),
+            depth_m=float(value["depth_m"]),
+            sigma_range_m=float(value["sigma_range_m"]),
+            inlier_pixels=int(value["inlier_pixels"]),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class CameraDetectionFrame:
+    """One completed render→detect→localize cycle, timestamped and camera-posed.
+
+    Card C-1, work item 2. Every field here answers a question an auditor would
+    otherwise have to guess at: WHEN the pixels were captured (not when the
+    answer arrived), WHERE the camera was, WHAT was asked, WHICH provider
+    answered, and HOW MANY detections were dropped on the way. A frame with
+    zero detections is a real observation and is published like any other — an
+    empty frame is evidence of looking and seeing nothing, which is not the
+    same as not looking.
+    """
+
+    frame_id: str
+    sequence: int
+    source_timestamp_ns: int
+    capture_started_monotonic_ns: int
+    capture_completed_monotonic_ns: int
+    published_monotonic_ns: int
+    published_wall_s: float
+    detection_ttl_ns: int
+    width_px: int
+    height_px: int
+    robot_x: float
+    robot_y: float
+    robot_yaw_rad: float
+    queries: tuple[str, ...]
+    detections: tuple[CameraDetectionRecord, ...]
+    raw_detections: int
+    localized_detections: int
+    rejected_detections: int
+    truncated_detections: int
+    render_ms: float
+    detect_ms: float
+    total_ms: float
+    detector_name: str
+    provider_profile: str
+    active_providers: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "frame_id", _bounded_text(self.frame_id, "frame_id"))
+        object.__setattr__(
+            self, "detector_name", _bounded_text(self.detector_name, "detector_name")
+        )
+        object.__setattr__(
+            self,
+            "provider_profile",
+            _bounded_text(self.provider_profile, "provider_profile"),
+        )
+        for name in (
+            "sequence",
+            "source_timestamp_ns",
+            "capture_started_monotonic_ns",
+            "capture_completed_monotonic_ns",
+            "published_monotonic_ns",
+            "detection_ttl_ns",
+            "raw_detections",
+            "localized_detections",
+            "rejected_detections",
+            "truncated_detections",
+        ):
+            object.__setattr__(self, name, _nonneg_int(getattr(self, name), name))
+        for name in ("width_px", "height_px"):
+            value = _nonneg_int(getattr(self, name), name)
+            if value < 1:
+                raise ValueError(f"{name} must be positive")
+            object.__setattr__(self, name, value)
+        for name in (
+            "published_wall_s",
+            "robot_x",
+            "robot_y",
+            "robot_yaw_rad",
+            "render_ms",
+            "detect_ms",
+            "total_ms",
+        ):
+            object.__setattr__(self, name, _finite_float(getattr(self, name), name))
+        if self.render_ms < 0.0 or self.detect_ms < 0.0 or self.total_ms < 0.0:
+            raise ValueError("latencies must be non-negative")
+        if self.capture_completed_monotonic_ns < self.capture_started_monotonic_ns:
+            raise ValueError("capture cannot complete before it starts")
+        if self.published_monotonic_ns < self.capture_completed_monotonic_ns:
+            raise ValueError("a frame cannot publish before its capture completes")
+        queries = tuple(_bounded_text(q, "query", limit=64) for q in self.queries)
+        if not queries:
+            raise ValueError("a frame must record the query batch it answered")
+        if len(queries) > 16:
+            raise ValueError("query batch exceeds 16 phrases")
+        object.__setattr__(self, "queries", queries)
+        detections = tuple(self.detections)
+        for item in detections:
+            if not isinstance(item, CameraDetectionRecord):
+                raise TypeError("detections must be CameraDetectionRecord")
+        if len(detections) > MAX_RETAINED_DETECTIONS:
+            raise ValueError("retained detections exceed the per-frame ceiling")
+        object.__setattr__(self, "detections", detections)
+        if len(detections) + self.truncated_detections != self.localized_detections:
+            raise ValueError(
+                "retained + truncated detections must equal the localized count; "
+                "a frame that loses rows without counting them is not evidence"
+            )
+        if self.localized_detections + self.rejected_detections != self.raw_detections:
+            raise ValueError("localized + rejected must equal the raw detection count")
+        providers = tuple(
+            _bounded_text(p, "active_provider", limit=64) for p in self.active_providers
+        )
+        if len(providers) > 8:
+            raise ValueError("active_providers exceeds 8 entries")
+        object.__setattr__(self, "active_providers", providers)
+
+    # -- freshness, measured against the frame's OWN clocks ------------------
+    @property
+    def publish_latency_ns(self) -> int:
+        """Capture-START to publish. The honest age of the pixels on arrival."""
+
+        return self.published_monotonic_ns - self.capture_started_monotonic_ns
+
+    @property
+    def expired_at_publish(self) -> bool:
+        """True when the pixels were already past TTL the moment they landed.
+
+        Deliberately computed from capture START, not from capture completion
+        or publish time. Measuring age from the moment the ANSWER appeared
+        would make every frame look fresh and would be a causality corruption,
+        not an optimisation.
+        """
+
+        return self.publish_latency_ns > self.detection_ttl_ns
+
+    def age_ns(self, now_monotonic_ns: int) -> int:
+        return int(now_monotonic_ns) - self.capture_started_monotonic_ns
+
+    def is_expired(self, now_monotonic_ns: int) -> bool:
+        return self.age_ns(now_monotonic_ns) > self.detection_ttl_ns
+
+    def class_counts(self) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for record in self.detections:
+            counts[record.label] = counts.get(record.label, 0) + 1
+        return counts
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "frame_id": self.frame_id,
+            "sequence": self.sequence,
+            "source_timestamp_ns": self.source_timestamp_ns,
+            "capture_started_monotonic_ns": self.capture_started_monotonic_ns,
+            "capture_completed_monotonic_ns": self.capture_completed_monotonic_ns,
+            "published_monotonic_ns": self.published_monotonic_ns,
+            "published_wall_s": round(self.published_wall_s, 6),
+            "detection_ttl_ns": self.detection_ttl_ns,
+            "publish_latency_ms": round(self.publish_latency_ns / 1e6, 3),
+            "expired_at_publish": self.expired_at_publish,
+            "width_px": self.width_px,
+            "height_px": self.height_px,
+            "robot_x": round(self.robot_x, 4),
+            "robot_y": round(self.robot_y, 4),
+            "robot_yaw_rad": round(self.robot_yaw_rad, 4),
+            "queries": list(self.queries),
+            "detections": [record.as_dict() for record in self.detections],
+            "raw_detections": self.raw_detections,
+            "localized_detections": self.localized_detections,
+            "rejected_detections": self.rejected_detections,
+            "truncated_detections": self.truncated_detections,
+            "render_ms": round(self.render_ms, 3),
+            "detect_ms": round(self.detect_ms, 3),
+            "total_ms": round(self.total_ms, 3),
+            "detector_name": self.detector_name,
+            "provider_profile": self.provider_profile,
+            "active_providers": list(self.active_providers),
+        }
+
+    @classmethod
+    def from_mapping(cls, value: Mapping[str, Any]) -> CameraDetectionFrame:
+        """Exact-key decode. Derived fields are recomputed, never trusted."""
+
+        if not isinstance(value, Mapping):
+            raise TypeError("frame must be a mapping")
+        derived = {"publish_latency_ms", "expired_at_publish"}
+        required = {
+            "frame_id",
+            "sequence",
+            "source_timestamp_ns",
+            "capture_started_monotonic_ns",
+            "capture_completed_monotonic_ns",
+            "published_monotonic_ns",
+            "published_wall_s",
+            "detection_ttl_ns",
+            "width_px",
+            "height_px",
+            "robot_x",
+            "robot_y",
+            "robot_yaw_rad",
+            "queries",
+            "detections",
+            "raw_detections",
+            "localized_detections",
+            "rejected_detections",
+            "truncated_detections",
+            "render_ms",
+            "detect_ms",
+            "total_ms",
+            "detector_name",
+            "provider_profile",
+            "active_providers",
+        }
+        unknown = set(value) - required - derived
+        if unknown:
+            raise ValueError(f"unknown frame keys: {sorted(unknown)}")
+        missing = required - set(value)
+        if missing:
+            raise ValueError(f"missing frame keys: {sorted(missing)}")
+        detections = value["detections"]
+        if not isinstance(detections, (list, tuple)):
+            raise TypeError("detections must be a sequence")
+        queries = value["queries"]
+        if not isinstance(queries, (list, tuple)):
+            raise TypeError("queries must be a sequence")
+        providers = value["active_providers"]
+        if not isinstance(providers, (list, tuple)):
+            raise TypeError("active_providers must be a sequence")
+        return cls(
+            frame_id=str(value["frame_id"]),
+            sequence=int(value["sequence"]),
+            source_timestamp_ns=int(value["source_timestamp_ns"]),
+            capture_started_monotonic_ns=int(value["capture_started_monotonic_ns"]),
+            capture_completed_monotonic_ns=int(value["capture_completed_monotonic_ns"]),
+            published_monotonic_ns=int(value["published_monotonic_ns"]),
+            published_wall_s=float(value["published_wall_s"]),
+            detection_ttl_ns=int(value["detection_ttl_ns"]),
+            width_px=int(value["width_px"]),
+            height_px=int(value["height_px"]),
+            robot_x=float(value["robot_x"]),
+            robot_y=float(value["robot_y"]),
+            robot_yaw_rad=float(value["robot_yaw_rad"]),
+            queries=tuple(str(q) for q in queries),
+            detections=tuple(
+                CameraDetectionRecord.from_mapping(item) for item in detections
+            ),
+            raw_detections=int(value["raw_detections"]),
+            localized_detections=int(value["localized_detections"]),
+            rejected_detections=int(value["rejected_detections"]),
+            truncated_detections=int(value["truncated_detections"]),
+            render_ms=float(value["render_ms"]),
+            detect_ms=float(value["detect_ms"]),
+            total_ms=float(value["total_ms"]),
+            detector_name=str(value["detector_name"]),
+            provider_profile=str(value["provider_profile"]),
+            active_providers=tuple(str(p) for p in providers),
+        )
+
+
 @dataclass
 class IngressStats:
     """Cheap health/telemetry for /api/ or a gate report (never blocks a read)."""
@@ -201,6 +612,15 @@ class IngressStats:
     last_error: str | None = None
     last_query: tuple[str, ...] = ()
     reactive_reads: int = 0
+    #: Card C-1. Frames handed to the runtime's publish seam, and the count of
+    #: consumer callbacks that raised. A publish seam whose failures are
+    #: invisible is a stream with a silent hole in it.
+    frames_published: int = 0
+    frame_callback_errors: int = 0
+    #: Detections dropped by the per-frame retention cap, cumulative.
+    detections_truncated: int = 0
+    #: Cycles whose inference ran while a PG-1 mission lease was held.
+    leased_inferences: int = 0
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -213,6 +633,10 @@ class IngressStats:
             "last_error": self.last_error,
             "last_query": list(self.last_query),
             "reactive_reads": self.reactive_reads,
+            "frames_published": self.frames_published,
+            "frame_callback_errors": self.frame_callback_errors,
+            "detections_truncated": self.detections_truncated,
+            "leased_inferences": self.leased_inferences,
         }
 
 
@@ -248,6 +672,36 @@ class CameraIngress:
     embed_fn: Callable[[Any], Sequence[float]] | None = None
     min_poll_interval_s: float = DEFAULT_MIN_POLL_INTERVAL_S
     backend_factory: Callable[[], Any] | None = None
+    #: Card C-1. The runtime's bounded publish seam. Invoked once per COMPLETED
+    #: cycle — including cycles that found nothing — from the worker thread and
+    #: deliberately OUTSIDE ``_lock``: the consumer takes the runtime's own
+    #: lock, and holding an ingress lock across a foreign lock is the lock-order
+    #: edge R24's roster exists to prevent. A raising callback is counted and
+    #: swallowed; a consumer bug must never kill the camera worker.
+    on_frame: Callable[[CameraDetectionFrame], None] | None = None
+    #: Card C-1, work item 3. PG-1's admission mechanism. While a cycle's
+    #: inference runs, a mission lease is held, so ``try_admit_generation``
+    #: refuses a competing generation. The detector never asks permission — it
+    #: declares the window and runs. That asymmetry IS the priority pin.
+    contention_guard: Any = None
+    #: Card C-1. When set, the worker PULLS one fresh pose per cycle instead of
+    #: the control loop PUSHING into this object. That inversion is the point:
+    #: the 10 Hz safety path then never calls a producer method at all, so no
+    #: amount of producer-side slowness can be in front of it. Returning
+    #: ``None`` (no new pose, or a stale one) skips the capture rather than
+    #: re-rendering a pose the robot has already left.
+    pose_source: Callable[[], tuple[float, float, float] | None] | None = None
+    #: Per-frame retention cap. Overflow is TRUNCATED and COUNTED, never
+    #: silently dropped.
+    max_detections_per_frame: int = 16
+    detection_ttl_ns: int = DEFAULT_DETECTION_TTL_NS
+    #: Card P0-D. Phrases every :meth:`set_query` keeps, whatever it is asked
+    #: for — the operator's ``perception.camera_ingress_queries`` batch. A
+    #: navigation directive NARROWS what the detector is looking for; it must
+    #: never be able to narrow away the things the mission needs seen. Empty by
+    #: default, because :data:`SAFETY_LEASE_QUERY` is pinned unconditionally and
+    #: a bare ingress has no operator batch to protect.
+    pinned_queries: tuple[str, ...] = ()
     # runtime state ---------------------------------------------------------
     _query: tuple[str, ...] = field(default=(), init=False)
     _pose: _Pose | None = field(default=None, init=False)
@@ -345,7 +799,19 @@ class CameraIngress:
 
     # -- cheap thread-safe setters (called from the 10 Hz path) -------------
     def set_query(self, query: str | Sequence[str] | None) -> None:
-        """Set the active open-vocab query (the semantic goal noun/phrase)."""
+        """Set the active open-vocab query, UNIONED with the pinned batch.
+
+        Card P0-D. A caller asking for one noun is asking the detector to look
+        for that noun *as well*, not to stop looking for everything else: the
+        batch it would otherwise replace is the one carrying
+        :data:`SAFETY_LEASE_QUERY`, and losing that at runtime is the defect
+        MOVE-1 measured. So the result is :attr:`pinned_queries`, then the
+        request, de-duplicated in that order, with ``person`` guaranteed
+        present.
+
+        ``None`` (and an empty request) still means *no query at all* — see
+        :meth:`clear_query`. The pin protects a narrowing, not the off switch.
+        """
 
         if query is None:
             phrases: tuple[str, ...] = ()
@@ -353,12 +819,36 @@ class CameraIngress:
             phrases = tuple(p for p in (query.strip(),) if p)
         else:
             phrases = tuple(str(q).strip() for q in query if str(q).strip())
+        self._set_query_batch(self._with_pinned(phrases))
+
+    def _with_pinned(self, phrases: tuple[str, ...]) -> tuple[str, ...]:
+        """``pinned_queries`` + ``phrases``, de-duplicated, ``person`` assured."""
+
+        if not phrases:
+            return ()
+        ordered: list[str] = []
+        for phrase in (*self.pinned_queries, *phrases):
+            text = " ".join(str(phrase).split())
+            if text and text not in ordered:
+                ordered.append(text)
+        # Whole-word, matching CameraStreamConfig.from_section's own check, so
+        # the two guards cannot disagree about what counts as asking.
+        if not any(SAFETY_LEASE_QUERY in text.lower().split() for text in ordered):
+            ordered.insert(0, SAFETY_LEASE_QUERY)
+        return tuple(ordered)
+
+    def _set_query_batch(self, phrases: tuple[str, ...]) -> None:
         with self._lock:
             self._query = phrases
             self.stats.last_query = phrases
 
     def clear_query(self) -> None:
-        self.set_query(None)
+        """Stop asking for anything. The one call the safety pin does not apply
+        to: this is an operator switching the eye off, not a directive
+        narrowing it, and a ``person`` that survived here would leave the
+        detector polling forever."""
+
+        self._set_query_batch(())
 
     def set_pose(self, x: float, y: float, yaw: float) -> None:
         """Set the mount pose the next render captures from (robot base pose)."""
@@ -400,7 +890,7 @@ class CameraIngress:
         if not query or pose is None:
             return None
         try:
-            candidates = self._detect_and_localize(query, pose)
+            candidates, frame = self._detect_and_localize(query, pose)
         except Exception as exc:  # noqa: BLE001 - a detect error must not crash the mission
             with self._lock:
                 self.stats.errors += 1
@@ -411,11 +901,33 @@ class CameraIngress:
             self._latest = candidates
             self.stats.polls += 1
             self.stats.candidates_last = len(candidates)
+        # Card C-1. Published OUTSIDE the ingress lock: the runtime's publish
+        # seam takes the runtime's own stream lock, and taking a foreign lock
+        # while holding ours would add exactly the lock-order edge R24's roster
+        # forbids. A consumer that raises is counted, never propagated — the
+        # camera worker outlives a broken consumer.
+        if frame is not None:
+            self._publish_frame(frame)
         return candidates
+
+    def _publish_frame(self, frame: CameraDetectionFrame) -> None:
+        callback = self.on_frame
+        if callback is None:
+            return
+        try:
+            callback(frame)
+        except Exception as exc:  # noqa: BLE001 - a consumer must not kill the worker
+            with self._lock:
+                self.stats.frame_callback_errors += 1
+                self.stats.last_error = f"on_frame {type(exc).__name__}: {exc}"
+            logger.warning("camera ingress frame publish failed: %s", exc)
+            return
+        with self._lock:
+            self.stats.frames_published += 1
 
     def _detect_and_localize(
         self, query: tuple[str, ...], pose: _Pose
-    ) -> list[dict[str, Any]]:
+    ) -> tuple[list[dict[str, Any]], CameraDetectionFrame | None]:
         import numpy as np
 
         from parcel_robot.detection_adapter.pixel_detections import (
@@ -428,6 +940,11 @@ class CameraIngress:
         seq = self._seq
         source_ts = time.time_ns()
         recv_ns = time.monotonic_ns()
+        # Card C-1. The freshness clock starts HERE — before the render, before
+        # inference — because that is when the photons this frame describes were
+        # true. Starting it after inference would make a half-second-old frame
+        # report itself as new.
+        capture_started_ns = recv_ns
 
         backend = self._ensure_backend()
         # Render RGB+depth from the current mount pose (worker's own MjData).
@@ -451,16 +968,38 @@ class CameraIngress:
             mount=self.mount,
         )
 
+        capture_completed_ns = time.monotonic_ns()
+        render_ms = (capture_completed_ns - capture_started_ns) / 1e6
+
         # Detect then localize per-box so the candidate can carry an honest
         # box+depth footprint (``localize_frame`` drops the box after localization).
+        #
+        # Card C-1, work item 3: the inference window is DECLARED to PG-1's
+        # guard, so a generation cannot start underneath a safety-relevant
+        # detection. The guard is optional so offline tests stay deterministic;
+        # when it is absent the detector simply runs, which is the incumbent
+        # behaviour, not a silent downgrade of a guard that was supposed to be
+        # there (the runtime always supplies one when it attaches ingress).
         t_detect = time.perf_counter()
-        detections = self.detector.detect(
-            rgb=rgb, depth=depth, seg=None, query=list(query)
-        )
+        guard = self.contention_guard
+        lease_ctx = getattr(guard, "mission_lease", None) if guard is not None else None
+        if callable(lease_ctx):
+            with lease_ctx("camera-ingress"):
+                detections = self.detector.detect(
+                    rgb=rgb, depth=depth, seg=None, query=list(query)
+                )
+            with self._lock:
+                self.stats.leased_inferences += 1
+        else:
+            detections = self.detector.detect(
+                rgb=rgb, depth=depth, seg=None, query=list(query)
+            )
         detect_ms = (time.perf_counter() - t_detect) * 1000.0
 
         fx = float(getattr(self.intrinsics, "fx", 0.0) or 0.0)
         candidates: list[dict[str, Any]] = []
+        records: list[CameraDetectionRecord] = []
+        raw_count = len(detections)
         localized_count = 0
         for offset, detection in enumerate(detections):
             loc = localize_detection(
@@ -501,12 +1040,82 @@ class CameraIngress:
                     front_depth_m=None if front is None else front[2],
                 )
             )
+            # Card C-1. The typed observation row, retained up to the per-frame
+            # cap. Overflow is counted below, not discarded in silence.
+            if len(records) < max(1, int(self.max_detections_per_frame)):
+                records.append(
+                    CameraDetectionRecord(
+                        label=str(loc.label),
+                        score=min(1.0, max(0.0, float(loc.score))),
+                        box=(
+                            float(detection.box[0]),
+                            float(detection.box[1]),
+                            float(detection.box[2]),
+                            float(detection.box[3]),
+                        ),
+                        world_x=float(loc.world_x),
+                        world_y=float(loc.world_y),
+                        world_z=float(loc.world_z),
+                        range_m=abs(float(loc.message.range_m)),
+                        bearing_rad=float(loc.message.bearing_rad),
+                        depth_m=abs(float(loc.depth_m)),
+                        sigma_range_m=abs(float(loc.sigma_range_m)),
+                        inlier_pixels=max(0, int(loc.inlier_pixels)),
+                    )
+                )
         latency_ms = (time.perf_counter() - t0) * 1000.0
+        truncated = localized_count - len(records)
+        published_ns = time.monotonic_ns()
+        frame = CameraDetectionFrame(
+            frame_id=f"cam-{seq}-{source_ts % (1 << 62)}",
+            sequence=seq,
+            source_timestamp_ns=source_ts % (1 << 62),
+            capture_started_monotonic_ns=capture_started_ns,
+            capture_completed_monotonic_ns=capture_completed_ns,
+            published_monotonic_ns=published_ns,
+            published_wall_s=time.time(),
+            detection_ttl_ns=int(self.detection_ttl_ns),
+            width_px=int(rgb.shape[1]),
+            height_px=int(rgb.shape[0]),
+            robot_x=pose.x,
+            robot_y=pose.y,
+            robot_yaw_rad=pose.yaw,
+            queries=tuple(query),
+            detections=tuple(records),
+            raw_detections=raw_count,
+            localized_detections=localized_count,
+            rejected_detections=raw_count - localized_count,
+            truncated_detections=truncated,
+            render_ms=render_ms,
+            detect_ms=detect_ms,
+            total_ms=latency_ms,
+            detector_name=str(getattr(self.detector, "name", "detector")),
+            # PG-1's resolved (provider, artifact) pair, recorded per frame so a
+            # latency number can never be read without knowing which provider
+            # produced it. ``selected`` is the profile name (``cuda_fp16`` /
+            # ``cpu_int8``); ``execution_providers`` is what ORT actually ran.
+            provider_profile=str(
+                getattr(getattr(self.detector, "resolution", None), "selected", None)
+                or "unknown"
+            ),
+            active_providers=tuple(
+                str(p)
+                for p in (
+                    getattr(
+                        getattr(self.detector, "resolution", None),
+                        "execution_providers",
+                        (),
+                    )
+                    or ()
+                )
+            )[:8],
+        )
         with self._lock:
             self.stats.detections_last = localized_count
             self.stats.last_latency_ms = latency_ms
             self.stats.last_detect_ms = detect_ms
-        return candidates
+            self.stats.detections_truncated += max(0, truncated)
+        return candidates, frame
 
     @staticmethod
     def _candidate_from_localized(
@@ -597,10 +1206,34 @@ class CameraIngress:
         )
         self._thread.start()
 
+    def _refresh_pose_from_source(self) -> bool:
+        """Pull one fresh pose, if a source is wired. True when a capture may run."""
+
+        source = self.pose_source
+        if source is None:
+            with self._lock:
+                return self._pose is not None
+        try:
+            pose = source()
+        except Exception as exc:  # noqa: BLE001 - a pose read must not kill the worker
+            with self._lock:
+                self.stats.errors += 1
+                self.stats.last_error = f"pose_source {type(exc).__name__}: {exc}"
+            return False
+        if pose is None:
+            # No new pose: do NOT reuse the last one. Clear it so a stalled
+            # simulator produces no frames rather than confident stale ones.
+            with self._lock:
+                self._pose = None
+            return False
+        with self._lock:
+            self._pose = _Pose(float(pose[0]), float(pose[1]), float(pose[2]))
+        return True
+
     def _run(self) -> None:
         while not self._stop.is_set():
             started = time.perf_counter()
-            if self.has_query and self._pose is not None:
+            if self.has_query and self._refresh_pose_from_source():
                 self.poll_once()
             # Sleep at least the floor between polls so the worker never busy-spins
             # while idle (no query) and stays off the reactive path when active.
@@ -626,8 +1259,12 @@ class CameraIngress:
 
 
 __all__ = [
+    "DEFAULT_DETECTION_TTL_NS",
     "DEFAULT_MIN_POLL_INTERVAL_S",
+    "MAX_RETAINED_DETECTIONS",
     "PIXEL_SOURCE",
+    "CameraDetectionFrame",
+    "CameraDetectionRecord",
     "CameraIngress",
     "IngressStats",
     "radius_m_from_box_depth",

@@ -20,8 +20,8 @@
       "mode": "0644",
       "origin": "mirror",
       "packaged": "configs/navigation/default.yaml",
-      "sha256": "4787ac08e5772985b3c3e4ec2a596541117ae6da221be2131cac65d04e5a6662",
-      "size": 8538,
+      "sha256": "3618f346b5eb6c5d8f8e73b6c8f90cd0bc2545f3d3e58ae5365556cc694e0378",
+      "size": 10859,
       "source": "configs/navigation/default.yaml"
     },
     {
@@ -604,24 +604,24 @@
       "mode": "0644",
       "origin": "mirror",
       "packaged": "prompts/personalities/calm_guardian.yaml",
-      "sha256": "4ac26a70b748b803f44bf0ff07022d9dfe8dcbfd05897327dba403572dfd26cd",
-      "size": 462,
+      "sha256": "c607edbc5f25974c3f50a104bdc6c17e42e3994b325a4076db5d35f78816c23b",
+      "size": 489,
       "source": "prompts/personalities/calm_guardian.yaml"
     },
     {
       "mode": "0644",
       "origin": "mirror",
       "packaged": "prompts/personalities/gentle_companion.yaml",
-      "sha256": "4a428d838573c1581f2e0a87019164c0732672e23ceefd2e1c6ae838ab833c32",
-      "size": 450,
+      "sha256": "4524d3665f076ec400bc2a476f27266f220388f15eac75620956cb1e2b4b255c",
+      "size": 480,
       "source": "prompts/personalities/gentle_companion.yaml"
     },
     {
       "mode": "0644",
       "origin": "mirror",
       "packaged": "prompts/personalities/playful_companion.yaml",
-      "sha256": "c0ff0a64f7c98e7ecff28a0f3281ee8f40cabe4f758185fc60968fe0775c9eae",
-      "size": 469,
+      "sha256": "2cc7cdb47f951922065bf34be486927828641b942f077aa93e1142a5a5a0b994",
+      "size": 500,
       "source": "prompts/personalities/playful_companion.yaml"
     },
     {
@@ -731,5 +731,5 @@
       "target": "src/parcel_robot/config/robot.yaml"
     }
   ],
-  "tree_digest": "5bf16ff58ddc98c34e27f9cfef4435316b2bf08a9b901ad5f7bfc4188b1468fa"
+  "tree_digest": "2af8a216fafe68968eaec870e936e317badbe652f89bf5b4e07468a4e068676f"
 }

@@ -53,6 +53,7 @@ def _speech_wav(duration_s: float = 2.0) -> bytes:
 # --- BeatLayer scheduling ---------------------------------------------------
 
 
+@pytest.mark.slow  # card P0-E: latency percentile pin is a nightly evidence ratchet
 def test_nods_land_on_accents_within_the_perceptual_budget() -> None:
     """The whole point: apexes within +/-100 ms of the accent, P50 < 30 ms."""
 
@@ -71,6 +72,7 @@ def test_nods_land_on_accents_within_the_perceptual_budget() -> None:
     assert stats["p95_ms"] < 100.0, stats
 
 
+@pytest.mark.slow  # card P0-E: latency percentile pin is a nightly evidence ratchet
 def test_control_rate_cannot_meet_the_apex_budget() -> None:
     """Why expression got its own channel: 10 Hz is too coarse, by design."""
 

@@ -1,0 +1,9516 @@
+{
+  "final_collision_flag": false,
+  "generated_at": "2026-08-22T03:48:43.115165+00:00",
+  "map_entries": [
+    {
+      "detection_count": 31,
+      "evidence_frames": 31,
+      "hygiene_note": "relief_unverified",
+      "label": "storefront",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 2.2645,
+      "surface_y": -0.0474
+    },
+    {
+      "detection_count": 3,
+      "evidence_frames": 3,
+      "hygiene_note": "relief_unverified",
+      "label": "window",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 0.5372,
+      "surface_y": -0.0002
+    },
+    {
+      "detection_count": 42,
+      "evidence_frames": 42,
+      "hygiene_note": "relief_unverified",
+      "label": "building",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 4.5002,
+      "surface_y": 3.5455
+    },
+    {
+      "detection_count": 21,
+      "evidence_frames": 21,
+      "hygiene_note": "relief_unverified",
+      "label": "window",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 4.6471,
+      "surface_y": 3.6187
+    },
+    {
+      "detection_count": 1,
+      "evidence_frames": 1,
+      "hygiene_note": "relief_unverified",
+      "label": "window",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 2.2503,
+      "surface_y": -0.0474
+    },
+    {
+      "detection_count": 4,
+      "evidence_frames": 4,
+      "hygiene_note": "relief_unverified",
+      "label": "door",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 4.5889,
+      "surface_y": 3.6872
+    },
+    {
+      "detection_count": 9,
+      "evidence_frames": 9,
+      "hygiene_note": "relief_unverified",
+      "label": "lamppost",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 3.6449,
+      "surface_y": -3.2468
+    },
+    {
+      "detection_count": 42,
+      "evidence_frames": 42,
+      "hygiene_note": "relief_unverified",
+      "label": "storefront",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 4.2182,
+      "surface_y": -3.277
+    },
+    {
+      "detection_count": 42,
+      "evidence_frames": 42,
+      "hygiene_note": "relief_unverified",
+      "label": "storefront",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 4.501,
+      "surface_y": 3.552
+    },
+    {
+      "detection_count": 35,
+      "evidence_frames": 35,
+      "hygiene_note": "relief_unverified",
+      "label": "lamppost",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 3.9851,
+      "surface_y": 2.2047
+    },
+    {
+      "detection_count": 42,
+      "evidence_frames": 42,
+      "hygiene_note": "relief_unverified",
+      "label": "building",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 2.2645,
+      "surface_y": -0.0466
+    },
+    {
+      "detection_count": 42,
+      "evidence_frames": 42,
+      "hygiene_note": "relief_unverified",
+      "label": "building",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 4.2182,
+      "surface_y": -3.277
+    },
+    {
+      "detection_count": 3,
+      "evidence_frames": 3,
+      "hygiene_note": "relief_unverified",
+      "label": "window",
+      "provenance": {
+        "detector_name": "camera_ingress",
+        "scene_id": "city_block",
+        "seat": "patrol",
+        "session_id": "move1-20260822T034638Z"
+      },
+      "status": "active",
+      "surface_x": 4.2103,
+      "surface_y": -3.2629
+    }
+  ],
+  "map_sweep_vocabulary": [
+    "building",
+    "storefront",
+    "door",
+    "window",
+    "lamppost",
+    "bench",
+    "tree",
+    "planter",
+    "bollard",
+    "traffic sign",
+    "bicycle rack",
+    "trash can"
+  ],
+  "owner_store": {
+    "sha256_after": null,
+    "sha256_before": null,
+    "unchanged": true
+  },
+  "query_vocabulary": [
+    "person",
+    "building",
+    "storefront",
+    "door",
+    "window",
+    "lamppost",
+    "bench",
+    "tree"
+  ],
+  "repo_head": "71b39a1ad66bb2fb2f6e647dbc94d351fd75d665",
+  "report": {
+    "budget_s": 120.0,
+    "collision_ticks": 56,
+    "elapsed_s": 120.0106,
+    "map_entries_final": 13,
+    "map_growth": [
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 0.0
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 0.2579
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 0.5207
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 1.2385
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 1.4901
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 1.7429
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 1.9955
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 2.2471
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 2.5006
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 2.7552
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 3.0136
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 3.2688
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 3.5214
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 3.7734
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 4.0264
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 4.2863
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 4.5444
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 4.7984
+      },
+      {
+        "detections_seen": 0,
+        "entries": 0,
+        "frames_seen": 0,
+        "labels": [],
+        "t_s": 5.0505
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 5.3024
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 5.5546
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 5.8057
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 6.0567
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 6.3089
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 6.5627
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 6.8152
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 7.0678
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 7.32
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 7.5723
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 7.8243
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 8.0772
+      },
+      {
+        "detections_seen": 8,
+        "entries": 8,
+        "frames_seen": 1,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 8.3294
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 8.5809
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 8.8331
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 9.0842
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 9.3351
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 9.587
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 9.8399
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 10.0932
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 10.3479
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 10.6013
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 10.8582
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 11.1106
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 11.3631
+      },
+      {
+        "detections_seen": 16,
+        "entries": 8,
+        "frames_seen": 2,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 11.6157
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 11.8677
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 12.1191
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 12.3709
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 12.6229
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 12.8758
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 13.1302
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 13.3832
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 13.6435
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 13.9012
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 14.1584
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 14.4134
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 14.6693
+      },
+      {
+        "detections_seen": 24,
+        "entries": 8,
+        "frames_seen": 3,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 14.9222
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 15.1734
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 15.4248
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 15.6764
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 15.9286
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 16.1822
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 16.436
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 16.6955
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 16.9506
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 17.2117
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 17.4664
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 17.7219
+      },
+      {
+        "detections_seen": 32,
+        "entries": 9,
+        "frames_seen": 4,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 18.0027
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 18.2557
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 18.5078
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 18.7593
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 19.0109
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 19.2635
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 19.5152
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 19.7671
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 20.0191
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 20.274
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 20.5299
+      },
+      {
+        "detections_seen": 39,
+        "entries": 9,
+        "frames_seen": 5,
+        "labels": [
+          "building",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 20.7831
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 21.0353
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 21.2881
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 21.5392
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 21.7932
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 22.064
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 22.3465
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 22.6015
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 22.8589
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 23.1307
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 23.3875
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 23.6585
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 23.9109
+      },
+      {
+        "detections_seen": 47,
+        "entries": 10,
+        "frames_seen": 6,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 24.1639
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 24.4149
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 24.6669
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 24.9183
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 25.1705
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 25.423
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 25.6767
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 25.9365
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 26.1884
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 26.4437
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 26.703
+      },
+      {
+        "detections_seen": 54,
+        "entries": 10,
+        "frames_seen": 7,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 26.9545
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 27.2066
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 27.4582
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 27.7095
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 27.9615
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 28.2157
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 28.4889
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 28.7442
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 28.9986
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 29.2535
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 29.5293
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 29.7825
+      },
+      {
+        "detections_seen": 62,
+        "entries": 10,
+        "frames_seen": 8,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 30.0363
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 30.2875
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 30.5395
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 30.7907
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 31.0421
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 31.2948
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 31.5489
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 31.8007
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 32.0531
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 32.305
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 32.5571
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 32.8102
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 33.0627
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 33.3149
+      },
+      {
+        "detections_seen": 70,
+        "entries": 10,
+        "frames_seen": 9,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 33.567
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 33.8185
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 34.0714
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 34.3231
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 34.5752
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 34.8276
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 35.0826
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 35.3404
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 35.5935
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 35.8464
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 36.1049
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 36.3583
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 36.6176
+      },
+      {
+        "detections_seen": 78,
+        "entries": 12,
+        "frames_seen": 10,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 36.8703
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 37.1219
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 37.3747
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 37.6264
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 37.8791
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 38.1384
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 38.3923
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 38.6517
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 38.9041
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 39.157
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 39.4098
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 39.6625
+      },
+      {
+        "detections_seen": 86,
+        "entries": 12,
+        "frames_seen": 11,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 39.9151
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 40.1671
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 40.4199
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 40.6717
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 40.9239
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 41.1764
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 41.4298
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 41.6879
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 41.9463
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 42.2002
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 42.4543
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 42.7076
+      },
+      {
+        "detections_seen": 94,
+        "entries": 12,
+        "frames_seen": 12,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 42.9599
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 43.2115
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 43.4637
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 43.7154
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 43.9675
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 44.2218
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 44.477
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 44.7296
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 44.9817
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 45.234
+      },
+      {
+        "detections_seen": 102,
+        "entries": 12,
+        "frames_seen": 13,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 45.4861
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 45.7377
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 45.9902
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 46.2419
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 46.4955
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 46.7487
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 47.0011
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 47.2534
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 47.5059
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 47.7581
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 48.0135
+      },
+      {
+        "detections_seen": 109,
+        "entries": 12,
+        "frames_seen": 14,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 48.2655
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 48.517
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 48.769
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 49.0207
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 49.2747
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 49.5345
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 49.7869
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 50.0523
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 50.3218
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 50.6167
+      },
+      {
+        "detections_seen": 117,
+        "entries": 13,
+        "frames_seen": 15,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 50.8695
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 51.1222
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 51.3764
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 51.6325
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 51.8979
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 52.1626
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 52.4151
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 52.6681
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 52.9363
+      },
+      {
+        "detections_seen": 125,
+        "entries": 13,
+        "frames_seen": 16,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 53.2079
+      },
+      {
+        "detections_seen": 133,
+        "entries": 13,
+        "frames_seen": 17,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 53.4614
+      },
+      {
+        "detections_seen": 133,
+        "entries": 13,
+        "frames_seen": 17,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 53.7158
+      },
+      {
+        "detections_seen": 133,
+        "entries": 13,
+        "frames_seen": 17,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 53.9687
+      },
+      {
+        "detections_seen": 133,
+        "entries": 13,
+        "frames_seen": 17,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 54.221
+      },
+      {
+        "detections_seen": 133,
+        "entries": 13,
+        "frames_seen": 17,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 54.4737
+      },
+      {
+        "detections_seen": 133,
+        "entries": 13,
+        "frames_seen": 17,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 54.7258
+      },
+      {
+        "detections_seen": 133,
+        "entries": 13,
+        "frames_seen": 17,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 54.9805
+      },
+      {
+        "detections_seen": 133,
+        "entries": 13,
+        "frames_seen": 17,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 55.2349
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 55.4869
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 55.7396
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 55.991
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 56.2449
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 56.497
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 56.7488
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 57.0005
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 57.2525
+      },
+      {
+        "detections_seen": 141,
+        "entries": 13,
+        "frames_seen": 18,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 57.5043
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 57.7561
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 58.0079
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 58.2616
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 58.514
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 58.7677
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 59.022
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 59.2751
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 59.5275
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 59.7834
+      },
+      {
+        "detections_seen": 149,
+        "entries": 13,
+        "frames_seen": 19,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 60.038
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 60.2895
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 60.5421
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 60.7935
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 61.0508
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 61.303
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 61.556
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 61.8094
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 62.0615
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 62.3147
+      },
+      {
+        "detections_seen": 157,
+        "entries": 13,
+        "frames_seen": 20,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 62.5671
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 62.8185
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 63.0709
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 63.3236
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 63.5775
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 63.8306
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 64.0843
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 64.3368
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 64.5888
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 64.8411
+      },
+      {
+        "detections_seen": 165,
+        "entries": 13,
+        "frames_seen": 21,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 65.0934
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 65.3453
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 65.5982
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 65.8502
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 66.1024
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 66.3547
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 66.6106
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 66.864
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 67.119
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 67.3719
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 67.624
+      },
+      {
+        "detections_seen": 173,
+        "entries": 13,
+        "frames_seen": 22,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 67.8764
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 68.1283
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 68.3809
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 68.6328
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 68.8848
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 69.1373
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 69.3903
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 69.6423
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 69.8948
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 70.1472
+      },
+      {
+        "detections_seen": 181,
+        "entries": 13,
+        "frames_seen": 23,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 70.3995
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 70.6516
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 70.9039
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 71.1556
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 71.4078
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 71.66
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 71.9124
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 72.1652
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 72.4242
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 72.6785
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 72.9322
+      },
+      {
+        "detections_seen": 188,
+        "entries": 13,
+        "frames_seen": 24,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 73.1837
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 73.4356
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 73.6884
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 73.9404
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 74.1929
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 74.4476
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 74.7006
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 74.9558
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 75.2076
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 75.4626
+      },
+      {
+        "detections_seen": 196,
+        "entries": 13,
+        "frames_seen": 25,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 75.7148
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 75.9657
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 76.2177
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 76.4686
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 76.7208
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 76.9747
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 77.2261
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 77.4779
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 77.7302
+      },
+      {
+        "detections_seen": 204,
+        "entries": 13,
+        "frames_seen": 26,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 77.982
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 78.2333
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 78.486
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 78.7376
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 78.99
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 79.2417
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 79.4929
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 79.7463
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 79.9985
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 80.2513
+      },
+      {
+        "detections_seen": 212,
+        "entries": 13,
+        "frames_seen": 27,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 80.5042
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 80.7561
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 81.0085
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 81.2602
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 81.5146
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 81.7692
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 82.0229
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 82.275
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 82.5275
+      },
+      {
+        "detections_seen": 220,
+        "entries": 13,
+        "frames_seen": 28,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 82.7796
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 83.031
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 83.2838
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 83.5355
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 83.7875
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 84.0389
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 84.2916
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 84.5473
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 84.8024
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 85.0659
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 85.3192
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 85.5746
+      },
+      {
+        "detections_seen": 228,
+        "entries": 13,
+        "frames_seen": 29,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 85.8306
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 86.0829
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 86.3381
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 86.5947
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 86.8493
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 87.1092
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 87.3632
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 87.6162
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 87.876
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 88.1282
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 88.382
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 88.635
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 88.8869
+      },
+      {
+        "detections_seen": 236,
+        "entries": 13,
+        "frames_seen": 30,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 89.138
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 89.3897
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 89.6425
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 89.8939
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 90.1451
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 90.3981
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 90.651
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 90.9036
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 91.1576
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 91.4097
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 91.6681
+      },
+      {
+        "detections_seen": 244,
+        "entries": 13,
+        "frames_seen": 31,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 91.9206
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 92.1726
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 92.4251
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 92.6765
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 92.9281
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 93.1801
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 93.432
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 93.684
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 93.9365
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 94.1882
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 94.44
+      },
+      {
+        "detections_seen": 252,
+        "entries": 13,
+        "frames_seen": 32,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 94.6929
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 94.9454
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 95.1989
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 95.4512
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 95.7038
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 95.9565
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 96.2108
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 96.4657
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 96.718
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 96.9704
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 97.2238
+      },
+      {
+        "detections_seen": 260,
+        "entries": 13,
+        "frames_seen": 33,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 97.476
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 97.7281
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 97.9811
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 98.2328
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 98.4852
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 98.739
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 98.9927
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 99.246
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 99.5012
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 99.7552
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 100.0071
+      },
+      {
+        "detections_seen": 267,
+        "entries": 13,
+        "frames_seen": 34,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 100.2589
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 100.5111
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 100.7646
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 101.0164
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 101.2701
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 101.5224
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 101.7747
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 102.027
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 102.2791
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 102.5321
+      },
+      {
+        "detections_seen": 275,
+        "entries": 13,
+        "frames_seen": 35,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 102.7849
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 103.0368
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 103.2907
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 103.5429
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 103.7957
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 104.0499
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 104.3025
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 104.5555
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 104.8128
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 105.0653
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 105.3176
+      },
+      {
+        "detections_seen": 283,
+        "entries": 13,
+        "frames_seen": 36,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 105.5694
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 105.8218
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 106.0753
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 106.3281
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 106.5912
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 106.8457
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 107.0988
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 107.3525
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 107.6062
+      },
+      {
+        "detections_seen": 291,
+        "entries": 13,
+        "frames_seen": 37,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 107.8588
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 108.1115
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 108.3652
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 108.6178
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 108.8715
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 109.1237
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 109.3766
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 109.6295
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 109.8819
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 110.1342
+      },
+      {
+        "detections_seen": 299,
+        "entries": 13,
+        "frames_seen": 38,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 110.3872
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 110.6396
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 110.8934
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 111.1458
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 111.4012
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 111.655
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 111.9082
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 112.1661
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 112.4189
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 112.6717
+      },
+      {
+        "detections_seen": 307,
+        "entries": 13,
+        "frames_seen": 39,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 112.9246
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 113.1764
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 113.4312
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 113.6837
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 113.9386
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 114.1944
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 114.4472
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 114.7026
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 114.9553
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 115.2134
+      },
+      {
+        "detections_seen": 315,
+        "entries": 13,
+        "frames_seen": 40,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 115.4655
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 115.7172
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 115.9691
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 116.2205
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 116.475
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 116.7274
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 116.9794
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 117.2356
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 117.4873
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 117.7394
+      },
+      {
+        "detections_seen": 323,
+        "entries": 13,
+        "frames_seen": 41,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 117.9916
+      },
+      {
+        "detections_seen": 331,
+        "entries": 13,
+        "frames_seen": 42,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 118.243
+      },
+      {
+        "detections_seen": 331,
+        "entries": 13,
+        "frames_seen": 42,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 118.4954
+      },
+      {
+        "detections_seen": 331,
+        "entries": 13,
+        "frames_seen": 42,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 118.7469
+      },
+      {
+        "detections_seen": 331,
+        "entries": 13,
+        "frames_seen": 42,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 118.999
+      },
+      {
+        "detections_seen": 331,
+        "entries": 13,
+        "frames_seen": 42,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 119.2513
+      },
+      {
+        "detections_seen": 331,
+        "entries": 13,
+        "frames_seen": 42,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 119.5053
+      },
+      {
+        "detections_seen": 331,
+        "entries": 13,
+        "frames_seen": 42,
+        "labels": [
+          "building",
+          "door",
+          "lamppost",
+          "storefront",
+          "window"
+        ],
+        "t_s": 119.7584
+      }
+    ],
+    "map_labels_final": [
+      "building",
+      "door",
+      "lamppost",
+      "storefront",
+      "window"
+    ],
+    "net_displacement_m": 0.006019,
+    "path": [
+      {
+        "reason": "advance",
+        "t_s": 0.0,
+        "x": 0.0,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "advance",
+        "t_s": 0.2579,
+        "x": 0.001421,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "advance",
+        "t_s": 0.5207,
+        "x": 0.003342,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "advance",
+        "t_s": 1.2385,
+        "x": 0.003903,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 1.4901,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 1.7429,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 1.9955,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 2.2471,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 2.5006,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 2.7552,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 3.0136,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 3.2688,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 3.5214,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 3.7734,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 4.0264,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 4.2863,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 4.5444,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 4.7984,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 5.0505,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 5.3024,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 5.5546,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 5.8057,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 6.0567,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 6.3089,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 6.5627,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 6.8152,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 7.0678,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 7.32,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 7.5723,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 7.8243,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 8.0772,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 8.3294,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 8.5809,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 8.8331,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 9.0842,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 9.3351,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 9.587,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 9.8399,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 10.0932,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 10.3479,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 10.6013,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 10.8582,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 11.1106,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 11.3631,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 11.6157,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 11.8677,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 12.1191,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 12.3709,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 12.6229,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 12.8758,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 13.1302,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 13.3832,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 13.6435,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 13.9012,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 14.1584,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 14.4134,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 14.6693,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 14.9222,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 15.1734,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 15.4248,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 15.6764,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 15.9286,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 16.1822,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 16.436,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 16.6955,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 16.9506,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 17.2117,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 17.4664,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 17.7219,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 18.0027,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 18.2557,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 18.5078,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 18.7593,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 19.0109,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 19.2635,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 19.5152,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 19.7671,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 20.0191,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 20.274,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 20.5299,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 20.7831,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 21.0353,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 21.2881,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 21.5392,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 21.7932,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 22.064,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 22.3465,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 22.6015,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 22.8589,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 23.1307,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 23.3875,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 23.6585,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 23.9109,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 24.1639,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 24.4149,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 24.6669,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 24.9183,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 25.1705,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 25.423,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 25.6767,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 25.9365,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 26.1884,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 26.4437,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 26.703,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 26.9545,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 27.2066,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 27.4582,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 27.7095,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 27.9615,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 28.2157,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 28.4889,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 28.7442,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 28.9986,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 29.2535,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 29.5293,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 29.7825,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 30.0363,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 30.2875,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 30.5395,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 30.7907,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 31.0421,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 31.2948,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 31.5489,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 31.8007,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 32.0531,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 32.305,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 32.5571,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 32.8102,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 33.0627,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 33.3149,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 33.567,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 33.8185,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 34.0714,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 34.3231,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 34.5752,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 34.8276,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 35.0826,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 35.3404,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 35.5935,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 35.8464,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 36.1049,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 36.3583,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 36.6176,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 36.8703,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 37.1219,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 37.3747,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 37.6264,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 37.8791,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 38.1384,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 38.3923,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 38.6517,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 38.9041,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 39.157,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 39.4098,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 39.6625,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 39.9151,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 40.1671,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 40.4199,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 40.6717,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 40.9239,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 41.1764,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 41.4298,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 41.6879,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 41.9463,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 42.2002,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 42.4543,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 42.7076,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 42.9599,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 43.2115,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 43.4637,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 43.7154,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 43.9675,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 44.2218,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 44.477,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 44.7296,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 44.9817,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 45.234,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 45.4861,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 45.7377,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 45.9902,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 46.2419,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 46.4955,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 46.7487,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 47.0011,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 47.2534,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 47.5059,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 47.7581,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 48.0135,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 48.2655,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 48.517,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 48.769,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 49.0207,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 49.2747,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 49.5345,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 49.7869,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 50.0523,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 50.3218,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 50.6167,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 50.8695,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 51.1222,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 51.3764,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 51.6325,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 51.8979,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 52.1626,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 52.4151,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 52.6681,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 52.9363,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 53.2079,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 53.4614,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 53.7158,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 53.9687,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 54.221,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 54.4737,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 54.7258,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_blocked",
+        "t_s": 54.9805,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 55.2349,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 55.4869,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 55.7396,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 55.991,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 56.2449,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 56.497,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 56.7488,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 57.0005,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 57.2525,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 57.5043,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 57.7561,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 58.0079,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 58.2616,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 58.514,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 58.7677,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 59.022,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 59.2751,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 59.5275,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 59.7834,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 60.038,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 60.2895,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 60.5421,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 60.7935,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 61.0508,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 61.303,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 61.556,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 61.8094,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 62.0615,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 62.3147,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 62.5671,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 62.8185,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 63.0709,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 63.3236,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 63.5775,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 63.8306,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 64.0843,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 64.3368,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 64.5888,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 64.8411,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 65.0934,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 65.3453,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 65.5982,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 65.8502,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 66.1024,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 66.3547,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 66.6106,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 66.864,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 67.119,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 67.3719,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 67.624,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 67.8764,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 68.1283,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 68.3809,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 68.6328,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 68.8848,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 69.1373,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 69.3903,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 69.6423,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 69.8948,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 70.1472,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 70.3995,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 70.6516,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 70.9039,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 71.1556,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 71.4078,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 71.66,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 71.9124,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 72.1652,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 72.4242,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 72.6785,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 72.9322,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 73.1837,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 73.4356,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 73.6884,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 73.9404,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 74.1929,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 74.4476,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 74.7006,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 74.9558,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 75.2076,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 75.4626,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 75.7148,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 75.9657,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 76.2177,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 76.4686,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 76.7208,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 76.9747,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 77.2261,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 77.4779,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 77.7302,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 77.982,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 78.2333,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 78.486,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 78.7376,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 78.99,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 79.2417,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 79.4929,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 79.7463,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 79.9985,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 80.2513,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 80.5042,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 80.7561,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 81.0085,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 81.2602,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 81.5146,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 81.7692,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 82.0229,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 82.275,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 82.5275,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 82.7796,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 83.031,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 83.2838,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 83.5355,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 83.7875,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 84.0389,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 84.2916,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 84.5473,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 84.8024,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 85.0659,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 85.3192,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 85.5746,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 85.8306,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 86.0829,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 86.3381,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 86.5947,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 86.8493,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 87.1092,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 87.3632,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 87.6162,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 87.876,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 88.1282,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 88.382,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 88.635,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 88.8869,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 89.138,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 89.3897,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 89.6425,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 89.8939,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 90.1451,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 90.3981,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 90.651,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 90.9036,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 91.1576,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 91.4097,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 91.6681,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 91.9206,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 92.1726,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 92.4251,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 92.6765,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 92.9281,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 93.1801,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 93.432,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 93.684,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 93.9365,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 94.1882,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 94.44,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 94.6929,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 94.9454,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 95.1989,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 95.4512,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 95.7038,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 95.9565,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 96.2108,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 96.4657,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 96.718,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 96.9704,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 97.2238,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 97.476,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 97.7281,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 97.9811,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 98.2328,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 98.4852,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 98.739,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 98.9927,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 99.246,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 99.5012,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 99.7552,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 100.0071,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 100.2589,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 100.5111,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 100.7646,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 101.0164,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 101.2701,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 101.5224,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 101.7747,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 102.027,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 102.2791,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 102.5321,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 102.7849,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 103.0368,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 103.2907,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 103.5429,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 103.7957,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 104.0499,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 104.3025,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 104.5555,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 104.8128,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 105.0653,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 105.3176,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 105.5694,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 105.8218,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 106.0753,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 106.3281,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 106.5912,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 106.8457,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 107.0988,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 107.3525,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 107.6062,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 107.8588,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 108.1115,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 108.3652,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 108.6178,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 108.8715,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 109.1237,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 109.3766,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 109.6295,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 109.8819,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 110.1342,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 110.3872,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 110.6396,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 110.8934,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 111.1458,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 111.4012,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 111.655,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 111.9082,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 112.1661,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_person",
+        "t_s": 112.4189,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 112.6717,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 112.9246,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 113.1764,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 113.4312,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 113.6837,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_contact",
+        "t_s": 113.9386,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 114.1944,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 114.4472,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 114.7026,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 114.9553,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 115.2134,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 115.4655,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 115.7172,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 115.9691,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 116.2205,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 116.475,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 116.7274,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 116.9794,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 117.2356,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 117.4873,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 117.7394,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 117.9916,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 118.243,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 118.4954,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 118.7469,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 118.999,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 119.2513,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 119.5053,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      },
+      {
+        "reason": "turn_hold",
+        "t_s": 119.7584,
+        "x": 0.006019,
+        "y": 0.0,
+        "yaw": 0.0
+      }
+    ],
+    "path_length_m": 0.006019,
+    "path_samples": 471,
+    "reasons": {
+      "advance": 4,
+      "turn_blocked": 1,
+      "turn_contact": 56,
+      "turn_hold": 369,
+      "turn_person": 41
+    },
+    "refused": 0,
+    "scene": "city_block",
+    "stopped_reason": "budget_exhausted",
+    "submitted": 471
+  },
+  "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+  "scene_sha256": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58",
+  "simulator_returncode": -15,
+  "stream_stats": {
+    "detections": 331,
+    "expired": 42,
+    "frames": 42,
+    "observed": 331,
+    "refused": 14
+  }
+}

@@ -222,21 +222,64 @@ def test_the_idle_window_is_a_config_key_with_a_generous_default() -> None:
 
 @pytest.mark.parametrize(
     "value",
-    [0, 0.0, -1, -600.0, "ten minutes", True, None, [600]],
+    [-1, -600.0, "ten minutes", True, None, [600]],
 )
 def test_an_unreadable_idle_window_is_a_refusal_not_a_default(value: object) -> None:
     """Fail-closed, and in the direction that matters.
 
-    Zero is the interesting one. It reads as "off" to a human and there is no
-    honest way to implement that here — a session that never hangs itself up is
-    a bill nobody is watching — so it is refused for exactly the reason a
-    whisperer cap of zero is refused: a silent off switch is worse than a loud
-    number. An operator who really wants it writes 86400 and can be seen doing it.
+    CARD P0-B MOVED ONE VALUE OUT OF THIS LIST. Zero used to be here, refused
+    for the reason a whisperer cap of zero is refused: a silent off switch on a
+    session that bills by the minute is worse than a loud number. The reasoning
+    was right about silence and wrong about zero — a hand-written 0 that
+    /api/state echoes and the shipped example documents is not silent, and the
+    two bounds that keep an unattended session finite (``session_max_s``,
+    ``monthly_budget_usd``) are untouched and still refuse it. See
+    ``test_zero_means_never_and_the_lane_stays_open`` below.
+
+    Everything else is still a refusal: negatives, non-numbers, ``.inf``.
     """
 
     with pytest.raises(RealtimeConfigError) as caught:
         realtime_config_from_mapping({"idle_close_after_s": value})
     assert "idle_close_after_s" in str(caught.value)
+
+
+def test_zero_means_never_and_the_lane_stays_open() -> None:
+    """Card P0-B, deliverable 3 — the prototype's "stay live while I'm around".
+
+    End to end through the real lane rather than through the loader alone,
+    because the interesting failure is arithmetic and not validation: the
+    comparison this replaced is ``idle_for < idle_close_after_s``, and
+    ``idle_for < 0.0`` is false for every duration there is — so a zero that
+    fell through to it would hang the session up on its FIRST idle tick, the
+    exact opposite of what the operator wrote.
+    """
+
+    assert realtime_config_from_mapping({"idle_close_after_s": 0}).idle_close_after_s == 0.0
+    assert realtime_config_from_mapping({"idle_close_after_s": 0}).idle_close_enabled is False
+    assert RealtimeConfig().idle_close_enabled is True, "the default still hangs up"
+
+    rig = _Rig(idle_close_after_s=0.0, ledger=ConversationMemory(":memory:"))
+    rig.open()
+    rig.speak()
+
+    # A whole day of silence, sampled the way the driver samples it.
+    for _ in range(24):
+        rig.clock.advance(3_600.0)
+        assert rig.lane.tick() is None
+
+    assert rig.lane.idle_hang_ups == 0
+    assert rig.lane.active is True
+    assert rig.lane.last_idle_seconds is None
+    assert not [row for row in rig.system_rows() if row.startswith(IDLE_LEDGER_PREFIX)]
+
+    # And the default is unchanged in the same rig, one line apart.
+    ordinary = _Rig(idle_close_after_s=IDLE_S)
+    ordinary.open()
+    ordinary.speak()
+    ordinary.clock.advance(IDLE_S + 1.0)
+    assert ordinary.lane.tick() == REASON_IDLE_HANG_UP
+    assert ordinary.lane.idle_hang_ups == 1
 
 
 def test_the_key_loads_from_a_file_and_a_typo_of_it_still_refuses(tmp_path: Path) -> None:

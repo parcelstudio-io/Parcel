@@ -36,6 +36,15 @@ the contract: a stack that comes up silently on the legacy voice path looks
 identical in the panel and is only discovered one typed sentence later.
 
 Stack options:
+  --prototype        Shorthand for --profile prototype (card P0-A). Deep-merges
+                     configs/robot.prototype.yaml over configs/robot.yaml and
+                     prefers configs/realtime.prototype.yaml for the hosted
+                     lane. Changes nothing when the flag is absent.
+  --profile NAME     Select the config profile configs/robot.NAME.yaml. Exported
+                     as PARCEL_PROFILE, so the panel and the simulator resolve
+                     the same overlay without either learning a new flag.
+  --dry-run          Print the resolved profile, overlay and realtime config,
+                     then exit 0 without starting or contacting anything.
   --fish             Also start/reuse Fish Audio S2 Pro on port 8091
   --whisper          Also start/reuse whisper.cpp ASR on port 8178
   --no-reasoner      Do not start Gemma. The hosted lane remains active unless
@@ -59,7 +68,11 @@ Environment equivalents:
                              real money, and that is the accepted cost of the
                              production path being the one that is tested)
   PARCEL_REALTIME_ENV=<path> (default ~/.config/parcel/realtime.env, mode 600)
-  PARCEL_REALTIME_CONFIG=<path> (the lane's YAML; usually set by realtime.env)
+  PARCEL_REALTIME_CONFIG=<path> (the lane's YAML; usually set by realtime.env.
+                             A selected profile's configs/realtime.<profile>.yaml
+                             wins over this when it exists, and says so.)
+  PARCEL_PROFILE=<name>      (default unset = the shipped configuration; same
+                             effect as --profile <name>)
 
 Services that were already healthy are reused and are not stopped on exit.
 Only processes started by this invocation are cleaned up.
@@ -78,6 +91,35 @@ is_true() {
   esac
 }
 
+# Card P0-A. Which YAML the hosted lane gets, and WHY, as one decision made in
+# one place so the dry-run and the real launch can never disagree about it.
+#
+# A selected profile's file wins over PARCEL_REALTIME_CONFIG deliberately:
+# realtime.env sets that variable on almost every host, so an env-first rule
+# would mean `--prototype` silently launched the production voice lane while
+# the panel showed the prototype robot. Absent, it falls back exactly as before
+# and prints the note the card asks for.
+REALTIME_YAML=""
+REALTIME_YAML_SOURCE=""
+select_realtime_yaml() {
+  local profile_yaml=""
+  [[ -n "$PROFILE" ]] && profile_yaml="$ROOT/configs/realtime.$PROFILE.yaml"
+  if [[ -n "$profile_yaml" && -f "$profile_yaml" ]]; then
+    REALTIME_YAML="$profile_yaml"
+    REALTIME_YAML_SOURCE="profile"
+  elif [[ -n "${PARCEL_REALTIME_CONFIG:-}" ]]; then
+    REALTIME_YAML="$PARCEL_REALTIME_CONFIG"
+    REALTIME_YAML_SOURCE="env"
+  else
+    REALTIME_YAML="$ROOT/configs/realtime.yaml"
+    REALTIME_YAML_SOURCE="default"
+  fi
+  if [[ -n "$profile_yaml" && ! -f "$profile_yaml" ]]; then
+    echo "Note: $profile_yaml is absent, so the hosted lane falls back to $REALTIME_YAML."
+    echo "      For the $PROFILE voice lane: cp $ROOT/configs/realtime.$PROFILE.yaml.example $profile_yaml"
+  fi
+}
+
 ENABLE_REASONER="${PARCEL_ENABLE_REASONER:-1}"
 ENABLE_FISH="${PARCEL_ENABLE_FISH:-0}"
 ENABLE_WHISPER="${PARCEL_ENABLE_WHISPER:-0}"
@@ -91,6 +133,9 @@ REALTIME_ENV="${PARCEL_REALTIME_ENV:-$HOME/.config/parcel/realtime.env}"
 LEGACY_REQUESTED=0
 SIM_ARGS=()
 PANEL_LLM_ARG=0
+# Card P0-A. Empty = the shipped configuration and today's behaviour exactly.
+PROFILE="${PARCEL_PROFILE:-}"
+DRY_RUN=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -101,6 +146,14 @@ while [[ $# -gt 0 ]]; do
     # every note, doc and habit that says `--realtime` keeps working.
     --realtime) ENABLE_REALTIME=1; shift ;;
     --legacy) ENABLE_REALTIME=0; LEGACY_REQUESTED=1; shift ;;
+    --prototype) PROFILE="prototype"; shift ;;
+    --profile)
+      [[ $# -ge 2 && -n "${2:-}" ]] || die "--profile requires a value"
+      PROFILE="$2"
+      shift 2
+      ;;
+    --profile=*) PROFILE="${1#*=}"; shift ;;
+    --dry-run) DRY_RUN=1; shift ;;
     --llm)
       ENABLE_REASONER=1
       PANEL_LLM_ARG=1
@@ -125,6 +178,34 @@ done
 
 [[ -x "$PYTHON" ]] || die "missing Parcel environment: $PYTHON"
 
+# Card P0-A — resolve the profile BEFORE anything starts, and export it so the
+# panel and the simulator (which launch_sim.sh starts as separate processes,
+# neither of which parses this script's flags) read the same overlay. A named
+# profile with no file is a typo at the command line: refuse by name rather
+# than start the shipped configuration and let it look like it worked.
+ROBOT_OVERLAY=""
+if [[ -n "$PROFILE" ]]; then
+  [[ "$PROFILE" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || die \
+    "invalid --profile value: $PROFILE (it names configs/robot.<profile>.yaml, not a path)"
+  ROBOT_OVERLAY="$ROOT/configs/robot.$PROFILE.yaml"
+  [[ -f "$ROBOT_OVERLAY" ]] || die \
+    "--profile $PROFILE selected but $ROBOT_OVERLAY does not exist"
+  export PARCEL_PROFILE="$PROFILE"
+  echo "Config profile: $PROFILE ($ROBOT_OVERLAY deep-merged over configs/robot.yaml)"
+fi
+
+if (( DRY_RUN )); then
+  select_realtime_yaml
+  echo "profile=${PROFILE:--}"
+  echo "robot_config=$ROOT/configs/robot.yaml"
+  echo "robot_overlay=${ROBOT_OVERLAY:--}"
+  echo "realtime_config=$REALTIME_YAML"
+  echo "realtime_config_source=$REALTIME_YAML_SOURCE"
+  echo "realtime_enabled=$ENABLE_REALTIME"
+  echo "dry run: nothing started, no credential read"
+  exit 0
+fi
+
 # The hosted lane: fail LOUDLY and before anything else starts. A stack that
 # comes up with a silently disabled lane is the worst outcome here, because the
 # panel looks identical and the owner discovers it one typed sentence later.
@@ -145,7 +226,7 @@ if is_true "$ENABLE_REALTIME"; then
          printf '%s=sk-...\\n' "$KEY_ENV" > $REALTIME_ENV
        For local e2e testing of the legacy voice path only: scripts/launch_stack.sh --legacy"
   fi
-  REALTIME_YAML="${PARCEL_REALTIME_CONFIG:-$ROOT/configs/realtime.yaml}"
+  select_realtime_yaml
   if [[ ! -f "$REALTIME_YAML" ]]; then
     die "the hosted Realtime lane is the production path and it needs $REALTIME_YAML,
        which is absent (the repo deliberately ships no configs/realtime.yaml).

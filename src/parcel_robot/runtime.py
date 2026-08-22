@@ -9,6 +9,7 @@ import threading
 import time
 from collections import OrderedDict, deque
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar, NoReturn
@@ -58,7 +59,21 @@ from parcel_robot.brain.observations import (
     build_observation_snapshot,
     task_state_from_executive,
 )
+
+# Card P0-B. The SAME reviewed explicit-affect grammar the legacy voice agent
+# uses (``agent._detect_explicit_affect``), imported rather than re-expressed so
+# the two lanes cannot drift onto different regexes for "I'm feeling sad".
+from parcel_robot.brain.router import explicit_affect_from_text
 from parcel_robot.brain.runtime_adapter import PAUSABLE_SKILL_CHANNELS
+
+# Card C-1. Pure-python types only: ``ingress`` defers numpy/mujoco/onnxruntime
+# to call time, so importing it here costs nothing and pulls in no render or
+# inference dependency on the flag-off path.
+from parcel_robot.camera_channel.ingress import (
+    DEFAULT_DETECTION_TTL_NS,
+    MAX_RETAINED_DETECTIONS,
+    CameraDetectionFrame,
+)
 from parcel_robot.config import ConfigStore
 from parcel_robot.context import (
     CallableContextProvider,
@@ -172,6 +187,8 @@ from parcel_robot.navigation.follow import (
     FollowYieldConfig,
 )
 from parcel_robot.navigation.goals import (
+    PLACE_NO_VOCABULARY,
+    PLACE_UNKNOWN,
     PlaceAdmission,
     admit_navigation_place,
     navigation_directive_from_text,
@@ -233,6 +250,7 @@ from parcel_robot.realtime.ingress import (
     KIND_EMERGENCY,
     KIND_FOLLOW,
     KIND_HOLD,
+    KIND_NONE,
     RealtimeTranscriptOutcome,
     matches_spoken_emergency,
 )
@@ -699,10 +717,52 @@ SCENE_HONESTY_NOTE = (
     "colours, faces, text, or how anything looks"
 )
 
+#: Card C-3 (research finding F12 / recon GT-14). Under
+#: ``perception.semantic_source: learned_map`` the note above is **actively
+#: false** — the robot IS looking through a camera, and a note that tells the
+#: hosted model to deny a real capability makes it lie in the safe-sounding
+#: direction. This is what it says instead. "Detected" and "recognised" are
+#: deliberately different words: the detector proposes a label, and the map
+#: records how often that proposal was repeated, which is not the same as
+#: knowing.
+SCENE_HONESTY_NOTE_LEARNED_MAP = (
+    "these came from the robot's own camera and the map it has built from what "
+    "it detected, not from a list of what exists: say what it has actually "
+    "seen, keep the uncertainty that each thing carries, and never describe "
+    "colours, faces or text the detector did not report"
+)
+
 #: The honest answer when perception has produced nothing at all yet. NOT a
 #: blindness claim — the robot is not blind, it has no reading — and the
 #: difference is the whole of F3.
 SCENE_NO_OBSERVATION = "the robot's perception has no reading yet"
+
+#: Card C-3. What the robot may say about how sure it is, keyed on the number of
+#: independent frames the map fused into a place. The bands are the abstention
+#: gate's own ``min_evidence_frames`` and half of it, so "I've only seen it
+#: once" and "the gate would refuse this" mean the same thing rather than two
+#: nearby things.
+SCENE_EVIDENCE_PHRASES: tuple[tuple[int, str], ...] = (
+    (1, "I've only seen it once"),
+    (3, "I've only seen it a couple of times"),
+    (7, "I've seen it a few times"),
+)
+
+
+def scene_evidence_phrase(evidence_frames: int) -> str:
+    """The hedge a place has earned. Empty once it is well observed.
+
+    An empty string is not "no information" — it is "this place does not need a
+    hedge", and the caller renders nothing. A place at one frame gets a sentence
+    that says so, because "I think that's a bench — I've only seen it once" is
+    the honest form of a one-frame detection and "there is a bench" is not.
+    """
+
+    frames = max(0, int(evidence_frames))
+    for threshold, phrase in SCENE_EVIDENCE_PHRASES:
+        if frames <= threshold:
+            return phrase
+    return ""
 
 
 def scene_bearing_words(bearing_rad: float) -> str:
@@ -758,10 +818,49 @@ def _scene_thing(label: str, distance_m: float, bearing_rad: float) -> dict[str,
     }
 
 
+def _learned_map_scene_rows(learned_map: object, robot: object) -> list[dict[str, object]]:
+    """Card C-3 — the map's own places, as scene rows. Never raises.
+
+    A map that cannot answer produces no rows, which ``scene_report`` renders as
+    "no reading yet" — the honest answer, and the one that keeps this function
+    pure with respect to everything except the object it was handed.
+    """
+
+    try:
+        rows = learned_map.around_me(  # type: ignore[attr-defined]
+            float(robot.x),  # type: ignore[attr-defined]
+            float(robot.y),  # type: ignore[attr-defined]
+            float(robot.yaw),  # type: ignore[attr-defined]
+            radius_m=15.0,
+            limit=16,
+        )
+        entries = {
+            str(getattr(entry, "entry_id", "")): entry
+            for entry in learned_map.active_entries()  # type: ignore[attr-defined]
+        }
+    except (AttributeError, TypeError, ValueError):  # pragma: no cover - defensive
+        return []
+    out: list[dict[str, object]] = []
+    for row in rows:
+        entry = entries.get(str(row.get("entry_id", "")))
+        if entry is None:
+            continue
+        out.append(
+            {
+                "label": str(row.get("label") or ""),
+                "x": float(getattr(entry, "surface_x", 0.0)),
+                "y": float(getattr(entry, "surface_y", 0.0)),
+                "evidence_frames": int(row.get("evidence_frames", 0) or 0),
+            }
+        )
+    return out
+
+
 def scene_report(
     observation: SimObservation | None,
     *,
     max_regions: int = SCENE_MAX_REGIONS,
+    learned_map: object | None = None,
 ) -> dict[str, object]:
     """A deterministic fact block about the robot's surroundings.
 
@@ -787,13 +886,18 @@ def scene_report(
             # the SAME KEYS, so a reader that has checked ``observed`` and a
             # reader that has not both get an answer instead of a KeyError.
             "closest": None,
-            "note": SCENE_HONESTY_NOTE,
+            "note": (
+                SCENE_HONESTY_NOTE
+                if learned_map is None
+                else SCENE_HONESTY_NOTE_LEARNED_MAP
+            ),
+            "semantic_source": "oracle" if learned_map is None else "learned_map",
         }
 
     robot = observation.robot
     candidates: list[tuple[float, dict[str, object]]] = []
 
-    def _offer(label: object, x: float, y: float) -> None:
+    def _offer(label: object, x: float, y: float, evidence_frames: int | None = None) -> None:
         clean = " ".join(str(label or "").split())
         if not clean:
             return
@@ -802,16 +906,34 @@ def scene_report(
             return
         distance = math.hypot(dx, dy)
         bearing = math.atan2(dy, dx) - float(robot.yaw)
-        candidates.append((distance, _scene_thing(clean, distance, bearing)))
+        thing = _scene_thing(clean, distance, bearing)
+        if evidence_frames is not None:
+            # Card C-3. The oracle's things carried no evidence because there
+            # was nothing to be uncertain about. A detected thing does, and the
+            # hedge travels with the fact rather than being reconstructed by
+            # whoever renders it.
+            thing["evidence_frames"] = int(evidence_frames)
+            hedge = scene_evidence_phrase(int(evidence_frames))
+            if hedge:
+                thing["uncertainty"] = hedge
+        candidates.append((distance, thing))
 
-    for region in observation.semantic_regions:
-        centre = _polygon_centre(region.polygon)
-        if centre is not None:
-            _offer(region.label, centre[0], centre[1])
-    for item in observation.semantic_objects:
-        position = item.position
-        if len(position) >= 2:
-            _offer(item.label, float(position[0]), float(position[1]))
+    if learned_map is not None:
+        # Card C-3 item 4 — "what do you see" describes what the dog has
+        # actually detected. The oracle's semantic tracks are NOT read here:
+        # mixing them in would let the sidecar answer a question about
+        # perception, which is the substitution this card exists to end.
+        for row in _learned_map_scene_rows(learned_map, robot):
+            _offer(row["label"], row["x"], row["y"], row["evidence_frames"])
+    else:
+        for region in observation.semantic_regions:
+            centre = _polygon_centre(region.polygon)
+            if centre is not None:
+                _offer(region.label, centre[0], centre[1])
+        for item in observation.semantic_objects:
+            position = item.position
+            if len(position) >= 2:
+                _offer(item.label, float(position[0]), float(position[1]))
 
     things: list[dict[str, object]] = []
     seen: set[str] = set()
@@ -852,7 +974,13 @@ def scene_report(
         },
         "clearance_m": None if clearance is None else _scene_distance(clearance),
         "closest": _scene_closest(observation, things, nearest_person),
-        "note": SCENE_HONESTY_NOTE,
+        # Card C-3 / F12. "The robot has no eyes" is true on the oracle path and
+        # FALSE once the map is built from pixels; a note that denies a real
+        # capability instructs the hosted model to lie.
+        "note": (
+            SCENE_HONESTY_NOTE if learned_map is None else SCENE_HONESTY_NOTE_LEARNED_MAP
+        ),
+        "semantic_source": "oracle" if learned_map is None else "learned_map",
     }
     report["summary"] = "; ".join(scene_fact_lines(report)) or SCENE_NO_OBSERVATION
     return report
@@ -1129,6 +1257,140 @@ class _LockedNavigationChannel(NavigationChannel):
             super().resume(intent, now_s=now_s)
 
 
+#: Card C-1. Public config keys under ``perception:``. Anything else starting
+#: with ``camera_ingress`` is REFUSED rather than ignored: a typo'd
+#: ``camera_ingress_rate`` that silently kept the default would be an operator
+#: who believes they set a rate and a robot that did not.
+CAMERA_STREAM_CONFIG_KEYS = frozenset(
+    {
+        "camera_ingress",
+        "camera_ingress_rate_hz",
+        "camera_ingress_queue_capacity",
+        "camera_ingress_max_detections_per_frame",
+        "camera_ingress_queries",
+    }
+)
+
+#: EV-1 row kind for one published detection frame. Typed by ``kind`` inside
+#: the existing ``event`` stream rather than by adding a fifth stream: the
+#: evidence schema's four-stream set is pinned by ``verify_event_log`` and read
+#: by ``evals/assertions``, and C-1 is not the card that gets to re-version a
+#: shared record format. See C1_STATUS.md §"declared deviations avoided".
+EVIDENCE_KIND_CAMERA_FRAME = "camera_detection_frame"
+
+
+@dataclass(frozen=True, slots=True)
+class CameraStreamConfig:
+    """Validated ``perception.camera_ingress*`` block. Absent == OFF.
+
+    Card C-1, work item 1. Fail-closed by construction: every numeric is
+    range-checked at the boundary, booleans are booleans (not 0/1), and the
+    query batch must name ``person`` so the PG-1 lease that person-relevant
+    inference rides is actually present rather than nominally configured.
+    """
+
+    enabled: bool
+    rate_hz: float
+    queue_capacity: int
+    max_detections_per_frame: int
+    queries: tuple[str, ...]
+
+    @classmethod
+    def from_section(cls, section: Mapping[str, Any] | None) -> CameraStreamConfig | None:
+        """Parse the block, or ``None`` when the operator did not ask for it.
+
+        ``None`` and ``enabled=False`` are deliberately different returns from
+        the same refusal to run: ``None`` means the block is absent (the
+        canonical shipped state, which must leave the wire untouched), while an
+        explicit ``camera_ingress: false`` is an operator saying so out loud.
+        Both are OFF; both must produce the identical snapshot.
+        """
+
+        data = dict(section or {})
+        present = {key for key in data if key.startswith("camera_ingress")}
+        unknown = present - CAMERA_STREAM_CONFIG_KEYS
+        if unknown:
+            raise ValueError(
+                f"unknown perception camera-ingress keys: {sorted(unknown)}"
+            )
+        if not present:
+            return None
+        raw_enabled = data.get("camera_ingress", False)
+        if not isinstance(raw_enabled, bool):
+            raise TypeError("perception.camera_ingress must be a boolean")
+        rate = cls._finite(data.get("camera_ingress_rate_hz", 2.0), "camera_ingress_rate_hz")
+        if not 0.0 < rate <= 10.0:
+            raise ValueError(
+                "perception.camera_ingress_rate_hz must be within (0, 10]; this is "
+                "semantic perception, not the control loop"
+            )
+        capacity = cls._integer(
+            data.get("camera_ingress_queue_capacity", 32),
+            "camera_ingress_queue_capacity",
+            low=1,
+            high=4096,
+        )
+        max_detections = cls._integer(
+            data.get("camera_ingress_max_detections_per_frame", 16),
+            "camera_ingress_max_detections_per_frame",
+            low=1,
+            high=MAX_RETAINED_DETECTIONS,
+        )
+        raw_queries = data.get("camera_ingress_queries", ["person", "lamppost"])
+        if not isinstance(raw_queries, list) or not raw_queries:
+            raise TypeError("perception.camera_ingress_queries must be a non-empty list")
+        queries: list[str] = []
+        for item in raw_queries:
+            if not isinstance(item, str):
+                raise TypeError("perception.camera_ingress_queries entries must be strings")
+            phrase = " ".join(item.split()).lower()
+            if not 1 <= len(phrase) <= 64:
+                raise ValueError("camera-ingress query phrases must be 1..64 characters")
+            if phrase not in queries:
+                queries.append(phrase)
+        if len(queries) > 16:
+            raise ValueError("camera-ingress accepts at most 16 unique query phrases")
+        if not any("person" in phrase.split() for phrase in queries):
+            raise ValueError(
+                "camera-ingress queries must include the whole word 'person' so the "
+                "PG-1 safety lease is actually taken; a camera that never asks about "
+                "people must not claim the person-relevant admission path"
+            )
+        return cls(
+            enabled=bool(raw_enabled),
+            rate_hz=rate,
+            queue_capacity=capacity,
+            max_detections_per_frame=max_detections,
+            queries=tuple(queries),
+        )
+
+    @staticmethod
+    def _finite(value: object, name: str) -> float:
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError(f"perception.{name} must be a number")
+        result = float(value)
+        if not math.isfinite(result):
+            raise ValueError(f"perception.{name} must be finite")
+        return result
+
+    @staticmethod
+    def _integer(value: object, name: str, *, low: int, high: int) -> int:
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise TypeError(f"perception.{name} must be an integer")
+        if not low <= value <= high:
+            raise ValueError(f"perception.{name} must be within [{low}, {high}]")
+        return value
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "enabled": self.enabled,
+            "rate_hz": self.rate_hz,
+            "queue_capacity": self.queue_capacity,
+            "max_detections_per_frame": self.max_detections_per_frame,
+            "queries": list(self.queries),
+        }
+
+
 class RobotRuntime:
     """Own command arbitration, behavior loops, telemetry, and agent execution."""
 
@@ -1246,6 +1508,68 @@ class RobotRuntime:
         self._camera_ingress: Any = None
         camera_ingress_cfg = self.store.section("camera_ingress")
         self._camera_ingress_config_enabled = bool(camera_ingress_cfg.get("enabled", False))
+        # Card C-1 — attach the eye. Card P0-A — ONE CAMERA FLAG.
+        #
+        # These were two switches that REFUSED EACH OTHER at startup: the legacy
+        # B4 flag re-points the navigator's `semantic_candidates` at pixels (a
+        # grounding-authority change) while `perception.camera_ingress` starts an
+        # observation stream that proposes nothing, and enabling both raised
+        # rather than resolving, on the reasoning that "which of the two camera
+        # switches is authoritative" should not be answered from a snapshot.
+        #
+        # The prototype answer is that it is one question with one answer:
+        # switching the camera on switches the camera on. `perception.
+        # camera_ingress` is the key; `camera_ingress.enabled` and
+        # PARCEL_CAMERA_INGRESS are ALIASES for the same intent, resolved
+        # together in `_camera_ingress_enabled`. Nothing about the authority
+        # changed — pixels still only ground the map once a B4 ingress is
+        # actually attached — what changed is that the operator no longer has to
+        # pick which spelling of "on" they meant.
+        #
+        # The FLAG-OFF path is untouched by construction: an absent perception
+        # block, an absent legacy key and an unset env still resolve to False at
+        # every site below, and `_camera_stream_enabled` still requires the C-1
+        # block to be present AND true, because the stream reads its rate, queue
+        # and query batch out of that block and has nowhere else to get them.
+        self._camera_stream_config = CameraStreamConfig.from_section(
+            self.store.section("perception")
+        )
+        self._camera_stream_enabled = bool(
+            self._camera_stream_config is not None and self._camera_stream_config.enabled
+        )
+        # The runtime OWNS the stream; the producer only hands frames to it.
+        # Keep-newest with an explicit eviction count: a queue that silently
+        # forgets is indistinguishable from a camera that never saw anything.
+        capacity = (
+            self._camera_stream_config.queue_capacity
+            if self._camera_stream_config is not None
+            else 32
+        )
+        self._camera_stream_lock = threading.Lock()
+        self._camera_frames: deque[CameraDetectionFrame] = deque(maxlen=capacity)
+        self._camera_frames_published = 0
+        self._camera_frames_dropped = 0
+        self._camera_detections_dropped = 0
+        self._camera_detections_total = 0
+        self._camera_stream_errors = 0
+        self._camera_stream_last_error = ""
+        self._camera_stream_started_monotonic: float | None = None
+        self._camera_evidence_offered = 0
+        self._camera_evidence_refused = 0
+        self._camera_attach_note = ""
+        self._camera_scene_path = ""
+        # Single-overwrite pose mailbox, guarded by the SAME lock as the frame
+        # queue. Deliberately one lock and not two: the control loop writes the
+        # slot, the camera worker reads it, and neither ever holds it across
+        # anything slower than three float assignments — so a second lock would
+        # buy no concurrency and would cost R24's roster another ordering
+        # constraint. The control loop never calls a producer method.
+        self._camera_pose_slot: tuple[float, float, float] | None = None
+        self._camera_pose_at_monotonic: float | None = None
+        self._camera_poses_offered = 0
+        self._camera_poses_consumed = 0
+        #: PG-1's admission mechanism, built only when the eye is attached.
+        self.perception_contention: Any = None
         safety_config = self.store.section("safety")
         self.obstacle_stop_m = float(safety_config.get("obstacle_stop_m", 0.65))
         self.obstacle_slow_m = float(safety_config.get("obstacle_slow_m", 1.2))
@@ -2151,7 +2475,16 @@ class RobotRuntime:
                     pose_names=self._realtime_pose_names,
                     on_dispatch=self._realtime_thinking_pose,
                     note=lambda message: self._emit("realtime", message, "info"),
-                )
+                ),
+                # Card P0-B. Two validated keys the loader has already checked:
+                # the proactive-motion allowlist (empty by default, and it can
+                # only ever hold ``play_gesture``/``set_pose``) and the
+                # ``navigate_to`` unknown-place mode (``refuse`` by default,
+                # which is the pre-card behaviour). Passed at construction so
+                # the broker's gates are decided once, from the owner's file,
+                # rather than re-read per call.
+                proactive_motion_tools=self.realtime_config.proactive_motion_tools,
+                unknown_place=self.realtime_config.unknown_place,
             )
             self.realtime_lane = RealtimeLane(
                 config=self.realtime_config,
@@ -3717,6 +4050,16 @@ class RobotRuntime:
         self._stop_event.clear()
         try:
             self.control_manager.start(threaded=not self._synchronous_control_dispatch)
+            # Card C-1. Attached BEFORE the control loop exists, and the
+            # ordering was chosen from a measurement rather than taste: with
+            # the attach after the loop start, compiling the MuJoCo scene and
+            # creating the ONNX session contended with an already-running 10 Hz
+            # loop and produced a single 305 ms ControlLoopWork sample — one
+            # startup tick, but three times the 100 ms deadline. Doing the
+            # expensive construction while no loop is turning removes it.
+            # The worker simply finds an empty pose mailbox until the loop
+            # starts filling it, which costs nothing.
+            self._attach_configured_camera_ingress()
             self._thread = threading.Thread(
                 target=self._control_loop,
                 name="parcel-control-loop",
@@ -3811,6 +4154,19 @@ class RobotRuntime:
                     self.realtime_lane.close()
                 except BaseException as error:  # noqa: BLE001 - teardown must continue
                     auxiliary_error = error
+            # Card C-1. The camera stops BEFORE the evidence log closes, and
+            # the order matters: the worker's last in-flight frame offers an
+            # EV-1 row on its way out, and closing the log first would drop
+            # exactly the final observation an incident review would want.
+            # (This is a reordering of the pre-C-1 teardown, which stopped the
+            # camera after the log — harmless when nothing published, wrong the
+            # moment something did.)
+            if self._camera_ingress is not None:
+                try:
+                    self._camera_ingress.stop()
+                except BaseException as error:  # noqa: BLE001 - render teardown must continue
+                    auxiliary_error = error
+                self._camera_ingress = None
             # Card EV-1. Closed AFTER the lane so the lane's own teardown rows
             # are in the record, and before the rest of teardown so a later
             # failure cannot cost the flush.
@@ -3819,12 +4175,6 @@ class RobotRuntime:
                     self._session_evidence.close("runtime closed")
                 except BaseException as error:  # noqa: BLE001 - teardown must continue
                     auxiliary_error = error
-            if self._camera_ingress is not None:
-                try:
-                    self._camera_ingress.stop()
-                except BaseException as error:  # noqa: BLE001 - render teardown must continue
-                    auxiliary_error = error
-                self._camera_ingress = None
             if self._microphone_loop is not None:
                 try:
                     self._microphone_loop.close()
@@ -5916,6 +6266,15 @@ class RobotRuntime:
             item_id=item_id,
             session_id=session_id,
         )
+        # Card P0-B, deliverable 5 — AFFECT ON THE HOSTED LANE.
+        #
+        # Strictly the ``KIND_NONE`` path: an utterance the deterministic
+        # ingress did not claim. Everything above this line is a command the
+        # robot has already acted on, and an affect gesture stapled onto a
+        # closed intent would be a second authority for one sentence — the exact
+        # thing ``note_ingress`` exists to prevent one line below.
+        if found.kind == KIND_NONE:
+            self._hosted_affect(clean, item_id=item_id, session_id=session_id)
         if executed:
             if found.kind == KIND_EMERGENCY:
                 # Card R9. An emergency latch has to be findable in the panel
@@ -5945,6 +6304,122 @@ class RobotRuntime:
         if broker is not None:
             broker.note_ingress(outcome)
         return outcome
+
+    #: Card P0-B. The machine-readable prefix of the affect meta row, so an
+    #: auditor (and the owner-model work in phase 2) can find every affect the
+    #: hosted lane recorded without matching prose.
+    HOSTED_AFFECT_PREFIX = "affect"
+
+    def _hosted_affect(
+        self,
+        transcript: str,
+        *,
+        item_id: str | None,
+        session_id: str | None,
+    ) -> str:
+        """Card P0-B, deliverable 5. "I'm feeling sad" on the HOSTED lane.
+
+        THE DEFECT THIS CLOSES. ``agent._detect_explicit_affect`` turns an
+        explicit first-person feeling into the persona's ``affect_actions``
+        gesture — a comfort bow for sad, a paw wave for happy — and it is
+        reachable only from ``submit_voice_text``, the LEGACY lane. Everything
+        the owner says to the production companion arrives here instead, so on
+        the lane that is actually shipped the sentence has always done nothing
+        at all: the model says something kind and the body stays still.
+
+        WHAT IT DOES, AND THE FOUR THINGS IT DOES NOT
+        ---------------------------------------------
+        On a hosted utterance the ingress did not claim, and only with
+        ``hosted_affect: true``:
+
+        1. the SAME reviewed grammar the legacy lane uses decides whether there
+           is an explicit affect at all (imported, never re-expressed);
+        2. the label must clear ``agent.affect.minimum_confidence`` from
+           ``configs/robot.yaml`` — the identical bar
+           ``agent._admit_proposal`` applies to a model-proposed one;
+        3. an ``affect`` meta row goes into the conversation ledger through the
+           lane's own writer, as ``system`` — the role that does not appear in
+           the chat pane, because this is a note about the turn and not a thing
+           the robot said;
+        4. the persona's gesture for that label is PROPOSED to the activity
+           coordinator, which owns the timing, the cooldown, the ttl and the
+           arbitration, and which refuses under a latched e-stop.
+
+        And it does NOT: reply, speak, set ``executed`` on the outcome (that
+        would make the broker drop the model's own tool call for the same
+        sentence, and would make ``narration()`` claim a local command ran),
+        touch ``_brain_return_to_safe_pose`` (postural recovery is not a social
+        gesture and the two must never share a door), or raise. It runs on the
+        realtime pump thread; nothing it can hit is worth a dead pump.
+
+        Returns the coordinator's disposition string, or ``""`` when nothing
+        happened — for tests and for the caller's benefit, never for the model.
+        """
+
+        if not getattr(self.realtime_config, "hosted_affect", False):
+            return ""
+        try:
+            evidence = explicit_affect_from_text(transcript)
+            if evidence is None:
+                return ""
+            confidence = float(evidence.confidence)
+            if confidence < self._affect_minimum_confidence:
+                self._emit(
+                    "realtime",
+                    (
+                        f"{self.HOSTED_AFFECT_PREFIX} {evidence.label!r} at "
+                        f"{confidence:.2f} is below the configured "
+                        f"{self._affect_minimum_confidence:.2f}; recorded nothing"
+                    ),
+                    "info",
+                )
+                return ""
+            skill = str(self.agent.affect_actions.get(evidence.label, "") or "")
+            # The row goes in BEFORE the proposal, and it goes in whether or not
+            # a gesture exists for this persona: what the owner felt is the fact
+            # worth keeping, and a personality with no action for "sad" must not
+            # also mean no memory of the owner being sad.
+            self._write_realtime_ledger(
+                "system",
+                (
+                    f"[{self.HOSTED_AFFECT_PREFIX} {evidence.label}] "
+                    f"confidence={confidence:.2f} action={skill or 'none'} "
+                    f"transcript={transcript!r}"
+                ),
+                item_id=item_id,
+                session_id=session_id,
+            )
+            if not skill:
+                return ""
+            detail = self.propose_action(
+                ActionProposal(
+                    kind="skill",
+                    name=skill,
+                    trigger="inferred_affect",
+                    # ``when_safe``, never ``now``: the owner said how they feel,
+                    # which is never a reason to interrupt something the body is
+                    # already doing for them.
+                    timing_preference="when_safe",
+                    interruption_request="none",
+                    reason=f"hosted transcript affect cue: {evidence.label}",
+                )
+            )
+            self._emit(
+                "realtime",
+                f"{self.HOSTED_AFFECT_PREFIX} {evidence.label}: {detail}",
+                "info",
+            )
+            return detail
+        except Exception as failure:  # noqa: BLE001 - card R22; never kill the pump
+            self._emit(
+                "realtime",
+                (
+                    f"{self.HOSTED_AFFECT_PREFIX} handling failed: "
+                    f"{type(failure).__name__}: {failure}"
+                ),
+                "warning",
+            )
+            return ""
 
     #: Card F1-SI. The one line an armed turn writes about WHOSE VOICE armed it.
     #: Machine-readable on purpose: ``evals/assertions``' ``voice_provenance``
@@ -6732,11 +7207,31 @@ class RobotRuntime:
         }
 
     def _realtime_scene_report(self) -> dict[str, object]:
-        """Card R18 — the surroundings, from perception only, right now."""
+        """Card R18 — the surroundings, from perception only, right now.
+
+        Card C-3 item 4: under ``learned_map`` the answer describes what the dog
+        has actually detected, with the uncertainty each place has earned. The
+        map is passed IN rather than looked up inside ``scene_report``, which
+        stays pure and therefore stays testable against hand-built inputs.
+        """
 
         with self._lock:
             observation = self._observation
-        return scene_report(observation)
+        return scene_report(observation, learned_map=self._scene_learned_map())
+
+    def _scene_learned_map(self) -> object | None:
+        """The map ``scene_report`` should describe, or ``None`` for the oracle."""
+
+        try:
+            from parcel_robot.perception_source import (
+                active_learned_map,
+                active_semantic_source,
+            )
+        except ImportError:  # pragma: no cover — frozen bundle path
+            return None
+        if not active_semantic_source().drives_from_learned_map:
+            return None
+        return active_learned_map()
 
     def _realtime_scene_lines(self) -> tuple[str, ...]:
         """The same facts as DI lines, for the session boundary.
@@ -6881,6 +7376,54 @@ class RobotRuntime:
                 return True
         return False
 
+    def _learned_map_offer_places(self) -> tuple[str, ...] | None:
+        """Card C-3 — what a refusal NAMES when the dog reads its own map.
+
+        ``None`` ⇒ oracle ⇒ the R10 union below is unchanged. Otherwise the
+        offers are the map's own active entries, nearest first from the robot's
+        last pose, so the refusal sentence names places the robot has actually
+        stood near rather than classes a sidecar declared.
+        """
+
+        try:
+            from parcel_robot.perception_source import (
+                active_learned_map,
+                active_semantic_source,
+            )
+        except ImportError:  # pragma: no cover — frozen bundle path
+            return None
+        if not active_semantic_source().drives_from_learned_map:
+            return None
+        learned = active_learned_map()
+        if learned is None:
+            return ()
+        with self._lock:
+            observation = self._observation
+        if observation is None:
+            # No pose, so no "nearest": fall back to the map's own vocabulary,
+            # unordered but honest, rather than inventing a distance.
+            try:
+                return tuple(learned.known_places())
+            except (AttributeError, TypeError, ValueError):
+                return ()
+        robot = observation.robot
+        try:
+            rows = learned.around_me(
+                float(robot.x), float(robot.y), float(robot.yaw), radius_m=25.0, limit=16
+            )
+        except (AttributeError, TypeError, ValueError):
+            return ()
+        names: list[str] = []
+        seen: set[str] = set()
+        for row in rows:
+            for label in (row.get("label"), *(row.get("names") or ())):
+                clean = " ".join(str(label or "").split())
+                key = clean.lower()
+                if clean and key not in seen:
+                    seen.add(key)
+                    names.append(clean)
+        return tuple(names)
+
     def _realtime_places(self) -> tuple[str, ...]:
         """The place vocabulary ``navigate_to`` is validated against — card R10.
 
@@ -6896,7 +7439,17 @@ class RobotRuntime:
 
         Never raises: an empty list makes the broker defer to the router, which
         is the layer that decided this before R10 and still runs next.
+
+        Card C-3: under ``learned_map`` the offer set is what the robot has
+        actually seen, nearest first, from the map's own entries. A refusal that
+        offers a place the owner cannot see is a worse answer than one that
+        offers nothing — and after the cutover, "cannot see" means the map does
+        not have it, not that the sidecar failed to declare it.
         """
+
+        learned_map_places = self._learned_map_offer_places()
+        if learned_map_places is not None:
+            return learned_map_places
 
         with self._lock:
             observation = self._observation
@@ -6964,9 +7517,35 @@ class RobotRuntime:
         """
 
         regions, objects = self._realtime_scene_vocabulary()
-        return admit_navigation_place(
-            directive, tuple(regions) + tuple(objects), offer=self._realtime_places()
-        )
+        known = tuple(regions) + tuple(objects)
+        offer = self._realtime_places()
+        # Card C-3. ``admit_navigation_place`` FAILS OPEN on an empty
+        # vocabulary and says ``no_vocabulary`` — the right call when the
+        # vocabulary comes from a sidecar, because a missing scene file must not
+        # take the navigation surface down. Under ``learned_map`` the same
+        # emptiness means something else entirely: the robot has looked and
+        # learned nothing, and admitting every directive there would resurrect
+        # "go to Narnia" at exactly the moment this card claims to have killed
+        # it. So off-oracle an empty vocabulary REFUSES, and says which of the
+        # two emptinesses it is.
+        admission = admit_navigation_place(directive, known, offer=offer)
+        if (
+            admission.reason == PLACE_NO_VOCABULARY
+            and self._learned_map_vocabulary() is not None
+        ):
+            # Only the fail-open verdict is converted. Running the gate first
+            # keeps its JURISDICTION exactly as it was: "let's go back home" is
+            # ``not_a_navigation_directive`` on both sources because the
+            # destination grammar does not call it a directive, and a blanket
+            # refusal here would have this gate start answering questions that
+            # belong to another layer.
+            return PlaceAdmission(
+                False,
+                "I haven't seen anywhere I could take you yet — I've been "
+                "building my own map and it's still empty.",
+                PLACE_UNKNOWN,
+            )
+        return admission
 
     def _realtime_orbit(self, direction: str, size: str, revolutions: float) -> str:
         """``circle_owner`` — the ROUTER still decides, exactly as navigate does.
@@ -7325,6 +7904,42 @@ class RobotRuntime:
                 "router_version": frame.router_version,
             }
 
+    def _learned_map_vocabulary(self) -> tuple[str, ...] | None:
+        """Card C-3 — the R20 vocabulary when the dog reads its own map.
+
+        ``None`` means "the source is the oracle", and every caller then takes
+        the sidecar path it always took. Under ``learned_map`` this is the whole
+        vocabulary: names the map earned from detections and from VLM proposals
+        promoted after k consistent visits. The scene sidecar is not consulted.
+
+        **This is where the Narnia property stops being a list.** Before the
+        cutover, "go to Narnia" was refused because Narnia is absent from a
+        vocabulary the world file declared — honest, but a property of the
+        simulator rather than of perception. After it, the vocabulary is what
+        the robot has actually seen, so the refusal is earned. A map that has
+        learned nothing returns an EMPTY tuple, not ``None``: an empty
+        vocabulary refuses everything, which is the correct answer for a robot
+        that has not looked yet, and it must not be confused with "no map axis
+        is installed", which admits everything.
+        """
+
+        try:
+            from parcel_robot.perception_source import (
+                active_learned_map,
+                active_semantic_source,
+            )
+        except ImportError:  # pragma: no cover — frozen bundle path
+            return None
+        if not active_semantic_source().drives_from_learned_map:
+            return None
+        learned = active_learned_map()
+        if learned is None:
+            return ()
+        try:
+            return tuple(learned.known_places())
+        except (AttributeError, TypeError, ValueError):
+            return ()
+
     def _realtime_scene_vocabulary(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
         """(region labels, object labels) the arrival table may classify against.
 
@@ -7332,7 +7947,18 @@ class RobotRuntime:
         This is what lets the local table classify a place whose noun is not in
         any hard-coded word list — the sidecar is the scene's vocabulary and this
         reads it rather than transcribing any of it.
+
+        Card C-3: under ``perception.semantic_source: learned_map`` the sidecar
+        is NOT read and the map's own learned names are the whole resolution
+        set. Regions come back empty because C-2's map is object-centric — a
+        place is a thing the robot saw, not a polygon the world file declared —
+        and claiming region vocabulary it does not have would be the sidecar
+        creeping back in under a different name.
         """
+
+        learned = self._learned_map_vocabulary()
+        if learned is not None:
+            return (), learned
 
         with self._lock:
             observation = self._observation
@@ -7560,7 +8186,7 @@ class RobotRuntime:
                 }
         arbitration = self.arbiter.snapshot()
         brain_tasks = self.task_executive.snapshot()
-        return {
+        state: dict[str, object] = {
             "simulator": {
                 "status": sim_status,
                 "name": getattr(self.backend, "name", "simulator"),
@@ -7661,6 +8287,14 @@ class RobotRuntime:
             "safety_latch": self._safety_latch_state(),
             "chat": chat,
         }
+        # Card C-1. APPENDED, and only when the eye is on. With the flag off
+        # the key is absent and this dict is byte-identical to the pre-C-1
+        # wire — which is the whole R1 discipline, and is asserted rather than
+        # asserted-by-docstring in tests/test_c1_camera_stream.py.
+        camera_stream = self.camera_stream_snapshot()
+        if camera_stream is not None:
+            state["camera_ingress"] = camera_stream
+        return state
 
     def latency_snapshot(self) -> dict[str, object]:
         snapshot = self.latency.snapshot()
@@ -7735,6 +8369,10 @@ class RobotRuntime:
                         "error",
                         detail={"source": SAFETY_SOURCE_SIMULATOR},
                     )
+                # Card C-1. Strictly AFTER emergency-stop adoption: the camera
+                # mailbox must never sit between the simulator declaring a stop
+                # and this runtime adopting it. No-op unless the eye is on.
+                self._offer_camera_pose(observation)
             except (OSError, RuntimeError, TypeError, ValueError) as error:
                 if not observe_recorded:
                     self.component_metrics.elapsed("SimulatorObserve", observe_started)
@@ -7952,7 +8590,20 @@ class RobotRuntime:
             )
             gated_command = command
             self.component_metrics.elapsed("CollisionGate", collision_started)
-            self.velocity_smoother.force(command, now=now)
+            # Card P0-D, defect MOVE1-D1 (scrum/20260821/task_20/MOVE1_STATUS.md
+            # §5). This was ``force(command)`` — the POST-gate command — which
+            # put the acceleration ramp back at the value the gate had already
+            # scaled, so the same scale was applied to its own output on the
+            # next tick and the one after. Measured on the product path: 0.0279
+            # m/s delivered where one application of the same gate to the same
+            # 0.25 m/s policy gives 0.0591 m/s, on 100 % of 255 slowing ticks.
+            #
+            # ``sync_after_gate`` keeps the pre-gate ramp on an axis the gate
+            # merely SCALED and collapses it on an axis the gate ZEROED, so a
+            # stop is byte-identically a stop and a slow band finally means what
+            # it says. No threshold moved and the gate order is unchanged: this
+            # line records the gate's decision, it does not make one.
+            self.velocity_smoother.sync_after_gate(command, now=now)
             # Card W6. The last thing before the SE2 hand-off, and after every
             # authority above it has spoken. Stops route to the emergency
             # bypass so no stop decision is ever smoothed.
@@ -8808,11 +9459,37 @@ class RobotRuntime:
         }
 
     def _camera_ingress_enabled(self) -> bool:
-        """True when camera pixel-ingress is opted in (env or config).
+        """THE GROUNDING GATE ONLY. Not the whole camera. Read the scope note.
 
-        Env ``PARCEL_CAMERA_INGRESS`` wins so a run can flip it without editing
-        config; otherwise the ``camera_ingress.enabled`` config knob. Default OFF
-        keeps the oracle path byte-identical.
+        Resolves whether ``_semantic_candidates`` may ground on pixels, in
+        precedence order:
+
+        1. ``PARCEL_CAMERA_INGRESS`` — an explicit on/off for THIS run, in both
+           directions (unchanged from B4).
+        2. ``camera_ingress.enabled`` — the legacy config section (unchanged).
+        3. ``perception.camera_ingress`` — the C-1 block. Card P0-A added this
+           term: the two spellings used to REFUSE each other at startup and now
+           resolve, so an operator who turned on the C-1 block also gets pixel
+           grounding instead of a ValueError.
+
+        SCOPE, AND IT IS NARROWER THAN "ONE FLAG" (card P0-A, corrected under
+        verification). This method is one of TWO consumers and the other one
+        does not read it. ``_attach_configured_camera_ingress`` starts the C-1
+        stream from ``self._camera_stream_config.enabled`` alone, so:
+
+        * ``PARCEL_CAMERA_INGRESS=1`` with no ``perception.camera_ingress``
+          gates grounding ON and the stream stays OFF.
+        * ``PARCEL_CAMERA_INGRESS=0`` with ``perception.camera_ingress: true``
+          gates grounding OFF and the stream still attaches.
+
+        The env var is therefore an alias for the GROUNDING gate, not for the
+        config key, and the stream follows the config key. Collapsing the last
+        of it means editing the attach site, which is outside card P0-A's
+        region; see scrum/20260822/task_1/P0A_STATUS.md "Handoffs".
+
+        Default OFF, and off from all three ⇒ the oracle path is byte-identical.
+        Grounding additionally requires an ATTACHED ingress: consenting to the
+        camera is not the same as having one.
         """
 
         env = os.environ.get("PARCEL_CAMERA_INGRESS", "").strip().lower()
@@ -8820,7 +9497,7 @@ class RobotRuntime:
             return True
         if env in {"0", "false", "no", "off"}:
             return False
-        return self._camera_ingress_config_enabled
+        return self._camera_ingress_config_enabled or self._camera_stream_enabled
 
     def _semantic_candidates(self, observation: SimObservation) -> list[dict[str, Any]]:
         """The one semantic ingress: pixel detections when armed, else the oracle.
@@ -8874,20 +9551,355 @@ class RobotRuntime:
             except Exception:  # noqa: BLE001, S110 - teardown best-effort
                 pass
 
+    # ---------------------------------------------------- Card C-1: the stream
+    def _offer_camera_pose(self, observation: SimObservation) -> None:
+        """Control-loop half of the pose mailbox. Cheap, bounded, non-foreign.
+
+        Card C-1. Called from the 10 Hz loop AFTER emergency-stop adoption, so
+        nothing here can sit between the simulator declaring a stop and the
+        runtime adopting it. It takes one uncontended lock and writes three
+        floats; it calls no producer method, so "the safety loop waits behind
+        the camera" has no code path to happen through.
+        """
+
+        if not self._camera_stream_enabled:
+            return
+        robot = observation.robot
+        x, y, yaw = float(robot.x), float(robot.y), float(robot.yaw)
+        if not (math.isfinite(x) and math.isfinite(y) and math.isfinite(yaw)):
+            return
+        with self._camera_stream_lock:
+            self._camera_pose_slot = (x, y, yaw)
+            self._camera_pose_at_monotonic = observation.timestamp
+            self._camera_poses_offered += 1
+
+    def _take_camera_pose(self) -> tuple[float, float, float] | None:
+        """Worker half of the mailbox: ONE fresh pose permits ONE capture.
+
+        Consuming the slot is what stops a stalled or disconnected simulator
+        from being rendered forever at its last known pose — a camera that
+        keeps producing confident frames of a world it can no longer see is
+        worse than a camera that stops.
+        """
+
+        now = time.monotonic()
+        with self._camera_stream_lock:
+            pose = self._camera_pose_slot
+            stamped = self._camera_pose_at_monotonic
+            self._camera_pose_slot = None
+            if pose is None or stamped is None:
+                return None
+            if not -0.05 <= now - stamped <= self.telemetry_stale_s:
+                return None
+            self._camera_poses_consumed += 1
+            return pose
+
+    def _publish_camera_frame(self, frame: CameraDetectionFrame) -> None:
+        """Producer → runtime handoff. Bounded, counted, never blocking.
+
+        Card C-1, work item 2. Runs on the camera worker thread. Takes ONLY
+        ``_camera_stream_lock`` and never calls back into the producer, so it
+        adds no edge to R24's lock roster and cannot deadlock against the
+        control loop. Eviction is explicit: the newest frame wins and the loss
+        is counted in both frames and detections, because "the queue was full"
+        and "the camera saw nothing" must never look the same downstream.
+        """
+
+        if not isinstance(frame, CameraDetectionFrame):
+            with self._camera_stream_lock:
+                self._camera_stream_errors += 1
+                self._camera_stream_last_error = "publish rejected a non-frame payload"
+            return
+        with self._camera_stream_lock:
+            if len(self._camera_frames) == self._camera_frames.maxlen:
+                evicted = self._camera_frames[0]
+                self._camera_frames_dropped += 1
+                self._camera_detections_dropped += len(evicted.detections)
+            self._camera_frames.append(frame)
+            self._camera_frames_published += 1
+            self._camera_detections_total += len(frame.detections)
+            if self._camera_stream_started_monotonic is None:
+                self._camera_stream_started_monotonic = time.monotonic()
+        self._offer_camera_frame_evidence(frame)
+
+    def _offer_camera_frame_evidence(self, frame: CameraDetectionFrame) -> None:
+        """Card C-1, work item 4. One bounded typed row per frame into EV-1.
+
+        Non-blocking by construction (``_offer_evidence`` drops rather than
+        waits). Raw arrays and embeddings never reach JSONL — only the typed
+        frame dict, whose detection count is already capped by the producer's
+        per-frame retention limit.
+        """
+
+        if self._session_evidence is None:
+            return
+        try:
+            row = frame.as_dict()
+            row["kind"] = EVIDENCE_KIND_CAMERA_FRAME
+            self._offer_evidence(STREAM_EVENT, row)
+        except Exception as error:  # noqa: BLE001 - evidence must not break the stream
+            with self._camera_stream_lock:
+                self._camera_evidence_refused += 1
+                self._camera_stream_last_error = f"evidence: {type(error).__name__}"
+            return
+        with self._camera_stream_lock:
+            self._camera_evidence_offered += 1
+
+    def camera_detection_frame_slice(
+        self, limit: int = 16
+    ) -> tuple[CameraDetectionFrame, ...]:
+        """Non-destructive newest-last view of the stream (panel / tests)."""
+
+        count = max(0, min(int(limit), MAX_RETAINED_DETECTIONS * 16))
+        with self._camera_stream_lock:
+            if count == 0:
+                return ()
+            return tuple(self._camera_frames)[-count:]
+
+    def drain_camera_detection_frames(
+        self, limit: int = 64
+    ) -> tuple[CameraDetectionFrame, ...]:
+        """Bounded consumer handoff. THE seam C-2 will read; C-1 never grounds.
+
+        Destructive: a drained frame leaves the queue. Returns oldest-first so a
+        consumer sees the observation order the camera produced.
+        """
+
+        count = max(0, int(limit))
+        drained: list[CameraDetectionFrame] = []
+        with self._camera_stream_lock:
+            while self._camera_frames and len(drained) < count:
+                drained.append(self._camera_frames.popleft())
+        return tuple(drained)
+
+    def _attach_configured_camera_ingress(self) -> None:
+        """Card C-1, work item 1. THE call site that was missing.
+
+        Until this card, ``attach_camera_ingress`` had zero non-test callers:
+        the whole pixel path was built and test-proven and had never once run
+        inside the live robot. This is the composition root that changes that,
+        and every hazard it has to clear is handled here rather than deferred:
+
+        **EGL binding.** ``MUJOCO_GL`` binds the offscreen GL backend at the
+        FIRST ``import mujoco`` in a process and cannot change afterwards. So
+        this either sets it before that import, or — if something already
+        imported MuJoCo under a different backend — REFUSES to start. It does
+        not proceed hoping the binding is compatible; a silently software-
+        rendered camera would be a perception stream that quietly is not one.
+
+        **Whose MjData.** The panel process talks to the simulator over a
+        socket and does NOT own the live ``MjModel``/``MjData``. So the camera
+        renders a STATIC, once-forwarded copy of the same scene, with the free
+        camera placed from the live robot pose. That is a real limitation and
+        the snapshot says so out loud (``mode``, ``dynamic_actors_synced``)
+        rather than letting an operator infer that the tile shows live people.
+
+        Raises on any failure. ``start()`` treats that as a startup failure and
+        tears the runtime down — asking for the eye and silently not getting it
+        is the one outcome that must not be possible.
+        """
+
+        config = self._camera_stream_config
+        if config is None or not config.enabled:
+            return
+
+        import sys
+
+        if "mujoco" in sys.modules:
+            bound = os.environ.get("MUJOCO_GL", "").strip().lower()
+            if bound != "egl":
+                raise RuntimeError(
+                    "perception.camera_ingress requires MUJOCO_GL=egl, but MuJoCo "
+                    f"was already imported with MUJOCO_GL={bound or '<unset>'!r}; "
+                    "the GL backend binds at first import and cannot be changed"
+                )
+        else:
+            os.environ["MUJOCO_GL"] = "egl"
+
+        from parcel_robot.camera_channel.channel import CameraChannelSpec
+        from parcel_robot.camera_channel.ingress import CameraIngress
+        from parcel_robot.detection_adapter.owlv2_onnx import load_owlv2_detector
+        from parcel_robot.perception_contention import default_guard
+        from parcel_robot.sim import resolve_scene
+
+        # `require_env=False` is correct here and is not a loosened gate: the
+        # env switch exists so that merely having weights on disk never flips a
+        # mission onto a heavy model by accident. An operator who wrote
+        # `perception.camera_ingress: true` has already made that decision
+        # explicitly, in the config, with the default being OFF.
+        detector = load_owlv2_detector(require_env=False)
+        if detector is None:
+            raise RuntimeError(
+                "perception.camera_ingress is enabled but the OWLv2 detector is "
+                "unavailable (weights, onnxruntime or tokenizers missing); refusing "
+                "to start a camera stream that cannot see"
+            )
+
+        scene = resolve_scene(self.store.path, None)
+        import mujoco
+
+        model = mujoco.MjModel.from_xml_path(str(scene))
+        data = mujoco.MjData(model)
+        mujoco.mj_forward(model, data)
+
+        spec = CameraChannelSpec.d455_go2_nominal()
+        ingress = CameraIngress.from_model_data(
+            model,
+            data,
+            spec=spec,
+            detector=detector,
+            min_poll_interval_s=1.0 / config.rate_hz,
+        )
+        ingress.on_frame = self._publish_camera_frame
+        ingress.contention_guard = default_guard()
+        ingress.pose_source = self._take_camera_pose
+        ingress.max_detections_per_frame = config.max_detections_per_frame
+        ingress.set_query(config.queries)
+        self.perception_contention = ingress.contention_guard
+        self._camera_scene_path = str(scene)
+        self.attach_camera_ingress(ingress)
+
+    def camera_stream_snapshot(self) -> dict[str, object] | None:
+        """The operator's truth about the eye, or ``None`` when it is off.
+
+        Returning ``None`` — not an ``{"enabled": false}`` block — is the R1
+        discipline: with the feature off the key is ABSENT from the wire, so a
+        flag-off snapshot is byte-identical to a build that never had C-1.
+        """
+
+        if not self._camera_stream_enabled:
+            return None
+        config = self._camera_stream_config
+        now_monotonic_ns = time.monotonic_ns()
+        with self._camera_stream_lock:
+            frames = tuple(self._camera_frames)
+            published = self._camera_frames_published
+            frames_dropped = self._camera_frames_dropped
+            detections_dropped = self._camera_detections_dropped
+            detections_total = self._camera_detections_total
+            errors = self._camera_stream_errors
+            last_error = self._camera_stream_last_error
+            started = self._camera_stream_started_monotonic
+            evidence_offered = self._camera_evidence_offered
+            evidence_refused = self._camera_evidence_refused
+            attach_note = self._camera_attach_note
+            poses_offered = self._camera_poses_offered
+            poses_consumed = self._camera_poses_consumed
+        ingress = self._camera_ingress
+        newest = frames[-1] if frames else None
+        # The age of the newest frame's PIXELS, not of its arrival.
+        frame_age_s = None if newest is None else newest.age_ns(now_monotonic_ns) / 1e9
+        # A separate clock for the newest frame that actually FOUND something:
+        # an empty observation must advance liveness without inventing a
+        # detection age it does not have.
+        newest_with_detections = None
+        for candidate in reversed(frames):
+            if candidate.detections:
+                newest_with_detections = candidate
+                break
+        detection_age_s = (
+            None
+            if newest_with_detections is None
+            else newest_with_detections.age_ns(now_monotonic_ns) / 1e9
+        )
+        producer_stats = None if ingress is None else dict(ingress.stats.as_dict())
+        callback_errors = int((producer_stats or {}).get("frame_callback_errors", 0))
+        # `fault` means the STREAM is broken, not that one detect failed: a
+        # transient render/detect error is counted and survived, but a publish
+        # seam that raises means frames are being produced and lost, and an
+        # operator must not read that as merely "stale".
+        if errors or callback_errors:
+            state = "fault"
+        elif newest is None:
+            state = "starting"
+        elif newest.is_expired(now_monotonic_ns):
+            state = "stale"
+        else:
+            state = "fresh"
+        elapsed = None if started is None else max(1e-9, time.monotonic() - started)
+        achieved_hz = None if elapsed is None else round(published / elapsed, 4)
+        return {
+            "enabled": True,
+            "state": state,
+            "fresh": state == "fresh",
+            "config": None if config is None else config.as_dict(),
+            "queue_capacity": self._camera_frames.maxlen,
+            "queue_depth": len(frames),
+            "frames_published": published,
+            "frames_dropped": frames_dropped,
+            "detections_retained_total": detections_total,
+            "detections_dropped_with_frames": detections_dropped,
+            "achieved_rate_hz": achieved_hz,
+            "frame_age_s": None if frame_age_s is None else round(frame_age_s, 4),
+            "last_detection_age_s": (
+                None if detection_age_s is None else round(detection_age_s, 4)
+            ),
+            "detection_ttl_ms": DEFAULT_DETECTION_TTL_NS / 1e6,
+            "newest_expired_at_publish": (
+                None if newest is None else newest.expired_at_publish
+            ),
+            # Query-conditioned counts: this is what the dog was ASKED about and
+            # found, never "everything the dog sees".
+            "latest_class_counts": {} if newest is None else newest.class_counts(),
+            "stream_errors": errors,
+            "last_error": last_error or None,
+            "attach_error": attach_note or None,
+            "evidence_rows_offered": evidence_offered,
+            "evidence_rows_refused": evidence_refused,
+            "poses_offered": poses_offered,
+            "poses_consumed": poses_consumed,
+            # What this camera actually is, stated rather than implied. The
+            # panel process talks to the simulator over a socket and does not
+            # own its MjData, so the render is a STATIC copy of the same scene
+            # posed from live telemetry. Moving actors and the robot's own
+            # joint state are NOT in the render. An operator reading the tile
+            # deserves to know that before trusting an empty person count.
+            "composition": {
+                "mode": "static_scene_copy_pose_synced",
+                "scene": self._camera_scene_path or None,
+                "camera_pose_synced": True,
+                "dynamic_actors_synced": False,
+                "robot_joint_state_synced": False,
+                "real_camera": False,
+            },
+            "producer": producer_stats,
+            # PG-1's process-wide guard, which BOTH halves must share. The
+            # counters make the registration falsifiable: `active_leases` rises
+            # while a frame is inferring, and `refused` is the only place a
+            # blocked generation would ever show up.
+            "contention_guard": (
+                None
+                if self.perception_contention is None
+                else dict(self.perception_contention.stats())
+            ),
+        }
+
     def _set_camera_query_from_directive(self, directive: str) -> None:
-        """Tell the attached ingress WHICH object to search for from the directive.
+        """Tell the attached ingress to search for the directive's goal noun TOO.
 
         Cheap + best-effort: the open-vocab detector is queried for the goal noun
         phrase extracted from the raw navigation directive (``go to the lamppost``
         → ``lamppost``). A no-op when no ingress is attached.
+
+        Card P0-D. This used to pass the bare noun, and ``set_query`` REPLACED
+        the batch with it — so ``go to the bench`` deleted the operator's
+        ``perception.camera_ingress_queries`` and, with them, the ``person``
+        query the PG-1 safety lease rides on and ``patrol/mission.py`` requires.
+        The configured batch is therefore re-supplied on every directive and the
+        noun is appended to it. ``CameraIngress.set_query`` de-duplicates and
+        pins ``person`` independently, so this holds even for an ingress that
+        was attached without a config block.
         """
 
         ingress = self._camera_ingress
         if ingress is None:
             return
         phrase = _camera_query_from_directive(directive)
-        if phrase:
-            ingress.set_query(phrase)
+        if not phrase:
+            return
+        config = self._camera_stream_config
+        configured = tuple(config.queries) if config is not None else ()
+        ingress.set_query((*configured, phrase))
 
     def _dynamic_cost_active(self) -> bool:
         try:

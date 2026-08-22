@@ -160,6 +160,53 @@ SYSTEM_INITIATED_MOTION_DETAIL = (
     "owner said, and the robot only starts moving when its owner asks it to"
 )
 
+#: Card P0-B, deliverable 1 — THE PROACTIVE UNLOCK, AND ITS CEILING.
+#:
+#: The gate above is what stops the dog driving off because a telemetry item
+#: made it talk to itself. It is also, unmodified, what stops the companion
+#: tilting its head at the owner walking in. The unlock is a config list of
+#: tools that may still run from a system-initiated reply — and this frozenset
+#: is the ceiling on that list, enforced HERE as well as at config load, so a
+#: broker constructed by hand (a test, a future caller) cannot be handed
+#: ``navigate_to`` either.
+#:
+#: Only tools whose worst case is a body that moved IN PLACE are in it. The
+#: travel tools are not, and cannot be: a proactive ``navigate_to`` is bench
+#: finding C1 verbatim. Everything admitted here still goes through
+#: ``SafetySupervisor.validate`` and still reaches the same door a typed request
+#: reaches — the gate decides WHETHER the proposal is considered, never what
+#: happens to it afterwards.
+PROACTIVE_MOTION_CEILING: frozenset[str] = frozenset({TOOL_PLAY_GESTURE, TOOL_SET_POSE})
+
+#: The machine-readable stamp on a proactive motion result, so an auditor can
+#: count what the robot started on its own without matching prose.
+PROVENANCE_RESULT_KEY = "provenance"
+
+#: Card P0-B, deliverable 2 — ``navigate_to`` MODES.
+#:
+#: ``refuse`` is the shipped behaviour: an unknown but well-formed place noun is
+#: handed to the router exactly as a typed sentence is, and the honest refusal
+#: comes from grounding (``test_navigate_to_grants_exactly_what_a_typed_sentence
+#: _grants``). ``ask`` answers the model with :data:`STATUS_UNKNOWN_PLACE`
+#: instead, touching no door.
+UNKNOWN_PLACE_REFUSE = "refuse"
+UNKNOWN_PLACE_ASK = "ask"
+
+#: A fifth result status, and the only one that is not a verdict on a request.
+#: ``rejected`` would have been a lie in the direction that matters: the request
+#: was fine, the robot simply does not know where that is, and the difference is
+#: precisely what makes the model ASK rather than apologise. Nothing moved, so
+#: it tenses as ``not started`` like every other non-``ok`` activity result.
+STATUS_UNKNOWN_PLACE = "unknown_place"
+
+#: What the model reads on the ask path. It states the gap and the two ways out
+#: — the owner naming the place, or the robot being sent to look — because the
+#: standing bench finding is that the model narrates what it is handed.
+UNKNOWN_PLACE_DETAIL = (
+    "the robot has no place by that name on its map, so it has not moved; ask the "
+    "owner where it is or offer to go and look for it"
+)
+
 #: Every tool this broker will answer. Anything else is refused by name.
 BROKER_TOOLS = (
     TOOL_GET_STATUS,
@@ -233,6 +280,10 @@ TENSE_BY_STATUS: Mapping[str, str] = {
     STATUS_DEFERRED: TENSE_WAITING,
     STATUS_DROPPED: TENSE_NOT_STARTED,
     STATUS_REJECTED: TENSE_NOT_STARTED,
+    # Card P0-B. Spelled out rather than left to the ``.get`` default: an ask is
+    # the one status whose NAME does not say the body stayed still, so the one
+    # that most needs the tense saying it.
+    STATUS_UNKNOWN_PLACE: TENSE_NOT_STARTED,
 }
 
 #: Said alongside every ``started``/``waiting`` result, because the bench's
@@ -628,6 +679,8 @@ class RealtimeToolBroker:
         doors: ToolDoors,
         *,
         tool_choice: str = "auto",
+        proactive_motion_tools: Sequence[str] = (),
+        unknown_place: str = UNKNOWN_PLACE_REFUSE,
     ) -> None:
         self._doors = doors
         self._tool_choice = tool_choice
@@ -637,6 +690,25 @@ class RealtimeToolBroker:
         #: that is what every call was before this card and because a response
         #: nobody tagged is, on the wire, one the owner's voice produced.
         self._provenance = RESPONSE_FROM_OWNER
+        #: Card P0-B. The proactive allowlist, intersected with the ceiling on
+        #: the way in. Two gates rather than one because the config loader and
+        #: this constructor have different callers: the loader answers for
+        #: ``configs/realtime.yaml`` and this answers for every other way a
+        #: broker can come into existence. A travel tool named here is dropped
+        #: silently BECAUSE the loader already refuses it loudly — this arm only
+        #: ever sees a caller that bypassed the loader.
+        self._proactive: frozenset[str] = frozenset(
+            str(name).strip() for name in proactive_motion_tools
+        ) & PROACTIVE_MOTION_CEILING
+        #: Card P0-B. ``refuse`` (shipped) or ``ask``. An unrecognised value is
+        #: the shipped behaviour, which is the fail-closed direction: it can only
+        #: ever mean "route it exactly as a typed sentence" and never "invent an
+        #: answer the owner did not configure".
+        self._unknown_place = (
+            UNKNOWN_PLACE_ASK
+            if str(unknown_place or "").strip().lower() == UNKNOWN_PLACE_ASK
+            else UNKNOWN_PLACE_REFUSE
+        )
         self.calls: list[dict[str, object]] = []
         self.dropped = 0
         self.rejected = 0
@@ -644,6 +716,15 @@ class RealtimeToolBroker:
         #: Motion proposals refused because the robot, not the owner, started
         #: the exchange. This is the C1 defect being caught, counted.
         self.system_initiated_motion_refusals = 0
+        #: Card P0-B. The other side of that number: motion the robot started on
+        #: its own and was ALLOWED to. Counted separately and published in the
+        #: snapshot, because "the dog moved and nobody asked it to" is a fact an
+        #: owner reading the panel is entitled to see the size of.
+        self.proactive_motion_admissions = 0
+        #: Card P0-B. Places the model asked about that the map does not hold.
+        #: A queue of these is the flywheel's shopping list: it is exactly the
+        #: set of nouns the owner uses and the robot cannot ground.
+        self.unknown_place_asks = 0
 
     # ----------------------------------------------------------- lane surface
     def session_events(self) -> tuple[ClientEvent, ...]:
@@ -691,6 +772,10 @@ class RealtimeToolBroker:
         elif status == STATUS_DROPPED:
             self.dropped += 1
         else:
+            # Card P0-B. An ``unknown_place`` ask lands here with the refusals,
+            # and that is the honest bucket: nothing was executed and no door
+            # was touched. It carries its own counter as well, because the
+            # QUESTION it represents is a different thing from a rejection.
             self.rejected += 1
         self._doors.note(f"tool {name}: {status} — {row['detail']}")
         return json.dumps(result, sort_keys=True)
@@ -730,6 +815,14 @@ class RealtimeToolBroker:
             # Card R11. The gate, from outside.
             "response_provenance": self._provenance,
             "system_initiated_motion_refusals": self.system_initiated_motion_refusals,
+            # Card P0-B. The unlock, from outside: what the gate was told to let
+            # through, how often it did, and which mode navigate_to is in. An
+            # operator must be able to answer "why did it move on its own" from
+            # the panel alone.
+            "proactive_motion_tools": sorted(self._proactive),
+            "proactive_motion_admissions": self.proactive_motion_admissions,
+            "unknown_place_mode": self._unknown_place,
+            "unknown_place_asks": self.unknown_place_asks,
             "last": dict(self.calls[-1]) if self.calls else None,
         }
 
@@ -745,12 +838,23 @@ class RealtimeToolBroker:
         # system-initiated response reaches a door — including ahead of the
         # utterance-scoped drop, which cannot see this case at all because there
         # is no utterance in flight (bench_navmodel.md §4, C1).
-        if name in MOTION_TOOLS and self._provenance != RESPONSE_FROM_OWNER:
+        # Card P0-B, deliverable 1. The unlock is a HOLE IN THIS GATE and
+        # nowhere else: a tool the owner put on the proactive list skips the
+        # refusal above and then travels the identical path an owner-initiated
+        # call travels — the same argument parse, the same
+        # ``SafetySupervisor.validate``, the same activity coordinator with its
+        # cooldown and its e-stop, the same door. Nothing downstream learns that
+        # this call was proactive; it only learns that it happened.
+        proactive = name in self._proactive and name in PROACTIVE_MOTION_CEILING
+        if name in MOTION_TOOLS and self._provenance != RESPONSE_FROM_OWNER and not proactive:
             self.system_initiated_motion_refusals += 1
             body = _refused(name, SYSTEM_INITIATED_MOTION_DETAIL)
             body["refusal"] = REFUSAL_SYSTEM_INITIATED_MOTION
             body["provenance"] = self._provenance
             return body
+        admitted_proactively = (
+            proactive and name in MOTION_TOOLS and self._provenance != RESPONSE_FROM_OWNER
+        )
 
         try:
             payload = _arguments(arguments)
@@ -773,14 +877,25 @@ class RealtimeToolBroker:
         if name == TOOL_RECALL_MEMORY:
             return self._recall(payload)
         if name == TOOL_PLAY_GESTURE:
-            return self._play_gesture(payload)
-        if name == TOOL_SET_POSE:
-            return self._set_pose(payload)
-        if name == TOOL_CIRCLE_OWNER:
-            return self._circle_owner(payload)
-        if name == TOOL_FOLLOW_OWNER:
-            return self._follow_owner(payload)
-        return self._navigate_to(payload)
+            result = self._play_gesture(payload)
+        elif name == TOOL_SET_POSE:
+            result = self._set_pose(payload)
+        elif name == TOOL_CIRCLE_OWNER:
+            result = self._circle_owner(payload)
+        elif name == TOOL_FOLLOW_OWNER:
+            result = self._follow_owner(payload)
+        else:
+            result = self._navigate_to(payload)
+        if admitted_proactively:
+            # Card P0-B. Counted here rather than at the gate so the number
+            # means "a proactive proposal reached a door", not "a proactive
+            # proposal arrived with unreadable arguments". The stamp is the
+            # transcript half of the same fact: a reader of the tool result can
+            # tell that the robot, not the owner, started this movement — which
+            # is the one thing the R11 refusal used to guarantee for free.
+            self.proactive_motion_admissions += 1
+            result[PROVENANCE_RESULT_KEY] = self._provenance
+        return result
 
     # ----------------------------------------------------------------- tools
     def _get_status(self) -> dict[str, object]:
@@ -914,6 +1029,38 @@ class RealtimeToolBroker:
                 }
             )
             return refusal
+        # Card P0-B, deliverable 2 — ASK, DO NOT GUESS.
+        #
+        # ``validate_place`` already separates the two failures a place noun can
+        # have. "with owner" is not a place NAME and is refused above. "narnia"
+        # is a perfectly good name the map has never heard of, and until now it
+        # was admitted, rendered into the router and allowed to fail at
+        # grounding — which is right for authority parity with a typed sentence
+        # (R20's ``test_navigate_to_grants_exactly_what_a_typed_sentence_grants``)
+        # and wrong for a companion, because what the owner hears is a robot
+        # that set off and then gave up rather than one that asked.
+        #
+        # In ``ask`` mode this returns the question instead: the place the model
+        # named, the places the robot does know, and no door touched. The map is
+        # never consulted twice and no motion is started on a name the robot
+        # cannot ground — the only thing that changes is who is asked next.
+        if (
+            verdict.reason == REASON_UNKNOWN_PLACE
+            and self._unknown_place == UNKNOWN_PLACE_ASK
+        ):
+            self.unknown_place_asks += 1
+            nearest = verdict.nearest or tuple(known[:REFUSAL_PLACE_LIMIT])
+            detail = UNKNOWN_PLACE_DETAIL
+            if nearest:
+                detail = f"{detail}. Places the robot does know: {', '.join(nearest)}"
+            return {
+                "status": STATUS_UNKNOWN_PLACE,
+                "tool": TOOL_NAVIGATE_TO,
+                "detail": detail,
+                "place": place,
+                "valid_places": list(nearest),
+                "reason": REASON_UNKNOWN_PLACE,
+            }
         relation = _enum(payload.get("relation"), RELATION_HINTS_TUPLE, default="")
         directive = NAVIGATE_DIRECTIVE_TEMPLATE.format(place=place)
         allowed = self._validated(ToolCall("navigate", {"directive": directive}), TOOL_NAVIGATE_TO)
@@ -1430,6 +1577,8 @@ __all__ = [
     "ORBIT_DIRECTIONS",
     "ORBIT_SIZES",
     "PLACE_FUNCTION_WORDS",
+    "PROACTIVE_MOTION_CEILING",
+    "PROVENANCE_RESULT_KEY",
     "REASON_NOT_A_PLACE_NAME",
     "REASON_UNKNOWN_PLACE",
     "REFUSAL_PLACE_LIMIT",
@@ -1441,6 +1590,7 @@ __all__ = [
     "STATUS_DROPPED",
     "STATUS_OK",
     "STATUS_REJECTED",
+    "STATUS_UNKNOWN_PLACE",
     "SYSTEM_INITIATED_MOTION_DETAIL",
     "TENSE_BY_STATUS",
     "TENSE_NOT_STARTED",
@@ -1453,6 +1603,9 @@ __all__ = [
     "TOOL_PLAY_GESTURE",
     "TOOL_RECALL_MEMORY",
     "TOOL_SET_POSE",
+    "UNKNOWN_PLACE_ASK",
+    "UNKNOWN_PLACE_DETAIL",
+    "UNKNOWN_PLACE_REFUSE",
     "PlaceVerdict",
     "RealtimeToolBroker",
     "SessionToolsUpdate",

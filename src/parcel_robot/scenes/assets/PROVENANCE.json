@@ -1,0 +1,389 @@
+{
+  "also_generated_by": [],
+  "do_not_hand_edit": "every file under scenes/assets/ is a build product of the CC0 sources below plus this script; re-run the script, never edit a PNG",
+  "files": {
+    "meshes/human_a.obj": {
+      "bytes": 151264,
+      "sha256": "08df6a771859bfe1f22d2d8d7f66a374e94ad68eaf5988ad32f41de9dca44a03"
+    },
+    "meshes/human_b.obj": {
+      "bytes": 151261,
+      "sha256": "5a75f7a7feefceb6bc72b3a2b3492628bac5a0aed878438c196ec2680b64c6d2"
+    },
+    "meshes/human_c.obj": {
+      "bytes": 151266,
+      "sha256": "aadf57256d76d55fc93813717ceca8fd2822dbc219fc54fb21ab96909130e8dd"
+    },
+    "meshes/human_d.obj": {
+      "bytes": 151258,
+      "sha256": "d8be1e58d28a12f7e17941df40e47e2c991ea1d87a2d4732ddf0706ffa1ed356"
+    },
+    "meshes/panel.obj": {
+      "bytes": 226,
+      "sha256": "7ddba07b1344d1d46272530fe126ef46796cd37bf2d09abf91a35f71c5b2a0b2"
+    },
+    "textures/bench_wood.png": {
+      "bytes": 414337,
+      "sha256": "5a703101b1a8a4c965ff7111a842c75ee2d761368090a675e5e9f8c25eae5906"
+    },
+    "textures/bench_wood_b.png": {
+      "bytes": 342227,
+      "sha256": "ab746a35503c769dda02daa00e6b73bbdc004353f9ac46be68b61eaa8bcee945"
+    },
+    "textures/city_metal.png": {
+      "bytes": 324631,
+      "sha256": "7d8679eda09f59b9da8e7f9d02c17556ee9cfd42f1e5eddfe9815dab3c93298a"
+    },
+    "textures/crosswalk_paint.png": {
+      "bytes": 332714,
+      "sha256": "0b2156348d6c7d6f40b79e573882e543b7314b92e5997c02cf3954ab8d260b37"
+    },
+    "textures/curb_concrete.png": {
+      "bytes": 252372,
+      "sha256": "8ec14ef9027c29fe5d718b57ee4a8244da0f4a433b00208eb6e8890d93524614"
+    },
+    "textures/door_wood.png": {
+      "bytes": 372857,
+      "sha256": "148dbbc3dced0fa78d3b974c21bf04838dc408bc4c55800792408ab7ae42dc58"
+    },
+    "textures/door_wood_b.png": {
+      "bytes": 292798,
+      "sha256": "7ab025d33409f2b76df50ca114f5f5c23bd11928e28d90745ff1414e839e358c"
+    },
+    "textures/facade_beige.png": {
+      "bytes": 74523,
+      "sha256": "f0e2beeb75a11b74c3d12a63fb8e5bdb2492c8e7e430522714b50cf51d6f5b8c"
+    },
+    "textures/facade_beige_b.png": {
+      "bytes": 48663,
+      "sha256": "06737f9d12b3cb39a84908de55378d9d4c0d051e46536cd21d2bc30167e5d87f"
+    },
+    "textures/facade_brick.png": {
+      "bytes": 561874,
+      "sha256": "2c058dd9a561776257884b21a27030558bf2be9057da11be4753404533128fac"
+    },
+    "textures/facade_brick_b.png": {
+      "bytes": 453704,
+      "sha256": "878c47a1a58c6f8669ecf289f59d84b6a95489fc137cdee105897ffc61070062"
+    },
+    "textures/facade_plaster.png": {
+      "bytes": 329897,
+      "sha256": "96ce4ccf54c0142dd4d3862d2c1e0ee30bc01e9a1ff280ce9b1961bce6a9afe0"
+    },
+    "textures/facade_plaster_b.png": {
+      "bytes": 276012,
+      "sha256": "ca39bf4dceb295eb071a9c3a58da14363ff35dd6b82fa748917d42b8bfafe8e1"
+    },
+    "textures/grass.png": {
+      "bytes": 564129,
+      "sha256": "240671aa13994e4f8ff3612c730c886676da30436cc615df20019d31e68dadc3"
+    },
+    "textures/person_1.png": {
+      "bytes": 100946,
+      "sha256": "a3d36a4caf9e54f97fec90c85986847b360f2bfe603ede8681c9663ef3e3c0f1"
+    },
+    "textures/person_2.png": {
+      "bytes": 142689,
+      "sha256": "319113972e6af3c7bebf70a931466559ef6af2adb28f6847aac6227cb5321d08"
+    },
+    "textures/person_3.png": {
+      "bytes": 100281,
+      "sha256": "7c4e2a9cf1faafa3a806da0036cf194943715f6db4882395e0df52c79b7e6299"
+    },
+    "textures/person_4.png": {
+      "bytes": 138534,
+      "sha256": "f8775739ee2f036643d16f668de240c750074bdbc393277134880e9b52ad9437"
+    },
+    "textures/person_5.png": {
+      "bytes": 96850,
+      "sha256": "8291cdf7d4b8cbc395eb9fc9cdb8e8539bd1f78235e8c86bb71a04a67d8078e5"
+    },
+    "textures/person_6.png": {
+      "bytes": 125988,
+      "sha256": "2b9e8fcc6cca5f3bd61f40ff58b3f56e3731940869e671ad2ca91afa94fd716d"
+    },
+    "textures/road_asphalt.png": {
+      "bytes": 597627,
+      "sha256": "4c3bc6028d02d9895f8ec6f7b33abe64bea9fa485fd6c2d6a06683a8ce31e8bd"
+    },
+    "textures/road_asphalt_b.png": {
+      "bytes": 507373,
+      "sha256": "78657542294c3c431358950238450422e6d836571bf41d817bce91f9db95b63a"
+    },
+    "textures/sidewalk_concrete.png": {
+      "bytes": 543706,
+      "sha256": "72c34e39ee7f2cf421a66e43aaee93b2d1789c471ed7327ba9200d355107ca8e"
+    },
+    "textures/sidewalk_concrete_b.png": {
+      "bytes": 456164,
+      "sha256": "ff0eed59efa4ee440ba76bc3debae1bd56126653c87fece6b718abf5e8605558"
+    },
+    "textures/storefront_a.png": {
+      "bytes": 23558,
+      "sha256": "4daf1902ad91e57ee653a9aba3766a356c5071d31645736d5bd06cb5e76be75d"
+    },
+    "textures/storefront_b.png": {
+      "bytes": 18178,
+      "sha256": "cdc2a60d5e3e24857c4dafbdae629ba275a5334cee1d038b1e62b74082933e96"
+    },
+    "textures/storefront_c.png": {
+      "bytes": 22509,
+      "sha256": "2482c760d930dcc1a3b7e869b6ef6f50783a1658bc6bf2899e13dbde26633f6c"
+    },
+    "textures/storefront_d.png": {
+      "bytes": 20984,
+      "sha256": "65ad32f909b488a53b0635909170f525de3e1acf7d1a467728b6ae2689828a47"
+    },
+    "textures/storefront_e.png": {
+      "bytes": 15601,
+      "sha256": "0d22fd5e2ba729ea1974d3bb6d92ec425a75da09703b05a09548db77c68a6fd0"
+    },
+    "textures/storefront_f.png": {
+      "bytes": 18809,
+      "sha256": "643d807d2fd601625bcefd240eaf64a954a2248e7e39df9286f8a280b6be2b99"
+    },
+    "textures/storefront_g.png": {
+      "bytes": 21128,
+      "sha256": "a5d0dca23db34953455821e14eb251a715380f7fa707d60d32b3cb93f21e243e"
+    },
+    "textures/tree_bark.png": {
+      "bytes": 567837,
+      "sha256": "c9f5de29a14ab427c0a7a9c2e33fad816ac6755bde08a1917eaa6707ce776c65"
+    },
+    "textures/tree_canopy.png": {
+      "bytes": 561852,
+      "sha256": "ea82b3fb0c68b0485f14cbe933d45f6e0c7b0798fc7aa7cfb37665b08bfceb9b"
+    }
+  },
+  "generated_by": "scratchpad/w1/build_assets.py (card W-1, 2026-08-21)",
+  "licence": "CC0-1.0 for every upstream source; the generated composites and meshes are original work released under the repo's licence",
+  "sources": [
+    {
+      "asset_id": "asphalt_02",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "bytes": 731707,
+      "license": "CC0",
+      "md5": "fa19772d4817754c3efab708c651f5a8",
+      "name": "Asphalt 02",
+      "role": "road",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/asphalt_02/asphalt_02_diff_1k.jpg"
+    },
+    {
+      "asset_id": "concrete_pavement_02",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "bytes": 1052909,
+      "license": "CC0",
+      "md5": "bdee8d4deebb78609414453a5fb299e2",
+      "name": "Concrete Pavement 02",
+      "role": "sidewalk",
+      "source": "https://polyhaven.com/a/concrete_pavement_02",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_pavement_02/concrete_pavement_02_diff_1k.jpg"
+    },
+    {
+      "asset_id": "painted_concrete",
+      "authors": {
+        "Dario Barresi": "Processing",
+        "Dimitrios Savva": "Photography"
+      },
+      "bytes": 995059,
+      "license": "CC0",
+      "md5": "57cc093c9a4226186da0149c2d759055",
+      "name": "Painted Concrete",
+      "role": "crosswalk_paint",
+      "source": "https://polyhaven.com/a/painted_concrete",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/painted_concrete/painted_concrete_diff_1k.jpg"
+    },
+    {
+      "asset_id": "concrete_wall_008",
+      "authors": {
+        "Charlotte Baglioni": "Photography",
+        "Dario Barresi": "Processing "
+      },
+      "bytes": 623051,
+      "license": "CC0",
+      "md5": "6a0f87fbfea261d797661c47e05b25ad",
+      "name": "Concrete Wall 008",
+      "role": "curb",
+      "source": "https://polyhaven.com/a/concrete_wall_008",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/concrete_wall_008/concrete_wall_008_diff_1k.jpg"
+    },
+    {
+      "asset_id": "leafy_grass",
+      "authors": {
+        "Charlotte Baglioni": "All"
+      },
+      "bytes": 1195394,
+      "license": "CC0",
+      "md5": "0dbc071e91d6905edfcfbe8eb785a1ab",
+      "name": "Leafy Grass",
+      "role": "grass",
+      "source": "https://polyhaven.com/a/leafy_grass",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/leafy_grass/leafy_grass_diff_1k.jpg"
+    },
+    {
+      "asset_id": "brick_wall_006",
+      "authors": {
+        "Jan Burghardt": "All"
+      },
+      "bytes": 1107155,
+      "license": "CC0",
+      "md5": "bca4cfee6a5aa6d4bac41e05dfc0cd40",
+      "name": "Brick Wall 006",
+      "role": "facade_brick",
+      "source": "https://polyhaven.com/a/brick_wall_006",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brick_wall_006/brick_wall_006_diff_1k.jpg"
+    },
+    {
+      "asset_id": "beige_wall_001",
+      "authors": {
+        "Dimitrios Savva": "Photography",
+        "Rico Cilliers": "Processing"
+      },
+      "bytes": 33074,
+      "license": "CC0",
+      "md5": "a99610d7d72ec6fb20ae991ad69b3eb7",
+      "name": "Beige Wall 001",
+      "role": "facade_beige",
+      "source": "https://polyhaven.com/a/beige_wall_001",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/beige_wall_001/beige_wall_001_diff_1k.jpg"
+    },
+    {
+      "asset_id": "painted_plaster_wall",
+      "authors": {
+        "Amal Kumar": "All"
+      },
+      "bytes": 686726,
+      "license": "CC0",
+      "md5": "15ba8c1f63a5ab412b1eabe31728540a",
+      "name": "Painted Plaster Wall",
+      "role": "facade_plaster",
+      "source": "https://polyhaven.com/a/painted_plaster_wall",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/painted_plaster_wall/painted_plaster_wall_diff_1k.jpg"
+    },
+    {
+      "asset_id": "brown_planks_03",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "bytes": 570668,
+      "license": "CC0",
+      "md5": "6c9fdc21afcdf171d0a39999392a70f4",
+      "name": "Brown Planks 03",
+      "role": "bench_wood",
+      "source": "https://polyhaven.com/a/brown_planks_03",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brown_planks_03/brown_planks_03_diff_1k.jpg"
+    },
+    {
+      "asset_id": "rough_pine_door",
+      "authors": {
+        "Dimitrios Savva": "All"
+      },
+      "bytes": 721865,
+      "license": "CC0",
+      "md5": "8c1036e566fe8e925e98123458aae385",
+      "name": "Rough Pine Door",
+      "role": "door_wood",
+      "source": "https://polyhaven.com/a/rough_pine_door",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rough_pine_door/rough_pine_door_diff_1k.jpg"
+    },
+    {
+      "asset_id": "metal_plate_02",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "bytes": 625917,
+      "license": "CC0",
+      "md5": "531b7e067dc537e0b3c7962175e04ffd",
+      "name": "Metal Plate 02",
+      "role": "city_metal",
+      "source": "https://polyhaven.com/a/metal_plate_02",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/metal_plate_02/metal_plate_02_diff_1k.jpg"
+    },
+    {
+      "asset_id": "bark_brown_02",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "bytes": 659592,
+      "license": "CC0",
+      "md5": "6669cca520594bdca19f94084984ab72",
+      "name": "Bark Brown 02",
+      "role": "tree_bark",
+      "source": "https://polyhaven.com/a/bark_brown_02",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_02/bark_brown_02_diff_1k.jpg"
+    },
+    {
+      "asset_id": "forest_leaves_03",
+      "authors": {
+        "Dimitrios Savva": "Photography",
+        "Rob Tuytel": "Processing"
+      },
+      "bytes": 1000751,
+      "license": "CC0",
+      "md5": "d407c7adebb2d943107eb91a30a9f909",
+      "name": "Forest Leaves 03",
+      "role": "tree_canopy",
+      "source": "https://polyhaven.com/a/forest_leaves_03",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_leaves_03/forest_leaves_03_diff_1k.jpg"
+    },
+    {
+      "asset_id": "denim_fabric",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "bytes": 886486,
+      "license": "CC0",
+      "md5": "3835b5e277dd99784bfe68d985da14ae",
+      "name": "Denim Fabric",
+      "role": "trousers_denim",
+      "source": "https://polyhaven.com/a/denim_fabric",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/denim_fabric/denim_fabric_diff_1k.jpg"
+    },
+    {
+      "asset_id": "fabric_pattern_05",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "bytes": 797220,
+      "license": "CC0",
+      "map": "col_01",
+      "md5": "bb9ea242bac4c41493de34ba251870c2",
+      "name": "Fabric Pattern 05",
+      "role": "shirt_pattern",
+      "source": "https://polyhaven.com/a/fabric_pattern_05",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/fabric_pattern_05/fabric_pattern_05_col_01_1k.jpg"
+    },
+    {
+      "asset_id": "cotton_jersey",
+      "authors": {
+        "Rico Cilliers": "Processing",
+        "colormass": "Photography"
+      },
+      "bytes": 581360,
+      "license": "CC0",
+      "md5": "d2f4493fdd48634b50d40f810ce9deb7",
+      "name": "Cotton Jersey",
+      "role": "shirt_jersey",
+      "source": "https://polyhaven.com/a/cotton_jersey",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/cotton_jersey/cotton_jersey_diff_1k.jpg"
+    },
+    {
+      "asset_id": "brown_leather",
+      "authors": {
+        "Rob Tuytel": "All"
+      },
+      "bytes": 503348,
+      "license": "CC0",
+      "md5": "080b3bf1372766ff2c7ff121ed07b5e8",
+      "name": "Brown Leather",
+      "role": "leather",
+      "source": "https://polyhaven.com/a/brown_leather",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/brown_leather/brown_leather_albedo_1k.jpg"
+    }
+  ]
+}

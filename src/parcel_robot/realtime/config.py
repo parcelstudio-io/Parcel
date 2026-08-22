@@ -76,12 +76,75 @@ ALLOWED_KEYS = frozenset(
         "whisperer",
         "capture",
         "voice_identity",
+        # Card P0-B — the four companion unlocks. Every one of them is OFF in
+        # the value it takes when the key is absent, so a config written before
+        # this card loads to byte-identical behaviour.
+        "proactive_motion_tools",
+        "unknown_place",
+        "hosted_affect",
     }
 )
 
 #: The nested ``whisperer:`` block — the owner's cost knob (card R11, owner
 #: directive 2026-08-20). Same refusal discipline as the outer schema.
-WHISPERER_ALLOWED_KEYS = frozenset({"enabled", "max_updates_per_minute", "min_gap_s"})
+WHISPERER_ALLOWED_KEYS = frozenset(
+    {"enabled", "max_updates_per_minute", "min_gap_s", "window_s"}
+)
+
+#: Card P0-B, deliverable 1 — WHICH MOTION TOOLS A SYSTEM-INITIATED REPLY MAY RUN.
+#:
+#: ``tool_broker`` refuses every :data:`~parcel_robot.realtime.tool_broker.MOTION_TOOLS`
+#: proposal when the response the model is answering was started by the ROBOT
+#: (card R11, bench finding C1: one injected telemetry item fired a spurious
+#: ``navigate_to`` in 2 of 3 forced-response trials). That gate is why the dog
+#: cannot drive off because it told itself something — and it is also why the
+#: companion may never so much as tilt its head unless spoken to first.
+#:
+#: The unlock is deliberately not "trust the provenance tag". It is a NAMED,
+#: closed list of tools whose worst case is a body that moved in place:
+#:
+#: * ``play_gesture`` and ``set_pose`` are bounded pose/trajectory skills that
+#:   run through the activity coordinator's cooldown, ttl and arbitration, and
+#:   they carry no navigation goal, no owner-relative tracking and no distance.
+#: * ``navigate_to``, ``circle_owner`` and ``follow_owner`` COMMIT THE ROBOT TO
+#:   TRAVEL. A proactive one is the C1 defect exactly, so naming one of them
+#:   here is a load refusal rather than a permission — see
+#:   :data:`PROACTIVE_MOTION_REFUSED`.
+#:
+#: Empty is the default and empty is the pre-card behaviour.
+PROACTIVE_MOTION_ALLOWED: tuple[str, ...] = ("play_gesture", "set_pose")
+
+#: The travel tools. Listing one in ``proactive_motion_tools`` is a refusal at
+#: load, with the reason, rather than a silent drop at dispatch: an operator who
+#: wrote it meant it, and the honest answer is to say why it cannot be had.
+PROACTIVE_MOTION_REFUSED: tuple[str, ...] = ("navigate_to", "circle_owner", "follow_owner")
+
+#: Card P0-B, deliverable 2 — WHAT ``navigate_to`` DOES WITH A PLACE NOBODY NAMED.
+#:
+#: ``refuse`` is the shipped behaviour and the default: a plain noun the robot
+#: has never heard of ("narnia") is admitted, rendered into the router as
+#: ``go to narnia`` and allowed to fail honestly at grounding, exactly as a
+#: TYPED sentence does (``test_navigate_to_grants_exactly_what_a_typed_sentence
+#: _grants`` pins that parity). The refusal, when it comes, comes from the map.
+#:
+#: ``ask`` answers the model instead: a structured ``unknown_place`` result that
+#: names the places the robot DOES know, touches no door and starts no motion,
+#: so the companion asks the owner where that is (or offers to go look) rather
+#: than setting off toward a name it cannot ground. Prototype directive
+#: 2026-08-22: ask over refuse.
+UNKNOWN_PLACE_REFUSE = "refuse"
+UNKNOWN_PLACE_ASK = "ask"
+ALLOWED_UNKNOWN_PLACE_MODES = frozenset({UNKNOWN_PLACE_REFUSE, UNKNOWN_PLACE_ASK})
+
+#: Card P0-B, deliverable 3. The one value of ``idle_close_after_s`` that is not
+#: a number of seconds: keep the session open for as long as it stays healthy.
+IDLE_CLOSE_NEVER = 0.0
+
+#: Card P0-B, deliverable 4. The rolling window ``whisperer.max_updates_per_minute``
+#: is counted over, in seconds. Sixty is what the cap has always meant and is
+#: the default; the key exists so the narration rate is one knob and not "a
+#: number you may set and a minute you may not".
+DEFAULT_WHISPERER_WINDOW_S = 60.0
 
 #: The nested ``capture:`` block — session audio capture (card R17, owner
 #: directive 2026-08-20 "store these valuable audio as test cases"). Same
@@ -183,12 +246,20 @@ class WhispererConfig:
     #: found a reroute silently swallowed by a min-gap a mission_clear was
     #: holding (``bench_whisperer.md``, "shared min-gap bug").
     min_gap_s: float = 15.0
+    #: Card P0-B. The window :attr:`max_updates_per_minute` is counted over, in
+    #: seconds. The cap was always "per rolling minute" and the minute was a
+    #: literal ``60.0`` inside ``whisperer._spent`` — so half the narration rate
+    #: was configurable and half of it was not, and an owner who wanted a
+    #: chattier prototype could only buy it in whole units of two-per-minute.
+    #: Default 60.0: the same minute, now written down.
+    window_s: float = DEFAULT_WHISPERER_WINDOW_S
 
     def as_dict(self) -> dict[str, object]:
         return {
             "enabled": self.enabled,
             "max_updates_per_minute": self.max_updates_per_minute,
             "min_gap_s": self.min_gap_s,
+            "window_s": self.window_s,
         }
 
 
@@ -338,13 +409,34 @@ class RealtimeConfig:
     #: nobody. Owner session 1 left a session open all night — seven
     #: ``[session rollover]`` rows between 06:23 and 12:23 with not one turn
     #: between them — because nothing in the product had an opinion about a lane
-    #: that is not being talked to. There is deliberately NO "off" value: the
-    #: loader refuses zero and negatives, exactly as it refuses a whisperer cap
-    #: of zero, because a silent off switch on a billing session is the failure
-    #: this key exists to prevent. An operator who really wants a session that
-    #: never hangs itself up writes a large number and can be seen doing it.
+    #: that is not being talked to. Negatives and non-finite values are still
+    #: refused, and the default is unchanged.
+    #:
+    #: CARD P0-B CHANGED ONE VALUE'S MEANING. ``0`` used to be a refusal, on the
+    #: reasoning that a silent off switch on a billing session is worse than a
+    #: loud number. Zero is now accepted and means NEVER IDLE-CLOSE — because it
+    #: is not silent: it is a value an operator wrote down, it is echoed in
+    #: ``/api/state`` and in the example config, and the two bounds that make an
+    #: unattended session finite (``session_max_s`` and ``monthly_budget_usd``)
+    #: are untouched and still refuse zero. What it buys is the prototype
+    #: directive: a companion lane that stays live while the owner is around
+    #: instead of hanging up mid-afternoon and needing to be spoken to twice.
     idle_close_after_s: float = 600.0
     monthly_budget_usd: float = 25.0
+    #: Card P0-B. Motion tools a SYSTEM-initiated response may still run — the
+    #: proactive-companion unlock. Empty (the default) is card R11's behaviour:
+    #: no motion at all unless the owner asked. See
+    #: :data:`PROACTIVE_MOTION_ALLOWED` for what may go in it and why the travel
+    #: tools may not.
+    proactive_motion_tools: tuple[str, ...] = ()
+    #: Card P0-B. ``refuse`` (default, unchanged behaviour) or ``ask``.
+    unknown_place: str = UNKNOWN_PLACE_REFUSE
+    #: Card P0-B. Run the deterministic explicit-affect grammar on hosted
+    #: transcripts the ingress did not claim, so "I'm feeling sad" reaches the
+    #: persona's ``affect_actions`` gesture on the HOSTED lane too and not only
+    #: on the legacy one. Default off: it proposes a body movement from a
+    #: sentence, which is exactly the class of thing that gets a switch.
+    hosted_affect: bool = False
     #: Card R11. The owner's control over robot-initiated hosted queries.
     whisperer: WhispererConfig = WhispererConfig()
     #: Card R17. Session audio capture. Default OFF; the owner opts in.
@@ -372,6 +464,17 @@ class RealtimeConfig:
 
         return self.source != "absent"
 
+    @property
+    def idle_close_enabled(self) -> bool:
+        """Card P0-B. False when ``idle_close_after_s: 0`` said never hang up.
+
+        A property rather than a comparison spelled out at the one call site, so
+        the meaning of the sentinel lives beside the key it belongs to and a
+        second reader cannot invent a different one.
+        """
+
+        return self.idle_close_after_s > IDLE_CLOSE_NEVER
+
     def as_dict(self) -> dict[str, object]:
         return {
             "enabled": self.enabled,
@@ -387,6 +490,12 @@ class RealtimeConfig:
             "session_max_s": self.session_max_s,
             "idle_close_after_s": self.idle_close_after_s,
             "monthly_budget_usd": self.monthly_budget_usd,
+            # Card P0-B. A list, not a tuple: this dict is JSON-serialized into
+            # /api/state, and an operator reading it must be able to see that
+            # the proactive unlock is on without going to the yaml.
+            "proactive_motion_tools": list(self.proactive_motion_tools),
+            "unknown_place": self.unknown_place,
+            "hosted_affect": self.hosted_affect,
             "whisperer": self.whisperer.as_dict(),
             "capture": self.capture.as_dict(),
             "voice_identity": self.voice_identity.as_dict(),
@@ -476,6 +585,116 @@ def _positive(mapping: Mapping[str, Any], key: str, default: float) -> float:
     return number
 
 
+def _idle_close_after_s(mapping: Mapping[str, Any], default: float) -> float:
+    """Card P0-B, deliverable 3. Seconds, or ``0`` meaning NEVER hang up.
+
+    Everything :func:`_positive` refuses is still refused here — a non-number, a
+    boolean, a negative, ``.inf``, ``nan`` — and for the same reasons. The one
+    admitted addition is exact zero, which no longer reads as "a cap of nothing"
+    (that would close the session on the first idle tick, which is what the old
+    comparison in ``lane._idle_due`` would literally have done) but as the
+    documented sentinel :data:`IDLE_CLOSE_NEVER`.
+
+    Why this is not the silent off switch R16 refused: it is not silent. The
+    value is written by hand, echoed by ``as_dict`` into ``/api/state``, and
+    named in the shipped example. And it removes only ONE of the three bounds on
+    an unattended session — ``session_max_s`` still rolls the socket over and
+    ``monthly_budget_usd`` still stops the robot starting billed exchanges, and
+    both of them still refuse zero.
+    """
+
+    key = "idle_close_after_s"
+    value = mapping.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RealtimeConfigError(f"realtime.{key} must be a number, got {value!r}")
+    number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.{key} must be a finite number, got {number}. Write 0 for "
+            f"'never hang up' — a sentinel that is visible in /api/state — "
+            f"rather than a non-finite value that also permits every finite one."
+        )
+    if number < 0.0:
+        raise RealtimeConfigError(
+            f"realtime.{key} must not be negative, got {number}. Zero means "
+            f"never idle-close; a negative is a typo for it."
+        )
+    return number
+
+
+def _proactive_motion_tools(mapping: Mapping[str, Any]) -> tuple[str, ...]:
+    """Card P0-B, deliverable 1. A closed list of low-risk tools, or nothing.
+
+    Three refusals, each of them a thing an operator could plausibly write:
+
+    * a **travel tool** (:data:`PROACTIVE_MOTION_REFUSED`). This is the one that
+      matters. ``navigate_to`` from a reply the robot started IS bench finding
+      C1 — the dog driving off because a telemetry item made it talk to itself —
+      and no amount of config may buy it back. Refused by name, with the reason.
+    * an **unknown name**, because a mistyped ``play_guesture`` that silently did
+      nothing would look exactly like the feature being broken.
+    * a **non-list, or a list holding something that is not a string**.
+
+    Duplicates are collapsed and order is not significant: this is a membership
+    test at dispatch, not a sequence.
+    """
+
+    key = "proactive_motion_tools"
+    if key not in mapping:
+        return ()
+    value = mapping.get(key)
+    if value is None:
+        return ()
+    if isinstance(value, (str, bytes)) or not isinstance(value, (list, tuple)):
+        raise RealtimeConfigError(
+            f"realtime.{key} must be a list of tool names, got {value!r}. "
+            f"Allowed entries: {', '.join(PROACTIVE_MOTION_ALLOWED)}."
+        )
+    names: list[str] = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise RealtimeConfigError(
+                f"realtime.{key} holds a non-name: {item!r}"
+            )
+        name = item.strip()
+        if name in PROACTIVE_MOTION_REFUSED:
+            raise RealtimeConfigError(
+                f"realtime.{key} may not contain {name!r}: it commits the robot "
+                f"to travel, and a trip the owner never asked for is the defect "
+                f"the system-initiated gate exists to prevent (bench_navmodel.md "
+                f"§4, finding C1). Allowed entries: "
+                f"{', '.join(PROACTIVE_MOTION_ALLOWED)}."
+            )
+        if name not in PROACTIVE_MOTION_ALLOWED:
+            raise RealtimeConfigError(
+                f"realtime.{key} names {name!r}, which is not a tool this robot "
+                f"will run proactively. Allowed entries: "
+                f"{', '.join(PROACTIVE_MOTION_ALLOWED)}."
+            )
+        if name not in names:
+            names.append(name)
+    return tuple(names)
+
+
+def _unknown_place(mapping: Mapping[str, Any]) -> str:
+    """Card P0-B, deliverable 2. ``refuse`` (default) or ``ask``."""
+
+    key = "unknown_place"
+    value = mapping.get(key, UNKNOWN_PLACE_REFUSE)
+    if not isinstance(value, str) or not value.strip():
+        raise RealtimeConfigError(
+            f"realtime.{key} must be one of "
+            f"{', '.join(sorted(ALLOWED_UNKNOWN_PLACE_MODES))}, got {value!r}"
+        )
+    clean = value.strip().lower()
+    if clean not in ALLOWED_UNKNOWN_PLACE_MODES:
+        raise RealtimeConfigError(
+            f"realtime.{key} must be one of "
+            f"{', '.join(sorted(ALLOWED_UNKNOWN_PLACE_MODES))}, got {value!r}"
+        )
+    return clean
+
+
 def _whole_number(mapping: Mapping[str, Any], key: str, default: int) -> int:
     """A positive integer. ``True`` is not 1 here, and 2.5 updates is not a cap."""
 
@@ -548,7 +767,37 @@ def whisperer_config_from_mapping(mapping: Mapping[str, Any] | None) -> Whispere
         enabled=enabled,
         max_updates_per_minute=_whole_number(mapping, "max_updates_per_minute", 2),
         min_gap_s=_non_negative(mapping, "min_gap_s", 15.0),
+        window_s=_whisperer_window(mapping),
     )
+
+
+def _whisperer_window(mapping: Mapping[str, Any]) -> float:
+    """Card P0-B, deliverable 4. The cap's rolling window, in seconds.
+
+    Strictly positive, unlike ``min_gap_s``. A window of zero would make
+    ``_spent`` count nothing at all and the cap would never bite again — the
+    silent removal of the owner's cost control, wearing the costume of a tuning
+    value. ``enabled: false`` is the off switch for narration and it is visible.
+    """
+
+    key = "window_s"
+    value = mapping.get(key, DEFAULT_WHISPERER_WINDOW_S)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.{key} must be a number, got {value!r}"
+        )
+    number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.{key} must be a finite number, got {number}"
+        )
+    if not number > 0.0:
+        raise RealtimeConfigError(
+            f"realtime.whisperer.{key} must be greater than zero, got {number}. "
+            f"A window of zero counts nothing and would remove the cap silently; "
+            f"use 'enabled: false' to stop narration, which is visible."
+        )
+    return number
 
 
 def resolve_capture_dir(directory: str) -> Path:
@@ -827,8 +1076,11 @@ def realtime_config_from_mapping(
         voice=_text(mapping, "voice", "cedar"),
         stall_timeout_s=_positive(mapping, "stall_timeout_s", 8.0),
         session_max_s=_positive(mapping, "session_max_s", 3600.0),
-        idle_close_after_s=_positive(mapping, "idle_close_after_s", 600.0),
+        idle_close_after_s=_idle_close_after_s(mapping, 600.0),
         monthly_budget_usd=_positive(mapping, "monthly_budget_usd", 25.0),
+        proactive_motion_tools=_proactive_motion_tools(mapping),
+        unknown_place=_unknown_place(mapping),
+        hosted_affect=_boolean(mapping, "hosted_affect", False),
         whisperer=whisperer_config_from_mapping(mapping.get("whisperer")),
         capture=capture_config_from_mapping(mapping.get("capture")),
         voice_identity=voice_identity_config_from_mapping(mapping.get("voice_identity")),
@@ -880,16 +1132,23 @@ def default_realtime_config() -> RealtimeConfig:
 __all__ = [
     "ALLOWED_KEYS",
     "ALLOWED_MODES",
+    "ALLOWED_UNKNOWN_PLACE_MODES",
     "CAPTURE_ALLOWED_KEYS",
     "DEFAULT_CAPTURE_DIR",
     "DEFAULT_CAPTURE_MAX_MINUTES",
     "DEFAULT_CAPTURE_OWNER_GAP_S",
     "DEFAULT_VOICE_THRESHOLD",
+    "DEFAULT_WHISPERER_WINDOW_S",
+    "IDLE_CLOSE_NEVER",
     "MAX_PERSONA_CHARS",
     "MODE_AUDIO",
     "MODE_TEXT",
+    "PROACTIVE_MOTION_ALLOWED",
+    "PROACTIVE_MOTION_REFUSED",
     "REALTIME_CONFIG_ENV",
     "REALTIME_CONFIG_RELATIVE",
+    "UNKNOWN_PLACE_ASK",
+    "UNKNOWN_PLACE_REFUSE",
     "VOICE_IDENTITY_ALLOWED_KEYS",
     "WHISPERER_ALLOWED_KEYS",
     "CaptureConfig",

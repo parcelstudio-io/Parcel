@@ -1,0 +1,134 @@
+{
+  "arms": {
+    "held": {
+      "arm": "held",
+      "attribution": {
+        "buckets": {
+          "delivered_moving": 0,
+          "gate_scaled": 256,
+          "gate_zeroed_obstacle": 0,
+          "gate_zeroed_other": 37,
+          "gate_zeroed_person": 24,
+          "gate_zeroed_ttc": 81,
+          "no_intent": 0,
+          "ramp_limited": 0,
+          "zero_intent": 0
+        },
+        "gate_touched_ticks": 398,
+        "sent_count": 327,
+        "sent_max_speed": 0.027766,
+        "sent_nonzero_count": 256,
+        "sent_p50_speed": 0.010993,
+        "ticks": 398,
+        "translating_intent_ticks": 398
+      },
+      "collision_ticks": 50,
+      "duration_s": 40.0,
+      "first": [
+        0.0,
+        0.0
+      ],
+      "last": [
+        0.319069,
+        0.0
+      ],
+      "motion_accepted": 160,
+      "motion_rejected": 0,
+      "net_displacement_m": 0.319069,
+      "path_length_m": 0.319069,
+      "pose_samples": 398
+    },
+    "held_static": {
+      "arm": "held_static",
+      "attribution": {
+        "buckets": {
+          "delivered_moving": 6,
+          "gate_scaled": 13,
+          "gate_zeroed_obstacle": 0,
+          "gate_zeroed_other": 374,
+          "gate_zeroed_person": 0,
+          "gate_zeroed_ttc": 0,
+          "no_intent": 0,
+          "ramp_limited": 3,
+          "zero_intent": 0
+        },
+        "gate_touched_ticks": 387,
+        "sent_count": 196,
+        "sent_max_speed": 0.25,
+        "sent_nonzero_count": 19,
+        "sent_p50_speed": 0.0,
+        "ticks": 398,
+        "translating_intent_ticks": 398
+      },
+      "collision_ticks": 0,
+      "duration_s": 40.0,
+      "first": [
+        0.0,
+        0.0
+      ],
+      "last": [
+        0.313445,
+        0.0
+      ],
+      "motion_accepted": 160,
+      "motion_rejected": 0,
+      "net_displacement_m": 0.313445,
+      "path_length_m": 0.313445,
+      "pose_samples": 398
+    },
+    "replicate": {
+      "arm": "replicate",
+      "attribution": {
+        "buckets": {
+          "delivered_moving": 0,
+          "gate_scaled": 180,
+          "gate_zeroed_obstacle": 0,
+          "gate_zeroed_other": 0,
+          "gate_zeroed_person": 14,
+          "gate_zeroed_ttc": 46,
+          "no_intent": 0,
+          "ramp_limited": 0,
+          "zero_intent": 160
+        },
+        "gate_touched_ticks": 240,
+        "sent_count": 207,
+        "sent_max_speed": 0.027511,
+        "sent_nonzero_count": 180,
+        "sent_p50_speed": 0.0135,
+        "ticks": 400,
+        "translating_intent_ticks": 240
+      },
+      "collision_ticks": 50,
+      "duration_s": 40.0,
+      "first": [
+        0.0,
+        0.0
+      ],
+      "last": [
+        0.226719,
+        0.0
+      ],
+      "motion_accepted": 160,
+      "motion_rejected": 0,
+      "net_displacement_m": 0.226719,
+      "path_length_m": 0.226719,
+      "pose_samples": 400
+    }
+  },
+  "duration_s": 40.0,
+  "fresh_simulator_per_arm": true,
+  "generated_at": "2026-08-22T03:05:55.559518+00:00",
+  "owner_store": {
+    "sha256_after": null,
+    "sha256_before": null,
+    "unchanged": true
+  },
+  "repo_head": "71b39a1ad66bb2fb2f6e647dbc94d351fd75d665",
+  "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+  "scene_sha256": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58",
+  "simulator_returncodes": {
+    "held": -15,
+    "held_static": -15,
+    "replicate": -15
+  }
+}

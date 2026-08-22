@@ -1,0 +1,29 @@
+VLM SEAT RECOMMENDATION (bench-vlm, 2026-08-21, RTX 5000 Ada 32GB, pre-registered before first inference)
+
+VERDICT: Seat Qwen3-VL-2B-Instruct (Apache-2.0), resident-always at 4,376 MiB, with generation duty-cycled behind PG-1's contention guard. Retire Qwen3-VL-8B from the seat (frees ~12.7 GiB). F3-class scene answerability stays deterministic-first (C-2 map is the truth source); the 2B is the escalation path and a new fifth abstention signal for PG-3.
+
+MEASURED BASIS (all real-photo = COCO control, 40 frames / 20 crops; sim = 42 untextured frames, null control):
+- Quality tie with incumbent: person QA 36/40 (2B) vs 36/40 (8B) pre-registered GT; 38/40 vs 40/40 amended any-person GT (post-hoc, labeled: 3 of 4 "misses" were uncounted tiny people, visible_px 29-177). Crop naming 16/20 vs 15/20. Verification (is-this-a-X, pos+neg) 37/40 both; p(yes) separation 0.85 (2B) vs 0.81 (8B); ECE 0.07 vs 0.09. Binomial CI at n=40 is roughly +/-10 pts: claim is "no measured degradation," not "2B beats 8B."
+- Cost: 4,376 vs 17,040 MiB resident; answer p50 89 vs 214 ms (n=206); TTFT p50 77 vs 178 ms (n=18); crop query p50 55 ms (n=49); warm load 1.0 s (tmpfs page cache — best case).
+- Contention (OWLv2 fp16 p95, n=30/arm, same method as bench-owl): alone 66.6-84.7 ms (session spread); VLM resident-idle 74-91 ms (residency is ~free at every size); VLM generating: 8B 150.1 ms (reproduces prior 150.4), 4B 121.1, SmolVLM2 109.2, 2B 106.2 — ALL breach the pre-registered 100 ms 10 Hz bound (H2 confirmed: co-generation contention is a property of any generating transformer, not size). Exploratory (not pre-registered): detector on high-priority CUDA stream during 2B generation = 95.8 ms. Caveat: detector call device-syncs, so numbers include draining in-flight VLM kernels — honest for the current stack, upper bound if runtime moves to stream events.
+- Pre-registered scorecard: q2 and s2 pass criteria 1-5, all four fail criterion 6; committed decision rule for exactly this outcome selects the best 1-5 passer as resident-but-duty-cycled = q2 (dominates SmolVLM2 on every quality metric). q4 fails VRAM (8,786 > 8,000) but is best at counting (30/40 within-1) if a mid seat is ever wanted.
+- Sim floor unchanged: person QA 4-8/42, naming 8-13/29, verify sep 0.31-0.41 for every model — W-1 textures gate everything (H3 confirmed). Path-clear QA vs depth-corridor GT uninformative (balanced acc ~0.5); re-run after W-1.
+
+OPEN DESIGN QUESTIONS (this bench's evidence):
+2. Map retrieval: detector-label-primary + 2B VLM-verify as rerank/tiebreak — 55-90 ms/crop, separation 0.85, ECE 0.07, vs SigLIP-2 text-cosine near-chance. Wire VLM-verify as PG-3's fifth signal.
+3. Vocabulary-free naming: yes, gated — 16/20 top-1 on real crops; naming consistency perfect for distinctive classes (bicycle, traffic light: 1 distinct name/4 crops), poor for "bench" (3 names) — promote VLM names only after k consistent namings via C-2's evidence counts. On sim 8/29: blocked by W-1, not the model.
+4. Embedding versioning (C-2 gap confirmed — card has no version field): stamp entries with (model_id, revision, dim); never compare across stamps; lazy re-embed on re-observation; mark old stamps stale via existing decay-marks-never-deletes; version-stable spine = class label + surface location + evidence; VLM-verify is version-free and bridges upgrades.
+5. Structurally missing: (a) no card owns the VLM duty-cycle policy (when the seat may generate: stationary / between keyframes / behind PG-1; pin the hi-prio-stream trick, worth 10-30 ms); (b) count answers unreliable at every size (12-17/40 exact) — F3 must never emit counts without map corroboration; (c) E-2 held-out scoring needs an any-person GT rule or it penalizes correct perception; (d) "go to Narnia" refusal: 120/120 absurd probes answered "no" across all models and both image sets — VLM refuses where OWLv2's label head fired at 0.338; keep navigability gate as defense in depth; coffee-shop TRUE-positive case untested (add to E-2 scene).
+(Q1 detector choice is bench-owl's seat; this data adds: a VLM cannot replace the detector — no boxes, 77-90 ms/single-answer vs 43 ms/11-label detection.)
+
+REGISTERED MISSES: H6 wrong both directions (SmolVLM2 slower than Qwen-2B, only -5 pts QA); H4 conservative (2B separation improved, not degraded). GPU checked before every load; no W1/E2 job appeared; nothing killed; peak co-resident stack 20.6 GiB with >6 GiB headroom kept.
+
+ARTIFACT REPORT: https://claude.ai/code/artifact/f34ee029-e7f6-4607-b89b-09c1f1cc6412
+
+FILES (all absolute):
+- Pre-registration: /tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/799cb356-4cb4-445b-a784-306b6c6fd4a6/scratchpad/cutover-research/bench-vlm/PREREGISTRATION.md
+- Aggregate table: .../cutover-research/bench-vlm/results/AGGREGATE.json; per-model raw answers: results/{q8,q4,q2,s2}_seat.json, results/{q8,q4,q2,s2}_contention.json, results/person_any_amended.json
+- Code: .../cutover-research/bench-vlm/code/{common,make_crops,bench_seat,bench_contention,aggregate,rescore_person_any}.py; crops + meta: .../cutover-research/bench-vlm/crops/
+- Weights (scratch, Apache-2.0): .../cutover-research/bench-vlm/hf/hub/ (Qwen3-VL-2B, Qwen3-VL-4B, SmolVLM2-2.2B); 8B reused from bench-owl cache. Report HTML: .../cutover-research/bench-vlm/report.html
+
+Sources: [BentoML VLM guide 2026](https://www.bentoml.com/blog/multimodal-ai-a-guide-to-open-source-vision-language-models), [TinyWeights small VLMs 2026](https://tinyweights.dev/posts/best-local-vision-language-models-2026/), [Presenc open-weight VLMs 2026](https://presenc.ai/research/best-open-weight-vision-language-models-2026), [SmolVLM blog](https://huggingface.co/blog/smolvlm)

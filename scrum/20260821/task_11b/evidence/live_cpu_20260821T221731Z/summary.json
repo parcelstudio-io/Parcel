@@ -1,0 +1,5477 @@
+{
+  "arms": {
+    "off": {
+      "arm": "off",
+      "backend_health_before_close": {},
+      "camera_on": false,
+      "close_error": null,
+      "config": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live_off.yaml",
+      "config_sha256": "8d7b168c3924d068826d8907fca9d984bc18bc99d44b4f59a96eeff18d79e0a8",
+      "control_loop_work": {
+        "count": 81,
+        "latest_ms": 10.283,
+        "max_ms": 10.642,
+        "mean_ms": 6.717,
+        "p50_ms": 6.891,
+        "p95_ms": 10.283,
+        "p99_ms": 10.642
+      },
+      "elapsed_s": 8.161,
+      "ended_at_utc": "2026-08-21T22:17:51.152483+00:00",
+      "evidence_after_close": null,
+      "gpu": {
+        "free_mib_min": 30975,
+        "headroom_at_least_6gib": true,
+        "samples": [
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:43.118734+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:43.640064+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:44.161655+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:44.683984+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:45.208155+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:45.729847+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:46.253715+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:46.776816+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:47.302437+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:47.829686+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:48.356658+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:48.884023+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:49.410579+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:49.941315+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:50.470216+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30975,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1254,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:50.997162+00:00"
+          }
+        ],
+        "used_mib_min": 1254,
+        "used_mib_peak": 1254
+      },
+      "http_base_url_during_run": null,
+      "latency": {
+        "aggregate": {},
+        "aggregate_by_status": {},
+        "audio": {
+          "bluetooth_connected": false,
+          "bluetooth_controller": true,
+          "bluetooth_duplex_ready": false,
+          "bluetooth_powered": true,
+          "capture_hardware": true,
+          "connected_input": true,
+          "connected_output": true,
+          "detail": "Audio input and output endpoints are connected.",
+          "driver": "PipeWire/ALSA",
+          "input_identity": "media.class=Audio/Source",
+          "input_is_monitor": false,
+          "status": "available",
+          "transport": "pipewire"
+        },
+        "component_definitions": {
+          "DuplexProducer": "Wall-clock duration of one duplex frame producer tick.",
+          "ExecutiveTick": "Wall-clock duration of one non-LLM task-executive tick.",
+          "FillerLatency": "End of final user input to the first audible duplex filler utterance (playback start / TTS enqueue audible \u2014 not filler fire time).",
+          "IntentRouter": "Wall-clock duration of deterministic intent routing.",
+          "ObservationSnapshotBuild": "Wall-clock duration of building a bounded camera/LiDAR planning snapshot.",
+          "PlanAcceptance": "Wall-clock duration of task-executive plan admission.",
+          "PlanModel": "Wall-clock duration of the complete planning-model request.",
+          "PlanValidation": "Wall-clock duration of PlanIR validation against fresh state."
+        },
+        "components": {
+          "ActivityCoordinator": {
+            "count": 81,
+            "latest_ms": 0.014,
+            "max_ms": 0.032,
+            "mean_ms": 0.016,
+            "p50_ms": 0.014,
+            "p95_ms": 0.023,
+            "p99_ms": 0.032
+          },
+          "BackendCommandSend": {
+            "count": 52,
+            "latest_ms": 0.024,
+            "max_ms": 0.041,
+            "mean_ms": 0.024,
+            "p50_ms": 0.023,
+            "p95_ms": 0.036,
+            "p99_ms": 0.041
+          },
+          "CollisionGate": {
+            "count": 81,
+            "latest_ms": 0.057,
+            "max_ms": 0.125,
+            "mean_ms": 0.073,
+            "p50_ms": 0.073,
+            "p95_ms": 0.104,
+            "p99_ms": 0.125
+          },
+          "ControlLoopOverrun": {
+            "count": 81,
+            "latest_ms": 0.0,
+            "max_ms": 0.0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "p99_ms": 0.0
+          },
+          "ControlLoopWork": {
+            "count": 81,
+            "latest_ms": 10.283,
+            "max_ms": 10.642,
+            "mean_ms": 6.717,
+            "p50_ms": 6.891,
+            "p95_ms": 10.283,
+            "p99_ms": 10.642
+          },
+          "DuplexProducer": {
+            "count": 81,
+            "latest_ms": 0.128,
+            "max_ms": 0.347,
+            "mean_ms": 0.135,
+            "p50_ms": 0.123,
+            "p95_ms": 0.21,
+            "p99_ms": 0.347
+          },
+          "ExecutiveTick": {
+            "count": 81,
+            "latest_ms": 0.189,
+            "max_ms": 0.528,
+            "mean_ms": 0.215,
+            "p50_ms": 0.193,
+            "p95_ms": 0.294,
+            "p99_ms": 0.528
+          },
+          "ExpressionLayer": {
+            "count": 401,
+            "latest_ms": 0.035,
+            "max_ms": 0.409,
+            "mean_ms": 0.048,
+            "p50_ms": 0.044,
+            "p95_ms": 0.066,
+            "p99_ms": 0.089
+          },
+          "MotionDispatch": {
+            "count": 81,
+            "latest_ms": 0.138,
+            "max_ms": 0.445,
+            "mean_ms": 0.21,
+            "p50_ms": 0.208,
+            "p95_ms": 0.313,
+            "p99_ms": 0.445
+          },
+          "NavigationController": {
+            "count": 81,
+            "latest_ms": 0.002,
+            "max_ms": 0.005,
+            "mean_ms": 0.002,
+            "p50_ms": 0.002,
+            "p95_ms": 0.003,
+            "p99_ms": 0.005
+          },
+          "OwnerSearchController": {
+            "count": 81,
+            "latest_ms": 0.001,
+            "max_ms": 0.006,
+            "mean_ms": 0.002,
+            "p50_ms": 0.002,
+            "p95_ms": 0.002,
+            "p99_ms": 0.006
+          },
+          "OwnerTrackHeadingFilter": {
+            "count": 81,
+            "latest_ms": 0.009,
+            "max_ms": 0.031,
+            "mean_ms": 0.011,
+            "p50_ms": 0.01,
+            "p95_ms": 0.014,
+            "p99_ms": 0.031
+          },
+          "PerceptionAge": {
+            "count": 81,
+            "latest_ms": 1.202,
+            "max_ms": 1.401,
+            "mean_ms": 1.206,
+            "p50_ms": 1.212,
+            "p95_ms": 1.368,
+            "p99_ms": 1.401
+          },
+          "SimulatorObserve": {
+            "count": 81,
+            "latest_ms": 9.677,
+            "max_ms": 9.98,
+            "mean_ms": 5.989,
+            "p50_ms": 6.214,
+            "p95_ms": 9.535,
+            "p99_ms": 9.98
+          },
+          "SpatialController": {
+            "count": 81,
+            "latest_ms": 0.003,
+            "max_ms": 0.008,
+            "mean_ms": 0.003,
+            "p50_ms": 0.003,
+            "p95_ms": 0.004,
+            "p99_ms": 0.008
+          }
+        },
+        "definitions": {
+          "AcousticAck": "The end-to-end acknowledgement budget: last owner speech frame to the instant the speaker worker began writing the first reply chunk. This is the number a sub-700 ms ack claim has to beat.",
+          "EndpointDecision": "Last speech frame of the owner's utterance to the endpointer's commit decision (how long the robot deliberated before deciding they stopped).",
+          "IntentRouting": "End of final user input to production of IntentFrame.",
+          "ObservationSnapshotBuild": "IntentFrame production to completion of the bounded planning observation snapshot.",
+          "PlanAcceptance": "Successful plan validation to task-executive admission.",
+          "PlanDecode": "Observation snapshot completion to receipt and parsing of the complete PlanIR.",
+          "PlanTimeToFirstOutput": "Observation snapshot completion to the first planning-model output token; for a non-streaming provider, the complete parsed planning response.",
+          "PlanValidation": "Complete PlanIR parsing to successful plan validation.",
+          "PlaybackEnqueueToFirstSample": "Audio-sink handoff to the speaker worker starting that chunk. The acoustic rig measured 0.54-0.64 s here, so it may never be assumed 0.",
+          "QueryEndToFirstSpokenAudio": "End of final user input to the first audio-sink handoff. This is a software lower-bound estimate until acoustic presentation timestamps are available.",
+          "SttFinalToQueryEnd": "Final transcript to the turn's query-end anchor (session admission).",
+          "SttRequestQueue": "Endpointer commit to the start of the STT request (segmentation, WAV framing and dispatch overhead).",
+          "SttTranscribe": "STT request start to the final transcript.",
+          "UserQueryEndToAcceptedPlan": "End of final user input to admission of a validated plan by the task executive.",
+          "UserQueryEndToFirstPlanOutput": "End of final user input to the first planning-model output token; for a non-streaming provider, the complete parsed planning response.",
+          "UserQueryEndToFirstReasoningResponse": "End of final user input to the first model output token; for deterministic or non-streaming paths, the complete validated reasoning result.",
+          "UserQueryEndToFirstResponse": "End of final user input to the first response made observable by logging or audio playback, whichever occurs first."
+        },
+        "stage_definitions": {
+          "intent_routed": "The deterministic intent router has classified the final user turn and produced its versioned IntentFrame.",
+          "observation_snapshot": "A bounded, sensor-grounded ObservationSnapshot is ready for planning.",
+          "plan_accepted": "The validated plan has been admitted by the task executive for execution.",
+          "plan_first_output": "The first output token or equivalent partial output from the planning model.",
+          "plan_response": "The complete planning-model response has been received and parsed as PlanIR.",
+          "plan_validated": "PlanIR has passed schema, semantic, capability, freshness, and safety validation."
+        },
+        "status_counts": {},
+        "turns": [],
+        "unavailable": {
+          "ASREndpointer": "capture endpoint connected; endpointer + STT clocks are wired (EndpointDecision / SttTranscribe), continuous per-frame ASR timing is still not exposed",
+          "BluetoothAcousticPresentation": "requires a connected headset and PipeWire presentation timestamps"
+        }
+      },
+      "motion_script": {
+        "accepted": 31,
+        "rejected": 0,
+        "rejection_reasons": []
+      },
+      "panel_html": null,
+      "process_memory": {
+        "runtime_rss_peak_kib_sampled": 95876,
+        "self_ru_maxrss_kib": 206356,
+        "simulator_rss_peak_kib_sampled": 751508
+      },
+      "started_at_utc": "2026-08-21T22:17:42.991123+00:00",
+      "state": {
+        "activities": {
+          "pending": [],
+          "recent": [],
+          "running": null
+        },
+        "agent": {
+          "active_source": "voice",
+          "personalities": [
+            {
+              "id": "calm_guardian",
+              "name": "Calm guardian"
+            },
+            {
+              "id": "gentle_companion",
+              "name": "Gentle companion"
+            },
+            {
+              "id": "playful_companion",
+              "name": "Playful companion"
+            }
+          ],
+          "personality": "gentle_companion",
+          "status": "ready"
+        },
+        "audio": {
+          "bluetooth_connected": false,
+          "bluetooth_controller": true,
+          "bluetooth_duplex_ready": false,
+          "bluetooth_powered": true,
+          "capture_hardware": true,
+          "connected_input": true,
+          "connected_output": true,
+          "detail": "Audio input and output endpoints are connected.",
+          "driver": "PipeWire/ALSA",
+          "input_identity": "media.class=Audio/Source",
+          "input_is_monitor": false,
+          "status": "available",
+          "transport": "pipewire"
+        },
+        "brain": {
+          "active_invariants": [],
+          "admitted_skills": [
+            "AskClarification",
+            "FollowFormation",
+            "Gesture",
+            "Hold",
+            "MoveRelative",
+            "NavigateTo",
+            "OrbitOwner",
+            "ReturnToSafePose",
+            "Vocalize"
+          ],
+          "architecture": "deterministic_router_shared_backbone_semantic_planner",
+          "battery": {
+            "percent": 90.0,
+            "source": "simulated",
+            "state": "normal"
+          },
+          "enabled": true,
+          "last_plan": null,
+          "planner_output_contract": "plan_ir_v1",
+          "resource_leases": [],
+          "tasks": []
+        },
+        "chat": [],
+        "collision": false,
+        "control": {
+          "command_age_ms": 133.464,
+          "controller": "mujoco_velocity",
+          "emergency_stopped": false,
+          "fault": null,
+          "feedback_age_ms": 33.423,
+          "last_stop_reason": "manager_start",
+          "lifecycle": "active",
+          "measured": {
+            "vx": 0.0,
+            "vy": 0.0,
+            "vyaw": 0.1031
+          },
+          "stop_confirmed": false,
+          "target": {
+            "vx": 0.0,
+            "vy": 0.0,
+            "vyaw": 0.1
+          },
+          "target_sequence": 52,
+          "target_source": "voice",
+          "tracking_error": {
+            "vx": 0.0,
+            "vy": 0.0,
+            "vyaw": -0.0031
+          },
+          "watchdog_stops": 0
+        },
+        "dialogue_state": {
+          "amendment_pending": false,
+          "engagement": 0.0,
+          "gaze_mode": "idle",
+          "influence": {
+            "defer_nonurgent": false,
+            "engagement": 0.0,
+            "gait_hint": "normal",
+            "gaze_mode": "idle",
+            "pace_scale_factor": 1.0,
+            "phase": "idle"
+          },
+          "latest": {
+            "channel": "dialogue_state",
+            "engagement": 0.0,
+            "expires_monotonic_ns": 507377987592719,
+            "phase": "idle",
+            "published_monotonic_ns": 507377487592719,
+            "schema_version": 1,
+            "sequence": 81,
+            "turn_id": ""
+          },
+          "pace_factor": 1.0,
+          "phase": "idle",
+          "reaction": {
+            "drained": 0,
+            "false_base_preempt_attempts": 0,
+            "reaction": null,
+            "reason": "base_busy",
+            "vetoed": true
+          },
+          "sequence": 81,
+          "turn_id": ""
+        },
+        "duplex": {
+          "act_idle": "<idle>",
+          "consumer": {
+            "accepted": 0,
+            "dropped_stale": 0,
+            "epoch": 0,
+            "executed_live": 0,
+            "last_kind": "twist",
+            "shadow": true,
+            "shadow_decoded": 81
+          },
+          "enabled": true,
+          "epoch": 0,
+          "filler": {
+            "awaiting_clause_boundary": false,
+            "ceiling_s": 2.0,
+            "filler_fired_this_turn": false,
+            "filler_latency_s": null,
+            "fillers_fired": 0,
+            "first_token_seen": false,
+            "last_filler_reason": null,
+            "last_filler_text": null,
+            "response_ceiling_breaches": 0,
+            "watchdog_s": 0.7
+          },
+          "filler_latency_s": null,
+          "frames_emitted": 81,
+          "interleaver": {
+            "anchor_s": 507369.474287903,
+            "epoch": 0,
+            "expected_t_from_clock": 81,
+            "frame_hz": 10.0,
+            "last_now_s": 507377.487826492,
+            "pending_act": null,
+            "period_s": 0.1,
+            "t": 81,
+            "text_queue_len": 0
+          },
+          "last_act_token": "<twist:1:2>",
+          "last_frame": {
+            "act": "<twist:1:2>",
+            "epoch": 0,
+            "t": 80,
+            "text": "<silence>"
+          },
+          "logging": {
+            "bytes_written": 22058,
+            "enabled": true,
+            "path": "logs/duplex/edbd4322e81c.jsonl",
+            "records": 81,
+            "rotate_bytes": 2000000
+          },
+          "missing_frames": 0,
+          "response_ceiling_breaches": 0,
+          "session_id": "edbd4322e81c",
+          "text_silence": "<silence>",
+          "turn_outcomes": []
+        },
+        "dynamic_agents": [],
+        "emergency_stopped": false,
+        "events": [
+          {
+            "id": 1,
+            "level": "info",
+            "role": "voice",
+            "text": "Speech stack: config=/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live_off.yaml; mode=auto; endpointing=energy (VAD hangover); aec=absent; capture=system default (monitor=False)",
+            "timestamp": "2026-08-21T22:17:43.098806+00:00"
+          },
+          {
+            "id": 2,
+            "level": "warning",
+            "role": "voice",
+            "text": "Microphone not armed: no speech recognizer (STT unreachable or disabled).",
+            "timestamp": "2026-08-21T22:17:43.098818+00:00"
+          },
+          {
+            "id": 3,
+            "level": "info",
+            "role": "voice",
+            "text": "Speech: stt=whisper.cpp unreachable at http://127.0.0.1:8178; tts=piper (models/piper/voice.onnx)",
+            "timestamp": "2026-08-21T22:17:43.099040+00:00"
+          },
+          {
+            "id": 4,
+            "level": "success",
+            "role": "runtime",
+            "text": "Runtime initialized",
+            "timestamp": "2026-08-21T22:17:43.099078+00:00"
+          },
+          {
+            "id": 5,
+            "level": "info",
+            "role": "safety",
+            "text": "Slowing near an obstacle",
+            "timestamp": "2026-08-21T22:17:46.109711+00:00"
+          },
+          {
+            "id": 6,
+            "level": "warning",
+            "role": "safety",
+            "text": "Proximity stop: obstacle too close",
+            "timestamp": "2026-08-21T22:17:50.113751+00:00"
+          }
+        ],
+        "expression": {
+          "apex_error": {
+            "count": 0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0
+          },
+          "enabled": true,
+          "gestures_played": 1,
+          "mode": "off",
+          "nods_delivered": 0,
+          "nods_scheduled": 0,
+          "offsets": {
+            "body_height_m": 0.0,
+            "body_pitch_rad": 0.0,
+            "head_pitch_rad": 0.0,
+            "head_yaw_rad": 0.0
+          },
+          "orients_triggered": 0,
+          "producer": "gated",
+          "thinking_holds": 0
+        },
+        "follow": {
+          "desired_distance_m": 1.85,
+          "enabled": false,
+          "heading_available": false,
+          "heading_track_status": "insufficient_motion",
+          "mode": "direct",
+          "owner_heading_rad": null,
+          "owner_speed_mps": null,
+          "perception_basis": "camera_owner_track+robot_odometry+lidar",
+          "prediction": {
+            "active": false,
+            "confidence": null,
+            "enabled": false,
+            "lead_x_m": null,
+            "lead_y_m": null,
+            "reason": "idle",
+            "speed_scale": 1.0
+          },
+          "stage_side": null,
+          "state": "idle",
+          "yield_aside": {
+            "active": false,
+            "aim_x_m": null,
+            "aim_y_m": null,
+            "aside_clearance_m": null,
+            "baseline_clearance_m": null,
+            "enabled": false,
+            "offset_m": null,
+            "reason": "idle",
+            "side": 0
+          }
+        },
+        "lidar_scan": {
+          "angle_increment_rad": 0.017453292519943295,
+          "angle_min_rad": -3.141592653589793,
+          "range_max_m": 30.0,
+          "range_min_m": 0.05,
+          "ranges": [
+            5.942,
+            6.052,
+            6.174,
+            6.306,
+            6.422,
+            6.563,
+            6.701,
+            6.856,
+            7.027,
+            7.201,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            7.061,
+            6.795,
+            6.566,
+            6.317,
+            6.121,
+            5.917,
+            5.747,
+            5.587,
+            5.411,
+            5.273,
+            5.123,
+            5.006,
+            4.884,
+            4.767,
+            4.664,
+            4.559,
+            4.063,
+            3.989,
+            3.926,
+            3.954,
+            3.994,
+            4.07,
+            4.953,
+            5.055,
+            5.139,
+            5.239,
+            5.347,
+            5.474,
+            5.591,
+            5.73,
+            5.856,
+            6.005,
+            6.141,
+            6.32,
+            6.481,
+            6.673,
+            6.871,
+            7.158,
+            30.0,
+            30.0,
+            1.672,
+            1.617,
+            1.582,
+            1.568,
+            1.564,
+            1.552,
+            1.535,
+            1.553,
+            1.541,
+            1.536,
+            1.552,
+            1.561,
+            1.608,
+            1.641,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            5.538,
+            5.148,
+            5.159,
+            5.185,
+            5.18,
+            5.203,
+            5.22,
+            5.253,
+            5.255,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            3.995,
+            7.376,
+            6.225,
+            5.45,
+            5.506,
+            6.626,
+            6.449,
+            6.313,
+            6.158,
+            6.016,
+            5.901,
+            5.771,
+            5.658,
+            5.564,
+            5.462,
+            5.375,
+            5.317,
+            5.228,
+            5.3,
+            5.419,
+            5.518,
+            5.306,
+            5.235,
+            5.105,
+            5.052,
+            4.992,
+            4.935,
+            4.868,
+            4.823,
+            4.748,
+            4.716,
+            4.675,
+            4.635,
+            4.599,
+            4.552,
+            4.508,
+            4.478,
+            4.452,
+            4.409,
+            4.383,
+            4.356,
+            4.311,
+            4.292,
+            4.272,
+            4.24,
+            4.226,
+            4.22,
+            4.193,
+            4.174,
+            4.157,
+            4.149,
+            4.133,
+            4.115,
+            4.152,
+            4.129,
+            4.126,
+            4.993,
+            6.57,
+            30.0,
+            30.0,
+            4.522,
+            4.516,
+            3.015,
+            3.011,
+            4.478,
+            4.517,
+            4.494,
+            4.518,
+            4.522,
+            4.526,
+            4.556,
+            4.561,
+            4.572,
+            4.578,
+            4.613,
+            4.651,
+            4.67,
+            4.671,
+            4.718,
+            4.738,
+            4.769,
+            4.805,
+            4.819,
+            4.858,
+            4.915,
+            4.936,
+            4.978,
+            5.013,
+            5.069,
+            5.124,
+            5.223,
+            5.268,
+            5.76,
+            5.602,
+            5.464,
+            3.745,
+            3.757,
+            3.793,
+            3.853,
+            3.911,
+            3.967,
+            4.028,
+            4.1,
+            4.139,
+            4.229,
+            4.297,
+            4.361,
+            4.458,
+            4.541,
+            4.617,
+            2.86,
+            2.766,
+            2.723,
+            2.712,
+            2.698,
+            2.711,
+            2.732,
+            2.78,
+            7.288,
+            7.594,
+            6.051,
+            6.107,
+            8.434,
+            8.675,
+            8.991,
+            7.01,
+            6.951,
+            7.004,
+            30.0,
+            30.0,
+            4.267,
+            4.185,
+            4.144,
+            4.119,
+            4.172,
+            4.258,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            6.824,
+            6.828,
+            6.833,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            7.595,
+            7.782,
+            6.294,
+            6.291,
+            6.385,
+            6.747,
+            6.535,
+            2.021,
+            1.963,
+            1.951,
+            1.924,
+            1.931,
+            1.92,
+            1.942,
+            1.958,
+            1.977,
+            2.046,
+            5.4,
+            5.474,
+            5.563,
+            5.65,
+            5.731,
+            5.839
+          ]
+        },
+        "mission_log": [],
+        "model": {
+          "detail": "LLM optional",
+          "roles": {},
+          "status": "deterministic"
+        },
+        "motion": {
+          "active_source": "voice",
+          "command": {
+            "vx": 0.08,
+            "vy": 0.0,
+            "vyaw": 0.1
+          },
+          "emergency_stopped": false
+        },
+        "navigation": {
+          "directive": null,
+          "dynamic_cost_active": false,
+          "enabled": false,
+          "goal": null,
+          "min_time_to_collision_s": null,
+          "reason": "navigation_disabled",
+          "state": "idle",
+          "time_to_collision_gate": false
+        },
+        "nearest_person": null,
+        "obstacle_distance_m": 1.2189767638334448,
+        "owner": {
+          "confidence": 1.0,
+          "id": "owner-1",
+          "visible": true,
+          "x": 2.0,
+          "y": -0.5
+        },
+        "owner_search": {
+          "degraded": "",
+          "enabled": false,
+          "frontier_target_x_m": null,
+          "frontier_target_y_m": null,
+          "last_observed_x_m": 0.0,
+          "last_observed_y_m": 0.0,
+          "map_available": false,
+          "outcome": "",
+          "owner_confidence": null,
+          "paused": false,
+          "reason": "idle",
+          "state": "idle",
+          "viewpoints": 0
+        },
+        "perception": {
+          "camera_role": "owner/object/scene perception",
+          "lidar_role": "range, free-space, and collision perception",
+          "maps": {
+            "available": false,
+            "data": null,
+            "provider": "google_maps",
+            "status": "placeholder"
+          },
+          "reasoning_visibility": {
+            "environment": [
+              "camera",
+              "lidar"
+            ],
+            "simulator_ground_truth": false
+          },
+          "simulator_truth_diagnostics_only": true,
+          "spatial_sensors": [
+            "camera",
+            "lidar"
+          ]
+        },
+        "realtime": {
+          "config": {
+            "capture": {
+              "dir": "recordings",
+              "enabled": false,
+              "max_minutes": 30.0,
+              "owner_gap_s": 0.75
+            },
+            "enabled": false,
+            "idle_close_after_s": 600.0,
+            "mode": "text",
+            "model": "gpt-realtime-2.1",
+            "monthly_budget_usd": 25.0,
+            "persona": "",
+            "session_max_s": 3600.0,
+            "si_profile": "",
+            "source": "absent",
+            "stall_timeout_s": 8.0,
+            "voice": "cedar",
+            "voice_identity": {
+              "budget_ms": 50.0,
+              "doa": false,
+              "enabled": true,
+              "min_utterance_s": 1.2,
+              "model": "",
+              "narration_interval_s": 60.0,
+              "profile": "",
+              "rejected_sector": null,
+              "threshold": 0.55
+            },
+            "whisperer": {
+              "enabled": true,
+              "max_updates_per_minute": 2,
+              "min_gap_s": 15.0
+            }
+          },
+          "constructed": false,
+          "enabled": false,
+          "mode": "text",
+          "whisperer": {
+            "enabled": true,
+            "folded": 0,
+            "forwarded": 0,
+            "forwarded_by_rule": {},
+            "last": {
+              "at_s": 507376.680313838,
+              "band": "never",
+              "folded": 0,
+              "forwarded": false,
+              "key": "proximity_churn",
+              "kind": "proximity_churn",
+              "rule": "never_band",
+              "schema_version": 3,
+              "seq": 5,
+              "text": "",
+              "updates_this_minute": 0
+            },
+            "max_updates_per_minute": 2,
+            "min_gap_s": 15.0,
+            "pace_watch": {
+              "accounted": true,
+              "logged": 0,
+              "mismatch_banked_s": 0.0,
+              "mismatch_open": false,
+              "pace_unknown": false,
+              "pace_unknown_episodes": 0,
+              "pace_unknown_for_s": 0.0,
+              "pace_unknown_seconds": 0.0,
+              "skips": {
+                "not_following": 7,
+                "session_baseline": 1
+              },
+              "ticks": 8
+            },
+            "schema_version": 3,
+            "suppressed": 5,
+            "suppressed_by_rule": {
+              "never_band": 5
+            },
+            "updates_this_minute": 0
+          }
+        },
+        "robot": {
+          "heading": 45.865271500222434,
+          "x": 0.3407133892674243,
+          "y": 0.08375268663157383,
+          "z": 0.27
+        },
+        "robot_profile": {
+          "dof": 12,
+          "footprint_radius_m": 0.32,
+          "name": "go2"
+        },
+        "safety_latch": {
+          "latched": false
+        },
+        "safety_log": [],
+        "simulator": {
+          "detail": "",
+          "name": "mujoco",
+          "status": "connected"
+        },
+        "spatial_behavior": {
+          "enabled": false,
+          "intent": null,
+          "orbit_radius_m": null,
+          "progress": 0.0,
+          "state": "idle",
+          "target_distance_m": null
+        },
+        "speech": {
+          "barge_ins": 0,
+          "endpointing": "energy (VAD hangover)",
+          "input_device_detail": "system default",
+          "mic_arming": {
+            "armed": false,
+            "capture_device": {
+              "confidence": "metadata",
+              "index": null,
+              "is_monitor": false,
+              "name": "system default",
+              "signal": "media.class=Audio/Source",
+              "source": "pipewire"
+            },
+            "code": "no_recognizer",
+            "override": false,
+            "reason": "Microphone not armed: no speech recognizer (STT unreachable or disabled)."
+          },
+          "microphone_active": false,
+          "mode": "auto",
+          "output_device_detail": "system default",
+          "playback_active": false,
+          "stack": {
+            "aec": {
+              "constructed": false,
+              "detail": "no AEC stage is wired into the capture loop on any config path"
+            },
+            "capture_device": {
+              "confidence": "metadata",
+              "index": null,
+              "is_monitor": false,
+              "name": "system default",
+              "signal": "media.class=Audio/Source",
+              "source": "pipewire"
+            },
+            "config_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live_off.yaml",
+            "endpointing": {
+              "models": {
+                "turn_model": "models/endpointing/smart_turn_v3.onnx",
+                "vad_model": "models/endpointing/silero_vad_v6.onnx"
+              },
+              "models_present": {
+                "turn_model": true,
+                "vad_model": true
+              },
+              "requested": "energy",
+              "resolved": "energy (VAD hangover)",
+              "semantic_loaded": false
+            },
+            "mic_arming": {
+              "armed": false,
+              "capture_device": {
+                "confidence": "metadata",
+                "index": null,
+                "is_monitor": false,
+                "name": "system default",
+                "signal": "media.class=Audio/Source",
+                "source": "pipewire"
+              },
+              "code": "no_recognizer",
+              "override": false,
+              "reason": "Microphone not armed: no speech recognizer (STT unreachable or disabled)."
+            },
+            "mode": "auto",
+            "stt": "whisper.cpp unreachable at http://127.0.0.1:8178",
+            "tts": "piper (models/piper/voice.onnx)"
+          },
+          "stt": "whisper.cpp unreachable at http://127.0.0.1:8178",
+          "tts": "piper (models/piper/voice.onnx)",
+          "turn_commits": 0
+        },
+        "voice": {
+          "last_reply": "",
+          "last_transcript": "",
+          "last_turn_id": null,
+          "mode": "text",
+          "partial": "",
+          "status": "idle",
+          "superseded": false
+        }
+      },
+      "typed_frames": {
+        "achieved_hz_from_publish_timestamps": 0.0,
+        "active_execution_providers": [],
+        "capture_ms": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "p50": null,
+          "p95": null,
+          "p99": null
+        },
+        "capture_start_to_publish_ms": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "p50": null,
+          "p95": null,
+          "p99": null
+        },
+        "config_digests": [],
+        "count": 0,
+        "detector_ms": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "p50": null,
+          "p95": null,
+          "p99": null
+        },
+        "empty_frames": 0,
+        "expired_at_publish": 0,
+        "inference_ms": {
+          "count": 0,
+          "max": null,
+          "mean": null,
+          "p50": null,
+          "p95": null,
+          "p99": null
+        },
+        "localization_rejections": 0,
+        "localized_detections": 0,
+        "model_digests": [],
+        "provider_profiles": [],
+        "raw_detections": 0,
+        "scene_digests": [],
+        "selected_execution_providers": [],
+        "view_ids": []
+      }
+    },
+    "on": {
+      "arm": "on",
+      "backend_health_before_close": {
+        "buffer_bytes": 8294400,
+        "buffer_refs": 3,
+        "has_current_buffers": true,
+        "kind": "mujoco_egl"
+      },
+      "camera_on": true,
+      "close_error": null,
+      "config": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live.yaml",
+      "config_sha256": "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558",
+      "control_loop_work": {
+        "count": 121,
+        "latest_ms": 6.675,
+        "max_ms": 44.967,
+        "mean_ms": 19.858,
+        "p50_ms": 18.547,
+        "p95_ms": 39.838,
+        "p99_ms": 43.865
+      },
+      "elapsed_s": 13.762,
+      "ended_at_utc": "2026-08-21T22:18:04.920306+00:00",
+      "evidence_after_close": {
+        "first_perception_row": {
+          "accepted_monotonic_ns": 507379812117587,
+          "authority": "proposal_only",
+          "calibration_id": "d455-intrinsics-nominal",
+          "camera_frame_id": "camera_color_optical_frame",
+          "camera_pose": {
+            "camera_rotation_world": [
+              0.7469746741572594,
+              0.13823060576378965,
+              0.6503238699277707,
+              -0.664852492036885,
+              0.15530476750208064,
+              0.7306514853358395,
+              0.0,
+              -0.9781476007338057,
+              0.20791169081775934
+            ],
+            "camera_translation_world": [
+              0.4760647940079123,
+              0.23530795197978005,
+              0.35
+            ],
+            "robot_x": 0.356391345441273,
+            "robot_y": 0.1008525106314734,
+            "robot_yaw_rad": 0.8434999999999766
+          },
+          "capture_completed_monotonic_ns": 507379208715768,
+          "capture_latency_ms": 51.057,
+          "capture_started_monotonic_ns": 507379157658882,
+          "capture_to_publish_age_ms": 654.357,
+          "config_digest": "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558",
+          "depth_max_m": 5.99,
+          "depth_min_m": 0.4,
+          "detection_count": 3,
+          "detections": [
+            {
+              "bearing_rad": 0.7302815155843918,
+              "box_xyxy": [
+                0,
+                0,
+                143,
+                587
+              ],
+              "covariance_xy": [
+                [
+                  0.0001849000617986968,
+                  -1.162309838748057e-06
+                ],
+                [
+                  -1.162309838748057e-06,
+                  0.0005742543406564136
+                ]
+              ],
+              "depth_m": 3.2376991510391235,
+              "detection_id": "pxdet-1000",
+              "detector_instance_key": null,
+              "evidence": {
+                "calibration_id": "d455-intrinsics-nominal",
+                "evidence_id": "pxdet-1000",
+                "expires_monotonic_ns": 507379508715768,
+                "frame_id": "camera_color_optical_frame",
+                "provenance": [
+                  "pixel_detections_v1",
+                  "owlv2"
+                ],
+                "received_monotonic_ns": 507379208715768,
+                "scene_revision": 0,
+                "schema_version": 1,
+                "sequence": 1000,
+                "source": "mujoco_egl.pixel",
+                "source_timestamp_ns": 1787350672788239686
+              },
+              "inlier_pixels": 56510,
+              "label": "lamppost",
+              "range_m": 4.378463373934483,
+              "score": 0.16816933453083038,
+              "sigma_bearing_rad": 0.0031055800780188177,
+              "sigma_range_m": 0.023963676896107174,
+              "world_point": [
+                0.34332082507497996,
+                4.479296375566035,
+                1.4232887424755347
+              ]
+            },
+            {
+              "bearing_rad": -0.2952994240843818,
+              "box_xyxy": [
+                790,
+                129,
+                902,
+                578
+              ],
+              "covariance_xy": [
+                [
+                  0.0003953867149808092,
+                  0.00013823480268396722
+                ],
+                [
+                  0.00013823480268396722,
+                  0.0002534174813353955
+                ]
+              ],
+              "depth_m": 3.889822006225586,
+              "detection_id": "pxdet-1001",
+              "detector_instance_key": null,
+              "evidence": {
+                "calibration_id": "d455-intrinsics-nominal",
+                "evidence_id": "pxdet-1001",
+                "expires_monotonic_ns": 507379508715768,
+                "frame_id": "camera_color_optical_frame",
+                "provenance": [
+                  "pixel_detections_v1",
+                  "owlv2"
+                ],
+                "received_monotonic_ns": 507379208715768,
+                "scene_revision": 0,
+                "schema_version": 1,
+                "sequence": 1001,
+                "source": "mujoco_egl.pixel",
+                "source_timestamp_ns": 1787350672788239686
+              },
+              "inlier_pixels": 30932,
+              "label": "lamppost",
+              "range_m": 4.1860985566033655,
+              "score": 0.44423845410346985,
+              "sigma_bearing_rad": 0.0031055800780188177,
+              "sigma_range_m": 0.021904276406995975,
+              "world_point": [
+                3.92907441324489,
+                2.282447528646072,
+                1.0642544740051934
+              ]
+            },
+            {
+              "bearing_rad": -0.3228097942656669,
+              "box_xyxy": [
+                819,
+                142,
+                892,
+                255
+              ],
+              "covariance_xy": [
+                [
+                  0.00030993658706871886,
+                  9.338167590747323e-05
+                ],
+                [
+                  9.338167590747323e-05,
+                  0.00020065524636139677
+                ]
+              ],
+              "depth_m": 3.7932677268981934,
+              "detection_id": "pxdet-1002",
+              "detector_instance_key": null,
+              "evidence": {
+                "calibration_id": "d455-intrinsics-nominal",
+                "evidence_id": "pxdet-1002",
+                "expires_monotonic_ns": 507379508715768,
+                "frame_id": "camera_color_optical_frame",
+                "provenance": [
+                  "pixel_detections_v1",
+                  "owlv2"
+                ],
+                "received_monotonic_ns": 507379208715768,
+                "scene_revision": 0,
+                "schema_version": 1,
+                "sequence": 1002,
+                "source": "mujoco_egl.pixel",
+                "source_timestamp_ns": 1787350672788239686
+              },
+              "inlier_pixels": 5671,
+              "label": "lamppost",
+              "range_m": 3.905420553063707,
+              "score": 0.14937245845794678,
+              "sigma_bearing_rad": 0.0031055800780188177,
+              "sigma_range_m": 0.01906538712036554,
+              "world_point": [
+                3.7442500368179967,
+                2.0437171954604567,
+                2.016919021945094
+              ]
+            }
+          ],
+          "detections_truncated": false,
+          "detector": {
+            "active_execution_providers": [
+              "CPUExecutionProvider"
+            ],
+            "model": "model_int8.onnx",
+            "model_digest": "e9cc288738a96a5a9b730801f622b2e1a531ed2a93d02dd1227a4d35fd9690c6",
+            "name": "owlv2",
+            "profile": "cpu_int8",
+            "selected_execution_provider": "CPUExecutionProvider"
+          },
+          "detector_latency_ms": 556.451,
+          "expired_at_publish": true,
+          "expires_monotonic_ns": 507379508715768,
+          "image_height_px": 720,
+          "image_width_px": 1280,
+          "inference_latency_ms": 654.339,
+          "kind": "camera_detection_frame",
+          "localization_rejection_count": 0,
+          "package_version": "0.1.0",
+          "post_capture_processing_latency_ms": 603.301,
+          "provenance": [
+            "camera_ingress_v1",
+            "static_scene_copy_pose_synced"
+          ],
+          "published_monotonic_ns": 507379812016374,
+          "query": [
+            "person",
+            "lamppost"
+          ],
+          "raw_detection_count": 3,
+          "received_monotonic_ns": 507379208715768,
+          "retained_detection_count": 3,
+          "runtime_drop_counts": {
+            "duplicate_detections": 0,
+            "duplicate_frames": 0,
+            "frame_truncation_detections": 0,
+            "queue_detections": 0,
+            "queue_frames": 0
+          },
+          "scene_digest": "56970679ebb2aa363f1370212f1c2f8ff4be0f90d3318e754a08b1bd5b0e5986",
+          "scene_id": "city_block.xml",
+          "scene_revision": 0,
+          "schema": "parcel.camera_detection_frame.v1",
+          "seq": 6,
+          "sequence": 1,
+          "source": "mujoco_egl",
+          "source_digest": "00b5d089992fea1e506cb6e0710b614ee409b6f81e0ca1a05e451b9cc050e8c7",
+          "source_timestamp_ns": 1787350672788239686,
+          "stream": "perception",
+          "view_id": "mujoco_egl:camera_color_optical_frame:1:1787350672788239686",
+          "wall": "2026-08-21T22:17:53.442743+00:00"
+        },
+        "last_row": {
+          "kind": "log_closed",
+          "reason": "runtime closed",
+          "seq": 28,
+          "stream": "marker",
+          "wall": "2026-08-21T22:18:04.917991+00:00"
+        },
+        "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/live_cpu_20260821T221731Z/sessions/sess_20260821T221751Z_56c9cb/events.jsonl",
+        "perception_row_count": 21,
+        "row_count": 28,
+        "sha256": "8711e5850563411d77cc85a9bd4a294269f028047ab6dc41d17b8cda2821d377",
+        "verification_problems": []
+      },
+      "gpu": {
+        "free_mib_min": 30585,
+        "headroom_at_least_6gib": true,
+        "samples": [
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30597,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1632,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:52.307939+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:52.830020+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:53.384165+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:53.942911+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:54.439693+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:54.987475+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:55.525131+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:56.073305+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:56.591761+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:57.095184+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:57.587410+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:58.129746+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:58.666309+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:59.209708+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:17:59.739703+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:18:00.296488+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:18:00.826474+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:18:01.349304+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:18:01.855172+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:18:02.355841+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:18:02.850750+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:18:03.400547+00:00"
+          },
+          {
+            "driver_version": "595.84",
+            "memory_free_mib": 30585,
+            "memory_total_mib": 32760,
+            "memory_used_mib": 1644,
+            "name": "NVIDIA RTX 5000 Ada Generation",
+            "sampled_at_utc": "2026-08-21T22:18:03.910373+00:00"
+          }
+        ],
+        "used_mib_min": 1632,
+        "used_mib_peak": 1644
+      },
+      "http_base_url_during_run": "http://127.0.0.1:34823",
+      "latency": {
+        "aggregate": {},
+        "aggregate_by_status": {},
+        "audio": {
+          "bluetooth_connected": false,
+          "bluetooth_controller": true,
+          "bluetooth_duplex_ready": false,
+          "bluetooth_powered": true,
+          "capture_hardware": true,
+          "connected_input": true,
+          "connected_output": true,
+          "detail": "Audio input and output endpoints are connected.",
+          "driver": "PipeWire/ALSA",
+          "input_identity": "media.class=Audio/Source",
+          "input_is_monitor": false,
+          "status": "available",
+          "transport": "pipewire"
+        },
+        "component_definitions": {
+          "DuplexProducer": "Wall-clock duration of one duplex frame producer tick.",
+          "ExecutiveTick": "Wall-clock duration of one non-LLM task-executive tick.",
+          "FillerLatency": "End of final user input to the first audible duplex filler utterance (playback start / TTS enqueue audible \u2014 not filler fire time).",
+          "IntentRouter": "Wall-clock duration of deterministic intent routing.",
+          "ObservationSnapshotBuild": "Wall-clock duration of building a bounded camera/LiDAR planning snapshot.",
+          "PlanAcceptance": "Wall-clock duration of task-executive plan admission.",
+          "PlanModel": "Wall-clock duration of the complete planning-model request.",
+          "PlanValidation": "Wall-clock duration of PlanIR validation against fresh state."
+        },
+        "components": {
+          "ActivityCoordinator": {
+            "count": 121,
+            "latest_ms": 0.014,
+            "max_ms": 0.234,
+            "mean_ms": 0.046,
+            "p50_ms": 0.022,
+            "p95_ms": 0.125,
+            "p99_ms": 0.14
+          },
+          "BackendCommandSend": {
+            "count": 50,
+            "latest_ms": 0.023,
+            "max_ms": 0.318,
+            "mean_ms": 0.068,
+            "p50_ms": 0.037,
+            "p95_ms": 0.213,
+            "p99_ms": 0.318
+          },
+          "CollisionGate": {
+            "count": 121,
+            "latest_ms": 0.068,
+            "max_ms": 1.149,
+            "mean_ms": 0.229,
+            "p50_ms": 0.166,
+            "p95_ms": 0.554,
+            "p99_ms": 0.823
+          },
+          "ControlLoopOverrun": {
+            "count": 121,
+            "latest_ms": 0.0,
+            "max_ms": 0.0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "p99_ms": 0.0
+          },
+          "ControlLoopWork": {
+            "count": 121,
+            "latest_ms": 6.675,
+            "max_ms": 44.967,
+            "mean_ms": 19.858,
+            "p50_ms": 18.547,
+            "p95_ms": 39.838,
+            "p99_ms": 43.865
+          },
+          "DuplexProducer": {
+            "count": 121,
+            "latest_ms": 1.224,
+            "max_ms": 3.326,
+            "mean_ms": 0.452,
+            "p50_ms": 0.315,
+            "p95_ms": 1.353,
+            "p99_ms": 1.824
+          },
+          "ExecutiveTick": {
+            "count": 121,
+            "latest_ms": 0.187,
+            "max_ms": 2.652,
+            "mean_ms": 0.648,
+            "p50_ms": 0.531,
+            "p95_ms": 1.429,
+            "p99_ms": 2.028
+          },
+          "ExpressionLayer": {
+            "count": 512,
+            "latest_ms": 0.032,
+            "max_ms": 1.4,
+            "mean_ms": 0.341,
+            "p50_ms": 0.2,
+            "p95_ms": 0.965,
+            "p99_ms": 1.261
+          },
+          "MotionDispatch": {
+            "count": 121,
+            "latest_ms": 0.344,
+            "max_ms": 3.168,
+            "mean_ms": 0.653,
+            "p50_ms": 0.454,
+            "p95_ms": 1.909,
+            "p99_ms": 2.936
+          },
+          "NavigationController": {
+            "count": 121,
+            "latest_ms": 0.002,
+            "max_ms": 0.028,
+            "mean_ms": 0.005,
+            "p50_ms": 0.003,
+            "p95_ms": 0.012,
+            "p99_ms": 0.027
+          },
+          "OwnerSearchController": {
+            "count": 121,
+            "latest_ms": 0.002,
+            "max_ms": 0.046,
+            "mean_ms": 0.005,
+            "p50_ms": 0.002,
+            "p95_ms": 0.013,
+            "p99_ms": 0.031
+          },
+          "OwnerTrackHeadingFilter": {
+            "count": 121,
+            "latest_ms": 0.01,
+            "max_ms": 0.198,
+            "mean_ms": 0.029,
+            "p50_ms": 0.014,
+            "p95_ms": 0.082,
+            "p99_ms": 0.186
+          },
+          "PerceptionAge": {
+            "count": 121,
+            "latest_ms": 1.044,
+            "max_ms": 6.298,
+            "mean_ms": 2.68,
+            "p50_ms": 2.909,
+            "p95_ms": 4.748,
+            "p99_ms": 5.988
+          },
+          "SimulatorObserve": {
+            "count": 121,
+            "latest_ms": 4.788,
+            "max_ms": 41.73,
+            "mean_ms": 17.537,
+            "p50_ms": 16.437,
+            "p95_ms": 36.669,
+            "p99_ms": 41.61
+          },
+          "SpatialController": {
+            "count": 121,
+            "latest_ms": 0.004,
+            "max_ms": 0.048,
+            "mean_ms": 0.007,
+            "p50_ms": 0.003,
+            "p95_ms": 0.019,
+            "p99_ms": 0.043
+          }
+        },
+        "definitions": {
+          "AcousticAck": "The end-to-end acknowledgement budget: last owner speech frame to the instant the speaker worker began writing the first reply chunk. This is the number a sub-700 ms ack claim has to beat.",
+          "EndpointDecision": "Last speech frame of the owner's utterance to the endpointer's commit decision (how long the robot deliberated before deciding they stopped).",
+          "IntentRouting": "End of final user input to production of IntentFrame.",
+          "ObservationSnapshotBuild": "IntentFrame production to completion of the bounded planning observation snapshot.",
+          "PlanAcceptance": "Successful plan validation to task-executive admission.",
+          "PlanDecode": "Observation snapshot completion to receipt and parsing of the complete PlanIR.",
+          "PlanTimeToFirstOutput": "Observation snapshot completion to the first planning-model output token; for a non-streaming provider, the complete parsed planning response.",
+          "PlanValidation": "Complete PlanIR parsing to successful plan validation.",
+          "PlaybackEnqueueToFirstSample": "Audio-sink handoff to the speaker worker starting that chunk. The acoustic rig measured 0.54-0.64 s here, so it may never be assumed 0.",
+          "QueryEndToFirstSpokenAudio": "End of final user input to the first audio-sink handoff. This is a software lower-bound estimate until acoustic presentation timestamps are available.",
+          "SttFinalToQueryEnd": "Final transcript to the turn's query-end anchor (session admission).",
+          "SttRequestQueue": "Endpointer commit to the start of the STT request (segmentation, WAV framing and dispatch overhead).",
+          "SttTranscribe": "STT request start to the final transcript.",
+          "UserQueryEndToAcceptedPlan": "End of final user input to admission of a validated plan by the task executive.",
+          "UserQueryEndToFirstPlanOutput": "End of final user input to the first planning-model output token; for a non-streaming provider, the complete parsed planning response.",
+          "UserQueryEndToFirstReasoningResponse": "End of final user input to the first model output token; for deterministic or non-streaming paths, the complete validated reasoning result.",
+          "UserQueryEndToFirstResponse": "End of final user input to the first response made observable by logging or audio playback, whichever occurs first."
+        },
+        "stage_definitions": {
+          "intent_routed": "The deterministic intent router has classified the final user turn and produced its versioned IntentFrame.",
+          "observation_snapshot": "A bounded, sensor-grounded ObservationSnapshot is ready for planning.",
+          "plan_accepted": "The validated plan has been admitted by the task executive for execution.",
+          "plan_first_output": "The first output token or equivalent partial output from the planning model.",
+          "plan_response": "The complete planning-model response has been received and parsed as PlanIR.",
+          "plan_validated": "PlanIR has passed schema, semantic, capability, freshness, and safety validation."
+        },
+        "status_counts": {},
+        "turns": [],
+        "unavailable": {
+          "ASREndpointer": "capture endpoint connected; endpointer + STT clocks are wired (EndpointDecision / SttTranscribe), continuous per-frame ASR timing is still not exposed",
+          "BluetoothAcousticPresentation": "requires a connected headset and PipeWire presentation timestamps"
+        }
+      },
+      "motion_script": {
+        "accepted": 45,
+        "rejected": 0,
+        "rejection_reasons": []
+      },
+      "panel_html": {
+        "bytes": 106130,
+        "camera_tile_present": false,
+        "sha256": "e586f5d82c865c29f92f9eb542e5470529e291069b1d85ffdd2713ff40888c32",
+        "static_copy_caveat_present": true
+      },
+      "process_memory": {
+        "runtime_rss_peak_kib_sampled": 2063644,
+        "self_ru_maxrss_kib": 2001460,
+        "simulator_rss_peak_kib_sampled": 752036
+      },
+      "started_at_utc": "2026-08-21T22:17:51.158138+00:00",
+      "state": {
+        "activities": {
+          "pending": [],
+          "recent": [],
+          "running": null
+        },
+        "agent": {
+          "active_source": "voice",
+          "personalities": [
+            {
+              "id": "calm_guardian",
+              "name": "Calm guardian"
+            },
+            {
+              "id": "gentle_companion",
+              "name": "Gentle companion"
+            },
+            {
+              "id": "playful_companion",
+              "name": "Playful companion"
+            }
+          ],
+          "personality": "gentle_companion",
+          "status": "ready"
+        },
+        "audio": {
+          "bluetooth_connected": false,
+          "bluetooth_controller": true,
+          "bluetooth_duplex_ready": false,
+          "bluetooth_powered": true,
+          "capture_hardware": true,
+          "connected_input": true,
+          "connected_output": true,
+          "detail": "Audio input and output endpoints are connected.",
+          "driver": "PipeWire/ALSA",
+          "input_identity": "media.class=Audio/Source",
+          "input_is_monitor": false,
+          "status": "available",
+          "transport": "pipewire"
+        },
+        "brain": {
+          "active_invariants": [],
+          "admitted_skills": [
+            "AskClarification",
+            "FollowFormation",
+            "Gesture",
+            "Hold",
+            "MoveRelative",
+            "NavigateTo",
+            "OrbitOwner",
+            "ReturnToSafePose",
+            "Vocalize"
+          ],
+          "architecture": "deterministic_router_shared_backbone_semantic_planner",
+          "battery": {
+            "percent": 90.0,
+            "source": "simulated",
+            "state": "normal"
+          },
+          "enabled": true,
+          "last_plan": null,
+          "planner_output_contract": "plan_ir_v1",
+          "resource_leases": [],
+          "tasks": []
+        },
+        "camera_ingress": {
+          "attached": true,
+          "authority": "proposal_only",
+          "composition": {
+            "backend": "mujoco_egl",
+            "camera_mount_base_pose_synced": true,
+            "config_digest": "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558",
+            "dynamic_actor_state_synced": false,
+            "mode": "static_scene_copy_pose_synced",
+            "package_version": "0.1.0",
+            "real_camera": false,
+            "robot_joint_state_synced": false,
+            "scene_compiled_model_digest": "56970679ebb2aa363f1370212f1c2f8ff4be0f90d3318e754a08b1bd5b0e5986",
+            "scene_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+            "scene_robot_body_pose_synced": false,
+            "scene_xml_digest": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58",
+            "source_digest": "00b5d089992fea1e506cb6e0710b614ee409b6f81e0ca1a05e451b9cc050e8c7"
+          },
+          "config": {
+            "enabled": true,
+            "max_detections_per_frame": 16,
+            "queries": [
+              "person",
+              "lamppost"
+            ],
+            "queue_capacity": 8,
+            "rate_hz": 2.0
+          },
+          "config_digest": "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558",
+          "configured_rate_hz": 2.0,
+          "contention": {
+            "generation_consumer_wired": false,
+            "guard": {
+              "active_leases": 0,
+              "admitted": 0,
+              "expired_leases": 0,
+              "refused": 0
+            },
+            "person_query_lease_producer": true
+          },
+          "detections_received": 33,
+          "detections_retained": 33,
+          "dropped_detections": 0,
+          "dropped_frames": 0,
+          "duplicate_detections": 0,
+          "duplicate_frames": 0,
+          "empty_frames": 0,
+          "enabled": true,
+          "errors": 0,
+          "evidence": {
+            "accepted": 20,
+            "dropped": 0,
+            "offered": 20,
+            "schema": "parcel.camera_detection_frame.v1",
+            "stream": "perception",
+            "writer": {
+              "bytes_written": 80707,
+              "closed_at": "",
+              "enabled": true,
+              "max_bytes": 67108864,
+              "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/live_cpu_20260821T221731Z/sessions/sess_20260821T221751Z_56c9cb/events.jsonl",
+              "rows_dropped_after_stop": 0,
+              "rows_dropped_queue_full": 0,
+              "rows_written": 25,
+              "running": true,
+              "schema": "parcel.session_evidence.v2",
+              "session_id": "sess_20260821T221751Z_56c9cb",
+              "started_at": "2026-08-21T22:17:51.489793+00:00",
+              "stopped_reason": "",
+              "writer_errors": 0
+            }
+          },
+          "frames_accepted": 20,
+          "frames_received": 20,
+          "frames_without_localized_detections": 0,
+          "fresh": false,
+          "last_detection_age_s": 0.035,
+          "last_error": null,
+          "last_frame_age_s": 0.035,
+          "latest_capture_latency_ms": 29.046,
+          "latest_capture_to_publish_age_ms": 541.868,
+          "latest_frame_class_counts": {
+            "lamppost": 1
+          },
+          "latest_frame_expired_at_publish": true,
+          "latest_frame_expired_now": true,
+          "latest_frame_localization_rejection_count": 0,
+          "latest_frame_localized_detection_count": 1,
+          "latest_frame_raw_detection_count": 1,
+          "latest_post_capture_processing_latency_ms": 512.822,
+          "localization_rejections": 0,
+          "observed_rate_hz": 1.751,
+          "pose_mailbox": {
+            "drained": 21,
+            "offered": 121,
+            "overwritten": 99,
+            "pending": true,
+            "stale_rejected": 0
+          },
+          "producer": {
+            "attempts": 21,
+            "candidates_last": 1,
+            "detections_last": 1,
+            "errors": 0,
+            "frame_sink_errors": 0,
+            "frames_emitted": 20,
+            "last_attempt_monotonic_ns": 507390681231548,
+            "last_attempt_succeeded": true,
+            "last_detect_ms": 507.26,
+            "last_error": null,
+            "last_latency_ms": 541.86,
+            "last_published_monotonic_ns": 507390660956679,
+            "last_query": [
+              "person",
+              "lamppost"
+            ],
+            "last_source_timestamp_ns": 1787350683749670022,
+            "last_success_monotonic_ns": 507390660956679,
+            "localization_rejections_last": 0,
+            "localized_last": 1,
+            "polls": 20,
+            "reactive_reads": 0
+          },
+          "query_conditioned": true,
+          "queue_capacity": 8,
+          "queue_depth": 0,
+          "raw_detections_received": 33,
+          "stale_after_s": 1.5,
+          "state": "stale",
+          "truncated_detections": 0
+        },
+        "chat": [],
+        "collision": false,
+        "control": {
+          "command_age_ms": 1.645,
+          "controller": "mujoco_velocity",
+          "emergency_stopped": false,
+          "fault": null,
+          "feedback_age_ms": 3.002,
+          "last_stop_reason": "manager_start",
+          "lifecycle": "active",
+          "measured": {
+            "vx": 0.1079,
+            "vy": -0.0007,
+            "vyaw": 0.1348
+          },
+          "stop_confirmed": false,
+          "target": {
+            "vx": 0.08,
+            "vy": 0.0,
+            "vyaw": 0.1
+          },
+          "target_sequence": 50,
+          "target_source": "voice",
+          "tracking_error": {
+            "vx": -0.0279,
+            "vy": 0.0007,
+            "vyaw": -0.0348
+          },
+          "watchdog_stops": 0
+        },
+        "dialogue_state": {
+          "amendment_pending": false,
+          "engagement": 0.0,
+          "gaze_mode": "idle",
+          "influence": {
+            "defer_nonurgent": false,
+            "engagement": 0.0,
+            "gait_hint": "normal",
+            "gaze_mode": "idle",
+            "pace_scale_factor": 1.0,
+            "phase": "idle"
+          },
+          "latest": {
+            "channel": "dialogue_state",
+            "engagement": 0.0,
+            "expires_monotonic_ns": 507391194723897,
+            "phase": "idle",
+            "published_monotonic_ns": 507390694723897,
+            "schema_version": 1,
+            "sequence": 121,
+            "turn_id": ""
+          },
+          "pace_factor": 1.0,
+          "phase": "idle",
+          "reaction": {
+            "drained": 0,
+            "false_base_preempt_attempts": 0,
+            "reaction": null,
+            "reason": "base_busy",
+            "vetoed": true
+          },
+          "sequence": 121,
+          "turn_id": ""
+        },
+        "duplex": {
+          "act_idle": "<idle>",
+          "consumer": {
+            "accepted": 0,
+            "dropped_stale": 0,
+            "epoch": 0,
+            "executed_live": 0,
+            "last_kind": "twist",
+            "shadow": true,
+            "shadow_decoded": 121
+          },
+          "enabled": true,
+          "epoch": 0,
+          "filler": {
+            "awaiting_clause_boundary": false,
+            "ceiling_s": 2.0,
+            "filler_fired_this_turn": false,
+            "filler_latency_s": null,
+            "fillers_fired": 0,
+            "first_token_seen": false,
+            "last_filler_reason": null,
+            "last_filler_text": null,
+            "response_ceiling_breaches": 0,
+            "watchdog_s": 0.7
+          },
+          "filler_latency_s": null,
+          "frames_emitted": 121,
+          "interleaver": {
+            "anchor_s": 507378.663047053,
+            "epoch": 0,
+            "expected_t_from_clock": 121,
+            "frame_hz": 10.0,
+            "last_now_s": 507390.695171263,
+            "pending_act": null,
+            "period_s": 0.1,
+            "t": 121,
+            "text_queue_len": 0
+          },
+          "last_act_token": "<twist:1:2>",
+          "last_frame": {
+            "act": "<twist:1:2>",
+            "epoch": 0,
+            "t": 120,
+            "text": "<silence>"
+          },
+          "logging": {
+            "bytes_written": 32892,
+            "enabled": true,
+            "path": "logs/duplex/d295f96d6996.jsonl",
+            "records": 121,
+            "rotate_bytes": 2000000
+          },
+          "missing_frames": 0,
+          "response_ceiling_breaches": 0,
+          "session_id": "d295f96d6996",
+          "text_silence": "<silence>",
+          "turn_outcomes": []
+        },
+        "dynamic_agents": [],
+        "emergency_stopped": false,
+        "events": [
+          {
+            "id": 1,
+            "level": "info",
+            "role": "voice",
+            "text": "Speech stack: config=/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live.yaml; mode=auto; endpointing=energy (VAD hangover); aec=absent; capture=system default (monitor=False)",
+            "timestamp": "2026-08-21T22:17:51.465364+00:00"
+          },
+          {
+            "id": 2,
+            "level": "warning",
+            "role": "voice",
+            "text": "Microphone not armed: no speech recognizer (STT unreachable or disabled).",
+            "timestamp": "2026-08-21T22:17:51.465375+00:00"
+          },
+          {
+            "id": 3,
+            "level": "info",
+            "role": "evidence",
+            "text": "session evidence log armed: /home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/live_cpu_20260821T221731Z/sessions/sess_20260821T221751Z_56c9cb/events.jsonl",
+            "timestamp": "2026-08-21T22:17:51.489975+00:00"
+          },
+          {
+            "id": 4,
+            "level": "info",
+            "role": "voice",
+            "text": "Speech: stt=whisper.cpp unreachable at http://127.0.0.1:8178; tts=piper (models/piper/voice.onnx)",
+            "timestamp": "2026-08-21T22:17:51.489987+00:00"
+          },
+          {
+            "id": 5,
+            "level": "success",
+            "role": "runtime",
+            "text": "Runtime initialized",
+            "timestamp": "2026-08-21T22:17:51.490021+00:00"
+          },
+          {
+            "id": 6,
+            "level": "warning",
+            "role": "safety",
+            "text": "Proximity stop: obstacle too close",
+            "timestamp": "2026-08-21T22:17:52.293060+00:00"
+          }
+        ],
+        "expression": {
+          "apex_error": {
+            "count": 0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0
+          },
+          "enabled": true,
+          "gestures_played": 2,
+          "mode": "head_only",
+          "nods_delivered": 0,
+          "nods_scheduled": 0,
+          "offsets": {
+            "body_height_m": 0.0,
+            "body_pitch_rad": 0.0,
+            "head_pitch_rad": 0.0,
+            "head_yaw_rad": 0.0
+          },
+          "orients_triggered": 0,
+          "producer": "idle",
+          "thinking_holds": 0
+        },
+        "follow": {
+          "desired_distance_m": 1.85,
+          "enabled": false,
+          "heading_available": false,
+          "heading_track_status": "insufficient_motion",
+          "mode": "direct",
+          "owner_heading_rad": null,
+          "owner_speed_mps": null,
+          "perception_basis": "camera_owner_track+robot_odometry+lidar",
+          "prediction": {
+            "active": false,
+            "confidence": null,
+            "enabled": false,
+            "lead_x_m": null,
+            "lead_y_m": null,
+            "reason": "idle",
+            "speed_scale": 1.0
+          },
+          "stage_side": null,
+          "state": "idle",
+          "yield_aside": {
+            "active": false,
+            "aim_x_m": null,
+            "aim_y_m": null,
+            "aside_clearance_m": null,
+            "baseline_clearance_m": null,
+            "enabled": false,
+            "offset_m": null,
+            "reason": "idle",
+            "side": 0
+          }
+        },
+        "lidar_scan": {
+          "angle_increment_rad": 0.017453292519943295,
+          "angle_min_rad": -3.141592653589793,
+          "range_max_m": 30.0,
+          "range_min_m": 0.05,
+          "ranges": [
+            6.492,
+            6.248,
+            6.019,
+            5.822,
+            5.624,
+            5.442,
+            5.308,
+            4.655,
+            4.576,
+            4.577,
+            4.598,
+            4.633,
+            5.43,
+            5.485,
+            5.567,
+            5.628,
+            1.98,
+            1.955,
+            1.922,
+            1.906,
+            1.88,
+            1.9,
+            1.891,
+            1.903,
+            1.915,
+            1.921,
+            1.964,
+            2.056,
+            7.16,
+            7.341,
+            7.58,
+            30.0,
+            30.0,
+            30.0,
+            4.839,
+            4.783,
+            4.785,
+            4.844,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            4.986,
+            4.974,
+            4.969,
+            4.969,
+            4.967,
+            4.986,
+            4.97,
+            4.964,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            3.528,
+            3.483,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            4.907,
+            4.9,
+            5.634,
+            5.698,
+            6.029,
+            5.841,
+            5.672,
+            5.503,
+            5.358,
+            5.207,
+            5.081,
+            4.962,
+            4.835,
+            4.729,
+            4.679,
+            4.579,
+            4.518,
+            4.573,
+            4.647,
+            4.735,
+            4.815,
+            4.505,
+            4.389,
+            4.317,
+            4.238,
+            4.2,
+            4.123,
+            4.069,
+            4.022,
+            3.956,
+            3.924,
+            3.872,
+            3.827,
+            3.775,
+            3.75,
+            3.691,
+            3.659,
+            3.623,
+            3.6,
+            3.567,
+            3.534,
+            3.506,
+            3.478,
+            3.45,
+            3.418,
+            3.415,
+            3.385,
+            3.367,
+            3.343,
+            3.321,
+            3.318,
+            3.3,
+            3.296,
+            3.266,
+            3.264,
+            3.252,
+            3.239,
+            3.225,
+            3.261,
+            3.232,
+            3.24,
+            3.243,
+            3.832,
+            5.565,
+            30.0,
+            30.0,
+            30.0,
+            3.645,
+            3.643,
+            3.645,
+            3.627,
+            3.621,
+            2.145,
+            2.144,
+            2.181,
+            3.643,
+            3.672,
+            3.679,
+            3.701,
+            3.697,
+            3.714,
+            3.73,
+            3.761,
+            3.778,
+            3.8,
+            3.823,
+            3.842,
+            3.885,
+            3.901,
+            3.945,
+            3.957,
+            3.993,
+            4.023,
+            4.072,
+            4.115,
+            4.155,
+            4.181,
+            4.215,
+            4.272,
+            4.326,
+            4.383,
+            4.44,
+            4.533,
+            4.602,
+            5.094,
+            4.988,
+            4.86,
+            4.772,
+            4.686,
+            4.605,
+            4.526,
+            3.186,
+            3.165,
+            3.217,
+            3.284,
+            3.345,
+            3.419,
+            3.497,
+            3.566,
+            3.662,
+            3.75,
+            3.843,
+            3.939,
+            4.072,
+            4.167,
+            5.952,
+            6.137,
+            6.348,
+            6.55,
+            6.791,
+            7.033,
+            7.409,
+            7.841,
+            2.518,
+            2.465,
+            2.433,
+            2.424,
+            2.431,
+            2.44,
+            2.453,
+            2.495,
+            2.575,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            4.203,
+            4.123,
+            4.086,
+            4.108,
+            4.134,
+            4.214,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            7.011,
+            7.031,
+            7.056,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            8.369,
+            8.112,
+            6.865,
+            6.847,
+            6.926,
+            7.262,
+            7.056,
+            6.894,
+            6.73,
+            6.573,
+            6.426,
+            6.302,
+            6.182,
+            6.115,
+            5.99,
+            5.928,
+            2.671,
+            2.653,
+            2.633,
+            2.609,
+            2.63,
+            2.658,
+            2.703,
+            6.914,
+            7.082,
+            7.256,
+            7.426,
+            7.623,
+            7.826,
+            8.039,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            30.0,
+            8.018,
+            7.651,
+            7.312,
+            7.0,
+            6.719
+          ]
+        },
+        "mission_log": [],
+        "model": {
+          "detail": "LLM optional",
+          "roles": {},
+          "status": "deterministic"
+        },
+        "motion": {
+          "active_source": "voice",
+          "command": {
+            "vx": 0.08,
+            "vy": 0.0,
+            "vyaw": 0.1
+          },
+          "emergency_stopped": false
+        },
+        "navigation": {
+          "directive": null,
+          "dynamic_cost_active": false,
+          "enabled": false,
+          "goal": null,
+          "min_time_to_collision_s": null,
+          "reason": "navigation_disabled",
+          "state": "idle",
+          "time_to_collision_gate": false
+        },
+        "nearest_person": null,
+        "obstacle_distance_m": 1.8204098580063286,
+        "owner": {
+          "confidence": 1.0,
+          "id": "owner-1",
+          "visible": true,
+          "x": 2.0,
+          "y": -0.5
+        },
+        "owner_search": {
+          "degraded": "",
+          "enabled": false,
+          "frontier_target_x_m": null,
+          "frontier_target_y_m": null,
+          "last_observed_x_m": 0.0,
+          "last_observed_y_m": 0.0,
+          "map_available": false,
+          "outcome": "",
+          "owner_confidence": null,
+          "paused": false,
+          "reason": "idle",
+          "state": "idle",
+          "viewpoints": 0
+        },
+        "perception": {
+          "camera_role": "owner/object/scene perception",
+          "lidar_role": "range, free-space, and collision perception",
+          "maps": {
+            "available": false,
+            "data": null,
+            "provider": "google_maps",
+            "status": "placeholder"
+          },
+          "reasoning_visibility": {
+            "environment": [
+              "camera",
+              "lidar"
+            ],
+            "simulator_ground_truth": false
+          },
+          "simulator_truth_diagnostics_only": true,
+          "spatial_sensors": [
+            "camera",
+            "lidar"
+          ]
+        },
+        "realtime": {
+          "config": {
+            "capture": {
+              "dir": "recordings",
+              "enabled": false,
+              "max_minutes": 30.0,
+              "owner_gap_s": 0.75
+            },
+            "enabled": false,
+            "idle_close_after_s": 600.0,
+            "mode": "text",
+            "model": "gpt-realtime-2.1",
+            "monthly_budget_usd": 25.0,
+            "persona": "",
+            "session_max_s": 3600.0,
+            "si_profile": "",
+            "source": "absent",
+            "stall_timeout_s": 8.0,
+            "voice": "cedar",
+            "voice_identity": {
+              "budget_ms": 50.0,
+              "doa": false,
+              "enabled": true,
+              "min_utterance_s": 1.2,
+              "model": "",
+              "narration_interval_s": 60.0,
+              "profile": "",
+              "rejected_sector": null,
+              "threshold": 0.55
+            },
+            "whisperer": {
+              "enabled": true,
+              "max_updates_per_minute": 2,
+              "min_gap_s": 15.0
+            }
+          },
+          "constructed": false,
+          "enabled": false,
+          "mode": "text",
+          "whisperer": {
+            "enabled": true,
+            "folded": 0,
+            "forwarded": 0,
+            "forwarded_by_rule": {},
+            "last": {
+              "at_s": 507389.226669977,
+              "band": "never",
+              "folded": 0,
+              "forwarded": false,
+              "key": "position",
+              "kind": "position",
+              "rule": "never_band",
+              "schema_version": 3,
+              "seq": 10,
+              "text": "",
+              "updates_this_minute": 0
+            },
+            "max_updates_per_minute": 2,
+            "min_gap_s": 15.0,
+            "pace_watch": {
+              "accounted": true,
+              "logged": 0,
+              "mismatch_banked_s": 0.0,
+              "mismatch_open": false,
+              "pace_unknown": false,
+              "pace_unknown_episodes": 0,
+              "pace_unknown_for_s": 0.0,
+              "pace_unknown_seconds": 0.0,
+              "skips": {
+                "not_following": 11,
+                "session_baseline": 1
+              },
+              "ticks": 12
+            },
+            "schema_version": 3,
+            "suppressed": 10,
+            "suppressed_by_rule": {
+              "never_band": 10
+            },
+            "updates_this_minute": 0
+          }
+        },
+        "robot": {
+          "heading": 114.79209425442261,
+          "x": 0.48529671644192807,
+          "y": 0.9681637717741307,
+          "z": 0.27
+        },
+        "robot_profile": {
+          "dof": 12,
+          "footprint_radius_m": 0.32,
+          "name": "go2"
+        },
+        "safety_latch": {
+          "latched": false
+        },
+        "safety_log": [],
+        "simulator": {
+          "detail": "",
+          "name": "mujoco",
+          "status": "connected"
+        },
+        "spatial_behavior": {
+          "enabled": false,
+          "intent": null,
+          "orbit_radius_m": null,
+          "progress": 0.0,
+          "state": "idle",
+          "target_distance_m": null
+        },
+        "speech": {
+          "barge_ins": 0,
+          "endpointing": "energy (VAD hangover)",
+          "input_device_detail": "system default",
+          "mic_arming": {
+            "armed": false,
+            "capture_device": {
+              "confidence": "metadata",
+              "index": null,
+              "is_monitor": false,
+              "name": "system default",
+              "signal": "media.class=Audio/Source",
+              "source": "pipewire"
+            },
+            "code": "no_recognizer",
+            "override": false,
+            "reason": "Microphone not armed: no speech recognizer (STT unreachable or disabled)."
+          },
+          "microphone_active": false,
+          "mode": "auto",
+          "output_device_detail": "system default",
+          "playback_active": false,
+          "stack": {
+            "aec": {
+              "constructed": false,
+              "detail": "no AEC stage is wired into the capture loop on any config path"
+            },
+            "capture_device": {
+              "confidence": "metadata",
+              "index": null,
+              "is_monitor": false,
+              "name": "system default",
+              "signal": "media.class=Audio/Source",
+              "source": "pipewire"
+            },
+            "config_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live.yaml",
+            "endpointing": {
+              "models": {
+                "turn_model": "models/endpointing/smart_turn_v3.onnx",
+                "vad_model": "models/endpointing/silero_vad_v6.onnx"
+              },
+              "models_present": {
+                "turn_model": true,
+                "vad_model": true
+              },
+              "requested": "energy",
+              "resolved": "energy (VAD hangover)",
+              "semantic_loaded": false
+            },
+            "mic_arming": {
+              "armed": false,
+              "capture_device": {
+                "confidence": "metadata",
+                "index": null,
+                "is_monitor": false,
+                "name": "system default",
+                "signal": "media.class=Audio/Source",
+                "source": "pipewire"
+              },
+              "code": "no_recognizer",
+              "override": false,
+              "reason": "Microphone not armed: no speech recognizer (STT unreachable or disabled)."
+            },
+            "mode": "auto",
+            "stt": "whisper.cpp unreachable at http://127.0.0.1:8178",
+            "tts": "piper (models/piper/voice.onnx)"
+          },
+          "stt": "whisper.cpp unreachable at http://127.0.0.1:8178",
+          "tts": "piper (models/piper/voice.onnx)",
+          "turn_commits": 0
+        },
+        "voice": {
+          "last_reply": "",
+          "last_transcript": "",
+          "last_turn_id": null,
+          "mode": "text",
+          "partial": "",
+          "status": "idle",
+          "superseded": false
+        }
+      },
+      "typed_frames": {
+        "achieved_hz_from_publish_timestamps": 1.751,
+        "active_execution_providers": [
+          "CPUExecutionProvider"
+        ],
+        "capture_ms": {
+          "count": 20,
+          "max": 51.057,
+          "mean": 28.884,
+          "p50": 29.046,
+          "p95": 35.902,
+          "p99": 51.057
+        },
+        "capture_start_to_publish_ms": {
+          "count": 20,
+          "max": 654.357,
+          "mean": 555.871,
+          "p50": 547.37,
+          "p95": 566.54,
+          "p99": 654.357
+        },
+        "config_digests": [
+          "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558"
+        ],
+        "count": 20,
+        "detector_ms": {
+          "count": 20,
+          "max": 556.451,
+          "mean": 516.551,
+          "p50": 512.639,
+          "p95": 532.677,
+          "p99": 556.451
+        },
+        "empty_frames": 0,
+        "expired_at_publish": 20,
+        "inference_ms": {
+          "count": 20,
+          "max": 654.339,
+          "mean": 555.86,
+          "p50": 547.36,
+          "p95": 566.529,
+          "p99": 654.339
+        },
+        "localization_rejections": 0,
+        "localized_detections": 33,
+        "model_digests": [
+          "e9cc288738a96a5a9b730801f622b2e1a531ed2a93d02dd1227a4d35fd9690c6"
+        ],
+        "provider_profiles": [
+          "cpu_int8"
+        ],
+        "raw_detections": 33,
+        "scene_digests": [
+          "56970679ebb2aa363f1370212f1c2f8ff4be0f90d3318e754a08b1bd5b0e5986"
+        ],
+        "selected_execution_providers": [
+          "CPUExecutionProvider"
+        ],
+        "view_ids": [
+          "mujoco_egl:camera_color_optical_frame:1:1787350672788239686",
+          "mujoco_egl:camera_color_optical_frame:2:1787350673462914610",
+          "mujoco_egl:camera_color_optical_frame:3:1787350674045276154",
+          "mujoco_egl:camera_color_optical_frame:4:1787350674632079019",
+          "mujoco_egl:camera_color_optical_frame:5:1787350675195538999",
+          "mujoco_egl:camera_color_optical_frame:6:1787350675772643659",
+          "mujoco_egl:camera_color_optical_frame:7:1787350676344279915",
+          "mujoco_egl:camera_color_optical_frame:8:1787350676910418653",
+          "mujoco_egl:camera_color_optical_frame:9:1787350677471061827",
+          "mujoco_egl:camera_color_optical_frame:10:1787350678054123339",
+          "mujoco_egl:camera_color_optical_frame:11:1787350678621692238",
+          "mujoco_egl:camera_color_optical_frame:12:1787350679189320247",
+          "mujoco_egl:camera_color_optical_frame:13:1787350679765735355",
+          "mujoco_egl:camera_color_optical_frame:14:1787350680332490174",
+          "mujoco_egl:camera_color_optical_frame:15:1787350680906627950",
+          "mujoco_egl:camera_color_optical_frame:16:1787350681480493345",
+          "mujoco_egl:camera_color_optical_frame:17:1787350682047141693",
+          "mujoco_egl:camera_color_optical_frame:18:1787350682623668019",
+          "mujoco_egl:camera_color_optical_frame:19:1787350683183713079",
+          "mujoco_egl:camera_color_optical_frame:20:1787350683749670022"
+        ]
+      }
+    }
+  },
+  "ended_at_utc": "2026-08-21T22:18:05.178384+00:00",
+  "errors": [],
+  "gpu_after": {
+    "driver_version": "595.84",
+    "memory_free_mib": 31332,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 897,
+    "name": "NVIDIA RTX 5000 Ada Generation",
+    "sampled_at_utc": "2026-08-21T22:18:05.178359+00:00"
+  },
+  "gpu_before": {
+    "driver_version": "595.84",
+    "memory_free_mib": 31333,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 896,
+    "name": "NVIDIA RTX 5000 Ada Generation",
+    "sampled_at_utc": "2026-08-21T22:17:41.015660+00:00"
+  },
+  "normal_onnxruntime": {
+    "available_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "version": "1.28.0"
+  },
+  "owner_store_after": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/parcel_memory.sqlite3",
+    "sha256": "40506fd96fc61c341d64d44cb607ec206fd547c03b223fbe91134ab5c2db4aa8"
+  },
+  "owner_store_before": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/parcel_memory.sqlite3",
+    "sha256": "40506fd96fc61c341d64d44cb607ec206fd547c03b223fbe91134ab5c2db4aa8"
+  },
+  "owner_store_unchanged": true,
+  "pid": 543563,
+  "preregistration": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/C1_PREREGISTRATION.md",
+  "python": "/home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python",
+  "repo": "/home/jaewoo-jang/Desktop/Projects/Parcel",
+  "safety_isolation": {
+    "delta_at_most_5ms": false,
+    "delta_ms": 33.223,
+    "metric": "ControlLoopWork",
+    "off_p99_ms": 10.642,
+    "on_p99_ms": 43.865,
+    "on_under_100ms": true,
+    "preregistered": true
+  },
+  "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+  "scene_xml_sha256": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58",
+  "schema": "parcel.c1_cpu_live.v1",
+  "simulator": {
+    "after_off_clear": {
+      "backend": "mujoco",
+      "collision": false,
+      "command": {
+        "vx": 0.0,
+        "vy": 0.0,
+        "vyaw": 0.1
+      },
+      "dynamic_agents": [],
+      "dynamic_city": {
+        "active_agents": 0,
+        "enabled": false,
+        "seed": 7,
+        "speed_scale": 1.0
+      },
+      "emergency_stopped": false,
+      "lidar_obstacles": [
+        {
+          "bearing_rad": -1.1427858787317329,
+          "distance_m": 1.2189767638334448,
+          "id": "owner_body"
+        },
+        {
+          "bearing_rad": 2.9342958595290938,
+          "distance_m": 1.6050780333950456,
+          "id": "obstacle_bollard"
+        },
+        {
+          "bearing_rad": 1.7044204554788518,
+          "distance_m": 2.382489278419497,
+          "id": "pedestrian_5_body"
+        },
+        {
+          "bearing_rad": 0.8121552282976459,
+          "distance_m": 2.689474359667827,
+          "id": "lamp_post_1"
+        },
+        {
+          "bearing_rad": 1.437343674208833,
+          "distance_m": 3.122731966017,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 1.441876973087318,
+          "distance_m": 3.135203601150875,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 1.452455985908938,
+          "distance_m": 3.216643303014631,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 1.4739439214816956,
+          "distance_m": 3.280831644302705,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 1.429815052082465,
+          "distance_m": 3.3181547732654297,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 1.3788574342896247,
+          "distance_m": 3.403207825141269,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": 1.5374892237622397,
+          "distance_m": 3.4400383300615442,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 1.434365395386335,
+          "distance_m": 3.458566169165388,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 1.365229371338673,
+          "distance_m": 3.4771964691861146,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 1.3637479163794097,
+          "distance_m": 3.485460021057489,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": 1.3927432365598351,
+          "distance_m": 3.501981674260554,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": -1.6364391523687354,
+          "distance_m": 3.6415251280016014,
+          "id": "pedestrian_3_body"
+        },
+        {
+          "bearing_rad": 1.4614556270577221,
+          "distance_m": 3.6467174364463015,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": -0.2830068241379111,
+          "distance_m": 3.672263982610021,
+          "id": "signal_post"
+        },
+        {
+          "bearing_rad": 1.4586162013609778,
+          "distance_m": 3.7542799785637615,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 1.6181481124610304,
+          "distance_m": 3.773964406496231,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 1.4645582812374016,
+          "distance_m": 3.787583153282997,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": 0.6792319929223956,
+          "distance_m": 3.811897725436157,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": 2.0293145509411126,
+          "distance_m": 3.8148836994801276,
+          "id": "pedestrian_7_body"
+        },
+        {
+          "bearing_rad": 0.5643800240471988,
+          "distance_m": 3.8816068729654396,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": 1.5507853463935488,
+          "distance_m": 3.9841329684240177,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": 1.6508368627898804,
+          "distance_m": 3.9982653125006773,
+          "id": "bench_leg_l"
+        },
+        {
+          "bearing_rad": 0.35216854029317135,
+          "distance_m": 4.176332948591436,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": -1.6880309689211606,
+          "distance_m": 4.186889471012938,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": 0.7662963267948983,
+          "distance_m": 4.196247313368426,
+          "id": "bldg_2"
+        },
+        {
+          "bearing_rad": 0.8248008825334479,
+          "distance_m": 4.2039874189756805,
+          "id": "bldg_2"
+        },
+        {
+          "bearing_rad": -1.1457627823764527,
+          "distance_m": 4.222178108342028,
+          "id": "pedestrian_6_body"
+        },
+        {
+          "bearing_rad": 0.6883417135984606,
+          "distance_m": 4.2935917671771815,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": -1.6546803083795165,
+          "distance_m": 4.316352806702733,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": 1.037343069243562,
+          "distance_m": 4.367378003257974,
+          "id": "bldg_2"
+        },
+        {
+          "bearing_rad": 1.4265026009260406,
+          "distance_m": 4.638117680646115,
+          "id": "bldg_1"
+        },
+        {
+          "bearing_rad": 0.1729663015460292,
+          "distance_m": 4.644817070458526,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": -0.22998116201322372,
+          "distance_m": 4.7803783273173455,
+          "id": "planter_2"
+        },
+        {
+          "bearing_rad": -1.7836421008256444,
+          "distance_m": 4.806605842198219,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": -0.694123355381786,
+          "distance_m": 4.820568615484879,
+          "id": "obstacle_crate"
+        },
+        {
+          "bearing_rad": -0.60502450907987,
+          "distance_m": 4.892650089998666,
+          "id": "obstacle_crate"
+        },
+        {
+          "bearing_rad": 0.015723684476050437,
+          "distance_m": 4.898454247584424,
+          "id": "bldg_4"
+        },
+        {
+          "bearing_rad": 2.9925740899002875,
+          "distance_m": 4.903197157076524,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": -1.5172383804988092,
+          "distance_m": 5.007588353215464,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": 3.029139444993481,
+          "distance_m": 5.057958151032931,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": -0.22998116201322372,
+          "distance_m": 5.130378327317346,
+          "id": "tree_2"
+        },
+        {
+          "bearing_rad": -0.5717853346798525,
+          "distance_m": 5.170625658824646,
+          "id": "obstacle_crate"
+        },
+        {
+          "bearing_rad": -0.04946006925552204,
+          "distance_m": 5.248580883131592,
+          "id": "bldg_4"
+        },
+        {
+          "bearing_rad": 1.8159147662862258,
+          "distance_m": 5.388335172190567,
+          "id": "planter_1"
+        },
+        {
+          "bearing_rad": 2.91471734044113,
+          "distance_m": 5.5106694354012395,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": 1.8159147662862267,
+          "distance_m": 5.738335172190568,
+          "id": "tree_1"
+        },
+        {
+          "bearing_rad": -3.127658417732238,
+          "distance_m": 5.739298243570668,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": -0.2303959518938905,
+          "distance_m": 5.872540514043862,
+          "id": "pedestrian_2_body"
+        },
+        {
+          "bearing_rad": 2.7818552196169284,
+          "distance_m": 5.970178661821965,
+          "id": "pedestrian_4_body"
+        },
+        {
+          "bearing_rad": -1.3701233332747804,
+          "distance_m": 6.180239891047582,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": -0.2015713173178484,
+          "distance_m": 6.409916047434677,
+          "id": "bldg_4"
+        },
+        {
+          "bearing_rad": 2.337092653589795,
+          "distance_m": 6.500713389267425,
+          "id": "cyclist_1_bike"
+        },
+        {
+          "bearing_rad": 2.328846296476044,
+          "distance_m": 6.500945308298043,
+          "id": "cyclist_1_bike"
+        },
+        {
+          "bearing_rad": 1.917686265907622,
+          "distance_m": 6.641384644974093,
+          "id": "pedestrian_1_body"
+        },
+        {
+          "bearing_rad": 2.3691346662025854,
+          "distance_m": 6.664298439204351,
+          "id": "cyclist_1_bike"
+        },
+        {
+          "bearing_rad": 2.348501497439308,
+          "distance_m": 6.84119115511155,
+          "id": "cyclist_1_body"
+        },
+        {
+          "bearing_rad": -1.9710593287359992,
+          "distance_m": 6.949667798350166,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": 1.7701957004043116,
+          "distance_m": 6.972594716760491,
+          "id": "bldg_1"
+        },
+        {
+          "bearing_rad": 2.737934212321086,
+          "distance_m": 7.266857205727771,
+          "id": "lamp_post_2"
+        },
+        {
+          "bearing_rad": 2.745128705615029,
+          "distance_m": 7.703420995790301,
+          "id": "bldg_5"
+        }
+      ],
+      "lidar_scan": {
+        "angle_increment_rad": 0.017453292519943295,
+        "angle_min_rad": -3.141592653589793,
+        "range_max_m": 30.0,
+        "range_min_m": 0.05,
+        "ranges": [
+          5.965,
+          6.069,
+          6.203,
+          6.323,
+          6.456,
+          6.6,
+          6.737,
+          6.898,
+          7.065,
+          7.243,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          6.997,
+          6.736,
+          6.509,
+          6.293,
+          6.074,
+          5.883,
+          5.689,
+          5.547,
+          5.384,
+          5.232,
+          5.106,
+          4.97,
+          4.852,
+          4.741,
+          4.64,
+          4.55,
+          4.037,
+          3.975,
+          3.952,
+          3.964,
+          3.996,
+          4.098,
+          4.969,
+          5.049,
+          5.165,
+          5.261,
+          5.384,
+          5.481,
+          5.611,
+          5.733,
+          5.88,
+          6.024,
+          6.189,
+          6.351,
+          6.529,
+          6.709,
+          6.916,
+          7.201,
+          30.0,
+          30.0,
+          1.65,
+          1.603,
+          1.578,
+          1.562,
+          1.538,
+          1.545,
+          1.537,
+          1.538,
+          1.555,
+          1.576,
+          1.548,
+          1.576,
+          1.606,
+          1.645,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          5.336,
+          5.148,
+          5.163,
+          5.178,
+          5.196,
+          5.21,
+          5.227,
+          5.242,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          3.997,
+          7.328,
+          5.487,
+          5.452,
+          6.248,
+          6.579,
+          6.407,
+          6.27,
+          6.131,
+          5.985,
+          5.871,
+          5.754,
+          5.627,
+          5.55,
+          5.437,
+          5.349,
+          5.295,
+          5.23,
+          5.322,
+          5.434,
+          5.547,
+          5.294,
+          5.229,
+          5.09,
+          5.037,
+          4.986,
+          4.916,
+          4.851,
+          4.819,
+          4.77,
+          4.715,
+          4.665,
+          4.619,
+          4.575,
+          4.543,
+          4.508,
+          4.455,
+          4.441,
+          4.396,
+          4.372,
+          4.34,
+          4.317,
+          4.29,
+          4.278,
+          4.24,
+          4.227,
+          4.213,
+          4.198,
+          4.159,
+          4.169,
+          4.153,
+          4.138,
+          4.116,
+          4.132,
+          4.139,
+          4.205,
+          5.262,
+          30.0,
+          30.0,
+          30.0,
+          4.515,
+          4.515,
+          3.016,
+          3.025,
+          4.479,
+          4.497,
+          4.501,
+          4.522,
+          4.539,
+          4.551,
+          4.55,
+          4.585,
+          4.586,
+          4.62,
+          4.612,
+          4.634,
+          4.663,
+          4.685,
+          4.699,
+          4.743,
+          4.754,
+          4.798,
+          4.839,
+          4.861,
+          4.909,
+          4.945,
+          4.985,
+          5.039,
+          5.072,
+          5.137,
+          5.209,
+          5.278,
+          5.72,
+          5.57,
+          5.416,
+          3.72,
+          3.767,
+          3.819,
+          3.87,
+          3.939,
+          3.984,
+          4.032,
+          4.114,
+          4.178,
+          4.229,
+          4.328,
+          4.393,
+          4.477,
+          4.558,
+          4.65,
+          2.821,
+          2.754,
+          2.731,
+          2.712,
+          2.708,
+          2.713,
+          2.731,
+          2.787,
+          7.351,
+          7.628,
+          6.053,
+          8.226,
+          8.509,
+          8.748,
+          9.06,
+          7.005,
+          6.964,
+          7.008,
+          30.0,
+          30.0,
+          4.204,
+          4.155,
+          4.142,
+          4.141,
+          4.177,
+          4.304,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          6.816,
+          6.815,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          7.577,
+          6.385,
+          6.296,
+          6.302,
+          6.917,
+          6.689,
+          6.458,
+          2.0,
+          1.948,
+          1.955,
+          1.921,
+          1.936,
+          1.922,
+          1.934,
+          1.949,
+          1.975,
+          2.089,
+          5.4,
+          5.491,
+          5.576,
+          5.67,
+          5.775,
+          5.851
+        ]
+      },
+      "nearest_obstacle": {
+        "bearing_rad": -1.1427858787317329,
+        "distance_m": 1.2189767638334448,
+        "id": "owner_body"
+      },
+      "nearest_obstacle_m": 1.2189767638334448,
+      "nearest_person": null,
+      "nearest_person_m": null,
+      "owner": {
+        "confidence": 1.0,
+        "id": "owner-1",
+        "visible": true,
+        "x": 2.0,
+        "y": -0.5
+      },
+      "robot": {
+        "x": 0.3407133892674243,
+        "y": 0.08375268663157383,
+        "yaw": 0.8044999999999981,
+        "z": 0.27
+      },
+      "semantic_objects": [
+        {
+          "confidence": 0.98,
+          "id": "bldg_2",
+          "label": "building",
+          "metadata": {
+            "aliases": [
+              "bldg",
+              "storefront",
+              "building face"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "bldg_2"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "bldg_2",
+              "anchor_footprint_m": 1.8439088914585773,
+              "band_m": [
+                2.963908891458577,
+                3.463908891458577
+              ],
+              "center": [
+                -1.0,
+                5.8
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 2.963908891458577,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 1.8439088914585773,
+            "stand_off_m": 3.1639088914585773,
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 3.463908891458577
+          },
+          "position": [
+            -1.0,
+            5.8,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "bldg_3",
+          "label": "building",
+          "metadata": {
+            "aliases": [
+              "bldg",
+              "storefront",
+              "building face"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "bldg_3"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "bldg_3",
+              "anchor_footprint_m": 2.051828452868319,
+              "band_m": [
+                3.1718284528683185,
+                3.6718284528683185
+              ],
+              "center": [
+                2.2,
+                5.6
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 3.1718284528683185,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 2.051828452868319,
+            "stand_off_m": 3.3718284528683187,
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 3.6718284528683185
+          },
+          "position": [
+            2.2,
+            5.6,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "bldg_4",
+          "label": "building",
+          "metadata": {
+            "aliases": [
+              "bldg",
+              "storefront",
+              "building face"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "bldg_4"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "bldg_4",
+              "anchor_footprint_m": 2.193171219946131,
+              "band_m": [
+                3.313171219946131,
+                3.8131712199461307
+              ],
+              "center": [
+                5.5,
+                5.4
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 3.313171219946131,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 2.193171219946131,
+            "stand_off_m": 3.513171219946131,
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 3.8131712199461307
+          },
+          "position": [
+            5.5,
+            5.4,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "lamp_post_1",
+          "label": "lamppost",
+          "metadata": {
+            "aliases": [
+              "lamp post",
+              "streetlight",
+              "street light",
+              "lamp"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "lamp_post_1"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "lamp_post_1",
+              "anchor_footprint_m": 0.06,
+              "band_m": [
+                1.1800000000000002,
+                1.38
+              ],
+              "center": [
+                0.2,
+                3.15
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 1.1800000000000002,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 0.06,
+            "stand_off_m": 1.32,
+            "support_label": "sidewalk",
+            "support_polygon": [
+              [
+                -8.0,
+                2.2
+              ],
+              [
+                8.0,
+                2.2
+              ],
+              [
+                8.0,
+                4.2
+              ],
+              [
+                -8.0,
+                4.2
+              ]
+            ],
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 1.38
+          },
+          "position": [
+            0.2,
+            3.15,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "planter_2",
+          "label": "planter",
+          "metadata": {
+            "aliases": [
+              "plant pot",
+              "flower box",
+              "pot"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "planter_2"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "planter_2",
+              "anchor_footprint_m": 0.45,
+              "band_m": [
+                1.57,
+                1.77
+              ],
+              "center": [
+                5.0,
+                3.1
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 1.57,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 0.45,
+            "stand_off_m": 1.6700000000000002,
+            "support_label": "sidewalk",
+            "support_polygon": [
+              [
+                -8.0,
+                2.2
+              ],
+              [
+                8.0,
+                2.2
+              ],
+              [
+                8.0,
+                4.2
+              ],
+              [
+                -8.0,
+                4.2
+              ]
+            ],
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 1.77
+          },
+          "position": [
+            5.0,
+            3.1,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "tree_2",
+          "label": "tree",
+          "metadata": {
+            "aliases": [
+              "trees",
+              "street tree"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "tree_2",
+              "tree_top_2"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "tree_2",
+              "anchor_footprint_m": 0.58,
+              "band_m": [
+                1.7,
+                1.9
+              ],
+              "center": [
+                5.0,
+                3.1
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 1.7,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 0.58,
+            "stand_off_m": 1.8,
+            "support_label": "sidewalk",
+            "support_polygon": [
+              [
+                -8.0,
+                2.2
+              ],
+              [
+                8.0,
+                2.2
+              ],
+              [
+                8.0,
+                4.2
+              ],
+              [
+                -8.0,
+                4.2
+              ]
+            ],
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 1.9
+          },
+          "position": [
+            5.0,
+            3.1,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        }
+      ],
+      "semantic_regions": [
+        {
+          "confidence": 0.98,
+          "id": "sidewalk",
+          "label": "sidewalk",
+          "metadata": {
+            "aliases": [
+              "pavement",
+              "safe region"
+            ],
+            "arrival_radius_m": 0.12,
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": null,
+              "kind": "polygon",
+              "polygon": [
+                [
+                  -8.0,
+                  2.2
+                ],
+                [
+                  8.0,
+                  2.2
+                ],
+                [
+                  8.0,
+                  4.2
+                ],
+                [
+                  -8.0,
+                  4.2
+                ]
+              ]
+            },
+            "target_obstacle_clearance_m": 1.3,
+            "terminal_clearance_m": 0.32
+          },
+          "polygon": [
+            [
+              -8.0,
+              2.2
+            ],
+            [
+              8.0,
+              2.2
+            ],
+            [
+              8.0,
+              4.2
+            ],
+            [
+              -8.0,
+              4.2
+            ]
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "crosswalk",
+          "label": "crosswalk",
+          "metadata": {
+            "aliases": [
+              "crossing",
+              "zebra crossing",
+              "cross walk"
+            ],
+            "arrival_radius_m": 0.12,
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": null,
+              "kind": "polygon",
+              "polygon": [
+                [
+                  2.35,
+                  -0.3999999999999999
+                ],
+                [
+                  3.85,
+                  -0.3999999999999999
+                ],
+                [
+                  3.85,
+                  2.0
+                ],
+                [
+                  2.35,
+                  2.0
+                ]
+              ]
+            },
+            "target_obstacle_clearance_m": 1.3,
+            "terminal_clearance_m": 0.32
+          },
+          "polygon": [
+            [
+              2.35,
+              -0.3999999999999999
+            ],
+            [
+              3.85,
+              -0.3999999999999999
+            ],
+            [
+              3.85,
+              2.0
+            ],
+            [
+              2.35,
+              2.0
+            ]
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        }
+      ],
+      "sim_time": 8.654999999999953,
+      "timestamp": 507377.526675079,
+      "type": "status",
+      "version": 1
+    },
+    "command": [
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python",
+      "-B",
+      "-m",
+      "parcel_robot.sim",
+      "--config",
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live.yaml",
+      "--scene",
+      "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+      "--socket",
+      "/tmp/parcel-c1-live-543563.sock",
+      "--static-city"
+    ],
+    "log": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/live_cpu_20260821T221731Z/simulator.log",
+    "pid": 543630,
+    "ready_status": {
+      "backend": "mujoco",
+      "collision": false,
+      "command": {
+        "vx": 0.0,
+        "vy": 0.0,
+        "vyaw": 0.0
+      },
+      "dynamic_agents": [],
+      "dynamic_city": {
+        "active_agents": 0,
+        "enabled": false,
+        "seed": 7,
+        "speed_scale": 1.0
+      },
+      "emergency_stopped": false,
+      "lidar_obstacles": [
+        {
+          "bearing_rad": -2.4756234162106834,
+          "distance_m": 1.2804493814764855,
+          "id": "obstacle_bollard"
+        },
+        {
+          "bearing_rad": -0.24497866312686423,
+          "distance_m": 1.5215528128088303,
+          "id": "owner_body"
+        },
+        {
+          "bearing_rad": 2.4087775518032863,
+          "distance_m": 2.170724809414742,
+          "id": "pedestrian_5_body"
+        },
+        {
+          "bearing_rad": 1.5073893748280645,
+          "distance_m": 2.776342820417326,
+          "id": "lamp_post_1"
+        },
+        {
+          "bearing_rad": 2.145399397342503,
+          "distance_m": 2.9918574848564967,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 2.1504518787943097,
+          "distance_m": 3.002769928839492,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 2.163692855382365,
+          "distance_m": 3.0803529228596256,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 2.1876833506685047,
+          "distance_m": 3.1372243201736274,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 2.1429899708028906,
+          "distance_m": 3.1889172119045504,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 2.257700005459042,
+          "distance_m": 3.275385931996731,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 2.092690630618838,
+          "distance_m": 3.2906647587390334,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": 2.151194514188771,
+          "distance_m": 3.327259244967377,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 2.0805277898211862,
+          "distance_m": 3.368956492017763,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 2.079208200539769,
+          "distance_m": 3.3776884671372738,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": 2.10936397733051,
+          "distance_m": 3.384375790872195,
+          "id": "bench_leg_r"
+        },
+        {
+          "bearing_rad": 2.1834494836590057,
+          "distance_m": 3.5058201735052843,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": 2.788602265762883,
+          "distance_m": 3.519691346263317,
+          "id": "pedestrian_7_body"
+        },
+        {
+          "bearing_rad": 2.3489482402124473,
+          "distance_m": 3.5833319100481322,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 2.1827717699174674,
+          "distance_m": 3.613954753171419,
+          "id": "bench_seat"
+        },
+        {
+          "bearing_rad": 2.189579968034584,
+          "distance_m": 3.6452112175771925,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": 2.3871124697553876,
+          "distance_m": 3.7973292314314624,
+          "id": "bench_leg_l"
+        },
+        {
+          "bearing_rad": 2.2825713683639144,
+          "distance_m": 3.8136303656713193,
+          "id": "bench_back"
+        },
+        {
+          "bearing_rad": -0.7610127542247298,
+          "distance_m": 3.82,
+          "id": "pedestrian_3_body"
+        },
+        {
+          "bearing_rad": 2.4034565661930376,
+          "distance_m": 3.870751722543343,
+          "id": "bench_leg_l"
+        },
+        {
+          "bearing_rad": 1.4056476493802696,
+          "distance_m": 3.9379337712087534,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": 0.49934672168012995,
+          "distance_m": 4.010487430149584,
+          "id": "signal_post"
+        },
+        {
+          "bearing_rad": 1.2961692640794267,
+          "distance_m": 4.043516675547117,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": 1.5707963267948966,
+          "distance_m": 4.279999999999999,
+          "id": "bldg_2"
+        },
+        {
+          "bearing_rad": 1.5542346941803515,
+          "distance_m": 4.280630933759208,
+          "id": "bldg_2"
+        },
+        {
+          "bearing_rad": 1.6616428856380505,
+          "distance_m": 4.299047619047618,
+          "id": "bldg_2"
+        },
+        {
+          "bearing_rad": -0.8156919233162236,
+          "distance_m": 4.349047011971501,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": 1.0976703286642282,
+          "distance_m": 4.3983153773354315,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": -0.7853981633974483,
+          "distance_m": 4.488326112068521,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": 1.8681309451246362,
+          "distance_m": 4.491107707130917,
+          "id": "bldg_2"
+        },
+        {
+          "bearing_rad": 2.1645459935056675,
+          "distance_m": 4.505971404805462,
+          "id": "bldg_1"
+        },
+        {
+          "bearing_rad": -0.30288486837497164,
+          "distance_m": 4.518916384272062,
+          "id": "pedestrian_6_body"
+        },
+        {
+          "bearing_rad": -0.8558209336332503,
+          "distance_m": 4.561033681088297,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": -2.457297861928643,
+          "distance_m": 4.584079934095691,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": -2.4193448799219213,
+          "distance_m": 4.74449444663532,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": 0.9323939628543947,
+          "distance_m": 4.9100679834119845,
+          "id": "bldg_3"
+        },
+        {
+          "bearing_rad": -2.3504384051510874,
+          "distance_m": 5.08521377930605,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": 0.5549957273385866,
+          "distance_m": 5.113026432033091,
+          "id": "planter_2"
+        },
+        {
+          "bearing_rad": 2.579405909689764,
+          "distance_m": 5.139526207742884,
+          "id": "planter_1"
+        },
+        {
+          "bearing_rad": 0.11870533714317721,
+          "distance_m": 5.168624600025037,
+          "id": "obstacle_crate"
+        },
+        {
+          "bearing_rad": 0.7853981633974483,
+          "distance_m": 5.19543289325507,
+          "id": "bldg_4"
+        },
+        {
+          "bearing_rad": 0.20209587776132443,
+          "distance_m": 5.24322248741181,
+          "id": "obstacle_crate"
+        },
+        {
+          "bearing_rad": 0.5549957273385866,
+          "distance_m": 5.463026432033091,
+          "id": "tree_2"
+        },
+        {
+          "bearing_rad": 2.579405909689764,
+          "distance_m": 5.489526207742885,
+          "id": "tree_1"
+        },
+        {
+          "bearing_rad": 0.725681400386244,
+          "distance_m": 5.556633049629694,
+          "id": "bldg_4"
+        },
+        {
+          "bearing_rad": -2.590159105955767,
+          "distance_m": 5.597060080817161,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": -2.6852441850326842,
+          "distance_m": 5.626989472816156,
+          "id": "pedestrian_4_body"
+        },
+        {
+          "bearing_rad": 0.10942036342490269,
+          "distance_m": 5.6322638083711,
+          "id": "obstacle_crate"
+        },
+        {
+          "bearing_rad": -1.0141970087846737,
+          "distance_m": 5.737142857142858,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": -0.5667292175235064,
+          "distance_m": 6.012939479339715,
+          "id": "bldg_6"
+        },
+        {
+          "bearing_rad": -3.141592653589793,
+          "distance_m": 6.16,
+          "id": "cyclist_1_bike"
+        },
+        {
+          "bearing_rad": 3.1199910759135836,
+          "distance_m": 6.161512169239521,
+          "id": "cyclist_1_bike"
+        },
+        {
+          "bearing_rad": 0.5570207846893975,
+          "distance_m": 6.205094936037762,
+          "id": "pedestrian_2_body"
+        },
+        {
+          "bearing_rad": -3.120511439749645,
+          "distance_m": 6.321475739622934,
+          "id": "cyclist_1_bike"
+        },
+        {
+          "bearing_rad": 2.69093132750916,
+          "distance_m": 6.3676701430890255,
+          "id": "pedestrian_1_body"
+        },
+        {
+          "bearing_rad": -3.141592653589793,
+          "distance_m": 6.5,
+          "id": "cyclist_1_body"
+        },
+        {
+          "bearing_rad": -2.14859357583223,
+          "distance_m": 6.637412162578842,
+          "id": "bldg_5"
+        },
+        {
+          "bearing_rad": 0.5853309141633551,
+          "distance_m": 6.739139890949889,
+          "id": "bldg_4"
+        },
+        {
+          "bearing_rad": -2.733103760517166,
+          "distance_m": 6.9206848993775925,
+          "id": "lamp_post_2"
+        },
+        {
+          "bearing_rad": 2.5758911849336155,
+          "distance_m": 7.142573282722254,
+          "id": "bldg_1"
+        }
+      ],
+      "lidar_scan": {
+        "angle_increment_rad": 0.017453292519943295,
+        "angle_min_rad": -3.141592653589793,
+        "range_max_m": 30.0,
+        "range_min_m": 0.05,
+        "ranges": [
+          6.48,
+          6.483,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          7.268,
+          7.528,
+          5.99,
+          5.94,
+          5.972,
+          6.539,
+          6.318,
+          6.125,
+          5.955,
+          5.787,
+          1.692,
+          1.643,
+          1.627,
+          1.618,
+          1.593,
+          1.597,
+          1.587,
+          1.599,
+          1.607,
+          1.64,
+          1.665,
+          5.285,
+          5.375,
+          5.469,
+          5.552,
+          5.675,
+          5.792,
+          5.913,
+          6.026,
+          6.168,
+          6.306,
+          6.458,
+          6.634,
+          6.789,
+          6.977,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          7.307,
+          7.044,
+          6.815,
+          6.601,
+          6.401,
+          6.203,
+          6.039,
+          5.886,
+          5.71,
+          5.586,
+          5.445,
+          5.312,
+          5.214,
+          5.091,
+          4.969,
+          4.878,
+          4.787,
+          4.691,
+          4.247,
+          4.167,
+          4.134,
+          4.156,
+          4.172,
+          4.276,
+          5.231,
+          5.348,
+          5.456,
+          5.587,
+          5.723,
+          5.874,
+          6.027,
+          6.168,
+          6.344,
+          6.539,
+          6.714,
+          6.937,
+          7.167,
+          7.499,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          2.006,
+          1.922,
+          1.886,
+          1.864,
+          1.864,
+          1.841,
+          1.839,
+          1.847,
+          1.852,
+          1.866,
+          1.882,
+          1.928,
+          2.009,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          5.5,
+          5.509,
+          5.518,
+          5.539,
+          5.549,
+          5.58,
+          5.593,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          4.361,
+          4.329,
+          7.733,
+          5.812,
+          5.769,
+          6.57,
+          6.905,
+          6.74,
+          6.593,
+          6.416,
+          6.273,
+          6.143,
+          6.017,
+          5.89,
+          5.775,
+          5.673,
+          5.618,
+          5.507,
+          5.614,
+          5.719,
+          5.82,
+          5.567,
+          5.43,
+          5.367,
+          5.287,
+          5.216,
+          5.143,
+          5.084,
+          5.008,
+          4.957,
+          4.914,
+          4.842,
+          4.816,
+          4.748,
+          4.723,
+          4.668,
+          4.64,
+          4.597,
+          4.547,
+          4.535,
+          4.504,
+          4.461,
+          4.43,
+          4.404,
+          4.372,
+          4.364,
+          4.329,
+          4.312,
+          4.286,
+          4.27,
+          4.284,
+          4.289,
+          4.264,
+          4.482,
+          5.03,
+          5.738,
+          6.694,
+          30.0,
+          3.095,
+          3.107,
+          4.565,
+          4.563,
+          4.554,
+          4.559,
+          4.581,
+          4.566,
+          4.568,
+          4.585,
+          4.601,
+          4.588,
+          4.608,
+          4.617,
+          4.621,
+          4.656,
+          4.667,
+          4.686,
+          4.699,
+          4.73,
+          4.745,
+          4.772,
+          4.791,
+          4.818,
+          4.869,
+          4.886,
+          4.926,
+          4.959,
+          4.993,
+          5.033,
+          5.123,
+          5.16,
+          5.75,
+          5.569,
+          3.624,
+          3.657,
+          3.694,
+          3.728,
+          3.764,
+          3.829,
+          3.877,
+          3.918,
+          3.976,
+          4.034,
+          4.093,
+          4.155,
+          4.208,
+          4.292,
+          2.607,
+          2.552,
+          2.517,
+          2.503,
+          2.506,
+          2.508,
+          2.503,
+          2.531,
+          2.62,
+          6.58,
+          6.746,
+          6.919,
+          7.077,
+          5.834,
+          5.814,
+          7.883,
+          8.118,
+          8.375,
+          8.599,
+          6.733,
+          6.687,
+          6.705,
+          30.0,
+          3.957,
+          3.878,
+          3.846,
+          3.844,
+          3.85,
+          3.902,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          30.0,
+          6.473
+        ]
+      },
+      "nearest_obstacle": {
+        "bearing_rad": -2.4756234162106834,
+        "distance_m": 1.2804493814764855,
+        "id": "obstacle_bollard"
+      },
+      "nearest_obstacle_m": 1.2804493814764855,
+      "nearest_person": null,
+      "nearest_person_m": null,
+      "owner": {
+        "confidence": 1.0,
+        "id": "owner-1",
+        "visible": true,
+        "x": 2.0,
+        "y": -0.5
+      },
+      "robot": {
+        "x": 0.0,
+        "y": 0.0,
+        "yaw": 0.0,
+        "z": 0.27
+      },
+      "semantic_objects": [
+        {
+          "confidence": 0.98,
+          "id": "bldg_3",
+          "label": "building",
+          "metadata": {
+            "aliases": [
+              "bldg",
+              "storefront",
+              "building face"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "bldg_3"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "bldg_3",
+              "anchor_footprint_m": 2.051828452868319,
+              "band_m": [
+                3.1718284528683185,
+                3.6718284528683185
+              ],
+              "center": [
+                2.2,
+                5.6
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 3.1718284528683185,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 2.051828452868319,
+            "stand_off_m": 3.3718284528683187,
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 3.6718284528683185
+          },
+          "position": [
+            2.2,
+            5.6,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "bldg_4",
+          "label": "building",
+          "metadata": {
+            "aliases": [
+              "bldg",
+              "storefront",
+              "building face"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "bldg_4"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "bldg_4",
+              "anchor_footprint_m": 2.193171219946131,
+              "band_m": [
+                3.313171219946131,
+                3.8131712199461307
+              ],
+              "center": [
+                5.5,
+                5.4
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 3.313171219946131,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 2.193171219946131,
+            "stand_off_m": 3.513171219946131,
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 3.8131712199461307
+          },
+          "position": [
+            5.5,
+            5.4,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "bldg_6",
+          "label": "building",
+          "metadata": {
+            "aliases": [
+              "bldg",
+              "storefront",
+              "building face"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "bldg_6"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "bldg_6",
+              "anchor_footprint_m": 2.4083189157584592,
+              "band_m": [
+                3.528318915758459,
+                4.028318915758459
+              ],
+              "center": [
+                5.0,
+                -5.0
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 3.528318915758459,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 2.4083189157584592,
+            "stand_off_m": 3.728318915758459,
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 4.028318915758459
+          },
+          "position": [
+            5.0,
+            -5.0,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "planter_2",
+          "label": "planter",
+          "metadata": {
+            "aliases": [
+              "plant pot",
+              "flower box",
+              "pot"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "planter_2"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "planter_2",
+              "anchor_footprint_m": 0.45,
+              "band_m": [
+                1.57,
+                1.77
+              ],
+              "center": [
+                5.0,
+                3.1
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 1.57,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 0.45,
+            "stand_off_m": 1.6700000000000002,
+            "support_label": "sidewalk",
+            "support_polygon": [
+              [
+                -8.0,
+                2.2
+              ],
+              [
+                8.0,
+                2.2
+              ],
+              [
+                8.0,
+                4.2
+              ],
+              [
+                -8.0,
+                4.2
+              ]
+            ],
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 1.77
+          },
+          "position": [
+            5.0,
+            3.1,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        },
+        {
+          "confidence": 0.98,
+          "id": "tree_2",
+          "label": "tree",
+          "metadata": {
+            "aliases": [
+              "trees",
+              "street tree"
+            ],
+            "arrival_radius_m": 0.06,
+            "associated_lidar_ids": [
+              "tree_2",
+              "tree_top_2"
+            ],
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": "tree_2",
+              "anchor_footprint_m": 0.58,
+              "band_m": [
+                1.7,
+                1.9
+              ],
+              "center": [
+                5.0,
+                3.1
+              ],
+              "kind": "relative_band",
+              "polygon": null,
+              "radius_m": null
+            },
+            "minimum_vicinity_radius_m": 1.7,
+            "non_target_obstacle_clearance_m": 1.25,
+            "radius_m": 0.58,
+            "stand_off_m": 1.8,
+            "support_label": "sidewalk",
+            "support_polygon": [
+              [
+                -8.0,
+                2.2
+              ],
+              [
+                8.0,
+                2.2
+              ],
+              [
+                8.0,
+                4.2
+              ],
+              [
+                -8.0,
+                4.2
+              ]
+            ],
+            "target_min_surface_clearance_m": 0.8,
+            "terminal_support_clearance_m": 0.32,
+            "vicinity_radius_m": 1.9
+          },
+          "position": [
+            5.0,
+            3.1,
+            0.0
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        }
+      ],
+      "semantic_regions": [
+        {
+          "confidence": 0.98,
+          "id": "crosswalk",
+          "label": "crosswalk",
+          "metadata": {
+            "aliases": [
+              "crossing",
+              "zebra crossing",
+              "cross walk"
+            ],
+            "arrival_radius_m": 0.12,
+            "diagnostics_only": true,
+            "goal_region": {
+              "anchor_entity": null,
+              "kind": "polygon",
+              "polygon": [
+                [
+                  2.35,
+                  -0.3999999999999999
+                ],
+                [
+                  3.85,
+                  -0.3999999999999999
+                ],
+                [
+                  3.85,
+                  2.0
+                ],
+                [
+                  2.35,
+                  2.0
+                ]
+              ]
+            },
+            "target_obstacle_clearance_m": 1.3,
+            "terminal_clearance_m": 0.32
+          },
+          "polygon": [
+            [
+              2.35,
+              -0.3999999999999999
+            ],
+            [
+              3.85,
+              -0.3999999999999999
+            ],
+            [
+              3.85,
+              2.0
+            ],
+            [
+              2.35,
+              2.0
+            ]
+          ],
+          "reachable": true,
+          "source": "simulator_semantic_camera"
+        }
+      ],
+      "sim_time": 0.0,
+      "timestamp": 507368.868135788,
+      "type": "status",
+      "version": 1
+    },
+    "returncode": 0,
+    "socket_exists_after_stop": false
+  },
+  "socket": "/tmp/parcel-c1-live-543563.sock",
+  "source_sha256": {
+    "scripts/launch_sim.sh": "97f38645f885282000b79773787aec600535d79b88b952c0244bec58a583046a",
+    "src/parcel_robot/camera_channel/backends/mujoco_egl.py": "4cb4b2f4d56e89e71e5f0589892ce1063c474d490393f6b433e3a5a71d28b136",
+    "src/parcel_robot/camera_channel/ingress.py": "5d9f3405ba559216471122ae4fb11356ef8057fef19f0842e1b6de01604bec07",
+    "src/parcel_robot/realtime/evidence_log.py": "0b5a52be8e05f6c2b1ab7f5139dae32c2709a3aebf5fdce38338a5196e63fdda",
+    "src/parcel_robot/runtime.py": "024a363224cb67ca9c6d538a1827a95b993b355213b633d497a96fab52f08398",
+    "src/parcel_robot/sim.py": "b1fa5d8e563d644914ad2a99ef2946dfa7ebb4995149c0799e1eeb4fc9d2f7c3",
+    "src/parcel_robot/ui/index.html": "0494c77ee6ffaf873b9b5406162ae49dc0cf59061eb137173809c54a069f6ae7",
+    "src/parcel_robot/web_panel.py": "fc423fcf163822eb50b5cb0d2b7d3b6fff767141f4c8752c67e827863c2fcc9a",
+    "tests/test_c1_camera_ingress.py": "b9318755478fab4bdc668ad3f216c6d7ccf18e8970cd634060a7c23b61cb3cdc",
+    "tests/test_runtime_activation.py": "e0f5d9837332baeff9e8385f6c05d5e2da70702bb5f96ed38a252303076240e7"
+  },
+  "started_at_utc": "2026-08-21T22:17:40.991246+00:00"
+}

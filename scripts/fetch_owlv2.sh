@@ -42,6 +42,19 @@
 #   model_int8.onnx == model_quantized.onnx == model_uint8.onnx by content on this
 #   export (identical sha) — we pin the explicit int8 name.
 #
+# VARIANT CHOICE — fp16 (model_fp16.onnx, 307 MB), OPT-IN via --fp16 (card P0-C):
+#   The paragraph above is still true *on a CPU-only onnxruntime*. It stopped
+#   being the whole story once `onnxruntime-gpu` landed in .parcel
+#   (`pip install -e '.[perception]'`): with a real CUDAExecutionProvider the
+#   fp16 graph is the fast path, and `perception_providers.resolve_provider`
+#   walks (cuda_fp16, cpu_int8) and picks it when BOTH the EP is registered and
+#   this file is on disk. Measured by PG-1 on this host (RTX 5000 Ada, driver
+#   595.84): detector 524 ms int8-CPU -> 83 ms fp16-CUDA p50.
+#   The fp16 file is therefore ADDITIVE, never a replacement: `--fp16` fetches it
+#   ALONGSIDE model_int8.onnx so the CPU fallback keeps its artifact and a
+#   CUDA-less machine behaves exactly as it does today. Same export repo, same
+#   upstream Apache-2.0 checkpoint, same .part staging + sha256 gate.
+#
 # EXACT URLs + sha256 (LFS oid == file sha256 for the big model, confirmed via the
 # CDN X-Linked-ETag; computed blob sha for the small JSON) — pinned so a re-run
 # refuses a corrupt/unexpected file:
@@ -51,14 +64,18 @@
 #   $BASE/preprocessor_config.json         425 B  cf3e396635b797ee1a464e1b2836e98748f8edac19e89aaa2c93b55ac15b0064
 #   $BASE/tokenizer_config.json            960 B  bf011c6d421981c3102428c6390472e83d8c097653262b15573ff10af44348ee
 #   $BASE/special_tokens_map.json          576 B  c4dbb96da703fb38f10ccf0490df2fd476811c5a3e71b7e0189cffeed3224e25
+#   --fp16 only:
+#   $BASE/onnx/model_fp16.onnx       307407627 B  694e2ae55306381ec0643edeb272ba6a4987820cb578ff38323210bc89fdb96d
 #   where BASE = https://huggingface.co/onnx-community/owlv2-base-patch16-ensemble-ONNX/resolve/main
 #
 # TARGET: ~/.cache/parcel/owlv2-b16  (override with PARCEL_OWLV2_DIR)
 #   model_int8.onnx, tokenizer.json, config.json, preprocessor_config.json,
 #   tokenizer_config.json, special_tokens_map.json  (~167 MB total)
+#   + model_fp16.onnx with --fp16                                (~474 MB total)
 #
 # USAGE:
 #   scripts/fetch_owlv2.sh            # idempotent; verifies existing files
+#   scripts/fetch_owlv2.sh --fp16    # ALSO fetch the CUDA fp16 graph (+307 MB)
 #   scripts/fetch_owlv2.sh --force   # re-download even if present
 #   PARCEL_OWLV2_DIR=/some/dir scripts/fetch_owlv2.sh
 # ---------------------------------------------------------------------------
@@ -67,10 +84,12 @@ set -euo pipefail
 BASE_URL="${PARCEL_OWLV2_BASE_URL:-https://huggingface.co/onnx-community/owlv2-base-patch16-ensemble-ONNX/resolve/main}"
 DEST_DIR="${PARCEL_OWLV2_DIR:-$HOME/.cache/parcel/owlv2-b16}"
 FORCE=0
+FP16=0
 for arg in "$@"; do
   case "$arg" in
     --force) FORCE=1 ;;
-    -h|--help) sed -n '2,70p' "$0"; exit 0 ;;
+    --fp16) FP16=1 ;;
+    -h|--help) sed -n '2,81p' "$0"; exit 0 ;;
     *) echo "fetch_owlv2: unknown arg: $arg" >&2; exit 2 ;;
   esac
 done
@@ -84,6 +103,16 @@ FILES=(
   "tokenizer_config.json|tokenizer_config.json|bf011c6d421981c3102428c6390472e83d8c097653262b15573ff10af44348ee"
   "special_tokens_map.json|special_tokens_map.json|c4dbb96da703fb38f10ccf0490df2fd476811c5a3e71b7e0189cffeed3224e25"
 )
+
+# The CUDA fp16 graph, appended only under --fp16. sha256 == the hub's LFS oid,
+# cross-checked against the HF tree API (size 307407627) AND against the copy
+# PG-1 measured 83 ms p50 on. Same repo, same commit-addressed export.
+FP16_FILES=(
+  "model_fp16.onnx|onnx/model_fp16.onnx|694e2ae55306381ec0643edeb272ba6a4987820cb578ff38323210bc89fdb96d"
+)
+if [[ "$FP16" -eq 1 ]]; then
+  FILES+=("${FP16_FILES[@]}")
+fi
 
 log() { echo "fetch_owlv2: $*" >&2; }
 die() { echo "fetch_owlv2: ERROR: $*" >&2; exit 1; }
@@ -143,7 +172,11 @@ Delete it (or --force) to re-download."
 done
 
 echo
-echo "fetch_owlv2: OWLv2 int8 ONNX (Apache-2.0) landed in $DEST_DIR"
+if [[ "$FP16" -eq 1 ]]; then
+  echo "fetch_owlv2: OWLv2 int8 + fp16 ONNX (Apache-2.0) landed in $DEST_DIR"
+else
+  echo "fetch_owlv2: OWLv2 int8 ONNX (Apache-2.0) landed in $DEST_DIR"
+fi
 printf '  %-26s %-10s %s\n' "FILE" "STATUS" "SHA256"
 for row in "${SUMMARY[@]}"; do
   IFS='|' read -r n s h <<<"$row"

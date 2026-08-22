@@ -1,0 +1,156 @@
+{
+ "byte_restored": 13,
+ "cells": [
+  {
+   "anchor_occurrences": 1,
+   "breaks": "history is destroyed; the map can no longer say what it stopped believing",
+   "detail": "=========================== short test summary info ============================\nFAILED tests/test_c2_online_map.py::test_absence_marks_and_never_deletes - Ru...\n1 failed, 1 warning in 0.44s",
+   "file": "src/parcel_robot/online_map/online_map.py",
+   "how": "assertion",
+   "name": "decay deletes instead of marking",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 1
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "quarantine degrades to annotation; a place the robot stopped believing is still offered as a goal",
+   "detail": "=========================== short test summary info ============================\nFAILED tests/test_c2_online_map.py::test_a_decayed_entry_is_excluded_from_retrieval_not_merely_annotated\n1 failed, 1 warning in 0.43s",
+   "file": "src/parcel_robot/online_map/entries.py",
+   "how": "assertion",
+   "name": "decay-marked entries stay retrievable",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 2
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "R27 discipline: a stored place stops naming the session and eye that wrote it",
+   "detail": "=========================== short test summary info ============================\nFAILED tests/test_c2_online_map.py::test_a_map_reloads_entry_for_entry_with_its_provenance\n1 failed, 1 warning in 0.44s",
+   "file": "src/parcel_robot/online_map/entries.py",
+   "how": "assertion",
+   "name": "writer provenance dropped on persist",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 3
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "the R27 catastrophe, re-armed",
+   "detail": "=========================== short test summary info ============================\nFAILED tests/test_c2_online_map.py::test_the_owner_conversation_store_is_refused_by_name\n1 failed, 1 warning in 0.44s",
+   "file": "src/parcel_robot/online_map/store.py",
+   "how": "assertion",
+   "name": "the owner's conversation store is accepted as a map store",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 4
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "the dog that walked yesterday forgets the lamppost",
+   "detail": "FAILED tests/test_c2_online_map.py::test_a_map_reloads_entry_for_entry_with_its_provenance\nFAILED tests/test_c2_online_map.py::test_reload_survives_a_fresh_interpreter\n2 failed, 1 warning in 0.65s",
+   "file": "src/parcel_robot/online_map/online_map.py",
+   "how": "assertion",
+   "name": "reload skipped; every session starts empty",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 5
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "PG-3 becomes decoration; every query is grounded",
+   "detail": "FAILED tests/test_c2_online_map.py::test_a_query_with_no_label_match_produces_no_candidates_and_a_verdict\nFAILED tests/test_c2_online_map.py::test_an_unasked_term_is_refused_because_nobody_asked\n2 failed, 1 warning in 0.45s",
+   "file": "src/parcel_robot/online_map/online_map.py",
+   "how": "assertion",
+   "name": "abstention bypassed in the query API",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 6
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "the live proof stops being falsifiable",
+   "detail": "\nwrote /home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_12b/evidence/c2_replay_summary.json\nSELF-CHECK FAILED: live-proof scoring needs >=5 null controls, got 0",
+   "file": "scrum/20260821/task_12b/evidence/run_c2_replay.py",
+   "how": "assertion",
+   "name": "null controls removed from the live-proof scoring",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 7
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "REVISION 3(a): a photorealistic person poster becomes a persistent place",
+   "detail": "FAILED tests/test_c2_online_map.py::test_a_person_is_observed_counted_and_never_persisted\nFAILED tests/test_c2_online_map.py::test_the_poster_decoy_cannot_enter_the_map_as_a_person\n2 failed, 1 warning in 0.45s",
+   "file": "src/parcel_robot/online_map/hygiene.py",
+   "how": "assertion",
+   "name": "volatile-class exclusion disabled (poster enters the map as a person)",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 8
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "REVISION 3(b): a 0.45 m painted sign becomes a coffee shop",
+   "detail": "FAILED tests/test_c2_online_map.py::test_the_decal_decoy_cannot_forge_a_storefront\nFAILED tests/test_c2_online_map.py::test_the_decal_decoy_is_refused_by_the_map_itself\n2 failed, 1 warning in 0.44s",
+   "file": "src/parcel_robot/online_map/hygiene.py",
+   "how": "assertion",
+   "name": "metric-size gate disabled (decal forges label agreement)",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 9
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "REVISION 2: the stored vector describes no view that ever existed",
+   "detail": "=========================== short test summary info ============================\nFAILED tests/test_c2_online_map.py::test_the_stored_embedding_is_the_best_view_and_never_a_blend\n1 failed, 1 warning in 0.44s",
+   "file": "src/parcel_robot/online_map/online_map.py",
+   "how": "assertion",
+   "name": "embeddings averaged across views instead of best-view",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 10
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "REVISION 2: two coordinate systems compared as if they were one",
+   "detail": "=========================== short test summary info ============================\nFAILED tests/test_c2_online_map.py::test_a_version_mismatch_reports_unavailable_and_never_cross_space_cosines\n1 failed, 1 warning in 0.45s",
+   "file": "src/parcel_robot/online_map/online_map.py",
+   "how": "assertion",
+   "name": "version mismatch silently cross-space cosines",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 11
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "REVISION 1: the modality-gap band becomes a presence verdict",
+   "detail": "=========================== short test summary info ============================\nFAILED tests/test_c2_online_map.py::test_the_embedding_channel_returns_a_permutation_of_the_same_candidates\n1 failed, 1 warning in 0.45s",
+   "file": "src/parcel_robot/online_map/online_map.py",
+   "how": "assertion",
+   "name": "cosine promoted to an absolute presence threshold",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 12
+  },
+  {
+   "anchor_occurrences": 1,
+   "breaks": "REVISION 5: one-in-seven wrong names becomes vocabulary",
+   "detail": "FAILED tests/test_c2_online_map.py::test_an_unpromoted_vlm_name_is_not_retrievable_and_is_not_vocabulary\nFAILED tests/test_c2_online_map.py::test_the_same_visit_repeated_does_not_promote_a_name\n2 failed, 1 warning in 0.45s",
+   "file": "src/parcel_robot/online_map/entries.py",
+   "how": "assertion",
+   "name": "VLM-proposed name admitted without the k-visit gate",
+   "red": true,
+   "restored_byte_identical": true,
+   "seed": 13
+  }
+ ],
+ "elapsed_s": 34.4,
+ "final_sweep": "68 passed, 1 warning in 0.67s",
+ "final_sweep_green": true,
+ "generated_at": "2026-08-22T01:20:32Z",
+ "no_seed_remains_applied": true,
+ "red": 13,
+ "repo_root_strays": [],
+ "seeds": 13
+}

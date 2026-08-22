@@ -686,27 +686,39 @@ def test_both_tiers_carry_the_tier_coverage_gate_and_the_commit_tier_keeps_every
 
     commit_source = inspect.getsource(run_commit_tier)
     nightly_source = inspect.getsource(run_nightly_tier)
-    required = (
+    # Card P0-E (scrum/20260822/task_5): the commit tier is the safety core plus
+    # the cheap truth checks; the evidence ratchets below moved to nightly. Both
+    # lists are literal so a further re-cut is a visible edit here, not a
+    # silently smaller loop.
+    commit_required = (
         "evaluate_ruff",
         "evaluate_hard_safety",
-        "evaluate_frozen_digest_sentinels",
         "evaluate_release_parity",
-        "evaluate_latency_ledger",
-        "evaluate_followbench_jerk_ledger",
         "evaluate_assertion_evals",
         "evaluate_tier_coverage",
         "model-off-non-inferiority",
-        "frozen-digest-integrity",
         "release-parity-integrity",
-        "mutation-panel-freshness",
-        "latency-tail",
         # Card R27: the owner's store must stay unreachable from a test.
         "owner-store-isolation",
         "default-suite",
     )
-    for entry in required:
+    nightly_only = (
+        "evaluate_frozen_digest_sentinels",
+        "evaluate_latency_ledger",
+        "evaluate_followbench_jerk_ledger",
+        "frozen-digest-integrity",
+        "mutation-panel-freshness",
+        "latency-tail",
+    )
+    for entry in commit_required:
         assert entry in commit_source, f"the commit tier lost its {entry} gate"
         assert entry in nightly_source, f"the nightly tier lost its {entry} gate"
+    for entry in nightly_only:
+        assert entry in nightly_source, f"the nightly tier lost its {entry} gate"
+        assert entry not in commit_source, (
+            f"{entry} is a nightly evidence ratchet since card P0-E; putting it back "
+            "in the commit tier is a deliberate edit of BOTH lists"
+        )
     for entry in ("evaluate_mutation_panel", "evaluate_nav_instruct_candidate",
                   "evaluate_pose_drift_arms", "slow-suite", "metamorphic"):
         assert entry in nightly_source, f"the nightly tier lost its {entry} gate"

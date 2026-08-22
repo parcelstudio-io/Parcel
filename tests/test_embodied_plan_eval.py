@@ -32,6 +32,7 @@ def _case(report: dict[str, object], case_id: str) -> dict[str, object]:
     return next(item for item in report["cases"] if item["case_id"] == case_id)
 
 
+@pytest.mark.slow  # card P0-E: frozen-digest integrity is a nightly evidence ratchet
 def test_manifest_hash_locks_every_physical_input_and_unique_seed() -> None:
     manifest, cases, accepted = load_frozen_suite()
 

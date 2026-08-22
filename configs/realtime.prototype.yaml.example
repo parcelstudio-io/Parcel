@@ -1,0 +1,486 @@
+# Parcel — hosted Realtime companion lane, PROTOTYPE PROFILE (card P0-A).
+#
+# This is configs/realtime.yaml.example with EIGHT values changed for the
+# 2026-08-22 prototype directive ("a good companion that communicates
+# fluidly"). Every comment that explains a key is kept verbatim; each departure
+# is marked `PROTOTYPE:` at its key and says what it was.
+#
+#     COPY THIS FILE TO configs/realtime.prototype.yaml
+#
+# `scripts/launch_stack.sh --prototype` prefers configs/realtime.prototype.yaml
+# when it exists and falls back to configs/realtime.yaml with a printed note,
+# so the prototype voice lane and the prototype robot overlay come up together
+# from one flag. The production example next door is unchanged and is still
+# what a non-prototype launch uses.
+#
+#   PROTOTYPE departures, complete, in file order:
+#     model                            gpt-realtime-2.1-mini -> gpt-realtime-2.1
+#     idle_close_after_s               600.0   -> 0 (never; card P0-B's spelling)
+#     unknown_place                    refuse  -> ask
+#     proactive_motion_tools           []      -> [play_gesture, set_pose]
+#     hosted_affect                    false   -> true
+#     whisperer.max_updates_per_minute 2       -> 6
+#     whisperer.min_gap_s              15.0    -> 4.0
+#     voice_identity.enabled           true    -> false
+#
+# The middle three are card P0-B's companion unlocks, set to P0-B's own
+# prototype values and merged into this file during P0-A's verification pass;
+# their semantics, defaults and validators are P0-B's, not P0-A's. The list
+# above is asserted complete by
+# tests/test_prototype_profile.py::test_realtime_prototype_example_validates_and_carries_its_departures.
+#
+# ---------------------------------------------------------------------------
+# Parcel — hosted Realtime companion lane (cards R1 … R1.6/R3).
+#
+# COPY THIS FILE TO configs/realtime.yaml TO SATISFY THE DEFAULT LAUNCHER.
+#
+# The real configs/realtime.yaml is deliberately NOT in the repository. The
+# production launcher nevertheless requires it and a credential; absence makes
+# `scripts/launch_stack.sh` refuse before starting any service. Only an explicit
+# `--legacy` launch selects the local cascade. Every key below is validated on
+# load — an unknown key, a wrong type, a non-positive number or an unknown mode
+# is a REFUSAL, never a silent default (a typo'd `enabled: ture` reading as false
+# would be a bad day; a typo'd budget reading as "unlimited" would be worse).
+#
+# THE CREDENTIAL IS NOT IN THIS FILE AND NEVER WILL BE.
+# It lives outside the repository, mode 600, and is loaded into the environment
+# before the process starts:
+#
+#     install -m 600 /dev/null ~/.config/parcel/realtime.env
+#     printf 'OPENAI_API_KEY=sk-...\n' > ~/.config/parcel/realtime.env
+#     set -a; . ~/.config/parcel/realtime.env; set +a
+#
+# scripts/launch_stack.sh sources that file and refuses loudly if the key is
+# missing. `--realtime` remains an accepted no-op because Realtime is already
+# the default.
+
+# Consent to the FEATURE. Not consent to a session: the lane still needs the
+# panel's handshake token and an explicit owner gesture before it opens one.
+enabled: true
+
+# PERSONALITY IS JUST PROMPT TEXT (owner directive, 2026-08-18).
+# Write who the robot is, in plain prose. It is handed to the model verbatim in
+# place of the personality-profile block — no YAML profile to author, no file to
+# add. Everything that is NOT personality rides along regardless: the companion
+# preamble, the voice guardrails ("never claim to have arrived anywhere"), and
+# the developer-note contract. A persona cannot prompt those away.
+#
+# Editing this line changes the session's SI digest, which is recorded per
+# session and in every corpus fixture — so a transcript is always attributable
+# to the exact words that produced it. That is the whole discipline; there is no
+# version to bump for free text.
+#
+# Delete the key entirely to fall back to a preset profile (see si_profile);
+# leaving it BLANK is a refusal, not a fallback.
+persona: "You are a lively conversational agent that likes to go around New York."
+
+# Preset personality id from prompts/personalities, used ONLY when `persona` is
+# absent. Delete it to inherit the runtime's own personality setting.
+# si_profile: gentle_companion
+
+# text  — the manual-testing path: the panel's text box talks to the live
+#         session, replies land in the chat pane and the ledger, no microphone,
+#         no speaker, no audio gateway. It remains the cheapest setup default.
+# audio — additionally starts the loopback audio gateway and serves the panel's
+#         microphone button; the browser becomes both mouth and ear. This path
+#         uses browser capture/playback and does not require Python PortAudio.
+mode: text
+
+# gpt-realtime-2.1-mini is the cheap one and is what every live run in the
+# status docs used. gpt-realtime-2.1 is the full-size sibling.
+#
+# PROTOTYPE (was gpt-realtime-2.1-mini): the board's voice-tier experiment. The
+# mini is what every measurement in the status docs was taken on, so a
+# transcript produced under this file is NOT comparable to those runs — that is
+# the point of the experiment, and it is also the reason the production example
+# next door keeps the mini. Full-size costs materially more per session; the
+# monthly ceiling below is the only thing standing between that and a surprise.
+model: gpt-realtime-2.1
+
+# Hosted voice id.
+voice: cedar
+
+# The watchdog: seconds of provider silence, while a response is expected,
+# before the lane reconnects. Not a latency budget — a liveness bound.
+stall_timeout_s: 8.0
+
+# Hard session cap. The provider bills per session and the lane's memory tail
+# is re-injected on every reconnect, so a rollover is invisible to the owner.
+session_max_s: 3600.0
+
+# HOW LONG A SESSION NOBODY IS TALKING TO STAYS OPEN (card R16).
+#
+# On 2026-08-20 a conversation ended at 05:39, nobody said anything else until
+# 14:11, and the lane sat there the whole time renewing itself once an hour —
+# seven `[session rollover]` rows between 06:23 and 12:23 with not one word
+# between them, because a rollover renews whatever it finds and nothing in the
+# product had an opinion about a conversation that had plainly ended.
+#
+# Past this many seconds of CONVERSATIONAL silence the lane hangs up: the
+# socket closes, a
+# `[idle hang-up after Ns]` row goes in the ledger, the driver stops pumping and
+# — in `mode: audio` — the browser's microphone button goes back to "Enable
+# microphone".
+#
+# Nothing is lost by hanging up. The conversation lives in the ledger, not in
+# the provider, so the next thing you say opens a fresh session with the same
+# memory tail replayed into it, exactly as a rollover always did.
+#
+# "Conversational" is the load-bearing word, and it means four things and no
+# others: you typed, the provider's own voice-activity detector heard you start
+# or finish speaking, the robot narrated a fact the model actually took, or a
+# reply completed. An OPEN MICROPHONE IS NOT A CONVERSATION — an armed mic in an
+# empty room streams audio frames (and bills for them) forever, which is the
+# most expensive way there is to be idle, so frames alone will not hold the lane
+# open. You will not be cut off mid-sentence: speech detection resets the clock
+# at the first syllable, and a turn that is still waiting for its answer is
+# never idle at all.
+#
+# ZERO MEANS NEVER (card P0-B). It used to be refused, on the reasoning that a
+# silent off switch on a billing session is worse than a loud number — and the
+# reasoning was right about silence and wrong about zero, which is neither
+# silent nor a default: you write it by hand, /api/state echoes it, and the two
+# bounds that keep an unattended session finite are untouched (`session_max_s`
+# still rolls the socket over, `monthly_budget_usd` still stops the robot
+# starting billed exchanges, and both still refuse zero). What it buys is a
+# prototype companion that is still awake when you come back into the room.
+#
+# Negatives, non-numbers and `.inf` are still refusals.
+#
+# PROTOTYPE (was 600.0): never. The owner is at the desk for hours and a
+# ten-minute hang-up meant the lane was down more often than up — the first
+# sentence after lunch paid a reconnect before it was answered.
+#
+# This is the spelling card P0-B added for exactly this case, and it is chosen
+# over a big finite number on purpose: 86400 is a lie about intent (nobody
+# wants a hang-up at hour 24, they want none), and 1e308 is the same lie in a
+# costume. The two bounds that keep an unattended session finite are still on —
+# `session_max_s` rolls the socket over hourly and `monthly_budget_usd` stops
+# the robot starting billed exchanges — so "never idle-close" is not "never
+# ends"; it is "does not hang up on a conversation that is only paused".
+idle_close_after_s: 0
+
+# ---------------------------------------------------------------------------
+# THE COMPANION UNLOCKS (card P0-B). All three are OFF in the values shown, and
+# a config that omits them behaves exactly as it did before the card.
+
+# MAY THE ROBOT MOVE WHEN NOBODY SPOKE TO IT?
+#
+# The lane tags every response with who asked for it. A response the ROBOT
+# started — it narrated its own battery level and asked the model for a reply —
+# may not move the body, because the 2026-08-19 bench fired a spurious
+# `navigate_to("picnic spot by the big oak")` off a single injected telemetry
+# item in 2 of 3 forced-response trials. That gate is why the dog cannot drive
+# off because it told itself something. It is also why the companion cannot tilt
+# its head when you walk in.
+#
+# This list is the hole in that gate, and only these two names may go in it:
+#
+#   play_gesture   a bounded emote from the catalog
+#   set_pose       a bounded pose from the catalog
+#
+# `navigate_to`, `circle_owner` and `follow_owner` are REFUSED AT LOAD if you
+# write them here — they commit the robot to travel, and a trip you never asked
+# for is the defect the gate exists to prevent. Everything admitted still goes
+# through the safety supervisor, the emergency latch and the activity
+# coordinator's cooldown, exactly as your own request does.
+#
+# Empty (the default) means no proactive motion at all.
+proactive_motion_tools: [play_gesture, set_pose]   # P0-B prototype value (Fable merge); ceiling enforced in loader AND broker
+
+# WHAT `navigate_to` DOES WITH A PLACE THE MAP HAS NEVER HEARD OF.
+#
+#   refuse  the shipped behaviour: the name is handed to the router exactly as
+#           a typed "go to narnia" is, and the refusal comes from grounding.
+#           Authority parity with the keyboard, and a robot that sets off and
+#           then gives up.
+#   ask     the broker answers the model with a structured `unknown_place`
+#           result naming the places it DOES know, touches no door and starts
+#           no motion — so the companion asks you where that is, or offers to
+#           go and look, instead of walking at a name it cannot ground.
+#
+# A place the robot knows is unaffected either way, and so is a junk directive
+# ("with owner"), which is refused before this key is consulted.
+unknown_place: ask   # P0-B prototype value (Fable merge). WATCH: with an empty place vocabulary (cold map) every navigate_to returns unknown_place until entries exist — intended on a first desk run, but observe it.
+
+# DOES "I'M FEELING SAD" REACH THE BODY ON THIS LANE?
+#
+# The deterministic explicit-affect grammar — the one that turns an explicit
+# first-person feeling into your personality's `affect_actions` gesture, a
+# comfort bow for sad and a paw wave for happy — has only ever been wired to the
+# LEGACY voice path. Everything you say to the hosted companion arrives
+# somewhere else, so on the lane that actually ships the sentence has always
+# done nothing: the model says something kind and the body stays still.
+#
+# With this true, a hosted sentence that no local command claimed is checked for
+# an explicit affect. Above `agent.affect.minimum_confidence` in
+# configs/robot.yaml it writes an `[affect <label>]` note into the conversation
+# ledger (a `system` row, so it does not appear in the chat pane as something
+# the robot said) and PROPOSES the gesture to the activity coordinator, which
+# keeps the timing, the cooldown and the e-stop. It never replies, never speaks
+# and never touches postural recovery.
+hosted_affect: true   # P0-B prototype value (Fable merge); needs robot.prototype.yaml affect minimum_confidence 0.5 (P0-A sets it)
+
+# The arming gate refuses to open a session once this month's estimated spend
+# reaches this number. Estimated at ASSUMED rates (realtime/cost.py) — it is a
+# guard rail, not an invoice.
+#
+# Card R25 made that sentence TRUE. It was documented here from R1 and the
+# arming gate never read it: the gate's comparison existed, nothing passed it a
+# figure, and the ceiling compared 0.00 against this number every time for
+# twenty-four cards. What changed:
+#
+#   * "this month" is UTC, measured from a durable append-only ledger at
+#     <capture.dir>/spend.jsonl (default: recordings/spend.jsonl) — one priced
+#     row per hosted response, so the ceiling survives a restart. Delete the
+#     file to reset the month; move it with PARCEL_REALTIME_SPEND_LEDGER.
+#   * The refusal names the figure, the period and this key. Raise the number
+#     (or wait for the 1st, UTC) to open a session again.
+#   * A session ALREADY OPEN is never hung up mid-sentence by the ceiling; what
+#     the ceiling does to it is stop the ROBOT from starting billed exchanges
+#     you did not ask for. Your own turns are never gated.
+#   * SAFETY-class facts — the emergency latch and its clear, a refusal of your
+#     own command, a mission terminal — are spoken PAST the ceiling, exactly as
+#     they already bypass the whisperer's max_updates_per_minute below. A robot
+#     that will not say "I have stopped" because of a money knob is the failure
+#     the knob exists to prevent. A voice rejection is deliberately NOT in that
+#     set: it is a fact about somebody else's request, and a talkative
+#     television must not be able to spend past your ceiling.
+#   * If the ledger cannot be READ, the lane arms anyway and says so loudly in
+#     the panel. That is the one deliberately fail-OPEN control in this file: a
+#     broken spend file must not brick the robot. Everything else here still
+#     fails closed — including this key itself, which now refuses .inf as well
+#     as zero, negatives and non-numbers.
+#
+# The figure is a LOWER BOUND: a response the provider billed whose completion
+# frame never arrived is spend the ledger never saw.
+monthly_budget_usd: 25.0
+
+# ---------------------------------------------------------------------------
+# THE SITUATIONAL WHISPERER (card R11) — the owner's cost knob.
+#
+# The robot notices things about itself: it arrived, it is waiting behind
+# someone, its battery went low, you asked to run and you are walking. Each of
+# those it decides to SAY becomes a `response.create` on the hosted session, and
+# the 2026-08-19 bench measured gpt-realtime-2.1-mini speaking on essentially
+# every injected state item (0-2 silences in ~20). So one forwarded fact is one
+# spoken line and one billed response, and `max_updates_per_minute` is the cost
+# control and the politeness control at the same time.
+#
+# THIS BLOCK ONLY GOVERNS WHAT THE ROBOT STARTS. Talking to it — the panel's
+# text box, the microphone, every voice command — is a different door and is
+# not affected by anything here.
+#
+# Delete the whole block to accept the defaults shown.
+whisperer:
+  # false = no state updates at all. The robot still answers you; it just never
+  # starts a conversation about itself.
+  enabled: true
+
+  # THE KNOB. A hard cap on robot-initiated (billed) queries per rolling
+  # minute. Anything held back is not thrown away — it is folded into the next
+  # item that does go out as "+N more", so you can always see the knob working
+  # (/api/state shows `updates_this_minute` and `folded`).
+  #
+  # Four facts BYPASS this cap, because delaying them failed the bench
+  # disqualifyingly (judge-everything delayed an emergency stop by 9.8 s and
+  # lost the resume-clear outright): an emergency stop and its release, a
+  # mission terminal, a reroute, and a refusal of something YOU asked for.
+  #
+  # PROTOTYPE (was 2): a robot that may mention itself twice a minute reads as
+  # absent, and the folded "+N more" suffix is not a substitute for having said
+  # the thing when it was true. Six is still a cap and still a cost control —
+  # every one of these is a billed response — it is just a cap set for a
+  # companion being evaluated on presence rather than for an unattended stack.
+  max_updates_per_minute: 6
+
+  # Spacing inside the budget, in seconds. Terminal-like events are exempt —
+  # the bench caught a reroute silently swallowed by a min-gap that a
+  # "way is clear again" was holding.
+  #
+  # PROTOTYPE (was 15.0): 15 s of forced spacing turned a sequence of related
+  # observations into one observation and a silence. 4 s is long enough that
+  # two facts do not collide mid-sentence and short enough that the second one
+  # is still about the same moment.
+  min_gap_s: 4.0
+
+  # THE OTHER HALF OF THE CAP (card P0-B). The window `max_updates_per_minute`
+  # is counted over, in seconds. It was a literal 60 inside the code, which made
+  # the narration rate half a knob: you could set the number and not the minute,
+  # so the only rates you could buy were whole multiples of one-per-minute. 60.0
+  # is the same minute the cap has always meant.
+  #
+  # Halve it for a chattier prototype (2 per 30 s is 4/min at the same spacing);
+  # raise it for a quieter robot without dropping the cap to 1. Zero is refused:
+  # a window of nothing counts nothing and would remove the cap silently, and
+  # `enabled: false` is the off switch that can be seen.
+  window_s: 60.0
+
+# ---------------------------------------------------------------------------
+# SESSION AUDIO CAPTURE (card R17) — DEFAULT OFF, and off is the shipped answer.
+#
+# On 2026-08-20 the owner spoke a 52-query corpus to the live robot. It cost
+# real money and produced the most informative eval this project has. The
+# gateway moved 3,605 microphone frames up and 296 speech frames down and wrote
+# NONE of it to disk, so every ASR failure in that run — a Korean TV sign-off
+# attributed to the owner, the spoken emergency phrase transcribed as "Dice
+# out!" and never matched, a code-switched sentence normalised away — is
+# permanently unreproducible. The transcripts survived.
+# The sound did not.
+#
+# With this block on, each gateway run writes:
+#
+#     <dir>/<session_id>/owner.wav   exactly the microphone audio the provider
+#                                    heard (mono PCM16 at the session rate)
+#     <dir>/<session_id>/robot.wav   exactly the hosted speech the robot was
+#                                    asked to play, unwrapped from its
+#                                    per-chunk RIFF into one continuous stream
+#     <dir>/<session_id>/index.json  the tiling of both files into segments —
+#                                    owner turns cut on silence, robot audio cut
+#                                    on each hosted utterance — so a single turn
+#                                    can be sliced out by byte range and dropped
+#                                    into a corpus as a fixture. Times are
+#                                    DERIVED from byte offsets, never measured,
+#                                    so the index cannot drift from the audio.
+#
+# THIS RECORDS A HOUSEHOLD MICROPHONE TO DISK. That is why it is off unless you
+# write it down here yourself, and why the folder is created lazily — a stack
+# that boots with capture on and is never spoken to leaves nothing behind.
+#
+# The tee can never slow the conversation down or break it: frames are handed
+# to a bounded queue and written by a background thread, a full queue drops and
+# counts rather than waiting for the disk, and a tee that fails disables itself
+# instead of raising into the audio relay.
+#
+# Delete the whole block for the defaults shown (i.e. off).
+capture:
+  # The opt-in. Nothing below has any effect while this is false.
+  enabled: false
+
+  # Where per-session folders are created. Relative paths resolve against the
+  # repo root and NEVER against the current directory, so `recordings` means one
+  # place regardless of where the stack was launched from.
+  #
+  # A directory inside `evals/` is REFUSED at config load: those are reviewed,
+  # frozen fixtures that runs are scored against, and a live tee appending into
+  # that tree could rewrite the record while it is being graded.
+  dir: recordings
+
+  # Hard bound on ONE session's recording, per stream. Reaching it stops
+  # CAPTURE — it logs once, finalizes both WAVs and writes the index — and
+  # leaves the conversation completely untouched. An audio tee is a
+  # convenience; it is never a reason to end a session. Zero is refused, the
+  # same way a whisperer cap of zero is: `enabled: false` is the off switch,
+  # and it is visible.
+  #
+  # 30 minutes of 24 kHz mono PCM16 is ~86 MB per stream.
+  max_minutes: 30.0
+
+  # Silence between microphone frames that cuts a new OWNER segment in the
+  # index. The robot half is delimited by the lane's own utterance boundaries;
+  # the owner half has no such marker, so the index cuts on a gap. The default
+  # is longer than any capture buffer and shorter than the pause between two
+  # spoken corpus queries.
+  owner_gap_s: 0.75
+
+# ---------------------------------------------------------------------------
+# SPEAKER IDENTITY FOR COMMAND ARMING (card F1-SI)
+#
+# THE DEFECT THIS BLOCK EXISTS BECAUSE OF. On 2026-08-20 a television commanded
+# the robot, twice, across two owner sessions. Acoustic echo cancellation does
+# not defend against that (it cancels the robot's OWN speaker; a TV is an
+# independent source in the room) and the transcript-level Unicode-script check
+# only catches the cross-LANGUAGE case. A same-language TV defeats every
+# transcript-level layer there is, so the defence has to be about who is
+# speaking.
+#
+# THE SAFETY ASYMMETRY, AND IT IS NOT CONFIGURABLE. **The emergency stop is
+# never identity-gated.** Anyone in the room may stop the dog — a visitor, a
+# child, a voice the robot has never heard. There is no key in this block that
+# reaches the latch, by construction. What identity gates is ARMING: turning a
+# sentence into motion.
+#
+# NOTHING HERE DOES ANYTHING UNTIL YOU ENROLL. With no enrolled profile the gate
+# reports `verify_disabled`, says so in /api/state and in the event log, and the
+# robot behaves exactly as it did before this card. Enrollment is one command,
+# once, with your own voice:
+#
+#     tools/enroll_owner_voice.py --wav a.wav b.wav c.wav d.wav e.wav
+#     tools/enroll_owner_voice.py --show      # where is it, is it sane
+#
+# It writes ONE json file at mode 0600 beside this config — outside the
+# repository, like the credential. It holds an averaged voice embedding, not
+# audio, and re-running it overwrites cleanly.
+voice_identity:
+  # The feature switch. `true` is the default and is inert without a profile.
+  #
+  # PROTOTYPE (was true): OFF until the owner enrolls. `true` is inert without a
+  # profile and this host has none, so both settings behave identically today —
+  # the difference is that `false` is the state an operator can read off the
+  # file, while an inert `true` looks like a gate that is guarding something.
+  # A command gate nobody enrolled for is a gate in name only, and this card's
+  # directive is ask-over-refuse.
+  #
+  # Turn it back on the same minute you enroll — one command, once, your voice:
+  #
+  #     tools/enroll_owner_voice.py --wav a.wav b.wav c.wav d.wav e.wav
+  #     tools/enroll_owner_voice.py --show      # where is it, is it sane
+  #
+  # The emergency stop is never identity-gated either way; see the block header.
+  enabled: false
+
+  # Cosine similarity at or above which a turn is you. Measured on THIS host's
+  # own microphone array (scrum/20260820/research/bench_doa.md, Bench B): the
+  # worst impostor pair scored 0.431 and the weakest genuine pair 0.640, with
+  # zero overlap across 378 pairs, so 0.55 is the midpoint of the measured gap.
+  #
+  # Raise it to be stricter (more "I didn't recognise that voice" for you);
+  # lower it to be more permissive. A value outside (0, 1] is REFUSED rather
+  # than clamped — `threshold: 55` is the percentage somebody meant, and it
+  # would lock you out of your own robot forever.
+  threshold: 0.55
+
+  # Where the enrolled profile lives. Empty = beside this file. Never put it in
+  # the repository; the enroller refuses to.
+  # profile: /home/you/.config/parcel/owner_voice_profile.json
+
+  # The embedding model. Empty = the vendored models/speaker_id/ copy named by
+  # models/speaker_id/models.lock.json.
+  # model: /path/to/nemo_en_titanet_small.onnx
+
+  # How much speech is buffered before the first (provisional) check of a turn.
+  # Raised from 0.6 to 1.2 by measurement: at 0.6 s the false-reject rate over
+  # this host's gold set was 38.5 %, because a fragment of a sentence is not the
+  # sentence. The whole turn is checked again when you stop speaking.
+  min_utterance_s: 1.2
+
+  # Added-latency budget in milliseconds, MEASURED and reported in /api/state,
+  # not enforced as a timeout — half an embedding is worse than a slow one.
+  # Measured end to end on this host: median 18 ms, p95 33 ms per turn.
+  budget_ms: 50.0
+
+  # How often a refusal may become a SPOKEN sentence ("someone who isn't you
+  # asked me to…"). Every refusal is counted and logged regardless; this only
+  # stops a talkative television from becoming a talkative robot.
+  narration_interval_s: 60.0
+
+  # THE DIRECTION-OF-ARRIVAL PREFILTER, and it needs a udev rule you must grant.
+  # The reSpeaker XVF3800 reports the azimuth a sound came from on a vendor USB
+  # interface that is separate from the audio streams, so reading it cannot
+  # disturb capture. Until the rule below exists every read fails with a
+  # permission error and the prefilter contributes nothing (it never refuses on
+  # its own absence).
+  #
+  #   sudo tee /etc/udev/rules.d/99-respeaker-xvf3800.rules <<< 'SUBSYSTEM=="usb", ATTRS{idVendor}=="2886", ATTRS{idProduct}=="001a", MODE="0660", GROUP="plugdev", TAG+="uaccess"'
+  #   sudo udevadm control --reload && sudo udevadm trigger --action=change /sys/bus/usb/devices/3-1
+  #
+  # (A udev trigger re-applies node permissions; it does not reset the device.)
+  doa: false
+
+  # The television's azimuth, in degrees, as [start, end]. Wrap is allowed:
+  # [350, 10] is the twenty degrees around due north. A turn arriving from
+  # inside this sector is refused UNLESS the voice check passes — belt and
+  # suspenders, in that order, and the voice check is always the authority.
+  # Setting this while `doa: false` is REFUSED: nothing would ever read an
+  # azimuth to compare it against.
+  # rejected_sector: [80, 110]

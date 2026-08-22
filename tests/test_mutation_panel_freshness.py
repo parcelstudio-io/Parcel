@@ -81,6 +81,7 @@ def _assert_panel_payload_is_current_and_sensitive(payload: dict) -> None:
     ), "no_false_arrival is green on the clean run but no mutant exercises it"
 
 
+@pytest.mark.slow  # card P0-E: mutation-panel freshness is a nightly evidence ratchet
 def test_committed_mutation_panel_is_on_the_current_frozen_set() -> None:
     """The committed payload cannot silently rot to a retired episode set (fast)."""
 
@@ -88,6 +89,7 @@ def test_committed_mutation_panel_is_on_the_current_frozen_set() -> None:
     _assert_panel_payload_is_current_and_sensitive(payload)
 
 
+@pytest.mark.slow  # card P0-E: mutation-panel freshness is a nightly evidence ratchet
 def test_committed_panel_safety_fields_still_reproduce() -> None:
     """The GATED artifact's safety-relevant fields must survive a live re-run.
 

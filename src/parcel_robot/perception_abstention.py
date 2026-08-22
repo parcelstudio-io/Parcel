@@ -54,6 +54,43 @@ similarity is *decisive* — a robust z-score against the map's own background,
 because a bare top-vs-runner-up difference on this data is 0.0004–0.01 and
 carries nothing.
 
+The fifth gate, re-measured (card P0-D)
+---------------------------------------
+The robust z-score above was fitted on a *cosine* background, where every place
+carries a non-zero score. C-2's ``OnlineSemanticMap`` does not feed it one: its
+background is an evidence-weighted **label strength** that is non-zero for the
+places whose label matches the query and exactly ``0.0`` for every other place
+(``online_map.py`` ``_assess``). One match among zeros has a median of 0 and a
+median absolute deviation of 0, so :func:`ranking_margin` returns ``0.0`` — for
+every query, forever. Measured: 0/6 and 0/18 admissions, ``background_mad 0.0``,
+and the whole gate reading ``ABSTAIN_INDECISIVE_RANKING`` no matter what the
+robot saw. It was masked only by ``abstention.enabled: false``.
+
+So the module now carries **two** margin estimators and the policy picks one:
+
+* :data:`RANKING_MARGIN_ROBUST_Z` — :func:`ranking_margin`, unchanged, still the
+  default, still the fitted PG-3 operating point on a cosine background.
+* :data:`RANKING_MARGIN_LABEL_STRENGTH` — :func:`label_strength_margin`, a
+  top-vs-second **label-strength ratio among matching candidates**. The
+  2026-08-21 retrieval bench (``scrum/20260821/cutover_research/
+  bench_retrieval.md``) found label-primary the only *separable* arm of five:
+  corroborated entries score 2.8–8.2 and stray single-detection labels 0.12,
+  while cosine at two embedder sizes stayed non-separable. A single matching
+  candidate is therefore scored against :data:`STRAY_LABEL_STRENGTH` rather than
+  against nothing, so "the map holds exactly one lamppost" is a *strong* answer
+  instead of a structurally impossible one.
+
+Which signals are consulted at all is now configuration
+-------------------------------------------------------
+:attr:`AbstentionPolicy.signals` names the gates that run. The default is
+:data:`DEFAULT_SIGNALS` — today's six, in today's order — so the shipping
+operating point is byte-identical. A prototype profile
+(``configs/navigation/prototype.yaml``) selects a subset. A threshold whose
+signal is not selected is not read, which is why the "an enabled policy cannot
+have a gate turned off" invariant is checked per *active* signal: dropping a
+gate is now something a config says out loud, and zeroing its threshold is
+still the silent death this class refuses.
+
 Fail-closed, everywhere
 -----------------------
 Every missing signal is a refusal. An empty map is a refusal. A query the
@@ -96,6 +133,7 @@ __all__ = [
     "ABSTAIN_NOT_NAVIGABLE",
     "ABSTAIN_NO_DETECTOR_SUPPORT",
     "ABSTAIN_NO_OBSERVATIONS",
+    "DEFAULT_SIGNALS",
     "GROUNDED",
     "GROUND_BAND_M",
     "MIN_EVIDENCE_FRAMES",
@@ -104,6 +142,17 @@ __all__ = [
     "MIN_LABEL_PROBABILITY",
     "MIN_LABEL_PURITY",
     "MIN_RANKING_MARGIN",
+    "RANKING_MARGIN_LABEL_STRENGTH",
+    "RANKING_MARGIN_ROBUST_Z",
+    "REGISTERED_RANKING_MARGIN_MODES",
+    "REGISTERED_SIGNALS",
+    "SIGNAL_EVIDENCE_COUNT",
+    "SIGNAL_LABEL_FRAMES",
+    "SIGNAL_LABEL_PROBABILITY",
+    "SIGNAL_LABEL_SUPPORT",
+    "SIGNAL_NAVIGABILITY",
+    "SIGNAL_RANKING_MARGIN",
+    "STRAY_LABEL_STRENGTH",
     "AbstentionPolicy",
     "AbstentionVerdict",
     "DetectorSupport",
@@ -111,6 +160,7 @@ __all__ = [
     "active_abstention_policy",
     "assess_place_query",
     "detector_prompts_for",
+    "label_strength_margin",
     "ranking_margin",
     "use_abstention_policy",
 ]
@@ -177,6 +227,66 @@ MIN_GROUND_EVIDENCE_FRACTION: float = 0.08
 #: bare top-two difference: both were measured on the FIT split and the robust
 #: z was the one that separated.
 MIN_RANKING_MARGIN: float = 1.0
+
+# ---------------------------------------------------------- the signal set ---
+#
+# Names for the six gates, so a config can say which of them run. These are the
+# strings ``perception.abstention.signals`` accepts; each one is the gate whose
+# threshold constant sits directly above.
+
+#: Peak per-prompt detector probability (:data:`MIN_LABEL_PROBABILITY`). Owns
+#: the "the detector was never asked" refusal too: not asking is only evidence
+#: of absence if you are willing to read the label head at all.
+SIGNAL_LABEL_PROBABILITY = "label_probability"
+#: How many frames cleared that probability (:data:`MIN_LABEL_FRAMES`).
+SIGNAL_LABEL_FRAMES = "label_frames"
+#: Share of a place's own detections carrying the term (:data:`MIN_LABEL_PURITY`).
+SIGNAL_LABEL_SUPPORT = "label_support"
+#: Independent observations of the place (:data:`MIN_EVIDENCE_FRAMES`).
+SIGNAL_EVIDENCE_COUNT = "evidence_count"
+#: Depth returns inside the ground band (:data:`MIN_GROUND_EVIDENCE_FRACTION`).
+SIGNAL_NAVIGABILITY = "navigability"
+#: Decisiveness of the ranking (:data:`MIN_RANKING_MARGIN`).
+SIGNAL_RANKING_MARGIN = "ranking_margin"
+
+#: The shipping signal set: all six, in the order the gate applies them. This
+#: is the default, so a config that says nothing gets exactly PG-3's operating
+#: point.
+DEFAULT_SIGNALS: tuple[str, ...] = (
+    SIGNAL_LABEL_PROBABILITY,
+    SIGNAL_LABEL_FRAMES,
+    SIGNAL_LABEL_SUPPORT,
+    SIGNAL_EVIDENCE_COUNT,
+    SIGNAL_NAVIGABILITY,
+    SIGNAL_RANKING_MARGIN,
+)
+
+#: Every signal name a config may write. Anything else is a hard error, for the
+#: same reason an unknown key is: a misspelled gate that reads as "the default"
+#: looks exactly like a gate that never fires.
+REGISTERED_SIGNALS: frozenset[str] = frozenset(DEFAULT_SIGNALS)
+
+# ------------------------------------------------------ the ranking margin ---
+
+#: PG-3's fitted estimator: a robust z-score against a *cosine* background.
+RANKING_MARGIN_ROBUST_Z = "robust_z"
+#: Top-vs-second label strength among matching candidates. See the module
+#: docstring: this is the only estimator that can be non-zero on the online
+#: map's own background.
+RANKING_MARGIN_LABEL_STRENGTH = "label_strength"
+
+REGISTERED_RANKING_MARGIN_MODES: frozenset[str] = frozenset(
+    {RANKING_MARGIN_ROBUST_Z, RANKING_MARGIN_LABEL_STRENGTH}
+)
+
+#: Label strength a *stray* single-detection label scores under C-2's evidence
+#: weighting. **PROVISIONAL**, and read off the 2026-08-21 retrieval bench
+#: (``bench_retrieval.md``: "corroborated entries score 2.8-8.2 and stray
+#: single-detection labels 0.12"), which ran on an untextured scene. It is the
+#: denominator a lone matching candidate is scored against, so a lone stray
+#: scores exactly 1.0 and a lone corroborated place scores 23-68. It has NOT
+#: been re-derived on real frames.
+STRAY_LABEL_STRENGTH: float = 0.12
 
 
 # ------------------------------------------------------------ the evidence ---
@@ -289,10 +399,32 @@ class AbstentionPolicy:
     min_ranking_margin: float = MIN_RANKING_MARGIN
     ground_band_m: float = GROUND_BAND_M
     offer_limit: int = PLACE_OFFER_LIMIT
+    #: Which gates run. Card P0-D. Defaults to :data:`DEFAULT_SIGNALS`, so a
+    #: policy nobody configured is PG-3's six, unchanged and in order.
+    signals: tuple[str, ...] = DEFAULT_SIGNALS
+    #: Which estimator :data:`SIGNAL_RANKING_MARGIN` uses. Card P0-D. Defaults
+    #: to the fitted robust z-score.
+    ranking_margin_mode: str = RANKING_MARGIN_ROBUST_Z
 
     def __post_init__(self) -> None:
         if not isinstance(self.enabled, bool):
             raise TypeError("AbstentionPolicy.enabled must be a boolean")
+        if isinstance(self.signals, str) or not isinstance(self.signals, (tuple, list)):
+            raise TypeError("AbstentionPolicy.signals must be a sequence of names")
+        object.__setattr__(self, "signals", tuple(str(s) for s in self.signals))
+        unknown_signals = sorted(set(self.signals) - REGISTERED_SIGNALS)
+        if unknown_signals:
+            raise ValueError(
+                "unknown abstention signal(s): " + ", ".join(unknown_signals)
+            )
+        if len(set(self.signals)) != len(self.signals):
+            raise ValueError("AbstentionPolicy.signals must not repeat a signal")
+        if self.ranking_margin_mode not in REGISTERED_RANKING_MARGIN_MODES:
+            raise ValueError(
+                "unknown abstention ranking_margin_mode: "
+                f"{self.ranking_margin_mode!r}; expected one of "
+                + ", ".join(sorted(REGISTERED_RANKING_MARGIN_MODES))
+            )
         floats = (
             "min_label_probability",
             "min_label_purity",
@@ -310,18 +442,35 @@ class AbstentionPolicy:
                 raise TypeError(f"AbstentionPolicy.{name} must be an int")
         if not self.enabled:
             return
+        if not self.signals:
+            raise ValueError(
+                "an enabled AbstentionPolicy must name at least one signal; an "
+                "enabled gate with no signals admits everything, which is the "
+                "silent death this class exists to refuse"
+            )
         # ENABLED-ONLY invariants: a gate at zero is a gate that is not there.
+        # Checked per ACTIVE signal (card P0-D): a threshold whose signal the
+        # config did not select is never read, so requiring it to be non-zero
+        # would only make an honest subset look like a misconfiguration.
         checks = (
-            ("min_label_probability", self.min_label_probability > 0.0),
-            ("min_label_frames", self.min_label_frames >= 1),
-            ("min_label_purity", self.min_label_purity > 0.0),
-            ("min_evidence_frames", self.min_evidence_frames >= 1),
-            ("min_ground_evidence_fraction", self.min_ground_evidence_fraction > 0.0),
-            ("min_ranking_margin", math.isfinite(self.min_ranking_margin)),
-            ("ground_band_m", self.ground_band_m > 0.0),
-            ("offer_limit", self.offer_limit >= 0),
+            (SIGNAL_LABEL_PROBABILITY, "min_label_probability",
+             self.min_label_probability > 0.0),
+            (SIGNAL_LABEL_FRAMES, "min_label_frames", self.min_label_frames >= 1),
+            (SIGNAL_LABEL_SUPPORT, "min_label_purity", self.min_label_purity > 0.0),
+            (SIGNAL_EVIDENCE_COUNT, "min_evidence_frames", self.min_evidence_frames >= 1),
+            (SIGNAL_NAVIGABILITY, "min_ground_evidence_fraction",
+             self.min_ground_evidence_fraction > 0.0),
+            (SIGNAL_RANKING_MARGIN, "min_ranking_margin",
+             math.isfinite(self.min_ranking_margin)),
+            (None, "ground_band_m", self.ground_band_m > 0.0),
+            (None, "offer_limit", self.offer_limit >= 0),
         )
-        disabled = [name for name, ok in checks if not ok]
+        active = set(self.signals)
+        disabled = [
+            name
+            for signal, name, ok in checks
+            if not ok and (signal is None or signal in active)
+        ]
         if disabled:
             raise ValueError(
                 "an enabled AbstentionPolicy cannot have a gate turned off: "
@@ -356,6 +505,8 @@ class AbstentionPolicy:
             "min_ranking_margin",
             "ground_band_m",
             "offer_limit",
+            "signals",
+            "ranking_margin_mode",
         }
         unknown = sorted(set(data) - fields)
         if unknown:
@@ -366,6 +517,14 @@ class AbstentionPolicy:
                 kwargs[key] = int(value)
             elif key == "enabled":
                 kwargs[key] = bool(value)
+            elif key == "signals":
+                if isinstance(value, str) or not isinstance(value, (list, tuple)):
+                    raise TypeError(
+                        "perception.abstention.signals must be a list of signal names"
+                    )
+                kwargs[key] = tuple(str(item) for item in value)
+            elif key == "ranking_margin_mode":
+                kwargs[key] = str(value)
             else:
                 kwargs[key] = float(value)
         return cls(**kwargs)
@@ -597,6 +756,57 @@ def ranking_margin(similarities: Sequence[float]) -> float:
     return (ordered[-1] - median) / (1.4826 * mad)
 
 
+def label_strength_margin(strengths: Sequence[float]) -> float:
+    """Top-vs-second **label strength** among the candidates that matched.
+
+    The 2026-08-21 retrieval bench's finding, made into a gate: label strength
+    is the separable signal (corroborated 2.8-8.2, stray 0.12) and cosine is
+    not, at either embedder size. So the decisiveness question becomes "how many
+    times stronger than the best alternative is the winner", where:
+
+    * ``strengths`` is the map's background FOR THIS QUERY — a place that does
+      not carry the queried label contributes ``0.0`` and is not an alternative,
+      so those entries are dropped rather than counted as a tie at zero. That
+      dropping is the whole fix: :func:`ranking_margin` reads the zeros as the
+      background, finds MAD ``0.0``, and returns ``0.0`` for every query the
+      online map can ever ask.
+    * with **one** matching candidate the alternative is
+      :data:`STRAY_LABEL_STRENGTH`, the strength a stray single-detection label
+      scores. One lamppost in the map is then a decisive answer (ratio ~24) and
+      one stray is not (ratio 1.0) — which is the distinction the bench made and
+      the one a comparison against an empty set cannot make.
+    * an empty match set returns ``0.0``. No candidate is not a decisive
+      candidate, and the gate treats it as the refusal it is.
+
+    Scale-free like the robust z it replaces, and for the same reason: it is a
+    ratio, so it carries across queries whose absolute strengths differ.
+    """
+
+    values = sorted(
+        (
+            float(v)
+            for v in strengths
+            if math.isfinite(float(v)) and float(v) > 0.0
+        ),
+        reverse=True,
+    )
+    if not values:
+        return 0.0
+    runner_up = values[1] if len(values) > 1 else 0.0
+    denominator = max(runner_up, STRAY_LABEL_STRENGTH)
+    if denominator <= 0.0:  # pragma: no cover - STRAY_LABEL_STRENGTH is positive
+        return 0.0
+    return values[0] / denominator
+
+
+def _margin_for(policy: AbstentionPolicy, background: Sequence[float]) -> float:
+    """Whichever estimator the policy selected. One switch, one place."""
+
+    if policy.ranking_margin_mode == RANKING_MARGIN_LABEL_STRENGTH:
+        return label_strength_margin(background)
+    return ranking_margin(background)
+
+
 def _median(ordered: Sequence[float]) -> float:
     n = len(ordered)
     mid = n // 2
@@ -612,11 +822,18 @@ def _offers(places: Sequence[PlaceEvidence], policy: AbstentionPolicy) -> tuple[
     offer can never drift from what the gate would accept.
     """
 
+    active = set(policy.signals)
     ok = [
         place
         for place in places
-        if place.evidence_frames >= policy.min_evidence_frames
-        and place.ground_evidence_fraction >= policy.min_ground_evidence_fraction
+        if (
+            SIGNAL_EVIDENCE_COUNT not in active
+            or place.evidence_frames >= policy.min_evidence_frames
+        )
+        and (
+            SIGNAL_NAVIGABILITY not in active
+            or place.ground_evidence_fraction >= policy.min_ground_evidence_fraction
+        )
         and place.label
     ]
     ok.sort(key=lambda p: (-p.evidence_frames, p.place_id))
@@ -657,25 +874,38 @@ def assess_place_query(
     active = policy if policy is not None else active_abstention_policy()
     text = " ".join(str(query).strip().split())
     offers = _offers(places, active)
+    #: Card P0-D. The gates this policy selected. Defaults to all six, so the
+    #: whole membership test below is a no-op on the shipping operating point.
+    on = set(active.signals)
 
     def refuse(reason: str, signals: Mapping[str, float]) -> AbstentionVerdict:
         return AbstentionVerdict(False, text, reason, offers, None, dict(signals))
 
-    if support is None or not support.asked:
+    label_head = SIGNAL_LABEL_PROBABILITY in on
+    if label_head and (support is None or not support.asked):
         # Never asked is not evidence of absence. Fail closed.
         return refuse(ABSTAIN_NO_DETECTOR_SUPPORT, {"peak_probability": 0.0, "asked": 0.0})
     signals = {
-        "peak_probability": float(support.peak_probability),
-        "frames_fired": float(support.frames_fired),
-        "frames_observed": float(support.frames_observed),
+        "peak_probability": float(support.peak_probability) if support is not None else 0.0,
+        "frames_fired": float(support.frames_fired) if support is not None else 0.0,
+        "frames_observed": float(support.frames_observed) if support is not None else 0.0,
     }
     # Two readings of the same gate, and both are needed. The peak says the
     # detector ever answered loudly; the count says it did so more than once.
     # A single lucky box in one frame is not a place.
-    if support.peak_probability < active.min_label_probability:
+    if (
+        label_head
+        and support is not None
+        and support.peak_probability < active.min_label_probability
+    ):
         return refuse(ABSTAIN_NO_DETECTOR_SUPPORT, signals)
-    if support.frames_fired < active.min_label_frames:
+    if (
+        SIGNAL_LABEL_FRAMES in on
+        and support is not None
+        and support.frames_fired < active.min_label_frames
+    ):
         return refuse(ABSTAIN_NO_DETECTOR_SUPPORT, signals)
+    # Not a signal and not configurable: no place at all is no place at all.
     if not places:
         return refuse(ABSTAIN_NO_OBSERVATIONS, signals)
 
@@ -684,7 +914,7 @@ def assess_place_query(
         if map_similarities is not None
         else [place.similarity for place in places]
     )
-    margin = ranking_margin(background)
+    margin = _margin_for(active, background)
     signals["ranking_margin"] = float(margin)
 
     ranked = sorted(places, key=lambda p: (-p.similarity, p.place_id))
@@ -697,15 +927,36 @@ def assess_place_query(
         ABSTAIN_NOT_NAVIGABLE,
         ABSTAIN_INDECISIVE_RANKING,
     )
-    worst = ABSTAIN_LABEL_DISAGREEMENT
+    # The "furthest through" report has to start at the first gate that is
+    # actually running, or a dropped first gate would be reported as the reason
+    # nothing passed the gates that are still there.
+    place_gates = [
+        reason
+        for signal, reason in (
+            (SIGNAL_LABEL_SUPPORT, ABSTAIN_LABEL_DISAGREEMENT),
+            (SIGNAL_EVIDENCE_COUNT, ABSTAIN_INSUFFICIENT_EVIDENCE),
+            (SIGNAL_NAVIGABILITY, ABSTAIN_NOT_NAVIGABLE),
+            (SIGNAL_RANKING_MARGIN, ABSTAIN_INDECISIVE_RANKING),
+        )
+        if signal in on
+    ]
+    worst = place_gates[0] if place_gates else ABSTAIN_LABEL_DISAGREEMENT
     for place in ranked:
-        if place.label_support <= 0 or place.label_purity < active.min_label_purity:
+        if SIGNAL_LABEL_SUPPORT in on and (
+            place.label_support <= 0 or place.label_purity < active.min_label_purity
+        ):
             failed = ABSTAIN_LABEL_DISAGREEMENT
-        elif place.evidence_frames < active.min_evidence_frames:
+        elif (
+            SIGNAL_EVIDENCE_COUNT in on
+            and place.evidence_frames < active.min_evidence_frames
+        ):
             failed = ABSTAIN_INSUFFICIENT_EVIDENCE
-        elif place.ground_evidence_fraction < active.min_ground_evidence_fraction:
+        elif (
+            SIGNAL_NAVIGABILITY in on
+            and place.ground_evidence_fraction < active.min_ground_evidence_fraction
+        ):
             failed = ABSTAIN_NOT_NAVIGABLE
-        elif margin < active.min_ranking_margin:
+        elif SIGNAL_RANKING_MARGIN in on and margin < active.min_ranking_margin:
             failed = ABSTAIN_INDECISIVE_RANKING
         else:
             return AbstentionVerdict(

@@ -1,0 +1,1029 @@
+{
+  "card": "C-3",
+  "arm": "B (truth-derived synthetic detections; NOT a perception claim)",
+  "map_entries": 14,
+  "map_known_places": [
+    "bench",
+    "building",
+    "door",
+    "lamppost",
+    "planter",
+    "tree"
+  ],
+  "corpus_rows_10_13": [
+    {
+      "row": "10",
+      "directive": "Go to Narnia.",
+      "oracle": {
+        "admitted": false,
+        "reason": "unknown_place"
+      },
+      "learned_map": {
+        "admitted": false,
+        "reason": "unknown_place"
+      },
+      "equivalent": true
+    },
+    {
+      "row": "11",
+      "directive": "Go to my office.",
+      "oracle": {
+        "admitted": false,
+        "reason": "unknown_place"
+      },
+      "learned_map": {
+        "admitted": false,
+        "reason": "unknown_place"
+      },
+      "equivalent": true
+    },
+    {
+      "row": "12",
+      "directive": "Take me to the moon.",
+      "oracle": {
+        "admitted": false,
+        "reason": "unknown_place"
+      },
+      "learned_map": {
+        "admitted": false,
+        "reason": "unknown_place"
+      },
+      "equivalent": true
+    },
+    {
+      "row": "13",
+      "directive": "Let's go back home.",
+      "oracle": {
+        "admitted": true,
+        "reason": "not_a_navigation_directive"
+      },
+      "learned_map": {
+        "admitted": true,
+        "reason": "not_a_navigation_directive"
+      },
+      "equivalent": true
+    }
+  ],
+  "corpus_equivalence_failures": [],
+  "known_place_admission": [
+    {
+      "place": "bench",
+      "admitted": true,
+      "reason": "known_place"
+    },
+    {
+      "place": "building",
+      "admitted": true,
+      "reason": "known_place"
+    },
+    {
+      "place": "door",
+      "admitted": true,
+      "reason": "known_place"
+    },
+    {
+      "place": "lamppost",
+      "admitted": true,
+      "reason": "known_place"
+    },
+    {
+      "place": "planter",
+      "admitted": true,
+      "reason": "known_place"
+    },
+    {
+      "place": "tree",
+      "admitted": true,
+      "reason": "known_place"
+    }
+  ],
+  "known_place_admitted": 6,
+  "known_place_total": 6,
+  "null_controls": [
+    {
+      "directive": "go to the helipad",
+      "admitted": false,
+      "reason": "unknown_place"
+    },
+    {
+      "directive": "go to the swimming pool",
+      "admitted": false,
+      "reason": "unknown_place"
+    },
+    {
+      "directive": "go to the aquarium",
+      "admitted": false,
+      "reason": "unknown_place"
+    },
+    {
+      "directive": "go to the launch pad",
+      "admitted": false,
+      "reason": "unknown_place"
+    },
+    {
+      "directive": "go to the throne room",
+      "admitted": false,
+      "reason": "unknown_place"
+    },
+    {
+      "directive": "go to narnia",
+      "admitted": false,
+      "reason": "unknown_place"
+    }
+  ],
+  "null_controls_admitted": 0,
+  "poi_arm": [
+    {
+      "directive": "go to the coffee shop",
+      "goal_source": "semantic_search",
+      "goal": null
+    },
+    {
+      "directive": "go to the crosswalk",
+      "goal_source": "semantic_search",
+      "goal": null
+    },
+    {
+      "directive": "go to the park",
+      "goal_source": "semantic_search",
+      "goal": null
+    },
+    {
+      "directive": "go to the bookstore",
+      "goal_source": "semantic_search",
+      "goal": null
+    }
+  ],
+  "poi_sourced_goals": 0,
+  "poi_table_size": 0,
+  "scene": {
+    "learned_map": {
+      "semantic_source": "learned_map",
+      "note_denies_eyes": false,
+      "things": [
+        {
+          "label": "bench",
+          "distance_m": 2.1,
+          "direction": "ahead on my left",
+          "evidence_frames": 24
+        },
+        {
+          "label": "lamppost",
+          "distance_m": 3.1,
+          "direction": "ahead on my right",
+          "evidence_frames": 24
+        },
+        {
+          "label": "planter",
+          "distance_m": 3.7,
+          "direction": "on my left",
+          "evidence_frames": 24
+        },
+        {
+          "label": "tree",
+          "distance_m": 3.7,
+          "direction": "on my left",
+          "evidence_frames": 24
+        }
+      ],
+      "summary": "bench 2.1 m ahead on my left; lamppost 3.1 m ahead on my right; planter 3.7 m on my left; tree 3.7 m on my left; no people tracked; closest of all: bench at 2.1 m ahead on my left"
+    },
+    "oracle": {
+      "semantic_source": "oracle",
+      "note_denies_eyes": true,
+      "things": [
+        "bench",
+        "sidewalk",
+        "lamppost",
+        "planter"
+      ]
+    }
+  },
+  "shadow": {
+    "rows": [
+      {
+        "query_class": "bench",
+        "agreement_total": 0.0,
+        "n_total": 3,
+        "agreement_comparable": 0.0,
+        "n_comparable": 2,
+        "counts": {
+          "benign_miss": 1,
+          "localization_delta": 0,
+          "admission_flip": 0,
+          "refusal_flip": 2
+        }
+      },
+      {
+        "query_class": "building",
+        "agreement_total": 0.0,
+        "n_total": 3,
+        "agreement_comparable": 0.0,
+        "n_comparable": 1,
+        "counts": {
+          "benign_miss": 2,
+          "localization_delta": 0,
+          "admission_flip": 0,
+          "refusal_flip": 1
+        }
+      },
+      {
+        "query_class": "door",
+        "agreement_total": 0.0,
+        "n_total": 3,
+        "agreement_comparable": null,
+        "n_comparable": 0,
+        "counts": {
+          "benign_miss": 3,
+          "localization_delta": 0,
+          "admission_flip": 0,
+          "refusal_flip": 0
+        }
+      },
+      {
+        "query_class": "lamppost",
+        "agreement_total": 0.0,
+        "n_total": 3,
+        "agreement_comparable": 0.0,
+        "n_comparable": 2,
+        "counts": {
+          "benign_miss": 1,
+          "localization_delta": 0,
+          "admission_flip": 0,
+          "refusal_flip": 2
+        }
+      },
+      {
+        "query_class": "planter",
+        "agreement_total": 0.0,
+        "n_total": 3,
+        "agreement_comparable": 0.0,
+        "n_comparable": 1,
+        "counts": {
+          "benign_miss": 2,
+          "localization_delta": 0,
+          "admission_flip": 0,
+          "refusal_flip": 1
+        }
+      },
+      {
+        "query_class": "tree",
+        "agreement_total": 0.0,
+        "n_total": 3,
+        "agreement_comparable": 0.0,
+        "n_comparable": 1,
+        "counts": {
+          "benign_miss": 2,
+          "localization_delta": 0,
+          "admission_flip": 0,
+          "refusal_flip": 1
+        }
+      }
+    ],
+    "overall": {
+      "agreement_total": 0.0,
+      "n_total": 18,
+      "agreement_comparable": 0.0,
+      "n_comparable": 7
+    },
+    "counts": {
+      "benign_miss": 11,
+      "localization_delta": 0,
+      "admission_flip": 0,
+      "refusal_flip": 7
+    },
+    "hard_gate_divergences": [
+      {
+        "query": "bench",
+        "query_class": "bench",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bench_1",
+          "label": "bench",
+          "x": -2.5,
+          "y": 3.045,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "bench",
+          "x": -2.499764288286503,
+          "y": 3.052510983446622,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-bench"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "building",
+        "query_class": "building",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bldg_2",
+          "label": "building",
+          "x": -1.0,
+          "y": 5.8,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "building",
+          "x": -1.011943378220844,
+          "y": 5.7874411039028875,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-building"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "lamppost",
+        "query_class": "lamppost",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "lamp_post_1",
+          "label": "lamppost",
+          "x": 0.2,
+          "y": 3.15,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "lamppost",
+          "x": 0.20108578696396145,
+          "y": 3.154243857436956,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-lamppost"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "planter",
+        "query_class": "planter",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "planter_2",
+          "label": "planter",
+          "x": 5.0,
+          "y": 3.1,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "planter",
+          "x": 4.98328700368928,
+          "y": 3.114568646534455,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-0.0-0.0-planter"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "tree",
+        "query_class": "tree",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "tree_2",
+          "label": "tree",
+          "x": 5.0,
+          "y": 3.1,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "tree",
+          "x": 5.015568364239323,
+          "y": 3.0884179019316207,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-0.0-0.0-tree"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "bench",
+        "query_class": "bench",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bench_1",
+          "label": "bench",
+          "x": -2.5,
+          "y": 3.045,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "bench",
+          "x": -2.499764288286503,
+          "y": 3.052510983446622,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-3.0-2.0-bench"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "lamppost",
+        "query_class": "lamppost",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "lamp_post_1",
+          "label": "lamppost",
+          "x": 0.2,
+          "y": 3.15,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "lamppost",
+          "x": 0.20108578696396145,
+          "y": 3.154243857436956,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-3.0-2.0-lamppost"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      }
+    ],
+    "divergences": [
+      {
+        "query": "bench",
+        "query_class": "bench",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bench_1",
+          "label": "bench",
+          "x": -2.5,
+          "y": 3.045,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "bench",
+          "x": -2.499764288286503,
+          "y": 3.052510983446622,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-bench"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "building",
+        "query_class": "building",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bldg_2",
+          "label": "building",
+          "x": -1.0,
+          "y": 5.8,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "building",
+          "x": -1.011943378220844,
+          "y": 5.7874411039028875,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-building"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "door",
+        "query_class": "door",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "door_1",
+          "label": "door",
+          "x": -6.949999999999999,
+          "y": 4.119999999999999,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "door",
+          "x": -6.950792367060947,
+          "y": 4.139853023446792,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-door"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "lamppost",
+        "query_class": "lamppost",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "lamp_post_1",
+          "label": "lamppost",
+          "x": 0.2,
+          "y": 3.15,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "lamppost",
+          "x": 0.20108578696396145,
+          "y": 3.154243857436956,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-lamppost"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "planter",
+        "query_class": "planter",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "planter_1",
+          "label": "planter",
+          "x": -5.0,
+          "y": 3.15,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "planter",
+          "x": -5.020068372316748,
+          "y": 3.123868171737279,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-planter"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "tree",
+        "query_class": "tree",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "tree_1",
+          "label": "tree",
+          "x": -5.0,
+          "y": 3.15,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "tree",
+          "x": -5.006784326335265,
+          "y": 3.1498595834669993,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose--2.0-1.0-tree"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "bench",
+        "query_class": "bench",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bench_1",
+          "label": "bench",
+          "x": -2.5,
+          "y": 3.045,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "bench",
+          "x": -2.499764288286503,
+          "y": 3.052510983446622,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-0.0-0.0-bench"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "building",
+        "query_class": "building",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bldg_2",
+          "label": "building",
+          "x": -1.0,
+          "y": 5.8,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "building",
+          "x": -1.011943378220844,
+          "y": 5.7874411039028875,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-0.0-0.0-building"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "door",
+        "query_class": "door",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "door_1",
+          "label": "door",
+          "x": -6.949999999999999,
+          "y": 4.119999999999999,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "door",
+          "x": -6.950792367060947,
+          "y": 4.139853023446792,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-0.0-0.0-door"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "lamppost",
+        "query_class": "lamppost",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "lamp_post_1",
+          "label": "lamppost",
+          "x": 0.2,
+          "y": 3.15,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "lamppost",
+          "x": 0.20108578696396145,
+          "y": 3.154243857436956,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-0.0-0.0-lamppost"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "planter",
+        "query_class": "planter",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "planter_2",
+          "label": "planter",
+          "x": 5.0,
+          "y": 3.1,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "planter",
+          "x": 4.98328700368928,
+          "y": 3.114568646534455,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-0.0-0.0-planter"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "tree",
+        "query_class": "tree",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "tree_2",
+          "label": "tree",
+          "x": 5.0,
+          "y": 3.1,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "tree",
+          "x": 5.015568364239323,
+          "y": 3.0884179019316207,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-0.0-0.0-tree"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "bench",
+        "query_class": "bench",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bench_1",
+          "label": "bench",
+          "x": -2.5,
+          "y": 3.045,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "bench",
+          "x": -2.499764288286503,
+          "y": 3.052510983446622,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-3.0-2.0-bench"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "building",
+        "query_class": "building",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "bldg_3",
+          "label": "building",
+          "x": 2.2,
+          "y": 5.6,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "building",
+          "x": 2.1879273398305985,
+          "y": 5.6140813928431585,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-3.0-2.0-building"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "door",
+        "query_class": "door",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "door_1",
+          "label": "door",
+          "x": -6.949999999999999,
+          "y": 4.119999999999999,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "door",
+          "x": -6.950792367060947,
+          "y": 4.139853023446792,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-3.0-2.0-door"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "lamppost",
+        "query_class": "lamppost",
+        "divergence_class": "refusal_flip",
+        "comparable": true,
+        "hard_gate": true,
+        "oracle": {
+          "admitted": true,
+          "place_id": "lamp_post_1",
+          "label": "lamppost",
+          "x": 0.2,
+          "y": 3.15,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "lamppost",
+          "x": 0.20108578696396145,
+          "y": 3.154243857436956,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-3.0-2.0-lamppost"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "learned map refused inside its own envelope: indecisive_ranking"
+      },
+      {
+        "query": "planter",
+        "query_class": "planter",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "planter_2",
+          "label": "planter",
+          "x": 5.0,
+          "y": 3.1,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "planter",
+          "x": 4.98328700368928,
+          "y": 3.114568646534455,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-3.0-2.0-planter"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      },
+      {
+        "query": "tree",
+        "query_class": "tree",
+        "divergence_class": "benign_miss",
+        "comparable": false,
+        "hard_gate": false,
+        "oracle": {
+          "admitted": true,
+          "place_id": "tree_2",
+          "label": "tree",
+          "x": 5.0,
+          "y": 3.1,
+          "reason": null
+        },
+        "learned": {
+          "admitted": false,
+          "place_id": null,
+          "label": "tree",
+          "x": 5.015568364239323,
+          "y": 3.0884179019316207,
+          "reason": "indecisive_ranking"
+        },
+        "frames": [
+          "pose-3.0-2.0-tree"
+        ],
+        "frame_times_ns": [],
+        "delta_m": null,
+        "note": "oracle answer lay outside the learned map's sensing envelope"
+      }
+    ]
+  },
+  "owner_store_sha16": {
+    "before": "40506fd96fc61c34",
+    "after": "40506fd96fc61c34"
+  }
+}

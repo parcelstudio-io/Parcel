@@ -29,6 +29,12 @@ import pytest
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = REPO_ROOT / "src" / "parcel_robot"
 
+#: Card P0-E (scrum/20260822/task_5): the literal ratchet is an evidence guard
+#: over the retired constant families, not a product guard. It now runs in the
+#: nightly tier with the other ratchets; a new family literal still reddens
+#: there, and the shrinking allowlist keeps its one-way semantics.
+pytestmark = pytest.mark.slow
+
 #: The retired families, by literal value. ``0.32``/``0.35`` are F-robot-radius
 #: (the audit's "one literal, two values"); ``1.2``/``1.25`` are F-proximity
 #: (six copies, one drift live); ``1.32`` is F-arrival (the stand-off composite

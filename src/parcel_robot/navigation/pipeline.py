@@ -434,6 +434,63 @@ def soft_import_health() -> dict[str, object]:
     }
 
 
+def _semantic_source_policy(data: Any) -> Any:
+    """Card C-3. Read ``perception.semantic_source`` from a navigation config.
+
+    Returns ``None`` when the axis is unavailable or unset, which means "consult
+    the process default", which ships as ``oracle`` — so a config that has never
+    heard of this card behaves exactly as it did.
+
+    A MALFORMED source is NOT swallowed. Everything else this loader touches
+    degrades softly, but a typo'd source that read as "the default" would look
+    identical to a cutover that never happened, and the whole point of the POI
+    disable is that it cannot fail silently.
+    """
+
+    try:
+        from parcel_robot.perception_source import SemanticSourcePolicy
+    except ImportError:  # pragma: no cover — frozen BARN bundle path
+        return None
+    section = (data or {}).get("perception") if isinstance(data, dict) else None
+    if not isinstance(section, dict):
+        return None
+    return SemanticSourcePolicy.from_mapping(section)
+
+
+def _build_grounder(pois_path: Any, policy: Any) -> PlaceGrounder:
+    """Construct the POI arm, degrading ONLY where the outcome is identical.
+
+    A frozen BARN v8 bundle ships a ``parcel_robot`` tree that predates this
+    card — including a ``PlaceGrounder`` with no ``for_semantic_source`` — while
+    taking THIS module as a reviewed replacement source. Calling the classmethod
+    unconditionally turned the whole v8 bundle derivation into an
+    ``AttributeError`` inside the policy sidecar.
+
+    The degrade is deliberately asymmetric, because the incident audit's own
+    lesson is that "a soft-import that degrades a capability to None on
+    ImportError turned a loud mistake into a quiet one":
+
+    * **oracle** (or no source axis at all, which is what a frozen bundle has) —
+      fall back to ``from_yaml``. That is byte-identical to what the classmethod
+      would have returned, so the degrade changes nothing and may be silent.
+    * **off-oracle** — RAISE. Here the fallback would silently re-arm the second
+      oracle this card exists to disable, and a cutover run that quietly kept
+      its POI table is precisely the false-positive REVISION §1 was written to
+      prevent. Failing loudly is the only safe direction.
+    """
+
+    factory = getattr(PlaceGrounder, "for_semantic_source", None)
+    if callable(factory):
+        return factory(pois_path, policy)
+    if policy is not None and not getattr(policy, "poi_grounding_enabled", True):
+        raise RuntimeError(
+            "perception.semantic_source is off-oracle but this PlaceGrounder "
+            "predates card C-3 and cannot empty its POI table; refusing to run "
+            "a cutover with the POI second-oracle still armed"
+        )
+    return PlaceGrounder.from_yaml(pois_path)
+
+
 class DirectiveNavigator:
     """NL directive → POI goal → navigator model → collision-filtered mid-level cmd."""
 
@@ -831,7 +888,11 @@ class DirectiveNavigator:
         )
 
         registry = ModelRegistry.load(models_root)
-        grounder = PlaceGrounder.from_yaml(pois_path)
+        # Card C-3 REVISION 1. The POI table is a second oracle that fires
+        # before semantic search; off-oracle it is constructed EMPTY. Under the
+        # shipping source (``oracle``) this is exactly ``from_yaml`` and the
+        # table, the scoring and the ``known_poi`` metadata are unchanged.
+        grounder = _build_grounder(pois_path, _semantic_source_policy(data))
         safety = dict(data.get("safety") or {})
         search_config = dict(data.get("semantic_search") or {})
         progress_config = dict(data.get("progress_watchdog") or {})
@@ -1040,6 +1101,11 @@ class DirectiveNavigator:
             )
         except LookupError:
             semantic_goal = semantic_goal_from_directive(directive)
+            # Card C-3 REVISION 1. Off-oracle the POI arm is empty by
+            # construction; recording WHY makes "the mission reached the place
+            # through perception" a checkable claim rather than an inference
+            # from the absence of a known_poi tag.
+            poi_disabled = getattr(self.grounder, "disabled_reason", "")
             return Mission(
                 directive=directive,
                 goal=None,
@@ -1047,6 +1113,11 @@ class DirectiveNavigator:
                 semantic_goal=semantic_goal,
                 metadata={
                     "goal_source": "semantic_search",
+                    **(
+                        {"poi_grounding_disabled": poi_disabled}
+                        if poi_disabled
+                        else {}
+                    ),
                     "semantic_query": semantic_goal.query,
                     "resolution_state": "unresolved",
                     # Directive modifiers, recorded so the runtime and the

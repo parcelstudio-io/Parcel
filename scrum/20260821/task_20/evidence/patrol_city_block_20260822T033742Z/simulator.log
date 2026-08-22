@@ -1,0 +1,3 @@
+Parcel sim ready: /home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml
+Listening for poses/walk/trajectory on /tmp/parcel-move1-patrol-910552.sock
+Controls: W/S A/D Q/E Space, 1=sit 2=bow, or run parcel-control

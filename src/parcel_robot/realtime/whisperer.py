@@ -88,7 +88,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from .config import WhispererConfig
+from .config import DEFAULT_WHISPERER_WINDOW_S, WhispererConfig
 
 #: Bumped whenever :class:`StateDigest`'s field set changes meaning. It rides on
 #: every digest and on every decision row, so a recorded whisperer log can never
@@ -1115,9 +1115,22 @@ class Whisperer:
         )
 
     def _spent(self, at: float) -> int:
-        """Forwards inside the trailing minute. Criticals are counted here too."""
+        """Forwards inside the trailing window. Criticals are counted here too.
 
-        while self._forwards and (at - self._forwards[0]) >= 60.0:
+        Card P0-B, deliverable 4. The window was a literal ``60.0`` here, which
+        made the owner's narration rate half a knob: ``max_updates_per_minute``
+        could be set and the minute could not, so the only rates purchasable
+        were whole multiples of one-per-minute. It is now
+        ``whisperer.window_s``, validated, defaulting to the same 60.0 — a
+        config that does not mention it counts exactly the minute it always did.
+        """
+
+        window = float(getattr(self.config, "window_s", DEFAULT_WHISPERER_WINDOW_S))
+        if not window > 0.0:
+            # Belt and braces: the loader refuses this, and a hand-built
+            # WhispererConfig must not be able to divide the cap by nothing.
+            window = DEFAULT_WHISPERER_WINDOW_S
+        while self._forwards and (at - self._forwards[0]) >= window:
             self._forwards.popleft()
         return len(self._forwards)
 
@@ -1170,6 +1183,9 @@ class Whisperer:
                 "enabled": self.config.enabled,
                 "max_updates_per_minute": self.config.max_updates_per_minute,
                 "min_gap_s": self.config.min_gap_s,
+                # Card P0-B. ``updates_this_minute`` is only readable next to the
+                # window it was counted over, now that the window is a knob.
+                "window_s": getattr(self.config, "window_s", DEFAULT_WHISPERER_WINDOW_S),
                 "updates_this_minute": self._spent(at),
                 "folded": self._folded,
                 "forwarded": self.forwarded,

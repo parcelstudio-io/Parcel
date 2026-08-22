@@ -1,8 +1,28 @@
 <mujoco model="parcel_city_block">
   <!-- Stylized city block for Go2 skill / RL development. -->
+  <!-- Card W-1 (2026-08-21) textured this block. THE RULE THAT MAKES THAT SAFE:
+       every pre-existing geom keeps its name, type, size, pos, quat, friction
+       and contact flags, and every geom W-1 ADDS is named `vis_*` and carries
+       contype="0" conaffinity="0" density="0". `vis_` matches no prefix in
+       sim.LOGICAL_OBSTACLE_PREFIXES, headless_city._STATIC_OBSTACLE_PREFIXES,
+       the semantics sidecar's geom/region prefix tables, or
+       tests/test_city_orbit_clearance.STATIC_LOGICAL_PREFIXES, so nothing this
+       card added can become an obstacle, a semantic instance, or a mass.
+       tests/test_scene_assets.py pins both halves and compiles this file
+       against its pre-W-1 revision to prove the dynamics arrays are identical.
+       The only attributes changed on existing geoms are VISUAL ones:
+       `material`, `rgba`, and `group` (the person capsules move to group 4,
+       which MuJoCo's default mjvOption does not render, because the textured
+       human meshes now stand in their place). -->
   <include file="../../../third_party/unitree_mujoco/unitree_robots/go2/go2.xml"/>
-  <!-- go2.xml meshdir is relative to this scene file; override after include. -->
+  <!-- go2.xml meshdir is relative to this scene file; override after include.
+       texturedir is NOT set by go2.xml (it declares no textures), so this
+       block's own textures resolve from `assets/textures/` beside this file.
+       W-1's meshes cannot use meshdir - it is spoken for by the Go2 - so they
+       climb back out of it explicitly; test_scene_assets.py asserts every
+       referenced asset file exists. -->
   <compiler meshdir="../../../third_party/unitree_mujoco/unitree_robots/go2/assets"
+    texturedir="assets/textures"
     angle="radian" autolimits="true"/>
 
   <statistic center="0 0 0.4" extent="8"/>
@@ -16,22 +36,94 @@
   <asset>
     <texture type="skybox" builtin="gradient" rgb1="0.45 0.62 0.82" rgb2="0.08 0.12 0.18"
       width="512" height="3072"/>
-    <texture type="2d" name="asphalt" builtin="checker" mark="edge" rgb1="0.22 0.22 0.24"
-      rgb2="0.18 0.18 0.2" markrgb="0.3 0.3 0.32" width="256" height="256"/>
-    <texture type="2d" name="sidewalk" builtin="flat" rgb1="0.55 0.55 0.52" width="128" height="128"/>
+    <!-- W-1: photo-derived CC0 surface textures (Poly Haven), built by
+         scratchpad/w1/build_assets.py. Provenance, licence and per-file
+         sha256: assets/PROVENANCE.json. `type="cube"` on everything that
+         dresses a box/cylinder/sphere: MuJoCo's 2d projection onto a box face
+         streaks, cube mapping does not. Planes and UV meshes stay `2d`. -->
+    <texture type="2d" name="asphalt" file="road_asphalt.png"/>
+    <texture type="cube" name="sidewalk" file="sidewalk_concrete.png"/>
+    <texture type="cube" name="curb_tex" file="curb_concrete.png"/>
+    <texture type="cube" name="crosswalk_tex" file="crosswalk_paint.png"/>
+    <texture type="cube" name="brick_tex" file="facade_brick.png"/>
+    <texture type="cube" name="beige_tex" file="facade_beige.png"/>
+    <texture type="cube" name="plaster_tex" file="facade_plaster.png"/>
+    <texture type="cube" name="bench_tex" file="bench_wood.png"/>
+    <texture type="cube" name="door_tex" file="door_wood.png"/>
+    <texture type="cube" name="metal_tex" file="city_metal.png"/>
+    <texture type="cube" name="bark_tex" file="tree_bark.png"/>
+    <texture type="cube" name="canopy_tex" file="tree_canopy.png"/>
+    <texture type="cube" name="grass_tex" file="grass.png"/>
+
     <material name="asphalt" texture="asphalt" texuniform="true" texrepeat="8 8" reflectance="0.05"/>
-    <material name="sidewalk" texture="sidewalk" reflectance="0.08"/>
-    <material name="building_a" rgba="0.62 0.58 0.52 1"/>
-    <material name="building_b" rgba="0.45 0.5 0.55 1"/>
-    <material name="building_c" rgba="0.7 0.68 0.64 1"/>
-    <material name="crosswalk" rgba="0.92 0.92 0.9 1"/>
-    <material name="bench" rgba="0.35 0.28 0.2 1"/>
-    <material name="curb" rgba="0.5 0.5 0.48 1"/>
-    <material name="city_grass" rgba="0.22 0.42 0.2 1"/>
+    <material name="sidewalk" texture="sidewalk" texuniform="true" texrepeat="1.6 1.6"
+      reflectance="0.08"/>
+    <material name="building_a" texture="brick_tex" texuniform="true" texrepeat="0.55 0.55"/>
+    <material name="building_b" texture="beige_tex" texuniform="true" texrepeat="0.5 0.5"/>
+    <material name="building_c" texture="plaster_tex" texuniform="true" texrepeat="0.5 0.5"/>
+    <material name="crosswalk" texture="crosswalk_tex" texuniform="false" texrepeat="1 3"/>
+    <material name="bench" texture="bench_tex" texuniform="false" texrepeat="3 1"/>
+    <material name="curb" texture="curb_tex" texuniform="true" texrepeat="4 4"/>
+    <material name="city_grass" texture="grass_tex" texuniform="true" texrepeat="1.4 1.4"/>
     <material name="city_glass" rgba="0.2 0.42 0.56 1" reflectance="0.35"/>
-    <material name="city_metal" rgba="0.16 0.18 0.2 1"/>
-    <material name="entry_wall" rgba="0.58 0.54 0.48 1"/>
-    <material name="door_leaf" rgba="0.42 0.24 0.14 1"/>
+    <material name="city_metal" texture="metal_tex" texuniform="true" texrepeat="1 1"
+      rgba="0.45 0.47 0.5 1"/>
+    <material name="entry_wall" texture="plaster_tex" texuniform="true" texrepeat="0.9 0.9"/>
+    <material name="door_leaf" texture="door_tex" texuniform="true" texrepeat="0.7 0.7"/>
+    <material name="tree_bark" texture="bark_tex" texuniform="true" texrepeat="1.5 1.5"/>
+    <material name="tree_canopy" texture="canopy_tex" texuniform="true" texrepeat="1.1 1.1"/>
+    <material name="crate_wood" texture="bench_tex" texuniform="true" texrepeat="1.6 1.6"
+      rgba="0.86 0.7 0.5 1"/>
+
+    <!-- Storefront fascias. Each is one flat UV quad; the sign lettering,
+         glazing, mullions and entrance are baked into the image, so a
+         storefront is one geom rather than a dozen. -->
+    <texture type="2d" name="shopfront_a" file="storefront_a.png"/>
+    <texture type="2d" name="shopfront_b" file="storefront_b.png"/>
+    <texture type="2d" name="shopfront_c" file="storefront_c.png"/>
+    <texture type="2d" name="shopfront_d" file="storefront_d.png"/>
+    <material name="shopfront_a" texture="shopfront_a"/>
+    <material name="shopfront_b" texture="shopfront_b"/>
+    <material name="shopfront_c" texture="shopfront_c"/>
+    <material name="shopfront_d" texture="shopfront_d"/>
+
+    <!-- Pedestrian skins. Four silhouettes x six outfits; nine bodies in this
+         scene use nine distinct (mesh, texture) pairs so a detector cannot
+         memorise one appearance. -->
+    <texture type="2d" name="person_1" file="person_1.png"/>
+    <texture type="2d" name="person_2" file="person_2.png"/>
+    <texture type="2d" name="person_3" file="person_3.png"/>
+    <texture type="2d" name="person_4" file="person_4.png"/>
+    <texture type="2d" name="person_5" file="person_5.png"/>
+    <texture type="2d" name="person_6" file="person_6.png"/>
+    <material name="person_1" texture="person_1"/>
+    <material name="person_2" texture="person_2"/>
+    <material name="person_3" texture="person_3"/>
+    <material name="person_4" texture="person_4"/>
+    <material name="person_5" texture="person_5"/>
+    <material name="person_6" texture="person_6"/>
+
+
+    <mesh name="human_a" inertia="shell"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/human_a.obj"/>
+    <mesh name="human_b" inertia="shell"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/human_b.obj"/>
+    <mesh name="human_c" inertia="shell"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/human_c.obj"/>
+    <mesh name="human_d" inertia="shell"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/human_d.obj"/>
+    <mesh name="shopfront_1" inertia="shell" scale="3.0 1 2.5"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/panel.obj"/>
+    <mesh name="shopfront_2" inertia="shell" scale="2.4 1 2.7"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/panel.obj"/>
+    <mesh name="shopfront_3" inertia="shell" scale="2.6 1 2.4"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/panel.obj"/>
+    <mesh name="shopfront_4" inertia="shell" scale="2.8 1 2.6"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/panel.obj"/>
+    <mesh name="shopfront_5" inertia="shell" scale="2.9 1 2.5"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/panel.obj"/>
+    <mesh name="shopfront_6" inertia="shell" scale="3.0 1 2.6"
+      file="../../../../../src/parcel_robot/scenes/assets/meshes/panel.obj"/>
   </asset>
 
   <worldbody>
@@ -67,17 +159,46 @@
     <geom name="bldg_5" type="box" pos="-5.5 -4.5 1.8" size="1.7 1.4 1.8" material="building_b"/>
     <geom name="bldg_6" type="box" pos="5.0 -5.0 2.2" size="1.8 1.6 2.2" material="building_c"/>
 
+    <!-- W-1: the storefronts. One textured quad per building face, standing
+         30-40 mm proud of the facade, carrying its own glazing, entrance and
+         fascia sign. These are the `storefront` and `door` visual evidence the
+         2026-08-21 detector bench found the block had none of. Purely visual:
+         the building box behind each one is still the whole collision story. -->
+    <geom name="vis_shopfront_1" type="mesh" mesh="shopfront_1" material="shopfront_a"
+      pos="-4.5 3.965 0.06" contype="0" conaffinity="0" density="0"/>
+    <geom name="vis_shopfront_2" type="mesh" mesh="shopfront_2" material="shopfront_b"
+      pos="-1.0 4.565 0.06" contype="0" conaffinity="0" density="0"/>
+    <geom name="vis_shopfront_3" type="mesh" mesh="shopfront_3" material="shopfront_c"
+      pos="2.2 4.165 0.06" contype="0" conaffinity="0" density="0"/>
+    <geom name="vis_shopfront_4" type="mesh" mesh="shopfront_4" material="shopfront_d"
+      pos="5.5 3.865 0.06" contype="0" conaffinity="0" density="0"/>
+    <geom name="vis_shopfront_5" type="mesh" mesh="shopfront_5" material="shopfront_b"
+      pos="-5.5 -3.065 0.06" euler="0 0 3.14159265" contype="0" conaffinity="0" density="0"/>
+    <geom name="vis_shopfront_6" type="mesh" mesh="shopfront_6" material="shopfront_d"
+      pos="5.0 -3.365 0.06" euler="0 0 3.14159265" contype="0" conaffinity="0" density="0"/>
+
+
+    <!-- Awnings, on the four faces with no street tree in front of them. -->
+    <geom name="vis_awning_2" type="box" pos="-1.0 4.28 2.14" size="1.15 0.28 0.05"
+      rgba="0.62 0.20 0.16 1" contype="0" conaffinity="0" density="0"/>
+    <geom name="vis_awning_3" type="box" pos="2.2 3.90 1.90" size="1.25 0.28 0.05"
+      rgba="0.16 0.24 0.46 1" contype="0" conaffinity="0" density="0"/>
+    <geom name="vis_awning_5" type="box" pos="-5.5 -2.82 1.98" size="1.40 0.28 0.05"
+      rgba="0.20 0.36 0.28 1" contype="0" conaffinity="0" density="0"/>
+    <geom name="vis_awning_6" type="box" pos="5.0 -3.12 2.06" size="1.45 0.28 0.05"
+      rgba="0.72 0.52 0.14 1" contype="0" conaffinity="0" density="0"/>
+
     <!-- Storefront windows and a small planted plaza. -->
     <geom name="window_1" type="box" pos="-4.5 3.99 1.9" size="0.75 0.015 0.7" material="city_glass"/>
     <geom name="window_2" type="box" pos="-1.0 4.59 1.8" size="0.7 0.015 0.8" material="city_glass"/>
     <geom name="window_3" type="box" pos="2.2 4.19 1.4" size="0.75 0.015 0.65" material="city_glass"/>
     <geom name="window_4" type="box" pos="5.5 3.89 1.8" size="0.75 0.015 0.75" material="city_glass"/>
     <geom name="planter_1" type="cylinder" pos="-5.0 3.15 0.18" size="0.45 0.18" material="city_grass"/>
-    <geom name="tree_1" type="cylinder" pos="-5.0 3.15 0.9" size="0.10 0.75" rgba="0.32 0.2 0.1 1"/>
-    <geom name="tree_top_1" type="sphere" pos="-5.0 3.15 1.85" size="0.58" rgba="0.18 0.48 0.19 1"/>
+    <geom name="tree_1" type="cylinder" pos="-5.0 3.15 0.9" size="0.10 0.75" material="tree_bark"/>
+    <geom name="tree_top_1" type="sphere" pos="-5.0 3.15 1.85" size="0.58" material="tree_canopy"/>
     <geom name="planter_2" type="cylinder" pos="5.0 3.1 0.18" size="0.45 0.18" material="city_grass"/>
-    <geom name="tree_2" type="cylinder" pos="5.0 3.1 0.9" size="0.10 0.75" rgba="0.32 0.2 0.1 1"/>
-    <geom name="tree_top_2" type="sphere" pos="5.0 3.1 1.85" size="0.58" rgba="0.18 0.48 0.19 1"/>
+    <geom name="tree_2" type="cylinder" pos="5.0 3.1 0.9" size="0.10 0.75" material="tree_bark"/>
+    <geom name="tree_top_2" type="sphere" pos="5.0 3.1 1.85" size="0.58" material="tree_canopy"/>
 
     <!-- Card R14: the block's one PORTAL. An entry wall runs west from bldg_1's
          west corner along the north sidewalk's inner edge, and `door_1` is the
@@ -117,7 +238,7 @@
     <!-- Explicit navigation obstacles used by simulator telemetry. -->
     <!-- Kept outside the owner's default 1.6 m orbit annulus. -->
     <geom name="obstacle_crate" type="box" pos="5.8 1.0 0.3" size="0.35 0.35 0.3"
-      rgba="0.72 0.36 0.12 1"/>
+      material="crate_wood"/>
     <geom name="obstacle_bollard" type="cylinder" pos="-1.4 -1.1 0.45" size="0.18 0.45"
       rgba="0.85 0.7 0.12 1"/>
 
@@ -125,64 +246,90 @@
          eventually replace this oracle pose with RGB-D + UWB fusion. -->
     <!-- Default commissioning location has a continuously verified 1.6 m
          orbit corridor clear of every static city fixture. -->
+    <!-- W-1: the capsule and head keep every physical attribute and move to
+         group 4, which MuJoCo's default mjvOption (geomgroup 1,1,1,0,0,0) does
+         not draw, so the textured human mesh beside them is what a camera and
+         the segmentation buffer see. The capsule is still the shape every
+         non-visual consumer reads: it is unchanged in the model. -->
     <body name="owner" mocap="true" pos="2.0 -0.5 0">
       <geom name="owner_body" type="capsule" fromto="0 0 0.1 0 0 1.55" size="0.22"
-        contype="0" conaffinity="0" rgba="0.15 0.68 0.95 1"/>
+        contype="0" conaffinity="0" rgba="0.15 0.68 0.95 1" group="4"/>
       <geom name="owner_head" type="sphere" pos="0 0 1.78" size="0.2"
-        contype="0" conaffinity="0" rgba="0.92 0.72 0.55 1"/>
+        contype="0" conaffinity="0" rgba="0.92 0.72 0.55 1" group="4"/>
+      <geom name="vis_owner" type="mesh" mesh="human_d" material="person_3"
+        euler="0 0 -0.85" contype="0" conaffinity="0" density="0"/>
     </body>
 
     <!-- Lightweight living-city actors. The Python route controller advances
          these mocap bodies deterministically and publishes their tracks. -->
     <body name="pedestrian_1" mocap="true" pos="-6.2 3.0 0">
       <geom name="pedestrian_1_body" type="capsule" fromto="0 0 0.15 0 0 1.48" size="0.20"
-        contype="0" conaffinity="0" rgba="0.95 0.35 0.25 1"/>
+        contype="0" conaffinity="0" rgba="0.95 0.35 0.25 1" group="4"/>
       <geom name="pedestrian_1_head" type="sphere" pos="0 0 1.7" size="0.18"
-        contype="0" conaffinity="0" rgba="0.72 0.45 0.28 1"/>
+        contype="0" conaffinity="0" rgba="0.72 0.45 0.28 1" group="4"/>
+      <geom name="vis_pedestrian_1" type="mesh" mesh="human_a" material="person_1"
+        euler="0 0 0.62" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="pedestrian_2" mocap="true" pos="5.7 3.55 0">
       <geom name="pedestrian_2_body" type="capsule" fromto="0 0 0.15 0 0 1.42" size="0.19"
-        contype="0" conaffinity="0" rgba="0.62 0.32 0.9 1"/>
+        contype="0" conaffinity="0" rgba="0.62 0.32 0.9 1" group="4"/>
       <geom name="pedestrian_2_head" type="sphere" pos="0 0 1.64" size="0.18"
-        contype="0" conaffinity="0" rgba="0.86 0.62 0.44 1"/>
+        contype="0" conaffinity="0" rgba="0.86 0.62 0.44 1" group="4"/>
+      <geom name="vis_pedestrian_2" type="mesh" mesh="human_b" material="person_2"
+        euler="0 0 2.60" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="pedestrian_3" mocap="true" pos="3.15 -3.0 0">
       <geom name="pedestrian_3_body" type="capsule" fromto="0 0 0.15 0 0 1.5" size="0.21"
-        contype="0" conaffinity="0" rgba="0.18 0.68 0.42 1"/>
+        contype="0" conaffinity="0" rgba="0.18 0.68 0.42 1" group="4"/>
       <geom name="pedestrian_3_head" type="sphere" pos="0 0 1.73" size="0.19"
-        contype="0" conaffinity="0" rgba="0.5 0.3 0.2 1"/>
+        contype="0" conaffinity="0" rgba="0.5 0.3 0.2 1" group="4"/>
+      <geom name="vis_pedestrian_3" type="mesh" mesh="human_c" material="person_3"
+        euler="0 0 -1.20" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="pedestrian_4" mocap="true" pos="-5.5 -2.7 0">
       <geom name="pedestrian_4_body" type="capsule" fromto="0 0 0.15 0 0 1.38" size="0.18"
-        contype="0" conaffinity="0" rgba="0.96 0.7 0.18 1"/>
+        contype="0" conaffinity="0" rgba="0.96 0.7 0.18 1" group="4"/>
       <geom name="pedestrian_4_head" type="sphere" pos="0 0 1.6" size="0.17"
-        contype="0" conaffinity="0" rgba="0.72 0.48 0.3 1"/>
+        contype="0" conaffinity="0" rgba="0.72 0.48 0.3 1" group="4"/>
+      <geom name="vis_pedestrian_4" type="mesh" mesh="human_d" material="person_4"
+        euler="0 0 1.95" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="pedestrian_5" mocap="true" pos="-2.0 1.8 0">
       <geom name="pedestrian_5_body" type="capsule" fromto="0 0 0.15 0 0 1.46" size="0.20"
-        contype="0" conaffinity="0" rgba="0.22 0.5 0.92 1"/>
+        contype="0" conaffinity="0" rgba="0.22 0.5 0.92 1" group="4"/>
       <geom name="pedestrian_5_head" type="sphere" pos="0 0 1.68" size="0.18"
-        contype="0" conaffinity="0" rgba="0.38 0.22 0.15 1"/>
+        contype="0" conaffinity="0" rgba="0.38 0.22 0.15 1" group="4"/>
+      <geom name="vis_pedestrian_5" type="mesh" mesh="human_a" material="person_5"
+        euler="0 0 -2.35" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="pedestrian_6" mocap="true" pos="4.8 -1.5 0">
       <geom name="pedestrian_6_body" type="capsule" fromto="0 0 0.15 0 0 1.44" size="0.19"
-        contype="0" conaffinity="0" rgba="0.9 0.25 0.62 1"/>
+        contype="0" conaffinity="0" rgba="0.9 0.25 0.62 1" group="4"/>
       <geom name="pedestrian_6_head" type="sphere" pos="0 0 1.66" size="0.18"
-        contype="0" conaffinity="0" rgba="0.82 0.57 0.38 1"/>
+        contype="0" conaffinity="0" rgba="0.82 0.57 0.38 1" group="4"/>
+      <geom name="vis_pedestrian_6" type="mesh" mesh="human_b" material="person_6"
+        euler="0 0 0.20" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="pedestrian_7" mocap="true" pos="-3.8 1.4 0">
       <geom name="pedestrian_7_body" type="capsule" fromto="0 0 0.15 0 0 1.52" size="0.21"
-        contype="0" conaffinity="0" rgba="0.2 0.76 0.75 1"/>
+        contype="0" conaffinity="0" rgba="0.2 0.76 0.75 1" group="4"/>
       <geom name="pedestrian_7_head" type="sphere" pos="0 0 1.75" size="0.19"
-        contype="0" conaffinity="0" rgba="0.58 0.36 0.22 1"/>
+        contype="0" conaffinity="0" rgba="0.58 0.36 0.22 1" group="4"/>
+      <geom name="vis_pedestrian_7" type="mesh" mesh="human_c" material="person_1"
+        euler="0 0 3.05" contype="0" conaffinity="0" density="0"/>
     </body>
     <body name="cyclist_1" mocap="true" pos="-7.0 0 0">
       <geom name="cyclist_1_bike" type="box" pos="0 0 0.48" size="0.52 0.14 0.10"
         contype="0" conaffinity="0" rgba="0.08 0.12 0.15 1"/>
       <geom name="cyclist_1_body" type="capsule" fromto="0 0 0.58 0 0 1.4" size="0.18"
-        contype="0" conaffinity="0" rgba="0.95 0.55 0.08 1"/>
+        contype="0" conaffinity="0" rgba="0.95 0.55 0.08 1" group="4"/>
       <geom name="cyclist_1_head" type="sphere" pos="0 0 1.62" size="0.17"
-        contype="0" conaffinity="0" rgba="0.4 0.25 0.16 1"/>
+        contype="0" conaffinity="0" rgba="0.4 0.25 0.16 1" group="4"/>
+      <!-- The rider stands over the frame: the bike box is 0.38-0.58 m and the
+           mesh is lifted so its feet sit at pedal height, which is as close to
+           a riding pose as a rigid visual mesh gets without a second mesh. -->
+      <geom name="vis_cyclist_1" type="mesh" mesh="human_b" material="person_5"
+        pos="-0.04 0 0.14" contype="0" conaffinity="0" density="0"/>
     </body>
   </worldbody>
 </mujoco>

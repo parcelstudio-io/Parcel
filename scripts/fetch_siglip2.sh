@@ -26,6 +26,22 @@
 #   cross-class / synonym cosines is validated by calibrate_threshold at
 #   bring-up (see scrum/20260809/task_5/SIGLIP_REAL_STATUS.md).
 #
+# VARIANT CHOICE — fp16 (text 539 MB / vision 177 MB), OPT-IN via --fp16 (P0-C):
+#   The "fp16 pays off only on GPU, which onnxruntime can't reach here" line
+#   above was true of the CPU-only onnxruntime. `pip install -e '.[perception]'`
+#   puts `onnxruntime-gpu` in .parcel and a real CUDAExecutionProvider with it,
+#   so the fp16 encoders become the fast path:
+#   `perception_providers.resolve_provider` walks (cuda_fp16, cpu_int8) and picks
+#   fp16 only when the EP is registered AND the file is on disk. PG-1 measured
+#   the image encoder at 45.9 ms int8-CPU vs 3.35 ms fp16-CUDA on this host.
+#   ADDITIVE, never a replacement: `--fp16` fetches the fp16 encoders ALONGSIDE
+#   the int8 ones, so the CPU fallback keeps its artifacts and a CUDA-less
+#   machine resolves exactly as it does today. Text and vision resolve
+#   INDEPENDENTLY, so fetching only one of the two is a supported state.
+#   NOTE the fused `onnx/model_fp16.onnx` in the same repo (750 MB) is a
+#   DIFFERENT artifact and is deliberately not fetched — this path uses the
+#   separate encoders.
+#
 # EXACT URLs + sha256 (LFS oid for the big files; computed blob sha for the
 # small JSON) — pinned so a re-run refuses a corrupt/unexpected file:
 #   $BASE/onnx/text_model_int8.onnx    283438275 B  3a0603d3a00c05a80a6ded4743c16aaac7b1e62cdcc7e362e7ce418659b96400
@@ -36,15 +52,20 @@
 #   $BASE/preprocessor_config.json           394 B  9b36b57ebaf20f09bf4c22100ccc21877ea6bfe5aead0c00c59f8af8ccefacfc
 #   $BASE/tokenizer_config.json            47240 B  7c3a247599e741bceba1a3fe0285aea88d1044dc1fad2caa1e48cdd9fd25f630
 #   $BASE/special_tokens_map.json            636 B  baec30ea10906f16adb8c18af7a34023002c1746542612b8b41c9f09e1351351
+#   --fp16 only:
+#   $BASE/onnx/text_model_fp16.onnx    564862230 B  711da56ada0a4aa11c7dd3320df741081a3cae4f0ae1b5e5c6d5b294738d0eb0
+#   $BASE/onnx/vision_model_fp16.onnx  186039516 B  a1959f7bd3993a607e48839f6d01e25b876fe76afda301b028b78eef68aabd95
 #   where BASE = https://huggingface.co/onnx-community/siglip2-base-patch16-224-ONNX/resolve/main
 #
 # TARGET: ~/.cache/parcel/siglip2-b16  (override with PARCEL_SIGLIP2_DIR)
 #   text_model_int8.onnx, vision_model_int8.onnx, tokenizer.json, tokenizer.model,
 #   config.json, preprocessor_config.json, tokenizer_config.json,
 #   special_tokens_map.json  (~420 MB total)
+#   + text_model_fp16.onnx, vision_model_fp16.onnx with --fp16  (~1.14 GB total)
 #
 # USAGE:
 #   scripts/fetch_siglip2.sh            # idempotent; verifies existing files
+#   scripts/fetch_siglip2.sh --fp16    # ALSO fetch the CUDA fp16 encoders (+716 MB)
 #   scripts/fetch_siglip2.sh --force   # re-download even if present
 #   PARCEL_SIGLIP2_DIR=/some/dir scripts/fetch_siglip2.sh
 # ---------------------------------------------------------------------------
@@ -53,10 +74,12 @@ set -euo pipefail
 BASE_URL="${PARCEL_SIGLIP2_BASE_URL:-https://huggingface.co/onnx-community/siglip2-base-patch16-224-ONNX/resolve/main}"
 DEST_DIR="${PARCEL_SIGLIP2_DIR:-$HOME/.cache/parcel/siglip2-b16}"
 FORCE=0
+FP16=0
 for arg in "$@"; do
   case "$arg" in
     --force) FORCE=1 ;;
-    -h|--help) sed -n '2,60p' "$0"; exit 0 ;;
+    --fp16) FP16=1 ;;
+    -h|--help) sed -n '2,71p' "$0"; exit 0 ;;
     *) echo "fetch_siglip2: unknown arg: $arg" >&2; exit 2 ;;
   esac
 done
@@ -72,6 +95,17 @@ FILES=(
   "tokenizer_config.json|tokenizer_config.json|7c3a247599e741bceba1a3fe0285aea88d1044dc1fad2caa1e48cdd9fd25f630"
   "special_tokens_map.json|special_tokens_map.json|baec30ea10906f16adb8c18af7a34023002c1746542612b8b41c9f09e1351351"
 )
+
+# The CUDA fp16 encoders, appended only under --fp16. Both sha256 == the hub's
+# LFS oid, cross-checked against the HF tree API (sizes 564862230 / 186039516)
+# AND against the copies PG-1 measured on. Same repo, same export.
+FP16_FILES=(
+  "text_model_fp16.onnx|onnx/text_model_fp16.onnx|711da56ada0a4aa11c7dd3320df741081a3cae4f0ae1b5e5c6d5b294738d0eb0"
+  "vision_model_fp16.onnx|onnx/vision_model_fp16.onnx|a1959f7bd3993a607e48839f6d01e25b876fe76afda301b028b78eef68aabd95"
+)
+if [[ "$FP16" -eq 1 ]]; then
+  FILES+=("${FP16_FILES[@]}")
+fi
 
 log() { echo "fetch_siglip2: $*" >&2; }
 die() { echo "fetch_siglip2: ERROR: $*" >&2; exit 1; }
@@ -131,7 +165,11 @@ Delete it (or --force) to re-download."
 done
 
 echo
-echo "fetch_siglip2: SigLIP-2 int8 ONNX landed in $DEST_DIR"
+if [[ "$FP16" -eq 1 ]]; then
+  echo "fetch_siglip2: SigLIP-2 int8 + fp16 ONNX landed in $DEST_DIR"
+else
+  echo "fetch_siglip2: SigLIP-2 int8 ONNX landed in $DEST_DIR"
+fi
 printf '  %-26s %-10s %s\n' "FILE" "STATUS" "SHA256"
 for row in "${SUMMARY[@]}"; do
   IFS='|' read -r n s h <<<"$row"

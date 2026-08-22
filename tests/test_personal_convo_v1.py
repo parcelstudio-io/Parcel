@@ -63,6 +63,7 @@ def _run(memory_backend: str = "tiered") -> dict:
 # --- manifest / freeze integrity -------------------------------------------------
 
 
+@pytest.mark.slow  # card P0-E: frozen-digest integrity is a nightly evidence ratchet
 def test_manifest_locks_all_inputs_and_covers_every_family() -> None:
     manifest = load_frozen_suite()
     probes = load_probes(manifest)

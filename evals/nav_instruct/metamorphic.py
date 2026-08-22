@@ -109,9 +109,15 @@ def transform_scene_xml(
     the south side is still ``sidewalk``, so entity identity — the thing the
     semantic layer joins on — is invariant while every coordinate moves.
 
-    ``source_dir`` re-roots the scene's relative ``include``/``meshdir`` paths
-    to absolute ones, so a transformed copy can be written anywhere (a pytest
-    ``tmp_path``) and still find the Go2 model.
+    ``source_dir`` re-roots the scene's relative ``include`` and compiler asset
+    directories to absolute ones, so a transformed copy can be written anywhere
+    (a pytest ``tmp_path``) and still find the Go2 model and the scene's own
+    textures and meshes.
+
+    Card W-1 widened that from ``meshdir`` alone to every asset directory the
+    compiler understands: the city block gained ``texturedir`` when it was
+    textured, and a re-rooter that knows about one directory attribute and not
+    the others fails the moment a scene uses a second one.
     """
 
     root = ET.fromstring(xml_text)
@@ -121,9 +127,10 @@ def transform_scene_xml(
             if target and not Path(target).is_absolute():
                 element.set("file", str((source_dir / target).resolve()))
         for element in root.iter("compiler"):
-            meshdir = element.get("meshdir")
-            if meshdir and not Path(meshdir).is_absolute():
-                element.set("meshdir", str((source_dir / meshdir).resolve()))
+            for attribute in ("meshdir", "texturedir", "assetdir"):
+                value = element.get(attribute)
+                if value and not Path(value).is_absolute():
+                    element.set(attribute, str((source_dir / value).resolve()))
     for element in root.iter():
         pos = element.get("pos")
         if pos is not None:

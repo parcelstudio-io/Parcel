@@ -1786,8 +1786,19 @@ class RealtimeLane:
         return max(0.0, now - self._last_activity_at)
 
     def _idle_due(self, now: float) -> float | None:
-        """Seconds of silence when the lane should hang up, else ``None``."""
+        """Seconds of silence when the lane should hang up, else ``None``.
 
+        Card P0-B, deliverable 3. ``idle_close_after_s: 0`` means NEVER, and it
+        has to be answered here rather than in the comparison below: ``idle_for
+        < 0.0`` is false for every idle duration there is, so a zero that fell
+        through to the arithmetic would hang the session up on its first idle
+        tick — the exact opposite of what the operator wrote. The sentinel's
+        meaning lives on the config object (``idle_close_enabled``) so this file
+        and the loader cannot drift apart about what zero is.
+        """
+
+        if not self.config.idle_close_enabled:
+            return None
         idle_for = self._idle_seconds(now)
         if idle_for is None or idle_for < self.config.idle_close_after_s:
             return None

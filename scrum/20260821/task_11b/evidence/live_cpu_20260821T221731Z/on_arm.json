@@ -1,0 +1,1811 @@
+{
+  "arm": "on",
+  "backend_health_before_close": {
+    "buffer_bytes": 8294400,
+    "buffer_refs": 3,
+    "has_current_buffers": true,
+    "kind": "mujoco_egl"
+  },
+  "camera_on": true,
+  "close_error": null,
+  "config": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live.yaml",
+  "config_sha256": "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558",
+  "control_loop_work": {
+    "count": 121,
+    "latest_ms": 6.675,
+    "max_ms": 44.967,
+    "mean_ms": 19.858,
+    "p50_ms": 18.547,
+    "p95_ms": 39.838,
+    "p99_ms": 43.865
+  },
+  "elapsed_s": 13.762,
+  "ended_at_utc": "2026-08-21T22:18:04.920306+00:00",
+  "evidence_after_close": {
+    "first_perception_row": {
+      "accepted_monotonic_ns": 507379812117587,
+      "authority": "proposal_only",
+      "calibration_id": "d455-intrinsics-nominal",
+      "camera_frame_id": "camera_color_optical_frame",
+      "camera_pose": {
+        "camera_rotation_world": [
+          0.7469746741572594,
+          0.13823060576378965,
+          0.6503238699277707,
+          -0.664852492036885,
+          0.15530476750208064,
+          0.7306514853358395,
+          0.0,
+          -0.9781476007338057,
+          0.20791169081775934
+        ],
+        "camera_translation_world": [
+          0.4760647940079123,
+          0.23530795197978005,
+          0.35
+        ],
+        "robot_x": 0.356391345441273,
+        "robot_y": 0.1008525106314734,
+        "robot_yaw_rad": 0.8434999999999766
+      },
+      "capture_completed_monotonic_ns": 507379208715768,
+      "capture_latency_ms": 51.057,
+      "capture_started_monotonic_ns": 507379157658882,
+      "capture_to_publish_age_ms": 654.357,
+      "config_digest": "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558",
+      "depth_max_m": 5.99,
+      "depth_min_m": 0.4,
+      "detection_count": 3,
+      "detections": [
+        {
+          "bearing_rad": 0.7302815155843918,
+          "box_xyxy": [
+            0,
+            0,
+            143,
+            587
+          ],
+          "covariance_xy": [
+            [
+              0.0001849000617986968,
+              -1.162309838748057e-06
+            ],
+            [
+              -1.162309838748057e-06,
+              0.0005742543406564136
+            ]
+          ],
+          "depth_m": 3.2376991510391235,
+          "detection_id": "pxdet-1000",
+          "detector_instance_key": null,
+          "evidence": {
+            "calibration_id": "d455-intrinsics-nominal",
+            "evidence_id": "pxdet-1000",
+            "expires_monotonic_ns": 507379508715768,
+            "frame_id": "camera_color_optical_frame",
+            "provenance": [
+              "pixel_detections_v1",
+              "owlv2"
+            ],
+            "received_monotonic_ns": 507379208715768,
+            "scene_revision": 0,
+            "schema_version": 1,
+            "sequence": 1000,
+            "source": "mujoco_egl.pixel",
+            "source_timestamp_ns": 1787350672788239686
+          },
+          "inlier_pixels": 56510,
+          "label": "lamppost",
+          "range_m": 4.378463373934483,
+          "score": 0.16816933453083038,
+          "sigma_bearing_rad": 0.0031055800780188177,
+          "sigma_range_m": 0.023963676896107174,
+          "world_point": [
+            0.34332082507497996,
+            4.479296375566035,
+            1.4232887424755347
+          ]
+        },
+        {
+          "bearing_rad": -0.2952994240843818,
+          "box_xyxy": [
+            790,
+            129,
+            902,
+            578
+          ],
+          "covariance_xy": [
+            [
+              0.0003953867149808092,
+              0.00013823480268396722
+            ],
+            [
+              0.00013823480268396722,
+              0.0002534174813353955
+            ]
+          ],
+          "depth_m": 3.889822006225586,
+          "detection_id": "pxdet-1001",
+          "detector_instance_key": null,
+          "evidence": {
+            "calibration_id": "d455-intrinsics-nominal",
+            "evidence_id": "pxdet-1001",
+            "expires_monotonic_ns": 507379508715768,
+            "frame_id": "camera_color_optical_frame",
+            "provenance": [
+              "pixel_detections_v1",
+              "owlv2"
+            ],
+            "received_monotonic_ns": 507379208715768,
+            "scene_revision": 0,
+            "schema_version": 1,
+            "sequence": 1001,
+            "source": "mujoco_egl.pixel",
+            "source_timestamp_ns": 1787350672788239686
+          },
+          "inlier_pixels": 30932,
+          "label": "lamppost",
+          "range_m": 4.1860985566033655,
+          "score": 0.44423845410346985,
+          "sigma_bearing_rad": 0.0031055800780188177,
+          "sigma_range_m": 0.021904276406995975,
+          "world_point": [
+            3.92907441324489,
+            2.282447528646072,
+            1.0642544740051934
+          ]
+        },
+        {
+          "bearing_rad": -0.3228097942656669,
+          "box_xyxy": [
+            819,
+            142,
+            892,
+            255
+          ],
+          "covariance_xy": [
+            [
+              0.00030993658706871886,
+              9.338167590747323e-05
+            ],
+            [
+              9.338167590747323e-05,
+              0.00020065524636139677
+            ]
+          ],
+          "depth_m": 3.7932677268981934,
+          "detection_id": "pxdet-1002",
+          "detector_instance_key": null,
+          "evidence": {
+            "calibration_id": "d455-intrinsics-nominal",
+            "evidence_id": "pxdet-1002",
+            "expires_monotonic_ns": 507379508715768,
+            "frame_id": "camera_color_optical_frame",
+            "provenance": [
+              "pixel_detections_v1",
+              "owlv2"
+            ],
+            "received_monotonic_ns": 507379208715768,
+            "scene_revision": 0,
+            "schema_version": 1,
+            "sequence": 1002,
+            "source": "mujoco_egl.pixel",
+            "source_timestamp_ns": 1787350672788239686
+          },
+          "inlier_pixels": 5671,
+          "label": "lamppost",
+          "range_m": 3.905420553063707,
+          "score": 0.14937245845794678,
+          "sigma_bearing_rad": 0.0031055800780188177,
+          "sigma_range_m": 0.01906538712036554,
+          "world_point": [
+            3.7442500368179967,
+            2.0437171954604567,
+            2.016919021945094
+          ]
+        }
+      ],
+      "detections_truncated": false,
+      "detector": {
+        "active_execution_providers": [
+          "CPUExecutionProvider"
+        ],
+        "model": "model_int8.onnx",
+        "model_digest": "e9cc288738a96a5a9b730801f622b2e1a531ed2a93d02dd1227a4d35fd9690c6",
+        "name": "owlv2",
+        "profile": "cpu_int8",
+        "selected_execution_provider": "CPUExecutionProvider"
+      },
+      "detector_latency_ms": 556.451,
+      "expired_at_publish": true,
+      "expires_monotonic_ns": 507379508715768,
+      "image_height_px": 720,
+      "image_width_px": 1280,
+      "inference_latency_ms": 654.339,
+      "kind": "camera_detection_frame",
+      "localization_rejection_count": 0,
+      "package_version": "0.1.0",
+      "post_capture_processing_latency_ms": 603.301,
+      "provenance": [
+        "camera_ingress_v1",
+        "static_scene_copy_pose_synced"
+      ],
+      "published_monotonic_ns": 507379812016374,
+      "query": [
+        "person",
+        "lamppost"
+      ],
+      "raw_detection_count": 3,
+      "received_monotonic_ns": 507379208715768,
+      "retained_detection_count": 3,
+      "runtime_drop_counts": {
+        "duplicate_detections": 0,
+        "duplicate_frames": 0,
+        "frame_truncation_detections": 0,
+        "queue_detections": 0,
+        "queue_frames": 0
+      },
+      "scene_digest": "56970679ebb2aa363f1370212f1c2f8ff4be0f90d3318e754a08b1bd5b0e5986",
+      "scene_id": "city_block.xml",
+      "scene_revision": 0,
+      "schema": "parcel.camera_detection_frame.v1",
+      "seq": 6,
+      "sequence": 1,
+      "source": "mujoco_egl",
+      "source_digest": "00b5d089992fea1e506cb6e0710b614ee409b6f81e0ca1a05e451b9cc050e8c7",
+      "source_timestamp_ns": 1787350672788239686,
+      "stream": "perception",
+      "view_id": "mujoco_egl:camera_color_optical_frame:1:1787350672788239686",
+      "wall": "2026-08-21T22:17:53.442743+00:00"
+    },
+    "last_row": {
+      "kind": "log_closed",
+      "reason": "runtime closed",
+      "seq": 28,
+      "stream": "marker",
+      "wall": "2026-08-21T22:18:04.917991+00:00"
+    },
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/live_cpu_20260821T221731Z/sessions/sess_20260821T221751Z_56c9cb/events.jsonl",
+    "perception_row_count": 21,
+    "row_count": 28,
+    "sha256": "8711e5850563411d77cc85a9bd4a294269f028047ab6dc41d17b8cda2821d377",
+    "verification_problems": []
+  },
+  "gpu": {
+    "free_mib_min": 30585,
+    "headroom_at_least_6gib": true,
+    "samples": [
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30597,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1632,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:52.307939+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:52.830020+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:53.384165+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:53.942911+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:54.439693+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:54.987475+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:55.525131+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:56.073305+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:56.591761+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:57.095184+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:57.587410+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:58.129746+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:58.666309+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:59.209708+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:17:59.739703+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:18:00.296488+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:18:00.826474+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:18:01.349304+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:18:01.855172+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:18:02.355841+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:18:02.850750+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:18:03.400547+00:00"
+      },
+      {
+        "driver_version": "595.84",
+        "memory_free_mib": 30585,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 1644,
+        "name": "NVIDIA RTX 5000 Ada Generation",
+        "sampled_at_utc": "2026-08-21T22:18:03.910373+00:00"
+      }
+    ],
+    "used_mib_min": 1632,
+    "used_mib_peak": 1644
+  },
+  "http_base_url_during_run": "http://127.0.0.1:34823",
+  "latency": {
+    "aggregate": {},
+    "aggregate_by_status": {},
+    "audio": {
+      "bluetooth_connected": false,
+      "bluetooth_controller": true,
+      "bluetooth_duplex_ready": false,
+      "bluetooth_powered": true,
+      "capture_hardware": true,
+      "connected_input": true,
+      "connected_output": true,
+      "detail": "Audio input and output endpoints are connected.",
+      "driver": "PipeWire/ALSA",
+      "input_identity": "media.class=Audio/Source",
+      "input_is_monitor": false,
+      "status": "available",
+      "transport": "pipewire"
+    },
+    "component_definitions": {
+      "DuplexProducer": "Wall-clock duration of one duplex frame producer tick.",
+      "ExecutiveTick": "Wall-clock duration of one non-LLM task-executive tick.",
+      "FillerLatency": "End of final user input to the first audible duplex filler utterance (playback start / TTS enqueue audible \u2014 not filler fire time).",
+      "IntentRouter": "Wall-clock duration of deterministic intent routing.",
+      "ObservationSnapshotBuild": "Wall-clock duration of building a bounded camera/LiDAR planning snapshot.",
+      "PlanAcceptance": "Wall-clock duration of task-executive plan admission.",
+      "PlanModel": "Wall-clock duration of the complete planning-model request.",
+      "PlanValidation": "Wall-clock duration of PlanIR validation against fresh state."
+    },
+    "components": {
+      "ActivityCoordinator": {
+        "count": 121,
+        "latest_ms": 0.014,
+        "max_ms": 0.234,
+        "mean_ms": 0.046,
+        "p50_ms": 0.022,
+        "p95_ms": 0.125,
+        "p99_ms": 0.14
+      },
+      "BackendCommandSend": {
+        "count": 50,
+        "latest_ms": 0.023,
+        "max_ms": 0.318,
+        "mean_ms": 0.068,
+        "p50_ms": 0.037,
+        "p95_ms": 0.213,
+        "p99_ms": 0.318
+      },
+      "CollisionGate": {
+        "count": 121,
+        "latest_ms": 0.068,
+        "max_ms": 1.149,
+        "mean_ms": 0.229,
+        "p50_ms": 0.166,
+        "p95_ms": 0.554,
+        "p99_ms": 0.823
+      },
+      "ControlLoopOverrun": {
+        "count": 121,
+        "latest_ms": 0.0,
+        "max_ms": 0.0,
+        "mean_ms": 0.0,
+        "p50_ms": 0.0,
+        "p95_ms": 0.0,
+        "p99_ms": 0.0
+      },
+      "ControlLoopWork": {
+        "count": 121,
+        "latest_ms": 6.675,
+        "max_ms": 44.967,
+        "mean_ms": 19.858,
+        "p50_ms": 18.547,
+        "p95_ms": 39.838,
+        "p99_ms": 43.865
+      },
+      "DuplexProducer": {
+        "count": 121,
+        "latest_ms": 1.224,
+        "max_ms": 3.326,
+        "mean_ms": 0.452,
+        "p50_ms": 0.315,
+        "p95_ms": 1.353,
+        "p99_ms": 1.824
+      },
+      "ExecutiveTick": {
+        "count": 121,
+        "latest_ms": 0.187,
+        "max_ms": 2.652,
+        "mean_ms": 0.648,
+        "p50_ms": 0.531,
+        "p95_ms": 1.429,
+        "p99_ms": 2.028
+      },
+      "ExpressionLayer": {
+        "count": 512,
+        "latest_ms": 0.032,
+        "max_ms": 1.4,
+        "mean_ms": 0.341,
+        "p50_ms": 0.2,
+        "p95_ms": 0.965,
+        "p99_ms": 1.261
+      },
+      "MotionDispatch": {
+        "count": 121,
+        "latest_ms": 0.344,
+        "max_ms": 3.168,
+        "mean_ms": 0.653,
+        "p50_ms": 0.454,
+        "p95_ms": 1.909,
+        "p99_ms": 2.936
+      },
+      "NavigationController": {
+        "count": 121,
+        "latest_ms": 0.002,
+        "max_ms": 0.028,
+        "mean_ms": 0.005,
+        "p50_ms": 0.003,
+        "p95_ms": 0.012,
+        "p99_ms": 0.027
+      },
+      "OwnerSearchController": {
+        "count": 121,
+        "latest_ms": 0.002,
+        "max_ms": 0.046,
+        "mean_ms": 0.005,
+        "p50_ms": 0.002,
+        "p95_ms": 0.013,
+        "p99_ms": 0.031
+      },
+      "OwnerTrackHeadingFilter": {
+        "count": 121,
+        "latest_ms": 0.01,
+        "max_ms": 0.198,
+        "mean_ms": 0.029,
+        "p50_ms": 0.014,
+        "p95_ms": 0.082,
+        "p99_ms": 0.186
+      },
+      "PerceptionAge": {
+        "count": 121,
+        "latest_ms": 1.044,
+        "max_ms": 6.298,
+        "mean_ms": 2.68,
+        "p50_ms": 2.909,
+        "p95_ms": 4.748,
+        "p99_ms": 5.988
+      },
+      "SimulatorObserve": {
+        "count": 121,
+        "latest_ms": 4.788,
+        "max_ms": 41.73,
+        "mean_ms": 17.537,
+        "p50_ms": 16.437,
+        "p95_ms": 36.669,
+        "p99_ms": 41.61
+      },
+      "SpatialController": {
+        "count": 121,
+        "latest_ms": 0.004,
+        "max_ms": 0.048,
+        "mean_ms": 0.007,
+        "p50_ms": 0.003,
+        "p95_ms": 0.019,
+        "p99_ms": 0.043
+      }
+    },
+    "definitions": {
+      "AcousticAck": "The end-to-end acknowledgement budget: last owner speech frame to the instant the speaker worker began writing the first reply chunk. This is the number a sub-700 ms ack claim has to beat.",
+      "EndpointDecision": "Last speech frame of the owner's utterance to the endpointer's commit decision (how long the robot deliberated before deciding they stopped).",
+      "IntentRouting": "End of final user input to production of IntentFrame.",
+      "ObservationSnapshotBuild": "IntentFrame production to completion of the bounded planning observation snapshot.",
+      "PlanAcceptance": "Successful plan validation to task-executive admission.",
+      "PlanDecode": "Observation snapshot completion to receipt and parsing of the complete PlanIR.",
+      "PlanTimeToFirstOutput": "Observation snapshot completion to the first planning-model output token; for a non-streaming provider, the complete parsed planning response.",
+      "PlanValidation": "Complete PlanIR parsing to successful plan validation.",
+      "PlaybackEnqueueToFirstSample": "Audio-sink handoff to the speaker worker starting that chunk. The acoustic rig measured 0.54-0.64 s here, so it may never be assumed 0.",
+      "QueryEndToFirstSpokenAudio": "End of final user input to the first audio-sink handoff. This is a software lower-bound estimate until acoustic presentation timestamps are available.",
+      "SttFinalToQueryEnd": "Final transcript to the turn's query-end anchor (session admission).",
+      "SttRequestQueue": "Endpointer commit to the start of the STT request (segmentation, WAV framing and dispatch overhead).",
+      "SttTranscribe": "STT request start to the final transcript.",
+      "UserQueryEndToAcceptedPlan": "End of final user input to admission of a validated plan by the task executive.",
+      "UserQueryEndToFirstPlanOutput": "End of final user input to the first planning-model output token; for a non-streaming provider, the complete parsed planning response.",
+      "UserQueryEndToFirstReasoningResponse": "End of final user input to the first model output token; for deterministic or non-streaming paths, the complete validated reasoning result.",
+      "UserQueryEndToFirstResponse": "End of final user input to the first response made observable by logging or audio playback, whichever occurs first."
+    },
+    "stage_definitions": {
+      "intent_routed": "The deterministic intent router has classified the final user turn and produced its versioned IntentFrame.",
+      "observation_snapshot": "A bounded, sensor-grounded ObservationSnapshot is ready for planning.",
+      "plan_accepted": "The validated plan has been admitted by the task executive for execution.",
+      "plan_first_output": "The first output token or equivalent partial output from the planning model.",
+      "plan_response": "The complete planning-model response has been received and parsed as PlanIR.",
+      "plan_validated": "PlanIR has passed schema, semantic, capability, freshness, and safety validation."
+    },
+    "status_counts": {},
+    "turns": [],
+    "unavailable": {
+      "ASREndpointer": "capture endpoint connected; endpointer + STT clocks are wired (EndpointDecision / SttTranscribe), continuous per-frame ASR timing is still not exposed",
+      "BluetoothAcousticPresentation": "requires a connected headset and PipeWire presentation timestamps"
+    }
+  },
+  "motion_script": {
+    "accepted": 45,
+    "rejected": 0,
+    "rejection_reasons": []
+  },
+  "panel_html": {
+    "bytes": 106130,
+    "camera_tile_present": false,
+    "sha256": "e586f5d82c865c29f92f9eb542e5470529e291069b1d85ffdd2713ff40888c32",
+    "static_copy_caveat_present": true
+  },
+  "process_memory": {
+    "runtime_rss_peak_kib_sampled": 2063644,
+    "self_ru_maxrss_kib": 2001460,
+    "simulator_rss_peak_kib_sampled": 752036
+  },
+  "started_at_utc": "2026-08-21T22:17:51.158138+00:00",
+  "state": {
+    "activities": {
+      "pending": [],
+      "recent": [],
+      "running": null
+    },
+    "agent": {
+      "active_source": "voice",
+      "personalities": [
+        {
+          "id": "calm_guardian",
+          "name": "Calm guardian"
+        },
+        {
+          "id": "gentle_companion",
+          "name": "Gentle companion"
+        },
+        {
+          "id": "playful_companion",
+          "name": "Playful companion"
+        }
+      ],
+      "personality": "gentle_companion",
+      "status": "ready"
+    },
+    "audio": {
+      "bluetooth_connected": false,
+      "bluetooth_controller": true,
+      "bluetooth_duplex_ready": false,
+      "bluetooth_powered": true,
+      "capture_hardware": true,
+      "connected_input": true,
+      "connected_output": true,
+      "detail": "Audio input and output endpoints are connected.",
+      "driver": "PipeWire/ALSA",
+      "input_identity": "media.class=Audio/Source",
+      "input_is_monitor": false,
+      "status": "available",
+      "transport": "pipewire"
+    },
+    "brain": {
+      "active_invariants": [],
+      "admitted_skills": [
+        "AskClarification",
+        "FollowFormation",
+        "Gesture",
+        "Hold",
+        "MoveRelative",
+        "NavigateTo",
+        "OrbitOwner",
+        "ReturnToSafePose",
+        "Vocalize"
+      ],
+      "architecture": "deterministic_router_shared_backbone_semantic_planner",
+      "battery": {
+        "percent": 90.0,
+        "source": "simulated",
+        "state": "normal"
+      },
+      "enabled": true,
+      "last_plan": null,
+      "planner_output_contract": "plan_ir_v1",
+      "resource_leases": [],
+      "tasks": []
+    },
+    "camera_ingress": {
+      "attached": true,
+      "authority": "proposal_only",
+      "composition": {
+        "backend": "mujoco_egl",
+        "camera_mount_base_pose_synced": true,
+        "config_digest": "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558",
+        "dynamic_actor_state_synced": false,
+        "mode": "static_scene_copy_pose_synced",
+        "package_version": "0.1.0",
+        "real_camera": false,
+        "robot_joint_state_synced": false,
+        "scene_compiled_model_digest": "56970679ebb2aa363f1370212f1c2f8ff4be0f90d3318e754a08b1bd5b0e5986",
+        "scene_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+        "scene_robot_body_pose_synced": false,
+        "scene_xml_digest": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58",
+        "source_digest": "00b5d089992fea1e506cb6e0710b614ee409b6f81e0ca1a05e451b9cc050e8c7"
+      },
+      "config": {
+        "enabled": true,
+        "max_detections_per_frame": 16,
+        "queries": [
+          "person",
+          "lamppost"
+        ],
+        "queue_capacity": 8,
+        "rate_hz": 2.0
+      },
+      "config_digest": "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558",
+      "configured_rate_hz": 2.0,
+      "contention": {
+        "generation_consumer_wired": false,
+        "guard": {
+          "active_leases": 0,
+          "admitted": 0,
+          "expired_leases": 0,
+          "refused": 0
+        },
+        "person_query_lease_producer": true
+      },
+      "detections_received": 33,
+      "detections_retained": 33,
+      "dropped_detections": 0,
+      "dropped_frames": 0,
+      "duplicate_detections": 0,
+      "duplicate_frames": 0,
+      "empty_frames": 0,
+      "enabled": true,
+      "errors": 0,
+      "evidence": {
+        "accepted": 20,
+        "dropped": 0,
+        "offered": 20,
+        "schema": "parcel.camera_detection_frame.v1",
+        "stream": "perception",
+        "writer": {
+          "bytes_written": 80707,
+          "closed_at": "",
+          "enabled": true,
+          "max_bytes": 67108864,
+          "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/live_cpu_20260821T221731Z/sessions/sess_20260821T221751Z_56c9cb/events.jsonl",
+          "rows_dropped_after_stop": 0,
+          "rows_dropped_queue_full": 0,
+          "rows_written": 25,
+          "running": true,
+          "schema": "parcel.session_evidence.v2",
+          "session_id": "sess_20260821T221751Z_56c9cb",
+          "started_at": "2026-08-21T22:17:51.489793+00:00",
+          "stopped_reason": "",
+          "writer_errors": 0
+        }
+      },
+      "frames_accepted": 20,
+      "frames_received": 20,
+      "frames_without_localized_detections": 0,
+      "fresh": false,
+      "last_detection_age_s": 0.035,
+      "last_error": null,
+      "last_frame_age_s": 0.035,
+      "latest_capture_latency_ms": 29.046,
+      "latest_capture_to_publish_age_ms": 541.868,
+      "latest_frame_class_counts": {
+        "lamppost": 1
+      },
+      "latest_frame_expired_at_publish": true,
+      "latest_frame_expired_now": true,
+      "latest_frame_localization_rejection_count": 0,
+      "latest_frame_localized_detection_count": 1,
+      "latest_frame_raw_detection_count": 1,
+      "latest_post_capture_processing_latency_ms": 512.822,
+      "localization_rejections": 0,
+      "observed_rate_hz": 1.751,
+      "pose_mailbox": {
+        "drained": 21,
+        "offered": 121,
+        "overwritten": 99,
+        "pending": true,
+        "stale_rejected": 0
+      },
+      "producer": {
+        "attempts": 21,
+        "candidates_last": 1,
+        "detections_last": 1,
+        "errors": 0,
+        "frame_sink_errors": 0,
+        "frames_emitted": 20,
+        "last_attempt_monotonic_ns": 507390681231548,
+        "last_attempt_succeeded": true,
+        "last_detect_ms": 507.26,
+        "last_error": null,
+        "last_latency_ms": 541.86,
+        "last_published_monotonic_ns": 507390660956679,
+        "last_query": [
+          "person",
+          "lamppost"
+        ],
+        "last_source_timestamp_ns": 1787350683749670022,
+        "last_success_monotonic_ns": 507390660956679,
+        "localization_rejections_last": 0,
+        "localized_last": 1,
+        "polls": 20,
+        "reactive_reads": 0
+      },
+      "query_conditioned": true,
+      "queue_capacity": 8,
+      "queue_depth": 0,
+      "raw_detections_received": 33,
+      "stale_after_s": 1.5,
+      "state": "stale",
+      "truncated_detections": 0
+    },
+    "chat": [],
+    "collision": false,
+    "control": {
+      "command_age_ms": 1.645,
+      "controller": "mujoco_velocity",
+      "emergency_stopped": false,
+      "fault": null,
+      "feedback_age_ms": 3.002,
+      "last_stop_reason": "manager_start",
+      "lifecycle": "active",
+      "measured": {
+        "vx": 0.1079,
+        "vy": -0.0007,
+        "vyaw": 0.1348
+      },
+      "stop_confirmed": false,
+      "target": {
+        "vx": 0.08,
+        "vy": 0.0,
+        "vyaw": 0.1
+      },
+      "target_sequence": 50,
+      "target_source": "voice",
+      "tracking_error": {
+        "vx": -0.0279,
+        "vy": 0.0007,
+        "vyaw": -0.0348
+      },
+      "watchdog_stops": 0
+    },
+    "dialogue_state": {
+      "amendment_pending": false,
+      "engagement": 0.0,
+      "gaze_mode": "idle",
+      "influence": {
+        "defer_nonurgent": false,
+        "engagement": 0.0,
+        "gait_hint": "normal",
+        "gaze_mode": "idle",
+        "pace_scale_factor": 1.0,
+        "phase": "idle"
+      },
+      "latest": {
+        "channel": "dialogue_state",
+        "engagement": 0.0,
+        "expires_monotonic_ns": 507391194723897,
+        "phase": "idle",
+        "published_monotonic_ns": 507390694723897,
+        "schema_version": 1,
+        "sequence": 121,
+        "turn_id": ""
+      },
+      "pace_factor": 1.0,
+      "phase": "idle",
+      "reaction": {
+        "drained": 0,
+        "false_base_preempt_attempts": 0,
+        "reaction": null,
+        "reason": "base_busy",
+        "vetoed": true
+      },
+      "sequence": 121,
+      "turn_id": ""
+    },
+    "duplex": {
+      "act_idle": "<idle>",
+      "consumer": {
+        "accepted": 0,
+        "dropped_stale": 0,
+        "epoch": 0,
+        "executed_live": 0,
+        "last_kind": "twist",
+        "shadow": true,
+        "shadow_decoded": 121
+      },
+      "enabled": true,
+      "epoch": 0,
+      "filler": {
+        "awaiting_clause_boundary": false,
+        "ceiling_s": 2.0,
+        "filler_fired_this_turn": false,
+        "filler_latency_s": null,
+        "fillers_fired": 0,
+        "first_token_seen": false,
+        "last_filler_reason": null,
+        "last_filler_text": null,
+        "response_ceiling_breaches": 0,
+        "watchdog_s": 0.7
+      },
+      "filler_latency_s": null,
+      "frames_emitted": 121,
+      "interleaver": {
+        "anchor_s": 507378.663047053,
+        "epoch": 0,
+        "expected_t_from_clock": 121,
+        "frame_hz": 10.0,
+        "last_now_s": 507390.695171263,
+        "pending_act": null,
+        "period_s": 0.1,
+        "t": 121,
+        "text_queue_len": 0
+      },
+      "last_act_token": "<twist:1:2>",
+      "last_frame": {
+        "act": "<twist:1:2>",
+        "epoch": 0,
+        "t": 120,
+        "text": "<silence>"
+      },
+      "logging": {
+        "bytes_written": 32892,
+        "enabled": true,
+        "path": "logs/duplex/d295f96d6996.jsonl",
+        "records": 121,
+        "rotate_bytes": 2000000
+      },
+      "missing_frames": 0,
+      "response_ceiling_breaches": 0,
+      "session_id": "d295f96d6996",
+      "text_silence": "<silence>",
+      "turn_outcomes": []
+    },
+    "dynamic_agents": [],
+    "emergency_stopped": false,
+    "events": [
+      {
+        "id": 1,
+        "level": "info",
+        "role": "voice",
+        "text": "Speech stack: config=/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live.yaml; mode=auto; endpointing=energy (VAD hangover); aec=absent; capture=system default (monitor=False)",
+        "timestamp": "2026-08-21T22:17:51.465364+00:00"
+      },
+      {
+        "id": 2,
+        "level": "warning",
+        "role": "voice",
+        "text": "Microphone not armed: no speech recognizer (STT unreachable or disabled).",
+        "timestamp": "2026-08-21T22:17:51.465375+00:00"
+      },
+      {
+        "id": 3,
+        "level": "info",
+        "role": "evidence",
+        "text": "session evidence log armed: /home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/live_cpu_20260821T221731Z/sessions/sess_20260821T221751Z_56c9cb/events.jsonl",
+        "timestamp": "2026-08-21T22:17:51.489975+00:00"
+      },
+      {
+        "id": 4,
+        "level": "info",
+        "role": "voice",
+        "text": "Speech: stt=whisper.cpp unreachable at http://127.0.0.1:8178; tts=piper (models/piper/voice.onnx)",
+        "timestamp": "2026-08-21T22:17:51.489987+00:00"
+      },
+      {
+        "id": 5,
+        "level": "success",
+        "role": "runtime",
+        "text": "Runtime initialized",
+        "timestamp": "2026-08-21T22:17:51.490021+00:00"
+      },
+      {
+        "id": 6,
+        "level": "warning",
+        "role": "safety",
+        "text": "Proximity stop: obstacle too close",
+        "timestamp": "2026-08-21T22:17:52.293060+00:00"
+      }
+    ],
+    "expression": {
+      "apex_error": {
+        "count": 0,
+        "p50_ms": 0.0,
+        "p95_ms": 0.0
+      },
+      "enabled": true,
+      "gestures_played": 2,
+      "mode": "head_only",
+      "nods_delivered": 0,
+      "nods_scheduled": 0,
+      "offsets": {
+        "body_height_m": 0.0,
+        "body_pitch_rad": 0.0,
+        "head_pitch_rad": 0.0,
+        "head_yaw_rad": 0.0
+      },
+      "orients_triggered": 0,
+      "producer": "idle",
+      "thinking_holds": 0
+    },
+    "follow": {
+      "desired_distance_m": 1.85,
+      "enabled": false,
+      "heading_available": false,
+      "heading_track_status": "insufficient_motion",
+      "mode": "direct",
+      "owner_heading_rad": null,
+      "owner_speed_mps": null,
+      "perception_basis": "camera_owner_track+robot_odometry+lidar",
+      "prediction": {
+        "active": false,
+        "confidence": null,
+        "enabled": false,
+        "lead_x_m": null,
+        "lead_y_m": null,
+        "reason": "idle",
+        "speed_scale": 1.0
+      },
+      "stage_side": null,
+      "state": "idle",
+      "yield_aside": {
+        "active": false,
+        "aim_x_m": null,
+        "aim_y_m": null,
+        "aside_clearance_m": null,
+        "baseline_clearance_m": null,
+        "enabled": false,
+        "offset_m": null,
+        "reason": "idle",
+        "side": 0
+      }
+    },
+    "lidar_scan": {
+      "angle_increment_rad": 0.017453292519943295,
+      "angle_min_rad": -3.141592653589793,
+      "range_max_m": 30.0,
+      "range_min_m": 0.05,
+      "ranges": [
+        6.492,
+        6.248,
+        6.019,
+        5.822,
+        5.624,
+        5.442,
+        5.308,
+        4.655,
+        4.576,
+        4.577,
+        4.598,
+        4.633,
+        5.43,
+        5.485,
+        5.567,
+        5.628,
+        1.98,
+        1.955,
+        1.922,
+        1.906,
+        1.88,
+        1.9,
+        1.891,
+        1.903,
+        1.915,
+        1.921,
+        1.964,
+        2.056,
+        7.16,
+        7.341,
+        7.58,
+        30.0,
+        30.0,
+        30.0,
+        4.839,
+        4.783,
+        4.785,
+        4.844,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        4.986,
+        4.974,
+        4.969,
+        4.969,
+        4.967,
+        4.986,
+        4.97,
+        4.964,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        3.528,
+        3.483,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        4.907,
+        4.9,
+        5.634,
+        5.698,
+        6.029,
+        5.841,
+        5.672,
+        5.503,
+        5.358,
+        5.207,
+        5.081,
+        4.962,
+        4.835,
+        4.729,
+        4.679,
+        4.579,
+        4.518,
+        4.573,
+        4.647,
+        4.735,
+        4.815,
+        4.505,
+        4.389,
+        4.317,
+        4.238,
+        4.2,
+        4.123,
+        4.069,
+        4.022,
+        3.956,
+        3.924,
+        3.872,
+        3.827,
+        3.775,
+        3.75,
+        3.691,
+        3.659,
+        3.623,
+        3.6,
+        3.567,
+        3.534,
+        3.506,
+        3.478,
+        3.45,
+        3.418,
+        3.415,
+        3.385,
+        3.367,
+        3.343,
+        3.321,
+        3.318,
+        3.3,
+        3.296,
+        3.266,
+        3.264,
+        3.252,
+        3.239,
+        3.225,
+        3.261,
+        3.232,
+        3.24,
+        3.243,
+        3.832,
+        5.565,
+        30.0,
+        30.0,
+        30.0,
+        3.645,
+        3.643,
+        3.645,
+        3.627,
+        3.621,
+        2.145,
+        2.144,
+        2.181,
+        3.643,
+        3.672,
+        3.679,
+        3.701,
+        3.697,
+        3.714,
+        3.73,
+        3.761,
+        3.778,
+        3.8,
+        3.823,
+        3.842,
+        3.885,
+        3.901,
+        3.945,
+        3.957,
+        3.993,
+        4.023,
+        4.072,
+        4.115,
+        4.155,
+        4.181,
+        4.215,
+        4.272,
+        4.326,
+        4.383,
+        4.44,
+        4.533,
+        4.602,
+        5.094,
+        4.988,
+        4.86,
+        4.772,
+        4.686,
+        4.605,
+        4.526,
+        3.186,
+        3.165,
+        3.217,
+        3.284,
+        3.345,
+        3.419,
+        3.497,
+        3.566,
+        3.662,
+        3.75,
+        3.843,
+        3.939,
+        4.072,
+        4.167,
+        5.952,
+        6.137,
+        6.348,
+        6.55,
+        6.791,
+        7.033,
+        7.409,
+        7.841,
+        2.518,
+        2.465,
+        2.433,
+        2.424,
+        2.431,
+        2.44,
+        2.453,
+        2.495,
+        2.575,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        4.203,
+        4.123,
+        4.086,
+        4.108,
+        4.134,
+        4.214,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        7.011,
+        7.031,
+        7.056,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        8.369,
+        8.112,
+        6.865,
+        6.847,
+        6.926,
+        7.262,
+        7.056,
+        6.894,
+        6.73,
+        6.573,
+        6.426,
+        6.302,
+        6.182,
+        6.115,
+        5.99,
+        5.928,
+        2.671,
+        2.653,
+        2.633,
+        2.609,
+        2.63,
+        2.658,
+        2.703,
+        6.914,
+        7.082,
+        7.256,
+        7.426,
+        7.623,
+        7.826,
+        8.039,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        30.0,
+        8.018,
+        7.651,
+        7.312,
+        7.0,
+        6.719
+      ]
+    },
+    "mission_log": [],
+    "model": {
+      "detail": "LLM optional",
+      "roles": {},
+      "status": "deterministic"
+    },
+    "motion": {
+      "active_source": "voice",
+      "command": {
+        "vx": 0.08,
+        "vy": 0.0,
+        "vyaw": 0.1
+      },
+      "emergency_stopped": false
+    },
+    "navigation": {
+      "directive": null,
+      "dynamic_cost_active": false,
+      "enabled": false,
+      "goal": null,
+      "min_time_to_collision_s": null,
+      "reason": "navigation_disabled",
+      "state": "idle",
+      "time_to_collision_gate": false
+    },
+    "nearest_person": null,
+    "obstacle_distance_m": 1.8204098580063286,
+    "owner": {
+      "confidence": 1.0,
+      "id": "owner-1",
+      "visible": true,
+      "x": 2.0,
+      "y": -0.5
+    },
+    "owner_search": {
+      "degraded": "",
+      "enabled": false,
+      "frontier_target_x_m": null,
+      "frontier_target_y_m": null,
+      "last_observed_x_m": 0.0,
+      "last_observed_y_m": 0.0,
+      "map_available": false,
+      "outcome": "",
+      "owner_confidence": null,
+      "paused": false,
+      "reason": "idle",
+      "state": "idle",
+      "viewpoints": 0
+    },
+    "perception": {
+      "camera_role": "owner/object/scene perception",
+      "lidar_role": "range, free-space, and collision perception",
+      "maps": {
+        "available": false,
+        "data": null,
+        "provider": "google_maps",
+        "status": "placeholder"
+      },
+      "reasoning_visibility": {
+        "environment": [
+          "camera",
+          "lidar"
+        ],
+        "simulator_ground_truth": false
+      },
+      "simulator_truth_diagnostics_only": true,
+      "spatial_sensors": [
+        "camera",
+        "lidar"
+      ]
+    },
+    "realtime": {
+      "config": {
+        "capture": {
+          "dir": "recordings",
+          "enabled": false,
+          "max_minutes": 30.0,
+          "owner_gap_s": 0.75
+        },
+        "enabled": false,
+        "idle_close_after_s": 600.0,
+        "mode": "text",
+        "model": "gpt-realtime-2.1",
+        "monthly_budget_usd": 25.0,
+        "persona": "",
+        "session_max_s": 3600.0,
+        "si_profile": "",
+        "source": "absent",
+        "stall_timeout_s": 8.0,
+        "voice": "cedar",
+        "voice_identity": {
+          "budget_ms": 50.0,
+          "doa": false,
+          "enabled": true,
+          "min_utterance_s": 1.2,
+          "model": "",
+          "narration_interval_s": 60.0,
+          "profile": "",
+          "rejected_sector": null,
+          "threshold": 0.55
+        },
+        "whisperer": {
+          "enabled": true,
+          "max_updates_per_minute": 2,
+          "min_gap_s": 15.0
+        }
+      },
+      "constructed": false,
+      "enabled": false,
+      "mode": "text",
+      "whisperer": {
+        "enabled": true,
+        "folded": 0,
+        "forwarded": 0,
+        "forwarded_by_rule": {},
+        "last": {
+          "at_s": 507389.226669977,
+          "band": "never",
+          "folded": 0,
+          "forwarded": false,
+          "key": "position",
+          "kind": "position",
+          "rule": "never_band",
+          "schema_version": 3,
+          "seq": 10,
+          "text": "",
+          "updates_this_minute": 0
+        },
+        "max_updates_per_minute": 2,
+        "min_gap_s": 15.0,
+        "pace_watch": {
+          "accounted": true,
+          "logged": 0,
+          "mismatch_banked_s": 0.0,
+          "mismatch_open": false,
+          "pace_unknown": false,
+          "pace_unknown_episodes": 0,
+          "pace_unknown_for_s": 0.0,
+          "pace_unknown_seconds": 0.0,
+          "skips": {
+            "not_following": 11,
+            "session_baseline": 1
+          },
+          "ticks": 12
+        },
+        "schema_version": 3,
+        "suppressed": 10,
+        "suppressed_by_rule": {
+          "never_band": 10
+        },
+        "updates_this_minute": 0
+      }
+    },
+    "robot": {
+      "heading": 114.79209425442261,
+      "x": 0.48529671644192807,
+      "y": 0.9681637717741307,
+      "z": 0.27
+    },
+    "robot_profile": {
+      "dof": 12,
+      "footprint_radius_m": 0.32,
+      "name": "go2"
+    },
+    "safety_latch": {
+      "latched": false
+    },
+    "safety_log": [],
+    "simulator": {
+      "detail": "",
+      "name": "mujoco",
+      "status": "connected"
+    },
+    "spatial_behavior": {
+      "enabled": false,
+      "intent": null,
+      "orbit_radius_m": null,
+      "progress": 0.0,
+      "state": "idle",
+      "target_distance_m": null
+    },
+    "speech": {
+      "barge_ins": 0,
+      "endpointing": "energy (VAD hangover)",
+      "input_device_detail": "system default",
+      "mic_arming": {
+        "armed": false,
+        "capture_device": {
+          "confidence": "metadata",
+          "index": null,
+          "is_monitor": false,
+          "name": "system default",
+          "signal": "media.class=Audio/Source",
+          "source": "pipewire"
+        },
+        "code": "no_recognizer",
+        "override": false,
+        "reason": "Microphone not armed: no speech recognizer (STT unreachable or disabled)."
+      },
+      "microphone_active": false,
+      "mode": "auto",
+      "output_device_detail": "system default",
+      "playback_active": false,
+      "stack": {
+        "aec": {
+          "constructed": false,
+          "detail": "no AEC stage is wired into the capture loop on any config path"
+        },
+        "capture_device": {
+          "confidence": "metadata",
+          "index": null,
+          "is_monitor": false,
+          "name": "system default",
+          "signal": "media.class=Audio/Source",
+          "source": "pipewire"
+        },
+        "config_path": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/c1_cpu_live.yaml",
+        "endpointing": {
+          "models": {
+            "turn_model": "models/endpointing/smart_turn_v3.onnx",
+            "vad_model": "models/endpointing/silero_vad_v6.onnx"
+          },
+          "models_present": {
+            "turn_model": true,
+            "vad_model": true
+          },
+          "requested": "energy",
+          "resolved": "energy (VAD hangover)",
+          "semantic_loaded": false
+        },
+        "mic_arming": {
+          "armed": false,
+          "capture_device": {
+            "confidence": "metadata",
+            "index": null,
+            "is_monitor": false,
+            "name": "system default",
+            "signal": "media.class=Audio/Source",
+            "source": "pipewire"
+          },
+          "code": "no_recognizer",
+          "override": false,
+          "reason": "Microphone not armed: no speech recognizer (STT unreachable or disabled)."
+        },
+        "mode": "auto",
+        "stt": "whisper.cpp unreachable at http://127.0.0.1:8178",
+        "tts": "piper (models/piper/voice.onnx)"
+      },
+      "stt": "whisper.cpp unreachable at http://127.0.0.1:8178",
+      "tts": "piper (models/piper/voice.onnx)",
+      "turn_commits": 0
+    },
+    "voice": {
+      "last_reply": "",
+      "last_transcript": "",
+      "last_turn_id": null,
+      "mode": "text",
+      "partial": "",
+      "status": "idle",
+      "superseded": false
+    }
+  },
+  "typed_frames": {
+    "achieved_hz_from_publish_timestamps": 1.751,
+    "active_execution_providers": [
+      "CPUExecutionProvider"
+    ],
+    "capture_ms": {
+      "count": 20,
+      "max": 51.057,
+      "mean": 28.884,
+      "p50": 29.046,
+      "p95": 35.902,
+      "p99": 51.057
+    },
+    "capture_start_to_publish_ms": {
+      "count": 20,
+      "max": 654.357,
+      "mean": 555.871,
+      "p50": 547.37,
+      "p95": 566.54,
+      "p99": 654.357
+    },
+    "config_digests": [
+      "80ea182833cba394ac2c6b3034319da5e5473ddaafa7e204b96d63c8e9421558"
+    ],
+    "count": 20,
+    "detector_ms": {
+      "count": 20,
+      "max": 556.451,
+      "mean": 516.551,
+      "p50": 512.639,
+      "p95": 532.677,
+      "p99": 556.451
+    },
+    "empty_frames": 0,
+    "expired_at_publish": 20,
+    "inference_ms": {
+      "count": 20,
+      "max": 654.339,
+      "mean": 555.86,
+      "p50": 547.36,
+      "p95": 566.529,
+      "p99": 654.339
+    },
+    "localization_rejections": 0,
+    "localized_detections": 33,
+    "model_digests": [
+      "e9cc288738a96a5a9b730801f622b2e1a531ed2a93d02dd1227a4d35fd9690c6"
+    ],
+    "provider_profiles": [
+      "cpu_int8"
+    ],
+    "raw_detections": 33,
+    "scene_digests": [
+      "56970679ebb2aa363f1370212f1c2f8ff4be0f90d3318e754a08b1bd5b0e5986"
+    ],
+    "selected_execution_providers": [
+      "CPUExecutionProvider"
+    ],
+    "view_ids": [
+      "mujoco_egl:camera_color_optical_frame:1:1787350672788239686",
+      "mujoco_egl:camera_color_optical_frame:2:1787350673462914610",
+      "mujoco_egl:camera_color_optical_frame:3:1787350674045276154",
+      "mujoco_egl:camera_color_optical_frame:4:1787350674632079019",
+      "mujoco_egl:camera_color_optical_frame:5:1787350675195538999",
+      "mujoco_egl:camera_color_optical_frame:6:1787350675772643659",
+      "mujoco_egl:camera_color_optical_frame:7:1787350676344279915",
+      "mujoco_egl:camera_color_optical_frame:8:1787350676910418653",
+      "mujoco_egl:camera_color_optical_frame:9:1787350677471061827",
+      "mujoco_egl:camera_color_optical_frame:10:1787350678054123339",
+      "mujoco_egl:camera_color_optical_frame:11:1787350678621692238",
+      "mujoco_egl:camera_color_optical_frame:12:1787350679189320247",
+      "mujoco_egl:camera_color_optical_frame:13:1787350679765735355",
+      "mujoco_egl:camera_color_optical_frame:14:1787350680332490174",
+      "mujoco_egl:camera_color_optical_frame:15:1787350680906627950",
+      "mujoco_egl:camera_color_optical_frame:16:1787350681480493345",
+      "mujoco_egl:camera_color_optical_frame:17:1787350682047141693",
+      "mujoco_egl:camera_color_optical_frame:18:1787350682623668019",
+      "mujoco_egl:camera_color_optical_frame:19:1787350683183713079",
+      "mujoco_egl:camera_color_optical_frame:20:1787350683749670022"
+    ]
+  }
+}

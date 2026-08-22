@@ -1209,6 +1209,20 @@
                  screen-reader user must be interrupted for. -->
             <div id="pump-alarm" class="pump-alarm" role="alert" aria-live="assertive" hidden></div>
           </div>
+          <!-- Card C-1. What the dog currently SEES, by class count. Hidden
+               entirely unless `perception.camera_ingress` is on, so a build
+               with the eye off renders exactly the panel it rendered before.
+               Everything inside is written with textContent, never innerHTML:
+               these strings carry detector-supplied labels. -->
+          <div id="perception-tile" hidden>
+            <div class="section-divider"></div>
+            <p class="section-label">What the dog sees
+              <span id="perception-state" class="log-count">starting</span>
+            </p>
+            <p id="perception-classes" class="command-description">No detections yet.</p>
+            <p id="perception-health" class="command-description"></p>
+            <p id="perception-caveat" class="command-description"></p>
+          </div>
           <div class="section-divider"></div>
           <div>
             <p class="section-label">Move simulated owner · 0.5 m</p>
@@ -1440,6 +1454,7 @@
       renderEstopSource(snapshot.safety_latch);
 
       renderRealtime(snapshot.realtime);
+      renderPerception(snapshot.camera_ingress);
       renderMissionStatus(snapshot);
       renderMissionLog(snapshot.mission_log);
       renderSafetyLog(snapshot.safety_log);
@@ -1465,6 +1480,54 @@
         ? "Legacy path (e2e testing only) — tick to talk to the live hosted session"
         : "Live hosted session · the production path";
       label.classList.toggle("legacy-warning", legacy);
+    }
+
+    // Card C-1. The perception tile. Its job is to be HONEST rather than
+    // reassuring: when the newest frame is older than the detection TTL the
+    // class counts are labelled stale rather than shown as current, because a
+    // half-second-old count of people is not a count of people now.
+    function renderPerception(camera) {
+      const tile = el("perception-tile");
+      if (!tile) return;
+      if (!camera || camera.enabled !== true) {
+        tile.hidden = true;
+        return;
+      }
+      tile.hidden = false;
+      const state = String(camera.state || "starting");
+      const stale = state !== "fresh";
+      el("perception-state").textContent = state;
+      const counts = camera.latest_class_counts || {};
+      const names = Object.keys(counts).sort();
+      const total = names.reduce((sum, name) => sum + Number(counts[name] || 0), 0);
+      let summary;
+      if (state === "starting") {
+        summary = "No frames yet.";
+      } else if (!names.length) {
+        // An empty observation is a real observation and says so.
+        summary = "Looked, found nothing in the query set.";
+      } else {
+        summary = names.map((name) => `${name} × ${counts[name]}`).join(" · ");
+      }
+      el("perception-classes").textContent = stale && total
+        ? `stale — ${summary}`
+        : summary;
+      const rate = camera.achieved_rate_hz;
+      const age = camera.frame_age_s;
+      const parts = [
+        Number.isFinite(rate) ? `${Number(rate).toFixed(2)} Hz` : "— Hz",
+        Number.isFinite(age) ? `frame age ${Number(age).toFixed(2)} s` : "no frame",
+        `queue ${camera.queue_depth}/${camera.queue_capacity}`,
+        `dropped ${camera.frames_dropped}`,
+      ];
+      if (camera.newest_expired_at_publish === true) {
+        parts.push(`expired on arrival (TTL ${camera.detection_ttl_ms} ms)`);
+      }
+      el("perception-health").textContent = parts.join(" · ");
+      const composition = camera.composition || {};
+      el("perception-caveat").textContent = composition.dynamic_actors_synced === false
+        ? "Static scene copy posed from live telemetry — moving actors are not in this render."
+        : "";
     }
 
     function renderRealtime(realtime) {

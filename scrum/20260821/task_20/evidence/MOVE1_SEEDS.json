@@ -1,0 +1,326 @@
+{
+  "generated_at": "2026-08-22T03:51:21.148271+00:00",
+  "repo_head": "71b39a1ad66bb2fb2f6e647dbc94d351fd75d665",
+  "baseline_green": {
+    "returncode": 0,
+    "tail": [
+      "37 passed, 2 warnings in 1.37s"
+    ]
+  },
+  "seeds": [
+    {
+      "seed": "S01",
+      "claim": "the person standoff makes the patrol turn instead of pushing",
+      "tests": [
+        "test_turns_instead_of_pushing_into_a_person",
+        "test_c1_geometry_turns_instead_of_pushing",
+        "test_person_priority_beats_geometry"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "3 failed in 0.26s"
+      ]
+    },
+    {
+      "seed": "S02",
+      "claim": "a short lane makes the patrol turn",
+      "tests": [
+        "test_turns_when_the_lane_ahead_is_short"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.24s"
+      ]
+    },
+    {
+      "seed": "S03",
+      "claim": "a turn does not translate",
+      "tests": [
+        "test_turns_instead_of_pushing_into_a_person",
+        "test_turns_when_the_lane_ahead_is_short",
+        "test_c1_geometry_turns_instead_of_pushing"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "3 failed in 0.26s"
+      ]
+    },
+    {
+      "seed": "S04",
+      "claim": "hysteresis holds the turn through the release margin",
+      "tests": [
+        "test_hysteresis_holds_the_turn_until_the_release_margin"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.24s"
+      ]
+    },
+    {
+      "seed": "S05",
+      "claim": "a fruitless turn flips direction",
+      "tests": [
+        "test_turn_direction_flips_when_a_turn_finds_no_lane"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.25s"
+      ]
+    },
+    {
+      "seed": "S06",
+      "claim": "a boxed-in patrol gives up instead of spinning out the budget",
+      "tests": [
+        "test_boxed_in_gives_up_rather_than_spinning_out_the_budget",
+        "test_runner_ends_early_when_boxed_in"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "2 failed in 0.26s"
+      ]
+    },
+    {
+      "seed": "S07",
+      "claim": "the budget outranks a clear lane",
+      "tests": [
+        "test_budget_exhausted_stops_and_outranks_a_clear_lane"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.20s"
+      ]
+    },
+    {
+      "seed": "S08",
+      "claim": "contact outranks everything below the budget",
+      "tests": [
+        "test_contact_beats_everything_below_budget"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.25s"
+      ]
+    },
+    {
+      "seed": "S09",
+      "claim": "forward clearance only reads rays inside the body-forward cone",
+      "tests": [
+        "test_forward_clearance_takes_the_shortest_ray_inside_the_cone_only"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.28s"
+      ]
+    },
+    {
+      "seed": "S10",
+      "claim": "NaN rays are dropouts, not zero-distance obstacles",
+      "tests": [
+        "test_forward_clearance_ignores_nan_rays_and_returns_none_when_all_invalid"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.24s"
+      ]
+    },
+    {
+      "seed": "S11",
+      "claim": "range_max means no return, not an obstacle at range_max",
+      "tests": [
+        "test_forward_clearance_treats_range_max_as_no_return",
+        "test_forward_clearance_takes_the_shortest_ray_inside_the_cone_only"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed, 1 passed in 0.27s"
+      ]
+    },
+    {
+      "seed": "S12",
+      "claim": "the owner carries a collision envelope on top of the person standoff",
+      "tests": [
+        "test_c1_geometry_turns_instead_of_pushing"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.26s"
+      ]
+    },
+    {
+      "seed": "S13",
+      "claim": "an absent pose is not a pose at the origin",
+      "tests": [
+        "test_sense_from_snapshot_without_a_pose_is_none_not_the_origin"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.25s"
+      ]
+    },
+    {
+      "seed": "S14",
+      "claim": "the runner never drives on a tick with no pose",
+      "tests": [
+        "test_runner_skips_ticks_without_a_pose_and_never_drives_blind"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.32s"
+      ]
+    },
+    {
+      "seed": "S15",
+      "claim": "refused submissions are counted",
+      "tests": [
+        "test_runner_counts_refused_submissions_without_ending_the_mission"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.31s"
+      ]
+    },
+    {
+      "seed": "S16",
+      "claim": "the T1 sweep vocabulary carries no volatile class",
+      "tests": [
+        "test_sweep_vocabulary_carries_no_volatile_class"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed, 1 warning in 0.89s"
+      ]
+    },
+    {
+      "seed": "S17",
+      "claim": "the map-growth record is stamped with the tick it belongs to",
+      "tests": [
+        "test_runner_records_path_map_growth_and_stops_on_budget"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.21s"
+      ]
+    },
+    {
+      "seed": "S18",
+      "claim": "the ingress batch always takes the person safety lease",
+      "tests": [
+        "test_ingress_batch_always_takes_the_person_safety_lease",
+        "test_ingress_batch_is_accepted_by_the_real_camera_stream_config"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "2 failed, 2 warnings in 1.63s"
+      ]
+    },
+    {
+      "seed": "S19",
+      "claim": "the lease query never leaks into the map sweep vocabulary",
+      "tests": [
+        "test_ingress_batch_is_the_query_set_not_the_map_set",
+        "test_sweep_vocabulary_carries_no_volatile_class"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "2 failed, 1 warning in 0.85s"
+      ]
+    },
+    {
+      "seed": "S20",
+      "claim": "the person standoff asks about DIRECTION, not distance alone",
+      "tests": [
+        "test_person_behind_does_not_block_the_lane_ahead",
+        "test_turn_hold_releases_once_the_heading_is_off_the_person",
+        "test_sense_from_snapshot_reports_owner_bearing_in_the_body_frame"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "2 failed, 1 passed in 0.25s"
+      ]
+    },
+    {
+      "seed": "S21",
+      "claim": "an unknown person bearing fails closed",
+      "tests": [
+        "test_unknown_person_bearing_fails_closed"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.27s"
+      ]
+    },
+    {
+      "seed": "S22",
+      "claim": "the turn goes away from the person",
+      "tests": [
+        "test_turn_goes_away_from_the_person_not_whichever_way_the_counter_points"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.22s"
+      ]
+    },
+    {
+      "seed": "S23",
+      "claim": "the owner bearing is reported in the body frame, not the world frame",
+      "tests": [
+        "test_sense_from_snapshot_reports_owner_bearing_in_the_body_frame"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "1 failed in 0.20s"
+      ]
+    },
+    {
+      "seed": "S24",
+      "claim": "the snapshot heading is degrees and is converted before use",
+      "tests": [
+        "test_snapshot_heading_is_read_as_degrees_not_radians",
+        "test_sense_from_snapshot_reports_owner_bearing_in_the_body_frame"
+      ],
+      "verdict": "RED",
+      "returncode": 1,
+      "tail": [
+        "2 failed, 2 warnings in 1.41s"
+      ]
+    }
+  ],
+  "red_count": 24,
+  "seed_count": 24,
+  "restored_hashes_match": true,
+  "fresh_interpreter_canary": {
+    "returncode": 0,
+    "stdout": "turn_person 0.0",
+    "expected": "turn_person 0.0",
+    "ok": true
+  },
+  "final_sweep": {
+    "returncode": 0,
+    "tail": [
+      "37 passed, 2 warnings in 1.34s"
+    ]
+  }
+}

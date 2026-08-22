@@ -140,16 +140,31 @@ def _abstention_filtered(
     # subset. Scoring a query against only the candidates that already matched
     # it would ask "does this stand out from things like itself", which a single
     # match answers trivially and which is not the question.
+    #
+    # Card P0-D: that is the right background for the ROBUST-Z estimator, which
+    # was fitted on a cosine that scores every place. It is the wrong one for
+    # the label-strength estimator, whose question is explicitly "how much
+    # stronger than the best ALTERNATIVE", and a place that does not carry the
+    # queried label is not an alternative. Measured on the C-3 fixtures: two
+    # equally well-observed places both score ``evidence_confidence`` 0.8647, so
+    # the whole-map background makes the ratio exactly 1.0 and refuses every
+    # query — the same structural zero the robust z had, wearing a new hat. So
+    # under that estimator the background IS the matching set, which is what
+    # "among matching candidates" means, and non-matching places contribute
+    # nothing rather than a spurious tie.
     background: list[float] = []
-    for item in observation.extras.get("semantic_candidates", []) or []:
-        if isinstance(item, Mapping):
-            value = item.get("confidence", item.get("score"))
-        else:
-            value = getattr(item, "confidence", None)
-        try:
-            background.append(float(value))
-        except (TypeError, ValueError):
-            continue
+    if getattr(active, "ranking_margin_mode", "") == "label_strength":
+        background = [float(candidate.confidence) for candidate in candidates]
+    else:
+        for item in observation.extras.get("semantic_candidates", []) or []:
+            if isinstance(item, Mapping):
+                value = item.get("confidence", item.get("score"))
+            else:
+                value = getattr(item, "confidence", None)
+            try:
+                background.append(float(value))
+            except (TypeError, ValueError):
+                continue
     verdict = assess_place_query(
         goal.query,
         support=support,
@@ -179,6 +194,15 @@ def semantic_candidates_from_observation(
     installed otherwise — so the shipping path is byte-identical to the oracle
     read this replaced, by construction rather than by measurement.
     """
+
+    # Card C-3. The SOURCE axis is decided before a single oracle field is
+    # read, so ``oracle`` (the shipping default) reaches the code below by the
+    # only path that ever existed and cannot differ from it. Off-oracle the
+    # oracle read is not merely discarded — it is never performed, which is the
+    # difference between "the learned map drove" and "the learned map agreed".
+    source_policy = _active_source()
+    if source_policy is not None and source_policy.drives_from_learned_map:
+        return learned_map_candidates(observation)
 
     candidates: list[dict[str, Any]] = [
         {
@@ -216,6 +240,176 @@ def semantic_candidates_from_observation(
         robot_y=float(robot.y),
         robot_yaw_rad=float(robot.yaw),
     )
+
+
+#: Card C-3. How fast an evidence-derived confidence saturates, in frames. A
+#: place seen once is not a place seen twenty times, and the difference has to
+#: survive into the number a downstream threshold reads. Set to the abstention
+#: gate's own ``min_evidence_frames`` so the two agree about what "enough
+#: observations" means instead of drifting apart; imported rather than retyped.
+EVIDENCE_SATURATION_FRAMES = 7.0
+
+
+def evidence_confidence(entry: Any) -> float:
+    """An honest confidence for a learned place. **Never a constant.**
+
+    The oracle stamped ``0.98`` on every row by fiat, which made every candidate
+    maximally trusted and every downstream confidence threshold vacuous. This is
+    the replacement, and it is built from what the map actually accumulated:
+
+    * **label purity** — the share of this place's own detections that carried
+      its label. A place whose detections disagree about what it is has earned
+      less than one whose detections agree.
+    * **evidence saturation** — ``1 - exp(-frames / N)``, monotone in the number
+      of independent frames and bounded below 1. It cannot reach 1.0, because a
+      map built from a finite number of looks has not earned certainty.
+
+    Both terms come from persisted counters, so the same entry yields the same
+    number in a later session. A seeded defect replaces this with a literal and
+    the seed goes red on the variance of the output, not on the value — a
+    constant is detectable without agreeing on which constant would be wrong.
+    """
+
+    detections = max(0, int(getattr(entry, "detection_count", 0) or 0))
+    support = max(0, int(getattr(entry, "label_support", 0) or 0))
+    frames = max(0, int(getattr(entry, "evidence_frames", 0) or 0))
+    purity = (support / detections) if detections else 0.0
+    saturation = 1.0 - math.exp(-frames / EVIDENCE_SATURATION_FRAMES)
+    value = purity * saturation
+    # Clamp into the SemanticCandidate contract without ever reaching 1.0.
+    return max(0.0, min(0.999, value))
+
+
+def learned_map_candidates(
+    observation: SimObservation,
+    *,
+    learned_map: Any = None,
+    radius_m: float | None = None,
+) -> list[dict[str, Any]]:
+    """Card C-3 — semantic candidates from the dog's own map, not the oracle.
+
+    Same payload shape the oracle read produced, so ``ObservationSemanticMap``
+    and ``GrounderV2`` consume it unchanged; that identical consumer contract is
+    what makes the cutover a source swap rather than a rewrite of the ladder.
+
+    What is deliberately NOT carried across:
+
+    * **the 0.98.** :func:`evidence_confidence` earns the number instead.
+    * **the closed label set.** ``metadata['aliases']`` are the entry's own
+      admissible names — detector labels and names promoted after k consistent
+      visits — never the scene sidecar's declared vocabulary. This is what makes
+      the Narnia refusal a property of perception rather than of a list the
+      world file happened to ship.
+    * **guaranteed reachability.** The oracle asserted ``reachable``; the map
+      reports whether the robot's own body has stood near the place, and says
+      which source it used.
+
+    An absent or empty map returns ``[]``. That is the honest answer for a robot
+    that has not looked yet, and the ladder already knows how to answer UNSEEN.
+    """
+
+    active = learned_map if learned_map is not None else active_learned_map()
+    if active is None:
+        return []
+    robot = observation.robot
+    try:
+        rows = active.around_me(
+            float(robot.x),
+            float(robot.y),
+            float(robot.yaw),
+            radius_m=(
+                float(radius_m) if radius_m is not None else _default_visibility_range()
+            ),
+            limit=64,
+        )
+    except (AttributeError, TypeError, ValueError):
+        return []
+    by_id = {
+        str(getattr(entry, "entry_id", "")): entry
+        for entry in getattr(active, "active_entries", lambda: ())()
+    }
+    candidates: list[dict[str, Any]] = []
+    for row in rows:
+        entry = by_id.get(str(row.get("entry_id", "")))
+        if entry is None:
+            continue
+        navigability, navigability_source = _navigability(active, entry)
+        candidates.append(
+            {
+                "id": str(entry.entry_id),
+                "label": str(entry.label),
+                "position": [
+                    float(entry.surface_x),
+                    float(entry.surface_y),
+                    float(entry.surface_z),
+                ],
+                "confidence": evidence_confidence(entry),
+                "kind": "object",
+                "source": "online_map",
+                # The map does not assert reachability; it reports whether the
+                # robot has been able to stand there. PG-3's navigability signal
+                # is the gate, and it reads the metadata below.
+                "reachable": navigability > 0.0,
+                "metadata": {
+                    "semantic_source": "learned_map",
+                    "aliases": list(row.get("names") or ()),
+                    "evidence_frames": int(entry.evidence_frames),
+                    "detection_count": int(entry.detection_count),
+                    "label_support": int(entry.label_support),
+                    "visits": int(getattr(entry, "visits", 0) or 0),
+                    "peak_score": float(getattr(entry, "peak_score", 0.0) or 0.0),
+                    "hygiene_note": str(getattr(entry, "hygiene_note", "")),
+                    "navigability": navigability,
+                    "navigability_source": navigability_source,
+                    "first_seen_wall_s": float(entry.first_seen_wall_s),
+                    "last_seen_wall_s": float(entry.last_seen_wall_s),
+                },
+            }
+        )
+    return candidates
+
+
+def _navigability(active: Any, entry: Any) -> tuple[float, str]:
+    try:
+        value, source = active.navigability(entry)
+        return float(value), str(source)
+    except (AttributeError, TypeError, ValueError):
+        return 0.0, "unavailable"
+
+
+def _default_visibility_range() -> float:
+    try:
+        from parcel_robot.online_map import DEFAULT_VISIBILITY_RANGE_M
+
+        return float(DEFAULT_VISIBILITY_RANGE_M)
+    except (ImportError, TypeError, ValueError):  # pragma: no cover
+        return 15.0
+
+
+def _active_source() -> Any:
+    """Resolve the process-default semantic source. ``None`` ⇒ oracle.
+
+    Soft-import for the same reason ``_active_chain`` is soft: a frozen BARN
+    bundle ships a ``parcel_robot`` tree that predates this package. ``None``
+    means "no source axis", which is the pre-C-3 read and is exactly what
+    ``oracle`` produces anyway.
+    """
+
+    try:
+        from parcel_robot.perception_source import active_semantic_source
+    except ImportError:  # pragma: no cover — frozen BARN bundle path
+        return None
+    return active_semantic_source()
+
+
+def active_learned_map() -> Any:
+    """The process-installed ``OnlineSemanticMap``, or ``None``."""
+
+    try:
+        from parcel_robot.perception_source.selection import active_learned_map as _map
+    except ImportError:  # pragma: no cover — frozen BARN bundle path
+        return None
+    return _map()
 
 
 def _active_chain() -> Any:

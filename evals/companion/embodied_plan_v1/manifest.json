@@ -31,7 +31,7 @@
     },
     "city_scene": {
       "path": "src/parcel_robot/scenes/city_block.xml",
-      "sha256": "bb7f8e02a7e6b63862293dae427b4980ff7509344e2996337caa3885b99be7ec"
+      "sha256": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58"
     },
     "robot_config": {
       "path": "configs/robot.yaml",

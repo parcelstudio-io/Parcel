@@ -1,0 +1,316 @@
+{
+  "deltas": {
+    "CollisionGate_p50_ms": 0.059,
+    "CollisionGate_p99_ms": 0.735,
+    "ControlLoopWork_p50_ms": 11.288,
+    "ControlLoopWork_p99_ms": 28.211,
+    "MotionDispatch_p99_ms": 2.602
+  },
+  "environment": {
+    "available_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "cuda_provider_present": false,
+    "mujoco_gl": "egl",
+    "onnxruntime_version": "1.28.0",
+    "python": "3.14.4"
+  },
+  "fresh_simulator_per_arm": true,
+  "generated_at": "2026-08-21T23:58:41.362565+00:00",
+  "gpu": {
+    "after": {
+      "free_mib": 31295,
+      "used_mib": 934
+    },
+    "before": {
+      "free_mib": 31295,
+      "used_mib": 934
+    }
+  },
+  "off": {
+    "api_state_has_camera_key": false,
+    "api_state_status": 200,
+    "arm": "off",
+    "camera_snapshot": null,
+    "config": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/rerun_live_20260821T235718Z/c1_off.yaml",
+    "detect_ms": {
+      "count": 0,
+      "max": null,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "duration_s": 40.0,
+    "evidence": {
+      "armed": true,
+      "decode_errors": [],
+      "final_row_kind": "log_closed",
+      "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/recordings/sess_20260821T235719Z_1e5bba/events.jsonl",
+      "perception_rows": 0,
+      "perception_rows_strictly_decoded": 0,
+      "rows_total": 31,
+      "sha256": "bda0836e7576d373584f4f6b70c29aee293f11b885d7851d7f1494dcd96d6b81",
+      "verify_problems": []
+    },
+    "evidence_session_id": "sess_20260821T235719Z_1e5bba",
+    "frames_captured": 0,
+    "frames_expired_at_publish": 0,
+    "frames_with_stale_provenance": [],
+    "gpu_during": {
+      "free_mib": 30937,
+      "used_mib": 1292
+    },
+    "http_port": 42679,
+    "metrics": {
+      "CollisionGate": {
+        "count": 401,
+        "max_ms": 0.125,
+        "p50_ms": 0.066,
+        "p95_ms": 0.103,
+        "p99_ms": 0.117
+      },
+      "ControlLoopWork": {
+        "count": 401,
+        "max_ms": 11.69,
+        "p50_ms": 7.028,
+        "p95_ms": 10.19,
+        "p99_ms": 11.072
+      },
+      "MotionDispatch": {
+        "count": 401,
+        "max_ms": 0.82,
+        "p50_ms": 0.234,
+        "p95_ms": 0.376,
+        "p99_ms": 0.459
+      },
+      "SimulatorObserve": {
+        "count": 401,
+        "max_ms": 11.093,
+        "p50_ms": 6.269,
+        "p95_ms": 9.402,
+        "p99_ms": 10.272
+      }
+    },
+    "motion_accepted": 160,
+    "motion_rejected": 0,
+    "panel_has_perception_tile": true,
+    "panel_html_bytes": 104136,
+    "panel_html_status": 200,
+    "producer": null,
+    "publish_latency_ms": {
+      "count": 0,
+      "max": null,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "render_ms": {
+      "count": 0,
+      "max": null,
+      "p50": null,
+      "p95": null,
+      "p99": null
+    },
+    "started_at": 1787356639.2438955
+  },
+  "on": {
+    "api_state_has_camera_key": true,
+    "api_state_status": 200,
+    "arm": "on",
+    "camera_snapshot": {
+      "achieved_rate_hz": 1.7522,
+      "attach_error": null,
+      "composition": {
+        "camera_pose_synced": true,
+        "dynamic_actors_synced": false,
+        "mode": "static_scene_copy_pose_synced",
+        "real_camera": false,
+        "robot_joint_state_synced": false,
+        "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml"
+      },
+      "config": {
+        "enabled": true,
+        "max_detections_per_frame": 8,
+        "queries": [
+          "person",
+          "lamppost"
+        ],
+        "queue_capacity": 16,
+        "rate_hz": 2.0
+      },
+      "contention_guard": {
+        "active_leases": 2,
+        "admitted": 0,
+        "expired_leases": 0,
+        "refused": 0
+      },
+      "detection_ttl_ms": 300.0,
+      "detections_dropped_with_frames": 82,
+      "detections_retained_total": 122,
+      "enabled": true,
+      "evidence_rows_offered": 68,
+      "evidence_rows_refused": 0,
+      "frame_age_s": 0.6441,
+      "frames_dropped": 52,
+      "frames_published": 68,
+      "fresh": false,
+      "last_detection_age_s": 0.6441,
+      "last_error": null,
+      "latest_class_counts": {
+        "lamppost": 4
+      },
+      "newest_expired_at_publish": true,
+      "poses_consumed": 69,
+      "poses_offered": 400,
+      "producer": {
+        "candidates_last": 4,
+        "detections_last": 4,
+        "detections_truncated": 0,
+        "errors": 0,
+        "frame_callback_errors": 0,
+        "frames_published": 68,
+        "last_detect_ms": 517.05,
+        "last_error": null,
+        "last_latency_ms": 561.48,
+        "last_query": [
+          "person",
+          "lamppost"
+        ],
+        "leased_inferences": 68,
+        "polls": 68,
+        "reactive_reads": 0
+      },
+      "queue_capacity": 16,
+      "queue_depth": 16,
+      "state": "stale",
+      "stream_errors": 0
+    },
+    "config": "/home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260821/task_11b/evidence/rerun_live_20260821T235718Z/c1_on.yaml",
+    "detect_ms": {
+      "count": 16,
+      "max": 532.985,
+      "mean": 520.6213,
+      "p50": 520.59,
+      "p95": 528.622,
+      "p99": 532.985
+    },
+    "duration_s": 40.0,
+    "evidence": {
+      "armed": true,
+      "decode_errors": [],
+      "final_row_kind": "log_closed",
+      "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/recordings/sess_20260821T235800Z_0b3919/events.jsonl",
+      "perception_rows": 69,
+      "perception_rows_strictly_decoded": 69,
+      "rows_total": 100,
+      "sha256": "e4765644bb000f012d0fde2ba205b21bac3c02c5d8ffc6e7655987011f69dbc4",
+      "verify_problems": []
+    },
+    "evidence_session_id": "sess_20260821T235800Z_0b3919",
+    "frames_captured": 16,
+    "frames_expired_at_publish": 16,
+    "frames_with_stale_provenance": [],
+    "gpu_during": {
+      "free_mib": 30547,
+      "used_mib": 1682
+    },
+    "http_port": 37695,
+    "metrics": {
+      "CollisionGate": {
+        "count": 400,
+        "max_ms": 1.402,
+        "p50_ms": 0.125,
+        "p95_ms": 0.593,
+        "p99_ms": 0.852
+      },
+      "ControlLoopWork": {
+        "count": 400,
+        "max_ms": 41.619,
+        "p50_ms": 18.316,
+        "p95_ms": 32.15,
+        "p99_ms": 39.283
+      },
+      "MotionDispatch": {
+        "count": 400,
+        "max_ms": 3.841,
+        "p50_ms": 0.565,
+        "p95_ms": 2.236,
+        "p99_ms": 3.061
+      },
+      "SimulatorObserve": {
+        "count": 400,
+        "max_ms": 39.788,
+        "p50_ms": 14.613,
+        "p95_ms": 29.293,
+        "p99_ms": 35.77
+      }
+    },
+    "motion_accepted": 160,
+    "motion_rejected": 0,
+    "panel_has_perception_tile": true,
+    "panel_html_bytes": 104136,
+    "panel_html_status": 200,
+    "producer": {
+      "candidates_last": 4,
+      "detections_last": 4,
+      "detections_truncated": 0,
+      "detector_name": "owlv2",
+      "errors": 0,
+      "frame_callback_errors": 0,
+      "frames_published": 68,
+      "last_detect_ms": 517.05,
+      "last_error": null,
+      "last_latency_ms": 561.48,
+      "last_query": [
+        "person",
+        "lamppost"
+      ],
+      "leased_inferences": 68,
+      "polls": 68,
+      "provider_execution_providers": [
+        "CPUExecutionProvider"
+      ],
+      "provider_model_file": "/home/jaewoo-jang/.cache/parcel/owlv2-b16/model_int8.onnx",
+      "provider_precision": "int8",
+      "provider_rejected": [
+        "('cuda_fp16', 'CUDAExecutionProvider not registered in this onnxruntime build')"
+      ],
+      "provider_requested": "auto",
+      "provider_selected": "cpu_int8",
+      "reactive_reads": 0
+    },
+    "publish_latency_ms": {
+      "count": 16,
+      "max": 587.5,
+      "mean": 565.1448,
+      "p50": 562.557,
+      "p95": 583.148,
+      "p99": 587.5
+    },
+    "render_ms": {
+      "count": 16,
+      "max": 40.809,
+      "mean": 33.0642,
+      "p50": 35.402,
+      "p95": 39.336,
+      "p99": 40.809
+    },
+    "started_at": 1787356680.0650115
+  },
+  "owner_store": {
+    "path": "/home/jaewoo-jang/.parcel/parcel_memory.sqlite3",
+    "sha256_after": null,
+    "sha256_before": null,
+    "unchanged": true
+  },
+  "repo_head": "71b39a1ad66bb2fb2f6e647dbc94d351fd75d665",
+  "run_start_wall": 1787356638.162189,
+  "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+  "scene_sha256": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58",
+  "simulator_returncodes": {
+    "off": -15,
+    "on": -15
+  },
+  "socket_removed_after_stop": true
+}

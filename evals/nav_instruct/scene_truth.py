@@ -89,6 +89,24 @@ SCENE_PATH = REPO_ROOT / SCENE_RELPATH
 #: Checked-in generated artifact. Never hand-edit — regenerate.
 ARTIFACT_PATH = Path(__file__).resolve().parent / "scene_truth.json"
 
+#: Card W-1. The held-out scene variant, and the *only* other scene this module
+#: knows how to derive a truth artifact for.
+#:
+#: It carries no ``transcribed`` section and no ``transcription_deltas``,
+#: because those two record a disagreement between the episode generator's hand
+#: table and the scene — and nothing generates episodes against the held-out
+#: block. An empty section would look like agreement; the section is absent
+#: instead, and ``held_out`` says so in the artifact itself.
+HELD_OUT_SCENE_ID = "city_block_b"
+HELD_OUT_SCENE_RELPATH = "src/parcel_robot/scenes/city_block_b.xml"
+HELD_OUT_ARTIFACT_PATH = Path(__file__).resolve().parent / "scene_truth_city_block_b.json"
+
+#: scene id -> (scene relpath, artifact path, carries a hand transcription)
+SCENE_TARGETS: dict[str, tuple[str, Path, bool]] = {
+    "city_block": (SCENE_RELPATH, ARTIFACT_PATH, True),
+    HELD_OUT_SCENE_ID: (HELD_OUT_SCENE_RELPATH, HELD_OUT_ARTIFACT_PATH, False),
+}
+
 #: Bumped 1 -> 2 by card PG-2, which ADDED the ``surfaces`` and
 #: ``surface_convention`` sections. Nothing in ``derived`` / ``transcribed`` /
 #: ``transcription_deltas`` moved by a byte, so a v1 reader that ignores unknown
@@ -551,34 +569,53 @@ def transcription_deltas(
     return sorted(rows, key=lambda row: (row["entity_id"], row["field"]))
 
 
-def build_artifact(scene: str | Path = SCENE_PATH) -> dict[str, Any]:
-    """The full checked-in artifact payload, derived from the scene."""
+def build_artifact(
+    scene: str | Path = SCENE_PATH,
+    *,
+    relpath: str = SCENE_RELPATH,
+    transcription: bool = True,
+) -> dict[str, Any]:
+    """The full checked-in artifact payload, derived from the scene.
+
+    ``transcription=False`` (card W-1, the held-out variant) omits the
+    generator's hand table and the deltas against it rather than emitting them
+    empty: there is no generator table for that scene to disagree with, and an
+    empty delta list would read as "checked, agreed".
+    """
 
     derived = derive_scene_truth(scene)
-    transcribed = transcribed_table()
-    return {
+    payload: dict[str, Any] = {
         "artifact_version": ARTIFACT_VERSION,
         "generated_by": "evals/nav_instruct/scene_truth.py",
         "do_not_hand_edit": (
             "regenerate with: .parcel/bin/python -m evals.nav_instruct.scene_truth "
             "--regenerate"
         ),
-        "scene": {"path": SCENE_RELPATH, "sha256": scene_sha256(scene)},
-        "generator_landmark_ids": list(GENERATOR_LANDMARK_IDS),
+        "scene": {"path": relpath, "sha256": scene_sha256(scene)},
         "derived": derived,
-        "transcribed": transcribed,
-        "transcription_deltas": transcription_deltas(derived, transcribed),
         "surface_convention": surface_convention(),
         "surfaces": derive_scene_surfaces(scene),
     }
+    if transcription:
+        transcribed = transcribed_table()
+        payload["generator_landmark_ids"] = list(GENERATOR_LANDMARK_IDS)
+        payload["transcribed"] = transcribed
+        payload["transcription_deltas"] = transcription_deltas(derived, transcribed)
+    else:
+        payload["held_out"] = (
+            "This scene exists only so a generalization claim can be earned on "
+            "pixels no perception component was tuned against. It carries no "
+            "episode generator table. See tests/test_held_out_scene.py."
+        )
+    return payload
 
 
-def write_artifact(path: str | Path = ARTIFACT_PATH) -> Path:
+def write_artifact(path: str | Path = ARTIFACT_PATH, **kwargs: Any) -> Path:
     """Regenerate the checked-in artifact from the scene."""
 
     target = Path(path)
     target.write_text(
-        json.dumps(build_artifact(), sort_keys=True, indent=2) + "\n",
+        json.dumps(build_artifact(**kwargs), sort_keys=True, indent=2) + "\n",
         encoding="utf-8",
     )
     return target
@@ -683,23 +720,33 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="exit non-zero if the checked-in artifact differs from the scene",
     )
+    parser.add_argument(
+        "--scene",
+        choices=sorted(SCENE_TARGETS),
+        default="city_block",
+        help="which scene's truth artifact to regenerate or check (card W-1)",
+    )
     args = parser.parse_args(argv)
 
-    fresh = build_artifact()
+    relpath, artifact_path, transcription = SCENE_TARGETS[args.scene]
+    scene_path = REPO_ROOT / relpath
+    fresh = build_artifact(scene_path, relpath=relpath, transcription=transcription)
     if args.regenerate:
-        write_artifact()
-        print(json.dumps({"regenerated": str(ARTIFACT_PATH)}, indent=2))
+        write_artifact(
+            artifact_path, scene=scene_path, relpath=relpath, transcription=transcription
+        )
+        print(json.dumps({"regenerated": str(artifact_path)}, indent=2))
         return 0
 
-    stored = load_artifact() if ARTIFACT_PATH.exists() else None
+    stored = load_artifact(artifact_path) if artifact_path.exists() else None
     drifted = stored != fresh
     print(
         json.dumps(
             {
-                "artifact": str(ARTIFACT_PATH),
+                "artifact": str(artifact_path),
                 "scene_sha256": fresh["scene"]["sha256"],
                 "drifted": drifted,
-                "transcription_deltas": fresh["transcription_deltas"],
+                "transcription_deltas": fresh.get("transcription_deltas", []),
             },
             indent=2,
             sort_keys=True,

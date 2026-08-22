@@ -293,7 +293,13 @@ def test_start_navigation_sets_camera_query(
         ingress = _FakeIngress([_pixel_candidate()])
         runtime.attach_camera_ingress(ingress, start=False)
         runtime._set_camera_query_from_directive("go to the lamppost")
-        assert ingress.queries == ["lamppost"]
+        # Card P0-D: the directive lane hands the ingress a BATCH — the
+        # configured ``camera_ingress_queries`` (none here, so empty) plus the
+        # goal noun — instead of the bare noun that used to REPLACE the batch
+        # and take the ``person`` safety lease with it. The real
+        # ``CameraIngress.set_query`` pins ``person`` on top of whatever arrives;
+        # this stand-in records the batch verbatim.
+        assert ingress.queries == [("lamppost",)]
     finally:
         runtime.close()
 

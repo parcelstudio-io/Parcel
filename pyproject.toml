@@ -16,7 +16,39 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8,<9",
+  # Card P0-E: parallel default suite (`pytest -n auto`) if the suite proves
+  # xdist-clean; see scrum/20260822/task_5/P0E_STATUS.md for the verdict.
+  "pytest-xdist>=3,<4",
   "ruff>=0.12,<1",
+]
+# Card P0-C: the GPU detector in the production venv.
+#
+#   .parcel/bin/pip install -e '.[perception]'
+#
+# WHY THIS IS AN EXTRA AND NOT A BASE DEPENDENCY: it REPLACES the CPU
+# `onnxruntime` package rather than sitting beside it — both projects install the
+# same `onnxruntime` import package, so pip will happily leave you with a half of
+# each. Uninstall `onnxruntime` first. Everything in the repo keeps working
+# afterwards, because onnxruntime-gpu still registers CPUExecutionProvider; what
+# it adds is CUDAExecutionProvider.
+#
+# WHY THE [cuda,cudnn] EXTRAS ARE NOT OPTIONAL HERE (measured, PG-1 §6): the bare
+# `onnxruntime-gpu` wheel advertises CUDAExecutionProvider in
+# get_available_providers() from a stub, then fails to load libcublasLt at
+# session construction and SILENTLY BUILDS A CPU SESSION — an fp16 graph on the
+# CPU at 726 ms/query, slower than the 524 ms int8 path it displaced. The
+# `cuda`/`cudnn` extras pull the nvidia-* runtime wheels that
+# `perception_providers.prepare_cuda_runtime()` then makes findable via
+# `onnxruntime.preload_dlls()`. ~3 GB on disk.
+# `perception_providers.assert_provider_honoured()` is the backstop that refuses
+# the CPU-in-disguise session if any of that is missing.
+#
+# VERSION: >=1.28 because 1.28.0 is the exact version proved on this host
+# (Python 3.14.4, driver 595.84 / CUDA 13.2, RTX 5000 Ada) — wheel tag
+# cp314-cp314-manylinux_2_28_x86_64 — and because it matches the CPU
+# `onnxruntime` 1.28.0 it replaces, so the provider is the only variable.
+perception = [
+  "onnxruntime-gpu[cuda,cudnn]>=1.28,<2",
 ]
 voice = [
   "msgpack>=1.1,<2",
@@ -39,6 +71,12 @@ parcel_robot = [
   "bridge/fixtures/*.json",
   "config/*.yaml",
   "scenes/*.xml",
+  # Card W-1: the scene textures and visual meshes the MJCF references. Without
+  # this glob a wheel ships a scene whose <texture file=...> targets are absent
+  # and MuJoCo refuses to compile it.
+  "scenes/assets/*.json",
+  "scenes/assets/textures/*.png",
+  "scenes/assets/meshes/*.obj",
   "ui/*.html",
   "runtime_assets/**/*",
 ]

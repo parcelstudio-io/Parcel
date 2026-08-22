@@ -1,0 +1,43 @@
+# C-1 evidence-only normal-product composition profile.
+# Canonical/package configs intentionally omit these keys so default OFF stays
+# byte-identical. This file is the explicit operator opt-in used by the live cell.
+simulation:
+  scene: src/parcel_robot/scenes/city_block.xml
+  dynamic_city:
+    enabled: false
+    seed: 7
+    speed_scale: 1.0
+
+skills:
+  root: configs/skills
+
+navigation:
+  enabled: false
+
+motion:
+  backend: rl
+  max_vx: 0.6
+  max_vy: 0.4
+  max_vyaw: 1.0
+  rl:
+    enabled: true
+    policy_path: ""
+
+language_model:
+  enabled: false
+
+planner_model:
+  enabled: false
+
+memory:
+  path: ":memory:"
+
+poses: {}
+modules: []
+
+perception:
+  camera_ingress: true
+  camera_ingress_rate_hz: 2.0
+  camera_ingress_queue_capacity: 8
+  camera_ingress_max_detections_per_frame: 16
+  camera_ingress_queries: [person, lamppost]

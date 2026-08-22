@@ -14,37 +14,50 @@ the aspirational promotion gates into an executable, exit-coded gate.
 
 What it enforces (tiered by cost)
 ---------------------------------
-``--tier commit`` (fast, offline, deterministic — no network, no model server):
+``--tier commit`` (fast, offline, deterministic — no network, no model server).
+Since card P0-E (``scrum/20260822/task_5``, owner directive: prototype, loosen
+production fail-safe process) the commit tier is the SAFETY CORE plus the cheap
+truth checks:
   * the default gate ``pytest -m "not slow"`` (latest recorded local run:
-    7,715 passed on 2026-08-21);
+    7,970 passed on 2026-08-22);
   * ``ruff`` — ratcheted against a pinned baseline so pre-existing debt in
     modules this card does not own cannot block a commit, while any *new*
     violation reddens (see ``scripts/ci_ruff_baseline.json``);
-  * the frozen-digest integrity tests (nav_instruct v3, embodied plan,
-    conversation_quality, personal_convo) — a sha drift reddens — plus an
-    independent sentinel sha over the immutable frozen manifests;
-  * the mutation-panel freshness guard;
-  * **the three hard regression gates the verdict demands:**
-    (a) MODEL-OFF NON-INFERIORITY — the SigLIP / OWLv2(B3) / memory flag-off
-        byte-equal cells, wired into one gate so Design A cannot silently rot;
-    (b) LATENCY-TAIL — the committed p95/p99 percentile pins;
-    (c) HARD-SAFETY — zero hard collisions on every product artifact and no new
-        false_arrival, read from the existing harness ledgers;
+  * HARD-SAFETY — zero hard collisions on every product artifact and no new
+    false_arrival, read from the existing harness ledgers;
+  * RELEASE-PARITY — every packaged runtime asset byte-identical to its
+    canonical source (this caught a shipped ``max_vx`` drift once);
+  * MODEL-OFF NON-INFERIORITY — the SigLIP / OWLv2(B3) / memory flag-off
+    byte-equal cells, wired into one gate so Design A cannot silently rot;
+  * OWNER-STORE ISOLATION (card R27) — the owner's sqlite is unreachable from
+    a test;
   * ASSERTION-EVALS (card EV-1, ``scrum/20260820/task_11``) — the eleven
     programmatic session assertions over a frozen fixture set, the harness
     self-test (a null / always-claims-success / random-tool agent must FAIL
     every suite and a clean control must PASS), pass^k on the e-stop (k=1 here,
     k=3 nightly), and the pinned findings of any committed run folder that is
     present. Logic lives in ``evals/assertions/gate.py``; this file stays the
-    register of WHICH gates exist.
+    register of WHICH gates exist;
+  * TIER-COVERAGE (card R26) — no test is orphaned from both tiers.
 
-``--tier nightly`` (slow, scheduled): everything above, plus the slow suite
-  (live-sim e2e + acoustic rig via ``-m slow``), the nav_instruct minival
-  candidate run, every registered mutation-panel case (latest recorded: 7/7),
-  and the metamorphic suite. Numeric eval outputs are reported unless their row
-  is explicitly hard: candidate collisions and mutation survivors gate, while
-  the candidate differential row (including candidate false-arrival) reports.
-  The frozen baseline's no-new-false-arrival invariant remains hard separately.
+``--tier nightly`` (slow, scheduled): everything above, plus the EVIDENCE
+  RATCHETS that card P0-E moved out of the commit tier — they protect claims,
+  not the robot, and reddened on doc edits and scene retunes:
+  * the frozen-digest integrity tests (nav_instruct v3, embodied plan,
+    conversation_quality, personal_convo) — a sha drift reddens — plus an
+    independent sentinel sha over the immutable frozen manifests;
+  * the mutation-panel freshness guard;
+  * LATENCY-TAIL — the committed p95/p99 percentile pins and the latency
+    ledger ratchet; the follow-bench jerk ratchet;
+  * the held-out-scene prose scan and the retired-literal AST ratchet (marked
+    ``slow`` in their test modules);
+  and the slow suite (live-sim e2e + acoustic rig via ``-m slow``), the
+  nav_instruct minival candidate run, every registered mutation-panel case
+  (latest recorded: 7/7), and the metamorphic suite. Numeric eval outputs are
+  reported unless their row is explicitly hard: candidate collisions and
+  mutation survivors gate, while the candidate differential row (including
+  candidate false-arrival) reports. The frozen baseline's
+  no-new-false-arrival invariant remains hard separately.
 
 Any hard gate red ==> non-zero exit. Report-only gates never change the exit
 code; they are printed so a human sees the trend.
@@ -242,6 +255,52 @@ LATENCY_TAIL_NODE_IDS: tuple[str, ...] = (
 #:   west end and no case's route, goal or frustum reaches it. Attribution in
 #:   ``scrum/20260820/task_3/R14_STATUS.md`` §4.
 #:
+#: * ``embodied_plan_v1/manifest.json`` ``88fa9fb5…`` -> ``d251f781…``,
+#:   2026-08-21, card W-1 (``scrum/20260821/task_10``), whose work item 1
+#:   instructs the digest-pinned scene change and whose DoD requires this gate
+#:   green after it, executing the owner's standing world-simulator decision
+#:   ("texture the city now", recorded in ``AUDIT_OVERNIGHT_FABLE.md``).
+#:   **Nothing about the eval changed.** Identical in kind to the two entries
+#:   above: this manifest SHA-locks ``src/parcel_robot/scenes/city_block.xml``
+#:   as ``locked_inputs.city_scene``, W-1 gave that scene photo textures, six
+#:   storefront quads, four awnings and nine human visual meshes, so the lock
+#:   had to be refreshed ``bb7f8e02…`` -> ``38d71b66…`` and the manifest's own
+#:   sha moved MECHANICALLY with it. Only that one sha string differs; every
+#:   other locked input and every byte of layout is untouched. The suite's
+#:   BEHAVIOUR is unmoved and was re-measured against a scratch copy of the
+#:   manifest BEFORE the committed file was touched: 997 simulator steps, 0
+#:   collisions, 0 timeouts, minimum clearance 0.883147 m, per-case
+#:   200/260/64/389/84, 4 passed / 1 unsupported — bit-identical to the frozen
+#:   row. It is unmoved for a reason and not by luck: W-1 changed **no**
+#:   physics. Every pre-existing geom keeps its name/type/size/pos/quat/
+#:   friction/contact flags, every added geom is ``vis_*`` with
+#:   ``contype=0 conaffinity=0 density=0``, and the equivalence is MEASURED —
+#:   141 dynamics arrays byte-equal, the same 68 colliding geoms in the same
+#:   order, and a 3,000-step rollout over 31,290 contacts with
+#:   ``max |Δqpos| = 0.0``. Attribution in
+#:   ``scrum/20260821/task_10/W1_STATUS.md`` §4.
+#:
+#: * ``embodied_plan_v1/manifest.json`` ``d251f781…`` -> ``d1bb1a8d…``,
+#:   2026-08-21 (evening), incident restoration
+#:   (``scrum/20260821/AUDIT_W1_INCIDENT_FABLE.md``), EXPLICIT OWNER
+#:   AUTHORIZATION ("Re-pin.", 2026-08-21). **Nothing about the eval OR the
+#:   scene's certified properties changed.** During the chain collision an
+#:   uncertified executor added three decoy blocks to
+#:   ``src/parcel_robot/scenes/city_block.xml``; the restoration removed them
+#:   surgically, leaving whitespace seams, so the restored file is
+#:   PROPERTY-IDENTICAL to W-1's certified scene but not byte-identical
+#:   (``38d71b66…`` -> ``e89f4f12…``; W-1's exact bytes are unrecoverable —
+#:   its build tooling wrote them outside any transcript). The equivalence is
+#:   MEASURED, not asserted: all 31 W-1 property pins green after restore
+#:   (asset digests, physics byte-equivalence of the 141 dynamics arrays,
+#:   held-out isolation, zero decoy or held-out-scene references), and the
+#:   suite's BEHAVIOUR was re-measured against a scratch copy of this manifest
+#:   BEFORE the committed file was touched: 997 simulator steps, 0 collisions,
+#:   0 timeouts, minimum clearance 0.883147 m, per-case min/median/max
+#:   64/200/389 summing 997, 4 passed / 1 unsupported — bit-identical to the
+#:   frozen row. Only the one ``city_scene`` sha string differs in the
+#:   manifest; ``scene_truth.json``'s one ``scene.sha256`` line moved with it.
+#:
 #: * ``nav_instruct/episodes/v4/manifest.json`` **ADDED** (not moved) as
 #:   ``b2945444…``, 2026-08-11, lane E8, EXPLICIT OWNER AUTHORIZATION (re-freeze
 #:   the episodes to v4 so the follow goal radii match the retuned stand-off,
@@ -273,7 +332,24 @@ DIGEST_SENTINELS: dict[str, str] = {
     # portal. No eval OUTPUT moved — 997/0/0/0.883147 and the per-case row are
     # bit-identical, measured on a scratch manifest before this line changed.
     # Previous pin: 1725a246dd00de63e8574d401927ba206fd48424221d98cffca40c22f721d470
-    "evals/companion/embodied_plan_v1/manifest.json": "88fa9fb581d0714e725841340475eafad5ac9f8e1195c055d8e368dd7e2b02e9",
+    # Re-pinned 2026-08-21 (card W-1): the only locked input that moved is
+    # src/parcel_robot/scenes/city_block.xml, which gained photo textures,
+    # storefront/awning quads and human visual meshes. No eval OUTPUT moved —
+    # 997/0/0/0.883147 and the per-case 200/260/64/389/84 row are bit-identical,
+    # measured on a scratch manifest while this file was still at HEAD. The
+    # scene's PHYSICS is byte-equivalent by direct measurement, not by
+    # assertion: 141 dynamics arrays equal, the same 68 colliding geoms with the
+    # same names, and a 3,000-step / 31,290-contact rollout with max |dqpos|=0.
+    # Previous pin: 88fa9fb581d0714e725841340475eafad5ac9f8e1195c055d8e368dd7e2b02e9
+    # Re-pinned 2026-08-21 evening (incident restoration, owner-authorized
+    # "Re-pin."): the only locked input that moved is
+    # src/parcel_robot/scenes/city_block.xml, restored after the chain
+    # collision — property-identical to W-1's certified scene (31/31 pins),
+    # byte-different only by whitespace seams where uncertified decoy blocks
+    # were removed. No eval OUTPUT moved — 997/0/0/0.883147 and 4 passed /
+    # 1 unsupported, measured on a scratch manifest before this line changed.
+    # Previous pin: d251f781421e33e7b96c2e34730075d3bf4c241264fea66fdaaa4fc4fa2004b7
+    "evals/companion/embodied_plan_v1/manifest.json": "d1bb1a8daed637b1620be992d5373dd67d907954b3fc73d0c08c14863519fbcb",
     "evals/companion/personal_convo_v1/manifest.json": "d338f3352cd9597aeb9977f75c139d926bdfba1fe1d6b036b9a3ace08a1cf114",
 }
 
@@ -1307,24 +1383,23 @@ def evaluate_nav_instruct_candidate(tier: str = "nightly") -> list[GateResult]:
 def run_commit_tier() -> list[GateResult]:
     tier = "commit"
     results: list[GateResult] = []
+    # Card P0-E (scrum/20260822/task_5): the commit tier is the SAFETY CORE plus
+    # the cheap truth checks. The evidence ratchets — frozen-digest sentinels,
+    # the latency and follow-bench ledgers, frozen-digest integrity,
+    # mutation-panel freshness, the latency percentile pins — moved to the
+    # nightly tier, where they still gate. They protect claims, not the robot,
+    # and for the prototype they reddened on doc edits and scene retunes.
     # Cheap deterministic checks first (fast-fail signal without waiting on pytest).
     results.append(evaluate_ruff(tier=tier))
     results.append(evaluate_hard_safety(tier=tier))
-    results.append(evaluate_frozen_digest_sentinels(DIGEST_SENTINELS, tier=tier))
     results.append(evaluate_release_parity(tier=tier))
-    results.append(evaluate_latency_ledger(tier=tier))
-    results.append(evaluate_followbench_jerk_ledger(tier=tier))
     results.append(evaluate_assertion_evals(tier=tier, k=1))
     # Card R26: cheap (three collections, no execution) and it is the only gate
     # that can see a whole tier going dark.
     results.append(evaluate_tier_coverage(tier=tier))
     # Targeted hard-gate pytest selections (small, fast).
     results.append(_pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900))
-    results.append(_pytest_gate("frozen-digest-integrity", tier, FROZEN_DIGEST_NODE_IDS, timeout=900))
     results.append(_pytest_gate("release-parity-integrity", tier, RELEASE_PARITY_NODE_IDS, timeout=600))
-    results.append(_pytest_gate("mutation-panel-freshness", tier, MUTATION_FRESHNESS_NODE_IDS, timeout=600))
-    # Percentile-pin pytest stays; ledger source switch is evaluate_latency_ledger above.
-    results.append(_pytest_gate("latency-tail", tier, LATENCY_TAIL_NODE_IDS, timeout=600))
     results.append(_pytest_gate("owner-store-isolation", tier, OWNER_STORE_NODE_IDS, timeout=900))
     # The full default gate last (latest recorded: 7,715 passed on 2026-08-21).
     results.append(

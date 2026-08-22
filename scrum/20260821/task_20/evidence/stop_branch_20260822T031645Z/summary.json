@@ -1,0 +1,26 @@
+{
+  "arm": "held_static",
+  "duration_s": 40.0,
+  "final_robot_x_m": 0.31349886942233773,
+  "generated_at": "2026-08-22T03:17:26.886378+00:00",
+  "reactive_safety_file": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/navigation/reactive_safety.py",
+  "repo_head": "71b39a1ad66bb2fb2f6e647dbc94d351fd75d665",
+  "scan_health_calls": {
+    "allowed": 398,
+    "refused": 0
+  },
+  "stop_translation_call_sites": [
+    {
+      "context": [
+        "            policy.person_stop_m",
+        "            + math.hypot(command.vx, command.vy) * policy.reaction_time_s",
+        "        )",
+        "        if toward_person and person_distance <= predictive_person_stop:",
+        "            return _stop_translation(command)"
+      ],
+      "count": 374,
+      "line": 243,
+      "source": "return _stop_translation(command)"
+    }
+  ]
+}

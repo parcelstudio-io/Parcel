@@ -64,6 +64,7 @@ class _FakeProvider:
         return AgentDecision("I'm here to talk.", intent="conversation")
 
 
+@pytest.mark.slow  # card P0-E: frozen-digest integrity is a nightly evidence ratchet
 def test_manifest_locks_all_conversation_inputs() -> None:
     manifest, cases = load_frozen_suite()
 

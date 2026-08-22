@@ -844,10 +844,29 @@ def _symbol_digest(source: str, symbol: str) -> str:
 #:   and every predicate below that line — ``emergency_stopping``,
 #:   ``zero_intent``, ``stopping``, ``nominal_ramp`` — is untouched. Only the
 #:   event TEXT moved. Reason recorded in scrum/20260818/task_1/R4L_STATUS.md.
+#: * 2026-08-22 (card P0-D, scrum/20260822/task_4) — MOVED ``_dispatch_active``
+#:   only, one call: ``velocity_smoother.force(command)`` ->
+#:   ``velocity_smoother.sync_after_gate(command)``. Defect MOVE1-D1: forcing
+#:   the ramp to the POST-gate command re-applied the reactive slow-scale to its
+#:   own output every tick, so the slow band delivered 0.0279 m/s where one
+#:   application of the same gate to the same policy gives 0.0591 m/s (100 % of
+#:   255 slowing ticks, scrum/20260821/task_20/MOVE1_STATUS.md §5).
+#:   ``sync_after_gate`` collapses the ramp on an axis the gate ZEROED — which
+#:   is byte-identical to ``force`` for every stop, and stops are the only thing
+#:   this pin classifies — and keeps the pre-gate value on an axis the gate
+#:   merely SCALED. No predicate below that line moved: ``emergency_stopping``,
+#:   ``zero_intent``, ``stopping`` and ``nominal_ramp`` are character-identical,
+#:   and ``proximity_state`` still comes from the same ``_collision_safe`` call.
+#:   KNOWN DIVERGENCE, declared rather than fixed: the bench replica
+#:   (``evals/companion_nav/runner.py::_DispatchReplica.step``, which is NOT a
+#:   pinned symbol) still calls ``force`` on the post-gate command, so its
+#:   slow-band speeds now measure the compounding the product no longer has.
+#:   ``evals/**`` is outside P0-D's OWNS; handed off in
+#:   scrum/20260822/task_4/P0D_STATUS.md.
 STOPPING_PREDICATE_PIN: dict[str, dict[str, str]] = {
     "src/parcel_robot/runtime.py": {
         "RobotRuntime._dispatch_active": (
-            "7a830d4cb4927127d174481fd40298829dccff5b71e2c45b05789d9baabba8b2"
+            "51a508473b78c51a8b0dc916d1eead84f57455bc130f93f73aed52322905dc51"
         ),
         "RobotRuntime._finalize_for_actuator": (
             "e8d737068343a2945a2484a542d241d2ec0a737dcd6be1d69e1cb8c936769e7a"

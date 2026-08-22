@@ -1,0 +1,275 @@
+{
+ "arm_b_map_path_only": {
+  "entries": 14,
+  "null_controls": [
+   {
+    "admitted": false,
+    "candidates": 0,
+    "query": "fire hydrant",
+    "reason": "no_detector_support"
+   },
+   {
+    "admitted": false,
+    "candidates": 0,
+    "query": "mailbox",
+    "reason": "no_detector_support"
+   },
+   {
+    "admitted": false,
+    "candidates": 0,
+    "query": "fountain",
+    "reason": "no_detector_support"
+   },
+   {
+    "admitted": false,
+    "candidates": 0,
+    "query": "traffic cone",
+    "reason": "no_detector_support"
+   },
+   {
+    "admitted": false,
+    "candidates": 0,
+    "query": "bicycle rack",
+    "reason": "no_detector_support"
+   },
+   {
+    "admitted": false,
+    "candidates": 0,
+    "query": "vending machine",
+    "reason": "no_detector_support"
+   }
+  ],
+  "null_controls_admitted": 0,
+  "pg3_admitted": 0,
+  "queries": [
+   "bench",
+   "building",
+   "door",
+   "lamppost",
+   "planter",
+   "tree"
+  ],
+  "query_table": [
+   {
+    "candidates": 1,
+    "evidence_frames": 24,
+    "map_xy": [
+     -2.5093,
+     3.1684
+    ],
+    "pg3_admitted": false,
+    "pg3_ranking_margin": 0.0,
+    "pg3_reason": "indecisive_ranking",
+    "query": "bench",
+    "ranking_background_degenerate": true,
+    "surface_distance_m": 0.0,
+    "truth_part": "bench_1",
+    "visits": 3,
+    "within_tolerance": true
+   },
+   {
+    "candidates": 5,
+    "evidence_frames": 24,
+    "map_xy": [
+     -0.9974,
+     5.81
+    ],
+    "pg3_admitted": false,
+    "pg3_ranking_margin": 0.0,
+    "pg3_reason": "indecisive_ranking",
+    "query": "building",
+    "ranking_background_degenerate": true,
+    "surface_distance_m": 0.0,
+    "truth_part": "bldg_2",
+    "visits": 3,
+    "within_tolerance": true
+   },
+   {
+    "candidates": 1,
+    "evidence_frames": 24,
+    "map_xy": [
+     -6.9361,
+     4.14
+    ],
+    "pg3_admitted": false,
+    "pg3_ranking_margin": 0.0,
+    "pg3_reason": "indecisive_ranking",
+    "query": "door",
+    "ranking_background_degenerate": true,
+    "surface_distance_m": 0.0,
+    "truth_part": "door_1",
+    "visits": 3,
+    "within_tolerance": true
+   },
+   {
+    "candidates": 2,
+    "evidence_frames": 24,
+    "map_xy": [
+     0.2072,
+     3.1421
+    ],
+    "pg3_admitted": false,
+    "pg3_ranking_margin": 0.0,
+    "pg3_reason": "indecisive_ranking",
+    "query": "lamppost",
+    "ranking_background_degenerate": true,
+    "surface_distance_m": 0.0,
+    "truth_part": "lamp_post_1",
+    "visits": 3,
+    "within_tolerance": true
+   },
+   {
+    "candidates": 2,
+    "evidence_frames": 24,
+    "map_xy": [
+     5.0043,
+     3.0986
+    ],
+    "pg3_admitted": false,
+    "pg3_ranking_margin": 0.0,
+    "pg3_reason": "indecisive_ranking",
+    "query": "planter",
+    "ranking_background_degenerate": true,
+    "surface_distance_m": 0.0,
+    "truth_part": "planter_2",
+    "visits": 3,
+    "within_tolerance": true
+   },
+   {
+    "candidates": 2,
+    "evidence_frames": 24,
+    "map_xy": [
+     5.0064,
+     3.096
+    ],
+    "pg3_admitted": false,
+    "pg3_ranking_margin": 0.0,
+    "pg3_reason": "indecisive_ranking",
+    "query": "tree",
+    "ranking_background_degenerate": true,
+    "surface_distance_m": 0.0,
+    "truth_part": "tree_2",
+    "visits": 3,
+    "within_tolerance": true
+   }
+  ],
+  "what_this_is": "map path only: detections synthesized at scene_truth surfaces. NOT a perception claim.",
+  "within_tolerance": 6
+ },
+ "corpus_within_tolerance": 0,
+ "elapsed_s": 0.01,
+ "entries_written": 1,
+ "frames": 16,
+ "freshness": {
+  "expired_at_publish": 16,
+  "expired_fraction": 1.0,
+  "frames": 16,
+  "publish_latency_p50_ms": 562.557
+ },
+ "generated_at": "2026-08-22T01:20:32Z",
+ "map_stats_after_reload": {
+  "by_status": {
+   "active": 1
+  },
+  "entries": 1,
+  "frames_seen": 16,
+  "fuse_radius_m": 1.0,
+  "observations_seen": 0,
+  "refused_hygiene": 0,
+  "refused_volatile": 0,
+  "schema": "parcel.online_map.v1",
+  "store": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/799cb356-4cb4-445b-a784-306b6c6fd4a6/scratchpad/c2_live/c2_replay_map.sqlite3"
+ },
+ "null_controls": [
+  {
+   "admitted": false,
+   "asked": false,
+   "candidates": 0,
+   "query": "fire hydrant",
+   "reason": "no_detector_support"
+  },
+  {
+   "admitted": false,
+   "asked": false,
+   "candidates": 0,
+   "query": "mailbox",
+   "reason": "no_detector_support"
+  },
+  {
+   "admitted": false,
+   "asked": false,
+   "candidates": 0,
+   "query": "fountain",
+   "reason": "no_detector_support"
+  },
+  {
+   "admitted": false,
+   "asked": false,
+   "candidates": 0,
+   "query": "traffic cone",
+   "reason": "no_detector_support"
+  },
+  {
+   "admitted": false,
+   "asked": false,
+   "candidates": 0,
+   "query": "bicycle rack",
+   "reason": "no_detector_support"
+  },
+  {
+   "admitted": false,
+   "asked": false,
+   "candidates": 0,
+   "query": "vending machine",
+   "reason": "no_detector_support"
+  }
+ ],
+ "null_controls_admitted": 0,
+ "null_controls_candidates": 0,
+ "observations": 40,
+ "owner_store_sha16": "40506fd96fc61c34",
+ "persisted": 16,
+ "query_table": [
+  {
+   "all_truth_distances_m": {
+    "lamp_post_1": 3.8583,
+    "lamp_post_2": 11.8042
+   },
+   "best_is_this_entry": true,
+   "candidates": 1,
+   "entry_id": "place-b458de46f1fd4e92",
+   "evidence_frames": 16,
+   "hygiene_note": "relief_unverified",
+   "map_xy": [
+    4.0051,
+    2.2148
+   ],
+   "metric_extent_wh_m": [
+    0.682,
+    2.575
+   ],
+   "navigability": 0.0,
+   "navigability_source": "robot_traversal",
+   "peak_score": 0.4955,
+   "pg3_admitted": false,
+   "pg3_ranking_margin": 0.0,
+   "pg3_reason": "not_navigable",
+   "query": "lamppost",
+   "ranking_background_degenerate": true,
+   "surface_distance_m": 3.8583,
+   "truth_part": "lamp_post_1",
+   "visits": 1,
+   "within_tolerance": false
+  }
+ ],
+ "refused_volatile": 0,
+ "reload_entry_count": 1,
+ "scene_sha256_pin": {
+  "path": "src/parcel_robot/scenes/city_block.xml",
+  "sha256": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58"
+ },
+ "source": "C-1 rerun_live_20260821T235718Z on_frames.json (verbatim)",
+ "source_summary_sha256": "1dff417b790f1dbd7b47d09deb74b0f52d9a0211e4e38760676d31bff57a6db9",
+ "store_path": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/799cb356-4cb4-445b-a784-306b6c6fd4a6/scratchpad/c2_live/c2_replay_map.sqlite3",
+ "tolerance_m": 1.0
+}

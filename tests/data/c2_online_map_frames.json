@@ -1,0 +1,1286 @@
+{
+ "frames": [
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513417568704516,
+   "capture_started_monotonic_ns": 513417541509695,
+   "detect_ms": 522.079,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5157,
+     "box": [
+      220.0,
+      128.0,
+      337.0,
+      570.0
+     ],
+     "depth_m": 3.7485,
+     "inlier_pixels": 27843,
+     "label": "lamppost",
+     "range_m": 4.4059,
+     "score": 0.387289,
+     "sigma_range_m": 0.0243,
+     "world_x": 3.9668,
+     "world_y": 2.1728,
+     "world_z": 1.1942
+    },
+    {
+     "bearing_rad": 0.5201,
+     "box": [
+      242.0,
+      139.0,
+      341.0,
+      241.0
+     ],
+     "depth_m": 3.6748,
+     "inlier_pixels": 5878,
+     "label": "lamppost",
+     "range_m": 4.1251,
+     "score": 0.100936,
+     "sigma_range_m": 0.0213,
+     "world_x": 3.7135,
+     "world_y": 2.0502,
+     "world_z": 2.0311
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-53-1787356711172091450",
+   "height_px": 720,
+   "localized_detections": 2,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 557.666,
+   "published_monotonic_ns": 513418099175419,
+   "published_wall_s": 1787356711.72976,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 2,
+   "rejected_detections": 0,
+   "render_ms": 27.195,
+   "robot_x": 0.1339,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 53,
+   "source_timestamp_ns": 1787356711172091450,
+   "total_ms": 557.666,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513418158362390,
+   "capture_started_monotonic_ns": 513418119370484,
+   "detect_ms": 524.819,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.6616,
+     "box": [
+      0.0,
+      0.0,
+      343.0,
+      576.0
+     ],
+     "depth_m": 4.4234,
+     "inlier_pixels": 145995,
+     "label": "lamppost",
+     "range_m": 5.5936,
+     "score": 0.113373,
+     "sigma_range_m": 0.0391,
+     "world_x": 4.5515,
+     "world_y": 3.4366,
+     "world_z": 1.7086
+    },
+    {
+     "bearing_rad": 0.5181,
+     "box": [
+      215.0,
+      131.0,
+      332.0,
+      581.0
+     ],
+     "depth_m": 3.7545,
+     "inlier_pixels": 30447,
+     "label": "lamppost",
+     "range_m": 4.4307,
+     "score": 0.299115,
+     "sigma_range_m": 0.0245,
+     "world_x": 3.9873,
+     "world_y": 2.1943,
+     "world_z": 1.1462
+    },
+    {
+     "bearing_rad": 0.4873,
+     "box": [
+      299.0,
+      177.0,
+      321.0,
+      205.0
+     ],
+     "depth_m": 3.7779,
+     "inlier_pixels": 462,
+     "label": "lamppost",
+     "range_m": 4.1525,
+     "score": 0.119955,
+     "sigma_range_m": 0.0216,
+     "world_x": 3.8072,
+     "world_y": 1.9445,
+     "world_z": 2.1059
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-54-1787356711749952399",
+   "height_px": 720,
+   "localized_detections": 3,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 578.484,
+   "published_monotonic_ns": 513418697854614,
+   "published_wall_s": 1787356712.32844,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 3,
+   "rejected_detections": 0,
+   "render_ms": 38.992,
+   "robot_x": 0.1381,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 54,
+   "source_timestamp_ns": 1787356711749952399,
+   "total_ms": 578.484,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513418755611965,
+   "capture_started_monotonic_ns": 513418718073865,
+   "detect_ms": 513.107,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5162,
+     "box": [
+      220.0,
+      119.0,
+      336.0,
+      570.0
+     ],
+     "depth_m": 3.7325,
+     "inlier_pixels": 27682,
+     "label": "lamppost",
+     "range_m": 4.3876,
+     "score": 0.495544,
+     "sigma_range_m": 0.0241,
+     "world_x": 3.9585,
+     "world_y": 2.1655,
+     "world_z": 1.1963
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-55-1787356712348655580",
+   "height_px": 720,
+   "localized_detections": 1,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 555.352,
+   "published_monotonic_ns": 513419273425894,
+   "published_wall_s": 1787356712.904011,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 1,
+   "rejected_detections": 0,
+   "render_ms": 37.538,
+   "robot_x": 0.1425,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 55,
+   "source_timestamp_ns": 1787356712348655580,
+   "total_ms": 555.353,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513419320540673,
+   "capture_started_monotonic_ns": 513419293639907,
+   "detect_ms": 516.445,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.6702,
+     "box": [
+      1.0,
+      0.0,
+      345.0,
+      533.0
+     ],
+     "depth_m": 4.4483,
+     "inlier_pixels": 133320,
+     "label": "lamppost",
+     "range_m": 5.6345,
+     "score": 0.102337,
+     "sigma_range_m": 0.0397,
+     "world_x": 4.5606,
+     "world_y": 3.5,
+     "world_z": 1.818
+    },
+    {
+     "bearing_rad": 0.5199,
+     "box": [
+      217.0,
+      121.0,
+      336.0,
+      561.0
+     ],
+     "depth_m": 3.7847,
+     "inlier_pixels": 27629,
+     "label": "lamppost",
+     "range_m": 4.4464,
+     "score": 0.388573,
+     "sigma_range_m": 0.0247,
+     "world_x": 4.0038,
+     "world_y": 2.2091,
+     "world_z": 1.2462
+    },
+    {
+     "bearing_rad": -0.7416,
+     "box": [
+      1190.0,
+      159.0,
+      1280.0,
+      429.0
+     ],
+     "depth_m": 3.5254,
+     "inlier_pixels": 23584,
+     "label": "lamppost",
+     "range_m": 4.818,
+     "score": 0.103481,
+     "sigma_range_m": 0.029,
+     "world_x": 3.6977,
+     "world_y": -3.2545,
+     "world_z": 1.4391
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-56-1787356712924221792",
+   "height_px": 720,
+   "localized_detections": 3,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 558.083,
+   "published_monotonic_ns": 513419851723312,
+   "published_wall_s": 1787356713.482309,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 3,
+   "rejected_detections": 0,
+   "render_ms": 26.901,
+   "robot_x": 0.145,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 56,
+   "source_timestamp_ns": 1787356712924221792,
+   "total_ms": 558.084,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513419912687608,
+   "capture_started_monotonic_ns": 513419873351892,
+   "detect_ms": 532.985,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.6687,
+     "box": [
+      0.0,
+      0.0,
+      326.0,
+      544.0
+     ],
+     "depth_m": 4.4309,
+     "inlier_pixels": 137361,
+     "label": "lamppost",
+     "range_m": 5.6177,
+     "score": 0.157464,
+     "sigma_range_m": 0.0394,
+     "world_x": 4.5571,
+     "world_y": 3.4827,
+     "world_z": 1.771
+    },
+    {
+     "bearing_rad": 0.5233,
+     "box": [
+      212.0,
+      118.0,
+      329.0,
+      565.0
+     ],
+     "depth_m": 3.8106,
+     "inlier_pixels": 29679,
+     "label": "lamppost",
+     "range_m": 4.4905,
+     "score": 0.458668,
+     "sigma_range_m": 0.0252,
+     "world_x": 4.0387,
+     "world_y": 2.2442,
+     "world_z": 1.226
+    },
+    {
+     "bearing_rad": -0.7427,
+     "box": [
+      1198.0,
+      180.0,
+      1280.0,
+      435.0
+     ],
+     "depth_m": 3.5158,
+     "inlier_pixels": 20240,
+     "label": "lamppost",
+     "range_m": 4.8313,
+     "score": 0.122752,
+     "sigma_range_m": 0.0292,
+     "world_x": 3.7081,
+     "world_y": -3.2674,
+     "world_z": 1.364
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-57-1787356713503933798",
+   "height_px": 720,
+   "localized_detections": 3,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 587.5,
+   "published_monotonic_ns": 513420460852266,
+   "published_wall_s": 1787356714.091438,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 3,
+   "rejected_detections": 0,
+   "render_ms": 39.336,
+   "robot_x": 0.1492,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 57,
+   "source_timestamp_ns": 1787356713503933798,
+   "total_ms": 587.501,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513420512454076,
+   "capture_started_monotonic_ns": 513420481067621,
+   "detect_ms": 526.354,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5238,
+     "box": [
+      207.0,
+      135.0,
+      331.0,
+      581.0
+     ],
+     "depth_m": 3.7992,
+     "inlier_pixels": 33491,
+     "label": "lamppost",
+     "range_m": 4.5008,
+     "score": 0.393983,
+     "sigma_range_m": 0.0253,
+     "world_x": 4.0502,
+     "world_y": 2.2511,
+     "world_z": 1.1343
+    },
+    {
+     "bearing_rad": -0.7436,
+     "box": [
+      1198.0,
+      173.0,
+      1280.0,
+      430.0
+     ],
+     "depth_m": 3.5044,
+     "inlier_pixels": 20400,
+     "label": "lamppost",
+     "range_m": 4.8111,
+     "score": 0.106002,
+     "sigma_range_m": 0.0289,
+     "world_x": 3.694,
+     "world_y": -3.2568,
+     "world_z": 1.3927
+    },
+    {
+     "bearing_rad": 0.5797,
+     "box": [
+      174.0,
+      358.0,
+      232.0,
+      514.0
+     ],
+     "depth_m": 4.6321,
+     "inlier_pixels": 8171,
+     "label": "lamppost",
+     "range_m": 5.7623,
+     "score": 0.108793,
+     "sigma_range_m": 0.0415,
+     "world_x": 4.9738,
+     "world_y": 3.1564,
+     "world_z": 0.7954
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-58-1787356714111649517",
+   "height_px": 720,
+   "localized_detections": 3,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 570.203,
+   "published_monotonic_ns": 513421051270569,
+   "published_wall_s": 1787356714.681856,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 3,
+   "rejected_detections": 0,
+   "render_ms": 31.386,
+   "robot_x": 0.1528,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 58,
+   "source_timestamp_ns": 1787356714111649517,
+   "total_ms": 570.204,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513421109198588,
+   "capture_started_monotonic_ns": 513421071478062,
+   "detect_ms": 515.973,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5246,
+     "box": [
+      210.0,
+      126.0,
+      327.0,
+      568.0
+     ],
+     "depth_m": 3.8106,
+     "inlier_pixels": 30597,
+     "label": "lamppost",
+     "range_m": 4.4977,
+     "score": 0.371215,
+     "sigma_range_m": 0.0253,
+     "world_x": 4.0483,
+     "world_y": 2.2526,
+     "world_z": 1.2099
+    },
+    {
+     "bearing_rad": -0.7299,
+     "box": [
+      1199.0,
+      231.0,
+      1251.0,
+      402.0
+     ],
+     "depth_m": 3.5738,
+     "inlier_pixels": 8450,
+     "label": "lamppost",
+     "range_m": 4.8643,
+     "score": 0.110118,
+     "sigma_range_m": 0.0296,
+     "world_x": 3.7803,
+     "world_y": -3.2436,
+     "world_z": 1.3319
+    },
+    {
+     "bearing_rad": 0.5738,
+     "box": [
+      182.0,
+      351.0,
+      245.0,
+      500.0
+     ],
+     "depth_m": 4.6314,
+     "inlier_pixels": 7461,
+     "label": "lamppost",
+     "range_m": 5.7138,
+     "score": 0.107299,
+     "sigma_range_m": 0.0408,
+     "world_x": 4.9541,
+     "world_y": 3.1017,
+     "world_z": 0.8966
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-59-1787356714702059978",
+   "height_px": 720,
+   "localized_detections": 3,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 565.893,
+   "published_monotonic_ns": 513421637370978,
+   "published_wall_s": 1787356715.267956,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 3,
+   "rejected_detections": 0,
+   "render_ms": 37.721,
+   "robot_x": 0.1554,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 59,
+   "source_timestamp_ns": 1787356714702059978,
+   "total_ms": 565.893,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513421685217754,
+   "capture_started_monotonic_ns": 513421657589838,
+   "detect_ms": 528.622,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5276,
+     "box": [
+      208.0,
+      133.0,
+      327.0,
+      559.0
+     ],
+     "depth_m": 3.892,
+     "inlier_pixels": 30359,
+     "label": "lamppost",
+     "range_m": 4.5887,
+     "score": 0.457478,
+     "sigma_range_m": 0.0263,
+     "world_x": 4.1209,
+     "world_y": 2.3103,
+     "world_z": 1.264
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-60-1787356715288171623",
+   "height_px": 720,
+   "localized_detections": 1,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 563.234,
+   "published_monotonic_ns": 513422220823636,
+   "published_wall_s": 1787356715.851409,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 1,
+   "rejected_detections": 0,
+   "render_ms": 27.628,
+   "robot_x": 0.1562,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 60,
+   "source_timestamp_ns": 1787356715288171623,
+   "total_ms": 563.235,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513422268461285,
+   "capture_started_monotonic_ns": 513422241032211,
+   "detect_ms": 515.798,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5128,
+     "box": [
+      221.0,
+      131.0,
+      341.0,
+      588.0
+     ],
+     "depth_m": 3.6834,
+     "inlier_pixels": 28782,
+     "label": "lamppost",
+     "range_m": 4.3398,
+     "score": 0.348386,
+     "sigma_range_m": 0.0235,
+     "world_x": 3.9379,
+     "world_y": 2.1292,
+     "world_z": 1.1219
+    },
+    {
+     "bearing_rad": -0.7434,
+     "box": [
+      1198.0,
+      183.0,
+      1280.0,
+      424.0
+     ],
+     "depth_m": 3.5158,
+     "inlier_pixels": 19120,
+     "label": "lamppost",
+     "range_m": 4.8279,
+     "score": 0.110215,
+     "sigma_range_m": 0.0291,
+     "world_x": 3.7105,
+     "world_y": -3.2674,
+     "world_z": 1.3854
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-61-1787356715871614206",
+   "height_px": 720,
+   "localized_detections": 2,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 551.887,
+   "published_monotonic_ns": 513422792918963,
+   "published_wall_s": 1787356716.423504,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 2,
+   "rejected_detections": 0,
+   "render_ms": 27.429,
+   "robot_x": 0.1562,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 61,
+   "source_timestamp_ns": 1787356715871614206,
+   "total_ms": 551.887,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513422840051720,
+   "capture_started_monotonic_ns": 513422813122119,
+   "detect_ms": 514.379,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5231,
+     "box": [
+      216.0,
+      128.0,
+      329.0,
+      553.0
+     ],
+     "depth_m": 3.7869,
+     "inlier_pixels": 26754,
+     "label": "lamppost",
+     "range_m": 4.4445,
+     "score": 0.395372,
+     "sigma_range_m": 0.0247,
+     "world_x": 4.0063,
+     "world_y": 2.2205,
+     "world_z": 1.2979
+    },
+    {
+     "bearing_rad": -0.744,
+     "box": [
+      1197.0,
+      173.0,
+      1280.0,
+      420.0
+     ],
+     "depth_m": 3.5044,
+     "inlier_pixels": 19845,
+     "label": "lamppost",
+     "range_m": 4.8051,
+     "score": 0.13403,
+     "sigma_range_m": 0.0289,
+     "world_x": 3.6917,
+     "world_y": -3.2541,
+     "world_z": 1.4193
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-62-1787356716443704035",
+   "height_px": 720,
+   "localized_detections": 2,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 549.875,
+   "published_monotonic_ns": 513423362997062,
+   "published_wall_s": 1787356716.993582,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 2,
+   "rejected_detections": 0,
+   "render_ms": 26.93,
+   "robot_x": 0.1562,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 62,
+   "source_timestamp_ns": 1787356716443704035,
+   "total_ms": 549.875,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513423421386267,
+   "capture_started_monotonic_ns": 513423383204485,
+   "detect_ms": 515.581,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5226,
+     "box": [
+      211.0,
+      134.0,
+      329.0,
+      574.0
+     ],
+     "depth_m": 3.7709,
+     "inlier_pixels": 30924,
+     "label": "lamppost",
+     "range_m": 4.4547,
+     "score": 0.349378,
+     "sigma_range_m": 0.0248,
+     "world_x": 4.0164,
+     "world_y": 2.2235,
+     "world_z": 1.1731
+    },
+    {
+     "bearing_rad": -0.7425,
+     "box": [
+      1193.0,
+      170.0,
+      1278.0,
+      411.0
+     ],
+     "depth_m": 3.5158,
+     "inlier_pixels": 19837,
+     "label": "lamppost",
+     "range_m": 4.8041,
+     "score": 0.101419,
+     "sigma_range_m": 0.0288,
+     "world_x": 3.6958,
+     "world_y": -3.2483,
+     "world_z": 1.4548
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-63-1787356717013786280",
+   "height_px": 720,
+   "localized_detections": 2,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 562.557,
+   "published_monotonic_ns": 513423945761420,
+   "published_wall_s": 1787356717.576346,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 2,
+   "rejected_detections": 0,
+   "render_ms": 38.182,
+   "robot_x": 0.1562,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 63,
+   "source_timestamp_ns": 1787356717013786280,
+   "total_ms": 562.557,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513423994744352,
+   "capture_started_monotonic_ns": 513423965960841,
+   "detect_ms": 520.59,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5231,
+     "box": [
+      216.0,
+      128.0,
+      329.0,
+      553.0
+     ],
+     "depth_m": 3.7869,
+     "inlier_pixels": 26754,
+     "label": "lamppost",
+     "range_m": 4.4445,
+     "score": 0.395372,
+     "sigma_range_m": 0.0247,
+     "world_x": 4.0063,
+     "world_y": 2.2205,
+     "world_z": 1.2979
+    },
+    {
+     "bearing_rad": -0.744,
+     "box": [
+      1197.0,
+      173.0,
+      1280.0,
+      420.0
+     ],
+     "depth_m": 3.5044,
+     "inlier_pixels": 19845,
+     "label": "lamppost",
+     "range_m": 4.8051,
+     "score": 0.13403,
+     "sigma_range_m": 0.0289,
+     "world_x": 3.6917,
+     "world_y": -3.2541,
+     "world_z": 1.4193
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-64-1787356717596542686",
+   "height_px": 720,
+   "localized_detections": 2,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 559.571,
+   "published_monotonic_ns": 513424525531513,
+   "published_wall_s": 1787356718.156117,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 2,
+   "rejected_detections": 0,
+   "render_ms": 28.784,
+   "robot_x": 0.1562,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 64,
+   "source_timestamp_ns": 1787356717596542686,
+   "total_ms": 559.571,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513424587992651,
+   "capture_started_monotonic_ns": 513424547184090,
+   "detect_ms": 526.095,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": -0.6602,
+     "box": [
+      950.0,
+      13.0,
+      1280.0,
+      560.0
+     ],
+     "depth_m": 4.213,
+     "inlier_pixels": 150324,
+     "label": "lamppost",
+     "range_m": 5.3243,
+     "score": 0.117265,
+     "sigma_range_m": 0.0354,
+     "world_x": 4.3655,
+     "world_y": -3.2651,
+     "world_z": 1.6742
+    },
+    {
+     "bearing_rad": 0.5295,
+     "box": [
+      207.0,
+      134.0,
+      315.0,
+      562.0
+     ],
+     "depth_m": 3.8684,
+     "inlier_pixels": 30539,
+     "label": "lamppost",
+     "range_m": 4.5686,
+     "score": 0.352782,
+     "sigma_range_m": 0.0261,
+     "world_x": 4.1028,
+     "world_y": 2.3076,
+     "world_z": 1.2522
+    },
+    {
+     "bearing_rad": 0.5806,
+     "box": [
+      174.0,
+      357.0,
+      232.0,
+      506.0
+     ],
+     "depth_m": 4.6325,
+     "inlier_pixels": 7743,
+     "label": "lamppost",
+     "range_m": 5.7571,
+     "score": 0.131551,
+     "sigma_range_m": 0.0414,
+     "world_x": 4.9736,
+     "world_y": 3.1578,
+     "world_z": 0.8309
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-65-1787356718177766005",
+   "height_px": 720,
+   "localized_detections": 3,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 583.148,
+   "published_monotonic_ns": 513425130332568,
+   "published_wall_s": 1787356718.760918,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 3,
+   "rejected_detections": 0,
+   "render_ms": 40.809,
+   "robot_x": 0.1598,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 65,
+   "source_timestamp_ns": 1787356718177766005,
+   "total_ms": 583.149,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513425186964879,
+   "capture_started_monotonic_ns": 513425150554143,
+   "detect_ms": 525.295,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5191,
+     "box": [
+      219.0,
+      135.0,
+      327.0,
+      569.0
+     ],
+     "depth_m": 3.7079,
+     "inlier_pixels": 27248,
+     "label": "lamppost",
+     "range_m": 4.3609,
+     "score": 0.419824,
+     "sigma_range_m": 0.0238,
+     "world_x": 3.9498,
+     "world_y": 2.1635,
+     "world_z": 1.2175
+    },
+    {
+     "bearing_rad": 0.4905,
+     "box": [
+      296.0,
+      175.0,
+      320.0,
+      203.0
+     ],
+     "depth_m": 3.753,
+     "inlier_pixels": 493,
+     "label": "lamppost",
+     "range_m": 4.1306,
+     "score": 0.114603,
+     "sigma_range_m": 0.0213,
+     "world_x": 3.8069,
+     "world_y": 1.9459,
+     "world_z": 2.1062
+    },
+    {
+     "bearing_rad": -0.7422,
+     "box": [
+      1201.0,
+      189.0,
+      1280.0,
+      449.0
+     ],
+     "depth_m": 3.5158,
+     "inlier_pixels": 19866,
+     "label": "lamppost",
+     "range_m": 4.8464,
+     "score": 0.148163,
+     "sigma_range_m": 0.0294,
+     "world_x": 3.7353,
+     "world_y": -3.2756,
+     "world_z": 1.3026
+    },
+    {
+     "bearing_rad": 0.578,
+     "box": [
+      177.0,
+      361.0,
+      234.0,
+      509.0
+     ],
+     "depth_m": 4.6223,
+     "inlier_pixels": 7385,
+     "label": "lamppost",
+     "range_m": 5.7405,
+     "score": 0.106893,
+     "sigma_range_m": 0.0412,
+     "world_x": 4.9716,
+     "world_y": 3.1362,
+     "world_z": 0.8084
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-66-1787356718781135958",
+   "height_px": 720,
+   "localized_detections": 4,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 578.943,
+   "published_monotonic_ns": 513425729497047,
+   "published_wall_s": 1787356719.360082,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 4,
+   "rejected_detections": 0,
+   "render_ms": 36.411,
+   "robot_x": 0.1634,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 66,
+   "source_timestamp_ns": 1787356718781135958,
+   "total_ms": 578.944,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513425785129577,
+   "capture_started_monotonic_ns": 513425749727605,
+   "detect_ms": 514.77,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5219,
+     "box": [
+      220.0,
+      128.0,
+      331.0,
+      548.0
+     ],
+     "depth_m": 3.7325,
+     "inlier_pixels": 24761,
+     "label": "lamppost",
+     "range_m": 4.3688,
+     "score": 0.262478,
+     "sigma_range_m": 0.0239,
+     "world_x": 3.9526,
+     "world_y": 2.1779,
+     "world_z": 1.3318
+    },
+    {
+     "bearing_rad": 0.5734,
+     "box": [
+      181.0,
+      372.0,
+      235.0,
+      527.0
+     ],
+     "depth_m": 4.5786,
+     "inlier_pixels": 7163,
+     "label": "lamppost",
+     "range_m": 5.6978,
+     "score": 0.133743,
+     "sigma_range_m": 0.0406,
+     "world_x": 4.9518,
+     "world_y": 3.0911,
+     "world_z": 0.7001
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-67-1787356719380309420",
+   "height_px": 720,
+   "localized_detections": 2,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 558.442,
+   "published_monotonic_ns": 513426308169291,
+   "published_wall_s": 1787356719.938755,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 2,
+   "rejected_detections": 0,
+   "render_ms": 35.402,
+   "robot_x": 0.1654,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 67,
+   "source_timestamp_ns": 1787356719380309420,
+   "total_ms": 558.442,
+   "truncated_detections": 0,
+   "width_px": 1280
+  },
+  {
+   "active_providers": [
+    "CPUExecutionProvider"
+   ],
+   "capture_completed_monotonic_ns": 513426356754072,
+   "capture_started_monotonic_ns": 513426328371096,
+   "detect_ms": 517.048,
+   "detection_ttl_ns": 300000000,
+   "detections": [
+    {
+     "bearing_rad": 0.5186,
+     "box": [
+      220.0,
+      131.0,
+      332.0,
+      565.0
+     ],
+     "depth_m": 3.7108,
+     "inlier_pixels": 26622,
+     "label": "lamppost",
+     "range_m": 4.3589,
+     "score": 0.34488,
+     "sigma_range_m": 0.0238,
+     "world_x": 3.9531,
+     "world_y": 2.1607,
+     "world_z": 1.2345
+    },
+    {
+     "bearing_rad": -0.7484,
+     "box": [
+      1207.0,
+      163.0,
+      1280.0,
+      425.0
+     ],
+     "depth_m": 3.4875,
+     "inlier_pixels": 18460,
+     "label": "lamppost",
+     "range_m": 4.7988,
+     "score": 0.177034,
+     "sigma_range_m": 0.0288,
+     "world_x": 3.6838,
+     "world_y": -3.2655,
+     "world_z": 1.4274
+    },
+    {
+     "bearing_rad": 0.4899,
+     "box": [
+      297.0,
+      176.0,
+      321.0,
+      203.0
+     ],
+     "depth_m": 3.7498,
+     "inlier_pixels": 445,
+     "label": "lamppost",
+     "range_m": 4.1265,
+     "score": 0.108142,
+     "sigma_range_m": 0.0213,
+     "world_x": 3.8086,
+     "world_y": 1.9417,
+     "world_z": 2.1021
+    },
+    {
+     "bearing_rad": 0.5904,
+     "box": [
+      116.0,
+      350.0,
+      272.0,
+      543.0
+     ],
+     "depth_m": 4.6094,
+     "inlier_pixels": 27097,
+     "label": "lamppost",
+     "range_m": 5.7985,
+     "score": 0.128352,
+     "sigma_range_m": 0.042,
+     "world_x": 4.9842,
+     "world_y": 3.2282,
+     "world_z": 0.7054
+    }
+   ],
+   "detector_name": "owlv2",
+   "expired_at_publish": true,
+   "frame_id": "cam-68-1787356719958952831",
+   "height_px": 720,
+   "localized_detections": 4,
+   "provider_profile": "cpu_int8",
+   "publish_latency_ms": 561.479,
+   "published_monotonic_ns": 513426889850473,
+   "published_wall_s": 1787356720.520436,
+   "queries": [
+    "person",
+    "lamppost"
+   ],
+   "raw_detections": 4,
+   "rejected_detections": 0,
+   "render_ms": 28.383,
+   "robot_x": 0.1674,
+   "robot_y": 0.0,
+   "robot_yaw_rad": 0.0,
+   "sequence": 68,
+   "source_timestamp_ns": 1787356719958952831,
+   "total_ms": 561.48,
+   "truncated_detections": 0,
+   "width_px": 1280
+  }
+ ],
+ "note": "Card C-2 fixture. VERBATIM copy of the 16 retained CameraDetectionFrame rows C-1 published from a live run of the real stack against W-1's textured city_block scene (sha e89f4f12...), OWLv2-b16 int8 on CPU, query batch ['person','lamppost']. Source of truth: scrum/20260821/task_11b/evidence/rerun_live_20260821T235718Z/on_frames.json (summary.json sha256 1dff417b790f1dbd7b47d09deb74b0f52d9a0211e4e38760676d31bff57a6db9). Copied rather than referenced so C-2's tests do not depend on another card's evidence folder staying where it is.",
+ "source_summary_sha256": "1dff417b790f1dbd7b47d09deb74b0f52d9a0211e4e38760676d31bff57a6db9"
+}

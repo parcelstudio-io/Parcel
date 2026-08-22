@@ -67,10 +67,19 @@ from parcel_robot.runtime_channels import NavigationChannel
 REPO = pathlib.Path(__file__).resolve().parents[1]
 RUNTIME_PATH = REPO / "src" / "parcel_robot" / "runtime.py"
 
-#: The six locks ``RobotRuntime.__init__`` constructs. Named explicitly rather
-#: than discovered so that a SEVENTH lock added without a card is itself a
-#: finding: ``test_the_lock_roster_is_complete`` fails until it is listed here
-#: with an owner and an order.
+#: The seven locks ``RobotRuntime.__init__`` constructs. Named explicitly
+#: rather than discovered so that an EIGHTH lock added without a card is itself
+#: a finding: ``test_the_lock_roster_is_complete`` fails until it is listed
+#: here with an owner and an order.
+#:
+#: * 2026-08-21 (C-1) — ``_camera_stream_lock`` added, owner: the camera
+#:   observation stream. It guards the bounded frame queue, its drop counters,
+#:   and the single-slot pose mailbox — one lock for all three deliberately, so
+#:   that attaching the eye costs this roster ONE new name and ZERO new
+#:   ordering edges (``test_the_lock_order_is_the_pinned_one`` is the proof:
+#:   ``PINNED_LOCK_ORDER`` below is unchanged by C-1). It is a leaf: the
+#:   camera worker takes it alone, never while holding another runtime lock,
+#:   and never across a render, an inference, or an evidence-log offer.
 RUNTIME_LOCKS: tuple[str, ...] = (
     "_lock",
     "_agent_lock",
@@ -78,6 +87,7 @@ RUNTIME_LOCKS: tuple[str, ...] = (
     "_command_lock",
     "_close_lock",
     "_transcript_lock",
+    "_camera_stream_lock",
 )
 
 #: The three hosted motion doors §Arch-1 names. Each must hold ``_agent_lock``

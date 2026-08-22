@@ -59,6 +59,44 @@ terminal_verification:
 perception:
   tier: T0
   seed: 20260807
+
+  # Card C-3 (scrum/20260821/task_13/) — WHERE semantic candidates come from.
+  #
+  # This is a DIFFERENT AXIS from `tier` above, and the two must never be
+  # conflated. `tier` chooses how much sensor noise is applied to whatever
+  # candidates arrive; both of its rungs read the MuJoCo ground-truth oracle.
+  # `semantic_source` chooses whose map answers "where is the bench".
+  #
+  #   oracle       THE DEFAULT. The GT read, unchanged and byte-identical to
+  #                everything before this card. `extract_city_semantics` /
+  #                `visible_city_semantics` with their stamped 0.98.
+  #   learned_map  C-2's OnlineSemanticMap is the ONLY candidate source. The
+  #                card calls this "T1". Confidences are earned from evidence
+  #                counts and label purity; there is no 0.98. The scene sidecar
+  #                is not read, so the "go to Narnia" refusal stops being a
+  #                property of a declared label set and becomes a property of
+  #                what the robot has actually seen.
+  #   shadow       The card's "T0_shadow_T1". The oracle DRIVES; the learned map
+  #                answers beside it and every disagreement is classified
+  #                {benign_miss, localization_delta, admission_flip,
+  #                refusal_flip} and logged with the frames that produced it.
+  #                Behaviourally identical to `oracle` — it is a measuring
+  #                instrument, not a deployment mode.
+  #
+  # `T1` is REFUSED here, loudly, and that refusal is deliberate: T1 is a
+  # registered *tier* name (see REGISTERED_TIERS) and a config that wrote it
+  # under this key while meaning "read the learned map" would silently get the
+  # oracle with a noise ladder on top. Write `learned_map`.
+  #
+  # Off-oracle this ALSO empties the demo_pois.yaml POI table. `PlaceGrounder`
+  # fires before semantic search and grounds "coffee shop"/"crosswalk"/"park"/
+  # "bookstore" to hardcoded coordinates; it is a second oracle, and a mission
+  # that "succeeds" through it under `learned_map` has measured a lookup table.
+  # See scrum/20260821/cutover_research/res_design_review.md F1.
+  #
+  # Unknown keys starting `semantic_source` are a hard error, for the same
+  # reason the abstention block below makes them one.
+  semantic_source: oracle
   # Widens both confidence distributions; 1.0 is the calibrated shape.
   confidence_temperature: 1.0
   # Arrival evidence threshold on the MEAN detection score across confirming

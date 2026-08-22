@@ -1,0 +1,297 @@
+{
+  "arms": {
+    "held": {
+      "arm": "held",
+      "attribution": {
+        "buckets": {
+          "delivered_moving": 0,
+          "gate_scaled": 255,
+          "gate_zeroed_obstacle": 0,
+          "gate_zeroed_other": 38,
+          "gate_zeroed_person": 24,
+          "gate_zeroed_ttc": 81,
+          "no_intent": 0,
+          "ramp_limited": 0,
+          "ttc_gate_zeroed": 0,
+          "zero_intent": 0
+        },
+        "d6_compounded_share": 1.0,
+        "d6_compounded_ticks": 255,
+        "d6_examples": [
+          {
+            "delivered": 0.021569,
+            "scale": 0.239656,
+            "single_application": 0.059914
+          },
+          {
+            "delivered": 0.007172,
+            "scale": 0.23965,
+            "single_application": 0.059912
+          },
+          {
+            "delivered": 0.023257,
+            "scale": 0.239009,
+            "single_application": 0.059752
+          },
+          {
+            "delivered": 0.026954,
+            "scale": 0.237397,
+            "single_application": 0.059349
+          },
+          {
+            "delivered": 0.027398,
+            "scale": 0.235416,
+            "single_application": 0.058854
+          }
+        ],
+        "d6_slowing_ticks": 255,
+        "gate_touched_ticks": 398,
+        "sent_count": 324,
+        "sent_max_speed": 0.027398,
+        "sent_nonzero_count": 255,
+        "sent_p50_speed": 0.011263,
+        "ticks": 398,
+        "translating_intent_ticks": 398
+      },
+      "collision_ticks": 50,
+      "duration_s": 40.0,
+      "first": [
+        0.0,
+        0.0
+      ],
+      "last": [
+        0.31856,
+        0.0
+      ],
+      "motion_accepted": 160,
+      "motion_rejected": 0,
+      "net_displacement_m": 0.31856,
+      "path_length_m": 0.31856,
+      "pose_samples": 398
+    },
+    "held_static": {
+      "arm": "held_static",
+      "attribution": {
+        "buckets": {
+          "delivered_moving": 6,
+          "gate_scaled": 13,
+          "gate_zeroed_obstacle": 0,
+          "gate_zeroed_other": 374,
+          "gate_zeroed_person": 0,
+          "gate_zeroed_ttc": 0,
+          "no_intent": 0,
+          "ramp_limited": 3,
+          "ttc_gate_zeroed": 0,
+          "zero_intent": 0
+        },
+        "d6_compounded_share": 0.7692,
+        "d6_compounded_ticks": 10,
+        "d6_examples": [
+          {
+            "delivered": 0.230042,
+            "scale": 0.920168,
+            "single_application": 0.230042
+          },
+          {
+            "delivered": 0.174478,
+            "scale": 0.697912,
+            "single_application": 0.174478
+          },
+          {
+            "delivered": 0.131886,
+            "scale": 0.527544,
+            "single_application": 0.131886
+          },
+          {
+            "delivered": 0.088727,
+            "scale": 0.398823,
+            "single_application": 0.099706
+          },
+          {
+            "delivered": 0.056105,
+            "scale": 0.311575,
+            "single_application": 0.077894
+          }
+        ],
+        "d6_slowing_ticks": 13,
+        "gate_touched_ticks": 387,
+        "sent_count": 198,
+        "sent_max_speed": 0.25,
+        "sent_nonzero_count": 19,
+        "sent_p50_speed": 0.0,
+        "ticks": 398,
+        "translating_intent_ticks": 398
+      },
+      "collision_ticks": 0,
+      "duration_s": 40.0,
+      "first": [
+        0.0,
+        0.0
+      ],
+      "last": [
+        0.313346,
+        0.0
+      ],
+      "motion_accepted": 160,
+      "motion_rejected": 0,
+      "net_displacement_m": 0.313346,
+      "path_length_m": 0.313346,
+      "pose_samples": 398
+    },
+    "replicate": {
+      "arm": "replicate",
+      "attribution": {
+        "buckets": {
+          "delivered_moving": 0,
+          "gate_scaled": 180,
+          "gate_zeroed_obstacle": 0,
+          "gate_zeroed_other": 0,
+          "gate_zeroed_person": 14,
+          "gate_zeroed_ttc": 46,
+          "no_intent": 0,
+          "ramp_limited": 0,
+          "ttc_gate_zeroed": 0,
+          "zero_intent": 160
+        },
+        "d6_compounded_share": 1.0,
+        "d6_compounded_ticks": 180,
+        "d6_examples": [
+          {
+            "delivered": 0.021569,
+            "scale": 0.239656,
+            "single_application": 0.059914
+          },
+          {
+            "delivered": 0.009648,
+            "scale": 0.23941,
+            "single_application": 0.059853
+          },
+          {
+            "delivered": 0.02399,
+            "scale": 0.238649,
+            "single_application": 0.059662
+          },
+          {
+            "delivered": 0.021391,
+            "scale": 0.236731,
+            "single_application": 0.059183
+          },
+          {
+            "delivered": 0.026809,
+            "scale": 0.235222,
+            "single_application": 0.058806
+          }
+        ],
+        "d6_slowing_ticks": 180,
+        "gate_touched_ticks": 240,
+        "sent_count": 209,
+        "sent_max_speed": 0.026809,
+        "sent_nonzero_count": 180,
+        "sent_p50_speed": 0.013516,
+        "ticks": 400,
+        "translating_intent_ticks": 240
+      },
+      "collision_ticks": 50,
+      "duration_s": 40.0,
+      "first": [
+        0.0,
+        0.0
+      ],
+      "last": [
+        0.225913,
+        0.0
+      ],
+      "motion_accepted": 160,
+      "motion_rejected": 0,
+      "net_displacement_m": 0.225913,
+      "path_length_m": 0.225913,
+      "pose_samples": 400
+    },
+    "steered": {
+      "arm": "steered",
+      "attribution": {
+        "buckets": {
+          "delivered_moving": 73,
+          "gate_scaled": 121,
+          "gate_zeroed_obstacle": 0,
+          "gate_zeroed_other": 0,
+          "gate_zeroed_person": 0,
+          "gate_zeroed_ttc": 9,
+          "no_intent": 0,
+          "ramp_limited": 8,
+          "ttc_gate_zeroed": 0,
+          "zero_intent": 156
+        },
+        "d6_compounded_share": 0.7603,
+        "d6_compounded_ticks": 92,
+        "d6_examples": [
+          {
+            "delivered": 0.021569,
+            "scale": 0.239656,
+            "single_application": 0.059914
+          },
+          {
+            "delivered": 0.007125,
+            "scale": 0.239657,
+            "single_application": 0.059914
+          },
+          {
+            "delivered": 0.023215,
+            "scale": 0.239014,
+            "single_application": 0.059754
+          },
+          {
+            "delivered": 0.02683,
+            "scale": 0.237406,
+            "single_application": 0.059352
+          },
+          {
+            "delivered": 0.027753,
+            "scale": 0.235432,
+            "single_application": 0.058858
+          }
+        ],
+        "d6_slowing_ticks": 121,
+        "gate_touched_ticks": 130,
+        "sent_count": 183,
+        "sent_max_speed": 0.25,
+        "sent_nonzero_count": 178,
+        "sent_p50_speed": 0.113911,
+        "ticks": 398,
+        "translating_intent_ticks": 242
+      },
+      "collision_ticks": 18,
+      "duration_s": 40.0,
+      "first": [
+        0.0,
+        0.0
+      ],
+      "last": [
+        0.34799,
+        1.221846
+      ],
+      "motion_accepted": 160,
+      "motion_rejected": 0,
+      "net_displacement_m": 1.270435,
+      "path_length_m": 3.776813,
+      "pose_samples": 398
+    }
+  },
+  "duration_s": 40.0,
+  "fresh_simulator_per_arm": true,
+  "generated_at": "2026-08-22T03:15:16.540359+00:00",
+  "owner_store": {
+    "sha256_after": null,
+    "sha256_before": null,
+    "unchanged": true
+  },
+  "repo_head": "71b39a1ad66bb2fb2f6e647dbc94d351fd75d665",
+  "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+  "scene_sha256": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58",
+  "simulator_returncodes": {
+    "held": -15,
+    "held_static": -15,
+    "replicate": -15,
+    "steered": -15
+  }
+}

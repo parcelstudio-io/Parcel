@@ -1,0 +1,164 @@
+Parcel sim ready: /home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml
+Listening for poses/walk/trajectory on /tmp/parcel-c1-rerun-639998.sock
+Controls: W/S A/D Q/E Space, 1=sit 2=bow, or run parcel-control
+Failed to load plugin 'libdecor-gtk.so': failed to init
+No plugins found, falling back on no decorations
+/home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/lib/python3.14/site-packages/glfw/__init__.py:917: GLFWError: (65548) b'Wayland: The platform does not provide the window position'
+  warnings.warn(message, GLFWError)
+WARNING: OpenGL error 0x502 in or before mjr_makeContext
+
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.00 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.02 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+walk command: vx=0.00 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+walk command: vx=0.01 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+emergency stop latched

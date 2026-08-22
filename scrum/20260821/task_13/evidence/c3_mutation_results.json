@@ -1,0 +1,169 @@
+{
+  "card": "C-3",
+  "suite": "tests/test_c3_cutover.py",
+  "canary": {
+    "outcome": "green",
+    "detail": "54 passed, 3 warnings in 1.25s"
+  },
+  "seeds_total": 15,
+  "seeds_red": 15,
+  "all_restored": true,
+  "final_sweep": {
+    "outcome": "green",
+    "detail": "54 passed, 3 warnings in 1.11s"
+  },
+  "repo_root_strays": [],
+  "elapsed_s": 50.3,
+  "results": [
+    {
+      "seed": 1,
+      "name": "T1 stamps a fake confidence",
+      "property_broken": "the oracle's 0.98-by-fiat returns under a new name",
+      "file": "src/parcel_robot/navigation/semantic_map.py",
+      "outcome": "red",
+      "detail": "2 failed, 52 passed, 3 warnings in 1.18s",
+      "restored": true,
+      "pre_seed_sha256": "51c07d45d7478cc26d95e739843f3becea81c276eb59dbb59eb79a1b4b7ce40e"
+    },
+    {
+      "seed": 2,
+      "name": "shadow divergence unlogged",
+      "property_broken": "the migration instrument records nothing",
+      "file": "src/parcel_robot/perception_source/shadow.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.20s",
+      "restored": true,
+      "pre_seed_sha256": "df474f1d0af90c07fada1269c2416e725df73112592395f2be6986435a6a97d8"
+    },
+    {
+      "seed": 3,
+      "name": "rows 10-13 admit under T1 (empty map fails open)",
+      "property_broken": "'go to Narnia' returns the moment the label set is gone",
+      "file": "src/parcel_robot/runtime.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.16s",
+      "restored": true,
+      "pre_seed_sha256": "11f93f45b21dfab4761bcafd866c2436336e808809c18d2eadcd6f65223e25a7"
+    },
+    {
+      "seed": 4,
+      "name": "safety reads the semantic source",
+      "property_broken": "the tier moves the safety envelope",
+      "file": "src/parcel_robot/navigation/reactive_safety.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.18s",
+      "restored": true,
+      "pre_seed_sha256": "ea56325d0e280ebc9169e4e62a9bec062464e629b6f6695800f4a3139922252f"
+    },
+    {
+      "seed": 5,
+      "name": "T0 is not byte-identical (oracle routed through the map arm)",
+      "property_broken": "the shipping default stops being the pre-C-3 read",
+      "file": "src/parcel_robot/navigation/semantic_map.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.18s",
+      "restored": true,
+      "pre_seed_sha256": "51c07d45d7478cc26d95e739843f3becea81c276eb59dbb59eb79a1b4b7ce40e"
+    },
+    {
+      "seed": 6,
+      "name": "the POI table is re-enabled off-oracle",
+      "property_broken": "a T1-only mission can pass by consulting a lookup table",
+      "file": "src/parcel_robot/navigation/grounder.py",
+      "outcome": "red",
+      "detail": "3 failed, 51 passed, 3 warnings in 1.17s",
+      "restored": true,
+      "pre_seed_sha256": "4f5c255f99f3c65ff95ddfe463a5d9302f0801442217c11b405380a60268b668"
+    },
+    {
+      "seed": 7,
+      "name": "the disabled POI arm still grounds",
+      "property_broken": "the disable is a log line rather than a mechanism",
+      "file": "src/parcel_robot/navigation/grounder.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.22s",
+      "restored": true,
+      "pre_seed_sha256": "4f5c255f99f3c65ff95ddfe463a5d9302f0801442217c11b405380a60268b668"
+    },
+    {
+      "seed": 8,
+      "name": "the divergence taxonomy collapses two classes into one",
+      "property_broken": "an admission flip and a benign miss become the same event",
+      "file": "src/parcel_robot/perception_source/shadow.py",
+      "outcome": "red",
+      "detail": "3 failed, 51 passed, 3 warnings in 1.17s",
+      "restored": true,
+      "pre_seed_sha256": "df474f1d0af90c07fada1269c2416e725df73112592395f2be6986435a6a97d8"
+    },
+    {
+      "seed": 9,
+      "name": "agreement is reported without its denominators",
+      "property_broken": "a rate with no n behind it re-enters the record",
+      "file": "src/parcel_robot/perception_source/shadow.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.38s",
+      "restored": true,
+      "pre_seed_sha256": "df474f1d0af90c07fada1269c2416e725df73112592395f2be6986435a6a97d8"
+    },
+    {
+      "seed": 10,
+      "name": "a divergence is accepted without the frames that produced it",
+      "property_broken": "divergence stops being re-examinable evidence",
+      "file": "src/parcel_robot/perception_source/shadow.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.22s",
+      "restored": true,
+      "pre_seed_sha256": "df474f1d0af90c07fada1269c2416e725df73112592395f2be6986435a6a97d8"
+    },
+    {
+      "seed": 11,
+      "name": "the tier and source axes are conflated ('T1' selects the map)",
+      "property_broken": "a config that says T1 silently gets the oracle plus noise",
+      "file": "src/parcel_robot/perception_source/selection.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.18s",
+      "restored": true,
+      "pre_seed_sha256": "047cac29f4900fbb4a2bd5e993ee43cac9f6ef978666b4cc3480b0dce581e36a"
+    },
+    {
+      "seed": 12,
+      "name": "an unestablished sensing envelope counts as comparable",
+      "property_broken": "a forgetful harness inflates its own agreement denominator",
+      "file": "src/parcel_robot/perception_source/shadow.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.24s",
+      "restored": true,
+      "pre_seed_sha256": "df474f1d0af90c07fada1269c2416e725df73112592395f2be6986435a6a97d8"
+    },
+    {
+      "seed": 13,
+      "name": "the learned-map source silently falls back to the oracle",
+      "property_broken": "the cutover reports success while ground truth answers",
+      "file": "src/parcel_robot/navigation/semantic_map.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.24s",
+      "restored": true,
+      "pre_seed_sha256": "51c07d45d7478cc26d95e739843f3becea81c276eb59dbb59eb79a1b4b7ce40e"
+    },
+    {
+      "seed": 14,
+      "name": "an empty agreement class reports a perfect score",
+      "property_broken": "n=0 flatters instead of abstaining",
+      "file": "src/parcel_robot/perception_source/shadow.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.23s",
+      "restored": true,
+      "pre_seed_sha256": "df474f1d0af90c07fada1269c2416e725df73112592395f2be6986435a6a97d8"
+    },
+    {
+      "seed": 15,
+      "name": "the scene note keeps denying the robot has eyes under T1",
+      "property_broken": "F12: the hosted model is instructed to deny a real capability",
+      "file": "src/parcel_robot/runtime.py",
+      "outcome": "red",
+      "detail": "1 failed, 53 passed, 3 warnings in 1.13s",
+      "restored": true,
+      "pre_seed_sha256": "11f93f45b21dfab4761bcafd866c2436336e808809c18d2eadcd6f65223e25a7"
+    }
+  ]
+}

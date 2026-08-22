@@ -1,0 +1,141 @@
+{
+  "schema": "parcel.c1_mutation_results.v1",
+  "date": "2026-08-21",
+  "cache_protocol": {
+    "python_no_bytecode": true,
+    "pytest_cacheprovider_disabled": true,
+    "seed_specific_pythonpycacheprefix": true
+  },
+  "result": {
+    "seeds_planned": 10,
+    "seeds_red": 10,
+    "seeds_restored_exactly": 10,
+    "named_green_after_restore": 10
+  },
+  "frozen_sha256": {
+    "src/parcel_robot/runtime.py": "024a363224cb67ca9c6d538a1827a95b993b355213b633d497a96fab52f08398",
+    "src/parcel_robot/realtime/evidence_log.py": "0b5a52be8e05f6c2b1ab7f5139dae32c2709a3aebf5fdce38338a5196e63fdda",
+    "src/parcel_robot/camera_channel/ingress.py": "5d9f3405ba559216471122ae4fb11356ef8057fef19f0842e1b6de01604bec07",
+    "src/parcel_robot/camera_channel/backends/mujoco_egl.py": "4cb4b2f4d56e89e71e5f0589892ce1063c474d490393f6b433e3a5a71d28b136",
+    "src/parcel_robot/web_panel.py": "fc423fcf163822eb50b5cb0d2b7d3b6fff767141f4c8752c67e827863c2fcc9a",
+    "tests/test_c1_camera_ingress.py": "b9318755478fab4bdc668ad3f216c6d7ccf18e8970cd634060a7c23b61cb3cdc"
+  },
+  "seeds": [
+    {
+      "id": "C1-M1",
+      "file": "src/parcel_robot/runtime.py",
+      "mutation": "missing perception.camera_ingress defaults true",
+      "mutant_sha256": "23f35b94fb889eab2e9b1456b69fac32ffa24664f60c04f1d28d63cb02d85afc",
+      "test": "test_c1_config_is_strict_default_off_and_keeps_unrelated_perception_keys",
+      "red": "1 failed",
+      "failure": "default.enabled was True",
+      "green": "1 passed",
+      "restored_sha256": "024a363224cb67ca9c6d538a1827a95b993b355213b633d497a96fab52f08398"
+    },
+    {
+      "id": "C1-M2",
+      "file": "src/parcel_robot/runtime.py",
+      "mutation": "queue eviction does not increment dropped frame counter",
+      "mutant_sha256": "d1f005daf8422c0d969336f81d75188d2c4c158c3192fa9c6215e7bdeb472916",
+      "test": "test_runtime_keep_newest_queue_counts_truncation_eviction_and_duplicates",
+      "red": "1 failed",
+      "failure": "expected dropped_frames 1, observed 0",
+      "green": "1 passed",
+      "restored_sha256": "024a363224cb67ca9c6d538a1827a95b993b355213b633d497a96fab52f08398"
+    },
+    {
+      "id": "C1-M3",
+      "file": "src/parcel_robot/realtime/evidence_log.py",
+      "mutation": "default v1 snapshot gains v2 schema field",
+      "mutant_sha256": "bd61c2bc8588a5636ebdd1bab8d9bbc3ae4059339208da758af03330f2433d8a",
+      "test": "test_default_v1_writer_snapshot_keeps_exact_legacy_shape_and_v2_is_additive",
+      "red": "1 failed",
+      "failure": "legacy snapshot had an extra schema key",
+      "green": "1 passed",
+      "restored_sha256": "0b5a52be8e05f6c2b1ab7f5139dae32c2709a3aebf5fdce38338a5196e63fdda"
+    },
+    {
+      "id": "C1-M4",
+      "file": "src/parcel_robot/runtime.py",
+      "mutation": "typed camera evidence offered to event stream",
+      "mutant_sha256": "b8bd6ad2a9aa1be4d3293ccc911b8cffb05948e89925af13a1e7d3d3c0f6c119",
+      "test": "test_real_ev1_v2_persists_and_verifies_a_typed_perception_slice",
+      "red": "1 failed",
+      "failure": "zero perception rows persisted",
+      "green": "1 passed",
+      "restored_sha256": "024a363224cb67ca9c6d538a1827a95b993b355213b633d497a96fab52f08398"
+    },
+    {
+      "id": "C1-M5",
+      "file": "src/parcel_robot/camera_channel/ingress.py",
+      "mutation": "worker reuses last pose after pose source returns none",
+      "mutant_sha256": "1f45b3159f3a82b5edec3d7246fc03af33c09b60d0a6e40ba17537487c177bca",
+      "test": "test_pose_source_requires_a_new_sample_for_every_capture",
+      "red": "1 failed",
+      "failure": "five captures were emitted from one pose",
+      "green": "1 passed",
+      "restored_sha256": "5d9f3405ba559216471122ae4fb11356ef8057fef19f0842e1b6de01604bec07"
+    },
+    {
+      "id": "C1-M6",
+      "file": "src/parcel_robot/camera_channel/ingress.py",
+      "mutation": "request/envelope sequence correlation check removed",
+      "mutant_sha256": "f1fa9c0d74160f70f88cc2723391be1b94621f935eb51f2b038edaf9cd8850e4",
+      "test": "test_capture_envelope_mismatch_fails_before_detector_or_evidence",
+      "red": "1 failed, 8 passed",
+      "failure": "sequence mismatch reached detector/frame publication",
+      "green": "9 passed",
+      "restored_sha256": "5d9f3405ba559216471122ae4fb11356ef8057fef19f0842e1b6de01604bec07"
+    },
+    {
+      "id": "C1-M7",
+      "file": "src/parcel_robot/web_panel.py",
+      "mutation": "panel parser accepts argparse abbreviations",
+      "mutant_sha256": "cbea9e4e3abcdfbf81934ac9100ce9ac1cbcaaa11b50301585ba1d98cdf746dc",
+      "test": "test_sim_and_panel_clis_refuse_abbreviated_composition_overrides",
+      "red": "2 failed, 2 passed",
+      "failure": "panel accepted abbreviated scene/config overrides",
+      "green": "4 passed",
+      "restored_sha256": "fc423fcf163822eb50b5cb0d2b7d3b6fff767141f4c8752c67e827863c2fcc9a"
+    },
+    {
+      "id": "C1-M8",
+      "file": "src/parcel_robot/camera_channel/backends/mujoco_egl.py",
+      "mutation": "EGL backend retains historical buffer refs",
+      "mutant_sha256": "34c86158b98ac6d843d511efc5cf00503b0a3289b5807d78da92ccdf59dbfc58",
+      "test": "test_mujoco_backend_replaces_ephemeral_buffers_instead_of_leaking_history",
+      "red": "1 failed",
+      "failure": "second capture retained five refs instead of three",
+      "green": "1 passed",
+      "restored_sha256": "4cb4b2f4d56e89e71e5f0589892ce1063c474d490393f6b433e3a5a71d28b136"
+    },
+    {
+      "id": "C1-M9",
+      "file": "src/parcel_robot/runtime.py",
+      "mutation": "C1 producer may coexist with legacy B4 authority",
+      "mutant_sha256": "664fde3e35c59d782cd873e1ca27c6b53bb58c46e26f79334f7a1becb4f985a2",
+      "test": "test_c1_refuses_both_legacy_authority_arms",
+      "red": "1 failed",
+      "failure": "legacy config arm did not fail closed",
+      "green": "1 passed",
+      "restored_sha256": "024a363224cb67ca9c6d538a1827a95b993b355213b633d497a96fab52f08398"
+    },
+    {
+      "id": "C1-M10",
+      "file": "src/parcel_robot/runtime.py",
+      "mutation": "current expiry uses publish clock rather than snapshot clock",
+      "mutant_sha256": "3b86c91780c3eec1f41e0a7ec7084dfe31d4f795ce85cf0ed7372187fc450f1a",
+      "test": "test_snapshot_current_expiry_flips_at_the_exact_ttl_boundary",
+      "red": "1 failed",
+      "failure": "latest_frame_expired_now stayed false at exact expiry",
+      "green": "1 passed",
+      "restored_sha256": "024a363224cb67ca9c6d538a1827a95b993b355213b633d497a96fab52f08398"
+    }
+  ],
+  "post_restore": {
+    "dedicated": "86 passed, 3 warnings in 16.65s",
+    "cross": "192 passed, 3 warnings in 21.46s",
+    "ruff": "All checks passed!",
+    "diff_check": "clean"
+  }
+}

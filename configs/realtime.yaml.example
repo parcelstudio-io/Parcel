@@ -97,11 +97,78 @@ session_max_s: 3600.0
 # at the first syllable, and a turn that is still waiting for its answer is
 # never idle at all.
 #
-# There is deliberately no "off" value. Zero and negatives are refused, exactly
-# as a whisperer cap of zero is: a silent off switch on a session that bills by
-# the minute is the defect this key exists to remove. Write a big number if you
-# genuinely want a session that never hangs itself up.
+# ZERO MEANS NEVER (card P0-B). It used to be refused, on the reasoning that a
+# silent off switch on a billing session is worse than a loud number — and the
+# reasoning was right about silence and wrong about zero, which is neither
+# silent nor a default: you write it by hand, /api/state echoes it, and the two
+# bounds that keep an unattended session finite are untouched (`session_max_s`
+# still rolls the socket over, `monthly_budget_usd` still stops the robot
+# starting billed exchanges, and both still refuse zero). What it buys is a
+# prototype companion that is still awake when you come back into the room.
+#
+# Negatives, non-numbers and `.inf` are still refusals.
 idle_close_after_s: 600.0
+
+# ---------------------------------------------------------------------------
+# THE COMPANION UNLOCKS (card P0-B). All three are OFF in the values shown, and
+# a config that omits them behaves exactly as it did before the card.
+
+# MAY THE ROBOT MOVE WHEN NOBODY SPOKE TO IT?
+#
+# The lane tags every response with who asked for it. A response the ROBOT
+# started — it narrated its own battery level and asked the model for a reply —
+# may not move the body, because the 2026-08-19 bench fired a spurious
+# `navigate_to("picnic spot by the big oak")` off a single injected telemetry
+# item in 2 of 3 forced-response trials. That gate is why the dog cannot drive
+# off because it told itself something. It is also why the companion cannot tilt
+# its head when you walk in.
+#
+# This list is the hole in that gate, and only these two names may go in it:
+#
+#   play_gesture   a bounded emote from the catalog
+#   set_pose       a bounded pose from the catalog
+#
+# `navigate_to`, `circle_owner` and `follow_owner` are REFUSED AT LOAD if you
+# write them here — they commit the robot to travel, and a trip you never asked
+# for is the defect the gate exists to prevent. Everything admitted still goes
+# through the safety supervisor, the emergency latch and the activity
+# coordinator's cooldown, exactly as your own request does.
+#
+# Empty (the default) means no proactive motion at all.
+proactive_motion_tools: []
+
+# WHAT `navigate_to` DOES WITH A PLACE THE MAP HAS NEVER HEARD OF.
+#
+#   refuse  the shipped behaviour: the name is handed to the router exactly as
+#           a typed "go to narnia" is, and the refusal comes from grounding.
+#           Authority parity with the keyboard, and a robot that sets off and
+#           then gives up.
+#   ask     the broker answers the model with a structured `unknown_place`
+#           result naming the places it DOES know, touches no door and starts
+#           no motion — so the companion asks you where that is, or offers to
+#           go and look, instead of walking at a name it cannot ground.
+#
+# A place the robot knows is unaffected either way, and so is a junk directive
+# ("with owner"), which is refused before this key is consulted.
+unknown_place: refuse
+
+# DOES "I'M FEELING SAD" REACH THE BODY ON THIS LANE?
+#
+# The deterministic explicit-affect grammar — the one that turns an explicit
+# first-person feeling into your personality's `affect_actions` gesture, a
+# comfort bow for sad and a paw wave for happy — has only ever been wired to the
+# LEGACY voice path. Everything you say to the hosted companion arrives
+# somewhere else, so on the lane that actually ships the sentence has always
+# done nothing: the model says something kind and the body stays still.
+#
+# With this true, a hosted sentence that no local command claimed is checked for
+# an explicit affect. Above `agent.affect.minimum_confidence` in
+# configs/robot.yaml it writes an `[affect <label>]` note into the conversation
+# ledger (a `system` row, so it does not appear in the chat pane as something
+# the robot said) and PROPOSES the gesture to the activity coordinator, which
+# keeps the timing, the cooldown and the e-stop. It never replies, never speaks
+# and never touches postural recovery.
+hosted_affect: false
 
 # The arming gate refuses to open a session once this month's estimated spend
 # reaches this number. Estimated at ASSUMED rates (realtime/cost.py) — it is a
@@ -174,6 +241,18 @@ whisperer:
   # the bench caught a reroute silently swallowed by a min-gap that a
   # "way is clear again" was holding.
   min_gap_s: 15.0
+
+  # THE OTHER HALF OF THE CAP (card P0-B). The window `max_updates_per_minute`
+  # is counted over, in seconds. It was a literal 60 inside the code, which made
+  # the narration rate half a knob: you could set the number and not the minute,
+  # so the only rates you could buy were whole multiples of one-per-minute. 60.0
+  # is the same minute the cap has always meant.
+  #
+  # Halve it for a chattier prototype (2 per 30 s is 4/min at the same spacing);
+  # raise it for a quieter robot without dropping the cap to 1. Zero is refused:
+  # a window of nothing counts nothing and would remove the cap silently, and
+  # `enabled: false` is the off switch that can be seen.
+  window_s: 60.0
 
 # ---------------------------------------------------------------------------
 # SESSION AUDIO CAPTURE (card R17) — DEFAULT OFF, and off is the shipped answer.

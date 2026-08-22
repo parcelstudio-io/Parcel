@@ -1,0 +1,156 @@
+# Parcel — the PROTOTYPE profile (card P0-A, 2026-08-22).
+#
+# THIS FILE IS AN OVERLAY, NOT A CONFIG. It is deep-merged ON TOP OF
+# configs/robot.yaml by parcel_robot.config.ConfigStore; every key absent here
+# keeps the shipped value, and mappings merge key by key (a list replaces).
+#
+# Select it with either of:
+#
+#     scripts/launch_stack.sh --prototype        # exports PARCEL_PROFILE for
+#                                                # the panel AND the simulator
+#     PARCEL_PROFILE=prototype .parcel/bin/python -m parcel_robot.web_panel ...
+#
+# WHY A SEPARATE FILE. configs/robot.yaml is SHA-locked by
+# evals/companion/embodied_plan_v1/manifest.json (and checked in
+# scripts/ci_gate.py), so until this card every prototype relaxation was an
+# edit that moved a frozen digest and dragged an eval re-freeze behind it. The
+# overlay carries the relaxations without touching that file's bytes.
+#
+# THE MERGED RESULT IS VALIDATED BY THE SAME LOADERS. Nothing downstream knows
+# profiles exist: a typo here fails at startup exactly where a typo in
+# configs/robot.yaml would, and with the same message. There is no separate
+# schema to keep in step, and no key here that the shipped file does not
+# already define somewhere.
+
+# ---------------------------------------------------------------------------
+# THE EYE (card P0-A deliverable 3)
+#
+# `perception.camera_ingress` is THE camera switch, and it is the one this
+# profile sets. Setting it starts the C-1 observation stream AND (card P0-A)
+# grants pixel grounding, which used to be a second switch that REFUSED this
+# one at startup — an operator who wanted both had to answer "which of these is
+# authoritative" from a snapshot and then pick one.
+#
+# SCOPE, stated exactly, because "one flag" overstates it. The collapse joined
+# the two GROUNDING spellings (`camera_ingress.enabled` and the
+# PARCEL_CAMERA_INGRESS env var now resolve with this key in
+# `_camera_ingress_enabled`). It did NOT join the stream:
+# `_attach_configured_camera_ingress` reads this config key alone, so
+# `PARCEL_CAMERA_INGRESS=1` grounds without starting a stream and
+# `PARCEL_CAMERA_INGRESS=0` does not stop one this key started. Finishing that
+# means editing the attach site, which is outside card P0-A's region — see
+# scrum/20260822/task_1/P0A_STATUS.md "Handoffs". Setting the key HERE, as this
+# profile does, moves both consumers, which is why the profile sets the key and
+# not the env var.
+#
+# The stream still needs a producer and an EGL-capable, same-process simulator;
+# this key is the runtime's consent, not a guarantee that a camera exists.
+# Absent everywhere is still OFF.
+perception:
+  camera_ingress: true
+
+  # Semantic perception, not the control loop. The validator caps this at
+  # 10 Hz; 2 Hz is the C-1 default and what the detector was measured at.
+  camera_ingress_rate_hz: 2.0
+
+  # The open-vocabulary query batch. "person" is MANDATORY (the loader refuses
+  # a batch without it) because the person-relevant inference lease is taken on
+  # the strength of this list — a camera that never asks about people must not
+  # claim the person-relevant admission path.
+  #
+  # The rest is the indoor vocabulary the desk prototype actually lives in;
+  # configs/robot.yaml's default batch is [person, lamppost], which is the
+  # city-block sim's street furniture. Max 16 phrases.
+  camera_ingress_queries:
+    - person
+    - chair
+    - table
+    - door
+    - couch
+    - laptop
+    - cup
+    - backpack
+
+# ---------------------------------------------------------------------------
+# AFFECT (configs/robot.yaml:218-221)
+#
+# 0.75 -> 0.50. At 0.75 the affect estimator effectively never proposed a
+# social action, so the companion read as unresponsive to how the owner sounds.
+# This threshold gates a PROPOSAL, not a motion: an accepted proposal still
+# goes through the arbiter, the reactive gate and the collision gate like every
+# other behavior, and `social_action_cooldown_s` still bounds the rate.
+agent:
+  affect:
+    minimum_confidence: 0.5
+
+# ---------------------------------------------------------------------------
+# INDOOR PERSON STANDOFF — REQUESTED, AND NOT DELIVERABLE FROM A CONFIG FILE.
+#
+# The card asked this overlay to set `safety.person_stop_m: 0.7` for an indoor
+# stand-off. It cannot: the value is FLOORED by the safety authority, not by
+# this file.
+#
+#   parcel_robot.authority.SafetyEnvelope.person_social_zone_m = 1.2
+#   ReactiveSafetyPolicy.__post_init__ (navigation/reactive_safety.py) refuses
+#     any configured person_stop_m below
+#     DEFAULT_SAFETY_ENVELOPE.person_stop(0.0) == 1.2
+#
+# Writing 0.7 here does not relax anything — it makes the runtime refuse to
+# construct at all ("reactive person_stop_m must not undercut
+# SafetyEnvelope.person_stop(0.0)"), i.e. the prototype would not boot. Lowering
+# it is a change to authority.py or reactive_safety.py, both of which are the
+# physical-safety core this wave is explicitly not touching, and both of which
+# need the paired-run value-change protocol. Recorded as a blocker in
+# scrum/20260822/task_1/P0A_STATUS.md and handed off; the key is left at the
+# shipped 1.2 rather than pinned here, so it moves the day the floor does.
+#
+# For the same reason the DERIVED follow numbers are untouched and still
+# re-derive from the runtime's person_stop_m at construction
+# (RobotRuntime.__init__'s `minimum_owner_keepout`, and
+#  navigation/follow.py's _OWNER_KEEPOUT_M / _FOLLOW_DESIRED_DISTANCE_M):
+#   owner_keepout_m   = person_stop_m + owner_collision_envelope_m = 1.75
+#   desired_distance_m = owner_keepout_m + OWNER_STAND_OFF_MARGIN_M = 1.85
+# They are derivations, not copies, so nothing here has to restate them.
+
+# ---------------------------------------------------------------------------
+# THE PROTOTYPE PERCEPTION STACK — ONE LINE AWAY, DELIBERATELY NOT TAKEN.
+#
+# Card P0-D shipped `configs/navigation/prototype.yaml` (default.yaml with the
+# `perception.semantic_source` / `perception.abstention` block changed) and its
+# header says: "Nothing selects this file by default. Point `navigation.config`
+# at it in a robot profile to run the prototype perception stack." This is that
+# robot profile, and this is the line:
+#
+#     navigation:
+#       config: configs/navigation/prototype.yaml
+#
+# It is COMMENTED OUT, and the reason is P0-D's own header two paragraphs later:
+# "Every threshold below is PROVISIONAL. None of them was derived on real
+# frames... an operating point to MEASURE from, not a calibration to trust"
+# (the bench it is read off scored 0/69 person recall on an untextured scene).
+# Switching an unmeasured ABSTENTION gate on by default in the owner-facing
+# profile risks a companion that refuses every place it is asked about, which is
+# the opposite of this wave's ask-over-refuse directive — and it is a decision
+# about P0-D's calibration, not about profiles, so P0-A does not get to make it
+# silently. Verified that it is only a decision and not a defect: a runtime
+# built with `navigation.config` pointed at that file constructs exactly as one
+# pointed at default.yaml does.
+#
+# Uncomment when someone has measured it. See P0A_STATUS.md "Handoffs".
+
+# ---------------------------------------------------------------------------
+# VOICE IDENTITY — the key lives in the REALTIME config, not this one.
+#
+# The gate RobotRuntime._build_voice_identity_gate builds reads
+# `voice_identity.enabled` from the hosted-lane YAML
+# (parcel_robot.realtime.config), which is a different file with a different
+# loader. The prototype's setting is therefore in
+# configs/realtime.prototype.yaml.example, where it is `enabled: false` until
+# the owner enrolls:
+#
+#     tools/enroll_owner_voice.py --wav a.wav b.wav c.wav d.wav e.wav
+#     tools/enroll_owner_voice.py --show
+#
+# Nothing is written here for it on purpose: an unrecognised top-level key in
+# robot.yaml is SILENTLY IGNORED by ConfigStore, so a `voice_identity:` block
+# in this file would look like a setting and be nothing at all.

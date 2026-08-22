@@ -106,6 +106,7 @@ def test_v1_is_still_the_default_and_v3_must_be_asked_for_by_name() -> None:
     assert episode_set_spec(EPISODE_SET_V3).next_to_band_reference == "surface"
 
 
+@pytest.mark.slow  # card P0-E: frozen-digest integrity is a nightly evidence ratchet
 def test_frozen_ledger_prefix_is_byte_identical_after_the_v3_append() -> None:
     lines = LEDGER.read_text(encoding="utf-8").splitlines(keepends=True)
     assert len(lines) > FROZEN_LEDGER_PREFIX_LINES, "the v3 rows were never appended"
@@ -118,6 +119,7 @@ def test_frozen_ledger_prefix_is_byte_identical_after_the_v3_append() -> None:
 # --------------------------------------------------------------------------
 
 
+@pytest.mark.slow  # card P0-E: frozen-digest integrity is a nightly evidence ratchet
 def test_checked_in_v3_files_equal_a_fresh_generation(tmp_path: Path) -> None:
     episodes = generate_minival(version=EPISODE_SET_V3)
     assert matrix_digest(episodes) == FROZEN_V3_DIGEST
@@ -133,6 +135,7 @@ def test_checked_in_v3_files_equal_a_fresh_generation(tmp_path: Path) -> None:
         )
 
 
+@pytest.mark.slow  # card P0-E: frozen-digest integrity is a nightly evidence ratchet
 def test_v3_manifest_records_the_correction_it_carries() -> None:
     manifest = json.loads((EPISODES_DIR / EPISODE_SET_V3 / "manifest.json").read_text())
     assert manifest["sha256"] == FROZEN_V3_DIGEST
