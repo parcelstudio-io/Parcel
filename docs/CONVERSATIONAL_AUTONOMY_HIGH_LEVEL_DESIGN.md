@@ -78,7 +78,7 @@ it does not substitute for the interrupted integrated suite or a clean-clone gat
 | Committed product | `21ea2fb`, including Wave P1/P2, ENV-1/1b and Week 1 | Git now carries the provenance-pinned Unitree pack and failure-complete commit-tier asset/gate path; this is reproducible source, not physical commissioning |
 | Active worktree | VENUE-1, OT-2, NM-1/ASK-1, DOOR-1, DUPLEX-1 and CAP-1 changes, tests and preregistrations | Describes Wave-2 work in flight only; no status narrative or targeted test promotes it to an accepted integrated result |
 | Accepted committed execution | `21ea2fb` Week-1 landing gate and audit | Stable local committed-code evidence: 10/10 hard stages, 9,070 collected and 8,969 default passes; hosted execution remains a separate claim |
-| Current clean-checkout boundary | Committed `21ea2fb` includes all 20 Unitree pack paths and the asset-first contained commit runner | The original missing-pack crash is closed, but an independent tracked-only archive still finishes with 44 default-suite failures from other absent external/BARN evidence; source hermeticity is not closed |
+| Current clean-checkout boundary | Committed `21ea2fb` includes all 20 Unitree pack paths and the asset-first contained commit runner | The original missing-pack crash is closed, but a real clean Git clone still finishes with 40 default-suite failures from other absent external/BARN evidence (the no-`.git` archive reports 44); source hermeticity is not closed |
 | Recorded evaluations | Frozen eval ledgers and dated Scrum evidence | Historical or subsystem evidence; never silently generalized |
 | Physical hardware | Only the reSpeaker XVF3800 is present; no Go2, D455/UVC camera or independent stop was exercised | No L4/L5 mobility, perception or localization claim is permitted |
 
@@ -176,7 +176,7 @@ released as a companion dog.
 | Is the software ready to mount on a Go2 EDU and run semiautonomously? | **No** | The normal runtime is simulator-composed; there is no physical observation assembler or localization/SLAM; default semantic truth is an oracle; owner perception is not live; stopping and authority are uncommissioned. |
 | Should the D455 be purchased now? | **Yes** | It is the approximately $300 day-one instrument that unlocks P1-A/P1-C/VENUE-1/OT-2 physical rows; RGB-only webcam evidence cannot satisfy the metric-depth ingress. Buying it generates evidence without claiming body readiness. |
 | Should a Go2 EDU quote be requested now? | **Yes—EDU Standard quote, not a PO** | Quote, firmware/SDK, lead-time, built-in sensor and return-window facts are reversible schedule inputs. Decline assumed Orin/L2 add-ons until a consumer and compute need are proven. |
-| Should the Go2 PO be released now? | **Not yet; evidence-gated R&D PO** | The Unitree first-crash repair and seven ROAM-1 simulations above the 1.0 m displacement tell are committed. The 44-failure tracked-source aggregate, through-air TV-on false barge-in at or below 2%, hosted CI, owner backlog, independent-stop choice and lab readiness remain. |
+| Should the Go2 PO be released now? | **Not yet; evidence-gated R&D PO** | The Unitree first-crash repair and seven ROAM-1 simulations above the 1.0 m displacement tell are committed. The 40-failure clean-clone aggregate, through-air TV-on false barge-in at or below 2%, hosted CI, owner backlog, independent-stop choice and lab readiness remain. |
 | Is production/companion procurement justified? | **No** | Clean-checkout integrity, physical observation, SLAM, owner following, gateway/stopping and repeated ODD missions remain open. A later Go2 order is for supervised commissioning, not deployment inventory. |
 
 The hardware choice also does not solve perception by itself. A Go2 EDU provides a
@@ -376,7 +376,7 @@ the simulator path; the Unitree HAL and capture tools are parallel foundations.
 | Deployment | Launch scripts and console entry points exist, but the web-panel/runtime builder is MuJoCo-centered and the main stack terminates in simulator launch. Service containers are incomplete. | Development composition, not a physical deployment topology. |
 | Memory/personalization | Conversation SQLite is active. Committed P2-A adds consented owner facts, deterministic store/refuse/forget policy and full-ledger replay; tiered, route and semantic memories remain separate. | Stronger privacy seam, not proven long-horizon personalization. Hosted model-selected storage, distiller scheduling and derived-data deletion need evidence. |
 | Observability | Turn latency, component metrics, ledgers, duplex records, and recent transcript-origin logging exist as separate surfaces. | Broad instrumentation without one causal trace. |
-| Packaging/CI | Runtime assets have a 91-item parity check; GATE-0 now tracks and independently verifies the 20-path Unitree pack and contains every commit-stage exception. | The original first crash is repaired, but a tracked-source archive still has 44 default-suite failures from other absent external evidence. Hosted execution, a truthful Python matrix, nightly containment and branch-protection evidence remain open. |
+| Packaging/CI | Runtime assets have a 91-item parity check; GATE-0 now tracks and independently verifies the 20-path Unitree pack and contains every commit-stage exception. | The original first crash is repaired, but a clean Git clone still has 40 default-suite failures from other absent external evidence. Hosted execution, a truthful Python matrix, nightly containment and branch-protection evidence remain open. |
 
 ### 3.3 Code map
 
@@ -504,7 +504,7 @@ deployment contract.
 
 | Gap | Consequence | Target response |
 | --- | --- | --- |
-| GATE-0 closes the Unitree first crash but not full source hermeticity. | The 20-path Unitree pack, asset evaluator and exception-contained commit tier work, yet a tracked-only archive still reports 44 default-suite failures from absent external/BARN evidence. Outside a Git repository the asset stage marks shipping closure `SKIPPED` but still returns PASS. | Make every commit-tier dependency tracked/generated/explicitly skipped, fail the asset stage when closure cannot be established, then require clean-clone and hosted reports at the exact commit before installed-wheel/deployment smoke. |
+| GATE-0 closes the Unitree first crash but not full source hermeticity. | The 20-path Unitree pack, asset evaluator and exception-contained commit tier work, yet a clean Git clone still reports 40 default-suite failures from absent external/BARN evidence; a no-`.git` archive reports 44 and lets the asset stage mark shipping closure `SKIPPED` while returning PASS. | Make every commit-tier dependency tracked/generated/explicitly skipped, fail the asset stage when closure cannot be established, then require clean-clone and hosted reports at the exact commit before installed-wheel/deployment smoke. |
 | Packaging advertises Python `>=3.10`; CI runs only 3.12. | GATE-0 fixed the specific Python 3.11 `RetainedEvent.fields` import rejection, but no full 3.10/3.11 install/collection/default parity exists and `websockets>=17` excludes 3.10. | Define a real upper/lower support contract, test install/import/node-ID parity/default behavior across every claimed minor, and split or narrow incompatible extras explicitly. |
 | Eager `core`/`navigation` barrels load 118 Parcel modules from leaf imports. | Optional/import-order failures contaminate unrelated modules; a seven-hop cycle can make `_HAS_INSTRUCTNAV=False` and turn required semantic navigation into a green no-op. | Make initializers side-effect-light, migrate product imports to leaves, add forbidden-edge/order tests, and replace required-capability soft fallback with startup-fatal admission. |
 | Nightly stages are not uniformly exception-contained. | GATE-0 wraps all ten commit stages, but the nightly path still directly invokes several evaluators; one ordinary exception can suppress later nightly evidence. | Put every nightly evaluator behind the same bounded named `ERROR` contract, always emit valid text/JSON/artifacts, and preserve nonzero exit for any hard FAIL/ERROR. |
@@ -566,7 +566,7 @@ Its accepted Week-1 landing gate on local CPython 3.14 collected **9,070 tests**
 The larger footprint and repaired Unitree path are material strengths. The current
 promotion result is **green only on the populated developer tree, red from tracked
 source, and incomplete for hardware**: an independent archive reaches the complete
-report but fails 44 default tests. Hosted execution, the Python support contract,
+report but fails 40 default tests in a real clean Git clone. Hosted execution, the Python support contract,
 nightly containment and intended-hardware campaigns also remain open. A simulator
 gate can establish neither a physical stopping envelope nor owner-safe navigation.
 
@@ -577,6 +577,7 @@ gate can establish neither a physical stopping envelope nor owner-safe navigatio
 | Committed source/asset closure | **Repaired:** 20 tracked Unitree paths, pinned revision/hashes, zero hidden/unmanifested payloads or gitlinks, and both scenes compile in the asset-first hard stage | The failure-complete ten-stage commit runner closes the original first-crash defect and still reports later verdicts after an ordinary evaluator exception. |
 | Accepted `21ea2fb` landing gate | **9,070 collected:** 8,989 non-slow + 81 slow; default result **8,969 passed, 17 skipped, 3 xfailed** | All ten hard stages passed on the quiescent developer tree in 5:53; Ruff stayed at seven baseline fingerprints and zero new. This is strong local committed-code evidence, not hardware evidence. |
 | Independent tracked-only archive | **RED:** nine earlier stages pass; default suite reports **44 failed, 8,910 passed, 32 skipped, 3 xfailed** | Other BARN/external evidence remains ambient/ignored. Because an archive has no `.git`, the asset stage also reports shipping closure `SKIPPED` while returning PASS—a fail-open evaluator edge to fix. |
+| Independent clean Git clone | **RED:** nine earlier stages pass, including full 20-path Unitree closure; default suite reports **40 failed, 8,915 passed, 31 skipped, 3 xfailed** | This is the representative source-integrity verdict: the Unitree fix works, while other BARN/external inputs remain ambient. |
 | CPython 3.11 contract | **Specific import fixed; full parity unproved** | `RetainedEvent.fields` now uses an immutable per-instance factory and imports on 3.11. CI still has no 3.11 lane, so install/collection/default behavior remains an open contract. |
 | Python 3.10 dependency contract | **Inconsistent** | Base metadata says `>=3.10`, while the voice extra's `websockets>=17` requires Python 3.11+. Support must be narrowed or dependencies split and tested. |
 | Accepted `21ea2fb` Ruff checks | **Gate evaluator:** PASS, seven violation fingerprints, baseline seven, new zero | The ratchet guarantees no new fingerprint, not a debt-free codebase. Wave 2 must earn a new quiescent result. |
@@ -1448,7 +1449,7 @@ systems overhead inside the semantic application.
 | Priority lane | Action | Exit evidence |
 | --- | --- | --- |
 | PR-0 immediate evidence procurement | Buy the D455 and request the Go2 EDU Standard quote; confirm firmware/SDK, built-in sensor, return window and independent-stop options | D455 receipt/live-test plan and written quote facts; neither is recorded as software or body readiness |
-| IG-1 hermetic commit gate — **partially landed** | Preserve the tracked/pinned Unitree asset closure and ten failure-contained stages; eliminate the 44 tracked-source failures and fail when shipping closure cannot run | Fresh clone emits a complete green report; missing/tampered/unknown-closure/exploding-stage cases remain named red while independent stages continue |
+| IG-1 hermetic commit gate — **partially landed** | Preserve the tracked/pinned Unitree asset closure and ten failure-contained stages; eliminate the 40 clean-clone failures and fail when shipping closure cannot run | Fresh clone emits a complete green report; missing/tampered/unknown-closure/exploding-stage cases remain named red while independent stages continue |
 | IG-2 true Python contract | Fix `RetainedEvent`, settle 3.10/voice dependencies, declare a bounded range and test every claimed minor | Fresh installs, imports, equal node-ID sets and assigned behavioral lanes across the required matrix; no collection-error escape or version-specific node loss |
 | IG-3 module/capability integrity | Thin `core`, `navigation`, `navigation.envs` and `instructnav` initializers; migrate product leaf imports; remove semantic soft-degrade | Leaf imports avoid pipeline/simulator/InstructNav, and product startup is hard-red if required semantic navigation is unhealthy |
 | IG-4 independent closeout | Verify exact integrated tree locally and in hosted Actions; record artifacts/branch protection | Full commit gate and scheduled/slow evidence green from clean checkout, with exact environment/dependency identity and retained reports |
@@ -1459,7 +1460,7 @@ systems overhead inside the semantic application.
 | AU-1 supervised mobility | Point-goal then semantic navigation in a bounded indoor ODD | Repeated multi-room missions, localization-loss recovery, dynamic-person course and terminal witness with zero unresolved hard event |
 | CP-1 companion behavior | Add physical following, owner recovery, ego-noise voice and governed personalization | Cohort/through-air evidence, safe give-up, correction, consent/delete audit and operator handoff pass |
 
-IG-1's Unitree/containment core is landed; its 44-failure clean-source tail plus
+IG-1's Unitree/containment core is landed; its 40-failure clean-clone tail plus
 IG-2 through IG-4 are the remaining release-integrity block and are
 specified in the linked integrity TODO. D455 purchase, Go2 quotation, interface design, BOM research
 and replay work may proceed in parallel, but Go2 PO release, feature promotion and
@@ -1729,7 +1730,7 @@ regression.
 
 The present program milestone is not “autonomous companion dog.” It is
 **hermetic release integrity plus a safely commissioned, observable Go2 research
-platform**. The Unitree/commit-stage repair is landed but the 44-failure tracked-source
+platform**. The Unitree/commit-stage repair is landed but the 40-failure clean-clone
 tail remains; until a clean clone and hosted execution
 runs the same admitted product across its claimed Python versions and cannot silently
 drop semantic navigation, every higher capability statement still has an unstable

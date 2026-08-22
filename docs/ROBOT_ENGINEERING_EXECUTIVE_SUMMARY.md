@@ -104,7 +104,7 @@ Go2, D455, L2 LiDAR or Orin.
 | --- | --- |
 | Buy for autonomous companion deployment? | **No.** Physical autonomy prerequisites are absent or uncommissioned. |
 | Buy D455 for engineering now? | **Yes.** It unlocks physical camera, metric-depth and owner-tracking measurements; the RGB-only UVC path cannot satisfy the current depth contract. |
-| Buy Go2 EDU as an engineering platform today? | **Quote now; evidence-gated PO.** The Unitree first-crash repair and simulator roam tell are committed; still close the 44-failure clean-source aggregate, measure through-air false barge-in at no more than 2%, confirm hosted CI, and independently close acceptance, independent-stop and lab-safety gates before release. |
+| Buy Go2 EDU as an engineering platform today? | **Quote now; evidence-gated PO.** The Unitree first-crash repair and simulator roam tell are committed; still close the 40-failure clean-clone aggregate, measure through-air false barge-in at no more than 2%, confirm hosted CI, and independently close acceptance, independent-stop and lab-safety gates before release. |
 | What must the PO say? | Supervised R&D/data-collection/commissioning platform, not an autonomous product. |
 | What should be purchased with the body? | Independent stop decision/remote, tether or leash, controlled-area equipment, dedicated network and the agreed sensor/compute mounts. |
 | What should happen before delivery? | Name operator/reviewer, prepare capture and privacy procedures, pin firmware/SDK assumptions and write the vendor acceptance checklist. |
@@ -566,7 +566,8 @@ wrapper, so an ordinary stage failure still produces the remaining human/JSON
 verdicts. This directly closes the original first-crash defect. An independent
 tracked-only archive run nevertheless reached the default suite and finished red:
 44 failures and 8,910 passes, dominated by other BARN/external evidence that exists
-on the developer machine but not in Git. In a non-Git archive the asset evaluator also
+on the developer machine but not in Git. A subsequent real clean Git clone confirmed
+the verdict with 40 failures and 8,915 passes. In the non-Git archive the asset evaluator also
 labels shipping closure `SKIPPED` yet returns PASS; that fail-open disposition should
 be corrected even though an actual Git clone can perform the check.
 
@@ -603,8 +604,9 @@ contacts. ENV-1b retained the important distinction between an SDK importing and
 device being attached.
 
 That developer-tree verdict does not reproduce from tracked source: the independent
-archive run reported **44 failed, 8,910 passed, 32 skipped and three expected
-failures**, even though all nine stages before the default suite passed. The evidence
+archive run reported **44 failed and 8,910 passed**; the real clean Git clone reported
+**40 failed, 8,915 passed, 31 skipped and three expected failures**, even though all
+nine stages before the default suite passed. The evidence
 is otherwise unusually candid about limitations: the roam result is bimodal,
 not coverage-seeking SLAM; AIR-1's estimated speech onset cannot pass as a measured
 latency; and no camera or robot hardware row ran. The repository now contains the
@@ -752,7 +754,7 @@ Two policies should remain non-negotiable:
 
 | Gate | Work | Exit evidence |
 | --- | --- | --- |
-| **A. Release integrity** | Preserve the committed GATE-0 asset/stage repair; eliminate the 44 tracked-source failures and fail unavailable closure, then add hosted evidence, a truthful Python matrix, nightly containment, thin eager barrels and startup-fatal required capabilities | Tracked-only local and hosted checkouts emit complete green reports over the same admitted tests on every supported interpreter. No feature promotion or Go2 PO inherits an older wave's verdict. |
+| **A. Release integrity** | Preserve the committed GATE-0 asset/stage repair; eliminate the 40 clean-clone failures and fail unavailable closure, then add hosted evidence, a truthful Python matrix, nightly containment, thin eager barrels and startup-fatal required capabilities | Tracked-only local and hosted checkouts emit complete green reports over the same admitted tests on every supported interpreter. No feature promotion or Go2 PO inherits an older wave's verdict. |
 | **B. Lab readiness** | Freeze EDU SKU/firmware/SDK/BOM; prepare controlled area, stop/tether, operator, network, capture and privacy procedures | Signed R&D acceptance plan; read-only data can be captured on day one. |
 | **C. Physical substrate** | Inventory/telemetry; clock and extrinsic calibration; physical bags/replay; native gateway; axes/frame/mode and fault commissioning | Tethered minimum-speed motion independently stops on expiry, client death, state loss and operator action. |
 | **D. Estimation/perception shadow** | Compare SLAM on common bags; publish MAP↔ODOM health; wire RGB-D/LiDAR; measure metric perception, semantics and owner ROC/ID switches | Frozen timing/accuracy/health thresholds pass independent visits without synthetic/physical mixing; learned output remains proposal-only. |
