@@ -546,8 +546,11 @@ def test_no_motion_sdk_is_reachable_and_an_installed_camera_sdk_reaches_no_devic
     """The motion guarantee, re-measured — and re-cut by card ENV-1.
 
     This was ``test_no_vendor_sdk_is_reachable_and_none_was_installed`` and it
-    asserted that seven named modules were all absent. Six of the seven still
-    are, and that is the guarantee worth keeping: the modules that can command
+    asserted that seven named modules were all absent. FIVE of the seven still
+    are (card ENV-1b corrects the count: ``pyrealsense2`` AND ``cv2`` both
+    dropped out, not one of them; the loop below re-asserts those five plus
+    ``unilidar_sdk2``, which was never in the original seven), and that is the
+    guarantee worth keeping: the modules that can command
     the dog are the ones whose absence from ``.parcel`` means no test run can
     move a robot. ``pyrealsense2`` and ``cv2`` are NOT in that class — they read
     a camera — and P1-A installed both on 2026-08-22 for the desk-camera venue,

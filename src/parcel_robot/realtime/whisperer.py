@@ -81,6 +81,7 @@ Three things changed, and they are the invariant this module now carries:
 
 from __future__ import annotations
 
+import random
 import threading
 import time
 from collections import deque
@@ -88,7 +89,12 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from .config import DEFAULT_WHISPERER_WINDOW_S, OwnerEventsConfig, WhispererConfig
+from .config import (
+    DEFAULT_WHISPERER_WINDOW_S,
+    CuriosityConfig,
+    OwnerEventsConfig,
+    WhispererConfig,
+)
 
 #: Bumped whenever :class:`StateDigest`'s field set changes meaning. It rides on
 #: every digest and on every decision row, so a recorded whisperer log can never
@@ -178,6 +184,98 @@ OWNER_EVENT_KINDS: frozenset[str] = frozenset(
     }
 )
 
+# ============================================ card CURIO-1: the world classes
+#
+# P2-B's four classes above are closed and are not touched by this card. They
+# gave the dog a subject it never had — YOU. These five give it the other one:
+# the WORLD, and one more fact about you that P2-B's rising edge left without a
+# partner.
+#
+# Everything before this block is a fact the robot has about ITSELF or about the
+# owner's presence. None of it is a fact about what the robot SAW. The learned
+# map (card P1-B) and the ASK outcome (card P1-D) produce exactly those facts
+# all day and nothing narrated them, which is why the dog could greet you and
+# could not say "there is a new plant by the window".
+#
+# THE BAND, AND WHY IT IS THE MIDDLE ONE
+# --------------------------------------
+# The four curiosity classes are MIDDLE band, which in this module has a
+# specific meaning: "decided by a deterministic mechanism, never by a band and
+# never by a classifier". Their mechanism is :class:`ChatterScheduler`, and the
+# door it calls is :meth:`Whisperer.offer_curiosity`. A curiosity event handed
+# to bare :meth:`Whisperer.offer` has skipped the scheduler and is REFUSED with
+# :data:`RULE_MIDDLE_BAND_NEEDS_MECHANISM`, exactly as a mission-block event is.
+#
+# That is deliberate and it is the whole safety argument for this card. An
+# always-band curiosity class would mean "the map grew, therefore the robot
+# speaks" — and the map grows on a camera frame, at 2 Hz, forever. The band
+# table cannot bound that; only a scheduler with a clock can.
+#
+#: A NAME entered the map's vocabulary — ``known_places()`` grew. This is the
+#: dog learning what a thing is CALLED, and it is the only class here whose
+#: subject is the robot's own understanding rather than the world.
+KIND_PLACE_LEARNED = "place_learned"
+#: A thing the robot had not seen in this scene before now has a map entry.
+#: "There is a new plant by the window."
+KIND_NOVEL_OBJECT = "novel_object"
+#: Something the robot knew about is no longer there (it decayed out of the
+#: active set), or has come back after being gone. The world moved.
+KIND_SCENE_CHANGE = "scene_change"
+#: Card P1-D's ASK outcome, spoken. The map has a candidate and the abstention
+#: gate would not ADMIT it, so the honest move is to ask the owner rather than
+#: to name it confidently or to say nothing. The one class here that wants an
+#: answer.
+KIND_ASK_ABOUT = "ask_about"
+#: **Idle chatter.** Not fed by an event at all: this is what the dog says when
+#: NOTHING has happened, about something it already knows, coloured by the time
+#: of day. It exists because the card asked for two cadences and they turned out
+#: to be two different KINDS of remark (see :data:`STIMULUS_KINDS`) — a fast
+#: floor for "I just saw something" and a slow Poisson mean for "it has been
+#: quiet a while". A class that fires when nothing happened cannot be
+#: event-triggered, so it needs its own class and its own clock.
+KIND_IDLE_REMARK = "idle_remark"
+
+#: The five, as a set. Same reason P2-B's set exists: a caller asks "is this
+#: curiosity" once, in one place.
+CURIOSITY_KINDS: frozenset[str] = frozenset(
+    {
+        KIND_PLACE_LEARNED,
+        KIND_NOVEL_OBJECT,
+        KIND_SCENE_CHANGE,
+        KIND_ASK_ABOUT,
+        KIND_IDLE_REMARK,
+    }
+)
+
+#: THE FOUR THAT NEED SOMETHING TO HAVE HAPPENED. Correction pass, 2026-08-22:
+#: the card's "Poisson gaps, mean 4-8 min" and its "3-6 utterances in a 120 s
+#: roam" were never one number, and reading them as one was the first pass's
+#: mistake. They are two cadences over two kinds of remark:
+#:
+#:   * a STIMULUS remark answers "something just happened" — it is paced by a
+#:     fixed floor (``curiosity.stimulus_min_gap_s``, 25 s) because the thing it
+#:     is about is already in the past and a six-minute wait would have the dog
+#:     narrating a lamppost it walked past four corners ago;
+#:   * an IDLE remark answers "nothing is happening" — it is paced by a Poisson
+#:     mean (``curiosity.mean_gap_s``, 4-8 min) because that is a companion's
+#:     rhythm in a quiet room and anything faster is a talkative appliance.
+#:
+#: Both are still banded, deduped, min-gapped and capped identically. The two
+#: knobs decide when a remark is DUE; the cap decides whether it is affordable,
+#: and the cap wins.
+STIMULUS_KINDS: frozenset[str] = frozenset(CURIOSITY_KINDS - {KIND_IDLE_REMARK})
+
+#: The owner went away. **The falling edge P2-B's watcher does not carry.**
+#:
+#: P2-B's :class:`OwnerEventWatcher` is closed, so this card does not add a
+#: fifth class to it; :class:`FarewellWatcher` below observes the SAME
+#: :class:`OwnerPresence` samples and fires on the other edge. ALWAYS band and
+#: NOT critical, for P2-B's reasons exactly: a farewell is news about the owner,
+#: it is banded/deduped/min-gapped/capped like everything else, and no goodbye
+#: is worth spending past the owner's own ceiling.
+KIND_OWNER_LEFT = "owner_left"
+# ======================================== END card CURIO-1 (the world classes)
+
 #: Never band — the telemetry the bench proved must never reach the session.
 KIND_NAV_TICK = "nav_tick"
 KIND_FOLLOW_TICK = "follow_tick"
@@ -232,6 +330,11 @@ ALWAYS_BAND: frozenset[str] = frozenset(
         # late. The cap and the min-gap still apply, and they are what bound a
         # storm.
         *OWNER_EVENT_KINDS,
+        # Card CURIO-1. The falling edge of the same presence track. Banded
+        # here rather than in the middle band because it is an EDGE — it happens
+        # once, when it happens, and there is nothing for a scheduler to pace.
+        # Not critical (see KIND_OWNER_LEFT).
+        KIND_OWNER_LEFT,
     }
 )
 
@@ -252,8 +355,16 @@ NEVER_BAND: frozenset[str] = frozenset(
     }
 )
 
-#: Decided by the three deterministic mechanisms rather than by a band.
-MIDDLE_BAND: frozenset[str] = frozenset({KIND_MISSION_BLOCKED, KIND_MISSION_BLOCK_CLEAR})
+#: Decided by the deterministic mechanisms rather than by a band.
+#:
+#: Card CURIO-1 adds a fourth mechanism — :class:`ChatterScheduler`, whose door
+#: is :meth:`Whisperer.offer_curiosity`. Handing a curiosity class to bare
+#: :meth:`Whisperer.offer` refuses with
+#: :data:`RULE_MIDDLE_BAND_NEEDS_MECHANISM`, which is the guard that keeps a 2 Hz
+#: map from becoming a 2 Hz robot.
+MIDDLE_BAND: frozenset[str] = frozenset(
+    {KIND_MISSION_BLOCKED, KIND_MISSION_BLOCK_CLEAR, *CURIOSITY_KINDS}
+)
 
 #: **Critical.** These bypass the owner's per-minute budget: the emergency
 #: latch, a refusal of the owner's own command, and a mission terminal (card
@@ -310,6 +421,17 @@ RULE_PACE_KNOWN_RESUMED = "pace_known_resumed"
 #: budget slot and the dedup entry are given back, because nothing was billed
 #: and nothing was said — and the row stays, because "we tried" is a fact.
 RULE_NARRATION_FLOOR_REFUSED = "narration_floor_refused"
+#: **Card CURIO-1.** The middle band's fourth mechanism said yes: the chatter
+#: scheduler's gap had elapsed, the owner was there, the conversation was quiet
+#: and the class named a place the map has admitted. The forward is still
+#: subject to the dedup window, the min-gap and the owner's cap below it.
+RULE_CHATTER_SCHEDULED = "chatter_scheduled"
+#: **Card CURIO-1.** A class that is not curiosity was handed to
+#: :meth:`Whisperer.offer_curiosity`. The mirror image of
+#: :data:`RULE_MIDDLE_BAND_NEEDS_MECHANISM`: a mechanism may only speak for the
+#: classes it is the mechanism FOR, or "the middle band has a mechanism" stops
+#: being a statement about anything.
+RULE_CURIOSITY_DOOR_WRONG_CLASS = "curiosity_door_wrong_class"
 
 # ------------------------------------------------------------ tuning constants
 #: Card design point 2 / bench B2. A mission block must persist this long before
@@ -426,6 +548,44 @@ HINTS: Mapping[str, str] = {
         "Ask the owner exactly ONE short question about their day or about "
         "something they like, then stop and listen. Do NOT ask more than one "
         "question, and do NOT explain why you are asking."
+    ),
+    # Card CURIO-1. The card writes one HINT for the whole family — "mention one
+    # thing you noticed, one sentence, no status, no sensors" — and these four
+    # are that sentence, per class, with the class's own verb. Every one of them
+    # spends its second clause on a prohibition for the reason the rest of this
+    # table does: the bench's failure mode is not silence, it is the model
+    # narrating the INSTRUMENT ("my online semantic map has admitted a new
+    # label") when it was handed a fact with no speech act.
+    KIND_NOVEL_OBJECT: (
+        "Mention the one thing you just noticed, in one short sentence, the way "
+        "you would point something out to a friend. Do NOT list your sensors, do "
+        "NOT give coordinates or distances, and do NOT report your status."
+    ),
+    KIND_PLACE_LEARNED: (
+        "Say, in one short sentence, that you have worked out what this thing is "
+        "called. Do NOT explain how you learned it, do NOT mention a map, a "
+        "detector or a confidence, and do NOT ask for a task."
+    ),
+    KIND_SCENE_CHANGE: (
+        "Remark on the one thing that has changed since you last looked, in one "
+        "short sentence. Do NOT speculate about why, and do NOT describe your "
+        "sensors or your memory."
+    ),
+    KIND_ASK_ABOUT: (
+        "Ask the owner ONE short question about the thing you are unsure of, and "
+        "say plainly that you are not sure. Do NOT name it as if you knew, do NOT "
+        "ask more than one question, and do NOT explain your uncertainty in "
+        "numbers."
+    ),
+    KIND_IDLE_REMARK: (
+        "Make one short, easy remark — you are filling a quiet moment, not "
+        "reporting anything. Do NOT ask for a task, do NOT list your status, and "
+        "do NOT pretend something has just happened."
+    ),
+    KIND_OWNER_LEFT: (
+        "Say a short, easy goodbye — one sentence, the way a dog watches someone "
+        "go. Do NOT ask where they are going, do NOT ask them to stay, and do NOT "
+        "say how long they were here."
     ),
 }
 
@@ -750,6 +910,49 @@ class Whisperer:
         at = self._clock() if now is None else float(now)
         with self._lock:
             return self._offer_locked(event, at=at)
+
+    # ================================== card CURIO-1: the fourth mechanism's door
+    def offer_curiosity(
+        self, event: StateEvent, *, now: float | None = None
+    ) -> WhispererDecision:
+        """The MIDDLE band's fourth mechanism, calling in. Always logs.
+
+        The block debounce and the pace watcher are middle-band mechanisms that
+        live inside this class because their inputs are digests. The chatter
+        scheduler's inputs are a clock, the owner's presence and the lane's
+        busy state — none of which is in a :class:`StateDigest` — so it lives
+        outside and this is the door it calls through. Structurally it is the
+        same arrangement: the mechanism decides, ``_forward`` prices.
+
+        What this door does NOT do is decide. It has no clock of its own, no
+        cadence and no view of the owner: by the time an event reaches here the
+        scheduler has already said yes, and everything below is the pricing that
+        every other class pays — the dedup window, ``min_gap_s`` and the owner's
+        ``max_updates_per_minute``. No curiosity class is in
+        :data:`CRITICAL_KINDS`, so none of them can spend past that cap; the
+        card's "the cap exceeded" seed is red because of that sentence.
+
+        A class that is not curiosity is refused here and logged, rather than
+        priced. A mechanism that will speak for any class it is handed is not a
+        mechanism, and the middle band's whole claim is that each of its classes
+        has exactly one way in.
+        """
+
+        at = self._clock() if now is None else float(now)
+        with self._lock:
+            if str(event.kind) not in CURIOSITY_KINDS:
+                return self._record(
+                    event,
+                    band=band_of(str(event.kind)),
+                    forwarded=False,
+                    rule=RULE_CURIOSITY_DOOR_WRONG_CLASS,
+                    at=at,
+                )
+            return self._forward(
+                event, band=BAND_MIDDLE, rule=RULE_CHATTER_SCHEDULED, at=at
+            )
+
+    # ============================== END card CURIO-1 (Whisperer door) ==========
 
     def undeliver(self, decision: WhispererDecision) -> WhispererDecision | None:
         """The lane's floor gate refused something this object said to forward.
@@ -1591,6 +1794,557 @@ class OwnerEventWatcher:
             ),
             detail={"quiet_for_s": round(quiet_for, 1), "episode": self._episode},
         )
+
+
+# ============================================ card CURIO-1: the chatter layer
+#
+# WHY THERE IS A SCHEDULER AND NOT A THRESHOLD
+# --------------------------------------------
+# The learned map grows on a camera frame — 2 Hz, for the length of a walk. Every
+# other producer in this module is edge-triggered on something rare (a latch, an
+# arrival, a person stepping into the path); this one is edge-triggered on
+# something CONSTANT. So "the map grew, therefore say something" is not a
+# cadence, it is a firehose with a band table in front of it, and the band table
+# would spend the owner's whole minute on the first six lampposts of the walk.
+#
+# What a companion needs instead is a rate: something like a remark every few
+# minutes, arriving at irregular times rather than on a metronome, and never
+# while you are talking. That is a Poisson process with an admission gate, and
+# it is what this class is.
+#
+# THE THREE CLOCKS, DELIBERATELY SEPARATE
+# ---------------------------------------
+# 1. ``clock`` — monotonic. Durations: the gap, the quiet window. Injectable, so
+#    every test below runs on a frozen clock with no sleeping.
+# 2. ``time_band`` — WALL clock, and a separate callable for exactly P2-B's
+#    ``day_key`` reason: "is it the middle of the night" is a question about
+#    calendars and time zones, and mixing it into a monotonic duration is how you
+#    get a dog that goes quiet at 3 a.m. UTC in a house on the US west coast.
+# 3. ``rng`` — the gap draw. Injectable and seeded in every measurement, because
+#    "3 to 6 remarks in 120 seconds" is a claim about a distribution and a claim
+#    about a distribution that cannot be re-run is an anecdote.
+#
+# WHAT "QUIET" MEANS HERE, AND WHY IT IS NOT P2-B's MEANING
+# ---------------------------------------------------------
+# ``OwnerEventWatcher.note_turn`` counts BOTH sides of the conversation, because
+# a greeting is due after silence and a robot that just answered you has not been
+# silent. This class's ``note_turn`` counts the owner's exchanges ONLY — an owner
+# turn, and the robot's answer to one — and deliberately NOT the robot's own
+# unprompted remarks. The two jobs are different:
+#
+#   * ``quiet_s`` protects a CONVERSATION. It exists so the dog does not talk
+#     over you, or into the three-second gap where you are thinking.
+#   * the Poisson gap paces a MONOLOGUE. It is what stops five remarks in a row.
+#
+# Feeding the monologue back into the conversation clock would collapse the two
+# and make the faster of them meaningless. With no exchange at all — a session
+# nobody has spoken on — there is no conversation to protect, so the quiet
+# condition is satisfied and the gap is the only thing pacing the dog. That is
+# the case the 120 s roam measures.
+
+#: Why a scheduler tick produced no remark. R13's discipline, applied to a
+#: second watcher: every tick lands in exactly one of these or is admitted —
+#: never neither — so ``ticks == admitted + sum(skips)`` is an invariant with a
+#: test on it, and "the dog was quiet for two minutes" is a number rather than an
+#: absence in a log.
+CHATTER_SKIP_DISABLED = "curiosity_disabled"
+CHATTER_SKIP_NO_OWNER = "owner_not_present"
+CHATTER_SKIP_LANE_BUSY = "lane_busy"
+CHATTER_SKIP_ACTIVITY_BUSY = "activity_running"
+CHATTER_SKIP_QUIET_HOURS = "quiet_hours"
+CHATTER_SKIP_CONVERSATION = "conversation_not_quiet"
+#: The IDLE gap: the Poisson draw around ``mean_gap_s`` has not elapsed.
+CHATTER_SKIP_GAP_HOLDING = "gap_holding"
+#: The STIMULUS gap: something HAS happened, and the fixed
+#: ``stimulus_min_gap_s`` floor since the last remark has not elapsed. Separate
+#: from the reason above because they are different clocks over different kinds
+#: of remark, and a log that called both "gap_holding" could not tell an
+#: operator which knob to turn.
+CHATTER_SKIP_STIMULUS_GAP = "stimulus_gap_holding"
+
+CHATTER_SKIP_REASONS: frozenset[str] = frozenset(
+    {
+        CHATTER_SKIP_DISABLED,
+        CHATTER_SKIP_NO_OWNER,
+        CHATTER_SKIP_LANE_BUSY,
+        CHATTER_SKIP_ACTIVITY_BUSY,
+        CHATTER_SKIP_QUIET_HOURS,
+        CHATTER_SKIP_CONVERSATION,
+        CHATTER_SKIP_GAP_HOLDING,
+        CHATTER_SKIP_STIMULUS_GAP,
+    }
+)
+
+#: The time-of-day bands. Four, because a companion needs to know the difference
+#: between "good morning" and "still up?" and does not need more resolution than
+#: that. Boundaries are local wall-clock hours.
+TIME_BAND_MORNING = "morning"
+TIME_BAND_AFTERNOON = "afternoon"
+TIME_BAND_EVENING = "evening"
+TIME_BAND_NIGHT = "night"
+
+TIME_BANDS: frozenset[str] = frozenset(
+    {TIME_BAND_MORNING, TIME_BAND_AFTERNOON, TIME_BAND_EVENING, TIME_BAND_NIGHT}
+)
+
+#: How each band reads inside a FACT. One short clause, never a timestamp: the
+#: R21 lesson about the e-stop door applies here too — the class is the thing
+#: that is spoken, and the raw number stays in ``detail``.
+TIME_BAND_PHRASES: Mapping[str, str] = {
+    TIME_BAND_MORNING: "It is the morning.",
+    TIME_BAND_AFTERNOON: "It is the afternoon.",
+    TIME_BAND_EVENING: "It is the evening.",
+    TIME_BAND_NIGHT: "It is the middle of the night.",
+}
+
+
+def time_band_of(hour: int) -> str:
+    """Local hour -> band. Total, and deliberately not configurable.
+
+    A band table an operator can re-cut is a band table that disagrees with the
+    sentence in :data:`TIME_BAND_PHRASES` that renders it. The knob the owner
+    gets is ``curiosity.night_quiet``, which decides whether the NIGHT band
+    silences the dog — not where night begins.
+    """
+
+    value = int(hour) % 24
+    if 5 <= value < 12:
+        return TIME_BAND_MORNING
+    if 12 <= value < 17:
+        return TIME_BAND_AFTERNOON
+    if 17 <= value < 22:
+        return TIME_BAND_EVENING
+    return TIME_BAND_NIGHT
+
+
+def _local_time_band() -> str:
+    return time_band_of(time.localtime().tm_hour)
+
+
+@dataclass(frozen=True)
+class ChatterState:
+    """Everything outside this module that can veto a remark, as one value.
+
+    Deliberately three booleans and a clock reading rather than a lane, a
+    coordinator and a track: this class must not learn the shape of the lane to
+    decide whether now is a good moment, or the lane's next refactor becomes a
+    change to the cadence. The runtime adapts what it has into this — the same
+    move :class:`OwnerPresence` makes for P2-B.
+    """
+
+    at_s: float
+    #: Is the owner here at all. From the same presence sample P2-B's watcher
+    #: reads, so the two cannot disagree about whether anybody is listening.
+    owner_present: bool = False
+    #: The lane cannot take a narration right now: a hosted response is playing,
+    #: a response is outstanding, or the OWNER has spoken and has not been
+    #: answered. The lane's floor gate refuses all three anyway — this is the
+    #: same rule read one layer earlier, so that a remark the lane would drop is
+    #: never drawn from the budget in the first place.
+    lane_busy: bool = True
+    #: A physical activity is running. ``prompts/functions/patrol.yaml``: *social
+    #: actions can wait until an idle checkpoint*. This is that sentence, read
+    #: against the coordinator that already owns checkpoint semantics.
+    activity_running: bool = False
+
+
+class ChatterScheduler:
+    """WHEN the dog may remark on the world. Owns no lane, no map and no model.
+
+    Same shape as every other decision object in this file: it takes a state and
+    returns an answer, it counts every tick, and it has no thread. It does not
+    know what the remark will be about — the runtime picks that — because "is now
+    a good moment" and "is there anything worth saying" are different questions
+    and folding them together is how a scheduler quietly becomes a content
+    filter.
+    """
+
+    def __init__(
+        self,
+        *,
+        config: CuriosityConfig,
+        clock: Callable[[], float] = time.monotonic,
+        rng: random.Random | None = None,
+        time_band: Callable[[], str] | None = None,
+    ) -> None:
+        self.config = config
+        self._clock = clock
+        self._rng = rng if rng is not None else random.Random()
+        self._time_band = time_band or _local_time_band
+        self._lock = threading.RLock()
+
+        self._anchor_at: float | None = None
+        self._next_gap_s: float = self._draw_gap()
+        self._last_remark_at: float | None = None
+        self._last_turn_at: float | None = None
+
+        # counters, for ``/api/state`` and for the status doc's numbers
+        self.ticks = 0
+        self.admitted = 0
+        self.remarks = 0
+        self.refusals = 0
+        self.skips: dict[str, int] = {}
+        self.last_band = ""
+
+    # ------------------------------------------------------------- the doors
+    def note_turn(self, at: float | None = None) -> None:
+        """An OWNER exchange happened. Starts the quiet window over.
+
+        See the module note above: the robot's own unprompted remarks
+        deliberately do NOT come through here. ``note_remark`` is their door.
+        """
+
+        with self._lock:
+            self._last_turn_at = self._clock() if at is None else float(at)
+
+    def note_remark(self, at: float | None = None) -> None:
+        """A remark was EXPRESSED. Re-arms both clocks.
+
+        Called when the owner actually got something: a narrated sentence, or —
+        when the per-minute cap was already spent — the free gesture that
+        replaced it. **The gesture IS the remark** for the fact it stood in for;
+        one noticing produces one expression, billed or free, and the fact is
+        not also queued for a sentence later (see
+        ``RobotRuntime._curiosity_free_gesture``). That is a deliberate reading
+        of the card's work item 3 and it is written down here because the
+        alternative — gesture now, sentence later — gives the owner two of
+        everything and was the other live option.
+
+        NOT called on an offer the whisperer or the lane refused: nothing was
+        heard, so paying a silence for it would make the owner's cost knob buy
+        quiet twice. ``note_refusal`` is that path.
+        """
+
+        with self._lock:
+            now = self._clock() if at is None else float(at)
+            self._last_remark_at = now
+            self._anchor_at = now
+            self._next_gap_s = self._draw_gap()
+            self.remarks += 1
+
+    def due(self, state: ChatterState, *, stimulus: bool = False) -> bool:
+        """Is now a moment to say something. Counts the tick either way.
+
+        ``stimulus=True`` means the caller HAS something that just happened and
+        is asking whether it may say it; ``stimulus=False`` means nothing has
+        happened and it is asking whether the quiet is long enough to be worth
+        filling. Everything above the gap is identical for the two — the owner
+        has to be there, the lane has to be free, the coordinator has to be at a
+        checkpoint, the night has to be over and the conversation has to be
+        quiet. Only the LAST test differs, and it is the whole of the correction
+        pass's ruling 6 (see :data:`STIMULUS_KINDS`).
+        """
+
+        with self._lock:
+            self.ticks += 1
+            at = float(state.at_s)
+            band = str(self._time_band())
+            self.last_band = band
+            if self._anchor_at is None:
+                # The first tick is the anchor. Measuring the first gap from
+                # process start would have the dog owe a remark the instant a
+                # session opens on a runtime that had been up for an hour.
+                self._anchor_at = at
+            if not self.config.enabled:
+                return self._skip(CHATTER_SKIP_DISABLED)
+            if self.config.require_owner_present and not state.owner_present:
+                return self._skip(CHATTER_SKIP_NO_OWNER)
+            if state.lane_busy:
+                return self._skip(CHATTER_SKIP_LANE_BUSY)
+            if state.activity_running:
+                return self._skip(CHATTER_SKIP_ACTIVITY_BUSY)
+            if self.config.night_quiet and band == TIME_BAND_NIGHT:
+                return self._skip(CHATTER_SKIP_QUIET_HOURS)
+            quiet_for = self._quiet_for(at)
+            if quiet_for is not None and quiet_for < float(self.config.quiet_s):
+                return self._skip(CHATTER_SKIP_CONVERSATION)
+            since = at - float(self._anchor_at)
+            if stimulus:
+                if since < float(self.config.stimulus_min_gap_s):
+                    return self._skip(CHATTER_SKIP_STIMULUS_GAP)
+            elif since < self._next_gap_s:
+                return self._skip(CHATTER_SKIP_GAP_HOLDING)
+            self.admitted += 1
+            return True
+
+    def note_refusal(self, at: float | None = None) -> None:
+        """The offer was made and refused downstream. Stop retrying every second.
+
+        Correction-pass note. Without this the feed re-offered a refused
+        candidate on every 1 Hz tick — the dedup window, the min-gap or the
+        monthly ceiling would refuse it again and again, and the decision log
+        filled with a suppression row a second. The anchor moves so the
+        stimulus floor restarts; the Poisson draw is deliberately NOT redrawn,
+        because a remark nobody heard must not buy the owner a fresh
+        four-minute silence (which is the same reasoning ``undeliver`` uses to
+        hand the budget slot back).
+        """
+
+        with self._lock:
+            self._anchor_at = self._clock() if at is None else float(at)
+            self.refusals += 1
+
+    def band(self) -> str:
+        """The current time-of-day band, for the FACT's own clause."""
+
+        with self._lock:
+            return str(self._time_band())
+
+    def snapshot(self) -> dict[str, object]:
+        """Everything the chatter layer did, as a JSON-safe dict.
+
+        A public accessor, and not yet on the wire: publishing it belongs in
+        ``runtime.realtime_snapshot``, which is another card's region and which
+        this card therefore did not touch. ``RobotRuntime.curiosity_snapshot()``
+        is the door; wiring it into ``/api/state`` is one key, and the status
+        doc records it as a handoff rather than pretending it is done.
+        """
+
+        with self._lock:
+            return {
+                "config": self.config.as_dict(),
+                "ticks": self.ticks,
+                "admitted": self.admitted,
+                "remarks": self.remarks,
+                "refusals": self.refusals,
+                "skips": dict(self.skips),
+                "next_gap_s": round(self._next_gap_s, 3),
+                "last_band": self.last_band,
+                "last_remark_at_s": self._last_remark_at,
+            }
+
+    # ------------------------------------------------------------- internals
+    def _skip(self, reason: str) -> bool:
+        self.skips[reason] = self.skips.get(reason, 0) + 1
+        return False
+
+    def _quiet_for(self, at: float) -> float | None:
+        """Seconds since the last OWNER exchange. ``None`` = there has been none.
+
+        ``None`` is not "zero seconds of quiet". A session nobody has spoken on
+        has no conversation to interrupt, so the quiet condition is satisfied
+        rather than blocking — which is the difference between a companion that
+        goes first and one that waits to be talked to before it will talk.
+        """
+
+        if self._last_turn_at is None:
+            return None
+        return max(0.0, at - float(self._last_turn_at))
+
+    def _draw_gap(self) -> float:
+        """One exponential inter-arrival time. Poisson gaps, by definition.
+
+        Clamped below at ``min_gap_floor_s`` because an exponential draw can come
+        back at 0.2 s and a remark that lands 0.2 s after the last one is a
+        stutter, not a cadence. The whisperer's own ``min_gap_s`` would refuse it
+        anyway — this is the same bound one layer earlier, so the budget is not
+        spent on something that was always going to be dropped.
+        """
+
+        mean = float(self.config.mean_gap_s)
+        if not mean > 0.0:
+            return float(self.config.min_gap_floor_s)
+        return max(float(self.config.min_gap_floor_s), self._rng.expovariate(1.0 / mean))
+
+
+class FarewellWatcher:
+    """The falling edge of the owner's presence. Card CURIO-1's fifth class.
+
+    P2-B's :class:`OwnerEventWatcher` is a closed block and this card does not
+    edit it, so the goodbye is a SECOND watcher over the SAME
+    :class:`OwnerPresence` samples rather than a fifth branch inside the first
+    one. The runtime feeds both from one ``owner_presence_sample()`` call, which
+    is what keeps them from disagreeing about whether you are in the room.
+
+    It is deliberately not symmetric with the appearance classes. An appearance
+    is announced after a DEBOUNCE (the tracker must hold you for a moment before
+    the dog says hello); a departure is announced after an ABSENCE (the tracker
+    must fail to find you for a while before the dog decides you have gone), and
+    the second number is much larger than the first because the cost of the two
+    mistakes is not the same: a greeting fired at a passing shadow is charming,
+    and a goodbye fired at one is the robot saying farewell to your back while
+    you stand in front of it.
+    """
+
+    def __init__(
+        self,
+        *,
+        config: CuriosityConfig,
+        min_confidence: float = 0.3,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self.config = config
+        self._min_confidence = float(min_confidence)
+        self._clock = clock
+        self._lock = threading.RLock()
+
+        self._present = False
+        self._ever_seen = False
+        self._gone_since: float | None = None
+        self._episode = 0
+        self._announced_episode = 0
+
+        self.samples = 0
+        self.farewells = 0
+
+    def observe(self, sample: OwnerPresence) -> tuple[StateEvent, ...]:
+        """One presence sample in, at most one farewell out."""
+
+        with self._lock:
+            self.samples += 1
+            at = float(sample.at_s)
+            here = sample.credible(self._min_confidence)
+            if here:
+                if not self._present:
+                    self._present = True
+                    self._episode += 1
+                self._ever_seen = True
+                self._gone_since = None
+                return ()
+            if self._present:
+                self._present = False
+                self._gone_since = at
+                return ()
+            if not self._ever_seen or self._gone_since is None:
+                # Never seen at all. A robot that boots in an empty room has not
+                # been left, and saying goodbye to nobody is the single most
+                # obviously broken thing this class could do.
+                return ()
+            if not self.config.farewell or self._announced_episode == self._episode:
+                return ()
+            gone_for = at - float(self._gone_since)
+            if gone_for < float(self.config.farewell_after_s):
+                return ()
+            self._announced_episode = self._episode
+            self.farewells += 1
+            return (
+                StateEvent(
+                    kind=KIND_OWNER_LEFT,
+                    key=f"owner_left:{self._episode}",
+                    fact=(
+                        "The robot's owner tracking reports the owner has gone out "
+                        "of view and has not come back."
+                    ),
+                    detail={
+                        "episode": self._episode,
+                        "gone_for_s": round(gone_for, 1),
+                        "source": str(sample.source),
+                    },
+                ),
+            )
+
+    def snapshot(self) -> dict[str, object]:
+        with self._lock:
+            return {
+                "present": self._present,
+                "ever_seen": self._ever_seen,
+                "episode": self._episode,
+                "announced_episode": self._announced_episode,
+                "samples": self.samples,
+                "farewells": self.farewells,
+            }
+
+
+#: The FACT sentence for each curiosity class, as a template over one place name.
+#: Templates rather than free text for R11's founding reason: the differ is the
+#: only thing that turns state into a class, and the class is the only thing a
+#: gate downstream may read. A producer that could hand this module a sentence
+#: could hand it a hallucination, and no band table would notice.
+CURIOSITY_FACTS: Mapping[str, str] = {
+    KIND_NOVEL_OBJECT: (
+        "The robot has just seen something in this place it had not seen here "
+        "before, and its own map now has a row for it: {indefinite}."
+    ),
+    KIND_PLACE_LEARNED: (
+        "The robot's map has just accepted a name for a place it already knew "
+        "about: it can be called {definite} from now on."
+    ),
+    KIND_SCENE_CHANGE: (
+        "Something the robot had learned about — {definite} — is not where its "
+        "map last saw it."
+    ),
+    KIND_ASK_ABOUT: (
+        "The robot is looking at something it cannot confirm. The closest thing "
+        "in its own map is {definite}, and it is NOT sure that is what this is."
+    ),
+    KIND_IDLE_REMARK: (
+        "Nothing new has happened for a while. Something the robot has already "
+        "learned about in this place is {definite}."
+    ),
+}
+
+#: Words that already ARE an article. Correction pass, 2026-08-22: the templates
+#: used to hard-code ``the {place}`` and the map's vocabulary is free to contain
+#: a name that starts with one — ``the front step`` rendered as *"the the front
+#: step"*. The article is decided per NAME rather than per template, because the
+#: template cannot know what the map learned.
+_ARTICLES = ("the ", "a ", "an ")
+
+
+def _definite_phrase(place: str) -> str:
+    """``bench`` -> ``the bench``; ``the front step`` -> ``the front step``."""
+
+    return place if place.lower().startswith(_ARTICLES) else f"the {place}"
+
+
+def _indefinite_phrase(place: str) -> str:
+    """``bench`` -> ``a bench``; ``awning`` -> ``an awning``; articles kept."""
+
+    if place.lower().startswith(_ARTICLES):
+        return place
+    article = "an" if place[:1].lower() in "aeiou" else "a"
+    return f"{article} {place}"
+
+
+def curiosity_event(
+    kind: str,
+    place: str,
+    *,
+    time_band: str = "",
+    detail: Mapping[str, object] | None = None,
+) -> StateEvent:
+    """Build one curiosity :class:`StateEvent` for an ADMITTED place name.
+
+    This function does NOT check admission. It cannot: the vocabulary lives in
+    the learned map and this module has no business importing perception. The
+    admission gate is the runtime's ``_curiosity_admitted_names`` and it runs
+    before this is called — which is exactly the arrangement the card's "0
+    hallucinated places" row is scored against, and the reason the seeded RED for
+    it is seeded THERE and not here.
+
+    What this does refuse is an empty name and an unknown class, because both
+    would produce a sentence with a hole in it and a sentence with a hole in it
+    is what the model fills in.
+    """
+
+    template = CURIOSITY_FACTS.get(str(kind))
+    if template is None:
+        raise WhispererError(
+            f"{kind!r} is not a curiosity class; known classes are "
+            f"{sorted(CURIOSITY_FACTS)}"
+        )
+    clean = " ".join(str(place).split())
+    if not clean:
+        raise WhispererError(
+            f"refusing to compose a {kind} remark with no place name: an empty "
+            "name is a sentence the model would finish"
+        )
+    fact = template.format(
+        place=clean,
+        definite=_definite_phrase(clean),
+        indefinite=_indefinite_phrase(clean),
+    )
+    band = str(time_band)
+    phrase = TIME_BAND_PHRASES.get(band, "")
+    if phrase:
+        fact = f"{fact} {phrase}"
+    rows: dict[str, object] = {"place": clean, "time_band": band}
+    if detail:
+        rows.update(dict(detail))
+    return StateEvent(kind=str(kind), key=f"{kind}:{clean}", fact=fact, detail=rows)
+
+
+# ========================================== END card CURIO-1 (chatter layer) ==
 
 
 def compose(event: StateEvent, *, folded: int = 0) -> str:

@@ -74,6 +74,7 @@ from parcel_robot.realtime.tool_broker import (
     TOOL_FOLLOW_OWNER,
     TOOL_NAVIGATE_TO,
     TOOL_PLAY_GESTURE,
+    TOOL_ROAM,
     TOOL_SET_POSE,
     RealtimeToolBroker,
     ToolDoors,
@@ -96,6 +97,11 @@ GOOD_ARGUMENTS: dict[str, str] = {
     TOOL_NAVIGATE_TO: '{"place": "sidewalk"}',
     TOOL_CIRCLE_OWNER: "{}",
     TOOL_FOLLOW_OWNER: "{}",
+    # Card ROAM-1. The ninth tool and the fourth travel tool. Its verdict on
+    # this surface is written down rather than inherited: roam is a MOTION tool
+    # (so the system-initiated gate refuses it) and it is in
+    # PROACTIVE_MOTION_REFUSED (so no config can buy it back).
+    TOOL_ROAM: "{}",
 }
 
 
@@ -142,6 +148,10 @@ class _Doors:
         self.touched.append(("follow", (pace,)))
         return "Owner-follow enabled"
 
+    def roam(self, action: str, budget_s: float) -> str:
+        self.touched.append(("roam", (action, budget_s)))
+        return "Roaming for the next 120 seconds"
+
     def on_dispatch(self) -> None:
         self.dispatches += 1
 
@@ -156,6 +166,7 @@ class _Doors:
             places=self.places,
             orbit=self.orbit,
             follow=self.follow,
+            roam=self.roam,
             gesture_names=lambda: ("paw_wave", "head_nod"),
             pose_names=lambda: ("sit", "lie_down"),
             on_dispatch=self.on_dispatch,

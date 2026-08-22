@@ -1214,9 +1214,17 @@ def test_the_gate_is_wired_into_both_tiers_with_the_right_k() -> None:
     """ONE new hard-gate entry, in the commit tier at k=1 and nightly at k=3."""
 
     source = (REPO / "scripts" / "ci_gate.py").read_text(encoding="utf-8")
-    assert "results.append(evaluate_assertion_evals(tier=tier, k=1))" in source
+    # Card GATE-0 (scrum/20260822/task_20) turned the commit tier's straight-line
+    # `results.append(...)` list into a deferred stage table run under
+    # `run_stage`, so every evaluator's crash becomes a reported row instead of a
+    # traceback that ends the run. The k this gate is wired at is what EV-1
+    # cares about, and it is still literal on both sides.
+    assert '("assertion-evals", lambda: evaluate_assertion_evals(tier=tier, k=1)),' in source
     assert "results.append(evaluate_assertion_evals(tier=tier, k=3))" in source
     assert "ASSERTION-EVALS" in source, "the gate list must document the new gate"
+    assert '"assertion-evals",' in source, (
+        "the commit tier's declared stage names must still carry it"
+    )
 
 
 def test_the_gate_entry_reports_hard_and_uses_the_shared_vocabulary() -> None:

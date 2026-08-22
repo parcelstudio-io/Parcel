@@ -918,6 +918,14 @@ def _nav_observation(
         lidar=observation.lidar_ranges or None,
         extras={
             POSE_PROVIDER_KEY: pose_provider,
+            # Card ROAM-1, the same one line the runtime's ``_navigation_extras``
+            # now carries, from the same source. Without it every eval that runs
+            # through this builder measured the navigator on a frozen clock —
+            # tracker dt pinned to the 0.1 literal, every TTL reading 0 s — and
+            # so could never have shown the product defect it was meant to
+            # guard. ``observation.timestamp`` is what the trace samples already
+            # use two screens down; nothing else in this function changes.
+            "time_s": float(observation.timestamp),
             "collision": observation.collision,
             "perception_fresh": True,
             "lidar_angle_min_rad": observation.lidar_angle_min_rad,

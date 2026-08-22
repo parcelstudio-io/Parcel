@@ -147,6 +147,13 @@ DEFAULT_POLL_S = 0.05
 #: Control-frame vocabulary, both directions. Small on purpose: every frame the
 #: browser can send is a verb this module implements, and anything else is
 #: counted as a protocol error rather than ignored.
+#: Card MARK-1, correction pass. How many ``played`` acks are folded into the
+#: record after an interrupt before the rest are treated as stale. A browser
+#: sends at most two — whatever its timer had in flight, and the one it sends on
+#: receiving ``stop`` — and the bound is what stops a client that has decided to
+#: keep talking from moving a counter forever.
+MAX_FINAL_ACKS_PER_UTTERANCE = 4
+
 CLIENT_MIC = "mic"
 CLIENT_PLAYED = "played"
 CLIENT_PONG = "pong"
@@ -187,6 +194,22 @@ INDEX_FLUSH_INTERVAL_S = 1.0
 #: Segment kinds in the index.
 SEGMENT_OWNER_TURN = "owner_turn"
 SEGMENT_UTTERANCE = "utterance"
+
+
+def _as_int(value: object) -> int | None:
+    """One browser-supplied integer, or ``None``. Card MARK-1.
+
+    Deliberately not a refusal: an absent or unparseable channel count from a
+    client that predates this field is the shipped case, and the pin — not the
+    parser — is what decides whether that matters.
+    """
+
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return int(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
 
 
 class GatewayError(RuntimeError):
@@ -447,9 +470,30 @@ class _CaptureStream:
         if self._open is not None:
             self._open["frames"] = int(self._open["frames"]) + 1
 
-    def mark_interrupted(self) -> None:
-        if self._open is not None:
-            self._open["interrupted"] = True
+    def mark_interrupted(self, wall: float | None = None) -> None:
+        """Mark the open robot segment barged in on, and say WHEN.
+
+        Card MARK-1, correction pass, defect 5 — AIR-1's handoff. ``interrupted``
+        alone answers "was this reply cut off"; the through-air work needs "cut
+        off WHEN", because the whole measurement is a latency: the owner's voice
+        reaches the array at one instant and this WAV stops at another, and
+        without a stamp the second instant can only be recovered by counting
+        bytes and assuming the tee never dropped one.
+
+        ``wall`` is the clock read by ``_offer`` on the RELAY thread, i.e. the
+        moment ``interrupt()`` actually ran — not the moment the writer thread
+        got round to this queue entry, which can be a whole drain batch later.
+        Absent ⇒ the field is simply not written, so an older caller records
+        exactly what it always did.
+        """
+
+        if self._open is None:
+            return
+        self._open["interrupted"] = True
+        if wall is not None:
+            self._open["interrupted_at"] = _iso(wall)
+            self._open["interrupted_byte"] = self.data_bytes
+            self._open["interrupted_t_s"] = self.data_bytes / self.bytes_per_second
 
     def close_segment(self, wall: float | None = None) -> None:
         segment = self._open
@@ -697,7 +741,10 @@ class SessionAudioCapture:
                 touched.add("robot")
                 cut = True
             elif kind == "interrupt":
-                self._robot.mark_interrupted()
+                # Card MARK-1, correction pass: the wall stamp ``note_interrupt``
+                # queued, not ``self._wall()`` now. See ``mark_interrupted``.
+                self._robot.mark_interrupted(wall)
+                touched.add("robot")
             if self._over_cap():
                 self._stop_at_cap()
                 return
@@ -929,6 +976,8 @@ class BrowserAudioGateway:
         max_outbound_bytes: int = DEFAULT_MAX_OUTBOUND_BYTES,
         capture: SessionAudioCapture | None = None,
         voice_identity: Any | None = None,
+        capture_channels: int = 1,
+        capture_beam: int | None = None,
     ) -> None:
         self._on_audio = on_audio
         self._on_mic = on_mic
@@ -941,6 +990,17 @@ class BrowserAudioGateway:
         #: byte-for-byte what R7/R17 shipped, and the gate says which it is.
         self._voice_identity = voice_identity
         self._clock = clock
+        #: Card MARK-1. Which ear the browser is told to open. The reSpeaker
+        #: XVF3800 presents TWO capture channels (measured on this host:
+        #: ``hw:2,0`` is S16_LE / 16 kHz / CHANNELS: 2) — ch0 is the conference
+        #: beam and ch1 is the ASR beam — and asking for one channel makes the
+        #: audio stack DOWNMIX them, which is a different, worse microphone than
+        #: either. ``capture_beam=None`` is the shipped default and pins
+        #: nothing: the ear is whatever the browser opened, recorded and stated
+        #: but never refused. Set it and the pin becomes a refusal (card AIR-1
+        #: commissions the array and decides that).
+        self._capture_channels = max(1, int(capture_channels))
+        self._capture_beam = None if capture_beam is None else max(0, int(capture_beam))
         self._sample_rate_hz = int(sample_rate_hz)
         self._bytes_per_ms = (self._sample_rate_hz * 2) / 1000.0
         self._max_inbound_frame_bytes = int(max_inbound_frame_bytes)
@@ -957,6 +1017,15 @@ class BrowserAudioGateway:
         self._sent_bytes_this_utterance = 0
         self._first_send_at: float | None = None
         self._played_started: float | None = None
+        #: Card MARK-1. The monotonic floor under this utterance's acks, and the
+        #: one-final-ack slot an interrupt opens. See :meth:`ack_played`.
+        self._played_ack_ms = 0.0
+        #: Card MARK-1, correction pass. Set while the browser reports its
+        #: schedule has run dry; ``None`` means playback is live.
+        self._playback_drained_ms: float | None = None
+        self._interrupted_seq = 0
+        self._interrupted_sent_ms = 0.0
+        self._final_ack_seen = True
 
         # ------------------------------------------------------------ counters
         self.connections = 0
@@ -986,6 +1055,23 @@ class BrowserAudioGateway:
         self.interrupts = 0
         self.played_acks = 0
         self.stale_acks = 0
+        #: Card MARK-1. Acks that reported LESS heard audio than an earlier ack
+        #: for the same utterance. Kept apart from ``stale_acks`` on purpose: a
+        #: stale ack is a frame about a reply that is over, and this one is a
+        #: client whose playback bookkeeping is wrong about the reply in flight.
+        self.regressive_acks = 0
+        #: Acks that reported the browser's schedule had run dry.
+        self.drained_acks = 0
+        #: The single post-interrupt ack, and the position it reported.
+        self.final_acks = 0
+        self.last_final_played_ms: float | None = None
+        #: Card MARK-1. Mic arms refused because the ear the browser opened was
+        #: not the beam this gateway pins. Only ever non-zero when a beam IS
+        #: pinned; unpinned is the shipped default and refuses nothing.
+        self.capture_pin_refusals = 0
+        #: What the browser last reported about the ear it actually opened.
+        self.capture_channels_reported: int | None = None
+        self.capture_beam_reported: int | None = None
         self.control_errors = 0
 
     # --------------------------------------------------------------- lifecycle
@@ -1099,6 +1185,7 @@ class BrowserAudioGateway:
             # must never anchor this one's played clock.
             self._played_started = None
             self._first_send_at = None
+            self._playback_drained_ms = None
         if previous is not None:
             previous.close_reason = "displaced by a newer panel connection"
             previous.closed.set()
@@ -1115,6 +1202,7 @@ class BrowserAudioGateway:
                 self._conn = None
                 self._played_started = None
                 self._first_send_at = None
+                self._playback_drained_ms = None
             was_open = conn.mic_open
             conn.mic_open = False
         conn.close_reason = conn.close_reason or reason
@@ -1133,6 +1221,15 @@ class BrowserAudioGateway:
         provider defaults the input half to the same, so a browser capturing at
         48 kHz has to resample before it sends. Saying the number out loud is
         what lets a headless client be honest about doing it.
+
+        CARD MARK-1 — ``capture`` IS NOT ``input``
+        ------------------------------------------
+        ``input`` describes the PCM the browser must SEND (mono, always). The
+        new ``capture`` block describes the DEVICE it should open to get it: how
+        many hardware channels to ask for, and which of them is the ear. They
+        are different questions and were being answered by one number, which is
+        how ``channelCount: 1`` came to mean "let the audio stack average the
+        conference beam and the ASR beam together and give me that".
         """
 
         return {
@@ -1143,6 +1240,7 @@ class BrowserAudioGateway:
                 "channels": 1,
                 "max_frame_bytes": self._max_inbound_frame_bytes,
             },
+            "capture": {"channels": self._capture_channels, "beam": self._capture_beam},
             "output": {"format": "wav", "rate": self._sample_rate_hz, "channels": 1},
             "mic_open": False,
         }
@@ -1220,12 +1318,30 @@ class BrowserAudioGateway:
         self._on_audio(frame)
         return True
 
-    def set_mic(self, conn: _Connection, want_open: bool) -> bool:
+    def set_mic(
+        self,
+        conn: _Connection,
+        want_open: bool,
+        *,
+        channels: object = None,
+        beam: object = None,
+    ) -> bool:
         """The owner's per-connection gesture. Returns the state that now holds.
 
         Opening asks the runtime first (``on_mic``): if it refuses — no session,
         no budget, no credential — the microphone stays shut and the browser is
         told why. Fail-closed, exactly like every other arming surface here.
+
+        CARD MARK-1 — WHICH EAR DID YOU ACTUALLY OPEN?
+        ----------------------------------------------
+        ``channels`` and ``beam`` are what the browser says it got back from
+        ``getUserMedia`` after applying the ``capture`` block in ``hello()``.
+        They are always RECORDED, so a session can answer "what microphone was
+        this?" afterwards. They are only ever REFUSED when a beam is pinned:
+        without a pin (the shipped default) a downmixed ear is accepted and
+        stated, because taking the owner's microphone away over a beam index is
+        a worse failure than a slightly worse microphone, and because the fix
+        for it is a hardware commissioning step (card AIR-1) and not a click.
         """
 
         with self._lock:
@@ -1238,6 +1354,14 @@ class BrowserAudioGateway:
                 return False
             already = conn.mic_open
         if want_open and not already:
+            refusal = self._check_capture_pin(channels, beam)
+            if refusal is not None:
+                with self._lock:
+                    self.mic_refusals += 1
+                    self.capture_pin_refusals += 1
+                self._send_control(conn, {"type": SERVER_MIC, "on": False, "reason": refusal})
+                self._note(f"audio gateway: microphone refused — {refusal}")
+                return False
             try:
                 self._report_mic(True, raising=True)
             except (GatewayError, OSError, RuntimeError, TypeError, ValueError) as error:
@@ -1250,7 +1374,7 @@ class BrowserAudioGateway:
                 conn.mic_open = True
                 self.mic_opens += 1
             self._send_control(conn, {"type": SERVER_MIC, "on": True, "reason": "armed"})
-            self._note("audio gateway: microphone opened by owner gesture")
+            self._note(f"audio gateway: microphone opened by owner gesture{self._ear_text()}")
             return True
         if not want_open and already:
             with self._lock:
@@ -1262,6 +1386,55 @@ class BrowserAudioGateway:
             return False
         self._send_control(conn, {"type": SERVER_MIC, "on": already, "reason": "unchanged"})
         return already
+
+    def _check_capture_pin(self, channels: object, beam: object) -> str | None:
+        """Record the ear the browser opened; refuse it only against a pin.
+
+        Returns the refusal sentence, or ``None`` to let the arming continue.
+        Called without the lock (it takes it), before ``on_mic`` is consulted:
+        a microphone that is going to be refused for being the wrong ear must
+        not first open a paid session.
+        """
+
+        got_channels = _as_int(channels)
+        got_beam = _as_int(beam)
+        with self._lock:
+            self.capture_channels_reported = got_channels
+            self.capture_beam_reported = got_beam
+            pin = self._capture_beam
+            want_channels = self._capture_channels
+        if pin is None:
+            return None
+        if got_channels is None:
+            return (
+                f"this gateway pins capture channel {pin} and the browser did not say which "
+                "ear it opened; send {\"type\":\"mic\",\"on\":true,\"channels\":N,\"beam\":I}"
+            )
+        if got_channels < pin + 1:
+            return (
+                f"this gateway pins capture channel {pin} (of {want_channels}) and the browser "
+                f"opened {got_channels} channel(s): the beams were downmixed into one ear, "
+                "which is a different microphone from the one that was asked for"
+            )
+        if got_beam != pin:
+            return (
+                f"this gateway pins capture channel {pin} and the browser is sending "
+                f"channel {got_beam}"
+            )
+        return None
+
+    def _ear_text(self) -> str:
+        """How the last-armed ear reads in a note. Card MARK-1."""
+
+        with self._lock:
+            channels = self.capture_channels_reported
+            beam = self.capture_beam_reported
+            pin = self._capture_beam
+        if channels is None:
+            return ""
+        if channels <= 1:
+            return f" (ear: {channels} channel, downmixed{'' if pin is None else ' — PINNED'})"
+        return f" (ear: channel {beam} of {channels})"
 
     def close_mic(self, reason: str) -> bool:
         """Shut the ear because the RUNTIME says so. Card R16, work item 3.
@@ -1311,10 +1484,18 @@ class BrowserAudioGateway:
             return
         kind = str(body.get("type", "")).strip()
         if kind == CLIENT_MIC:
-            self.set_mic(conn, bool(body.get("on", False)))
+            # Card MARK-1: ``channels``/``beam`` are optional and absent from
+            # every pre-MARK-1 client, which is exactly what an unpinned gateway
+            # accepts. A pinned one refuses the silence — see ``_check_capture_pin``.
+            self.set_mic(
+                conn,
+                bool(body.get("on", False)),
+                channels=body.get("channels"),
+                beam=body.get("beam"),
+            )
             return
         if kind == CLIENT_PLAYED:
-            self.ack_played(body.get("utterance"), body.get("ms"))
+            self.ack_played(body.get("utterance"), body.get("ms"), body.get("drained", False))
             return
         if kind == CLIENT_PONG:
             return
@@ -1331,6 +1512,11 @@ class BrowserAudioGateway:
             self._sent_bytes_this_utterance = 0
             self._first_send_at = None
             self._played_started = None
+            # Card MARK-1: the monotonic floor is per UTTERANCE. Carrying it
+            # across would make the second reply's first honest ack look like a
+            # regression and silently pin the mark at the first reply's length.
+            self._played_ack_ms = 0.0
+            self._playback_drained_ms = None
             conn = self._live_connection()
             seq = self._utterance_seq
             capture = self._capture
@@ -1394,6 +1580,16 @@ class BrowserAudioGateway:
             seq = self._utterance_seq
             self._played_started = None
             self._first_send_at = None
+            self._played_ack_ms = 0.0
+            self._playback_drained_ms = None
+            # Card MARK-1: this utterance is now allowed exactly one FINAL ack —
+            # the browser's last word on what came out of the speaker before it
+            # stopped. Recorded, never anchoring: see ``_record_final_ack``.
+            self._interrupted_seq = seq
+            self._interrupted_sent_ms = self._sent_bytes_this_utterance / self._bytes_per_ms
+            self._final_ack_seen = False
+            self.final_acks = 0
+            self.last_final_played_ms = None
             discarded = 0 if conn is None else conn.discard()
             self.frames_discarded_interrupt += discarded
             capture = self._capture
@@ -1404,24 +1600,51 @@ class BrowserAudioGateway:
 
     @property
     def played_started_monotonic(self) -> float | None:
-        """When the BROWSER said this utterance started playing. Clamped here."""
+        """When the BROWSER said this utterance started playing. Clamped here.
+
+        Card MARK-1, correction pass, defect 3. While playback is DRAINED the
+        anchor is recomputed against the current clock so that the elapsed time
+        the lane derives from it stays pinned at the position the browser last
+        reported. The lane's arithmetic is untouched — it still reads one
+        number and subtracts — but that number no longer pretends a silent
+        speaker is still playing. Before this, the only thing bounding a
+        truncate across a stall was ``enqueued_ms``, which saves you exactly
+        while the socket is not running ahead of the tab.
+        """
 
         with self._lock:
-            return self._played_started
+            drained = self._playback_drained_ms
+            if drained is None:
+                return self._played_started
+            anchor = self._clock() - (drained / 1000.0)
+            if self._first_send_at is not None:
+                anchor = max(self._first_send_at, anchor)
+            return anchor
 
-    def ack_played(self, utterance: object, ms: object) -> bool:
+    def ack_played(self, utterance: object, ms: object, drained: object = False) -> bool:
         """Fold one browser playback ack into the played clock, clamped.
 
-        Three independent clamps, because this is the number the lane hands the
+        Four independent clamps, because this is the number the lane hands the
         provider as "what the owner actually heard":
 
         * an ack for anything but the CURRENT utterance is dropped (a stale ack
-          from the reply before a barge-in would otherwise anchor this one);
+          from the reply before a barge-in would otherwise anchor this one) —
+          with one exception, the single FINAL ack a client is invited to send
+          after an interrupt, which is recorded and never anchors anything;
         * the reported position is clamped to the audio actually handed to the
           socket, so the browser cannot claim to have played more than was sent;
         * the derived anchor is never earlier than the moment the first byte of
           this utterance left, so it cannot claim playback began before there
-          was anything to play.
+          was anything to play;
+        * **card MARK-1: within one utterance the position may only GO UP.**
+          Heard audio does not un-hear itself. The client that shipped in
+          ``index.html`` re-stamped its playback origin every time its schedule
+          ran dry and then reported a position measured from the re-stamp — so
+          in the middle of a reply the owner was still listening to, it reported
+          ~0 and dragged the truncate point back with it (measured: 1 441 ms of
+          error on the stall fixtures, ``tests/test_mark1_barge_in_mark.py``).
+          A regressive ack is dropped and counted here rather than trusted,
+          which makes the mark honest even for a browser that is not.
         """
 
         try:
@@ -1437,14 +1660,74 @@ class BrowserAudioGateway:
             return False
         with self._lock:
             if seq != self._utterance_seq or self._first_send_at is None:
-                self.stale_acks += 1
-                return False
+                return self._record_final_ack(seq, position_ms)
             sent_ms = self._sent_bytes_this_utterance / self._bytes_per_ms
             clamped = min(max(0.0, position_ms), sent_ms)
+            if clamped < self._played_ack_ms:
+                self.regressive_acks += 1
+                if not bool(drained) and self._playback_drained_ms is not None:
+                    # Correction pass. The position walked backwards, so it is
+                    # refused — but a NON-drained ack is still positive evidence
+                    # that audio is coming out again, and leaving the freeze on
+                    # would keep reporting the stall for another timer period.
+                    # Unfreeze AT the monotonic floor: playback is live, and the
+                    # owner has heard exactly what was last accepted. (This is
+                    # the common shape right after an underrun resumes: the
+                    # scheduling lead-in is not audio anyone has heard yet, so
+                    # the client's position dips by ~20 ms.)
+                    self._playback_drained_ms = None
+                    self._played_started = max(
+                        self._first_send_at, self._clock() - (self._played_ack_ms / 1000.0)
+                    )
+                return False
+            self._played_ack_ms = clamped
             now = self._clock()
             self._played_started = max(self._first_send_at, now - (clamped / 1000.0))
             self.played_acks += 1
+            # Card MARK-1, correction pass, defect 3. A DRAINED ack says the
+            # schedule has run dry: the position has stopped moving even though
+            # the wall clock has not. Freeze it. Any later ordinary ack means
+            # audio is coming out again, so the freeze is lifted by the same
+            # frame that proves it should be.
+            if bool(drained):
+                self._playback_drained_ms = clamped
+                self.drained_acks += 1
+            else:
+                self._playback_drained_ms = None
             return True
+
+    def _record_final_ack(self, seq: int, position_ms: float) -> bool:
+        """Acks that arrive AFTER an interrupt. Card MARK-1.
+
+        Called with the lock held. The lane truncated the provider's belief the
+        moment VAD fired — before any of these could possibly arrive — so none
+        of them can move the mark and none of them tries to. What they are for
+        is the record: the browser's own last word on how much of the reply came
+        out of the speaker, which is what an audit compares against the
+        ``audio_end_ms`` the provider was told.
+
+        CORRECTION PASS, defect 6. This used to keep exactly ONE slot, and on a
+        real socket the wrong ack won it. ``interrupt()`` clears
+        ``_first_send_at`` immediately, but the browser's ~100 ms timer may
+        already have a ``played`` frame in flight; that frame lands here first,
+        takes the slot, and the browser's true final position — sent when it
+        actually received ``stop`` — is then discarded as stale. The recorded
+        number was silently up to one timer period early.
+
+        So: fold, do not latch. Heard audio only grows, so the LARGEST
+        post-interrupt position is the right one whatever order the frames
+        arrive in, and the count is bounded so a chatty client cannot spin it.
+        """
+
+        if seq != self._interrupted_seq or self.final_acks >= MAX_FINAL_ACKS_PER_UTTERANCE:
+            self.stale_acks += 1
+            return False
+        self._final_ack_seen = True
+        self.final_acks += 1
+        clamped = min(max(0.0, position_ms), self._interrupted_sent_ms)
+        previous = self.last_final_played_ms
+        self.last_final_played_ms = clamped if previous is None else max(previous, clamped)
+        return False
 
     # ---------------------------------------------------------------- plumbing
     def _live_connection(self) -> _Connection | None:
@@ -1547,6 +1830,19 @@ class BrowserAudioGateway:
                 "interrupts": self.interrupts,
                 "played_acks": self.played_acks,
                 "stale_acks": self.stale_acks,
+                # Card MARK-1. Barge-in mark integrity, from outside: acks that
+                # tried to walk the played clock backwards, the browser's last
+                # word after an interrupt, and which ear it actually opened.
+                "regressive_acks": self.regressive_acks,
+                "drained_acks": self.drained_acks,
+                "playback_drained_ms": self._playback_drained_ms,
+                "final_acks": self.final_acks,
+                "last_final_played_ms": self.last_final_played_ms,
+                "capture_channels_pinned": self._capture_channels,
+                "capture_beam_pinned": self._capture_beam,
+                "capture_channels_reported": self.capture_channels_reported,
+                "capture_beam_reported": self.capture_beam_reported,
+                "capture_pin_refusals": self.capture_pin_refusals,
                 "control_errors": self.control_errors,
             }
 

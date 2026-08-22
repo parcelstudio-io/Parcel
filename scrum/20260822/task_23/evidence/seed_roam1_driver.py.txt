@@ -1,0 +1,33 @@
+"""Seeded-RED harness: seed, run, restore byte-identically, purge, rerun."""
+import hashlib, shutil, subprocess, sys, os
+from pathlib import Path
+REPO = Path("/home/jaewoo-jang/Desktop/Projects/Parcel")
+
+def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+def purge():
+    for d in REPO.rglob("__pycache__"):
+        shutil.rmtree(d, ignore_errors=True)
+
+def run(tests):
+    env = dict(os.environ); env.pop("TMPDIR", None)
+    r = subprocess.run([str(REPO/".parcel/bin/python"), "-m", "pytest", *tests, "-q", "--no-header", "-p", "no:cacheprovider"],
+                       cwd=REPO, capture_output=True, text=True, env=env)
+    tail = [l for l in r.stdout.strip().splitlines() if l.strip()][-1]
+    return r.returncode, tail
+
+def seed(name, path, old, new, tests):
+    p = REPO/path
+    before_sha = sha(p); before = p.read_text()
+    assert old in before, f"{name}: seed anchor not found"
+    p.write_text(before.replace(old, new, 1)); purge()
+    rc_red, tail_red = run(tests)
+    p.write_text(before); purge()
+    after_sha = sha(p)
+    assert after_sha == before_sha, f"{name}: restore not byte-identical"
+    rc_green, tail_green = run(tests)
+    print(f"--- {name} ({path})")
+    print(f"    sha before/after: {before_sha[:16]} / {after_sha[:16]}  identical={before_sha==after_sha}")
+    print(f"    SEEDED : rc={rc_red}  {tail_red}")
+    print(f"    RESTORED: rc={rc_green}  {tail_green}")
+    return rc_red != 0 and rc_green == 0

@@ -117,6 +117,23 @@ OVERLAY_INTRODUCIBLE_KEYS = frozenset(
         # legacy B4 grounding switch (RobotRuntime reads camera_ingress.enabled)
         "camera_ingress",
         "camera_ingress.enabled",
+        # ---- CARD ROAM-1: the roam behavior's knobs ------------------------
+        # The base configuration is SHA-locked and cannot grow a `roam:`
+        # section, so without this entry the prototype overlay REFUSES to load
+        # one — which is what the verifier measured: `_roam_limits` read
+        # `store.section("roam")` and no operator could ever put anything in
+        # it.
+        #
+        # ONE ENTRY, NOT SIX, and the difference matters. Listing `roam` here
+        # exempts the WHOLE SUBTREE: the loop below `continue`s on the exempt
+        # parent and never descends, so `roam.budget_st` would merge silently.
+        # Listing the five children alongside it would LOOK like a spelling
+        # guard and be inert — the same shape of lie as the
+        # `minimum_confidenc` key this whole mechanism exists to catch. So the
+        # typo check lives where the section is READ, in
+        # `RobotRuntime.roam_config`, which refuses an unknown key by name and
+        # is the roam family's equivalent of `CameraStreamConfig.from_section`.
+        "roam",
     }
 )
 

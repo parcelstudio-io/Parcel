@@ -1,0 +1,41 @@
+{
+  "loop_hz_10_shipped": {
+    "control_dt_s": 0.1,
+    "time_s_deltas": [
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1
+    ],
+    "tracker_dt_after_first_tick": [
+      0.1
+    ]
+  },
+  "loop_hz_20_seeded": {
+    "control_dt_s": 0.05,
+    "time_s_deltas": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.05
+    ],
+    "tracker_dt_after_first_tick": [
+      0.05
+    ]
+  },
+  "note": "pipeline.py:1949-1955 arithmetic, applied to the time_s the shipped _nav_observation now supplies. Before card ROAM-1 no product or eval path supplied time_s at all, so both rows above would read 0.1."
+}

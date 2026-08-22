@@ -1,0 +1,4856 @@
+{
+  "arm": "static",
+  "budget_s": 120.0,
+  "collision_ticks": 0,
+  "config_sha256": "5d3221d19a33d4311328765633a2fb5935547e379485c1f0234ab52f97432805",
+  "first_tick_latency_s": 0.0806,
+  "generated_at": "2026-08-22T10:37:26.656263+00:00",
+  "ingress": {
+    "error": "",
+    "executed": true,
+    "item_id": null,
+    "kind": "roam",
+    "name": "roam",
+    "reply": "Roaming for the next 120 seconds",
+    "session_id": null,
+    "transcript": "Go explore"
+  },
+  "ingress_latency_s": 0.0003,
+  "loop_period_s": 0.1,
+  "min_person_clearance_m": 1.116076,
+  "net_displacement_m": 0.284751,
+  "owner_store": {
+    "sha256_after": null,
+    "sha256_before": null,
+    "unchanged": true
+  },
+  "path_length_m": 21.837393,
+  "person_stop_m": 0.7,
+  "reasons": {
+    "advance": 357,
+    "turn_blocked": 115,
+    "turn_hold": 7
+  },
+  "repo_head": "8862220e557ed86cf8783ef2cc00c267446b629a",
+  "roam_active_samples": 479,
+  "roam_final": {
+    "active": false,
+    "budget_s": 30.0,
+    "elapsed_s": 0.0,
+    "idle_checkpoint": true,
+    "min_forward_clearance_m": null,
+    "min_person_clearance_m": null,
+    "reason": "owner_stopped",
+    "refused": 0,
+    "remaining_s": 0.0,
+    "ticks": 2
+  },
+  "samples": 479,
+  "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml",
+  "scene_sha256": "e89f4f1219f7a92a64855698fa5c04423897ab0090d53863e6996614413dda58",
+  "simulator_returncode": -15,
+  "stop": {
+    "error": "",
+    "executed": true,
+    "item_id": null,
+    "kind": "roam_stop",
+    "name": "roam_stop",
+    "reply": "Stopped roaming (owner_stopped)",
+    "session_id": null,
+    "transcript": "stop roaming"
+  },
+  "stop_active_after": false,
+  "stop_latency_s": 0.5009,
+  "trace": [
+    {
+      "collision": false,
+      "heading_deg": 0.0,
+      "person_clearance_m": 1.5115528128088302,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 0.0013,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 0.0,
+      "person_clearance_m": 1.4871553377138247,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 0.252,
+      "x": 0.025157760737347407,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 0.0,
+      "person_clearance_m": 1.4140189388785982,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 0.5025,
+      "x": 0.10069212809670722,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 0.0,
+      "person_clearance_m": 1.3669153443131608,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 0.7532,
+      "x": 0.14944212809670726,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 0.0,
+      "person_clearance_m": 1.2946153410610435,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 1.0037,
+      "x": 0.22444212809670733,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 0.0,
+      "person_clearance_m": 1.245337750148329,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 1.2543,
+      "x": 0.2756921280967068,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 0.0,
+      "person_clearance_m": 1.1734315931658486,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 1.5048,
+      "x": 0.3506921280967052,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 2.7849165082321585,
+      "person_clearance_m": 1.1710392694423502,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 1.7554,
+      "x": 0.35319212809670514,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 14.256879368004125,
+      "person_clearance_m": 1.1710392694423502,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 2.006,
+      "x": 0.35319212809670514,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 23.653387208149635,
+      "person_clearance_m": 1.1710392694423502,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 2.2565,
+      "x": 0.35319212809670514,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 37.175191173237074,
+      "person_clearance_m": 1.1710392694423502,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 2.5071,
+      "x": 0.35319212809670514,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 46.57169901338259,
+      "person_clearance_m": 1.1710392694423502,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 2.7577,
+      "x": 0.35319212809670514,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 60.32268609652113,
+      "person_clearance_m": 1.1710392694423502,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 3.0082,
+      "x": 0.35319212809670514,
+      "y": 0.0
+    },
+    {
+      "collision": false,
+      "heading_deg": 66.5419559163972,
+      "person_clearance_m": 1.1672842858234511,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 3.2588,
+      "x": 0.36434802121361626,
+      "y": 0.023171026174374602
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.1635785554614635,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 3.5093,
+      "x": 0.39197743330476403,
+      "y": 0.09212742778582883
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.1633471606199532,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 3.7597,
+      "x": 0.4101534121300496,
+      "y": 0.13870675575159847
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.1657342548906127,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 4.0102,
+      "x": 0.4374173803679779,
+      "y": 0.2085757477002535
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.1691425364035717,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 4.2606,
+      "x": 0.45559335919326344,
+      "y": 0.2551550756660235
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.1769587722562156,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 4.5112,
+      "x": 0.48285732743119175,
+      "y": 0.32502406761467856
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.1839531793389793,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 4.7618,
+      "x": 0.5010333062564775,
+      "y": 0.3716033955804486
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.197077321912323,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 5.0123,
+      "x": 0.5282972744944091,
+      "y": 0.4414723875291036
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.2075511929407314,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 5.2627,
+      "x": 0.5464732533196969,
+      "y": 0.48805171549487364
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.2257876383193917,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 5.513,
+      "x": 0.5737372215576285,
+      "y": 0.557920707443526
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.239950558437771,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 5.7636,
+      "x": 0.5923675998535485,
+      "y": 0.605664518608438
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.2630901914279558,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 6.0141,
+      "x": 0.6196315680914801,
+      "y": 0.6755335105570897
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.2796232757435704,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 6.2644,
+      "x": 0.6373531474461357,
+      "y": 0.7209483553237133
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.3077543190421819,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 6.5148,
+      "x": 0.6650715151546995,
+      "y": 0.7919818304715092
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.3271424822879727,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 6.7652,
+      "x": 0.6827930945093551,
+      "y": 0.8373966752381328
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.3595696315105923,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 7.0155,
+      "x": 0.7105114622179189,
+      "y": 0.9084301503859287
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.3821718879681864,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 7.2659,
+      "x": 0.7286874410432067,
+      "y": 0.9550094783516965
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.4179713527526552,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 7.5162,
+      "x": 0.7559514092811384,
+      "y": 1.0248784703003482
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.4436876975842625,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 7.7668,
+      "x": 0.7745817875770583,
+      "y": 1.0726222814652602
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.4817196102676309,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 8.0173,
+      "x": 0.8009369568737256,
+      "y": 1.1401623070156235
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.5097204519035528,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 8.268,
+      "x": 0.8195673351696455,
+      "y": 1.1879061181805355
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.5530023166337739,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 8.5185,
+      "x": 0.8472857028782094,
+      "y": 1.2589395933283314
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.5816433584578327,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 8.7692,
+      "x": 0.8650072822328649,
+      "y": 1.304354438094955
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.6271027647444563,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 9.0197,
+      "x": 0.8922712504707966,
+      "y": 1.3742234300436067
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.6590933295136436,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 9.2703,
+      "x": 0.9109016287667165,
+      "y": 1.4219672412085187
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.7071893759944559,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 9.5208,
+      "x": 0.9381655970046482,
+      "y": 1.4918362331571704
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.7392277175922468,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 9.7716,
+      "x": 0.9558871763593038,
+      "y": 1.537251077923794
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.789644542145916,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 10.0221,
+      "x": 0.9831511445972354,
+      "y": 1.6071200698724457
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.8239773820869096,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 10.2727,
+      "x": 1.001327123422523,
+      "y": 1.6536993978382135
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.8764978160428647,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 10.5231,
+      "x": 1.028591091660448,
+      "y": 1.7235683897868652
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.913056240020621,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 10.7735,
+      "x": 1.0472214699563633,
+      "y": 1.7713122009517772
+    },
+    {
+      "collision": false,
+      "heading_deg": 68.6834967226813,
+      "person_clearance_m": 1.9674802049082916,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 11.0238,
+      "x": 1.0744854381942883,
+      "y": 1.841181192900429
+    },
+    {
+      "collision": false,
+      "heading_deg": 69.66786379349055,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 11.2742,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.72115963920037,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 11.5245,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 88.09669784651523,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 11.7749,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 101.61850181160118,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_hold",
+      "t_s": 12.0255,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 110.78582653369332,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_hold",
+      "t_s": 12.2761,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 124.76599673488387,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 12.5266,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 133.70413833892374,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 12.7771,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 147.45512542206197,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_hold",
+      "t_s": 13.0277,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 156.85163326220643,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_hold",
+      "t_s": 13.2784,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 170.37343722729238,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 13.529,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": 179.54076194938455,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 13.7796,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": -166.47906784942344,
+      "person_clearance_m": 1.98657820882754,
+      "roam_active": true,
+      "roam_reason": "turn_hold",
+      "t_s": 14.0302,
+      "x": 1.0839300261858213,
+      "y": 1.8653847070983658
+    },
+    {
+      "collision": false,
+      "heading_deg": -158.26032522319207,
+      "person_clearance_m": 1.9867516694944232,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 14.2808,
+      "x": 1.0761554210520465,
+      "y": 1.8625452856254887
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.6014642062146,
+      "person_clearance_m": 1.9834711572880381,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 14.5314,
+      "x": 1.016896813098047,
+      "y": 1.8349484424101565
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 1.9808147427906302,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 14.782,
+      "x": 0.9721279904435174,
+      "y": 1.8126829428818645
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 1.9786602254464236,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 15.0326,
+      "x": 0.9038565659194793,
+      "y": 1.7787259834558697
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 1.978495010540999,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 15.2832,
+      "x": 0.8590884186906018,
+      "y": 1.7564591248158732
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 1.9801005399380245,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 15.5339,
+      "x": 0.7919361978472856,
+      "y": 1.7230588368558784
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 1.9824046329073586,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 15.7847,
+      "x": 0.7471680506184082,
+      "y": 1.7007919782158818
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 1.987704661428238,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 16.0353,
+      "x": 0.680015829775092,
+      "y": 1.667391690255887
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 1.9924612939454123,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 16.286,
+      "x": 0.6352476825462146,
+      "y": 1.6451248316158904
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.001417479573764,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 16.5366,
+      "x": 0.5680954617028984,
+      "y": 1.6117245436558956
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.0084014712484253,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 16.7872,
+      "x": 0.5244465181547429,
+      "y": 1.590014356481899
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.0211412566240803,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 17.0377,
+      "x": 0.45617509363070696,
+      "y": 1.5560573970559042
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.030684375139746,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 17.2883,
+      "x": 0.41140694640183173,
+      "y": 1.5337905384159076
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.0470241128104227,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 17.5388,
+      "x": 0.343135521877797,
+      "y": 1.4998335789899129
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.0585854501109075,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 17.7893,
+      "x": 0.29948657832964365,
+      "y": 1.4781233918159162
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.0783802900186785,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 18.0396,
+      "x": 0.23121515380560845,
+      "y": 1.4441664323899215
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.0924746794500493,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 18.2902,
+      "x": 0.1864470065767321,
+      "y": 1.421899573749925
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.1148407045889606,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 18.5407,
+      "x": 0.1204139894141395,
+      "y": 1.38905595725593
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.1314680937826864,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 18.7912,
+      "x": 0.07452663850454125,
+      "y": 1.3662324271499335
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.1573659453126206,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 19.0417,
+      "x": 0.00737441766122708,
+      "y": 1.3328321391899387
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.17517461272669,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 19.2922,
+      "x": -0.036274525886927096,
+      "y": 1.311121952015942
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.2040331141280802,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 19.5426,
+      "x": -0.10342674673024145,
+      "y": 1.2777216640559472
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.2247465741675176,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 19.7932,
+      "x": -0.1493140976398397,
+      "y": 1.2548981339499508
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.2564706972848168,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 20.0435,
+      "x": -0.2164663184831542,
+      "y": 1.221497845989956
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.2779673058099332,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 20.2941,
+      "x": -0.26011526203130836,
+      "y": 1.1997876588159593
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.3129314489100556,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 20.5446,
+      "x": -0.3283866865553431,
+      "y": 1.1658306993899645
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.336722356537633,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 20.7951,
+      "x": -0.3731548337842183,
+      "y": 1.143563840749968
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.55508699975573,
+      "person_clearance_m": 2.373649292852705,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 21.0454,
+      "x": -0.44030705462753117,
+      "y": 1.1101635527899731
+    },
+    {
+      "collision": false,
+      "heading_deg": -150.55562289603805,
+      "person_clearance_m": 2.3742770879590944,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 21.2959,
+      "x": -0.44142625830825305,
+      "y": 1.1096068813239732
+    },
+    {
+      "collision": false,
+      "heading_deg": -138.69038143914227,
+      "person_clearance_m": 2.3742770879590944,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 21.5464,
+      "x": -0.44142625830825305,
+      "y": 1.1096068813239732
+    },
+    {
+      "collision": false,
+      "heading_deg": -129.75223983510142,
+      "person_clearance_m": 2.3742770879590944,
+      "roam_active": true,
+      "roam_reason": "turn_hold",
+      "t_s": 21.7969,
+      "x": -0.44142625830825305,
+      "y": 1.1096068813239732
+    },
+    {
+      "collision": false,
+      "heading_deg": -116.94029533921501,
+      "person_clearance_m": 2.3736064951780103,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 22.0473,
+      "x": -0.44535124005733456,
+      "y": 1.1024145067357274
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.78646644614113,
+      "person_clearance_m": 2.367492321640258,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 22.2978,
+      "x": -0.4625638907293614,
+      "y": 1.0644617383962238
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.3550739967299323,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 22.5483,
+      "x": -0.4915158143443543,
+      "y": 0.993922311684384
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.3480833783060824,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 22.7988,
+      "x": -0.5099564397240369,
+      "y": 0.9487946501495074
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.338765573453067,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 23.0493,
+      "x": -0.5387994691640517,
+      "y": 0.8782103590308541
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.333849229676405,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 23.2998,
+      "x": -0.5572400945437334,
+      "y": 0.8330826974959774
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.3278821808128134,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 23.5503,
+      "x": -0.5856102874355512,
+      "y": 0.7636555259038594
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.324984433244186,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 23.8006,
+      "x": -0.6045237493634298,
+      "y": 0.7173707448424474
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.3222360213168463,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 24.051,
+      "x": -0.6333667788034446,
+      "y": 0.6467864537237942
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.321531717900136,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 24.3013,
+      "x": -0.6522802407313232,
+      "y": 0.6005016726623822
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.322107479542022,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 24.5517,
+      "x": -0.680650433623141,
+      "y": 0.5310745010702642
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.3235789564231064,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 24.8023,
+      "x": -0.6995638955510196,
+      "y": 0.484789720008853
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.327292627663958,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 25.0528,
+      "x": -0.7272128354388646,
+      "y": 0.417127589502613
+    },
+    {
+      "collision": false,
+      "heading_deg": -112.22651644414219,
+      "person_clearance_m": 2.330537725688141,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 25.3033,
+      "x": -0.7444193258458373,
+      "y": 0.3750200872188531
+    },
+    {
+      "collision": false,
+      "heading_deg": -106.15931415553649,
+      "person_clearance_m": 2.330713645614159,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 25.5538,
+      "x": -0.7452555577356449,
+      "y": 0.37297367128062314
+    },
+    {
+      "collision": false,
+      "heading_deg": -97.5716580235828,
+      "person_clearance_m": 2.330713645614159,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 25.8043,
+      "x": -0.7452555577356449,
+      "y": 0.37297367128062314
+    },
+    {
+      "collision": false,
+      "heading_deg": -83.82067094044304,
+      "person_clearance_m": 2.330713645614159,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 26.0547,
+      "x": -0.7452555577356449,
+      "y": 0.37297367128062314
+    },
+    {
+      "collision": false,
+      "heading_deg": -74.65334621834987,
+      "person_clearance_m": 2.330713645614159,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 26.3053,
+      "x": -0.7452555577356449,
+      "y": 0.37297367128062314
+    },
+    {
+      "collision": false,
+      "heading_deg": -60.673176017157786,
+      "person_clearance_m": 2.330713645614159,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 26.5557,
+      "x": -0.7452555577356449,
+      "y": 0.37297367128062314
+    },
+    {
+      "collision": false,
+      "heading_deg": -51.73503441311693,
+      "person_clearance_m": 2.330713645614159,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 26.8066,
+      "x": -0.7452555577356449,
+      "y": 0.37297367128062314
+    },
+    {
+      "collision": false,
+      "heading_deg": -37.75486421192482,
+      "person_clearance_m": 2.330713645614159,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 27.0571,
+      "x": -0.7452555577356449,
+      "y": 0.37297367128062314
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.57571349391558,
+      "person_clearance_m": 2.3057006141712524,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 27.3077,
+      "x": -0.7236224422834684,
+      "y": 0.3584327519776389
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 2.2341155382031523,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 27.5582,
+      "x": -0.6600981175403305,
+      "y": 0.32169175188912397
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 2.1852959632261317,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 27.8087,
+      "x": -0.6165926894711312,
+      "y": 0.297048746217823
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 2.110930514014977,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 28.0591,
+      "x": -0.5502469116656022,
+      "y": 0.25946816256908906
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 2.063442308026625,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 28.3095,
+      "x": -0.5078291192981329,
+      "y": 0.2354412320395713
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.9904768670367672,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 28.56,
+      "x": -0.4425709771943339,
+      "y": 0.19847672353262152
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.9406866659086843,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 28.8104,
+      "x": -0.3979779134234046,
+      "y": 0.17321764271953918
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.867932915177908,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 29.0607,
+      "x": -0.3327197713196056,
+      "y": 0.13625313421258942
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.8182984531277102,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 29.3111,
+      "x": -0.2881267075486763,
+      "y": 0.11099405339950676
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.7469977738872753,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 29.5615,
+      "x": -0.2239562011466073,
+      "y": 0.07464562003433867
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.6987481961349167,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 29.812,
+      "x": -0.18045077307740798,
+      "y": 0.05000261436303827
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.6253198083488514,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 30.0625,
+      "x": -0.114104995271879,
+      "y": 0.012422030714305168
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.5784777754447907,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 30.3132,
+      "x": -0.07168720290440966,
+      "y": -0.01160489981521266
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.506586286817994,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 30.5637,
+      "x": -0.006429060800610972,
+      "y": -0.04856940832216325
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.4575912522010535,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 30.8143,
+      "x": 0.03816400297031814,
+      "y": -0.07382848913524616
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.3861016632603802,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 31.065,
+      "x": 0.10342214507411697,
+      "y": -0.11079299764219676
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.339779358138704,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 31.3155,
+      "x": 0.1458399374415863,
+      "y": -0.13481992817171443
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.267581178770834,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 31.566,
+      "x": 0.21218571524711527,
+      "y": -0.1724005118204467
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.2215996199450643,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 31.8164,
+      "x": 0.2546035076145846,
+      "y": -0.19642744234996404
+    },
+    {
+      "collision": false,
+      "heading_deg": -29.52874251773243,
+      "person_clearance_m": 1.1517500037449337,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 32.067,
+      "x": 0.319313375336982,
+      "y": -0.23308138895027555
+    },
+    {
+      "collision": false,
+      "heading_deg": -28.517783545939277,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 32.3176,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": -19.566226069789966,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 32.5682,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": -10.210667434463991,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 32.8187,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": 3.540319648675779,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 33.0692,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": 12.707644370768959,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 33.3198,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": 26.45863145390873,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 33.5703,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": 35.39677305794958,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 33.8208,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": 49.376943259141655,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 34.0713,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": 58.77345109928612,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 34.3218,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": 72.29525506437206,
+      "person_clearance_m": 1.1277104995501686,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 34.5723,
+      "x": 0.34166763916231,
+      "y": -0.24574363075948355
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.52666015561881,
+      "person_clearance_m": 1.1256680317424148,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 34.8229,
+      "x": 0.3477449911911913,
+      "y": -0.2208643009758478
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.126995286032741,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 35.0734,
+      "x": 0.36043277360332254,
+      "y": -0.1476755763476768
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.130198682241526,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 35.3238,
+      "x": 0.3685185270329811,
+      "y": -0.0983337017230258
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.1379261442705668,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 35.5743,
+      "x": 0.3808493010132104,
+      "y": -0.023087342920433043
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.1448374821622949,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 35.8248,
+      "x": 0.38893505444286897,
+      "y": 0.026254531704217838
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.1576549128927256,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 36.0752,
+      "x": 0.40086154075161534,
+      "y": 0.09903379677557805
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.1683706372658782,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 36.3257,
+      "x": 0.40914943801701537,
+      "y": 0.14960921826584533
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.186331292582719,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 36.5763,
+      "x": 0.42107592432576174,
+      "y": 0.22238848333720557
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.200534547814711,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 36.8268,
+      "x": 0.42936382159116177,
+      "y": 0.27296390482747285
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.223785594917842,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 37.0774,
+      "x": 0.4414924517356496,
+      "y": 0.34697671676444936
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.240864249229452,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 37.3277,
+      "x": 0.44957820516530816,
+      "y": 0.39631859138910036
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.2687602626001473,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 37.5783,
+      "x": 0.461706835309796,
+      "y": 0.47033140332607687
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.2893387027147107,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 37.8288,
+      "x": 0.46999473257519603,
+      "y": 0.5209068248163441
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.3210190936729296,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 38.0794,
+      "x": 0.4819212188839424,
+      "y": 0.5936860898877043
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.3438299478355484,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 38.3301,
+      "x": 0.49000697231360096,
+      "y": 0.6430279645123553
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.3799704673812978,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 38.5808,
+      "x": 0.5021356024580887,
+      "y": 0.7170407764493318
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.4052916476562034,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 38.8314,
+      "x": 0.5102213558877473,
+      "y": 0.7663826510739828
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.4450211931303636,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 39.0821,
+      "x": 0.5223499860322351,
+      "y": 0.8403954630109594
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.4733202987985317,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 39.3325,
+      "x": 0.5306378832976352,
+      "y": 0.8909708845012266
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.516326853422606,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 39.5833,
+      "x": 0.542766513442123,
+      "y": 0.9649836964382031
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.545998828149837,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 39.8339,
+      "x": 0.5508522668717816,
+      "y": 1.014325571062853
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.5911461120600585,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 40.0846,
+      "x": 0.562778753180528,
+      "y": 1.0871048361342066
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.62344131360402,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 40.3353,
+      "x": 0.571066650445928,
+      "y": 1.1376802576244693
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.6719875736209537,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 40.5861,
+      "x": 0.5831952805904158,
+      "y": 1.2116930695614392
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.7051570233037079,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 40.8366,
+      "x": 0.5912810340200744,
+      "y": 1.2610349441860857
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.756049616422249,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 41.0871,
+      "x": 0.6034096641645622,
+      "y": 1.3350477561230556
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.7906984546992184,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 41.3377,
+      "x": 0.6114954175942208,
+      "y": 1.3843896307477022
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.843689806444533,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 41.5882,
+      "x": 0.6236240477387086,
+      "y": 1.458402442684672
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.8796615632442661,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 41.8388,
+      "x": 0.6317098011683672,
+      "y": 1.5077443173093186
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.9345295219722638,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 42.0893,
+      "x": 0.643838431312855,
+      "y": 1.5817571292462884
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 1.9904268498023867,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 42.3409,
+      "x": 0.6559670614573428,
+      "y": 1.6557699411832583
+    },
+    {
+      "collision": false,
+      "heading_deg": 80.69354103098517,
+      "person_clearance_m": 2.0272717455189024,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 42.5913,
+      "x": 0.6638488215990773,
+      "y": 1.7038669829887365
+    },
+    {
+      "collision": false,
+      "heading_deg": 83.49938059435192,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 42.8418,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": 90.69689020915187,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 43.0923,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": 104.19602545268471,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 43.3434,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": 113.59253329282916,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 43.5939,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": 127.1143372579151,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 43.8445,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": 136.51084509805958,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 44.0952,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": 150.2618321811978,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 44.3457,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": 159.19997378523766,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 44.5962,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": 173.18014398642822,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 44.8468,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": -177.42334817342703,
+      "person_clearance_m": 2.0450809698218517,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 45.0973,
+      "x": 0.6676287523879386,
+      "y": 1.7269333394756572
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.82005408050125,
+      "person_clearance_m": 2.065059837399306,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 45.3478,
+      "x": 0.6180783623342423,
+      "y": 1.7200969664701753
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.084056039942083,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 45.5983,
+      "x": 0.5677138949581458,
+      "y": 1.7106125248128408
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.1127044688723355,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 45.8488,
+      "x": 0.495274699208088,
+      "y": 1.6967696414757272
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.1331063688413474,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 46.0993,
+      "x": 0.4461633800555064,
+      "y": 1.6873846358234468
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.165696966418115,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 46.3508,
+      "x": 0.37126861834781943,
+      "y": 1.6730725022037192
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.188010173716827,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 46.6013,
+      "x": 0.32215729919523783,
+      "y": 1.6636874965514388
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.222834156296279,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 46.8518,
+      "x": 0.2484903204663655,
+      "y": 1.6496099880730182
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.2463160186821662,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 47.1023,
+      "x": 0.2006067842925995,
+      "y": 1.6404596075620448
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.2843356370116137,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 47.3529,
+      "x": 0.12571202258491426,
+      "y": 1.6261474739423172
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.310095837764588,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 47.6034,
+      "x": 0.07660070343233377,
+      "y": 1.6167624682900368
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.3499237486776723,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 47.854,
+      "x": 0.002933724703462697,
+      "y": 1.6026849598116162
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.37724229371418,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 48.1045,
+      "x": -0.046177594449118065,
+      "y": 1.5932999541593358
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.41932770051665,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 48.3551,
+      "x": -0.1198445731779889,
+      "y": 1.5792224456809152
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.4480988461056095,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 48.6056,
+      "x": -0.1689558923305694,
+      "y": 1.5698374400286348
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.492286350422364,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 48.8561,
+      "x": -0.24262287105944014,
+      "y": 1.5557599315502142
+    },
+    {
+      "collision": false,
+      "heading_deg": -169.18140424602467,
+      "person_clearance_m": 2.52164943572365,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 49.1066,
+      "x": -0.29050640723320703,
+      "y": 1.5466095510392408
+    },
+    {
+      "collision": false,
+      "heading_deg": -168.23894669258587,
+      "person_clearance_m": 2.554134875709061,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 49.3571,
+      "x": -0.342578609370572,
+      "y": 1.5366587307432602
+    },
+    {
+      "collision": false,
+      "heading_deg": -163.21764891224086,
+      "person_clearance_m": 2.554134875709061,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 49.6076,
+      "x": -0.342578609370572,
+      "y": 1.5366587307432602
+    },
+    {
+      "collision": false,
+      "heading_deg": -150.04357912844975,
+      "person_clearance_m": 2.554134875709061,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 49.8582,
+      "x": -0.342578609370572,
+      "y": 1.5366587307432602
+    },
+    {
+      "collision": false,
+      "heading_deg": -140.8762544063566,
+      "person_clearance_m": 2.554134875709061,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 50.1089,
+      "x": -0.342578609370572,
+      "y": 1.5366587307432602
+    },
+    {
+      "collision": false,
+      "heading_deg": -127.12526732321682,
+      "person_clearance_m": 2.554134875709061,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 50.3594,
+      "x": -0.342578609370572,
+      "y": 1.5366587307432602
+    },
+    {
+      "collision": false,
+      "heading_deg": -117.7287594830713,
+      "person_clearance_m": 2.554134875709061,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 50.61,
+      "x": -0.342578609370572,
+      "y": 1.5366587307432602
+    },
+    {
+      "collision": false,
+      "heading_deg": -104.91977676332846,
+      "person_clearance_m": 2.5507478637062126,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 50.8605,
+      "x": -0.3449267996046734,
+      "y": 1.5287818065958758
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.86841028669801,
+      "person_clearance_m": 2.5314516313796886,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 51.1111,
+      "x": -0.35380495184182226,
+      "y": 1.4887047053842504
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.494811298468804,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 51.3616,
+      "x": -0.3672655792943994,
+      "y": 1.4149228497177722
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.470506772345189,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 51.612,
+      "x": -0.376372065480151,
+      "y": 1.364488393149379
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.4361682989389335,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 51.8625,
+      "x": -0.3896986306300314,
+      "y": 1.2906818713419743
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.4146525746132363,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 52.113,
+      "x": -0.39836089797745367,
+      "y": 1.2427076321671613
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.3823087074741967,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 52.3635,
+      "x": -0.41190957254649874,
+      "y": 1.1676710016629666
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.3619886082307158,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 52.6141,
+      "x": -0.42079394931308567,
+      "y": 1.1184666537913635
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.3328662130369757,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 52.8647,
+      "x": -0.43412051446296607,
+      "y": 1.0446601319839588
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.3143779256247985,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 53.1151,
+      "x": -0.443004891229553,
+      "y": 0.9954557841123561
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.287647968577983,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 53.3657,
+      "x": -0.45655356579859807,
+      "y": 0.9204191536081682
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.271505652510343,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 53.6162,
+      "x": -0.46521583314602033,
+      "y": 0.8724449144333595
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.2481483332647922,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 53.8667,
+      "x": -0.47854239829590073,
+      "y": 0.7986383926259615
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.2335907374269324,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 54.1172,
+      "x": -0.48742677506248766,
+      "y": 0.7494340447543628
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.2129852490118624,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 54.3678,
+      "x": -0.5009754496315327,
+      "y": 0.6743974142501749
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.2005373629154032,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 54.6183,
+      "x": -0.5098598263981197,
+      "y": 0.6251930663785762
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.1837429629785836,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 54.8688,
+      "x": -0.5229642821288354,
+      "y": 0.5526166532679682
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.1731877517231197,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 55.1193,
+      "x": -0.532070768314587,
+      "y": 0.5021821966995795
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.1596279881149965,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 55.37,
+      "x": -0.5451752240453027,
+      "y": 0.4296057835889715
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.1513510096757162,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 55.6206,
+      "x": -0.5542817102310543,
+      "y": 0.37917132702058287
+    },
+    {
+      "collision": false,
+      "heading_deg": -100.23509415734969,
+      "person_clearance_m": 2.141287656753918,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 55.8713,
+      "x": -0.5671334658752548,
+      "y": 0.30799444291362404
+    },
+    {
+      "collision": false,
+      "heading_deg": -97.25030211322895,
+      "person_clearance_m": 2.141142595188181,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 56.1217,
+      "x": -0.5673384458818471,
+      "y": 0.30685920205024475
+    },
+    {
+      "collision": false,
+      "heading_deg": -85.68847387132617,
+      "person_clearance_m": 2.141142595188181,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 56.3723,
+      "x": -0.5673384458818471,
+      "y": 0.30685920205024475
+    },
+    {
+      "collision": false,
+      "heading_deg": -76.75033226728533,
+      "person_clearance_m": 2.141142595188181,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 56.6229,
+      "x": -0.5673384458818471,
+      "y": 0.30685920205024475
+    },
+    {
+      "collision": false,
+      "heading_deg": -62.770162066093214,
+      "person_clearance_m": 2.141142595188181,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 56.8735,
+      "x": -0.5673384458818471,
+      "y": 0.30685920205024475
+    },
+    {
+      "collision": false,
+      "heading_deg": -53.602837344000044,
+      "person_clearance_m": 2.141142595188181,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 57.1241,
+      "x": -0.5673384458818471,
+      "y": 0.30685920205024475
+    },
+    {
+      "collision": false,
+      "heading_deg": -39.85185026086026,
+      "person_clearance_m": 2.141142595188181,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 57.3746,
+      "x": -0.5673384458818471,
+      "y": 0.30685920205024475
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.6733162916242,
+      "person_clearance_m": 2.116433975473771,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 57.6252,
+      "x": -0.5462366147561163,
+      "y": 0.2915486385789377
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 2.044657508664394,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 57.8758,
+      "x": -0.4832786537631848,
+      "y": 0.2520470165040394
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.996338414158591,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 58.1263,
+      "x": -0.44069447498007097,
+      "y": 0.2258441976219443
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.9239850277732964,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 58.3769,
+      "x": -0.37681820680540024,
+      "y": 0.18653996929880168
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.8758387518129898,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 58.6275,
+      "x": -0.3342340280222864,
+      "y": 0.1603371504167066
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.8025645801610064,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 58.8782,
+      "x": -0.26929315537803783,
+      "y": 0.12037785162151171
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.7546207575172323,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 59.1288,
+      "x": -0.22670897659492462,
+      "y": 0.09417503273941719
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.6840681678056029,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 59.3793,
+      "x": -0.16389731288983336,
+      "y": 0.055525874888327685
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.6351644483556,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 59.6299,
+      "x": -0.12024852963714276,
+      "y": 0.028667985534180512
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.564985793990165,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 59.8805,
+      "x": -0.057436865932050725,
+      "y": -0.009981172316909316
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.5163640765206792,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 60.1311,
+      "x": -0.013788082679359905,
+      "y": -0.03683906167105649
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.4466269654490136,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 60.3817,
+      "x": 0.04902358102573181,
+      "y": -0.07548821952214618
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.3983396334091975,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 60.6324,
+      "x": 0.09267236427842282,
+      "y": -0.10234610887629307
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.3279583129930874,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 60.8829,
+      "x": 0.1565486324530923,
+      "y": -0.1416503371994352
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.2812411521946023,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 61.1334,
+      "x": 0.19913281123620502,
+      "y": -0.16785315608153029
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.211503407807595,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 61.384,
+      "x": 0.2630090794108744,
+      "y": -0.2071573844046729
+    },
+    {
+      "collision": false,
+      "heading_deg": -31.60474075901818,
+      "person_clearance_m": 1.166470509989461,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 61.6346,
+      "x": 0.3044745188431442,
+      "y": -0.2326718226387407
+    },
+    {
+      "collision": false,
+      "heading_deg": -25.692816221702444,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 61.8852,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": -17.12923953893697,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 62.1357,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": -3.3782524557972025,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 62.386,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": 5.789072266295977,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 62.6365,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": 19.76924246748808,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 62.887,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": 28.936567189581258,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 63.1375,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": 42.4583711546687,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 63.3881,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": 51.85487899481398,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 63.6386,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": 65.60586607795221,
+      "person_clearance_m": 1.1641704073163768,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 63.8891,
+      "x": 0.30659735897273915,
+      "y": -0.2339780447386131
+    },
+    {
+      "collision": false,
+      "heading_deg": 73.83462947138864,
+      "person_clearance_m": 1.1629197759677392,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 64.1397,
+      "x": 0.30910726297616187,
+      "y": -0.2261827054742467
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.54860764363512,
+      "person_clearance_m": 1.1598981413330427,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 64.3902,
+      "x": 0.32377884724927464,
+      "y": -0.16231034838890324
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.1606556213177583,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 64.6406,
+      "x": 0.3339104592931991,
+      "y": -0.11207178873733938
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.1645295347351297,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 64.8911,
+      "x": 0.3487347975580663,
+      "y": -0.03855145824971991
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.1689262460329906,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 65.1416,
+      "x": 0.3586176897346444,
+      "y": 0.010462095408693108
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.1780337018381712,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 65.392,
+      "x": 0.37319495569509714,
+      "y": 0.08275708705485227
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.1861803546452463,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 65.6426,
+      "x": 0.3833249201760897,
+      "y": 0.13299597955472567
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.200740156216538,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 65.8933,
+      "x": 0.3981492584409569,
+      "y": 0.20651631004234597
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.2121540819154035,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 66.1438,
+      "x": 0.408032150617535,
+      "y": 0.25552986370075936
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.2317704339067173,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 66.3943,
+      "x": 0.4228564888824022,
+      "y": 0.329050194188378
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.2464692574508867,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 66.6448,
+      "x": 0.4327393810589803,
+      "y": 0.3780637478467904
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.2713009427452409,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 66.8953,
+      "x": 0.44781079162826193,
+      "y": 0.45280941717586937
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.2886589073346804,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 67.1458,
+      "x": 0.4574466115004256,
+      "y": 0.5005976319928215
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.3175345909123557,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 67.3964,
+      "x": 0.47227094976529277,
+      "y": 0.5741179624804434
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.3387258462841407,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 67.647,
+      "x": 0.48240091424628534,
+      "y": 0.6243568549803185
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.3712106164627587,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 67.8976,
+      "x": 0.49697818020673806,
+      "y": 0.69665184662648
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.3945169442900796,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 68.1482,
+      "x": 0.5068610723833161,
+      "y": 0.7456654002848947
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.431960892073756,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 68.3987,
+      "x": 0.5219324829525978,
+      "y": 0.820411069613977
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.4577076210274778,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 68.6493,
+      "x": 0.5318153751291759,
+      "y": 0.8694246232723917
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.4973225935155619,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 68.8998,
+      "x": 0.5463926410896286,
+      "y": 0.9417196149185533
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.5259497046139756,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 69.1507,
+      "x": 0.5565226055706212,
+      "y": 0.9919585074184283
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.5686421563053796,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 69.4013,
+      "x": 0.5710998715310739,
+      "y": 1.064253499064584
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.5993009237056264,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 69.6518,
+      "x": 0.5812298360120665,
+      "y": 1.1144923915644545
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.6455525116414,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 69.9021,
+      "x": 0.5960541742769336,
+      "y": 1.1880127220520698
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.6780577484756563,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 70.1525,
+      "x": 0.6061841387579262,
+      "y": 1.2382516145519402
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.726044401133216,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 70.4031,
+      "x": 0.6207614047183789,
+      "y": 1.3105466061980953
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.7601907096812177,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 70.6537,
+      "x": 0.6308913691993715,
+      "y": 1.3607854986979657
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.8104142434083166,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 70.9042,
+      "x": 0.6454686351598242,
+      "y": 1.4330804903441208
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.8451568454501792,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 71.1548,
+      "x": 0.6553515273364023,
+      "y": 1.482094044002531
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.8982611553998578,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 71.4054,
+      "x": 0.6701758656012695,
+      "y": 1.5556143744901463
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.9351983188887345,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 71.656,
+      "x": 0.6803058300822621,
+      "y": 1.6058532669900167
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 1.989950029331647,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 71.9063,
+      "x": 0.6950771107406689,
+      "y": 1.679110461768498
+    },
+    {
+      "collision": false,
+      "heading_deg": 78.59997059128835,
+      "person_clearance_m": 2.0237564803416985,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 72.1568,
+      "x": 0.7040649254971094,
+      "y": 1.7236849378394583
+    },
+    {
+      "collision": false,
+      "heading_deg": 84.55254453976646,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 72.4073,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": 93.14146149643915,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 72.6579,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": 107.1216316976297,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 72.9084,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": 116.28895641972186,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 73.159,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": 130.0399435028601,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 73.4095,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": 138.97808510689995,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 73.6601,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": 152.7290721900382,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 73.9106,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": 162.12558003018268,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 74.1612,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": 176.1057502313732,
+      "person_clearance_m": 2.025463926294183,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 74.4117,
+      "x": 0.7045163508447132,
+      "y": 1.7259237521563835
+    },
+    {
+      "collision": false,
+      "heading_deg": -175.88722455305629,
+      "person_clearance_m": 2.029259624088101,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 74.6622,
+      "x": 0.6963991639639819,
+      "y": 1.7255797152061942
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.09184093194423,
+      "person_clearance_m": 2.055890262261533,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 74.9128,
+      "x": 0.6304914212034007,
+      "y": 1.7170048063890162
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.0756316666038614,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 75.1631,
+      "x": 0.5811006938766295,
+      "y": 1.7092230325966622
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.10673142848768,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 75.4137,
+      "x": 0.5070149632782707,
+      "y": 1.6975480798469926
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.1284308912884677,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 75.6642,
+      "x": 0.45762447621269614,
+      "y": 1.6897647780138796
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.162383135519309,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 75.9147,
+      "x": 0.38353874561433393,
+      "y": 1.67808982526421
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.1865239349494203,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 76.1652,
+      "x": 0.33291349637211975,
+      "y": 1.6701119408852692
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.222557062457855,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 76.4157,
+      "x": 0.2600625279503969,
+      "y": 1.6586315706814274
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.2478282329119272,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 76.6662,
+      "x": 0.2106720408848221,
+      "y": 1.6508482688483144
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.286965466007702,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 76.9168,
+      "x": 0.1365863102864599,
+      "y": 1.6391733160986448
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.3145312056289074,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 77.1673,
+      "x": 0.08596106104424617,
+      "y": 1.631195431719704
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.355326736540259,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 77.4177,
+      "x": 0.013110092622523916,
+      "y": 1.6197150615158622
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.383716687471682,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 77.668,
+      "x": -0.03628039444305053,
+      "y": 1.6119317596827492
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.4281067229363007,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 77.9184,
+      "x": -0.1116008872180514,
+      "y": 1.6000622243872518
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.457908710298992,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 78.1689,
+      "x": -0.16099137428362606,
+      "y": 1.5922789225541387
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.50360156928401,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 78.4194,
+      "x": -0.23507710488198827,
+      "y": 1.5806039698044692
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.5339170520331056,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 78.67,
+      "x": -0.2832328297709237,
+      "y": 1.573015250517184
+    },
+    {
+      "collision": false,
+      "heading_deg": -171.04457377215368,
+      "person_clearance_m": 2.580889101015188,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 78.9205,
+      "x": -0.35643076154084696,
+      "y": 1.5614802033780775
+    },
+    {
+      "collision": false,
+      "heading_deg": -170.1108122237875,
+      "person_clearance_m": 2.596739994010343,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 79.171,
+      "x": -0.38077128222342493,
+      "y": 1.557644452193926
+    },
+    {
+      "collision": false,
+      "heading_deg": -161.0765456482388,
+      "person_clearance_m": 2.596739994010343,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 79.4215,
+      "x": -0.38077128222342493,
+      "y": 1.557644452193926
+    },
+    {
+      "collision": false,
+      "heading_deg": -151.7276608581856,
+      "person_clearance_m": 2.596739994010343,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 79.6721,
+      "x": -0.38077128222342493,
+      "y": 1.557644452193926
+    },
+    {
+      "collision": false,
+      "heading_deg": -138.20585689309814,
+      "person_clearance_m": 2.596739994010343,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 79.9225,
+      "x": -0.38077128222342493,
+      "y": 1.557644452193926
+    },
+    {
+      "collision": false,
+      "heading_deg": -128.80934905295265,
+      "person_clearance_m": 2.596739994010343,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 80.173,
+      "x": -0.38077128222342493,
+      "y": 1.557644452193926
+    },
+    {
+      "collision": false,
+      "heading_deg": -115.28754508786521,
+      "person_clearance_m": 2.596739994010343,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 80.4236,
+      "x": -0.38077128222342493,
+      "y": 1.557644452193926
+    },
+    {
+      "collision": false,
+      "heading_deg": -107.05845057277989,
+      "person_clearance_m": 2.593669752798875,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 80.674,
+      "x": -0.3834014791530458,
+      "y": 1.5498919249154601
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.3394737830529,
+      "person_clearance_m": 2.5635557540475356,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 80.9245,
+      "x": -0.3995088461045702,
+      "y": 1.4840833478028157
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.5415096414257743,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 81.1751,
+      "x": -0.4098931227084447,
+      "y": 1.436452168309629
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.508265147650757,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 81.4262,
+      "x": -0.4261330837082354,
+      "y": 1.3619516571253072
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.4878229030969914,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 81.6768,
+      "x": -0.43651600959334746,
+      "y": 1.3143201827615605
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.4571555232291225,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 81.9271,
+      "x": -0.45275597059313816,
+      "y": 1.2398196715772387
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.437931356625895,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 82.1776,
+      "x": -0.46340512534709927,
+      "y": 1.1909668773580113
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.410889358733961,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 82.428,
+      "x": -0.4791126286091919,
+      "y": 1.118909005884651
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.3930396564539134,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 82.6785,
+      "x": -0.49002801223200204,
+      "y": 1.0688348918099428
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.368343981780014,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 82.929,
+      "x": -0.5060017443629424,
+      "y": 0.9955557004811018
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.3528401690434944,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 83.1796,
+      "x": -0.5166508991169013,
+      "y": 0.9467029062618744
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.3310554009848037,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 83.4302,
+      "x": -0.5326246312478397,
+      "y": 0.8734237149330333
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.317530239520508,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 83.6808,
+      "x": -0.5432737860017985,
+      "y": 0.8245709207138059
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.2984709318986054,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 83.9313,
+      "x": -0.5595137470015858,
+      "y": 0.7500704095294841
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.2872924244985073,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 84.182,
+      "x": -0.5698966728866958,
+      "y": 0.7024389351657374
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.271653323611508,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 84.4323,
+      "x": -0.5858704050176341,
+      "y": 0.6291597438368963
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.2620672517641216,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 84.6829,
+      "x": -0.596785788640442,
+      "y": 0.5790856297621882
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.249861801268046,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 84.9335,
+      "x": -0.6124932919025313,
+      "y": 0.5070277582888278
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.2424959008020577,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 85.1841,
+      "x": -0.6234086755253392,
+      "y": 0.45695364421411977
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.2335510173992867,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 85.4347,
+      "x": -0.6390523051643219,
+      "y": 0.38518879176788356
+    },
+    {
+      "collision": false,
+      "heading_deg": -102.29722677048069,
+      "person_clearance_m": 2.2288923535595355,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 85.6853,
+      "x": -0.6489206736455421,
+      "y": 0.3399178396753476
+    },
+    {
+      "collision": false,
+      "heading_deg": -96.2459417986625,
+      "person_clearance_m": 2.228685227727638,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 85.9358,
+      "x": -0.6494007482561649,
+      "y": 0.33771550656023264
+    },
+    {
+      "collision": false,
+      "heading_deg": -87.86233782682976,
+      "person_clearance_m": 2.228685227727638,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 86.1863,
+      "x": -0.6494007482561649,
+      "y": 0.33771550656023264
+    },
+    {
+      "collision": false,
+      "heading_deg": -73.88216762563765,
+      "person_clearance_m": 2.228685227727638,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 86.4369,
+      "x": -0.6494007482561649,
+      "y": 0.33771550656023264
+    },
+    {
+      "collision": false,
+      "heading_deg": -64.71484290354448,
+      "person_clearance_m": 2.228685227727638,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 86.6875,
+      "x": -0.6494007482561649,
+      "y": 0.33771550656023264
+    },
+    {
+      "collision": false,
+      "heading_deg": -50.9638558204047,
+      "person_clearance_m": 2.228685227727638,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 86.938,
+      "x": -0.6494007482561649,
+      "y": 0.33771550656023264
+    },
+    {
+      "collision": false,
+      "heading_deg": -41.79653109831152,
+      "person_clearance_m": 2.228685227727638,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 87.1886,
+      "x": -0.6494007482561649,
+      "y": 0.33771550656023264
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.97131349327815,
+      "person_clearance_m": 2.1814499619759733,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 87.4392,
+      "x": -0.6091640524402627,
+      "y": 0.3081347921182786
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 2.134698754106962,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 87.6898,
+      "x": -0.5685248231156248,
+      "y": 0.28120908426766617
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 2.061663810349252,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 87.9403,
+      "x": -0.5048523180181949,
+      "y": 0.23925822498424099
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 2.012679997701979,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 88.191,
+      "x": -0.46205604410025014,
+      "y": 0.2110617457937421
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.9423510409934732,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 88.4416,
+      "x": -0.4004711621207687,
+      "y": 0.17048632451960954
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.8947850729343385,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 88.6922,
+      "x": -0.35871869976179827,
+      "y": 0.14297756433375697
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.822439701199391,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 88.9428,
+      "x": -0.2950461946643683,
+      "y": 0.1010267050503313
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.7763168112051788,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 89.1934,
+      "x": -0.25433754386437213,
+      "y": 0.0742056638691245
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.7055742989420224,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 89.444,
+      "x": -0.19170885032591645,
+      "y": 0.0329425235903451
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.6585687128430273,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 89.6946,
+      "x": -0.149956387966946,
+      "y": 0.005433763404492246
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.587146893017324,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 89.9451,
+      "x": -0.08628388286951605,
+      "y": -0.03651709587893336
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.5183947358405827,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 90.1966,
+      "x": -0.024699000890034652,
+      "y": -0.07709251715306648
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.4708253748374391,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 90.447,
+      "x": 0.018097273027909963,
+      "y": -0.10528899634356594
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.4015476441887964,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 90.6989,
+      "x": 0.0807259665663656,
+      "y": -0.1465521366223452
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.355603198160664,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 90.9495,
+      "x": 0.12247842892533606,
+      "y": -0.17406089680819778
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.2870837108831257,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 91.201,
+      "x": 0.18510712246379174,
+      "y": -0.21532403708697664
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.2416924686154778,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 91.4516,
+      "x": 0.2268595848227622,
+      "y": -0.24283279727282922
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.1740837897403333,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 91.7022,
+      "x": 0.2894882783612179,
+      "y": -0.2840959375516081
+    },
+    {
+      "collision": false,
+      "heading_deg": -33.37903350563841,
+      "person_clearance_m": 1.1314566953099456,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 91.9528,
+      "x": 0.3292771912172744,
+      "y": -0.310311006076253
+    },
+    {
+      "collision": false,
+      "heading_deg": -27.39127193762547,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 92.2033,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": -18.595378997007337,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 92.454,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": -5.073575031919898,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 92.7046,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": 4.3229328082256115,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 92.9552,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": 18.07391989136538,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 93.2067,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": 27.012061495406236,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 93.4574,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": 40.763048578546,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 93.7079,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": 49.930373300639076,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 93.9584,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": 63.91054350182963,
+      "person_clearance_m": 1.130418456246727,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 94.209,
+      "x": 0.330249454284218,
+      "y": -0.31095158509926163
+    },
+    {
+      "collision": false,
+      "heading_deg": 71.90900165846841,
+      "person_clearance_m": 1.1285494064998882,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 94.4596,
+      "x": 0.333023114351787,
+      "y": -0.3032357431449705
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.76747012994583,
+      "person_clearance_m": 1.1205323644709175,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 94.7102,
+      "x": 0.35013365816077047,
+      "y": -0.23804688432692264
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.1176267669638549,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 94.9608,
+      "x": 0.3615592971272092,
+      "y": -0.18936983877280236
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.1160755043028567,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 95.2114,
+      "x": 0.3786970040256749,
+      "y": -0.11635409387992093
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.116916300878307,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 95.462,
+      "x": 0.3901221419579854,
+      "y": -0.06767693061799998
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.1209842926483533,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 95.7126,
+      "x": 0.4072598488564511,
+      "y": 0.005338814274881091
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.125556884851516,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 95.9633,
+      "x": 0.4186849867887616,
+      "y": 0.05401597753680178
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.135176378459245,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 96.2138,
+      "x": 0.4358226936872273,
+      "y": 0.12703172242968316
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.1436295097556641,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 96.4645,
+      "x": 0.44753346006784556,
+      "y": 0.17692581477315214
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.1584204244730032,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 96.7151,
+      "x": 0.4643855385180035,
+      "y": 0.24872463058448555
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.170486656895284,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 96.9657,
+      "x": 0.47609630489862176,
+      "y": 0.2986187229279545
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.1903537763903107,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 97.2163,
+      "x": 0.4929483833487797,
+      "y": 0.3704175387392879
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.2054582407712862,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 97.4669,
+      "x": 0.5043735212810894,
+      "y": 0.41909470200120885
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.2305089685917139,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 97.7175,
+      "x": 0.5215112281795518,
+      "y": 0.4921104468940903
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.2487536116242646,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 97.9681,
+      "x": 0.53293636611186,
+      "y": 0.5407876101560112
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.2788595433158447,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 98.2186,
+      "x": 0.5503597014586301,
+      "y": 0.6150202841304406
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.299498709264446,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 98.4692,
+      "x": 0.5614992109426307,
+      "y": 0.6624805183108136
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.3332748147082947,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 98.7198,
+      "x": 0.5786369178410931,
+      "y": 0.735496263203695
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.357707529343207,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 98.9704,
+      "x": 0.590347684221709,
+      "y": 0.785390355547164
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.3953442033883032,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 99.221,
+      "x": 0.6074853911201714,
+      "y": 0.8584061004400454
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.4216215249769106,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 99.4716,
+      "x": 0.6189105290524797,
+      "y": 0.9070832637019663
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.4627238980784194,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 99.7222,
+      "x": 0.6360482359509421,
+      "y": 0.9800990085948478
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.491196917985081,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 99.9729,
+      "x": 0.6474733738832503,
+      "y": 1.0287761718567687
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.5361778823575658,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 100.2235,
+      "x": 0.6648967092300204,
+      "y": 1.1030088458311982
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.566646055658268,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 100.4741,
+      "x": 0.6763218471623287,
+      "y": 1.1516860090931191
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.612913389476106,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 100.7245,
+      "x": 0.6931739256124834,
+      "y": 1.2234848249044525
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.6451359179947886,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 100.9751,
+      "x": 0.7045990635447916,
+      "y": 1.2721619881663735
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.6955288903322818,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 101.2256,
+      "x": 0.7220223988915617,
+      "y": 1.346394662140803
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.7293534972471327,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 101.4763,
+      "x": 0.73344753682387,
+      "y": 1.395071825402724
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.7811812279521388,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 101.7266,
+      "x": 0.7505852437223324,
+      "y": 1.4680875702956053
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.8164230994588115,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 101.9772,
+      "x": 0.7620103816546406,
+      "y": 1.5167647335575263
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.8702606962465749,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 102.2276,
+      "x": 0.779148088553103,
+      "y": 1.5897804784504077
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.90676905831455,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 102.4784,
+      "x": 0.7905732264854113,
+      "y": 1.6384576417123287
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.9614673024614662,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 102.7288,
+      "x": 0.807425304935566,
+      "y": 1.710256457523662
+    },
+    {
+      "collision": false,
+      "heading_deg": 76.79106109296252,
+      "person_clearance_m": 1.997356624476698,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 102.9794,
+      "x": 0.8183248723981293,
+      "y": 1.7566944110961102
+    },
+    {
+      "collision": false,
+      "heading_deg": 79.77524536768081,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 103.2302,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 86.68376877731885,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 103.4806,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 100.62408562252716,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 103.731,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 109.79141034461932,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 103.9815,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 123.31321430970526,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 104.232,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 132.48053903179743,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 104.4825,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 146.46070923298797,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 104.7328,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 155.85721707313243,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 104.9832,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 169.37902103821838,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 105.2336,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": 178.54634576031054,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 105.4841,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": -167.70266715654986,
+      "person_clearance_m": 2.0161698811973974,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 105.7344,
+      "x": 0.8239922767431982,
+      "y": 1.7808405674235586
+    },
+    {
+      "collision": false,
+      "heading_deg": -161.40660711122922,
+      "person_clearance_m": 2.0210677179923398,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 105.9851,
+      "x": 0.7999500568547913,
+      "y": 1.7738226281879421
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.0320888223105458,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 106.2357,
+      "x": 0.7291044549642015,
+      "y": 1.7476670571748878
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.0401084351226,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 106.4863,
+      "x": 0.682363959819338,
+      "y": 1.7299096329919452
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.0538923239607136,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 106.737,
+      "x": 0.6122532171020426,
+      "y": 1.7032734967175314
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.0639670696450843,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 106.9876,
+      "x": 0.5666812343358006,
+      "y": 1.6859600081391624
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.081459249781762,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 107.238,
+      "x": 0.4954019792398837,
+      "y": 1.658879936260175
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.0937348372462354,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 107.4888,
+      "x": 0.44982999647364175,
+      "y": 1.641566447681806
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.1146107279943287,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 107.7394,
+      "x": 0.3785507413777248,
+      "y": 1.6144863758028185
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.129389734834157,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 107.99,
+      "x": 0.33181024623286126,
+      "y": 1.596728951619876
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.153141298604816,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 108.2406,
+      "x": 0.2616995035155659,
+      "y": 1.570092815345462
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.1700095403536945,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 108.4913,
+      "x": 0.21495900837070236,
+      "y": 1.5523353911625195
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.1968246082892513,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 108.7418,
+      "x": 0.14484826565340703,
+      "y": 1.5256992548881056
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.2161684666846284,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 108.9924,
+      "x": 0.09693925812992153,
+      "y": 1.5074978951005895
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.2459290075337526,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 109.243,
+      "x": 0.026828515412625376,
+      "y": 1.4808617588261757
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.265648075237964,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 109.4936,
+      "x": -0.017574954974995404,
+      "y": 1.4639922058523802
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.2986734677151643,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 109.7442,
+      "x": -0.08885421007091314,
+      "y": 1.4369121339733928
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.3212226568234877,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 109.9948,
+      "x": -0.13559470521577713,
+      "y": 1.4191547097904502
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.3569294989953944,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 110.2454,
+      "x": -0.20687396031169406,
+      "y": 1.3920746379114628
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.3811845952655046,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 110.4962,
+      "x": -0.25361445545655764,
+      "y": 1.3743172137285202
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.418136725729675,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 110.7468,
+      "x": -0.3225566857952314,
+      "y": 1.34812501305868
+    },
+    {
+      "collision": false,
+      "heading_deg": -159.1974551271363,
+      "person_clearance_m": 2.4445271344779327,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 110.9974,
+      "x": -0.3703058813095732,
+      "y": 1.3299843682812889
+    },
+    {
+      "collision": false,
+      "heading_deg": -158.1946842067108,
+      "person_clearance_m": 2.4700582253493817,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 111.2481,
+      "x": -0.41544650513962605,
+      "y": 1.3128347595159418
+    },
+    {
+      "collision": false,
+      "heading_deg": -153.28514436545484,
+      "person_clearance_m": 2.4700582253493817,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 111.4987,
+      "x": -0.41544650513962605,
+      "y": 1.3128347595159418
+    },
+    {
+      "collision": false,
+      "heading_deg": -140.1422329226575,
+      "person_clearance_m": 2.4700582253493817,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 111.7493,
+      "x": -0.41544650513962605,
+      "y": 1.3128347595159418
+    },
+    {
+      "collision": false,
+      "heading_deg": -130.97490820056433,
+      "person_clearance_m": 2.4700582253493817,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 111.9999,
+      "x": -0.41544650513962605,
+      "y": 1.3128347595159418
+    },
+    {
+      "collision": false,
+      "heading_deg": -116.99473799937225,
+      "person_clearance_m": 2.4700582253493817,
+      "roam_active": true,
+      "roam_reason": "turn_hold",
+      "t_s": 112.2504,
+      "x": -0.41544650513962605,
+      "y": 1.3128347595159418
+    },
+    {
+      "collision": false,
+      "heading_deg": -108.76405332432091,
+      "person_clearance_m": 2.467755185929911,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 112.5009,
+      "x": -0.4183015478027679,
+      "y": 1.3051769957822994
+    },
+    {
+      "collision": false,
+      "heading_deg": -104.00014729857037,
+      "person_clearance_m": 2.4442968682299933,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 112.7513,
+      "x": -0.436008873121028,
+      "y": 1.2411704411594993
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.426269715070151,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 113.0017,
+      "x": -0.4480841152162743,
+      "y": 1.1926504605704944
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.4010245265638686,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 113.2525,
+      "x": -0.4658943039304081,
+      "y": 1.1210832915754427
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.384839919140968,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 113.5031,
+      "x": -0.47796900814338017,
+      "y": 1.0725631770025263
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.3612734280064194,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 113.7537,
+      "x": -0.4966847996734869,
+      "y": 0.9973569994145056
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.347413396437081,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 114.0043,
+      "x": -0.5084576362811363,
+      "y": 0.9500498877059078
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.3275729846097475,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 114.2549,
+      "x": -0.5265696926005977,
+      "y": 0.8772697158465266
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.3150657154283136,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 114.5056,
+      "x": -0.5389462644188964,
+      "y": 0.8275365984092827
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.298589610361679,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 114.7563,
+      "x": -0.5567564531330335,
+      "y": 0.7559694294142245
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.288455101434997,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 115.007,
+      "x": -0.5688311573460078,
+      "y": 0.7074493148413037
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.2746344776147946,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 115.2575,
+      "x": -0.5872450812707936,
+      "y": 0.6334561401175994
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.266655734507159,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 115.5081,
+      "x": -0.5993197854837679,
+      "y": 0.5849360255446786
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.2564721166029447,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 115.7587,
+      "x": -0.6171299741979049,
+      "y": 0.5133688565496204
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.250651769833529,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 116.0093,
+      "x": -0.6292046784108792,
+      "y": 0.4648487419767012
+    },
+    {
+      "collision": false,
+      "heading_deg": -103.97473920867485,
+      "person_clearance_m": 2.243495673595408,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 116.2599,
+      "x": -0.6475595368882674,
+      "y": 0.3910929115576248
+    },
+    {
+      "collision": false,
+      "heading_deg": -101.14985506130849,
+      "person_clearance_m": 2.243297166544563,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 116.5105,
+      "x": -0.6481570546834006,
+      "y": 0.388691889439992
+    },
+    {
+      "collision": false,
+      "heading_deg": -89.65190065333641,
+      "person_clearance_m": 2.243297166544563,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 116.7611,
+      "x": -0.6481570546834006,
+      "y": 0.388691889439992
+    },
+    {
+      "collision": false,
+      "heading_deg": -80.25539281319091,
+      "person_clearance_m": 2.243297166544563,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 117.0117,
+      "x": -0.6481570546834006,
+      "y": 0.388691889439992
+    },
+    {
+      "collision": false,
+      "heading_deg": -66.50440573005113,
+      "person_clearance_m": 2.243297166544563,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 117.2624,
+      "x": -0.6481570546834006,
+      "y": 0.388691889439992
+    },
+    {
+      "collision": false,
+      "heading_deg": -57.337081007957956,
+      "person_clearance_m": 2.243297166544563,
+      "roam_active": true,
+      "roam_reason": "turn_blocked",
+      "t_s": 117.513,
+      "x": -0.6481570546834006,
+      "y": 0.388691889439992
+    },
+    {
+      "collision": false,
+      "heading_deg": -43.586093924818194,
+      "person_clearance_m": 2.243297166544563,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 117.7634,
+      "x": -0.6481570546834006,
+      "y": 0.388691889439992
+    },
+    {
+      "collision": false,
+      "heading_deg": -37.344130564161894,
+      "person_clearance_m": 2.2194920379975196,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 118.0141,
+      "x": -0.628486749751615,
+      "y": 0.3724354158972708
+    },
+    {
+      "collision": false,
+      "heading_deg": -35.23013786328679,
+      "person_clearance_m": 2.1483480012052567,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 118.2647,
+      "x": -0.567914138727762,
+      "y": 0.3287936484617038
+    },
+    {
+      "collision": false,
+      "heading_deg": -35.23013786328679,
+      "person_clearance_m": 2.0994719165262037,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 118.5154,
+      "x": -0.526051007801107,
+      "y": 0.2992294679552576
+    },
+    {
+      "collision": false,
+      "heading_deg": -35.23013786328679,
+      "person_clearance_m": 2.029299764093704,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 118.766,
+      "x": -0.46580894134567674,
+      "y": 0.2566858911289083
+    },
+    {
+      "collision": false,
+      "heading_deg": -35.23013786328679,
+      "person_clearance_m": 1.981841110344804,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 119.0166,
+      "x": -0.42496686239284265,
+      "y": 0.22784278819579007
+    },
+    {
+      "collision": false,
+      "heading_deg": -35.23013786328679,
+      "person_clearance_m": 1.9096605408823637,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 119.2674,
+      "x": -0.36268269198977066,
+      "y": 0.1838570562227848
+    },
+    {
+      "collision": false,
+      "heading_deg": -35.23013786328679,
+      "person_clearance_m": 1.8636434586486545,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 119.518,
+      "x": -0.3228616650107574,
+      "y": 0.15573503086299456
+    },
+    {
+      "collision": false,
+      "heading_deg": -35.23013786328679,
+      "person_clearance_m": 1.793063795107743,
+      "roam_active": true,
+      "roam_reason": "advance",
+      "t_s": 119.7686,
+      "x": -0.2615985465815063,
+      "y": 0.11247037646331726
+    }
+  ]
+}

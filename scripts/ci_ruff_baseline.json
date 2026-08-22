@@ -10,5 +10,6 @@
     "src/parcel_robot/detection_adapter/sim_bridge.py::ISC004"
   ],
   "generated_at": "2026-08-09T22:31:09Z",
-  "note": "Pre-existing ruff debt this CI gate ratchets against. New (file, rule) fingerprints beyond this set redden scripts/ci_gate.py. Burn down toward an empty list; regenerate with `ci_gate.py --update-ruff-baseline`."
+  "note": "Pre-existing ruff debt this CI gate ratchets against. New (file, rule) fingerprints beyond this set redden scripts/ci_gate.py. Burn down toward an empty list; regenerate with `ci_gate.py --update-ruff-baseline`. ruff_version is load-bearing (card GATE-0, scrum/20260822/task_20): a ratchet is a set of (file, rule) pairs and a different linter asks a different question — this same tree yields these 7 fingerprints on ruff 0.16.x and roughly 51 on 0.15.x. evaluate_ruff therefore ERRORS rather than rendering a verdict when the running ruff differs from this stamp. Keep it equal to the pyproject dev-extra pin (`ruff==0.16.1`).",
+  "ruff_version": "0.16.1"
 }

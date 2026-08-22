@@ -1,0 +1,47 @@
+### FINISH-1 seeded-RED transcripts · 2026-08-22T12:30:54-04:00 · TMPDIR unset
+### tree: 8862220 + the uncommitted week-1 tree + this card's edits
+
+##### A/ROAM-1 — S9a: limits_from_safety stops setting the tether
+sha256 before: 0e962c7b398e8af3b31ce5d9c29ebc992ff782f6c0fddbcec682617f5a04140d
+--- SEEDED run ---
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_roam1_behavior.py::test_the_owners_roam_knobs_reach_the_behavior
+FAILED tests/test_roam1_behavior.py::test_the_tether_is_off_by_default_so_move1s_baseline_is_untouched
+2 failed, 54 passed, 1 warning in 2.17s
+RESTORE OK (byte-identical) 0e962c7b398e8af3b31ce5d9c29ebc992ff782f6c0fddbcec682617f5a04140d
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+56 passed, 1 warning in 2.16s
+
+##### A/ROAM-1 — S9b: the tether branch removed from the policy ladder
+sha256 before: 0e962c7b398e8af3b31ce5d9c29ebc992ff782f6c0fddbcec682617f5a04140d
+--- SEEDED run (whole roam suite) ---
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_roam1_behavior.py::test_the_tether_turns_a_patrol_back_toward_home
+1 failed, 55 passed, 1 warning in 2.16s
+sha256 after : 0e962c7b398e8af3b31ce5d9c29ebc992ff782f6c0fddbcec682617f5a04140d
+RESTORE OK (byte-identical)
+--- RESTORED run ---
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+56 passed, 1 warning in 2.12s
+
+##### A/ROAM-1 — S8: 'roam' removed from OVERLAY_INTRODUCIBLE_KEYS
+config.py sha256 before: 3f41bbbe2790e5163d46d024690f544ceec9c2c81e50b979e2d836f7e8fc2d7c
+--- SEEDED ---
+FAILED tests/test_roam1_behavior.py::test_the_owners_roam_knobs_reach_the_behavior
+FAILED tests/test_roam1_behavior.py::test_a_misspelled_roam_key_is_refused_by_name
+2 failed, 54 passed, 1 warning in 2.22s
+RESTORE OK (byte-identical)
+--- RESTORED ---
+56 passed, 1 warning in 2.14s
+### FINISH-1 — the stop/tick race, three variants · 2026-08-22T12:31:21-04:00
+runtime.py sha256 before: 0ba366aef198a2f073da5b8a915f19ae970a1bf70efe045589c5f8b8c7c93c1f
+CONTROL   : 56 passed, 1 warning in 2.09s
+S7a lock only         : 56 passed, 1 warning in 1.62s
+S7b post-check only   : 56 passed, 1 warning in 2.10s
+S7c both halves       : FAILED tests/test_roam1_behavior.py::test_a_stop_racing_an_in_flight_tick_leaves_no_stale_roam_command | 1 failed, 55 passed, 1 warning in 1.63s
+RESTORED  : 56 passed, 1 warning in 2.11s
+runtime.py sha256 after : 0ba366aef198a2f073da5b8a915f19ae970a1bf70efe045589c5f8b8c7c93c1f

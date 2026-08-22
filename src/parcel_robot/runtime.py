@@ -226,6 +226,15 @@ from parcel_robot.owner_model import (
     known_facts_answer,
     owner_notes_from_facts,
 )
+from parcel_robot.patrol import (  # card ROAM-1: MOVE-1's patrol, now product
+    DEFAULT_ROAM_TETHER_M,
+    PatrolCommand,
+    PatrolLimits,
+    PatrolPolicy,
+    PatrolSense,
+    limits_from_safety,
+    sense_from_snapshot,
+)
 from parcel_robot.perception import NullMapProvider, PerceptionContract
 from parcel_robot.pose import (
     POSE_PROVIDER_KEY,
@@ -257,6 +266,10 @@ from parcel_robot.realtime.ingress import (
     KIND_FOLLOW,
     KIND_HOLD,
     KIND_NONE,
+    # Card ROAM-1. The two kinds the ingress appended; the five above are
+    # unchanged and this import does not reorder them.
+    KIND_ROAM,
+    KIND_ROAM_STOP,
     RealtimeTranscriptOutcome,
     matches_spoken_emergency,
 )
@@ -293,17 +306,27 @@ from parcel_robot.realtime.voice_identity import gate_decision as voice_gate_dec
 from parcel_robot.realtime.voice_identity import rejection_fact as voice_rejection_fact
 from parcel_robot.realtime.whisperer import (
     CRITICAL_KINDS,
+    KIND_ASK_ABOUT,  # card CURIO-1
+    KIND_IDLE_REMARK,  # card CURIO-1
     KIND_MISSION_ARRIVED,
     KIND_MISSION_ENDED,
+    KIND_NOVEL_OBJECT,  # card CURIO-1
+    KIND_PLACE_LEARNED,  # card CURIO-1
     KIND_REFUSAL,
+    KIND_SCENE_CHANGE,  # card CURIO-1
     KIND_VOICE_REJECTED,
     OWNER_SOURCE_MOCAP,
     OWNER_SOURCE_PIXELS,
+    RULE_BUDGET,  # card CURIO-1
+    ChatterScheduler,  # card CURIO-1
+    ChatterState,  # card CURIO-1
+    FarewellWatcher,  # card CURIO-1
     OwnerEventWatcher,
     OwnerPresence,
     StateDigest,
     StateEvent,
     Whisperer,
+    curiosity_event,  # card CURIO-1
 )
 from parcel_robot.robot_profile import RobotProfile
 from parcel_robot.runtime_channels import (
@@ -1962,6 +1985,22 @@ class RobotRuntime:
         #: Faults that set the latch, kept for the operator/telemetry surface.
         self._input_health_latch_faults: tuple[str, ...] = ()
         self._control_not_ready_reason: str | None = None
+        # ---- CARD ROAM-1 state: the bounded exploration behavior ----------
+        # ``_roam_policy is not None`` IS the "am I roaming" flag — one field,
+        # not a bool beside an object that can disagree with it. Everything else
+        # here is a record for the panel and the status doc.
+        self._roam_policy: PatrolPolicy | None = None
+        self._roam_started_at = 0.0
+        self._roam_last_tick_at = 0.0
+        self._roam_budget_s = float(self.DEFAULT_ROAM_BUDGET_S)
+        self._roam_reason = "idle"
+        self._roam_ticks = 0
+        self._roam_refused = 0
+        #: The patrol prompt's "social actions can wait until an idle
+        #: checkpoint", as a readable predicate. True when not roaming, because
+        #: a robot standing still is nothing but a checkpoint.
+        self._roam_idle_checkpoint = True
+        # ---- END CARD ROAM-1 state ----------------------------------------
         agent_config = self.store.agent_config()
         context_config = ContextBuildConfig.from_mapping(self.store.section("query_context"))
         self.context_builder = ContextBuilder(
@@ -2573,6 +2612,16 @@ class RobotRuntime:
                     follow=self._gate_by_voice(
                         "follow_owner",
                         self._watch_under_latch("tool follow_owner", self._realtime_follow),
+                    ),
+                    # Card ROAM-1. Wrapped in BOTH wrappers for the same reason
+                    # every other motion door is: an unverified voice must not
+                    # be able to send the dog off on its own, and a roam refused
+                    # under a latch must be written down. Roam is the longest
+                    # motion on the surface, so it is the one where "who asked
+                    # for this" matters most minutes later.
+                    roam=self._gate_by_voice(
+                        "roam",
+                        self._watch_under_latch("tool roam", self._realtime_roam),
                     ),
                     gesture_names=lambda: tuple(self._emote_catalog),
                     pose_names=self._realtime_pose_names,
@@ -4643,6 +4692,475 @@ class RobotRuntime:
             return "Holding position"
         raise ValueError(f"unknown behavior: {mode}")
 
+    # ======================================================================
+    # CARD ROAM-1 — "GO EXPLORE" IS A RUNTIME BEHAVIOR
+    #
+    # A NEW region. P1-B's camera->map writer, P2-A's owner-model doors, P2-B's
+    # affect helpers and the camera attach site are all elsewhere in this file
+    # and none of them is touched. CURIO-1 owns the whisperer feed and it is
+    # not touched either — what this region offers CURIO-1 is
+    # :meth:`roam_idle_checkpoint`, which is the patrol prompt's own rule
+    # ("social actions can wait until an idle checkpoint") made readable.
+    #
+    # WHAT THIS IS. ``patrol/mission.py``'s ``PatrolPolicy`` — MOVE-1's, and
+    # never once constructed on the product path — driven from the control loop
+    # beside follow/search/spatial/navigation, on a fixed time budget.
+    #
+    # WHAT IT IS NOT, and this is the whole safety argument:
+    #
+    #   * It is not an authority. Every command it proposes is submitted
+    #     through ``submit_motion`` and therefore crosses the arbiter, the pace
+    #     cap, ``apply_reactive_safety`` and the e-stop exactly like a typed
+    #     arrow key. The policy's job is to stop PROPOSING headings the gate
+    #     would refuse (E2-D2's measured failure), not to be trusted with any.
+    #   * It is not a planner. It never names a goal, never grounds a place and
+    #     never touches PlanIR admission. It is a proposer with a clock.
+    #   * It does not survive anything. A latch, an owner command, a lost pose,
+    #     a closed runtime or an exhausted budget all end it, and the check
+    #     that ends it runs FIRST in the step, before any sensing.
+    #
+    # THE ARBITER SOURCE IS ``voice``. Roam is owner-commanded by construction
+    # (the broker tool is in ``MOTION_TOOLS`` and out of the proactive ceiling;
+    # the ingress kind only exists for an owner utterance), so it travels the
+    # channel an owner's direct motion command travels — the same one MOVE-1's
+    # harness used to measure the patrol. It is NOT given a new
+    # ``SOURCE_PRIORITIES`` entry: adding a priority row is a change to the
+    # arbitration contract for every subsystem, and this behavior does not need
+    # one because it yields by STOPPING rather than by losing a bid.
+
+    #: Every key the ``roam:`` config section may carry. Read by
+    #: :meth:`roam_config`, which refuses anything else BY NAME. The two
+    #: clearance thresholds are deliberately absent: they are derived from
+    #: ``safety.person_stop_m`` / ``safety.obstacle_stop_m`` so the patrol can
+    #: never be tuned inside the gate that refuses it.
+    ROAM_CONFIG_KEYS: ClassVar[frozenset[str]] = frozenset(
+        {"budget_s", "cruise_vx", "turn_vyaw", "alternate_turns", "tether_m"}
+    )
+
+    #: The roam budget when the owner does not say how long. Two minutes is
+    #: MOVE-1's own measurement window, which is what makes the card's three
+    #: 120 s runs comparable with its 0.134 m baseline.
+    DEFAULT_ROAM_BUDGET_S: ClassVar[float] = 120.0
+    #: Bounds on a requested budget. The broker clamps in minutes on the model's
+    #: side; this clamps in seconds on the runtime's, because the runtime is the
+    #: side that must still be right when the caller is a panel or a test.
+    MIN_ROAM_BUDGET_S: ClassVar[float] = 15.0
+    MAX_ROAM_BUDGET_S: ClassVar[float] = 600.0
+    #: How often the policy is asked for a heading. The control loop runs at
+    #: ``loop_hz``; asking a turn-or-cruise policy at 10 Hz buys nothing over
+    #: asking it at 4 Hz and costs a proposal that changes sign mid-turn.
+    ROAM_TICK_S: ClassVar[float] = 0.25
+
+    def start_roam(self, budget_s: float | None = None) -> str:
+        """Begin a bounded roam. Refuses rather than queueing behind anything.
+
+        Every refusal here is a ``ValueError`` because the broker maps that to
+        ``rejected`` with the sentence intact — the model then says the true
+        reason ("I'm already exploring", "I'm stopped") instead of a guess.
+        """
+
+        if self._closed:
+            raise RuntimeError("runtime is closed")
+        budget = self._clamped_roam_budget(budget_s)
+        with self._command_lock:
+            if self.arbiter.emergency_stopped or self.agent.safety.emergency_stopped:
+                # Same refusal every other positive-motion door gives under a
+                # latch, and it is recorded the same way.
+                self._refuse_under_latch("roam")
+            if self._roam_active:
+                raise ValueError("the robot is already out roaming")
+            if self.follow.enabled:
+                raise ValueError(
+                    "the robot is following its owner right now; ask it to stay first"
+                )
+            with self._lock:
+                navigating = self._navigation_directive is not None
+            if navigating:
+                raise ValueError("the robot is already on its way somewhere")
+            self._interrupt_brain("correction", "owner sent the robot out to roam")
+            self.preempt(
+                "voice",
+                reason="roam_started",
+                targets=("spatial", "search", "activities"),
+            )
+            policy = PatrolPolicy(self._roam_limits(budget))
+            with self._lock:
+                self._roam_policy = policy
+                self._roam_budget_s = budget
+                self._roam_started_at = time.monotonic()
+                self._roam_last_tick_at = 0.0
+                self._roam_reason = "starting"
+                self._roam_idle_checkpoint = True
+                self._roam_ticks = 0
+                self._roam_refused = 0
+                self._behavior_generation += 1
+        message = f"Roaming for the next {budget:g} seconds"
+        self._emit("roam", message, "success")
+        return message
+
+    def stop_roam(self, reason: str = "owner_stopped") -> str:
+        """End a roam in ONE tick. Idempotent, and never raises on an idle dog.
+
+        Idempotent on purpose: "stop roaming" said to a robot that is already
+        standing still must be a calm confirmation, not an error the model has
+        to narrate as a failure.
+        """
+
+        with self._lock:
+            was_active = self._roam_policy is not None
+            self._roam_policy = None
+            self._roam_started_at = 0.0
+            self._roam_last_tick_at = 0.0
+            self._roam_reason = str(reason)
+            self._roam_idle_checkpoint = True
+            if was_active:
+                self._behavior_generation += 1
+        if not was_active:
+            return "The robot is not roaming"
+        # ---- HOW A ROAM LETS GO OF THE BODY, and it is THREE cases ---------
+        #
+        # Corrected under verification. This used to call ``stop_motion()`` for
+        # every reason except the latch, and ``stop_motion`` does
+        # ``preempt("manual", targets=("spatial",))`` on the way through — so a
+        # roam "yielding" to an owner who had just said "walk a circle around
+        # me" cancelled that circle one tick later. Reproduced in-process
+        # through ``start_spatial_behavior``. The dog obeyed the command and
+        # then stopped obeying it, and the roam looked like the polite one.
+        #
+        # The distinction the three arms encode is WHO ALREADY OWNS THE BODY:
+        #
+        #   * ``emergency_stop`` / ``runtime_closed`` — the latch or the
+        #     shutdown has already stopped the body. A second stop here would
+        #     only race with it.
+        #   * ``owner_command`` — a NEW owner behavior owns the body as of this
+        #     tick. The roam must release its own channel and touch nothing
+        #     else: ``arbiter.cancel("voice")`` retires the roam's intent and
+        #     stops there. Settling the body would be this behavior overruling
+        #     the owner on its way out the door.
+        #   * everything else (``owner_stopped``, ``budget_exhausted``,
+        #     ``boxed_in``, ``input_health_latched``) — nobody else asked for
+        #     anything, so the roam owes the owner a body that is standing
+        #     still, and ``stop_motion`` is how it settles.
+        if reason == "owner_command":
+            with self._command_lock:
+                self.arbiter.cancel("voice")
+        elif reason not in {"emergency_stop", "runtime_closed"}:
+            with self._command_lock:
+                self.arbiter.cancel("voice")
+                self.stop_motion()
+        message = f"Stopped roaming ({reason})"
+        self._emit("roam", message, "info")
+        return message
+
+    @property
+    def _roam_active(self) -> bool:
+        with self._lock:
+            return self._roam_policy is not None
+
+    def roam_idle_checkpoint(self) -> bool:
+        """Is the roam between legs — i.e. may a social action run right now?
+
+        ``prompts/functions/patrol.yaml``'s rule, made readable rather than
+        re-worded: "social actions can wait until an idle checkpoint". A roam
+        that is TURNING is negotiating a blocked lane and is the worst moment to
+        interrupt; a roam that is cruising, or not roaming at all, is a
+        checkpoint. CURIO-1's remarks ride this predicate — it is published for
+        that card and this region does not call it.
+        """
+
+        with self._lock:
+            return bool(self._roam_idle_checkpoint)
+
+    def roam_snapshot(self) -> dict[str, object]:
+        """What the panel and the hosted model may know about the roam."""
+
+        with self._lock:
+            policy = self._roam_policy
+            started = self._roam_started_at
+            budget = self._roam_budget_s
+            reason = self._roam_reason
+            ticks = self._roam_ticks
+            refused = self._roam_refused
+            checkpoint = self._roam_idle_checkpoint
+        active = policy is not None
+        elapsed = max(0.0, time.monotonic() - started) if active and started else 0.0
+        return {
+            "active": active,
+            "budget_s": round(float(budget), 3),
+            "elapsed_s": round(elapsed, 3),
+            "remaining_s": round(max(0.0, budget - elapsed), 3) if active else 0.0,
+            "reason": reason,
+            "ticks": ticks,
+            "refused": refused,
+            "idle_checkpoint": checkpoint,
+            "min_person_clearance_m": (
+                round(policy.limits.min_person_clearance_m, 3) if policy is not None else None
+            ),
+            "min_forward_clearance_m": (
+                round(policy.limits.min_forward_clearance_m, 3) if policy is not None else None
+            ),
+        }
+
+    def _clamped_roam_budget(self, budget_s: float | None) -> float:
+        if budget_s is None:
+            # Card ROAM-1, corrected under verification: the OWNER'S default,
+            # from their profile, not the class constant. The constant is the
+            # fallback for a config that does not mention roam at all, which is
+            # every config today except the prototype profile.
+            configured = self.roam_config.get("budget_s")
+            if configured is None:
+                return float(self.DEFAULT_ROAM_BUDGET_S)
+            try:
+                value = float(configured)
+            except (TypeError, ValueError):
+                raise ValueError(
+                    f"roam.budget_s must be a number, not {configured!r}"
+                ) from None
+            if not math.isfinite(value):
+                raise ValueError("roam.budget_s must be finite")
+            return min(self.MAX_ROAM_BUDGET_S, max(self.MIN_ROAM_BUDGET_S, value))
+        try:
+            value = float(budget_s)
+        except (TypeError, ValueError):
+            raise ValueError("roam budget must be a number") from None
+        if not math.isfinite(value):
+            raise ValueError("roam budget must be finite")
+        return min(self.MAX_ROAM_BUDGET_S, max(self.MIN_ROAM_BUDGET_S, value))
+
+    def _roam_limits(self, budget_s: float) -> PatrolLimits:
+        """The proposer's thresholds, DERIVED from this runtime's own gate.
+
+        ``patrol.limits_from_safety`` is the pure half and is unit-tested
+        without a runtime; this is the two-line adapter that hands it the
+        numbers the reactive gate was actually built with, so a prototype
+        profile that commissions ``safety.person_stop_m: 0.7`` (card P1-E) gets
+        a patrol that keeps 0.85 m rather than one still turning away at 1.35 m.
+        """
+
+        overrides = self.roam_config
+        shipped = PatrolLimits()
+        tether = overrides.get("tether_m", DEFAULT_ROAM_TETHER_M)
+        return limits_from_safety(
+            person_stop_m=self.person_stop_m,
+            obstacle_stop_m=self.obstacle_stop_m,
+            budget_s=budget_s,
+            cruise_vx=float(overrides.get("cruise_vx", shipped.cruise_vx)),
+            turn_vyaw=float(overrides.get("turn_vyaw", shipped.turn_vyaw)),
+            alternate_turns=bool(overrides.get("alternate_turns", True)),
+            # ``None`` is a legitimate value here and means unbounded, so it is
+            # read through a sentinel rather than through ``or``: ``tether_m:
+            # null`` in the profile must mean "no tether", not "use the
+            # default".
+            tether_m=None if tether is None else float(tether),
+        )
+
+    @property
+    def roam_config(self) -> dict[str, object]:
+        """The optional ``roam:`` section, read once per call, never cached.
+
+        Card ROAM-1, corrected under verification. This used to be read
+        straight from ``store.section("roam")`` and it was DEAD: the base
+        configuration is SHA-locked and omits the section, so the profile
+        overlay loader refused any ``roam:`` block an operator wrote
+        (``config.check_overlay_keys``). The five key paths are now on
+        :data:`~parcel_robot.config.OVERLAY_INTRODUCIBLE_KEYS` with a reason,
+        so ``configs/robot.prototype.yaml`` can carry them and they arrive
+        here. Absent, every reader below falls to a code default.
+        """
+
+        section = self.store.section("roam")
+        if not isinstance(section, dict):
+            return {}
+        # THE SPELLING GUARD, and it has to be here. ``config.py`` exempts the
+        # whole ``roam`` subtree from the overlay key check (the exemption
+        # cannot be narrower — the loader stops descending at an exempt
+        # parent), so this is the roam family's equivalent of
+        # ``CameraStreamConfig.from_section``: without it, ``budget_st: 300``
+        # would merge cleanly, read as nothing, and leave the owner with a
+        # 120 s roam while the file on disk said five minutes. That is the
+        # ``minimum_confidenc`` failure verbatim.
+        unknown = sorted(str(key) for key in section if str(key) not in self.ROAM_CONFIG_KEYS)
+        if unknown:
+            raise ValueError(
+                f"unknown roam config key(s): {', '.join(unknown)}; "
+                f"allowed: {', '.join(sorted(self.ROAM_CONFIG_KEYS))}"
+            )
+        return dict(section)
+
+    def _roam_sense(self, observation: SimObservation, elapsed_s: float) -> PatrolSense | None:
+        """This tick's sensing, through the patrol package's TESTED adapter.
+
+        ``sense_from_snapshot`` is fed a compact mapping shaped exactly like the
+        public snapshot's relevant keys rather than the whole of
+        :meth:`snapshot` — which takes ``_lock``, walks the event ring and
+        renders half the panel. Same adapter, same units (heading in DEGREES,
+        which is the bug MOVE-1 measured as a -81.9 rad bearing), no second
+        implementation of the sensing anywhere.
+        """
+
+        payload: dict[str, object] = {
+            "robot": {
+                "x": observation.robot.x,
+                "y": observation.robot.y,
+                "heading": math.degrees(observation.robot.yaw),
+            },
+            "owner": {
+                "x": observation.owner.x,
+                "y": observation.owner.y,
+                "visible": observation.owner.visible,
+            },
+            "collision": bool(observation.collision),
+            "obstacle_distance_m": observation.nearest_obstacle_m,
+        }
+        if observation.nearest_person_id is not None:
+            payload["nearest_person"] = {
+                "distance_m": observation.nearest_person_m,
+                "bearing_rad": observation.nearest_person_bearing_rad,
+            }
+        if observation.lidar_ranges:
+            payload["lidar_scan"] = {
+                "ranges": list(observation.lidar_ranges),
+                "angle_min_rad": observation.lidar_angle_min_rad,
+                "angle_increment_rad": observation.lidar_angle_increment_rad,
+                "range_max_m": observation.lidar_range_max_m,
+            }
+        return sense_from_snapshot(
+            payload,
+            elapsed_s=elapsed_s,
+            # The SAME envelope the spatial behaviors and the owner-keepout
+            # minimum are built from, read from the controller's own config
+            # rather than re-stated: an owner is a person for standoff purposes
+            # and carries this extra radius, and forgetting it is what parked
+            # C-1's robot 0.31 m from the origin.
+            owner_envelope_m=self.spatial.config.owner_collision_envelope_m,
+        )
+
+    def _step_roam(self, observation: SimObservation | None) -> None:
+        """One roam tick. Yields before it senses; senses before it proposes."""
+
+        with self._lock:
+            policy = self._roam_policy
+            started = self._roam_started_at
+            budget = self._roam_budget_s
+            last_tick = self._roam_last_tick_at
+        if policy is None:
+            return
+
+        # ---- the ladder that ENDS a roam, ahead of everything else --------
+        if self._closed:
+            self.stop_roam("runtime_closed")
+            return
+        if self.arbiter.emergency_stopped or self.agent.safety.emergency_stopped:
+            # A latch has already stopped the body. All this does is make sure
+            # nothing proposes another heading on the next tick — a roam that
+            # merely had its commands refused would resume the instant the latch
+            # cleared, which is a dog that remembers an errand nobody re-issued.
+            self.stop_roam("emergency_stop")
+            return
+        if self._input_health_latched:
+            self.stop_roam("input_health_latched")
+            return
+        with self._lock:
+            navigating = self._navigation_directive is not None
+        if navigating or self.follow.enabled or self.search.enabled or self.spatial.active:
+            # ANY owner command wins, and it wins by ending the roam rather than
+            # outbidding it: the owner asked for something specific and a roam
+            # that resumed underneath it would be the robot ignoring them.
+            self.stop_roam("owner_command")
+            return
+        now = time.monotonic()
+        elapsed = now - started
+        if elapsed >= budget:
+            self.stop_roam("budget_exhausted")
+            return
+        if observation is None or not self._observation_is_fresh(observation):
+            # No pose, or a stale one. Do not drive blind and do not end the
+            # mission on one gap — MOVE-1's runner rule, kept.
+            return
+        if now - last_tick < self.ROAM_TICK_S:
+            return
+
+        sense = self._roam_sense(observation, elapsed)
+        if sense is None:
+            return
+        command = policy.step(sense)
+        if command.reason == "boxed_in":
+            # The policy gave up rather than spinning out the budget. That is a
+            # BLOCKER, and the patrol prompt's rule is to report one.
+            self.stop_roam("boxed_in")
+            return
+        if command.reason == "budget_exhausted":
+            self.stop_roam("budget_exhausted")
+            return
+        # ---- THE STOP/TICK RACE, closed under the command lock -------------
+        #
+        # Corrected under verification. The submit and the "am I still
+        # roaming?" post-check used to be two separate critical sections, so a
+        # ``stop_roam`` landing between them left ONE roam command already
+        # accepted by the arbiter with up to ``loop_period * 3`` of TTL still
+        # to run: the owner said "stop roaming" and the dog took one more step.
+        #
+        # Both halves now happen inside ``_command_lock`` — the same lock
+        # ``stop_roam`` takes to cancel the channel — and the membership test
+        # is re-read INSIDE it rather than trusted from the top of the tick. A
+        # stop that wins the lock first is seen here and nothing is submitted;
+        # a stop that loses it finds the intent already cancelled on the line
+        # below. There is no interleaving that leaves a live roam command
+        # behind a stopped roam.
+        with self._command_lock:
+            with self._lock:
+                still_roaming = self._roam_policy is policy
+            if not still_roaming:
+                # Stopped while this tick was deciding. Belt and braces: the
+                # channel is retired again in case this tick's submit had
+                # already landed before the stop took the lock.
+                self.arbiter.cancel("voice")
+                return
+            accepted = self._submit_roam_command(command)
+            with self._lock:
+                if self._roam_policy is not policy:
+                    self.arbiter.cancel("voice")
+                    return
+                self._roam_last_tick_at = now
+                self._roam_reason = command.reason
+                self._roam_ticks += 1
+                if not accepted:
+                    self._roam_refused += 1
+                # The patrol prompt's idle checkpoint: cruising or idle is a
+                # moment a social action may take; a turn is the robot
+                # negotiating a lane.
+                self._roam_idle_checkpoint = command.reason in {"advance", "idle"}
+
+    def _submit_roam_command(self, command: PatrolCommand) -> bool:
+        """Hand one proposal to the arbiter. A refusal is data, never an error."""
+
+        try:
+            self.submit_motion(
+                "voice",
+                VelocityCommand(vx=command.vx, vy=command.vy, vyaw=command.vyaw),
+                ttl=self.loop_period * 3.0,
+            )
+        except (RuntimeError, ValueError):
+            return False
+        return True
+
+    def _realtime_roam(self, action: str, budget_s: float = 0.0) -> str:
+        """The hosted ``roam`` tool's door. One door, both actions.
+
+        Wrapped in ``_gate_by_voice`` and ``_watch_under_latch`` at the
+        construction site like every other motion door, so an unverified voice
+        cannot send the dog off and a refusal under a latch is written down.
+        """
+
+        clean = " ".join(str(action).split()).lower() or "start"
+        if clean == "stop":
+            return self.stop_roam("owner_stopped")
+        if clean != "start":
+            raise ValueError(f"unknown roam action: {action!r}")
+        return self.start_roam(budget_s if budget_s else None)
+
+    # ====================== END CARD ROAM-1 region ========================
+
     def start_follow_formation(
         self,
         relation: str = "behind",
@@ -6400,6 +6918,27 @@ class RobotRuntime:
             elif found.kind == KIND_HOLD:
                 reply = self.set_behavior("stay")
                 executed = True
+            # ---- CARD ROAM-1: "go explore" is executed LOCALLY ------------
+            #
+            # APPENDED to the ladder; nothing above moves. These two branches
+            # are what make the card's claim true — "roam" is executed by the
+            # runtime before the model speaks, exactly like follow and hold,
+            # rather than waiting for a hosted function call to come back over
+            # the wire. The hosted ``roam`` tool still exists for the sentences
+            # the phrase table does not cover, and ``note_ingress`` below is
+            # what stops the two becoming a second authority for one utterance.
+            #
+            # The stop branch is deliberately UNCONDITIONAL on there being a
+            # roam to stop: ``stop_roam`` is idempotent, so "stop roaming" said
+            # to a robot standing still is a calm confirmation and not an error
+            # the model has to narrate as a failure.
+            elif found.kind == KIND_ROAM:
+                reply = self.start_roam()
+                executed = True
+            elif found.kind == KIND_ROAM_STOP:
+                reply = self.stop_roam("owner_stopped")
+                executed = True
+            # ---- END CARD ROAM-1 ingress branches -------------------------
         except (RuntimeError, TypeError, ValueError) as failure:
             error = str(failure)
             executed = False
@@ -8740,6 +9279,10 @@ class RobotRuntime:
             "owner_search": search,
             "navigation": navigation,
             "spatial_behavior": spatial,
+            # Card ROAM-1. "Is the dog out exploring, how much budget is left,
+            # and what is it doing right now" is a question an owner reading the
+            # panel is entitled to answer without opening a log.
+            "roam": self.roam_snapshot(),
             "audio": self.audio_status.as_dict(),
             "speech": {
                 "mode": self.speech_stack.mode,
@@ -8985,6 +9528,15 @@ class RobotRuntime:
             navigation_started = time.monotonic()
             self._step_navigation(observation)
             self.component_metrics.elapsed("NavigationController", navigation_started)
+
+            # Card ROAM-1. LAST of the motion producers, and last on purpose:
+            # every step above it is a behavior the owner named, and roam's
+            # first act each tick is to end itself if any of them is running.
+            # Placing it here means it observes their state AFTER they have
+            # published it for this tick rather than one tick stale.
+            roam_started = time.monotonic()
+            self._step_roam(observation)
+            self.component_metrics.elapsed("RoamBehavior", roam_started)
 
             self._enforce_perception_invariant(observation)
             self._step_brain()
@@ -9957,6 +10509,31 @@ class RobotRuntime:
         update_provider_from_sim(self._pose_provider, observation)
         return {
             POSE_PROVIDER_KEY: self._pose_provider,
+            # ---- CARD ROAM-1: THE NAVIGATOR'S CLOCK -----------------------
+            #
+            # ONE LINE, and its absence was a buried Phase-5 defect. The
+            # navigator reads ``extras["time_s"]`` in nine places — the
+            # multi-object tracker's dt, the memory TTLs, the goal TTLs, the
+            # recovery timers — and nothing on the PRODUCT path has ever
+            # supplied it. ``pipeline.py:1949`` therefore fell to its
+            # ``dt = 0.1`` literal on every tick regardless of ``loop_hz``, and
+            # every ``float(extras.get("time_s") or 0.0)`` read zero, so no TTL
+            # ever advanced: an entry written at t=0 was still "0 s old" ten
+            # minutes later. The evals never caught it because
+            # ``headless_city`` did not supply it either (fixed on the same
+            # card, one line, same source).
+            #
+            # THE SOURCE IS THE SIM CLOCK, not ``time.monotonic()``. The
+            # observation's own timestamp is what every other consumer of this
+            # tick already agrees on (``_step_spatial`` measures staleness
+            # against it, ``headless_city`` traces against it), and reading a
+            # second clock here would make tracker dt disagree with the
+            # freshness test applied to the same frame. The MuJoCo backend
+            # already validates it into the monotonic range on the way in
+            # (``backends/mujoco.py:123``), so it IS the runtime's monotonic
+            # clock, sampled where the frame was.
+            "time_s": float(observation.timestamp),
+            # ---- END CARD ROAM-1 clock line -------------------------------
             "collision": observation.collision,
             "perception_fresh": self._observation_is_fresh(observation),
             "lidar_angle_min_rad": observation.lidar_angle_min_rad,
@@ -11749,6 +12326,9 @@ class RobotRuntime:
         "circle_owner": "walk around you",
         "play_gesture": "do that",
         "set_pose": "move like that",
+        # Card ROAM-1. Written out like the five above it, for the reason the
+        # comment above gives: "I am not going to roam." stops mid-thought.
+        "roam": "go off exploring",
     }
 
     def _gate_by_voice(self, tool: str, call: Callable[..., str]) -> Callable[..., str]:
@@ -12270,6 +12850,14 @@ class RobotRuntime:
         # it cannot cost the digest below — the try/except inside it is what
         # makes that true, and this call is deliberately not inside the digest's.
         self._step_owner_events(observation, now)
+        # Card CURIO-1. THE CHATTER TICK, on the same 1 Hz beat and for P2-B's
+        # reason: the three initiative layers must not drift apart, and a remark
+        # about the world must be able to see the same owner sample the greeting
+        # saw. Ordered AFTER the owner events on purpose — you walking in is
+        # news and a lamppost is not, and the min-gap gives the first offer of a
+        # tick the better claim on the minute. Like the call above it, this one
+        # carries its own try/except and is deliberately outside the digest's.
+        self._step_curiosity(observation, now)
         try:
             decisions = whisperer.observe(self._whisperer_digest(observation, now))
         except (AttributeError, KeyError, RuntimeError, TypeError, ValueError) as error:
@@ -12289,6 +12877,579 @@ class RobotRuntime:
                 decision.text, critical=decision.kind in CRITICAL_KINDS
             ):
                 whisperer.undeliver(decision)
+
+    # ==================== card CURIO-1: the chatter feed (ONE region) ========
+    #
+    # WHAT THIS REGION IS, AND WHAT IT DELIBERATELY IS NOT
+    # ----------------------------------------------------
+    # It is the FEED: it reads the learned map through its public API, decides
+    # which single fact is worth a sentence right now, and hands it to the
+    # whisperer's curiosity door. It is not a scheduler (that is
+    # ``whisperer.ChatterScheduler``), it is not a band table, and it is not a
+    # narrator — every sentence still leaves through ``_narrate_mission``, the
+    # same door every other robot-initiated fact uses, with the same cap.
+    #
+    # THE ONE ABSOLUTE
+    # ----------------
+    # **A remark may only name a place the map has ADMITTED.** Admitted means:
+    # in ``known_places()`` at the moment of speaking, AND not carried by a
+    # ``vlm_proposed`` name. That is the card's "0 hallucinated places" row and
+    # it is a hard row, so it is enforced in exactly one function
+    # (``_curiosity_admitted_names``) that every candidate passes through, and
+    # seeded RED there.
+    #
+    # NM-1 HANDOFF. When card NM-1 lands its detector-agreement judge, the
+    # provenance test in ``_curiosity_admitted_names`` is the ONE line that
+    # changes: ``promoted`` stops being sufficient and NM-1's admission flag
+    # becomes the test. Nothing else in this region knows how a name is judged.
+    #
+    # LOCKS: this region takes no lock of its own (R24's roster is unchanged by
+    # this card) and reads the map under the EXISTING ``_p1b_map_lock``, never
+    # nested inside another lock, so ``PINNED_LOCK_ORDER`` is unchanged too.
+    # Everything else here is touched only from the control loop's 1 Hz tick.
+
+    #: How many un-remarked observations may queue up. A bound, because the map
+    #: grows for the length of a walk and a queue that does not forget is a
+    #: memory leak with a story. Oldest out first: the dog that has been walking
+    #: for an hour should remark on what it just saw, not on the third lamppost.
+    CURIOSITY_PENDING_MAX = 64
+    #: How many "already said that" keys are remembered. Bounded for the same
+    #: reason; overflowing it can only ever make the dog repeat itself, never
+    #: make it hallucinate.
+    CURIOSITY_SAID_MAX = 512
+
+    def _curiosity_layer(self) -> tuple[Any, Any] | None:
+        """The scheduler and the farewell watcher, built on first use.
+
+        Lazily rather than in ``__init__`` for one honest reason: ``__init__``
+        is edited by several cards at once and this needs two lines there and
+        nothing else. Construction is deterministic, takes no lock and happens
+        on the control loop's thread only — ``_step_curiosity`` is the sole
+        caller and the control loop is the sole caller of that.
+
+        ``PARCEL_CURIOSITY_SEED`` seeds the gap draw. It exists so a measured
+        claim about a rate ("3 to 6 remarks in 120 seconds") can be re-run by
+        somebody else and get the same answer; unset, the gaps are ordinary
+        random draws.
+        """
+
+        existing = getattr(self, "_curio_scheduler", None)
+        if existing is not None:
+            return (existing, self._curio_farewell)
+        config = self.realtime_config.whisperer.curiosity
+        seed = os.environ.get("PARCEL_CURIOSITY_SEED", "").strip()
+        rng = random.Random(int(seed)) if seed.lstrip("-").isdigit() else None
+        scheduler = ChatterScheduler(config=config, clock=time.monotonic, rng=rng)
+        farewell = FarewellWatcher(
+            config=config,
+            min_confidence=self.realtime_config.whisperer.owner_events.min_confidence,
+            clock=time.monotonic,
+        )
+        # ORDER MATTERS. ``curiosity_snapshot`` is called from the PANEL thread
+        # and uses ``_curio_scheduler is None`` as "the layer does not exist
+        # yet", so the scheduler is bound LAST: a non-None scheduler now means
+        # every field below it is already there, and a half-built layer can
+        # never be read.
+        self._curio_farewell = farewell
+        #: entry ids the map held at the last scan, and the admitted vocabulary
+        #: at the last scan. The FIRST scan is a baseline and produces no
+        #: candidates — R11's rule for the first digest of a session, applied
+        #: here for the same reason: a map reloaded from yesterday's store is
+        #: not a discovery, and announcing all of it would be the dog telling
+        #: you about your own living room.
+        self._curio_seen_ids: dict[str, str] = {}
+        self._curio_vocabulary: set[str] = set()
+        self._curio_baselined = False
+        #: Candidates waiting for a moment to be said, oldest first.
+        self._curio_pending: dict[str, tuple[str, str]] = {}
+        #: Keys already spoken this session.
+        self._curio_said: set[str] = set()
+        #: The counters the status doc and ``/api/state`` read.
+        #: The counters the status doc and the panel read. COPY-ON-WRITE: it is
+        #: written on the control loop and read from the panel thread, and
+        #: ``dict(...)`` over a dict another thread is mutating raises. Rebinding
+        #: is atomic, so a reader either sees the old dict or the new one and
+        #: never a torn one — which buys thread-safety with no new lock and
+        #: therefore no new edge in R24's ``PINNED_LOCK_ORDER``.
+        self._curio_counts: dict[str, int] = {}
+        self._curio_last_turn_marker = -1
+        self._curio_scheduler = scheduler
+        return (scheduler, farewell)
+
+    def _curio_count(self, name: str, delta: int = 1) -> None:
+        """Bump one counter, copy-on-write (see ``_curio_counts``)."""
+
+        counts = getattr(self, "_curio_counts", None)
+        if counts is None:
+            return
+        self._curio_counts = {**counts, name: counts.get(name, 0) + int(delta)}
+
+    def _curiosity_admitted_names(self) -> frozenset[str]:
+        """THE ADMISSION GATE. Names this robot is allowed to say out loud.
+
+        Two tests, and both of them have to pass:
+
+        1. the name is in ``known_places()`` — the map's own vocabulary, which
+           already excludes decayed entries and inadmissible names;
+        2. no ACTIVE entry carries that name with ``vlm_proposed`` provenance.
+
+        Test 2 is belt and braces today and the whole point tomorrow.
+        ``known_places()`` already filters on ``ProposedName.admissible``, so on
+        today's ``entries.py`` an un-promoted guess cannot get through test 1
+        either. It is written out anyway because this is the card's hard row:
+        the day somebody makes a hypothesis admissible for some good reason of
+        their own, the dog must go quiet about it rather than start naming it,
+        and a gate that depends on a filter in another module for its safety is
+        a gate that will be surprised.
+
+        **Card NM-1 replaces test 2**, not test 1: a k-promoted name is
+        *consistent*, which P1-D measured is not the same as *correct* (45 %
+        naming accuracy; 2 of 2 false promotions at full resolution). Until
+        NM-1's independent judge exists, ``promoted`` is the strongest signal
+        this system has and the status doc says exactly that.
+        """
+
+        learned = getattr(self, "_p1b_learned_map", None)
+        if learned is None:
+            return frozenset()
+        from parcel_robot.online_map.entries import NAME_VLM_PROPOSED
+
+        with self._p1b_map_lock:
+            vocabulary = set(learned.known_places())
+            proposed: set[str] = set()
+            for entry in learned.active_entries():
+                for name in entry.names:
+                    if str(name.provenance) == NAME_VLM_PROPOSED:
+                        proposed.add(str(name.text))
+        return frozenset(vocabulary - proposed)
+
+    def _curiosity_scan(self, admitted: frozenset[str]) -> None:
+        """Diff the map against the last scan; queue what is worth saying.
+
+        Runs on EVERY tick, not only on the ticks a remark is due, so that
+        "new since last time" means new since the robot last looked and not new
+        since it last spoke. Everything queued here has already passed the
+        admission gate; nothing downstream may add a name.
+        """
+
+        learned = getattr(self, "_p1b_learned_map", None)
+        if learned is None:
+            return
+        with self._p1b_map_lock:
+            active = {
+                str(entry.entry_id): str(entry.label)
+                for entry in learned.active_entries()
+            }
+        previous = self._curio_seen_ids
+        vocabulary_before = self._curio_vocabulary
+        self._curio_seen_ids = active
+        self._curio_vocabulary = set(admitted)
+        if not self._curio_baselined:
+            self._curio_baselined = True
+            self._curio_count("baseline_entries", len(active))
+            return
+
+        # 1. Things that are no longer there. Only sayable while the LABEL is
+        #    still admitted — a decayed entry whose label left the vocabulary
+        #    with it cannot be named at all under this card's absolute, so it is
+        #    dropped and counted rather than spoken about approximately.
+        for entry_id, label in previous.items():
+            if entry_id in active:
+                continue
+            if label in admitted:
+                self._curio_queue(KIND_SCENE_CHANGE, label)
+            else:
+                self._curio_count("dropped_unadmitted")
+
+        # 2. Things that are there now and were not before.
+        for entry_id, label in active.items():
+            if entry_id in previous:
+                continue
+            if label in admitted:
+                self._curio_queue(KIND_NOVEL_OBJECT, label)
+            else:
+                self._curio_count("dropped_unadmitted")
+
+        # 3. The vocabulary itself grew: a NAME was admitted for something the
+        #    robot already had a row for. This is the dog learning what a thing
+        #    is CALLED, which is a different sentence from having seen it.
+        for name in sorted(set(admitted) - set(vocabulary_before)):
+            if name in {label for label in active.values()}:
+                # It arrived with the entry; ``novel_object`` above already has
+                # it and two sentences about one lamppost is one too many.
+                continue
+            self._curio_queue(KIND_PLACE_LEARNED, name)
+
+    def _curio_queue(self, kind: str, place: str) -> None:
+        key = f"{kind}:{place}"
+        if key in self._curio_said or key in self._curio_pending:
+            return
+        self._curio_pending[key] = (kind, place)
+        while len(self._curio_pending) > self.CURIOSITY_PENDING_MAX:
+            self._curio_pending.pop(next(iter(self._curio_pending)))
+            self._curio_count("pending_evicted")
+
+    def _curiosity_ask_candidate(self, admitted: frozenset[str]) -> tuple[str, str] | None:
+        """Card P1-D's ASK outcome, as a remark. The map's own public verdict.
+
+        Not a re-implementation of the abstention gate and deliberately not a
+        second copy of its thresholds: ``OnlineSemanticMap.resolve`` returns the
+        verdict ``perception_abstention.assess_place_query`` produced, and an
+        ASK there is an ASK here. Called only on a tick where the scheduler has
+        already said a remark is due, so the cost is one resolve per remark and
+        not one per tick.
+        """
+
+        learned = getattr(self, "_p1b_learned_map", None)
+        if learned is None or not admitted:
+            return None
+        from parcel_robot.perception_abstention import OUTCOME_ASK
+
+        for label in sorted(admitted):
+            key = f"{KIND_ASK_ABOUT}:{label}"
+            if key in self._curio_said:
+                continue
+            try:
+                with self._p1b_map_lock:
+                    result = learned.resolve(label)
+            except Exception:  # noqa: BLE001 - a query is never worth the loop
+                self._curio_count("ask_query_failed")
+                return None
+            if str(getattr(result.verdict, "outcome", "")) != OUTCOME_ASK:
+                continue
+            # THE VERDICT'S OWN SUBJECT. ``AbstentionVerdict.candidate`` is the
+            # field card P1-D named for it ("the place an ASK is asking ABOUT —
+            # the best candidate's label"); the first pass read a field called
+            # ``ask_place`` that does not exist on that dataclass, so ``place``
+            # always fell back to the queried label, the verdict's real
+            # candidate was never spoken, and the re-check below was
+            # unreachable. It is reachable now and it has to be: the candidate
+            # is the map's best guess, and the map's best guess is exactly the
+            # thing that can be a name this card may not say.
+            place = str(getattr(result.verdict, "candidate", "") or "").strip() or label
+            if place not in admitted:
+                self._curio_count("dropped_unadmitted")
+                continue
+            return (KIND_ASK_ABOUT, place)
+        return None
+
+    def _curiosity_candidate(self, admitted: frozenset[str]) -> tuple[str, str] | None:
+        """The ONE thing to say now, or nothing. Oldest queued first.
+
+        Re-checks admission at the point of speaking rather than trusting what
+        was queued: a name that has decayed out of ``known_places()`` in the
+        four minutes since it was noticed is a name this robot may no longer
+        say, and "it was true when we queued it" is exactly the reasoning the
+        card's hard row exists to refuse.
+        """
+
+        for key, (kind, place) in list(self._curio_pending.items()):
+            self._curio_pending.pop(key, None)
+            if key in self._curio_said:
+                continue
+            if place not in admitted:
+                self._curio_count("dropped_unadmitted")
+                continue
+            return (kind, place)
+        return self._curiosity_ask_candidate(admitted)
+
+    def _curiosity_idle_candidate(
+        self, admitted: frozenset[str]
+    ) -> tuple[str, str] | None:
+        """Something to say when NOTHING has happened. The slow cadence's subject.
+
+        Correction pass, ruling 6. An idle remark still names an ADMITTED place
+        — it is the dog thinking out loud about something it already knows, not
+        a sentence about nothing — so the card's hard row is unchanged and this
+        function adds no new way for a name to reach the model. What it adds is
+        a subject for the four-to-eight-minute clock, which otherwise had a
+        cadence and nothing to say on it.
+
+        Round-robins rather than repeating: an idle remark is marked said like
+        any other, so a quiet afternoon walks the vocabulary instead of
+        returning to the first lamppost every six minutes.
+        """
+
+        for name in sorted(admitted):
+            if f"{KIND_IDLE_REMARK}:{name}" in self._curio_said:
+                continue
+            return (KIND_IDLE_REMARK, name)
+        return None
+
+    def _curiosity_activity_busy(self) -> bool:
+        """Is this a bad moment for a social action?
+
+        ``prompts/functions/patrol.yaml`` (not edited): *social actions can wait
+        until an idle checkpoint*. Two producers of "not a checkpoint", and
+        neither is re-derived here:
+
+        * the activity coordinator is running something — a skill, a pose, a
+          gesture — which is the general case;
+        * card ROAM-1's ``roam_idle_checkpoint()``, which it published for this
+          card and does not itself call. A roam that is TURNING is negotiating a
+          blocked lane and is the worst moment to interrupt; a roam that is
+          cruising, or not roaming at all, reports ``True``.
+
+        Written as a read of ROAM-1's predicate rather than a copy of its rule,
+        and defensively so this card still works on a tree where that card has
+        not landed.
+        """
+
+        if self.activities.running() is not None:
+            return True
+        checkpoint = getattr(self, "roam_idle_checkpoint", None)
+        if checkpoint is None:
+            return False
+        try:
+            return not bool(checkpoint())
+        except Exception:  # noqa: BLE001 - a predicate is never worth the loop
+            return False
+
+    def _curiosity_lane_busy(self) -> bool:
+        """Can the lane take a narration at all right now.
+
+        The lane's OWN answer, not a copy of its rule: ``idle_seconds`` is
+        ``None`` for exactly the four states in which ``narrate_event`` refuses
+        — no session, a hosted response playing, a response outstanding, or the
+        owner owed an answer. Reading it here means a remark the floor gate
+        would drop is never drawn from the owner's budget in the first place,
+        and it means this card cannot drift from ``lane.py`` (which it does not
+        touch) if that rule ever changes.
+        """
+
+        lane = self.realtime_lane
+        if lane is None:
+            return True
+        try:
+            snapshot = lane.snapshot()
+        except Exception:  # noqa: BLE001 - a snapshot is never worth the loop
+            return True
+        if snapshot.get("idle_seconds") is None:
+            return True
+        return bool(snapshot.get("voice_turn_owed"))
+
+    def _curiosity_note_owner_turn(self, at: float) -> None:
+        """Start the quiet window over when the OWNER has been in the exchange.
+
+        Polled off the lane's own counters rather than wired into P2-B's
+        ``note_realtime_turn``, which counts BOTH sides and is another card's
+        region. The distinction is load-bearing here and is not there: this
+        clock exists so the dog does not talk over a conversation, and the
+        robot's own unprompted remarks are not a conversation. ``text_turns``
+        and ``voice_turns_owed`` both count owner turns and neither counts a
+        narration, so their sum moving is an owner exchange and nothing else.
+        """
+
+        lane = self.realtime_lane
+        if lane is None:
+            return
+        try:
+            snapshot = lane.snapshot()
+            marker = int(snapshot.get("text_turns", 0) or 0) + int(
+                snapshot.get("voice_turns_owed", 0) or 0
+            )
+        except Exception:  # noqa: BLE001
+            return
+        previous = self._curio_last_turn_marker
+        self._curio_last_turn_marker = marker
+        if previous >= 0 and marker > previous:
+            self._curio_scheduler.note_turn(at)
+
+    def _curiosity_free_gesture(self) -> bool:
+        """The NON-BILLED variant, when the owner's cap has already been spent.
+
+        Card work item 3. The remark the budget refused becomes a gesture: a
+        look, not a sentence. Nothing goes on the wire and nothing is billed, so
+        this is deliberately NOT gated on the whisperer's cap — the cap is a
+        money and politeness knob for hosted responses, and this costs neither.
+        It IS gated on the activity coordinator, through ``_brain_gesture``'s
+        own proposal path, so a gesture can no more preempt navigation than any
+        other emote can.
+
+        **THE GESTURE IS THE REMARK.** Returning ``True`` means the fact was
+        EXPRESSED: it is marked said, and the cadence clock is re-armed exactly
+        as a spoken sentence would re-arm it. One noticing produces one
+        expression, billed or free. The other live option was "gesture now,
+        sentence when the cap frees up", and it was rejected because it hands
+        the owner two of everything for one lamppost — the gesture would become
+        a trailer for a sentence rather than a substitute for it. The choice is
+        recorded in ``ChatterScheduler.note_remark``'s docstring as well, since
+        that is the method whose contract it settles.
+
+        **WHICH DOOR.** ``_brain_gesture`` — the emote catalog plus the activity
+        coordinator's proposal path. NOT ``realtime.proactive_motion_tools``,
+        which is P0-B's allowlist for motion the hosted MODEL proposes on a
+        system-initiated response. This is not a model proposal: no model is
+        consulted, nothing is billed, and the card's own wording ("a yip/whine
+        sound effect **or** a ``play_gesture``") left the door open. The
+        catalog check makes an unknown name a counted skip rather than a raise.
+        """
+
+        name = str(self.realtime_config.whisperer.curiosity.gesture_when_capped)
+        if not name or name not in self._emote_catalog:
+            self._curio_count("gesture_unavailable")
+            return False
+        try:
+            self._brain_gesture(name)
+        except Exception as error:  # noqa: BLE001 - a shrug may not stop the loop
+            self._curio_count("gesture_refused")
+            self._emit("realtime", f"curiosity gesture skipped: {error}", "info")
+            return False
+        self._curio_count("gestures")
+        return True
+
+    def _whisper_curiosity(self, event: StateEvent) -> bool:
+        """Offer ONE curiosity fact through the middle band's fourth mechanism.
+
+        The sibling of ``_whisper``, and different from it in exactly one place:
+        the door. ``offer_curiosity`` is the mechanism entry the middle band
+        requires, so a curiosity class that reached ``offer`` instead would be
+        refused with ``middle_band_requires_a_mechanism`` — which is the guard
+        that keeps a 2 Hz map from becoming a 2 Hz robot, and it is seeded RED.
+
+        ``critical=False`` is not a parameter here and never will be: no
+        curiosity class is in ``CRITICAL_KINDS``, so a remark can neither spend
+        past the owner's per-minute cap nor past the month's ceiling.
+        """
+
+        whisperer = self.realtime_whisperer
+        if whisperer is None:
+            return False
+        decision = whisperer.offer_curiosity(event)
+        if not decision.forwarded:
+            self._curio_count(f"suppressed_{decision.rule}")
+            if decision.rule == RULE_BUDGET:
+                # The cap is spent. The free variant still lets the dog show it
+                # noticed something, which is the difference between a budget
+                # and a mute button.
+                return self._curiosity_free_gesture()
+            return False
+        if self._narrate_mission(decision.text, critical=False):
+            self._curio_count("narrated")
+            return True
+        whisperer.undeliver(decision)
+        self._curio_count("floor_refused")
+        return False
+
+    def _step_curiosity(
+        self, observation: SimObservation | None, now: float
+    ) -> tuple[StateEvent, ...]:
+        """One chatter tick. At most one remark, at most one farewell.
+
+        Never raises. A dog that cannot think of anything to say must not be
+        able to stop the control loop, and neither must a map that is mid-write
+        or a lane that is mid-reconnect.
+
+        Returns what it offered, for the tests and the harness; the whisperer's
+        decision log holds what actually happened to each one.
+        """
+
+        if not self.realtime_config.whisperer.curiosity.enabled:
+            return ()
+        try:
+            layer = self._curiosity_layer()
+            if layer is None:
+                return ()
+            scheduler, farewell = layer
+            offered: list[StateEvent] = []
+
+            # 1. The farewell — the falling edge P2-B's watcher does not carry.
+            #    An ALWAYS-band class, so it goes through the ordinary door.
+            sample = self.owner_presence_sample(observation, now)
+            for event in farewell.observe(sample):
+                offered.append(event)
+                self._whisper(event)
+
+            # 2. The world. Scan every tick; speak only when the scheduler says.
+            admitted = self._curiosity_admitted_names()
+            self._curiosity_scan(admitted)
+            self._curiosity_note_owner_turn(now)
+            state = ChatterState(
+                at_s=now,
+                owner_present=sample.credible(
+                    self.realtime_config.whisperer.owner_events.min_confidence
+                ),
+                lane_busy=self._curiosity_lane_busy(),
+                activity_running=self._curiosity_activity_busy(),
+            )
+            # THE TWO CADENCES (correction pass, ruling 6). Which candidate
+            # exists decides which clock is asked, not the other way round: if
+            # something happened, the fast stimulus floor governs; if nothing
+            # did, the slow Poisson mean governs. One ``due`` call per tick
+            # either way, so the scheduler's ``ticks == admitted + skips``
+            # invariant is untouched.
+            candidate = self._curiosity_candidate(admitted)
+            stimulus = candidate is not None
+            if not scheduler.due(state, stimulus=stimulus):
+                if stimulus:
+                    # Put it back. It was never offered, so it is not spent —
+                    # and this is the ordinary case, not an error: the stimulus
+                    # floor is doing its job.
+                    self._curio_queue(*candidate)
+                return tuple(offered)
+            if candidate is None:
+                candidate = self._curiosity_idle_candidate(admitted)
+            if candidate is None:
+                # The moment was right and there was nothing at all to say —
+                # the map has not admitted a single name yet.
+                self._curio_count("nothing_to_say")
+                return tuple(offered)
+            kind, place = candidate
+            event = curiosity_event(kind, place, time_band=scheduler.band())
+            offered.append(event)
+            if self._whisper_curiosity(event):
+                self._curio_said.add(f"{kind}:{place}")
+                while len(self._curio_said) > self.CURIOSITY_SAID_MAX:
+                    self._curio_said.pop()
+                scheduler.note_remark(now)
+            else:
+                # Nothing was heard, so nothing was said: the candidate goes
+                # back on the queue and the Poisson draw is NOT re-armed. A
+                # refusal must not cost the dog a four-minute silence it never
+                # spent. ``note_refusal`` moves the ANCHOR only, which stops the
+                # feed re-offering the same candidate on every 1 Hz tick and
+                # filling the decision log with a suppression row a second.
+                if kind != KIND_IDLE_REMARK:
+                    self._curio_queue(kind, place)
+                scheduler.note_refusal(now)
+            return tuple(offered)
+        except Exception as error:  # noqa: BLE001 - a remark may never stop the loop
+            self._curio_count("tick_failed")
+            self._emit("realtime", f"curiosity tick skipped: {error}", "info")
+            return ()
+
+    def curiosity_snapshot(self) -> dict[str, object] | None:
+        """What the robot has been curious about, or ``None`` when it is off.
+
+        ``None`` rather than a disabled block, which is this repo's R1
+        discipline: with the feature off the key is ABSENT, so a snapshot is
+        byte-identical to a build that never had this card.
+
+        **Not yet on the wire.** ``realtime_snapshot`` is P2-B's/R3's region and
+        this card's OWNS is one feed region, so nothing publishes this yet. It
+        is the accessor a panel key would read, it is what the roam harness
+        reads, and adding ``"curiosity": self.curiosity_snapshot()`` beside
+        ``"owner_events"`` is the whole of the follow-up.
+        """
+
+        scheduler = getattr(self, "_curio_scheduler", None)
+        if scheduler is None:
+            return None
+        # Called from the PANEL thread while the control loop is writing. Each
+        # read below is a single atomic operation on the CPython object — a
+        # reference read for the copy-on-write counters, ``len()`` for the
+        # containers — so nothing here can catch a container mid-mutation and
+        # nothing here needs a lock. The two collaborators take their own.
+        return {
+            "scheduler": scheduler.snapshot(),
+            "farewell": self._curio_farewell.snapshot(),
+            "counts": dict(self._curio_counts),
+            "pending": len(self._curio_pending),
+            "said": len(self._curio_said),
+            "admitted_names": len(self._curio_vocabulary),
+        }
+
+    # ================== END card CURIO-1 (the chatter feed) ==================
 
     def _whisper_refusal(self, fact: str, *, subject: str = "") -> bool:
         """A refusal of the OWNER's own request, forwarded as a critical fact.

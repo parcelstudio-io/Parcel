@@ -16,6 +16,9 @@ from __future__ import annotations
 
 from .mission import (
     DEFAULT_MAP_SWEEP_VOCABULARY,
+    DEFAULT_ROAM_TETHER_M,
+    FORWARD_CLEARANCE_MARGIN_M,
+    PERSON_CLEARANCE_MARGIN_M,
     SAFETY_LEASE_QUERY,
     MapGrowthSample,
     PathSample,
@@ -27,11 +30,15 @@ from .mission import (
     PatrolSense,
     forward_clearance_from_scan,
     ingress_queries,
+    limits_from_safety,
     sense_from_snapshot,
 )
 
 __all__ = [
     "DEFAULT_MAP_SWEEP_VOCABULARY",
+    "DEFAULT_ROAM_TETHER_M",
+    "FORWARD_CLEARANCE_MARGIN_M",
+    "PERSON_CLEARANCE_MARGIN_M",
     "SAFETY_LEASE_QUERY",
     "MapGrowthSample",
     "PathSample",
@@ -43,5 +50,6 @@ __all__ = [
     "PatrolSense",
     "forward_clearance_from_scan",
     "ingress_queries",
+    "limits_from_safety",
     "sense_from_snapshot",
 ]

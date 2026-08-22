@@ -124,8 +124,81 @@ KIND_FOLLOW = "follow"
 KIND_HOLD = "hold"
 KIND_NONE = "none"
 
-#: Everything a hosted utterance is allowed to mean locally.
-INGRESS_KINDS = frozenset({KIND_EMERGENCY, KIND_CLOSED_INTENT, KIND_FOLLOW, KIND_HOLD, KIND_NONE})
+# ---------------------------------------------------------------------------
+# Card ROAM-1 — "GO EXPLORE" AS A CLOSED INTENT
+#
+# Two new kinds, APPENDED. Nothing above this block moves and no existing
+# phrase set is touched: the classification ladder in ``scan`` keeps its exact
+# order (emergency, closed intents, follow, hold) and these are read after it,
+# so "stop" is still only ever an emergency and "come here" is still only ever
+# COME.
+#
+# WHY THE PHRASES LIVE HERE AND NOT IN ``voice/closed_intents.py``. That module
+# is the grammar the local agent, the router and this ingress all share, and
+# every one of its members maps to an executive/CommandArbiter cap that already
+# exists (pause, resume, faster, slower, stop, come). Roam has no such cap: it
+# is a RUNTIME BEHAVIOR the runtime owns, reached through
+# ``RobotRuntime.start_roam`` the way follow is reached through
+# ``set_behavior``. Follow and hold are already classified here for exactly
+# that reason — they are behaviors, not caps — and roam joins them rather than
+# widening what ``parse_closed_intent`` means for its other four callers.
+#
+# THE STOP SIDE IS DELIBERATELY WIDER THAN THE START SIDE. Starting a roam is a
+# positive motion request and gets an exact whole-utterance match. Stopping one
+# is the owner taking the body back, so "stop roaming", "stop exploring",
+# "stop wandering" and "come back" all land. What is NOT widened is the bare
+# word "stop": it is matched above, by ``EMERGENCY_STOP_PHRASES``, and it
+# latches the e-stop — which is a strictly stronger answer to the same request.
+KIND_ROAM = "roam"
+KIND_ROAM_STOP = "roam_stop"
+
+#: Start phrases. Exact, whole-utterance, unpunctuated — the same contract every
+#: other phrase set in this repo has, matched after :func:`normalize`.
+ROAM_START_PHRASES = frozenset(
+    {
+        "roam",
+        "go roam",
+        "go explore",
+        "explore",
+        "go exploring",
+        "go and explore",
+        "have a wander",
+        "go for a wander",
+        "wander around",
+        "go look around",
+        "look around",
+        "go have a look around",
+    }
+)
+
+#: Stop phrases. See the block above for why this set is the wider of the two.
+ROAM_STOP_PHRASES = frozenset(
+    {
+        "stop roaming",
+        "stop exploring",
+        "stop wandering",
+        "stop looking around",
+        "stop roaming around",
+        "come back",
+        "that's enough exploring",
+        "thats enough exploring",
+        "done exploring",
+    }
+)
+
+#: Everything a hosted utterance is allowed to mean locally. The two roam kinds
+#: are appended; the five above them are unchanged.
+INGRESS_KINDS = frozenset(
+    {
+        KIND_EMERGENCY,
+        KIND_CLOSED_INTENT,
+        KIND_FOLLOW,
+        KIND_HOLD,
+        KIND_ROAM,
+        KIND_ROAM_STOP,
+        KIND_NONE,
+    }
+)
 
 #: Refused deliberately: GOAL_AMEND ("actually, the other bench") is a request
 #: to re-plan, and re-planning is the deliberative planner — precisely what
@@ -258,6 +331,15 @@ def scan(text: str) -> IngressScan:
         return IngressScan(kind=KIND_FOLLOW, original=original, normalized=clean)
     if folded in hold_phrases():
         return IngressScan(kind=KIND_HOLD, original=original, normalized=clean)
+    # Card ROAM-1. APPENDED, and appended for a reason that is part of the
+    # contract: every branch above this line either latches the body or hands it
+    # to a behavior the owner named explicitly, and a roam must never be able to
+    # shadow one of them. Stop is read before start so an utterance that somehow
+    # matched both would end a roam rather than begin one.
+    if folded in ROAM_STOP_PHRASES:
+        return IngressScan(kind=KIND_ROAM_STOP, original=original, normalized=clean)
+    if folded in ROAM_START_PHRASES:
+        return IngressScan(kind=KIND_ROAM, original=original, normalized=clean)
     return IngressScan(kind=KIND_NONE, original=original, normalized=clean)
 
 
@@ -308,6 +390,10 @@ __all__ = [
     "KIND_FOLLOW",
     "KIND_HOLD",
     "KIND_NONE",
+    "KIND_ROAM",
+    "KIND_ROAM_STOP",
+    "ROAM_START_PHRASES",
+    "ROAM_STOP_PHRASES",
     "SPOKEN_EMERGENCY_PHRASE",
     "SPOKEN_EMERGENCY_VARIANTS",
     "IngressScan",

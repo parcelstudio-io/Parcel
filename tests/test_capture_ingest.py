@@ -389,12 +389,23 @@ def test_each_live_adapter_refuses_here_naming_the_missing_module_or_the_missing
 def test_the_module_present_refusal_never_imported_the_vendor_sdk() -> None:
     """The device gate must run BEFORE the import, not after it.
 
-    ``pyrealsense2`` is installed here. If the ``/dev`` census ran after the
-    import — or not at all — every preflight on this box would load the vendor
-    SDK to discover there is nothing to talk to, and
+    If the ``/dev`` census ran after the import — or not at all — a box with the
+    wheel would load the vendor SDK to discover there is nothing to talk to, and
     ``test_a_full_preflight_run_never_imports_a_vendor_sdk`` would be measuring
     a property the code no longer has.
+
+    Card ENV-1b: which refusal comes back depends on the venv, so the guard asks
+    the venv instead of assuming it. ``pyrealsense2`` is installed in ``.parcel``
+    (P1-A put it there for the desk camera) but the ``dev`` extra does not carry
+    it — there is no aarch64 wheel, so adding it would break ``pip install .[dev]``
+    on the Orin — and a fresh ``.[dev]`` venv therefore has no wheel at all. Both
+    venvs must reach a *named* refusal with the SDK still unimported; only the
+    reason differs, and the branch names which one this run measured.
     """
+
+    import importlib.util
+
+    wheel_installed = importlib.util.find_spec("pyrealsense2") is not None
 
     script = (
         "import sys;"
@@ -402,7 +413,7 @@ def test_the_module_present_refusal_never_imported_the_vendor_sdk() -> None:
         "from scripts.parcel_capture.ingest import RealSenseIngest, IngestUnavailableError;"
         "from parcel_robot.capture import channel;"
         "adapter = RealSenseIngest();"
-        "assert adapter.dependency_report().satisfied, 'this arm needs the wheel installed';"
+        "print('SATISFIED', adapter.dependency_report().satisfied);"
         "\ntry:\n"
         "    list(adapter.read(channel('d455.color'), 0.01))\n"
         "except IngestUnavailableError as error:\n"
@@ -421,7 +432,15 @@ def test_the_module_present_refusal_never_imported_the_vendor_sdk() -> None:
     )
     assert proc.returncode == 0, proc.stderr
     assert "Traceback" not in proc.stderr
-    assert "REASON device_node_missing" in proc.stdout, proc.stdout
+    assert f"SATISFIED {wheel_installed}" in proc.stdout, proc.stdout
+    if wheel_installed:
+        # The module arm cannot fire, so the /dev census is the only thing that
+        # can produce this refusal — and it produced it without the import.
+        assert "REASON device_node_missing" in proc.stdout, proc.stdout
+    else:
+        # A fresh ``.[dev]`` venv: the module arm refuses first, by name.
+        assert "REASON dependency_missing" in proc.stdout, proc.stdout
+    # Either way the vendor SDK was never loaded. This half is the property.
     assert "IMPORTED False" in proc.stdout, proc.stdout
 
 
@@ -447,7 +466,17 @@ def test_the_dependency_report_names_each_module_state_and_is_never_a_traceback(
     A report that calls an adapter READY on a box with no camera is precisely
     the go/no-go lie this package exists to prevent, so the guard now asks the
     report to distinguish *absent* from *installed but no device*.
+
+    Card ENV-1b: *which* of the two the realsense line shows is a fact about the
+    venv, not about the code. ``.parcel`` has P1-A's wheel; a fresh
+    ``pip install .[dev]`` venv does not (the ``dev`` extra cannot carry
+    ``pyrealsense2`` — no aarch64 wheel, so it would break the Orin install). The
+    guard therefore branches on ``find_spec`` and asserts the *other* state in
+    the other venv, rather than skipping: in both, the line must be one of the
+    two refusals and must never read a bare ``READY``.
     """
+
+    import importlib.util
 
     text = dependency_report_text()
     assert "Traceback" not in text
@@ -469,10 +498,16 @@ def test_the_dependency_report_names_each_module_state_and_is_never_a_traceback(
     l2_block = block("l2")
     assert "UNAVAILABLE (missing: unilidar_sdk2)" in l2_block
 
-    # The module P1-A installed: present, and its device is not.
+    # The module P1-A installed: present, and its device is not — or, in a venv
+    # built from the `dev` extra alone, the module arm.
     rs_block = block("realsense")
-    assert "NO DEVICE (installed: pyrealsense2)" in rs_block
     assert "READY" not in rs_block
+    if importlib.util.find_spec("pyrealsense2") is None:
+        assert "UNAVAILABLE (missing: pyrealsense2)" in rs_block
+    else:
+        assert "NO DEVICE (installed: pyrealsense2)" in rs_block
+    # Both arms still name the device half, so an operator who installs the wheel
+    # is not then handed a bare READY.
     assert "/dev/video*" in rs_block
     assert "USB 3 (BLUE)" in rs_block
 
@@ -1799,6 +1834,59 @@ def test_a_webcam_on_dev_video_is_not_a_realsense_and_the_enumeration_says_so(
     # And the pipeline was never started, so no vendor RuntimeError can be the
     # thing the operator reads.
     assert log["started"] == 0
+
+
+def test_a_build_with_no_rs_context_refuses_instead_of_falling_through_to_start(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Card ENV-1b item 5: the enumeration gate was fail-OPEN and is now closed.
+
+    ``_require_enumerated_device`` used to ``return`` when ``read_field(rs,
+    'context')`` found nothing, on the reasoning that an uninterrogable build
+    should let the open speak for itself. The open does not speak — it crashes.
+    A webcam-only host (``/dev/video0`` present, no RealSense) then reached
+    ``pipeline.start()``, and preflight filed ``probe_raised — RuntimeError``:
+    the unattributable absence, naming no device and offering no remedy, that
+    card ENV-1 was written to remove. It is also the opposite of what
+    ``stream_selection`` does two methods down, which refuses UNPARSEABLE when a
+    build exposes no ``rs.stream``/``rs.config``.
+
+    So the missing symbol is named, and — the half that matters — the pipeline
+    is never started, because a librealsense traceback attributed to the camera
+    is a lie about which thing is broken.
+    """
+
+    log = _install_fake_realsense(monkeypatch, honours_config=True, devices=0)
+    # A webcam-shaped node IS there: the import-free census cannot refuse, so
+    # this gate is the only thing between the operator and pipeline.start().
+    monkeypatch.setattr(
+        rs_module.RealSenseIngest,
+        "device_report",
+        classmethod(
+            lambda cls: ingest_base.DeviceReport(
+                adapter=cls.adapter_name,
+                presence=ingest_base.DevicePresence.ATTACHED,
+                detail="staged: a UVC webcam is on /dev/video0",
+                remedy="",
+                nodes=("/dev/video0",),
+            )
+        ),
+    )
+    # A build that spells the symbol differently, or does not ship it at all.
+    monkeypatch.delattr(sys.modules["pyrealsense2"], "context")
+
+    with pytest.raises(IngestUnavailableError) as caught:
+        list(RealSenseIngest().read(channel("d455.color"), 0.02))
+    assert caught.value.reason.value == "unparseable"
+    assert "rs.context" in str(caught.value)
+    assert "Traceback" not in str(caught.value)
+    assert caught.value.remedy, "a refusal with no remedy is one nobody can act on"
+    assert "pyrealsense2" in caught.value.remedy
+    assert log["queried"] == 0
+    assert log["started"] == 0, (
+        "the adapter fell through to pipeline.start(); the operator gets "
+        "probe_raised — RuntimeError instead of the missing symbol"
+    )
 
 
 def test_a_failed_start_is_not_masked_by_the_stop_in_the_finally(

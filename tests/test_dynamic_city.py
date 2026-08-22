@@ -57,7 +57,8 @@ def test_snapshots_can_be_limited_to_scene_mapped_actors():
     assert {track["id"] for track in tracks} == {"ped-2", "cyclist-1"}
 
 
-@pytest.mark.skipif(not FLAT_SCENE.exists(), reason="flat Go2 scene is unavailable")
+# Card GATE-0: the `skipif(not FLAT_SCENE.exists())` guard is gone — the flat
+# Go2 scene is a tracked, manifest-pinned asset now, not a developer clone.
 def test_flat_scene_does_not_publish_phantom_city_tracks():
     model = mujoco.MjModel.from_xml_path(str(FLAT_SCENE))
     city = DynamicCity.default(seed=3)

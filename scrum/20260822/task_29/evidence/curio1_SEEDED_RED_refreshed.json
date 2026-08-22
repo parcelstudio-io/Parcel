@@ -1,0 +1,110 @@
+{
+  "baseline": {
+    "returncode": 0,
+    "tail": "60 passed, 1 warning in 1.68s"
+  },
+  "seeds": {
+    "A2_ask_speaks_the_query_not_the_verdicts_candidate": {
+      "failed": [
+        "test_an_ask_verdict_from_the_map_becomes_an_ask_about_remark",
+        "test_an_ask_verdict_naming_an_unadmitted_place_is_dropped"
+      ],
+      "returncode": 1,
+      "tail": "2 failed, 58 passed, 1 warning in 1.62s"
+    },
+    "A3_ask_speaking_time_recheck_dropped": {
+      "failed": [
+        "test_an_ask_verdict_naming_an_unadmitted_place_is_dropped"
+      ],
+      "returncode": 1,
+      "tail": "1 failed, 59 passed, 1 warning in 1.59s"
+    },
+    "A_provenance_test_dropped": {
+      "failed": [
+        "test_an_admissible_vlm_name_is_still_refused_by_this_card"
+      ],
+      "returncode": 1,
+      "tail": "1 failed, 59 passed, 1 warning in 1.61s"
+    },
+    "B_lane_busy_check_dropped": {
+      "failed": [
+        "test_a_remark_never_lands_while_the_owner_is_owed_an_answer"
+      ],
+      "returncode": 1,
+      "tail": "1 failed, 59 passed, 1 warning in 1.64s"
+    },
+    "C_curiosity_becomes_critical": {
+      "failed": [
+        "test_a_remark_obeys_the_min_gap_like_every_other_fact",
+        "test_a_remark_the_cap_refused_becomes_a_free_gesture",
+        "test_no_curiosity_class_is_critical",
+        "test_remarks_can_never_spend_past_the_owners_cap"
+      ],
+      "returncode": 1,
+      "tail": "4 failed, 56 passed, 1 warning in 1.66s"
+    },
+    "D_curiosity_promoted_to_the_always_band": {
+      "failed": [
+        "test_a_curiosity_event_handed_to_bare_offer_is_refused",
+        "test_the_four_curiosity_classes_are_middle_band"
+      ],
+      "returncode": 1,
+      "tail": "2 failed, 58 passed, 1 warning in 1.60s"
+    },
+    "E_decayed_place_admission_gate_removed": {
+      "failed": [
+        "test_a_place_whose_label_leaves_the_vocabulary_is_dropped_not_guessed_at"
+      ],
+      "returncode": 1,
+      "tail": "1 failed, 59 passed, 1 warning in 1.65s"
+    },
+    "F_every_name_the_map_has_becomes_vocabulary": {
+      "failed": [
+        "test_a_vlm_proposed_name_is_never_a_place_learned",
+        "test_an_admissible_vlm_name_is_still_refused_by_this_card",
+        "test_the_runtime_never_names_a_place_the_map_has_not_admitted"
+      ],
+      "returncode": 1,
+      "tail": "3 failed, 57 passed, 1 warning in 1.63s"
+    },
+    "G_conversation_clock_stops_ticking": {
+      "failed": [
+        "test_an_owner_turn_starts_the_quiet_window_over_on_the_product_path"
+      ],
+      "returncode": 1,
+      "tail": "1 failed, 59 passed, 1 warning in 1.61s"
+    },
+    "H_stimulus_gate_reads_the_idle_mean": {
+      "failed": [
+        "test_a_place_that_decays_out_of_the_map_is_a_scene_change",
+        "test_a_promoted_name_entering_the_vocabulary_is_a_place_learned",
+        "test_a_refused_offer_is_not_retried_every_second",
+        "test_a_remark_never_lands_while_the_owner_is_owed_an_answer",
+        "test_a_remark_the_cap_refused_becomes_a_free_gesture",
+        "test_an_ask_verdict_from_the_map_becomes_an_ask_about_remark",
+        "test_an_owner_turn_starts_the_quiet_window_over_on_the_product_path",
+        "test_the_runtime_never_names_a_place_the_map_has_not_admitted",
+        "test_the_runtime_remarks_on_a_thing_it_has_just_seen",
+        "test_the_snapshot_publishes_what_the_dog_did_and_did_not_say",
+        "test_the_stimulus_floor_paces_event_driven_remarks"
+      ],
+      "returncode": 1,
+      "tail": "11 failed, 49 passed, 1 warning in 1.67s"
+    }
+  },
+  "tree_sha256_after": {
+    "configs/realtime.prototype.yaml.example": "8a50ef1ef304d3f9eedfa4677e044868832812f72e55abab88db1e7ec141fd89",
+    "src/parcel_robot/realtime/config.py": "ab00ba88ad6c7a92f5c76c2362a22e02d7ee74ccd696690ebab0b47196f78098",
+    "src/parcel_robot/realtime/whisperer.py": "d8dcf4755a99ba44d42414942dacb78fa1edb598e66b371c19ceff04b06df872",
+    "src/parcel_robot/runtime.py": "0ba366aef198a2f073da5b8a915f19ae970a1bf70efe045589c5f8b8c7c93c1f",
+    "tests/test_curio1_chatter.py": "e7543f84451f736455a9b6fe77c905048ac56a45aa539247252b860fc13e5917"
+  },
+  "tree_sha256_before": {
+    "configs/realtime.prototype.yaml.example": "8a50ef1ef304d3f9eedfa4677e044868832812f72e55abab88db1e7ec141fd89",
+    "src/parcel_robot/realtime/config.py": "ab00ba88ad6c7a92f5c76c2362a22e02d7ee74ccd696690ebab0b47196f78098",
+    "src/parcel_robot/realtime/whisperer.py": "d8dcf4755a99ba44d42414942dacb78fa1edb598e66b371c19ceff04b06df872",
+    "src/parcel_robot/runtime.py": "0ba366aef198a2f073da5b8a915f19ae970a1bf70efe045589c5f8b8c7c93c1f",
+    "tests/test_curio1_chatter.py": "e7543f84451f736455a9b6fe77c905048ac56a45aa539247252b860fc13e5917"
+  },
+  "tree_unchanged": true
+}

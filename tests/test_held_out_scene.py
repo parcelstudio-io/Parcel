@@ -49,6 +49,22 @@ ALLOWED: dict[str, str] = {
         "asset integrity: reads the scene's GEOMETRY and its texture references, "
         "never renders it and never runs a model on it"
     ),
+    "tests/test_unitree_asset_pack.py": (
+        "card GATE-0 (scrum/20260822/task_20). The vendored Unitree Go2 MJCF is "
+        "the payload BOTH product scenes <include>, so proving the pack is "
+        "self-contained means compiling both — a gate that certified only the "
+        "development city would leave the held-out scene's compilability "
+        "uncertified and the clean clone still broken. GEOMETRY ONLY, by the "
+        "same rule test_scene_assets.py already runs under: MjModel.from_xml_path "
+        "and nothing else. No renderer is constructed, no data is stepped, and no "
+        "model is run over its pixels. It names the scene deliberately rather "
+        "than reaching it through a glob, so this scan can see the exposure — a "
+        "silent load is exactly what the load-pair below exists to prevent. "
+        "SEAT GRANTED by the card, which also required the pair to grow "
+        "deliberately rather than by accident. scripts/ci_gate.py runs the same "
+        "compile at gate time and derives its scene list, so it does not need a "
+        "seat of its own."
+    ),
     "scrum/20260821/task_10/README.md": "the card that created it",
     "scrum/20260821/task_10/W1_STATUS.md": "the card's status document",
     "scrum/20260821/task_14/README.md": (
@@ -73,6 +89,38 @@ ALLOWED: dict[str, str] = {
         "author's gate — the doc catch-22 again. Seat granted by the chain "
         "auditor (AUDIT_WAVE_P1P2_FABLE.md); the asset-pack TEST it plans needs "
         "its own seat and the load-pair must grow deliberately"
+    ),
+    "scrum/20260822/task_20/README.md": (
+        "card GATE-0's own dispatch text. It names the two scenes whose "
+        "<include> lines the vendored Unitree pack has to satisfy, and it is "
+        "the reason the seat above exists. Tracked at HEAD 8862220, i.e. this "
+        "scan was ALREADY red on the card's own paperwork before its executor "
+        "opened a file — the doc catch-22 AUDIT_CHAIN_FABLE.md describes, for "
+        "the fourth time. Seat taken by the GATE-0 executor with the card's "
+        "authority over task_20/ docs"
+    ),
+    "scrum/20260822/task_20/PREREGISTRATION.md": (
+        "GATE-0's pre-registered acceptance rows, fixed before any measurement. "
+        "Row R3 has to say which scenes the asset gate compiles or it is not a "
+        "pre-registration. Same catch-22 seat as the README above"
+    ),
+    "scrum/20260822/task_20/GATE0_STATUS.md": (
+        "GATE-0's status record. It reports the seat granted above and cannot "
+        "do so without naming its subject. Same catch-22 seat"
+    ),
+    "CODEBASE_INDEX.md": (
+        "generated file index; lists paths only, never scene content; regenerated "
+        "per commit by tools/codebase_index.py. Its single mention is one line of "
+        "a directory census — `src/parcel_robot/scenes/ — 2 .xml (city_block.xml; "
+        "city_block_b.xml)` — which is the scene's NAME and not one pixel, one "
+        "geometry row or one label of it. Seat granted by card FINISH-1 "
+        "(scrum/20260822/task_29 §C6) on GATE-0's behalf, which owns this seat "
+        "file this wave: the nightly prose scan was red on it from the moment the "
+        "index was generated, which is the doc catch-22 for the fifth time — a "
+        "file that enumerates every tracked path cannot enumerate them minus one. "
+        "ONE seat, grown deliberately: tools/codebase_index.py itself does NOT "
+        "name the scene (it globs), so it gets no seat, and this entry does not "
+        "join LOAD_ALLOWED — an index never opens what it lists."
     ),
     "scrum/20260821/task_20/MOVE1_STATUS.md": (
         "MOVE-1's status record names the scene only to say its exposure stays "
@@ -156,8 +204,16 @@ def test_only_the_allowlist_names_the_held_out_scene() -> None:
     # exempt from the staleness half on purpose — a status document is prose,
     # and making a test outcome depend on whether a sentence has been written
     # yet turns the writing of evidence into a source edit.
+    # ... and a file that is not in this checkout at all cannot be hiding a
+    # leak, so it is not a stale exemption either. Card FINISH-1 (task_29 §C6)
+    # added the seat for the GENERATED CODEBASE_INDEX.md, which a tree that has
+    # not run `tools/codebase_index.py` yet simply does not have; without this
+    # clause the seat would turn "the index has not been generated" into a red
+    # build about the held-out scene, which is a sentence about nothing.
     stale = sorted(
-        name for name in set(ALLOWED) - found if not name.startswith("scrum/")
+        name
+        for name in set(ALLOWED) - found
+        if not name.startswith("scrum/") and (REPO / name).is_file()
     )
     assert not stale, f"allowlist entries that no longer mention the scene: {stale}"
 
@@ -175,14 +231,28 @@ def test_no_product_module_names_the_held_out_scene() -> None:
     )
 
 
+#: The tests allowed to LOAD the held-out scene, not merely name it. It was a
+#: pair (this file + the asset-integrity scan); card GATE-0 grew it to three,
+#: deliberately, because the vendored-simulator gate must compile both product
+#: scenes or the clean-clone claim covers only half of them. Every member reads
+#: geometry and never appearance. Growing this set is a decision, not a diff.
+LOAD_ALLOWED = frozenset({
+    "tests/test_held_out_scene.py",
+    "tests/test_scene_assets.py",
+    "tests/test_unitree_asset_pack.py",
+})
+
+
 def test_no_test_outside_this_pair_loads_the_held_out_scene() -> None:
     offenders = sorted(
         name
         for name in _mentions()
         if name.startswith("tests/")
-        and name not in {"tests/test_held_out_scene.py", "tests/test_scene_assets.py"}
+        and name not in LOAD_ALLOWED
     )
-    assert not offenders, f"tests outside the declared pair read the held-out scene: {offenders}"
+    assert not offenders, (
+        f"tests outside the declared load set read the held-out scene: {offenders}"
+    )
 
 
 def test_the_held_out_scene_is_not_the_default_scene_anywhere() -> None:

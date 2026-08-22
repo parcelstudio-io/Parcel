@@ -300,12 +300,19 @@ def test_freeform_paths_accept_new_children() -> None:
         check_overlay_keys(base, {"prompting": {"toolz": {"weather": True}}})
 
 
-def test_introducible_keys_are_exactly_the_two_documented_families() -> None:
-    """Every exemption is a real key with its own downstream validator."""
+def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
+    """Every exemption is a real key with its own downstream validator.
+
+    Card ROAM-1 adds the third family. The verdict is written here rather than
+    inherited, which is what this test is for: the SHA-locked base omits a
+    ``roam:`` section, so without the exemption the prototype overlay refuses
+    to carry one — measured, and it is why the roam knobs were unreachable in
+    ROAM-1's first pass.
+    """
 
     base = yaml.safe_load(ROBOT_YAML.read_text(encoding="utf-8"))
     assert all(
-        key.startswith(("perception.camera_ingress", "camera_ingress"))
+        key.startswith(("perception.camera_ingress", "camera_ingress", "roam"))
         for key in OVERLAY_INTRODUCIBLE_KEYS
     )
     check_overlay_keys(base, {"camera_ingress": {"enabled": True}})
@@ -314,6 +321,26 @@ def test_introducible_keys_are_exactly_the_two_documented_families() -> None:
 
     with pytest.raises(ValueError, match="unknown perception camera-ingress keys"):
         CameraStreamConfig.from_section({"camera_ingress": True, "camera_ingress_ratez": 2.0})
+
+    # The roam family exempts the whole SUBTREE — the loader stops descending
+    # at an exempt parent — so a typo inside it merges cleanly HERE and is
+    # caught downstream instead, exactly as the camera family's is. Both halves
+    # are asserted so the division of labour cannot rot.
+    assert "roam" in OVERLAY_INTRODUCIBLE_KEYS
+    assert not any(key.startswith("roam.") for key in OVERLAY_INTRODUCIBLE_KEYS), (
+        "listing roam's children would look like a spelling guard and be inert"
+    )
+    check_overlay_keys(base, {"roam": {"budget_st": 90.0}})  # merges; not the guard
+
+    from parcel_robot.runtime import RobotRuntime
+
+    assert RobotRuntime.ROAM_CONFIG_KEYS == {
+        "budget_s",
+        "cruise_vx",
+        "turn_vyaw",
+        "alternate_turns",
+        "tether_m",
+    }
 
 
 def test_a_typo_in_the_overlay_fails_where_a_typo_in_the_base_would(

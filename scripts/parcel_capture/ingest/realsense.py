@@ -337,9 +337,25 @@ class RealSenseIngest(IngestAdapter):
 
         factory = read_field(rs, "context")
         if not present(factory):
-            # A build with no rs.context cannot be interrogated; let the open
-            # speak for itself rather than inventing an absence.
-            return
+            # Card ENV-1b closes a fail-open hole. This used to ``return``, on
+            # the reasoning that a build with no ``rs.context`` should let the
+            # open speak for itself — but the open does not speak, it crashes:
+            # a webcam-only host reached ``pipeline.start()`` and preflight filed
+            # ``probe_raised — RuntimeError``, the exact unattributable absence
+            # ENV-1 was written to remove. It is also inconsistent with
+            # :meth:`stream_selection`, which already refuses UNPARSEABLE when a
+            # build exposes no ``rs.stream``/``rs.config``. Fail closed and name
+            # the symbol, so the operator sees "this build cannot be interrogated"
+            # rather than a librealsense traceback attributed to the camera.
+            raise IngestUnavailableError(
+                AbsenceReason.UNPARSEABLE,
+                "pyrealsense2 imports here but this build exposes no rs.context, so "
+                "the device list cannot be read and no channel can be attributed to a "
+                "camera rather than to a crashed probe",
+                "check the pyrealsense2 build: `python -c \"import pyrealsense2 as rs; "
+                'print(rs.__version__, rs.context)"`. A build that cannot enumerate '
+                "devices must not be used for the D455 rows.",
+            )
         handle = ReadOnlyHandle(factory(), allowed=("query_devices",), label="realsense context")
         try:
             count = len(list(handle.query_devices()))

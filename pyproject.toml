@@ -19,7 +19,14 @@ dev = [
   # Card P0-E: parallel default suite (`pytest -n auto`) if the suite proves
   # xdist-clean; see scrum/20260822/task_5/P0E_STATUS.md for the verdict.
   "pytest-xdist>=3,<4",
-  "ruff>=0.12,<1",
+  # Card GATE-0 (scrum/20260822/task_20): PINNED, not ranged. The commit gate's
+  # ruff verdict is a RATCHET against a recorded set of (file, rule)
+  # fingerprints, and a different ruff enables a different rule set — this tree
+  # yields 7 fingerprints on 0.16.x and roughly 51 on 0.15.x. Under `>=0.12,<1`
+  # the verdict was whatever pip resolved that day, which is not a gate.
+  # `scripts/ci_ruff_baseline.json` stamps `ruff_version` and `evaluate_ruff`
+  # ERRORS on a mismatch, so this pin and that stamp move together.
+  "ruff==0.16.1",
 ]
 # Card P0-C: the GPU detector in the production venv.
 #

@@ -104,6 +104,11 @@ class _Doors:
         self.navigate_result = "Okay—I'll navigate toward the sidewalk safely."
         self.orbit_result = F2_ACK
         self.follow_result = "Okay—I'll follow you safely."
+        # Card ROAM-1. The runtime's own admission sentence for a roam. Written
+        # in the same first-person promise voice as its neighbours on purpose:
+        # what this fixture proves is that the promise stays on the record as
+        # ``admitted`` and never reaches ``detail``.
+        self.roam_result = "Roaming for the next 120 seconds"
         self.errors: dict[str, Exception] = {}
 
     def _raise(self, tool: str) -> None:
@@ -148,6 +153,11 @@ class _Doors:
         self._raise("follow_owner")
         return self.follow_result
 
+    def roam(self, action: str, budget_s: float) -> str:
+        del action, budget_s
+        self._raise("roam")
+        return self.roam_result
+
     def as_doors(self) -> ToolDoors:
         return ToolDoors(
             validate=self.validate,
@@ -159,6 +169,7 @@ class _Doors:
             places=self.places,
             orbit=self.orbit,
             follow=self.follow,
+            roam=self.roam,
             gesture_names=lambda: ("paw_wave",),
             pose_names=lambda: ("sit",),
         )
@@ -171,6 +182,8 @@ ACTIVITY_ARGUMENTS = {
     "navigate_to": '{"place": "the sidewalk"}',
     "circle_owner": "{}",
     "follow_owner": "{}",
+    # Card ROAM-1, the ninth tool.
+    "roam": '{"action": "start", "minutes": 2}',
 }
 
 
@@ -194,6 +207,12 @@ def test_the_activity_set_covers_every_tool_that_starts_something() -> None:
         "navigate_to",
         "circle_owner",
         "follow_owner",
+        # Card ROAM-1. The verdict, written down as this test asks: roam is the
+        # LONGEST activity on the surface — minutes, not seconds — so it is the
+        # one where "the result only ever says STARTED" matters most. A roam
+        # that reported itself finished would be the F2 defect stretched over
+        # two minutes instead of one second.
+        "roam",
     }
     # The two read-only tools are NOT activities: their result IS the answer and
     # there is nothing about them that continues after the call returns.

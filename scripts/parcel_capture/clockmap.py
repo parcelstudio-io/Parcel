@@ -2634,16 +2634,42 @@ def main(argv: Sequence[str] | None = None) -> int:
                 attached = ", ".join(device_nodes_present(requirement)) or "NOTHING"
                 print(f"          needs a device at: {nodes}   attached: {attached}")
             print(f"          {requirement.note}")
-        missing = [
-            device.value for device, (satisfied, _) in availability.items() if not satisfied
-        ]
+        # Card ENV-1b: two facts, two remedies. Classifying by the condition that
+        # actually failed is the whole point of the ENV-1 split — handing the
+        # operator of a wheel-installed, camera-less host "run this on the Orin
+        # inside the ROS 2 Humble environment" sends them to reinstall an SDK
+        # they already have, and no SDK install has ever attached a camera.
+        module_missing: list[str] = []
+        device_missing: list[tuple[str, str]] = []
+        for device, (satisfied, _present) in availability.items():
+            if satisfied:
+                continue
+            requirement = PROBE_REQUIREMENTS[device]
+            has_module = not requirement.modules or bool(availability[device][1])
+            if has_module and requirement.device_nodes:
+                nodes = ", ".join(f"/dev/{pattern}" for pattern in requirement.device_nodes)
+                device_missing.append((device.value, nodes))
+            else:
+                module_missing.append(device.value)
+        missing = sorted(module_missing + [name for name, _nodes in device_missing])
         if missing:
+            print("\nREFUSED: no clock probe is possible for: " + ", ".join(missing))
+            print("This host cannot record offset triples for those devices.")
+            if module_missing:
+                print(
+                    "\n  MODULE MISSING — the SDK is not on this interpreter's import "
+                    "path: " + ", ".join(sorted(module_missing)) + "\n  Run this on the "
+                    "Orin inside the ROS 2 Humble environment that owns the vendor SDKs."
+                )
+            for name, nodes in sorted(device_missing):
+                print(
+                    f"\n  DEVICE MISSING — {name}: the SDK is installed and nothing is "
+                    f"attached.\n  Plug the device in and confirm the node appears at "
+                    f"{nodes} (`ls {nodes}`).\n  No SDK install and no Python environment "
+                    f"can substitute for the cable."
+                )
             print(
-                "\nREFUSED: no clock probe is possible for: "
-                + ", ".join(sorted(missing))
-                + "\nThis host cannot record offset triples for those devices. Run this "
-                "on the Orin inside the ROS 2 Humble environment that owns the vendor "
-                "SDKs. Recording a session without them leaves their timestamps "
+                "\nRecording a session without them leaves their timestamps "
                 "permanently unrecoverable."
             )
             return 2

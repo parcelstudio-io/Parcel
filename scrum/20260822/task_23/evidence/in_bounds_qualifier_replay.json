@@ -1,0 +1,62 @@
+{
+  "TETHERED run 1": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": true,
+    "left_block_at_s": null,
+    "max_abs_x_m": 3.644473,
+    "max_abs_y_m": 10.01271,
+    "net_displacement_in_block_m": 6.54006,
+    "net_displacement_m": 6.54006,
+    "out_of_block_samples": 0
+  },
+  "TETHERED run 2": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": true,
+    "left_block_at_s": null,
+    "max_abs_x_m": 3.671429,
+    "max_abs_y_m": 9.971351,
+    "net_displacement_in_block_m": 6.474798,
+    "net_displacement_m": 6.474798,
+    "out_of_block_samples": 0
+  },
+  "TETHERED run 3": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": true,
+    "left_block_at_s": null,
+    "max_abs_x_m": 3.594768,
+    "max_abs_y_m": 9.96169,
+    "net_displacement_in_block_m": 6.558471,
+    "net_displacement_m": 6.558471,
+    "out_of_block_samples": 0
+  },
+  "UNTETHERED armB run 1": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": true,
+    "left_block_at_s": null,
+    "max_abs_x_m": 2.38586,
+    "max_abs_y_m": 2.669544,
+    "net_displacement_in_block_m": 3.366806,
+    "net_displacement_m": 3.366806,
+    "out_of_block_samples": 0
+  },
+  "UNTETHERED armB run 2": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": true,
+    "left_block_at_s": null,
+    "max_abs_x_m": 2.354038,
+    "max_abs_y_m": 2.701284,
+    "net_displacement_in_block_m": 2.048318,
+    "net_displacement_m": 2.048318,
+    "out_of_block_samples": 0
+  },
+  "UNTETHERED armB run 3 (the 20.67 m run that left the scene)": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": false,
+    "left_block_at_s": 85.4365,
+    "max_abs_x_m": 2.19587,
+    "max_abs_y_m": 20.557518,
+    "net_displacement_in_block_m": 12.015434,
+    "net_displacement_m": 20.674462,
+    "out_of_block_samples": 138
+  }
+}

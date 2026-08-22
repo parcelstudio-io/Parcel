@@ -9,8 +9,11 @@ and asserts the gate reddens — then asserts it is green on a clean input:
 * HARD-SAFETY                <- an injected collision, and a new false_arrival
 * LATENCY-TAIL               <- a p95/p99 spike past the ratchet ceiling
 * FROZEN-DIGEST INTEGRITY    <- a byte-changed frozen manifest
-* RUFF RATCHET               <- a new (file, rule) fingerprint
+* RUFF RATCHET               <- a new (file, rule) fingerprint, and (card
+                                GATE-0) a baseline recorded on a different ruff
 * TIER COVERAGE (card R26)   <- a narrowed nightly selection that orphans a tier
+* STAGE CONTAINMENT (GATE-0) <- an evaluator that raises must still leave a
+                                complete summary and a complete --json
 
 Seeds are injected into *copies* / synthetic inputs or via runtime monkeypatch —
 never a committed source or frozen artifact edit (the mutation-panel rule).
@@ -26,10 +29,12 @@ import pytest
 
 from scripts.ci_gate import (
     COMMIT_MARKERS,
+    COMMIT_TIER_STAGE_NAMES,
     DIGEST_SENTINELS,
     MODEL_OFF_NODE_IDS,
     NIGHTLY_SLOW_MARKERS,
     RELEASE_PARITY_MANIFEST,
+    GateResult,
     evaluate_frozen_digest_sentinels,
     evaluate_hard_safety,
     evaluate_latency_ledger,
@@ -37,9 +42,11 @@ from scripts.ci_gate import (
     evaluate_release_parity,
     evaluate_ruff,
     evaluate_tier_coverage,
+    main,
     run_commit_tier,
     run_nightly_tier,
     run_pytest,
+    run_stage,
 )
 
 REPO = Path(__file__).resolve().parents[1]
@@ -467,29 +474,101 @@ def test_latency_ledger_reddens_on_seeded_spike(tmp_path: Path) -> None:
 # ===========================================================================
 
 
-def _fake_ruff(monkeypatch, fingerprints: list[str]) -> None:
+#: Card GATE-0: the linter the synthetic baselines below claim to be recorded on.
+_FAKE_RUFF_VERSION = "9.9.9"
+
+
+def _fake_ruff(monkeypatch, fingerprints: list[str], version: str = _FAKE_RUFF_VERSION) -> None:
     proc = SimpleNamespace(returncode=1, stdout="", stderr="")
     monkeypatch.setattr(
         "scripts.ci_gate._ruff_fingerprints", lambda root=REPO: (sorted(fingerprints), proc)
     )
+    monkeypatch.setattr("scripts.ci_gate.ruff_version", lambda root=REPO: version)
+
+
+def _baseline(path: Path, fingerprints: list[str], version: str | None = _FAKE_RUFF_VERSION) -> Path:
+    payload: dict = {"fingerprints": fingerprints}
+    if version is not None:
+        payload["ruff_version"] = version
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
 
 
 def test_ruff_ratchet_is_green_when_no_new_fingerprint(tmp_path: Path, monkeypatch) -> None:
     fps = ["src/a.py::I001", "src/b.py::B009"]
     _fake_ruff(monkeypatch, fps)
-    baseline = tmp_path / "baseline.json"
-    baseline.write_text(json.dumps({"fingerprints": fps}), encoding="utf-8")
+    baseline = _baseline(tmp_path / "baseline.json", fps)
     assert evaluate_ruff(baseline_path=baseline).status == "pass"
 
 
 def test_ruff_ratchet_reddens_on_new_fingerprint(tmp_path: Path, monkeypatch) -> None:
     # Baseline knows only a.py; a new violation appears in c.py.
     _fake_ruff(monkeypatch, ["src/a.py::I001", "src/c.py::F401"])
-    baseline = tmp_path / "baseline.json"
-    baseline.write_text(json.dumps({"fingerprints": ["src/a.py::I001"]}), encoding="utf-8")
+    baseline = _baseline(tmp_path / "baseline.json", ["src/a.py::I001"])
     result = evaluate_ruff(baseline_path=baseline)
     assert result.status == "fail", "a new ruff fingerprint must redden the ratchet"
     assert "src/c.py::F401" in result.detail
+
+
+# --- card GATE-0: the ratchet knows which linter it was recorded on --------
+#
+# The defect: ruff was range-pinned (`>=0.12,<1`) and the baseline recorded no
+# version, so the commit verdict depended on whichever wheel pip resolved that
+# day — this tree yields 7 fingerprints on 0.16.x and roughly 51 on 0.15.x. A
+# ratchet compared across rule sets is not a gate, it is a coin flip that
+# usually lands green.
+
+
+def test_the_ratchet_refuses_a_baseline_recorded_on_another_ruff(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fps = ["src/a.py::I001"]
+    _fake_ruff(monkeypatch, fps, version="0.15.0")
+    baseline = _baseline(tmp_path / "baseline.json", fps, version="0.16.1")
+    result = evaluate_ruff(baseline_path=baseline)
+    assert result.status == "error", (
+        "the same fingerprint set under a different linter is a different "
+        "question; the ratchet must refuse rather than answer it"
+    )
+    assert "0.15.0" in result.detail and "0.16.1" in result.detail
+    assert result.hard, "an unrenderable verdict still fails the build"
+
+
+def test_the_ratchet_refuses_an_unstamped_baseline(tmp_path: Path, monkeypatch) -> None:
+    fps = ["src/a.py::I001"]
+    _fake_ruff(monkeypatch, fps)
+    baseline = _baseline(tmp_path / "baseline.json", fps, version=None)
+    result = evaluate_ruff(baseline_path=baseline)
+    assert result.status == "error"
+    assert "ruff_version" in result.detail
+
+
+def test_the_ratchet_refuses_when_the_running_ruff_cannot_be_identified(
+    tmp_path: Path, monkeypatch
+) -> None:
+    fps = ["src/a.py::I001"]
+    _fake_ruff(monkeypatch, fps, version=None)  # ruff --version unreadable
+    baseline = _baseline(tmp_path / "baseline.json", fps, version="0.16.1")
+    result = evaluate_ruff(baseline_path=baseline)
+    assert result.status == "error"
+    assert "unknown linter" in result.detail
+
+
+def test_the_committed_baseline_and_the_pyproject_pin_agree() -> None:
+    """The two halves of the pin are in different files; they must not drift."""
+
+    import re
+
+    from scripts.ci_gate import RUFF_BASELINE
+
+    stamped = json.loads(RUFF_BASELINE.read_text(encoding="utf-8"))["ruff_version"]
+    pyproject = (REPO / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r'"ruff==([0-9][^"]*)"', pyproject)
+    assert match, "the dev extra must PIN ruff (`ruff==X.Y.Z`), not range it"
+    assert match.group(1) == stamped, (
+        f"pyproject pins ruff=={match.group(1)} but "
+        f"{RUFF_BASELINE.name} was recorded on {stamped}"
+    )
 
 
 # ===========================================================================
@@ -692,6 +771,9 @@ def test_both_tiers_carry_the_tier_coverage_gate_and_the_commit_tier_keeps_every
     # silently smaller loop.
     commit_required = (
         "evaluate_ruff",
+        # Card GATE-0: the vendored-simulator closure. Both tiers, because the
+        # nightly is a superset and a fresh clone has to reach it either way.
+        "evaluate_unitree_assets",
         "evaluate_hard_safety",
         "evaluate_release_parity",
         "evaluate_assertion_evals",
@@ -777,3 +859,208 @@ def test_the_lane_arming_test_states_its_own_premise() -> None:
     body = source[start : source.index("\ndef ", start + 10)]
     assert 'monkeypatch.setenv("OPENAI_API_KEY", "")' in body
     assert 'monkeypatch.delenv("PARCEL_REALTIME_KEY_ENV"' in body
+
+
+# ===========================================================================
+# STAGE CONTAINMENT — card GATE-0 (scrum/20260822/task_20)
+#
+# `run_commit_tier` used to be a straight-line list build. On a clean clone the
+# Go2 MJCF was gitignored, `evaluate_hard_safety` raised about a second in, and
+# the traceback took the whole runner with it: no summary, no `--json`, and
+# eight later gates that nobody ever learned the verdict of. The gate's own
+# failure mode was invisible to the gate. Every stage now runs under
+# `run_stage`, and these are the seeds that prove it.
+# ===========================================================================
+
+
+def _stub_stage(name: str, tier: str = "commit") -> GateResult:
+    return GateResult(name, tier, True, "pass", "stub")
+
+
+@pytest.fixture
+def fast_commit_tier(monkeypatch):
+    """Every commit-tier evaluator replaced by a cheap green stub.
+
+    The tier itself is REAL — this exercises the actual `run_commit_tier`
+    ordering and the actual wrapper, not a re-implementation of them. Only the
+    five-minute evaluators are stubbed out.
+    """
+
+    import scripts.ci_gate as gate
+
+    monkeypatch.setattr(gate, "evaluate_ruff", lambda **kw: _stub_stage("ruff"))
+    monkeypatch.setattr(
+        gate, "evaluate_unitree_assets", lambda **kw: _stub_stage("unitree-assets")
+    )
+    monkeypatch.setattr(gate, "evaluate_hard_safety", lambda **kw: _stub_stage("hard-safety"))
+    monkeypatch.setattr(
+        gate, "evaluate_release_parity", lambda **kw: _stub_stage("release-parity")
+    )
+    monkeypatch.setattr(
+        gate, "evaluate_assertion_evals", lambda **kw: _stub_stage("assertion-evals")
+    )
+    monkeypatch.setattr(
+        gate, "evaluate_tier_coverage", lambda **kw: _stub_stage("tier-coverage")
+    )
+    monkeypatch.setattr(
+        gate, "_pytest_gate", lambda name, tier, ids, **kw: _stub_stage(name, tier)
+    )
+    return gate
+
+
+def test_the_clean_commit_tier_reports_exactly_the_declared_stages(fast_commit_tier) -> None:
+    """The control for every seed below."""
+
+    results = run_commit_tier()
+    assert tuple(r.name for r in results) == COMMIT_TIER_STAGE_NAMES
+    assert all(r.status == "pass" for r in results)
+
+
+def test_the_asset_stage_runs_before_the_gate_that_used_to_die_on_it() -> None:
+    names = list(COMMIT_TIER_STAGE_NAMES)
+    assert names.index("unitree-assets") < names.index("hard-safety"), (
+        "hard-safety is the gate that raised on the missing MJCF; the payload "
+        "check has to speak first or the report still blames the wrong thing"
+    )
+
+
+#: The victim, and how many of the ten commit-tier rows it can cost. One per
+#: stage that calls it: ``evaluate_ruff`` and ``evaluate_hard_safety`` back one
+#: stage each, while ``_pytest_gate`` is the shared helper behind FOUR
+#: (model-off-non-inferiority, release-parity-integrity, owner-store-isolation,
+#: default-suite). The number is written down rather than counted from the
+#: result, so a fifth pytest stage reddens this test on purpose.
+EXPLODING_VICTIMS = [("evaluate_ruff", 1), ("evaluate_hard_safety", 1), ("_pytest_gate", 4)]
+
+
+@pytest.mark.parametrize(("victim", "expected_rows"), EXPLODING_VICTIMS)
+def test_one_exploding_evaluator_costs_exactly_one_row(
+    fast_commit_tier, victim: str, expected_rows: int
+) -> None:
+    """Seeded RED. Anywhere in the tier — first, middle, or the pytest gates —
+    a raising evaluator becomes a NAMED error on exactly the stages it backs and
+    the rest still run.
+
+    Corrected by FINISH-1 (task_29 §C7): the test asserted only that SOME row
+    errored, so "costs exactly one row" was in its name and nowhere in its
+    body — a containment gate that let the blast radius grow silently. The
+    count is now asserted, and it is per-victim because ``_pytest_gate`` really
+    does back four stages: one evaluator, one row; one shared helper, its own
+    four.
+    """
+
+    def boom(*args, **kwargs):
+        raise ValueError("seeded: this evaluator explodes")
+
+    monkey = pytest.MonkeyPatch()
+    monkey.setattr(fast_commit_tier, victim, boom)
+    try:
+        results = run_commit_tier()
+    finally:
+        monkey.undo()
+
+    assert tuple(r.name for r in results) == COMMIT_TIER_STAGE_NAMES, (
+        "a crash must not shorten the report"
+    )
+    errored = [r for r in results if r.status == "error"]
+    assert errored, "the crash has to be visible as an ERROR row"
+    assert len(errored) == expected_rows, (
+        f"seeding {victim} cost {[r.name for r in errored]}; this evaluator backs "
+        f"{expected_rows} stage(s) and containment means the blast radius is exactly that"
+    )
+    for row in errored:
+        assert "ValueError" in row.detail
+        assert "seeded: this evaluator explodes" in row.detail
+        assert row.hard, "containment reports the failure, it does not forgive it"
+        assert "traceback_tail" in row.extra
+    assert any(r.status == "pass" for r in results), "later gates still ran"
+
+
+def test_the_json_summary_still_emits_when_the_first_evaluator_raises(
+    fast_commit_tier, capsys
+) -> None:
+    """The headline row: `--json` used to never print at all."""
+
+    def boom(**kwargs):
+        raise RuntimeError("seeded: no Go2 assets in this checkout")
+
+    monkey = pytest.MonkeyPatch()
+    monkey.setattr(fast_commit_tier, "evaluate_ruff", boom)
+    try:
+        exit_code = main(["--tier", "commit", "--json"])
+    finally:
+        monkey.undo()
+
+    out = capsys.readouterr().out
+    assert exit_code == 1, "a contained ERROR is still a red build"
+
+    summary, brace, raw_json = out.partition("\n{")
+    assert brace, "the JSON block never printed — the exact defect this closes"
+    assert "Traceback (most recent call last)" not in summary, (
+        "the human summary must REPORT the crash, not bleed it"
+    )
+    assert "RESULT: FAIL" in summary
+    assert "[ ERROR] HARD  ruff" in summary
+
+    payload = json.loads("{" + raw_json)
+    assert payload["tier"] == "commit"
+    names = [gate["name"] for gate in payload["gates"]]
+    assert names == list(COMMIT_TIER_STAGE_NAMES), (
+        f"--json must name every stage even on a crash; got {names}"
+    )
+    assert payload["gates"][0]["status"] == "error"
+    # The traceback survives INSIDE the machine-readable payload on purpose: a
+    # contained crash still has to be diagnosable without re-running the gate.
+    assert "RuntimeError" in payload["gates"][0]["extra"]["traceback_tail"]
+
+
+def test_a_keyboard_interrupt_is_not_swallowed(fast_commit_tier) -> None:
+    """`except Exception`, never `BaseException`: an operator's Ctrl-C is not a
+    gate result, and a runner that turns it into one cannot be stopped."""
+
+    def interrupted(**kwargs):
+        raise KeyboardInterrupt
+
+    monkey = pytest.MonkeyPatch()
+    monkey.setattr(fast_commit_tier, "evaluate_hard_safety", interrupted)
+    try:
+        with pytest.raises(KeyboardInterrupt):
+            run_commit_tier()
+    finally:
+        monkey.undo()
+
+
+def test_a_system_exit_is_not_swallowed_either(fast_commit_tier) -> None:
+    def leaving(**kwargs):
+        raise SystemExit(3)
+
+    monkey = pytest.MonkeyPatch()
+    monkey.setattr(fast_commit_tier, "evaluate_tier_coverage", leaving)
+    try:
+        with pytest.raises(SystemExit):
+            run_commit_tier()
+    finally:
+        monkey.undo()
+
+
+def test_the_wrapper_flattens_multi_result_stages() -> None:
+    """Some evaluators return a list (the nightly's pose-drift arms). The
+    wrapper must not wrap a list inside a list."""
+
+    rows = [_stub_stage("a"), _stub_stage("b")]
+    assert run_stage("multi", lambda: rows, tier="commit") == rows
+    assert run_stage("single", lambda: rows[0], tier="commit") == [rows[0]]
+
+
+def test_the_traceback_tail_is_bounded() -> None:
+    from scripts.ci_gate import STAGE_TRACEBACK_TAIL_CHARS
+
+    def deep(n: int = 60):
+        if n:
+            return deep(n - 1)
+        raise ValueError("x" * 5000)
+
+    row = run_stage("deep", deep, tier="commit")[0]
+    assert row.status == "error"
+    assert len(row.extra["traceback_tail"]) <= STAGE_TRACEBACK_TAIL_CHARS
+    assert len(row.detail) < 400, "a gate report is read by humans"

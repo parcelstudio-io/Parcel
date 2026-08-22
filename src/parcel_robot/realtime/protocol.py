@@ -29,7 +29,7 @@ from __future__ import annotations
 import base64
 import binascii
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any, ClassVar
 
@@ -110,6 +110,158 @@ class ClientEvent:
         raise NotImplementedError
 
 
+# ---------------------------------------------------- CARD TURN-1 · endpointing
+#: Wire names of the two endpointers the provider offers.
+#:
+#: ``server_vad`` is an energy VAD: it ends the owner's turn after a fixed
+#: silence tail, so a person who pauses to think mid-sentence gets interrupted
+#: by arithmetic. ``semantic_vad`` asks the model whether the sentence sounded
+#: finished, and takes :attr:`TurnDetection.eagerness` instead of a millisecond
+#: count. Which one a companion wants is a matter of taste and of measurement —
+#: which is the whole reason this stopped being a string literal.
+TURN_DETECTION_SERVER_VAD = "server_vad"
+TURN_DETECTION_SEMANTIC_VAD = "semantic_vad"
+TURN_DETECTION_TYPES: tuple[str, ...] = (TURN_DETECTION_SERVER_VAD, TURN_DETECTION_SEMANTIC_VAD)
+
+#: How quickly ``semantic_vad`` decides the owner is done. ``low`` waits, ``high``
+#: jumps in, ``auto`` is the provider's own balance. ``medium`` is documented by
+#: the provider and is accepted here even though card TURN-1's text names only
+#: three: refusing a value the provider takes would be a wrong refusal, and this
+#: card's whole point is that the owner gets to choose.
+TURN_DETECTION_EAGERNESS: tuple[str, ...] = ("low", "medium", "high", "auto")
+
+#: Bound on ``silence_duration_ms``, from card TURN-1: below 200 ms the tail is
+#: shorter than the pause inside an ordinary two-clause sentence (the recording
+#: protocol uses ~400 ms), and above 800 ms the robot reads as deaf. Outside the
+#: band is a typo, and a typo here costs every turn of every session.
+SILENCE_DURATION_MS_RANGE: tuple[int, int] = (200, 800)
+
+#: Bound on ``prefix_padding_ms`` — how much audio before the VAD trigger is kept.
+#: Zero is legal (keep nothing); past two seconds it is not a padding, it is a
+#: mistyped ``silence_duration_ms``.
+PREFIX_PADDING_MS_RANGE: tuple[int, int] = (0, 2_000)
+
+#: ``threshold`` is a normalised activation probability, so it lives in [0, 1].
+THRESHOLD_RANGE: tuple[float, float] = (0.0, 1.0)
+
+#: Knobs the provider reads only for ``server_vad``, and only for ``semantic_vad``.
+#: Sending one to the wrong endpointer is accepted on the wire and then ignored,
+#: which is exactly the failure this module was written after: on 2026-08-18 every
+#: session before that date ran with its voice and its VAD silently discarded.
+#: A switch that cannot take effect is refused here rather than shipped.
+SERVER_VAD_ONLY_KEYS: tuple[str, ...] = ("threshold", "prefix_padding_ms", "silence_duration_ms")
+SEMANTIC_VAD_ONLY_KEYS: tuple[str, ...] = ("eagerness",)
+
+
+@dataclass(frozen=True)
+class TurnDetection:
+    """WHEN THE OWNER'S TURN ENDS — card TURN-1.
+
+    Until this card, endpointing was the string literal ``"server_vad"`` inside
+    :meth:`SessionUpdate.to_payload`, and the provider's ~500 ms silence tail was
+    therefore not a setting: it was a property of the source code. ``robot.yaml``'s
+    ``speech.endpointing: semantic`` (Silero + Smart Turn) applies only to the
+    ``--legacy`` local loop and never reached the hosted lane at all.
+
+    EVERY OPTIONAL FIELD DEFAULTS TO ``None``, AND THAT IS THE CONTRACT
+    ------------------------------------------------------------------
+    ``None`` means "the key is not sent", not "send the provider's default". So
+    ``TurnDetection()`` renders exactly ``{"type": "server_vad"}`` — byte-identical
+    to the literal it replaced — and a config that says nothing about endpointing
+    produces the same session frame it produced before this card existed. That is
+    a pre-registered, seeded row (TURN-1 T1/T2), not an intention.
+
+    Validation happens in ``__post_init__`` so the object cannot exist in a shape
+    the wire would refuse or, worse, silently ignore. See
+    :data:`SERVER_VAD_ONLY_KEYS`.
+    """
+
+    type: str = TURN_DETECTION_SERVER_VAD
+    #: Energy VAD activation probability, ``server_vad`` only.
+    threshold: float | None = None
+    #: Audio kept from before the trigger, ``server_vad`` only.
+    prefix_padding_ms: int | None = None
+    #: Silence tail that ends the turn, ``server_vad`` only.
+    silence_duration_ms: int | None = None
+    #: ``semantic_vad`` only. See :data:`TURN_DETECTION_EAGERNESS`.
+    eagerness: str | None = None
+    #: Whether the provider cancels its own in-flight reply when it hears the
+    #: owner start talking. The lane ALSO barges in locally (``_on_speech_started``),
+    #: so this is the provider's half of the same behaviour and both halves are
+    #: wanted; ``False`` leaves the lane as the only one that reacts.
+    interrupt_response: bool | None = None
+    #: Whether the provider creates a response of its own when it commits the
+    #: turn. ``False`` means the lane's watchdog is the only thing that will ever
+    #: answer the owner — a real knob with a real footgun, documented in the
+    #: shipped example rather than hidden.
+    create_response: bool | None = None
+
+    def __post_init__(self) -> None:
+        if self.type not in TURN_DETECTION_TYPES:
+            raise RealtimeProtocolError(
+                f"turn_detection.type must be one of {', '.join(TURN_DETECTION_TYPES)}; "
+                f"got {self.type!r}"
+            )
+        if self.threshold is not None:
+            _in_range("threshold", float(self.threshold), THRESHOLD_RANGE)
+        if self.prefix_padding_ms is not None:
+            _in_range("prefix_padding_ms", int(self.prefix_padding_ms), PREFIX_PADDING_MS_RANGE)
+        if self.silence_duration_ms is not None:
+            _in_range(
+                "silence_duration_ms", int(self.silence_duration_ms), SILENCE_DURATION_MS_RANGE
+            )
+        if self.eagerness is not None and self.eagerness not in TURN_DETECTION_EAGERNESS:
+            raise RealtimeProtocolError(
+                f"turn_detection.eagerness must be one of "
+                f"{', '.join(TURN_DETECTION_EAGERNESS)}; got {self.eagerness!r}"
+            )
+        wrong = (
+            SEMANTIC_VAD_ONLY_KEYS
+            if self.type == TURN_DETECTION_SERVER_VAD
+            else SERVER_VAD_ONLY_KEYS
+        )
+        for key in wrong:
+            if getattr(self, key) is None:
+                continue
+            raise RealtimeProtocolError(
+                f"turn_detection.{key} is not read when turn_detection.type is "
+                f"{self.type!r}; the provider would accept the frame and ignore the "
+                f"knob. Remove it, or change the type."
+            )
+
+    def to_payload(self) -> dict[str, Any]:
+        """The ``session.audio.input.turn_detection`` object, keys-set-only."""
+
+        payload: dict[str, Any] = {"type": self.type}
+        for key in (
+            "threshold",
+            "prefix_padding_ms",
+            "silence_duration_ms",
+            "eagerness",
+            "interrupt_response",
+            "create_response",
+        ):
+            value = getattr(self, key)
+            if value is not None:
+                payload[key] = value
+        return payload
+
+    def as_dict(self) -> dict[str, Any]:
+        """What ``/api/state`` shows: exactly what goes on the wire."""
+
+        return self.to_payload()
+
+
+def _in_range(key: str, value: float, bounds: tuple[float, float]) -> None:
+    """Refuse a knob outside its band, naming the band. Card TURN-1."""
+
+    low, high = bounds
+    if not low <= value <= high:
+        raise RealtimeProtocolError(
+            f"turn_detection.{key} must be between {low} and {high} inclusive; got {value}"
+        )
+
+
 @dataclass(frozen=True)
 class SessionUpdate(ClientEvent):
     """Instructions, voice, and the two switches R1 depends on.
@@ -125,7 +277,9 @@ class SessionUpdate(ClientEvent):
     model: str
     voice: str
     input_audio_transcription: bool = True
-    turn_detection: str = "server_vad"
+    #: Card TURN-1. Was the string ``"server_vad"``; is now the validated object
+    #: above. The default renders the identical payload — see :class:`TurnDetection`.
+    turn_detection: TurnDetection = TurnDetection()
 
     def to_payload(self) -> dict[str, Any]:
         session: dict[str, Any] = {
@@ -146,7 +300,10 @@ class SessionUpdate(ClientEvent):
                 # provider's default voice and default VAD while believing it
                 # had set them. They belong to the audio input/output objects.
                 "input": {
-                    "turn_detection": {"type": self.turn_detection},
+                    # Card TURN-1: was ``{"type": self.turn_detection}`` with a
+                    # string field. ``TurnDetection().to_payload()`` is that dict,
+                    # exactly, and every added key is one an operator wrote down.
+                    "turn_detection": self.turn_detection.to_payload(),
                     # Same relocation, same reason. Without transcription the
                     # owner's half of every spoken conversation never reaches
                     # the ledger, so a silently-discarded switch here is the
@@ -412,7 +569,16 @@ class RetainedEvent(ServerEvent):
     #: plain mapping rather than a per-type dataclass: the provider adds fields
     #: to ASR frames between releases, and a retained event that silently drops
     #: the new one would be the same defect one layer down.
-    fields: Mapping[str, Any] = MappingProxyType({})
+    #: ``default_factory``, not a bare ``MappingProxyType({})`` — card GATE-0
+    #: (``scrum/20260822/task_20``). A shared class-level mappingproxy is a
+    #: MUTABLE default as far as ``dataclasses`` is concerned, and CPython <=
+    #: 3.11 raises ``ValueError: mutable default <class 'mappingproxy'> for
+    #: field fields`` **at import time**. That made ``requires-python >= 3.10``
+    #: false on exactly 3.11: the whole realtime package failed to import, and
+    #: it was invisible here because the dev venv is 3.14 (which allows it) and
+    #: hosted CI never ran. The empty mapping is still immutable and still
+    #: shared-by-value; it is now built per instance.
+    fields: Mapping[str, Any] = field(default_factory=lambda: MappingProxyType({}))
 
 
 #: Observed live 2026-08-20 (``live_run_1``), refused as unknown until EV-1.
@@ -755,9 +921,18 @@ __all__ = [
     "CONTENT_TYPE_BY_ROLE",
     "LIFECYCLE_EVENT_TYPES",
     "PCM16_SAMPLE_RATE_HZ",
+    "PREFIX_PADDING_MS_RANGE",
     "RETAINED_EVENT_TYPES",
+    "SEMANTIC_VAD_ONLY_KEYS",
     "SERVER_EVENT_TYPES",
+    "SERVER_VAD_ONLY_KEYS",
     "SESSION_OBJECT_TYPE",
+    "SILENCE_DURATION_MS_RANGE",
+    "THRESHOLD_RANGE",
+    "TURN_DETECTION_EAGERNESS",
+    "TURN_DETECTION_SEMANTIC_VAD",
+    "TURN_DETECTION_SERVER_VAD",
+    "TURN_DETECTION_TYPES",
     "ClientEvent",
     "ConversationItemCreate",
     "ConversationItemTruncate",
@@ -782,6 +957,7 @@ __all__ = [
     "SessionUpdate",
     "SpeechStarted",
     "SpeechStopped",
+    "TurnDetection",
     "UnknownEventType",
     "Usage",
     "parse_client_event_type",

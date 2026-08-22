@@ -599,13 +599,22 @@ def test_the_panel_token_never_reaches_the_gateway_url() -> None:
 
 
 def test_the_browser_arms_the_microphone_only_after_the_gateway_says_hello() -> None:
+    """R7's rule, through MARK-1's arming path.
+
+    Card MARK-1 moved the arming frame into ``armEar``, which first applies the
+    capture beam the hello names and then says which ear it actually opened. The
+    rule R7 pinned is unchanged and is still what is asserted: the frame that
+    opens the ear is sent from the hello branch and from nowhere else.
+    """
+
     source = PANEL.read_text(encoding="utf-8")
-    assert 'socket.send(JSON.stringify({ type: "mic", on: true }));' in source
-    # And it does so inside the hello branch, not on socket open.
+    assert 'type: "mic", on: true, channels: mic.captureChannels, beam: mic.beam,' in source
+    assert source.count('type: "mic", on: true') == 1, "one arming frame, one place"
+    # And it is reached from the hello branch, not on socket open.
     hello_at = source.index('if (body.type === "hello")')
-    arm_at = source.index('socket.send(JSON.stringify({ type: "mic", on: true }));')
+    call_at = source.index("armEar(mic, body.capture);")
     mic_at = source.index('if (body.type === "mic")')
-    assert hello_at < arm_at < mic_at
+    assert hello_at < call_at < mic_at
 
 
 def test_the_browser_stops_local_playback_on_the_barge_in_frame() -> None:
@@ -631,7 +640,13 @@ def test_the_browser_resamples_to_the_rate_the_gateway_named() -> None:
     source = PANEL.read_text(encoding="utf-8")
     assert "function encodeMicFrame(samples, fromRate, toRate)" in source
     assert "mic.rate = Number(body.input && body.input.rate) || 24000;" in source
-    assert "encodeMicFrame(event.inputBuffer.getChannelData(0), mic.capture.sampleRate, mic.rate)" in source
+    # Card MARK-1: the ear is the pinned beam (``ear``), not channel 0 — the
+    # XVF3800's channel 0 is the conference beam and 1 is the ASR beam. The
+    # resample this test is about is unchanged.
+    assert (
+        "encodeMicFrame(event.inputBuffer.getChannelData(ear), mic.capture.sampleRate, mic.rate)"
+        in source
+    )
 
 
 # ================================================ H. the whole pipe, end to end

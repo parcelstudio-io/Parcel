@@ -1,0 +1,47 @@
+--- S5 TOOL_ROAM dead on the product path (src/parcel_robot/safety.py)
+    sha before/after: d8508891eaaec03a / d8508891eaaec03a  identical=True
+    SEEDED : rc=1  2 failed, 54 passed, 1 warning in 2.11s
+    RESTORED: rc=0  56 passed, 1 warning in 2.05s
+--- S6 roam cancels the owner's command on its way out (src/parcel_robot/runtime.py)
+    sha before/after: 0ba366aef198a2f0 / 0ba366aef198a2f0  identical=True
+    SEEDED : rc=1  1 failed, 55 passed, 1 warning in 2.15s
+    RESTORED: rc=0  56 passed, 1 warning in 2.14s
+--- S7 a stale roam command survives the stop (src/parcel_robot/runtime.py)
+    sha before/after: 0ba366aef198a2f0 / 0ba366aef198a2f0  identical=True
+    SEEDED : rc=0  56 passed, 1 warning in 2.05s
+    RESTORED: rc=0  56 passed, 1 warning in 2.08s
+--- S8 the roam config section is refused by the overlay (src/parcel_robot/config.py)
+    sha before/after: 3f41bbbe2790e516 / 3f41bbbe2790e516  identical=True
+    SEEDED : rc=0  56 passed, 1 warning in 2.12s
+    RESTORED: rc=0  56 passed, 1 warning in 2.13s
+--- S9 an untethered roam walks off the map (src/parcel_robot/patrol/mission.py)
+    sha before/after: 0e962c7b398e8af3 / 0e962c7b398e8af3  identical=True
+    SEEDED : rc=1  1 failed, 55 passed, 1 warning in 2.19s
+    RESTORED: rc=0  56 passed, 1 warning in 2.07s
+
+S5 supervisor allowlist: PROVEN
+S6 yield cancels owner: PROVEN
+S7 stop/tick race: NOT PROVEN
+S8 knobs unreachable: NOT PROVEN
+S9 tether: PROVEN
+--- S7 a stale roam command survives the stop (re-cut) (src/parcel_robot/runtime.py)
+    sha before/after: 0ba366aef198a2f0 / 0ba366aef198a2f0  identical=True
+    SEEDED : rc=0  56 passed, 1 warning in 2.07s
+    RESTORED: rc=0  56 passed, 1 warning in 2.06s
+--- S8 the roam config section is refused by the overlay (re-cut) (src/parcel_robot/config.py)
+    sha before/after: 3f41bbbe2790e516 / 3f41bbbe2790e516  identical=True
+    SEEDED : rc=1  2 failed, 54 passed, 1 warning in 2.25s
+    RESTORED: rc=0  56 passed, 1 warning in 2.09s
+
+S7 stop/tick race (re-cut): NOT PROVEN
+S8 knobs unreachable (re-cut): PROVEN
+--- S7 stop/tick race — the shared command lock removed (src/parcel_robot/runtime.py)
+    sha before/after: 0ba366aef198a2f0 / 0ba366aef198a2f0  identical=True
+    SEEDED : rc=0  56 passed, 1 warning in 2.06s
+    RESTORED: rc=0  56 passed, 1 warning in 2.53s
+S7: NOT PROVEN
+--- S7 stop/tick race — the guard restored to its pre-correction shape (src/parcel_robot/runtime.py)
+    sha before/after: 0ba366aef198a2f0 / 0ba366aef198a2f0  identical=True
+    SEEDED : rc=1  1 failed, 55 passed, 1 warning in 2.04s
+    RESTORED: rc=0  56 passed, 1 warning in 2.45s
+S7: PROVEN

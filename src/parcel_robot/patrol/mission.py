@@ -147,6 +147,46 @@ class PatrolLimits:
     turn_flip_after_s: float = 4.0
     #: Cap on one continuous turn, so a boxed-in patrol still ends.
     turn_giveup_after_s: float = 12.0
+    #: Card ROAM-1, and it is the difference between wandering and circling.
+    #:
+    #: MEASURED, on the product path, three consecutive 120 s runs in
+    #: ``--static-city``: 21.85 m of path and **0.14 m of net displacement**,
+    #: with a total heading change of 1404 degrees — 3.90 full turns, every one
+    #: of them the same way. ``_turn`` uses a sign that only ever flips
+    #: mid-turn (``turn_flip_after_s``), so a patrol that clears each blocked
+    #: lane by turning left traces a closed polygon and comes home. It was
+    #: never exploring; it was doing donuts inside a 1.8 x 2.2 m box.
+    #:
+    #: With this on, the sign flips when a turn RELEASES, so consecutive
+    #: avoidance turns alternate and the path opens out instead of closing.
+    #:
+    #: DEFAULT OFF. MOVE-1's policy is a measured artifact and its numbers are
+    #: the baseline the Go2 decision is read against; changing what
+    #: ``PatrolPolicy()`` does by default would silently move that baseline.
+    #: :func:`limits_from_safety` — which only the roam behavior calls — turns
+    #: it on.
+    alternate_turns: bool = False
+    #: Card ROAM-1, added under verification — HOW FAR FROM HOME IS STILL A
+    #: WANDER. ``None`` means unbounded, which is what the shipped policy has
+    #: always been.
+    #:
+    #: MEASURED, and it is why this exists. The third run of the corrected
+    #: arm reported 20.674462 m of net displacement, and the verifier read the
+    #: trace: the robot left the 24 x 24 m road plane at t = 85 s and spent
+    #: 138 of 479 samples driving straight at -84.6 degrees across the
+    #: unfenced infinite ground plane. 8.66 m of that "net displacement"
+    #: accrued off the rendered map. The number was true and it was not the
+    #: number anyone wanted — a dog told to go explore had left the block and
+    #: was still going.
+    #:
+    #: A tether is not a safety device and must never be read as one; the
+    #: reactive gate is untouched and is still the only thing that refuses.
+    #: This is a PROPOSER bound: past it the patrol treats "away from home" the
+    #: way it treats a wall, and turns.
+    #:
+    #: DEFAULT ``None`` so MOVE-1's baseline policy is byte-identical.
+    #: :func:`limits_from_safety` sets it.
+    tether_m: float | None = None
 
     def __post_init__(self) -> None:
         positive = (
@@ -166,8 +206,93 @@ class PatrolLimits:
                 raise ValueError(f"PatrolLimits.{name} must be positive and finite")
         if not math.isfinite(self.clearance_release_margin_m) or self.clearance_release_margin_m < 0.0:
             raise ValueError("PatrolLimits.clearance_release_margin_m must be >= 0")
+        # Card ROAM-1. ``None`` is unbounded; a number must be a real radius.
+        if self.tether_m is not None:
+            if not isinstance(self.tether_m, (int, float)) or isinstance(self.tether_m, bool):
+                raise TypeError("PatrolLimits.tether_m must be a number or None")
+            if not math.isfinite(float(self.tether_m)) or float(self.tether_m) <= 0.0:
+                raise ValueError("PatrolLimits.tether_m must be positive and finite")
         if self.turn_flip_after_s > self.turn_giveup_after_s:
             raise ValueError("turn_flip_after_s must not exceed turn_giveup_after_s")
+
+
+# ===================== CARD ROAM-1 — patrol becomes a product behavior ======
+#
+# MOVE-1 ran this package from a harness with the SHIPPED defaults above, and
+# those defaults were written against the SHIPPED reactive gate
+# (``person_stop_m`` 1.2 m, ``obstacle_stop_m`` 0.65 m). P1-E then made the
+# person zone a config: ``configs/robot.prototype.yaml`` commissions
+# ``safety.person_stop_m: 0.7`` and the runtime boots on it. A patrol that
+# keeps a 1.35 m standoff on a robot whose gate only refuses inside 0.7 m is
+# not being safe — it is turning away from lanes the gate would have allowed,
+# which is the same budget-burning failure E2-D2 measured from the other side.
+#
+# So the roam behavior DERIVES its two clearance thresholds from the gate's own
+# numbers instead of carrying a second copy of them. Nothing here relaxes a
+# gate: these are *proposer* thresholds that sit strictly OUTSIDE the gate's
+# refusal radius, and the gate remains the unconditional last line.
+
+#: How far outside the gate's person stop the proposer keeps itself. 0.15 m is
+#: the margin the shipped defaults already encode (1.35 = 1.2 + 0.15) — carried
+#: forward as a named constant rather than re-derived, so the prototype profile
+#: reproduces the shipped ratio instead of inventing a new one.
+PERSON_CLEARANCE_MARGIN_M = 0.15
+
+#: The same relationship for the obstacle lane: the shipped default 1.5 m sits
+#: 0.85 m outside the 0.65 m ``obstacle_stop_m``.
+FORWARD_CLEARANCE_MARGIN_M = 0.85
+
+#: How far from home a roam may wander when nobody configures it. One number,
+#: read by :func:`limits_from_safety`, by ``RobotRuntime._roam_limits`` and
+#: documented in ``configs/robot.prototype.yaml`` — three readers, one
+#: definition. 10 m is comfortably inside the dev scene's 24 x 24 m road plane,
+#: which is the boundary the untethered run walked off.
+DEFAULT_ROAM_TETHER_M = 10.0
+
+
+def limits_from_safety(
+    *,
+    person_stop_m: float,
+    obstacle_stop_m: float,
+    budget_s: float = 120.0,
+    cruise_vx: float = 0.25,
+    turn_vyaw: float = 0.8,
+    alternate_turns: bool = True,
+    tether_m: float | None = DEFAULT_ROAM_TETHER_M,
+) -> PatrolLimits:
+    """Build :class:`PatrolLimits` from the reactive gate's own thresholds.
+
+    Pure and unit-testable with no runtime: given the two distances the gate
+    will actually refuse at, it returns the proposer thresholds that sit one
+    named margin outside them. Feeding it the SHIPPED numbers
+    (``person_stop_m=1.2``, ``obstacle_stop_m=0.65``) reproduces the shipped
+    defaults exactly, which is the property the card's test pins.
+    """
+
+    for name, value in (
+        ("person_stop_m", person_stop_m),
+        ("obstacle_stop_m", obstacle_stop_m),
+    ):
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            raise TypeError(f"limits_from_safety {name} must be a number")
+        if not math.isfinite(float(value)) or float(value) <= 0.0:
+            raise ValueError(f"limits_from_safety {name} must be positive and finite")
+    return PatrolLimits(
+        budget_s=float(budget_s),
+        cruise_vx=float(cruise_vx),
+        turn_vyaw=float(turn_vyaw),
+        min_forward_clearance_m=float(obstacle_stop_m) + FORWARD_CLEARANCE_MARGIN_M,
+        min_person_clearance_m=float(person_stop_m) + PERSON_CLEARANCE_MARGIN_M,
+        alternate_turns=bool(alternate_turns),
+        # Card ROAM-1, under verification. 10 m is a bounded wander around
+        # home, which is what "go explore" means for a companion — and it is
+        # comfortably inside the 24 x 24 m road plane the dev scene renders, so
+        # a roam cannot walk off the edge of the world and call it progress.
+        tether_m=tether_m,
+    )
+
+
+# ===================== END CARD ROAM-1 region ==============================
 
 
 class PatrolPolicy:
@@ -183,6 +308,11 @@ class PatrolPolicy:
             raise ValueError("turn_sign must be -1 or 1")
         self._turn_sign = turn_sign
         self._turning_since: float | None = None
+        #: Card ROAM-1. Where the roam STARTED, latched on the first sense and
+        #: never moved. The policy has no other notion of home and deliberately
+        #: does not get one from a map: a tether that depended on localisation
+        #: would fail in exactly the situation it exists for.
+        self._home: tuple[float, float] | None = None
 
     @property
     def turning_since(self) -> float | None:
@@ -213,6 +343,29 @@ class PatrolPolicy:
         wrapped = math.atan2(math.sin(bearing), math.cos(bearing))
         return abs(wrapped) < FORWARD_HALF_ANGLE_RAD
 
+    def _tether_blocks(self, sense: PatrolSense, radius_m: float | None) -> bool:
+        """Is the patrol outside its tether AND still heading away from home?
+
+        Card ROAM-1. Distance alone is the wrong question here for the SAME
+        reason it was the wrong question for people (see :meth:`_person_blocks`
+        and the live patrol it deadlocked): a robot turning in place never
+        changes its distance to home, so a distance-only tether can never
+        release and the patrol spins out its whole budget on the boundary. So
+        this asks about the travel DIRECTION — the tether blocks only while
+        home is BEHIND the body, and clears the moment the nose comes round.
+        """
+
+        if radius_m is None or self._home is None:
+            return False
+        dx = self._home[0] - sense.x
+        dy = self._home[1] - sense.y
+        if math.hypot(dx, dy) < radius_m:
+            return False
+        # Bearing to home in the BODY frame; 0 means home is dead ahead.
+        bearing = math.atan2(dy, dx) - sense.yaw
+        wrapped = math.atan2(math.sin(bearing), math.cos(bearing))
+        return abs(wrapped) >= FORWARD_HALF_ANGLE_RAD
+
     def _turn(self, sense: PatrolSense, reason: str) -> PatrolCommand:
         limits = self.limits
         if self._turning_since is None:
@@ -226,6 +379,16 @@ class PatrolPolicy:
             self._turn_sign = -self._turn_sign
             self._turning_since = sense.elapsed_s
         sign = self._turn_sign
+        if reason == "turn_tether" and self._home is not None:
+            # Card ROAM-1. Turn the SHORT way back toward home rather than
+            # whichever way the counter happens to point — the other way takes
+            # the long way round and spends the budget outside the tether.
+            bearing = math.atan2(
+                self._home[1] - sense.y, self._home[0] - sense.x
+            ) - sense.yaw
+            wrapped = math.atan2(math.sin(bearing), math.cos(bearing))
+            if wrapped != 0.0:
+                sign = 1 if wrapped > 0.0 else -1
         if reason == "turn_person" and sense.person_bearing_rad is not None:
             # Turn AWAY from the person rather than whichever way the counter
             # happens to point: a person to port is cleared by turning to
@@ -239,6 +402,11 @@ class PatrolPolicy:
 
     def step(self, sense: PatrolSense) -> PatrolCommand:
         limits = self.limits
+        # Card ROAM-1. Home is wherever the patrol was standing when it was
+        # told to go. Latched before the budget check so a zero-budget policy
+        # still has one, and never re-latched.
+        if self._home is None:
+            self._home = (sense.x, sense.y)
         if sense.elapsed_s >= limits.budget_s:
             self._turning_since = None
             return PatrolCommand(reason="budget_exhausted")
@@ -246,6 +414,10 @@ class PatrolPolicy:
             return self._turn(sense, "turn_contact")
         if self._person_blocks(sense, limits.min_person_clearance_m):
             return self._turn(sense, "turn_person")
+        # Card ROAM-1. Below people (a person is always the more urgent
+        # yield) and above geometry (a wall inside the tether is still a wall).
+        if self._tether_blocks(sense, limits.tether_m):
+            return self._turn(sense, "turn_tether")
         forward = sense.forward_clearance_m
         if forward is not None and forward < limits.min_forward_clearance_m:
             return self._turn(sense, "turn_blocked")
@@ -254,9 +426,21 @@ class PatrolPolicy:
             person_release = limits.min_person_clearance_m + limits.clearance_release_margin_m
             forward_ok = forward is None or forward >= release
             person_ok = not self._person_blocks(sense, person_release)
-            if not (forward_ok and person_ok):
+            # Card ROAM-1. The tether releases on DIRECTION, so it needs no
+            # radius margin: it clears as soon as the nose is pointing home,
+            # which cannot chatter the way a distance boundary can.
+            tether_ok = not self._tether_blocks(sense, limits.tether_m)
+            if not (forward_ok and person_ok and tether_ok):
                 return self._turn(sense, "turn_hold")
             self._turning_since = None
+            # Card ROAM-1. THE RELEASE, which is the only moment a sign flip is
+            # free: the lane ahead is clear, so nothing about this tick's
+            # decision depends on which way the last one turned. Flipping
+            # mid-turn (what ``turn_flip_after_s`` does) is a recovery from
+            # being boxed in; flipping HERE is what stops eighteen consecutive
+            # left turns from closing into a circle.
+            if limits.alternate_turns:
+                self._turn_sign = -self._turn_sign
         return PatrolCommand(vx=limits.cruise_vx, reason="advance")
 
 

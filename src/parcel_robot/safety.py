@@ -85,6 +85,32 @@ class SafetyLimits:
 ALLOWED_BACKENDS = frozenset({"vendor", "rl"})
 _BACKEND_ALIASES = {"sport": "vendor"}
 
+# ===================== CARD ROAM-1 — the behavior allowlist ================
+#
+# ALLOWLIST ENTRIES ONLY. This block adds two names to the set
+# ``_validate_behavior`` accepts and changes NO semantics: the e-stop refusal
+# above it, the argument shape check, and the refusal wording are all
+# untouched, so ``roam`` is refused under a latch by the identical line that
+# refuses ``follow``.
+#
+# WHY IT IS HERE AT ALL. ROAM-1's first pass wired ``TOOL_ROAM`` through the
+# supervisor's existing ``set_behavior`` arm — which was the right door — but
+# never asked the PRODUCT supervisor whether it knew the name. It did not, and
+# the verifier measured what that cost: a product-constructed broker with owner
+# provenance got ``rejected: not started: Unknown behavior: roam`` while
+# ``follow_owner`` sailed through the same door. The tool was dead on arrival
+# and the card's own broker tests could not see it, because they used a stub
+# validator that approved everything. A guard that mocks the authority it is
+# guarding proves nothing about the authority.
+#
+# ``roam_stop`` is a separate mode rather than an argument to ``roam`` for the
+# same reason ``stay`` is separate from ``follow``: whether a call ENDS motion
+# or STARTS it must be answerable from the mode name alone, here, before any
+# argument is read.
+BEHAVIOR_MODES = frozenset({"follow", "follow_behind", "stay", "roam", "roam_stop"})
+
+# ===================== END CARD ROAM-1 region =============================
+
 
 class SafetySupervisor:
     """Fail-closed validation between probabilistic decisions and robot actions."""
@@ -197,7 +223,7 @@ class SafetySupervisor:
         if set(call.arguments) != {"mode"} or not isinstance(call.arguments.get("mode"), str):
             return ToolResult(call.name, False, "set_behavior requires only a string mode")
         mode = call.arguments["mode"]
-        if mode not in {"follow", "follow_behind", "stay"}:
+        if mode not in BEHAVIOR_MODES:
             return ToolResult(call.name, False, f"Unknown behavior: {mode}")
         return ToolResult(call.name, True, f"Behavior approved: {mode}")
 

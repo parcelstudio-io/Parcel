@@ -1213,7 +1213,17 @@ def test_no_live_reader_can_run_here_and_the_report_says_which_half_is_missing(t
     * the refusal names WHICH half is missing, the module or the device, because
       "install the SDK" and "plug the camera in" are different instructions and
       an operator handed the wrong one loses a session morning.
+
+    Card ENV-1b: *which* half the realsense adapter reports is a fact about the
+    venv. ``.parcel`` carries P1-A's ``pyrealsense2``; a venv built from
+    ``pip install .[dev]`` does not, because the ``dev`` extra cannot declare it
+    (no aarch64 wheel — it would break the install on the Orin). Pinning
+    ``device_absent`` unconditionally made a fresh ``.[dev]`` venv fail a test
+    about the product. The invariant that holds in both is the loop below: every
+    live adapter lands in one of the two states, and the two are distinguished.
     """
+
+    import importlib.util
 
     for name in ("rclpy", "cyclonedds", "unitree_sdk2py", "mcap"):
         assert not module_available(name), f"{name} must not be installed in this venv"
@@ -1245,7 +1255,15 @@ def test_no_live_reader_can_run_here_and_the_report_says_which_half_is_missing(t
     assert set(states) == {"dds", "realsense", "l2"}
     # And the two reasons are actually distinguished, not collapsed into one.
     assert states["dds"] == "module_absent"
-    assert states["realsense"] == "device_absent"
+    assert states["realsense"] == (
+        "device_absent" if importlib.util.find_spec("pyrealsense2") else "module_absent"
+    )
+    # The two facts stay separate even in the venv where only one refusal can
+    # fire: the /dev census is import-free, so it answers for the camera whether
+    # or not the wheel is on the path.
+    realsense = next(f for f in LIVE_ADAPTERS if f.adapter_name == "realsense")()
+    assert realsense.device_report().presence is DevicePresence.ABSENT
+    assert realsense.device_report().remedy
 
 
 def test_every_transport_declares_what_a_live_reader_would_need():

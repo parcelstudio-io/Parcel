@@ -88,6 +88,7 @@ import os
 import subprocess
 import sys
 import time
+import traceback
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -352,6 +353,33 @@ DIGEST_SENTINELS: dict[str, str] = {
     "evals/companion/embodied_plan_v1/manifest.json": "d1bb1a8daed637b1620be992d5373dd67d907954b3fc73d0c08c14863519fbcb",
     "evals/companion/personal_convo_v1/manifest.json": "d338f3352cd9597aeb9977f75c139d926bdfba1fe1d6b036b9a3ace08a1cf114",
 }
+
+# ---------------------------------------------------------------------------
+# (b2) UNITREE-ASSETS — card GATE-0 (scrum/20260822/task_20).
+#
+# Both product scenes ``<include>`` the Unitree Go2 MJCF. Until this card the
+# directory was blanket-gitignored and nothing fetched it, so on a fresh clone
+# the FIRST gate that opened a scene (hard-safety, via the mutation panel's live
+# clean run) raised and the whole runner died ~1 s in without a summary. The
+# pack is now a tracked, manifest-pinned 20-file subset at its upstream path,
+# and this stage is the closure contract for it.
+# ---------------------------------------------------------------------------
+UNITREE_ROOT = REPO / "third_party" / "unitree_mujoco"
+UNITREE_PROVENANCE = UNITREE_ROOT / "PROVENANCE.json"
+
+#: Pinned here INDEPENDENTLY of the manifest, on purpose. A self-consistent
+#: replacement pack generated at some other upstream revision validates against
+#: its own manifest perfectly; this constant is the second witness that says
+#: which revision Parcel actually reviewed.
+UNITREE_EXPECTED_REVISION = "ae6a8403e272733e9996ef59990880330496177f"
+
+#: Product scenes are DERIVED, never listed: every scene that includes the pack
+#: is compiled, so adding one cannot silently skip coverage — and one of the two
+#: is a held-out scene (``tests/test_held_out_scene.py``) that this file
+#: therefore does not name.
+PRODUCT_SCENE_DIR = REPO / "src" / "parcel_robot" / "scenes"
+UNITREE_INCLUDE_TOKEN = "third_party/unitree_mujoco/unitree_robots/go2"
+
 
 # ---------------------------------------------------------------------------
 # (c) HARD-SAFETY — product-path artifacts and their pinned invariants.
@@ -677,6 +705,214 @@ def _panel_safety_fields_live() -> dict[str, Any]:
     from scripts.mutation_panel import live_clean_safety_fields
 
     return live_clean_safety_fields()
+
+
+# === GATE-0 region (card scrum/20260822/task_20) — the unitree-assets stage ==
+def _under_repo(path: Path) -> bool:
+    return REPO == path or REPO in path.parents
+
+
+def _repo_rel(path: Path) -> str:
+    """Repo-relative posix path, or the absolute path when it is outside."""
+
+    return path.relative_to(REPO).as_posix() if _under_repo(path) else str(path)
+
+
+def _git_paths(*args: str) -> tuple[set[str], str | None]:
+    """``git ls-files`` output as a set of repo-relative posix paths.
+
+    Card GATE-0. Returns ``(paths, error)``; ``error`` is a short reason when
+    git could not answer (no git binary, not a work tree — a tarball export),
+    in which case the caller records the closure sub-check as SKIPPED rather
+    than passing it vacuously.
+    """
+
+    try:
+        proc = subprocess.run(
+            ["git", *args], cwd=str(REPO), capture_output=True, check=False
+        )
+    except OSError as exc:  # no git binary at all
+        return set(), f"{type(exc).__name__}: {exc}"
+    if proc.returncode != 0:
+        return set(), (proc.stderr.decode("utf-8", "replace").strip() or "git failed")[:160]
+    out = proc.stdout.decode("utf-8", "replace")
+    return {name for name in out.split("\0") if name}, None
+
+
+def evaluate_unitree_assets(
+    *,
+    root: Path = UNITREE_ROOT,
+    provenance: Path = UNITREE_PROVENANCE,
+    expected_revision: str = UNITREE_EXPECTED_REVISION,
+    scene_dir: Path = PRODUCT_SCENE_DIR,
+    tier: str = "commit",
+) -> GateResult:
+    """The vendored Go2 MJCF pack is complete, pinned, closed, and compiles.
+
+    Card GATE-0 (``scrum/20260822/task_20``), the narrowed execution of the Sol
+    session's IG-1. Five things, in the order they can go wrong:
+
+    1. **Pinned.** ``PROVENANCE.json.upstream_revision`` must equal
+       :data:`UNITREE_EXPECTED_REVISION`, a constant this file holds
+       independently — a replacement pack that is self-consistent at some other
+       revision must still redden.
+    2. **Safe paths.** No manifest entry may be absolute, contain ``..``, or
+       carry a ``.git`` component. Checked BEFORE the path is joined to disk.
+    3. **Byte-exact.** Every payload exists at its declared size and sha256.
+    4. **Closed.** The set of files the parent repository would ship under
+       ``third_party/`` equals the manifest plus the manifest itself — an extra
+       file smuggled through the ``.gitignore`` carve-out is a hard red, and so
+       is a tracked gitlink (the 76 MB nested upstream clone must never become
+       a submodule pointer).
+    5. **Compiles.** Every product scene that includes the pack is compiled by
+       MuJoCo. GEOMETRY ONLY: ``MjModel.from_xml_path`` and nothing else — no
+       renderer is constructed, no data is stepped, and no model is run over the
+       pixels, because one of these scenes is held out for a generalization
+       claim (``tests/test_held_out_scene.py``).
+
+    Runs BEFORE ``hard-safety`` because ``hard-safety`` is the gate that used to
+    die on a missing pack, with a traceback instead of a result.
+    """
+
+    name = "unitree-assets"
+    problems: list[str] = []
+    checks: list[str] = []
+
+    if not provenance.is_file():
+        return GateResult(
+            name, tier, True, "fail",
+            f"{_repo_rel(provenance)} is MISSING — the vendored Go2 "
+            "MJCF pack is not in this checkout; both product scenes are uncompilable",
+        )
+    try:
+        manifest = json.loads(provenance.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return GateResult(name, tier, True, "fail", f"PROVENANCE.json is unparseable: {exc}")
+
+    revision = manifest.get("upstream_revision")
+    pinned_ok = revision == expected_revision
+    checks.append(f"upstream_revision {str(revision)[:12]} == pin: {pinned_ok}")
+    if not pinned_ok:
+        problems.append(
+            f"PROVENANCE.json upstream_revision={revision!r} but this gate pins "
+            f"{expected_revision!r}"
+        )
+
+    entries = manifest.get("files")
+    if not isinstance(entries, list) or not entries:
+        problems.append("PROVENANCE.json lists no payload files")
+        entries = []
+
+    declared: set[str] = set()
+    total_bytes = 0
+    for entry in entries:
+        rel = entry.get("path") if isinstance(entry, dict) else None
+        parts = rel.split("/") if isinstance(rel, str) else []
+        unsafe = (
+            not isinstance(rel, str)
+            or not rel
+            or rel.startswith("/")
+            or "\\" in rel
+            or ":" in rel
+            or "" in parts
+            or ".." in parts
+            or ".git" in parts
+        )
+        if unsafe:
+            problems.append(f"unsafe manifest path {rel!r} (absolute, '..', or .git component)")
+            continue
+        declared.add(rel)
+        target = root / rel
+        if not target.is_file():
+            problems.append(f"manifest payload is missing from the checkout: {rel}")
+            continue
+        blob = target.read_bytes()
+        total_bytes += len(blob)
+        if len(blob) != entry.get("size_bytes"):
+            problems.append(f"{rel}: {len(blob)} bytes on disk, manifest says {entry.get('size_bytes')}")
+        digest = hashlib.sha256(blob).hexdigest()
+        if digest != entry.get("sha256"):
+            problems.append(
+                f"{rel}: sha256 {digest[:12]}... != manifest {str(entry.get('sha256'))[:12]}..."
+            )
+    checks.append(
+        f"payload: {len(declared)} manifest file(s), {total_bytes / 1_048_576:.1f} MiB on disk"
+    )
+
+    rel_root = _repo_rel(root) if _under_repo(root) else None
+    if rel_root is None:
+        # A synthetic pack under tmp (the seeded self-tests) has no parent repo
+        # to be closed against. Recorded as skipped, never as passed.
+        tracked = untracked = set()
+        git_err: str | None = "pack root is outside the repository"
+    else:
+        tracked, tracked_err = _git_paths("ls-files", "-z", "--", rel_root)
+        untracked, untracked_err = _git_paths(
+            "ls-files", "-z", "--others", "--exclude-standard", "--", rel_root
+        )
+        git_err = tracked_err or untracked_err
+    if git_err is not None:
+        checks.append(f"shipping closure: SKIPPED ({git_err})")
+    else:
+        shipped = tracked | untracked
+        expected = {f"{rel_root}/{rel}" for rel in declared}
+        expected.add(_repo_rel(provenance))
+        extra = sorted(shipped - expected)
+        hidden = sorted(expected - shipped)
+        checks.append(
+            f"shipping closure: {len(shipped)} path(s) under {rel_root}/, "
+            f"unmanifested={len(extra)} hidden={len(hidden)}"
+        )
+        if extra:
+            problems.append(
+                f"file(s) under {rel_root}/ that the manifest does not declare: {extra[:6]}"
+            )
+        if hidden:
+            problems.append(
+                f"manifest file(s) the parent repo would NOT ship (still ignored): {hidden[:6]}"
+            )
+        staged, staged_err = _git_paths("ls-files", "-s", "-z", "--", rel_root)
+        if staged_err is None:
+            links = sorted(row.split("\t", 1)[-1] for row in staged if row.startswith("160000"))
+            if links:
+                problems.append(f"gitlink(s) tracked under {rel_root}/ (nested repo): {links}")
+            checks.append(f"gitlinks under {rel_root}/: {len(links)}")
+
+    scenes = sorted(
+        path
+        for path in scene_dir.glob("*.xml")
+        if UNITREE_INCLUDE_TOKEN in path.read_text(encoding="utf-8", errors="ignore")
+    )
+    if not scenes:
+        problems.append(
+            f"no scene under {_repo_rel(scene_dir)} includes the pack — "
+            "this gate would be certifying nothing"
+        )
+    for scene in scenes:
+        started = time.perf_counter()
+        try:
+            import mujoco
+
+            model = mujoco.MjModel.from_xml_path(str(scene))
+        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
+            problems.append(
+                f"{scene.name} does not compile: {type(exc).__name__}: "
+                f"{str(exc).splitlines()[0][:200] if str(exc) else '(no message)'}"
+            )
+            continue
+        checks.append(
+            f"{scene.name}: compiled {model.ngeom} geom / {model.nmesh} mesh in "
+            f"{time.perf_counter() - started:.2f}s"
+        )
+
+    detail = " | ".join(checks)
+    if problems:
+        return GateResult(
+            name, tier, True, "fail", "; ".join(problems),
+            extra={"checks": checks, "problems": problems},
+        )
+    return GateResult(name, tier, True, "pass", detail, extra={"checks": checks})
+# === end GATE-0 region =====================================================
 
 
 def evaluate_hard_safety(
@@ -1041,6 +1277,32 @@ def _ruff_fingerprints(root: Path = REPO) -> tuple[list[str], subprocess.Complet
     return sorted(fps), proc
 
 
+# === GATE-0 region (card scrum/20260822/task_20) — the ruff verdict is pinned =
+def ruff_version(root: Path = REPO) -> str | None:
+    """The version of the ruff this gate is about to run, or ``None``.
+
+    Card GATE-0. A ratchet compares today's fingerprints against a recorded set,
+    so it silently means different things under different linters: the same tree
+    yields **7** fingerprints on ruff 0.16.x and roughly **51** on 0.15.x. With
+    ruff range-pinned (``>=0.12,<1``) and the baseline recording no version, the
+    commit verdict depended on whichever wheel pip happened to resolve. The
+    version is now pinned in the dev extra AND stamped into the baseline, and a
+    mismatch is an ERROR rather than a verdict.
+    """
+
+    try:
+        proc = subprocess.run(
+            [PYTHON, "-m", "ruff", "--version"],
+            cwd=str(root), env=_base_env(), capture_output=True, text=True, check=False,
+        )
+    except OSError:
+        return None
+    if proc.returncode != 0:
+        return None
+    parts = (proc.stdout or "").strip().split()
+    return parts[1] if len(parts) >= 2 and parts[0] == "ruff" else None
+
+
 def evaluate_ruff(*, baseline_path: Path = RUFF_BASELINE, tier: str = "commit") -> GateResult:
     """Fail only on ruff violations whose (file, rule) is not in the baseline.
 
@@ -1049,6 +1311,11 @@ def evaluate_ruff(*, baseline_path: Path = RUFF_BASELINE, tier: str = "commit") 
     commit. The ratchet keeps ruff a real per-commit gate — new code must be
     clean — while the debt is burned down separately (it is enumerated in the
     baseline file and in docs/CI.md as a handoff).
+
+    Card GATE-0: the ratchet REFUSES to render a verdict under a ruff other than
+    the one its baseline was recorded on. A baseline is a set of (file, rule)
+    pairs; a different linter has a different rule set, so comparing across
+    versions is comparing two different questions and calling the answer green.
     """
 
     current, proc = _ruff_fingerprints()
@@ -1059,9 +1326,32 @@ def evaluate_ruff(*, baseline_path: Path = RUFF_BASELINE, tier: str = "commit") 
             "ruff", tier, True, "error",
             f"no ruff baseline at {baseline_path.name}; run --update-ruff-baseline",
         )
-    baseline = set(json.loads(baseline_path.read_text(encoding="utf-8")).get("fingerprints", []))
+    doc = json.loads(baseline_path.read_text(encoding="utf-8"))
+    pinned = doc.get("ruff_version")
+    running = ruff_version()
+    if not pinned:
+        return GateResult(
+            "ruff", tier, True, "error",
+            f"{baseline_path.name} records no ruff_version, so its {len(doc.get('fingerprints', []))} "
+            "fingerprint(s) cannot be attributed to a linter; re-pin with --update-ruff-baseline",
+        )
+    if running is None:
+        return GateResult(
+            "ruff", tier, True, "error",
+            "could not read `ruff --version`; the ratchet will not render a verdict "
+            f"under an unknown linter (baseline was recorded on ruff {pinned})",
+        )
+    if running != pinned:
+        return GateResult(
+            "ruff", tier, True, "error",
+            f"ruff {running} is running but {baseline_path.name} was recorded on ruff "
+            f"{pinned}; the rule sets differ, so the ratchet is not comparable. Install "
+            f"the pinned ruff (pyproject dev extra) or re-pin with --update-ruff-baseline",
+            extra={"running": running, "baseline": pinned},
+        )
+    baseline = set(doc.get("fingerprints", []))
     new = sorted(set(current) - baseline)
-    detail = f"{len(current)} violation(s), baseline {len(baseline)}, new {len(new)}"
+    detail = f"ruff {running}: {len(current)} violation(s), baseline {len(baseline)}, new {len(new)}"
     if new:
         return GateResult(
             "ruff", tier, True, "fail",
@@ -1077,14 +1367,19 @@ def update_ruff_baseline(*, baseline_path: Path = RUFF_BASELINE) -> int:
         "note": (
             "Pre-existing ruff debt this CI gate ratchets against. New (file, rule) "
             "fingerprints beyond this set redden scripts/ci_gate.py. Burn down toward "
-            "an empty list; regenerate with `ci_gate.py --update-ruff-baseline`."
+            "an empty list; regenerate with `ci_gate.py --update-ruff-baseline`. "
+            "ruff_version is load-bearing (card GATE-0): the same tree yields 7 "
+            "fingerprints on 0.16.x and ~51 on 0.15.x, so evaluate_ruff refuses to "
+            "compare across versions. Keep it equal to the pyproject dev-extra pin."
         ),
+        "ruff_version": ruff_version(),
         "count": len(current),
         "fingerprints": current,
     }
     baseline_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"wrote {baseline_path} with {len(current)} fingerprint(s)")
+    print(f"wrote {baseline_path} with {len(current)} fingerprint(s) on ruff {payload['ruff_version']}")
     return 0
+# === end GATE-0 region =====================================================
 
 
 # ---------------------------------------------------------------------------
@@ -1380,32 +1675,107 @@ def evaluate_nav_instruct_candidate(tier: str = "nightly") -> list[GateResult]:
 # ---------------------------------------------------------------------------
 
 
+# === GATE-0 region (card scrum/20260822/task_20) — per-stage containment ====
+#: Bounded traceback tail carried on an errored stage. Bounded because a gate
+#: report is read by humans and pasted into status docs.
+STAGE_TRACEBACK_TAIL_CHARS = 1400
+
+#: The stage names ``run_commit_tier`` must produce on EVERY run, crash or not.
+#: ``tests/test_ci_gate.py`` seeds the first evaluator to raise and asserts the
+#: produced names still equal this tuple; that is the containment contract, and
+#: this literal makes adding or dropping a stage a visible edit.
+COMMIT_TIER_STAGE_NAMES: tuple[str, ...] = (
+    "ruff",
+    "unitree-assets",
+    "hard-safety",
+    "release-parity",
+    "assertion-evals",
+    "tier-coverage",
+    "model-off-non-inferiority",
+    "release-parity-integrity",
+    "owner-store-isolation",
+    "default-suite",
+)
+
+
+def run_stage(
+    name: str,
+    evaluate: Callable[[], GateResult | list[GateResult]],
+    *,
+    tier: str,
+    hard: bool = True,
+) -> list[GateResult]:
+    """Run one gate stage so that nothing it does can end the run.
+
+    Card GATE-0. ``run_commit_tier`` used to be a straight-line list build, so
+    the first evaluator that raised took the whole runner with it: on a fresh
+    clone ``evaluate_hard_safety`` hit the gitignored Go2 MJCF about a second
+    in, and the traceback skipped every later gate, the summary, AND ``--json``.
+    A gate that cannot report its own crash reports nothing at all, which is
+    strictly worse than reporting red.
+
+    ``Exception``, never ``BaseException``: an operator's Ctrl-C is not a gate
+    result, so ``KeyboardInterrupt`` and ``SystemExit`` still propagate.
+
+    The contained stage becomes a hard ``error`` result, so the process exit
+    stays non-zero — containment reports the failure, it does not forgive it.
+    """
+
+    try:
+        produced = evaluate()
+    except Exception as exc:  # noqa: BLE001 - deliberate: converted, not swallowed
+        message = str(exc).splitlines()[0][:200] if str(exc) else "(no message)"
+        return [
+            GateResult(
+                name, tier, hard, "error",
+                f"{type(exc).__name__}: {message} "
+                "[stage contained by the GATE-0 wrapper; later gates still ran]",
+                extra={"traceback_tail": traceback.format_exc()[-STAGE_TRACEBACK_TAIL_CHARS:]},
+            )
+        ]
+    return list(produced) if isinstance(produced, list) else [produced]
+
+
 def run_commit_tier() -> list[GateResult]:
     tier = "commit"
-    results: list[GateResult] = []
     # Card P0-E (scrum/20260822/task_5): the commit tier is the SAFETY CORE plus
     # the cheap truth checks. The evidence ratchets — frozen-digest sentinels,
     # the latency and follow-bench ledgers, frozen-digest integrity,
     # mutation-panel freshness, the latency percentile pins — moved to the
     # nightly tier, where they still gate. They protect claims, not the robot,
     # and for the prototype they reddened on doc edits and scene retunes.
+    #
+    # Card GATE-0: the table below is deferred (each entry is a thunk) and every
+    # entry runs under ``run_stage``, so one exploding evaluator costs exactly
+    # one ERROR row and the other nine still report.
     # Cheap deterministic checks first (fast-fail signal without waiting on pytest).
-    results.append(evaluate_ruff(tier=tier))
-    results.append(evaluate_hard_safety(tier=tier))
-    results.append(evaluate_release_parity(tier=tier))
-    results.append(evaluate_assertion_evals(tier=tier, k=1))
-    # Card R26: cheap (three collections, no execution) and it is the only gate
-    # that can see a whole tier going dark.
-    results.append(evaluate_tier_coverage(tier=tier))
-    # Targeted hard-gate pytest selections (small, fast).
-    results.append(_pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900))
-    results.append(_pytest_gate("release-parity-integrity", tier, RELEASE_PARITY_NODE_IDS, timeout=600))
-    results.append(_pytest_gate("owner-store-isolation", tier, OWNER_STORE_NODE_IDS, timeout=900))
-    # The full default gate last (latest recorded: 7,715 passed on 2026-08-21).
-    results.append(
-        _pytest_gate("default-suite", tier, (), markers="not slow", timeout=1800)
+    stages: tuple[tuple[str, Callable[[], GateResult | list[GateResult]]], ...] = (
+        ("ruff", lambda: evaluate_ruff(tier=tier)),
+        # Card GATE-0: the simulator payload, BEFORE hard-safety — hard-safety is
+        # the gate that used to die on it.
+        ("unitree-assets", lambda: evaluate_unitree_assets(tier=tier)),
+        ("hard-safety", lambda: evaluate_hard_safety(tier=tier)),
+        ("release-parity", lambda: evaluate_release_parity(tier=tier)),
+        ("assertion-evals", lambda: evaluate_assertion_evals(tier=tier, k=1)),
+        # Card R26: cheap (three collections, no execution) and it is the only gate
+        # that can see a whole tier going dark.
+        ("tier-coverage", lambda: evaluate_tier_coverage(tier=tier)),
+        # Targeted hard-gate pytest selections (small, fast).
+        ("model-off-non-inferiority",
+         lambda: _pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900)),
+        ("release-parity-integrity",
+         lambda: _pytest_gate("release-parity-integrity", tier, RELEASE_PARITY_NODE_IDS, timeout=600)),
+        ("owner-store-isolation",
+         lambda: _pytest_gate("owner-store-isolation", tier, OWNER_STORE_NODE_IDS, timeout=900)),
+        # The full default gate last (latest recorded: 7,715 passed on 2026-08-21).
+        ("default-suite",
+         lambda: _pytest_gate("default-suite", tier, (), markers="not slow", timeout=1800)),
     )
+    results: list[GateResult] = []
+    for stage_name, evaluate in stages:
+        results.extend(run_stage(stage_name, evaluate, tier=tier))
     return results
+# === end GATE-0 region =====================================================
 
 
 #: Card R26. Environment the nightly's pytest subprocesses run under.
@@ -1421,6 +1791,10 @@ def run_nightly_tier() -> list[GateResult]:
     results: list[GateResult] = []
     # Re-run every commit hard gate (nightly is a superset).
     results.append(evaluate_ruff(tier=tier))
+    # Card GATE-0: the same simulator-payload closure the commit tier runs. The
+    # superset invariant is executable (tests/test_ci_gate.py), so this is not
+    # an optional echo.
+    results.append(evaluate_unitree_assets(tier=tier))
     results.append(evaluate_hard_safety(tier=tier))
     results.append(evaluate_frozen_digest_sentinels(DIGEST_SENTINELS, tier=tier))
     results.append(evaluate_release_parity(tier=tier))

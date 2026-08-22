@@ -58,8 +58,35 @@ models/**/*.incomplete
 *.incomplete
 MUJOCO_LOG.TXT
 
-# Nested clone of Sesame CSM (has its own .git)
-third_party/
+# Vendored third-party trees. Every nested clone here carries its own .git and
+# is ignored wholesale (Sesame CSM, CityWalker, fish-speech, llama.cpp, ...).
+#
+# THE ONE CARVE-OUT (card GATE-0, scrum/20260822/task_20): both product scenes
+# `<include>` the Unitree Go2 MJCF at
+# `third_party/unitree_mujoco/unitree_robots/go2/go2.xml`, so a blanket ignore
+# made a fresh clone unable to compile `city_block.xml` at all — `ci_gate.py
+# --tier commit` died ~1 s in with an unhandled ValueError and never emitted a
+# summary. The 20-file manifest-pinned subset below (LICENSE, PROVENANCE.json,
+# two MJCF files, 16 OBJ meshes; 27.1 MiB) is therefore TRACKED, at its
+# upstream path so the scenes' include lines and the frozen scene digests do
+# not move. `tests/test_unitree_asset_pack.py` + the `unitree-assets` gate
+# stage enforce exact closure: an unmanifested file here is a hard red.
+# Nothing else under third_party/ — including the nested .git directories and
+# the 296 MB developer checkout this subset came from — is exposed.
+third_party/*
+!third_party/unitree_mujoco/
+third_party/unitree_mujoco/*
+!third_party/unitree_mujoco/LICENSE
+!third_party/unitree_mujoco/PROVENANCE.json
+!third_party/unitree_mujoco/unitree_robots/
+third_party/unitree_mujoco/unitree_robots/*
+!third_party/unitree_mujoco/unitree_robots/go2/
+third_party/unitree_mujoco/unitree_robots/go2/*
+!third_party/unitree_mujoco/unitree_robots/go2/go2.xml
+!third_party/unitree_mujoco/unitree_robots/go2/scene.xml
+!third_party/unitree_mujoco/unitree_robots/go2/assets/
+third_party/unitree_mujoco/unitree_robots/go2/assets/*
+!third_party/unitree_mujoco/unitree_robots/go2/assets/*.obj
 /usr/
 
 .tmp_ci/

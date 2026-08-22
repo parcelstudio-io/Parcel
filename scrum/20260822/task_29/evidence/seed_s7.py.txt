@@ -1,0 +1,85 @@
+"""FINISH-1: does the stop/tick race guard have a seed that reddens?
+
+Three variants, because the guard has two halves and the first correction pass
+recorded S7 as NOT PROVEN with the lock alone seeded out.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import os
+import shutil
+import subprocess
+from pathlib import Path
+
+REPO = Path("/home/jaewoo-jang/Desktop/Projects/Parcel")
+CACHE = Path("/home/jaewoo-jang/.cache/parcel-finish1")
+TARGET = REPO / "src/parcel_robot/runtime.py"
+TEST = "tests/test_roam1_behavior.py"
+
+LOCK_OLD = """        with self._command_lock:
+            with self._lock:
+                still_roaming = self._roam_policy is policy"""
+LOCK_NEW = """        if True:  # SEED S7a: the command lock dropped around the tick
+            with self._lock:
+                still_roaming = self._roam_policy is policy"""
+
+POST_OLD = """            accepted = self._submit_roam_command(command)
+            with self._lock:
+                if self._roam_policy is not policy:
+                    self.arbiter.cancel("voice")
+                    return
+"""
+POST_NEW = """            accepted = self._submit_roam_command(command)
+            with self._lock:
+"""
+
+
+def purge() -> None:
+    subprocess.run(
+        ["bash", "-c", "find . -name __pycache__ -type d -not -path './.parcel/*' -exec rm -rf {} + 2>/dev/null"],
+        cwd=REPO, check=False,
+    )
+
+
+def run() -> str:
+    env = dict(os.environ)
+    env.pop("TMPDIR", None)
+    proc = subprocess.run(
+        [str(REPO / ".parcel/bin/python"), "-m", "pytest", TEST, "-q", "--no-header",
+         "-p", "no:cacheprovider"],
+        cwd=REPO, capture_output=True, text=True, env=env, check=False,
+    )
+    lines = [line for line in proc.stdout.strip().splitlines() if line.strip()]
+    failed = [line for line in lines if line.startswith("FAILED")]
+    return " | ".join([*failed, lines[-1]])
+
+
+def main() -> None:
+    original = TARGET.read_bytes()
+    before = hashlib.sha256(original).hexdigest()
+    shutil.copyfile(TARGET, CACHE / "runtime.py.orig")
+    print(f"runtime.py sha256 before: {before}")
+    purge()
+    print(f"CONTROL   : {run()}")
+    for label, pairs in (
+        ("S7a lock only", [(LOCK_OLD, LOCK_NEW)]),
+        ("S7b post-check only", [(POST_OLD, POST_NEW)]),
+        ("S7c both halves", [(LOCK_OLD, LOCK_NEW), (POST_OLD, POST_NEW)]),
+    ):
+        text = original.decode("utf-8")
+        for old, new in pairs:
+            assert text.count(old) == 1, f"{label}: anchor count {text.count(old)}"
+            text = text.replace(old, new)
+        TARGET.write_text(text, encoding="utf-8")
+        purge()
+        print(f"{label:22s}: {run()}")
+        TARGET.write_bytes(original)
+        assert hashlib.sha256(TARGET.read_bytes()).hexdigest() == before, "RESTORE MISMATCH"
+    purge()
+    print(f"RESTORED  : {run()}")
+    print(f"runtime.py sha256 after : {hashlib.sha256(TARGET.read_bytes()).hexdigest()}")
+
+
+if __name__ == "__main__":
+    main()

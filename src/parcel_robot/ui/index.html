@@ -2485,6 +2485,10 @@
     const MIC_LABEL_IDLE = "🎙 Enable microphone";
     const MIC_LABEL_LIVE = "🔴 Listening · click to stop";
     const MIC_LABEL_BUSY = "🎙 Connecting…";
+    // Card MARK-1. How often this tab reports what the owner has heard while
+    // hosted audio is rendering. Ten a second is nothing on the wire and it
+    // bounds how stale the truncate point can be when a barge-in lands.
+    const PLAYED_ACK_INTERVAL_MS = 100;
 
     function micLabel(text) {
       const button = el("mic-button");
@@ -2510,6 +2514,10 @@
       const mic = state.mic;
       state.mic = null;
       if (!mic) return;
+      // Card MARK-1: the played-ack timer dies with the microphone it reports
+      // on. A tab that closed the mic four times would otherwise carry four
+      // live intervals, each of them talking about a socket that is gone.
+      try { if (mic.ackTimer) clearInterval(mic.ackTimer); } catch (_) {}
       try { if (mic.processor) mic.processor.disconnect(); } catch (_) {}
       try { if (mic.source) mic.source.disconnect(); } catch (_) {}
       try { if (mic.stream) mic.stream.getTracks().forEach((track) => track.stop()); } catch (_) {}
@@ -2564,27 +2572,66 @@
       }
       source.start(mic.playAt);
       mic.playAt += audio.duration;
+      // Card MARK-1. Every millisecond of this utterance that has been HANDED
+      // to the audio clock. Together with `playAt` this is what makes the
+      // played position survive a stall: see `playedMs`.
+      mic.scheduledMs += audio.duration * 1000;
       mic.sources.push(source);
       source.onended = () => {
         const at = mic.sources.indexOf(source);
         if (at >= 0) mic.sources.splice(at, 1);
       };
-      // What the owner has ACTUALLY heard so far, from the audio clock rather
-      // than from arrival time. The gateway clamps it before the lane uses it
-      // to truncate the model's belief about its own reply.
-      if (mic.socket.readyState === 1 && mic.utterance) {
-        const played = Math.max(0, (mic.playback.currentTime - mic.playStart) * 1000);
-        mic.socket.send(JSON.stringify({ type: "played", utterance: mic.utterance, ms: played }));
-      }
+      mic.wasRendering = true;
+      sendPlayed(mic, false);
+    }
+
+    // CARD MARK-1 — WHAT THE OWNER HAS ACTUALLY HEARD OF THIS REPLY
+    // Scheduled minus not-yet-played. Both halves come from the audio clock, so
+    // a gap moves neither: if the stream stalls and the schedule runs dry,
+    // `scheduledMs` stops growing and `playAt - currentTime` is already zero,
+    // and the answer stays "everything we were given" instead of collapsing.
+    //
+    // The formula this replaces was `currentTime - playStart`, which is only the
+    // same number while playback is unbroken. `playStart` is re-stamped every
+    // time the schedule underruns, so mid-reply — with the owner still
+    // listening — it reported ~0 and dragged the truncate point back with it.
+    // Measured on the R7 rig: 1 441 ms of error on the stall fixtures, against
+    // 1 ms for this (tests/test_mark1_barge_in_mark.py).
+    function playedMs(mic) {
+      if (!mic.playback) return 0;
+      const remaining = Math.max(0, (mic.playAt - mic.playback.currentTime) * 1000);
+      return Math.max(0, Math.min(mic.scheduledMs, mic.scheduledMs - remaining));
+    }
+
+    // The gateway clamps this before the lane uses it to truncate the model's
+    // belief about its own reply, and refuses it if it ever walks backwards.
+    //
+    // `drained` means "the schedule has run dry here": there is nothing left to
+    // play, so the played position has STOPPED and the gateway must stop
+    // extrapolating it forward with the wall clock. Without it the timer simply
+    // goes quiet at the one moment the two clocks diverge, and the only thing
+    // bounding the truncate is how much audio happened to be enqueued.
+    function sendPlayed(mic, drained) {
+      if (!mic.socket || mic.socket.readyState !== 1 || !mic.utterance) return;
+      mic.socket.send(JSON.stringify({
+        type: "played", utterance: mic.utterance, ms: playedMs(mic), drained: !!drained,
+      }));
     }
 
     // Barge-in, browser half. The lane already cancels the response and tells
     // the provider how much was heard; without this the audio already sitting
     // in this tab's own buffer would keep talking over the owner.
     function stopPlayback(mic) {
+      // Card MARK-1: one last ack with the final position, BEFORE the state
+      // that computes it is thrown away. The lane truncated the moment VAD
+      // fired, so this cannot move the mark — it is the browser's own last word
+      // on what came out of the speaker, for the record.
+      sendPlayed(mic, true);
       mic.sources.splice(0).forEach((source) => { try { source.stop(); } catch (_) {} });
       mic.playAt = 0;
       mic.playStart = 0;
+      mic.scheduledMs = 0;
+      mic.wasRendering = false;
     }
 
     async function startMic() {
@@ -2616,9 +2663,35 @@
         utterance: 0,
         playAt: 0,
         playStart: 0,
+        // Card MARK-1: audio handed to the clock for this utterance, the ear
+        // that was actually opened, and the ~100 ms played-ack timer.
+        scheduledMs: 0,
+        wasRendering: false,
+        captureChannels: 1,
+        beam: 0,
+        ackTimer: null,
         sources: [],
       };
       state.mic = mic;
+      // The played clock must not stop when the CHUNKS stop. Chunks arrive far
+      // faster than they play — thirteen of them inside a second in R7's live
+      // sessions — so a client that only reports on arrival stops reporting
+      // seconds before the owner stops listening, and every barge-in after that
+      // truncates the reply at whatever the last arrival happened to say.
+      mic.ackTimer = setInterval(() => {
+        if (state.mic !== mic) return;
+        if (!mic.playback) return;
+        const rendering = mic.playAt > mic.playback.currentTime;
+        if (rendering) {
+          sendPlayed(mic, false);
+        } else if (mic.wasRendering) {
+          // The edge, once: the schedule just ran dry. Reporting the position
+          // here is what tells the gateway to freeze it instead of assuming
+          // audio kept coming out of a speaker that has gone silent.
+          sendPlayed(mic, true);
+        }
+        mic.wasRendering = rendering;
+      }, PLAYED_ACK_INTERVAL_MS);
 
       socket.addEventListener("message", (event) => {
         if (state.mic !== mic) return;
@@ -2632,8 +2705,10 @@
           mic.rate = Number(body.input && body.input.rate) || 24000;
           mic.maxFrameBytes = Number(body.input && body.input.max_frame_bytes) || 32768;
           // Connected is not listening: the gateway keeps the ear shut until
-          // this frame, which only ever follows the click that got us here.
-          socket.send(JSON.stringify({ type: "mic", on: true }));
+          // the mic frame, which only ever follows the click that got us here.
+          // Card MARK-1: `capture` says which ear to open before we say we are
+          // open, so the gateway can refuse a downmix instead of accepting one.
+          armEar(mic, body.capture);
           return;
         }
         if (body.type === "mic") {
@@ -2649,6 +2724,8 @@
           mic.utterance = Number(body.utterance) || 0;
           mic.playAt = 0;
           mic.playStart = 0;
+          mic.scheduledMs = 0;
+          mic.wasRendering = false;
           return;
         }
         if (body.type === "stop") {
@@ -2669,6 +2746,52 @@
       });
     }
 
+    // CARD MARK-1 — THE EAR TAKES THE BEAM THE GATEWAY PINS
+    // The reSpeaker XVF3800 presents TWO capture channels: ch0 is the
+    // conference beam and ch1 is the ASR beam. `channelCount: 1` does not pick
+    // one — it makes the audio stack AVERAGE them, which is a third, worse
+    // microphone. When the gateway's hello pins a beam we widen the track to
+    // that many channels and turn off the browser's own AEC/NS, because the
+    // array does both on-chip and Chrome's AEC3 downmixes to mono to do its
+    // job. With no pin (the shipped default) NOTHING here runs: no
+    // applyConstraints, no AEC change, one channel with Chrome's AEC, exactly
+    // as before. Either way we tell the gateway which ear we actually got, and
+    // it decides whether that is acceptable.
+    //
+    // `beam` MUST be tested with Number.isInteger and never with
+    // Number.isFinite(Number(beam)). The shipped hello is
+    // `capture: {"channels": 1, "beam": null}` (the gateway is built unpinned —
+    // runtime.py:7636), ECMA-262 ToNumber(null) is +0, and +0 is finite — so a
+    // isFinite test reads "no pin" as "pin channel 0" and takes Chrome's AEC
+    // off the owner's microphone on the very first click. With no array AEC
+    // reference routed yet (card AIR-1) Chrome's AEC3 is the ONLY echo
+    // canceller in the loop, so that is the robot barging in on its own voice.
+    // Number.isInteger(null) is false. Pinned by test under gjs; see
+    // tests/test_mark1_browser_ear.py::test_the_unpinned_hello_leaves_the_microphone_alone.
+    async function armEar(mic, pin) {
+      const track = (mic.stream.getAudioTracks && mic.stream.getAudioTracks()[0]) || null;
+      const wants = pin && pin.beam !== null && Number.isInteger(pin.beam) ? pin : null;
+      if (track && wants && track.applyConstraints) {
+        try {
+          await track.applyConstraints({
+            channelCount: Number(wants.channels) || 2,
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+          });
+        } catch (error) {
+          showToast(`Microphone could not open ${Number(wants.channels) || 2} channels`);
+        }
+      }
+      const settings = track && track.getSettings ? track.getSettings() : {};
+      mic.captureChannels = Math.max(1, Number(settings.channelCount) || 1);
+      mic.beam = wants ? Math.max(0, Number(wants.beam)) : 0;
+      if (state.mic !== mic || mic.socket.readyState !== 1) return;
+      mic.socket.send(JSON.stringify({
+        type: "mic", on: true, channels: mic.captureChannels, beam: mic.beam,
+      }));
+    }
+
     function armCapture(mic) {
       if (mic.processor) return;
       mic.capture = new AudioContext();
@@ -2678,10 +2801,13 @@
       // works here: an AudioWorklet needs a blob: module URL and the panel's
       // Content-Security-Policy is `default-src 'self'`.
       const frames = 2048;
-      mic.processor = mic.capture.createScriptProcessor(frames, 1, 1);
+      mic.processor = mic.capture.createScriptProcessor(frames, mic.captureChannels, 1);
       mic.processor.onaudioprocess = (event) => {
         if (state.mic !== mic || mic.socket.readyState !== 1) return;
-        const payload = encodeMicFrame(event.inputBuffer.getChannelData(0), mic.capture.sampleRate, mic.rate);
+        // Card MARK-1: the pinned beam, or channel 0 when there is only one ear
+        // to take. Never an average of the two.
+        const ear = Math.min(mic.beam, event.inputBuffer.numberOfChannels - 1);
+        const payload = encodeMicFrame(event.inputBuffer.getChannelData(ear), mic.capture.sampleRate, mic.rate);
         // Mic frames keep flowing while hosted audio plays — that is what makes
         // barge-in possible at all. Oversized frames are the gateway's refusal
         // to make, not ours; this only refuses to exceed the stated cap.

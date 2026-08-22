@@ -165,3 +165,47 @@ owner_follow:
 # Nothing is written here for it on purpose: an unrecognised top-level key in
 # robot.yaml is SILENTLY IGNORED by ConfigStore, so a `voice_identity:` block
 # in this file would look like a setting and be nothing at all.
+
+# ---------------------------------------------------------------------------
+# ROAM — "go explore", and the four numbers that decide what that means.
+# Card ROAM-1 (scrum/20260822/task_23/ROAM1_STATUS.md).
+#
+# The behavior is PatrolPolicy (src/parcel_robot/patrol/mission.py), driven by
+# the runtime's own control loop and reached three ways: the spoken/typed
+# closed intent ("go explore", "have a wander"), the hosted `roam` tool, and
+# RobotRuntime.start_roam directly. It is owner-commanded only — `roam` is in
+# realtime.config.PROACTIVE_MOTION_REFUSED, so no config can make the dog
+# decide to leave on its own.
+#
+# This whole section is OPTIONAL. Every key below has a code default and the
+# behavior works with the section absent; the base robot.yaml is SHA-locked and
+# omits it, so the five paths are listed in config.OVERLAY_INTRODUCIBLE_KEYS.
+#
+# NOT HERE, on purpose: the two clearance thresholds. They are DERIVED from
+# `safety.person_stop_m` and `safety.obstacle_stop_m` above by
+# patrol.limits_from_safety, one named margin outside each, so the patrol can
+# never be tuned INSIDE the gate that refuses it. Change the zone, not the
+# patrol.
+roam:
+  # Default roam length when the owner does not say how long. Clamped to
+  # [MIN_ROAM_BUDGET_S, MAX_ROAM_BUDGET_S] = [15, 600] by start_roam.
+  # 120 s matches MOVE-1's measurement window, which is what makes the card's
+  # three runs comparable with its 0.134 m baseline.
+  budget_s: 120.0
+  # Cruise speed while the lane ahead is clear, m/s. The reactive gate still
+  # scales and stops this; it is a proposal, not a floor.
+  cruise_vx: 0.25
+  # Yaw rate while turning away from a blocked lane, rad/s.
+  turn_vyaw: 0.8
+  # Flip the turn direction when a turn RELEASES, so consecutive avoidance
+  # turns alternate. Measured with it OFF: 21.85 m of path against 0.14 m of
+  # net displacement — 3.90 full turns, all one way, a closed circle inside a
+  # 1.8 x 2.2 m box. The dog was doing donuts. Leave this on.
+  alternate_turns: true
+  # How far from where it started a roam may wander, metres. Measured with it
+  # absent: one run left the 24 x 24 m road plane at t = 85 s and drove
+  # straight across the unfenced ground plane, banking 8.66 m of "net
+  # displacement" off the rendered map. NOT a safety device — the reactive gate
+  # is the only thing that refuses — it is a proposer bound that makes the dog
+  # turn around, so "go explore" stays a wander around home.
+  tether_m: 10.0

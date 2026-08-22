@@ -1,0 +1,127 @@
+=== tethered run 1 ===
+[0;93m2026-08-22 12:09:15.311444685 [W:onnxruntime:, transformer_memcpy.cc:111 ApplyImpl] 3 Memcpy nodes are added to the graph main_graph for CUDAExecutionProvider. It might have negative impact on performance (including unable to run CUDA graph). Set session_options.log_severity_level=1 to see the detail logs before this message.[m
+{
+  "arm": "static",
+  "person_stop_m": 0.7,
+  "path_length_m": 26.137395,
+  "net_displacement_m": 6.54006,
+  "net_displacement_in_block_m": 6.54006,
+  "in_bounds": true,
+  "bounds": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": true,
+    "net_displacement_m": 6.54006,
+    "net_displacement_in_block_m": 6.54006,
+    "out_of_block_samples": 0,
+    "left_block_at_s": null,
+    "max_abs_x_m": 3.644473,
+    "max_abs_y_m": 10.01271
+  },
+  "collision_ticks": 0,
+  "min_person_clearance_m": 1.156364,
+  "roam_active_samples": 479,
+  "samples": 479,
+  "reasons": {
+    "advance": 422,
+    "turn_blocked": 37,
+    "turn_hold": 9,
+    "turn_tether": 11
+  },
+  "ingress_latency_s": 0.0005,
+  "first_tick_latency_s": 0.101,
+  "stop_latency_s": 0.5006,
+  "stop_active_after": false,
+  "owner_store": {
+    "sha256_before": null,
+    "sha256_after": null,
+    "unchanged": true
+  }
+}
+
+wrote scrum/20260822/task_23/evidence/roam_static_tethered_1/summary.json
+=== run 1 exit 0 ===
+=== tethered run 2 ===
+[0;93m2026-08-22 12:11:20.258884928 [W:onnxruntime:, transformer_memcpy.cc:111 ApplyImpl] 3 Memcpy nodes are added to the graph main_graph for CUDAExecutionProvider. It might have negative impact on performance (including unable to run CUDA graph). Set session_options.log_severity_level=1 to see the detail logs before this message.[m
+{
+  "arm": "static",
+  "person_stop_m": 0.7,
+  "path_length_m": 26.133556,
+  "net_displacement_m": 6.474798,
+  "net_displacement_in_block_m": 6.474798,
+  "in_bounds": true,
+  "bounds": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": true,
+    "net_displacement_m": 6.474798,
+    "net_displacement_in_block_m": 6.474798,
+    "out_of_block_samples": 0,
+    "left_block_at_s": null,
+    "max_abs_x_m": 3.671429,
+    "max_abs_y_m": 9.971351
+  },
+  "collision_ticks": 0,
+  "min_person_clearance_m": 1.164318,
+  "roam_active_samples": 479,
+  "samples": 479,
+  "reasons": {
+    "advance": 422,
+    "turn_blocked": 35,
+    "turn_hold": 12,
+    "turn_tether": 10
+  },
+  "ingress_latency_s": 0.0005,
+  "first_tick_latency_s": 0.0809,
+  "stop_latency_s": 0.5008,
+  "stop_active_after": false,
+  "owner_store": {
+    "sha256_before": null,
+    "sha256_after": null,
+    "unchanged": true
+  }
+}
+
+wrote scrum/20260822/task_23/evidence/roam_static_tethered_2/summary.json
+=== run 2 exit 0 ===
+=== tethered run 3 ===
+[0;93m2026-08-22 12:13:25.170470669 [W:onnxruntime:, transformer_memcpy.cc:111 ApplyImpl] 3 Memcpy nodes are added to the graph main_graph for CUDAExecutionProvider. It might have negative impact on performance (including unable to run CUDA graph). Set session_options.log_severity_level=1 to see the detail logs before this message.[m
+{
+  "arm": "static",
+  "person_stop_m": 0.7,
+  "path_length_m": 25.990399,
+  "net_displacement_m": 6.558471,
+  "net_displacement_in_block_m": 6.558471,
+  "in_bounds": true,
+  "bounds": {
+    "block_half_extent_m": 12.0,
+    "in_bounds": true,
+    "net_displacement_m": 6.558471,
+    "net_displacement_in_block_m": 6.558471,
+    "out_of_block_samples": 0,
+    "left_block_at_s": null,
+    "max_abs_x_m": 3.594768,
+    "max_abs_y_m": 9.96169
+  },
+  "collision_ticks": 0,
+  "min_person_clearance_m": 1.127456,
+  "roam_active_samples": 479,
+  "samples": 479,
+  "reasons": {
+    "advance": 420,
+    "turn_blocked": 40,
+    "turn_hold": 8,
+    "turn_tether": 11
+  },
+  "ingress_latency_s": 0.0005,
+  "first_tick_latency_s": 0.0608,
+  "stop_latency_s": 0.0009,
+  "stop_active_after": false,
+  "owner_store": {
+    "sha256_before": null,
+    "sha256_after": null,
+    "unchanged": true
+  }
+}
+
+wrote scrum/20260822/task_23/evidence/roam_static_tethered_3/summary.json
+=== run 3 exit 0 ===
+ALLDONE

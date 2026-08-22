@@ -1698,7 +1698,19 @@ def test_a_full_preflight_run_never_imports_a_vendor_sdk() -> None:
     refuses ``device_node_missing`` without the SDK ever entering
     ``sys.modules``. The second half of this test pins the reason, so the
     property can never again be satisfied by the probe simply not running.
+
+    Card ENV-1b: the reason it pins depends on the venv. ``.parcel`` carries
+    P1-A's wheel; a venv built from ``pip install .[dev]`` does not, because the
+    ``dev`` extra cannot declare ``pyrealsense2`` (no aarch64 wheel — it would
+    break the install on the Orin). So the module arm is asserted instead of
+    skipped: without the wheel every D455 row must read ``dependency_missing``
+    naming ``pyrealsense2``, and ``VENDOR []`` — the property itself — holds
+    unbranched in both venvs.
     """
+
+    import importlib.util
+
+    wheel_installed = importlib.util.find_spec("pyrealsense2") is not None
 
     script = (
         f"import sys;"
@@ -1724,11 +1736,22 @@ def test_a_full_preflight_run_never_imports_a_vendor_sdk() -> None:
     assert "EXIT 2" in proc.stdout
     assert "VENDOR []" in proc.stdout
 
-    # The six D455 rows must be ABSENT for the DEVICE, named and actionable —
-    # not ABSENT because a probe crashed. Before this card they read
-    # "probe_raised — RuntimeError: stop() cannot be called before start()",
-    # which names the wrong call, no device, and no remedy.
-    for channel_id in ("d455.color", "d455.depth", "d455.infra1", "d455.infra2"):
+    # The D455 rows must be ABSENT for a NAMED reason, actionable — not ABSENT
+    # because a probe crashed. Before card ENV-1 they read "probe_raised —
+    # RuntimeError: stop() cannot be called before start()", which names the
+    # wrong call, no device, and no remedy.
+    #
+    # Card ENV-1b: ALL SIX rows, not four. The product emits accel and gyro too
+    # (they are `motion` streams, a different branch of `stream_selection`), and
+    # pinning four of six left the two that take the other branch unguarded.
+    for channel_id in (
+        "d455.color",
+        "d455.depth",
+        "d455.infra1",
+        "d455.infra2",
+        "d455.accel",
+        "d455.gyro",
+    ):
         line = next(
             (
                 item
@@ -1738,10 +1761,15 @@ def test_a_full_preflight_run_never_imports_a_vendor_sdk() -> None:
             None,
         )
         assert line is not None, f"{channel_id} produced no absence finding at all"
-        assert "device_node_missing" in line, line
         assert "probe_raised" not in line, line
-        assert "/dev/video*" in line, line
-        assert "USB 3 (BLUE)" in line, line
+        if wheel_installed:
+            assert "device_node_missing" in line, line
+            assert "/dev/video*" in line, line
+            assert "USB 3 (BLUE)" in line, line
+        else:
+            # A fresh `.[dev]` venv stops one gate earlier, and says so by name.
+            assert "dependency_missing" in line, line
+            assert "pyrealsense2" in line, line
 
     # The dog's rows still say dependency_missing: that SDK really is absent,
     # and collapsing the two reasons would cost a session-day of debugging.

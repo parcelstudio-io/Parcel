@@ -1,0 +1,35 @@
+# run A — HEAD 8862220's runner, Unitree pack hidden, clean clone (CPython 3.12.13)
+# command: ./.venv/bin/python scripts/_head_ci_gate.py --tier commit --json ; rc=1
+# stdout was EMPTY (0 bytes): no summary, no JSON.
+# stderr:
+Traceback (most recent call last):
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/_head_ci_gate.py", line 1524, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/_head_ci_gate.py", line 1511, in main
+    results = run_commit_tier() if args.tier == "commit" else run_nightly_tier()
+              ^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/_head_ci_gate.py", line 1394, in run_commit_tier
+    results.append(evaluate_hard_safety(tier=tier))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/_head_ci_gate.py", line 757, in evaluate_hard_safety
+    live_fields = reproducer()
+                  ^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/_head_ci_gate.py", line 679, in _panel_safety_fields_live
+    return live_clean_safety_fields()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/mutation_panel.py", line 270, in live_clean_safety_fields
+    clean = run_once(_episodes(episode_ids), max_steps=max_steps)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/mutation_panel.py", line 607, in run_once
+    runner = NavInstructRunner(
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/evals/nav_instruct/runner.py", line 712, in __init__
+    HeadlessCityWorld() if scene is None else HeadlessCityWorld(scene)
+    ^^^^^^^^^^^^^^^^^^^
+  File "/home/jaewoo-jang/.cache/parcel-gate0/clean/src/parcel_robot/headless_city.py", line 147, in __init__
+    self.model = mujoco.MjModel.from_xml_path(str(self.scene))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: XML Error: Error opening file '../../../third_party/unitree_mujoco/unitree_robots/go2/go2.xml'
+Element 'include', line 17
+

@@ -84,6 +84,7 @@ from .protocol import (
     FunctionCallOutput,
     InputAudioBufferAppend,
     InputTranscriptionCompleted,
+    LifecycleEvent,
     OutputAudioDelta,
     OutputAudioDone,
     OutputTranscriptDelta,
@@ -107,6 +108,23 @@ from .transport import Transport, TransportClosed
 #: returns no accents at all, so a smaller coalesce would silently cost the
 #: hosted voice its beat nods.
 DEFAULT_COALESCE_MS = 240.0
+
+#: Card MARK-1, work item 3. How long a ``speech_started`` may be held before it
+#: is treated as a real interruption rather than a backchannel ("mm-hmm",
+#: "yeah", a laugh). **0 ships**, and 0 is R16's behaviour to the byte: the
+#: reply is cancelled on the frame. It is a knob and not a chosen number because
+#: the trade it makes is felt, not computed — a floor of N ms buys backchannel
+#: survival and costs every genuine interruption N ms of the dog still talking —
+#: and DUPLEX-1 (task_26) owns that choice with a live session to judge it on.
+#: MARK-1 measures both arms; see ``scrum/20260822/task_22/MARK1_STATUS.md``.
+DEFAULT_BACKCHANNEL_FLOOR_MS = 0.0
+
+#: Card MARK-1, correction pass. The ``response.done`` status that means "the
+#: PROVIDER cancelled this reply", which under the hosted default
+#: ``turn_detection.interrupt_response: true`` is what a genuine interruption
+#: looks like from this side of the socket. Named because a held barge-in has to
+#: tell it apart from a reply that simply ended.
+RESPONSE_STATUS_CANCELLED = "cancelled"
 
 #: Card R22, work item 1. How many dispatch-failure LINES are kept. The counts
 #: (``dispatch_failure_count`` / ``dispatch_failure_types``) stay exact; this
@@ -437,6 +455,14 @@ DEFAULT_ITEM_TRACE_LIMIT = 64
 #: enough to show a whole memory tail being refused without turning
 #: ``/api/state`` into a log file.
 DEFAULT_SERVER_ERROR_WINDOW = 5
+
+#: Card TURN-1. The lifecycle frame that means "your turn is committed and I am
+#: answering it". Named here rather than spelled inline in ``_dispatch`` because
+#: it is now a MEASUREMENT anchor and not merely a frame the lane ignores; see
+#: :attr:`RealtimeLane.turn_timings`. The full ignorable set stays in
+#: ``protocol.LIFECYCLE_EVENT_TYPES``, which is still the one list a reader
+#: consults for "frames the lane does not act on".
+LIFECYCLE_RESPONSE_CREATED = "response.created"
 
 #: Card P2-A. The hard ceiling on session-open replay, applied in the LANE and
 #: not in the row source.
@@ -819,10 +845,39 @@ class _ResponseState:
     playing: bool = False
     enqueued_ms: float = 0.0
     transcript_parts: list[str] = field(default_factory=list)
+    #: Card MARK-1. When the FIRST chunk of this reply was handed to the sink.
+    #: The played clock's last-resort anchor: a sink that never reports a
+    #: playback mark (a browser tab that stopped acking, the R7 live client)
+    #: used to make ``played_ms`` read 0 and the provider be told the owner
+    #: heard none of a reply they heard seconds of. See ``played_ms``.
+    first_enqueue_at: float | None = None
 
     @property
     def transcript(self) -> str:
         return "".join(self.transcript_parts)
+
+
+@dataclass
+class _BargeInHold:
+    """Card MARK-1, work item 3. One provisional barge-in waiting on the floor.
+
+    Server VAD says "the owner started making noise". That is not yet the same
+    thing as "the owner is taking the turn": ``mm-hmm`` and ``yeah`` are how a
+    person shows they are LISTENING, and cancelling the reply on one of them is
+    how a companion learns to stop mid-sentence every time you agree with it.
+
+    While a hold is open nothing has been told to the provider and nothing has
+    been taken from the sink — the reply keeps playing, so a hold that resolves
+    as a backchannel costs exactly nothing. Only :meth:`RealtimeLane._commit_barge_in`
+    interrupts, cancels and truncates, and it does so at the position heard AT
+    COMMIT TIME, never at the position heard when the noise started.
+    """
+
+    started_at: float
+    deadline: float
+    response_id: str
+    item_id: str
+    played_at_start_ms: float
 
 
 class RealtimeLane:
@@ -863,6 +918,8 @@ class RealtimeLane:
         server_error_window: int = DEFAULT_SERVER_ERROR_WINDOW,
         on_idle_close: Callable[[float], None] | None = None,
         retention_sink: Callable[[str, Mapping[str, Any]], None] | None = None,
+        backchannel_floor_ms: float = DEFAULT_BACKCHANNEL_FLOOR_MS,
+        assume_playback_without_ack: bool = True,
     ) -> None:
         self.config = config
         self.instructions = instructions
@@ -950,6 +1007,27 @@ class RealtimeLane:
         #: Seconds actually waited before each reconnect, in order.
         self.backoff_waits: list[float] = []
         self.truncations: list[dict[str, object]] = []
+        # ------------------------------------------------ card MARK-1, barge-in
+        #: How long a ``speech_started`` must go unresolved before the reply is
+        #: actually cancelled. 0 — the shipped default — is R16's behaviour
+        #: exactly: cancel on the frame. See :meth:`_on_speech_started`.
+        self._backchannel_floor_ms = max(0.0, float(backchannel_floor_ms))
+        #: Whether ``played_ms`` may anchor on the first enqueue when the sink
+        #: reports no playback mark. See :meth:`played_ms` for why the honest
+        #: answer to "has playback been PROVEN" was the wrong answer to "what
+        #: did the owner hear".
+        self._assume_playback_without_ack = bool(assume_playback_without_ack)
+        self._barge_in_hold: _BargeInHold | None = None
+        self._speech_end_override: float | None = None
+        self._played_anchor_fallback_for: str | None = None
+        #: Provisional barge-ins opened, settled as backchannels, and committed.
+        #: Survival is (survived / holds); DUPLEX-1 sets the bar it must clear.
+        self.backchannel_holds = 0
+        self.backchannels_survived = 0
+        self.barge_ins_committed = 0
+        self.barge_in_hold_failures = 0
+        #: Replies whose played clock had to fall back to the first enqueue.
+        self.played_anchor_fallbacks = 0
         self.protocol_errors: list[str] = []
         #: Card R22, work item 1. Frames the lane UNDERSTOOD and then failed to
         #: handle, kept apart from ``protocol_errors`` on purpose: a protocol
@@ -1165,6 +1243,31 @@ class RealtimeLane:
         #: many of them tried to move the body anyway.
         self.system_initiated_responses = 0
         self.system_initiated_tool_calls = 0
+        # ---------------------------------- CARD TURN-1 · endpointing timings
+        #: HOW LONG THE OWNER WAITED, per spoken turn, in milliseconds.
+        #:
+        #: Endpointing is now a config knob (``realtime.turn_detection``), and a
+        #: knob whose effect nobody measures is a preference, not a setting. Each
+        #: row is one turn: when server VAD closed the utterance, how long until
+        #: the provider created a response for it, and how long until the first
+        #: byte of that response reached the speaker. Those two are the numbers
+        #: card TURN-1 pre-registers (commit p50 ≤ 0.6 s) and they are the only
+        #: way to compare ``server_vad`` against ``semantic_vad`` at each
+        #: eagerness without asking a person how it felt.
+        #:
+        #: NOT written to the conversation ledger. A per-turn timing row in there
+        #: would enter the memory tail and be replayed to the provider on every
+        #: reconnect — a measurement that changes what it measures. It rides in
+        #: ``snapshot()`` instead, which is what the R17 tee and the replay tool
+        #: read.
+        self.turn_timings: list[dict[str, object]] = []
+        #: Turns that have been timed (rows may be evicted; this never resets).
+        self.turns_timed = 0
+        #: Bound on the retained rows. 200 turns is far more than one session
+        #: ever holds and stops a long-running lane growing a list forever.
+        self._turn_timing_limit = 200
+        #: The row being filled in, or ``None`` between turns.
+        self._turn_timing: dict[str, object] | None = None
 
     # ------------------------------------------------------------ properties
     @property
@@ -1341,6 +1444,13 @@ class RealtimeLane:
             except OSError:  # pragma: no cover - defensive
                 pass
         self._response = _ResponseState()
+        # CARD MARK-1, correction pass, defect 4. A provisional barge-in belongs
+        # to a response on a socket that no longer exists. Carried across, it is
+        # settled against whatever comes next: on the reconnect path that is a
+        # cancel aimed at a reply the owner never interrupted, and on both paths
+        # it is counted as a backchannel the owner never made.
+        self._barge_in_hold = None
+        self._speech_end_override = None
         self._pcm.clear()
         self._expecting_server = False
         self._responses_pending = 0
@@ -1354,6 +1464,12 @@ class RealtimeLane:
         # refusals — a beat is only ever pending because the call did not
         # simply succeed in silence.
         self._drop_pending_beat("the session it belonged to ended")
+        # CARD TURN-1 — MARKED REGION (speech_stopped timing). Same rule, one
+        # layer down: a turn whose stopwatch was started on the DEAD socket can
+        # never be completed on the new one, and letting the next reply stamp it
+        # would report a wait that includes a reconnect and a backoff. The row
+        # stays in ``turn_timings``, incomplete and honestly so.
+        self._turn_timing = None
         # Card R8: the spoken turn owed on the socket that just died is not owed
         # by the NEW one — ``_reconnect`` reads it before this runs and repays it
         # explicitly, exactly as it does for ``_responses_pending``. Leaving it
@@ -1377,11 +1493,17 @@ class RealtimeLane:
         # on the strength of the DEAD session's silence would make a stall
         # recovery indistinguishable from a hang-up.
         self._last_activity_at = now
+        # CARD TURN-1 — MARKED REGION (endpointing on the wire).
+        # ``turn_detection`` was a default the codec supplied; it is now the
+        # owner's config, carried explicitly so a reader of this line can see
+        # that the yaml reaches the session frame. An absent ``turn_detection:``
+        # block loads to ``TurnDetection()`` and renders the identical payload.
         self._send(
             SessionUpdate(
                 instructions=self.instructions,
                 model=self.config.model,
                 voice=self.config.voice,
+                turn_detection=self.config.turn_detection,
             )
         )
         self._declare_tools()
@@ -1522,6 +1644,13 @@ class RealtimeLane:
                 pass
         self.transport = None
         self._response = _ResponseState()
+        # CARD MARK-1, correction pass, defect 4. A provisional barge-in belongs
+        # to a response on a socket that no longer exists. Carried across, it is
+        # settled against whatever comes next: on the reconnect path that is a
+        # cancel aimed at a reply the owner never interrupted, and on both paths
+        # it is counted as a backchannel the owner never made.
+        self._barge_in_hold = None
+        self._speech_end_override = None
         self._pcm.clear()
         self._expecting_server = False
         self._responses_pending = 0
@@ -1758,7 +1887,13 @@ class RealtimeLane:
         if not self._lock.acquire(blocking=False):
             return 0
         try:
-            return self._pump_locked()
+            handled = self._pump_locked()
+            # CARD MARK-1 — the backchannel floor is a DEADLINE, and a deadline
+            # needs a clock that ticks whether or not the provider sends
+            # anything. This is that tick: no-op unless a hold is open, and a
+            # no-op entirely while ``backchannel_floor_ms`` is 0.
+            self._settle_barge_in_hold()
+            return handled
         finally:
             self._lock.release()
 
@@ -1996,6 +2131,12 @@ class RealtimeLane:
             # moment the provider takes on the obligation to answer it. Until
             # this line the frame was a documented no-op and a spoken turn was
             # owed by nobody the lane could name.
+            #
+            # CARD TURN-1 — MARKED REGION (speech_stopped timing). It is also the
+            # moment the OWNER starts waiting, so it is where the stopwatch for
+            # this turn starts. Ordered before ``_arm_voice_turn`` so the anchor
+            # exists even if the arming path notes or raises.
+            self._on_speech_stopped(event)
             self._arm_voice_turn("server VAD closed the owner's utterance")
             return
         if isinstance(event, InputTranscriptionCompleted):
@@ -2047,6 +2188,20 @@ class RealtimeLane:
             # arms a turn, touches the sink or writes the ledger. The lane's
             # behaviour is byte-identical; only the record survives.
             self._retain(event)
+            return
+        if isinstance(event, LifecycleEvent):
+            # CARD TURN-1 — MARKED REGION (speech_stopped timing).
+            #
+            # ``response.created`` is the provider saying "your turn is over and
+            # I am answering it". That is the far end of the interval this card
+            # exists to measure, and until now the lane had no branch for
+            # LifecycleEvent at all, so the frame was parsed and dropped.
+            #
+            # It stays a CONVERSATIONAL no-op — nothing here marks activity, arms
+            # a turn, touches the sink or writes the ledger, and no frame is
+            # sent. Every other lifecycle type still falls through untouched.
+            if event.type_name == LIFECYCLE_RESPONSE_CREATED:
+                self._note_turn_milestone("response_created_ms")
             return
 
     def _retain(self, event: RetainedEvent) -> None:
@@ -2183,6 +2338,88 @@ class RealtimeLane:
         self._arm_watchdog()
         self._note(f"a spoken turn is owed an answer: {why}")
 
+    # ------------------------------------ CARD TURN-1 · endpointing timings
+    def _on_speech_stopped(self, event: SpeechStopped) -> None:
+        """Start this turn's stopwatch. Card TURN-1, work item 2.
+
+        THE INTERVAL, AND WHY IT IS ANCHORED HERE
+        -----------------------------------------
+        ``input_audio_buffer.speech_stopped`` is the provider announcing that its
+        endpointer has closed the owner's utterance. Everything the card wants to
+        compare — ``server_vad``'s fixed silence tail against ``semantic_vad`` at
+        each eagerness — is a property of WHEN this frame arrives relative to the
+        owner's last syllable and of how long the answer then takes. The lane
+        cannot see the owner's last syllable (that is the microphone's end of the
+        world), but it can see this frame, ``response.created``, and the first
+        byte of audio it hands the speaker, and those three are what a replay can
+        line up against a recording whose true boundaries are known.
+
+        ``audio_end_ms`` is the provider's own index into the input buffer for
+        this boundary. It is recorded beside the wall clock because they answer
+        different questions: the wall clock says how long the owner waited, and
+        ``audio_end_ms`` says WHERE in the audio the endpointer cut — which is
+        the only way a replay can tell a mid-sentence commit from a late one.
+
+        Never raises. This is instrumentation attached to a conversation, and a
+        conversation must not be able to die of its own stopwatch.
+        """
+
+        row: dict[str, object] = {
+            "session_id": self.session_id,
+            "audio_end_ms": int(getattr(event, "audio_end_ms", 0) or 0),
+            "speech_stopped_at": round(float(self._clock()), 6),
+            "response_created_ms": None,
+            "first_audio_ms": None,
+        }
+        self._turn_timing = row
+        self.turn_timings.append(row)
+        self.turns_timed += 1
+        # Oldest first, same discipline as ``_item_trace``: an unbounded list on
+        # a lane that runs for a day is a leak, and the recent turns are the ones
+        # a replay or an operator ever reads.
+        if len(self.turn_timings) > self._turn_timing_limit:
+            del self.turn_timings[: len(self.turn_timings) - self._turn_timing_limit]
+
+    def _note_turn_milestone(self, key: str) -> None:
+        """Stamp one milestone into the open turn row, once. Card TURN-1.
+
+        ``once`` is the whole discipline: a response that emits forty audio
+        deltas must move ``first_audio_ms`` on the first one only, or the number
+        stops meaning "how long until the owner heard anything" and starts
+        meaning "how long the reply was". A milestone with no open turn (an
+        answer on a session whose ``speech_stopped`` was dropped) is simply not
+        recorded — inventing a zero would put a fabricated 0 ms into the p50 this
+        card pre-registers.
+
+        AND ONLY WHAT THE OWNER IS WAITING FOR (correction pass).
+        ---------------------------------------------------------
+        The row-close below handles the common case — both milestones filled,
+        the row stops accepting stamps — but not this one: a turn the provider
+        answers with TEXT or a tool call only never gets a ``first_audio_ms``,
+        so its row stays open, and the next thing the ROBOT says by itself
+        (``narrate_event``) would stamp its own audio into the owner's row as a
+        wait of several minutes. The lane already knows who asked, because card
+        R11 made it know: ``_response_provenance``. A system-initiated response
+        is not an answer to anybody, so it contributes no milestone at all.
+        """
+
+        if self._response_provenance != RESPONSE_FROM_OWNER:
+            return
+        row = self._turn_timing
+        if row is None or row.get(key) is not None:
+            return
+        anchor = row.get("speech_stopped_at")
+        if not isinstance(anchor, (int, float)):
+            return
+        row[key] = round(max(0.0, (float(self._clock()) - float(anchor)) * 1000.0), 3)
+        # A finished row stops being the open one. Without this, a turn the
+        # provider answered and then a narration the ROBOT started later would
+        # both write into the same row, and the second number would describe a
+        # wait nobody did. The row stays in ``turn_timings``; it just stops
+        # accepting stamps.
+        if row.get("response_created_ms") is not None and row.get("first_audio_ms") is not None:
+            self._turn_timing = None
+
     # -------------------------------------------------------- playback bridge
     def assert_sink_free(self, claimant: str = "realtime lane") -> None:
         """Refuse to share the mouth. Called before every claim, both ways.
@@ -2242,7 +2479,17 @@ class RealtimeLane:
         # from the first RIFF header and otherwise keeps the last one it saw
         # (default 16 kHz), so raw 24 kHz PCM would play ~50% slow.
         sink.enqueue(pcm16_wav(chunk, sample_rate_hz=self._sample_rate_hz))
+        # CARD MARK-1 — the played clock's last-resort anchor, one line, after the
+        # enqueue for the same reason TURN-1's stamp is: it can never claim audio
+        # the sink refused to take. See ``played_ms``.
+        if self._response.first_enqueue_at is None:
+            self._response.first_enqueue_at = self._clock()
         self._response.enqueued_ms += len(chunk) / self._bytes_per_ms
+        # CARD TURN-1 — the far end of the interval, one line, after the enqueue
+        # so it can never claim audio the sink did not take. Stamped once per
+        # turn (see ``_note_turn_milestone``); a chunk with no open turn is not
+        # recorded rather than recorded as zero.
+        self._note_turn_milestone("first_audio_ms")
 
     def _require_sink(self) -> SinkLike:
         if self._sink is None:
@@ -2260,25 +2507,280 @@ class RealtimeLane:
         clock — and clamped by what was enqueued, because a truncate that
         overstates what the owner heard makes the provider's transcript lie in
         the ledger's favour.
+
+        CARD MARK-1 — THE FALLBACK, AND WHY IT IS NOT A LIE
+        ---------------------------------------------------
+        Returning 0 when the sink reports no mark was the honest answer to the
+        question "has the sink PROVEN anything played", and it was the wrong
+        answer to the question this number is actually asked: "how much of this
+        reply did the owner hear". R7's live sessions truncated at 0 ms after
+        thirteen chunks had gone down the socket (``R7_STATUS.md`` does_not_prove
+        2), so the provider was told the owner heard NONE of a reply they heard
+        seconds of — and the model, correctly reasoning from what it was told,
+        said the whole thing again.
+
+        So when audio has been enqueued for THIS reply and no playback mark
+        exists, the anchor falls back to the moment the first chunk was handed
+        to the sink. It is a weaker claim than a browser ack and it is stated as
+        one (``played_anchor_fallbacks`` counts every reply it happened on), but
+        it is bounded on both sides — never more than what was enqueued, never
+        earlier than the first enqueue — and it is enormously closer to the
+        truth than zero. ``audio`` mode only: in ``text`` mode a
+        :class:`~parcel_robot.realtime.browser_sink.DiscardSink` really does
+        drop every byte, nothing is heard, and 0 is the true answer.
         """
 
         if self._sink is None:
             return 0.0
         started = getattr(self._sink, "first_chunk_started_monotonic", None)
         if started is None:
+            started = self._fallback_play_anchor()
+        if started is None:
             return 0.0
         elapsed_ms = max(0.0, (self._clock() - float(started)) * 1000.0)
         return min(self._response.enqueued_ms, elapsed_ms)
 
+    def _fallback_play_anchor(self) -> float | None:
+        """The first-enqueue anchor, once per reply, counted. Card MARK-1."""
+
+        if not self._assume_playback_without_ack or not self.config.audio:
+            return None
+        anchor = self._response.first_enqueue_at
+        if anchor is None or self._response.enqueued_ms <= 0.0:
+            return None
+        if self._played_anchor_fallback_for != self._response.response_id:
+            # Once per REPLY, keyed on its id rather than on a flag someone has
+            # to remember to clear: a counter that moved per audio chunk would
+            # report forty fallbacks for one reply.
+            self._played_anchor_fallback_for = self._response.response_id
+            self.played_anchor_fallbacks += 1
+            self._note(
+                "played clock: the sink reported no playback mark for "
+                f"{self._response.response_id!r}; anchoring on the first enqueue "
+                f"({self._response.enqueued_ms:.0f} ms of audio was sent) rather than "
+                "telling the provider the owner heard none of it"
+            )
+        return float(anchor)
+
     # -------------------------------------------------------------- barge-in
     def _on_speech_started(self) -> None:
+        """Server VAD heard noise while the robot was talking. Card R16 + MARK-1.
+
+        With ``backchannel_floor_ms`` at 0 — the shipped default — this is
+        byte-for-byte what it has always been: interrupt, cancel, truncate, now.
+
+        Above 0 the cancel becomes PROVISIONAL for that many milliseconds (see
+        :class:`_BargeInHold`). Nothing is told to the provider and nothing is
+        taken from the sink while the hold is open, so a "mm-hmm" that resolves
+        inside the floor costs nothing at all; a real interruption costs the
+        floor. Which trade is right is DUPLEX-1's call to make from the numbers
+        MARK-1 measures, which is why the default is off and the knob is here.
+        """
+
         if not self._response.playing:
             return
+        floor_ms = self._backchannel_floor_ms
+        if floor_ms <= 0.0:
+            self._commit_barge_in()
+            return
+        if self._barge_in_hold is not None:
+            return  # one hold per reply; a second VAD start is the same turn
+        now = self._clock()
+        self._barge_in_hold = _BargeInHold(
+            started_at=now,
+            deadline=now + (floor_ms / 1000.0),
+            response_id=self._response.response_id,
+            item_id=self._response.item_id,
+            played_at_start_ms=self.played_ms(),
+        )
+        self.backchannel_holds += 1
+        self._note(
+            f"barge-in held: {floor_ms:.0f} ms backchannel floor on "
+            f"{self._response.response_id!r}; the reply keeps playing until the "
+            "floor says this was a turn and not a 'mm-hmm'"
+        )
+
+    def _settle_barge_in_hold(self) -> None:
+        """:meth:`_resolve_barge_in_hold` behind R22's firewall. Never raises.
+
+        Everything downstream of a commit — the socket, the ledger, the sink —
+        can fail, and none of them may take the pump thread down with them. Same
+        broad catch as ``_dispatch``, same reason.
+        """
+
+        if self._barge_in_hold is None:
+            return
+        try:
+            self._resolve_barge_in_hold()
+        except Exception as error:  # noqa: BLE001 - see the docstring above
+            self._barge_in_hold = None
+            self.barge_in_hold_failures += 1
+            self._note(f"barge-in hold could not be settled: {type(error).__name__}: {error}")
+
+    def _resolve_barge_in_hold(self) -> str | None:
+        """Settle an open hold. Card MARK-1, work item 3. Returns what it did.
+
+        Two ways out, and the lane must survive both:
+
+        * **the owner stopped inside the floor** — server VAD closed the
+          utterance and it was shorter than the floor, so it was a backchannel:
+          the hold is dropped, no cancel and no truncate are ever sent, and the
+          reply the owner was agreeing with plays on;
+        * **the floor expired** — this is a turn. Commit exactly as an unheld
+          barge-in would, at the position heard NOW rather than when the noise
+          started, because the owner has been listening the whole time the hold
+          was open.
+
+        The speech-end signal is READ from TURN-1's ``turn_timings`` rows rather
+        than taken by editing TURN-1's dispatch branch: MARK-1 does not own that
+        region. If those rows are ever absent or shaped differently, this
+        degrades to "the floor expired", which is the pre-MARK-1 behaviour one
+        floor late — never to a barge-in that silently does not happen.
+        """
+
+        hold = self._barge_in_hold
+        if hold is None:
+            return None
+        if not self._response.playing or self._response.response_id != hold.response_id:
+            # The reply ENDED while the hold was open, and there are two very
+            # different reasons for that.
+            #
+            # CORRECTION PASS, defect 2. The provider's default is
+            # ``interrupt_response: true``: server VAD hearing the owner makes
+            # the PROVIDER cancel the response, and ``response.done`` then
+            # arrives with ``status: "cancelled"`` before this floor expires. The
+            # first version of this branch read that as "the reply finished",
+            # counted a survived backchannel, and returned — so nothing called
+            # ``sink.interrupt()`` and nothing truncated the item. The owner
+            # would have been talked over by the seconds of audio already
+            # scheduled in the browser AND the provider would still believe it
+            # said all of it. That is the exact failure this card exists to
+            # remove, reintroduced by the feature meant to soften it.
+            #
+            # A response that ran to ``completed`` really is a survived
+            # backchannel: the owner made a noise, the dog finished its
+            # sentence, nobody cancelled anything.
+            self._barge_in_hold = None
+            if self._response_was_cancelled(hold):
+                self._note(
+                    "barge-in hold committed: the provider cancelled "
+                    f"{hold.response_id!r} itself (interrupt_response), so the mark is "
+                    "ours to send even though the cancel is not"
+                )
+                # No ``response.cancel``: the provider already did that, and a
+                # second one is a refusal frame in the record for nothing.
+                self._commit_barge_in(send_cancel=False)
+                return "provider_cancelled"
+            self.backchannels_survived += 1
+            self._note("barge-in hold dropped: the reply finished before the floor did")
+            return "finished"
+        speech_ended_at = self._speech_ended_after(hold.started_at)
+        if speech_ended_at is not None:
+            self._barge_in_hold = None
+            self._speech_end_override = None
+            self.backchannels_survived += 1
+            burst_ms = max(0.0, (speech_ended_at - hold.started_at) * 1000.0)
+            self._note(
+                f"backchannel survived: the owner made {burst_ms:.0f} ms of noise and "
+                f"stopped inside the {self._backchannel_floor_ms:.0f} ms floor, so the "
+                "reply was never cancelled"
+            )
+            return "backchannel"
+        if self._clock() < hold.deadline:
+            return None
+        self._barge_in_hold = None
+        self._note(
+            f"backchannel floor passed at {self._backchannel_floor_ms:.0f} ms: this is a "
+            "turn, not a 'mm-hmm'"
+        )
+        self._commit_barge_in()
+        return "committed"
+
+    def _speech_ended_after(self, since: float) -> float | None:
+        """When server VAD closed an utterance that began after ``since``.
+
+        A read-only view of the rows TURN-1's ``_on_speech_stopped`` writes.
+        Defensive on purpose — see :meth:`_resolve_barge_in_hold`.
+        """
+
+        if self._speech_end_override is not None and self._speech_end_override >= since:
+            return self._speech_end_override
+        try:
+            rows = self.turn_timings
+        except AttributeError:  # pragma: no cover - TURN-1's rows are gone
+            return None
+        for row in reversed(rows or ()):
+            stopped_at = row.get("speech_stopped_at") if isinstance(row, dict) else None
+            if isinstance(stopped_at, (int, float)) and float(stopped_at) >= since:
+                return float(stopped_at)
+        return None
+
+    def _response_was_cancelled(self, hold: _BargeInHold) -> bool:
+        """Did the provider cancel the reply this hold is about? Card MARK-1.
+
+        A read-only view of ``usage_rows``, which ``_on_response_done`` already
+        writes one row into per response with the provider's own ``status``.
+        Read rather than re-derived so that no other card's region has to move,
+        and matched on BOTH the response id and the hold's start time so a
+        cancellation from an earlier turn can never settle this one.
+
+        Unknown ⇒ ``False``, and FINISH-1 corrected what that sentence used to
+        claim. There is no floor left to fall through to: the caller has
+        already dropped the hold before it asks, so an unknown status, a
+        missing row, a differently-shaped row and the provider's ``incomplete``
+        every one of them settle exactly like ``completed`` — a survived
+        backchannel, no ``sink.interrupt()``, no truncate. That is the
+        behaviour on purpose (the alternative is a truncate for a response that
+        has already ended, on every schema change), and the residual is real
+        and named in ``MARK1_STATUS.md`` §2: a provider that one day cancels
+        under a different word would be read as having finished.
+        """
+
+        try:
+            rows = self.usage_rows
+        except AttributeError:  # pragma: no cover - defensive
+            return False
+        for row in reversed(rows or ()):
+            if not isinstance(row, Mapping):
+                continue
+            if str(row.get("response_id") or "") != hold.response_id:
+                continue
+            at = row.get("monotonic_s")
+            if isinstance(at, (int, float)) and float(at) < hold.started_at:
+                continue
+            return str(row.get("status") or "") == RESPONSE_STATUS_CANCELLED
+        return False
+
+    def note_owner_speech_stopped(self, at: float | None = None) -> None:
+        """Tell the lane the owner stopped making noise. Card MARK-1, the seam.
+
+        The turn controller DUPLEX-1 builds will know this before server VAD
+        does — a local endpointer sees the owner's last syllable, and the
+        provider's ``speech_stopped`` trails it by the whole silence tail. This
+        is where that knowledge goes in, and it is the same door the harness
+        drives so the floor can be measured without waiting on TURN-1's tail.
+        """
+
+        self._speech_end_override = float(self._clock() if at is None else at)
+
+    def _commit_barge_in(self, *, send_cancel: bool = True) -> None:
+        """Interrupt, cancel and truncate. Card R16; held open by MARK-1's floor.
+
+        ``send_cancel=False`` is the one case where the provider got there
+        first: it cancelled the response itself under ``interrupt_response``,
+        so the cancel would be a refusal frame in the record and the mark is
+        the only thing still owed. Everything else is identical, deliberately —
+        the sink still has to be interrupted, because a provider-side cancel
+        stops NEW audio and does nothing about the seconds already scheduled in
+        the browser.
+        """
+
         played = self.played_ms()
         sink = self._sink
         if sink is not None:
             sink.interrupt()
-        self._send(ResponseCancel(response_id=self._response.response_id or None))
+        if send_cancel:
+            self._send(ResponseCancel(response_id=self._response.response_id or None))
         if self._response.item_id:
             self._send(
                 ConversationItemTruncate(
@@ -2304,6 +2806,9 @@ class RealtimeLane:
             )
         self._response.playing = False
         self._pcm.clear()
+        self.barge_ins_committed += 1
+        # Card MARK-1: whatever settled this turn cannot settle the next one.
+        self._speech_end_override = None
         self._note(f"barge-in: cancelled {self._response.response_id!r} at {int(played)} ms")
 
     # --------------------------------------------------------------- content
@@ -3215,6 +3720,26 @@ class RealtimeLane:
             "brokered_tool_calls": list(self.brokered_tool_calls),
             "text_turns": self.text_turns,
             "backoff_waits_s": list(self.backoff_waits),
+            # Card TURN-1. The endpointing the session is actually running under,
+            # and how long the owner waited on each spoken turn under it. The
+            # config object is echoed here rather than only in the realtime
+            # config block because a session survives a config edit: what
+            # /api/state must answer is "what is THIS session using".
+            "turn_detection": self.config.turn_detection.as_dict(),
+            "turns_timed": self.turns_timed,
+            "turn_timings": [dict(row) for row in self.turn_timings[-20:]],
+            # Card MARK-1. Barge-in mark integrity, from outside. ``truncations``
+            # is the record the debt was about: every one of them carries the
+            # position the provider was told the owner heard, beside what was
+            # actually enqueued, so an ``audio_end_ms`` of 0 against 3 120 ms of
+            # audio is visible from /api/state instead of only from a wire trace.
+            "truncations": [dict(row) for row in self.truncations[-10:]],
+            "played_anchor_fallbacks": self.played_anchor_fallbacks,
+            "backchannel_floor_ms": self._backchannel_floor_ms,
+            "backchannel_holds": self.backchannel_holds,
+            "backchannels_survived": self.backchannels_survived,
+            "barge_ins_committed": self.barge_ins_committed,
+            "barge_in_hold_failures": self.barge_in_hold_failures,
         }
 
 
@@ -3229,6 +3754,7 @@ __all__ = [
     "CODE_NO_TRANSPORT",
     "CODE_RESPONSE_ALREADY_ACTIVE",
     "DEFAULT_ANSWER_TOOLS",
+    "DEFAULT_BACKCHANNEL_FLOOR_MS",
     "DEFAULT_COALESCE_MS",
     "DEFAULT_ENTRY_TIMEOUT_S",
     "DEFAULT_ITEM_TRACE_LIMIT",
@@ -3246,6 +3772,7 @@ __all__ = [
     "ITEM_PURPOSE_NARRATION",
     "ITEM_PURPOSE_OWNER_TURN",
     "ITEM_PURPOSE_TAIL",
+    "LIFECYCLE_RESPONSE_CREATED",
     "MAX_TAIL_ITEMS",
     "MIN_SUBSTANTIVE_WORDS",
     "REASON_IDLE_HANG_UP",

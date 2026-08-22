@@ -36,13 +36,25 @@ from __future__ import annotations
 import math
 import os
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
 
 from parcel_robot.paths import parcel_roots, resolve_asset
+
+# Card TURN-1. The endpointing object lives in ``protocol.py`` because it is a
+# WIRE object — it has to render the exact ``session.audio.input.turn_detection``
+# mapping the provider reads, and a second copy of that shape in this file is a
+# second place for it to drift. ``protocol`` imports nothing from this package,
+# so this direction is the acyclic one; it is also a pure codec, no I/O.
+from .protocol import (
+    TURN_DETECTION_EAGERNESS,
+    TURN_DETECTION_TYPES,
+    RealtimeProtocolError,
+    TurnDetection,
+)
 
 #: Repo-relative location the runtime looks for. Deliberately NOT created by
 #: this card and deliberately NOT in the packaged ship set for R1.
@@ -82,13 +94,44 @@ ALLOWED_KEYS = frozenset(
         "proactive_motion_tools",
         "unknown_place",
         "hosted_affect",
+        # Card TURN-1 — endpointing. Absent means the block is not written at
+        # all, which renders the identical ``session.update`` this repo has sent
+        # since 2026-08-18 (pre-registered row T1/T2, seeded).
+        "turn_detection",
+    }
+)
+
+#: Card TURN-1. The nested ``turn_detection:`` block. The keys are the provider's
+#: own, spelled exactly as they go on the wire, so a reader of the yaml and a
+#: reader of a wire trace are looking at the same words. Same refusal discipline
+#: as every other block here.
+TURN_DETECTION_ALLOWED_KEYS = frozenset(
+    {
+        "type",
+        "threshold",
+        "prefix_padding_ms",
+        "silence_duration_ms",
+        "eagerness",
+        "interrupt_response",
+        "create_response",
     }
 )
 
 #: The nested ``whisperer:`` block — the owner's cost knob (card R11, owner
 #: directive 2026-08-20). Same refusal discipline as the outer schema.
 WHISPERER_ALLOWED_KEYS = frozenset(
-    {"enabled", "max_updates_per_minute", "min_gap_s", "window_s", "owner_events"}
+    {
+        "enabled",
+        "max_updates_per_minute",
+        "min_gap_s",
+        "window_s",
+        "owner_events",
+        # Card CURIO-1 — the chatter layer. Nested here for P2-B's reason
+        # exactly: a curiosity remark is whisperer traffic, banded and capped by
+        # the block it sits in, and an owner who turns the cap down has to see
+        # everything the cap holds in one place.
+        "curiosity",
+    }
 )
 
 #: Card P2-B. The nested ``whisperer.owner_events:`` block. Same fail-closed
@@ -106,6 +149,27 @@ OWNER_EVENTS_ALLOWED_KEYS = frozenset(
         "question_of_the_day",
     }
 )
+
+# ================================= card CURIO-1: the chatter block's schema ==
+#: The nested ``whisperer.curiosity:`` block — WHEN the dog may remark on what
+#: it has seen. Same fail-closed discipline as every other block in this file: a
+#: key nothing reads looks exactly like a switch that was never flipped, and the
+#: switch this block holds is "does the robot start talking on its own".
+CURIOSITY_ALLOWED_KEYS = frozenset(
+    {
+        "enabled",
+        "mean_gap_s",
+        "stimulus_min_gap_s",
+        "min_gap_floor_s",
+        "quiet_s",
+        "require_owner_present",
+        "night_quiet",
+        "farewell",
+        "farewell_after_s",
+        "gesture_when_capped",
+    }
+)
+# ============================= END card CURIO-1 (chatter block's schema) =====
 
 #: Card P0-B, deliverable 1 — WHICH MOTION TOOLS A SYSTEM-INITIATED REPLY MAY RUN.
 #:
@@ -133,7 +197,18 @@ PROACTIVE_MOTION_ALLOWED: tuple[str, ...] = ("play_gesture", "set_pose")
 #: The travel tools. Listing one in ``proactive_motion_tools`` is a refusal at
 #: load, with the reason, rather than a silent drop at dispatch: an operator who
 #: wrote it meant it, and the honest answer is to say why it cannot be had.
-PROACTIVE_MOTION_REFUSED: tuple[str, ...] = ("navigate_to", "circle_owner", "follow_owner")
+#: Card ROAM-1 appends ``roam`` — the fourth travel tool and the only one with
+#: no destination in it. A proactive roam is bench finding C1 with a longer
+#: fuse: no place noun to check, no arrival to fail, just a dog that decided to
+#: leave. The card's own test asserts this tuple plus
+#: :data:`PROACTIVE_MOTION_ALLOWED` still covers ``MOTION_TOOLS`` exactly, so a
+#: tenth tool cannot join the surface without a verdict being written here.
+PROACTIVE_MOTION_REFUSED: tuple[str, ...] = (
+    "navigate_to",
+    "circle_owner",
+    "follow_owner",
+    "roam",
+)
 
 #: Card P0-B, deliverable 2 — WHAT ``navigate_to`` DOES WITH A PLACE NOBODY NAMED.
 #:
@@ -286,6 +361,107 @@ class OwnerEventsConfig:
         }
 
 
+# ==================================== card CURIO-1: the chatter block ========
+@dataclass(frozen=True)
+class CuriosityConfig:
+    """Card CURIO-1. When the robot may remark on what it has SEEN.
+
+    THE ONE THING TO UNDERSTAND ABOUT THIS BLOCK
+    --------------------------------------------
+    Like P2-B's next door, it buys nothing. Every remark still passes the
+    whisperer's band table, its dedup window, its ``min_gap_s`` and its
+    ``max_updates_per_minute``, and no curiosity class is in ``CRITICAL_KINDS``.
+    These knobs decide when a remark is DUE; the knobs above decide whether a
+    due remark is affordable, and they win.
+
+    THE ONE THING THAT IS DIFFERENT FROM P2-B
+    -----------------------------------------
+    P2-B's classes are edge-triggered on something rare — you walked in. These
+    are fed by a map that grows on a camera frame, at 2 Hz, for the length of a
+    walk. So this block carries a RATE where P2-B's carries thresholds, and the
+    rate is the load-bearing part: with ``mean_gap_s`` removed the band table
+    alone would spend the owner's whole minute on the first six lampposts.
+
+    **Default off**, for P2-B's reason exactly: every forward is a billed hosted
+    response, and a config written before this card must keep costing what it
+    cost. ``configs/realtime.prototype.yaml.example`` is where ``enabled: true``
+    belongs.
+    """
+
+    #: The opt-in. With it false the curiosity classes are never produced at
+    #: all — not produced-and-suppressed, not produced-and-deduped: never
+    #: produced, and the farewell class with them.
+    enabled: bool = False
+    #: The MEAN of the Poisson gap between IDLE remarks, in seconds. 360 s =
+    #: six minutes, the middle of the card's 4–8 minute band. Gaps are
+    #: exponential draws around this, so the dog is irregular rather than
+    #: metronomic — which is the difference between a companion and a
+    #: notification.
+    #:
+    #: **This paces ``idle_remark`` only.** Correction pass, 2026-08-22: the
+    #: card's two numbers were two cadences over two kinds of remark, not one
+    #: number written twice. See ``stimulus_min_gap_s`` below and
+    #: ``whisperer.STIMULUS_KINDS``.
+    mean_gap_s: float = 360.0
+    #: The FLOOR between remarks that answer something that just happened —
+    #: ``novel_object``, ``scene_change``, ``place_learned``, ``ask_about``. A
+    #: fixed gap and not a mean, because the subject is already in the past: a
+    #: six-minute wait would have the dog narrating a lamppost it walked past
+    #: four corners ago. 25 s is the value the card's own "3-6 utterances in a
+    #: 120 s roam" row implies, and it is now the shipped default rather than a
+    #: harness override.
+    stimulus_min_gap_s: float = 25.0
+    #: The floor an exponential draw is clamped to. An exponential can come back
+    #: at 0.2 s, and a remark 0.2 s after the last one is a stutter. The
+    #: whisperer's own ``min_gap_s`` would refuse it anyway; this is the same
+    #: bound one layer earlier, so the budget is not spent on something that was
+    #: always going to be dropped.
+    min_gap_floor_s: float = 20.0
+    #: Silence, in seconds, that an OWNER exchange must be in the past before a
+    #: remark may go out. This is the "do not talk over me" knob. A session
+    #: nobody has spoken on has no conversation to protect and this does not
+    #: block it — see ``ChatterScheduler._quiet_for``.
+    quiet_s: float = 90.0
+    #: Remark only when the owner is there to hear it. False makes the dog talk
+    #: to an empty room, which is a legitimate thing to want in a sim run and a
+    #: strange thing to want in a living room.
+    require_owner_present: bool = True
+    #: Go quiet in the NIGHT band (22:00–05:00 local). The band boundaries are
+    #: not configurable on purpose (``whisperer.time_band_of`` says why); this is
+    #: the knob.
+    night_quiet: bool = True
+    #: Say goodbye on the falling edge of the owner's presence.
+    farewell: bool = True
+    #: How long the owner must be out of view before that goodbye. Much larger
+    #: than P2-B's ``appear_debounce_s`` and deliberately so: a hello fired at a
+    #: passing shadow is charming and a goodbye fired at one is the robot
+    #: farewelling your back while you stand in front of it.
+    farewell_after_s: float = 45.0
+    #: THE FREE VARIANT. When the owner's per-minute cap has already been spent,
+    #: a remark that would have been billed becomes this gesture instead —
+    #: nothing goes on the wire, nothing is billed, and the dog still visibly
+    #: noticed something. Empty string disables it. The name must be in the
+    #: runtime's emote catalog or the gesture is skipped and counted.
+    gesture_when_capped: str = "curious_look"
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "enabled": self.enabled,
+            "mean_gap_s": self.mean_gap_s,
+            "stimulus_min_gap_s": self.stimulus_min_gap_s,
+            "min_gap_floor_s": self.min_gap_floor_s,
+            "quiet_s": self.quiet_s,
+            "require_owner_present": self.require_owner_present,
+            "night_quiet": self.night_quiet,
+            "farewell": self.farewell,
+            "farewell_after_s": self.farewell_after_s,
+            "gesture_when_capped": self.gesture_when_capped,
+        }
+
+
+# ================================ END card CURIO-1 (the chatter block) =======
+
+
 @dataclass(frozen=True)
 class WhispererConfig:
     """How often the robot may talk to the owner about ITSELF.
@@ -333,6 +509,12 @@ class WhispererConfig:
     #: min-gapped and capped by the block they sit in, and a reader who turns
     #: the cap down has to be able to see in one place everything the cap holds.
     owner_events: OwnerEventsConfig = OwnerEventsConfig()
+    #: Card CURIO-1. The chatter layer — when the robot may remark on what it
+    #: has SEEN. Nested here for the same reason ``owner_events`` is: it is
+    #: whisperer traffic, it is capped by the block it sits in, and the two
+    #: initiative families being one nesting apart is what lets an owner turn
+    #: down "the dog goes first" with one number.
+    curiosity: CuriosityConfig = CuriosityConfig()
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -341,6 +523,7 @@ class WhispererConfig:
             "min_gap_s": self.min_gap_s,
             "window_s": self.window_s,
             "owner_events": self.owner_events.as_dict(),
+            "curiosity": self.curiosity.as_dict(),
         }
 
 
@@ -525,6 +708,14 @@ class RealtimeConfig:
     #: Card F1-SI. Speaker verification for command arming. Inert until an
     #: owner profile is enrolled; never reaches the emergency latch.
     voice_identity: VoiceIdentityConfig = VoiceIdentityConfig()
+    #: Card TURN-1. WHEN THE OWNER'S TURN ENDS. The default renders the exact
+    #: ``{"type": "server_vad"}`` the lane sent before this key existed, so a
+    #: config that never mentions endpointing is byte-identical on the wire.
+    #: ``default_factory`` rather than a bare call: :class:`TurnDetection` lives
+    #: in ``protocol.py``, so from here ruff cannot see that it is frozen and
+    #: reads the call as a mutable default (RUF009). Same shape of fix, and the
+    #: same reason, as the one card GATE-0 applies at ``protocol.py:415``.
+    turn_detection: TurnDetection = field(default_factory=TurnDetection)
     source: str = "absent"
 
     @property
@@ -580,6 +771,10 @@ class RealtimeConfig:
             "whisperer": self.whisperer.as_dict(),
             "capture": self.capture.as_dict(),
             "voice_identity": self.voice_identity.as_dict(),
+            # Card TURN-1. Exactly the object that goes on the wire, so an
+            # operator reading /api/state can see the endpointing the session is
+            # actually running under rather than inferring it from the yaml.
+            "turn_detection": self.turn_detection.as_dict(),
             "source": self.source,
         }
 
@@ -850,6 +1045,8 @@ def whisperer_config_from_mapping(mapping: Mapping[str, Any] | None) -> Whispere
         min_gap_s=_non_negative(mapping, "min_gap_s", 15.0),
         window_s=_whisperer_window(mapping),
         owner_events=owner_events_config_from_mapping(mapping.get("owner_events")),
+        # Card CURIO-1.
+        curiosity=curiosity_config_from_mapping(mapping.get("curiosity")),
     )
 
 
@@ -946,6 +1143,96 @@ def _owner_events_probability(
     return number
 
 
+# ============================ card CURIO-1: the chatter block's validator ====
+def curiosity_config_from_mapping(
+    mapping: Mapping[str, Any] | None,
+) -> CuriosityConfig:
+    """Validate ``whisperer.curiosity:``. Absent ⇒ the documented defaults (off).
+
+    Every number here is refused when it is non-finite, for card R25's reason
+    applied to a new block: an infinite ``mean_gap_s`` is a dog that never
+    remarks on anything again — a silent off switch wearing a tuning value's
+    clothes — and ``enabled: false`` is the off switch that is visible in the
+    config.
+    """
+
+    if mapping is None:
+        return CuriosityConfig()
+    if not isinstance(mapping, Mapping):
+        raise RealtimeConfigError(
+            "realtime.whisperer.curiosity must be a mapping, got "
+            f"{type(mapping).__name__}"
+        )
+    unknown = sorted(str(key) for key in mapping if str(key) not in CURIOSITY_ALLOWED_KEYS)
+    if unknown:
+        raise RealtimeConfigError(
+            f"unknown realtime.whisperer.curiosity key(s): {', '.join(unknown)}; "
+            f"allowed: {', '.join(sorted(CURIOSITY_ALLOWED_KEYS))}"
+        )
+    gesture = mapping.get("gesture_when_capped", "curious_look")
+    if not isinstance(gesture, str):
+        raise RealtimeConfigError(
+            "realtime.whisperer.curiosity.gesture_when_capped must be a string "
+            f"(an emote name, or '' for none), got {gesture!r}"
+        )
+    return CuriosityConfig(
+        enabled=_curiosity_flag(mapping, "enabled", False),
+        mean_gap_s=_curiosity_seconds(mapping, "mean_gap_s", 360.0, positive=True),
+        stimulus_min_gap_s=_curiosity_seconds(
+            mapping, "stimulus_min_gap_s", 25.0, positive=False
+        ),
+        min_gap_floor_s=_curiosity_seconds(
+            mapping, "min_gap_floor_s", 20.0, positive=False
+        ),
+        quiet_s=_curiosity_seconds(mapping, "quiet_s", 90.0, positive=False),
+        require_owner_present=_curiosity_flag(mapping, "require_owner_present", True),
+        night_quiet=_curiosity_flag(mapping, "night_quiet", True),
+        farewell=_curiosity_flag(mapping, "farewell", True),
+        farewell_after_s=_curiosity_seconds(
+            mapping, "farewell_after_s", 45.0, positive=True
+        ),
+        gesture_when_capped=gesture.strip(),
+    )
+
+
+def _curiosity_flag(mapping: Mapping[str, Any], key: str, default: bool) -> bool:
+    value = mapping.get(key, default)
+    if not isinstance(value, bool):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.curiosity.{key} must be a boolean, got {value!r}"
+        )
+    return value
+
+
+def _curiosity_seconds(
+    mapping: Mapping[str, Any], key: str, default: float, *, positive: bool
+) -> float:
+    value = mapping.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.curiosity.{key} must be a number, got {value!r}"
+        )
+    number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.curiosity.{key} must be a finite number, got {number}"
+        )
+    if positive and not number > 0.0:
+        raise RealtimeConfigError(
+            f"realtime.whisperer.curiosity.{key} must be greater than zero, got "
+            f"{number}. Use 'enabled: false' to turn curiosity off, which is "
+            f"visible in the config."
+        )
+    if not positive and number < 0.0:
+        raise RealtimeConfigError(
+            f"realtime.whisperer.curiosity.{key} must not be negative, got {number}"
+        )
+    return number
+
+
+# ======================== END card CURIO-1 (the chatter block's validator) ===
+
+
 def _whisperer_window(mapping: Mapping[str, Any]) -> float:
     """Card P0-B, deliverable 4. The cap's rolling window, in seconds.
 
@@ -1012,6 +1299,107 @@ def resolve_capture_dir(directory: str) -> Path:
                 f"tree: those fixtures are the record a run is scored against."
             )
     return resolved
+
+
+def turn_detection_from_mapping(mapping: Mapping[str, Any] | None) -> TurnDetection:
+    """Validate the nested ``turn_detection:`` block. Card TURN-1.
+
+    ABSENT ⇒ ``TurnDetection()`` ⇒ ``{"type": "server_vad"}`` on the wire, which
+    is byte-for-byte what this lane sent before the key existed. That is the
+    contract the card names first and the one that is seeded RED: a knob whose
+    default changes anything is not a knob, it is a behaviour change wearing one.
+
+    Type checking happens HERE and range/enum/cross-key checking happens in
+    :class:`~parcel_robot.realtime.protocol.TurnDetection`. The split is not
+    arbitrary: YAML can hand this function a list where a number belongs, and a
+    ``TypeError`` from ``int()`` inside a frozen dataclass is not a sentence an
+    operator can act on. Everything the wire object refuses is re-raised as a
+    :class:`RealtimeConfigError` so one ``except`` in the loader still catches
+    every way a config file can be wrong.
+    """
+
+    if mapping is None:
+        return TurnDetection()
+    if not isinstance(mapping, Mapping):
+        raise RealtimeConfigError(
+            f"realtime.turn_detection must be a mapping, got {type(mapping).__name__}"
+        )
+    unknown = sorted(str(key) for key in mapping if str(key) not in TURN_DETECTION_ALLOWED_KEYS)
+    if unknown:
+        raise RealtimeConfigError(
+            f"unknown realtime.turn_detection key(s): {', '.join(unknown)}; "
+            f"allowed: {', '.join(sorted(TURN_DETECTION_ALLOWED_KEYS))}"
+        )
+    kind = mapping.get("type", TURN_DETECTION_TYPES[0])
+    if not isinstance(kind, str) or kind not in TURN_DETECTION_TYPES:
+        raise RealtimeConfigError(
+            f"realtime.turn_detection.type must be one of "
+            f"{', '.join(TURN_DETECTION_TYPES)}; got {kind!r}"
+        )
+    eagerness = mapping.get("eagerness")
+    if eagerness is not None and (
+        not isinstance(eagerness, str) or eagerness not in TURN_DETECTION_EAGERNESS
+    ):
+        raise RealtimeConfigError(
+            f"realtime.turn_detection.eagerness must be one of "
+            f"{', '.join(TURN_DETECTION_EAGERNESS)}; got {eagerness!r}"
+        )
+    try:
+        return TurnDetection(
+            type=kind,
+            threshold=_turn_number(mapping, "threshold", whole=False),
+            prefix_padding_ms=_turn_number(mapping, "prefix_padding_ms", whole=True),
+            silence_duration_ms=_turn_number(mapping, "silence_duration_ms", whole=True),
+            eagerness=eagerness,
+            interrupt_response=_turn_flag(mapping, "interrupt_response"),
+            create_response=_turn_flag(mapping, "create_response"),
+        )
+    except RealtimeProtocolError as error:
+        raise RealtimeConfigError(f"realtime.{error}") from error
+
+
+def _turn_number(mapping: Mapping[str, Any], key: str, *, whole: bool) -> Any:
+    """One optional number from the ``turn_detection:`` block. Card TURN-1.
+
+    ``None`` (the key is absent) is returned unchanged and is what keeps the
+    payload identical. Booleans are refused before the ``isinstance(..., int)``
+    test can accept them, and non-finite values are refused for the same reason
+    card R25 refuses them everywhere else in this file: ``.inf`` spelled in YAML
+    is a bound that permits everything.
+    """
+
+    if key not in mapping:
+        return None
+    value = mapping[key]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RealtimeConfigError(
+            f"realtime.turn_detection.{key} must be a number, got {value!r}"
+        )
+    number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.turn_detection.{key} must be a finite number, got {number}"
+        )
+    if not whole:
+        return number
+    if number != int(number):
+        raise RealtimeConfigError(
+            f"realtime.turn_detection.{key} is a whole number of milliseconds, got {number}"
+        )
+    return int(number)
+
+
+def _turn_flag(mapping: Mapping[str, Any], key: str) -> bool | None:
+    """One optional boolean from the ``turn_detection:`` block. Card TURN-1."""
+
+    if key not in mapping:
+        return None
+    value = mapping[key]
+    if not isinstance(value, bool):
+        raise RealtimeConfigError(
+            f"realtime.turn_detection.{key} must be a boolean, got {value!r}"
+        )
+    return value
 
 
 def capture_config_from_mapping(mapping: Mapping[str, Any] | None) -> CaptureConfig:
@@ -1259,6 +1647,7 @@ def realtime_config_from_mapping(
         whisperer=whisperer_config_from_mapping(mapping.get("whisperer")),
         capture=capture_config_from_mapping(mapping.get("capture")),
         voice_identity=voice_identity_config_from_mapping(mapping.get("voice_identity")),
+        turn_detection=turn_detection_from_mapping(mapping.get("turn_detection")),
         source=source,
     )
 
@@ -1309,6 +1698,7 @@ __all__ = [
     "ALLOWED_MODES",
     "ALLOWED_UNKNOWN_PLACE_MODES",
     "CAPTURE_ALLOWED_KEYS",
+    "CURIOSITY_ALLOWED_KEYS",
     "DEFAULT_CAPTURE_DIR",
     "DEFAULT_CAPTURE_MAX_MINUTES",
     "DEFAULT_CAPTURE_OWNER_GAP_S",
@@ -1322,23 +1712,28 @@ __all__ = [
     "PROACTIVE_MOTION_REFUSED",
     "REALTIME_CONFIG_ENV",
     "REALTIME_CONFIG_RELATIVE",
+    "TURN_DETECTION_ALLOWED_KEYS",
     "UNKNOWN_PLACE_ASK",
     "UNKNOWN_PLACE_REFUSE",
     "VOICE_IDENTITY_ALLOWED_KEYS",
     "WHISPERER_ALLOWED_KEYS",
     "CaptureConfig",
+    "CuriosityConfig",
     "OwnerEventsConfig",
     "RealtimeConfig",
     "RealtimeConfigError",
+    "TurnDetection",
     "VoiceIdentityConfig",
     "WhispererConfig",
     "capture_config_from_mapping",
+    "curiosity_config_from_mapping",
     "default_realtime_config",
     "load_realtime_config",
     "owner_events_config_from_mapping",
     "realtime_config_from_mapping",
     "resolve_capture_dir",
     "resolve_realtime_config_path",
+    "turn_detection_from_mapping",
     "voice_identity_config_from_mapping",
     "whisperer_config_from_mapping",
 ]

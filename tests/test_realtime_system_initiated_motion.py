@@ -58,6 +58,7 @@ from parcel_robot.realtime.tool_broker import (
     TOOL_NAVIGATE_TO,
     TOOL_PLAY_GESTURE,
     TOOL_RECALL_MEMORY,
+    TOOL_ROAM,
     TOOL_SET_POSE,
     RealtimeToolBroker,
     ToolDoors,
@@ -73,6 +74,11 @@ GOOD_ARGUMENTS = {
     TOOL_PLAY_GESTURE: '{"name": "paw_wave"}',
     TOOL_CIRCLE_OWNER: '{"direction": "clockwise", "size": "normal", "revolutions": 1.0}',
     TOOL_FOLLOW_OWNER: '{"pace": "walk"}',
+    # Card ROAM-1. The ninth tool. Its verdict on this gate is the same one
+    # every travel tool gets and is written down rather than inherited: a roam
+    # the robot started because it talked to itself is bench finding C1 with a
+    # longer fuse.
+    TOOL_ROAM: '{"action": "start", "minutes": 2}',
 }
 
 
@@ -145,6 +151,10 @@ class _Doors:
         self.touched.append(("follow", (pace,)))
         return "Owner-follow enabled"
 
+    def roam(self, action: str, budget_s: float) -> str:
+        self.touched.append(("roam", (action, budget_s)))
+        return "Roaming for the next 120 seconds"
+
     def on_dispatch(self) -> None:
         self.dispatches += 1
 
@@ -159,6 +169,7 @@ class _Doors:
             places=self.places,
             orbit=self.orbit,
             follow=self.follow,
+            roam=self.roam,
             gesture_names=lambda: ("paw_wave", "head_nod"),
             pose_names=lambda: ("sit", "lie_down"),
             on_dispatch=self.on_dispatch,

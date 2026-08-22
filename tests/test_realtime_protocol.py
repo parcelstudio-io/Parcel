@@ -547,3 +547,70 @@ def test_every_client_event_serializes_to_a_type_the_codec_admits() -> None:
     ]
     for event in events:
         assert parse_client_event_type(event.to_payload()) in CLIENT_EVENT_TYPES
+
+
+# ---------------------------------------------------------------------------
+# Card GATE-0 (scrum/20260822/task_20) — RetainedEvent.fields is a FACTORY.
+#
+# `fields: Mapping[str, Any] = MappingProxyType({})` is a class-level mutable
+# default as far as `dataclasses` is concerned. CPython <= 3.11 raises
+# `ValueError: mutable default <class 'mappingproxy'> for field fields` while
+# EXECUTING the decorator, so `import parcel_robot.realtime.protocol` — and with
+# it the whole realtime package — failed on exactly 3.11 while `pyproject.toml`
+# claimed `requires-python >= 3.10`. Nothing here could see it: the dev venv is
+# 3.14 (which permits the shared proxy) and hosted Actions had never run.
+# Measured before the fix on CPython 3.11.15; green after.
+# ---------------------------------------------------------------------------
+
+
+def test_retained_event_defaults_are_distinct_immutable_empty_mappings() -> None:
+    import dataclasses
+    from types import MappingProxyType
+
+    first = RetainedEvent(type_name="a")
+    second = RetainedEvent(type_name="b")
+
+    assert first.fields == second.fields == {}
+    assert isinstance(first.fields, MappingProxyType)
+    assert first.fields is not second.fields, (
+        "a shared class-level default is what CPython 3.11 refuses; per-instance "
+        "is the fix, not a cosmetic rewrite of the same object"
+    )
+    with pytest.raises(TypeError):
+        first.fields["x"] = 1  # type: ignore[index]
+
+    spec = {f.name: f for f in dataclasses.fields(RetainedEvent)}["fields"]
+    assert spec.default is dataclasses.MISSING, "the default must be a factory"
+    assert spec.default_factory is not dataclasses.MISSING
+
+
+def test_the_declared_python_floor_can_actually_execute_the_dataclass() -> None:
+    """The generic form of the same defect: no dataclass in this module may
+    carry a default that `dataclasses` classifies as mutable.
+
+    `dataclasses` refuses `list`/`dict`/`set` defaults on every version and
+    refused anything unhashable up to 3.11. Rather than pin the rule to one
+    field, assert the property over the module.
+    """
+
+    import dataclasses
+    import inspect
+
+    from parcel_robot.realtime import protocol as module
+
+    offenders = []
+    for _name, obj in inspect.getmembers(module, inspect.isclass):
+        if not dataclasses.is_dataclass(obj) or obj.__module__ != module.__name__:
+            continue
+        for spec in dataclasses.fields(obj):
+            default = spec.default
+            if default is dataclasses.MISSING:
+                continue
+            try:
+                hash(default)
+            except TypeError:
+                offenders.append(f"{obj.__name__}.{spec.name} = {default!r}")
+    assert not offenders, (
+        "these dataclass defaults are unhashable and CPython <= 3.11 rejects "
+        f"them at import time, breaking the declared support floor: {offenders}"
+    )

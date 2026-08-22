@@ -140,6 +140,57 @@ TOOL_FOLLOW_OWNER = "follow_owner"
 #: arranged against, so the beat that carries this result must speak.
 TOOL_REMEMBER_FACT = "remember_fact"
 
+# ==================== CARD ROAM-1 — "GO EXPLORE" ON THE HOSTED SURFACE ======
+#
+# A NEW region, beside P0-B's proactive-unlock block and P2-A's owner-model
+# block and touching neither.
+#
+# The ninth tool, and the first that asks the robot to go somewhere WITHOUT
+# saying where. The 2026-08-22 build order refuted "roam on command" as a
+# capability: eight tools, none of them roam, and ``PatrolPolicy`` never
+# constructed on the product path.
+#
+# THE LINEAGE IS ``prompts/functions/patrol.yaml`` (``id: patrol``, "Patrol
+# behavior"). Roam is patrol on a bounded budget, so this tool does not invent
+# a second vocabulary for the same behavior: the three rules that prompt states
+# — patrol/route completion is ONGOING WORK, social actions wait for an idle
+# checkpoint, and blockers are REPORTED rather than routed around — are carried
+# into the description below verbatim in meaning. They are carried in the TOOL
+# DESCRIPTION rather than by editing the prompt because that YAML is
+# digest-pinned in ``runtime_assets/MANIFEST.json``; a text change there means a
+# mirror re-sync and a manifest edit, and the behaviour is fully expressible
+# without one. See ROAM1_STATUS.md, "deviations".
+TOOL_ROAM = "roam"
+
+#: What the model may ask roam to do. ``start`` is the owner saying "go
+#: explore"; ``stop`` is them taking the body back. There is no ``pause``: a
+#: paused roam is an idle robot with a live budget, which is a state nobody
+#: asked for and one more thing that could be forgotten in the started position.
+ROAM_ACTION_START = "start"
+ROAM_ACTION_STOP = "stop"
+ROAM_ACTIONS = (ROAM_ACTION_START, ROAM_ACTION_STOP)
+
+#: The budget the model may request, in MINUTES, and its bounds. Minutes rather
+#: than seconds because that is the unit the owner speaks in ("go explore for a
+#: couple of minutes") and a model handed seconds writes 300 as readily as 30.
+#: The runtime clamps again on its own side — this is the model-facing bound,
+#: not the authority.
+ROAM_MIN_MINUTES = 0.25
+ROAM_MAX_MINUTES = 10.0
+DEFAULT_ROAM_MINUTES = 2.0
+
+#: The patrol prompt's rule, in the words the model reads. Kept as a constant so
+#: the description, the started-detail and the card's test all quote ONE string
+#: instead of three drifting paraphrases.
+ROAM_ONGOING_WORK_NOTE = (
+    "roaming is ongoing work with a time budget: it keeps going until the "
+    "budget runs out or the owner stops it, social things can wait for an idle "
+    "checkpoint between legs, and a blocker is something to report rather than "
+    "a reason to invent a new route"
+)
+
+# ==================== END CARD ROAM-1 constants ============================
+
 #: The three things the model may ask this tool to do. ``remember`` is a
 #: proposal, not a command — the policy decides. ``forget`` is the owner's
 #: "don't remember that" and is always honoured. ``list`` is
@@ -160,6 +211,14 @@ MOTION_TOOLS = frozenset(
         TOOL_NAVIGATE_TO,
         TOOL_CIRCLE_OWNER,
         TOOL_FOLLOW_OWNER,
+        # Card ROAM-1. Membership here is not bookkeeping: it is the entire
+        # mechanism by which "the robot never sets off exploring because it
+        # talked to itself" is true. A proactive roam is bench finding C1 with
+        # a longer fuse — no place noun to check, no arrival to fail, just a
+        # dog that left. It is a MOTION tool and it is NOT in
+        # ``PROACTIVE_MOTION_CEILING``, so no config can put it on the
+        # proactive list.
+        TOOL_ROAM,
     }
 )
 
@@ -263,6 +322,8 @@ BROKER_TOOLS = (
     # element-for-element; inserting in the middle would move six specs for no
     # reason.
     TOOL_REMEMBER_FACT,
+    # Card ROAM-1. Appended LAST for the identical reason P2-A gave one line up.
+    TOOL_ROAM,
 )
 
 #: Card R15 — "done" MEANS DONE.
@@ -288,6 +349,12 @@ ACTIVITY_TOOLS = frozenset(
         TOOL_NAVIGATE_TO,
         TOOL_CIRCLE_OWNER,
         TOOL_FOLLOW_OWNER,
+        # Card ROAM-1. The longest-running activity on the surface — minutes,
+        # not seconds — and therefore the one where "done" MEANS DONE bites
+        # hardest. ``roam(action="stop")`` is in the same set and reads the same
+        # way: the stop has been ASKED FOR, and the runtime's own terminal is
+        # still what says the body settled.
+        TOOL_ROAM,
     }
 )
 
@@ -744,6 +811,62 @@ def build_tool_specs(
                 "required": [],
             },
         },
+        # ================= CARD ROAM-1 spec, appended last =================
+        {
+            "type": "function",
+            "name": TOOL_ROAM,
+            # Three jobs, exactly as P2-A's block above states its own three:
+            #
+            # 1. Get it CALLED. "Go explore", "have a wander", "go look around"
+            #    are the owner's own words for this and there was nothing to
+            #    call — the build order measured the model either fabricating
+            #    ``navigate_to("run route")`` or denying it could move at all.
+            # 2. Stop it CLAIMING. Roaming runs for MINUTES. The result says
+            #    started; the runtime's terminal says finished; there is no
+            #    sentence in between where "I explored the area" is true.
+            # 3. Carry the PATROL PROMPT'S rules (``prompts/functions/
+            #    patrol.yaml``): ongoing work, social things wait for an idle
+            #    checkpoint, blockers get reported.
+            "description": (
+                "Go and explore on your own for a while — wander the area, look "
+                "around, and let your map grow. You CAN do this: when the owner "
+                "says to go explore, go roam, have a wander or go look around, "
+                "CALL this tool with action='start'. Call it with "
+                "action='stop' when they ask you to stop roaming or come back. "
+                f"{ROAM_ONGOING_WORK_NOTE}. You do NOT choose where to go and "
+                "you cannot say where you will end up — the robot picks its own "
+                "way and refuses any heading its safety gate would veto. The "
+                "result only ever says roaming has STARTED, so say you are "
+                "heading off to look around now and NEVER that you have "
+                "explored, arrived, finished or seen anything; the robot's own "
+                "systems report the ending. Never call this because you decided "
+                "to — only when the owner asks."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": list(ROAM_ACTIONS),
+                        "description": (
+                            "start roaming, or stop a roam already running. "
+                            "Defaults to start."
+                        ),
+                    },
+                    "minutes": {
+                        "type": "number",
+                        "description": (
+                            f"How long to roam, {ROAM_MIN_MINUTES:g} to "
+                            f"{ROAM_MAX_MINUTES:g} minutes. Only if the owner "
+                            f"said how long; otherwise leave it out and the "
+                            f"robot uses its own budget."
+                        ),
+                    },
+                },
+                "required": [],
+            },
+        },
+        # ================= END CARD ROAM-1 spec ============================
     )
 
 
@@ -787,6 +910,13 @@ class ToolDoors:
     places: Callable[[], Sequence[str]] = tuple
     orbit: Callable[[str, str, float], str] = _unwired
     follow: Callable[[str], str] = _unwired
+    #: Card ROAM-1. ``roam(action, budget_s)`` — ONE door for both actions
+    #: rather than ``start_roam``/``stop_roam``, because unlike P2-A's three
+    #: fact doors these two have the same consequence class (they hand the body
+    #: to, or take it back from, one behavior) and the runtime is the thing that
+    #: owns whether a roam is currently running. A host that has not wired it
+    #: gets ``_unwired``'s honest refusal, exactly like ``orbit``/``follow``.
+    roam: Callable[[str, float], str] = _unwired
     #: Card P2-A. The owner-model doors. Three rather than one because they
     #: have three different consequences — a write, a delete and a read — and a
     #: single ``facts(action, ...)`` door would make "did this call change
@@ -1055,6 +1185,11 @@ class RealtimeToolBroker:
             result = self._circle_owner(payload)
         elif name == TOOL_FOLLOW_OWNER:
             result = self._follow_owner(payload)
+        elif name == TOOL_ROAM:
+            # Card ROAM-1. Reached only after the R11 provenance gate above has
+            # let it past, which for this tool means "the owner asked" and
+            # nothing else — it is in MOTION_TOOLS and not in the ceiling.
+            result = self._roam(payload)
         else:
             result = self._navigate_to(payload)
         if admitted_proactively:
@@ -1553,6 +1688,79 @@ class RealtimeToolBroker:
             ),
         }
 
+    # ============================================== card ROAM-1: go explore
+    def _roam(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        """``roam(action, minutes)`` — patrol, on a bounded budget, on command.
+
+        Routed through the supervisor's ``set_behavior`` arm with mode
+        ``roam``/``roam_stop``, i.e. the same authority "follow me" takes. No
+        new authority is created here: the broker validates the shape, the
+        supervisor validates the request, the runtime door starts (or ends) the
+        behavior, and every velocity the behavior proposes still crosses
+        ``apply_reactive_safety`` on the dispatch path like any other.
+
+        The budget is clamped, not refused. A model that asks for an hour is
+        not making a safety error — it is guessing at a unit — and the honest
+        answer is the robot's own ceiling with the clamp reported in the result
+        so the model can say the true number instead of the one it asked for.
+        """
+
+        action = _enum(payload.get("action"), ROAM_ACTIONS, default=ROAM_ACTION_START)
+        if action == ROAM_ACTION_STOP:
+            allowed = self._validated(
+                ToolCall("set_behavior", {"mode": "roam_stop"}), TOOL_ROAM
+            )
+            if allowed is not None:
+                return allowed
+            self._doors.on_dispatch()
+            try:
+                detail = self._doors.roam(ROAM_ACTION_STOP, 0.0)
+            except ValueError as error:
+                return _refused(TOOL_ROAM, str(error))
+            except RuntimeError as error:
+                return _dropped(TOOL_ROAM, _reason(str(error)))
+            return {
+                "status": STATUS_OK,
+                "tool": TOOL_ROAM,
+                "detail": "the robot is stopping its roam and settling where it is",
+                "admitted": _reason(str(detail)),
+                "action": ROAM_ACTION_STOP,
+            }
+
+        minutes, clamped = _roam_minutes(payload.get("minutes"))
+        allowed = self._validated(
+            ToolCall("set_behavior", {"mode": "roam"}), TOOL_ROAM
+        )
+        if allowed is not None:
+            return allowed
+        self._doors.on_dispatch()
+        try:
+            detail = self._doors.roam(ROAM_ACTION_START, minutes * 60.0)
+        except ValueError as error:
+            # The runtime refused a well-formed request — already roaming, no
+            # pose, a latch. It is a REJECT and the sentence says why, so the
+            # model narrates a true reason instead of inventing one.
+            return _refused(TOOL_ROAM, str(error))
+        except RuntimeError as error:
+            return _dropped(TOOL_ROAM, _reason(str(error)))
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_ROAM,
+            # Present progressive, and no destination in it: the one sentence
+            # this tool must never produce is a place the robot has not chosen.
+            "detail": (
+                f"the robot is heading off to explore on its own for about "
+                f"{minutes:g} minutes"
+            ),
+            "admitted": _reason(str(detail)),
+            "action": ROAM_ACTION_START,
+            "minutes": round(minutes, 3),
+            "minutes_clamped": clamped,
+            "ongoing_work_note": ROAM_ONGOING_WORK_NOTE,
+        }
+
+    # ========================================== END card ROAM-1 broker arm
+
     # ------------------------------------------------------------- plumbing
     def _validated(self, call: ToolCall, tool: str) -> dict[str, object] | None:
         """``None`` means the supervisor allowed it. Anything else is the answer."""
@@ -1797,6 +2005,24 @@ def _redacted_key(decision: object) -> str:
     return "_".join(sorted(set(matched))[:_FACT_KEY_WORDS]) or "redacted"
 
 
+def _roam_minutes(value: object) -> tuple[float, bool]:
+    """Card ROAM-1. Clamp a requested roam budget; say whether it was clamped.
+
+    Returns the pair rather than the number alone for the same reason
+    ``_intensity`` does: the model must be able to say the length it is
+    ACTUALLY roaming for, and a silently shortened budget is a robot that
+    contradicts its own last sentence four minutes later.
+    """
+
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return DEFAULT_ROAM_MINUTES, False
+    number = float(value)
+    if not math.isfinite(number):
+        return DEFAULT_ROAM_MINUTES, False
+    clamped = min(ROAM_MAX_MINUTES, max(ROAM_MIN_MINUTES, number))
+    return clamped, clamped != number
+
+
 def _revolutions(value: object) -> float:
     """Clamp laps into the supervisor's own [0.25, 1.0] window."""
 
@@ -1991,6 +2217,7 @@ __all__ = [
     "BROKER_TOOLS",
     "COMPLETION_LANGUAGE",
     "COMPLETION_NOTE",
+    "DEFAULT_ROAM_MINUTES",
     "FOLLOW_PACES",
     "MAX_INTENSITY",
     "MIN_INTENSITY",
@@ -2007,6 +2234,12 @@ __all__ = [
     "REFUSAL_SYSTEM_INITIATED_MOTION",
     "RESPONSE_FROM_OWNER",
     "RESPONSE_FROM_SYSTEM",
+    "ROAM_ACTIONS",
+    "ROAM_ACTION_START",
+    "ROAM_ACTION_STOP",
+    "ROAM_MAX_MINUTES",
+    "ROAM_MIN_MINUTES",
+    "ROAM_ONGOING_WORK_NOTE",
     "SCRIPT_LANGUAGE",
     "STATUS_DEFERRED",
     "STATUS_DROPPED",
@@ -2024,6 +2257,7 @@ __all__ = [
     "TOOL_NAVIGATE_TO",
     "TOOL_PLAY_GESTURE",
     "TOOL_RECALL_MEMORY",
+    "TOOL_ROAM",
     "TOOL_SET_POSE",
     "UNKNOWN_PLACE_ASK",
     "UNKNOWN_PLACE_DETAIL",

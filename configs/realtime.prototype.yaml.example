@@ -367,6 +367,81 @@ whisperer:
     # the robot asked for rather than overheard.
     question_of_the_day: true
 
+  # -------------------------------------------------------------------------
+  # WHEN THE DOG TALKS ABOUT WHAT IT *SEES* (card CURIO-1) — ON, prototype only.
+  #
+  # This whole block is an ADDITION, not a departure: `configs/realtime.yaml.example`
+  # does not carry a `curiosity:` key at all, so there is no production value
+  # here that this file changed. The TEN departures in the header above are
+  # still exactly ten. With the block absent — which is what every config
+  # written before this card is — `enabled` reads false and the robot never
+  # produces a curiosity class at all.
+  #
+  # WHY IT NEEDS A RATE AND `owner_events` ABOVE DOES NOT. P2-B's classes are
+  # edge-triggered on something rare: you walked in. These are fed by the
+  # learned map, which grows on a camera frame, at 2 Hz, for the length of a
+  # walk. Left to the band table alone the dog would spend the owner's whole
+  # minute on the first six lampposts, so the cadence is the load-bearing knob
+  # here — `mean_gap_s` is the mean of a Poisson gap, not a timer.
+  #
+  # IT BUYS NOTHING, exactly like the block above: every remark is banded,
+  # deduplicated, min-gapped and counted against `max_updates_per_minute`, and
+  # no curiosity class is in the critical set. When the cap IS spent, the
+  # remark becomes `gesture_when_capped` instead — free, instant, unbilled.
+  curiosity:
+    enabled: true
+
+    # THE TWO CADENCES. They are two different kinds of remark, not one number
+    # written twice:
+    #
+    #   mean_gap_s          IDLE chatter — `idle_remark`, the thing the dog says
+    #                       when NOTHING has happened, coloured by the time of
+    #                       day. 360 = six minutes, the middle of the 4-8 minute
+    #                       band. Exponential draws around this mean, so the dog
+    #                       is irregular rather than metronomic.
+    #                       `PARCEL_CURIOSITY_SEED` seeds the draw when a run
+    #                       needs to be repeatable.
+    #   stimulus_min_gap_s  SOMETHING JUST HAPPENED — `novel_object`,
+    #                       `scene_change`, `place_learned`, `ask_about`. A
+    #                       fixed floor, not a mean: the subject is already in
+    #                       the past, and a six-minute wait would have the dog
+    #                       narrating a lamppost it walked past four corners
+    #                       ago. This is the knob that makes a 120 s roam
+    #                       produce 3-6 remarks with nothing overridden.
+    mean_gap_s: 360.0
+    stimulus_min_gap_s: 25.0
+
+    # The floor a draw is clamped to. An exponential can come back at 0.2 s and
+    # a remark 0.2 s after the last one is a stutter, not a cadence.
+    min_gap_floor_s: 20.0
+
+    # An OWNER exchange must be this far in the past before a remark goes out.
+    # This is the "do not talk over me" knob, and it counts your turns only:
+    # the robot's own unprompted remarks are paced by `mean_gap_s` instead, and
+    # feeding them back in here would collapse the two into the slower one.
+    quiet_s: 90.0
+
+    # Remark only when you are there to hear it.
+    require_owner_present: true
+
+    # Go quiet between 22:00 and 05:00 local. The band boundaries are not
+    # configurable on purpose; this is the knob.
+    night_quiet: true
+
+    # Say goodbye on the falling edge of the same presence track P2-B's hello
+    # rides. `farewell_after_s` is much larger than `appear_debounce_s` above
+    # and deliberately so: a hello fired at a passing shadow is charming, and a
+    # goodbye fired at one is the robot farewelling your back while you are
+    # standing in front of it.
+    farewell: true
+    farewell_after_s: 45.0
+
+    # THE FREE VARIANT. When the per-minute cap above is already spent, the
+    # remark becomes this gesture: nothing on the wire, nothing billed, and the
+    # dog still visibly noticed something. Must be a name in the runtime's
+    # emote catalog; '' turns it off.
+    gesture_when_capped: curious_look
+
 # ---------------------------------------------------------------------------
 # SESSION AUDIO CAPTURE (card R17) — DEFAULT OFF, and off is the shipped answer.
 #
@@ -526,6 +601,39 @@ voice_identity:
   #   sudo udevadm control --reload && sudo udevadm trigger --action=change /sys/bus/usb/devices/3-1
   #
   # (A udev trigger re-applies node permissions; it does not reset the device.)
+  #
+  # --- AIR-1 device notes (card task_25) — BEGIN --------------------------
+  # Measured on this host 2026-08-22 with `tools/xvf3800_probe.py`, which
+  # prints all of the following and exits non-zero when any of it stops being
+  # true:
+  #
+  # * `/dev/bus/usb/003/008` is root:root 0664 and this user is in `plugdev`,
+  #   so the rule above is the whole difference between a working DoA
+  #   prefilter and 100 % Errno 13. The sysfs path in the trigger line is this
+  #   host's real one (`/sys/bus/usb/devices/3-1` = bus 3, device 8).
+  # * The array is **16 kHz only, in both directions** — one rate in
+  #   `/proc/asound/card2/stream0`, and PortAudio answers PaErrorCode -9997
+  #   (Invalid sample rate) for 22 050, 24 000, 44 100 and 48 000 Hz on
+  #   `hw:2,0`. The hosted lane produces 24 kHz and Piper 22.05 kHz, so the
+  #   path to this device MUST resample. `tests/test_air1_rate_pin.py` holds
+  #   the pin and reddens if a producer's rate moves without one.
+  # * Capture is two channels and they are two different beams: ch0
+  #   Conference, **ch1 ASR**. An ear that asks for one channel gets
+  #   PipeWire's average of the two, which is neither. The browser ear must
+  #   select ch1 explicitly (card MARK-1).
+  # * The array's hardware AEC references **its own DAC**, so the speaker has
+  #   to hang off the array's amplifier. Playback routed anywhere else is echo
+  #   the AEC has never heard of, and it comes back as false barge-ins.
+  #   `tools/measure_erle.py` measures what survives; the gate is >= 20 dB.
+  # * Each USB capture channel is a runtime-selectable MUX
+  #   (`AUDIO_MGR_OP_L`/`_R`, vendor control interface, same one as DoA above):
+  #   raw mic, amplified mic as the canceller receives it, far-end reference,
+  #   AEC residual, or the processed beam. So the echo measurement can be taken
+  #   the same-instant way on ONE recording — `measure_erle.py --method mux` —
+  #   and needs no second loudspeaker. It needs the udev rule above. Writing
+  #   that mux changes what a LIVE capture stream carries, so the tool reads the
+  #   routing first and restores it in a `finally`; nothing is saved to flash.
+  # --- AIR-1 device notes — END -------------------------------------------
   doa: false
 
   # The television's azimuth, in degrees, as [start, end]. Wrap is allowed:
@@ -535,3 +643,50 @@ voice_identity:
   # Setting this while `doa: false` is REFUSED: nothing would ever read an
   # azimuth to compare it against.
   # rejected_sector: [80, 110]
+
+# WHEN YOUR TURN ENDS (card TURN-1) — THE PROTOTYPE CHOICE IS NOT YET MADE. ----
+#
+# The prototype directive wants a companion that "communicates fluidly", and
+# half of that is endpointing: today every pause longer than the provider's
+# ~500 ms silence tail ends your turn, mid-sentence pauses included. This card
+# made that a knob. It did NOT get to pick a value, and the reason is stated
+# rather than hidden: the choice is pre-registered to come from a measurement
+# on the owner's own voice (commit p50 <= 0.6 s, 0/20 mid-sentence commits),
+# and that recording does not exist yet.
+#
+# So this block ships COMMENTED, exactly like the shipped example, and the
+# prototype behaves as it does today until the numbers exist. A default guessed
+# in a config file and then never measured is how "semantic" ended up in
+# robot.yaml applying to a loop nobody runs.
+#
+# THE TEN MINUTES THAT SETTLES IT (owner):
+#
+#   .parcel/bin/python tools/replay_turn_detection.py --plan \
+#       --out ~/.cache/parcel-turn1/recording
+#   ~/.cache/parcel-turn1/recording/record.sh          # 20 utterances, ~10 min
+#   for arm in server_vad_default semantic_low semantic_auto semantic_high; do
+#     .parcel/bin/python tools/replay_turn_detection.py --replay --live \
+#         --recording ~/.cache/parcel-turn1/recording --arm "$arm" \
+#         --out ~/.cache/parcel-turn1/results
+#   done
+#
+# Then uncomment the winner. The expected one, on the reasoning that a
+# household companion should wait rather than interrupt, is the first:
+#
+# turn_detection:
+#   type: semantic_vad
+#   eagerness: low            # low | medium | high | auto
+#   interrupt_response: true  # the provider cancels its own reply when you talk
+#
+# The patient energy VAD, if semantic_vad turns out to be worse on your voice:
+#
+# turn_detection:
+#   type: server_vad
+#   silence_duration_ms: 700  # 200-800 accepted; outside is a refusal
+#   threshold: 0.5            # raise in a room with a television
+#   prefix_padding_ms: 300    # audio kept before the trigger, 0-2000
+#
+# `eagerness` under server_vad, and `threshold` / `prefix_padding_ms` /
+# `silence_duration_ms` under semantic_vad, are REFUSED: the provider accepts
+# such a frame and ignores the key, which is the same silent-discard defect
+# that made every session before 2026-08-18 run on the wrong voice and VAD.

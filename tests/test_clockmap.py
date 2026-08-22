@@ -25,6 +25,7 @@ The five card gates and where they live:
 from __future__ import annotations
 
 import ast
+import importlib.machinery
 import importlib.util
 import json
 import math
@@ -1195,14 +1196,22 @@ def test_probe_availability_fails_closed_on_this_hardwareless_dev_box() -> None:
     # The L2: its binding is genuinely absent, which is the module arm.
     assert availability[SourceDevice.L2][1] == ()
 
-    # The D455: the module IS here and the probe is still ABSENT. This is the
-    # arm the card exists for.
+    # The D455: ABSENT either way, and the module census says which half.
+    #
+    # Card ENV-1b: the census depends on the venv, so the guard asks instead of
+    # assuming. ``.parcel`` has P1-A's wheel — that is the arm ENV-1 exists for,
+    # module present and the probe still ABSENT. A venv from
+    # ``pip install .[dev]`` has no wheel (the ``dev`` extra cannot declare
+    # ``pyrealsense2``: no aarch64 wheel, and it would break the Orin install),
+    # so the module arm is asserted there instead of skipped.
     d455_satisfied, d455_present = availability[SourceDevice.D455]
     assert d455_satisfied is False
-    assert d455_present == ("pyrealsense2",), (
-        "this arm needs P1-A's wheel installed; without it the guard proves nothing "
-        "about module presence failing to imply device presence"
-    )
+    if importlib.util.find_spec("pyrealsense2") is None:
+        assert d455_present == (), "the census must not name a module it cannot find"
+    else:
+        assert d455_present == ("pyrealsense2",)
+    # And in both venvs the device half is answered independently, by a /dev
+    # census that imports nothing.
     assert device_nodes_present(PROBE_REQUIREMENTS[SourceDevice.D455]) == (), (
         "a /dev/video* node exists on this host; the hardwareless arm cannot be measured"
     )
@@ -1211,21 +1220,55 @@ def test_probe_availability_fails_closed_on_this_hardwareless_dev_box() -> None:
     assert availability[SourceDevice.ORIN][0] is True
 
 
-def test_seeded_red_a_probe_satisfied_by_its_module_alone_is_caught() -> None:
+def test_seeded_red_a_probe_satisfied_by_its_module_alone_is_caught(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The seeded failure behind the guard above, run rather than described.
 
     ``probe_availability`` before card ENV-1, verbatim: modules only. Fed the
     D455's real requirement on this real host, it answers *satisfied* — which is
     exactly the claim the guard must reject. If the rule above ever regresses to
     module-presence-only, this reproduction is what shows the difference.
+
+    Card ENV-1b: the seed only bites in a venv that HAS the wheel — ``.parcel``
+    does, a fresh ``pip install .[dev]`` venv does not, and the ``dev`` extra
+    cannot carry ``pyrealsense2`` (no aarch64 wheel; it would break the install
+    on the Orin). Rather than skip there, the wheel-absent venv gets the seed it
+    CAN run: the requirement is fed to the module-only rule with the module
+    staged present, and the real rule must still answer ABSENT because the
+    ``/dev`` census is a second, independent condition.
     """
 
     requirement = PROBE_REQUIREMENTS[SourceDevice.D455]
     module_only = not requirement.modules or any(
         importlib.util.find_spec(name) is not None for name in requirement.modules
     )
-    assert module_only is True, "the D455's module is not installed; nothing to seed"
-    assert probe_availability()[SourceDevice.D455][0] is False, (
+    if module_only:
+        # The wheel is really here (``.parcel``): the pre-ENV-1 rule says
+        # satisfied about this very host, and the shipped rule must not.
+        assert probe_availability()[SourceDevice.D455][0] is False, (
+            "probe_availability agrees with the module-only rule — the device gate is gone"
+        )
+        return
+
+    # No wheel on the path. Stage the module half instead, so the seed still
+    # measures the thing: with the module present the OLD rule is satisfied, and
+    # the shipped rule must still refuse on the missing /dev node.
+    real_find_spec = importlib.util.find_spec
+
+    def staged(name: str, package: str | None = None):
+        if name in requirement.modules:
+            return importlib.machinery.ModuleSpec(name, None)
+        return real_find_spec(name, package)
+
+    monkeypatch.setattr(importlib.util, "find_spec", staged)
+    staged_module_only = any(
+        importlib.util.find_spec(name) is not None for name in requirement.modules
+    )
+    assert staged_module_only is True, "the stage did not take; nothing to seed"
+    satisfied, present = probe_availability()[SourceDevice.D455]
+    assert present == ("pyrealsense2",), "the module census must report the staged module"
+    assert satisfied is False, (
         "probe_availability agrees with the module-only rule — the device gate is gone"
     )
 
@@ -1281,6 +1324,79 @@ def test_a_non_interrogable_device_is_a_ritual_not_a_missing_probe(
     assert all(satisfied for satisfied, _ in probe_availability().values())
     assert main(["--check"]) == 0
     assert "OK: every declared clock probe" in capsys.readouterr().out
+
+
+_ROS2_SENTENCE = "Orin inside the ROS 2 Humble environment"
+
+
+def _refused_paragraphs(out: str) -> tuple[str, str]:
+    """The MODULE MISSING and DEVICE MISSING halves of ``--check``'s refusal."""
+
+    refusal = out.split("REFUSED:", 1)[1]
+    blocks = [block for block in refusal.split("\n\n") if block.strip()]
+    module_half = "\n".join(b for b in blocks if "MODULE MISSING" in b)
+    device_half = "\n".join(b for b in blocks if "DEVICE MISSING" in b)
+    return module_half, device_half
+
+
+def test_a_device_absent_refusal_gives_the_attach_remedy_not_the_sdk_remedy(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Card ENV-1b item 2: the REFUSED paragraph must split the two facts.
+
+    ENV-1 made ``probe_availability`` two independent conditions, but ``--check``
+    still printed one remedy for both: "Run this on the Orin inside the ROS 2
+    Humble environment that owns the vendor SDKs." On a host whose module census
+    is non-empty and whose declared ``/dev`` node is missing — which is exactly
+    what a D455 that is not plugged in looks like on a box with the wheel — that
+    remedy sends the operator to reinstall an SDK they already have. No SDK
+    install has ever attached a camera.
+    """
+
+    import scripts.parcel_capture.clockmap as clockmap_module
+
+    real_find_spec = importlib.util.find_spec
+    findable = {"pyrealsense2"}
+
+    def fake_find_spec(name: str, package: str | None = None) -> object | None:
+        if name in findable:
+            return object()
+        return real_find_spec(name, package)
+
+    monkeypatch.setattr(importlib.util, "find_spec", fake_find_spec)
+    # Nothing is attached, for any device that declares a node.
+    monkeypatch.setattr(clockmap_module, "device_nodes_present", lambda _req: ())
+
+    # --- arm 1: the D455 is the ONLY unsatisfied device --------------------
+    # Its SDK is here and its cable is not, so the module remedy is not merely
+    # misplaced — it must not be printed at all.
+    findable.update({"rclpy", "cyclonedds", "unitree_lidar_sdk_pybind"})
+    assert main(["--check"]) == 2
+    out = capsys.readouterr().out
+    assert "Traceback" not in out
+    refused = next(line for line in out.splitlines() if line.startswith("REFUSED:"))
+    assert "d455" in refused
+    module_half, device_half = _refused_paragraphs(out)
+    assert module_half == "", module_half
+    assert "d455" in device_half
+    assert "/dev/video*" in device_half
+    assert "ls /dev/video*" in device_half
+    assert _ROS2_SENTENCE not in out, "the SDK remedy for a device-absent refusal"
+
+    # --- arm 2: both halves are non-empty ----------------------------------
+    # The dog's and the L2's SDKs really are absent here, so the module remedy
+    # is right for THEM — and must still not attach to the D455.
+    findable.difference_update({"rclpy", "cyclonedds", "unitree_lidar_sdk_pybind"})
+    assert main(["--check"]) == 2
+    out = capsys.readouterr().out
+    module_half, device_half = _refused_paragraphs(out)
+    assert "go2" in module_half and "l2" in module_half
+    assert "d455" not in module_half
+    assert _ROS2_SENTENCE in module_half
+    assert "d455" in device_half and "/dev/video*" in device_half
+    assert _ROS2_SENTENCE not in device_half
+    # The existing contract is unchanged: same exit code, same two words.
+    assert "REFUSED" in out and "permanently unrecoverable" in out
 
 
 # --------------------------------------------------------------------------- #

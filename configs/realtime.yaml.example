@@ -456,6 +456,39 @@ voice_identity:
   #   sudo udevadm control --reload && sudo udevadm trigger --action=change /sys/bus/usb/devices/3-1
   #
   # (A udev trigger re-applies node permissions; it does not reset the device.)
+  #
+  # --- AIR-1 device notes (card task_25) — BEGIN --------------------------
+  # Measured on this host 2026-08-22 with `tools/xvf3800_probe.py`, which
+  # prints all of the following and exits non-zero when any of it stops being
+  # true:
+  #
+  # * `/dev/bus/usb/003/008` is root:root 0664 and this user is in `plugdev`,
+  #   so the rule above is the whole difference between a working DoA
+  #   prefilter and 100 % Errno 13. The sysfs path in the trigger line is this
+  #   host's real one (`/sys/bus/usb/devices/3-1` = bus 3, device 8).
+  # * The array is **16 kHz only, in both directions** — one rate in
+  #   `/proc/asound/card2/stream0`, and PortAudio answers PaErrorCode -9997
+  #   (Invalid sample rate) for 22 050, 24 000, 44 100 and 48 000 Hz on
+  #   `hw:2,0`. The hosted lane produces 24 kHz and Piper 22.05 kHz, so the
+  #   path to this device MUST resample. `tests/test_air1_rate_pin.py` holds
+  #   the pin and reddens if a producer's rate moves without one.
+  # * Capture is two channels and they are two different beams: ch0
+  #   Conference, **ch1 ASR**. An ear that asks for one channel gets
+  #   PipeWire's average of the two, which is neither. The browser ear must
+  #   select ch1 explicitly (card MARK-1).
+  # * The array's hardware AEC references **its own DAC**, so the speaker has
+  #   to hang off the array's amplifier. Playback routed anywhere else is echo
+  #   the AEC has never heard of, and it comes back as false barge-ins.
+  #   `tools/measure_erle.py` measures what survives; the gate is >= 20 dB.
+  # * Each USB capture channel is a runtime-selectable MUX
+  #   (`AUDIO_MGR_OP_L`/`_R`, vendor control interface, same one as DoA above):
+  #   raw mic, amplified mic as the canceller receives it, far-end reference,
+  #   AEC residual, or the processed beam. So the echo measurement can be taken
+  #   the same-instant way on ONE recording — `measure_erle.py --method mux` —
+  #   and needs no second loudspeaker. It needs the udev rule above. Writing
+  #   that mux changes what a LIVE capture stream carries, so the tool reads the
+  #   routing first and restores it in a `finally`; nothing is saved to flash.
+  # --- AIR-1 device notes — END -------------------------------------------
   doa: false
 
   # The television's azimuth, in degrees, as [start, end]. Wrap is allowed:
@@ -465,3 +498,68 @@ voice_identity:
   # Setting this while `doa: false` is REFUSED: nothing would ever read an
   # azimuth to compare it against.
   # rejected_sector: [80, 110]
+
+# WHEN YOUR TURN ENDS (card TURN-1). ------------------------------------------
+#
+# THIS WHOLE BLOCK IS COMMENTED OUT AND THAT IS THE SHIPPED DEFAULT. With no
+# `turn_detection:` key the lane sends exactly `{"type": "server_vad"}` — the
+# frame it has sent since 2026-08-18 — so copying this file changes nothing
+# about how the robot listens. Uncomment a block below to change it.
+#
+# Until this card, endpointing was not a setting at all: `"server_vad"` was a
+# string literal inside realtime/protocol.py, and the provider's ~500 ms silence
+# tail was therefore a property of the source code. Every pause longer than it
+# ended your turn — including the pause in the middle of an ordinary sentence.
+# (`robot.yaml speech.endpointing: semantic` is a DIFFERENT endpointer on the
+# `--legacy` local loop and has never applied to the hosted lane.)
+#
+# TWO ENDPOINTERS, AND THEY TAKE DIFFERENT KNOBS.
+#
+#   server_vad    an energy VAD. Ends your turn after a fixed silence tail.
+#                 Reads: threshold, prefix_padding_ms, silence_duration_ms.
+#   semantic_vad  asks the model whether the sentence SOUNDED finished.
+#                 Reads: eagerness.
+#
+# Sending a knob to the endpointer that does not read it is REFUSED here, not
+# ignored. The provider would accept the frame and drop the key — which is
+# precisely how every session before 2026-08-18 ran on the wrong voice and the
+# wrong VAD while this repo believed it had set both.
+#
+# turn_detection:
+#   # An energy VAD that waits longer than the default before deciding you are
+#   # done. 200-800 ms is the accepted band; outside it is a refusal, because
+#   # below 200 ms the tail is shorter than the pause inside an ordinary
+#   # two-clause sentence and above 800 ms the robot reads as deaf.
+#   type: server_vad
+#   silence_duration_ms: 700
+#   # Activation probability, 0-1. Higher is harder to trigger — raise it in a
+#   # room with a television in it.
+#   threshold: 0.5
+#   # Milliseconds of audio kept from BEFORE the trigger, so a turn does not
+#   # start with a clipped first syllable. 0-2000.
+#   prefix_padding_ms: 300
+#
+# turn_detection:
+#   # The one this card exists for: let the model decide whether you finished
+#   # the sentence, and trade eagerness for patience.
+#   type: semantic_vad
+#   # low | medium | high | auto. `low` waits — it is the setting for a person
+#   # who thinks mid-sentence. `high` jumps in. `auto` is the provider's balance.
+#   eagerness: low
+#   # Whether the PROVIDER cancels its own reply when it hears you start
+#   # talking. The lane also barges in locally the moment it hears you, so this
+#   # is the other half of the same behaviour and you almost certainly want it.
+#   interrupt_response: true
+#
+# create_response: false is accepted on both and is a FOOTGUN worth stating
+# out loud: it means the provider commits your turn and then answers nothing,
+# leaving the lane's watchdog as the only thing that will ever speak. It exists
+# for a build that drives responses itself. Leave it alone otherwise.
+#
+# Which one to run is a MEASUREMENT, not a taste: record twenty two-clause
+# utterances and replay them through each arm —
+#
+#   .parcel/bin/python tools/replay_turn_detection.py --arms
+#   .parcel/bin/python tools/replay_turn_detection.py --plan --out <dir>
+#   .parcel/bin/python tools/replay_turn_detection.py --replay --live \
+#       --recording <dir> --arm semantic_low

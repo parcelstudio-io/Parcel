@@ -1,0 +1,70 @@
+### FINISH-1 seeded-RED transcripts — C/GATE-0 and E/AIR-1 · 2026-08-22T12:31:36-04:00
+
+##### C1 closure stops reporting unmanifested files / C6 seat removed / C7 two stages one evaluator
+=== G1 closure stops reporting unmanifested files   (scripts/ci_gate.py sha256 b73ccf1feb65dcdc65b34257d02fdb45af07e58845ebbffd09912d5aab4f9c22)
+--- SEEDED ---
+tests/test_unitree_asset_pack.py:419: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_unitree_asset_pack.py::test_an_unmanifested_file_smuggled_through_the_carve_out_reddens
+1 failed, 26 passed in 1.26s
+RESTORE OK (byte-identical)
+--- RESTORED ---
+...........................                                              [100%]
+27 passed in 1.40s
+
+=== G6 the CODEBASE_INDEX.md seat removed   (tests/test_held_out_scene.py sha256 3b40324427d23da18499be372b0786fce873b407b1e05827fd082067cad73c7d)
+--- SEEDED ---
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_held_out_scene.py::test_only_the_allowlist_names_the_held_out_scene
+1 failed, 6 passed, 1 warning in 1.29s
+RESTORE OK (byte-identical)
+--- RESTORED ---
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+7 passed, 1 warning in 1.31s
+
+=== G7 two stages backed by one evaluator   (scripts/ci_gate.py sha256 b73ccf1feb65dcdc65b34257d02fdb45af07e58845ebbffd09912d5aab4f9c22)
+--- SEEDED ---
+FAILED tests/test_ci_gate.py::test_one_exploding_evaluator_costs_exactly_one_row[evaluate_ruff-1]
+FAILED tests/test_ci_gate.py::test_one_exploding_evaluator_costs_exactly_one_row[evaluate_hard_safety-1]
+FAILED tests/test_ci_gate.py::test_one_exploding_evaluator_costs_exactly_one_row[_pytest_gate-4]
+3 failed, 56 deselected in 0.14s
+RESTORE OK (byte-identical)
+--- RESTORED ---
+...                                                                      [100%]
+3 passed, 56 deselected in 0.12s
+
+
+##### C3 seeds E and F, re-measured POST-INTEGRATION on the final tree
+=== SEED E (post-integration): one vendored OBJ deleted
+foot.obj sha256 df9e78a7c0110d02557439010f2a5f11f0ec4fd907b32704145dbd6aa7affc0b
+FAILED tests/test_sim.py::test_pose_controller_moves_toward_targets - ValueEr...
+FAILED tests/test_sim.py::test_expression_overlay_is_additive_and_never_disturbs_targets
+9 failed, 32 passed in 0.93s
+RESTORE OK (byte-identical)
+.........................................                                [100%]
+41 passed in 1.62s
+
+=== SEED F (post-integration): the blanket third_party/ ignore restored
+.gitignore sha256 2c56ef101b389e55972181cede007f134d4773463c43a1d584111832b06509ce
+FAILED tests/test_unitree_asset_pack.py::test_git_would_ship_the_pack_and_nothing_else_under_third_party
+FAILED tests/test_unitree_asset_pack.py::test_an_unmanifested_file_smuggled_through_the_carve_out_reddens
+FAILED tests/test_unitree_asset_pack.py::test_the_gitignore_carve_out_really_would_ship_a_stray_obj
+3 failed, 1 passed, 23 deselected in 0.89s
+RESTORE OK (byte-identical)
+....                                                                     [100%]
+4 passed, 23 deselected in 0.90s
+
+##### E1 the tee's interrupted_at stamp goes unread
+sha256 before: cd8edb3ecabcb539b9d5f40239d8bd5356283029f0c0180582b368b4e98cdfa3
+--- SEEDED run ---
+    from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_air1_scorecard.py::test_the_tee_alone_yields_an_interrupt_median
+1 failed, 39 passed, 1 warning in 8.98s
+RESTORE OK (byte-identical) cd8edb3ecabcb539b9d5f40239d8bd5356283029f0c0180582b368b4e98cdfa3
+--- RESTORED run ---
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+40 passed, 1 warning in 8.99s

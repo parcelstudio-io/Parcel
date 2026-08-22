@@ -56,20 +56,34 @@ The four IMUs (dog body, built-in LiDAR, add-on L2, D455) are grouped by
 other at rest by :func:`imu_cross_check`: three units at 9.81 and one at 1e24
 identifies the broken unit with no calibration and no second session.
 
-Two Pythons, no vendor SDK
---------------------------
+Two Pythons, and two facts: the module and the device
+-----------------------------------------------------
 This tree may assume Python 3.10 + Humble because it runs on the Orin; it is
-*developed* on a box that has none of ``rclpy``, ``cyclonedds``,
-``unitree_sdk2py``, ``pyrealsense2``, ``cv2``, ``mcap`` or ``zstandard``. So the
-default reader for every transport is a reader that **refuses with a remedy**,
-and the refusal explicitly forbids the fix that would break board rule 1: do not
-``pip install`` the vendor SDK into ``.parcel/``. Its absence from that venv is
-the strongest motion guarantee the project currently has
-(``PHYSICAL_SESSION_PLAN.md``), and a preflight tool is not worth spending it.
+*developed* on a box with **no device of any kind attached** — no dog, no
+camera, no LiDAR. Whether that box also carries a vendor SDK is a *separate*
+question, and cards ENV-1/ENV-1b exist because collapsing the two produced a
+false READY: ``pyrealsense2`` was installed into ``.parcel`` on 2026-08-22 for
+the desk-camera venue, and every D455 probe promptly reported itself satisfied
+on a host that has never had a camera plugged into it. (A venv built from
+``pip install .[dev]`` carries no such wheel — there is no aarch64 build, so the
+``dev`` extra must not declare it or the install breaks on the Orin — so both
+states are supported and neither is assumed.)
+
+So the default reader for every transport is a reader that **refuses with a
+remedy naming which half is missing**: the module is not on the import path
+(``importlib.util.find_spec``, never an import) or the device is not attached (a
+``/dev`` glob census, never an open). ``pip install`` and *plug the cable in*
+are different instructions and an operator handed the wrong one loses a session
+morning. For the motion SDKs the refusal additionally forbids the fix that would
+break board rule 1: do not ``pip install`` ``unitree_sdk2py`` into ``.parcel/``.
+Its absence from that venv is the strongest motion guarantee the project
+currently has (``PHYSICAL_SESSION_PLAN.md``), and a preflight tool is not worth
+spending it. A *camera* SDK cannot command anything and is not part of that
+guarantee.
 
 Running this file on a bare dev box is therefore a supported, first-class
-outcome: every channel ABSENT, every absence explained, exit non-zero, no
-traceback.
+outcome: every channel ABSENT, every absence explained and attributed to the
+module or to the device, exit non-zero, no traceback.
 
 One list of channels
 --------------------

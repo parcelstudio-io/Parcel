@@ -26,8 +26,14 @@ SCENE = (
     / "scene.xml"
 )
 
+# Card GATE-0 (scrum/20260822/task_20): the three `skipif(not SCENE.exists())`
+# guards that used to sit on the tests below are gone. That path is now a
+# TRACKED, manifest-pinned asset (third_party/unitree_mujoco/PROVENANCE.json),
+# so "not checked out" is no longer a state a clean clone can be in — and while
+# the guards existed, a fresh clone reported these three as SKIPPED rather than
+# telling anyone the simulator payload was missing entirely.
 
-@pytest.mark.skipif(not SCENE.exists(), reason="unitree_mujoco Go2 scene not checked out")
+
 def test_bind_actuators_uses_joint_names():
     model = mujoco.MjModel.from_xml_path(str(SCENE))
     bindings = bind_actuators(model)
@@ -37,7 +43,6 @@ def test_bind_actuators_uses_joint_names():
     assert len(bindings) == 12
 
 
-@pytest.mark.skipif(not SCENE.exists(), reason="unitree_mujoco Go2 scene not checked out")
 def test_pose_controller_moves_toward_targets():
     model = mujoco.MjModel.from_xml_path(str(SCENE))
     data = mujoco.MjData(model)
@@ -193,7 +198,6 @@ def test_expression_message_round_trip_and_validation() -> None:
         expression_to_message({"FL_thigh_joint": float("nan")})
 
 
-@pytest.mark.skipif(not SCENE.exists(), reason="unitree_mujoco Go2 scene not checked out")
 def test_expression_overlay_is_additive_and_never_disturbs_targets() -> None:
     """The overlay rides on top of held targets and can be cleared."""
 

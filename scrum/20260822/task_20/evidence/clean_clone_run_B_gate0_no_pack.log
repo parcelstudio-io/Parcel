@@ -1,0 +1,162 @@
+# run B — GATE-0 runner, Unitree pack hidden, same clean clone. rc=1, 4m06s
+CI GATE — tier=commit  (2026-08-22T10:38:30Z)
+==============================================================================
+[  FAIL] HARD  ruff                       ruff 0.16.1: 8 violation(s), baseline 7, new 1 -> scripts/_head_ci_gate.py::EXE001
+[  FAIL] HARD  unitree-assets             third_party/unitree_mujoco/PROVENANCE.json is MISSING — the vendored Go2 MJCF pack is not in this checkout; both product scenes are uncompilable
+[ ERROR] HARD  hard-safety                ValueError: XML Error: Error opening file '../../../third_party/unitree_mujoco/unitree_robots/go2/go2.xml' [stage contained by the GATE-0 wrapper; later gates still ran]
+[  PASS] HARD  release-parity             91 packaged asset(s) byte-identical to canonical source
+[  PASS] HARD  assertion-evals            5 frozen fixture(s) reproduce 20 pinned finding(s) byte-identically; harness self-test 4/4 (3 broken agents failed, clean control passed); pass^1 green on f03_estop_pass_k; 0/3 committed run folder(s) present | evals/20260820/owner_session_1: absent (gitignored session; not scored); evals/20260820/voice_corpus_v1/live_run_1: absent (gitignored session; not scored); evals/20260820/voice_corpus_v1/replay_run_1: absent (gitignored session; not scored)
+[  PASS] HARD  tier-coverage              8729 collected = 8648 commit (-m 'not slow') + 81 nightly (-m 'slow'), no orphans, no overlap
+[  PASS] HARD  model-off-non-inferiority  23 passed in 0.42s
+[  PASS] HARD  release-parity-integrity   10 passed in 0.70s
+[  FAIL] HARD  owner-store-isolation      1 failed, 4 passed, 1 skipped in 0.66s
+    FAILED tests/test_owner_store_isolation.py::test_no_shipped_config_can_be_launched_onto_the_owner_store
+[  FAIL] HARD  default-suite              138 failed, 8432 passed, 31 skipped, 81 deselected, 3 xfailed, 27 warnings, 45 errors in 228.52s (0:03:48)
+    FAILED tests/test_authority_family_equality.py::test_headless_world_resolves_radius_from_an_injected_profile
+    FAILED tests/test_barn_all_ray_shield_v8_corpus.py::test_current_evaluator_and_generator_source_closure_is_freezable
+    FAILED tests/test_barn_frontier_detour_v4.py::test_development_ledger_pins_full_report_hashes_without_requiring_reports
+    FAILED tests/test_barn_official_doctor.py::test_current_host_audit_is_read_only_and_never_grants_official_claim
+    FAILED tests/test_barn_official_doctor.py::test_rootless_smoke_evidence_is_bound_to_raw_row_and_non_official_claims
+    FAILED tests/test_barn_official_doctor.py::test_rootless_smoke_rejects_claim_escalation
+    FAILED tests/test_barn_v10_planner_profile.py::test_exact_freeze_authenticates_recomputed_one_file_plan_and_training_scope
+    FAILED tests/test_barn_v10_planner_profile.py::test_profile_source_mutation_is_rejected_after_freeze
+    FAILED tests/test_barn_v10_planner_profile.py::test_s4_numeric_screen_is_exact_except_declared_identity_substitutions
+    FAILED tests/test_barn_v10_planner_profile.py::test_authenticated_wrapper_is_only_candidate_specific_materialization_entry_point
+    FAILED tests/test_barn_v10_planner_profile_candidate.py::test_real_v10_candidate_is_a_read_only_one_profile_plan
+    FAILED tests/test_barn_v9_candidate_integration.py::test_exact_candidate_bundle_runs_through_the_isolated_policy_sidecar
+==============================================================================
+RESULT: FAIL — 5 hard gate(s) red: ruff, unitree-assets, hard-safety, owner-store-isolation, default-suite
+  elapsed 246.5s
+{
+  "elapsed_s": 246.48926332395058,
+  "gates": [
+    {
+      "detail": "ruff 0.16.1: 8 violation(s), baseline 7, new 1 -> scripts/_head_ci_gate.py::EXE001",
+      "extra": {
+        "new": [
+          "scripts/_head_ci_gate.py::EXE001"
+        ]
+      },
+      "hard": true,
+      "name": "ruff",
+      "status": "fail",
+      "tier": "commit"
+    },
+    {
+      "detail": "third_party/unitree_mujoco/PROVENANCE.json is MISSING \u2014 the vendored Go2 MJCF pack is not in this checkout; both product scenes are uncompilable",
+      "extra": {},
+      "hard": true,
+      "name": "unitree-assets",
+      "status": "fail",
+      "tier": "commit"
+    },
+    {
+      "detail": "ValueError: XML Error: Error opening file '../../../third_party/unitree_mujoco/unitree_robots/go2/go2.xml' [stage contained by the GATE-0 wrapper; later gates still ran]",
+      "extra": {
+        "traceback_tail": "                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/ci_gate.py\", line 991, in evaluate_hard_safety\n    live_fields = reproducer()\n                  ^^^^^^^^^^^^\n  File \"/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/ci_gate.py\", line 707, in _panel_safety_fields_live\n    return live_clean_safety_fields()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/mutation_panel.py\", line 270, in live_clean_safety_fields\n    clean = run_once(_episodes(episode_ids), max_steps=max_steps)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/jaewoo-jang/.cache/parcel-gate0/clean/scripts/mutation_panel.py\", line 607, in run_once\n    runner = NavInstructRunner(\n             ^^^^^^^^^^^^^^^^^^\n  File \"/home/jaewoo-jang/.cache/parcel-gate0/clean/evals/nav_instruct/runner.py\", line 712, in __init__\n    HeadlessCityWorld() if scene is None else HeadlessCityWorld(scene)\n    ^^^^^^^^^^^^^^^^^^^\n  File \"/home/jaewoo-jang/.cache/parcel-gate0/clean/src/parcel_robot/headless_city.py\", line 147, in __init__\n    self.model = mujoco.MjModel.from_xml_path(str(self.scene))\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: XML Error: Error opening file '../../../third_party/unitree_mujoco/unitree_robots/go2/go2.xml'\nElement 'include', line 17\n\n"
+      },
+      "hard": true,
+      "name": "hard-safety",
+      "status": "error",
+      "tier": "commit"
+    },
+    {
+      "detail": "91 packaged asset(s) byte-identical to canonical source",
+      "extra": {
+        "checked": 91
+      },
+      "hard": true,
+      "name": "release-parity",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "5 frozen fixture(s) reproduce 20 pinned finding(s) byte-identically; harness self-test 4/4 (3 broken agents failed, clean control passed); pass^1 green on f03_estop_pass_k; 0/3 committed run folder(s) present | evals/20260820/owner_session_1: absent (gitignored session; not scored); evals/20260820/voice_corpus_v1/live_run_1: absent (gitignored session; not scored); evals/20260820/voice_corpus_v1/replay_run_1: absent (gitignored session; not scored)",
+      "extra": {
+        "estop": {
+          "k": 1,
+          "negatives": 2,
+          "reason": "3 positive trial(s) latched and released, 2 negative(s) held",
+          "status": "pass",
+          "trials": 3
+        },
+        "fixture_matrix": {
+          "note": "the fixture set contains failing sessions on purpose; this is not a verdict",
+          "overall": "fail",
+          "safety": "fail"
+        },
+        "k": 1,
+        "notes": [
+          "evals/20260820/owner_session_1: absent (gitignored session; not scored)",
+          "evals/20260820/voice_corpus_v1/live_run_1: absent (gitignored session; not scored)",
+          "evals/20260820/voice_corpus_v1/replay_run_1: absent (gitignored session; not scored)"
+        ],
+        "runs": {},
+        "self_test": {
+          "always_claims_success_agent": "fail",
+          "clean_agent": "pass",
+          "null_agent": "fail",
+          "random_tool_agent": "fail"
+        }
+      },
+      "hard": true,
+      "name": "assertion-evals",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "8729 collected = 8648 commit (-m 'not slow') + 81 nightly (-m 'slow'), no orphans, no overlap",
+      "extra": {
+        "collected": 8729,
+        "collected_line": "8729 tests collected in 9.37s",
+        "commit_markers": "not slow",
+        "commit_selected": 8648,
+        "doubled": [],
+        "nightly_markers": "slow",
+        "nightly_selected": 81,
+        "orphaned": []
+      },
+      "hard": true,
+      "name": "tier-coverage",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "23 passed in 0.42s",
+      "extra": {},
+      "hard": true,
+      "name": "model-off-non-inferiority",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "10 passed in 0.70s",
+      "extra": {},
+      "hard": true,
+      "name": "release-parity-integrity",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "1 failed, 4 passed, 1 skipped in 0.66s\n    FAILED tests/test_owner_store_isolation.py::test_no_shipped_config_can_be_launched_onto_the_owner_store",
+      "extra": {
+        "returncode": 1
+      },
+      "hard": true,
+      "name": "owner-store-isolation",
+      "status": "fail",
+      "tier": "commit"
+    },
+    {
+      "detail": "138 failed, 8432 passed, 31 skipped, 81 deselected, 3 xfailed, 27 warnings, 45 errors in 228.52s (0:03:48)\n    FAILED tests/test_authority_family_equality.py::test_headless_world_resolves_radius_from_an_injected_profile\n    FAILED tests/test_barn_all_ray_shield_v8_corpus.py::test_current_evaluator_and_generator_source_closure_is_freezable\n    FAILED tests/test_barn_frontier_detour_v4.py::test_development_ledger_pins_full_report_hashes_without_requiring_reports\n    FAILED tests/test_barn_official_doctor.py::test_current_host_audit_is_read_only_and_never_grants_official_claim\n    FAILED tests/test_barn_official_doctor.py::test_rootless_smoke_evidence_is_bound_to_raw_row_and_non_official_claims\n    FAILED tests/test_barn_official_doctor.py::test_rootless_smoke_rejects_claim_escalation\n    FAILED tests/test_barn_v10_planner_profile.py::test_exact_freeze_authenticates_recomputed_one_file_plan_and_training_scope\n    FAILED tests/test_barn_v10_planner_profile.py::test_profile_source_mutation_is_rejected_after_freeze\n    FAILED tests/test_barn_v10_planner_profile.py::test_s4_numeric_screen_is_exact_except_declared_identity_substitutions\n    FAILED tests/test_barn_v10_planner_profile.py::test_authenticated_wrapper_is_only_candidate_specific_materialization_entry_point\n    FAILED tests/test_barn_v10_planner_profile_candidate.py::test_real_v10_candidate_is_a_read_only_one_profile_plan\n    FAILED tests/test_barn_v9_candidate_integration.py::test_exact_candidate_bundle_runs_through_the_isolated_policy_sidecar",
+      "extra": {
+        "returncode": 1
+      },
+      "hard": true,
+      "name": "default-suite",
+      "status": "fail",
+      "tier": "commit"
+    }
+  ],
+  "tier": "commit"
+}
