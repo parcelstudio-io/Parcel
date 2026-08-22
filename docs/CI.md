@@ -3,13 +3,36 @@
 Parcel has a large test surface and rich eval harnesses (nav_instruct + mutation
 panel, follow-bench, acoustic loop, planner/conversation packs, metamorphic
 suite). The executable runner and versioned workflow definition below close the
-historical gap where every promotion gate was manual. The latest recorded local
-commit-tier run, independently rerun on 2026-08-21, passed 7,715 tests with 9
-skipped and 42 deselected; all hard gates were green. The first RECORDED nightly ran the
-same day — `evals/nightly/20260821T102132Z` — and is the first time the 42
-deselected tests have been executed by any gate. The workflow declares push, pull-request,
-scheduled, and manual triggers, but hosted GitHub Actions execution/enabling
-remains unverified until a GitHub run is recorded.
+historical gap where every promotion gate was manual.
+
+**Current audit delta (2026-08-22, baseline `71b39a1` plus the visible worktree):**
+the exact commit tier is **RED**: 1 failed, 7,970 passed, 9 skipped and 42
+deselected. Every dedicated hard stage passed; the default-suite failure is the
+held-out-evidence allowlist rejecting an untracked MOVE-1 status document that
+names the protected scene identifier without a seat. This is a promotion-blocking
+evidence-governance failure, not a runtime failure. Raw Ruff is also not clean:
+12 findings map to the seven grandfathered baseline fingerprints, so the ratchet
+passes with zero new fingerprints.
+
+The direct local slow suite under nightly variables currently reports 11 passed,
+7 skipped, 4 xfailed and 20 setup errors: three clean-wheel cells lack Python
+3.14 venv/`ensurepip`, and 17
+voice-navigation cells are refused because the nightly environment does not
+declare a scratch memory path. With `PARCEL_MEMORY_PATH=:memory:` the voice slice
+reaches behavior and reports 16 passed, 1 xfailed and 1 real failure
+(`semantic_arrival_verification_failed` for the lamppost mission).
+The seven skips are material coverage boundaries: five collected closed-loop
+Follow-Bench cases require the additional `PARCEL_FOLLOW_BENCH_SLOW=1` opt-in,
+and two live-provider cases require explicit live/spend opt-in and a credential.
+The four xfails pin measured capability gaps (half-scale embodiment covariance,
+two region-goal transforms, and pedestrian-stream navigation); they are not
+environmental skips.
+
+The first and only recorded nightly ran on 2026-08-21 —
+`evals/nightly/20260821T102132Z` — and is RED. It was the first time the 42
+deselected tests were executed by a gate. The workflow declares push,
+pull-request, scheduled and manual triggers, but hosted GitHub Actions
+execution/enabling remains unverified until a GitHub run is recorded.
 
 The runner does **not** add new evals. It wraps the harnesses that already
 exist and turns the aspirational promotion gates into one exit-coded command.
@@ -23,7 +46,7 @@ exist and turns the aspirational promotion gates into one exit-coded command.
 ## Run it locally
 
 ```bash
-# per-commit gate (fast, offline, deterministic — no model server, no network)
+# per-commit gate (offline; deterministic under its declared host capabilities)
 .parcel/bin/python scripts/ci_gate.py --tier commit
 
 # nightly bundle (slow — live-sim e2e, acoustic rig, candidate minival, panel)
@@ -46,28 +69,38 @@ printed but never change the exit code.
 
 `ci.yml` is the canonical, versioned record of what must run and when; the gate
 logic lives in `ci_gate.py` so a hosted runner and a laptop invoke the same
-gate. Local execution is verified; hosted execution remains unverified.
+gate logic. The runner has been exercised locally and the current local verdict
+is red; hosted execution remains unverified. Python, resolved dependencies,
+host packages, GL support and credentials can still differ between environments.
 
 ## What the commit tier enforces (all hard, all offline)
 
 | Gate | Wraps | Reddens when |
 | --- | --- | --- |
-| `default-suite` | `pytest -m "not slow"` (latest recorded: 7,715 passed) | any default-gate test fails |
+| `default-suite` | `pytest -m "not slow"` (2026-08-22 worktree audit: 7,970 passed, 1 failed) | any default-gate test fails |
 | `ruff` | `ruff check` ratcheted vs baseline | a **new** `(file, rule)` violation appears |
 | `release-parity` | generated runtime-asset manifest | a canonical/deployable asset differs or disappears |
-| `assertion-evals` | frozen EV-1 fixtures + seeded harness self-test | findings drift or a deliberately broken evaluator passes |
+| `assertion-evals` | five frozen EV-1 fixtures reproducing 20 expected findings + seeded harness self-test | findings drift or a deliberately broken evaluator passes |
 | `tier-coverage` | independent commit/nightly collection | a test becomes orphaned, overlaps tiers, or a required hard gate disappears |
 | `owner-store-isolation` | explicit owner-memory isolation nodes | a test or in-process runtime can reach the owner's writable store |
 | `frozen-digest-integrity` | nav_instruct v3, embodied plan, conversation_quality, personal_convo manifest-sha tests | a byte drifts in any frozen pack |
 | `frozen-digest-sentinels` | independent sha over the immutable frozen manifests | a pinned manifest's bytes move |
-| `release-parity-integrity` | source/package behavior tests | source and installed/package roots resolve differently |
+| `release-parity-integrity` | canonical source vs the checkout's packaged runtime-assets tree | their behavior or bytes differ; installed-wheel behavior is a separate slow-tier claim |
 | `mutation-panel-freshness` | `test_mutation_panel_freshness.py` committed-panel guard | the panel rots off the current frozen episode set |
 | **`model-off-non-inferiority`** | SigLIP / OWLv2(B3) / tiered-memory **flag-off byte-equal** cells | a model-off path stops being byte-identical to its deterministic fallback |
 | **`latency-tail`** | committed p95/p99 percentile pins (observability + beat-sync) | a tail latency pin regresses |
-| **`hard-safety`** | nav_instruct frozen-baseline row, mutation-panel clean run, follow-bench ledger | a hard collision appears on any product artifact, or the frozen baseline gains a false_arrival |
+| `latency-tail-ledger` | latest append-only latency row against the pinned tail ceiling | a field-bearing series exceeds its ratchet or the ledger is malformed |
+| `follow-bench-jerk-ratchet` | latest shipped Follow-Bench jerk row against its pinned margin | commanded jerk exceeds the ratchet or provenance is absent |
+| **`hard-safety`** | nav_instruct frozen baseline, mutation clean run, Follow-Bench and field-bearing walk-with-me rows | a field-bearing gated artifact gains a hard collision, or the frozen baseline gains a false arrival |
 
 The three **bold** gates are the hard regression gates the independent verdict
 demands. Any of them red fails the commit.
+
+An `assertion-evals` pass means the frozen fixtures reproduce their 20 expected
+findings and the deliberately broken evaluators fail. The fixture set
+intentionally contains failing sessions, and its aggregate matrix reports
+overall and safety failure; this gate does not claim those recorded sessions
+are good.
 
 ### The three hard regression gates, precisely
 
@@ -81,9 +114,12 @@ demands. Any of them red fails the commit.
   the persisted append-only latency ledger. The ledger is wired into the gate,
   but its current rows do not cover every real acoustic/device stage; see the
   handoff below.
-- **Hard-safety:** zero hard collisions on every product artifact (the
-  frozen-baseline nav row, the mutation-panel clean run, every follow-bench row)
-  and no new false_arrival on the frozen baseline (pinned at 0).
+- **Hard-safety:** zero hard collisions on every currently field-bearing,
+  hard-gated artifact (the frozen-baseline nav row, the mutation-panel clean
+  run, every Follow-Bench row, and the instrumented walk-with-me row), plus no
+  new `false_arrival` on the frozen baseline (pinned at 0). One legacy
+  walk-with-me row lacks the collision field and is explicitly outside that
+  claim until migrated or retired.
 
 ## What the nightly tier adds
 
@@ -94,8 +130,11 @@ Everything in the commit tier (re-run), plus:
 | `mutation-panel` | `scripts/mutation_panel.py` run in-process | hard — fails if any mutant survives (**7/7 killed** in the 2026-08-21 nightly; this line said 6/6 until a nightly actually printed the number) |
 | `nav-instruct-candidate:collisions` | candidate v4 minival run | hard — collisions must be 0 |
 | `nav-instruct-candidate:differential` | same run | report — SR, authority histogram, false_arrival |
+| `pose-drift-arms:*` | seven calibrated pose-error arms over 61 cells | hard — safety, non-vacuity and preregistered floors must hold |
 | `slow-suite` | `pytest -m slow` (`PARCEL_NIGHTLY=1`, live-sim e2e + acoustic rig + nightly metamorphic) | hard |
 | `metamorphic` | `pytest -m slow tests/test_nav_metamorphic.py` | report (already inside slow-suite; carries measured xfails) |
+| `future-clock-sweep` | commit selection shifted 400 days by the nightly wrapper | hard — calendar-dependent failures must remain absent |
+| `assertion-nightly` | pass^3 assertion fixtures and optional bounded judge/review queue | report — review volume, judge errors and spend remain visible |
 
 Per the verdict, nightly numeric outputs are **reported** unless their row is
 explicitly hard. Candidate collisions and mutation survivors gate; the
@@ -103,11 +142,18 @@ candidate differential row—including candidate `false_arrival`—is report-onl
 The frozen baseline's no-new-false-arrival invariant remains a separate hard
 commit-tier safety check.
 
+The scheduled environment does not set `PARCEL_FOLLOW_BENCH_SLOW=1`, so five
+collected closed-loop Follow-Bench cases skip even inside `slow-suite`. The two
+live-provider cells also skip without their explicit opt-in and credential. A
+nightly row that reads the committed Follow-Bench ledger is not a fresh rerun of
+those five scenarios.
+
 ## Self-test — proof the gate is not theatre
 
 A green gate proves nothing unless it goes red for the right reason. Mirroring
-`scripts/mutation_panel.py`, `tests/test_ci_gate.py` seeds each hard gate's exact
-class of regression and asserts it reddens (and is green on a clean input):
+`scripts/mutation_panel.py`, `tests/test_ci_gate.py` seeds selected critical
+failure classes and asserts they redden (and are green on clean input). A
+separate roster/deletion guard makes removal of a required hard gate loud:
 
 | Seed | Gate that must catch it | How it is injected |
 | --- | --- | --- |
@@ -127,15 +173,18 @@ rule the mutation panel follows.
 
 ## Design notes and constraints
 
-- **Offline & deterministic:** the commit tier never depends on the network or a
-  running model server. The real-weight SigLIP/OWLv2 cells self-skip when weights
-  are absent; the flag-off cells they leave behind are exactly the model-off
-  guarantee. MuJoCo runs headless (`MUJOCO_GL=egl`; use `osmesa` on a GPU-less
-  runner).
+- **Offline and capability-conditioned:** the commit tier never depends on the
+  network or a running model server. Its deterministic behavioral assertions are
+  conditioned on declared host capabilities: real-weight SigLIP/OWLv2 cells
+  self-skip when weights are absent, GL/cache availability affects other skips,
+  and load-sensitive cells may skip with measurement under contention. The
+  flag-off cells remain the model-off guarantee. MuJoCo runs headless
+  (`MUJOCO_GL=egl`; use `osmesa` on a GPU-less runner).
 - **No new gate logic in CI:** `ci.yml` only provisions an environment and calls
-  the runner. The gate is identical locally and in CI. (The nightly job calls
-  `scripts/run_nightly.py`, which wraps `ci_gate.py --tier nightly` and adds the
-  evidence folder — see the tier map below.)
+  the runner. Local and hosted jobs invoke the same gate logic, not an identical
+  resolved environment. (The nightly job calls `scripts/run_nightly.py`, which
+  wraps `ci_gate.py --tier nightly` and adds the evidence folder — see the tier
+  map below.)
 - **Hermetic against the operator's shell (card R26):** every subprocess the gate
   launches has `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `PARCEL_REALTIME_KEY_ENV`
   and whatever that indirection names removed, unless `PARCEL_REALTIME_LIVE=1`
@@ -147,7 +196,7 @@ rule the mutation panel follows.
   because the repo has no such tool and its convention is `scripts/*.py` run with
   `.parcel/bin/python` (e.g. `scripts/mutation_panel.py`). No new dependency.
 
-## The tier map — what runs where, and what never runs (card R26)
+## The tier map — what runs, skips, or does not complete (card R26)
 
 The full audit could not answer this from the repo, and the answer turned out to
 matter: the nightly tier existed, the cron declared it, and **no nightly had ever
@@ -161,30 +210,36 @@ end-to-end tier — had never been executed by any gate. Card R26
 | **nightly** | `scripts/run_nightly.py` | everything in commit, **plus `pytest -m slow`**, mutation panel, candidate minival, DR-2 drift arms, the future-clock sweep, EV-1's judge/review queue | 08:00 UTC cron + manual | `evals/nightly/<stamp>/` + a row in `evals/nightly/ledger.jsonl` |
 | **per-release** | `pytest -m slow tests/test_release_parity_wheel.py` (inside the nightly slow tier) | builds a wheel into a throwaway venv | whenever the packaged tree changes | the nightly folder |
 | **opt-in live** | `PARCEL_REALTIME_LIVE=1 pytest -m slow tests/test_realtime_live*.py` | two `skipif`s: the env switch **and** a credential | by hand, when someone is watching the spend | the session's own evidence folder |
-| **never runs, and why** | — | see below | — | — |
+| **skips or does not complete, and why** | — | see below | — | — |
 
 `ci_gate.py` defines the two selections as `COMMIT_MARKERS` / `NIGHTLY_SLOW_MARKERS`
 and a hard **`tier-coverage`** gate (both tiers) re-derives all three collections
 and reddens if any collected test is selected by neither tier — or by both. That
 is the executable form of "a tier went dark".
 
-**What never runs, and why — the honest list:**
+**What skips or does not complete by default — the honest list:**
+
+- Five collected closed-loop cases in `tests/test_follow_bench_v1.py` skip in
+  the scheduled nightly unless `PARCEL_FOLLOW_BENCH_SLOW=1` is also set. The
+  hard safety stage reads the committed Follow-Bench ledger; it does not refresh
+  those five scenarios.
 
 - `tests/test_realtime_live.py` / `tests/test_realtime_live_smoke.py` — opt-in
   live provider calls. They **skip by default**, need `PARCEL_REALTIME_LIVE=1`
   plus a credential, and cost money. They are in the nightly's selection and
   skip there; that skip is visible in the run folder.
-- `tests/test_release_parity_wheel.py` — needs `ensurepip`
-  (`apt install python3.14-venv`). Absent on this host, so it **errors at setup**
-  in the nightly rather than skipping. Recorded as an environmental red.
-- The browser half of `src/parcel_robot/ui/index.html` — 2,365 lines, executed by
+- `tests/test_release_parity_wheel.py` — setup starts but cannot complete on this
+  host because `ensurepip` is absent (`apt install python3.14-venv`). It
+  **errors at setup** rather than skipping and is recorded as an environmental
+  red; no installed-wheel claim follows from that run.
+- The browser half of `src/parcel_robot/ui/index.html` — 2,724 lines, executed by
   zero tests in any tier. Registered debt (audit §Tests), not R26's.
 - Anything under `evals/` that is not reachable from `testpaths = ["tests"]` —
   eval harnesses are run by their own runners, not by pytest.
 
 ### The load-sensitive tests, and who owns them
 
-Three wall-clock assertions sat inside the hard commit gate with no owning card,
+Four wall-clock test functions sat inside the hard commit gate with no owning card,
 having reddened at least six recorded gate runs across four cards. **Card R26
 owns them now.** They are marked `load_sensitive` (`scripts/load_guard.py`):
 
@@ -214,8 +269,10 @@ it while an ordinary run does not.
 
 ## Handoffs (things the runner needs but could not add without touching owned code)
 
-These are real gaps surfaced while wiring the gate. The runner works today
-without them; closing them strengthens the named gate.
+These are narrower gaps surfaced while wiring the gate. The framework executes,
+but the current commit and nightly promotion posture is red for the blockers
+documented above; closing the items below strengthens the named gates rather
+than clearing those blockers by itself.
 
 1. **Acoustic latency coverage is incomplete.** The product now appends
    turn-bearing rows to `evals/latency/ledger.jsonl`, and

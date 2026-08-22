@@ -4,7 +4,7 @@
 design grounded in the current Parcel code. It is not a claim that Nav2, a
 learned visual navigator, real-camera perception, or physical Go2 navigation is
 already operational. Current capabilities remain described in
-[CURRENT_STATUS.md](CURRENT_STATUS.md).
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md).
 
 ## Outcome
 
@@ -40,10 +40,11 @@ independent proximity/TTC gates. It also preserves `vy` in the robot command
 contract while emitting `vy = 0` in ordinary route following.
 
 The 2026-08-09 audit nevertheless found system-level problems that isolated
-gain tuning cannot solve:
+gain tuning could not solve. Its first item has since landed; the remaining
+items continue to motivate the target design:
 
-- the shared environmental gate precedes the S-curve shaper, whose emergency
-  branch ramps toward zero instead of reasserting an exact-zero final command;
+- **closed since that audit:** a typed post-shaper finalizer now makes hard
+  stops exact zero and proximity stops exact-zero translation before dispatch;
 - missing, stale, or unsynchronized required LiDAR can enter the point-goal
   fallback and translate instead of producing `HOLD`;
 - there is no production localizer or commissioned `map -> odom` evidence join;

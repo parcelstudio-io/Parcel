@@ -6,6 +6,11 @@ social-action policy for Parcel. Architecture context:
 [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md) and
 [NAVIGATION_CITY.md](NAVIGATION_CITY.md).
 
+Targeted correction (2026-08-22): the committed final-stop boundary and current
+speed limits were rechecked. A visible, uncommitted pixel-perception/online-map
+wave is called out separately from the metadata-derived default; none of these
+updates is physical robot commissioning.
+
 Short version:
 
 1. Keep MuJoCo as the fast, deterministic Go2 development backend.
@@ -46,6 +51,15 @@ with the dog or one another. The scripted gait is now continuous across command
 refreshes, but physically credible foot contact still requires a learned
 locomotion policy or Isaac/URBAN-SIM.
 
+Default camera/semantic tracks in this world still come from scene metadata.
+The visible 2026-08-22 C-1/C-2/C-3 worktree adds an EGL + OWLv2 proposal stream,
+an online semantic map, and source selection, but keeps `oracle` as the default.
+Its measured proposal age (about 562 ms against a 300 ms TTL), 0/5 live map
+corpus result, zero ranking margin, persisted-crop defect, and 0/18 shadow
+agreement make it diagnostic/in-flight rather than an admitted dynamic-city
+perception source. See [NAVIGATION_CITY.md](NAVIGATION_CITY.md) for the evidence
+links and cutover boundary.
+
 The dynamic cost is a preference, not a safety mask. `grid_v1` accepts at most
 16 validated non-owner tracks plus a separately weighted owner track, scores
 only a six-meter window, and replans every tick while the layer is active. A
@@ -54,8 +68,11 @@ universal proximity gate still consumes the simulator's earliest social
 contact candidate (which can be the owner), while the later configured TTC
 gate recomputes contact for non-owner dynamic tracks against the outgoing
 command and can only reduce the command at that gate. The later S-curve shaper
-can still leave residual velocity while decelerating, which the 2026-08-09 audit
-marks as a P0 ordering defect. Neither dynamic layer models prediction
+is followed by a typed finalizer: hard stops reassert exact all-axis zero and
+reset state, while proximity/TTC stops reassert exact-zero translation and may
+retain only finite gated yaw. The optional nominal-stop ramp is separate,
+monotone, re-gated, and off in the shipped config. These software guarantees do
+not measure physical braking. Neither dynamic layer models prediction
 uncertainty or social intent.
 
 The expression layer is now also live in this backend. A separate 50 Hz channel
@@ -133,7 +150,7 @@ machine:
 ALIGN: vx=0, vy=0, bounded yaw → exit below 7°
 TRACK: default point-goal policy uses vy=0; forward speed is tapered by
        heading/distance
-       → re-enter ALIGN above 28° (`grid_v1`) or 30° (`stub_v0`)
+       → re-enter ALIGN above 55° (`grid_v1`) or 30° (`stub_v0`)
 ```
 
 This does not make the quadruped nonholonomic. Body-frame lateral velocity is
@@ -142,18 +159,20 @@ recovery, and planners that intentionally request it. It is simply not the
 preferred mode for sustained progress toward a particular location. Any lateral
 request remains acceleration- and safety-limited like forward motion. Obstacle
 avoidance uses the same alignment handoff before translating. Explicit E-stop
-uses the stronger manager stop path; ordinary environmental vetoes require the
-post-shaper exact-zero correction described above. The simulator preserves gait
-phase when the 10 Hz runtime refreshes an otherwise compatible walk command.
+uses the stronger manager stop path; the post-shaper finalizer now prevents an
+ordinary environmental veto from regaining translation. The simulator
+preserves gait phase when the 10 Hz runtime refreshes an otherwise compatible
+walk command.
 
 The configured speed numbers have different authority. `grid_v1` now requests
 up to `0.85 m/s`, the default navigation pipeline caps its output at
-`0.45 m/s`, and the wider body-level clamp is `1.0 m/s`. A post-safety S-curve
-shaper bounds acceleration and jerk; ordinary environmental vetoes currently
-enter its bounded emergency ramp. The current calm
-profile is driven by prosody measured from the robot's own synthesized speech,
-not by a classifier of the owner's mood. These simulator pacing changes have
-not been commissioned on hardware.
+`0.9 m/s`, and the wider body-level clamp is `1.0 m/s`. The wrapper therefore
+does not mask the planner's cruise request, although taper, slew, arbitration,
+safety, and shaping may command less. A post-safety S-curve shaper bounds
+acceleration and jerk, followed by the typed stop finalizer described above.
+The current calm profile is driven by prosody measured from the robot's own
+synthesized speech, not by a classifier of the owner's mood. These simulator
+pacing changes have not been commissioned on hardware.
 
 For a future physical ROS 2 stack, the recommended local-control composition is
 established geometry rather than an LLM:

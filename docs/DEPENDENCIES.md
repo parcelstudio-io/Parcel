@@ -3,11 +3,18 @@
 Host inventory and install paths for running Parcel simulation, city navigation,
 and (optionally) MetaUrban on this machine.
 
+> **Targeted recheck, 2026-08-22.** The original host inventory below was made
+> on 2026-08-04. The recheck covered the claims most likely to affect setup:
+> kernel, local speech artifacts, semantic endpointing, USB audio, native
+> PortAudio, and package-data parity. It did not recommission every service or
+> device in this guide. In particular, an artifact being present is not evidence
+> of a live service, a usable audio stream, or a physical robot capability.
+
 ## Host snapshot (checked 2026-08-04)
 
 | Item | Value |
 | --- | --- |
-| OS | Ubuntu 26.04 (kernel 7.0.0-28-generic) |
+| OS | Ubuntu 26.04 (kernel `7.0.0-28-generic` on 2026-08-04; `7.0.0-29-generic` in the 2026-08-22 targeted recheck) |
 | System Python | **3.14.4** only (`/usr/bin/python3`) |
 | GPU | **NVIDIA RTX 5000 Ada Generation** (AD102GL) |
 | VRAM | 32760 MiB |
@@ -98,10 +105,19 @@ runtime (`sudo apt install libportaudio2`) before treating capture/playback as
 available. Hardware enumeration performed by Parcel is a separate check and
 does not prove the Python PortAudio binding can open a stream.
 
-### Locked freeze (installed in `.parcel`)
+### Recorded lock snapshot (incomplete relative to current `.parcel`)
 
 See [`requirements-lock.txt`](../requirements-lock.txt) at the repo root (generated
 from `pip freeze` after install). Key versions at last install:
+
+The 2026-08-22 targeted recheck normalized installed/locked distribution names
+and, ignoring the editable Parcel entry, found 17 distributions present in
+`.parcel` but absent from the lock. They include the endpointing runtime
+(`onnxruntime`, `sherpa-onnx`, and `sherpa-onnx-core`) and packages used by the
+current test/model tooling. The table is therefore a useful historical version
+snapshot, not a complete clean-environment reproduction input. Refresh and
+classification are tracked by the in-flight
+[R30 card](../scrum/20260821/task_18/README.md).
 
 | Package | Version |
 | --- | --- |
@@ -143,12 +159,14 @@ path; this small smoke is an API check, not planner-quality evidence.
 | whisper.cpp `base.en` | official CPU binary | 142 MB | `scripts/launch_whisper.sh` |
 | Silero VAD v6.2 | whisper.cpp VAD model | 885 KB | enabled by `scripts/launch_whisper.sh` |
 
-Piper is the configured TTS design choice, but it is **not currently installed**
-at `third_party/piper/piper`; its configured voice and companion JSON are also
-absent. The optional semantic-endpointing code exists, but `.parcel` has neither
-ONNX Runtime nor the configured Silero/Smart Turn endpointing weights. Do not
-confuse whisper.cpp's own Silero file with Parcel's in-process ONNX endpointing
-models.
+Piper is the configured local-cascade TTS choice. In the 2026-08-22 recheck its
+binary, configured voice, and companion JSON all exist at
+`third_party/piper/piper`, `models/piper/voice.onnx`, and
+`models/piper/voice.onnx.json`. Parcel's separate in-process endpointing stack is
+also present: the configured Silero v6 and Smart Turn v3 ONNX weights resolve,
+`.parcel` imports `onnxruntime 1.28.0` and `sherpa_onnx 1.13.6`, and the canonical
+local-cascade profile selects `endpointing: semantic`. These files are distinct
+from whisper.cpp's own Silero model.
 
 Check the exact speech state without starting anything:
 
@@ -156,12 +174,12 @@ Check the exact speech state without starting anything:
 ./scripts/run_speech_services.sh --check
 ```
 
-At this snapshot it exits nonzero because whisper.cpp is not running and all
-three Piper artifacts are missing. `scripts/install_speech_services.sh` is the
-tracked installer for those artifacts; review its download sources and options
-before running it. The installer has not been exercised end to end on this host:
-the existing whisper.cpp artifacts do not prove its source-build branch, and the
-Piper download/extract/voice-metadata path remains unverified.
+In the 2026-08-22 recheck it exits nonzero only because whisper.cpp is installed
+but not running; it reports all three Piper artifacts healthy and reads the
+voice metadata as 22,050 Hz. `scripts/install_speech_services.sh` remains the
+tracked installer. Existing artifacts prove readiness checks and provider
+resolution, not that every installer download/build branch is reproducible or
+that audio has played through a physical endpoint.
 
 Fish was installed with
 `uv sync --python 3.12 --extra cu129 --no-install-package pyaudio`. The API
@@ -170,11 +188,16 @@ avoids a false dependency on missing PortAudio development headers. The Fish
 model requires roughly 24 GB of VRAM and has a research/non-commercial model
 license, so it is opt-in in `launch_stack.sh`.
 
-ALSA detects the Realtek ALC1220 hardware and Bluetooth is powered, but PipeWire
-currently exposes only `Dummy Output` and no source; no USB audio array appears
-in `lsusb`. The native PortAudio runtime is also missing. Parcel therefore
-selects text mode. Connecting/routing a microphone and output, then installing
-`libportaudio2`, are separate prerequisites before enabling audio I/O.
+The 2026-08-04 desktop audit found the Realtek ALC1220 and a powered Bluetooth
+controller, but only a PipeWire dummy output and no USB array. That last fact is
+now superseded: the 2026-08-22 recheck sees a Seeed ReSpeaker XVF3800 4-Mic
+Array as USB ID `2886:001a`. USB enumeration is only attachment evidence. The
+default `.parcel` process still cannot import `sounddevice` because the native
+PortAudio library is absent; no physical input/output product stream or
+through-air AEC result was produced. XVF3800 control/DoA reads are additionally
+blocked by the current usbfs permissions until the documented udev rule is
+applied. The hosted browser-audio lane can bypass Python PortAudio, but it does
+not commission this local hardware path.
 
 The D0 duplex-frame, filler, and local JSONL logging code adds no model weights
 or third-party runtime: it is stdlib/NumPy code inside `.parcel`. This is an
@@ -296,8 +319,8 @@ Keep `active_model: grid_v1`; see [`NAVIGATION_CITY.md`](NAVIGATION_CITY.md).
 | Gemma structured action reasoning | Yes (CPU fallback or admitted CUDA llama.cpp profile) |
 | Gemma GPU offload | Yes: verified official b10236 CUDA 12 OCI runtime; 31/31 layers measured. Source compilation remains optional/unavailable. |
 | Fish S2 Pro server | Yes, opt-in (uses most GPU VRAM) |
-| Microphone/speaker duplex | **Blocked:** PipeWire has only dummy output/no source, no USB array is attached, no PortAudio runtime is installed, Piper is missing, and there is no hardware AEC |
-| Semantic endpointing | Code/tests only; ONNX Runtime + weights absent and canonical selection remains `energy` |
+| Microphone/speaker duplex | Hosted browser audio is implemented; the local physical path remains **blocked/uncommissioned**. The XVF3800 and Piper artifacts are present, but native PortAudio is absent, no physical product stream has completed, DoA access awaits the udev permission, and hardware AEC has not been measured. |
+| Semantic endpointing | Implemented, runtime-wired, and selected in the canonical local-cascade config; ONNX Runtime and both configured weights resolve. No live-microphone cutoff/latency result follows from startup availability. |
 | BARN ROS/Gazebo runtime smoke | Yes, cache-only Bubblewrap/PRoot: unchanged upstream MPPI completed one public world; no Parcel/SIF/score claim |
 | BARN Parcel 50×10 public protocol | **Blocked**: the corrected single-world hook started but never translated enough to begin the evaluator trial, so no row exists; first-sensor/command telemetry must localize the liveness stall, and upstream-tested Singularity/SIF execution is still unavailable |
 | Living MetaUrban city + SMPL humans | **Blocked** on a real Parcel backend adapter (and Conda 3.9) |
@@ -305,14 +328,25 @@ Keep `active_model: grid_v1`; see [`NAVIGATION_CITY.md`](NAVIGATION_CITY.md).
 
 ---
 
-## 6. Reproduce from lockfile
+## 6. Bootstrap from the incomplete environment snapshot
 
-These commands reproduce the environment **from a Parcel source checkout**.
-The wheel is not relocatable yet: prompts, skill YAML, and navigation YAML are
-repository assets rather than package data, and the packaged fallback config is
-not synchronized with `configs/robot.yaml`. It is actively incompatible with
-current speech validation: fallback-only `fish_streaming` and `barge_in` keys
-raise `ValueError` as unsupported.
+These commands bootstrap an environment **from a Parcel source checkout**; they
+do not reproduce the audited environment byte-for-byte. The current
+`requirements-lock.txt` omits 17 distributions present in `.parcel`, including
+parts of the endpointing runtime, as documented above. Treat it as an incomplete
+snapshot until a clean, verified lock-generation workflow closes that gap.
+The earlier package-data drift is no longer the current blocker: N27 generates a
+manifest and byte-checks 91 curated runtime config, prompt, skill, fixture, and
+navigation assets against canonical source. The former fallback-only
+`fish_streaming` / `barge_in` divergence is therefore historical. Keep two
+claims separate, however: the in-process source/package parity gate is recorded
+green, while a clean build/install-wheel smoke is a distinct slow-tier check and
+has no recorded result in this targeted recheck. The visible, uncommitted W-1
+worktree separately adds package-data globs and integrity tests for the city
+scene's referenced textures/meshes; that is not part of the committed 91-asset
+parity claim and still is not an installed-wheel result. Third-party services,
+model weights, native libraries, and simulator/vendor assets not explicitly in
+those ship sets remain external deployment dependencies.
 
 ```bash
 source .parcel/bin/activate

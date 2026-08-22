@@ -3,7 +3,7 @@
 Implementation snapshot: 2026-08-04. This document describes Parcel’s skill
 system, stylized city simulation scene, public `Dog` API, and
 Gymnasium-oriented RL hooks. For operational status and deployment boundaries,
-also read [CURRENT_STATUS.md](CURRENT_STATUS.md).
+also read the current [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md).
 
 ## Goals
 

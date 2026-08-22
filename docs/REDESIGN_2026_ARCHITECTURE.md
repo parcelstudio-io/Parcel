@@ -6,7 +6,7 @@ was implemented, and the contracts that must survive any vendor swap.
 
 Operational caveat: implementation is not the same as deployment readiness.
 The current desktop/service/device state and configuration bindings are tracked in
-[CURRENT_STATUS.md](CURRENT_STATUS.md); the benefits and costs of the decisions
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md); the benefits and costs of the decisions
 below are centralized in [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md).
 
 ## The portability contract (non-negotiable)
@@ -27,11 +27,12 @@ run a second, non-Unitree adapter through the full manager lifecycle
 (registry construction → arming → velocity tracking → feedback-confirmed stop
 → latched E-stop → TTL watchdog) with zero edits to generic code.
 
-This is **control-contract portability**, not installation portability. The
-current wheel omits repository-level `prompts/`, skill YAML, and navigation YAML,
-and its packaged fallback config is divergent. Run the architecture from a
-source checkout/editable install until those assets and paths are packaged and a
-clean external-wheel test exists.
+This is **control-contract portability**, not installation portability. N27 has
+since restored byte parity between canonical and packaged assets and added a hard
+manifest/parity gate. A clean external-wheel test still has not completed in the
+audited environment because Python 3.14 venv/`ensurepip` support is missing, so
+installation portability remains unverified even though the earlier divergence
+is closed. See the current engineering handbook before making a deployment claim.
 
 ## Layer map
 
@@ -40,7 +41,7 @@ L6  Deliberative brain     brain/            PlanIR → validator → executive 
 L5  Voice / duplex         voice_pipeline.py, voice_audio.py, providers.py; D0 shadow frames
 L4  Skills / expression    configs/skills/, gait.py, expression.py, prosody.py; attention pure-only
 L3  Motion & skills        skills/, motion.py (vendor-neutral backends)
-L2  Navigation & collision navigation/       grid planner + shared reactive gate; post-shaper exact-zero pending
+L2  Navigation & collision navigation/       grid planner + shared reactive gate + landed final stop disposition
 L1  Perception             mujoco_lidar.py raycaster (sim) → hardware sensors (next)
 L0  Vendor HAL             control/          registry, ControlManager, adapters
 ```
@@ -159,9 +160,9 @@ planning asynchronous per turn.
 
 These pieces are wired and test-covered, but physical audio and expressive
 motion are not operationally validated. The canonical YAML now places the live
-endpointing/device keys and Fish reference ID under `speech:`. The divergent
-packaged fallback retains unsupported `fish_streaming`/`barge_in` keys, as
-recorded in [CURRENT_STATUS.md](CURRENT_STATUS.md).
+endpointing/device keys and Fish reference ID under `speech:`. N27 regenerated
+the packaged fallback and now enforces byte-identical source/package assets;
+installed-wheel behavior remains a separate, currently incomplete proof.
 
 ## 2026-08-04 adversarial review round
 
@@ -224,11 +225,12 @@ architecture, not deferred footnotes.
   all-track TTC gate. Tests prove corridor avoidance and gate engagement, but
   not socially correct passing-side choice or a reduction distinct from the
   existing reactive-person gate.
-- `SCurveVelocityShaper` runs after the safety gate and before
-  `ControlManager`; explicit stop paths reset it, but ordinary environmental
-  vetoes currently use its bounded emergency ramp. A companion-eval dispatch replica
-  reduced mean commanded jerk 0.9592→0.5530 m/s³ across 11 episodes, but stops
-  before the manager/HAL and never exercises the calm profile.
+- At the time of this review, `SCurveVelocityShaper` ran after the safety gate
+  and ordinary environmental vetoes used its bounded emergency ramp. That
+  ordering defect has since been closed by the typed post-shaper finalizer:
+  hard stops are exact zero and proximity stops are exact-zero translation
+  before dispatch. The companion-eval replica's 0.9592→0.5530 m/s³ mean-jerk
+  improvement still stops before the manager/HAL and is not physical evidence.
 - `SearchOwner` is a system-authored, non-model-callable skill: last observed
   point → yaw sweep → planner-backed frontier search. Phase order and budget are
   tested, but the earlier corner-loss run exhausted the budget and gave up; the
@@ -269,7 +271,7 @@ The complete contract and promotion gates are in
 | Real sensors | after hardware bring-up | Mid-360/L2 + Orbbec Gemini 335; same scan contract |
 | Terrain (stairs/curbs) | after flat-ground validation | elevation_mapping_cupy |
 | AEC / far-field mic | before real duplex demos | XVF3800-class hardware AEC + WebRTC residual |
-| Activate Silero VAD / Smart Turn | when ONNX Runtime + weights ship and an audio endpoint is available | implemented seam in `endpointing.py`; keep loud energy fallback |
+| Commission Silero VAD / Smart Turn through-air | ONNX Runtime/weights are present; proceed when a usable physical endpoint and operator are available | canonical semantic seam in `endpointing.py`; retain loud energy fallback |
 | D1 dual-head TEXT+ACT decoder | after consented D0 corpus + frozen side-by-side eval | train behind `DuplexFrame`; shadow A/B first; never bypass PlanIR/admissibility/safety |
 | RL locomotion | priority 4 funded | unitree_rl_gym→lab→mjlab lineage; ONNX; damping kill switch |
 | ros2_control spike | hardware phase | evaluate against the registry using `quadruped_ros2_control` as reference |

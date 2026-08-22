@@ -5,6 +5,12 @@ Implementation snapshot: 2026-08-04. Canonical authority context:
 and [REDESIGN_2026_ARCHITECTURE.md](REDESIGN_2026_ARCHITECTURE.md). Living-city
 scene details: [DYNAMIC_CITY_AND_BEHAVIOR.md](DYNAMIC_CITY_AND_BEHAVIOR.md).
 
+Targeted correction (2026-08-22): speed limits and the landed post-shaper stop
+boundary below were rechecked against committed code/config. The perception
+section also records the visible, uncommitted C-1/C-2/C-3 worktree separately
+from the default oracle path; that work is diagnostic/in-flight, not shipped or
+physically commissioned capability.
+
 ## Reality check
 
 - `src/parcel_robot/scenes/city_block.xml` is the active daily city scene. The
@@ -39,7 +45,8 @@ explicit destination directive
   -> navigation-local collision brake and configured velocity bounds
   -> runtime CommandArbiter + smoother
   -> runtime-wide camera/LiDAR proximity and TTC vetoes
-  -> jerk-limited actuator hand-off (environmental stop currently ramps)
+  -> jerk-limited hand-off + typed final stop disposition
+       (hard: all-axis zero; proximity: zero translation; nominal: optional re-gated ramp)
   -> ControlManager -> selected locomotion controller
   -> odometry, LiDAR, semantic tracks, and measured velocity feed the next tick
 ```
@@ -80,6 +87,7 @@ src/parcel_robot/navigation/
   envs/metaurban_env.py        # offline scaffold only
 
 src/parcel_robot/runtime.py    # sensor adapter, arbitration, terminal stop proof
+src/parcel_robot/core/hard_stop.py  # final post-shaper stop disposition
 src/parcel_robot/mujoco_lidar.py
 evals/companion_nav/           # product-oriented companion scenarios
 evals/external/                # research proxies (BARN / Habitat)
@@ -103,8 +111,15 @@ The product path calls the same pipeline through `Dog.navigate(...)` from
 camera/depth semantic tracks, LiDAR obstacle returns, freshness, and measured
 motion feedback. The returned command still passes through runtime arbitration,
 the shared reactive gate, and final shaping before `ControlManager` sees it.
-The current reactive decision precedes that final S-curve shaper; the
-2026-08-09 audit marks a post-shaper exact-zero reassertion as P0 work.
+The reactive decision precedes the final S-curve shaper, but the actuator
+boundary now reasserts the typed disposition after shaping. Hard stops produce
+exact `(0, 0, 0)` and reset the smoother/shaper; proximity stops produce
+exact-zero translation while retaining only finite gated yaw. An explicitly
+nominal zero intent may decelerate monotonically, but every candidate is
+re-gated and any malformed/non-monotone value or new veto falls closed to a
+hard stop. That nominal-ramp option is off in the shipped config. These are
+tested software-command properties, not physical stopping distance or latency
+measurements.
 
 ## Sensor and map contract
 
@@ -115,16 +130,23 @@ consistent frame.
 | Input | Used for | Current implementation | Important limit |
 | --- | --- | --- | --- |
 | Planar LiDAR | Free/occupied evidence, A* route, local collision range | 360-ray MuJoCo `mj_multiRay`, 30 m reported maximum, 0.008 m seeded hit noise, 0.2% dropout; navigator subsamples with stride 2 and caps mapping at 12 m | One horizontal plane misses terrain, drop-offs, glass, and obstacles above/below the plane |
-| Camera/depth semantic tracks | Owner identity/position; sidewalk/lamppost candidates; dynamic-agent tracks expected from a physical adapter | Simulator emits typed tracks from known scene objects with range/FOV filtering | No pixel detector, depth estimator, occlusion-aware semantic camera, or re-identification model is implemented |
+| Camera/depth semantic tracks | Owner identity/position; sidewalk/lamppost candidates; dynamic-agent tracks expected from a physical adapter | The committed/default path emits typed tracks from simulator scene metadata with range/FOV filtering. The visible 2026-08-22 worktree adds a config-gated 2 Hz EGL + OWLv2 proposal stream, but its retained frames were all stale at publish (about 562 ms age versus a 300 ms TTL). | The worktree stream is diagnostic, not navigation authority. There is still no admitted physical depth/localization, occlusion-aware semantic camera, or owner re-identification stack. |
+| Online semantic map/source selection | Candidate memory and an eventual non-oracle semantic source | Visible, uncommitted C-2/C-3 packages add an object-centric map and `oracle` / `learned_map` / `shadow` selection; the default remains `oracle` | Live corpus target was 0/5, ranking margin was always zero, source-crop persistence is defective, shadow agreement was 0/18, and held-out/live-mission tails remain unproven |
 | Odometry / body state | Robot pose, route frame, progress, stop verification | Simulator state or Unitree `SportModeState` contract | No SLAM, relocalization, loop closure, or drift correction is implemented |
 | Static POI registry | Resolve known names to metric goals | `demo_pois.yaml` | A demo coordinate prior; hardware use requires a real localized map frame |
 | Google Maps | Future context/route hint | Disabled `NullMapProvider` | Placeholder only: no key, request, route, or navigation authority |
 
 The simulator keeps its truth oracles for test scoring, but the navigator API
 does not accept collision geometry or an evaluator path. Nevertheless, the
-current semantic-track generator itself is derived from known scene metadata.
-Passing typed tracks across an adapter boundary is good architecture; it does
-not make the simulator's semantic perception realistic.
+default semantic-track generator itself is derived from known scene metadata.
+The visible 2026-08-22 worktree can instead feed an OWLv2 proposal stream into
+an online map or compare it in shadow, but C-1's freshness miss and C-2/C-3's
+retrieval/shadow failures prevent admission. Passing typed tracks across an
+adapter boundary is good architecture; neither path makes simulator evidence a
+physical perception result. See the dated
+[C-1](../scrum/20260821/task_11b/C1_STATUS.md),
+[C-2](../scrum/20260821/task_12b/C2_STATUS.md), and
+[C-3](../scrum/20260821/task_13/C3_STATUS.md) records.
 
 ## Geometric planner design and consequences
 
@@ -142,25 +164,26 @@ is active, A* runs every tick so a cached route does not lag moving tracks.
 | Binary footprint inflation | Simple, inspectable hard geometric clearance | Conservative rasterization narrows passages; it is flat 2-D and not terrain traversability |
 | Known-free line-of-sight smoothing | Shorter paths without cutting an inflated corner | It cannot smooth through unseen space and may produce cautious stop/scan behavior |
 | Replan periodically plus on invalidation | Reduces A* load while reacting immediately to a newly blocked cached segment | At the 10 Hz runtime and five-step interval, static-only global replans are about 0.5 s apart; any active dynamic layer increases this to every tick |
-| Rotate-first hysteresis (`28°` enter, `7°` exit) | Removes diagonal slide and gives a stable heading mode | Slower than simultaneous rotate/translate and may look hesitant in a crowd |
+| Rotate-first hysteresis (`55°` enter, `7°` exit) | Reserves a full translation stop for genuine corners while the curvature taper handles moderate heading error | Slower than simultaneous rotate/translate at large errors and can still look hesitant in a crowd |
 | Nominal `vy=0` | Natural forward-facing travel and portability to non-strafing bases | Gives up useful holonomic sidesteps; a future local planner may intentionally use `vy` without changing the command contract |
 | Scan-only default recovery | Avoids reversing into the rear blind wedge of a 270° eval/hardware scan and remains conservative in the 360° simulator | Rotation alone cannot escape every U-trap or wall-end local minimum |
 
 The current speed values are deliberately layered. `grid.yaml` has a desired
-cruise of `0.85 m/s`, but `default.yaml` clamps any navigation output to
-`0.45 m/s`; `configs/robot.yaml` then has a broader body-level limit of
-`1.0 m/s`. The 2026-08-04 cruise/global-limit retune improves tapering and
-non-navigation motion, but does **not** make ordinary navigation a sustained
-`0.85 m/s` controller. These simulator values are not a commissioned hardware
-speed profile.
+cruise of `0.85 m/s`; `default.yaml` permits up to `0.9 m/s`; and
+`configs/robot.yaml` has a broader body-level limit of `1.0 m/s`. The wrapper
+therefore no longer masks the planner's 0.85 m/s request, but heading/distance
+tapers, navigation slew, arbitration, the runtime smoother, safety gates, and
+the actuator shaper can all command less. These simulator pacing values do not
+establish a sustained measured speed or a commissioned hardware profile.
 
 The planner has its own acceleration slew, and the runtime applies another
 velocity smoother before the shared safety gate and an S-curve shaper after it.
 This makes command changes gentler, but the nested filters add tracking lag.
-The S-curve emergency branch currently decelerates rather than guaranteeing an
-exact-zero final command on an ordinary proximity/TTC veto, so neither immediate
-environmental stop behavior nor physical response may be inferred from the
-kinematic simulation.
+The post-shaper finalizer prevents that shaping stage from relaxing the final
+stop class: hard stops are exact all-axis zero, proximity/TTC stops are
+exact-zero translation with gated yaw, and only nominal non-emergency stops may
+use an opt-in monotone, re-gated ramp (off in the shipped config). Physical
+response still cannot be inferred from the kinematic simulation.
 
 The current batched grid-update microbenchmark is documented in
 [GRID_UPDATE_PERFORMANCE.md](GRID_UPDATE_PERFORMANCE.md). Its local-host timing
@@ -201,7 +224,9 @@ Advantages: common-sense vicinity rather than exact-point semantics, explicit
 uncertainty, bounded search/retry, and outcome-based success. Limitations: the
 parser recognizes a bounded vocabulary; the simulator candidate metadata
 contains hand-authored clearances; search is rotation-only; and there is no
-learned open-vocabulary grounding or long-lived semantic SLAM on hardware.
+admitted learned open-vocabulary grounding or long-lived semantic SLAM on
+hardware. The visible OWLv2/online-map worktree is a measured challenger, not a
+promotion of this default.
 
 ## Dynamic people and collision handling
 
@@ -254,7 +279,8 @@ after 45 seconds and holds rather than wandering indefinitely.
 | `grid_v1` | Default Parcel navigator, including soft dynamic-agent costs | Physical scan/localization commissioning and hardware eval |
 | `stub_v0` | Tests and loud missing-scan fallback | Keep as a diagnostic; do not equate it with mapped navigation |
 | POI lookup | Working against static demo YAML | Real map frame, localization, lifecycle/version policy |
-| Semantic search and terminal verification | Working against typed simulator tracks | Physical camera/depth perception with freshness and calibration tests |
+| Semantic search and terminal verification | Working against typed simulator tracks; default source is the metadata-derived oracle | Physical camera/depth perception with freshness, calibration, and held-out task tests |
+| OWLv2 stream + online semantic map cutover | Visible in the uncommitted 2026-08-22 worktree; diagnostic only, with the C-1/C-2/C-3 misses above | Fresh proposal frames, valid ranking/persistence, accepted shadow/held-out results, and closed-loop mission evidence before changing the oracle default |
 | CityWalker / NaVILA / NoMaD / ViNT | YAML metadata/checkpoint paths only; factory rejects their types | Inference adapter, exact observation/action contract, safety wrapping, tests |
 | MetaUrban | Vendor install script plus kinematic scaffold | Versioned service/IPC adapter for reset, step, observations, actions, shutdown |
 | Google Maps | Disabled placeholder | Privacy policy, network/cache behavior, grounding and localization adapter; never collision authority |

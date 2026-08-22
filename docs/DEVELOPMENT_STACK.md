@@ -6,8 +6,18 @@ explicit production conversational path and requires `--legacy` to select the
 profile described here. The local cascade remains the rollback/E2E-test path;
 both paths keep probabilistic AI outside the final motor-safety boundary.
 
-Read the [documentation index](README.md) before setup; `CURRENT_STATUS.md` is
-an August 4 historical snapshot. [VOICE_PROVIDER_ARCHITECTURE.md](VOICE_PROVIDER_ARCHITECTURE.md)
+> **2026-08-22 reconciliation.** Piper's binary, voice and metadata, plus the
+> semantic endpointing artifacts, are present on this workstation. The
+> whisper.cpp server was stopped during the recheck. An XVF3800 USB device
+> enumerates, but the product has no opened native PortAudio capture/playback
+> stream, commissioned AEC/DoA path or through-air result. Presence is not
+> operation. The normal robot composition remains MuJoCo; the Unitree adapter in
+> the diagram is an available commissioning component, not a commissioned
+> physical runtime.
+
+Read the [documentation index](README.md) and current
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) before setup.
+[VOICE_PROVIDER_ARCHITECTURE.md](VOICE_PROVIDER_ARCHITECTURE.md)
 records the provider boundary, while [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md)
 explains the advantages and limitations behind the split below.
 
@@ -35,7 +45,7 @@ browser text  and/or  MicrophoneVoiceLoop (VAD → STT)
  priority arbiter + TTL + proximity/TTC brake
               |
               v
- S-curve handoff (current environmental-stop ramp) → ControlManager
+ S-curve handoff → typed final stop disposition → ControlManager
               |
               v
         SimulatorBackend (MuJoCo) / Unitree Sport
@@ -70,8 +80,8 @@ The local MuJoCo backend now provides:
 - registered behavior channels with explicit stop versus pause state and resume
   primitives (automatic semantic resume is not complete);
 - a shared collision brake for manual, voice, follow, and navigation commands;
-  it currently precedes the S-curve handoff, so post-shaper exact-zero
-  reassertion remains P0 work; and
+  a landed post-shaper finalizer reasserts exact hard-stop zero or zero
+  translation for proximity stops before dispatch; and
 - a simulator-side motion watchdog independent of the web application; and
 - a subordinate 50 Hz expression channel: idle body offsets actuate in MuJoCo,
   while Go2 head/gaze and speech-accent nods are state/metrics only because the
@@ -104,10 +114,10 @@ and is not the right dependency for the first reliable quadruped-control slice.
 | --- | --- | --- | --- |
 | Conversation + shared PlanIR default | Gemma 4 26B-A4B IT QAT Q4 GGUF | Installed under `models/gemma-4-26b-a4b/`; served on port 8080 when launched | 14.4 GB file; CPU and admitted CUDA profiles |
 | Optional planning specialist | Same provider contract | Supported by code; intentionally absent from canonical config after challenger regressions | Separate endpoint/resource budget if enabled |
-| Speech synthesis default | Piper | **Not installed** at configured binary/voice/JSON paths | CPU, onboard-friendly once installed |
+| Speech synthesis default | Piper | Binary, voice and metadata installed; service is launched on demand | CPU, onboard-friendly; physical playback remains uncommissioned |
 | Speech synthesis opt-in | Fish Audio S2 Pro | Isolated environment/weights present; server off by default | GPU-heavy; model license must be reviewed |
 | Speech recognition | whisper.cpp `base.en` | Binary/model installed; server off by default | 142 MB; CPU profile |
-| Voice activity / endpointing | `EnergyVad`; optional Silero + Smart Turn seam | Energy is effective; ONNX Runtime/weights absent | In process, CPU target |
+| Voice activity / endpointing | Silero + Smart Turn canonical; `EnergyVad` fallback | Canonical ONNX artifacts resolve; no live-microphone proof | In process, CPU target |
 
 Gemma 4 26B-A4B is the installed, tested baseline. Qwen3.6-35B-A3B Q4_K_M is
 the recommended next A/B candidate for stronger conversation and semantic
@@ -116,8 +126,9 @@ Ada. Kimi K2.5 is not a sensible local target: its one-trillion-parameter
 checkpoint is meant for multi-GPU serving. Exact tradeoffs are in [Audio,
 latency, and spatial intelligence](AUDIO_LATENCY_AND_SPATIAL_INTELLIGENCE.md).
 
-Piper is the intended onboard TTS default (CPU), but is absent on this host.
-Fish S2 Pro is
+Piper is the intended onboard TTS default (CPU), and its binary, voice and
+metadata are installed on this host. That does not establish a usable speaker
+stream or through-air performance. Fish S2 Pro is
 an opt-in docked/GPU mode with an official streaming server and the Fish Audio
 Research License (research/non-commercial by default). The Fish checkout uses
 its own Python 3.12 + CUDA uv environment so Torch cannot destabilize Parcel's
@@ -129,7 +140,8 @@ Audio codec tokens are useful *inside* Fish S2: its RVQ codec has ten codebooks
 that preserve speech detail. They are not appropriate instructions for a robot.
 The **current** path is:
 
-1. PortAudio capture → energy echo guard → energy or optional semantic VAD;
+1. PortAudio capture → energy echo guard → canonical semantic endpointing, with
+   `EnergyVad` as the loud fallback;
 2. explicit turn commit → one buffered WAV → blocking whisper.cpp request;
 3. finalized text only to Gemma and the deterministic safety layer;
 4. reply text → the selected TTS provider (Piper in canonical config); and
@@ -154,8 +166,8 @@ semantics but are not evidence of acoustic streaming.
 The canonical YAML now keeps device selectors, endpointing/model paths, echo
 guard, `fish_url`, and the consumed `fish_reference_id` beneath the `speech:`
 section the runtime reads. `fish_streaming` and `barge_in` are
-fallback-config-only legacy keys that current validation rejects as unknown,
-not switches. See [CURRENT_STATUS.md](CURRENT_STATUS.md) before changing audio
+removed historical keys that current validation rejects as unknown; neither the
+canonical nor byte-identical packaged YAML contains them. See the [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) before changing audio
 behavior.
 
 The canonical runtime also enables the **D0 dual-stream overlay**. At each 10 Hz
@@ -179,14 +191,13 @@ contain reply-derived text plus owner/context values and outcomes under
 `logs/duplex/` (not the user transcript today); disable them with
 `duplex.logging: false`. Long-session size and retention remain unverified.
 
-The desktop has ALSA capture hardware plus a powered Bluetooth controller.
-PipeWire currently exposes only `Dummy Output` and no source, no USB audio array
-appears in `lsusb`, and the native `libportaudio2` runtime required by Python
-`sounddevice` is absent.
-Parcel therefore starts in **streaming text mode**. A USB array or headset must
-be selected as both an input and an output-capable route; production duplex
-audio also needs acoustic echo cancellation. For the XVF3800, the speaker must
-use the array's own playback/DAC path so its AEC receives the reference signal.
+The 2026-08-22 recheck sees the XVF3800 as USB `2886:001a`, but PipeWire exposes
+no usable product source/sink and plain Python `sounddevice` cannot open the
+native PortAudio path. Parcel therefore starts in **streaming text mode**. USB
+enumeration is not a stream: the array still needs permission, selected
+capture/playback routes, supervised speaker wiring and commissioned AEC/DoA.
+For the XVF3800, the speaker must use the array's own playback/DAC path so its
+AEC receives the reference signal.
 
 ## Run it
 
@@ -255,8 +266,9 @@ ignored by Git. The tracked launch scripts and configuration make their expected
 locations explicit.
 
 Use `./scripts/run_speech_services.sh --check` for a non-mutating speech
-readiness probe. It currently fails until whisper is running and Piper's binary,
-voice, and metadata are installed.
+readiness probe. In the 2026-08-22 recheck Piper's binary, voice and metadata
+pass; the probe fails because whisper is installed but stopped. Passing that
+probe would still not commission a physical audio stream.
 
 Use `./scripts/watch_nav_evals.sh` to **watch** the live voice→nav e2e cases run
 one at a time in a native MuJoCo window (`MUJOCO_GL=glfw`, needs `DISPLAY`) —

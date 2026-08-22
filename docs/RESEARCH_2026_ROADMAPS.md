@@ -15,7 +15,14 @@ max-effort synthesis), adjudicated against each other and against the codebase.
 > shadow-only—not a trained behavior model or actuator source. Hardware AEC,
 > streaming acoustic STT, speculative generation, an overlap classifier,
 > expressive neural TTS, D1, and physical timing calibration remain future work.
-> See [CURRENT_STATUS.md](CURRENT_STATUS.md).
+> See the [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
+> for current implementation and quality; this roadmap preserves dated research direction.
+
+> **2026-08-22 artifact/device delta:** the XVF3800 now enumerates over USB and
+> Piper's binary, voice and metadata are present. Native PortAudio/product
+> capture-playback, AEC/DoA and through-air evidence remain uncommissioned. The
+> “absent,” “not attached,” and latency-baseline statements below describe the
+> original research audit; they are retained so its reasoning is reproducible.
 
 ---
 

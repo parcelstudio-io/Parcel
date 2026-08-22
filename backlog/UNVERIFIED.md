@@ -1,6 +1,6 @@
 # Unverified claims register
 
-**Opened:** 2026-08-04 · **Refreshed:** 2026-08-16 against the
+**Opened:** 2026-08-04 · **Refreshed:** 2026-08-22 against the
 [conversational-autonomy HLD](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
 · Conventions in [README.md](README.md).
 
@@ -55,15 +55,17 @@ assumption would hurt.
   test stays green. The 3.46 ms `ApexToAccentError` is *scheduler* accuracy —
   it says nothing about whether the accents themselves are right.
 
-## U5 — No audio device has ever been opened · **major**
+## U5 — No physical PortAudio product stream has completed · **major**
 
 - **Claim:** device selection by name/index works (`speech.input_device`).
-- **Reality:** the no-root PortAudio path imports and enumerates devices, and the
-  virtual acoustic rig has run, but no physical microphone/speaker stream has
-  completed the product path. Device negotiation against real hardware remains
-  unverified.
-- **To verify:** after B3 or B21 provides a physical transducer, start the panel
-  in `speech.mode: audio` and confirm
+- **Reality:** the dated no-root-prefix experiment imported PortAudio, enumerated
+  devices and ran the virtual acoustic rig when its environment was explicitly
+  sourced. In the 2026-08-22 plain-runtime recheck, `sounddevice` still could not
+  open the native PortAudio path and PipeWire exposed no usable product endpoint.
+  No physical microphone/speaker stream has completed the product path, so device
+  negotiation against real hardware remains unverified.
+- **To verify:** with the attached XVF3800, the required udev/usbfs access and
+  supervised speaker wiring, start the panel in `speech.mode: audio` and confirm
   `/api/state → speech.input_device_detail` names the intended device.
 - **Risk:** frame size, dtype, and blocksize negotiation with a real PortAudio
   backend is untested; a mismatch would surface only at first capture.

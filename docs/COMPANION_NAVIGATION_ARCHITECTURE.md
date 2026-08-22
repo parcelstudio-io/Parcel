@@ -6,6 +6,12 @@ safety-ordering correction audited on 2026-08-09, aligned with
 describes the default implemented code path, not a target architecture or a
 claim of physical deployment.
 
+Targeted correction (2026-08-22): the speed envelope and landed final-stop
+boundary below were rechecked against committed code/config. Perception notes
+also distinguish the visible, uncommitted C-1/C-2/C-3 worktree from the
+metadata-oracle default; the challenger is diagnostic/in-flight, not shipped or
+physically commissioned.
+
 ## Decision
 
 Parcel is not one language model that continuously predicts body velocity. It
@@ -61,11 +67,16 @@ classical global-plan/local-control/independent-shield split.
 That is useful local defense, but it is not the universal safety boundary. The
 runtime applies `reactive_safety.py` and a configured constant-velocity
 time-to-collision brake after arbitration and the first smoother to manual,
-voice, follow, search, spatial, and navigation commands alike. A 2026-08-09
-audit found that the later S-curve shaper's emergency branch decelerates toward
-zero rather than reasserting exact zero. Thus the environmental gate is shared
-but is not yet the required non-relaxable **post-shaper** authority. Explicit
-E-stop/manager-stop paths remain stronger; closing this ordering defect is P0.
+voice, follow, search, spatial, and navigation commands alike. The later
+post-shaper finalizer now converts that result into a typed dispatch
+disposition: hard stops emit exact all-axis zero and reset stateful command
+stages; proximity stops emit exact-zero translation while preserving only
+finite, gated yaw; and an explicitly nominal zero intent may decay only along a
+monotone ramp that is re-run through safety. That nominal-ramp option is off in
+the shipped config. Missing history, malformed or non-monotone values, expired
+intent, or a new veto fails closed to hard stop. This closes the 2026-08-09
+software-ordering defect, but does not prove physical braking distance or stop
+latency.
 `ControlManager` then adds controller-state safety—fresh feedback, finite
 limits, tilt/fault checks, command expiry, stop confirmation, and the software
 E-stop—but it has no camera or LiDAR view of its own.
@@ -148,13 +159,24 @@ real-world perception. The demo POI file is likewise a static coordinate prior,
 not live Google Maps; using it on hardware requires a commissioned map frame
 and localization.
 
+The visible 2026-08-22 worktree adds a config-gated EGL + OWLv2 proposal stream,
+an object-centric online map, and `oracle` / `learned_map` / `shadow` source
+selection. It does not change the authority claim: the default remains
+`oracle`, C-1 measured about 562 ms publish age against a 300 ms TTL, C-2's live
+corpus result was 0/5 with zero ranking margin plus a persisted-crop defect, and
+C-3 measured shadow agreement of 0/18 while leaving held-out and live-mission
+tails unfinished. Treat it as diagnostic/in-flight evidence. See the dated
+[C-1](../scrum/20260821/task_11b/C1_STATUS.md),
+[C-2](../scrum/20260821/task_12b/C2_STATUS.md), and
+[C-3](../scrum/20260821/task_13/C3_STATUS.md) records.
+
 ## What is authoritative today
 
 | Layer | Implemented default | Status / limitation |
 | --- | --- | --- |
-| Conversation and planning | Shared configured Gemma provider, logically split into conversation and planner roles, behind `IntentFrame` and PlanIR | Model service is optional; deterministic routes still work without it |
+| Conversation and planning | The production launcher declares hosted Realtime for interaction; local Gemma remains the planning service and explicit legacy conversation path, behind `IntentFrame` and PlanIR | Hosted credentials/network are production-lane dependencies; model services remain subordinate to deterministic routing, validation, and runtime gates |
 | Geometric navigation | `active_model: grid_v1` over the occlusion-true MuJoCo scan | Physical scan/localization adapter not implemented or commissioned |
-| Semantic goal resolution | Typed simulator camera/depth tracks, bounded search, safe approach, terminal verification | Simulator tracks are metadata-derived; real open-vocabulary perception is absent |
+| Semantic goal resolution | Typed simulator tracks, bounded search, safe approach, and terminal verification; default semantic source remains the metadata oracle | The visible OWLv2/online-map challenger is uncommitted and unadmitted; physical open-vocabulary perception is absent |
 | Owner-relative motion | Direct/behind follow, bounded step/orbit, lead-point prediction, and three-stage owner reacquisition | Depends on fresh, enrolled camera owner tracks; no identity re-identification stack; search degrades to coverage-only ranking without calibrated LiDAR |
 | Dynamic-agent handling | Per-tick constant-velocity A* cost field plus two outgoing TTC/proximity checks | Bounded prediction only: no uncertainty model, interaction model, ORCA negotiation, or hardware safety certification |
 | Locomotion | `ControlManager` plus simulator adapter by default; Unitree Sport adapter available behind commissioning gates | Unitree path is untested on a physical dog from this workstation |
@@ -170,12 +192,12 @@ fails closed for learned types until a tested inference adapter exists. See
 | Choice | Advantage | Limitation / cost |
 | --- | --- | --- |
 | Semantic LLM output, deterministic motion | Natural-language flexibility cannot bypass typed skills or the motor boundary | The fixed skill vocabulary cannot yet express every reasonable request |
-| Separate conversation and planning roles, shared default backbone | Conversation can stream quickly while only physical multi-step tasks pay planning cost; one loaded model fits the device | Shared service contention and a single model's failure mode remain; logical separation is not independent redundancy |
+| Separate interaction and planning roles behind one typed boundary | Hosted interaction can stream quickly while only physical multi-step tasks pay local planning cost; the explicit legacy lane can still reuse Gemma | More services add network/credential/resource failure modes; logical separation is not independent authority or redundancy |
 | Classical grid planner as default | Inspectable, CPU-fast, sensor-grounded, deterministic regression behavior | Flat 2-D world, rolling local memory, no loop closure or terrain model, and only bounded constant-velocity crowd prediction |
 | Rotate first, then move forward | Avoids diagonal “sliding,” matches quadruped-facing behavior, and also works on non-holonomic adapters | Longer/slower than a holonomic optimum and can hesitate in dense crowds |
 | Keep `vy` in the contract | Manual strafing and future local planners remain possible without changing the HAL | Every controller and safety check must reason about arbitrary travel direction |
 | Soft dynamic route cost plus independent hard gates | A* can prefer a route away from predicted people without granting the predictor safety authority | Constant-velocity Gaussian lobes can be wrong; malformed tracks disable the soft layer for that tick, and the hard gates still need fresh geometry |
-| Layered speed envelope | Planner tuning, behavior policy, and hardware/body limits can be changed independently | The numbers are easy to misread: current `grid_v1` asks for `0.85 m/s`, the navigation wrapper caps it at `0.45 m/s`, and the global body clamp is `1.0 m/s` |
+| Layered speed envelope | Planner tuning, behavior policy, and hardware/body limits can be changed independently | The numbers are easy to misread: current `grid_v1` asks for `0.85 m/s`, the navigation wrapper allows `0.9 m/s`, and the global body clamp is `1.0 m/s`; tapers, slew, arbitration, safety, and shaping can still command less |
 | TTLs plus feedback-confirmed stopping | Dead producers decay to stop and semantic arrival cannot be declared while coasting | Adds stop latency and can reject progress when feedback is delayed or misframed |
 | Loud point-goal fallback when the calibrated scan is missing | Simulator/API continuity and obvious telemetry instead of a hidden mode change | The fallback is less capable and may still translate; a hardware deployment must treat `scan_missing_fallback` as a degraded condition, not normal navigation |
 
@@ -189,6 +211,8 @@ intrusion, jerk, and time to reacquire.
 related tests verify sidewalk, lamppost, and owner-orbit outcome predicates.
 The headless base is kinematic and the semantic tracks are simulator-generated,
 so this gate proves task logic rather than gait physics or camera recognition.
+The C-1/C-2/C-3 worktree tests add diagnostic stream/map/cutover evidence, but
+their recorded misses prevent treating them as an admitted perception gate.
 
 **Embodied-plan gate:** `evals/companion/embodied_plan_v1/` runs accepted PlanIR
 through the executive and the same headless navigation/spatial controllers.

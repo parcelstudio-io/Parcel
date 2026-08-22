@@ -168,10 +168,11 @@ Safety framing is invariant across stages: randomness and learning live
 only in *whether and which* named, pre-authored reaction is proposed—never in
 trajectory content. Every motion-claiming reaction flows through the shared
 arbiter, reactive-safety, TTC, shaper, and `ControlManager` path. The 2026-08-09
-audit found that this path does **not** yet have its intended unconditional
-post-shaper collision gate: ordinary environmental vetoes enter the shaper's
-bounded-deceleration emergency branch. A post-shaper exact-zero disposition is
-P0 work and remains mandatory before physical navigation claims.
+audit found that this path lacked its intended post-shaper disposition. That
+software-ordering defect is now closed: the landed typed finalizer emits exact
+zero for hard stops and exact-zero translation for proximity stops before
+dispatch. Physical stopping distance, stability and independent-stop evidence
+remain mandatory before physical navigation claims.
 
 ## Quality gate (owner decision #4)
 

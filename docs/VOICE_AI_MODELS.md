@@ -14,6 +14,13 @@ replaceable adapter decision now live in
 supersedes vendor-selection conclusions in this older snapshot without weakening
 the local text/typed-action trust boundary below.
 
+> **2026-08-22 artifact recheck:** Piper's configured binary, voice and metadata
+> are present, and the semantic endpointing artifacts still resolve. The
+> whisper.cpp service was stopped. An XVF3800 enumerates over USB, but no native
+> PortAudio product stream, AEC/DoA integration or through-air result has been
+> commissioned. Rows below that say Piper is absent reflect the older audit and
+> are superseded by this note and the corrected effective-status row.
+
 ## The implemented architecture
 
 ```text
@@ -60,7 +67,7 @@ compilation, task admission, collision response, and E-stop.
 | whisper.cpp | Provider, server binary, and `base.en` weights installed | Server was not running in this audit; no microphone endpoint connected |
 | Energy endpointing | Implemented fallback | No longer the canonical default; remains the loud degradation path |
 | Silero v6 + Smart Turn v3 | Implemented, runtime-wired, and canonical default | ONNX artifacts and `onnxruntime` resolve; no live microphone or observed latency/cutoff evidence |
-| Piper | Provider and install/run scripts implemented | Configured default, but binary and voice absent |
+| Piper | Provider and install/run scripts implemented | Configured default; binary, voice and metadata present; physical playback uncommissioned |
 | Fish S2 | Provider and isolated service implemented | Optional; not the configured default and not running |
 | Duplex cancellation | Implemented | Browser-tested; acoustic barge-in awaits a device/AEC integration |
 | D0 TEXT/ACT framing | Implemented and enabled | Observes existing reply/action events at the nominal control-loop cadence; shadow-only and not model-generated |
@@ -128,7 +135,9 @@ Limitations:
 A native speech-to-speech model may later supply expressive audio or an
 inner-monologue proposal, but it should not gain direct PlanIR or actuator
 authority until it demonstrates typed tool reliability at the robot's safety
-bar. The cascade boundary remains the production default.
+bar. The deterministic text/typed-action boundary remains the production rule;
+hosted Realtime is the normal interaction lane, while the cascade described here
+is the explicit local/legacy path.
 
 ## Crucial design choice: router, conversation, and planning lanes
 
@@ -142,10 +151,12 @@ a versioned `IntentFrame` and selects one of three paths:
 3. compound/corrective physical tasks go to the deliberative PlanIR contract.
 
 The conversation and planner provider interfaces are independent, but
-`VoiceAgent` defaults `planner_model` to `language_model`. Thus the active
-design is **split contracts and routing over one resident Gemma backbone**, not
-two deployed brains. Both lanes receive the original transcript; one model's
-paraphrase never becomes another model's instruction.
+`VoiceAgent` defaults `planner_model` to `language_model`. Thus the local/legacy
+and default local-PlanIR design is **split contracts and routing over one
+resident Gemma backbone**, not two deployed local brains. The normal launcher
+uses hosted Realtime for interaction while Gemma remains the local reasoner;
+both semantic lanes receive the original transcript, and one model's paraphrase
+never becomes another model's instruction.
 
 This choice saves memory, avoids another lossy intent-extraction hop, and lets
 deterministic commands stay fast. Independent interfaces still permit a later

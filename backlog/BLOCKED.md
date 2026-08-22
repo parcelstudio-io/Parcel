@@ -1,6 +1,6 @@
 # Blocked work
 
-**Opened:** 2026-08-04 · **Refreshed:** 2026-08-16 from the
+**Opened:** 2026-08-04 · **Refreshed:** 2026-08-22 from the
 [conversational-autonomy HLD](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
 · Conventions in [README.md](README.md).
 
@@ -15,7 +15,13 @@ blockers. Active external work begins below.
 
 ---
 
-## B3 — ReSpeaker XVF3800 hardware · *in the post* · **robot through-air/AEC hardware blocker**
+## B3 — ReSpeaker XVF3800 physical stream · *attached, not commissioned* · **robot through-air/AEC blocker**
+
+> **2026-08-22 delta:** USB enumeration now reports Seeed `2886:001a`, so
+> procurement/attachment is closed. It does **not** prove a UAC product stream,
+> DoA control access, AEC, speaker wiring, or through-air latency. The remaining
+> external unblock is the udev/usbfs access plus operator-supervised capture,
+> playback, echo and double-talk runbook.
 
 > **2026-08-07:** with B1 demoted and B2 landed, a transducer is the single
 > hardware item gating the robot Tier-2 through-air rig, the

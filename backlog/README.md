@@ -68,10 +68,10 @@ active board; their sprint/status records remain historical evidence.
 ## Related
 
 - [../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
-  — the 2026-08-15 code-grounded current/target architecture and the source for
+  — the 2026-08-22 code-grounded current/target architecture and the source for
   the HLD delivery map in `NEXT.md`.
-- [../docs/CURRENT_STATUS.md](../docs/CURRENT_STATUS.md) — a historical
-  2026-08-04 capability snapshot, not current authority.
+- [../docs/archive/LEGACY_IMPLEMENTATION_STATUS_2026-08-04_TO_09.md](../docs/archive/LEGACY_IMPLEMENTATION_STATUS_2026-08-04_TO_09.md)
+  — the retired August 4-9 capability matrix; the handbook is current authority.
 - [../docs/RESEARCH_2026_ROADMAPS.md](../docs/RESEARCH_2026_ROADMAPS.md) —
   where the larger roadmap items come from.
 - `../scrum/<date>/task_<n>/README.md` — per-sprint handoffs, the usual source of new

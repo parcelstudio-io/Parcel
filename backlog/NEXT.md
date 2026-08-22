@@ -1,6 +1,6 @@
 # Next up
 
-**Opened:** 2026-08-04 · **Refreshed:** 2026-08-21 from the
+**Opened:** 2026-08-04 · **Refreshed:** 2026-08-22 from the
 [conversational-autonomy HLD](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
 · Conventions in [README.md](README.md).
 
@@ -9,6 +9,30 @@ another `N` card. The portfolio map also references `B` decisions/evidence at th
 required point, but those cards remain in `BLOCKED.md` and are not made executable by
 appearing here. Roadmap rationale lives in
 [../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md](../docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md).
+
+## Active worktree delta — 2026-08-22
+
+The dependency map below remains the durable first-ODD architecture queue, but the
+current uncommitted engineering wave is newer than its N-card refresh. Its detailed
+register is [`scrum/20260821/TASK_BOARD.md`](../scrum/20260821/TASK_BOARD.md).
+Until those changes are reviewed and committed, they are visible worktree evidence,
+not the shipped baseline.
+
+| Priority | Current work | State / exit |
+| ---: | --- | --- |
+| 0 | R29 engineering handbook and documentation truth | Re-audit current architecture/quality, retire the misleading legacy status page, repair live links and stale current claims |
+| 1 | Perception cutover integration closure | C-1 camera, C-2 map and C-3 policy exist, but no production composition root drains camera frames into the map or installs the learned source; fail closed on incomplete non-oracle configurations |
+| 2 | PG-4 learned-map admission signal | Owner-gated: ranking margin is structurally zero in the measured label-primary distribution; fix/re-derive on textured evidence before enabling abstention |
+| 3 | C-3 tail and generalization | Live voice plus at least three learned-map closed-loop development missions, VLM veto/duty cycle and re-derived thresholds precede the still-unspent held-out evaluation |
+| 4 | MOVE-1 residuals | Patrol plumbing ran, but fix compounding slow-band attenuation, attribute dynamic-city contacts, repair vacuous evidence guards and repeat the narrow 5 m result |
+| 5 | Measurement and eval wave | M-1 reliability/pass-k, M-2 adversarial sets, arrival across every class, R30 eval/lock/model provenance hygiene and SI-v3 prompt alignment |
+| 6 | Red-team fixture decision | Choose an isolated derived variant or an explicitly re-pinned development scene for poster/decal decoys; do not spend held-out evidence to discover plumbing failures |
+
+The key correction to the earlier board language is architectural: the source
+selection helpers are not merely “not promoted”; their production binding is
+incomplete. A YAML value can disable the demo POI oracle while the process-global
+semantic candidate source remains the default oracle. Treat that combination as a
+startup defect to close, not a usable shadow/cutover mode.
 
 ## Prioritized delivery and dependency map — 2026-08-16
 

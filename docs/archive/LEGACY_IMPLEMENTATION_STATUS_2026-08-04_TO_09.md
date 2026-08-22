@@ -1,10 +1,13 @@
-# Current implementation status
+# Legacy implementation status, 2026-08-04 to 2026-08-09
 
-**Historical snapshot:** 2026-08-04. This page records the operational truth as
-of that date; it is not the authority for the current checkout. Use the
-[documentation index](README.md), current code and executable evidence for
-later claims. The terms and capability distinctions below remain useful when
-reading this historical record.
+**Archived historical record.** This matrix began as the 2026-08-04 operational
+snapshot and accumulated several navigation corrections through 2026-08-09. It
+was retired from the live documentation surface on 2026-08-22 because its
+“current status” name and later banner concealed that mixed date range. Use the
+[documentation index](../README.md), the canonical
+[engineering handbook](../CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md), current
+code and executable evidence for present claims. The terms and capability
+distinctions below remain useful when reading this historical record.
 
 **2026-08-09 navigation audit correction:** the environmental proximity/TTC
 gate is shared across motion sources, but it precedes the final S-curve shaper.
@@ -64,7 +67,7 @@ Status terms used throughout the documentation:
 
 ## Configuration binding and inert keys
 
-The audio keys in [`configs/robot.yaml`](../configs/robot.yaml) now live under
+The audio keys in [`configs/robot.yaml`](../../configs/robot.yaml) now live under
 the `speech:` section read by the runtime. Device selectors (when uncommented),
 `endpointing`, model paths, `echo_guard_scale`, and `fish_url` therefore reach
 their consumers. The canonical selection remains `endpointing: energy` and
@@ -77,14 +80,14 @@ rejects them as unknown rather than treating them as switches. Barge-in is
 wired on whenever the microphone loop exists. Remove or migrate those two
 legacy fallback keys before relying on packaged startup.
 
-[`configs/personality.yaml`](../configs/personality.yaml) (2026-08-08) is a
+[`configs/personality.yaml`](../../configs/personality.yaml) (2026-08-08) is a
 **bound, not inert** surface: it carries the per-personality blocked-by-a-person
 yield policy and its utterance templates, and every key reaches the runtime's
 `_step_navigation` seam. It is a separate file because `configs/robot.yaml` is
 hash-locked by `evals/companion/embodied_plan_v1`. Loading is fail-closed on
 unknown keys; a tree that ships no such file gets the documented built-in
 defaults and reports `source="builtin"`. See
-[YIELD_POLICY.md](YIELD_POLICY.md).
+[YIELD_POLICY.md](../YIELD_POLICY.md).
 
 ## Desktop evidence
 
@@ -195,6 +198,6 @@ execution is not installation portability evidence.
 - no top-decile claim across external benchmarks without their official
   protocol, assets, runtime, and recorded score.
 
-Update this page whenever one of those boundaries changes. Evidence should name
-the command, device/service, date, and failure semantics—not only the intended
-architecture.
+Do not update this archived matrix as those boundaries change. Record current
+evidence—with command, device/service, date and failure semantics—in the living
+engineering handbook and the appropriate evidence ledger instead.

@@ -1,5 +1,14 @@
 # Acoustic bring-up plan
 
+> **Current reconciliation, 2026-08-22.** This page preserves a 2026-08-07
+> virtual-rig experiment and its runbook; its “now” column is historical evidence,
+> not current host state. The XVF3800 currently enumerates over USB and Piper's
+> artifacts are present, but plain `sounddevice` still cannot open the native
+> PortAudio path, PipeWire exposed no usable product source/sink in the recheck,
+> and no physical stream, AEC, DoA or through-air gate is commissioned. Consult
+> the [engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) for
+> current readiness.
+
 **Status 2026-08-07.** Parcel's audio stack can now be assembled, exercised and
 *measured* on this machine without root. What it cannot do is make a sound in
 a room: no transducer has ever been attached, every physical capture reads

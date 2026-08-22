@@ -8,6 +8,13 @@ optional artifacts or hardware, **fallback** means deliberately degraded
 behavior, and **planned** means no runtime path exists yet. “Active” is not a
 claim of live-microphone or on-robot acoustic evidence.
 
+> **2026-08-22 reconciliation.** The XVF3800 now enumerates over USB, and Piper's
+> configured binary, voice and metadata are present. Native `sounddevice` /
+> PortAudio and a usable product source/sink were still unavailable during the
+> recheck; whisper.cpp was installed but stopped. No opened physical audio stream,
+> AEC/DoA integration or through-air result is commissioned. The dated desktop
+> audit later in this page remains useful history, not the current device list.
+
 ## Current status at a glance
 
 | Capability | Status | What is true today |
@@ -17,7 +24,7 @@ claim of live-microphone or on-robot acoustic evidence.
 | Default endpointing | **Semantic path selected; no live-mic proof** | The canonical profile selects Silero v6 plus Smart Turn v3. The models resolve and `onnxruntime` loads; obviously complete turns use the configured 0.20 s decision and incomplete turns may wait up to 2.5 s. Those are thresholds, not measured acoustic latency. |
 | Energy endpointing | **Fallback** | Adaptive `EnergyVad` remains the dependency-free degrade path and historical segmenter. The runtime reports degradation rather than silently claiming the semantic stack. |
 | whisper.cpp STT | **Adapter and weights installed; service stopped** | The runtime submits a completed WAV to `/inference`. This is utterance-level, not streaming ASR. |
-| Piper TTS | **Configured, not installed** | The configured binary and voice files are absent. `speech.mode: auto` therefore degrades without failing the simulator. |
+| Piper TTS | **Artifacts present; playback uncommissioned** | The configured binary, voice and metadata exist. A usable physical output stream and through-air behavior have not been demonstrated. |
 | Fish S2 TTS | **Optional service/adapter installed** | The provider exposes streaming, but the runtime's sentence wrapper currently calls blocking `synthesize()` once per sentence, so cancellation and first audio are sentence-granular. |
 | Acoustic echo cancellation | **Planned hardware integration** | The software path has only an energy echo guard. An XVF3800-class array must provide the real speaker reference. |
 | D0 duplex frames and fillers | **Active in software** | The runtime mirrors reply/action events into a 10 Hz shadow stream and can play deterministic fillers. Frames observe existing behavior; they do not drive speech or motion. |
@@ -34,7 +41,7 @@ The read-only audit found:
 - Bluetooth AAC/SBC and hands-free codec support; and
 - ALSA capture hardware and drivers.
 
-No Bluetooth or USB audio endpoint was connected. PipeWire reported only a
+In the 2026-08-04 audit, no Bluetooth or USB audio endpoint was connected. PipeWire reported only a
 dummy output, no source, and no real default sink; `lsusb` showed no XVF3800 or
 other USB audio device. Accordingly, `detect_audio_devices()` returned `text
 mode`, `connected_input: false`, `connected_output: false`, and `transport:
@@ -42,7 +49,8 @@ none`. A powered adapter with A2DP/HFP roles is capability evidence, not a
 connected usable headset. This is not a missing Bluetooth driver. It is
 compounded by a separate software prerequisite: the installed Python
 `sounddevice` distribution cannot import until the missing `libportaudio2`
-runtime is installed.
+runtime is installed. The 2026-08-22 reconciliation above supersedes only the
+device/artifact inventory; it does not create an operational audio path.
 
 AirPods and similar headsets can be used after pairing. A2DP normally gives
 good playback without the headset microphone; opening the microphone switches
@@ -315,16 +323,19 @@ for the full navigation design.
 
 The installed and evaluated language-model decision is maintained in [Voice
 intelligence and model design](VOICE_AI_MODELS.md). In short: Gemma 4 remains
-the admitted shared conversation/planning backbone; installed Ministral 8B
-challengers were not promoted; Qwen is a research candidate, not an installed
-or evaluated runtime profile. Model quality does not remove the deterministic
-router, schema validation, task executive, or motor-safety boundary.
+the admitted local/legacy conversation and shared PlanIR backbone; the normal
+launcher uses hosted Realtime for interaction while retaining local semantic
+admission. Installed Ministral 8B challengers were not promoted; Qwen is a
+research candidate, not an installed or evaluated runtime profile. Model
+quality does not remove the deterministic router, schema validation, task
+executive, or motor-safety boundary.
 
 ## Local runbook
 
-The current host has whisper weights and a prebuilt whisper server, but Piper's
-binary/voice are missing. The reproducible installation and service scripts
-are:
+The current host has whisper weights and a prebuilt whisper server; that service
+was stopped in the 2026-08-22 recheck. Piper's binary, voice and metadata are
+present, while physical capture/playback remains uncommissioned. The installation
+and service scripts are:
 
 ```bash
 # Inspect requirements and pinned destinations.

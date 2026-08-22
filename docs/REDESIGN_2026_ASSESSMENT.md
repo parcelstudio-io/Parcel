@@ -8,7 +8,7 @@ proposals, adjudicated, with every load-bearing claim verified against source.
 
 This is the redesign record, not a live readiness claim. Subsequent features,
 operational blockers, configuration bindings, and inert reserved keys are tracked in
-[CURRENT_STATUS.md](CURRENT_STATUS.md); decision tradeoffs are in
+[engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md); decision tradeoffs are in
 [DESIGN_DECISIONS.md](DESIGN_DECISIONS.md).
 
 ## 1. The question

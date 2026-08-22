@@ -1,18 +1,39 @@
-# Conversational autonomy high-level design
+# Parcel robot engineering handbook
 
-- **Status:** recommended target architecture, grounded in the current checkout
-- **Audit date:** 2026-08-15
-- **Audit commit:** `8473a5159babf9eb740dedf901e140a08163093d`
-- **Product objective:** a capable conversational companion that can safely execute
-  long-running, autonomous navigation tasks in a declared operating domain
-- **First operating domain:** supervised, flat, mapped, private indoor/outdoor
-  routes; dry conditions; adequate light; walking speed; trained operator with an
-  independent stop
+**Executive high-level design, robotics foundations, current quality snapshot,
+tradeoffs, and delivery roadmap**
 
-This document joins the conversational, task, perception, navigation, control,
-memory, deployment, and evaluation designs into one system view. It is an
-architectural synthesis, not a claim that the target system is already operational.
-Subsystem details remain in the linked design documents near the end.
+| Document control | Value |
+| --- | --- |
+| Status | Canonical living system design and evidence-dated quality snapshot |
+| Audit date | 2026-08-22 |
+| Committed baseline | `71b39a1ad66bb2fb2f6e647dbc94d351fd75d665` (`main`) |
+| Worktree scope | Baseline plus the visible, uncommitted C-1/C-2/C-3 perception-map cutover and MOVE-1 patrol wave; those changes are reported as in-flight, not shipped |
+| Product objective | A capable conversational companion that safely executes long-running navigation tasks inside a declared operating design domain (ODD) |
+| First proposed ODD | Supervised, flat, mapped, private indoor/outdoor routes; dry conditions; adequate light; walking speed; trained operator with an independent stop |
+| Audience | Engineering executives, robotics/software engineers, safety reviewers, operators, and learners |
+
+This handbook joins the physical robot, sensing, estimation, semantic perception,
+mapping, planning, navigation, control, safety, conversation, task execution,
+memory, deployment, and evaluation designs into one system view. It explains both
+the engineering decisions and the robotics underneath them. It is intentionally
+long-form: the main body supports design and investment decisions; the textbook
+appendices derive the core concepts and walk through how this repository applies
+them.
+
+It is an architectural synthesis and quality audit, not a claim that the target
+system is already operational. In particular, a green simulator regression suite
+does not commission a physical Go2, a detector module does not create trustworthy
+perception, and an accepted command does not prove the body moved. Those distinctions
+are central to the design.
+
+### Suggested reading paths
+
+- **Executive / product:** sections 1-5, 10-14, then Appendix A.
+- **Robotics engineer:** sections 3-11, then Appendices B-H.
+- **AI / interaction engineer:** sections 6-10, then Appendices H-I.
+- **Safety / release reviewer:** sections 1, 3, 5, 8-13, then Appendices D and G-H.
+- **New learner:** Appendix A first, then B-G in order, followed by the main body.
 
 ## 1. How to read the claims
 
@@ -68,7 +89,63 @@ That scenario requires conversation, grounding, memory, revision, recovery,
 identity, social navigation, and terminal truth to work as one system. A better
 chat model or a better point-to-point planner alone cannot deliver it.
 
+### 2.1 Executive snapshot at the audit cutoff
+
+**Product judgment:** Parcel is an unusually well-instrumented, safety-minded
+robotics research/development stack with an integrated MuJoCo companion demo. It
+is not a commissioned physical robot product. On the maturity ladder defined in
+section 5.2, the integrated system is **L2**: normal development paths are wired,
+with several L3 simulation/replay subsystems and no L4 physical autonomy.
+
+**What deserves continued investment:** the semantic-model trust boundary,
+deterministic compiler/executive, revision handling, grid baseline, independent
+arrival concept, layered stop/control lifecycle, evidence contracts, mutation
+testing and adversarial record-keeping. These are harder to reconstruct than a
+new model adapter and remain correct strategic foundations.
+
+**What blocks a field claim:** no commissioned physical localization/perception,
+owner identity, native sole-writer gateway, stopping envelope, independent-stop
+campaign, acoustic path, or repeated first-ODD mission evidence. The current
+commit gate is red; the slow tier has environmental/setup errors plus a real
+semantic-arrival failure; the only recorded nightly is red.
+
+**What the newest work changes:** C-1/C-2/C-3 and MOVE-1 add meaningful camera,
+semantic-memory, source-policy and patrol components, but not an end-to-end visual
+navigation capability. The CPU frames are stale, the map misses its live corpus,
+the learned admission signal refuses the shadow set, and production never binds
+camera -> map -> learned source. Treat the wave as experimental infrastructure.
+
+**Recommended executive decision:** freeze feature-led field claims. Spend the
+next increment on release truth, complete composition/fail-closed admission,
+arrival reliability, the native physical authority boundary, sensor/localization
+evidence, and repeated low-speed commissioning. Continue learned navigation and
+open-vocabulary work in shadow until it beats a deterministic baseline without
+weakening hard gates.
+
 ## 3. Current architecture, as built
+
+### 3.0 What “current” means in this audit
+
+The committed baseline is `main` at `71b39a1`. The checkout also contains an
+uncommitted but internally recorded engineering wave. This handbook audits both,
+because an engineer opening the tree encounters both, but it never treats the
+worktree wave as a released capability.
+
+| Layer | Committed baseline | Visible in-flight worktree | Default / authority consequence |
+| --- | --- | --- | --- |
+| World appearance | MuJoCo development city with built-in/stylized materials | W-1 adds photo-derived textures/meshes, provenance, packaging globs, primary-scene edits and a separate held-out appearance/layout fixture | The edited development scene is visible only in the current worktree; its perception evidence is not committed, and held-out evidence has not been spent |
+| Legacy navigation-candidate camera ingress | `camera_ingress.enabled` / `PARCEL_CAMERA_INGRESS`, MuJoCo EGL and OWLv2 could replace navigation candidates when manually attached, but had no normal composition-root attachment | Existing path retained | Default off; this is a potential semantic-authority path, not the C-1 observation queue |
+| C-1 observation camera ingress | Shared camera/provider primitives existed | `perception.camera_ingress` normally attaches a config-gated 2 Hz worker with typed bounded frames, evidence logging, state/UI telemetry and a pose mailbox | Default off; simultaneous legacy/C-1 enablement is refused; measured CPU frames were stale and no production consumer drains this stream into the online map |
+| Online semantic map | Route memory and simulator-side semantic map existed; no persistent robot-written object/place map | C-2 adds evidence/provenance-bearing entries, hygiene, persistence isolation, fusion, decay, label-primary retrieval and place-graph binding | The package is exercised by tests/harnesses but is not installed by a normal composition root; its live corpus result was 0/5 and a persistence defect drops the source crop |
+| Semantic source | Simulator oracle semantics and hard-coded demo POIs supplied candidate truth | C-3 defines `oracle`, `learned_map`, and behavior-preserving `shadow` policies, POI behavior, and divergence records | Integration is incomplete: YAML is parsed for POI behavior, while the candidate function still reads a process-global selector/map that production never installs. A non-oracle YAML can disable POIs yet still leave oracle candidates driving. |
+| Exploration | Navigation/search controllers existed, but no reusable patrol loop built a map while moving | MOVE-1 adds a bounded proposer/runner that turns around people/geometry and sweeps a nonvolatile vocabulary | Research/evaluation utility only; it is not a user-facing mission or safety authority |
+
+This distinction matters operationally: changing a YAML key from `oracle` to
+`learned_map` is neither a harmless backend swap nor currently a complete one.
+It empties the POI table but does not install the map-backed process-global
+candidate source. Until one composition root owns that binding and camera-to-map
+drain, non-oracle startup should fail closed rather than create a mixed-provenance
+runtime.
 
 ### 3.1 End-to-end logical path
 
@@ -118,6 +195,35 @@ VoiceAgent + DeterministicIntentRouter
        -> ExecutionResult + VerifiedFact -> TaskExecutive
 ```
 
+The committed stack now has two interaction lanes. A bare production launcher
+requires the hosted Realtime lane and its local credential/config declaration;
+`--legacy` deliberately selects the local endpointing/STT/Gemma/TTS path for
+rollback and end-to-end testing. Both lanes terminate in a restricted tool or
+intent surface: neither receives raw velocity, joint, lease, priority, or safety
+authority.
+
+The current observation/evidence plane is equally important:
+
+```text
+                 canonical default                       optional/in-flight
+MuJoCo state ──> oracle semantic rows ───────────────┐   RGB-D render / OWLv2
+      │                                              │          │
+      ├── ray-cast LiDAR ─> rolling occupancy grid   │   typed camera frames
+      ├── owner/dynamic tracks ─> social/TTC gates   │          │
+      └── truth pose (MAP and ODOM, zero covariance) │   evidence log   online map
+                                                     │          │
+                                      semantic_source selector <─┘
+                                               │
+                                               v
+                                   grounding / search / arrival
+```
+
+The right-hand camera-to-map-to-selector edges are currently connected only by
+test/evaluation harnesses, not the normal runtime composition root. Safety
+geometry remains independent of the semantic-source selector. In other
+words, choosing where the word “bench” comes from is not allowed to choose whether
+the LiDAR sector is clear or whether a body command is admissible.
+
 The most important existing architectural property is that the language model is
 not a servo controller. Model work is outside the control loop; deterministic code
 owns admission, resources, revisions, execution, completion, and final motion.
@@ -126,36 +232,38 @@ owns admission, resources, revisions, execution, completion, and final motion.
 
 | Area | Current checkout/default state | Architectural reading |
 | --- | --- | --- |
-| Turn handling | Final transcripts can act. The duplex API accepts non-executing partials for supersession, but the normal microphone path provides speech-onset/VAD barge-in and final-only ASR. Turn/generation guards discard superseded work. | Strong basis for linearizable conversational control; streaming partial ASR is not wired. |
+| Turn handling | The production launcher requires a hosted Realtime lane; an explicit `--legacy` path retains local endpointing/STT/Gemma/TTS. Final transcripts can act. Partials may prepare/cancel but do not execute. Turn, generation, origin, voice-identity, spend, and restricted-tool gates now exist. | Stronger live-interaction path, but it introduces cloud availability, cost, credential, privacy, and network-tail dependencies. Local through-air audio/AEC remains uncommissioned. |
 | Emergency and common intent | A deterministic router handles stop, follow, hold, navigation, status, corrections, and compound routing. | Correct least-latency, least-authority path. |
-| Conversation | A local Gemma/llama.cpp provider path is configured and is operational only when its external service/model is healthy. Tools are nonphysical and read-only results are appended without a second synthesis pass. A separate `next_action` field can propose a bounded social pose/trajectory through deterministic validation and an activity publisher. | Useful prototype with a guarded social-effect seam, not an effect-free or fully grounded tool-using conversation executive. |
+| Conversation | Hosted GPT Realtime is the declared production interaction lane; local Gemma/llama.cpp remains the reasoning/planning service and the explicit legacy conversation path. Realtime tools are schema-restricted and revalidated by the runtime; local read-only tool results still lack a general bounded second synthesis pass. | Capable, guarded prototype with an honest fail-loud launcher. It is not an offline product, a field-validated voice interface, or a single coherent dialogue/task lifecycle yet. |
 | Planning | The canonical config omits `planner_output_contract`, so model planning defaults to verbose `plan_ir_v1`; system-authored local plans use `PlanSketch`. | Safe because authority fields are overwritten, but the model contract exposes needless surface and prompt drift. |
 | Plan admission | Skills, resources, preconditions, timeouts, success conditions, invariants, freshness, and semantic grounding structure are deterministically compiled and validated. `NavigateTo` may still begin an active search for an unseen target. | One of Parcel's strongest seams; admission is not proof that the destination is currently visible. |
 | Task execution | `TaskExecutive` is deterministic and rejects stale revision/attempt feedback. | Strong state-machine core, but recovery and wait behavior are incomplete. |
 | Physical action lifecycle | Follow, hold, spatial, and navigation normally use the brain path; simple walks, catalog skills, backend switching, and legacy fallbacks can bypass it. | `RobotRuntime` bypasses still traverse its downstream safety, but task/resource/progress authority is split. The legacy ROS JSON publisher has no product-path safety proof and should be isolated or retired. |
-| World evidence | Rich `EvidenceEnvelopeV1` types exist, while planner snapshots are rebuilt mainly from `SimObservation` and lose some provenance, covariance, calibration, and revision data. | Contracts are stronger than their live integration. |
-| Semantic perception | Default T0 pass-through uses simulator semantic truth. The opt-in asynchronous pixel detector renders MuJoCo RGB/depth and falls back to simulator semantic truth when no pixel frame is ready. | Simulated pixel research path, not a physical-camera integration. |
+| World evidence | Rich `EvidenceEnvelopeV1` types and bounded event/session logs exist. C-1 adds exact-key camera-detection frames and C-2 adds provenance-bearing map observations/entries, while planner snapshots are still rebuilt mainly from `SimObservation` and flatten calibration, covariance, identity and world revisions. | Contracts are stronger than end-to-end integration; there is not yet one authoritative revisioned world model. |
+| Semantic perception | Default T0/oracle reads simulator semantic truth. The in-flight C-1 worker can render MuJoCo RGB/depth, run OWLv2 on CPU, localize detections, publish a bounded typed stream and write evidence rows. Its measured 562.6 ms median capture-to-publish age exceeds the 300 ms TTL; all retained frames were stale. | Useful diagnostic/proposal evidence, not a physical camera and not fresh enough for grounding or safety authority. |
 | Pose/localization | `TruthPoseProvider` supplies simulator truth for MAP and ODOM with zero covariance. | A provider seam exists; physical localization and `T_map_odom` do not. |
 | Local navigation | With a calibrated scan, `grid_v1` uses a rolling 161x161, 0.1 m occupancy grid, footprint inflation, A*, dynamic soft costs, and a forward-preferred tracker. An absent or grid-invalid scan invokes a loud point-goal stub fallback. Complete absence is normally stopped downstream, but malformed/missing calibration can be grid-invalid while simpler reactive presence checks still pass translation. | Good deterministic local baseline with a real degraded-path gap: the navigator must return typed HOLD rather than rely on non-equivalent downstream scan checks. |
-| Global mapping | No live metric map server, SLAM, or global geometric planner; the active grid is about a 16.1 m rolling window. | Blocking field-deployment gap; route topology cannot supply metric localization. |
-| Semantic navigation | A small deterministic relation/vocabulary parser plus demo POIs feed current-view, memory, scan, search/frontier, safe-approach, progress-watchdog, and terminal-verification logic. Semantic goals have strong independent checks; static POI point goals can still arrive from navigator stop without semantic re-verification. | Thoughtful mission logic, but verification is not uniform, semantic breadth is limited, simulator-backed, and concentrated in one large class. |
+| Global mapping | The actuating planner still has no live global metric map server, SLAM, or global geometric planner; its active grid is about a 16.1 m rolling window. The in-flight online semantic map stores robot-observed object/place evidence and may bind labels to the place graph, but is not a geometric free-space map or localization system. | Object/place memory is useful context, not a substitute for metric localization, traversability, or current obstacle evidence. |
+| Semantic navigation | A deterministic relation/vocabulary parser plus demo POIs feed current-view, memory, scan, search/frontier, safe-approach, progress-watchdog, and terminal-verification logic. C-3 implements policy/helpers for removing the POI oracle and reading a learned map, but the production composition root never installs the process-global source/map; only tests/harnesses do. The shadow study produced 0/18 agreements (0/7 comparable), all `indecisive_ranking`, with zero admission flips. | The cutover is experimental and partially wired. Non-oracle configuration can create a mixed state and should fail startup until one owner binds all edges. Verification remains uneven, simulator-backed, and concentrated in one large coordinator. |
 | Route memory | Topological place-graph persistence APIs and safe interim waypoint handoff exist; the live hook is disabled by default and neither loads nor saves, so normal use is session-local. | Valuable within-session topology proposal layer; not wired cross-restart continuity, SLAM, or relocalization. |
+| Patrol / map-building motion | The standalone in-flight MOVE-1 runner proposes budgeted cruise/turn commands with person-first priority, directional clearance, hysteresis, and a separate nonvolatile map vocabulary. One 120 s development-scene run covered 5.0137 m and wrote 57 provenanced entries across five place classes, but recorded 10 collision ticks and ended only 0.134 m from its start. No production runtime references the patrol package. | A useful evaluation driver and a narrow acceptance-floor pass, not a wired skill, exploration planner, coverage guarantee, production mission, or generalization result. |
 | Social/dynamic navigation | The grid's privileged simulator-track dynamic soft-cost layer is on; the pipeline's perception-derived person-aware overlay is off. TTC also consumes simulator tracks. Malformed predictive inputs disable prediction for that tick while geometric reactive safety remains. | Algorithms exist without field-grade evidence provenance; prediction currently fails open to geometric-only safety. |
 | Expression/attention | Dialogue expression runs separately; the social reaction arbiter is selected and recorded, but its selected reaction is not enacted by the normal runtime path. | Partly shadow-wired and correctly subordinate to locomotion. |
-| Audio | The owner-authorized semantic Silero/Smart Turn path is now canonical and its ONNX artifacts/runtime resolve; the microphone loop still transcribes a committed utterance rather than streaming partial ASR. No live-microphone latency/cutoff evidence or AEC stage exists. | The configured endpointing improvement is available but unmeasured through real transducers; text remains the honest reliable interaction mode in this environment. |
+| Audio | The semantic Silero/Smart Turn path is canonical on the local lane. Hosted Realtime retains input-transcription deltas as evidence but only completed transcription enters robot behavior; the local microphone path likewise acts on committed utterances. No commissioned local acoustic AEC or through-transducer latency/cutoff result exists. | Partial evidence supports responsiveness/observability without partial action authority. Reliable physical barge-in and self-speech rejection remain unproven. |
 | Dual-stream research | The D0 TEXT+ACT frame path is shadow/logging telemetry and has no action authority. | Correct staging boundary; synchronous logging still needs removal from the semantic caller. |
 | Safety/control | The normal velocity path has priority/TTL arbitration, input-health and reactive collision/person/TTC gates, two shaping stages, post-shaper hard/proximity-stop reassertion, and a sole `ControlManager` velocity writer. Pose/trajectory activities first stop locomotion, then call separate backend methods through activity/E-stop gates rather than the velocity safety chain. | Strong velocity-control design, but physical effect authority is split and no independent native gateway exists. |
 | Physical bring-up | Typed evidence provenance and a narrow commissioning manager landed. A substantial capture stack exists but is not imported by runtime/navigation. No capability-admitting physical-production launcher supervising a native gateway and sensor spine, or commissioned autonomous motion, exists. | Parallel foundations only; not physical autonomy. |
-| Deployment | Launch scripts and console entry points exist, but the deploy `safety-control` path is a synthetic 10 Hz navigator smoke and voice/perception services are placeholders. | A deployment skeleton, not the target gateway/sensor supervision topology. |
+| Deployment | Launch scripts and console entry points exist. The default stack now fails loudly unless hosted-Realtime configuration and credentials are present; `--legacy` is explicit. The deploy `safety-control` path remains a synthetic 10 Hz navigator smoke and service containers are incomplete. | Better composition honesty, still a development launcher rather than the target native gateway/sensor supervision topology. |
 | Memory | SQLite recent conversation is active. Tiered summary/profile memory exists but is disabled by default; enabled runtime retrieval is not passed the current query and the distiller proposes no profile facts. Route and semantic memories are separate. | No coherent durable conversational-spatial-task memory. |
 | Observability | Turn latency, component metrics, ledgers, duplex records, and recent transcript-origin logging exist as separate surfaces. | Broad instrumentation without one causal trace. |
-| Packaging | N27 now generates and byte-checks 91 packaged assets/side-mirror files from canonical source; the previously divergent navigation files are byte-identical. The build/install-wheel nightly exists but has not run on this host. | The confirmed drift is repaired and guarded in-process; a real installed-wheel parity result remains unverified, and parity does not prove the values are safe. |
+| Packaging | N27 generates and byte-checks 91 runtime assets; the worktree also packages referenced scene textures/meshes and updates their manifest. Source/package parity is a hard gate, while installed-wheel validation belongs to the slow tier and must be reported separately from source-tree success. | Drift prevention is materially better. A wheel test is still not a deployment, and current slow-tier health must be read from the quality snapshot rather than inferred from the manifest. |
 
 ### 3.3 Code map
 
 | Concern | Current owner |
 | --- | --- |
 | Main turn routing and model/tool handling | [`agent.py`](../src/parcel_robot/agent.py) |
+| Hosted Realtime transport, admission, tools, evidence and spend | [`realtime/`](../src/parcel_robot/realtime/) |
 | Runtime composition and final dispatch | [`runtime.py`](../src/parcel_robot/runtime.py) |
 | Deterministic intent | [`brain/router.py`](../src/parcel_robot/brain/router.py) |
 | Typed task/snapshot/result contracts | [`brain/contracts.py`](../src/parcel_robot/brain/contracts.py) |
@@ -167,6 +275,9 @@ owns admission, resources, revisions, execution, completion, and final motion.
 | Rolling grid planner/controller | [`navigation/grid_planner.py`](../src/parcel_robot/navigation/grid_planner.py), [`navigation/grid_navigator.py`](../src/parcel_robot/navigation/grid_navigator.py) |
 | Pose/localization seam | [`pose.py`](../src/parcel_robot/pose.py) |
 | Pixel localization/tracking chain | [`detection_adapter/`](../src/parcel_robot/detection_adapter/), [`camera_channel/`](../src/parcel_robot/camera_channel/) |
+| In-flight robot-written semantic map | [`online_map/`](../src/parcel_robot/online_map/) |
+| In-flight semantic-source selection/shadow comparison | [`perception_source/`](../src/parcel_robot/perception_source/) |
+| In-flight bounded patrol/evaluation driver | [`patrol/`](../src/parcel_robot/patrol/) |
 | Owner follow and search | [`navigation/follow.py`](../src/parcel_robot/navigation/follow.py), [`navigation/search_owner.py`](../src/parcel_robot/navigation/search_owner.py) |
 | Route/place memory | [`route_memory/`](../src/parcel_robot/route_memory/) |
 | Footway/crossing policy | [`maps/`](../src/parcel_robot/maps/) |
@@ -178,9 +289,12 @@ owns admission, resources, revisions, execution, completion, and final motion.
 | Voice arming and reaction selection | [`audio_arming.py`](../src/parcel_robot/audio_arming.py), [`voice/reaction_bridge.py`](../src/parcel_robot/voice/reaction_bridge.py) |
 | Capture/replay foundation | [`capture/`](../src/parcel_robot/capture/) |
 
-`runtime.py` is roughly 6,662 lines and `navigation/pipeline.py` roughly 6,393
-lines. They are effective integration laboratories, but their size and shared state
-now make authority, invariants, clocks, and failure behavior difficult to audit.
+In the audited worktree, `runtime.py` is 11,895 lines and
+`navigation/pipeline.py` is 6,604 lines. They are effective integration
+laboratories, but their size, lock surface, mutable state, and cross-cutting
+responsibilities now make authority, invariants, clocks, teardown, and failure
+behavior difficult to audit. Decomposition is therefore a risk-reduction program,
+not a style cleanup.
 
 ## 4. What is already well designed
 
@@ -232,6 +346,13 @@ ViNT are not runnable navigator challengers in the current checkout. This is sti
 the correct promotion posture: a real adapter should first rank goals, frontiers,
 routes, or cost priors under replay and shadow evaluation.
 
+One configuration name needs special care: canonical `configs/robot.yaml` selects
+`motion.backend: rl`, but its `policy_path` is empty. `RLPolicyBackend` therefore
+runs as the `rl[stub]` intent facade; no learned locomotion policy is loaded or
+executed. Simulator velocity still reaches the body through `ControlManager` and
+the simulator controller. A literal `rl` key is not evidence of an actuating RL
+policy.
+
 ### 4.6 Explicit ambiguity and failure states
 
 Grounding can report resolved, remembered, unseen, or ambiguous. Search is bounded,
@@ -260,6 +381,14 @@ deployment contract.
 | Typed navigation grounding is converted back to free text and reparsed. | The validated relation and the navigator's interpretation can diverge. | Pass a typed `NavigationTask` end to end; retain text only for audit/explanation. |
 | Planner snapshots flatten rich evidence. | Models and verifiers lose frame, covariance, calibration, unique observation, and causal provenance. | Build query-scoped snapshots from an evidence-enveloped world store. |
 | Camera candidates embed a detector sequence in string IDs but do not expose capture time/view identity as structured evidence, and cached reads are not deduplicated by consumers. | One cached frame can count as multiple independent observations for confirmation or arrival. | Require immutable perception snapshots and independence-aware deduplication. |
+| The C-1 queue, C-2 map and C-3 source policy have no single production composition owner. | Camera frames are not drained into the map; `use_learned_map()` / `use_semantic_source()` are test-only call sites; YAML affects the POI grounder without binding the candidate source. A configuration can therefore look cut over while oracle candidates still drive. | Create one explicit, non-global `PerceptionSource` object, bind ingress -> map -> snapshot at startup, reject incomplete combinations, expose effective provenance in state/evidence, and test the normal launcher rather than manual installers. |
+| The C-1 CPU detector publishes at roughly 562.6 ms median age against a 300 ms TTL. | Every retained measured frame is stale before a consumer sees it; using it for grounding would turn latency into false spatial confidence. | Keep it proposal/diagnostic-only; reduce model/render latency or move inference to an admitted accelerator, then remeasure capture-start-to-consumption tails under contention. |
+| The C-1 camera renders from a static scene copy and synchronizes the robot pose, but not moving actors or joint state. | A person can occupy different poses in the control world and the camera world; this invalidates dynamic-person safety conclusions from the current image stream. | Synchronize all safety-relevant dynamic state at a declared capture time, record the scene revision, and test cross-sensor temporal alignment before using camera detections for motion. |
+| `RobotRuntime` universally obtains a `SimObservation` from a `SimulatorBackend`; there is no production physical observation assembler. | Adding a Unitree actuator does not create physical autonomy: pose, scan, people and controller evidence still have no synchronized, physical-origin path into runtime safety and navigation. | Introduce a backend-neutral `RobotObservationV2` assembled from timestamped physical providers, then make simulator and replay explicit adapters rather than the universal data model. |
+| The normal Unitree builder supplies a raw state source whose declared evidence origin resolves to `UNKNOWN`. | Physical input health correctly refuses the evidence even if the SDK, network, mode and actuator are otherwise available; test-only commissioned wrappers do not prove the product composition. | Require a reviewed `CommissionedStateSource(origin=PHYSICAL)` in the normal physical launcher and bind it to the versioned capability/calibration manifest. |
+| The online-map source crop exists in memory but is omitted by the persisted representation. | After restart, a model upgrade cannot re-embed from the original bounded evidence; the record silently loses the artifact meant to support migration. | Persist/restore a bounded, integrity-checked crop reference or bytes and test fresh-interpreter re-embedding. |
+| The learned online map is object-centric and has no native semantic-region representation. | Extended places such as sidewalks and plazas cannot be grounded or verified faithfully; forcing them into point objects loses topology and extent. | Add versioned region/surface beliefs with polygon uncertainty and observation provenance, or explicitly keep region questions on a separate source until that contract exists. |
+| Learned-map label-primary retrieval currently makes the robust ranking margin exactly zero in the measured distribution. | The provisional PG-3 gate refuses every measured shadow answer; enabling it would create near-universal refusal, while disabling it removes the intended absent-place protection. | Replace or re-derive the signal on textured data, add the registered VLM veto if retained, freeze operating points, and promote only from held-out shadow evidence. |
 | Default pose and dynamic tracks are simulator truth. | Navigation scores do not demonstrate field localization or person tracking. | Add production sensor/localization/tracking providers and deterministic replay before robot promotion. |
 | MAP goals and ODOM poses lack a real timestamped transform. | Simulator truth hides frame inconsistency; physical tracking can be wrong after drift or relocalization. | Make a localization service own `T_map_odom`, covariance, health, and jump events. |
 | Semantic-memory ingestion can fall back to time zero. | Age decay is ineffective in the normal path. | Make time and observation sequence mandatory evidence fields. |
@@ -269,6 +398,7 @@ deployment contract.
 | `GoalArbiter` is usually called on singleton proposals and has no production lethal-cost callback. | It is a validation helper, not one continuous subgoal authority. | After task/preemption selects the behavior owner, use a live behavior-scoped `GoalManager` for mission, route-memory, exploration, recovery, and operator navigation subgoals; keep moving formation distinct. |
 | Route memory is disabled and its normal live hook is process-local, although save/load APIs exist. | It cannot provide wired cross-restart place continuity or relocalization. | Persist and load a versioned place graph with change detection; never treat it as free-space truth. |
 | Owner following lacks commissioned identity/re-identification. | “Nearest person” behavior would risk an identity swap. | Use an explicit owner belief state; ambiguity or identity loss means HOLD/search/clarify. |
+| Detection lock-on can be enabled while verification-on-approach is disabled. | The configuration/API admits a combination already associated with a wrong-instance false arrival: roughly 4.78 m distance-to-go and success-rate regression from 0.32 to 0.24 in the recorded candidate evidence. A warning is not an admission control. | Reject the combination at schema/startup time and require fresh instance identity plus terminal verification whenever lock-on can influence motion or arrival. |
 | Safety thresholds are duplicated across planner and runtime. | A planner-valid route can be executor-impossible and diagnoses are ambiguous. | Derive all planning envelopes from one immutable `RobotProfile x SpeedRegime x SafetyEnvelope`; keep the final gate independent. |
 | Recoverable HOLD/proximity/missing-scan policies may preserve yaw, while a latched input-health fault is exact zero at finalization; a no-provider pose fallback can still report healthy zero-covariance state. | The boundary between permitted inspection rotation and full stop, plus terminal pose truth, remains under-specified for physical use. | Resolve each input-class/pose policy explicitly, then freeze exact dispositions with property tests. |
 | Grid-invalid scan and malformed prediction have permissive internal fallbacks. Grid scan validity is stricter than reactive scan presence, so stub translation is not always suppressed. | Malformed calibration or prediction can leave more motion than the failed component can justify. | Make safety-relevant components return typed degraded/HOLD states under one calibrated evidence contract; retain downstream gates as independent defense. |
@@ -276,37 +406,132 @@ deployment contract.
 | Shared llama.cpp serving has one active cancellation handle. | Conversation, planning, and summarization can cancel or starve each other. | Add an inference broker with role-scoped queues, deadlines, cancellation, and overload policy. |
 | Tiered memory is disabled and fragmented from task/spatial memory. | The companion lacks durable reference, commitment, place, and failure continuity. | Introduce governed working, episodic, profile, and spatial memory stores. |
 | The reaction arbiter's selected output is recorded but not enacted. | “Social reaction” evidence can be mistaken for product behavior. | Wire it only to bounded voice/attention/expression adapters or label it shadow-only. |
-| No AEC or streaming partial-ASR path is wired. | Barge-in, self-talk, and natural turn latency remain weak on real audio. | Add capture identity, AEC, partials for preparation/interruption only, and priority speech delivery. |
+| No commissioned local acoustic AEC exists; hosted partial-ASR deltas are retained as evidence but never enter the behavioral/action path. | Physical barge-in, self-talk rejection and natural through-air latency remain weak or unmeasured even though the hosted protocol can stream partial evidence. | Commission capture identity and AEC; keep partials limited to preparation/interruption and admit only completed turns; measure through-transducer tails and cutoff. |
 | Declarative invariants are stored as one replaceable runtime tuple and enforcement is distributed across subsystems. | Protection may exist, but a task/revision cannot be traced cleanly from invariant to monitor, intervention, and evidence. | Add per-task/revision invariant leases and a monitor registry through terminal state. |
 | Duplex/session logging performs synchronous file work from the 10 Hz semantic caller. | Storage latency competes with motion dispatch even though the 50 Hz `ControlManager` thread is separate. | Enqueue bounded telemetry with drop accounting; move serialization/rotation/storage off all control callers. |
 | Runtime and navigation are large shared-state coordinators. | Changes have wide blast radius and ownership is unclear. | Extract typed ports and state owners inside a modular Python application; split processes only at real fault/timing boundaries. |
-| Packaged navigation defaults are stale. | Source and installed-wheel behavior differ, including motion caps and alignment. | Generate assets from one source, verify digests/zero diff, and test the built wheel in an empty environment. |
+| Reactive slow-band output is force-fed back into the upstream velocity smoother. | The same safety attenuation compounds across ticks; MOVE-1 measured roughly 2.2x less speed than one policy application intended. This is safe-directional but distorts behavior and every throughput/latency conclusion in the band. | Separate desired-state history from final gated output, add a closed-form steady-state property, and re-run follow/patrol baselines without weakening the stop boundary. |
+| The first patrol acceptance run recorded 10 collision ticks and only narrowly cleared its 5 m path floor. | The dynamic-city collision signal mixes robot-caused contact with agents striking a stationary robot; a single narrow pass cannot establish reliable exploration. | Attribute contact by relative motion/causal responsibility, repeat across seeds, report path coverage and net progress, and keep zero-contact as a separately visible hard metric. |
+| The MOVE-1 status references `evidence/MOVE1_EXIT_GATE.txt`, but that artifact is absent from the current task evidence. | A narrative pass cannot be independently reproduced or promoted from the referenced evidence package. | Regenerate the gate artifact from immutable inputs or mark the claim incomplete; add reference-existence checks to evidence governance. |
+| Generated package assets are now parity-gated, but installed-wheel and deployed-process behavior remain separate claims. | A byte-identical manifest can still package unsafe values or miss environment/service assumptions. | Keep clean-wheel tests in the recorded slow tier and add capability admission plus deployment smoke; never equate parity with safety. |
 
 ### 5.2 Evidence baseline
 
-The test posture is broad: 240 production Python files (about 92,389 lines) and
-282 test modules. A current non-slow collection selects 5,384 of 5,420 tests; the
-latest recorded commit gate for this HEAD lineage reports 5,375 passed, 9 skipped,
-and 36 deselected. That is strong regression evidence, not physical validity.
+The worktree is test-rich: 285 Python files under `src/parcel_robot` (126,788
+lines, including experimental and current untracked packages) and 342
+top-level test modules across 343 test Python files (154,565 lines). Collection on 2026-08-22 found **8,022
+tests**: 7,980 selected by the commit marker expression and 42 by the slow tier.
+The larger test footprint is a material strength, but the current promotion result
+is **red**, not green.
 
-The green result is a local, recorded runner result. The repository contains a
-GitHub Actions workflow definition, but its own header and `docs/CI.md` say hosted
-Actions are not yet wired; external per-commit/nightly execution is therefore
-unverified. Slow coverage is much thinner (the latest voice-navigation run records
-17 passes and one expected failure), and there is no HIL or physical-product proof.
+#### Current executable quality result
 
-The recorded product-facing and frozen calibration results explain the design
-priorities:
+| Check | Current result | Engineering reading |
+| --- | --- | --- |
+| Exact commit gate | **FAIL:** 1 failed, 7,970 passed, 9 skipped, 42 deselected; 352.4 s total | The sole failure is the protected held-out-scene identifier appearing in an untracked MOVE-1 status document without an allowlist seat. It is evidence-governance leakage rather than runtime behavior, but the gate correctly blocks promotion. |
+| Dedicated hard stages | **PASS** | Ruff ratchet; hard-safety evaluators; four digest sentinels; 91-asset release parity; latency ledger/tails; follow jerk ratchet; assertion-eval self-test; tier coverage; model-off 23; frozen-digest 6; release-parity tests 10; mutation freshness 2; owner-store isolation 6. |
+| Raw Ruff | **FAIL:** 12 findings across seven grandfathered `(file, rule)` fingerprints | The CI ratchet is green because no new fingerprint was added. The codebase is not raw-lint clean; the baseline is debt, not a pass in the ordinary Ruff sense. |
+| Direct local slow suite under nightly variables | **ERROR:** 11 passed, 7 skipped, 4 xfailed, 20 errors | This was direct `pytest -m slow`, not a complete successful official-nightly run. Three installed-wheel tests cannot create a venv because Python 3.14 `ensurepip`/venv support is absent. Seventeen voice-navigation setups are refused by the owner-store isolation guard because the nightly environment lacks a scratch `PARCEL_MEMORY_PATH`. |
+| Voice-navigation slow slice with isolated memory | **FAIL:** 16 passed, 1 xfailed, 1 failed | Removing the setup blocker exposes the known lamppost terminal failure: `semantic_arrival_verification_failed`. This is behavioral, not environmental. |
+| Recorded nightly | **FAIL:** one recorded run, three hard-red stages | There is no clean recorded nightly and no verified hosted GitHub Actions run. The recorded candidate report includes success rate 0.28 and one false arrival; those are report-only and cannot authorize promotion. |
+
+The current red gate should not erase what passed, and 7,970 passing tests should
+not erase the red. The useful executive conclusion is: **strong local regression
+engineering around a research simulator, with incomplete release/evidence hygiene
+and no physical assurance.**
+
+The seven slow-suite skips also hide work rather than proving it: five closed-loop
+Follow-Bench cases require the second opt-in `PARCEL_FOLLOW_BENCH_SLOW=1`, so the
+scheduled nightly does not refresh them, and two live-provider cases require
+credentials and explicit spend authorization. The four expected failures are
+measured capability gaps—half-scale covariance, two region-goal transform cases,
+and pedestrian-stream navigation—not benign infrastructure skips. Likewise, the
+green assertion-evaluator stage means five frozen fixtures reproduced 20 expected
+findings and seeded broken evaluators were detected; two fixture sessions
+intentionally contain failing overall/safety matrices, so that stage is not a claim
+that the represented robot sessions were good.
+
+#### Quality-system strengths
+
+- Exact-key immutable contracts, deterministic clocks and extensive negative cases.
+- Pre-registered measurements with null/control arms and explicit misses.
+- Seeded-defect/mutation panels that test whether important tests can actually fail.
+- Frozen manifests, source/package parity, held-out leakage protection and owner-store
+  isolation.
+- Separate commit/slow tier coverage with no collected orphan between the marker sets.
+- Honest `does_not_prove` boundaries in many eval/status records.
+- A sole normal velocity-writer feedback supervisor, layered command gates and
+  exact-stop property tests at the application boundary; pose/trajectory backend
+  effects remain a separate authority gap.
+
+#### Quality-system gaps
+
+- No line/branch coverage measurement or minimum; high test count cannot reveal
+  which production branches are untouched.
+- No mypy/pyright gate, despite a contract-heavy dynamically typed integration
+  surface.
+- No dependency-vulnerability, secret, license/SBOM or static-security promotion gate.
+- Raw Ruff debt remains; the ratchet guarantees “no new fingerprint,” not clean code.
+- Three active deprecation warnings still use the retired footprint constant.
+- CI declares Python 3.12 only while packaging declares Python `>=3.10`; the audited
+  workstation runs Python 3.14.4.
+- Hosted workflow installation uses broad `pyproject.toml` ranges rather than the
+  repository lock, so local and hosted dependency resolution can differ.
+- The workflow job timeout is 20 minutes while the internal default-suite timeout is
+  30 minutes; a valid long gate can be killed by its wrapper.
+- The first recorded nightly is red, slow setup depends on environment details, and
+  hosted Actions execution remains unverified.
+- Four of six latency-tail pins, the acoustic sentinel, E1 seal, dependency-lock
+  completeness, Gemma provenance and the model-seat fixture gate are still tracked
+  as eval-hygiene work; a green dedicated stage is narrower than full evidence trust.
+- Only one of the two legacy `walk_with_me` ledger rows carries
+  `hard_collision_total`; a hard-safety evaluator that passes available rows is not
+  equivalent to complete historical collision instrumentation.
+
+#### Capability maturity snapshot
+
+This handbook uses an internal five-level ladder rather than borrowing an ambiguous
+marketing TRL:
+
+| Level | Meaning |
+| --- | --- |
+| L0 | Design/research only |
+| L1 | Implemented in isolation |
+| L2 | Wired through a normal development entry point |
+| L3 | Repeatedly verified in deterministic simulation/replay for the stated scope |
+| L4 | Verified on intended hardware under supervised bounded conditions |
+| L5 | Commissioned for the declared ODD with repeated integrated evidence |
+
+| Subsystem | Current level | Why it stops there |
+| --- | ---: | --- |
+| Deterministic task contracts/executive | L3 | Broad tests and simulated execution; consequential-action lifecycles and recovery remain split |
+| Local grid navigation and semantic mission logic | L3 | Strong MuJoCo/replay coverage but a known semantic-arrival red, oracle perception and no physical localization |
+| Velocity safety/control supervision | L3 | Property/fault/simulator evidence; no commissioned native gateway, stopping envelope or hardware independent-stop campaign |
+| Hosted conversational lane | L2-L3 | Wired default and recorded software sessions; cloud/network/privacy dependency and no owner-reviewed through-air physical campaign |
+| Local acoustic lane | L2 | Piper/endpointing artifacts exist, but no commissioned physical PortAudio stream, AEC or through-air latency |
+| C-1 camera ingress | L2 experimental | Normal config attachment exists; measured frames are stale and never drain to the online map |
+| C-2 online semantic map | L1-L2 experimental | Strong isolated/replay tests; no normal composition owner, 0/5 live corpus, persistence defect |
+| C-3 source cutover | L1 experimental | Helpers/tests exist; production binding is incomplete and measured learned arm refuses all comparisons |
+| MOVE-1 patrol | L1-L2 experimental | Standalone runner completed one narrow development run; not a runtime skill and contact/generalization remain open |
+| Unitree physical locomotion | L1 | Adapter/supervisor implemented; SDK/NIC/modes/axes/frame and body behavior are uncommissioned |
+| Physical observation/localization spine | L0-L1 | Typed capture/provider foundations exist, but no normal physical observation assembly, sensor fusion, `T_map_odom`, localization integrity or runtime binding exists |
+| Integrated companion product | **L2 overall** | A capable simulator/development stack, not fielded autonomous robot evidence |
+
+#### Recorded product/evaluation results
 
 | Evidence set | Recorded result | What it does not prove |
 | --- | --- | --- |
-| Semantic navigation v4 | 25 episodes, success rate 0.24, SPL 0.1933, zero modeled collisions | General autonomy, physical perception, or physical collision safety |
+| Semantic navigation v4 | 25 episodes, success rate 0.24, SPL 0.1933, zero modeled collisions | General autonomy, physical perception or physical collision safety |
 | Scripted follow/navigation | Follow 7/9; navigation 2/2 | Identity-safe owner following or ecological validity |
-| Gemma conversation | 6/10 machine cases; about 349 ms median first-token latency | Human companion quality |
+| Gemma conversation calibration | 6/10 machine cases; about 349 ms median first-token latency | Human companion quality or the hosted lane |
 | Live PersonalConvo | 3/13 turns and 1/8 families | Long-horizon personal continuity |
 | Planner quality v2 | 5/5 selected semantic cases; 5.657 s median usable-plan latency | Physical execution or acceptable interactive tail latency |
-| Synthetic duplex | Five of nine gates fail | Through-air audio, echo cancellation, or natural barge-in |
-| Embodied PlanIR | 4/4 supported deterministic MuJoCo cases; an additional moving-owner case was unsupported | Moving-owner behavior, field sensors, or deployment readiness |
+| Synthetic duplex | Five of nine gates fail | Through-air audio, AEC or natural barge-in |
+| Embodied PlanIR | 4/4 supported deterministic MuJoCo cases; moving owner unsupported | Moving-owner behavior, field sensors or deployment readiness |
+| C-1 live camera | Safety gate p99 delta +0.735 ms; 562.6 ms median frame age; all 16 retained frames expired | Fresh perception or grounding authority |
+| C-2 online map | Isolated structure/persistence tests strong; live corpus 0/5 and one false-positive entry | Correct robot-written place memory |
+| C-3 shadow cutover | 0/18 agreement, 0 admission flips; all learned refusals `indecisive_ranking` | A usable learned source or production binding |
+| MOVE-1 patrol | 5.0137 m path, 57 entries, five place classes, 10 collision ticks, 0.134 m net displacement | Reliable exploration, map correctness or generalization |
 
 External BARN/Habitat results remain algorithm proxies. They are useful for
 regression and challenger selection but must not be used as product or physical
@@ -1043,6 +1268,26 @@ systems overhead inside the semantic application.
 
 ## 11. Delivery sequence and promotion gates
 
+### Immediate prioritized lanes from this audit
+
+| Priority lane | Action | Exit evidence |
+| --- | --- | --- |
+| P0-A release truth | Restore promotion truth | Current commit gate green without weakening the held-out rule; slow runner uses an isolated store; clean recorded nightly; installed-wheel cells **run and pass** in the designated release/hosted environment. An explained local skip may document a workstation limitation, but leaves release evidence incomplete. |
+| P0-B physical authority | Land the native physical authority boundary in parallel with P0-A | Restart-disarmed sole writer, epoch/TTL/lease/watchdog/stationary witness, credential isolation and fault campaign pass before autonomous hardware motion |
+| P0-C physical evidence | Establish the physical evidence/localization spine in parallel at the interface/replay level | Timestamped sensor frames, calibrated transforms, `T_map_odom`, covariance/health/jump behavior and deterministic replay; capability profile fails closed when any commissioned prerequisite is absent |
+| P1 behavior truth | Fix semantic arrival reliability | Lamppost and every shipped object/relation class pass repeated terminal-witness episodes; no false arrival; baseline re-frozen only after the defect closes |
+| P2 composition | Complete or reject the perception cutover | One composition root owns camera -> map -> source; incomplete/global mixed states refuse startup; effective provenance visible in snapshots; oracle remains a tested rollback |
+| P3 learned-map evidence | Repair persistence and admission evidence | Source crop survives persistence; ranking/abstention signals re-derived on textured evidence; nulls, decoys and independent visits pass; no threshold tuned on the final held-out scene |
+| P4 perception timing | Make camera evidence fresh enough or keep it diagnostic | Capture-start-to-consumer p95 below the declared TTL under CPU/GPU/control contention, with loss accounting; otherwise configuration cannot grant grounding authority |
+| P5 motion/evaluation | Fix measured distortions | Remove compounding slow-band attenuation without weakening stops; attribute contact causally; repeat patrol across seeds with coverage, net progress, map precision/recall and zero volatile persistence |
+| P6 quality infrastructure | Enforce missing quality controls | Raw Ruff debt and deprecations removed; coverage/type/security/dependency controls enforced in CI or covered by an explicit dated risk acceptance; Python-version matrix and lock usage aligned; timeout hierarchy coherent |
+| P7 commissioning | Run the staged first-ODD ladder after its owning gates | Independent stop, single-axis/low-speed bench, static/dynamic obstacles, owner occlusion, conversation during motion and terminal truth repeated with confidence intervals |
+
+These are claim-blocking lanes, not a single serialized feature queue. P0-A, P0-B
+and the software/replay portion of P0-C start immediately in parallel; physical
+motion remains gated, while P1-P6 may overlap so long as none is used to bypass a
+predecessor's admission evidence.
+
 ### Phase 0 — parallel P0: release truth and the physical authority boundary
 
 Run two workstreams immediately; neither waits for new semantic features.
@@ -1091,9 +1336,12 @@ on client death or command expiry.
 
 **Gate:** replay produces deterministic, internally coherent decision snapshots;
 physical profiles cannot arm without commissioned capabilities. Sensor/ROS failure
-expires motion authority and the gateway then stops on TTL. GPU, UI, logging, or
-storage failure cannot block gateway/control liveness and need not stop an otherwise
-safe deterministic task.
+expires motion authority and the gateway then stops on TTL. Failure of a
+non-safety UI, GPU consumer, logger or optional store must not block
+gateway/control liveness and need not stop a task **only if** the remaining
+commissioned capabilities and mandatory evidence/retention policy still authorize
+it. Loss of a safety-relevant perception provider or required evidence sink revokes
+or degrades the affected capability.
 
 ### Phase 2 — close the conversational task loop
 
@@ -1231,8 +1479,8 @@ remain magic constants or be silently inferred from a convenient simulator behav
 - [Attention steering design](ATTENTION_STEERING_DESIGN.md)
 - [Strata/generalization plan](STRATA_GENERALIZATION_PLAN.md)
 - [Hardware portability audit](HARDWARE_PORTABILITY_AUDIT.md)
-- [Historical operational snapshot](CURRENT_STATUS.md) — dated 2026-08-04 and
-  therefore historical relative to this audit
+- [Archived legacy implementation matrix](archive/LEGACY_IMPLEMENTATION_STATUS_2026-08-04_TO_09.md)
+  — a retired August 4-9 historical record, never current authority
 - [Accepted production convergence plan](../scrum/20260812/task_1/PRODUCTION_COMPANION_PLAN.md)
 - [Current FIX-A validation record](../scrum/20260815/task_1/FIXA_STATUS.md)
 - [Companion navigation result ledger](../evals/companion_nav/results/README.md)
@@ -1267,3 +1515,1240 @@ That design gives models more useful context and more opportunities to propose
 intelligent repairs while giving them no additional ability to manufacture truth or
 motor authority. It is the best balance of capability, safety, portability,
 testability, and incremental delivery for the stated objective.
+
+---
+
+## Appendix A — Robotics textbook: the system mental model
+
+### A.1 A robot is a feedback system, not a chatbot with legs
+
+A useful first model of Parcel is a closed loop:
+
+```text
+physical world -> sensors -> state/evidence -> estimation -> goals/plans
+       ^                                                    |
+       |                                                    v
+       +--- body/contact <- actuators <- admitted command <- controller
+```
+
+The world changes while computation runs. Sensors are delayed and noisy. The
+body has momentum, actuator limits, balance constraints, and contacts. People do
+not follow the robot's plan. A correct decision made from old evidence can be an
+unsafe command now. Robotics therefore depends on feedback: repeatedly observe,
+estimate, decide, act for a short horizon, and observe the result.
+
+Conversation adds another loop rather than replacing this one:
+
+```text
+owner utterance -> committed meaning -> authorized task -> physical loop
+       ^                                                   |
+       +------ explanation / clarification / result <------+
+```
+
+The task loop operates in symbols such as “owner,” “bench,” “next to,” and
+“wait.” The physical loop operates in metres, radians, seconds, velocities,
+forces, contact states, and uncertainty. Parcel's central architectural job is
+to translate between those domains without allowing a plausible sentence to
+become physical truth or motor authority.
+
+### A.2 Plant, controller, estimator, planner, and executive
+
+Robotics vocabulary is easier when each term has one job:
+
+| Concept | General meaning | Parcel realization |
+| --- | --- | --- |
+| Plant | The physical system being controlled | Go2 body, onboard locomotion controller, motors, contacts and environment; MuJoCo approximates this in development |
+| Sensor | Measures some function of the world or robot | Camera/RGB-D, LiDAR-like rays, pose/state feedback, microphones, controller telemetry |
+| State | Minimal variables needed to predict/control behavior | Body pose/twist, owner/obstacle tracks, controller lifecycle, task revision, evidence freshness |
+| Estimator | Infers state from noisy history | Track filters and owner prediction exist; a commissioned localization/SLAM estimator does not |
+| Controller | Converts a desired state/trajectory into commands and uses feedback to reduce error | Grid tracker and follow controllers propose body velocity; Unitree Sport closes lower-level gait/balance loops |
+| Planner | Searches over future actions or paths | PlanSketch/PlanIR at task level; A* in the local occupancy grid; search/frontier and approach logic |
+| Executive | Owns task state, resources, retries, cancellation and completion | Deterministic `TaskExecutive` plus runtime adapters, with legacy bypasses still present |
+| Safety monitor | Restricts or revokes commands independently of the goal | Arbitration, freshness/input health, proximity/TTC, final stop and controller watchdog layers |
+
+The planner should answer “what route or skill could achieve the goal?” The
+controller should answer “what short-lived command reduces current error?” The
+safety monitor should answer “is that command justified right now?” Combining
+all three inside a language model makes failures hard to detect and impossible
+to bound. Parcel intentionally keeps them separate.
+
+### A.3 Information flow and authority flow are different graphs
+
+A component may know something without being allowed to cause motion. The
+online semantic map may propose that a bench is near `(x, y)`. Route memory may
+propose an interim waypoint. A learned navigator may score a frontier. The
+conversation model may propose a task. These are information edges.
+
+Authority edges are narrower:
+
+```text
+recognized principal + committed turn
+        -> admitted typed task/revision
+        -> resource-owning behavior
+        -> short-lived velocity proposal
+        -> current evidence and safety disposition
+        -> sole locomotion writer
+```
+
+No proposal source may mint its own priority, lease, freshness, invariant, or
+success result. This is the practical meaning of “models propose; deterministic
+code disposes.” It is also why a `shadow` perception source can run beside the
+oracle without changing behavior: it receives information access but no
+actuation authority.
+
+### A.4 Time-scale separation
+
+Different robot problems require different rates. Faster is not automatically
+better; a rate must be fast enough for the dynamics and deadline it governs,
+and its worst-case execution time must fit its period.
+
+| Approximate scale in this checkout | Responsibility | Why it belongs there |
+| --- | --- | --- |
+| Onboard / vendor high rate | Joint torque/position, foot contact, gait and balance | Python must not try to recreate the manufacturer's stabilizing controller over a network |
+| 50 Hz (`20 ms`) | `ControlManager` body-command refresh/watchdog; expression channel also targets 50 Hz | Short command TTL and smooth actuator handoff; expression timing is faster but subordinate |
+| 10 Hz (`100 ms`) | Main semantic/control tick and D0 frame cadence | Navigation updates, safety gating, activity/task polling, simulator state |
+| Measured about 1.75 Hz | In-flight CPU OWLv2 camera stream configured for 2 Hz | Open-vocabulary perception is expensive; current 0.56 s age makes it diagnostic only |
+| Hundreds of milliseconds to seconds | STT/turn endpointing, semantic grounding, LLM conversation/planning | These components may miss interactive deadlines and must be cancellable and outside control locks |
+| Seconds to minutes | Search, patrol, navigation missions, conversation memory | Budgeted state machines, not blocking function calls |
+
+For a periodic loop with period `T`, useful engineering checks are:
+
+- worst-case execution time `C <= T` with reserve;
+- input age plus compute plus transport remains below the consuming policy's
+  freshness budget;
+- output TTL exceeds expected jitter but remains below the maximum tolerated
+  uncontrolled-motion duration;
+- a missed deadline is visible and has a defined degraded disposition.
+
+C-1 illustrates why all four matter. Its safety-gate work stayed well below the
+10 Hz deadline because rendering/inference ran off-loop, yet the resulting
+detections were still too old for the 300 ms evidence TTL. Control isolation
+passed; perception freshness failed. Those are different tests.
+
+### A.5 State, events, and revisions
+
+A robot mixes continuously changing physical state with discrete events:
+
+- continuous: pose, velocity, distance, bearing, covariance, battery;
+- discrete: transcript committed, task accepted, E-stop latched, goal reached,
+  controller faulted;
+- hybrid: a navigation state machine whose transitions depend on continuous
+  geometry and timers.
+
+Revision numbers turn asynchronous work into a linearizable transaction. If the
+owner says “go to the bench,” then corrects “the other bench,” the first planner
+may finish later. A result without the current task revision is stale even when
+its geometry is valid. Parcel stamps turn generations, task revisions, attempts,
+and navigation proposals so late work can be discarded rather than silently
+resurrecting an old instruction.
+
+### A.6 Evidence is a product, not a debug artifact
+
+The claim ladder used throughout this handbook is a compact assurance case:
+
+```text
+implemented -> wired -> default -> verified -> operational -> commissioned
+```
+
+Each arrow needs evidence. Code inspection proves implementation. A composition
+test proves wiring. Configuration inspection proves the default. A deterministic
+test or recorded experiment verifies a scoped behavior. Service/device probes
+show operational availability. Only intended-hardware, intended-environment
+measurements commission a capability. Skipping a rung is how a simulator feature
+gets described as a robot feature.
+
+Parcel improves on ordinary prototype practice by storing pre-registrations,
+negative controls, mutation results, frozen digests, and `does_not_prove`
+statements. The remaining challenge is to make those records one causal product
+trace rather than many specialist ledgers.
+
+## Appendix B — Geometry, coordinate frames, pose, and uncertainty
+
+### B.1 Why frames are contracts
+
+The tuple `(2, 1)` is not a location until its frame and units are known. It may
+mean two metres forward and one metre left of the body, a map coordinate, a pixel,
+or two degrees and one metre by mistake. Robotics makes frames explicit because
+mixing them produces confident but wrong motion.
+
+The important conceptual frames are:
+
+- **map:** a persistent/global frame in which destinations and long-lived
+  landmarks are expressed;
+- **odom:** a locally smooth frame that accumulates drift but should not jump;
+- **base/body:** attached to the robot; body velocity commands are normally
+  forward/lateral/yaw in this frame;
+- **sensor:** camera optical or LiDAR frame, fixed to the body by calibrated
+  extrinsics;
+- **object/person track:** a measured or estimated target frame with time and
+  uncertainty.
+
+The current simulator effectively supplies MAP and ODOM truth with zero
+covariance. That is convenient for algorithm development and dangerous for
+field inference: it hides drift, map-to-odom correction, relocalization jumps,
+calibration errors, and uncertainty reserve. A physical system needs a single
+localization owner for timestamped `T_map_odom`, covariance, health and jump
+events.
+
+### B.2 Planar rigid-body pose: SE(2)
+
+For mostly flat navigation, body pose is
+
+```text
+q = (x, y, theta)
+```
+
+where `(x, y)` is translation and `theta` is yaw. The homogeneous transform from
+body coordinates to world coordinates is
+
+```text
+T_world_body = [ cos(theta)  -sin(theta)  x ]
+               [ sin(theta)   cos(theta)  y ]
+               [     0            0       1 ]
+```
+
+A point `p_body = (px, py)` becomes
+
+```text
+p_world = R(theta) p_body + t.
+```
+
+A body-frame velocity `(vx, vy)` becomes world velocity
+
+```text
+x_dot = cos(theta) vx - sin(theta) vy
+y_dot = sin(theta) vx + cos(theta) vy
+theta_dot = vyaw.
+```
+
+This is why reading a heading in degrees as radians is catastrophic even when
+every value is finite. MOVE-1 found exactly that integration defect in its first
+patrol implementation and added a test against the runtime's degree conversion.
+Unit validation alone cannot replace a frame contract.
+
+Angles are periodic. Differences must be wrapped, commonly to `[-pi, pi)`, so
+that a target at `-179 degrees` is two degrees—not 358 degrees—from a body at
+`179 degrees`. Parcel's navigation, tracking and bearing utilities repeatedly
+perform this wrapping.
+
+### B.3 Three-dimensional pose: SE(3)
+
+Camera projection, leg kinematics and body attitude require 3-D pose:
+
+```text
+T = [ R  t ]
+    [ 0  1 ]
+```
+
+with `R` a 3x3 rotation and `t` a three-vector. Roll-pitch-yaw is intuitive but
+order-dependent and singular near certain attitudes. Rotation matrices and unit
+quaternions are safer composition representations. A calibrated camera extrinsic
+is a fixed `T_body_camera`; a measured pixel/depth point moves through
+`camera -> body -> map` using transforms at the capture timestamp, not the time
+inference finishes.
+
+The capture timestamp rule is essential. If the dog turns while a 500 ms detector
+runs, projecting with the newest pose places the old pixel in the wrong part of
+the map. The C-1 pose mailbox associates one fresh pose with one render and refuses
+to reuse a missing pose, which is the correct shape for simulated evidence. A
+physical implementation should instead use timestamped transform interpolation
+from a bounded buffer.
+
+### B.4 Twist, acceleration, and motion continuity
+
+A **twist** describes rigid-body velocity: linear velocity `v` and angular
+velocity `omega`. Parcel's body command is the planar subset `(vx, vy, vyaw)`.
+Acceleration limits bound how quickly velocity changes; jerk limits bound how
+quickly acceleration changes. Jerk limitation reduces mechanical shock and makes
+motion socially legible, but it adds state and latency. Emergency stop paths must
+bypass or reset that state so “smooth” cannot mean “kept moving through a veto.”
+
+Two serial shaping stages currently exist around the safety chain. Their state
+must be audited as part of authority. MOVE-1 showed that feeding post-gate output
+back into an upstream smoother compounds a slow-band scale each tick. The output
+is safer in magnitude but semantically wrong: one policy application no longer
+means what its configured scale says.
+
+### B.5 Covariance and confidence are not synonyms
+
+Covariance describes uncertainty in a numeric estimate and its correlations. For
+planar pose a covariance matrix might cover `(x, y, theta)`. A detector confidence
+is usually a model score; it is not automatically a calibrated probability and
+cannot replace geometric covariance.
+
+If a measurement model is `z = h(x) + noise`, first-order propagation uses the
+Jacobian `J = dh/dx`:
+
+```text
+Sigma_z approximately J Sigma_x J^T + R.
+```
+
+This matters for arrival. A point estimate can lie inside a goal region while a
+large part of its uncertainty lies outside. A robust terminal witness reserves
+margin for pose, target, map and stopping uncertainty. The current simulator's
+zero-covariance truth makes this easy; the proposed physical ODD must specify the
+reserve quantitatively.
+
+### B.6 Distance conventions
+
+“Distance to obstacle” may mean centre-to-centre, base-centre-to-surface,
+footprint-to-surface, or ray range. Mixing these silently shifts safety bands by
+the robot or object radius. Parcel explicitly names a base-centre-to-obstacle-
+surface clearance convention in its authority and reactive-safety code, while
+owner tracking also carries a collision envelope. The MOVE-1 diagnosis closed to
+about 1.8 mm only because it used the same convention as the running gate:
+
+```text
+owner centre standoff
+  = person stop clearance
+  + owner collision envelope
+  + speed * reaction horizon.
+```
+
+Frame, timestamp, unit, and distance convention should be treated as type
+information even when Python represents the underlying value as `float`.
+
+## Appendix C — Quadruped mechanics, kinematics, dynamics, and locomotion
+
+### C.1 What Parcel controls—and what it deliberately does not
+
+A Go2-class quadruped has an articulated body with multiple joints per leg. At
+the low level, stable locomotion requires joint sensing, contact estimation,
+motor current/torque control, body attitude stabilization, swing-foot placement,
+stance-force distribution and gait timing. Those loops run much faster and closer
+to the hardware than Parcel's Python application.
+
+Parcel normally asks the vendor/onboard locomotion layer for bounded body velocity
+or a reviewed Sport action. It does not replace the balance controller with an
+LLM or send language-model joint targets. This sacrifices direct control over
+gait optimization in exchange for a dramatically smaller and safer application
+boundary. Learned low-level locomotion remains a possible vendor/custom-controller
+implementation behind the same body-level contract, not an excuse to bypass it.
+
+### C.2 Degrees of freedom and forward kinematics
+
+A degree of freedom (DoF) is an independent generalized coordinate. A rigid body
+in free 3-D space has six: three translations and three rotations. Each revolute
+leg joint adds an angle. The full configuration vector `q` includes floating-base
+pose plus joint coordinates; `q_dot` contains body twist and joint velocities.
+
+Forward kinematics computes an end-effector or foot pose from joint angles:
+
+```text
+p_foot = f(q).
+```
+
+It composes link transforms from hip to thigh to calf to foot. Inverse kinematics
+asks for joint values that place the foot at a desired target. A quadruped controller
+uses this constantly for swing trajectories and posture. Multiple solutions or no
+solution may exist; joint limits and collision constraints make the problem more
+than algebraic inversion.
+
+The Jacobian linearizes this mapping:
+
+```text
+v_foot = J(q) q_dot
+tau_joint = J(q)^T f_contact.
+```
+
+The first relation maps joint speed to foot speed. The transpose maps a desired
+foot/contact force to generalized joint torque. Singular or ill-conditioned
+Jacobians amplify commands and reduce controllability, which is one reason
+reviewed posture/trajectory clips still require real-robot commissioning.
+
+### C.3 Dynamics and contact
+
+Rigid-body dynamics are commonly written
+
+```text
+M(q) q_ddot + C(q, q_dot) q_dot + g(q) = S^T tau + J_c(q)^T lambda,
+```
+
+where `M` is inertia, `C` captures velocity-dependent terms, `g` gravity, `tau`
+actuator torque, and `lambda` contact force through contact Jacobian `J_c`.
+Contacts are unilateral: a foot can push the ground but not pull it. Tangential
+force is limited by friction, approximated by `||f_t|| <= mu f_n`. Exceed it and
+the foot slips.
+
+Static stability asks whether the projected centre of mass lies inside the
+support polygon of contacting feet. Dynamic gaits may be stable even when that
+condition is temporarily false because momentum and planned future contacts
+matter. Zero-moment-point, centroidal dynamics, model-predictive control and
+learned policies are different ways to reason about that problem.
+
+Parcel's current city simulation is valuable for task, navigation, perception,
+collision and software lifecycle testing, but base travel is not evidence that
+the physical legged dynamics can execute the same trace. It should be read as a
+kinematic/behavioral preview around a detailed model, not physical gait
+commissioning.
+
+### C.4 Nested control loops
+
+A practical quadruped has nested loops:
+
+```text
+mission goal (seconds-minutes)
+  -> route/local path (seconds)
+  -> desired body velocity/heading (10-50 Hz)
+  -> gait, feet and body attitude (hundreds of Hz)
+  -> joint current/torque (higher rate)
+  -> motors and contact
+```
+
+Outer loops assume inner loops are stable and obey declared capabilities. Parcel's
+`ControlManager` supervises the application-to-locomotion boundary: lifecycle,
+fresh state, limits, command TTL, refresh, stationary witness, stop retries,
+faulting and E-stop. The Unitree Sport adapter then translates into vendor calls.
+Physical configuration is intentionally fail-closed: axes/frame are uncommissioned
+and the allowed-mode set is empty, so the repository cannot honestly claim a
+working Go2 command path on this host.
+
+### C.5 Trajectories, interpolation, and expressive motion
+
+A pose is a configuration target. A trajectory is a time-indexed sequence of
+targets. Good trajectory generation respects position, velocity, acceleration,
+jerk, joint, balance and contact constraints. Naively interpolating joint angles
+can drag a foot through the ground or move the centre of mass outside support.
+
+Parcel's YAML pose/trajectory catalog is bounded and highly testable. In MuJoCo it
+supports a useful commissioning gallery and personality expression. On hardware,
+however, expressive whole-body clips are physical actions with the same need for
+sole-writer authority, stop behavior and stability evidence as locomotion. The
+target architecture therefore either gives them a separately allowlisted native
+gateway contract or keeps them unsupported. “Decorative” describes product intent,
+not mechanical consequence.
+
+### C.6 Braking and stopping distance
+
+For initial speed `v`, reaction/transport delay `t_r`, and guaranteed deceleration
+`a_b > 0`, a simple planar stopping bound is
+
+```text
+d_stop = v t_r + v^2 / (2 a_b) + d_uncertainty + d_margin.
+```
+
+The first term is distance traveled before braking begins; the second is braking
+distance under constant deceleration. The reserves cover state age, controller
+tracking error, surface friction, slope, body footprint, localization and model
+uncertainty. The speed-dependent reaction-plus-braking portion grows more than
+twofold when speed doubles because it contains both linear and quadratic terms;
+the total clearance grows superlinearly, although a fixed uncertainty/margin
+reserve means the total does not necessarily double in every numerical regime.
+
+The simulator's proximity constants are policy inputs, not commissioned physical
+stopping evidence. The first ODD needs measured worst-case delay and deceleration
+across battery, payload, surface and network conditions, then a single derived
+safety envelope consumed consistently by planner, runtime and gateway.
+
+### C.7 Sim-to-real implications
+
+The reality gap includes friction, compliance, backlash, motor saturation, contact
+geometry, sensor latency/noise, illumination, calibration, thermal throttling and
+human behavior. Domain randomization and learned dynamics can help, but neither
+turns simulation into certification. The disciplined ladder is:
+
+1. pure contract/property tests;
+2. deterministic replay;
+3. MuJoCo functional and fault scenarios;
+4. fake-vendor/process lifecycle tests;
+5. hardware-in-the-loop without free motion;
+6. independently stopped, low-speed, single-axis commissioning;
+7. bounded scenarios inside the declared ODD;
+8. repeated integrated evidence with confidence intervals.
+
+Parcel is strong through the simulator/replay and fake-boundary portions of this
+ladder. The physical rungs remain intentionally open.
+
+## Appendix D — Sensors, perception, and evidence
+
+### D.1 Measurement chains
+
+A sensor does not directly output “truth.” It produces a signal through a chain:
+
+```text
+physical quantity
+  -> transducer / optics
+  -> analog electronics
+  -> sampling and quantization
+  -> driver timestamp
+  -> calibration and frame transform
+  -> filtering / inference
+  -> typed evidence
+  -> consumer-specific belief
+```
+
+Every stage can add bias, noise, latency, dropout or a frame error. A trustworthy
+evidence record therefore needs more than a label and score. Useful fields include
+capture start/end, monotonic and wall clocks where necessary, sensor/calibration
+identity, frame, pose/transform revision, provider/model/precision, sequence,
+uncertainty, input references, truncation/drop counts and expiry.
+
+Parcel's camera envelope and C-1 detection frame move in this direction. Its older
+`SimObservation` projection is intentionally simpler, which is why it should not
+become the physical world-model contract.
+
+### D.2 Camera geometry
+
+The pinhole model maps a camera-frame point `(X, Y, Z)` to a pixel `(u, v)`:
+
+```text
+u = fx X/Z + cx
+v = fy Y/Z + cy,
+```
+
+where `fx, fy` are focal lengths in pixels and `(cx, cy)` is the principal point.
+Given registered depth `Z`, back-projection is
+
+```text
+X = (u - cx) Z/fx
+Y = (v - cy) Z/fy.
+```
+
+That point must then pass through the calibrated camera-to-body extrinsic and the
+capture-time body pose. Depth uncertainty usually grows with range; pixel-centroid
+error creates bearing error; the two become correlated world-position uncertainty.
+Taking the median or robust inlier set over pixels is safer than trusting a single
+depth sample at an object boundary.
+
+The repository models a D455-like channel and nominal dog-height mount, carries
+intrinsics/extrinsics, localizes pixel detections, and explicitly distinguishes
+range uncertainty from measured surface relief. That last distinction matters:
+a range-noise formula cannot tell whether a detection lies on a flat poster. C-2
+correctly requires actual depth-patch samples for its planarity defense and labels
+the check unmeasured when those samples are absent.
+
+### D.3 Detection, segmentation, and open vocabulary
+
+Object detection returns boxes, labels and scores. Segmentation returns per-pixel
+regions. Open-vocabulary models compare visual features with arbitrary text prompts,
+which is attractive for language-grounded robots but introduces several traps:
+
+- scores vary with prompt wording and the other prompts in the batch;
+- a high similarity is not a calibrated probability;
+- a detector can confidently label a decal, reflection or texture;
+- small/occluded/low-viewpoint people may be missed;
+- the same frame reused by multiple consumers is still one observation;
+- model latency can make geometrically correct localization temporally wrong.
+
+Parcel keeps the in-flight C-1 observation stream diagnostic/proposal-only.
+Separately, the legacy camera-ingress path can replace navigation candidates when
+manually attached; it is off by default and must not be conflated with C-1. In the
+uncommitted W-1 textured-scene wave, all eight declared place classes fired and VLM
+scene reading improved materially, but person recall at the pre-registered threshold
+remained 1/74 (0.014). Lowering a threshold after looking at the result would fit the
+detector to the development world and inflate false positives; the status record
+correctly leaves the miss visible.
+
+### D.4 LiDAR and range sensing
+
+A 2-D LiDAR-like scan samples range by bearing. Each valid ray says:
+
+- cells before the return were observed free;
+- the return cell was occupied, subject to range/noise/geometry;
+- space behind the return is unknown, not free;
+- a no-return ray may mean clear to maximum range or missing data, depending on
+  the sensor contract.
+
+MuJoCo ray casting provides occlusion-true geometric observations for the rolling
+grid. It is much stronger than reading every scene object directly because nearer
+geometry hides farther geometry. It still lacks physical effects such as glass,
+black/absorptive surfaces, rain, multipath, vibration, time skew and calibration
+drift.
+
+Directional relevance matters. The nearest obstacle anywhere around the body
+should not necessarily stop forward motion if it is safely behind, but an orbit or
+lateral command changes the swept region. Parcel filters ranges by command direction
+for reactive safety and uses a footprint-inflated grid for planning. A mature final
+governor should evaluate the swept footprint over the command horizon rather than a
+single scalar nearest range.
+
+### D.5 Inertial, proprioceptive, GNSS and UWB measurements
+
+An IMU measures angular velocity and specific force, not absolute pose. Integrating
+gyro bias produces orientation drift; integrating acceleration twice produces rapid
+position drift. Joint encoders and motor/controller state provide proprioception.
+GNSS can bound outdoor global drift but suffers occlusion and multipath; UWB can
+provide local ranges/positions with anchor calibration and non-line-of-sight errors.
+
+The repository contains typed/noise/fusion seams for GNSS and UWB and controller
+feedback contracts. Their existence demonstrates interface planning, not live
+localization. No physical sensor spine currently fuses these into the default pose
+provider.
+
+### D.6 Audio is also a robot sensor/actuator system
+
+Microphones sample pressure; speakers alter the same acoustic field. Full duplex
+creates feedback: the robot hears itself. Voice activity detection, endpointing,
+ASR, identity, dialogue and TTS form a perception/action loop with latency and
+authority implications. Acoustic echo cancellation estimates the speaker-to-mic
+path and subtracts it; without AEC, an energy gate must conservatively distinguish
+owner speech from robot playback.
+
+The host currently enumerates a Seeed XVF3800/ReSpeaker USB array, correcting older
+docs that said no transducer was attached, but the available desktop probe did not
+show a working PipeWire source/sink path. Hardware presence therefore does not equal
+operational capture, AEC, or through-air latency evidence. The hosted browser audio
+lane and local PortAudio path also have different device boundaries and must be
+measured separately.
+
+### D.7 Freshness and negative evidence
+
+“I saw no person” is evidence only if the sensor was healthy, covered the relevant
+field of view, used a capable model, and the observation is fresh. An empty detection
+frame is different from no frame. C-1 preserves that distinction: empty observations
+count as real frames; missing/stale/faulted streams have different states; last-frame
+age and last-positive-detection age are separate.
+
+Likewise, object absence should not instantly delete a semantic memory. C-2 marks
+decay after revisiting the relevant place without seeing the object, excludes decayed
+entries from retrieval, preserves history, and permits later revival. This is a good
+belief-management pattern: absence changes confidence and eligibility while leaving
+an auditable record.
+
+### D.8 Multi-view evidence and data association
+
+Multiple views help reject false positives only when they are genuinely independent
+enough. Two boxes from the same cached image are not two views. Adjacent video frames
+may share the same failure. Useful independence keys include capture sequence,
+camera pose, visit/session, model version and source crop.
+
+Data association asks whether a new observation belongs to an existing track/map
+entry. Gating commonly uses geometric distance normalized by covariance (Mahalanobis
+distance), semantic compatibility, embedding similarity and time. Fusion should
+avoid averaging incompatible object instances. C-2 keeps two same-class places apart
+beyond a fuse radius and stores the best observed embedding rather than blending
+across views; proposed names require distinct visits before promotion.
+
+## Appendix E — State estimation, tracking, mapping, and memory
+
+### E.1 Bayesian filtering
+
+State estimation maintains a belief rather than a single fact. Given prior belief
+`p(x_{t-1})`, action/control `u_t`, and observation `z_t`, a Bayes filter has two
+steps:
+
+```text
+prediction: p(x_t | z_1:t-1, u_1:t)
+            = integral p(x_t | x_t-1, u_t) p(x_t-1 | ...) dx
+
+update:     p(x_t | z_1:t, u_1:t)
+            proportional to p(z_t | x_t) p(x_t | z_1:t-1, u_1:t).
+```
+
+The Kalman filter is the linear-Gaussian case. Extended and unscented variants
+handle nonlinear motion/measurement models approximately. Particle filters keep
+multiple hypotheses and are useful when beliefs are multimodal—for example, owner
+reacquisition after a long occlusion.
+
+Parcel's owner predictor uses bounded classical filtering and confidence to lead a
+moving target while braking as confidence falls. It is sensible as a proposal layer,
+but identity and physical observations are still simulator-derived; prediction
+cannot manufacture an owner track after identity is lost.
+
+### E.2 Tracking and identity
+
+A tracker needs prediction, measurement association, lifecycle and uncertainty.
+Person tracking adds a safety-critical identity question: which track is the enrolled
+owner? Choosing the nearest person after occlusion is not reacquisition; it is an
+identity switch.
+
+A robust `OwnerBelief` should carry candidate identities, embedding/model provenance,
+last confirmed observation, motion prediction, ambiguity, consent/enrollment state,
+and an explicit lost state. Positive follow authority requires a fresh, sufficiently
+confident owner hypothesis. Ambiguity means hold, search, ask or return—not silently
+select a stranger.
+
+`SearchOwner` already expresses a bounded behavioral skeleton: travel toward the
+last observation, sweep, explore frontiers and give up. It does not yet demonstrate
+successful physical or even repeatable simulated reacquisition, and it maintains
+search-local state rather than one world belief.
+
+### E.3 Occupancy grids
+
+An occupancy grid divides space into cells containing occupied/free/unknown belief.
+Using log odds avoids repeated probability normalization:
+
+```text
+l_t(m_i) = l_t-1(m_i) + inverse_sensor_model(z_t, x_t) - l_0.
+```
+
+Ray updates decrease occupancy along observed free cells and increase it at a valid
+return. Values are clamped to avoid absolute certainty. A rolling grid moves its
+window with the robot and preserves local resolution without unbounded memory.
+
+Parcel's default local planner uses a 161 by 161 grid at 0.1 m resolution—about
+16.1 m across—fed by calibrated MuJoCo ray ranges. The grid is local evidence, not
+a city map. It must not be extrapolated behind occlusion or across long-term drift.
+
+### E.4 Inflation and configuration space
+
+A path planner often treats the robot centre as a point after expanding obstacles by
+the footprint radius plus margin. This is a Minkowski sum: obstacle space inflated
+by the reflected robot footprint becomes configuration-space collision. It lets A*
+reason about a finite body using point-cell transitions.
+
+Inflation must match the body, speed and tracking error. Overinflation makes narrow
+routes impossible; underinflation plans paths the body cannot follow. Parcel has
+historically exposed mismatches between planner inflation, reactive stop distance,
+goal bands and object-centre/surface conventions. The target `RobotProfile x
+SpeedRegime x SafetyEnvelope` should derive them from one commissioned source while
+preserving an independent final check.
+
+### E.5 SLAM and localization
+
+Simultaneous localization and mapping (SLAM) estimates trajectory and map together.
+Visual, visual-inertial and LiDAR systems differ in measurements but share the need
+for data association, loop closure, optimization and failure detection. Loop closure
+may correct global drift and therefore jump the map-frame estimate; odom should remain
+locally continuous, with `T_map_odom` absorbing the correction.
+
+SLAM is not just a library selection. The first ODD needs calibrated sensors, time
+synchronization, observability in texture/geometry-poor regions, relocalization,
+covariance/health semantics, map lifecycle, change handling and failure policy.
+Parcel currently has provider/contracts and simulation truth, not a wired physical
+SLAM/localization spine.
+
+### E.6 Four different “maps” in Parcel
+
+These stores should not be conflated:
+
+| Representation | Contains | Can justify | Cannot justify |
+| --- | --- | --- | --- |
+| Rolling occupancy grid | Current local free/occupied evidence | Short-horizon collision-aware route | Global location, object identity, long-term permanence |
+| Navigation semantic map / oracle | Simulator-declared visible labels/locations | Development grounding and deterministic tests | Physical perception or learned-map truth |
+| Online semantic map (in-flight) | Robot-observed object/place entries, provenance, visits, names, embeddings, decay | Candidate places, vocabulary, local semantic memory | Free space, localization, road/geofence safety |
+| Route/place memory | Visited topological nodes/edges and semantic labels | Familiar interim waypoint proposal | Current traversability, obstacle clearance, relocalization by itself |
+
+The target world model links these representations by revision and provenance
+without merging their authority. A remembered café can propose where to look; a
+fresh local grid must still justify how to move; localization must justify which
+map region the grid occupies; terminal evidence must verify the requested relation.
+
+### E.7 Online semantic map design and current limits
+
+The in-flight map has several strong properties:
+
+- no implicit store path and mechanical refusal of the owner's conversation store;
+- volatile people are observed/counted but never persisted as places;
+- size and optional measured-relief hygiene;
+- reobservation strengthens instead of duplicating;
+- absence marks/decays rather than deleting history;
+- label/text candidate generation precedes embedding reranking;
+- embeddings compare only inside a versioned model/preprocessing space;
+- names require independent visits before text-channel promotion;
+- every resolve returns evidence and an abstention verdict.
+
+Its current blockers are equally concrete. The only live input corpus produced one
+false-positive place and missed all five target queries. The source crop is lost on
+store round-trip. The ranking-margin signal is structurally zero under the measured
+label-primary background, so the provisional admission gate refuses the shadow set.
+Those are promotion blockers, not reasons to discard the architecture.
+
+### E.8 Memory governance
+
+Robots need several memories with different retention and trust:
+
+- working memory for the current turn/task;
+- episodic memory for prior interactions and outcomes;
+- profile memory for user-approved stable preferences;
+- spatial/place memory for revisitable locations;
+- safety/incident evidence for audit;
+- model caches, which are performance artifacts rather than facts.
+
+The current conversation SQLite store, tiered summarization, route memory, semantic
+map and task records are fragmented. A governed design needs explicit purpose,
+consent, provenance, expiry, correction/forget controls, encryption/access policy
+and query relevance. Retrieval must not silently turn an old utterance or model
+summary into current physical truth.
+
+## Appendix F — Planning, navigation, following, and social motion
+
+### F.1 Hierarchical planning
+
+Navigation is not one algorithm. Parcel's intended hierarchy is:
+
+```text
+language / mission
+  -> typed semantic goal and terminal relation
+  -> grounding candidates / goal region
+  -> global route or place-memory hints
+  -> local observed-space path
+  -> path/formation tracking command
+  -> reactive and final safety
+  -> locomotion manager / onboard gait
+```
+
+Each layer solves a different horizon and must preserve the task revision. A global
+route may pass through stale space and therefore only proposes waypoints. A local
+planner uses fresh geometry. A tracker converts the path into body command. A safety
+gate can always reduce/revoke the proposal. Completion flows upward only after an
+independent terminal witness.
+
+### F.2 A* and cost design
+
+A* expands nodes in order of
+
+```text
+f(n) = g(n) + h(n),
+```
+
+where `g` is accumulated path cost and `h` estimates remaining cost. An admissible
+heuristic never overestimates and preserves optimality for the chosen grid/cost
+model. Real robot planners add costs for obstacle proximity, people, direction
+changes, unknown space and dynamic prediction. Those weights encode behavior and
+must not override lethal occupancy.
+
+Parcel's `grid_v1` is a strong default because it is deterministic, inspectable and
+cheap. A* on an inflated rolling grid makes failure modes reproducible. Its limits
+are discretization, local horizon, stale/dynamic-world mismatch, hardcoded envelopes
+and dependence on a valid scan. Learned challengers may score frontiers or paths,
+but should first operate in shadow and retain the grid/safety fallback.
+
+### F.3 Tracking a path
+
+A path is geometry; a controller must make the body follow it. A simple tracker
+selects a lookahead point, computes heading/distance error, rotates when angular
+error is large, then commands forward-preferred velocity. Rate limits prevent
+instant command jumps. Lateral velocity can be available for compatible bodies but
+should not be assumed across robot vendors.
+
+Pure pursuit, regulated pure pursuit, dynamic-window methods and model-predictive
+control trade computational cost against dynamic awareness and constraint handling.
+Parcel's current tracker is intentionally simple and explainable. Promotion of a
+more sophisticated controller should show fewer stalls/interventions and better
+comfort without increasing collision, clearance, latency or stale-input violations.
+
+### F.4 Goal regions and semantic relations
+
+Natural language rarely specifies an exact point. “Near the entrance,” “beside the
+bench,” and “at the crosswalk” describe regions and relations. Planning directly to
+an object centre may be impossible or unsafe because the object occupies that space.
+
+A semantic goal should contain:
+
+- target identity/hypothesis and evidence revision;
+- relation such as near, next-to, in-front-of or visible-from;
+- admissible region with standoff and approach constraints;
+- terminal observation/settling requirements;
+- ambiguity and alternate-instance policy;
+- time/distance/replan budget.
+
+Parcel has relation parsing, affordances, safe approach sampling, arrival bands and
+semantic verification, but some typed grounding is converted back to text and some
+static POI paths do not receive the full terminal witness. Passing typed intent end
+to end is an important next step.
+
+### F.5 Search and active perception
+
+An unseen target needs a sensing policy, not blind translation. Active perception
+chooses motions or viewpoints that reduce uncertainty: rotate, scan, approach a
+vantage point, inspect a candidate, or ask for clarification. Information gain,
+expected success and motion risk can be combined, but the action still passes
+normal safety and mission budgets.
+
+Parcel's unknown semantic targets rotate and require repeated observation before
+translation. Search/frontier and value-directed components exist, with bounded
+replans and failure. Some recovery/frontier paths historically bypassed the full
+grid goal lifecycle; the target goal manager must make every translation-bearing
+subgoal revisioned, expiring and lethal-checked.
+
+### F.6 Owner following
+
+Following is control of a moving formation, not navigation to the owner's current
+point. A desired relative pose might be behind the owner at distance `d`. The
+controller needs owner position, heading/velocity, confidence and age. Prediction
+can target
+
+```text
+p_target = p_owner + v_owner * lead_time + R(owner_heading) * formation_offset.
+```
+
+Prediction helps only if the track is accurate and the safety envelope leaves room
+to use it. Parcel's measured direct-follow case showed little benefit because the
+owner-clearance clamp left only about 0.05 m of effective lead. The stack now derives
+an owner comfort band from the same stand-off authority while retaining the same
+hard person stop as for a stranger.
+
+Following also needs identity continuity, occlusion policy, pace negotiation,
+reacquisition and social passing. Current simulator tracks exercise the controller;
+they do not solve physical owner recognition.
+
+### F.7 People, proxemics, and time to collision
+
+Social navigation is not equivalent to collision avoidance. A robot can avoid
+contact while crowding, cutting off or trapping a person. Proxemic costs encode
+larger comfort bands, often anisotropic around a walking person. Prediction can
+reserve a future corridor. Yield policy decides how long to wait, move aside,
+replan or report blockage.
+
+Time to collision (TTC) estimates when relative motion closes a separation. In a
+one-dimensional projection,
+
+```text
+TTC = distance_along_closing_axis / closing_speed
+```
+
+when closing speed is positive. Covariance, acceleration and lateral crossing make
+real TTC a distribution rather than one scalar. Parcel uses simulator tracks for
+predictive costs/TTC plus geometric reactive safety. Malformed predictions currently
+fall back to geometric-only gating; that is preferable to fabricated prediction but
+needs an explicit degraded disposition and physical evidence contract.
+
+### F.8 Patrol and exploration
+
+Patrol is a closed-loop behavior that repeatedly senses, chooses a bounded local
+action, moves, and records coverage/map growth. A robust exploration objective
+should balance new observed area, semantic discovery, path efficiency, revisit,
+battery/mission budget and risk. Merely accumulating path length can produce circles;
+net displacement alone can miss useful local coverage.
+
+MOVE-1's patrol is deliberately smaller: budget/contact/person/geometry priority,
+turn hysteresis, directional clearance and a fixed safe vocabulary. Its first run is
+valuable plumbing evidence—camera to map while moving—but the 5.0137 m path floor
+was passed by only 1.4 cm, net displacement was 0.134 m, all detections were stale,
+map correctness was unscored, and 10 collision ticks occurred. It should remain an
+evaluation driver until repeated, causally attributed and promoted through the
+normal task/authority lifecycle.
+
+### F.9 Arrival is a claim requiring a witness
+
+A controller returning “done” usually means its geometric error or path state met a
+threshold. Product success may require more:
+
+- the body is settled, not coasting through the region;
+- pose/localization is fresh and sufficiently certain;
+- the same target instance remains supported by independent current evidence;
+- the requested relation holds with uncertainty reserve;
+- no newer task revision superseded the goal;
+- the terminal result is durable enough to explain and replay.
+
+Parcel's semantic-arrival machinery embodies this principle and is one of its
+strongest designs. Historical evaluation also shows it is hard: search and arrival
+reliability across object classes remain open. A false arrival is worse than an
+honest refusal because it teaches the user that explanations cannot be trusted.
+
+## Appendix G — Control, safety, authority, and fault containment
+
+### G.1 Safety, reliability, and capability are separate axes
+
+A reliable system repeats its behavior. A safe system avoids unacceptable risk. A
+capable system achieves useful goals. A robot that reliably drives into a wall is
+not safe; a robot that always stops is safe in a narrow sense but not capable. Parcel
+therefore reports hard-safety metrics beside success, progress, comfort and latency
+rather than averaging them into one score.
+
+Safety is defined relative to an ODD and hazards. The proposed first ODD narrows
+terrain, weather, speed, supervision and route class because evidence for a flat,
+dry, private route says nothing about stairs, public roads or rain. Important hazard
+classes include collision with people/objects, falls/drop-offs, identity-following
+errors, uncontrolled motion after software/network failure, false arrival, unsafe
+posture, acoustic/privacy failures and operator misunderstanding.
+
+### G.2 Defense in depth
+
+The current velocity path applies multiple independent restrictions:
+
+```text
+source proposal
+  -> priority + TTL arbiter
+  -> configured kinematic limits
+  -> pre-gate smoothing
+  -> input-health/freshness disposition
+  -> directional person/obstacle/TTC reactive gate
+  -> actuator acceleration/jerk shaping
+  -> post-shaper hard/proximity stop reassertion + state reset
+  -> ControlManager capability/lifecycle/watchdog
+  -> simulator or vendor controller
+```
+
+Each layer catches a different class of failure. Arbitration prevents competing
+writers. Limits reject malformed/excessive commands. Freshness prevents old evidence
+from authorizing new motion. Reactive gates reduce commands based on current local
+geometry. Post-shaper finalization prevents stateful smoothing from leaking motion
+through a veto. `ControlManager` stops on stale commands/state and confirms a settled
+boundary. A target native gateway adds process-death/network isolation.
+
+Defense in depth is not blind duplication. Shared thresholds can drift; serial
+attenuation can compound; two gates can both assume the other owns a failure. The
+design should derive common envelope data once, then have the final layer recompute
+its own disposition from independently delivered evidence.
+
+### G.3 Priority, leases, TTL, and epochs
+
+A **priority** orders simultaneous claims. A **lease** grants temporary ownership of
+a resource. A **TTL** limits how long a command remains valid. An **epoch** prevents
+old commands from replaying after restart or re-arm. Together they convert an ongoing
+motion request into renewable, revocable authority rather than a one-time packet.
+
+If a client dies, renewal stops and the gateway issues stop. If the gateway restarts,
+it starts disarmed with a new epoch. If a delayed packet from the previous epoch
+arrives, it is rejected even if its sequence number once looked valid. Sequence,
+boot epoch, issue/deadline clocks and lease identity must all be explicit at the
+physical boundary.
+
+TTL sizing is a safety/availability tradeoff. Too short creates nuisance stops under
+normal jitter. Too long extends motion after failure. It must be derived from measured
+producer, transport, scheduling and gateway tails plus the commissioned stopping
+envelope—not selected because `0.35` feels responsive.
+
+### G.4 Clocks and freshness
+
+Monotonic time is appropriate for age, deadlines and TTL because wall time can jump
+under NTP or manual change. Wall time is useful for human audit and cross-session
+ordering. Distributed sensors need a clock-synchronization and timestamp-origin
+contract. A row should make clear whether time refers to exposure start, exposure
+end, driver receipt, inference completion or publication.
+
+Freshness is consumer-specific. A transcript may remain meaningful for seconds; a
+person range used for braking may not. A map entry can persist for months as a belief
+but cannot authorize local free space. A correct evidence envelope carries timestamps;
+each consumer applies an explicit maximum age and degraded behavior.
+
+### G.5 Stop semantics
+
+Parcel distinguishes several stop-like conditions:
+
+- **nominal stop:** smooth completion may ramp down while remaining monotone;
+- **proximity stop:** translation becomes exact zero while bounded yaw may remain for
+  observation, depending on policy;
+- **hard stop:** all axes exact zero and every downstream stateful shaper resets;
+- **latched E-stop:** remains stopped until an authorized explicit clear and fresh
+  post-clear conditions;
+- **hold/pause:** no positive motion, task state retained according to a separate
+  resume contract;
+- **cancel:** task/revision terminates; late work cannot resume it.
+
+Conflating them creates surprising resume or residual motion. The finalizer models
+intervention severity and reset obligations explicitly. Automatic semantic resume
+is still incomplete in parts of the task/channel stack, so the handbook does not
+claim a uniform pause/resume lifecycle.
+
+### G.6 The hardware E-stop boundary
+
+Software E-stop is valuable but shares power, processors, networks and bugs with the
+thing it stops. Physical commissioning requires an independent operator stop that
+does not depend on Python, the UI, hosted service, ROS discovery or the same network
+path. The native sole-writer gateway should stop on client death and TTL expiry, but
+it still does not replace an independent hardware stop.
+
+Physical enablement should require a capability manifest: robot identity/firmware,
+network interface, command/state frames, signs, allowed modes, state freshness,
+limits, stationary witness, sensor/calibration set, ODD version and evidence hashes.
+The current canonical config deliberately leaves Unitree axes/frame uncommissioned
+and `allowed_modes` empty. This is correct fail-closed behavior.
+
+### G.7 Runtime assurance for learned components
+
+Runtime assurance places a complex or learned controller beside a simple verified
+fallback and a monitor. The learned component may act only inside a safe set; the
+monitor switches or projects commands when boundaries approach. For Parcel, an even
+safer first stage is proposal/shadow mode: a learned model ranks goals/frontiers or
+predicts motion while the deterministic baseline actuates.
+
+Promotion requires more than average reward. It needs bounded latency, stale/malformed
+handling, confidence/uncertainty behavior, no new hard-gate violations, improvement
+on a repeatable residual, and rollback. A VLM or semantic map can be impressive in
+conversation while remaining unfit for terminal or collision authority.
+
+### G.8 Building a safety case
+
+A safety case connects claims to arguments and evidence. A simplified top claim might
+be “Parcel does not issue uncontrolled positive motion inside ODD v1.” Subclaims cover
+single writer, command age, state age, limits, obstacle/person evidence, process death,
+restart, E-stop and stationary confirmation. Evidence includes code review, property
+tests, seeded defects, deterministic replay, fault injection, HIL and physical trials.
+
+Tests must also attack the test system. Parcel's mutation panels have found green
+tests that could not detect the defect they claimed to cover and guards comparing
+`None` to `None`. This is excellent engineering practice: assurance evidence is
+software too and can be wrong.
+
+## Appendix H — Task autonomy, language models, and deterministic execution
+
+### H.1 From language to a typed task
+
+Language is ambiguous and open-ended; actuators need closed contracts. The safe
+translation pipeline is:
+
+```text
+utterance + context
+  -> committed intent / clarification
+  -> model or deterministic task proposal
+  -> schema decode
+  -> system-owned compilation
+  -> fresh-snapshot validation and authority injection
+  -> deterministic execution
+  -> independent result evidence
+  -> truthful narration
+```
+
+The model may choose among allowlisted semantic skills and arguments. The compiler
+chooses mechanics, resources, timeouts, success conditions and invariants. The
+validator rejects unknown skills, malformed geometry, stale snapshots, missing
+capabilities or unsupported relations. The executive owns lifecycle. This minimizes
+the model's authority while preserving its value in interpretation and repair.
+
+### H.2 PlanSketch versus PlanIR
+
+A concise PlanSketch lets a model express goal, ordered bounded skills and key
+arguments. A richer PlanIR exposes more mechanics and therefore more surface for
+prompt/schema drift and hallucination. Parcel supports both, but its architecture
+recommends a small model-authored contract compiled into richer system-owned steps.
+
+This is analogous to a high-level programming language compiling to an intermediate
+representation: the author expresses intent; a trusted compiler enforces calling
+conventions and safety. Model output should not carry raw velocity, arbitrary Python,
+resource priority or a self-declared successful result.
+
+### H.3 Deterministic intent before model inference
+
+Emergency stop, hold, status, common follow/navigation and corrections should use a
+deterministic router where semantics are clear. This reduces latency, cost and model
+failure surface. The model handles genuinely open or ambiguous requests. A strong
+agent is not one that calls the largest model for every sentence; it uses the least
+authority and computation needed for the decision.
+
+Parcel's immediate STOP path is therefore outside slow inference. Hosted or local
+model outage must never disable stop or closed skills.
+
+### H.4 Executive state and resource arbitration
+
+A task executive tracks states such as proposed, admitted, waiting, running, paused,
+blocked, succeeded, failed and canceled. Steps acquire resources—base, voice,
+attention, body activity—through explicit leases. Feedback is accepted only for the
+current task revision and step attempt.
+
+Resource priority alone is insufficient. Preemption needs a checkpoint/settled
+witness so an expressive pose cannot begin while the body still moves, and a paused
+navigation task cannot silently regain control after a correction. Parcel has strong
+deterministic revision rejection and resource concepts, but consequential actions
+still take multiple legacy/direct lifecycles and executive-level recovery attempts
+are limited.
+
+### H.5 Mission repair
+
+Real autonomy needs bounded repair:
+
+- reobserve or choose another view when evidence is weak;
+- choose another target instance or approach pose;
+- wait/yield/replan around a person;
+- recover localization or ask for help;
+- explain why a step is blocked;
+- accept a revision without restarting unrelated work.
+
+Repair is not unlimited self-direction. It operates inside the user's authorized
+mission, ODD, time/distance/energy budget and invariant leases. A target
+`MissionSupervisor` should choose among system-defined repairs using fresh evidence,
+record why, and terminate honestly when the budget expires.
+
+### H.6 Tool use and trust
+
+Read-only tools can provide weather, time, memory or map context. Their output is
+untrusted data with source, age and scope—not a system prompt and not physical
+evidence. A web result saying a business is open cannot prove the entrance is free.
+An old memory saying “my owner wears red” cannot authorize following a red-shirted
+stranger.
+
+The hosted Realtime broker and local provider paths expose different tool/synthesis
+flows. The long-term design should normalize them behind one typed tool-result
+contract, a bounded synthesis pass, explicit principal, deadline and causal trace.
+
+### H.7 Hallucination containment
+
+Hallucination is not eliminated by asking the model to be careful. It is contained by:
+
+- closed schemas and exact-key decoding;
+- allowlists and capability manifests;
+- compiler-owned authority fields;
+- fresh evidence and source labels;
+- independent success witnesses;
+- bounded time/resources;
+- model-outage fallbacks;
+- narration generated from task state rather than model imagination.
+
+The correct failure for “go to Narnia” is a grounded refusal or clarification, not
+the nearest high-similarity place. The learned-map abstention work aims to preserve
+that honesty after removing the simulator's closed label oracle; its current signal
+failure means the safe response is to withhold promotion.
+
+## Appendix I — Voice, dialogue, realtime interaction, and embodiment
+
+### I.1 The speech pipeline
+
+The local path can be viewed as:
+
+```text
+microphone -> acoustic framing -> VAD -> endpointing -> ASR
+  -> committed turn -> dialogue/task -> text chunks -> TTS -> speaker
+```
+
+Hosted Realtime can combine transport, ASR and generation in a streaming session,
+but robot authority still terminates in the restricted local tool broker. Parcel's
+launcher now makes the hosted lane an explicit production dependency and labels the
+legacy lane. That is operationally honest, though it trades local independence for
+better interaction quality and a cloud cost/privacy/network surface.
+
+### I.2 Turn commitment and partials
+
+Partial ASR is useful for anticipation and interruption but unstable: words may be
+revised. Parcel retains hosted transcription deltas as evidence while only a completed
+transcript enters robot behavior. This is a sound authority rule. A partial may cancel
+speech or prepare computation under a generation guard; it must not execute positive
+motion.
+
+Turn IDs, origin and generation guards prevent late replies from an interrupted turn
+from speaking or acting. A future unified `CommittedTurnV1` should normalize browser
+text, browser audio, local mic, operator/system events and trusted automation under
+one principal/revision contract.
+
+### I.3 Barge-in and echo cancellation
+
+Barge-in requires detecting owner speech while the robot speaks, stopping/ducking
+audio quickly, canceling old generation, and committing the new turn. Without AEC,
+speaker leakage can trigger VAD/ASR and make the robot interrupt itself. An energy
+ratio guard helps but is environment-dependent.
+
+End-to-end measurement should timestamp owner acoustic onset, capture, VAD onset,
+commit, old-audio cutoff, model first token, first TTS sample and audible output.
+Browser events and fake-TTS callbacks are useful software measures but cannot prove
+through-air latency.
+
+### I.4 Voice identity and authority
+
+Recognizing speech content is different from recognizing the speaker and authorizing
+the requested action. A multi-person environment needs policy for owner enrollment,
+confidence, replay/spoof resistance, ambiguous voices, emergency commands, privacy
+and retention. The hosted lane contains a voice-identity gate and evidence surfaces,
+but one-minute enrollment and physical household validation remain owner actions.
+
+STOP should remain broadly available and low latency. Positive motion may require a
+more trusted principal. Conversation with a stranger can be allowed without granting
+follow or navigation authority.
+
+### I.5 Dialogue and task state
+
+Good embodied dialogue says what the robot actually knows and is doing:
+
+- “I heard you” is not “I accepted the task”;
+- “I accepted” is not “I started moving”;
+- “the command was accepted by the arbiter” is not “the safety gate delivered motion”;
+- “the controller stopped” is not “I verified the bench beside me”;
+- “I cannot see it” is not “it does not exist.”
+
+MOVE-1's diagnosis is a perfect example: 160/160 motion intents were accepted, but
+the reactive person gate correctly stopped the body at the owner standoff. Product
+narration should derive from post-gate/controller/task evidence so the user never has
+to learn internal semantics by watching the dog fail to move.
+
+### I.6 Expression and social embodiment
+
+Expression can make intent legible—orienting, thinking pose, nod, bow, yielding—but
+must remain subordinate to locomotion and safety. Parcel uses a faster additive
+expression channel with gates for active skills, proximity, battery and E-stop.
+Beat-scheduled head telemetry acknowledges timing even though Go2 has no neck and
+cannot physically enact a literal head nod.
+
+Personality may choose utterance/gesture style and numeric yield temperament inside
+bounded policy. It must never choose smaller hard safety clearance, invent task
+success or override authority. Social warmth is a presentation layer over truthful
+state, not an alternative to it.

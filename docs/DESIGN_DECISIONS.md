@@ -6,8 +6,11 @@ This is Parcel's lightweight architecture-decision record. It complements the
 that must remain visible during refactors: why each choice exists, what it buys,
 what it costs, and what evidence would justify changing it.
 
-For the difference between implemented, wired, and operational, see
-[CURRENT_STATUS.md](CURRENT_STATUS.md).
+For the difference between implemented, wired, and operational, and for the
+current evidence-dated quality snapshot, see the living
+[high-level design](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md). The former
+[implementation-status snapshot](archive/LEGACY_IMPLEMENTATION_STATUS_2026-08-04_TO_09.md)
+is historical rather than the current authority.
 
 ## Decision map
 
@@ -62,11 +65,17 @@ implement the same HAL contracts in
 
 Normal outgoing commands are jerk-limited after arbitration and collision/TTC
 safety and immediately before `ControlManager`. Explicit E-stop/terminal stop
-paths reset or call through to manager stopping, but a 2026-08-09 audit found
-that the ordinary environmental-veto path enters a bounded emergency ramp
-rather than reasserting exact zero. The intended decision remains a single
-actuator handoff with non-relaxable post-shaper safety; implementing that typed
-final disposition is now P0 work.
+paths reset or call through to manager stopping. The post-shaper
+`finalize_command` boundary now applies a typed final disposition immediately
+before dispatch: a hard stop emits exact all-axis zero and resets downstream
+state; a proximity stop emits exact-zero translation while retaining only a
+finite, safety-inspected yaw; and an explicitly nominal, non-emergency zero
+intent may follow a monotone deceleration only after the decaying command is
+re-run through the safety gates; the shipped config leaves that nominal-ramp
+option off. Missing history, a malformed or non-monotone candidate, an expired
+intent, or a new safety veto falls closed to the hard-stop path. This closes the
+2026-08-09 software-ordering defect; it does not establish physical braking
+distance, balance, or stop latency.
 
 Interruption semantics distinguish **pause** from **stop**. A pausable channel
 releases its lease and records a bounded `ResumeIntent`; the intended resumption
@@ -154,16 +163,31 @@ real perception; planar LiDAR misses important 3-D hazards; localization,
 calibration, occlusion, identity continuity, and sensor disagreement are not
 solved by the contract alone.
 
+**2026-08-22 worktree evidence:** the committed/default semantic source remains
+the simulator-metadata `oracle`. A visible, uncommitted C-1/C-2/C-3 chain adds a
+config-gated EGL + OWLv2 camera stream, an online semantic map, and
+`oracle`/`learned_map`/`shadow` source selection. It is not an admitted
+replacement: C-1 measured about 562 ms capture-to-publish age against a 300 ms
+TTL, C-2 admitted 0/5 live-corpus queries and exposed a persisted-crop defect,
+and C-3 retained `oracle` as the default while measuring shadow agreement of
+0/18 and no admission flips. Treat the stream as diagnostic and the cutover as
+in-flight until freshness, ranking, persistence, held-out, and mission gates
+close. See the dated [C-1](../scrum/20260821/task_11b/C1_STATUS.md),
+[C-2](../scrum/20260821/task_12b/C2_STATUS.md), and
+[C-3](../scrum/20260821/task_13/C3_STATUS.md) records.
+
 **Revisit when:** hardware sensors land. Add uncertainty, timestamps, calibration
 health, and 3-D/elevation observations without exposing simulator-only state.
 
 ## D6. Hybrid duplex voice keeps text as the action boundary
 
-**Decision:** audio capture, endpointing, replaceable ASR, a text reasoner, and
-cancellable TTS are separate components. The present mic path submits a whole
-committed utterance to whisper.cpp; true streaming ASR is the target. Partial
-transcripts may reduce latency or interrupt output, but only a committed/final
-turn can dispatch an action. Audio codec tokens remain inside a speech provider. See
+**Decision:** audio capture, endpointing, replaceable ASR/reasoning/TTS, and the
+action boundary remain separate even when one hosted provider supplies several
+media stages. The production launcher declares a hosted Realtime interaction
+lane; the explicit legacy/local path submits a whole committed utterance to
+whisper.cpp before local reasoning and cancellable TTS. Partial transcripts may
+prepare or interrupt work, but only a committed/final turn can dispatch an
+action. Audio codec tokens remain inside a speech provider. See
 [`voice_audio.py`](../src/parcel_robot/voice_audio.py),
 [`voice_pipeline.py`](../src/parcel_robot/voice_pipeline.py), and
 [`providers.py`](../src/parcel_robot/providers.py).
@@ -178,8 +202,11 @@ continues when hardware or a service fails.
 
 **Limitations:** cascades compound latency and recognition errors; text loses
 prosody; full duplex without AEC is fragile; sentence chunking is less natural
-than a native streaming speech model. Current desktop audio is not operational,
-and deterministic fillers have only fake-TTS/scripted-clock evidence.
+than a native streaming speech model. Hosted browser audio is implemented, but
+the local physical desktop path is uncommissioned: native PortAudio is absent,
+no product input/output stream or through-air AEC result exists, and USB
+enumeration alone does not close that gap. Deterministic fillers still have only
+fake-TTS/scripted-clock evidence.
 
 **Revisit when:** an open speech-to-speech model fits target compute and meets
 tool reliability, cancellation, privacy, and latency gates. Even then, treat its
@@ -189,8 +216,11 @@ action output as a proposal to the same PlanIR validator.
 
 **Decision:** the runtime accepts distinct `language_model` and `planner_model`
 providers. The deterministic intent router chooses when deliberative planning
-is needed; both lanes terminate at the same typed contract. The default shares
-Gemma because measured specialist challengers did not clear quality gates.
+is needed; both lanes terminate at the same typed contract. The production
+launcher declares hosted Realtime for interaction, while local Gemma remains
+the planning service and explicit legacy conversation path. This is logical
+separation, not permission for either provider to bypass validation or runtime
+authority.
 
 **Advantages:** a fast conversational model and a slower spatial planner can be
 tuned, scaled, and measured independently; ordinary chat avoids planning
@@ -271,10 +301,12 @@ process boundaries isolate the GIL from native real-time loops.
 
 **Limitations:** Python threads are not hard real time; GC/GIL scheduling and
 dynamic typing can hurt tail latency; packaging Python 3.14 alongside ROS Humble
-is awkward. The current wheel is not relocatable because prompts and repository
-configuration assets are not packaged and the internal fallback config has
-drifted; its legacy speech keys are rejected by current validation. Only
-source-checkout/editable execution is supported.
+is awkward. N27 now generates and byte-checks a 91-asset runtime manifest, so
+the former prompt/config/skill package-data drift is historical. That parity
+gate is not the same as a recorded clean build/install-wheel deployment test,
+and third-party services, model weights, native libraries, and simulator assets
+remain external dependencies. Do not infer a deployable physical image from
+the in-process asset check alone.
 
 **Revisit when:** profiling shows a specific deadline or resource budget is
 missed. Port that component behind an existing protocol and compare identical
@@ -408,7 +440,9 @@ authority or making its event IDs durable product state.
 For a decision-changing pull request:
 
 1. update the relevant decision and its revisit evidence;
-2. update [CURRENT_STATUS.md](CURRENT_STATUS.md) if operational state changed;
+2. update the living
+   [high-level design](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) if
+   operational state changed;
 3. add or update a regression/eval that tests the promised boundary; and
 4. keep aspirational research language clearly marked as planned or
    experimental.

@@ -6,6 +6,11 @@ on 2026-08-09. Parcel has one **body-velocity actuator owner**:
 behavior, and manual control may propose motion, but only the manager's selected
 `LocomotionController` can deliver a body-velocity command.
 
+Targeted correction (2026-08-22): the P0 post-shaper final-stop boundary has
+landed in committed code, and the speed envelope below has been rechecked. The
+claims remain software/simulator claims; no physical braking or Go2 speed
+commissioning was performed by this documentation recheck.
+
 That qualification matters. Simulator-only pose and trajectory skills use a
 separate backend channel after the runtime serializes ownership and confirms a
 velocity stop. The physical runtime rejects those calls because no
@@ -26,7 +31,12 @@ voice / navigation / search / follow / spatial / manual
                  |
                  v
  jerk-limited actuator hand-off
-   (current emergency mode ramps toward zero)
+                 |
+                 v
+ typed final stop disposition
+   hard: exact all-axis zero + reset
+   proximity: exact-zero translation, gated yaw only
+   nominal ramp: opt-in, monotone, and re-gated
                  |
                  v
  leased body-velocity target (base_link)
@@ -47,15 +57,17 @@ This fixes the previous split path in which a voice request could call
 `SportClient.Move` before runtime smoothing and collision checks while
 follow/navigation commands went only to the simulator.
 
-**Open P0 defect:** the ordinary proximity/TTC decision currently runs before
-the final S-curve shaper. That shaper's `emergency=True` path uses bounded
-deceleration rather than returning exact zero, so a safety veto can still leave
-a residual final velocity on that tick. Explicit E-stop/stop paths are stronger
-and reset/call the manager stop path, but the normal environmental veto is not
-yet the post-shaper exact-zero authority described by the target architecture.
-The required correction is a typed, non-relaxable post-shaper admission whose
-`EXACT_HOLD` reasserts `(0, 0, 0)` and resets shaper state. See
-[NAVIGATION_ALGORITHM_2026.md](NAVIGATION_ALGORITHM_2026.md).
+**Landed P0 correction:** the ordinary proximity/TTC decision still runs before
+the final S-curve shaper, but `core/hard_stop.py::finalize_command` now executes
+after every shaper and immediately before dispatch. `HARD_STOP` reasserts exact
+`(0, 0, 0)` and attempts every downstream reset; `PROXIMITY_STOP` zeros
+translation exactly while preserving only finite yaw already admitted by the
+gate. The optional `NOMINAL_STOP` path accepts only a finite, sign-preserving,
+non-increasing command relative to the prior command, and the runtime re-gates
+each ramp candidate. It is off in the shipped config; a missing prior command,
+malformed/non-monotone candidate, expired intent, or new veto takes the hard
+path. This is a tested command-boundary property, not proof of physical stop
+response. See [NAVIGATION_ALGORITHM_2026.md](NAVIGATION_ALGORITHM_2026.md).
 
 ## Where authority lives
 
@@ -68,7 +80,8 @@ boundaries:
 | `CommandArbiter` | One active source by priority and TTL | Acceleration, perception, physical feedback |
 | `VelocitySmoother` | Bounded acceleration/deceleration | Safety authority; environmental stops are evaluated after this stage |
 | Runtime proximity and TTC gates | Directional person/owner/obstacle slowdown or translation stop, plus constant-velocity dynamic-track braking, using fresh camera/LiDAR observations | Vendor state, balance, RPC delivery, or socially optimal prediction |
-| `SCurveVelocityShaper` | Per-axis acceleration/jerk limits at the final SE(2) hand-off; optional calm profile | Collision authority; its current emergency branch still ramps toward zero, and the current calm signal is derived from the robot's synthesized speech rather than owner affect |
+| `SCurveVelocityShaper` | Per-axis acceleration/jerk limits at the final SE(2) hand-off; optional calm profile | Collision authority; the current calm signal is derived from the robot's synthesized speech rather than owner affect |
+| `FinalStopDecision` | Non-relaxable post-shaper dispatch class: exact hard stop, translation-zero proximity stop, or validated nominal stop | Physical braking, balance, contact, or independent hardware E-stop behavior |
 | `ControlManager` | Exclusive velocity writer, body limits, feedback freshness, controller faults/tilt, lease expiry, stop/E-stop lifecycle | Environmental collision perception or route planning |
 | Unitree Sport | Fast balance, gait, foot placement, and motor control for the requested body velocity | Semantic goals and external obstacle avoidance |
 
@@ -144,7 +157,7 @@ refuses to construct the physical controller until
 | Reuse Unitree Sport balance/gait | A proven onboard high-rate controller absorbs the hardest contact-control problem; Parcel can iterate on companion behavior safely at body-velocity level | Opaque firmware behavior, modes, tracking quality, foothold choices, and stop semantics remain vendor-specific |
 | Supervise Sport from Python | Python is appropriate for the current 10 Hz behavior loop and 50 Hz watchdog because hard real-time balance stays onboard | Python, DDS, and the host OS are not an independent real-time crash-stop layer; an onboard/native watchdog and physical E-stop remain required |
 | One leased `base_link` velocity contract | Simulator, Unitree, and a future vendor/custom controller share the same upper stack | A lowest-common-denominator SE(2) command cannot expose terrain-aware footsteps or whole-body maneuvers |
-| Two smoothers around the environmental gate | Behavior commands change legibly and the actuator hand-off bounds jerk | Cascaded filters add lag, and the current post-gate emergency ramp does not reassert exact zero; ordering and final response must be corrected and measured on Sport |
+| Two smoothers around the environmental gate, then a final stop disposition | Behavior commands change legibly, the hand-off bounds jerk, and shaping cannot relax a hard/proximity stop | Cascaded filters still add lag; command-space stop correctness does not measure the physical Sport response, braking distance, or balance transient |
 | Feedback-confirm every physical stop | Prevents a transport acknowledgment from being mistaken for a stationary robot | Adds latency and rejects new motion if timestamps, sequence numbers, frame calibration, or feedback delivery are wrong |
 | Lazy vendor imports and registered factories | Normal simulation/test imports remain independent of Unitree SDK and a second vendor needs no generic-code edit | Process-global DDS and Unitree's non-releasable Python lease still require a dedicated physical driver process |
 | Fail-closed commissioning flags | Wrong mode/frame/axis assumptions cannot silently move hardware | Physical construction is intentionally impossible with the repository defaults until a human completes commissioning |
@@ -259,11 +272,12 @@ motion:
 ```
 
 These are maximum envelopes, not commanded speeds. The default navigation
-wrapper still caps its output at `0.45 m/s` even though `grid_v1`'s desired
-cruise is `0.85 m/s`; manual, spatial, and other producers can use different
-bounded portions of the wider body envelope. The 2026-08-04 increases were
-made from simulator pacing observations and are not physically commissioned
-Go2 limits.
+wrapper allows up to `0.9 m/s`, while `grid_v1`'s desired cruise is
+`0.85 m/s`; manual, spatial, and other producers can use different bounded
+portions of the wider `1.0 m/s` body envelope. Heading/distance tapers, slew,
+arbitration, safety, and shaping can all command less. The values were tuned
+from simulator pacing observations and are not physically commissioned Go2
+limits.
 
 Important network distinction:
 
@@ -332,7 +346,8 @@ as forward motion.
 | Capability | Repository status | Evidence boundary |
 | --- | --- | --- |
 | Simulator body-velocity path through `ControlManager` | Implemented and used by `RobotRuntime` | Unit/integration tests and MuJoCo behavior only |
-| Runtime S-curve actuator shaping | Implemented after the collision gates; explicit stops reset it, while ordinary environmental vetoes use a bounded emergency ramp | The calm profile follows prosody measured from Parcel's own TTS audio; exact-zero post-shaper admission and physical response/lag remain unverified |
+| Runtime S-curve actuator shaping | Implemented after the collision gates; the shipped config keeps the optional nominal-stop ramp off | The calm profile follows prosody measured from Parcel's own TTS audio; physical response/lag remains unverified |
+| Post-shaper final stop disposition | Implemented immediately before `set_target`: hard stops are exact all-axis zero/reset, proximity stops are exact-zero translation, and opt-in nominal ramps are monotone and re-gated | Verified in the software dispatch pipeline; no physical braking-distance, stop-latency, or balance result |
 | Vendor-neutral lifecycle and portability | Implemented; mock second-vendor adapter covers arming, motion, watchdog, stop, and E-stop | No second physical robot |
 | Unitree Sport DDS/RPC/state adapter | Implemented and tested with injected SDK doubles | Not run against a physical Go2 from this workstation |
 | Frame, axis, and allowed-mode gates | Implemented and defaulted closed | Values remain uncommissioned in `configs/robot.yaml` |

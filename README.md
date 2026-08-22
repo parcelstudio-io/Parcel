@@ -7,11 +7,12 @@ open-weight reasoning, and a browser control deck. Engine-neutral backend and
 ROS boundaries keep the same intent layer usable for richer simulators and a
 later physical dog.
 
-Start with the [documentation index](docs/README.md) for the evidence-dated
-implementation records and blockers, then [crucial design decisions](docs/DESIGN_DECISIONS.md)
-for the advantages, limitations, and revisit criteria behind the architecture.
-[`CURRENT_STATUS.md`](docs/CURRENT_STATUS.md) is an August 4 historical snapshot,
-not the authority for this checkout.
+Start with the [engineering handbook](docs/CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md)
+for the executive design, current quality snapshot, robotics foundations,
+tradeoffs, and roadmap. The [documentation index](docs/README.md) routes to
+specialist designs and evidence, while [crucial design decisions](docs/DESIGN_DECISIONS.md)
+records advantages, limitations, and revisit criteria. New learners can use the
+[physics and robotics curricula](edu/INTRO.md) alongside the handbook.
 
 > Current host note: this machine is Ubuntu 26.04 with Python 3.14 and does not
 > currently have ROS 2 installed. Unitree documents Ubuntu 22.04 + ROS 2 Humble
@@ -48,8 +49,8 @@ or `I am very happy`. The hosted route sends only the final text submission to
 `/api/voice/text`, but executes only its final submission. In hosted audio mode,
 the browser supplies microphone capture and playback without requiring native
 PortAudio in the Python process. Fish S2 and whisper.cpp remain optional parts
-of the explicit legacy/local path; that path still has no commissioned local
-microphone/speaker endpoint or Piper installation.
+of the explicit legacy/local path. Piper and its selected voice are installed,
+but that path still has no commissioned local microphone/speaker stream or AEC.
 
 To visually inspect every bounded pose and gesture without starting the
 reasoning or audio services, launch the simulator commissioning gallery:
@@ -74,7 +75,8 @@ plays in canonical order after the countdown.
 ```
 
 Those flags only start and health-check their named services. They do not select
-Fish as `speech.tts_provider`, install Piper, or create an audio device. The
+Fish as `speech.tts_provider`, change the configured Piper selection, or create
+an audio device. The
 duplex coordinator, mic loop, and speaker sink are already wired, but audio
 becomes active only when STT + TTS + PortAudio + input/output endpoints are all
 healthy. Reliable overlap additionally requires AEC. Run
@@ -150,6 +152,13 @@ commissioning is explicit and bounded:
 .parcel/bin/python -m parcel_robot.unitree_control --vx 0.05 --duration 1 --arm
 ```
 
+This is a bounded standalone commissioning path, not the normal autonomous
+composition. `RobotRuntime` still consumes simulator observations, and the
+standard Unitree builder does not yet assemble synchronized physical-origin
+pose, scan, people, and controller evidence. Follow the handbook's physical
+composition and capability-admission sequence before interpreting the adapter
+as an end-to-end robot runtime.
+
 Read and follow [Closed-loop locomotion and Unitree Sport](docs/MOTION.md)
 before connecting hardware. The Python supervisor and software E-stop are not
 substitutes for an independent hardware E-stop. The Unitree Python SDK is not
@@ -159,7 +168,9 @@ does not exist here, so the physical path has not been hardware-validated.
 ## Installed Python environment
 
 Full host GPU / dependency inventory: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
-Locked pip freeze: [requirements-lock.txt](requirements-lock.txt).
+Environment snapshot: [requirements-lock.txt](requirements-lock.txt). The
+2026-08-22 audit found 17 distributions from the active environment missing from
+that file, so it is not yet a complete reproducible lock.
 
 The existing `.parcel` virtual environment is used for every pip package. It
 currently contains the editable project plus:
@@ -187,7 +198,8 @@ python -c "import mujoco; print(mujoco.__version__)"
 .parcel/bin/python -m ruff check .
 ```
 
-To reproduce the Python install in a compatible environment:
+To bootstrap the declared project extras in a compatible environment (not to
+reproduce the audited environment byte-for-byte):
 
 ```bash
 python3 -m venv .parcel
@@ -519,15 +531,16 @@ The implemented adapters are:
 - `WhisperCppProvider`: WAV audio to whisper.cpp `/inference`
 - `LlamaCppProvider`: transcript to strict Gemma JSON/tool calls
 - `SafetySupervisor`: allowlist and pose-limit validation
-- `PiperSpeechProvider`: configured on-device TTS target (not installed here)
+- `PiperSpeechProvider`: installed/configured on-device TTS target; binary,
+  voice, and 22.05 kHz metadata pass the readiness check
 - `FishSpeechProvider`: local Fish S2 request adapter (opt-in docked mode); the
   current sentence wrapper does not expose Fish's native audio chunk stream
 - `SentenceChunkedSynthesizer`: any blocking TTS becomes a cancellable stream
 - `DuplexVoiceSession`: partial/final text, stale-turn suppression, and barge-in
 - `MicrophoneVoiceLoop` / `SpeakerSink` (`voice_audio.py`): VAD-segmented
   capture, acoustic barge-in behind an echo guard, interruptible playback
-- `SileroVad` / `TurnEndpointer`: optional semantic endpointing with loud energy
-  fallback; code exists but ONNX dependencies/weights are absent here
+- `SileroVad` / `TurnEndpointer`: selected semantic endpointing with loud energy
+  fallback; ONNX Runtime and the Silero/Smart Turn weights are present
 - `ProsodyTap` / `ExpressionEngine`: pre-playback accents, idle body offsets,
   and epoch-scoped timing-only Go2 nod metrics
 - `VoicePipeline`: composes a single STT/reasoning/TTS utterance
@@ -543,6 +556,12 @@ src/parcel_robot/
 ├── brain/               # typed PlanIR, validator, executive, runtime adapter
 ├── control/             # controller HAL, single-writer manager, Unitree Sport
 ├── navigation/          # semantic grounding, follow/spatial, grid + safety
+├── realtime/            # hosted lane, transport, restricted tools, evidence/spend
+├── camera_channel/      # calibrated frame contracts and optional async ingress
+├── detection_adapter/   # detector, localization, tracking and noise adapters
+├── online_map/          # in-flight robot-written semantic map (not product-wired)
+├── perception_source/   # in-flight oracle/map/shadow policy (partial integration)
+├── patrol/              # standalone in-flight patrol/evaluation driver
 ├── skills/              # catalog, schema, executor, public Dog API
 ├── backends/            # replaceable simulator transport boundary
 ├── runtime.py           # arbitration, behavior loops, telemetry, final safety gate
