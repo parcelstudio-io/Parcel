@@ -8,6 +8,8 @@ from parcel_robot.authority import (
     CLEARANCE_CONVENTION,
     DEFAULT_SAFETY_ENVELOPE,
     DEFAULT_STAND_OFF_ENVELOPE,
+    SafetyEnvelope,
+    gate_lateral_clearance_m,
 )
 from parcel_robot.backends.base import OwnerTrack, SimObservation
 from parcel_robot.core.input_health import (
@@ -68,6 +70,14 @@ class ReactiveSafetyPolicy:
     (``base_center_to_obstacle_surface``). Person/obstacle slow bands and the
     reaction horizon are envelope-derived; obstacle stop keeps the stricter
     commissioning floor via ``max(envelope.floor, 0.65)``.
+
+    **The gate's LOGIC is not in this class** — it is ``apply_reactive_safety``
+    below, which card P1-E did not touch. What this class holds is the
+    distances, and as of P1-E the person clearance's SOURCE is config
+    (``safety.person_stop_m``) floored at
+    :data:`~parcel_robot.authority.PERSON_SOCIAL_ZONE_FLOOR_M`, rather than
+    config floored at the shipped 1.2 m social zone (which made the shipped
+    value its own floor and refused every indoor commissioning).
     """
 
     clearance_convention: str = CLEARANCE_CONVENTION
@@ -83,6 +93,11 @@ class ReactiveSafetyPolicy:
     orbit_clearance_margin_m: float = 0.10
     orbit_waypoint_tolerance_m: float = 0.16
     reaction_time_s: float = DEFAULT_SAFETY_ENVELOPE.reaction_latency_s
+    #: The authority this policy floors itself against (card P1-E). Injectable
+    #: so a scaled body brings its own footprint / latency / braking terms; the
+    #: Go2 default is the same object every un-injected call site already used,
+    #: so leaving it alone reproduces the previous behaviour exactly.
+    envelope: SafetyEnvelope = DEFAULT_SAFETY_ENVELOPE
 
     def __post_init__(self) -> None:
         if self.clearance_convention != CLEARANCE_CONVENTION:
@@ -107,7 +122,7 @@ class ReactiveSafetyPolicy:
             raise ValueError("obstacle stop distance must be below slow distance")
         if self.person_stop_m >= self.person_slow_m:
             raise ValueError("person stop distance must be below slow distance")
-        if self.obstacle_stop_m + 1e-12 < DEFAULT_SAFETY_ENVELOPE.obstacle_stop_floor_m:
+        if self.obstacle_stop_m + 1e-12 < self.envelope.obstacle_stop_floor_m:
             raise ValueError(
                 "reactive obstacle_stop_m must not undercut "
                 "SafetyEnvelope.obstacle_stop_floor_m"
@@ -122,7 +137,47 @@ class ReactiveSafetyPolicy:
         # (1.2 / 2.5), the derived ``owner_keepout_m`` (1.75) and follow
         # stand-off (1.85), and the re-frozen rows are recorded in
         # scrum/20260809/task_15/E5_PERSON_CLEARANCE_STATUS.md.
-        if self.person_stop_m + 1e-12 < DEFAULT_SAFETY_ENVELOPE.person_stop(0.0):
+        #
+        # Card P1-E (2026-08-22) changes the SOURCE of the number on the right,
+        # and nothing else. It used to be ``DEFAULT_SAFETY_ENVELOPE.person_stop(0.0)``
+        # — the SHIPPED social zone, 1.2 m — which made the shipped commissioning
+        # value its own floor: no config could ever set a smaller person
+        # clearance, and an overlay that tried (indoor 0.7 m) did not relax the
+        # robot, it stopped the robot from booting (P0-A blocker;
+        # WAVE_P0_VERIFICATION_FABLE.md row A-1). Now the configured
+        # ``person_stop_m`` COMMISSIONS the envelope's social zone, and the
+        # floor underneath is the authority's named
+        # ``PERSON_SOCIAL_ZONE_FLOOR_M`` — the body's ISO/TS-15066 stopping
+        # distance at cruise, which no commissioning may undercut. The refusal
+        # itself is unchanged in kind: still a construction error, still fails
+        # closed, still names what was violated. ``with_person_social_zone``
+        # raises on an under-floor value, so the message an operator sees for
+        # ``safety.person_stop_m: 0.6`` names the floor and the number.
+        try:
+            commissioned = self.envelope.with_person_social_zone(self.person_stop_m)
+        except ValueError as error:
+            # Re-raised in the gate's own vocabulary so the operator sees the
+            # CONFIG KEY they set and the FLOOR they have to clear in one line,
+            # and so the refusal is greppable under both names.
+            raise ValueError(
+                f"reactive person_stop_m must not undercut the commissioning "
+                f"floor: {error}"
+            ) from error
+        # WHY THIS SECOND CHECK STAYS (asked under P1-E verification, which read
+        # it as vestigial). ``commissioned.person_stop(0.0)`` is
+        # ``max(person_stop_m, stop_distance(0.0))``, and ``stop_distance(0.0)``
+        # is the body itself — ``footprint_radius_m + Zs + Zr``. At GO2 SCALE it
+        # is 0.32 m, the 0.68 m floor above dominates it, and this branch is
+        # indeed unreachable. It is not unreachable for an INJECTED envelope,
+        # which is the whole point of the ``envelope`` field: a body with a
+        # footprint (or a sensing-intrusion / pose-uncertainty term) wider than
+        # the commissioned person clearance would otherwise be allowed to
+        # commission a stop ring INSIDE its own hull. So this is the physics
+        # floor and the constant above is the proxemics floor; they bind for
+        # different robots. Reachability is demonstrated, not asserted, by
+        # ``tests/test_p1e_social_zone_is_config.py``
+        # ::test_the_physics_floor_still_binds_for_a_wider_body.
+        if self.person_stop_m + 1e-12 < commissioned.person_stop(0.0):
             raise ValueError(
                 "reactive person_stop_m must not undercut "
                 "SafetyEnvelope.person_stop(0.0)"
@@ -180,6 +235,37 @@ class ReactiveSafetyPolicy:
         """
 
         return min(self.person_stop_m + OWNER_STAND_OFF_MARGIN_M, self.person_slow_m)
+
+    @property
+    def commissioned_envelope(self) -> SafetyEnvelope:
+        """This gate's authority with the social zone COMMISSIONED from config.
+
+        Card P1-E. ``person_stop_m`` arrives from ``configs/robot*.yaml``
+        ``safety.person_stop_m``; this is that number wearing the authority's
+        type, so every derived quantity (``person_stop(v)``, the stand-off
+        family, the planner inflation below) comes off ONE object rather than
+        off a constant that config can silently disagree with.
+        """
+
+        return self.envelope.with_person_social_zone(self.person_stop_m)
+
+    @property
+    def planner_inflation_m(self) -> float:
+        """Lateral inflation a grid planner needs to AGREE with this gate.
+
+        Card P1-E / audit §6, "one number, two consumers". The obstacle ring is
+        the binding one for a lidar occupancy map, and the gate's directional
+        cone converts a stop ring into a lateral radius (see
+        :func:`~parcel_robot.authority.gate_lateral_clearance_m`). Feed this to
+        ``GridPlannerConfig.gate_clearance_m`` and the planner stops choosing
+        corridors this gate will refuse to drive down.
+
+        A map whose cells are PEOPLE takes ``person_stop_m`` instead — same
+        function, the other ring — which is why the number is derived here and
+        not frozen into the planner.
+        """
+
+        return gate_lateral_clearance_m(self.obstacle_stop_m)
 
 
 def apply_reactive_safety(

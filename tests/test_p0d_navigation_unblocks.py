@@ -417,6 +417,31 @@ def _prototype_policy() -> AbstentionPolicy:
     return AbstentionPolicy.from_mapping(data["perception"]["abstention"])
 
 
+def _evidence_roster_policy(**overrides: object) -> AbstentionPolicy:
+    """The prototype profile with P1-D's VLM veto taken back out.
+
+    P0-D's acceptance is about the EVIDENCE roster — label support, evidence
+    count, ranking margin — and specifically that a label-strength margin makes
+    it satisfiable where the robust z could not be. Card P1-D later added a
+    fourth signal to the same profile, ``vlm_veto``, which needs a model on the
+    host: with no seat installed it answers ``unavailable``, which the gate
+    reads as ASK, so every one of these admissions would become a question and
+    this file would be measuring P1-D's wiring instead of P0-D's estimator.
+
+    Naming the three signals HERE rather than inheriting whatever the profile
+    currently lists is the stronger arrangement: it stops this file drifting
+    silently every time another card edits the overlay, and it keeps each
+    card's acceptance measuring its own change. P1-D's own row 1 measures the
+    full four-signal roster with a real verifier.
+    """
+
+    import dataclasses
+
+    prototype = _prototype_policy()
+    signals = tuple(s for s in prototype.signals if s != "vlm_veto")
+    return dataclasses.replace(prototype, signals=signals, **overrides)
+
+
 def test_the_shipped_robust_z_is_structurally_zero_on_the_maps_own_background() -> None:
     """The defect, as arithmetic. Not a tuning miss — a structural zero.
 
@@ -466,20 +491,7 @@ def test_the_prototype_signal_set_admits_what_the_map_saw_and_nothing_else(
     ``admission_flip`` still 0 across all five absent queries.
     """
 
-    prototype = _prototype_policy()
-    policy = AbstentionPolicy(
-        enabled=prototype.enabled,
-        min_label_probability=prototype.min_label_probability,
-        min_label_frames=prototype.min_label_frames,
-        min_label_purity=prototype.min_label_purity,
-        min_evidence_frames=prototype.min_evidence_frames,
-        min_ground_evidence_fraction=prototype.min_ground_evidence_fraction,
-        min_ranking_margin=prototype.min_ranking_margin,
-        ground_band_m=prototype.ground_band_m,
-        offer_limit=prototype.offer_limit,
-        signals=prototype.signals,
-        ranking_margin_mode=mode,
-    )
+    policy = _evidence_roster_policy(ranking_margin_mode=mode)
     m = _seeded_map(policy)
 
     admitted = [q for q in PRESENT_QUERIES if m.resolve(q).admitted]
@@ -528,7 +540,6 @@ def test_the_c3_mission_path_admits_under_the_prototype_signal_set(
     GREEN: 2 of 2 admitted at margin 7.2055, absent queries unchanged.
     """
 
-    import dataclasses
 
     from test_c3_cutover import _FakeEntry, _FakeMap, _observation
 
@@ -545,7 +556,7 @@ def test_the_c3_mission_path_admits_under_the_prototype_signal_set(
         use_semantic_source,
     )
 
-    policy = dataclasses.replace(_prototype_policy(), ranking_margin_mode=mode)
+    policy = _evidence_roster_policy(ranking_margin_mode=mode)
     use_semantic_source(SemanticSourcePolicy(source=SOURCE_LEARNED_MAP))
     use_learned_map(
         _FakeMap(
@@ -620,7 +631,7 @@ def test_a_dropped_signal_relaxes_that_gate_and_only_that_gate() -> None:
     silently is by relaxing more than it says.
     """
 
-    prototype = _prototype_policy()
+    prototype = _evidence_roster_policy()
     m = _seeded_map(prototype)
     # `tree` in this fixture has ground_evidence_fraction 0.0 (the robot never
     # walked past it), which is what `not_navigable` refuses. Under the
@@ -669,6 +680,18 @@ def test_the_prototype_profile_is_default_yaml_with_one_block_changed() -> None:
         "perception.abstention.ranking_margin_mode",
         "perception.abstention.min_evidence_frames",
         "perception.abstention.min_ranking_margin",
+        # Card P1-D: the ASK posture, and the seat that answers the veto.
+        # Added to this pin rather than the pin being loosened — the set is
+        # still exhaustive and still says out loud exactly which keys the
+        # prototype profile is allowed to move.
+        "perception.abstention.ask_below_threshold",
+        "perception.abstention.veto_model",
+        # Card P1-B: the map-persistence + query-batch block. Same treatment —
+        # ONE new path named here, the set stays exhaustive, and the block is
+        # absent from default.yaml so the shipped file has not moved. The
+        # runtime refuses unknown keys INSIDE it (``_p1b_map_settings``), so
+        # this pin guards the block's existence and that one guards its shape.
+        "perception.online_map",
     }
     assert prototype["perception"]["semantic_source"] == "learned_map"
 

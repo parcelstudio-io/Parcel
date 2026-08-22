@@ -352,34 +352,60 @@ def test_prototype_overlay_resolves_the_documented_values() -> None:
     # ...and the rest of `agent` is the shipped block
     assert proto.section("agent")["brain"] == plain.section("agent")["brain"]
 
+    # Card P1-E landed the indoor person stand-off P0-A could not (see the
+    # test below): the ONLY safety key that moves is person_stop_m, and the
+    # rest of the block is still the shipped one, key by key.
+    assert proto.section("safety")["person_stop_m"] == 0.7
+    assert plain.section("safety")["person_stop_m"] == 1.2
+    assert {
+        key: value
+        for key, value in proto.section("safety").items()
+        if key != "person_stop_m"
+    } == {
+        key: value
+        for key, value in plain.section("safety").items()
+        if key != "person_stop_m"
+    }
+    # ...and its paired follow keepout, which is a LITERAL in the base and so
+    # cannot re-derive from the number above.
+    assert proto.section("owner_follow")["owner_keepout_m"] == 1.25
+    assert plain.section("owner_follow")["owner_keepout_m"] == 1.75
+
     # Untouched by this card, and each owned by another one:
-    assert proto.section("safety") == plain.section("safety")
     assert proto.section("navigation") == plain.section("navigation")
     assert proto.section("motion") == plain.section("motion")
 
 
 def test_indoor_person_standoff_is_floored_by_the_safety_authority() -> None:
-    """Why configs/robot.prototype.yaml does NOT carry ``person_stop_m: 0.7``.
+    """P0-A's blocker, now CLOSED by card P1-E — and its floor still holds.
 
-    The card asked for 0.7 as an indoor stand-off. It is not a config decision:
-    ``ReactiveSafetyPolicy`` refuses anything under
-    ``SafetyEnvelope.person_stop(0.0)``, so an overlay carrying 0.7 would not
-    relax the robot, it would stop it from booting. Lowering the floor is a
-    change to the physical-safety core (authority.py / reactive_safety.py) under
-    the paired-run value-change protocol, which this card does not own.
+    This test used to pin the blocker: an overlay carrying ``person_stop_m:
+    0.7`` did not relax the robot, it stopped it from booting, because
+    ``ReactiveSafetyPolicy`` floored the configured value at the SHIPPED social
+    zone (1.2 m). P1-E changed the SOURCE of that number — config commissions
+    the envelope's social zone — and put a named floor underneath it. So the
+    test flips: 0.7 constructs, the overlay carries it, and the refusal is
+    re-pinned where the floor now is.
     """
 
+    from parcel_robot.authority import PERSON_SOCIAL_ZONE_FLOOR_M
     from parcel_robot.navigation.reactive_safety import (
         DEFAULT_SAFETY_ENVELOPE,
         ReactiveSafetyPolicy,
     )
 
+    # The SHIPPED authority did not move: no profile, no change.
     assert DEFAULT_SAFETY_ENVELOPE.person_stop(0.0) == 1.2
-    with pytest.raises(ValueError, match="must not undercut"):
-        ReactiveSafetyPolicy(person_stop_m=0.7, person_slow_m=2.5)
-    # ...so the overlay carries no `safety` block at all — only the comment
-    # that says why, which is why this reads the parsed mapping, not the text.
-    assert "safety" not in (yaml.safe_load(PROTOTYPE_YAML.read_text(encoding="utf-8")) or {})
+    # The indoor value the card asked for now constructs...
+    assert ReactiveSafetyPolicy(person_stop_m=0.7, person_slow_m=2.5).person_stop_m == 0.7
+    # ...and the overlay carries it, read off the parsed mapping.
+    overlay = yaml.safe_load(PROTOTYPE_YAML.read_text(encoding="utf-8")) or {}
+    assert overlay["safety"]["person_stop_m"] == 0.7
+    # Below the named floor is still a refusal to boot, and the message names
+    # the floor so an operator can read the number they have to clear.
+    assert PERSON_SOCIAL_ZONE_FLOOR_M == 0.68
+    with pytest.raises(ValueError, match="PERSON_SOCIAL_ZONE_FLOOR_M"):
+        ReactiveSafetyPolicy(person_stop_m=0.6, person_slow_m=2.5)
 
 
 def test_realtime_prototype_example_validates_and_carries_its_departures() -> None:
@@ -433,6 +459,12 @@ def test_realtime_prototype_example_validates_and_carries_its_departures() -> No
         "whisperer.max_updates_per_minute",
         "whisperer.min_gap_s",
         "voice_identity.enabled",
+        # Card P2-B's owner-event bands, added to the overlay by P2-B and named
+        # here for the reason this assertion exists: the header's departure list
+        # has been wrong once already, so a new prototype-only value has to be
+        # written down in BOTH places or the gate says so.
+        "whisperer.owner_events.enabled",
+        "whisperer.owner_events.greeting_interval_s",
     }
     header = REALTIME_PROTOTYPE_EXAMPLE.read_text(encoding="utf-8").split("# ---", 1)[0]
     for dotted in differing:
@@ -519,12 +551,19 @@ poses: {{}}
 modules: []
 # The overlay may only write key paths the BASE defines (check_overlay_keys),
 # so a base used with the real configs/robot.prototype.yaml has to carry these
-# two at their shipped values, exactly as configs/robot.yaml does.
+# at their shipped values, exactly as configs/robot.yaml does. `safety` and
+# `owner_follow` joined the list when card P1-E landed the indoor person
+# stand-off in the overlay.
 perception:
   spatial_sensors: [camera, lidar]
 agent:
   affect:
     minimum_confidence: 0.75
+safety:
+  person_stop_m: 1.2
+  person_slow_m: 2.5
+owner_follow:
+  owner_keepout_m: 1.75
 """
 
 C1_BLOCK = """
@@ -646,11 +685,21 @@ def test_the_shipped_prototype_overlay_boots_a_runtime(
         assert runtime._camera_stream_config is not None
         assert "person" in runtime._camera_stream_config.queries
         assert runtime._affect_minimum_confidence == 0.5
-        # The safety numbers the overlay deliberately does not carry, DERIVED at
-        # construction from the authority rather than copied by the profile.
-        assert runtime.person_stop_m == 1.2
-        assert runtime.follow.config.owner_keepout_m == 1.75
+        # The indoor person stand-off, landed by card P1-E: the final gate and
+        # the owner keepout ring both move with the overlay's person_stop_m.
+        assert runtime.person_stop_m == 0.7
+        assert runtime.follow.config.owner_keepout_m == 1.25
+        assert runtime.reactive_safety_policy.person_stop_m == 0.7
+        assert runtime.reactive_safety_policy.owner_slow_m == pytest.approx(0.80)
+        # ...and the one number that does NOT move, pinned as the open handoff
+        # it is rather than left to be discovered: FollowConfig's nominal
+        # stand-off is an IMPORT-TIME constant off DEFAULT_SAFETY_ENVELOPE
+        # (follow.py `_FOLLOW_DESIRED_DISTANCE_M`) and is deliberately not
+        # exposed in yaml, so the formation still sits at 1.85 m of centre
+        # distance even though the gate would now allow 1.25 m. It only has to
+        # CLEAR the keepout ring (1.25 + 0.10), which it does.
         assert runtime.follow.config.desired_distance_m == pytest.approx(1.85)
+        assert runtime.follow.config.desired_distance_m >= 1.25 + 0.10
     finally:
         runtime.close()
 

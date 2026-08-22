@@ -108,6 +108,10 @@ def _abstention_filtered(
 
     try:
         from parcel_robot.perception_abstention import (
+            ABSTAIN_LABEL_DISAGREEMENT,
+            OUTCOME_ASK,
+            RANKING_MARGIN_LABEL_STRENGTH,
+            AbstentionVerdict,
             active_abstention_policy,
             assess_place_query,
             detector_prompts_for,
@@ -153,7 +157,9 @@ def _abstention_filtered(
     # "among matching candidates" means, and non-matching places contribute
     # nothing rather than a spurious tie.
     background: list[float] = []
-    if getattr(active, "ranking_margin_mode", "") == "label_strength":
+    # Card P1-D (refutation D-5): the module constant, not a bare literal that
+    # could silently stop matching if the mode were ever renamed.
+    if getattr(active, "ranking_margin_mode", "") == RANKING_MARGIN_LABEL_STRENGTH:
         background = [float(candidate.confidence) for candidate in candidates]
     else:
         for item in observation.extras.get("semantic_candidates", []) or []:
@@ -171,7 +177,42 @@ def _abstention_filtered(
         places=places,
         policy=active,
         map_similarities=background or None,
+        # No ``veto=`` here on purpose. Card P1-D, post-verification: an earlier
+        # draft passed ``getattr(active, "veto", None)``, which was ALWAYS None
+        # because no such attribute exists — so the signal the roster selected
+        # never ran on the product path. The gate now resolves the seat the
+        # config named (``perception_abstention.resolve_veto``), which means
+        # every call site gets it, including ones written after this comment.
     )
+    # ------------------------------------------------------------- D-R3 ---
+    # Card P1-D. An admission earned only through a SUBSTRING match is not an
+    # admission. ``_match_strength`` reports how each candidate met the query;
+    # a spelling coincidence ("a coffee shop" ⊃ "shop") may produce a candidate
+    # to ASK about but may never authorize motion, because the failure
+    # direction here is the dangerous one — the dog drives somewhere it was not
+    # asked to go, confidently, having passed every evidence gate on a place
+    # that really is well-observed. It is simply the wrong place.
+    #
+    # Checked AFTER the gate rather than by filtering candidates before it, so
+    # the refusal reason is the honest one and the ASK can still name the place.
+    if verdict.admitted and verdict.place_id is not None:
+        winner = next(
+            (c for c in candidates if c.candidate_id == verdict.place_id), None
+        )
+        if winner is not None and _match_strength(
+            goal.query, winner.label, winner.metadata.get("aliases")
+        ) not in ADMISSIBLE_MATCHES:
+            asking = bool(getattr(active, "ask_below_threshold", False))
+            verdict = AbstentionVerdict(
+                False,
+                verdict.query,
+                ABSTAIN_LABEL_DISAGREEMENT,
+                verdict.alternatives,
+                winner.candidate_id if asking else None,
+                {**dict(verdict.signals), "substring_match_only": 1.0},
+                OUTCOME_ASK if asking else "",
+                winner.label if asking else "",
+            )
     try:
         observation.extras["abstention_verdict"] = verdict.as_dict()
     except (AttributeError, TypeError):  # pragma: no cover — read-only extras
@@ -504,26 +545,82 @@ def _siglip_matcher() -> Any:
     return _SIGLIP_MATCHER
 
 
+#: How a query met a candidate's label. Card P1-D, refutation D-R3.
+#:
+#: The distinction exists because these three are not the same claim and the
+#: pre-P1-D code returned one bool for all of them:
+#:
+#:   ``exact``      the query IS this label (after normalization)
+#:   ``alias``      a curated synonym said so — ``city_semantics.CLASS_ALIASES``
+#:                  or the candidate's own alias list, or SigLIP-2's cosine
+#:   ``substring``  one string happens to contain the other. "a coffee shop"
+#:                  contains "shop"; "streetlight" contains "tree"... no, but
+#:                  "tree" ⊂ "street", which is how a lamppost once matched a
+#:                  tree. This is a COINCIDENCE OF SPELLING and it is evidence
+#:                  of nothing.
+#:   ``none``       no relation
+MATCH_EXACT = "exact"
+MATCH_ALIAS = "alias"
+MATCH_SUBSTRING = "substring"
+MATCH_NONE = "none"
+
+#: Match strengths that may reach an ADMIT. A substring hit may produce a
+#: candidate — so the dog can ask "did you mean the shop?" — but it may never
+#: authorize motion on its own. See :func:`_abstention_filtered`.
+ADMISSIBLE_MATCHES: frozenset[str] = frozenset({MATCH_EXACT, MATCH_ALIAS})
+
+
 def _matches(query: str, label: str, aliases: Any) -> bool:
+    """Does this candidate answer the query at all? (Any strength.)
+
+    Kept as the bool it always was so the candidate-gathering call site is
+    unchanged: a substring hit still PRODUCES a candidate. What changed in card
+    P1-D is that producing a candidate and being allowed to drive to it are now
+    two different questions — see :func:`_match_strength` and D-R3.
+    """
+
+    return _match_strength(query, label, aliases) != MATCH_NONE
+
+
+def _match_strength(query: str, label: str, aliases: Any) -> str:
     """Match a query against one candidate label (plus that label's aliases).
 
     Important: do **not** inject other vocabulary classes into ``texts`` just
     because the query names a class — that made every candidate match
     ``\"sidewalk\"`` / ``\"lamppost\"`` and collapsed grounding to AMBIGUOUS.
+
+    Card P1-D (refutation D-R3, ``scrum/20260822/WAVE_P0_VERIFICATION_FABLE.md``):
+    returns HOW it matched, not just whether. The substring fallback below is on
+    the mission path whenever SigLIP-2 weights are absent, and it admitted
+    ``"a coffee shop"`` against a map entry labelled ``shop`` — an admission,
+    i.e. the dog drives somewhere it was not asked to go. The fallback is kept
+    (deleting it would refuse real synonyms this deployment has no embedder for)
+    and demoted: a substring hit is at most an ASK.
     """
 
     normalized_query = _normalized(query)
     if not normalized_query:
-        return False
+        return MATCH_NONE
+    # "the bench" IS the bench. Determiners are stripped before the identity
+    # test — otherwise the owner's own natural phrasing would be demoted to a
+    # substring hit and the dog would ask about a place it can name exactly.
+    # Same determiner list ``perception_abstention.detector_prompts_for`` uses.
+    bare_query = _without_determiner(query)
+    if bare_query and bare_query == _without_determiner(label):
+        return MATCH_EXACT
     texts = [label]
     if isinstance(aliases, (list, tuple)):
         texts.extend(str(alias) for alias in aliases[:16])
+    # The candidate's OWN alias list is curated data, exactly like CLASS_ALIASES
+    # below, so a whole-string hit against it is a real synonym.
+    if any(_without_determiner(text) == bare_query for text in texts):
+        return MATCH_ALIAS
     try:
         from parcel_robot.city_semantics import CLASS_ALIASES
 
         for class_label, class_aliases in CLASS_ALIASES.items():
-            class_norm = _normalized(class_label)
-            label_in_class = class_norm == _normalized(label) or any(
+            class_norm = _without_determiner(class_label)
+            label_in_class = class_norm == _without_determiner(label) or any(
                 _normalized(alias) == _normalized(label) for alias in class_aliases
             )
             if not label_in_class:
@@ -532,10 +629,10 @@ def _matches(query: str, label: str, aliases: Any) -> bool:
             texts.extend(class_aliases)
             # Query is this class name or one of its aliases → accept (a real
             # synonym via the curated alias table, not a substring coincidence).
-            if class_norm == normalized_query or any(
-                _normalized(alias) == normalized_query for alias in class_aliases
+            if class_norm == bare_query or any(
+                _without_determiner(alias) == bare_query for alias in class_aliases
             ):
-                return True
+                return MATCH_ALIAS
     except ImportError:
         pass
     # SigLIP-2 embedding glue (N-C1 / A2). Missing weights → loud string_fallback
@@ -547,21 +644,39 @@ def _matches(query: str, label: str, aliases: Any) -> bool:
         # substring containment, which is the path that let "tree" match a
         # lamppost via its "streetlight" alias ("tree" ⊂ "street"). This is the
         # semantic_map half of the cross-class false-positive deletion.
-        return matcher.match(str(query), [str(t) for t in texts]) is not None
-    # Weights absent: byte-identical to the pre-neural path — substring
-    # containment first, then the matcher's own loud string fallback.
+        hit = matcher.match(str(query), [str(t) for t in texts])
+        return MATCH_ALIAS if hit is not None else MATCH_NONE
+    # Weights absent: substring containment, then the matcher's own loud string
+    # fallback. Card P1-D: both are reported as MATCH_SUBSTRING rather than as
+    # an accept. The set of candidates this produces is UNCHANGED — every
+    # containment that matched before still matches — and what changed is that
+    # the gate above can now tell a spelling coincidence from a synonym.
     for text in texts:
         normalized_text = _normalized(text)
         if normalized_text and (
             normalized_query in normalized_text or normalized_text in normalized_query
         ):
-            return True
+            return MATCH_SUBSTRING
     if matcher is not None:
         hit = matcher.match(str(query), [str(t) for t in texts])
         if hit is not None:
-            return True
-    return False
+            return MATCH_SUBSTRING
+    return MATCH_NONE
 
 
 def _normalized(value: object) -> str:
     return "".join(re.findall(r"[a-z0-9]+", str(value).lower()))
+
+
+#: Determiners that carry no referent of their own. Card P1-D: stripped before
+#: the exact/alias identity tests so "the bench" is the bench, while possessives
+#: ("my office") and proper nouns ("Narnia") are left alone — rewriting those
+#: would be a guess about what the owner meant.
+_DETERMINERS = ("a", "an", "the")
+
+
+def _without_determiner(value: object) -> str:
+    words = re.findall(r"[a-z0-9]+", str(value).lower())
+    while words and words[0] in _DETERMINERS:
+        words = words[1:]
+    return "".join(words)

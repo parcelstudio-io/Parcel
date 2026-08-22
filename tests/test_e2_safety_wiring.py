@@ -358,11 +358,21 @@ def test_the_person_floor_guard_is_now_symmetric_with_the_obstacle_guard() -> No
 
     with pytest.raises(ValueError, match="obstacle_stop_m"):
         ReactiveSafetyPolicy(obstacle_stop_m=0.5)
+    # Card P1-E (2026-08-22) moved WHERE this floor comes from: it used to be
+    # the shipped social zone (1.2 m), which made the commissioning value its
+    # own floor and made an indoor 0.7 m profile a refusal to boot; it is now
+    # ``PERSON_SOCIAL_ZONE_FLOOR_M`` (0.68 m), the body's ISO/TS-15066 stopping
+    # distance at cruise. The guard is unchanged in kind — still a refusal at
+    # construction, still naming ``person_stop_m`` — so the probe moves from
+    # the retired 1.0 to a value under the new floor.
     with pytest.raises(ValueError, match="person_stop_m"):
-        ReactiveSafetyPolicy(person_stop_m=1.0)
+        ReactiveSafetyPolicy(person_stop_m=0.6)
     # Commissioning STRICTER than the authority is still allowed, in both
     # families: the floor is a floor, not an equality.
     assert ReactiveSafetyPolicy(person_stop_m=1.4).person_stop_m == pytest.approx(1.4)
+    # ...and commissioning LOOSER than the shipped 1.2 is now allowed too, down
+    # to (and including) the floor. That is the P1-E deliverable.
+    assert ReactiveSafetyPolicy(person_stop_m=0.7).person_stop_m == pytest.approx(0.7)
     assert ReactiveSafetyPolicy().person_stop_m == pytest.approx(
         DEFAULT_SAFETY_ENVELOPE.person_stop(0.0)
     )
@@ -440,10 +450,14 @@ def test_the_runtime_constructed_policy_reflects_the_yaml_not_a_hidden_literal(
     finally:
         shipped.close()
 
+    # Card P1-E: 1.0 is now a legal indoor commissioning (it clears the 0.68 m
+    # floor), so the "refused" cell probes UNDER the floor instead. What is
+    # being pinned is unchanged: a config cannot walk the person clearance down
+    # without limit, and the limit is a refusal to construct.
     with pytest.raises(ValueError, match="person_stop_m"):
         _runtime(
             tmp_path / "undercut",
-            extra="safety:\n  person_stop_m: 1.0\n  person_slow_m: 2.0\n",
+            extra="safety:\n  person_stop_m: 0.6\n  person_slow_m: 2.0\n",
         )
 
 

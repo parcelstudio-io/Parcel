@@ -56,12 +56,14 @@ from .spend_ledger import (
 )
 from .transport import Transport, TransportClosed, transport_pair
 from .voice_identity import (
+    SpeakerLabel,
     VoiceArmingDecision,
     VoiceIdentityError,
     VoiceIdentityGate,
     VoiceVerdict,
     gate_decision,
     gates_kind,
+    speaker_label,
 )
 
 __all__ = [
@@ -84,6 +86,7 @@ __all__ = [
     "RealtimeProtocolError",
     "RealtimeTranscriptOutcome",
     "SinkOwnershipError",
+    "SpeakerLabel",
     "SpendLedger",
     "Transport",
     "TransportClosed",
@@ -105,5 +108,6 @@ __all__ = [
     "resolve_realtime_config_path",
     "resolve_spend_ledger_path",
     "scan",
+    "speaker_label",
     "transport_pair",
 ]

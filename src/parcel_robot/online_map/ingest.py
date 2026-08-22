@@ -54,6 +54,41 @@ def default_focal_lengths() -> tuple[float, float]:
     return _INTRINSICS_CACHE["d455"]
 
 
+def embedding_stamp_from_record(record: Any) -> EmbeddingStamp | None:
+    """Build the :class:`EmbeddingStamp` a detection record declares, or ``None``.
+
+    Card P1-B. The camera stream publishes the embedding SPACE as three flat
+    strings (``embedding_model_id`` / ``embedding_revision`` /
+    ``embedding_preprocessing``) rather than as a typed stamp, deliberately:
+    :mod:`parcel_robot.camera_channel.ingress` is C-1's diagnostic producer and
+    must not import the map's vocabulary, and "converting through an explicit
+    seam is what stops 'the stream said so' from silently becoming 'the map
+    says so'". This function is that conversion, and it is the ONLY one.
+
+    ``dim`` is not carried on the record and is not asked for: it is
+    ``len(embedding)`` by construction, and a stamped dim that could disagree
+    with the vector it stamps is a second source of truth for one fact.
+    """
+
+    model_id = str(getattr(record, "embedding_model_id", "") or "").strip()
+    if not model_id:
+        return None
+    vector = getattr(record, "embedding", None)
+    if vector is None:
+        raise ValueError(
+            f"detection record {getattr(record, 'label', '?')!r} declares the "
+            f"embedding space {model_id!r} but carries no embedding"
+        )
+    return EmbeddingStamp(
+        model_id=model_id,
+        revision=str(getattr(record, "embedding_revision", "") or "unknown"),
+        dim=len(tuple(vector)),
+        preprocessing=str(
+            getattr(record, "embedding_preprocessing", "") or "unknown"
+        ),
+    )
+
+
 def observation_from_record(
     record: Any,
     *,
@@ -89,6 +124,35 @@ def observation_from_record(
     width_m, height_m = metric_extents(
         record.box, float(record.depth_m), fx=focal_x, fy=focal_y
     )
+
+    # Card P1-B. The record now CARRIES its own crop embedding, embedding space,
+    # bounded thumbnail and depth patch when the producing ingress had them.
+    # Explicit kwargs still win — a fixture driving this seam by hand must not
+    # have its arguments quietly overridden — so this is a fallback, read with
+    # ``getattr`` so the duck-typed record contract of C-2 is unchanged and the
+    # 16 archived C-1 frames (which have none of these attributes) still load.
+    if embedding is None:
+        embedding = getattr(record, "embedding", None)
+        if embedding is not None and embedding_stamp is None:
+            embedding_stamp = embedding_stamp_from_record(record)
+    if thumbnail is None:
+        thumbnail = getattr(record, "thumbnail", None)
+    if depth_patch is None:
+        depth_patch = getattr(record, "depth_patch", None)
+
+    # REVISION 2, enforced at the seam rather than three layers down. The
+    # MapObservation constructor refuses this too, but the message there names
+    # a dataclass field; here it can name the RECORD that arrived without a
+    # space, which is the thing whose producer has to be fixed.
+    if embedding is not None and embedding_stamp is None:
+        raise ValueError(
+            f"detection record {getattr(record, 'label', '?')!r} carries an "
+            "embedding with no embedding space. A vector whose model/revision/"
+            "preprocessing are unknown is not comparable to any other vector — "
+            "REVISION 2 refuses it rather than producing a cosine that looks "
+            "exactly like a similarity. The producing ingress must set "
+            "embedding_model_id / embedding_revision / embedding_preprocessing."
+        )
 
     relief_m: float | None = None
     relief_samples = 0
@@ -184,6 +248,7 @@ def map_freshness_report(frames: Iterable[Any]) -> dict[str, Any]:
 
 __all__ = [
     "default_focal_lengths",
+    "embedding_stamp_from_record",
     "map_freshness_report",
     "observation_from_record",
     "observations_from_frame",

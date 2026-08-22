@@ -31,6 +31,7 @@ specific to being a second store:
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 from collections.abc import Iterable, Mapping
@@ -40,7 +41,18 @@ from typing import Any, Self
 
 from parcel_robot.memory_path import OWNER_STORE_NAME, owner_store_paths
 
-from .entries import ENV_MAP_PATH, MAP_SCHEMA, MAX_ENTRIES, MapEntry
+from .entries import (
+    ENV_MAP_PATH,
+    MAP_SCHEMA,
+    MAX_ENTRIES,
+    MIGRATABLE_SCHEMAS,
+    ORIGIN_UNKNOWN,
+    EvidenceOrigin,
+    MapEntry,
+    origins_conflict,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class MapStoreRefused(RuntimeError):
@@ -179,12 +191,90 @@ class OnlineMapStore:
                     (MAP_SCHEMA,),
                 )
             return
-        if row[0] != MAP_SCHEMA:
-            raise MapStoreRefused(
-                f"store at {self._path} was written by schema {row[0]!r}, this "
-                f"build speaks {MAP_SCHEMA!r}. Refusing to reinterpret rows "
-                "whose meaning may have changed."
+        found = str(row[0])
+        if found == MAP_SCHEMA:
+            return
+        if found in MIGRATABLE_SCHEMAS:
+            self._migrate_schema(found)
+            return
+        raise MapStoreRefused(
+            f"store at {self._path} was written by schema {found!r}, this "
+            f"build speaks {MAP_SCHEMA!r} and can migrate {list(MIGRATABLE_SCHEMAS)}. "
+            "Refusing to reinterpret rows whose meaning may have changed."
+        )
+
+    def _migrate_schema(self, found: str) -> None:
+        """Move a store forward one schema, loudly and once. Card P1-B.
+
+        v1 -> v2 is **additive**: rows gained ``thumbnail`` (AU-C2-1) and
+        ``provenance.origin``. Both are optional on read and a v1 row's
+        absence of them is not a loss of information — it is the information
+        ("this store never recorded one"). So every v1 row is re-read through
+        :meth:`MapEntry.from_mapping` and re-written in the v2 shape, which
+        means the migration is **verified by round-trip rather than asserted**:
+        a row this build cannot parse raises here, with the store still on v1,
+        instead of being silently relabelled v2 and failing on the next load.
+
+        The migration is recorded in ``map_meta`` (``migrated_from``,
+        ``migrated_rows``) because a store that quietly changed shape is a
+        store whose next auditor has to guess.
+        """
+
+        rows = self._conn.execute(
+            "SELECT entry_id, payload FROM map_entries ORDER BY entry_id"
+        ).fetchall()
+        rewritten: list[tuple[str, str, str, str]] = []
+        for entry_id, payload in rows:
+            data: Any = json.loads(payload)
+            if not isinstance(data, Mapping):
+                raise MapStoreRefused(
+                    f"cannot migrate {self._path} from {found}: row {entry_id!r} "
+                    "is not a mapping"
+                )
+            try:
+                entry = MapEntry.from_mapping(data)
+            except (TypeError, ValueError) as exc:
+                raise MapStoreRefused(
+                    f"cannot migrate {self._path} from {found} to {MAP_SCHEMA}: "
+                    f"row {entry_id!r} does not parse under the new schema "
+                    f"({type(exc).__name__}: {exc}). The store is UNCHANGED."
+                ) from exc
+            rewritten.append(
+                (
+                    entry.entry_id,
+                    entry.label,
+                    entry.status,
+                    json.dumps(
+                        entry.as_dict(), sort_keys=True, separators=(",", ":")
+                    ),
+                )
             )
+        with self._conn:
+            for entry_id, label, status, payload in rewritten:
+                self._conn.execute(
+                    "UPDATE map_entries SET label = ?, status = ?, payload = ? "
+                    "WHERE entry_id = ?",
+                    (label, status, payload, entry_id),
+                )
+            self._conn.execute(
+                "INSERT INTO map_meta(key, value) VALUES ('schema', ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (MAP_SCHEMA,),
+            )
+            self._conn.execute(
+                "INSERT INTO map_meta(key, value) VALUES ('migrated_from', ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (found,),
+            )
+            self._conn.execute(
+                "INSERT INTO map_meta(key, value) VALUES ('migrated_rows', ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (str(len(rewritten)),),
+            )
+        logger.info(
+            "online map store %s migrated %s -> %s (%d rows)",
+            self._path, found, MAP_SCHEMA, len(rewritten),
+        )
 
     # -- meta --------------------------------------------------------------
 
@@ -247,9 +337,80 @@ class OnlineMapStore:
             if not isinstance(data, Mapping):
                 raise MapStoreRefused("stored map row is not a mapping")
             out.append(MapEntry.from_mapping(data))
+        self._refuse_mixed_origins(out)
         return tuple(out)
 
+    @staticmethod
+    def _refuse_mixed_origins(entries: Iterable[MapEntry]) -> None:
+        """Card P1-B, work item 5. One store, one world.
+
+        A store holding both a place the robot saw through a real lens and a
+        place a renderer drew is a store where every aggregate — entry counts,
+        label purity, the retrieval bench, "has the dog seen a chair" — is a
+        blend of two worlds, and the blend is INVISIBLE: the two rows are
+        identical apart from one field nobody reads. Worse, the sim rows would
+        be borrowing the physical rows' credibility, which is the direction
+        that gets a robot walking toward something that was never there.
+
+        So the refusal is at LOAD, not at write: a store can only become mixed
+        by two different runs, and the run that would be misled is the one
+        reading it. ``unknown`` is deliberately not a party to this — it is
+        silent, not synthetic, and refusing every pre-P1-B store would make
+        this guard the first thing a future executor deletes.
+        """
+
+        counts: dict[str, int] = {}
+        for entry in entries:
+            origin = getattr(entry.provenance, "origin", ORIGIN_UNKNOWN)
+            counts[origin] = counts.get(origin, 0) + 1
+        if not origins_conflict(counts):
+            return
+        physical = counts.get(EvidenceOrigin.PHYSICAL.value, 0)
+        synthetic = {
+            name: n
+            for name, n in sorted(counts.items())
+            if name != EvidenceOrigin.PHYSICAL.value
+            and name != ORIGIN_UNKNOWN
+        }
+        raise MapStoreRefused(
+            "refusing to load a map that mixes evidence origins: "
+            f"{physical} entr{'y' if physical == 1 else 'ies'} stamped "
+            f"'{EvidenceOrigin.PHYSICAL.value}' alongside {synthetic}. "
+            "One store is one world. A physical row and a simulated row are "
+            "indistinguishable downstream, so a mixed store silently lends the "
+            "renderer's places the camera's credibility. Point "
+            f"{ENV_MAP_PATH} at a separate file per venue."
+        )
+
     def close(self) -> None:
+        """Checkpoint the WAL into the store file, then close. Card P1-B.
+
+        ``__init__`` sets ``journal_mode=WAL``, which is right for a store
+        written from one thread while another may read it — but WAL means a
+        committed row lives in ``<store>-wal`` until something checkpoints it.
+        SQLite checkpoints on the LAST connection closing, so before this
+        method existed the rows the robot had just learned sat in a sidecar
+        file until interpreter exit, and a reader that copied only the
+        ``.sqlite3`` got an empty map. "It persisted" has to mean the bytes are
+        in the file that has the name, not in a file whose name is a suffix.
+
+        ``TRUNCATE`` rather than ``PASSIVE``: it blocks until the whole WAL is
+        transferred and then empties it, so after ``close()`` the store is ONE
+        self-contained file and the ``-wal``/``-shm`` companions are gone. A
+        checkpoint failure is logged and swallowed — the close itself must
+        still happen, and a store that could not checkpoint is still a store
+        whose rows SQLite will recover from the WAL on the next open.
+        """
+
+        try:
+            if not self.in_memory:
+                self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        except sqlite3.Error as error:  # pragma: no cover - defensive
+            logger.warning(
+                "online map store %s could not checkpoint its WAL (%s); the "
+                "rows are still recoverable from the -wal sidecar",
+                self._path, error,
+            )
         with closing(self._conn):
             pass
 

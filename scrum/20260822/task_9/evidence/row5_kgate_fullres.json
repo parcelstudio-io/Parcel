@@ -1,0 +1,217 @@
+{
+ "objects": 8,
+ "promotions": 2,
+ "false_promotions": 2,
+ "rows": [
+  {
+   "object": "traffic_light_1",
+   "true_label": "traffic light",
+   "promoted_name": "pole",
+   "visits": 3,
+   "correct": false
+  },
+  {
+   "object": "bollard_1",
+   "true_label": "bollard",
+   "promoted_name": "yellow cylinder",
+   "visits": 3,
+   "correct": false
+  }
+ ],
+ "known_places": [
+  "bench",
+  "bollard",
+  "crate",
+  "door",
+  "lamppost",
+  "pole",
+  "traffic light",
+  "tree",
+  "yellow cylinder"
+ ],
+ "per_visit": [
+  {
+   "visit_id": "visit-0",
+   "considered": 7,
+   "asked": 7,
+   "proposals": 5,
+   "promotions": 0,
+   "demotions": 0,
+   "rejected": 0,
+   "budget_exhausted": false,
+   "outcomes": [
+    {
+     "entry_id": "place-0189e7652775436c",
+     "proposed": "pole",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-265b6db6422e44fc",
+     "proposed": "wooden box",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-2c1da60125674c6a",
+     "proposed": "yellow cylinder",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-ac35edee094e4d64",
+     "proposed": "black pole",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-bc2d32bbac9d4d28",
+     "proposed": "door",
+     "promoted": false,
+     "demoted": [],
+     "skipped": "same as label"
+    },
+    {
+     "entry_id": "place-c309ddc6ec454282",
+     "proposed": "wooden bench",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-c3e7f9dc3d4f4ba4",
+     "proposed": "tree",
+     "promoted": false,
+     "demoted": [],
+     "skipped": "same as label"
+    }
+   ]
+  },
+  {
+   "visit_id": "visit-1",
+   "considered": 7,
+   "asked": 7,
+   "proposals": 5,
+   "promotions": 0,
+   "demotions": 0,
+   "rejected": 0,
+   "budget_exhausted": false,
+   "outcomes": [
+    {
+     "entry_id": "place-0189e7652775436c",
+     "proposed": "pole",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-265b6db6422e44fc",
+     "proposed": "wooden wall",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-2c1da60125674c6a",
+     "proposed": "yellow cylinder",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-ac35edee094e4d64",
+     "proposed": "door",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-bc2d32bbac9d4d28",
+     "proposed": "door",
+     "promoted": false,
+     "demoted": [],
+     "skipped": "same as label"
+    },
+    {
+     "entry_id": "place-c309ddc6ec454282",
+     "proposed": "bench",
+     "promoted": false,
+     "demoted": [],
+     "skipped": "same as label"
+    },
+    {
+     "entry_id": "place-c3e7f9dc3d4f4ba4",
+     "proposed": "tree trunk",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    }
+   ]
+  },
+  {
+   "visit_id": "visit-2",
+   "considered": 7,
+   "asked": 7,
+   "proposals": 6,
+   "promotions": 2,
+   "demotions": 0,
+   "rejected": 0,
+   "budget_exhausted": false,
+   "outcomes": [
+    {
+     "entry_id": "place-0189e7652775436c",
+     "proposed": "pole",
+     "promoted": true,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-265b6db6422e44fc",
+     "proposed": "wooden wall",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-2c1da60125674c6a",
+     "proposed": "yellow cylinder",
+     "promoted": true,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-ac35edee094e4d64",
+     "proposed": "pole",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-bc2d32bbac9d4d28",
+     "proposed": "door",
+     "promoted": false,
+     "demoted": [],
+     "skipped": "same as label"
+    },
+    {
+     "entry_id": "place-c309ddc6ec454282",
+     "proposed": "wooden box",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-c3e7f9dc3d4f4ba4",
+     "proposed": "tree trunk",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    }
+   ]
+  }
+ ]
+}

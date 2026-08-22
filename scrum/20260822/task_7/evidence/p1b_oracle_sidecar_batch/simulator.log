@@ -1,0 +1,92 @@
+Parcel sim ready: /home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml
+Listening for poses/walk/trajectory on /home/jaewoo-jang/.cache/parcel-p1b/sim-1541346.sock
+Controls: W/S A/D Q/E Space, 1=sit 2=bow, or run parcel-control
+Failed to load plugin 'libdecor-gtk.so': failed to init
+No plugins found, falling back on no decorations
+/home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/lib/python3.14/site-packages/glfw/__init__.py:917: GLFWError: (65548) b'Wayland: The platform does not provide the window position'
+  warnings.warn(message, GLFWError)
+WARNING: OpenGL error 0x502 in or before mjr_makeContext
+
+stop requested
+stop requested
+stop requested
+walk command: vx=0.00 vy=0.00 vyaw=0.18 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.36 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.54 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.80 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.80 style=trot
+walk command: vx=0.09 vy=0.00 vyaw=0.62 style=trot
+walk command: vx=0.18 vy=0.00 vyaw=0.45 style=trot
+walk command: vx=0.25 vy=0.00 vyaw=0.26 style=trot
+walk command: vx=0.25 vy=0.00 vyaw=0.08 style=trot
+walk command: vx=0.25 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.25 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.10 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.16 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.09 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.07 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.25 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.25 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.15 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.06 vy=0.00 vyaw=0.00 style=trot
+stop requested
+stop requested
+walk command: vx=0.00 vy=0.00 vyaw=0.18 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.35 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.54 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.72 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.62 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.45 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.27 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.09 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.10 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.28 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.46 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.64 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.80 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.80 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.62 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.45 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.26 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.08 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.09 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.28 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.46 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.64 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.80 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.62 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.44 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.27 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.08 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.10 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.28 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.46 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.64 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.80 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.80 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.80 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.62 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.44 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.26 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.08 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.10 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.08 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.26 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.09 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.09 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.28 style=trot
+walk command: vx=0.05 vy=0.00 vyaw=0.09 style=trot
+walk command: vx=0.11 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.12 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.10 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.08 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.07 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.05 vy=0.00 vyaw=0.00 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.18 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.36 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.18 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.01 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=-0.17 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.01 style=trot
+walk command: vx=0.00 vy=0.00 vyaw=0.19 style=trot
+emergency stop latched

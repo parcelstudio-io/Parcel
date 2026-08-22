@@ -1,0 +1,377 @@
+{
+ "schema": "parcel.p1c_two_person_clip.v1",
+ "note": "Card P1-C fixture. Synthesized because this host has no camera. Frames 0-5 are the enrollment set; identity rows are measured on 6-19 so no cosine is a crop against itself. Crossing between frames 9 and 10, owner occluded on frames 13-16.",
+ "width": 640,
+ "height": 480,
+ "fps": 4.0,
+ "owner_id": "owner",
+ "camera": {
+  "fx": 300.0,
+  "fy": 300.0,
+  "cx": 320.0,
+  "cy": 240.0,
+  "height_m": 0.42
+ },
+ "enrollment_frames": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "crossing_frames": [
+  8,
+  9,
+  10,
+  11
+ ],
+ "occlusion_frames": [
+  13,
+  14,
+  15,
+  16
+ ],
+ "people": [
+  {
+   "id": "owner",
+   "shirt": [
+    38,
+    72,
+    196
+   ],
+   "trouser": [
+    26,
+    28,
+    58
+   ],
+   "skin": [
+    228,
+    192,
+    162
+   ],
+   "pattern": "vstripe"
+  },
+  {
+   "id": "other",
+   "shirt": [
+    206,
+    92,
+    36
+   ],
+   "trouser": [
+    72,
+    62,
+    40
+   ],
+   "skin": [
+    146,
+    108,
+    82
+   ],
+   "pattern": "hband"
+  }
+ ],
+ "frames": [
+  {
+   "t": 0.0,
+   "poses": {
+    "owner": {
+     "x": 3.5,
+     "y": 2.47,
+     "visible": true
+    },
+    "other": {
+     "x": 2.8,
+     "y": -2.47,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 0.25,
+   "poses": {
+    "owner": {
+     "x": 3.4737,
+     "y": 2.21,
+     "visible": true
+    },
+    "other": {
+     "x": 2.8263,
+     "y": -2.21,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 0.5,
+   "poses": {
+    "owner": {
+     "x": 3.4474,
+     "y": 1.95,
+     "visible": true
+    },
+    "other": {
+     "x": 2.8526,
+     "y": -1.95,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 0.75,
+   "poses": {
+    "owner": {
+     "x": 3.4211,
+     "y": 1.69,
+     "visible": true
+    },
+    "other": {
+     "x": 2.8789,
+     "y": -1.69,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 1.0,
+   "poses": {
+    "owner": {
+     "x": 3.3948,
+     "y": 1.43,
+     "visible": true
+    },
+    "other": {
+     "x": 2.9052,
+     "y": -1.43,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 1.25,
+   "poses": {
+    "owner": {
+     "x": 3.3685,
+     "y": 1.17,
+     "visible": true
+    },
+    "other": {
+     "x": 2.9315,
+     "y": -1.17,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 1.5,
+   "poses": {
+    "owner": {
+     "x": 3.3422,
+     "y": 0.91,
+     "visible": true
+    },
+    "other": {
+     "x": 2.9578,
+     "y": -0.91,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 1.75,
+   "poses": {
+    "owner": {
+     "x": 3.3159,
+     "y": 0.65,
+     "visible": true
+    },
+    "other": {
+     "x": 2.9841,
+     "y": -0.65,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 2.0,
+   "poses": {
+    "owner": {
+     "x": 3.2896,
+     "y": 0.39,
+     "visible": true
+    },
+    "other": {
+     "x": 3.0104,
+     "y": -0.39,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 2.25,
+   "poses": {
+    "owner": {
+     "x": 3.2633,
+     "y": 0.13,
+     "visible": true
+    },
+    "other": {
+     "x": 3.0367,
+     "y": -0.13,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 2.5,
+   "poses": {
+    "owner": {
+     "x": 3.237,
+     "y": -0.13,
+     "visible": true
+    },
+    "other": {
+     "x": 3.063,
+     "y": 0.13,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 2.75,
+   "poses": {
+    "owner": {
+     "x": 3.2107,
+     "y": -0.39,
+     "visible": true
+    },
+    "other": {
+     "x": 3.0893,
+     "y": 0.39,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 3.0,
+   "poses": {
+    "owner": {
+     "x": 3.1844,
+     "y": -0.65,
+     "visible": true
+    },
+    "other": {
+     "x": 3.1156,
+     "y": 0.65,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 3.25,
+   "poses": {
+    "owner": {
+     "x": 3.1581,
+     "y": -0.91,
+     "visible": false
+    },
+    "other": {
+     "x": 3.1419,
+     "y": 0.91,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 3.5,
+   "poses": {
+    "owner": {
+     "x": 3.1318,
+     "y": -1.17,
+     "visible": false
+    },
+    "other": {
+     "x": 3.1682,
+     "y": 1.17,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 3.75,
+   "poses": {
+    "owner": {
+     "x": 3.1055,
+     "y": -1.43,
+     "visible": false
+    },
+    "other": {
+     "x": 3.1945,
+     "y": 1.43,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 4.0,
+   "poses": {
+    "owner": {
+     "x": 3.0792,
+     "y": -1.69,
+     "visible": false
+    },
+    "other": {
+     "x": 3.2208,
+     "y": 1.69,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 4.25,
+   "poses": {
+    "owner": {
+     "x": 3.0529,
+     "y": -1.95,
+     "visible": true
+    },
+    "other": {
+     "x": 3.2471,
+     "y": 1.95,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 4.5,
+   "poses": {
+    "owner": {
+     "x": 3.0266,
+     "y": -2.21,
+     "visible": true
+    },
+    "other": {
+     "x": 3.2734,
+     "y": 2.21,
+     "visible": true
+    }
+   }
+  },
+  {
+   "t": 4.75,
+   "poses": {
+    "owner": {
+     "x": 3.0003,
+     "y": -2.47,
+     "visible": true
+    },
+    "other": {
+     "x": 3.2997,
+     "y": 2.47,
+     "visible": true
+    }
+   }
+  }
+ ]
+}

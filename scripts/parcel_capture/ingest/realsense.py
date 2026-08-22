@@ -252,6 +252,19 @@ class RealSenseIngest(IngestAdapter):
     adapter_name: ClassVar[str] = "realsense"
     transports: ClassVar[frozenset[Transport]] = frozenset({Transport.REALSENSE})
     payload_kind: ClassVar[PayloadKind] = PayloadKind.DERIVED_SUMMARY
+    #: A D455 on USB is a UVC device and enumerates as ``/dev/video*``. Card
+    #: ENV-1: this is the IMPORT-FREE half of the presence question, and it is
+    #: checked BEFORE ``pyrealsense2`` is imported so a preflight on a
+    #: camera-less box never loads the SDK. It is deliberately coarse — any
+    #: webcam creates these nodes — and :meth:`_require_enumerated_device` is
+    #: the precise half, run once the SDK is legitimately in memory.
+    device_nodes: ClassVar[tuple[str, ...]] = ("video*",)
+    device_remedy: ClassVar[str] = (
+        "plug the D455 into a USB 3 (BLUE) port, direct, no hub, and confirm it "
+        "enumerates: `ls /dev/video*` then `lsusb | grep -i intel`. Only one process "
+        "may hold the camera, so stop any other reader first. On the Orin also raise "
+        "usbfs_memory_mb before the session — that edit REBOOTS the box."
+    )
     requirements: ClassVar[tuple[Requirement, ...]] = (
         Requirement(
             "pyrealsense2",
@@ -289,6 +302,13 @@ class RealSenseIngest(IngestAdapter):
                 f"known: {sorted(STREAM_PROFILES)}"
             )
         self.require_dependencies()
+        # Card ENV-1, and the ordering is the point: the /dev census is checked
+        # BEFORE the import, so on a box that has the wheel and no camera this
+        # returns a named device refusal without ``pyrealsense2`` ever entering
+        # ``sys.modules``. That is what keeps
+        # ``test_a_full_preflight_run_never_imports_a_vendor_sdk`` true now that
+        # the wheel is installed here.
+        self.require_device()
         try:
             return importlib.import_module("pyrealsense2")
         except ImportError as error:
@@ -298,10 +318,51 @@ class RealSenseIngest(IngestAdapter):
                 self.requirements[0].remedy,
             ) from error
 
+    def _require_enumerated_device(self, rs: Any) -> None:
+        """librealsense\'s own device list, or a named refusal. Card ENV-1.
+
+        :meth:`~..base.IngestAdapter.require_device` answered from ``/dev`` and
+        cannot tell a D455 from a laptop webcam. This can: on a host with a UVC
+        camera and no RealSense, ``rs.context().query_devices()`` is empty, and
+        without this gate ``pipeline.start()`` raises a librealsense
+        ``RuntimeError`` that preflight files as ``probe_raised`` — a reason
+        that names neither the device nor a remedy.
+
+        Reached through :func:`~..base.read_field` and wrapped in a
+        :class:`~..base.ReadOnlyHandle` whose allowlist is exactly
+        ``query_devices``, so a build that spells ``context`` differently yields
+        a refusal rather than an ``AttributeError`` inside a probe, and nothing
+        else on the context is reachable from here.
+        """
+
+        factory = read_field(rs, "context")
+        if not present(factory):
+            # A build with no rs.context cannot be interrogated; let the open
+            # speak for itself rather than inventing an absence.
+            return
+        handle = ReadOnlyHandle(factory(), allowed=("query_devices",), label="realsense context")
+        try:
+            count = len(list(handle.query_devices()))
+        except Exception as error:  # a probe that raises is ABSENT, never a traceback
+            raise IngestUnavailableError(
+                AbsenceReason.UNPARSEABLE,
+                f"pyrealsense2 imported but rs.context().query_devices() raised: {error}",
+                self.device_remedy,
+            ) from error
+        if count:
+            return
+        raise IngestUnavailableError(
+            AbsenceReason.DEVICE_NODE_MISSING,
+            "pyrealsense2 imports here but rs.context().query_devices() enumerates 0 "
+            "devices: no RealSense is attached to this host",
+            self.device_remedy,
+        )
+
     def open_pipeline(self, entry: Channel) -> ReadOnlyHandle:
         """A pipeline handle, or an actionable refusal. Never configures the device."""
 
         rs = self._module(entry)
+        self._require_enumerated_device(rs)
         pipeline = rs.pipeline()
         return ReadOnlyHandle(
             pipeline, allowed=_PIPELINE_ALLOWLIST, label=f"realsense pipeline {entry.channel_id}"
@@ -363,8 +424,15 @@ class RealSenseIngest(IngestAdapter):
         handle = self.open_pipeline(entry)
         config = self.stream_selection(entry)
         decode = decoder_for(entry)
+        # ``started`` exists because an unconditional stop() MASKED the real
+        # failure: measured on this box before card ENV-1, a start() that failed
+        # for want of a device surfaced to the operator as
+        # "probe_raised — RuntimeError: stop() cannot be called before start()",
+        # which names the wrong call and offers no remedy at all.
+        started = False
         try:
             handle.start(config)
+            started = True
             end_ns = now_ns()[0] + int(window_s * 1e9)
             while now_ns()[0] < end_ns:
                 frames = handle.poll_for_frames()
@@ -376,7 +444,8 @@ class RealSenseIngest(IngestAdapter):
                         continue
                     yield build_frame(entry, samples, summary)
         finally:
-            handle.stop()
+            if started:
+                handle.stop()
 
     def channels(self) -> tuple[Channel, ...]:
         from parcel_robot.capture import CHANNELS

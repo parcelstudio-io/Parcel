@@ -72,6 +72,12 @@ def test_d15_pin_is_a_veto_only_under_the_retune() -> None:
     ``ReactiveSafetyPolicy`` refuses ``person_stop_m`` below the envelope floor
     (E5's guard, adjudication #12), so the old arm cannot be constructed as a
     policy at all — the arithmetic is done directly on the gate's expression.
+
+    Card P1-E (2026-08-22) lowered that floor from the shipped social zone
+    (1.2 m) to the named ``PERSON_SOCIAL_ZONE_FLOOR_M`` (0.68 m), so the retired
+    1.0 IS now constructible. The counterfactual arithmetic below is unchanged
+    and is still done on the gate's expression; the refusal is re-probed at a
+    value under the new floor, which is what the guard now guards.
     """
 
     policy = _shipped_policy()
@@ -82,7 +88,7 @@ def test_d15_pin_is_a_veto_only_under_the_retune() -> None:
     assert round(old_threshold, 4) == 1.1020
     assert clearance > old_threshold
     with pytest.raises(ValueError, match="person_stop_m must not undercut"):
-        ReactiveSafetyPolicy(person_stop_m=old_person_stop_m)
+        ReactiveSafetyPolicy(person_stop_m=0.6)
 
 
 def test_compliant_speed_is_the_float_lattice_supremum_at_the_d15_pin() -> None:

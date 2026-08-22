@@ -85,6 +85,11 @@ from typing import Any, ClassVar
 
 from parcel_robot.models import ToolCall, ToolResult
 
+# Card P2-A. The privacy policy is imported, not reimplemented: HLD §8.4 says a
+# deterministic policy decides what may be kept, and a second copy of the rules
+# living in the broker would be a second answer to the same question.
+from parcel_robot.owner_model import policy as owner_policy
+
 from .ingress import RealtimeTranscriptOutcome
 from .protocol import SESSION_OBJECT_TYPE, ClientEvent
 
@@ -118,6 +123,32 @@ TOOL_NAVIGATE_TO = "navigate_to"
 #: statement about its own body. The surface must match the body.
 TOOL_CIRCLE_OWNER = "circle_owner"
 TOOL_FOLLOW_OWNER = "follow_owner"
+
+#: Card P2-A. The eighth tool, and the first one that WRITES something durable
+#: about the owner rather than about the robot.
+#:
+#: Until this card, "my sister's name is Hana" became row N of ``messages`` and
+#: nothing else: there was no ``remember`` tool, so the model's only way to keep
+#: a fact was to hope it was still inside the twenty-row tail next session. The
+#: audit's §5 measurement of what the hosted model knows about its owner per
+#: turn — an "unknown" name, an "unknown" location and six lines of digest — is
+#: the shape of that gap.
+#:
+#: It is an ANSWER tool (:data:`ANSWER_TOOLS`) and NOT an activity tool: nothing
+#: moves, and the result is the sentence the owner needs to hear. A robot that
+#: silently stores a fact about a person is the failure mode this whole card is
+#: arranged against, so the beat that carries this result must speak.
+TOOL_REMEMBER_FACT = "remember_fact"
+
+#: The three things the model may ask this tool to do. ``remember`` is a
+#: proposal, not a command — the policy decides. ``forget`` is the owner's
+#: "don't remember that" and is always honoured. ``list`` is
+#: "what do you know about me", answered from the table rather than from the
+#: model's impression of the conversation.
+FACT_ACTION_REMEMBER = "remember"
+FACT_ACTION_FORGET = "forget"
+FACT_ACTION_LIST = "list"
+FACT_ACTIONS = (FACT_ACTION_REMEMBER, FACT_ACTION_FORGET, FACT_ACTION_LIST)
 
 #: The tools that commit the body. These are the ones the utterance-scoped
 #: dedupe drops when the deterministic ingress already acted, and the ones the
@@ -207,6 +238,17 @@ UNKNOWN_PLACE_DETAIL = (
     "owner where it is or offer to go and look for it"
 )
 
+#: Card P2-A. A sixth status, and the second one that is not a verdict on a
+#: request. The owner said something the privacy policy will not keep WITHOUT
+#: BEING ASKED — health, money, somebody else's secret. ``rejected`` would tell
+#: the model it did something wrong and it would apologise; this tells it the
+#: truth, which is that the robot needs permission and is waiting for it.
+#:
+#: The row is already on disk as ``consent='pending'`` when this comes back. The
+#: ask is a RECORD, not a discard — otherwise "yes, remember that" would have
+#: nothing to point at.
+STATUS_CONSENT_REQUIRED = "consent_required"
+
 #: Every tool this broker will answer. Anything else is refused by name.
 BROKER_TOOLS = (
     TOOL_GET_STATUS,
@@ -216,6 +258,11 @@ BROKER_TOOLS = (
     TOOL_NAVIGATE_TO,
     TOOL_CIRCLE_OWNER,
     TOOL_FOLLOW_OWNER,
+    # Card P2-A. Appended LAST because ``build_tool_specs`` emits in this order
+    # and two committed tests pin the emitted names against this tuple
+    # element-for-element; inserting in the middle would move six specs for no
+    # reason.
+    TOOL_REMEMBER_FACT,
 )
 
 #: Card R15 — "done" MEANS DONE.
@@ -257,7 +304,17 @@ ACTIVITY_TOOLS = frozenset(
 #: perception tool (live_run_1 re-cut F3 as exactly that missing tool) would be
 #: an ANSWER tool that is not an activity, while a hypothetical
 #: ``stop_and_report`` would be both.
-ANSWER_TOOLS = frozenset({TOOL_GET_STATUS, TOOL_RECALL_MEMORY})
+#:
+#: Card P2-A adds the third. ``remember_fact`` is exactly R19's shape: there is
+#: no mission log, no terminal event and no later narration that will tell the
+#: owner what the robot decided to keep about them. If the beat carrying this
+#: result does not speak, the robot stored a fact about a person in silence —
+#: which is the one outcome the consent design exists to prevent.
+#:
+#: ``realtime.lane.DEFAULT_ANSWER_TOOLS`` carries the same name; a committed
+#: test asserts the two sets are equal, which is the coupling being kept honest
+#: rather than the coupling being avoided.
+ANSWER_TOOLS = frozenset({TOOL_GET_STATUS, TOOL_RECALL_MEMORY, TOOL_REMEMBER_FACT})
 
 #: The key :data:`ANSWER_TOOLS` results carry so the LANE never has to know the
 #: tool surface. ``parcel_robot.realtime.lane.ANSWER_RESULT_KEY`` is the reader;
@@ -284,6 +341,12 @@ TENSE_BY_STATUS: Mapping[str, str] = {
     # the one status whose NAME does not say the body stayed still, so the one
     # that most needs the tense saying it.
     STATUS_UNKNOWN_PLACE: TENSE_NOT_STARTED,
+    # Card P2-A, post-verification. Same argument as P0-B's line above, and
+    # harmless today because ``remember_fact`` is not an ACTIVITY tool so
+    # ``_tensed`` never runs on it. It is here for SHAPE PARITY: if a future
+    # tool ever returns ``consent_required`` from an activity, the tense must
+    # already be right rather than falling to a ``.get`` default nobody checked.
+    STATUS_CONSENT_REQUIRED: TENSE_NOT_STARTED,
 }
 
 #: Said alongside every ``started``/``waiting`` result, because the bench's
@@ -615,6 +678,72 @@ def build_tool_specs(
                 "required": [],
             },
         },
+        {
+            "type": "function",
+            "name": TOOL_REMEMBER_FACT,
+            # Card P2-A. Three things this description has to do, and each one
+            # is a failure the audit measured or the design forbids:
+            #
+            # 1. Get the tool CALLED at all. A model with a memory tool it never
+            #    reaches for is the same as a model with no memory tool, and the
+            #    hosted lane's standing habit is to answer from the tail rather
+            #    than to act. Hence the explicit trigger list.
+            # 2. Stop it PROMISING. The policy decides, not the model, so the
+            #    description must not let it say "I'll remember that" before the
+            #    result comes back — a robot that promises to remember and then
+            #    does not is worse than one that never offered.
+            # 3. Stop it INVENTING. Only what the owner actually said. A fact
+            #    distilled from the robot's own guesses is a belief about a
+            #    person with no evidence behind it, and it is durable.
+            "description": (
+                "Keep, drop, or list durable facts about the OWNER — their name "
+                "and the names of people and pets in their life, what they like "
+                "and dislike, their routines, and the places that matter to "
+                "them. CALL THIS with action='remember' the moment the owner "
+                "tells you something about themselves worth keeping ('my "
+                "sister's name is Hana', 'I hate being told to cheer up'). CALL "
+                "IT with action='forget' when they say to forget something, and "
+                "with action='list' when they ask what you know or remember "
+                "about them — answer from what comes back, never from your own "
+                "impression. Record ONLY what the owner actually said; never "
+                "guess, never infer, and never store anything about yourself. "
+                "The robot's own privacy rules decide what is kept, so do NOT "
+                "say you have remembered anything until the result says so: if "
+                "it comes back needing permission, say plainly what it is and "
+                "ask whether they want you to keep it."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": list(FACT_ACTIONS),
+                        "description": (
+                            "remember a new fact, forget one, or list what you "
+                            "already know. Defaults to remember."
+                        ),
+                    },
+                    "fact": {
+                        "type": "string",
+                        "description": (
+                            "The fact, written as the sentence you would say "
+                            "back to them, in the third person: 'their sister "
+                            "is called Hana'. Required for remember."
+                        ),
+                    },
+                    "key": {
+                        "type": "string",
+                        "description": (
+                            "A short slug naming WHAT this is a fact about — "
+                            "'sister_name', 'coffee_preference'. Reusing a key "
+                            "replaces the old fact rather than adding a second "
+                            "one. Required for forget."
+                        ),
+                    },
+                },
+                "required": [],
+            },
+        },
     )
 
 
@@ -658,6 +787,24 @@ class ToolDoors:
     places: Callable[[], Sequence[str]] = tuple
     orbit: Callable[[str, str, float], str] = _unwired
     follow: Callable[[str], str] = _unwired
+    #: Card P2-A. The owner-model doors. Three rather than one because they
+    #: have three different consequences — a write, a delete and a read — and a
+    #: single ``facts(action, ...)`` door would make "did this call change
+    #: anything" a question about a string argument.
+    #:
+    #: ``remember_fact`` receives the fact text, the key and the POLICY'S
+    #: DECISION, already made. It does not re-decide: the broker owns the policy
+    #: call so that the verdict is visible in the tool result the model reads,
+    #: and the runtime owns the store. A door that decided for itself would put
+    #: the consent rule somewhere the model's answer cannot see it.
+    #:
+    #: ``known_facts`` returns rendered LINES, not rows. The broker never sees
+    #: the ``owner_facts`` schema — same discipline as ``places``, and it means
+    #: the consent filter cannot be forgotten on the way out of the store,
+    #: because what crosses this boundary is already the answer.
+    remember_fact: Callable[[str, str, object], Mapping[str, object]] = _unwired
+    forget_fact: Callable[[str], Mapping[str, object]] = _unwired
+    known_facts: Callable[[], Sequence[str]] = tuple
 
 
 @dataclass
@@ -725,6 +872,17 @@ class RealtimeToolBroker:
         #: A queue of these is the flywheel's shopping list: it is exactly the
         #: set of nouns the owner uses and the robot cannot ground.
         self.unknown_place_asks = 0
+        #: Card P2-A. The owner model's four numbers, published in the snapshot
+        #: because "what has this robot decided to keep about me, and what did
+        #: it decline to" is a question an owner must be able to answer from the
+        #: panel without opening a database. The three write outcomes are
+        #: counted separately on purpose: a rising ``facts_consent_asks`` with a
+        #: flat ``facts_remembered`` means the policy is asking about everything,
+        #: which is a tuning problem, and it is invisible in a single total.
+        self.facts_remembered = 0
+        self.facts_consent_asks = 0
+        self.facts_refused = 0
+        self.facts_forgotten = 0
 
     # ----------------------------------------------------------- lane surface
     def session_events(self) -> tuple[ClientEvent, ...]:
@@ -823,6 +981,11 @@ class RealtimeToolBroker:
             "proactive_motion_admissions": self.proactive_motion_admissions,
             "unknown_place_mode": self._unknown_place,
             "unknown_place_asks": self.unknown_place_asks,
+            # Card P2-A. The owner model, from outside.
+            "facts_remembered": self.facts_remembered,
+            "facts_consent_asks": self.facts_consent_asks,
+            "facts_refused": self.facts_refused,
+            "facts_forgotten": self.facts_forgotten,
             "last": dict(self.calls[-1]) if self.calls else None,
         }
 
@@ -876,6 +1039,14 @@ class RealtimeToolBroker:
             return self._get_status()
         if name == TOOL_RECALL_MEMORY:
             return self._recall(payload)
+        # Card P2-A. Beside the other two read-only tools and above every motion
+        # branch, because it is one: nothing here reaches a door that can move
+        # the body, and the R11 provenance gate above has already let it past on
+        # the same grounds it lets ``get_status`` past. A robot that may not
+        # answer a question while it is stopped is a worse robot, and the same
+        # argument applies to a robot that may not be told to forget something.
+        if name == TOOL_REMEMBER_FACT:
+            return self._remember_fact(payload)
         if name == TOOL_PLAY_GESTURE:
             result = self._play_gesture(payload)
         elif name == TOOL_SET_POSE:
@@ -932,6 +1103,191 @@ class RealtimeToolBroker:
             "tool": TOOL_RECALL_MEMORY,
             "detail": found or "nothing recorded about that yet",
             "query": query,
+        }
+
+    # ------------------------------------------------- card P2-A: owner facts
+    def _remember_fact(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        """The model PROPOSES; :mod:`parcel_robot.owner_model.policy` DECIDES.
+
+        HLD §8.4's rule, as code rather than as a prompt line. The order below
+        is the guarantee and it is worth reading in order:
+
+        1. the argument is parsed,
+        2. the supervisor is asked (this is a tool like any other),
+        3. **the policy rules on the text**, and only then
+        4. a door is touched, with the verdict passed to it rather than
+           re-derived.
+
+        Nothing between 3 and 4 can turn a ``refuse`` into a write, because 4
+        never runs on a refusal. And the detail the model reads always contains
+        the policy's own reason, so the sentence the owner hears is the sentence
+        the rule actually says — the model is not left to invent an explanation
+        for a decision it did not make.
+        """
+
+        action = _enum(payload.get("action"), FACT_ACTIONS, default=FACT_ACTION_REMEMBER)
+        allowed = self._validated(
+            ToolCall(TOOL_REMEMBER_FACT, {"action": action}), TOOL_REMEMBER_FACT
+        )
+        if allowed is not None:
+            return allowed
+
+        if action == FACT_ACTION_LIST:
+            return self._list_facts()
+        if action == FACT_ACTION_FORGET:
+            return self._forget_fact(payload)
+
+        try:
+            fact = _text(payload, "fact")
+        except ValueError as error:
+            return _refused(TOOL_REMEMBER_FACT, str(error))
+
+        decision = owner_policy.decide(fact)
+        key = " ".join(str(payload.get("key") or "").split()) or _fact_key(fact)
+
+        if decision.disposition == owner_policy.DISPOSITION_REFUSE:
+            # Card P2-A, post-verification. THE KEY IS PART OF THE PAYLOAD.
+            #
+            # ``_fact_key`` derives a slug from the fact text, so
+            # "their wifi password is hunter2" became ``wifi_password_hunter2``
+            # — and that string was then echoed back to the model inside the
+            # refusal, which is the model reading the credential out loud in the
+            # course of being told the credential may not be stored. A key the
+            # model supplied can carry it too. So on a REFUSE the derived and
+            # supplied keys are both discarded and the key is rebuilt from the
+            # policy's ``matched`` terms alone, which are drawn from the closed
+            # :data:`~parcel_robot.owner_model.policy.SECRET_TERMS` list and
+            # therefore cannot contain anything the owner said.
+            key = _redacted_key(decision)
+            self.facts_refused += 1
+            body = _refused(TOOL_REMEMBER_FACT, f"not storing that: {decision.reason}")
+            body.update(
+                {
+                    "action": action,
+                    # ``fact`` is NOT echoed on this arm, and the omission is the
+                    # point. Every other arm returns it so the model can confirm
+                    # exactly what was stored; here there is nothing to confirm,
+                    # and repeating the value would put the credential back into
+                    # the one surface this arm exists to keep it out of. The
+                    # model sent the text and still has it — what it needs back
+                    # is the verdict and the reason, which are both here.
+                    "fact_chars": len(fact),
+                    "key": key,
+                    "stored": False,
+                    **decision.as_dict(),
+                }
+            )
+            return body
+
+        try:
+            written = dict(self._doors.remember_fact(key, fact, decision))
+        except (KeyError, RuntimeError, TypeError, ValueError) as error:
+            return _refused(TOOL_REMEMBER_FACT, f"the fact store is unavailable: {error}")
+
+        if decision.disposition == owner_policy.DISPOSITION_ASK:
+            self.facts_consent_asks += 1
+            return {
+                "status": STATUS_CONSENT_REQUIRED,
+                "tool": TOOL_REMEMBER_FACT,
+                "detail": (
+                    f"not keeping that yet — {decision.reason}. Say back what it is "
+                    "and ask the owner whether they want it remembered"
+                ),
+                "action": action,
+                "fact": fact,
+                "key": key,
+                # False is the honest answer to the question the model is asking.
+                # A row EXISTS (pending), which is why "yes" has something to
+                # point at, but nothing about the owner has been kept: it will
+                # never render, never be listed, and never be spoken.
+                "stored": False,
+                "row_id": written.get("id"),
+                **decision.as_dict(),
+            }
+
+        self.facts_remembered += 1
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_REMEMBER_FACT,
+            # The stored VALUE is in the detail on purpose. R15's lesson applied
+            # to a write: the model narrates what it is handed, so handing it the
+            # exact text that went into the table is what makes "I've remembered
+            # that your sister is called Hana" a true sentence rather than a
+            # plausible one.
+            "detail": f"remembered: {fact}",
+            "action": action,
+            "fact": fact,
+            "key": key,
+            "stored": True,
+            "row_id": written.get("id"),
+            **decision.as_dict(),
+        }
+
+    def _forget_fact(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        """"Don't remember that." Always honoured; never asks the policy.
+
+        There is no rule under which the robot keeps a fact the owner told it to
+        drop, so there is nothing here for a policy to decide. A key it does not
+        hold is ``ok`` with ``forgotten: 0`` rather than a refusal — the owner
+        asked for a state, the state now holds, and making them argue with a
+        robot about whether it ever had the fact is not a product.
+        """
+
+        key = " ".join(str(payload.get("key") or "").split())
+        if not key:
+            # The model may have sent the fact text instead of the slug; deriving
+            # the key from it is the same derivation the remember path uses, so
+            # a round trip through both without an explicit key still lines up.
+            key = _fact_key(str(payload.get("fact") or ""))
+        if not key:
+            return _refused(
+                TOOL_REMEMBER_FACT, "say which fact to forget (its key, or the fact itself)"
+            )
+        try:
+            result = dict(self._doors.forget_fact(key))
+        except (KeyError, RuntimeError, TypeError, ValueError) as error:
+            return _refused(TOOL_REMEMBER_FACT, f"the fact store is unavailable: {error}")
+        forgotten = int(result.get("forgotten", 0) or 0)
+        self.facts_forgotten += forgotten
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_REMEMBER_FACT,
+            "detail": (
+                f"forgotten: {key}"
+                if forgotten
+                else f"nothing stored under {key!r}, so there was nothing to forget"
+            ),
+            "action": FACT_ACTION_FORGET,
+            "key": key,
+            "forgotten": forgotten,
+        }
+
+    def _list_facts(self) -> dict[str, object]:
+        """"What do you know about me" — answered from the table.
+
+        The door returns ONLY consented, live rows (the runtime filters, and
+        :func:`~parcel_robot.owner_model.notes.owner_notes_from_facts` filters
+        again inside the renderer). Pending and denied facts are not mentioned,
+        not counted, and not hinted at: "I know three things and I'm not
+        allowed to tell you one of them" is a disclosure of the thing itself.
+        """
+
+        try:
+            rows = [str(item) for item in self._doors.known_facts()]
+        except (KeyError, RuntimeError, TypeError, ValueError) as error:
+            return _refused(TOOL_REMEMBER_FACT, f"the fact store is unavailable: {error}")
+        clean = [" ".join(row.split()) for row in rows if str(row).strip()]
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_REMEMBER_FACT,
+            "detail": (
+                "; ".join(clean)
+                if clean
+                else "nothing kept about the owner yet — say so plainly"
+            ),
+            "action": FACT_ACTION_LIST,
+            "facts": clean,
+            "count": len(clean),
         }
 
     def _play_gesture(self, payload: Mapping[str, Any]) -> dict[str, object]:
@@ -1373,6 +1729,72 @@ def _enum(value: object, allowed: Sequence[str], *, default: str) -> str:
         return default
     clean = " ".join(value.split()).lower()
     return clean if clean in tuple(allowed) else default
+
+
+#: Card P2-A. Words that carry no identity, dropped when a key is derived from
+#: the fact text. Short and closed rather than a general stopword list: the key
+#: only has to be STABLE (so a second statement about the same subject replaces
+#: the first) and READABLE in a panel, not linguistically principled.
+_FACT_KEY_SKIP: frozenset[str] = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "in",
+        "is",
+        "it",
+        "of",
+        "on",
+        "or",
+        "that",
+        "the",
+        "their",
+        "they",
+        "them",
+        "to",
+        "with",
+    }
+)
+
+#: How many content words a derived key keeps. Three is enough to separate
+#: "sister called" from "brother called" and short enough to read.
+_FACT_KEY_WORDS = 3
+
+
+def _fact_key(fact: str) -> str:
+    """A stable slug for a fact the model did not name.
+
+    The model is ASKED for a key and often will not send one. Deriving it here
+    rather than storing an anonymous row is what makes the upsert work at all:
+    without a key, "their sister is called Hana" and a later correction to
+    "their sister is called Hanna" are two facts, and the robot believes both.
+    """
+
+    words = [
+        word
+        for word in "".join(
+            ch if ch.isalnum() else " " for ch in str(fact or "").lower()
+        ).split()
+        if word not in _FACT_KEY_SKIP
+    ]
+    return "_".join(words[:_FACT_KEY_WORDS])
+
+
+def _redacted_key(decision: object) -> str:
+    """A key for a refused fact, built ONLY from the policy's own vocabulary.
+
+    Never from the owner's text. ``matched`` is a subset of the policy's closed
+    term lists, so the worst this can return is the name of the category of
+    thing that was refused — ``password``, ``pin`` — which is exactly what the
+    model needs to say and contains none of what it must not.
+    """
+
+    matched = tuple(str(word) for word in getattr(decision, "matched", ()) if str(word).strip())
+    return "_".join(sorted(set(matched))[:_FACT_KEY_WORDS]) or "redacted"
 
 
 def _revolutions(value: object) -> float:

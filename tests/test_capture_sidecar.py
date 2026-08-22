@@ -1198,15 +1198,54 @@ def test_read_sidecar_refuses_anything_that_is_not_an_object(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_this_host_has_none_of_the_live_capture_dependencies(tmp_path):
-    """A measured claim, and the strongest motion guarantee the project has."""
+def test_no_live_reader_can_run_here_and_the_report_says_which_half_is_missing(tmp_path):
+    """A measured claim, re-cut by card ENV-1 — and still the motion guarantee.
 
-    for name in ("rclpy", "cyclonedds", "unitree_sdk2py", "pyrealsense2", "cv2", "mcap"):
+    Was ``test_this_host_has_none_of_the_live_capture_dependencies``, which
+    asserted six modules were absent. The premise died on 2026-08-22 when P1-A
+    installed ``pyrealsense2`` and ``opencv-python-headless`` into ``.parcel``
+    for the desk-camera venue. The claim worth making does not depend on that
+    afternoon's ``pip list``:
+
+    * the SDKs that can COMMAND the dog stay absent — that is the guarantee,
+      and it is unchanged;
+    * every live reader still refuses on this host; and
+    * the refusal names WHICH half is missing, the module or the device, because
+      "install the SDK" and "plug the camera in" are different instructions and
+      an operator handed the wrong one loses a session morning.
+    """
+
+    for name in ("rclpy", "cyclonedds", "unitree_sdk2py", "mcap"):
         assert not module_available(name), f"{name} must not be installed in this venv"
 
     missing = missing_dependencies(CHANNELS)
     assert missing, "on this box every transported channel is unavailable"
     assert "unitree_sdk2py" in {name for names in missing.values() for name in names}
+
+    from scripts.parcel_capture.ingest import LIVE_ADAPTERS, DevicePresence
+
+    states: dict[str, str] = {}
+    for factory in LIVE_ADAPTERS:
+        adapter = factory()
+        dependency = adapter.dependency_report()
+        device = adapter.device_report()
+        if not dependency.satisfied:
+            assert dependency.missing and dependency.remedy
+            states[adapter.adapter_name] = "module_absent"
+            continue
+        # The module is here. Something else must still be missing, or this
+        # host could read a live sensor — and it has none attached.
+        assert device.presence is DevicePresence.ABSENT, (
+            f"{adapter.adapter_name}: module present AND device present — this host "
+            f"has hardware attached and cannot measure the hardwareless invariant"
+        )
+        assert device.remedy, "a device refusal with no remedy is one nobody can act on"
+        states[adapter.adapter_name] = "device_absent"
+
+    assert set(states) == {"dds", "realsense", "l2"}
+    # And the two reasons are actually distinguished, not collapsed into one.
+    assert states["dds"] == "module_absent"
+    assert states["realsense"] == "device_absent"
 
 
 def test_every_transport_declares_what_a_live_reader_would_need():

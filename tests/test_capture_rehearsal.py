@@ -542,21 +542,44 @@ def test_the_rehearsal_drives_the_real_stack_and_binds_it_together(clean_outcome
     assert clean_outcome.attestation.required_free_bytes is not None
 
 
-def test_no_vendor_sdk_is_reachable_and_none_was_installed():
-    """The motion guarantee, re-measured from inside this card's process."""
+def test_no_motion_sdk_is_reachable_and_an_installed_camera_sdk_reaches_no_device():
+    """The motion guarantee, re-measured — and re-cut by card ENV-1.
+
+    This was ``test_no_vendor_sdk_is_reachable_and_none_was_installed`` and it
+    asserted that seven named modules were all absent. Six of the seven still
+    are, and that is the guarantee worth keeping: the modules that can command
+    the dog are the ones whose absence from ``.parcel`` means no test run can
+    move a robot. ``pyrealsense2`` and ``cv2`` are NOT in that class — they read
+    a camera — and P1-A installed both on 2026-08-22 for the desk-camera venue,
+    with the board's sanction. Asserting they are absent asserted a fact about
+    one afternoon's ``pip list``, not a property of the system.
+
+    So the split is by what the module can DO. The motion SDKs must stay absent.
+    A camera SDK may be present, and the invariant that replaces "it is not
+    installed" is the one that actually protects the rehearsal: **with the wheel
+    installed and no camera attached, the live reader still refuses, by name,
+    and still never gets far enough to import it.**
+    """
 
     import importlib.util
 
-    for name in (
-        "rclpy",
-        "cyclonedds",
-        "unitree_sdk2py",
-        "pyrealsense2",
-        "cv2",
-        "mcap",
-        "zstandard",
-    ):
-        assert importlib.util.find_spec(name) is None, f"{name} is installed — it must not be"
+    for name in ("rclpy", "cyclonedds", "unitree_sdk2py", "unilidar_sdk2", "mcap", "zstandard"):
+        assert importlib.util.find_spec(name) is None, (
+            f"{name} can command or decode the dog and must not be installed in .parcel/"
+        )
+
+    from scripts.parcel_capture.ingest import DevicePresence, RealSenseIngest
+
+    adapter = RealSenseIngest()
+    if importlib.util.find_spec("pyrealsense2") is None:
+        # A host that never got P1-A's install: the module arm is the refusal.
+        assert not adapter.dependency_report().satisfied
+        return
+
+    assert adapter.dependency_report().satisfied
+    assert adapter.device_report().presence is DevicePresence.ABSENT, (
+        "a camera is attached to this host; the hardwareless arm cannot be measured here"
+    )
 
 
 def test_a_full_rehearsal_never_imports_a_vendor_module(tmp_path):

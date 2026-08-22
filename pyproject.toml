@@ -50,6 +50,37 @@ dev = [
 perception = [
   "onnxruntime-gpu[cuda,cudnn]>=1.28,<2",
 ]
+# Card P1-A: real eyes. The physical camera backends
+# (`camera_channel/backends/{uvc,realsense,recorded}.py`).
+#
+#   .parcel/bin/pip install -e '.[camera]'            # webcam + recorded clips
+#   .parcel/bin/pip install -e '.[camera-realsense]'  # + the D455
+#
+# WHY TWO EXTRAS. `opencv-python-headless` is 40 MB and opens any /dev/video*;
+# `pyrealsense2` is 13 MB of librealsense and is useful only if a RealSense is
+# on the bus. Splitting them means a laptop with a webcam does not carry the
+# D455 stack, and the RECORDED backend — the one CI actually runs — needs
+# neither: it replays a committed clip through numpy alone. That is deliberate,
+# so the contract tests cannot be silently skipped for a missing optional wheel.
+#
+# WHY headless: the repo runs offscreen (EGL, no X). `opencv-python` pulls a Qt
+# GUI stack that is dead weight on a robot and can fight MuJoCo's GL binding.
+#
+# VERSION: >=4.10 is the first release with numpy-2 wheels (numpy>=2 is a base
+# dependency); 5.0.0.93 is what resolves and was installed on this host,
+# 2026-08-22.
+camera = [
+  "opencv-python-headless>=4.10,<6",
+]
+# NOTE, measured 2026-08-22 and contradicting the card's premise: pyrealsense2
+# ships a cp314 wheel (2.58.3.10794-cp314-cp314-manylinux1_x86_64) that imports
+# in this venv. The "Python-3.11 sidecar" the card specified is therefore NOT
+# needed and was not built; see the module docstring of
+# camera_channel/backends/realsense.py for the full reasoning.
+camera-realsense = [
+  "opencv-python-headless>=4.10,<6",
+  "pyrealsense2>=2.55,<3",
+]
 voice = [
   "msgpack>=1.1,<2",
   "sounddevice>=0.5,<1",

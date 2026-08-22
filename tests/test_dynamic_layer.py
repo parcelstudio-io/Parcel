@@ -787,12 +787,37 @@ REACTIVE_SAFETY_PATH = "src/parcel_robot/navigation/reactive_safety.py"
 #:   ``_owner_identity_trusted`` (who counts as the owner). The gate's safety
 #:   decision moved partly into helpers, and a ratchet that watched only the
 #:   caller would have been weaker after this change than before it.
+#: * ``ReactiveSafetyPolicy.__post_init__`` — ``e01bcca9…`` -> ``c228b5f8…``,
+#:   regenerated 2026-08-22 by card P1-E (``scrum/20260822/task_12``) under the
+#:   Wave P0/P1 board directive ("reactive_safety *distances* are config and may
+#:   move; the *semantics* do not") and the P0 verifier's row A-1
+#:   (``scrum/20260822/WAVE_P0_VERIFICATION_FABLE.md``). The ratchet reddened
+#:   unprompted, named this symbol, and the pin was regenerated after reading
+#:   the diff — it was not deleted or worked around.
+#:   **What moved is the SOURCE of one number.** E5's person floor compared the
+#:   configured ``person_stop_m`` against ``DEFAULT_SAFETY_ENVELOPE.person_stop(0.0)``
+#:   — the SHIPPED social zone, 1.2 m — which made the shipped commissioning
+#:   value its own floor: no profile could set an indoor stand-off, and the
+#:   0.7 m overlay P0-A wanted did not relax the robot, it stopped it booting.
+#:   Now the configured value COMMISSIONS the envelope's social zone
+#:   (``SafetyEnvelope.with_person_social_zone``) and the floor underneath is
+#:   the authority's named ``PERSON_SOCIAL_ZONE_FLOOR_M`` (0.68 m = the Go2's
+#:   ISO/TS-15066 stopping distance at cruise). The refusal is unchanged in
+#:   kind — construction-time, fail-closed, naming ``person_stop_m`` AND the
+#:   floor — and the obstacle floor now reads the same injected envelope.
+#:   **``apply_reactive_safety`` is UNCHANGED at ``f52db9c5…`` across this move
+#:   (checked, not assumed), as are ``owner_slow_m``, ``_owner_comfort_band_m``
+#:   and ``_owner_identity_trusted``**: the gate function, the owner band and
+#:   the identity test carry zero AST-normalised change. Only the constructor's
+#:   validation moved. Measurements — including the MOVE-1 owner-standoff arm
+#:   re-run (net displacement 0.31 m -> 0.84 m, zero contact) — are in
+#:   ``scrum/20260822/task_12/P1E_STATUS.md``.
 REACTIVE_SAFETY_PIN: dict[str, str] = {
     "apply_reactive_safety": (
         "f52db9c50cd6efe3958471a87d7f53e7ef3ba7b0038c895422dd0d7a4cf6bded"
     ),
     "ReactiveSafetyPolicy.__post_init__": (
-        "e01bcca941f8b8ed1448a62b066246235682941e8ff94e5c2927de7e8c47684e"
+        "c228b5f85688e7275a1783eecb2821cbdbc058224ab75f055c50cc9607e99dcc"
     ),
     "ReactiveSafetyPolicy.owner_slow_m": (
         "119af4adb6575f21ebbebe929e77e1e29eba3da345a021a69a2f32959e222f0e"

@@ -46,6 +46,66 @@ PROVENANCE_COLUMNS: tuple[tuple[str, str], ...] = (("writer", "TEXT"),)
 #: Every column this class migrates in, in application order.
 MIGRATED_COLUMNS: tuple[tuple[str, str], ...] = REALTIME_COLUMNS + PROVENANCE_COLUMNS
 
+# ===================================================================== card P2-A
+#
+# THE OWNER MODEL: A SECOND TABLE, NOT A SECOND DATABASE.
+#
+# HLD §8.4 asks for four memories with different retention rules, and names the
+# owner profile as "explicit/consented facts with confidence, edit, export, and
+# delete". This is that table. It lives beside ``messages`` in the SAME file for
+# one reason: card R27's owner-store isolation guard is on THIS constructor. A
+# separate ``owner_facts.sqlite3`` would be a second path resolved by a second
+# set of rules, and the whole lesson of R27 is that the second set of rules is
+# the one nobody applies.
+#
+# ``CREATE TABLE IF NOT EXISTS`` and nothing else — no ALTER, no backfill, no
+# touch of ``messages``. Adding this table to the owner's real store changes no
+# existing row and no existing query, exactly like R1's and R27's additive
+# migrations, and a store that never runs the owner's stack never grows it.
+OWNER_FACTS_TABLE = "owner_facts"
+
+#: Where the fact came from. ``owner_stated`` is the owner saying it in so many
+#: words and the model relaying it through ``remember_fact``; ``model_proposed``
+#: is the distiller inferring it from a session. Kept apart because they are not
+#: equally trustworthy and an owner reviewing the table is entitled to know
+#: which is which — HLD §8.4's "a model may propose a memory fact" is a sentence
+#: about provenance before it is a sentence about policy.
+FACT_OWNER_STATED = "owner_stated"
+FACT_MODEL_PROPOSED = "model_proposed"
+FACT_PROVENANCES: frozenset[str] = frozenset({FACT_OWNER_STATED, FACT_MODEL_PROPOSED})
+
+#: The schema. Written out rather than generated so a worried owner can read it.
+#:
+#: ``deleted_at`` is a SOFT delete and that is a deliberate, arguable choice. A
+#: hard delete would be the stronger privacy promise; a soft delete is the
+#: stronger *audit* promise, and this table's failure mode is a fact appearing
+#: that nobody can account for. The row stops rendering, stops being answered
+#: with, and stops being counted the instant it is deleted (every read in this
+#: class filters on it) — what survives is the record that the robot once
+#: believed it and was told to stop. A hard-delete path is one DELETE away and
+#: is the owner's to ask for; it is not this card's to take unilaterally.
+OWNER_FACTS_DDL = (
+    f"CREATE TABLE IF NOT EXISTS {OWNER_FACTS_TABLE} ("
+    "id INTEGER PRIMARY KEY, "
+    "key TEXT NOT NULL, "
+    "value TEXT NOT NULL, "
+    "category TEXT, "
+    "provenance TEXT NOT NULL, "
+    "consent TEXT NOT NULL, "
+    "confidence REAL NOT NULL DEFAULT 1.0, "
+    "reason TEXT, "
+    "session_id TEXT, "
+    "source_turn_ids TEXT, "
+    "writer TEXT, "
+    "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+    "updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+    "deleted_at TEXT)"
+)
+
+#: The default read cap. Generous — this table is facts, not turns; an owner
+#: with two hundred of them has been talking to the robot for a year.
+OWNER_FACTS_LIMIT = 200
+
 #: Who said it → the role the existing schema already understands. The lane
 #: needs the distinction (a hosted reply is not a local one), but inventing a
 #: new ``role`` value would break ``add()``'s Python-side whitelist and every
@@ -359,6 +419,12 @@ class ConversationMemory:
                 "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"
             )
             self._migrate_columns()
+            # Card P2-A. Additive and idempotent; see OWNER_FACTS_DDL. Inside
+            # the same lock and the same non-read-only arm as the migration
+            # above, so a ``mode=ro`` store never attempts it and a store that
+            # already has the table pays one PRAGMA.
+            self.connection.execute(OWNER_FACTS_DDL)
+            self.connection.commit()
 
     def _migrate_columns(self) -> None:
         """Add the annotation columns to an EXISTING database, once.
@@ -721,6 +787,239 @@ class ConversationMemory:
         # Oldest first: an answer that walks forwards through time reads as a
         # memory, and one that walks backwards reads as a database.
         out.sort(key=lambda item: (item.when is None, item.when or now))
+        return out
+
+    # ------------------------------------------------- card P2-A: owner facts
+    def add_owner_fact(
+        self,
+        *,
+        key: str,
+        value: str,
+        provenance: str,
+        consent: str,
+        category: str | None = None,
+        confidence: float = 1.0,
+        reason: str | None = None,
+        session_id: str | None = None,
+        source_turn_ids: Iterable[int] = (),
+    ) -> int:
+        """Write ONE owner fact. Returns its row id; ``0`` on a read-only store.
+
+        UPSERT BY KEY, AND WHY IT IS NOT AN APPEND. ``messages`` is append-only
+        because a conversation is a sequence of events. A profile is not: when
+        the owner moves house, "they live in Brooklyn" does not join "they live
+        in Manhattan" as a second true thing. So a live row with the same
+        ``key`` is UPDATED in place, its ``updated_at`` moves, and the previous
+        value is gone from the profile. The event that changed it is still in
+        ``messages``, which is where the history belongs.
+
+        THE CONSENT STATE IS NOT VALIDATED AGAINST THE PROVENANCE, deliberately.
+        An ``owner_stated`` fact can be ``pending`` (the owner said something
+        the policy wants to ask about) and a ``model_proposed`` one can be
+        ``granted`` (the policy admitted it outright). Coupling them would
+        encode a rule neither the card nor HLD §8.4 states.
+
+        Card R27: ``writer`` is stamped from the same resolved decision every
+        ``messages`` row carries, so a stray fact written by a test process is
+        as visible here as a stray turn is there.
+        """
+
+        clean_key = "_".join(str(key).strip().lower().split())
+        clean_value = " ".join(str(value).split())
+        if not clean_key:
+            raise ValueError("owner fact key must be non-empty")
+        if not clean_value:
+            raise ValueError("owner fact value must be non-empty")
+        if str(provenance) not in FACT_PROVENANCES:
+            raise ValueError(
+                f"unsupported owner-fact provenance: {provenance!r} "
+                f"(expected one of {sorted(FACT_PROVENANCES)})"
+            )
+        if self.read_only:
+            # The store itself would raise, and the caller is a background
+            # distillation pass that must not take a turn down with it. Zero is
+            # the honest answer: no row exists.
+            return 0
+        ids = ",".join(str(int(i)) for i in source_turn_ids)
+        with self._lock:
+            existing = self.connection.execute(
+                f"SELECT id FROM {OWNER_FACTS_TABLE} "
+                "WHERE key = ? AND deleted_at IS NULL ORDER BY id DESC LIMIT 1",
+                (clean_key,),
+            ).fetchone()
+            if existing is not None:
+                row_id = int(existing[0])
+                self.connection.execute(
+                    f"UPDATE {OWNER_FACTS_TABLE} SET value = ?, category = ?, "
+                    "provenance = ?, consent = ?, confidence = ?, reason = ?, "
+                    "session_id = ?, source_turn_ids = ?, writer = ?, "
+                    "updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                    (
+                        clean_value,
+                        category,
+                        str(provenance),
+                        str(consent),
+                        float(confidence),
+                        reason,
+                        session_id,
+                        ids,
+                        self.writer,
+                        row_id,
+                    ),
+                )
+                self.connection.commit()
+                return row_id
+            cursor = self.connection.execute(
+                f"INSERT INTO {OWNER_FACTS_TABLE} "
+                "(key, value, category, provenance, consent, confidence, reason, "
+                "session_id, source_turn_ids, writer) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    clean_key,
+                    clean_value,
+                    category,
+                    str(provenance),
+                    str(consent),
+                    float(confidence),
+                    reason,
+                    session_id,
+                    ids,
+                    self.writer,
+                ),
+            )
+            self.connection.commit()
+            return int(cursor.lastrowid or 0)
+
+    def owner_facts(
+        self,
+        *,
+        consent: str | None = None,
+        include_deleted: bool = False,
+        limit: int = OWNER_FACTS_LIMIT,
+    ) -> list[dict[str, object]]:
+        """Owner facts, newest-updated first. Soft-deleted rows excluded.
+
+        ``consent=None`` returns EVERY consent state, which is what the owner's
+        own review path wants ("show me what you have, including what you are
+        waiting to ask about"). The render and answer paths pass
+        ``consent='granted'`` — and
+        :func:`~parcel_robot.owner_model.notes.owner_notes_from_facts` filters
+        again on top of that, because a consent boundary with exactly one
+        enforcement point is a consent boundary one refactor from being gone.
+
+        Newest-updated first so the caller's cap keeps the recent facts.
+        """
+
+        query = (
+            "SELECT id, key, value, category, provenance, consent, confidence, "
+            "reason, session_id, source_turn_ids, writer, created_at, updated_at, "
+            f"deleted_at FROM {OWNER_FACTS_TABLE}"
+        )
+        clauses: list[str] = []
+        params: list[object] = []
+        if not include_deleted:
+            clauses.append("deleted_at IS NULL")
+        if consent is not None:
+            clauses.append("consent = ?")
+            params.append(str(consent))
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        query += " ORDER BY updated_at DESC, id DESC LIMIT ?"
+        params.append(int(limit))
+        with self._lock:
+            rows = self.connection.execute(query, tuple(params)).fetchall()
+        fields = (
+            "id",
+            "key",
+            "value",
+            "category",
+            "provenance",
+            "consent",
+            "confidence",
+            "reason",
+            "session_id",
+            "source_turn_ids",
+            "writer",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+        )
+        return [dict(zip(fields, row, strict=True)) for row in rows]
+
+    def set_owner_fact_consent(self, key: str, consent: str) -> int:
+        """Move a live fact between consent states. Returns rows affected.
+
+        This is the "yes, remember that" path for a row the policy parked as
+        ``pending``, and the "no, forget it" path that stops short of deleting.
+        """
+
+        clean_key = "_".join(str(key).strip().lower().split())
+        if not clean_key or self.read_only:
+            return 0
+        with self._lock:
+            cursor = self.connection.execute(
+                f"UPDATE {OWNER_FACTS_TABLE} SET consent = ?, "
+                "updated_at = CURRENT_TIMESTAMP WHERE key = ? AND deleted_at IS NULL",
+                (str(consent), clean_key),
+            )
+            self.connection.commit()
+            return int(cursor.rowcount or 0)
+
+    def forget_owner_fact(self, key: str) -> int:
+        """"Don't remember that." Soft delete; returns rows affected.
+
+        The row stays on disk (see :data:`OWNER_FACTS_DDL`) and stops existing
+        for every reader in this class the moment ``deleted_at`` is set. Probe
+        row 3 is the property that matters: the very next session must not carry
+        it into the developer instruction.
+        """
+
+        clean_key = "_".join(str(key).strip().lower().split())
+        if not clean_key or self.read_only:
+            return 0
+        with self._lock:
+            cursor = self.connection.execute(
+                f"UPDATE {OWNER_FACTS_TABLE} SET deleted_at = CURRENT_TIMESTAMP, "
+                "updated_at = CURRENT_TIMESTAMP WHERE key = ? AND deleted_at IS NULL",
+                (clean_key,),
+            )
+            self.connection.commit()
+            return int(cursor.rowcount or 0)
+
+    def ledger_tail(self, *, limit: int = 200) -> list[dict[str, object]]:
+        """Card P2-A work item 4 — the FULL ledger, both lanes, oldest last.
+
+        :meth:`realtime_turns` filters ``speaker IS NOT NULL``, so the session
+        the lane opens has only ever inherited hosted turns — the 2,618 legacy
+        rows the owner typed into the panel and spoke to the local voice agent
+        have never once been replayed to the hosted model. That filter is right
+        for its own job (a local typed turn must not be replayed as if the
+        HOSTED agent had said it) and wrong for this one, because the question
+        the session-open replay answers is "what have we said to each other",
+        not "what did you say on this API".
+
+        So this reuses :meth:`conversation_turns`, which recovers ``speaker``
+        from ``role`` for the pre-R1 rows and drops the ``system`` bookkeeping,
+        and maps it back onto the ``role``/``content`` shape the lane sends.
+        Deduping is the LANE's job, not this one's: the lane knows what it has
+        already injected in this session and this does not.
+        """
+
+        rows = self.conversation_turns(limit=max(1, int(limit)))
+        out: list[dict[str, object]] = []
+        for row in reversed(rows):  # conversation_turns is newest-first
+            role = _SPEAKER_ROLES.get(str(row.get("speaker") or ""), "")
+            if role not in {"user", "assistant"}:
+                continue
+            out.append(
+                {
+                    "id": row.get("id"),
+                    "role": role,
+                    "content": row.get("content"),
+                    "speaker": row.get("speaker"),
+                    "origin": row.get("origin"),
+                }
+            )
         return out
 
 

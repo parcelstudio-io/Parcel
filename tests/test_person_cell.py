@@ -130,9 +130,15 @@ def test_person_stop_10_counterfactual_is_labelled_derived_not_run() -> None:
     assert row["label"] == "derived-not-run"
     assert row["predictive_stop_m"] == pytest.approx(1.1020, abs=1e-6)
     assert row["gate_vetoes"] is False  # the old arm passes this tick
-    # And it is unrunnable, which is WHY it is derived.
+    # It was unrunnable when this row was derived, which is WHY it is derived.
+    # Card P1-E (2026-08-22) lowered the person floor from the shipped 1.2 m
+    # social zone to the named PERSON_SOCIAL_ZONE_FLOOR_M (0.68 m), so 1.0 IS
+    # constructible now. The row stays labelled "derived-not-run" because it
+    # was never run, not because it could not be; what is re-pinned here is the
+    # floor that does still refuse.
+    assert ReactiveSafetyPolicy(person_stop_m=1.0).person_stop_m == 1.0
     with pytest.raises(ValueError, match="person_stop_m must not undercut"):
-        ReactiveSafetyPolicy(person_stop_m=1.0)
+        ReactiveSafetyPolicy(person_stop_m=0.6)
     # The shipped value vetoes the same geometry at cruise.
     shipped = derived_person_stop_row(
         policy.person_stop_m, D15_CLEARANCE_M, reaction_time_s=policy.reaction_time_s

@@ -43,6 +43,13 @@ Stack options:
   --profile NAME     Select the config profile configs/robot.NAME.yaml. Exported
                      as PARCEL_PROFILE, so the panel and the simulator resolve
                      the same overlay without either learning a new flag.
+  --camera KIND      Card P1-A. Select a REAL camera venue: uvc (any USB
+                     webcam), realsense (D455 RGB + aligned depth) or recorded
+                     (replay a committed clip). Exported as
+                     PARCEL_CAMERA_BACKEND, and it also starts/reuses the
+                     out-of-process detector daemon, because a camera with no
+                     detector is a stream nothing reads. Absent = today's
+                     behaviour exactly: the MuJoCo/EGL venue, no daemon.
   --dry-run          Print the resolved profile, overlay and realtime config,
                      then exit 0 without starting or contacting anything.
   --fish             Also start/reuse Fish Audio S2 Pro on port 8091
@@ -73,6 +80,14 @@ Environment equivalents:
                              wins over this when it exists, and says so.)
   PARCEL_PROFILE=<name>      (default unset = the shipped configuration; same
                              effect as --profile <name>)
+  PARCEL_CAMERA_BACKEND=uvc|realsense|recorded
+                             (default unset = the simulated venue; same effect
+                             as --camera <kind>)
+  PARCEL_CAMERA_CONFIG=<path> (JSON/YAML describing the attached camera:
+                             intrinsics, mount, depth band, clip path. Optional;
+                             documented in camera_channel/backends/physical.py)
+  PARCEL_PERCEPTION_SOCKET=<path> (the detector daemon's AF_UNIX socket;
+                             default $XDG_RUNTIME_DIR/parcel_perception.sock)
 
 Services that were already healthy are reused and are not stopped on exit.
 Only processes started by this invocation are cleaned up.
@@ -136,6 +151,9 @@ PANEL_LLM_ARG=0
 # Card P0-A. Empty = the shipped configuration and today's behaviour exactly.
 PROFILE="${PARCEL_PROFILE:-}"
 DRY_RUN=0
+# Card P1-A. Empty = the simulated venue, exactly as before this card: no
+# physical backend is constructed and no detector daemon is started.
+CAMERA="${PARCEL_CAMERA_BACKEND:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -153,6 +171,12 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --profile=*) PROFILE="${1#*=}"; shift ;;
+    --camera)
+      [[ $# -ge 2 && -n "${2:-}" ]] || die "--camera requires a value (uvc|realsense|recorded)"
+      CAMERA="$2"
+      shift 2
+      ;;
+    --camera=*) CAMERA="${1#*=}"; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     --llm)
       ENABLE_REASONER=1
@@ -194,6 +218,34 @@ if [[ -n "$PROFILE" ]]; then
   echo "Config profile: $PROFILE ($ROBOT_OVERLAY deep-merged over configs/robot.yaml)"
 fi
 
+# Card P1-A — resolve the camera venue next to the profile, and for the same
+# reason: the panel and the simulator are separate processes that never see
+# these flags, so the decision has to become an exported environment fact
+# before anything starts. An unknown kind is a typo at the command line and is
+# refused BY NAME — coming up on the simulated venue when the operator asked
+# for the desk camera is the one outcome that must not be possible, because
+# both look identical in the panel.
+#
+# One spelling, deliberately: PARCEL_CAMERA_BACKEND is read by
+# camera_channel/backends/physical.py:resolve_backend_kind and by nothing else.
+# The card forbids a fourth camera flag and this does not add one — it selects
+# the VENUE, while P0-A's perception.camera_ingress / PARCEL_CAMERA_INGRESS
+# still decide whether the eye runs at all.
+PERCEPTION_SOCKET="${PARCEL_PERCEPTION_SOCKET:-}"
+if [[ -n "$CAMERA" ]]; then
+  case "$CAMERA" in
+    uvc|realsense|recorded) ;;
+    *) die "invalid --camera value: $CAMERA (expected uvc, realsense or recorded)" ;;
+  esac
+  export PARCEL_CAMERA_BACKEND="$CAMERA"
+  echo "Camera venue: $CAMERA (PARCEL_CAMERA_BACKEND=$CAMERA)"
+  if [[ -n "${PARCEL_CAMERA_CONFIG:-}" ]]; then
+    [[ -f "$PARCEL_CAMERA_CONFIG" ]] || die \
+      "PARCEL_CAMERA_CONFIG=$PARCEL_CAMERA_CONFIG does not exist"
+    echo "Camera config: $PARCEL_CAMERA_CONFIG"
+  fi
+fi
+
 if (( DRY_RUN )); then
   select_realtime_yaml
   echo "profile=${PROFILE:--}"
@@ -202,6 +254,9 @@ if (( DRY_RUN )); then
   echo "realtime_config=$REALTIME_YAML"
   echo "realtime_config_source=$REALTIME_YAML_SOURCE"
   echo "realtime_enabled=$ENABLE_REALTIME"
+  echo "camera=${CAMERA:--}"
+  echo "camera_config=${PARCEL_CAMERA_CONFIG:--}"
+  echo "perception_socket=${PERCEPTION_SOCKET:--}"
   echo "dry run: nothing started, no credential read"
   exit 0
 fi
@@ -422,6 +477,31 @@ if is_true "$ENABLE_FISH"; then
     FISH_PID="${OWNED_PIDS[${#OWNED_PIDS[@]}-1]}"
     wait_for_http "$FISH_HEALTH" "$FISH_PID" "Fish Speech S2 Pro" 300 "$FISH_API_KEY" || exit 1
   fi
+fi
+
+# Card P1-A — the detector daemon, only when a real camera venue was selected.
+#
+# It is started through its own launcher, which REUSES a daemon that already
+# answers a health probe instead of restarting it: this tree is shared, and the
+# socket may belong to the owner's live stack. The daemon is deliberately NOT
+# registered in OWNED_PIDS — like the reasoner and Fish, a service that was
+# healthy before this invocation is not stopped by it, and a daemon started
+# here outlives one panel session on purpose (a restart of the panel must not
+# cost a cold 200 MB ORT session). Stop it explicitly:
+#   scripts/launch_detector_daemon.sh --stop
+if [[ -n "$CAMERA" ]]; then
+  [[ -x "$ROOT/scripts/launch_detector_daemon.sh" ]] || die \
+    "missing executable script: $ROOT/scripts/launch_detector_daemon.sh"
+  DAEMON_ARGS=(--background --preload)
+  [[ -n "$PERCEPTION_SOCKET" ]] && DAEMON_ARGS+=(--socket "$PERCEPTION_SOCKET")
+  if ! "$ROOT/scripts/launch_detector_daemon.sh" "${DAEMON_ARGS[@]}"; then
+    die "--camera $CAMERA was requested but the detector daemon did not come up;
+       a camera venue with no detector is a stream nothing reads. Start it by
+       hand to see why: scripts/launch_detector_daemon.sh --preload"
+  fi
+  export PARCEL_PERCEPTION_SOCKET="${PERCEPTION_SOCKET:-$("$PYTHON" -c \
+    'from parcel_robot.perception_daemon import default_socket_path; print(default_socket_path())')}"
+  echo "Detector daemon socket: $PARCEL_PERCEPTION_SOCKET"
 fi
 
 echo "Model services ready; starting simulator and browser control deck."

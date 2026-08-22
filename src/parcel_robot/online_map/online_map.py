@@ -76,6 +76,7 @@ from .entries import (
     WriterProvenance,
     label_tokens,
     normalize_label,
+    origins_conflict,
 )
 from .hygiene import (
     NOTE_OK,
@@ -461,6 +462,28 @@ class OnlineSemanticMap:
             "refused_hygiene": self._refused_hygiene,
             "fuse_radius_m": self._fuse_radius_m,
             "store": None if self._store is None else self._store.path,
+            # Card P1-B. The three facts that separate "the map has rows" from
+            # "the map learned something", published where an operator and a
+            # status doc read the same number:
+            #   embedded  — entries carrying a REAL vector with its space stamp,
+            #               not the 8-dim label hash the ingress used to fall
+            #               back to (the fallback IS a valid embedding, so the
+            #               only honest test is the stamp, not the presence);
+            #   thumbnails— entries that could be re-embedded after a model
+            #               upgrade (AU-C2-1's whole point);
+            #   relief    — entries where the planarity defence actually
+            #               MEASURED something instead of reporting
+            #               ``relief_unverified``.
+            "origin": self._provenance.origin,
+            "entries_embedded": sum(
+                1 for e in self._entries.values() if e.embedding_stamp is not None
+            ),
+            "entries_with_thumbnail": sum(
+                1 for e in self._entries.values() if e.thumbnail
+            ),
+            "entries_relief_measured": sum(
+                1 for e in self._entries.values() if e.relief_m is not None
+            ),
         }
 
     # -- ingest ------------------------------------------------------------
@@ -542,6 +565,7 @@ class OnlineSemanticMap:
 
         if not isinstance(observation, MapObservation):
             raise TypeError("observe() takes a MapObservation")
+        self._refuse_foreign_origin(observation)
         self._observations_seen += 1
 
         verdict = screen_observation(
@@ -601,6 +625,29 @@ class OnlineSemanticMap:
             entry_id=entry.entry_id,
             created=created,
             hygiene=verdict,
+        )
+
+    def _refuse_foreign_origin(self, obs: MapObservation) -> None:
+        """Card P1-B. A map is one world; refuse the frame, not the store.
+
+        :meth:`OnlineMapStore.load_all` refuses a store that is ALREADY mixed.
+        This is the other end of the same invariant and it is the useful one:
+        it fires on the observation that would have made the store mixed, in
+        the process that fed it, naming both origins — instead of leaving the
+        discovery to whoever reloads the file tomorrow.
+
+        ``unknown`` on either side is not a conflict (see
+        :func:`~.entries.origins_conflict`): a fixture that never declared an
+        origin has not claimed anything.
+        """
+
+        if not origins_conflict({self._provenance.origin, obs.provenance.origin}):
+            return
+        raise MapRefused(
+            f"this map's writer is stamped {self._provenance.origin!r} and the "
+            f"observation is stamped {obs.provenance.origin!r}; refusing to fuse "
+            "pixels from two different worlds into one place. Build a second "
+            "map (and a second store) for the second venue."
         )
 
     def _nearest_same_class(self, obs: MapObservation) -> MapEntry | None:
@@ -929,6 +976,10 @@ class OnlineSemanticMap:
                     evidence_frames=entry.evidence_frames,
                     ground_evidence_fraction=ground,
                     similarity=float(cand.score),
+                    # Card P1-D (one line, declared out-of-OWNS): the entry's
+                    # bounded best-view crop rides along so the VLM veto has
+                    # something to look at. The gate never decodes it.
+                    crop_png=entry.thumbnail,
                 )
             )
 
@@ -1101,6 +1152,11 @@ class OnlineSemanticMap:
         written = self._store.save_all(self._entries.values())
         self._store.set_meta("session_id", self._provenance.session_id)
         self._store.set_meta("scene_id", self._provenance.scene_id)
+        # Card P1-B. The store's own answer to "which world is this file?",
+        # written where a reader looks first — ``load_all`` checks the ROWS, so
+        # this meta is a convenience and never the authority.
+        self._store.set_meta("origin", self._provenance.origin)
+        self._store.set_meta("persisted_entries", str(written))
         return written
 
     def reload(self) -> int:
@@ -1121,6 +1177,28 @@ class OnlineSemanticMap:
             entry._points = [(entry.surface_x, entry.surface_y, entry.surface_z)]
             entry._extents = [(entry.extent_w_m, entry.extent_h_m)]
         return len(loaded)
+
+    def close(self) -> None:
+        """Release the store, checkpointing its WAL. Card P1-B.
+
+        Separate from :meth:`persist` on purpose: persisting is a decision
+        (``persist_on_close``) and releasing the file is not. A map whose store
+        is never closed leaves its freshly written rows in ``<store>-wal``
+        until the interpreter exits, so anything that reads the store file
+        during or just after a run — an operator, a copy, a second process —
+        sees a map with fewer places in it than the robot learned.
+
+        Idempotent, and the map keeps its entries: after ``close()`` this is an
+        in-process map that has forgotten only where it used to live, so a
+        caller reading ``entries()`` during teardown still gets an answer.
+        Persisting after closing is a refusal, not a silent no-op.
+        """
+
+        store = self._store
+        if store is None:
+            return
+        self._store = None
+        store.close()
 
 
 __all__ = [

@@ -63,7 +63,7 @@ from parcel_robot.brain.observations import (
 # Card P0-B. The SAME reviewed explicit-affect grammar the legacy voice agent
 # uses (``agent._detect_explicit_affect``), imported rather than re-expressed so
 # the two lanes cannot drift onto different regexes for "I'm feeling sad".
-from parcel_robot.brain.router import explicit_affect_from_text
+from parcel_robot.brain.router import explicit_affect_from_text, lane_affect_from_evidence
 from parcel_robot.brain.runtime_adapter import PAUSABLE_SKILL_CHANNELS
 
 # Card C-1. Pure-python types only: ``ingress`` defers numpy/mujoco/onnxruntime
@@ -160,7 +160,7 @@ from parcel_robot.expression import (
     IdleLayer,
     ReactionHooks,
 )
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory import FACT_OWNER_STATED, ConversationMemory
 from parcel_robot.models import (
     ActionProposal,
     Pose,
@@ -220,6 +220,12 @@ from parcel_robot.observability import (
     latency_ledger_row,
     resolve_latency_ledger_path,
 )
+from parcel_robot.owner_model import (
+    CONSENT_GRANTED,
+    CONSENT_PENDING,
+    known_facts_answer,
+    owner_notes_from_facts,
+)
 from parcel_robot.perception import NullMapProvider, PerceptionContract
 from parcel_robot.pose import (
     POSE_PROVIDER_KEY,
@@ -255,9 +261,10 @@ from parcel_robot.realtime.ingress import (
     matches_spoken_emergency,
 )
 from parcel_robot.realtime.ingress import scan as scan_realtime_transcript
-from parcel_robot.realtime.lane import RealtimeLane, RealtimeLaneError
+from parcel_robot.realtime.lane import MAX_TAIL_ITEMS, RealtimeLane, RealtimeLaneError
 from parcel_robot.realtime.prompting import (
     MAX_HISTORY_LINES,
+    MAX_OWNER_NOTES,
     UNKNOWN_OWNER,
     DeveloperContext,
     InstructionSource,
@@ -270,12 +277,17 @@ from parcel_robot.realtime.spend_ledger import (
 from parcel_robot.realtime.tool_broker import (
     NAVIGATE_DIRECTIVE_TEMPLATE,
     TOOL_RECALL_MEMORY,
+    TOOL_REMEMBER_FACT,
     RealtimeToolBroker,
     ToolDoors,
 )
 from parcel_robot.realtime.voice_identity import (
+    VOICE_LABEL_KIND,
+    SpeakerLabel,
     VoiceArmingDecision,
     VoiceIdentityGate,
+    speaker_label,
+    unenrolled_label,
 )
 from parcel_robot.realtime.voice_identity import gate_decision as voice_gate_decision
 from parcel_robot.realtime.voice_identity import rejection_fact as voice_rejection_fact
@@ -285,6 +297,10 @@ from parcel_robot.realtime.whisperer import (
     KIND_MISSION_ENDED,
     KIND_REFUSAL,
     KIND_VOICE_REJECTED,
+    OWNER_SOURCE_MOCAP,
+    OWNER_SOURCE_PIXELS,
+    OwnerEventWatcher,
+    OwnerPresence,
     StateDigest,
     StateEvent,
     Whisperer,
@@ -394,6 +410,21 @@ MISSION_LOG_BLOCKED_MAX = MISSION_LOG_MAX // 2
 #: whisperer is the 8 s block debounce, so a second of resolution is ample and a
 #: 10 Hz digest would only fill its decision ring with duplicates.
 WHISPERER_TICK_INTERVAL_S = 1.0
+#: Card P2-B. How many affect observations the in-process history keeps. The
+#: ledger is the durable record; this ring is the index P2-A's distiller reads
+#: through :meth:`RobotRuntime.affect_history`, and it is bounded because a
+#: companion that runs for a month must not grow a list for a month.
+AFFECT_HISTORY_MAX = 200
+#: Card P2-B. How many identity labels the in-process history keeps. The
+#: COUNTERS beside it (`_ledger_rows_written` / `_ledger_rows_labelled`) are
+#: cumulative and un-evictable, so "every row carried a verdict" stays provable
+#: after the ring has rolled.
+SPEAKER_LABEL_HISTORY_MAX = 400
+#: Card P2-B. The two ledger speakers that are a CONVERSATION. ``system`` rows
+#: are the product's own bookkeeping and do not count as company — the same
+#: distinction ``mirror_realtime_chat`` already draws for the chat pane, named
+#: once here so the two cannot drift.
+REALTIME_CONVERSATIONAL_SPEAKERS: frozenset[str] = frozenset({"owner", "robot"})
 #: Card R19, mechanism D. The status
 #: :meth:`~parcel_robot.core.activities.ActivityCoordinator._expire` stamps on a
 #: proposal that sat in the queue past its TTL. Named here rather than in
@@ -1175,6 +1206,20 @@ class _RealtimeLedgerMirror:
         provider_item_id: str | None = None,
     ) -> int:
         row = 0
+        # Card P2-B, deliverable 1. The ROBOT's half of every hosted turn is
+        # written here and not through ``RobotRuntime._write_realtime_ledger``,
+        # so "every ledger row carries an identity label" needs the stamp at
+        # both doors or it is a claim about half the conversation. Guarded by
+        # the same rule as everything else in this class: bookkeeping may never
+        # cost a turn.
+        try:
+            self._runtime._stamp_speaker_label(
+                speaker, session_id=session_id, item_id=provider_item_id
+            )
+            if str(speaker) in REALTIME_CONVERSATIONAL_SPEAKERS:
+                self._runtime.note_realtime_turn()
+        except Exception:  # noqa: BLE001,S110 - a label may never end a turn
+            pass
         try:
             row = self._runtime.agent.memory.write_realtime_turn(
                 session_id=session_id,
@@ -1508,6 +1553,25 @@ class RobotRuntime:
         self._camera_ingress: Any = None
         camera_ingress_cfg = self.store.section("camera_ingress")
         self._camera_ingress_config_enabled = bool(camera_ingress_cfg.get("enabled", False))
+        # ---- CARD P1-B state: the camera -> online-map writer ----------
+        # All ``None``/zero here; ``_p1b_install_learned_map`` (own region,
+        # near ``_attach_configured_camera_ingress``) is the only thing that
+        # populates them, and only off-oracle. Declared in __init__ so every
+        # accessor is safe on a runtime whose start() never ran.
+        self._p1b_learned_map: Any = None
+        self._p1b_map_lock = threading.Lock()
+        self._p1b_map_settings_cache: dict[str, Any] = {}
+        self._p1b_map_store_note = ""
+        self._p1b_visit_id = "runtime"
+        self._p1b_frames_ingested = 0
+        self._p1b_observations = 0
+        self._p1b_refused = 0
+        self._p1b_errors = 0
+        self._p1b_last_error: str | None = None
+        self._p1b_map_reloaded = 0
+        self._p1b_persisted = 0
+        self._p1b_store_closed = False
+        # ---- END CARD P1-B state ---------------------------------------
         # Card C-1 — attach the eye. Card P0-A — ONE CAMERA FLAG.
         #
         # These were two switches that REFUSED EACH OTHER at startup: the legacy
@@ -2354,6 +2418,29 @@ class RobotRuntime:
             config=self.realtime_config.whisperer,
             clock=time.monotonic,
         )
+        #: Card P2-B. WHEN THE DOG SHOULD NOTICE YOU. Built unconditionally for
+        #: the same reason the whisperer above is: it is a pure state machine
+        #: with no thread and no cost, and a build where it can be missing is a
+        #: build where "did the robot decide not to greet me, or was there
+        #: nothing there to decide" has no answer. Its config defaults to
+        #: ``enabled: false``, so a tree that does not ask for owner events
+        #: produces none — not suppressed ones, none.
+        self.realtime_owner_events = OwnerEventWatcher(
+            config=self.realtime_config.whisperer.owner_events,
+            clock=time.monotonic,
+        )
+        #: Card P2-B. The rolling affect history P2-A's distiller may read
+        #: through :meth:`affect_history`. A bounded deque, not a table: the
+        #: LEDGER is the durable record (every affect writes an ``[affect …]``
+        #: row through the lane's own writer) and this is the in-process index
+        #: over it, so nothing here is the only copy of anything.
+        self._affect_history: deque[dict[str, object]] = deque(maxlen=AFFECT_HISTORY_MAX)
+        #: Card P2-B. The identity LABEL of every realtime ledger row this
+        #: process has written, and the two counters that make "100 % of rows
+        #: carry a verdict" a measurement rather than a claim.
+        self._speaker_labels: deque[dict[str, object]] = deque(maxlen=SPEAKER_LABEL_HISTORY_MAX)
+        self._ledger_rows_written = 0
+        self._ledger_rows_labelled = 0
         if self.realtime_config.enabled:
             # Card EV-1. Armed BEFORE the lane is built so the session's own
             # construction events are in the record, and only when there IS a
@@ -2394,6 +2481,16 @@ class RobotRuntime:
                     # "unknown" rather than inventing one; wiring a real place
                     # source is an R3 handoff.
                     owner_name=str(agent_config.get("owner_name", UNKNOWN_OWNER)),
+                    # Card P2-A. The ``owner_notes`` block has been rendered by
+                    # the prompt plane since it was built and NEVER provided —
+                    # the 25 sealed corpus fixtures are the only things that
+                    # ever filled it. This is the provider, and it is the whole
+                    # reason the owner-fact table exists: what the robot has
+                    # been told it may keep about its owner, in the model's
+                    # instruction, at every session open. Consented rows only,
+                    # and an empty store renders nothing at all — which is what
+                    # keeps the pinned DI digest and those fixtures valid.
+                    owner_notes=self._realtime_owner_notes,
                     history=lambda: history_digest_from_turns(
                         self.agent.memory.realtime_turns(limit=MAX_HISTORY_LINES * 2)
                     ),
@@ -2413,8 +2510,14 @@ class RobotRuntime:
             # mechanism for read-only conversation tools (safety.py:40-42),
             # which is why ``recall_memory`` validates instead of falling into
             # the fail-closed "Tool is not allowed" arm.
+            # Card P2-A joins ``remember_fact`` to the same exact-name
+            # allowlist, for the same documented reason (safety.py:40-42): it
+            # is a read/write of a TEXT STORE and touches no door that can move
+            # the body, so it must validate rather than fall into the
+            # fail-closed "Tool is not allowed" arm. The supervisor still sees
+            # every call.
             self.agent.safety.information_tools = frozenset(
-                self.agent.safety.information_tools | {TOOL_RECALL_MEMORY}
+                self.agent.safety.information_tools | {TOOL_RECALL_MEMORY, TOOL_REMEMBER_FACT}
             )
             self.realtime_broker = RealtimeToolBroker(
                 ToolDoors(
@@ -2475,6 +2578,17 @@ class RobotRuntime:
                     pose_names=self._realtime_pose_names,
                     on_dispatch=self._realtime_thinking_pose,
                     note=lambda message: self._emit("realtime", message, "info"),
+                    # Card P2-A. The owner-model doors. NOT wrapped in
+                    # ``_gate_by_voice`` or ``_watch_under_latch``, for R21's
+                    # own reason one screen up: these touch no door that can
+                    # move the body, and a robot that stops being able to say
+                    # what it knows — or to be told to forget something — while
+                    # it is stopped is a different and worse product. The
+                    # gating that matters here is the privacy policy, and it
+                    # runs inside the broker before any of these is called.
+                    remember_fact=self._realtime_remember_fact,
+                    forget_fact=self._realtime_forget_fact,
+                    known_facts=self._realtime_known_facts,
                 ),
                 # Card P0-B. Two validated keys the loader has already checked:
                 # the proactive-motion allowlist (empty by default, and it can
@@ -2493,7 +2607,18 @@ class RobotRuntime:
                 # NEVER submit_voice_text: that is the local agent's front door.
                 ingress=self.submit_realtime_transcript,
                 ledger=_RealtimeLedgerMirror(self),
-                memory_tail=lambda: self.agent.memory.realtime_turns(limit=20),
+                # Card P2-A, work item 4. WAS ``realtime_turns(limit=20)``:
+                # twenty rows, hosted lane only. The owner's 2,618 legacy
+                # panel/voice rows — everything they ever typed or said to the
+                # local agent — had never once been replayed into a hosted
+                # session, because ``realtime_turns`` filters ``speaker IS NOT
+                # NULL`` (which is right for its own job and wrong for this
+                # one). ``ledger_tail`` is both lanes, oldest last; the LANE
+                # dedupes and applies ``MAX_TAIL_ITEMS``, because the cap
+                # belongs at the last point before the wire and not in the row
+                # source. The read is bounded here as well so a store that grew
+                # overnight is never fully materialised in memory.
+                memory_tail=lambda: self.agent.memory.ledger_tail(limit=MAX_TAIL_ITEMS * 4),
                 # Card R7. R1.5's sink-ownership law is "two speakers must not
                 # share one ordered queue", and this callable is how the lane is
                 # told the local half is busy. It used to report the local
@@ -4059,6 +4184,16 @@ class RobotRuntime:
             # expensive construction while no loop is turning removes it.
             # The worker simply finds an empty pose mailbox until the loop
             # starts filling it, which costs nothing.
+            #
+            # ---- CARD P1-B seam 1 of 3: install the map BEFORE the eye. ----
+            # Ordering is load-bearing in both directions. The map must exist
+            # before the camera worker publishes its first frame or that frame
+            # is silently dropped; and it must exist before
+            # ``_attach_configured_camera_ingress`` builds the query batch,
+            # because under ``learned_map`` that batch is
+            # ``known_places()`` — the places the RELOADED map already knows —
+            # plus the curiosity list. Off-oracle only; inert by default.
+            self._p1b_install_learned_map()
             self._attach_configured_camera_ingress()
             self._thread = threading.Thread(
                 target=self._control_loop,
@@ -4167,6 +4302,16 @@ class RobotRuntime:
                 except BaseException as error:  # noqa: BLE001 - render teardown must continue
                     auxiliary_error = error
                 self._camera_ingress = None
+            # ---- CARD P1-B seam 3 of 3: persist what the robot learned. ----
+            # AFTER the camera worker is stopped, so no frame can land between
+            # the last ingest and the write, and BEFORE the evidence log closes
+            # so the persist decision is in the record. Never raises; returns 0
+            # when there is no store, and says so in the log rather than
+            # letting a run look like it saved something.
+            try:
+                self._p1b_persist_learned_map()
+            except BaseException as error:  # noqa: BLE001 - teardown must continue
+                auxiliary_error = error
             # Card EV-1. Closed AFTER the lane so the lane's own teardown rows
             # are in the record, and before the rest of teardown so a later
             # failure cannot cost the flush.
@@ -6265,6 +6410,10 @@ class RobotRuntime:
             ledger_text,
             item_id=item_id,
             session_id=session_id,
+            # Card P2-B. The row is labelled with the class it actually was, so
+            # an emergency turn reads ``ungated`` in the record instead of
+            # borrowing whatever verdict the last command turn happened to have.
+            kind=found.kind,
         )
         # Card P0-B, deliverable 5 — AFFECT ON THE HOSTED LANE.
         #
@@ -6354,27 +6503,48 @@ class RobotRuntime:
 
         Returns the coordinator's disposition string, or ``""`` when nothing
         happened — for tests and for the caller's benefit, never for the model.
+
+        **Card P2-B extends this helper** (it does not add a second one, per the
+        card's binding "Build on P0"): the reading now comes back through
+        ``brain.router.lane_affect_from_evidence`` so the bar has one expression
+        for every lane, the row carries the speaker's identity LABEL, and the
+        admitted reading is appended to the rolling history
+        :meth:`affect_history` publishes for P2-A's distiller.
         """
 
         if not getattr(self.realtime_config, "hosted_affect", False):
             return ""
         try:
-            evidence = explicit_affect_from_text(transcript)
+            # The grammar call stays at THIS module's boundary deliberately: it
+            # is the seam P0-B's tests reach through, and moving it would trade a
+            # testable door for a tidier import.
+            reading = lane_affect_from_evidence(
+                explicit_affect_from_text(transcript),
+                minimum_confidence=self._affect_minimum_confidence,
+            )
+            evidence = reading.evidence
             if evidence is None:
                 return ""
             confidence = float(evidence.confidence)
-            if confidence < self._affect_minimum_confidence:
+            if not reading.admitted:
                 self._emit(
                     "realtime",
                     (
                         f"{self.HOSTED_AFFECT_PREFIX} {evidence.label!r} at "
                         f"{confidence:.2f} is below the configured "
-                        f"{self._affect_minimum_confidence:.2f}; recorded nothing"
+                        f"{self._affect_minimum_confidence:.2f} "
+                        f"({reading.verdict}); recorded nothing"
                     ),
                     "info",
                 )
                 return ""
             skill = str(self.agent.affect_actions.get(evidence.label, "") or "")
+            # Card P2-B. WHOSE feeling this was, on the row itself. The label is
+            # computed before the row is written so the two cannot disagree, and
+            # it is a label: an ``unenrolled`` or ``not_owner`` affect row is
+            # still written, still remembered and still answered with a gesture.
+            # Identity says who; it does not say whether.
+            label = self._speaker_label_for(KIND_NONE)
             # The row goes in BEFORE the proposal, and it goes in whether or not
             # a gesture exists for this persona: what the owner felt is the fact
             # worth keeping, and a personality with no action for "sad" must not
@@ -6384,10 +6554,22 @@ class RobotRuntime:
                 (
                     f"[{self.HOSTED_AFFECT_PREFIX} {evidence.label}] "
                     f"confidence={confidence:.2f} action={skill or 'none'} "
-                    f"transcript={transcript!r}"
+                    f"transcript={transcript!r} speaker={label.label}"
                 ),
                 item_id=item_id,
                 session_id=session_id,
+                kind=KIND_NONE,
+            )
+            # Card P2-B. The rolling history P2-A's distiller reads. Recorded
+            # whether or not a gesture exists, for the same reason the row is.
+            self._record_affect(
+                label=str(evidence.label),
+                confidence=confidence,
+                skill=skill,
+                transcript=transcript,
+                speaker=label,
+                session_id=session_id,
+                item_id=item_id,
             )
             if not skill:
                 return ""
@@ -6420,6 +6602,242 @@ class RobotRuntime:
                 "warning",
             )
             return ""
+
+    # ================================================ card P2-B: notice the owner
+    #
+    # Three surfaces, one region, and the order below is the order they matter
+    # in: what a row is CALLED, what the owner FELT, and when the dog should say
+    # something first. None of them can refuse anything — that is the card's
+    # absolute, and it is why every method here returns a label, a record or an
+    # event and not a decision.
+
+    def _speaker_label_for(self, kind: str = VOICE_LABEL_KIND) -> SpeakerLabel:
+        """Name the speaker of the turn in progress. Total, and never a gate.
+
+        The reading twin of :meth:`_voice_arming_for`, and deliberately built
+        the same way: with no gate object at all — ``mode: text``, a build with
+        no audio gateway — it returns the ``unenrolled`` label rather than
+        nothing, because a row with no label is exactly the hole this card
+        exists to close. A gate that raises is also ``unenrolled``: the label
+        may never be the reason a turn fails.
+        """
+
+        gate = self.realtime_voice_identity
+        if gate is None:
+            return unenrolled_label(kind)
+        try:
+            return gate.label(kind)
+        except Exception as error:  # noqa: BLE001 - a label may never end a turn
+            self._emit("realtime", f"speaker label unavailable: {error}", "info")
+            return speaker_label(kind, None, enrolled=False)
+
+    def _stamp_speaker_label(
+        self,
+        speaker: str,
+        *,
+        kind: str = VOICE_LABEL_KIND,
+        session_id: str | None = None,
+        item_id: str | None = None,
+    ) -> SpeakerLabel:
+        """Record the identity label of ONE ledger row. Card P2-B, deliverable 1.
+
+        Called from both ledger doors — this class's ``_write_realtime_ledger``
+        (the owner's and the system's rows) and ``_RealtimeLedgerMirror`` (the
+        robot's) — because "every row" has to mean every row, and the two halves
+        of a hosted conversation are written by two different objects.
+
+        The label is stamped on the row's RECORD rather than inside the row's
+        TEXT. The transcript is what was said; a verdict spliced into it would
+        be the product editing the owner's own words, and the memory tail
+        replays those words to the model verbatim on every reconnect. The one
+        exception is the affect row, which is the product's own sentence to
+        begin with.
+
+        Never raises. A counter that failed to move must not cost a turn.
+        """
+
+        label = self._speaker_label_for(kind)
+        try:
+            row = {
+                "at_s": time.monotonic(),
+                "speaker": str(speaker),
+                "session_id": session_id,
+                "item_id": item_id,
+                **label.as_dict(),
+            }
+            with self._lock:
+                self._ledger_rows_written += 1
+                self._ledger_rows_labelled += 1
+                self._speaker_labels.append(row)
+        except Exception as error:  # noqa: BLE001 - bookkeeping may never raise
+            self._emit("realtime", f"speaker label not recorded: {error}", "info")
+        return label
+
+    def speaker_label_rows(self, limit: int = 0) -> list[dict[str, object]]:
+        """The identity label of each recent ledger row. Public, read-only."""
+
+        with self._lock:
+            rows = list(self._speaker_labels)
+        return rows[-limit:] if limit > 0 else rows
+
+    def identity_label_coverage(self) -> dict[str, object]:
+        """Rows written vs rows labelled, cumulative. The card's row 3, measured.
+
+        Cumulative counters rather than a scan of the ring: the ring rolls at
+        400 rows and "every row carried a verdict" has to stay provable for a
+        session that ran all day.
+        """
+
+        with self._lock:
+            written = self._ledger_rows_written
+            labelled = self._ledger_rows_labelled
+        return {
+            "rows_written": written,
+            "rows_labelled": labelled,
+            "coverage": 1.0 if written == 0 else labelled / written,
+            # Stated, not implied: nothing in this build lets a label refuse.
+            "blocking": False,
+        }
+
+    def _record_affect(
+        self,
+        *,
+        label: str,
+        confidence: float,
+        skill: str,
+        transcript: str,
+        speaker: SpeakerLabel,
+        session_id: str | None,
+        item_id: str | None,
+    ) -> None:
+        """Append one affect observation to the rolling history. Never raises."""
+
+        try:
+            row = {
+                "at_s": time.monotonic(),
+                "at_iso": datetime.now(UTC).isoformat(timespec="seconds"),
+                "label": str(label),
+                "confidence": round(float(confidence), 4),
+                "action": str(skill),
+                "transcript": " ".join(str(transcript).split())[:400],
+                "speaker": speaker.label,
+                "speaker_code": speaker.code,
+                "session_id": session_id,
+                "item_id": item_id,
+                "lane": "hosted",
+            }
+            with self._lock:
+                self._affect_history.append(row)
+        except Exception as error:  # noqa: BLE001 - history may never end a turn
+            self._emit("realtime", f"affect history not recorded: {error}", "info")
+
+    def affect_history(self, limit: int = 0) -> list[dict[str, object]]:
+        """Every affect this process has observed, newest last. THE PUBLIC API.
+
+        Card P2-B deliverable 2's last clause, and the seam card P2-A's
+        distiller consumes: a plain list of plain dicts, copied on the way out,
+        with no lock held by the caller and no object from this module in it. A
+        distiller that reads this cannot reach the runtime, cannot reach the
+        ledger and cannot be broken by a change to either.
+
+        The rows are an INDEX, not the record. The durable copy of every one of
+        them is the ``[affect …]`` row in the conversation ledger; if these two
+        ever disagree, the ledger is right.
+        """
+
+        with self._lock:
+            rows = [dict(row) for row in self._affect_history]
+        return rows[-limit:] if limit > 0 else rows
+
+    def note_realtime_turn(self, at: float | None = None) -> None:
+        """A hosted turn happened. Feeds the owner-event watcher's silence timer.
+
+        Both sides of the conversation call this, which is the point: a greeting
+        is due after SILENCE, and a robot that answered a question thirty seconds
+        ago has not been silent. Wired at the ledger doors so it cannot drift
+        from what was actually said.
+        """
+
+        watcher = self.realtime_owner_events
+        if watcher is None:
+            return
+        try:
+            watcher.note_turn(at)
+        except Exception as error:  # noqa: BLE001 - never end a turn over a timer
+            self._emit("realtime", f"owner-event turn note skipped: {error}", "info")
+
+    def owner_presence_sample(
+        self, observation: SimObservation | None, now: float
+    ) -> OwnerPresence:
+        """Adapt WHATEVER owner track this build has into one presence sample.
+
+        THE DROP-IN SEAM (card P1-C). Today the track is the simulator's owner
+        body — mocap-grade, confidence 1.0, and honest about being that. When
+        P1-C lands ``OwnerTrackV1`` from pixels, the only change here is which
+        object is read and which ``source`` the sample carries: the watcher
+        downstream takes a boolean, a confidence and a name, and has no opinion
+        about where they came from. That is deliberate, and it is why the
+        watcher's tests do not need a camera.
+
+        Freshness is part of presence: a stale observation is not a sighting. An
+        owner the robot last saw ten seconds ago is an owner it cannot currently
+        see, and greeting one would be the confidence-1.0 defect (audit §1) in a
+        new place.
+        """
+
+        track = getattr(self, "owner_track", None)
+        if track is not None:
+            # P1-C's OwnerTrackV1, when a later card wires one in. Read
+            # defensively: this method is a seam, not a contract consumer.
+            confidence = float(getattr(track, "identity_score", 0.0) or 0.0)
+            state = str(getattr(track, "state", ""))
+            return OwnerPresence(
+                present=state in ("confirmed", "tracking") and confidence > 0.0,
+                at_s=now,
+                confidence=confidence,
+                source=OWNER_SOURCE_PIXELS,
+            )
+        if observation is None or not self._observation_is_fresh(observation, now=now):
+            return OwnerPresence(present=False, at_s=now, confidence=0.0, source=OWNER_SOURCE_MOCAP)
+        owner = observation.owner
+        visible = bool(owner.visible)
+        confidence = float(owner.confidence) if math.isfinite(owner.confidence) else 0.0
+        return OwnerPresence(
+            present=visible,
+            at_s=now,
+            confidence=max(0.0, min(1.0, confidence)) if visible else 0.0,
+            source=OWNER_SOURCE_MOCAP,
+        )
+
+    def _step_owner_events(
+        self, observation: SimObservation | None, now: float
+    ) -> tuple[StateEvent, ...]:
+        """One owner-presence tick. Offers at most one event to the whisperer.
+
+        Runs on the whisperer's own 1 Hz tick, from ``_step_whisperer``, so the
+        greeting cadence and the state cadence cannot drift apart. Every event
+        it produces goes out through ``_whisper`` — the SAME door every other
+        robot-initiated fact uses, with the same band, the same dedup, the same
+        min-gap and the same per-window cap. There is no second path to the
+        model in this card and there was never going to be one: a companion that
+        could greet you past the owner's cost knob is a companion the owner
+        turns off.
+
+        Returns the events it offered, for the tests and for the panel; the
+        whisperer's own decision log holds what actually happened to them.
+        """
+
+        watcher = self.realtime_owner_events
+        if watcher is None or not watcher.config.enabled:
+            return ()
+        try:
+            events = watcher.observe(self.owner_presence_sample(observation, now))
+        except Exception as error:  # noqa: BLE001 - a greeting may never stop the loop
+            self._emit("realtime", f"owner-event tick skipped: {error}", "info")
+            return ()
+        for event in events:
+            self._whisper(event)
+        return events
 
     #: Card F1-SI. The one line an armed turn writes about WHOSE VOICE armed it.
     #: Machine-readable on purpose: ``evals/assertions``' ``voice_provenance``
@@ -6532,6 +6950,7 @@ class RobotRuntime:
             ledger_text,
             item_id=item_id,
             session_id=session_id,
+            kind=str(kind),
         )
         if speak:
             self._whisper(
@@ -6570,6 +6989,7 @@ class RobotRuntime:
         *,
         item_id: str | None,
         session_id: str | None,
+        kind: str = VOICE_LABEL_KIND,
     ) -> None:
         """Both-sides ledger write; never allowed to take down a turn.
 
@@ -6580,8 +7000,23 @@ class RobotRuntime:
         ``sqlite3.Error`` family fell straight through it. Broad now, counted,
         and the chat mirror is inside the firewall too — the mirror is a panel
         convenience and may not be able to end a turn either.
+
+        Card P2-B. ``kind`` is the ingress class the row belongs to, and it is
+        here for ONE reason: the emergency class must be labelled ``ungated``
+        rather than labelled with a verdict nobody computed. It changes nothing
+        else — the stamp happens before the write, cannot fail the write, and
+        the row's TEXT is untouched by it.
         """
 
+        self._stamp_speaker_label(
+            speaker, kind=kind, session_id=session_id, item_id=item_id
+        )
+        if str(speaker) in REALTIME_CONVERSATIONAL_SPEAKERS:
+            # Only the two CONVERSATIONAL speakers reset the silence timer. A
+            # ``[session rollover]`` note is the product talking to itself, and
+            # letting it count as company would be a companion whose greeting is
+            # postponed by its own bookkeeping.
+            self.note_realtime_turn()
         try:
             self.agent.memory.write_realtime_turn(
                 session_id=session_id,
@@ -7288,6 +7723,87 @@ class RobotRuntime:
                 return " | ".join(f"from an earlier summary: {text}" for text in hits[-5:])
         return ""
 
+    # ------------------------------------------------- card P2-A: owner facts
+    #
+    # Four methods, all of them wiring. Every decision they could make is made
+    # somewhere else on purpose: the privacy verdict arrives already decided
+    # (the broker calls ``owner_model.policy``), the consent filter lives in
+    # ``owner_model.notes``, and the store lives in ``memory.ConversationMemory``
+    # behind card R27's isolation guard. This class supplies the seam and
+    # nothing else — which is what keeps "what may the robot keep about me"
+    # answerable without reading ``runtime.py``.
+    def _realtime_remember_fact(
+        self, key: str, fact: str, decision: object
+    ) -> dict[str, object]:
+        """Write one owner-stated fact with the policy's verdict attached.
+
+        ``owner_stated`` and not ``model_proposed``: this path only ever runs
+        because the owner said something and the model relayed it. The
+        distiller's inferences come through
+        :func:`~parcel_robot.owner_model.distiller.distil_session` and are
+        stamped the other way, so the table can always answer "did I say this,
+        or did you work it out?".
+
+        Never raises into the broker: a failed write comes back as
+        ``{"id": 0}``, the broker reports the fact was not stored, and the model
+        says so. A robot that says it remembered something it did not is the
+        precise failure this whole card is arranged against.
+        """
+
+        consent = str(getattr(decision, "consent", CONSENT_PENDING))
+        row_id = self.agent.memory.add_owner_fact(
+            key=str(key),
+            value=str(fact),
+            provenance=FACT_OWNER_STATED,
+            consent=consent,
+            category=str(getattr(decision, "category", "")) or None,
+            reason=str(getattr(decision, "reason", "")) or None,
+            session_id=getattr(self.realtime_lane, "session_id", None),
+        )
+        return {"id": row_id, "consent": consent}
+
+    def _realtime_forget_fact(self, key: str) -> dict[str, object]:
+        """"Don't remember that." Soft-deletes; reports how many rows moved."""
+
+        return {"forgotten": self.agent.memory.forget_owner_fact(str(key))}
+
+    def _realtime_known_facts(self) -> tuple[str, ...]:
+        """The consented, live facts as sentences — the answer, already rendered.
+
+        The broker never sees a row, only these lines, so the consent filter
+        cannot be skipped on the way out. Applied twice deliberately:
+        ``consent=CONSENT_GRANTED`` in the query and again inside
+        :func:`~parcel_robot.owner_model.notes.known_facts_answer`, because a
+        boundary with one enforcement point is one refactor away from none.
+        """
+
+        try:
+            rows = self.agent.memory.owner_facts(consent=CONSENT_GRANTED)
+        except (RuntimeError, TypeError, ValueError):
+            return ()
+        return known_facts_answer(rows)
+
+    def _realtime_owner_notes(self) -> tuple[str, ...]:
+        """The DI's ``owner_notes`` block, which has never had anything in it.
+
+        ``realtime/prompting.py`` has rendered this block since the prompt plane
+        was built and ``runtime.py`` has never passed a provider, so the only
+        thing that ever filled it was the 25 sealed corpus fixtures. This is the
+        provider.
+
+        Returning ``()`` renders NOTHING — not a header, not "no notes" — which
+        is what keeps ``PINNED_DI_DIGEST`` and those fixtures valid: a store with
+        no consented facts produces byte-identical DI text to before this card.
+        ``DeveloperContext`` treats a provider that raises as absent, so a
+        broken store costs the block and never the session.
+        """
+
+        try:
+            rows = self.agent.memory.owner_facts(consent=CONSENT_GRANTED)
+        except (RuntimeError, TypeError, ValueError):
+            return ()
+        return owner_notes_from_facts(rows, limit=MAX_OWNER_NOTES)
+
     def _realtime_pose_names(self) -> tuple[str, ...]:
         """Catalog skills whose kind is literally ``pose``. Nothing else."""
 
@@ -7992,6 +8508,16 @@ class RobotRuntime:
         # "how often may the robot start a billed exchange with me" is a fact
         # about the configuration, not about the socket.
         whisperer_snapshot = None if whisperer is None else whisperer.snapshot()
+        # Card P2-B. Published in the CONSTRUCTED branch only, deliberately.
+        # Both are facts about a session — how many rows were labelled, how many
+        # appearances the watcher has seen — and with no lane both are zero. The
+        # owner-event CONFIGURATION is already visible in the flag-off branch
+        # through ``config.whisperer.owner_events``, which is where "when may the
+        # robot greet me" belongs, so nothing is hidden by keeping the counters
+        # out of a snapshot that has no session to count.
+        owner_events = self.realtime_owner_events
+        owner_events_snapshot = None if owner_events is None else owner_events.snapshot()
+        identity_coverage = self.identity_label_coverage()
         if lane is None:
             return {
                 "enabled": False,
@@ -8025,6 +8551,8 @@ class RobotRuntime:
             "driver": None if driver is None else driver.snapshot(),
             "gateway": None if gateway is None else gateway.snapshot(),
             "whisperer": whisperer_snapshot,
+            "owner_events": owner_events_snapshot,
+            "identity_labels": identity_coverage,
             # Card EV-1. The persisted stream the eval model reads, beside the
             # rings it is the uncapped version of.
             "session_evidence": self.session_evidence_snapshot(),
@@ -9621,6 +10149,12 @@ class RobotRuntime:
             if self._camera_stream_started_monotonic is None:
                 self._camera_stream_started_monotonic = time.monotonic()
         self._offer_camera_frame_evidence(frame)
+        # ---- CARD P1-B seam 2 of 3: the frame reaches the map. ----------
+        # After the queue and after EV-1, outside ``_camera_stream_lock``, on
+        # the camera worker thread. Takes only the map's own lock and never
+        # calls back into the producer, so R24's lock roster is unchanged. A
+        # no-op unless a learned map is installed (off-oracle only).
+        self._p1b_feed_learned_map(frame)
 
     def _offer_camera_frame_evidence(self, frame: CameraDetectionFrame) -> None:
         """Card C-1, work item 4. One bounded typed row per frame into EV-1.
@@ -9717,7 +10251,10 @@ class RobotRuntime:
             os.environ["MUJOCO_GL"] = "egl"
 
         from parcel_robot.camera_channel.channel import CameraChannelSpec
-        from parcel_robot.camera_channel.ingress import CameraIngress
+        from parcel_robot.camera_channel.ingress import (  # card P1-B: + the encoder seam
+            CameraIngress,
+            load_siglip2_embed_fn,
+        )
         from parcel_robot.detection_adapter.owlv2_onnx import load_owlv2_detector
         from parcel_robot.perception_contention import default_guard
         from parcel_robot.sim import resolve_scene
@@ -9743,21 +10280,518 @@ class RobotRuntime:
         mujoco.mj_forward(model, data)
 
         spec = CameraChannelSpec.d455_go2_nominal()
+        # ================= CARD P1-B: the encoders, at the attach site ======
+        # Work item 1. Until this card the composition root passed no
+        # ``embed_fn``, so every crop fell back to ``label_embedding`` — an
+        # 8-dim hash of the WORD, which is a fingerprint of the detector's
+        # label and contains nothing about the pixels. A map built on it can
+        # only ever re-discover what the detector already said.
+        #
+        # Unavailable encoder => ``None`` => no embeddings, frames as before.
+        # It is not a startup failure: the eye is worth having without it.
+        embed_space = load_siglip2_embed_fn()
         ingress = CameraIngress.from_model_data(
             model,
             data,
             spec=spec,
             detector=detector,
+            embed_fn=None if embed_space is None else embed_space[0],
+            embedding_model_id="" if embed_space is None else embed_space[1],
+            embedding_revision="" if embed_space is None else embed_space[2],
+            embedding_preprocessing="" if embed_space is None else embed_space[3],
+            # This ingress renders MuJoCo through EGL. There is no reading of
+            # these pixels under which they are physical, and the map refuses a
+            # store that mixes the two, so the venue is declared here.
+            origin=EvidenceOrigin.SIMULATION.value,
             min_poll_interval_s=1.0 / config.rate_hz,
         )
         ingress.on_frame = self._publish_camera_frame
         ingress.contention_guard = default_guard()
         ingress.pose_source = self._take_camera_pose
         ingress.max_detections_per_frame = config.max_detections_per_frame
-        ingress.set_query(config.queries)
+        # Refutation D-R1 (Fable, P0 verification). P0-D added
+        # ``CameraIngress.pinned_queries`` and nothing ever set it, so the
+        # operator's configured batch was dead code inside the ingress: it
+        # survived a directive only because ``_set_camera_query_from_directive``
+        # happened to re-supply ``config.queries`` by hand. Anything else that
+        # calls ``set_query`` — the patrol driver, a curiosity refresh, a future
+        # caller — silently narrowed the batch to its own phrase plus
+        # ``person``. One line, and the pin is real.
+        ingress.pinned_queries = tuple(config.queries)
+        ingress.set_query(self._p1b_query_batch(tuple(config.queries)))
+        # ================= END CARD P1-B ====================================
         self.perception_contention = ingress.contention_guard
         self._camera_scene_path = str(scene)
         self.attach_camera_ingress(ingress)
+
+    # =====================================================================
+    # CARD P1-B — the camera -> online-map writer.  (NEW REGION; P0-A's
+    # camera-flag regions, P0-B's transcript region and P0-D's dispatch /
+    # directive-query regions are all elsewhere in this file.)
+    #
+    # Why this region exists at all: before it, the online semantic map had
+    # ZERO product writers. It was constructed only inside its own test file,
+    # so a map "the robot builds as it patrols" was, on the real robot, an
+    # object that never existed. Everything below is the wiring that makes the
+    # dog's own experience a thing that survives the process that had it —
+    # observed, embedded, measured for relief, persisted on close, reloaded
+    # next time.
+    #
+    # Three seams outside this region call in, each one line and each marked
+    # with this card's name: ``_attach_configured_camera_ingress`` (the
+    # encoder + the query batch), ``_publish_camera_frame`` (the feed) and
+    # ``close()`` (the persist).
+    # =====================================================================
+
+    def _p1b_semantic_source(self) -> Any:
+        """The ``SemanticSourcePolicy`` this runtime is operating under.
+
+        C-3 put the axis in the NAVIGATION config's ``perception:`` block, next
+        to ``tier``, and ``_install_perception_chain`` above reads that same
+        block for the same reason. This resolves the file the robot config
+        actually selects (``navigation.config``) rather than hardcoding
+        ``default.yaml`` the way the tier reader does — otherwise a profile
+        that points at ``configs/navigation/prototype.yaml`` would silently get
+        the shipped source, which is precisely the "a cutover that never
+        happened looks like the default" failure C-3 exists to prevent.
+
+        Degrades to ``oracle`` — the shipping default, in which this whole
+        region is inert — on any read failure. A malformed SOURCE is NOT
+        swallowed, matching ``pipeline._semantic_source_policy``: a typo'd
+        source that read as the default is the one failure worth crashing for.
+        """
+
+        try:
+            from parcel_robot.perception_source import SemanticSourcePolicy
+        except ImportError:  # pragma: no cover - frozen bundle path
+            return None
+        section: Any = {}
+        try:
+            import yaml
+
+            from parcel_robot.paths import resolve_navigation_config
+
+            nav = self.store.section("navigation") or {}
+            configured = str(nav.get("config") or "configs/navigation/default.yaml")
+            raw = yaml.safe_load(
+                resolve_navigation_config(configured).read_text(encoding="utf-8")
+            )
+            section = (raw or {}).get("perception") or {}
+        except (OSError, ValueError, TypeError, KeyError, ImportError):
+            return SemanticSourcePolicy()
+        return SemanticSourcePolicy.from_mapping(section)
+
+    def _p1b_map_settings(self) -> dict[str, Any]:
+        """The ``perception.online_map`` block from the navigation config.
+
+        Card P1-B's own keys live beside C-3's source axis because they are the
+        same decision: a run that reads the learned map is a run that has to
+        say where the map lives and what it is curious about. Absent block =>
+        every default below, which is what an unmodified tree gets.
+        """
+
+        defaults: dict[str, Any] = {
+            "persist_on_close": True,
+            "reload_on_start": True,
+            "curiosity_queries": [],
+            "query_batch_from_known_places": True,
+            "oracle_query_batch_from_scene": False,
+            "visit_id_prefix": "runtime",
+        }
+        try:
+            import yaml
+
+            from parcel_robot.paths import resolve_navigation_config
+
+            nav = self.store.section("navigation") or {}
+            configured = str(nav.get("config") or "configs/navigation/default.yaml")
+            raw = yaml.safe_load(
+                resolve_navigation_config(configured).read_text(encoding="utf-8")
+            )
+            block = ((raw or {}).get("perception") or {}).get("online_map") or {}
+        except (OSError, ValueError, TypeError, KeyError, ImportError):
+            return defaults
+        if not isinstance(block, Mapping):
+            raise TypeError("perception.online_map must be a mapping")
+        unknown = sorted(set(block) - set(defaults))
+        if unknown:
+            # Fail closed on spelling, exactly as the abstention and
+            # semantic_source blocks do: a key nothing reads looks identical to
+            # a switch that was never flipped.
+            raise ValueError(
+                f"unknown perception.online_map key(s): {', '.join(unknown)}; "
+                f"known keys are {sorted(defaults)}"
+            )
+        merged = dict(defaults)
+        merged.update(block)
+        for flag in (
+            "persist_on_close",
+            "reload_on_start",
+            "query_batch_from_known_places",
+            "oracle_query_batch_from_scene",
+        ):
+            if not isinstance(merged[flag], bool):
+                raise TypeError(f"perception.online_map.{flag} must be a boolean")
+        curiosity = merged["curiosity_queries"]
+        if not isinstance(curiosity, list) or not all(
+            isinstance(item, str) for item in curiosity
+        ):
+            raise TypeError(
+                "perception.online_map.curiosity_queries must be a list of strings"
+            )
+        merged["curiosity_queries"] = [c.strip() for c in curiosity if c.strip()]
+        merged["visit_id_prefix"] = str(merged["visit_id_prefix"]).strip() or "runtime"
+        return merged
+
+    def _p1b_scene_id(self) -> str:
+        """WHICH WORLD, by name — resolved, not inferred from a filename.
+
+        Verification correction, 2026-08-22. This used to read
+        ``Path(self._camera_scene_path or self.store.path).stem``, and
+        ``_camera_scene_path`` is set by ``_attach_configured_camera_ingress``,
+        which runs AFTER this card's install (deliberately — the query batch is
+        built from the reloaded map). So the fallback always won and every
+        entry in every run was stamped with the stem of the ROBOT CONFIG file:
+        the dev-scene packs say ``scene_id: "p1b"``, the name of a throwaway
+        YAML, where they meant ``city_block``. Not a safety defect —
+        ``origin`` is what the store's mixing refusal reads — but a map
+        outlives the run that wrote it, and an entry that cannot say which
+        world it is from is a rumour with coordinates.
+
+        Resolved through ``sim.resolve_scene``, the SAME function the camera
+        attach uses, so the two cannot name different worlds. Degrades to
+        ``unknown`` rather than to a misleading filename: not knowing is a
+        legitimate answer and a wrong name is not.
+        """
+
+        try:
+            from parcel_robot.sim import resolve_scene
+
+            configured = self._camera_scene_path
+            scene = (
+                Path(configured)
+                if configured
+                else resolve_scene(Path(self.store.path), None)
+            )
+            return Path(scene).stem or "unknown"
+        except Exception:  # noqa: BLE001 - a name must not fail a boot
+            logger.debug("could not resolve a scene id for the map")
+            return "unknown"
+
+    def _p1b_install_learned_map(self) -> None:
+        """Build the runtime's OWN map and install it on the mission path.
+
+        Runs under ``semantic_source: shadow`` or ``learned_map`` only. Under
+        the shipping ``oracle`` this returns immediately and nothing in this
+        card exists as far as the process is concerned.
+
+        The store comes from ``PARCEL_ONLINE_MAP_PATH`` through C-2's own
+        resolver, whose R27 refusals are untouched and are the point: with no
+        env var there is NO STORE, and a run therefore gets an in-process map
+        that forgets everything — loudly, in the snapshot — rather than a
+        silent temp file nobody audited. The owner's conversation store is
+        refused by identity there, not here, so the two cannot drift.
+        """
+
+        policy = self._p1b_semantic_source()
+        if policy is None or not policy.reads_learned_map:
+            return
+
+        from parcel_robot.online_map import (
+            OnlineMapStore,
+            OnlineSemanticMap,
+            WriterProvenance,
+        )
+        from parcel_robot.perception_source import use_learned_map, use_semantic_source
+
+        settings = self._p1b_map_settings()
+        origin = (
+            EvidenceOrigin.SIMULATION.value
+            if self._camera_stream_enabled
+            else EvidenceOrigin.UNKNOWN.value
+        )
+        ingress = self._camera_ingress
+        if ingress is not None:
+            # The frames' own declaration wins over the runtime's guess: the
+            # ingress knows whether it is rendering or looking.
+            origin = str(getattr(ingress, "origin", origin) or origin)
+        # The EV-1 session id when there is one, so a map entry and the
+        # evidence log that recorded the frames behind it JOIN on one string.
+        # Evidence can be disabled (``PARCEL_SESSION_EVIDENCE=0``), and a map
+        # written under an empty session id would be a row nobody can trace, so
+        # the fallback is still unique per process.
+        session_id = self._session_evidence_id or f"runtime-{os.getpid()}-{int(time.time())}"
+        provenance = WriterProvenance(
+            session_id=session_id,
+            seat="runtime_camera",
+            detector_name=str(
+                getattr(getattr(ingress, "detector", None), "name", None)
+                or "camera_ingress"
+            ),
+            scene_id=self._p1b_scene_id(),
+            origin=origin,
+        )
+        store: Any = None
+        store_note = ""
+        try:
+            store = OnlineMapStore()
+        except Exception as error:  # noqa: BLE001 - a refused store is a real answer
+            store_note = f"{type(error).__name__}: {error}"
+            logger.warning(
+                "online map has no store this run (%s); the map will not "
+                "persist. Set PARCEL_ONLINE_MAP_PATH to an absolute path or "
+                "':memory:' to choose deliberately.",
+                store_note,
+            )
+        self._p1b_learned_map = OnlineSemanticMap(
+            store,
+            provenance=provenance,
+            reload=bool(settings["reload_on_start"]) and store is not None,
+        )
+        self._p1b_map_settings_cache = settings
+        self._p1b_map_store_note = store_note
+        self._p1b_map_reloaded = len(self._p1b_learned_map)
+        self._p1b_visit_id = f"{settings['visit_id_prefix']}-{session_id}"
+        use_semantic_source(policy)
+        use_learned_map(self._p1b_learned_map)
+        logger.info(
+            "online map installed: source=%s store=%s reloaded=%d origin=%s",
+            policy.source,
+            None if store is None else store.path,
+            self._p1b_map_reloaded,
+            origin,
+        )
+
+    def _p1b_query_batch(self, configured: tuple[str, ...]) -> tuple[str, ...]:
+        """The detector batch: configured + curiosity + what the map knows.
+
+        Card P1-B work item 4, the half P0-D did not land. P0-D made
+        ``set_query`` UNION rather than replace, which stopped a directive from
+        taking the ``person`` safety lease away. This decides what goes INTO
+        that union at attach time:
+
+        * under ``learned_map`` — the places the map already knows
+          (``known_places()``) plus the configured ``curiosity_queries``, so a
+          robot that has learned "bench" keeps confirming benches and still
+          asks about things it has never seen;
+        * under ``oracle`` — the scene sidecar's own
+          ``detector_query_set()``, which is the vocabulary that scene admits
+          to having, rather than a list somebody typed twice.
+
+        ``CameraIngress._with_pinned`` then caps the result at
+        ``MAX_QUERY_PHRASES`` with ``person`` first and counts what it dropped,
+        so a long curiosity list degrades visibly instead of blinding the eye
+        (refutation D-R2).
+        """
+
+        batch: list[str] = [str(q).strip() for q in configured if str(q).strip()]
+
+        def _extend(items: Any) -> None:
+            for item in items or ():
+                text = " ".join(str(item).split())
+                if text and text not in batch:
+                    batch.append(text)
+
+        policy = self._p1b_semantic_source()
+        reads_map = policy is not None and policy.reads_learned_map
+        if reads_map:
+            settings = self._p1b_map_settings_cache or self._p1b_map_settings()
+            learned = self._p1b_learned_map
+            if learned is not None and settings.get("query_batch_from_known_places"):
+                try:
+                    _extend(learned.known_places())
+                except Exception:  # noqa: BLE001 - a query batch must not fail a boot
+                    logger.warning("could not read known places for the query batch")
+            _extend(settings.get("curiosity_queries"))
+        elif self._p1b_map_settings().get("oracle_query_batch_from_scene"):
+            # Available, and OFF by default — measured, then deliberately not
+            # switched on. The sidecar's vocabulary for ``city_block`` is 34
+            # phrases; the cap keeps 16 and drops 18, and the resulting frames
+            # then hit ``camera_ingress_max_detections_per_frame`` hard. Two
+            # 25 s oracle runs, same scene, same budget, one key apart
+            # (evidence packs ``p1b_oracle_sidecar_batch`` vs ``p1b_flag_off``):
+            #
+            #   sidecar batch ON  : 632 of 1,016 detections TRUNCATED (62.2 %)
+            #   operator's batch  :  57 of   404 detections truncated (14.1 %)
+            #
+            # Under ``oracle`` the camera grounds nothing — the GT oracle
+            # supplies the candidates — so that cost buys a longer diagnostic
+            # stream and no product behaviour. Off keeps the shipped default's
+            # batch exactly ``perception.camera_ingress_queries``, as before
+            # this card. Raise the per-frame cap before turning it on.
+            try:
+                from parcel_robot.scene_semantics import load_scene_semantics
+
+                _extend(load_scene_semantics().detector_query_set())
+            except Exception:  # noqa: BLE001 - the sidecar is optional
+                logger.debug("no scene sidecar for the oracle query batch")
+        return tuple(batch)
+
+    def _p1b_feed_learned_map(self, frame: CameraDetectionFrame) -> None:
+        """One published camera frame into the runtime's map. Card P1-B.
+
+        Called from ``_publish_camera_frame`` on the CAMERA WORKER THREAD,
+        after the frame is queued and outside ``_camera_stream_lock``. It takes
+        one lock of its own and calls nothing back into the producer, so it
+        adds no edge to R24's lock roster.
+
+        Never raises. A map that cannot ingest must not be able to stop the
+        camera publishing, exactly as a raising evidence sink must not — the
+        failure is counted and the stream continues.
+        """
+
+        learned = self._p1b_learned_map
+        if learned is None:
+            return
+        from parcel_robot.online_map import MapRefused, observations_from_frame
+
+        try:
+            with self._p1b_map_lock:
+                # ``note_frame`` FIRST and unconditionally, including for a
+                # frame that found nothing: "looked and saw nothing" is the
+                # denominator that makes detector support honest, and PG-3
+                # refuses a term nobody asked about.
+                learned.note_frame(queries=tuple(frame.queries or ()))
+                learned.note_pose(float(frame.robot_x), float(frame.robot_y))
+                observed = 0
+                refused = 0
+                for observation in observations_from_frame(
+                    frame,
+                    visit_id=self._p1b_visit_id,
+                    provenance=learned.provenance,
+                    # C-1 measured every frame expired at publish (562 ms p50
+                    # against a 300 ms TTL). That is fatal to a REACTIVE claim
+                    # and largely harmless to a CUMULATIVE one — a lamppost
+                    # that was there 600 ms ago is still there — so the map
+                    # ingests stale pixels and says so rather than pretending.
+                    require_fresh=False,
+                ):
+                    outcome = learned.observe(observation)
+                    observed += 1
+                    if not outcome.persisted:
+                        refused += 1
+                self._p1b_frames_ingested += 1
+                self._p1b_observations += observed
+                self._p1b_refused += refused
+        except MapRefused as error:
+            with self._p1b_map_lock:
+                self._p1b_errors += 1
+                self._p1b_last_error = f"MapRefused: {error}"
+            logger.warning("online map refused a frame: %s", error)
+        except Exception as error:  # noqa: BLE001 - the map must not kill the eye
+            with self._p1b_map_lock:
+                self._p1b_errors += 1
+                self._p1b_last_error = f"{type(error).__name__}: {error}"
+            logger.warning("online map ingest failed: %s", error)
+
+    def _p1b_persist_learned_map(self) -> int:
+        """Write the map to its store on the way out. Card P1-B, work item 2.
+
+        **This is the first parameter in this system that persists from the
+        robot's own experience.** Everything else the runtime keeps across a
+        restart was written by a person: a config, a pose table, a POI file.
+        This is a thing the dog saw.
+
+        Called from ``close()``. Never raises — teardown continues past every
+        other subsystem's failure and must continue past this one — and returns
+        the row count so a caller (and the snapshot) can tell "wrote nothing"
+        apart from "did not try".
+        """
+
+        learned = self._p1b_learned_map
+        if learned is None:
+            return 0
+        settings = self._p1b_map_settings_cache or {}
+        if not settings.get("persist_on_close", True):
+            logger.info("online map: persist_on_close is off; not writing")
+            self._p1b_close_learned_map(learned)
+            return 0
+        if learned.store is None:
+            logger.info(
+                "online map: nothing to persist to (%s). %d entries are being "
+                "dropped with the process.",
+                self._p1b_map_store_note or "no store declared",
+                len(learned),
+            )
+            return 0
+        store_path = learned.store.path
+        try:
+            with self._p1b_map_lock:
+                written = int(learned.persist())
+                # Verification correction, 2026-08-22. The store opens
+                # ``journal_mode=WAL``, so ``persist`` COMMITS the rows but
+                # leaves them in ``<store>-wal`` until something checkpoints.
+                # Nothing did: the map object was dropped with the runtime and
+                # SQLite only checkpoints when the last connection closes, i.e.
+                # at interpreter exit. Anything reading the store file during
+                # or right after a run — an operator, a copy, an evidence pack
+                # hashing it — saw fewer places than the robot had learned.
+                # Closing INSIDE the lock, immediately after the write, is what
+                # makes "it persisted" mean the bytes are in the file that has
+                # the name.
+                learned.close()
+            self._p1b_persisted = written
+            self._p1b_store_closed = True
+            logger.info(
+                "online map persisted %d entries to %s (WAL checkpointed)",
+                written, store_path,
+            )
+            return written
+        except Exception as error:  # noqa: BLE001 - teardown must continue
+            self._p1b_last_error = f"persist {type(error).__name__}: {error}"
+            logger.warning("online map persist failed: %s", error)
+            # A failed persist must still release the file: leaving the
+            # connection open would keep the WAL uncheckpointed on top of
+            # having written nothing.
+            self._p1b_close_learned_map(learned)
+            return 0
+
+    def _p1b_close_learned_map(self, learned: Any) -> None:
+        """Release the map's store without persisting. Never raises."""
+
+        try:
+            with self._p1b_map_lock:
+                learned.close()
+            self._p1b_store_closed = True
+        except Exception as error:  # noqa: BLE001 - teardown must continue
+            logger.warning("online map store close failed: %s", error)
+
+    def learned_map_snapshot(self) -> dict[str, object] | None:
+        """What the robot has learned this run, or ``None`` when off.
+
+        ``None`` — not a disabled block — for the same R1 reason
+        ``camera_stream_snapshot`` returns ``None``: under the shipping
+        ``oracle`` source the key is ABSENT from the wire, so a flag-off
+        snapshot is byte-identical to a build that never had this card.
+        """
+
+        learned = self._p1b_learned_map
+        if learned is None:
+            return None
+        with self._p1b_map_lock:
+            stats = learned.stats()
+            payload: dict[str, object] = {
+                "frames_ingested": self._p1b_frames_ingested,
+                "observations": self._p1b_observations,
+                "refused": self._p1b_refused,
+                "errors": self._p1b_errors,
+                "last_error": self._p1b_last_error,
+                "reloaded_entries": self._p1b_map_reloaded,
+                "persisted_entries": self._p1b_persisted,
+                # Whether the store file is self-contained yet. Until the
+                # connection closes the newest rows live in ``<store>-wal``, so
+                # a reader that copies the ``.sqlite3`` alone gets a stale map.
+                "store_closed": self._p1b_store_closed,
+                "visit_id": self._p1b_visit_id,
+                # Honest about the store even — especially — when there is not
+                # one: a run with no PARCEL_ONLINE_MAP_PATH looks exactly like
+                # a run with one until close(), and then it is too late.
+                "store_note": self._p1b_map_store_note,
+            }
+        payload.update(stats)
+        return payload
+
+    # ================= END CARD P1-B region ==============================
 
     def camera_stream_snapshot(self) -> dict[str, object] | None:
         """The operator's truth about the eye, or ``None`` when it is off.
@@ -11229,6 +12263,13 @@ class RobotRuntime:
         if last is not None and (now - last) < WHISPERER_TICK_INTERVAL_S:
             return
         self._whisperer_tick_at_s = now
+        # Card P2-B. The owner-presence tick rides the SAME 1 Hz beat as the
+        # state digest, before it: the two watchers must not drift apart, and an
+        # appearance is the more urgent of the two facts. It offers through
+        # ``_whisper`` (its own budget accounting) and returns, so a failure in
+        # it cannot cost the digest below — the try/except inside it is what
+        # makes that true, and this call is deliberately not inside the digest's.
+        self._step_owner_events(observation, now)
         try:
             decisions = whisperer.observe(self._whisperer_digest(observation, now))
         except (AttributeError, KeyError, RuntimeError, TypeError, ValueError) as error:

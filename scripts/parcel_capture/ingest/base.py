@@ -26,11 +26,19 @@ An adapter turns one transport into :class:`IngestFrame` records. It is:
   what that does and does **not** close: an in-process caller with closure or
   ``gc`` introspection is not stopped by any of this, and PS-O's status doc
   names those routes rather than pretending they are shut.
-* **refusing rather than failing.** None of ``rclpy``, ``pyrealsense2`` or
-  ``unilidar_sdk2`` exists on the dev box. Every adapter answers
-  :meth:`IngestAdapter.dependency_report` without importing anything and raises
-  :class:`IngestUnavailableError` — module named, remedy attached — instead of a
-  traceback.
+* **refusing rather than failing, for the RIGHT reason.** Two facts, never
+  conflated (card ENV-1): is the MODULE here, and is the DEVICE here.
+  ``rclpy`` and ``unilidar_sdk2`` are absent on the dev box, so those adapters
+  refuse ``dependency_missing``. ``pyrealsense2`` **is** installed here — P1-A
+  put it in ``.parcel`` for the desk-camera venue on 2026-08-22 — and no
+  RealSense is plugged in, so :class:`RealSenseIngest` refuses
+  ``device_node_missing`` instead. Both answers come from
+  :meth:`IngestAdapter.dependency_report` and :meth:`IngestAdapter.device_report`
+  **without importing anything**, and both raise
+  :class:`IngestUnavailableError` — module or device named, remedy attached —
+  instead of a traceback. "The module imports" was never the same claim as "the
+  camera is there", and a probe that says READY on an empty desk is exactly the
+  go/no-go lie this package exists to prevent.
 * **not the primary recorder.** ``ros2 bag record -s mcap``
   (:mod:`scripts.parcel_capture.rosbag2`) is the recorder of record for the
   session, because every downstream tool — GLIM, FAST-LIO2, Point-LIO-ROS2,
@@ -69,6 +77,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Any, ClassVar
 from weakref import WeakKeyDictionary
 
@@ -193,6 +202,46 @@ class DependencyReport:
             "present": list(self.present),
             "missing": list(self.missing),
             "remedy": self.remedy,
+        }
+
+
+class DevicePresence(str, Enum):
+    """Is the hardware this adapter reads physically on this host?
+
+    Decided by a **filesystem census of /dev**, never by importing the vendor
+    SDK — which is the whole point. Card ENV-1: once ``pyrealsense2`` is
+    installed (P1-A did, legitimately, for the desk-camera venue), a
+    dependency probe alone says READY on a box with no camera, and the go/no-go
+    inherits a lie. Module presence and device presence are two facts and this
+    package now reports both.
+    """
+
+    #: A device node this transport's hardware creates exists.
+    ATTACHED = "attached"
+    #: This transport declares device nodes and none of them exist.
+    ABSENT = "absent"
+    #: This transport creates no device node (a dog on a network), so the
+    #: filesystem cannot answer and the read itself is the only probe.
+    NOT_ATTESTABLE = "not_attestable"
+
+
+@dataclass(frozen=True, slots=True)
+class DeviceReport:
+    """Whether the hardware is here, computed without importing anything."""
+
+    adapter: str
+    presence: DevicePresence
+    detail: str
+    remedy: str
+    nodes: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "adapter": self.adapter,
+            "presence": self.presence.value,
+            "detail": self.detail,
+            "remedy": self.remedy,
+            "nodes": list(self.nodes),
         }
 
 
@@ -558,6 +607,12 @@ class IngestAdapter(ABC):
     payload_kind: ClassVar[PayloadKind] = PayloadKind.DERIVED_SUMMARY
     #: Free-text caveats printed by the CLI and carried into the sidecar.
     notes: ClassVar[tuple[str, ...]] = ()
+    #: ``/dev`` glob patterns the hardware behind this transport creates when it
+    #: is plugged in. Empty means "this transport creates no device node", which
+    #: reads as :attr:`DevicePresence.NOT_ATTESTABLE` and never as attached.
+    device_nodes: ClassVar[tuple[str, ...]] = ()
+    #: What to do when the nodes are absent. Printed with the refusal.
+    device_remedy: ClassVar[str] = ""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
@@ -592,6 +647,72 @@ class IngestAdapter(ABC):
             missing=missing,
             remedy=remedy,
         )
+
+    # ---------------------------------------------------------------- device
+
+    @classmethod
+    def device_report(cls) -> DeviceReport:
+        """Is the hardware here? A ``/dev`` census — no import, no vendor call.
+
+        Card ENV-1. Deliberately coarse and deliberately import-free: it runs
+        *before* :meth:`require_dependencies`\' module is imported, so a
+        preflight on a box with no camera never loads the vendor SDK at all.
+        An adapter that can enumerate its own bus more precisely does that in
+        its open path, once the SDK is legitimately in memory.
+        """
+
+        if not cls.device_nodes:
+            return DeviceReport(
+                adapter=cls.adapter_name,
+                presence=DevicePresence.NOT_ATTESTABLE,
+                detail=(
+                    f"{cls.adapter_name}: this transport creates no /dev node, so the "
+                    f"filesystem cannot say whether the hardware is here; the read is "
+                    f"the only probe"
+                ),
+                remedy=cls.device_remedy,
+            )
+        found: list[str] = []
+        for pattern in cls.device_nodes:
+            found.extend(str(item) for item in Path("/dev").glob(pattern))
+        nodes = tuple(sorted(found))
+        if nodes:
+            return DeviceReport(
+                adapter=cls.adapter_name,
+                presence=DevicePresence.ATTACHED,
+                detail=f"{cls.adapter_name}: {', '.join(nodes)}",
+                remedy="",
+                nodes=nodes,
+            )
+        patterns = ", ".join(f"/dev/{pattern}" for pattern in cls.device_nodes)
+        return DeviceReport(
+            adapter=cls.adapter_name,
+            presence=DevicePresence.ABSENT,
+            detail=(
+                f"{cls.adapter_name}: nothing matches {patterns} — no device of this "
+                f"kind is attached to this host"
+            ),
+            remedy=cls.device_remedy,
+        )
+
+    @classmethod
+    def require_device(cls) -> DeviceReport:
+        """The device report, or a refusal naming the absent node and a remedy.
+
+        :attr:`DevicePresence.NOT_ATTESTABLE` passes: refusing there would
+        ground every network transport on a host where the dog is genuinely
+        reachable. Only a declared-and-missing node refuses.
+        """
+
+        report = cls.device_report()
+        if report.presence is DevicePresence.ABSENT:
+            raise IngestUnavailableError(
+                AbsenceReason.DEVICE_NODE_MISSING,
+                report.detail,
+                report.remedy
+                or f"attach the {cls.adapter_name} hardware to this host and re-run",
+            )
+        return report
 
     @classmethod
     def require_dependencies(cls) -> DependencyReport:

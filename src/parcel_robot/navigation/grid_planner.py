@@ -25,7 +25,7 @@ from typing import Literal
 
 import numpy as np
 
-from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
+from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE, gate_lateral_clearance_m
 
 GridCell = tuple[int, int]
 WorldPoint = tuple[float, float]
@@ -137,7 +137,11 @@ class GridPlannerConfig:
 
     resolution_m: float = 0.10
     grid_size_cells: int = 161
-    robot_radius_m: float = ROBOT_FOOTPRINT_RADIUS_M
+    # Card P1-E: read off the authority instead of ``geometry``'s deprecation
+    # shim. Same body, same number (0.32 m) — ``SafetyEnvelope`` is where the
+    # footprint has lived since 2026-08-07, and the reactive gate the planner
+    # now has to agree with reads it from there too.
+    robot_radius_m: float = DEFAULT_SAFETY_ENVELOPE.footprint_radius_m
     # ``safety_margin_m`` is the legacy hard margin.  Optional explicit hard
     # and comfort margins let an experimental profile prefer extra clearance
     # without declaring that entire comfort zone impassable.  Leaving the new
@@ -145,6 +149,24 @@ class GridPlannerConfig:
     safety_margin_m: float = 0.10
     hard_safety_margin_m: float | None = None
     comfort_safety_margin_m: float | None = None
+    # ``gate_clearance_m`` is the STOP RING the final reactive gate enforces
+    # against whatever this map's occupied cells represent — card P1-E, audit
+    # §6 ("the planner and the gate disagree on the envelope"). Set it from
+    # ``ReactiveSafetyPolicy.obstacle_stop_m`` (lidar map) or ``person_stop_m``
+    # (a map of people) and the planner will not route through gaps the gate
+    # refuses to drive down; the conversion from a forward ring to a lateral
+    # radius is the gate's own directional cone and lives in the authority
+    # (:func:`~parcel_robot.authority.gate_lateral_clearance_m`).
+    #
+    # ``None`` is the legacy footprint-only inflation, byte-for-byte. It is the
+    # DEFAULT deliberately: at the shipped obstacle ring the derived radius is
+    # 0.593 m, which closes every corridor narrower than 1.19 m — including a
+    # standard 0.8-0.9 m interior doorway. Switching it on by default would
+    # make the indoor companion refuse to plan through its own front door and
+    # would move every frozen navigation baseline at once. Turning it on is a
+    # navigation-profile decision (see the P1-E status doc's handoff), not a
+    # planner default.
+    gate_clearance_m: float | None = None
     comfort_cost_weight: float = 0.0
     lidar_range_cap_m: float = 12.0
     hit_log_odds: float = 0.90
@@ -205,6 +227,7 @@ class GridPlannerConfig:
         for name, value in (
             ("hard_safety_margin_m", self.hard_safety_margin_m),
             ("comfort_safety_margin_m", self.comfort_safety_margin_m),
+            ("gate_clearance_m", self.gate_clearance_m),
         ):
             if value is not None and (not math.isfinite(value) or value < 0.0):
                 raise ValueError(f"{name} must be finite and non-negative when set")
@@ -271,10 +294,28 @@ class GridPlannerConfig:
         )
 
     @property
-    def inflation_radius_m(self) -> float:
-        """Hard, non-traversable radius retained for compatibility."""
+    def gate_lateral_clearance_m(self) -> float:
+        """Lateral radius the reactive gate's stop ring implies (0.0 if unset)."""
 
-        return self.robot_radius_m + self.effective_hard_margin_m
+        if self.gate_clearance_m is None:
+            return 0.0
+        return gate_lateral_clearance_m(self.gate_clearance_m)
+
+    @property
+    def inflation_radius_m(self) -> float:
+        """Hard, non-traversable radius: footprint inflation, never inside the gate.
+
+        Card P1-E. The first term is the historical footprint + hard margin.
+        The second is the lateral clearance the FINAL safety gate will demand
+        of the same cells (``gate_clearance_m``); taking the max is what makes
+        "the planner does not choose corridors the gate refuses" true, and
+        leaving ``gate_clearance_m`` unset reproduces the old value exactly.
+        """
+
+        return max(
+            self.robot_radius_m + self.effective_hard_margin_m,
+            self.gate_lateral_clearance_m,
+        )
 
     @property
     def comfort_radius_m(self) -> float:

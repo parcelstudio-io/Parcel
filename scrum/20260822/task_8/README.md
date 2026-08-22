@@ -4,6 +4,8 @@
 (Wave P1/P2; P0 standing rules apply). **Roadmap:** audit §10 Phase 1 item 3,
 §6 "owner localization path to real".
 
+> **CORRECTION 2026-08-22 (owner's statement):** no robot hardware is on hand — no Go2, D455, L2 or Orin. Earlier wording in this card that assumes a D455/Go2 'on the bench' inherited a false fact from scrum/20260813/task_1; the only device present is the reSpeaker XVF3800 mic array. Live rows that need a camera wait for a purchase, not a cable.
+
 ## Why
 The owner is a mocap body with confidence 1.0 (audit §1); no identity, no
 re-ID, and reacquisition after loss has never succeeded. The real path is

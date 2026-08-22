@@ -1,0 +1,8 @@
+src/parcel_robot/runtime.py                         P1-B + 547/-2     file total +1052/-11
+src/parcel_robot/camera_channel/ingress.py          P1-B + 655/-6     file total +655/-6
+src/parcel_robot/online_map/store.py                P1-B + 167/-6     file total +167/-6
+src/parcel_robot/online_map/online_map.py           P1-B +  74/-0     file total +78/-0
+configs/navigation/prototype.yaml                   P1-B +  72/-0     file total +121/-1
+tests/test_c3_cutover.py                            P1-B +  60/-12    file total +60/-12
+tests/test_r24_lock_discipline.py                   P1-B +  24/-0     file total +24/-0
+tests/test_p0d_navigation_unblocks.py               P1-B +   6/-0     file total +40/-17

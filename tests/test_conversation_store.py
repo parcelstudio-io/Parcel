@@ -61,7 +61,7 @@ from parcel_robot.conversation_store import (
     source_for_origin,
     utc_now,
 )
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory import OWNER_FACTS_TABLE, ConversationMemory
 
 #: A round, fixed instant: 2023-11-14T22:13:20+00:00. Pinned rather than
 #: "now" so the ISO rendering below is an assertion and not a restatement.
@@ -703,7 +703,20 @@ def test_the_default_store_is_none_and_behaviour_is_byte_identical(tmp_path: Pat
     Two ledgers get the same writes; one is called exactly as every existing
     call site calls it, the other passes ``store=None`` explicitly. The
     ``messages`` tables must be byte-identical, and neither may have grown a
-    table.
+    table **that the dual-write seam put there**.
+
+    CARD P2-A MOVED THE EXPECTED SET, AND ONLY THE SET. It was ``{"messages"}``;
+    it is now ``{"messages", "owner_facts"}``, because P2-A puts the owner-fact
+    table beside ``messages`` in the same file on purpose — card R27's
+    owner-store isolation guard is on ``ConversationMemory.__init__``, and a
+    separate ``owner_facts.sqlite3`` would be a second path resolved by a second
+    set of rules.
+
+    What this test was written to catch is untouched: the assertion is still an
+    EXACT set, so a third table appearing — from the dual-write seam or from
+    anywhere else — still reddens it, and the two ledgers must still agree with
+    each other. What changed is the baseline, once, visibly. See
+    ``scrum/20260822/task_10/P2A_STATUS.md``.
     """
 
     def dump(path: Path, pass_store: bool) -> tuple[list[Any], set[str]]:
@@ -733,7 +746,7 @@ def test_the_default_store_is_none_and_behaviour_is_byte_identical(tmp_path: Pat
     without, tables_without = dump(tmp_path / "a.sqlite3", pass_store=False)
     explicit, tables_with = dump(tmp_path / "b.sqlite3", pass_store=True)
     assert without == explicit
-    assert tables_without == tables_with == {"messages"}
+    assert tables_without == tables_with == {"messages", OWNER_FACTS_TABLE}
 
 
 def test_a_dual_write_lands_in_both_stores(tmp_path: Path, clock: _Clock) -> None:

@@ -84,33 +84,44 @@ agent:
     minimum_confidence: 0.5
 
 # ---------------------------------------------------------------------------
-# INDOOR PERSON STANDOFF — REQUESTED, AND NOT DELIVERABLE FROM A CONFIG FILE.
+# INDOOR PERSON STANDOFF — DELIVERED BY CARD P1-E (2026-08-22).
 #
-# The card asked this overlay to set `safety.person_stop_m: 0.7` for an indoor
-# stand-off. It cannot: the value is FLOORED by the safety authority, not by
-# this file.
+# HISTORY, kept because it is the reason this key exists. P0-A recorded this as
+# a blocker: `SafetyEnvelope.person_social_zone_m` was the hardcoded 1.2 m and
+# `ReactiveSafetyPolicy.__post_init__` floored the configured `person_stop_m`
+# on it, so writing 0.7 here did not relax the robot — it stopped the prototype
+# from BOOTING ("reactive person_stop_m must not undercut
+# SafetyEnvelope.person_stop(0.0)"). The shipped commissioning value was its
+# own floor. See scrum/20260822/task_1/P0A_STATUS.md and
+# scrum/20260822/WAVE_P0_VERIFICATION_FABLE.md row A-1.
 #
-#   parcel_robot.authority.SafetyEnvelope.person_social_zone_m = 1.2
-#   ReactiveSafetyPolicy.__post_init__ (navigation/reactive_safety.py) refuses
-#     any configured person_stop_m below
-#     DEFAULT_SAFETY_ENVELOPE.person_stop(0.0) == 1.2
+# WHAT CHANGED (card P1-E, scrum/20260822/task_12/P1E_STATUS.md): the SOURCE of
+# that distance. `safety.person_stop_m` now COMMISSIONS the envelope's social
+# zone (`SafetyEnvelope.with_person_social_zone`), and the floor underneath is
+# the authority's named `PERSON_SOCIAL_ZONE_FLOOR_M` = 0.68 m — the Go2's own
+# ISO/TS-15066 stopping distance at cruise (0.32 + 0.85*0.12 + 0.85^2/2.8).
+# Below it the runtime REFUSES TO BOOT and names the floor. That refusal is the
+# safety core and did not move; the gate's logic, the e-stop latch, the command
+# TTLs and `finalize_command` carry zero diff lines.
 #
-# Writing 0.7 here does not relax anything — it makes the runtime refuse to
-# construct at all ("reactive person_stop_m must not undercut
-# SafetyEnvelope.person_stop(0.0)"), i.e. the prototype would not boot. Lowering
-# it is a change to authority.py or reactive_safety.py, both of which are the
-# physical-safety core this wave is explicitly not touching, and both of which
-# need the paired-run value-change protocol. Recorded as a blocker in
-# scrum/20260822/task_1/P0A_STATUS.md and handed off; the key is left at the
-# shipped 1.2 rather than pinned here, so it moves the day the floor does.
-#
-# For the same reason the DERIVED follow numbers are untouched and still
-# re-derive from the runtime's person_stop_m at construction
-# (RobotRuntime.__init__'s `minimum_owner_keepout`, and
-#  navigation/follow.py's _OWNER_KEEPOUT_M / _FOLLOW_DESIRED_DISTANCE_M):
-#   owner_keepout_m   = person_stop_m + owner_collision_envelope_m = 1.75
-#   desired_distance_m = owner_keepout_m + OWNER_STAND_OFF_MARGIN_M = 1.85
-# They are derivations, not copies, so nothing here has to restate them.
+# WHY 0.7 m INDOORS. E2-D2, measured: the dog travelled 0.31 m and stopped,
+# because in an apartment the owner is ALWAYS inside a 1.2 m wedge
+# (scrum/20260821/task_20/MOVE1_STATUS.md §1.4 — the arithmetic closes to
+# 1.8 mm). 0.7 m is one arm's length: close enough to be a companion, 0.02 m
+# above the floor the body can physically stop in.
+safety:
+  person_stop_m: 0.7
+
+# The follow stand-off is DERIVED from the number above, but `configs/robot.yaml`
+# pins `owner_follow.owner_keepout_m` as a LITERAL 1.75 (= the old 1.2 + the
+# 0.55 owner collision envelope), and a literal does not re-derive. Left alone,
+# the prototype would boot with a 0.7 m gate and still hold formation at 1.75 m
+# of centre distance — the gate would be relaxed and the behaviour would not.
+# 1.25 = 0.7 + 0.55 is exactly `RobotRuntime.__init__`'s `minimum_owner_keepout`
+# for this profile; the follow stand-off then re-derives to
+# 1.25 + OWNER_STAND_OFF_MARGIN_M = 1.35 m of centre distance.
+owner_follow:
+  owner_keepout_m: 1.25
 
 # ---------------------------------------------------------------------------
 # THE PROTOTYPE PERCEPTION STACK — ONE LINE AWAY, DELIBERATELY NOT TAKEN.

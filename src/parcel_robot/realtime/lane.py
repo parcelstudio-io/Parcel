@@ -67,6 +67,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
+# Card P2-A, post-verification. The SAME privacy policy the broker applies to
+# a proposed fact is applied to the replay tail — one set of rules about what
+# a credential is, not two.
+from parcel_robot.owner_model import policy as owner_policy
 from parcel_robot.voice_audio import pcm16_wav
 
 from .config import RealtimeConfig
@@ -216,7 +220,13 @@ CODE_RESPONSE_ALREADY_ACTIVE = "conversation_already_has_active_response"
 #: ``DEFAULT_RECEIPT_TOOLS``, which is a protection by omission — it survives
 #: only as long as nobody names them in the other list, and a constructor
 #: argument exists that does exactly that.
-DEFAULT_ANSWER_TOOLS = frozenset({"get_status", "recall_memory"})
+#:
+#: Card P2-A adds ``remember_fact`` for the same reason ``recall_memory`` is
+#: here: nothing else will ever tell the owner what the robot decided to keep
+#: about them. ``tool_broker.ANSWER_TOOLS`` carries the identical set and
+#: ``tests/test_realtime_answer_beat.py`` asserts the two are equal, so this
+#: list cannot drift away from the broker's.
+DEFAULT_ANSWER_TOOLS = frozenset({"get_status", "recall_memory", "remember_fact"})
 
 #: The stronger half of the same guarantee, and the one that does not depend on
 #: this module knowing the tool surface at all: a handler may mark its own
@@ -427,6 +437,23 @@ DEFAULT_ITEM_TRACE_LIMIT = 64
 #: enough to show a whole memory tail being refused without turning
 #: ``/api/state`` into a log file.
 DEFAULT_SERVER_ERROR_WINDOW = 5
+
+#: Card P2-A. The hard ceiling on session-open replay, applied in the LANE and
+#: not in the row source.
+#:
+#: The runtime now hands ``_inject_tail`` the whole conversation ledger — both
+#: lanes, back to the first row — instead of the twenty hosted turns it used to.
+#: That is the point of the card, and it is also a bill: every replayed item is
+#: input tokens at every session open and at every rollover, paid again each
+#: time. The cap lives here because this is the last place before the wire, so a
+#: future row source, a misconfigured limit or a store that grew overnight
+#: cannot route around it.
+#:
+#: 120 rather than 20: enough that a conversation from last week is still in the
+#: session (which is what "remembers me" means), small enough that a 3,000-row
+#: store does not open a session with a novel in it. The DI's six-line history
+#: digest still summarises what falls off the front.
+MAX_TAIL_ITEMS = 120
 
 #: Card R8, work item 3. What the lane calls the item it just sent, so a refusal
 #: can be reported as the thing it cost rather than as an opaque frame. Purposes
@@ -952,6 +979,17 @@ class RealtimeLane:
         self.stalls = 0
         self.disconnects = 0
         self.tail_items_injected = 0
+        #: Card P2-A. The other two thirds of the same fact. With a full ledger
+        #: arriving instead of a twenty-row tail, ``tail_items_injected`` alone
+        #: no longer says whether the session got the whole record: a low number
+        #: could be a short history, a duplicate-heavy store, or the cap biting.
+        #: These two separate those cases.
+        self.tail_items_deduped = 0
+        self.tail_items_dropped = 0
+        #: Card P2-A, post-verification. Tail items the privacy policy classed
+        #: as credentials and this lane refused to replay. Published because a
+        #: silent redaction is indistinguishable from a short history.
+        self.tail_items_redacted = 0
         #: Facts the runtime asked the model to narrate, and the ones the floor
         #: gate refused. Counted so "narration spams the session" is a NUMBER a
         #: test can assert on rather than a judgement call.
@@ -1375,16 +1413,98 @@ class RealtimeLane:
         the owner's sentences with the robot's answers missing from between them.
 
         See :data:`~parcel_robot.realtime.protocol.CONTENT_TYPE_BY_ROLE`.
+
+        CARD P2-A — WHAT THE PROVIDER IS HANDED IS NOW THE WHOLE RECORD.
+        ---------------------------------------------------------------
+
+        R8 fixed *which halves* were replayed. It did not touch *how much*, and
+        the row source the runtime passes was ``realtime_turns(limit=20)``:
+        twenty rows, hosted-lane only. The owner's 2,618 legacy panel/voice rows
+        — everything they ever typed or said to the local agent — have never
+        once been replayed into a hosted session. The audit's §5 measurement of
+        what the model knows per turn is that ceiling, seen from inside.
+
+        The lane does not decide the source (the runtime passes
+        ``memory_tail``); what the lane owns is what happens to the rows on the
+        way to the wire, and with a full ledger arriving instead of twenty rows
+        that stops being trivial:
+
+        * **Deduped.** The two write paths overlap. A hosted turn mirrored into
+          the conversation store and a legacy row saying the same thing arrive
+          as two items, and replaying the owner's sentence twice teaches the
+          model they said it twice. Keyed on ``(role, casefolded text)`` — the
+          same words from the same speaker are the same turn, whichever writer
+          logged them.
+        * **Capped.** :data:`MAX_TAIL_ITEMS` is a hard ceiling applied HERE,
+          after dedupe, so no configuration and no future row source can make a
+          session open with three thousand conversation items on the bill. The
+          cap keeps the NEWEST items: the tail arrives oldest-first, so the
+          window is taken from the end and then replayed in order.
+
+        * **Redacted.** A turn the privacy policy classes as a CREDENTIAL is
+          skipped. This is the hazard ``owner_model.policy`` names in its own
+          refusal and P2-A did not close on the first pass: ``remember_fact``
+          refuses to put "my password is hunter2" in ``owner_facts``, but the
+          hosted lane still writes the raw TURN to ``messages``, and a
+          full-ledger replay then reads it back to the model at every session
+          open — which is the same plaintext-to-the-hosted-model exposure the
+          refusal exists to prevent, arriving by a different door. The ledger
+          row itself is NOT touched (that is R22's surface and the owner's
+          record); the filter is here, at the last point before the wire.
+
+        Two things worth stating precisely, because both are easy to assume
+        wrongly from the code:
+
+        * **Dedupe keeps the OLDEST copy.** The first occurrence wins and later
+          identical ones are counted and dropped, so a sentence keeps its
+          original position in the conversation rather than jumping forward to
+          its most recent restatement.
+        * **"The whole ledger" is bounded before it gets here.** The runtime's
+          row source reads the newest ``MAX_TAIL_ITEMS * 4`` rows, so this is
+          the newest ~480 turns and not literally the first row the owner ever
+          typed. The cap below then takes the newest :data:`MAX_TAIL_ITEMS` of
+          whatever survives dedupe and redaction.
+
+        ``tail_items_deduped``, ``tail_items_dropped`` and
+        ``tail_items_redacted`` are published beside ``tail_items_injected`` so
+        "why did it only send 60" has an answer that does not require reading
+        this method.
         """
 
         self.tail_items_injected = 0
+        self.tail_items_deduped = 0
+        self.tail_items_dropped = 0
+        self.tail_items_redacted = 0
         if self._memory_tail is None:
             return
+        unique: list[tuple[str, str]] = []
+        seen: set[tuple[str, str]] = set()
         for row in self._memory_tail():
             role = str(row.get("role", "")).strip()
             content = str(row.get("content", "")).strip()
             if role not in {"user", "assistant"} or not content:
                 continue
+            if owner_policy.classify(content)[0] == owner_policy.CATEGORY_SECRET:
+                # Counted and logged, never rendered. The log line names the
+                # role and the length and NOT the text — a redaction that
+                # writes the secret into the application log has moved it, not
+                # removed it.
+                self.tail_items_redacted += 1
+                self._note(
+                    f"memory tail: skipped a {role} item ({len(content)} chars) "
+                    "that the privacy policy classes as a credential"
+                )
+                continue
+            fingerprint = (role, " ".join(content.split()).casefold())
+            if fingerprint in seen:
+                self.tail_items_deduped += 1
+                continue
+            seen.add(fingerprint)
+            unique.append((role, content))
+        if len(unique) > MAX_TAIL_ITEMS:
+            self.tail_items_dropped = len(unique) - MAX_TAIL_ITEMS
+            unique = unique[-MAX_TAIL_ITEMS:]
+        for role, content in unique:
             self._send_item(role=role, text=content, purpose=ITEM_PURPOSE_TAIL)
             self.tail_items_injected += 1
 
@@ -3081,6 +3201,9 @@ class RealtimeLane:
             "spend_ledger_failures": self.spend_ledger_failures,
             "audio_frames_sent": self._audio_sent_this_session,
             "tail_items_injected": self.tail_items_injected,
+            "tail_items_deduped": self.tail_items_deduped,
+            "tail_items_dropped": self.tail_items_dropped,
+            "tail_items_redacted": self.tail_items_redacted,
             "tools_enabled": self._tool_handler is not None,
             # Card R11, design point 5. The tag, from outside: how many responses
             # the robot started off its own state, how many of those tried to
@@ -3123,6 +3246,7 @@ __all__ = [
     "ITEM_PURPOSE_NARRATION",
     "ITEM_PURPOSE_OWNER_TURN",
     "ITEM_PURPOSE_TAIL",
+    "MAX_TAIL_ITEMS",
     "MIN_SUBSTANTIVE_WORDS",
     "REASON_IDLE_HANG_UP",
     "RESPONSE_FROM_OWNER",

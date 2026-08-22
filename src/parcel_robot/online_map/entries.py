@@ -16,11 +16,19 @@ one.
 
 from __future__ import annotations
 
+import base64
+import binascii
 import math
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
+
+# Card P1-B. ``parcel_robot.evidence_origin`` is a deliberate LEAF module
+# (stdlib only, see its docstring), so importing it here keeps this file's
+# "no import cost beyond stdlib" property intact while giving the map the same
+# typed provenance vocabulary the control boundary uses. One enum, not two.
+from parcel_robot.evidence_origin import SYNTHETIC_ORIGINS, EvidenceOrigin
 
 # --------------------------------------------------------------------------
 # Schema + vocabulary constants.
@@ -28,7 +36,21 @@ from typing import Any
 
 #: Bumped whenever a persisted row's meaning changes. A store written by a
 #: different schema is refused on load rather than reinterpreted.
-MAP_SCHEMA = "parcel.online_map.v1"
+#:
+#: Card P1-B bumped v1 -> v2. Two persisted meanings changed and both are
+#: additive, which is why :mod:`~parcel_robot.online_map.store` MIGRATES a v1
+#: store in place rather than refusing it: rows gained ``thumbnail`` (AU-C2-1 —
+#: the REVISION §6 source crop used to be dropped on persist) and
+#: ``provenance.origin`` (the typed :class:`~parcel_robot.evidence_origin.
+#: EvidenceOrigin` of the frames that produced the entry). A v1 row read under
+#: v2 restores ``thumbnail=None`` and ``origin=unknown``, which is exactly what
+#: it always meant: "this store never recorded one".
+MAP_SCHEMA = "parcel.online_map.v2"
+
+#: The schema versions this build can READ. A store written by anything else is
+#: refused; a store written by one of the older ones is migrated forward once,
+#: loudly, in ``OnlineMapStore._check_schema``.
+MIGRATABLE_SCHEMAS: tuple[str, ...] = ("parcel.online_map.v1",)
 
 #: The map's own store path override. Same discipline as R27's
 #: ``PARCEL_MEMORY_PATH``: ``:memory:`` or an absolute path, never relative.
@@ -92,7 +114,60 @@ MAX_HISTORY_PER_ENTRY = 64
 MAX_THUMBNAIL_BYTES = 16384
 MAX_EMBEDDING_DIM = 4096
 
+# -- evidence origin (card P1-B) --------------------------------------------
+
+#: The fail-closed default. A row that never declared where its pixels came
+#: from says ``unknown``, and ``unknown`` is never physical authority.
+ORIGIN_UNKNOWN = EvidenceOrigin.UNKNOWN.value
+
+#: Every value :func:`normalize_origin` will accept, as strings.
+ORIGIN_VALUES: frozenset[str] = frozenset(member.value for member in EvidenceOrigin)
+
+
+def normalize_origin(value: object) -> str:
+    """An ``EvidenceOrigin`` member or its value -> the value string.
+
+    Refuses anything else. A map entry whose origin is a free-form string is a
+    map entry that can claim to be physical by spelling, which is the exact
+    defect card W0-A retired the ``PHYSICAL_SOURCE_NAMES`` whitelist to close.
+    """
+
+    if isinstance(value, EvidenceOrigin):
+        return value.value
+    if not isinstance(value, str):
+        raise TypeError(
+            "origin must be an EvidenceOrigin or one of "
+            f"{sorted(ORIGIN_VALUES)}, got {type(value).__name__}"
+        )
+    clean = value.strip().lower()
+    if clean not in ORIGIN_VALUES:
+        raise ValueError(
+            f"unknown evidence origin {value!r}; registered origins are "
+            f"{sorted(ORIGIN_VALUES)}. Provenance is DECLARED, never inferred "
+            "from a string that happens to look trustworthy."
+        )
+    return clean
+
+
+def origins_conflict(origins: Mapping[str, int] | frozenset[str] | set[str]) -> bool:
+    """True when a collection of origins mixes PHYSICAL with a synthetic one.
+
+    The map's one cross-entry invariant. A store that holds both a place the
+    robot saw with its own eyes and a place a renderer drew is a store whose
+    every downstream number is a blend of two worlds — and the blend is
+    invisible, because both rows look identical apart from this field.
+    ``unknown`` is not synthetic and not physical: it is silent, and it does
+    not by itself make a store mixed.
+    """
+
+    present = set(origins)
+    if EvidenceOrigin.PHYSICAL.value not in present:
+        return False
+    return bool(present & {member.value for member in SYNTHETIC_ORIGINS})
+
+
 _WORD = re.compile(r"[a-z0-9]+")
+
 _STOPWORDS: frozenset[str] = frozenset(
     {"a", "an", "the", "of", "some", "this", "that", "nearest", "closest"}
 )
@@ -234,12 +309,25 @@ class WriterProvenance:
     keyframe map-building seat. Recording the seat per entry means a later
     cutover can ask "which of these places did the new eye actually write?"
     instead of assuming the map is homogeneous.
+
+    Card P1-B added ``origin``: WHICH WORLD the frames behind this entry came
+    from, as the tree's one typed answer
+    (:class:`~parcel_robot.evidence_origin.EvidenceOrigin`) rather than a free
+    string. ``scene_id`` already said *which scene*; it could not say whether
+    that scene was a renderer or a room, and a map is the one artifact that
+    outlives the run that wrote it — so a store reloaded next week must be able
+    to answer "were these places real?" without asking the executor. The
+    default is :attr:`EvidenceOrigin.UNKNOWN`, which is what a v1 row honestly
+    meant, and it is never physical authority.
     """
 
     session_id: str
     seat: str
     detector_name: str
     scene_id: str
+    #: Card P1-B. ``EvidenceOrigin`` VALUE (the enum is a ``str`` enum, so the
+    #: member and its value compare equal and JSON round-trips as itself).
+    origin: str = ORIGIN_UNKNOWN
 
     def __post_init__(self) -> None:
         for name, limit in (
@@ -249,6 +337,17 @@ class WriterProvenance:
             ("scene_id", 96),
         ):
             object.__setattr__(self, name, _text(getattr(self, name), name, limit=limit))
+        object.__setattr__(self, "origin", normalize_origin(self.origin))
+
+    @property
+    def evidence_origin(self) -> EvidenceOrigin:
+        """The typed member. Callers compare against this, never the string."""
+
+        return EvidenceOrigin(self.origin)
+
+    @property
+    def is_physical(self) -> bool:
+        return self.evidence_origin is EvidenceOrigin.PHYSICAL
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -256,17 +355,23 @@ class WriterProvenance:
             "seat": self.seat,
             "detector_name": self.detector_name,
             "scene_id": self.scene_id,
+            "origin": self.origin,
         }
 
     @classmethod
     def from_mapping(cls, data: Mapping[str, Any]) -> WriterProvenance:
         if not isinstance(data, Mapping):
             raise TypeError("provenance must be a mapping")
-        expected = {"session_id", "seat", "detector_name", "scene_id"}
+        expected = {"session_id", "seat", "detector_name", "scene_id", "origin"}
         unknown = set(data) - expected
         if unknown:
             raise ValueError(f"unknown provenance keys: {sorted(unknown)}")
-        missing = expected - set(data)
+        # ``origin`` is OPTIONAL on read and required on write. That asymmetry
+        # IS the v1 -> v2 migration: a row that predates card P1-B never
+        # recorded an origin, and "unknown" is precisely what it meant. Every
+        # other key stays mandatory, so this cannot silently accept a truncated
+        # row.
+        missing = (expected - {"origin"}) - set(data)
         if missing:
             raise ValueError(f"missing provenance keys: {sorted(missing)}")
         return cls(
@@ -274,6 +379,7 @@ class WriterProvenance:
             seat=str(data["seat"]),
             detector_name=str(data["detector_name"]),
             scene_id=str(data["scene_id"]),
+            origin=str(data.get("origin", ORIGIN_UNKNOWN)),
         )
 
 
@@ -519,6 +625,30 @@ def _round(value: float, places: int = 4) -> float:
     return round(float(value), places)
 
 
+def _thumbnail_from_mapping(value: object) -> bytes | None:
+    """Decode a persisted thumbnail. ``None``/absent/empty all mean "none".
+
+    Card P1-B / AU-C2-1. Strict about the shape (a non-string that is not
+    ``None`` is a corrupt row, not a missing crop) and strict about the base64
+    (``validate=True``), because a crop that silently decodes to garbage would
+    re-embed to a vector describing nothing while looking exactly like success.
+    """
+
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise TypeError("persisted thumbnail must be a base64 string or null")
+    if not value:
+        return None
+    try:
+        raw = base64.b64decode(value, validate=True)
+    except (ValueError, binascii.Error) as exc:
+        raise ValueError("persisted thumbnail is not valid base64") from exc
+    if len(raw) > MAX_THUMBNAIL_BYTES:
+        raise ValueError("persisted thumbnail exceeds the byte ceiling")
+    return raw
+
+
 # --------------------------------------------------------------------------
 # One place the dog knows.
 # --------------------------------------------------------------------------
@@ -699,6 +829,21 @@ class MapEntry:
                 else None
             ),
             "best_view_quality": _round(self.best_view_quality, 3),
+            # AU-C2-1 (2026-08-21 chain audit, REFUTED by round-trip): this key
+            # did not exist. ``MapEntry`` held the REVISION §6 source crop in
+            # memory, ``as_dict`` omitted it and ``from_mapping`` could not
+            # restore it, so ``OnlineMapStore.save`` dropped every thumbnail in
+            # silence. The consequence is not cosmetic: lazy re-embedding
+            # across a model upgrade needs the SOURCE PIXELS, and after one
+            # store reload there were none — the exact migration REVISION §6
+            # exists to protect. Base64 because the payload is bytes and the
+            # row is JSON; bounded by MAX_THUMBNAIL_BYTES at construction, so
+            # the encoded form is bounded too (4/3 of 16 KiB).
+            "thumbnail": (
+                base64.b64encode(self.thumbnail).decode("ascii")
+                if self.thumbnail
+                else None
+            ),
             "extent_w_m": _round(self.extent_w_m),
             "extent_h_m": _round(self.extent_h_m),
             "relief_m": (_round(self.relief_m) if self.relief_m is not None else None),
@@ -735,6 +880,10 @@ class MapEntry:
                 EmbeddingStamp.from_mapping(stamp) if stamp is not None else None
             ),
             best_view_quality=float(data["best_view_quality"]),
+            # AU-C2-1's other half. Optional on read — a v1 row has no such key
+            # and genuinely had no crop — and mandatory on write, so a v2 store
+            # that lost one is a bug and not a shrug.
+            thumbnail=_thumbnail_from_mapping(data.get("thumbnail")),
             extent_w_m=float(data["extent_w_m"]),
             extent_h_m=float(data["extent_h_m"]),
             relief_m=(
@@ -762,20 +911,26 @@ __all__ = [
     "MAP_SCHEMA",
     "MAX_ENTRIES",
     "MAX_THUMBNAIL_BYTES",
+    "MIGRATABLE_SCHEMAS",
     "NAME_DETECTOR_LABEL",
     "NAME_PROMOTED",
     "NAME_PROMOTION_VISITS",
     "NAME_VLM_PROPOSED",
+    "ORIGIN_UNKNOWN",
+    "ORIGIN_VALUES",
     "RETRIEVABLE_STATUSES",
     "STATUSES",
     "STATUS_ACTIVE",
     "STATUS_DECAYED",
     "STATUS_QUARANTINED",
     "EmbeddingStamp",
+    "EvidenceOrigin",
     "MapEntry",
     "MapObservation",
     "ProposedName",
     "WriterProvenance",
     "label_tokens",
     "normalize_label",
+    "normalize_origin",
+    "origins_conflict",
 ]

@@ -1,0 +1,1094 @@
+{
+ "prototype_with_veto": {
+  "arm": "prototype_with_veto",
+  "entries": 8,
+  "rows": [
+   {
+    "query": "bench",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 1.0,
+     "veto_p_yes": 0.8418
+    }
+   },
+   {
+    "query": "bollard",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 1.0,
+     "veto_p_yes": 0.9864
+    }
+   },
+   {
+    "query": "crate",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 1.0,
+     "veto_p_yes": 0.9981
+    }
+   },
+   {
+    "query": "door",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 1.0,
+     "veto_p_yes": 0.8775
+    }
+   },
+   {
+    "query": "lamppost",
+    "set": "present",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "vlm_veto_absent",
+    "candidate": "lamppost",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0,
+     "veto_p_yes": 0.2337
+    }
+   },
+   {
+    "query": "traffic light",
+    "set": "present",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "vlm_veto_absent",
+    "candidate": "traffic light",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0,
+     "veto_p_yes": 0.0341
+    }
+   },
+   {
+    "query": "tree",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 1.0,
+     "veto_p_yes": 0.9693
+    }
+   },
+   {
+    "query": "Narnia",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "my office",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "the moon",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a coffee shop",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "vlm_veto_absent",
+    "candidate": "shop",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0,
+     "veto_p_yes": 0.0078
+    }
+   },
+   {
+    "query": "a fire hydrant",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a swimming pool",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "the airport",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a shopping trolley",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   }
+  ],
+  "summary": {
+   "admit": 5,
+   "ask": 0,
+   "refuse": 10,
+   "present_admitted": 5,
+   "present_n": 7,
+   "absent_admitted": 0,
+   "absent_n": 8,
+   "ask_rate": 0.0,
+   "veto_stats": {
+    "asked": 8,
+    "present": 5,
+    "absent": 3,
+    "unavailable": 0,
+    "budget_declined": 0,
+    "loop_refusals": 0,
+    "mean_ms": 141.18
+   }
+  }
+ },
+ "no_seat_installed": {
+  "arm": "no_seat_installed",
+  "entries": 8,
+  "rows": [
+   {
+    "query": "bench",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "bench",
+    "question": "I think I have seen bench, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0
+    }
+   },
+   {
+    "query": "bollard",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "bollard",
+    "question": "I think I have seen bollard, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0
+    }
+   },
+   {
+    "query": "crate",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "crate",
+    "question": "I think I have seen crate, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0
+    }
+   },
+   {
+    "query": "door",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "door",
+    "question": "I think I have seen door, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0
+    }
+   },
+   {
+    "query": "lamppost",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "lamppost",
+    "question": "I think I have seen lamppost, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0
+    }
+   },
+   {
+    "query": "traffic light",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "traffic light",
+    "question": "I think I have seen traffic light, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0
+    }
+   },
+   {
+    "query": "tree",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "tree",
+    "question": "I think I have seen tree, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0
+    }
+   },
+   {
+    "query": "Narnia",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "my office",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "the moon",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a coffee shop",
+    "set": "absent",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "shop",
+    "question": "I am not sure, but I think the shop I have seen might be what you mean by a coffee shop. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944,
+     "veto": 0.0
+    }
+   },
+   {
+    "query": "a fire hydrant",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a swimming pool",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "the airport",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a shopping trolley",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   }
+  ],
+  "summary": {
+   "admit": 0,
+   "ask": 8,
+   "refuse": 7,
+   "present_admitted": 0,
+   "present_n": 7,
+   "absent_admitted": 0,
+   "absent_n": 8,
+   "ask_rate": 0.5333,
+   "veto_stats": {
+    "asked": 8,
+    "present": 0,
+    "absent": 0,
+    "unavailable": 8,
+    "budget_declined": 0,
+    "loop_refusals": 0,
+    "mean_ms": 0.0
+   }
+  }
+ },
+ "SEED_robust_z": {
+  "arm": "SEED_robust_z",
+  "entries": 8,
+  "rows": [
+   {
+    "query": "bench",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "bench",
+    "question": "I think I have seen bench, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 0.0
+    }
+   },
+   {
+    "query": "bollard",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "bollard",
+    "question": "I think I have seen bollard, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 0.0
+    }
+   },
+   {
+    "query": "crate",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "crate",
+    "question": "I think I have seen crate, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 0.0
+    }
+   },
+   {
+    "query": "door",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "door",
+    "question": "I think I have seen door, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 0.0
+    }
+   },
+   {
+    "query": "lamppost",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "lamppost",
+    "question": "I think I have seen lamppost, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 0.0
+    }
+   },
+   {
+    "query": "traffic light",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "traffic light",
+    "question": "I think I have seen traffic light, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 0.0
+    }
+   },
+   {
+    "query": "tree",
+    "set": "present",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "tree",
+    "question": "I think I have seen tree, but I am not sure enough to set off on my own. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 0.0
+    }
+   },
+   {
+    "query": "Narnia",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "my office",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "the moon",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a coffee shop",
+    "set": "absent",
+    "outcome": "ask",
+    "admitted": false,
+    "reason": "indecisive_ranking",
+    "candidate": "shop",
+    "question": "I am not sure, but I think the shop I have seen might be what you mean by a coffee shop. Want me to go and look?",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 0.0
+    }
+   },
+   {
+    "query": "a fire hydrant",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a swimming pool",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "the airport",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a shopping trolley",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   }
+  ],
+  "summary": {
+   "admit": 0,
+   "ask": 8,
+   "refuse": 7,
+   "present_admitted": 0,
+   "present_n": 7,
+   "absent_admitted": 0,
+   "absent_n": 8,
+   "ask_rate": 0.5333,
+   "veto_stats": {
+    "asked": 0,
+    "present": 0,
+    "absent": 0,
+    "unavailable": 0,
+    "budget_declined": 0,
+    "loop_refusals": 0,
+    "mean_ms": 0.0
+   }
+  }
+ },
+ "SEED_no_ask_no_veto": {
+  "arm": "SEED_no_ask_no_veto",
+  "entries": 8,
+  "rows": [
+   {
+    "query": "bench",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944
+    }
+   },
+   {
+    "query": "bollard",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944
+    }
+   },
+   {
+    "query": "crate",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944
+    }
+   },
+   {
+    "query": "door",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944
+    }
+   },
+   {
+    "query": "lamppost",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944
+    }
+   },
+   {
+    "query": "traffic light",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944
+    }
+   },
+   {
+    "query": "tree",
+    "set": "present",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944
+    }
+   },
+   {
+    "query": "Narnia",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "my office",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "the moon",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a coffee shop",
+    "set": "absent",
+    "outcome": "admit",
+    "admitted": true,
+    "reason": "grounded",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.8,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0,
+     "ranking_margin": 39.12,
+     "label_purity": 1.0,
+     "evidence_frames": 3.0,
+     "ground_evidence_fraction": 0.0,
+     "similarity": 4.6944
+    }
+   },
+   {
+    "query": "a fire hydrant",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a swimming pool",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "the airport",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   },
+   {
+    "query": "a shopping trolley",
+    "set": "absent",
+    "outcome": "refuse",
+    "admitted": false,
+    "reason": "no_observations",
+    "candidate": "",
+    "question": "",
+    "signals": {
+     "peak_probability": 0.0,
+     "frames_fired": 0.0,
+     "frames_observed": 0.0
+    }
+   }
+  ],
+  "summary": {
+   "admit": 8,
+   "ask": 0,
+   "refuse": 7,
+   "present_admitted": 7,
+   "present_n": 7,
+   "absent_admitted": 1,
+   "absent_n": 8,
+   "ask_rate": 0.0,
+   "veto_stats": {
+    "asked": 0,
+    "present": 0,
+    "absent": 0,
+    "unavailable": 0,
+    "budget_declined": 0,
+    "loop_refusals": 0,
+    "mean_ms": 0.0
+   }
+  }
+ }
+}

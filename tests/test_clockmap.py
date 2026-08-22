@@ -25,6 +25,7 @@ The five card gates and where they live:
 from __future__ import annotations
 
 import ast
+import importlib.util
 import json
 import math
 import subprocess
@@ -57,9 +58,11 @@ from scripts.parcel_capture.clockmap import (
     build_clock_map,
     canonical_json,
     clock_map_digest,
+    device_nodes_present,
     fit_relation,
     format_report,
     interrogate,
+    main,
     planned_elapsed_ns,
     probe_availability,
     read_samples_jsonl,
@@ -1163,14 +1166,121 @@ def test_the_public_t_factor_is_the_table_every_estimate_uses() -> None:
 
 
 def test_probe_availability_fails_closed_on_this_hardwareless_dev_box() -> None:
+    """Card ENV-1: a module is not a device, and this box has no devices.
+
+    The assertion used to be ``satisfied is False and present == ()`` for all
+    three — one claim doing two jobs, and resting on the premise that no vendor
+    SDK was installed. P1-A installed ``pyrealsense2`` on 2026-08-22 and the
+    D455 probe flipped to satisfied on a host that has never had a camera
+    plugged into it, which is a false claim in the one report whose job is to
+    say which clock offsets a session can still recover.
+
+    The property is kept and made per-device, and the module census stays
+    visible so "the SDK is missing" and "the SDK is here, the camera is not"
+    remain different, readable answers.
+    """
+
     availability = probe_availability()
     assert set(availability) == set(PROBE_REQUIREMENTS)
+
     for device in (SourceDevice.GO2, SourceDevice.D455, SourceDevice.L2):
-        satisfied, present = availability[device]
+        satisfied, _present = availability[device]
         assert satisfied is False, f"{device} claims a probe this box cannot run"
-        assert present == ()
-    # The Orin needs no SDK: it IS the host.
+
+    # The dog: no interrogation exists at all, so no install and no cable can
+    # ever make this one runnable.
+    assert PROBE_REQUIREMENTS[SourceDevice.GO2].interrogable is False
+    assert availability[SourceDevice.GO2][1] == (), "rclpy/cyclonedds appeared in .parcel/"
+
+    # The L2: its binding is genuinely absent, which is the module arm.
+    assert availability[SourceDevice.L2][1] == ()
+
+    # The D455: the module IS here and the probe is still ABSENT. This is the
+    # arm the card exists for.
+    d455_satisfied, d455_present = availability[SourceDevice.D455]
+    assert d455_satisfied is False
+    assert d455_present == ("pyrealsense2",), (
+        "this arm needs P1-A's wheel installed; without it the guard proves nothing "
+        "about module presence failing to imply device presence"
+    )
+    assert device_nodes_present(PROBE_REQUIREMENTS[SourceDevice.D455]) == (), (
+        "a /dev/video* node exists on this host; the hardwareless arm cannot be measured"
+    )
+
+    # The Orin needs no SDK and no cable: it IS the host.
     assert availability[SourceDevice.ORIN][0] is True
+
+
+def test_seeded_red_a_probe_satisfied_by_its_module_alone_is_caught() -> None:
+    """The seeded failure behind the guard above, run rather than described.
+
+    ``probe_availability`` before card ENV-1, verbatim: modules only. Fed the
+    D455's real requirement on this real host, it answers *satisfied* — which is
+    exactly the claim the guard must reject. If the rule above ever regresses to
+    module-presence-only, this reproduction is what shows the difference.
+    """
+
+    requirement = PROBE_REQUIREMENTS[SourceDevice.D455]
+    module_only = not requirement.modules or any(
+        importlib.util.find_spec(name) is not None for name in requirement.modules
+    )
+    assert module_only is True, "the D455's module is not installed; nothing to seed"
+    assert probe_availability()[SourceDevice.D455][0] is False, (
+        "probe_availability agrees with the module-only rule — the device gate is gone"
+    )
+
+
+def test_a_non_interrogable_device_is_a_ritual_not_a_missing_probe(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Verifier correction to ENV-1 deviation 4 (Fable, 2026-08-22).
+
+    The Go2 has no queryable clock — ``interrogable=False`` — and its modules
+    (``rclpy``, ``cyclonedds``) are what it takes to RECEIVE its messages at all.
+    ENV-1 first folded ``interrogable`` into ``satisfied``, which made the dog
+    read ABSENT on every host forever and ``--check`` exit 2 on a fully equipped
+    Orin. The Orin arm cannot be measured here, so it is modelled: with
+    ``rclpy`` findable, the dog's row is PRESENT with its module census, the
+    ``[ RITUAL]`` line still prints, and ``go2`` is not in the REFUSED list.
+    """
+
+    import scripts.parcel_capture.clockmap as clockmap_module
+
+    # Second correction, same review: the L2 is reached over UDP *or* ttyACM,
+    # so the filesystem cannot attest it and it declares NO device node — the
+    # same call ``L2Ingest`` makes. Only the D455 (a UVC device) has one.
+    assert PROBE_REQUIREMENTS[SourceDevice.L2].device_nodes == ()
+    assert PROBE_REQUIREMENTS[SourceDevice.D455].device_nodes == ("video*",)
+
+    real_find_spec = importlib.util.find_spec
+    findable: set[str] = {"rclpy"}
+
+    def fake_find_spec(name: str, package: str | None = None) -> object | None:
+        if name in findable:
+            return object()
+        return real_find_spec(name, package)
+
+    monkeypatch.setattr(importlib.util, "find_spec", fake_find_spec)
+
+    assert probe_availability()[SourceDevice.GO2] == (True, ("rclpy",))
+
+    # D455 and L2 are still ABSENT here, so --check still exits 2 — but not
+    # because of the dog.
+    assert main(["--check"]) == 2
+    out = capsys.readouterr().out
+    assert "[ RITUAL] go2" in out
+    assert "[PRESENT] go2" in out
+    refused = next(line for line in out.splitlines() if line.startswith("REFUSED:"))
+    assert "go2" not in refused
+
+    # A fully equipped Orin, modelled: every module findable and the D455 on
+    # the bus. The OK arm must be reachable — before the correction it was
+    # dead code on every host.
+    findable.update({"cyclonedds", "pyrealsense2", "unitree_lidar_sdk_pybind"})
+    monkeypatch.setattr(clockmap_module, "device_nodes_present", lambda _req: ("/dev/video0",))
+    assert all(satisfied for satisfied, _ in probe_availability().values())
+    assert main(["--check"]) == 0
+    assert "OK: every declared clock probe" in capsys.readouterr().out
 
 
 # --------------------------------------------------------------------------- #

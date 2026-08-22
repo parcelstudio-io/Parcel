@@ -2242,6 +2242,14 @@ class ProbeRequirement:
     tested with :func:`importlib.util.find_spec`, which is a lookup on the
     import path and never executes the module: this process must not be able to
     load a vendor SDK even by accident.
+
+    Card ENV-1: a module is **not** a device. ``pyrealsense2`` was installed
+    into ``.parcel`` on 2026-08-22 for the desk-camera venue, and on the day it
+    landed :func:`probe_availability` began reporting the D455 clock probe
+    PRESENT on a host with no camera — a false claim in the one report whose
+    whole job is to say which offsets this session can still recover.
+    :attr:`device_nodes` is the second, independent fact, and it is answered by
+    a ``/dev`` census so this module keeps its promise to import no vendor SDK.
     """
 
     device: SourceDevice
@@ -2253,6 +2261,10 @@ class ProbeRequirement:
     #: Defaults True so a new device must be argued INTO the ritual path rather
     #: than falling into it silently.
     interrogable: bool = True
+    #: ``/dev`` glob patterns the hardware creates when it is plugged into THIS
+    #: host. Empty means the filesystem cannot answer — a dog on a network makes
+    #: no node — and the probe then rests on its modules alone.
+    device_nodes: tuple[str, ...] = ()
 
 
 PROBE_REQUIREMENTS: Mapping[SourceDevice, ProbeRequirement] = MappingProxyType(
@@ -2280,6 +2292,7 @@ PROBE_REQUIREMENTS: Mapping[SourceDevice, ProbeRequirement] = MappingProxyType(
             device=SourceDevice.D455,
             method="frame metadata timestamp plus its timestamp DOMAIN",
             modules=("pyrealsense2",),
+            device_nodes=("video*",),
             note=(
                 "the domain must be recorded with the value: HARDWARE_CLOCK, "
                 "SYSTEM_TIME and GLOBAL_TIME are three different clocks, and in "
@@ -2291,6 +2304,11 @@ PROBE_REQUIREMENTS: Mapping[SourceDevice, ProbeRequirement] = MappingProxyType(
             device=SourceDevice.L2,
             method="cloud/IMU packet stamp over the add-on L2's own transport",
             modules=("unitree_lidar_sdk_pybind",),
+            # Verifier correction (Fable, ENV-1): NO device_nodes here. The L2
+            # is reached over UDP *or* /dev/ttyACM0 (the note below), so the
+            # filesystem cannot attest it — exactly why ``L2Ingest`` declares
+            # no node either. Gating on ttyACM* read the L2 ABSENT on the
+            # planned Ethernet wiring with its binding present.
             note=(
                 "the add-on L2 is `unilidar_sdk2` over UDP or /dev/ttyACM0, NOT the "
                 "built-in unit on `utlidar/*`; the python binding's import name is "
@@ -2312,12 +2330,38 @@ PROBE_REQUIREMENTS: Mapping[SourceDevice, ProbeRequirement] = MappingProxyType(
 )
 
 
-def probe_availability() -> dict[SourceDevice, tuple[bool, tuple[str, ...]]]:
-    """Per device: is any required module importable, and which are present.
+def device_nodes_present(requirement: ProbeRequirement) -> tuple[str, ...]:
+    """The ``/dev`` nodes this device would create, that actually exist here.
 
-    Fail closed: a module whose spec cannot be found — for any reason, including
-    a broken install — is absent, and a device with no present module cannot be
-    clock-mapped at all.
+    A filesystem lookup, never an import and never a device open — card ENV-1
+    added it and :data:`FORBIDDEN_IMPORTS` in ``tests/test_clockmap.py`` still
+    forbids this module from touching a vendor SDK.
+    """
+
+    found: list[str] = []
+    for pattern in requirement.device_nodes:
+        found.extend(str(item) for item in Path("/dev").glob(pattern))
+    return tuple(sorted(found))
+
+
+def probe_availability() -> dict[SourceDevice, tuple[bool, tuple[str, ...]]]:
+    """Per device: can this host actually run its clock probe, and which modules are here.
+
+    Two independent conditions, both of which must hold. Fail closed on each:
+
+    * some required **module** must be importable — a spec that cannot be found,
+      for any reason including a broken install, is absent;
+    * every declared **device node** must not be missing — card ENV-1. Installing
+      ``pyrealsense2`` does not attach a camera, and before this the wheel alone
+      flipped the D455 to PRESENT on a host that has never seen one.
+
+    A device that is not ``interrogable`` (the Go2) is a RITUAL, not a missing
+    probe: its modules are what it takes to receive its messages, ``--check``
+    prints the ``[ RITUAL]`` line for it, and its offset comes from PS-I's
+    bracketed sync ritual regardless of what this function says.
+
+    The returned module tuple is still the honest module census, so a caller can
+    tell "the SDK is missing" from "the SDK is here and the camera is not".
     """
 
     result: dict[SourceDevice, tuple[bool, tuple[str, ...]]] = {}
@@ -2330,7 +2374,15 @@ def probe_availability() -> dict[SourceDevice, tuple[bool, tuple[str, ...]]]:
                 found = False
             if found:
                 present.append(module)
-        satisfied = not requirement.modules or bool(present)
+        # Verifier correction (Fable, ENV-1 deviation 4): ``interrogable`` is NOT
+        # a condition here. The Go2's modules are what it takes to RECEIVE its
+        # messages (its own note says so) and the ``[ RITUAL]`` line in --check
+        # already says no probe exists; folding ``interrogable`` into
+        # ``satisfied`` made --check exit 2 on every host forever, a fully
+        # equipped Orin included.
+        satisfied = (not requirement.modules or bool(present)) and (
+            not requirement.device_nodes or bool(device_nodes_present(requirement))
+        )
         result[device] = (satisfied, tuple(present))
     return result
 
@@ -2577,6 +2629,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             print(f"[{state:>7}] {device.value:<5} {requirement.method}")
             print(f"          needs any of: {modules}   found: {found}")
+            if requirement.device_nodes:
+                nodes = ", ".join(f"/dev/{pattern}" for pattern in requirement.device_nodes)
+                attached = ", ".join(device_nodes_present(requirement)) or "NOTHING"
+                print(f"          needs a device at: {nodes}   attached: {attached}")
             print(f"          {requirement.note}")
         missing = [
             device.value for device, (satisfied, _) in availability.items() if not satisfied
@@ -2667,6 +2723,7 @@ __all__ = [
     "build_clock_map",
     "canonical_json",
     "clock_map_digest",
+    "device_nodes_present",
     "fit_relation",
     "format_report",
     "interrogate",

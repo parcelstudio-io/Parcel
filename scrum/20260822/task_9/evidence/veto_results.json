@@ -1,0 +1,802 @@
+[
+ {
+  "id": "orbit_bollard_1_3m_90__bench_1",
+  "label": "bench",
+  "ask": "bench",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9949386962122267,
+  "ms": 43.09,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bollard_1_3m_90__bench_1",
+  "label": "bench",
+  "ask": "bicycle",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.020963893992487232,
+  "ms": 43.13,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_4_3m_180__bench_1",
+  "label": "bench",
+  "ask": "bench",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.998042920508608,
+  "ms": 41.7,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_4_3m_180__bench_1",
+  "label": "bench",
+  "ask": "bollard",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.8687779572796411,
+  "ms": 42.01,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_4_6m_180__bench_1",
+  "label": "bench",
+  "ask": "bench",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.7930630875533261,
+  "ms": 40.02,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_4_6m_180__bench_1",
+  "label": "bench",
+  "ask": "building",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.33455880453976217,
+  "ms": 40.26,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_5_3m_90__bench_1",
+  "label": "bench",
+  "ask": "bench",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9802752854024671,
+  "ms": 40.89,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_5_3m_90__bench_1",
+  "label": "bench",
+  "ask": "bicycle",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.010327907871139814,
+  "ms": 39.78,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bicycle_6m_180__bicycle",
+  "label": "bicycle",
+  "ask": "bicycle",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.047425341130528105,
+  "ms": 40.41,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bicycle_6m_180__bicycle",
+  "label": "bicycle",
+  "ask": "building",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.6075975886564124,
+  "ms": 41.34,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bollard_1_3m_180__bicycle",
+  "label": "bicycle",
+  "ask": "bicycle",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.011687230080318207,
+  "ms": 40.07,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bollard_1_3m_180__bicycle",
+  "label": "bicycle",
+  "ask": "crate",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.986978308283953,
+  "ms": 40.79,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bollard_1_4.5m_180__bicycle",
+  "label": "bicycle",
+  "ask": "bicycle",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.1871302926432743,
+  "ms": 40.57,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bollard_1_4.5m_180__bicycle",
+  "label": "bicycle",
+  "ask": "bollard",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.959111549373129,
+  "ms": 41.64,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_1_3m_270__bicycle",
+  "label": "bicycle",
+  "ask": "bicycle",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.00734581736345225,
+  "ms": 41.89,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_1_3m_270__bicycle",
+  "label": "bicycle",
+  "ask": "building",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.05184400139319772,
+  "ms": 41.87,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_3m_270__bollard_1",
+  "label": "bollard",
+  "ask": "bollard",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9901265702616253,
+  "ms": 43.47,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_3m_270__bollard_1",
+  "label": "bollard",
+  "ask": "door",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.62971913690008,
+  "ms": 41.91,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_1_3m_270__bollard_1",
+  "label": "bollard",
+  "ask": "bollard",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.8477935771425292,
+  "ms": 41.14,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_1_3m_270__bollard_1",
+  "label": "bollard",
+  "ask": "building",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.032100032938638626,
+  "ms": 40.96,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_2_3m_270__bollard_1",
+  "label": "bollard",
+  "ask": "bollard",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.987562203914155,
+  "ms": 41.08,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_2_3m_270__bollard_1",
+  "label": "bollard",
+  "ask": "crate",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.14804419597733945,
+  "ms": 40.37,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_2_4.5m_270__bollard_1",
+  "label": "bollard",
+  "ask": "bollard",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.906827780845171,
+  "ms": 39.65,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_2_4.5m_270__bollard_1",
+  "label": "bollard",
+  "ask": "door",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.07807019713743296,
+  "ms": 39.53,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_3m_270__building_5",
+  "label": "building",
+  "ask": "building",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.6688527568237286,
+  "ms": 39.19,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_3m_270__building_5",
+  "label": "building",
+  "ask": "crate",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.31404525885114903,
+  "ms": 40.45,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__building_3",
+  "label": "building",
+  "ask": "building",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.49991662269730475,
+  "ms": 40.97,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__building_3",
+  "label": "building",
+  "ask": "door",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.9148575371294787,
+  "ms": 40.16,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__building_4",
+  "label": "building",
+  "ask": "building",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.8375073205179205,
+  "ms": 44.19,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__building_4",
+  "label": "building",
+  "ask": "lamppost",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.13476278281028387,
+  "ms": 43.49,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_270__building_5",
+  "label": "building",
+  "ask": "building",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.5697574041843958,
+  "ms": 44.97,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_270__building_5",
+  "label": "building",
+  "ask": "crate",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.7852568756368787,
+  "ms": 43.9,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_3m_0__crate_1",
+  "label": "crate",
+  "ask": "crate",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9932022836761698,
+  "ms": 40.88,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_3m_0__crate_1",
+  "label": "crate",
+  "ask": "lamppost",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.005730250899406049,
+  "ms": 40.0,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__crate_1",
+  "label": "crate",
+  "ask": "crate",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.7154042527387354,
+  "ms": 39.31,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__crate_1",
+  "label": "crate",
+  "ask": "planter",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.03963846534938121,
+  "ms": 40.92,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_6m_0__crate_1",
+  "label": "crate",
+  "ask": "crate",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.6653958862695091,
+  "ms": 38.9,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_6m_0__crate_1",
+  "label": "crate",
+  "ask": "door",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.808054575513606,
+  "ms": 39.3,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bicycle_3m_0__crate_1",
+  "label": "crate",
+  "ask": "crate",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9989994871190809,
+  "ms": 38.92,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bicycle_3m_0__crate_1",
+  "label": "crate",
+  "ask": "lamppost",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.00023050670787668804,
+  "ms": 39.79,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_3m_180__door_1",
+  "label": "door",
+  "ask": "door",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9609468890715017,
+  "ms": 40.55,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_3m_180__door_1",
+  "label": "door",
+  "ask": "traffic light",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.004755194374579125,
+  "ms": 39.66,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_2_3m_180__door_1",
+  "label": "door",
+  "ask": "door",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.994939314814221,
+  "ms": 39.29,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_2_3m_180__door_1",
+  "label": "door",
+  "ask": "lamppost",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.06954135386419412,
+  "ms": 42.45,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_2_4.5m_180__door_1",
+  "label": "door",
+  "ask": "door",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.8080466699430894,
+  "ms": 40.1,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_2_4.5m_180__door_1",
+  "label": "door",
+  "ask": "planter",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.0006667021422541565,
+  "ms": 39.0,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_3_6m_180__door_1",
+  "label": "door",
+  "ask": "door",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.992877883933438,
+  "ms": 39.03,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_3_6m_180__door_1",
+  "label": "door",
+  "ask": "traffic light",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.0008559001915142096,
+  "ms": 39.19,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bicycle_3m_90__lamppost_1",
+  "label": "lamppost",
+  "ask": "lamppost",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.8774671672855491,
+  "ms": 45.25,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bicycle_3m_90__lamppost_1",
+  "label": "lamppost",
+  "ask": "planter",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.06754580398112836,
+  "ms": 46.56,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bollard_1_3m_180__lamppost_2",
+  "label": "lamppost",
+  "ask": "lamppost",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.09268566922313273,
+  "ms": 39.31,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bollard_1_3m_180__lamppost_2",
+  "label": "lamppost",
+  "ask": "traffic light",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.0016484803684147546,
+  "ms": 38.65,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_4_3m_180__lamppost_1",
+  "label": "lamppost",
+  "ask": "lamppost",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.48041603418780904,
+  "ms": 41.42,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_4_3m_180__lamppost_1",
+  "label": "lamppost",
+  "ask": "tree",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.006487963978774153,
+  "ms": 41.58,
+  "text": "no"
+ },
+ {
+  "id": "orbit_crate_1_3m_180__lamppost_1",
+  "label": "lamppost",
+  "ask": "lamppost",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.751979649341637,
+  "ms": 42.69,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_crate_1_3m_180__lamppost_1",
+  "label": "lamppost",
+  "ask": "planter",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.02595693474539095,
+  "ms": 41.21,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__planter_2",
+  "label": "planter",
+  "ask": "planter",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.958535992023926,
+  "ms": 41.4,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__planter_2",
+  "label": "planter",
+  "ask": "tree",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.020332328725630146,
+  "ms": 40.02,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_6m_0__planter_2",
+  "label": "planter",
+  "ask": "planter",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9693229956527878,
+  "ms": 42.06,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_6m_0__planter_2",
+  "label": "planter",
+  "ask": "bench",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.3345831546428835,
+  "ms": 41.6,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_5_4.5m_90__planter_1",
+  "label": "planter",
+  "ask": "planter",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9912883591835565,
+  "ms": 41.83,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_5_4.5m_90__planter_1",
+  "label": "planter",
+  "ask": "traffic light",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.009708460651300797,
+  "ms": 41.74,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_5_6m_90__planter_1",
+  "label": "planter",
+  "ask": "planter",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.992422418491843,
+  "ms": 41.62,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_5_6m_90__planter_1",
+  "label": "planter",
+  "ask": "tree",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.5467320568079773,
+  "ms": 41.28,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+  "label": "traffic light",
+  "ask": "traffic light",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.02096406346509539,
+  "ms": 46.36,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+  "label": "traffic light",
+  "ask": "bicycle",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.0503290575809463,
+  "ms": 44.89,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_6_4.5m_90__traffic_light_1",
+  "label": "traffic light",
+  "ask": "traffic light",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.02595714067343702,
+  "ms": 43.62,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_6_4.5m_90__traffic_light_1",
+  "label": "traffic light",
+  "ask": "tree",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.04208603511217623,
+  "ms": 42.0,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_6_6m_90__traffic_light_1",
+  "label": "traffic light",
+  "ask": "traffic light",
+  "expect": "present",
+  "verdict": "absent",
+  "p_yes": 0.029311920922167223,
+  "ms": 40.84,
+  "text": "no"
+ },
+ {
+  "id": "orbit_building_6_6m_90__traffic_light_1",
+  "label": "traffic light",
+  "ask": "bench",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.392292851076804,
+  "ms": 40.85,
+  "text": "no"
+ },
+ {
+  "id": "orbit_planter_1_3m_0__traffic_light_1",
+  "label": "traffic light",
+  "ask": "traffic light",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9928783352302514,
+  "ms": 40.24,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_planter_1_3m_0__traffic_light_1",
+  "label": "traffic light",
+  "ask": "bicycle",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.0008830452461440503,
+  "ms": 41.16,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_3m_0__tree_2",
+  "label": "tree",
+  "ask": "tree",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9724129357494294,
+  "ms": 41.87,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_3m_0__tree_2",
+  "label": "tree",
+  "ask": "bench",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.001325020538317895,
+  "ms": 41.8,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__tree_2",
+  "label": "tree",
+  "ask": "tree",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.8596442626365873,
+  "ms": 42.76,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_4.5m_0__tree_2",
+  "label": "tree",
+  "ask": "bicycle",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.0012448413942634168,
+  "ms": 42.98,
+  "text": "no"
+ },
+ {
+  "id": "orbit_bench_1_6m_0__tree_2",
+  "label": "tree",
+  "ask": "tree",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.9780490433229834,
+  "ms": 42.02,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_bench_1_6m_0__tree_2",
+  "label": "tree",
+  "ask": "bollard",
+  "expect": "absent",
+  "verdict": "present",
+  "p_yes": 0.6547831513572622,
+  "ms": 40.82,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_1_6m_0__tree_2",
+  "label": "tree",
+  "ask": "tree",
+  "expect": "present",
+  "verdict": "present",
+  "p_yes": 0.5117090993689057,
+  "ms": 42.13,
+  "text": "yes"
+ },
+ {
+  "id": "orbit_building_1_6m_0__tree_2",
+  "label": "tree",
+  "ask": "bench",
+  "expect": "absent",
+  "verdict": "absent",
+  "p_yes": 0.3276617172478774,
+  "ms": 43.09,
+  "text": "no"
+ }
+]

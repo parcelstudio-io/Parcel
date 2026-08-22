@@ -88,7 +88,23 @@ ALLOWED_KEYS = frozenset(
 #: The nested ``whisperer:`` block — the owner's cost knob (card R11, owner
 #: directive 2026-08-20). Same refusal discipline as the outer schema.
 WHISPERER_ALLOWED_KEYS = frozenset(
-    {"enabled", "max_updates_per_minute", "min_gap_s", "window_s"}
+    {"enabled", "max_updates_per_minute", "min_gap_s", "window_s", "owner_events"}
+)
+
+#: Card P2-B. The nested ``whisperer.owner_events:`` block. Same fail-closed
+#: discipline as every other block in this file: an unknown key is a typo, and a
+#: typo that silently read as a default would be a companion that greets on a
+#: schedule nobody wrote down.
+OWNER_EVENTS_ALLOWED_KEYS = frozenset(
+    {
+        "enabled",
+        "min_confidence",
+        "appear_debounce_s",
+        "absence_s",
+        "long_absence_h",
+        "greeting_interval_s",
+        "question_of_the_day",
+    }
 )
 
 #: Card P0-B, deliverable 1 — WHICH MOTION TOOLS A SYSTEM-INITIATED REPLY MAY RUN.
@@ -212,6 +228,65 @@ class RealtimeConfigError(ValueError):
 
 
 @dataclass(frozen=True)
+class OwnerEventsConfig:
+    """Card P2-B. When the robot may start a conversation ABOUT THE OWNER.
+
+    THE ONE THING TO UNDERSTAND ABOUT THIS BLOCK
+    --------------------------------------------
+    It buys nothing. Every owner event still passes through the whisperer's
+    band table, its dedup window, its ``min_gap_s`` and its
+    ``max_updates_per_minute`` cap, and none of them is in ``CRITICAL_KINDS`` —
+    so this block can only ever make the robot *eligible* to greet you, never
+    entitled to. The knobs here decide when a greeting is DUE; the knobs above
+    decide whether a due greeting is affordable, and they win.
+
+    **Default off.** A companion that greets you is the point of card P2-B, and
+    default-off is still right for the shipped file: every forward is a billed
+    hosted response, and a config written before this card must keep costing
+    exactly what it cost. ``configs/realtime.prototype.yaml.example`` is where
+    ``enabled: true`` belongs (see P2B_STATUS.md §2 for the block to paste).
+    """
+
+    #: The opt-in. Nothing else in this block has any effect while it is false,
+    #: and with it false the owner-event classes are never produced at all —
+    #: not produced-and-suppressed, not produced-and-deduped: never produced.
+    enabled: bool = False
+    #: How sure the owner track has to be before a sighting counts. The mocap /
+    #: UWB track reports 1.0; P1-C's pixel track reports a measured similarity,
+    #: and this is the number that keeps a 0.2-confidence stranger from being
+    #: greeted as the owner.
+    min_confidence: float = 0.3
+    #: How long the owner must stay in view before an appearance is announced.
+    #: This is the anti-flicker guard: a tracker that drops one frame must not
+    #: buy a greeting.
+    appear_debounce_s: float = 2.0
+    #: How long the owner must have been AWAY for a new sighting to count as an
+    #: appearance at all. Below this it is the same visit and the dog has
+    #: already said hello — the single most important number in this block for
+    #: anybody who has met a real dog.
+    absence_s: float = 60.0
+    #: Above this, an appearance is a RETURN and gets the other sentence. In
+    #: hours because that is the unit the owner thinks in.
+    long_absence_h: float = 3.0
+    #: Silence, in seconds, after which a present owner is owed a greeting.
+    #: ``0`` disables that class alone (the appearance classes keep working).
+    greeting_interval_s: float = 900.0
+    #: The one question a day. False disables that class alone.
+    question_of_the_day: bool = True
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "enabled": self.enabled,
+            "min_confidence": self.min_confidence,
+            "appear_debounce_s": self.appear_debounce_s,
+            "absence_s": self.absence_s,
+            "long_absence_h": self.long_absence_h,
+            "greeting_interval_s": self.greeting_interval_s,
+            "question_of_the_day": self.question_of_the_day,
+        }
+
+
+@dataclass(frozen=True)
 class WhispererConfig:
     """How often the robot may talk to the owner about ITSELF.
 
@@ -253,6 +328,11 @@ class WhispererConfig:
     #: chattier prototype could only buy it in whole units of two-per-minute.
     #: Default 60.0: the same minute, now written down.
     window_s: float = DEFAULT_WHISPERER_WINDOW_S
+    #: Card P2-B. The owner-event bands. Nested here rather than at the top
+    #: level because they ARE whisperer traffic: they are banded, deduped,
+    #: min-gapped and capped by the block they sit in, and a reader who turns
+    #: the cap down has to be able to see in one place everything the cap holds.
+    owner_events: OwnerEventsConfig = OwnerEventsConfig()
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -260,6 +340,7 @@ class WhispererConfig:
             "max_updates_per_minute": self.max_updates_per_minute,
             "min_gap_s": self.min_gap_s,
             "window_s": self.window_s,
+            "owner_events": self.owner_events.as_dict(),
         }
 
 
@@ -768,7 +849,101 @@ def whisperer_config_from_mapping(mapping: Mapping[str, Any] | None) -> Whispere
         max_updates_per_minute=_whole_number(mapping, "max_updates_per_minute", 2),
         min_gap_s=_non_negative(mapping, "min_gap_s", 15.0),
         window_s=_whisperer_window(mapping),
+        owner_events=owner_events_config_from_mapping(mapping.get("owner_events")),
     )
+
+
+def owner_events_config_from_mapping(
+    mapping: Mapping[str, Any] | None,
+) -> OwnerEventsConfig:
+    """Validate ``whisperer.owner_events:``. Absent ⇒ the documented defaults (off).
+
+    Card P2-B. Every number here is a duration or a probability and every one of
+    them is refused when it is non-finite, exactly as card R25 taught the rest of
+    this file: an infinite ``absence_s`` is a dog that never greets you again,
+    which is a silent off switch wearing a tuning value's clothes.
+    """
+
+    if mapping is None:
+        return OwnerEventsConfig()
+    if not isinstance(mapping, Mapping):
+        raise RealtimeConfigError(
+            "realtime.whisperer.owner_events must be a mapping, got "
+            f"{type(mapping).__name__}"
+        )
+    unknown = sorted(str(key) for key in mapping if str(key) not in OWNER_EVENTS_ALLOWED_KEYS)
+    if unknown:
+        raise RealtimeConfigError(
+            f"unknown realtime.whisperer.owner_events key(s): {', '.join(unknown)}; "
+            f"allowed: {', '.join(sorted(OWNER_EVENTS_ALLOWED_KEYS))}"
+        )
+    return OwnerEventsConfig(
+        enabled=_owner_events_flag(mapping, "enabled", False),
+        min_confidence=_owner_events_probability(mapping, "min_confidence", 0.3),
+        appear_debounce_s=_owner_events_seconds(
+            mapping, "appear_debounce_s", 2.0, positive=True
+        ),
+        absence_s=_owner_events_seconds(mapping, "absence_s", 60.0, positive=False),
+        long_absence_h=_owner_events_seconds(
+            mapping, "long_absence_h", 3.0, positive=True
+        ),
+        greeting_interval_s=_owner_events_seconds(
+            mapping, "greeting_interval_s", 900.0, positive=False
+        ),
+        question_of_the_day=_owner_events_flag(mapping, "question_of_the_day", True),
+    )
+
+
+def _owner_events_flag(mapping: Mapping[str, Any], key: str, default: bool) -> bool:
+    value = mapping.get(key, default)
+    if not isinstance(value, bool):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.owner_events.{key} must be a boolean, got {value!r}"
+        )
+    return value
+
+
+def _owner_events_number(mapping: Mapping[str, Any], key: str, default: float) -> float:
+    value = mapping.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.owner_events.{key} must be a number, got {value!r}"
+        )
+    number = float(value)
+    if not math.isfinite(number):
+        raise RealtimeConfigError(
+            f"realtime.whisperer.owner_events.{key} must be a finite number, got {number}"
+        )
+    return number
+
+
+def _owner_events_seconds(
+    mapping: Mapping[str, Any], key: str, default: float, *, positive: bool
+) -> float:
+    number = _owner_events_number(mapping, key, default)
+    if positive and not number > 0.0:
+        raise RealtimeConfigError(
+            f"realtime.whisperer.owner_events.{key} must be greater than zero, got "
+            f"{number}. Use 'enabled: false' to turn owner events off, which is "
+            f"visible in the config."
+        )
+    if not positive and number < 0.0:
+        raise RealtimeConfigError(
+            f"realtime.whisperer.owner_events.{key} must not be negative, got {number}"
+        )
+    return number
+
+
+def _owner_events_probability(
+    mapping: Mapping[str, Any], key: str, default: float
+) -> float:
+    number = _owner_events_number(mapping, key, default)
+    if not 0.0 <= number <= 1.0:
+        raise RealtimeConfigError(
+            f"realtime.whisperer.owner_events.{key} is a track confidence and must "
+            f"be between 0.0 and 1.0, got {number}"
+        )
+    return number
 
 
 def _whisperer_window(mapping: Mapping[str, Any]) -> float:
@@ -1152,6 +1327,7 @@ __all__ = [
     "VOICE_IDENTITY_ALLOWED_KEYS",
     "WHISPERER_ALLOWED_KEYS",
     "CaptureConfig",
+    "OwnerEventsConfig",
     "RealtimeConfig",
     "RealtimeConfigError",
     "VoiceIdentityConfig",
@@ -1159,6 +1335,7 @@ __all__ = [
     "capture_config_from_mapping",
     "default_realtime_config",
     "load_realtime_config",
+    "owner_events_config_from_mapping",
     "realtime_config_from_mapping",
     "resolve_capture_dir",
     "resolve_realtime_config_path",

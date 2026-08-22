@@ -91,10 +91,45 @@ have a gate turned off" invariant is checked per *active* signal: dropping a
 gate is now something a config says out loud, and zeroing its threshold is
 still the silent death this class refuses.
 
+The sixth gate, and a third answer (card P1-D)
+----------------------------------------------
+C-3 turned the gate on over a learned map and measured **0/18** — every single
+answer refused, every one ``indecisive_ranking``, on perfect-geometry data.
+P0-D fixed the estimator. What remained was the posture: six AND-ed signals
+fitted on a world ``SYNTHESIS.md`` §2 declared invalid, all of which must pass,
+is a gate whose only reachable answer is no. Two things change here.
+
+**A signal that can say "that isn't a bench".** :data:`SIGNAL_VLM_VETO` shows
+the top candidate's best-view crop and the query noun to Qwen3-VL-2B
+(``SYNTHESIS.md`` decision 4: a statistical tie with the 8B at n=40, 4.4 GB,
+89 ms) and takes the admission away on an *absent* answer. It runs LAST, only
+on a place that already passed every evidence gate, and it is **subtractive
+only** — which is the entire safety argument for letting a 2B model near the
+mission path. It is not in :data:`DEFAULT_SIGNALS`.
+
+**A third outcome.** :data:`OUTCOME_ADMIT` / :data:`OUTCOME_ASK` /
+:data:`OUTCOME_REFUSE`. Below the admit threshold the dog now *asks* — "I think
+it's over there, want me to go?" — instead of refusing, whenever the shortfall
+is one of :data:`ASK_ELIGIBLE_REASONS` and there is a candidate to ask about.
+REFUSE is kept for the four cases where a question would be dishonest: no
+evidence at all, the detector was never asked, the place is not somewhere a
+robot can stand, and the veto fired. ``admitted`` still means exactly what it
+meant — may motion start — so an ASK authorizes nothing.
+
+Both are OFF unless a config says otherwise (:attr:`AbstentionPolicy.signals`,
+:attr:`AbstentionPolicy.ask_below_threshold`), and the shipping verdicts do not
+move.
+
 Fail-closed, everywhere
 -----------------------
 Every missing signal is a refusal. An empty map is a refusal. A query the
-detector was never asked about is a refusal. This is the **opposite** of R20's
+detector was never asked about is a refusal. **Card P1-D narrows this**, and
+only under a profile that asks for it: a *shortfall* against a provisional
+threshold becomes a question rather than a refusal, because the thresholds were
+fitted on a dead world and refusing on them is not honesty, it is
+superstition. What stays fail-closed is everything that is not a threshold —
+absence of evidence, absence of a candidate, physical unreachability, and an
+explicit veto. This is the **opposite** of R20's
 deliberate fail-open on an empty vocabulary (R20 §9 open risk 1) and the
 difference is principled: R20's vocabulary is a config sidecar, and its absence
 means *the robot failed to load a file*; a perception map's emptiness means
@@ -114,7 +149,9 @@ on real photographs). They must be re-earned after the world work.
 
 from __future__ import annotations
 
+import logging
 import math
+import threading
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -133,6 +170,10 @@ __all__ = [
     "ABSTAIN_NOT_NAVIGABLE",
     "ABSTAIN_NO_DETECTOR_SUPPORT",
     "ABSTAIN_NO_OBSERVATIONS",
+    "ABSTAIN_VETO_UNAVAILABLE",
+    "ABSTAIN_VLM_VETO",
+    "ASK_ELIGIBLE_REASONS",
+    "ASK_STATUS",
     "DEFAULT_SIGNALS",
     "GROUNDED",
     "GROUND_BAND_M",
@@ -142,8 +183,12 @@ __all__ = [
     "MIN_LABEL_PROBABILITY",
     "MIN_LABEL_PURITY",
     "MIN_RANKING_MARGIN",
+    "OUTCOME_ADMIT",
+    "OUTCOME_ASK",
+    "OUTCOME_REFUSE",
     "RANKING_MARGIN_LABEL_STRENGTH",
     "RANKING_MARGIN_ROBUST_Z",
+    "REGISTERED_OUTCOMES",
     "REGISTERED_RANKING_MARGIN_MODES",
     "REGISTERED_SIGNALS",
     "SIGNAL_EVIDENCE_COUNT",
@@ -152,18 +197,27 @@ __all__ = [
     "SIGNAL_LABEL_SUPPORT",
     "SIGNAL_NAVIGABILITY",
     "SIGNAL_RANKING_MARGIN",
+    "SIGNAL_VLM_VETO",
     "STRAY_LABEL_STRENGTH",
+    "VETO_ABSENT",
+    "VETO_PRESENT",
+    "VETO_UNAVAILABLE",
     "AbstentionPolicy",
     "AbstentionVerdict",
     "DetectorSupport",
     "PlaceEvidence",
     "active_abstention_policy",
     "assess_place_query",
+    "clear_veto_cache",
     "detector_prompts_for",
     "label_strength_margin",
     "ranking_margin",
+    "resolve_veto",
     "use_abstention_policy",
+    "use_veto",
 ]
+
+logger = logging.getLogger(__name__)
 
 # --------------------------------------------------------------- verdicts ---
 
@@ -174,6 +228,18 @@ ABSTAIN_LABEL_DISAGREEMENT = "label_disagreement"
 ABSTAIN_INSUFFICIENT_EVIDENCE = "insufficient_evidence"
 ABSTAIN_NOT_NAVIGABLE = "not_navigable"
 ABSTAIN_INDECISIVE_RANKING = "indecisive_ranking"
+#: Card P1-D. The VLM looked at the top candidate's best-view crop, was asked
+#: whether it is a ``<query>``, and said no. The only *subtractive* reason in
+#: this module: every other one is the absence of evidence, and this one is
+#: evidence of absence.
+ABSTAIN_VLM_VETO = "vlm_veto_absent"
+#: Card P1-D. The veto could not be consulted — no seat, no crop, a cold seat,
+#: or a declined GPU moment. NOT a refusal: ASK-eligible, and deliberately
+#: separate from :data:`ABSTAIN_INDECISIVE_RANKING`. An earlier draft reused the
+#: ranking reason here, so the logs said "indecisive ranking" while reporting a
+#: ranking margin of 39.1 — a gate that lies about which of its signals stopped
+#: it is a gate nobody can debug.
+ABSTAIN_VETO_UNAVAILABLE = "vlm_veto_unavailable"
 
 #: Every refusal this module can return. A caller that switches on the reason
 #: can be checked against this set instead of against a comment.
@@ -185,8 +251,78 @@ ABSTENTION_REASONS: frozenset[str] = frozenset(
         ABSTAIN_INSUFFICIENT_EVIDENCE,
         ABSTAIN_NOT_NAVIGABLE,
         ABSTAIN_INDECISIVE_RANKING,
+        ABSTAIN_VLM_VETO,
+        ABSTAIN_VETO_UNAVAILABLE,
     }
 )
+
+# ------------------------------------------------- the three-way outcome ---
+#
+# Card P1-D. C-3 measured 0/18: every learned-map answer refused. The prototype
+# ruling (audit §9) is that a gate which can only say YES or NO on evidence it
+# does not yet have will say NO forever — so the gate gets a third answer, and
+# it is the one a companion would actually give.
+
+#: The evidence carried the query. Motion may be authorized.
+OUTCOME_ADMIT = "admit"
+#: Below the admit threshold, but there IS a candidate and nothing contradicted
+#: it. "I think it's over there — want me to go?" No motion starts; the owner
+#: decides. This is the default posture below threshold under a prototype
+#: profile, and it is the whole content of "ask, don't refuse".
+OUTCOME_ASK = "ask"
+#: The honest no. Reserved, deliberately narrowly, for three cases: the VLM
+#: veto fired, there is no evidence at all, or the place is physically not
+#: somewhere the robot can stand.
+OUTCOME_REFUSE = "refuse"
+
+REGISTERED_OUTCOMES: frozenset[str] = frozenset(
+    {OUTCOME_ADMIT, OUTCOME_ASK, OUTCOME_REFUSE}
+)
+
+#: The status an ASK carries on the hosted lane. Deliberately NOT P0-B's
+#: ``unknown_place``: that one means "no place by that name exists on my map",
+#: and this one means "a place I can see might be it". See
+#: :meth:`AbstentionVerdict.as_ask`.
+ASK_STATUS = "uncertain_place"
+
+#: Which refusals may soften into a question, and which may not.
+#:
+#: ASK-eligible are the three *shortfall* reasons — the map has a candidate and
+#: the evidence merely fell short of a threshold that was fitted on a world
+#: SYNTHESIS.md §2 declared dead. Asking about those is honest.
+#:
+#: The rest stay REFUSE and each for its own reason, none of them a threshold:
+#:   ``no_observations``      there is no candidate; there is nothing to ask about
+#:   ``no_detector_support``  the label head was never asked, or never answered;
+#:                            "want me to go to the thing I have no evidence of"
+#:                            is not a question, it is a guess with a question mark
+#:   ``not_navigable``        a physical claim about the world. This is the gate
+#:                            that refuses corpus row 12 ("take me to the moon")
+#:                            and softening it would hand that row back
+#:   ``vlm_veto_absent``      something LOOKED and said no
+ASK_ELIGIBLE_REASONS: frozenset[str] = frozenset(
+    {
+        ABSTAIN_LABEL_DISAGREEMENT,
+        ABSTAIN_INSUFFICIENT_EVIDENCE,
+        ABSTAIN_INDECISIVE_RANKING,
+        ABSTAIN_VETO_UNAVAILABLE,
+    }
+)
+
+# ----------------------------------------------- the veto's own vocabulary ---
+#
+# Declared HERE, not in ``parcel_robot.vlm_veto``, and the dependency runs that
+# way round on purpose: the gate must be able to name the three answers without
+# importing a package that can import torch. ``vlm_veto`` imports these.
+
+#: The VLM looked and agreed the crop shows the queried noun.
+VETO_PRESENT = "present"
+#: The VLM looked and said it does not. This is the only answer that subtracts.
+VETO_ABSENT = "absent"
+#: No seat installed, no crop to look at, the GPU moment was declined, or the
+#: model answered neither yes nor no. **Never an admit and never a refusal** —
+#: it degrades to ASK, which is why enabling the veto requires the ask posture.
+VETO_UNAVAILABLE = "unavailable"
 
 # -------------------------------------------------------------- constants ---
 
@@ -248,6 +384,12 @@ SIGNAL_EVIDENCE_COUNT = "evidence_count"
 SIGNAL_NAVIGABILITY = "navigability"
 #: Decisiveness of the ranking (:data:`MIN_RANKING_MARGIN`).
 SIGNAL_RANKING_MARGIN = "ranking_margin"
+#: Card P1-D. The Qwen3-VL-2B verification veto: the top candidate's best-view
+#: crop and the query noun go to the model, and an *absent* answer removes the
+#: admission. Subtractive only — it never promotes a place the evidence gates
+#: refused, which is why a 2B model is allowed this close to the mission path.
+#: Not in :data:`DEFAULT_SIGNALS`: the shipping operating point does not move.
+SIGNAL_VLM_VETO = "vlm_veto"
 
 #: The shipping signal set: all six, in the order the gate applies them. This
 #: is the default, so a config that says nothing gets exactly PG-3's operating
@@ -264,7 +406,11 @@ DEFAULT_SIGNALS: tuple[str, ...] = (
 #: Every signal name a config may write. Anything else is a hard error, for the
 #: same reason an unknown key is: a misspelled gate that reads as "the default"
 #: looks exactly like a gate that never fires.
-REGISTERED_SIGNALS: frozenset[str] = frozenset(DEFAULT_SIGNALS)
+#:
+#: Card P1-D adds :data:`SIGNAL_VLM_VETO` here and NOT to
+#: :data:`DEFAULT_SIGNALS`: a config may select it, nothing selects it by
+#: default, and the shipped verdicts are byte-identical either way.
+REGISTERED_SIGNALS: frozenset[str] = frozenset({*DEFAULT_SIGNALS, SIGNAL_VLM_VETO})
 
 # ------------------------------------------------------ the ranking margin ---
 
@@ -348,10 +494,18 @@ class PlaceEvidence:
     ground_evidence_fraction: float = 0.0
     #: Text→place cosine. RANKING ONLY.
     similarity: float = 0.0
+    #: Card P1-D. The place's BEST-VIEW crop, encoded, or ``None``. This is the
+    #: only field the gate does not reason about: it is carried so the VLM veto
+    #: has something to look at without the gate having to know where crops come
+    #: from. A place with no crop is a place the veto cannot verify, which is an
+    #: ASK — see :data:`VETO_UNAVAILABLE`.
+    crop_png: bytes | None = None
 
     def __post_init__(self) -> None:
         if not self.place_id or len(self.place_id) > 128:
             raise ValueError("PlaceEvidence.place_id is invalid")
+        if self.crop_png is not None and not isinstance(self.crop_png, (bytes, bytearray)):
+            raise TypeError("PlaceEvidence.crop_png must be bytes")
         for name in ("x", "y", "z", "similarity", "ground_evidence_fraction"):
             if not math.isfinite(float(getattr(self, name))):
                 raise ValueError(f"PlaceEvidence.{name} must be finite")
@@ -405,10 +559,24 @@ class AbstentionPolicy:
     #: Which estimator :data:`SIGNAL_RANKING_MARGIN` uses. Card P0-D. Defaults
     #: to the fitted robust z-score.
     ranking_margin_mode: str = RANKING_MARGIN_ROBUST_Z
+    #: Card P1-D. WHICH seat answers :data:`SIGNAL_VLM_VETO`, named in config.
+    #: Empty means "no seat" and the veto answers :data:`VETO_UNAVAILABLE` for
+    #: every place, which is an ASK. A host without the weights therefore asks
+    #: rather than admitting or refusing, and that degradation is a config fact
+    #: rather than an accident of what happens to be importable.
+    veto_model: str = ""
+    #: Card P1-D. Does a shortfall become a QUESTION instead of a refusal?
+    #: ``False`` is the shipped two-way gate, unchanged: below threshold is a
+    #: refusal, exactly as PG-3 wrote it. ``True`` is the prototype posture —
+    #: :data:`ASK_ELIGIBLE_REASONS` become :data:`OUTCOME_ASK`, and the other
+    #: refusals are untouched.
+    ask_below_threshold: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.enabled, bool):
             raise TypeError("AbstentionPolicy.enabled must be a boolean")
+        if not isinstance(self.ask_below_threshold, bool):
+            raise TypeError("AbstentionPolicy.ask_below_threshold must be a boolean")
         if isinstance(self.signals, str) or not isinstance(self.signals, (tuple, list)):
             raise TypeError("AbstentionPolicy.signals must be a sequence of names")
         object.__setattr__(self, "signals", tuple(str(s) for s in self.signals))
@@ -448,6 +616,18 @@ class AbstentionPolicy:
                 "enabled gate with no signals admits everything, which is the "
                 "silent death this class exists to refuse"
             )
+        # Card P1-D. The veto is the only signal that can be UNAVAILABLE at call
+        # time — no seat installed, no crop, or the GPU moment declined. An
+        # unavailable veto degrades to ASK, so selecting the veto without the ask
+        # posture would silently turn every unavailable answer into a refusal and
+        # hand back the 0/18 this card exists to end. Making it a construction
+        # error means the two keys cannot drift apart in a config.
+        if SIGNAL_VLM_VETO in set(self.signals) and not self.ask_below_threshold:
+            raise ValueError(
+                "an enabled AbstentionPolicy that selects the vlm_veto signal must "
+                "set ask_below_threshold: true — an unavailable veto degrades to "
+                "ASK, and without the ask posture that degradation is a refusal"
+            )
         # ENABLED-ONLY invariants: a gate at zero is a gate that is not there.
         # Checked per ACTIVE signal (card P0-D): a threshold whose signal the
         # config did not select is never read, so requiring it to be non-zero
@@ -462,6 +642,10 @@ class AbstentionPolicy:
              self.min_ground_evidence_fraction > 0.0),
             (SIGNAL_RANKING_MARGIN, "min_ranking_margin",
              math.isfinite(self.min_ranking_margin)),
+            # The veto has no threshold of its own: its operating point lives in
+            # ``vlm_veto.VETO_P_YES_PRESENT``, inside the model wrapper that
+            # measured it. There is nothing here that could be zeroed, so the
+            # per-signal check has nothing to say about it.
             (None, "ground_band_m", self.ground_band_m > 0.0),
             (None, "offer_limit", self.offer_limit >= 0),
         )
@@ -507,6 +691,8 @@ class AbstentionPolicy:
             "offer_limit",
             "signals",
             "ranking_margin_mode",
+            "ask_below_threshold",
+            "veto_model",
         }
         unknown = sorted(set(data) - fields)
         if unknown:
@@ -515,7 +701,7 @@ class AbstentionPolicy:
         for key, value in data.items():
             if key in {"min_label_frames", "min_evidence_frames", "offer_limit"}:
                 kwargs[key] = int(value)
-            elif key == "enabled":
+            elif key in {"enabled", "ask_below_threshold"}:
                 kwargs[key] = bool(value)
             elif key == "signals":
                 if isinstance(value, str) or not isinstance(value, (list, tuple)):
@@ -523,7 +709,7 @@ class AbstentionPolicy:
                         "perception.abstention.signals must be a list of signal names"
                     )
                 kwargs[key] = tuple(str(item) for item in value)
-            elif key == "ranking_margin_mode":
+            elif key in {"ranking_margin_mode", "veto_model"}:
                 kwargs[key] = str(value)
             else:
                 kwargs[key] = float(value)
@@ -549,6 +735,83 @@ def use_abstention_policy(policy: AbstentionPolicy | None) -> None:
     _ACTIVE_POLICY = policy if policy is not None else AbstentionPolicy()
 
 
+# ------------------------------------------------------- the veto's seam ---
+#
+# Card P1-D, post-verification. The veto was originally a keyword argument with
+# no producer: `assess_place_query(veto=...)` existed, the roster could select
+# the signal, and NOTHING in the product ever passed one — so the shipped path
+# answered `unavailable` for every place and the measured 5-of-7 admissions were
+# reachable only from a harness that monkeypatched the gate. The verifier caught
+# it. This is the producer.
+#
+# It resolves HERE, inside the gate, rather than at the two call sites, for one
+# reason: there are two call sites today (`navigation.semantic_map` and
+# `online_map.online_map`) and a third one is a plausible edit. A seam that each
+# caller has to remember to thread is a seam that a new caller silently drops,
+# which is exactly the defect being repaired.
+
+_VETO_LOCK = threading.Lock()
+_VETO_RUNNERS: dict[str, Any] = {}
+_VETO_OVERRIDE: Any = None
+
+
+def use_veto(veto: Any) -> None:
+    """Install (or clear, with ``None``) a process-wide veto callable.
+
+    Tests and harnesses use this instead of monkeypatching the gate.
+    """
+
+    global _VETO_OVERRIDE
+    with _VETO_LOCK:
+        _VETO_OVERRIDE = veto
+
+
+def clear_veto_cache() -> None:
+    """Drop resolved seats. A new model id resolves fresh after this."""
+
+    with _VETO_LOCK:
+        _VETO_RUNNERS.clear()
+
+
+def resolve_veto(policy: AbstentionPolicy) -> Any:
+    """The veto callable for ``policy``, built once per model id and cached.
+
+    ``parcel_robot.vlm_veto`` is imported HERE and not at module scope, for two
+    independent reasons: that package imports names from this one (so a
+    top-level import is a cycle), and the gate is on the mission path while the
+    seat can pull in a tensor library. A host that never selects the signal
+    never imports the package at all.
+
+    Any failure to build a seat resolves to ``None``, which the gate reads as
+    :data:`VETO_UNAVAILABLE` and therefore as an ASK. A missing model is a
+    question, never a crash and never a silent admission.
+    """
+
+    with _VETO_LOCK:
+        if _VETO_OVERRIDE is not None:
+            return _VETO_OVERRIDE
+        key = str(policy.veto_model or "")
+        if key in _VETO_RUNNERS:
+            return _VETO_RUNNERS[key]
+    try:
+        from parcel_robot.vlm_veto import runner_for
+
+        # ``veto_callable()`` and not the runner itself: the gate calls
+        # ``veto(query, place)``, and a VetoRunner is not callable. The first
+        # draft returned the runner, every call raised TypeError, and the gate
+        # dutifully read that as "unavailable" — so the veto looked wired,
+        # answered nothing, and the product asked about everything. Caught by
+        # the CI eval row in ``tests/test_p1d_eval_rows.py``.
+        runner = runner_for(key).veto_callable()
+    except Exception:
+        logger.warning("vlm veto seat %r could not be built; asking instead", key,
+                       exc_info=True)
+        runner = None
+    with _VETO_LOCK:
+        _VETO_RUNNERS[key] = runner
+        return runner
+
+
 # --------------------------------------------------------------- verdict ---
 
 
@@ -569,12 +832,45 @@ class AbstentionVerdict:
     alternatives: tuple[str, ...] = ()
     place_id: str | None = None
     signals: Mapping[str, float] = field(default_factory=dict)
+    #: Card P1-D. ``""`` means "derive it": admitted ⇒ ADMIT, otherwise REFUSE,
+    #: which is exactly the two-way gate PG-3 shipped. Every construction that
+    #: predates this card therefore keeps its meaning without being edited.
+    outcome: str = ""
+    #: The place an ASK is asking ABOUT — the best candidate's label. Empty on
+    #: an admit (the place is already named by ``place_id``) and on a refusal
+    #: with no candidate.
+    candidate: str = ""
 
     def __post_init__(self) -> None:
         if self.admitted and self.reason != GROUNDED:
             raise ValueError("an admitted verdict must report the GROUNDED reason")
         if not self.admitted and self.reason not in ABSTENTION_REASONS:
             raise ValueError(f"unknown abstention reason: {self.reason!r}")
+        outcome = str(self.outcome or "")
+        if not outcome:
+            outcome = OUTCOME_ADMIT if self.admitted else OUTCOME_REFUSE
+        if outcome not in REGISTERED_OUTCOMES:
+            raise ValueError(f"unknown abstention outcome: {self.outcome!r}")
+        # The two fields cannot disagree. ``admitted`` is what every existing
+        # caller reads to decide whether motion may start, so an ASK that also
+        # said ``admitted=True`` would authorize the motion it was asking
+        # permission for.
+        if self.admitted and outcome != OUTCOME_ADMIT:
+            raise ValueError("an admitted verdict must carry the ADMIT outcome")
+        if not self.admitted and outcome == OUTCOME_ADMIT:
+            raise ValueError("an ADMIT outcome must be an admitted verdict")
+        object.__setattr__(self, "outcome", outcome)
+        object.__setattr__(self, "candidate", " ".join(str(self.candidate).split())[:160])
+
+    @property
+    def asks(self) -> bool:
+        """Is this a question rather than an answer?"""
+
+        return self.outcome == OUTCOME_ASK
+
+    @property
+    def refuses(self) -> bool:
+        return self.outcome == OUTCOME_REFUSE
 
     def _as_admission(self) -> PlaceAdmission:
         return PlaceAdmission(
@@ -594,6 +890,57 @@ class AbstentionVerdict:
 
         return self._as_admission().reply()
 
+    def question(self) -> str:
+        """The ASK sentence. Empty for any other outcome.
+
+        A companion's version of a refusal. It names what the robot thinks it
+        found, says plainly that it is not sure, and puts the decision with the
+        owner — which is the whole of "ask, don't refuse" in one sentence.
+        """
+
+        if self.outcome != OUTCOME_ASK:
+            return ""
+        target = self.candidate or self.query or "it"
+        if self.candidate and self.query and self.candidate.lower() != self.query.lower():
+            return (
+                f"I am not sure, but I think the {target} I have seen might be "
+                f"what you mean by {self.query}. Want me to go and look?"
+            )
+        return (
+            f"I think I have seen {target}, but I am not sure enough to set off "
+            "on my own. Want me to go and look?"
+        )
+
+    def as_ask(self) -> dict[str, Any]:
+        """The ASK, in the shape P0-B's broker already speaks.
+
+        The hosted lane already has an ask-not-refuse result:
+        ``tool_broker``'s ``{"status": "unknown_place", "place", "valid_places",
+        "detail", "reason"}``, which the model reads and turns into a question.
+        This is the same envelope for the case that envelope does not cover —
+        the map DOES have a candidate, it is simply not decisive — so the model
+        reads one shape, not two. The status differs (``uncertain_place`` vs
+        ``unknown_place``) because the two facts differ and a companion that
+        says "I have never heard of it" about a place it can see is lying.
+
+        Returns ``{}`` for a non-ASK verdict. **This card does not wire it**:
+        the broker and ``runtime.py`` are MUST-NOT-TOUCH, so the one-line
+        consumption is a handoff, recorded in ``P1D_STATUS.md``.
+        """
+
+        if self.outcome != OUTCOME_ASK:
+            return {}
+        return {
+            "status": ASK_STATUS,
+            "tool": "navigate_to",
+            "detail": self.question(),
+            "place": self.query,
+            "candidate": self.candidate,
+            "place_id": self.place_id,
+            "valid_places": list(self.alternatives),
+            "reason": self.reason,
+        }
+
     def as_dict(self) -> dict[str, Any]:
         return {
             "admitted": self.admitted,
@@ -602,6 +949,8 @@ class AbstentionVerdict:
             "alternatives": list(self.alternatives),
             "place_id": self.place_id,
             "signals": dict(self.signals),
+            "outcome": self.outcome,
+            "candidate": self.candidate,
         }
 
 
@@ -686,7 +1035,11 @@ def place_evidence_from_mapping(
         fraction = 0.0
     if not math.isfinite(fraction):
         fraction = 0.0
+    crop = item.get("thumbnail")
+    if not isinstance(crop, (bytes, bytearray)):
+        crop = None
     return PlaceEvidence(
+        crop_png=bytes(crop) if crop is not None else None,
         place_id=str(place_id)[:128] or "candidate",
         label=str(label)[:160] or str(term)[:160] or "place",
         x=float(x),
@@ -850,6 +1203,38 @@ def _offers(places: Sequence[PlaceEvidence], policy: AbstentionPolicy) -> tuple[
 # ------------------------------------------------------------- the gate ---
 
 
+def _veto_answer(
+    veto: Any, query: str, place: PlaceEvidence
+) -> tuple[str, float | None]:
+    """Ask the installed veto about one place. Never raises into the gate.
+
+    Accepts either a callable returning a :data:`VETO_PRESENT` /
+    :data:`VETO_ABSENT` / :data:`VETO_UNAVAILABLE` string, or one returning an
+    object with a ``.verdict`` (which is what
+    :class:`parcel_robot.vlm_veto.VetoAnswer` is). The gate deliberately does not
+    import ``vlm_veto`` — that package can import torch, and the gate is on the
+    mission path.
+    """
+
+    if veto is None:
+        return VETO_UNAVAILABLE, None
+    try:
+        answer = veto(query, place)
+    except Exception:  # a broken seat is unavailable, not a refusal
+        logger.warning("vlm veto raised; treating as unavailable", exc_info=True)
+        return VETO_UNAVAILABLE, None
+    verdict = getattr(answer, "verdict", answer)
+    p_yes = getattr(answer, "p_yes", None)
+    if verdict not in (VETO_PRESENT, VETO_ABSENT, VETO_UNAVAILABLE):
+        logger.warning("vlm veto returned %r; treating as unavailable", verdict)
+        return VETO_UNAVAILABLE, None
+    try:
+        p_yes = float(p_yes) if p_yes is not None else None
+    except (TypeError, ValueError):
+        p_yes = None
+    return str(verdict), p_yes
+
+
 def assess_place_query(
     query: str,
     *,
@@ -857,6 +1242,7 @@ def assess_place_query(
     places: Sequence[PlaceEvidence] = (),
     policy: AbstentionPolicy | None = None,
     map_similarities: Sequence[float] | None = None,
+    veto: Any = None,
 ) -> AbstentionVerdict:
     """Decide whether perception can honestly commit to ``query`` as a place.
 
@@ -878,8 +1264,40 @@ def assess_place_query(
     #: whole membership test below is a no-op on the shipping operating point.
     on = set(active.signals)
 
-    def refuse(reason: str, signals: Mapping[str, float]) -> AbstentionVerdict:
-        return AbstentionVerdict(False, text, reason, offers, None, dict(signals))
+    def refuse(
+        reason: str,
+        signals: Mapping[str, float],
+        *,
+        candidate: PlaceEvidence | None = None,
+    ) -> AbstentionVerdict:
+        """Card P1-D: the ONE place a shortfall becomes a question.
+
+        Every refusal in this function routes through here, so the ADMIT / ASK /
+        REFUSE decision is made once and cannot be forgotten at one call site.
+        The rule is small: the posture must be on, the reason must be a
+        shortfall (:data:`ASK_ELIGIBLE_REASONS`), and there must be a candidate
+        to ask ABOUT. Anything else is the refusal PG-3 always returned.
+        """
+
+        askable = (
+            active.ask_below_threshold
+            and reason in ASK_ELIGIBLE_REASONS
+            and candidate is not None
+        )
+        if not askable:
+            return AbstentionVerdict(
+                False, text, reason, offers, None, dict(signals), OUTCOME_REFUSE
+            )
+        return AbstentionVerdict(
+            False,
+            text,
+            reason,
+            offers,
+            candidate.place_id,
+            dict(signals),
+            OUTCOME_ASK,
+            candidate.label,
+        )
 
     label_head = SIGNAL_LABEL_PROBABILITY in on
     if label_head and (support is None or not support.asked):
@@ -941,6 +1359,11 @@ def assess_place_query(
         if signal in on
     ]
     worst = place_gates[0] if place_gates else ABSTAIN_LABEL_DISAGREEMENT
+    #: The place an ASK will name. Card P1-D: the best-ranked candidate the map
+    #: actually produced, chosen BEFORE any gate runs, because the question
+    #: "might this be what you meant" is about the map's best guess and not
+    #: about which threshold it happened to miss.
+    front_runner = ranked[0] if ranked else None
     for place in ranked:
         if SIGNAL_LABEL_SUPPORT in on and (
             place.label_support <= 0 or place.label_purity < active.min_label_purity
@@ -959,20 +1382,58 @@ def assess_place_query(
         elif SIGNAL_RANKING_MARGIN in on and margin < active.min_ranking_margin:
             failed = ABSTAIN_INDECISIVE_RANKING
         else:
+            passed = {
+                **signals,
+                "label_purity": place.label_purity,
+                "evidence_frames": float(place.evidence_frames),
+                "ground_evidence_fraction": place.ground_evidence_fraction,
+                "similarity": place.similarity,
+            }
+            # ------------------------------------------------- the veto ---
+            # LAST, and only on a place that already passed every evidence
+            # gate. That ordering is the whole safety argument for putting a
+            # 2B model on this path: it can only ever take an admission away,
+            # so a hallucinating verifier costs a question, never a place the
+            # evidence did not earn. It is also why it runs at most once per
+            # query instead of once per candidate — the crop it is shown is
+            # the winner's, and asking about the losers would be paying GPU
+            # time to re-rank, which is the thing a veto is not.
+            if SIGNAL_VLM_VETO in on:
+                # THE PRODUCER. ``veto=None`` from a caller means "use whatever
+                # the config named", not "there is no veto" — see resolve_veto.
+                # An explicit callable still wins, so a test can inject a stub
+                # without touching process state.
+                seat = veto if veto is not None else resolve_veto(active)
+                answer, p_yes = _veto_answer(seat, text, place)
+                passed["veto"] = 1.0 if answer == VETO_PRESENT else 0.0
+                if p_yes is not None:
+                    passed["veto_p_yes"] = float(p_yes)
+                if answer == VETO_ABSENT:
+                    # Evidence of absence, not absence of evidence. A REFUSE,
+                    # and never softened into a question: something looked at
+                    # the picture and said no.
+                    return AbstentionVerdict(
+                        False,
+                        text,
+                        ABSTAIN_VLM_VETO,
+                        offers,
+                        None,
+                        passed,
+                        OUTCOME_REFUSE,
+                        place.label,
+                    )
+                if answer == VETO_UNAVAILABLE:
+                    # No seat, no crop, or the GPU moment was declined. The
+                    # evidence says yes and nothing contradicts it, but the
+                    # signal the config selected did not run — so this is the
+                    # one place an ADMIT degrades, and it degrades to ASK.
+                    # The policy invariant guarantees the posture is on.
+                    return refuse(
+                        ABSTAIN_VETO_UNAVAILABLE, passed, candidate=place
+                    )
             return AbstentionVerdict(
-                True,
-                text,
-                GROUNDED,
-                (),
-                place.place_id,
-                {
-                    **signals,
-                    "label_purity": place.label_purity,
-                    "evidence_frames": float(place.evidence_frames),
-                    "ground_evidence_fraction": place.ground_evidence_fraction,
-                    "similarity": place.similarity,
-                },
+                True, text, GROUNDED, (), place.place_id, passed
             )
         if order.index(failed) > order.index(worst):
             worst = failed
-    return refuse(worst, signals)
+    return refuse(worst, signals, candidate=front_runner)

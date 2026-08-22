@@ -17,10 +17,17 @@ adapter                 transport                           dependency
 :class:`FakeIngest`     any row, synthetically              none
 ======================  ==================================  ==================
 
-None of the first three dependencies exists on the dev box, and the board
-forbids installing them, so each refuses here with the module named and a remedy
-attached — never a traceback. :class:`FakeIngest` is what makes the *path*
-testable anyway.
+Every one of the first three refuses on this dev box — but card ENV-1 split
+*why* into two facts that must never be conflated. ``rclpy`` and
+``unilidar_sdk2`` are not installed, so those two refuse ``dependency_missing``.
+``pyrealsense2`` **is** installed (P1-A put it in ``.parcel`` on 2026-08-22 for
+the desk-camera venue) and no camera is plugged in, so :class:`RealSenseIngest`
+refuses ``device_node_missing`` — and it does so from a ``/dev`` census, without
+importing the SDK. :func:`dependency_report_text` prints each module's state as
+one of *absent*, *installed but no device*, or *ready*, because "the wheel
+imports" and "the camera is there" are different claims and a report that
+collapses them tells the go/no-go a lie. :class:`FakeIngest` is what makes the
+*path* testable anyway.
 
 Ordering, because it decides what the session records
 -----------------------------------------------------
@@ -43,6 +50,8 @@ from .base import (
     NEVER_ALLOWED,
     AdapterCapability,
     DependencyReport,
+    DevicePresence,
+    DeviceReport,
     IngestAdapter,
     IngestContractError,
     IngestError,
@@ -188,11 +197,24 @@ def dependency_report_text(adapters: Sequence[type[IngestAdapter]] | None = None
     for factory in factories:
         adapter = factory()
         report = adapter.dependency_report()
-        state = "READY" if report.satisfied else f"UNAVAILABLE (missing: {', '.join(report.missing)})"
+        device = adapter.device_report()
+        # Three states, not two (card ENV-1). READY is reserved for "the module
+        # is here AND nothing says the hardware is not"; an installed wheel with
+        # no device on the bus reads NO DEVICE and names the modules it does
+        # have, so the line is actionable either way.
+        if not report.satisfied:
+            state = f"UNAVAILABLE (missing: {', '.join(report.missing)})"
+        elif device.presence is DevicePresence.ABSENT:
+            state = f"NO DEVICE (installed: {', '.join(report.present) or 'nothing required'})"
+        else:
+            state = "READY"
         lines.append("")
         lines.append(f"{report.adapter:<12} {len(adapter.channels()):>2} channel(s)  {state}")
         if report.remedy:
             lines.append(f"    remedy: {report.remedy}")
+        lines.append(f"    device: {device.presence.value} — {device.detail}")
+        if device.presence is DevicePresence.ABSENT and device.remedy:
+            lines.append(f"    plug:   {device.remedy}")
         for note in adapter.notes:
             lines.append(f"    note:   {note}")
     if census["unserved"]:
@@ -214,6 +236,8 @@ __all__ = [
     "AdapterCapability",
     "DdsIngest",
     "DependencyReport",
+    "DevicePresence",
+    "DeviceReport",
     "FakeIngest",
     "IngestAdapter",
     "IngestContractError",

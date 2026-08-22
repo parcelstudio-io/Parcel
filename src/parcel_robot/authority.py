@@ -103,6 +103,49 @@ PERSON_LATENCY_S: Final[float] = 0.168
 #: Canonical regime names, in the arbitration-documentation order.
 REGIME_NAMES: Final[tuple[str, ...]] = ("cruise", "search", "approach", "recover")
 
+#: **The hard floor under** :attr:`SafetyEnvelope.person_social_zone_m` (card
+#: P1-E, 2026-08-22). The social zone itself is a COMMISSIONING value and may
+#: be moved by config — an apartment companion that keeps 1.2 m from its owner
+#: cannot come when called (E2-D2: the dog stopped after 0.31 m of travel
+#: because the owner stood inside the 1.2 m wedge). What may NOT move is this
+#: floor: below it the system refuses to boot, by name, and that refusal is
+#: part of the physical-safety core.
+#:
+#: Why 0.68 m and not something softer. It is the body's own ISO/TS-15066
+#: stopping distance at the commissioned CRUISE speed::
+#:
+#:     stop_distance(0.85) = 0.32 + 0.85*0.12 + 0.85^2/(2*1.4) = 0.680036 m
+#:                           ^footprint  ^v*tau   ^braking
+#:
+#: (``_REFERENCE_CRUISE.vx_mps`` = 0.85 m/s, the value ``SpeedRegime`` already
+#: transcribes from ``configs/navigation/models/grid.yaml``.) Three properties
+#: follow, and they are the reason this is the floor:
+#:
+#: 1. It dominates BOTH obstacle floors already in the stack —
+#:    :attr:`SafetyEnvelope.obstacle_stop_floor_m` (0.60) and
+#:    ``reactive_safety._REACTIVE_OBSTACLE_STOP_FLOOR_M`` (0.65) — so a person
+#:    can never be commissioned less clearance than a wall.
+#: 2. With the final gate's own predictive term the ISO sum is still covered at
+#:    the fastest speed ``configs/robot.yaml`` permits: floor + ``max_vx*tau``
+#:    = 0.68 + 1.0*0.12 = 0.80 m >= ``stop_distance(1.0)`` = 0.7971 m.
+#: 3. It is a distance the body can actually produce, not a proxemics
+#:    preference: every term in it is a measured Go2 quantity
+#:    (``RobotProfile.footprint_radius_m`` / ``reaction_latency_s`` /
+#:    ``decel_max_mps2``), which is what a real commissioning record pins.
+#:
+#: Written as a literal rather than as ``stop_distance(cruise)`` on purpose: a
+#: floor that moves when someone retunes ``linear_decel`` is not a floor. The
+#: arithmetic above is pinned by ``tests/test_p1e_social_zone_is_config.py``,
+#: which reddens if the derivation and the literal ever part company.
+PERSON_SOCIAL_ZONE_FLOOR_M: Final[float] = 0.68
+
+#: Half-angle of the directional "toward" test the FINAL proximity gate uses
+#: (``navigation.reactive_safety._toward``, its ``half_angle`` default). Named
+#: here, in the authority, so the planner can derive the lateral clearance the
+#: gate will demand without importing the gate and without copying the number
+#: (card P1-E; the pin is a test that reads the gate function's own signature).
+GATE_TOWARD_HALF_ANGLE_RAD: Final[float] = 1.15
+
 
 @dataclass(frozen=True)
 class FieldMeta:
@@ -570,7 +613,10 @@ class SafetyEnvelope(_MetadataMixin):
             date="2026-08-07",
             bucket="human",
             note="HUMAN BUCKET — never scales. A half-size dog does not get half "
-            "a personal-space zone.",
+            "a personal-space zone. COMMISSIONING VALUE as of card P1-E "
+            "(2026-08-22): config (safety.person_stop_m) may move it — the "
+            "prototype indoor profile sets 0.7 — but never below "
+            "PERSON_SOCIAL_ZONE_FLOOR_M (0.68 m), which is a refusal to boot.",
         ),
         "person_latency_s": FieldMeta(
             unit="s",
@@ -613,6 +659,19 @@ class SafetyEnvelope(_MetadataMixin):
         _non_negative(self.sensing_intrusion_m, "sensing_intrusion_m")
         _non_negative(self.pose_uncertainty_m, "pose_uncertainty_m")
         _non_negative(self.person_social_zone_m, "person_social_zone_m")
+        # Card P1-E: the social zone is a COMMISSIONING value and may be moved
+        # by config; this floor may not. Refusal, not a clamp, and the floor is
+        # named in the message so the operator reads the number they have to
+        # clear. Every construction path lands here — ``from_mapping``,
+        # ``from_profile``, ``replace``, ``with_person_social_zone`` — so there
+        # is no way into the stack with an under-floor person clearance.
+        if self.person_social_zone_m + 1e-12 < PERSON_SOCIAL_ZONE_FLOOR_M:
+            raise ValueError(
+                f"person_social_zone_m {self.person_social_zone_m} m is below the "
+                f"commissioning floor PERSON_SOCIAL_ZONE_FLOOR_M "
+                f"({PERSON_SOCIAL_ZONE_FLOOR_M} m) — the Go2's ISO/TS-15066 "
+                "stopping distance at cruise. Refusing to build a safety envelope."
+            )
         _non_negative(self.person_latency_s, "person_latency_s")
         _positive(self.obstacle_comfort_band_m, "obstacle_comfort_band_m")
         _positive(self.person_comfort_band_m, "person_comfort_band_m")
@@ -651,6 +710,23 @@ class SafetyEnvelope(_MetadataMixin):
             self.person_social_zone_m,
             self.stop_distance(speed) + closing * self.person_latency_s,
         )
+
+    def with_person_social_zone(self, metres: float) -> SafetyEnvelope:
+        """This envelope with its social zone COMMISSIONED from config.
+
+        Card P1-E. The one constructor the reactive gate uses to turn
+        ``configs/robot*.yaml`` ``safety.person_stop_m`` into an envelope, so
+        the number the gate enforces and the number the authority states are
+        the same object rather than two literals that can drift (audit §6, and
+        the 1.25-vs-1.2 drift this class was created to end).
+
+        Nothing is clamped: an under-floor value raises out of
+        :meth:`__post_init__` naming :data:`PERSON_SOCIAL_ZONE_FLOOR_M`, which
+        is how a bad overlay becomes a refusal to boot instead of a quietly
+        weakened robot.
+        """
+
+        return replace(self, person_social_zone_m=_finite(metres, "person_social_zone_m"))
 
     @property
     def social_zone_is_binding(self) -> bool:
@@ -695,6 +771,42 @@ DEFAULT_SPEED_REGIME: SpeedRegime = SpeedRegime()
 #: The person social zone, as a named import for call sites that only need the
 #: HUMAN-BUCKET constant. Never scales.
 PERSON_SOCIAL_ZONE_M: Final[float] = DEFAULT_SAFETY_ENVELOPE.person_social_zone_m
+
+
+def gate_lateral_clearance_m(
+    stop_ring_m: float,
+    *,
+    half_angle_rad: float = GATE_TOWARD_HALF_ANGLE_RAD,
+) -> float:
+    """LATERAL clearance a planner must inflate by to agree with a stop ring.
+
+    Card P1-E, audit §6 ("the planner and the gate disagree on the envelope").
+    The final gate is DIRECTIONAL: it stops translation only for obstacles
+    inside a ``+/- half_angle`` cone about the travel direction. So a wall the
+    robot passes broadside never trips it, while the same wall ahead does. For
+    a straight corridor of half-width ``h`` travelled along its centreline the
+    nearest obstacle INSIDE the cone is at ``h / sin(half_angle)``, so the gate
+    refuses to translate whenever::
+
+        h / sin(half_angle) <= stop_ring   <=>   h <= stop_ring * sin(half_angle)
+
+    which makes ``stop_ring * sin(half_angle)`` exactly the inflation radius a
+    grid planner needs for "the planner does not choose corridors the gate
+    refuses". At the shipped obstacle ring (0.65 m) that is 0.5933 m — i.e. the
+    gate already refuses every corridor narrower than 1.19 m, while the legacy
+    footprint-only inflation (0.32 + 0.10 = 0.42 m) plans through anything
+    wider than 0.84 m. That gap is the disagreement, in metres.
+
+    One number, two consumers: pass the SAME quantity the gate enforces —
+    ``ReactiveSafetyPolicy.obstacle_stop_m`` for a lidar occupancy map,
+    ``person_stop_m`` for a map whose cells are people.
+    """
+
+    ring = _non_negative(stop_ring_m, "stop_ring_m")
+    angle = _finite(half_angle_rad, "half_angle_rad")
+    if not 0.0 < angle <= math.pi:
+        raise ValueError("half_angle_rad must be in (0, pi]")
+    return ring * math.sin(min(angle, math.pi / 2.0))
 
 
 # ---------------------------------------------------------------------------
@@ -854,8 +966,10 @@ __all__ = [
     "DEFAULT_SAFETY_ENVELOPE",
     "DEFAULT_SPEED_REGIME",
     "DEFAULT_STAND_OFF_ENVELOPE",
+    "GATE_TOWARD_HALF_ANGLE_RAD",
     "GRAVITY_MPS2",
     "HUMAN_BUCKET",
+    "PERSON_SOCIAL_ZONE_FLOOR_M",
     "PERSON_SOCIAL_ZONE_M",
     "REGIME_NAMES",
     "SCALING_BUCKETS",
@@ -865,4 +979,5 @@ __all__ = [
     "SpeedRegime",
     "StandOffEnvelope",
     "arbitrate_limits",
+    "gate_lateral_clearance_m",
 ]

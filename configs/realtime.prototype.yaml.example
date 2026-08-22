@@ -1,6 +1,6 @@
 # Parcel — hosted Realtime companion lane, PROTOTYPE PROFILE (card P0-A).
 #
-# This is configs/realtime.yaml.example with EIGHT values changed for the
+# This is configs/realtime.yaml.example with TEN values changed for the
 # 2026-08-22 prototype directive ("a good companion that communicates
 # fluidly"). Every comment that explains a key is kept verbatim; each departure
 # is marked `PROTOTYPE:` at its key and says what it was.
@@ -22,10 +22,14 @@
 #     whisperer.max_updates_per_minute 2       -> 6
 #     whisperer.min_gap_s              15.0    -> 4.0
 #     voice_identity.enabled           true    -> false
+#     whisperer.owner_events.enabled   false   -> true   (card P2-B)
+#     whisperer.owner_events.greeting_interval_s  900.0 -> 600.0 (card P2-B)
 #
 # The middle three are card P0-B's companion unlocks, set to P0-B's own
 # prototype values and merged into this file during P0-A's verification pass;
-# their semantics, defaults and validators are P0-B's, not P0-A's. The list
+# their semantics, defaults and validators are P0-B's, not P0-A's. The last two
+# are card P2-B's owner-event bands — the classes that let the dog go first —
+# and their semantics, defaults and validators are P2-B's. The list
 # above is asserted complete by
 # tests/test_prototype_profile.py::test_realtime_prototype_example_validates_and_carries_its_departures.
 #
@@ -315,6 +319,53 @@ whisperer:
   # a window of nothing counts nothing and would remove the cap silently, and
   # `enabled: false` is the off switch that can be seen.
   window_s: 60.0
+
+  # -------------------------------------------------------------------------
+  # WHEN THE DOG NOTICES *YOU* (card P2-B) — ON, in the prototype only.
+  #
+  # Everything above this line is a fact about the ROBOT. These four are facts
+  # about you: you came in (`owner_appeared`), you came back after a long time
+  # away (`owner_returned`), you have both been quiet a while (`greeting_due`),
+  # and the one question a day it asks about your day
+  # (`question_of_the_day`).
+  #
+  # THEY BUY NOTHING. Each is banded, deduplicated, min-gapped and counted
+  # against `max_updates_per_minute` above exactly like a mission terminal, and
+  # none of them is in the critical set that may spend past the monthly
+  # ceiling. With this file's 6-per-minute cap, a tracker flapping on and off
+  # for ten minutes still cannot produce more than six spoken lines in any
+  # minute — measured, not asserted (P2B_STATUS.md §3, row 5).
+  #
+  # The shipped `configs/realtime.yaml.example` keeps this off, because a
+  # config written before card P2-B must keep costing what it cost. This is the
+  # prototype: the whole point of it is a companion that goes first.
+  owner_events:
+    enabled: true
+
+    # The mocap/UWB owner track reports 1.0 today; card P1-C's camera track
+    # reports a measured similarity instead, and this is the number that keeps
+    # a low-confidence stranger from being greeted as you. 0.3 is deliberately
+    # permissive for the desk prototype — raise it once the pixel track lands.
+    min_confidence: 0.3
+
+    # Stay in view this long before a hello. The anti-flicker guard.
+    appear_debounce_s: 2.0
+
+    # Be away this long for a new sighting to count as an arrival at all.
+    # Below it, it is the same visit and you have already been greeted.
+    absence_s: 60.0
+
+    # Above this, an arrival is a RETURN and gets the other sentence.
+    long_absence_h: 3.0
+
+    # Silence — both sides — after which a present owner is owed a greeting.
+    # Ten minutes on the desk: long enough not to interrupt, short enough that
+    # a companion sitting next to you is not furniture.
+    greeting_interval_s: 600.0
+
+    # The one question a day. This is the first input the owner model gets that
+    # the robot asked for rather than overheard.
+    question_of_the_day: true
 
 # ---------------------------------------------------------------------------
 # SESSION AUDIO CAPTURE (card R17) — DEFAULT OFF, and off is the shipped answer.

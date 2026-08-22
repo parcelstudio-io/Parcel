@@ -88,7 +88,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from .config import DEFAULT_WHISPERER_WINDOW_S, WhispererConfig
+from .config import DEFAULT_WHISPERER_WINDOW_S, OwnerEventsConfig, WhispererConfig
 
 #: Bumped whenever :class:`StateDigest`'s field set changes meaning. It rides on
 #: every digest and on every decision row, so a recorded whisperer log can never
@@ -133,6 +133,51 @@ KIND_PACE_MISMATCH = "pace_mismatch"
 #: ``voice_identity.VoiceIdentityGate.note_rejection`` (once per minute), and the
 #: COUNT and the panel event are unconditional either way.
 KIND_VOICE_REJECTED = "voice_rejected"
+
+# ------------------------------------------- card P2-B: the owner-event classes
+#
+# Every class above this line is a fact about the ROBOT — it arrived, it is
+# blocked, its battery is low, someone it did not recognise spoke to it. That is
+# the whole reason the dog never initiates toward the person it lives with: there
+# was no class of fact whose subject was the owner.
+#
+# These four are that class. They ride the SAME band table, the SAME dedup, the
+# SAME min-gap and the SAME per-window cap as everything else — deliberately, and
+# it is the answer to "will the companion become a nuisance": the owner's cost
+# knob is also the politeness knob, and nothing here is exempt from it. None of
+# them is CRITICAL: the critical set buys the right to spend past the owner's own
+# ceiling, and no greeting is worth that.
+#
+#: The owner came into view after being away. Fired once per appearance episode,
+#: by :class:`OwnerEventWatcher`, and never on a blink of the tracker.
+KIND_OWNER_APPEARED = "owner_appeared"
+#: The card's ``owner_returned_after_Nh``: the same rising edge as
+#: :data:`KIND_OWNER_APPEARED` after a LONG absence, which is different news and
+#: gets a different sentence. The N lives in the fact and in the dedup key —
+#: ``owner_returned:3h`` — rather than in the class name, because a class name
+#: that carries a number is a class table that grows without bound. Exactly one
+#: of appeared/returned fires per appearance; never both.
+KIND_OWNER_RETURNED = "owner_returned"
+#: The owner is here and nothing has been said for a long time. This is the
+#: companion's own initiative, not a state change.
+KIND_GREETING_DUE = "greeting_due"
+#: Once a day, while the owner is present: the robot asks one thing about the
+#: owner's day. It is the only class in this module whose purpose is to LEARN
+#: rather than to report, and it is the flywheel's first turn.
+KIND_QUESTION_OF_THE_DAY = "question_of_the_day"
+
+#: The four, as a set, so a caller can ask "is this an owner event" without
+#: re-listing them (the F1-SI lesson: a set with three copies of itself is a set
+#: that will disagree with itself).
+OWNER_EVENT_KINDS: frozenset[str] = frozenset(
+    {
+        KIND_OWNER_APPEARED,
+        KIND_OWNER_RETURNED,
+        KIND_GREETING_DUE,
+        KIND_QUESTION_OF_THE_DAY,
+    }
+)
+
 #: Never band — the telemetry the bench proved must never reach the session.
 KIND_NAV_TICK = "nav_tick"
 KIND_FOLLOW_TICK = "follow_tick"
@@ -181,6 +226,12 @@ ALWAYS_BAND: frozenset[str] = frozenset(
         KIND_BATTERY_STATE,
         KIND_PACE_MISMATCH,
         KIND_VOICE_REJECTED,
+        # Card P2-B. Always band, never critical: the owner-event watcher has
+        # already decided that this greeting is due (once per appearance, once
+        # per day), so a second classifier here would only add a way for it to be
+        # late. The cap and the min-gap still apply, and they are what bound a
+        # storm.
+        *OWNER_EVENT_KINDS,
     }
 )
 
@@ -350,6 +401,31 @@ HINTS: Mapping[str, str] = {
         "Tell the owner, plainly and without alarm, that someone who is not them "
         "asked you to do something and you did not do it. Do NOT claim you cannot "
         "be stopped by other people — anyone may still stop you."
+    ),
+    # Card P2-B. Each of these is one short sentence, and each says what NOT to
+    # do, because the failure mode is the same one the bench found everywhere
+    # else in this table: handed a fact with no speech act, the model narrates
+    # the instrument ("my owner tracking reports…") instead of speaking to the
+    # person standing in front of it.
+    KIND_OWNER_APPEARED: (
+        "Greet the owner, warmly and in one short sentence, as a dog would when "
+        "someone it likes walks in. Do NOT describe your sensors or say how long "
+        "they were away in seconds."
+    ),
+    KIND_OWNER_RETURNED: (
+        "Welcome the owner back in one or two short sentences and say you noticed "
+        "they were gone a while. Do NOT recite the exact number of hours back at "
+        "them, and do NOT ask where they were."
+    ),
+    KIND_GREETING_DUE: (
+        "Say one short, friendly thing to the owner — you have both been quiet "
+        "for a while and you noticed. Do NOT ask them for a task and do NOT list "
+        "your status."
+    ),
+    KIND_QUESTION_OF_THE_DAY: (
+        "Ask the owner exactly ONE short question about their day or about "
+        "something they like, then stop and listen. Do NOT ask more than one "
+        "question, and do NOT explain why you are asking."
     ),
 }
 
@@ -1228,6 +1304,295 @@ class Whisperer:
         }
 
 
+# ================================================ card P2-B: the owner watcher
+#: Where an owner sighting came from. A LABEL on the sample, carried into the
+#: decision log's detail — never a gate, and never a threshold of its own: the
+#: confidence is the number that decides, and the source is what lets an auditor
+#: tell "the mocap said so" from "the camera thinks so" after the fact.
+OWNER_SOURCE_MOCAP = "mocap"
+OWNER_SOURCE_UWB = "uwb"
+OWNER_SOURCE_PIXELS = "pixels"
+
+
+@dataclass(frozen=True)
+class OwnerPresence:
+    """One sighting (or one non-sighting) of the owner. The watcher's only input.
+
+    Deliberately the smallest thing that can carry the question: is the owner
+    here, how sure are we, and who says so. It is NOT ``OwnerTrackV1`` — card
+    P1-C is building the pixel track that will produce one — because this module
+    must not learn the shape of a perception contract to decide whether to say
+    hello. The runtime adapts whatever track exists into this, which is what
+    makes P1-C's track a drop-in: a better ``confidence`` and a different
+    ``source``, and not one line of this file changes.
+    """
+
+    present: bool
+    at_s: float
+    confidence: float = 1.0
+    source: str = OWNER_SOURCE_MOCAP
+
+    def credible(self, minimum: float) -> bool:
+        """Present AND sure enough. The two halves of "the owner is here"."""
+
+        return bool(self.present) and float(self.confidence) >= float(minimum)
+
+
+def _away_phrase(seconds: float) -> str:
+    """How long the owner was gone, in the unit a person would actually use."""
+
+    if seconds < 90.0:
+        return "a minute or so"
+    if seconds < 3600.0:
+        return f"about {round(seconds / 60.0)} minutes"
+    hours = seconds / 3600.0
+    if hours < 1.5:
+        return "about an hour"
+    if hours < 24.0:
+        return f"about {round(hours)} hours"
+    days = round(hours / 24.0)
+    return "about a day" if days <= 1 else f"about {days} days"
+
+
+class OwnerEventWatcher:
+    """When the dog should say something to the OWNER. Owns no lane, no model.
+
+    THE DEFECT THIS CLOSES
+    ----------------------
+    Every class in this module before card P2-B has the robot as its subject: it
+    arrived, it is blocked, its battery is low. So the whisperer could tell you
+    everything about the robot and had no vocabulary at all for the fact that you
+    had just walked in — and the idle lane hung up after ten minutes, so by the
+    time you came back there was often nothing there to notice you with. P0-B
+    made the lane stay live (``idle_close_after_s: 0``); this makes something
+    happen when it does.
+
+    THE SHAPE
+    ---------
+    A state machine over presence samples, exactly like the block debounce and
+    the pace watcher, and it obeys the same three house rules:
+
+    1. **At most ONE event per observe call.** Not a policy — a return type. An
+       appearance, a greeting and a question-of-the-day that all came due on the
+       same tick cannot become three sentences in one breath, whatever the cap
+       says, and the appearance wins because it is the news.
+    2. **Every event is latched per episode.** One appearance, one greeting; one
+       question per calendar day. The whisperer's cap is the SECOND line of
+       defence against a storm and this is the first, because a cap that is
+       constantly saturated by greetings has stopped being a cost knob.
+    3. **It decides nothing about affordability.** It produces
+       :class:`StateEvent`s and hands them to :meth:`Whisperer.offer`, which
+       applies the band, the dedup, the min-gap and the owner's per-window cap.
+       Nothing here is critical and nothing here bypasses anything.
+
+    The clock is monotonic and injectable; ``day_key`` is a SEPARATE wall-clock
+    callable, because "once a day" is a question about calendars and every other
+    number in this class is a question about durations. Mixing the two is how you
+    get a robot that asks its question of the day twice at midnight.
+    """
+
+    def __init__(
+        self,
+        *,
+        config: OwnerEventsConfig,
+        clock: Callable[[], float] = time.monotonic,
+        day_key: Callable[[], str] | None = None,
+    ) -> None:
+        self.config = config
+        self._clock = clock
+        self._day_key = day_key or (lambda: time.strftime("%Y-%m-%d"))
+        self._lock = threading.RLock()
+
+        self._present = False
+        self._present_since: float | None = None
+        self._absent_since: float | None = None
+        self._episode = 0
+        self._announced_episode = 0
+        self._last_greeting_at: float | None = None
+        self._last_turn_at: float | None = None
+        self._question_day = ""
+
+        # counters, for ``/api/state`` and for the status doc's numbers
+        self.samples = 0
+        self.appearances = 0
+        self.events_by_kind: dict[str, int] = {}
+        self.last_confidence = 0.0
+        self.last_source = ""
+
+    # ------------------------------------------------------------- the doors
+    def note_turn(self, at: float | None = None) -> None:
+        """Somebody said something. The session ledger's half of the input.
+
+        Called for BOTH sides of the conversation on purpose: a greeting is due
+        after silence, and a robot that had just answered a question has not been
+        silent. This is what keeps ``greeting_due`` from interrupting a
+        conversation that is already happening.
+        """
+
+        with self._lock:
+            self._last_turn_at = self._at(at)
+
+    def observe(self, sample: OwnerPresence) -> tuple[StateEvent, ...]:
+        """One presence sample in, at most one classified event out."""
+
+        with self._lock:
+            self.samples += 1
+            self.last_confidence = float(sample.confidence)
+            self.last_source = str(sample.source)
+            at = float(sample.at_s)
+            here = sample.credible(self.config.min_confidence)
+            if here:
+                self._enter_locked(at)
+            else:
+                self._leave_locked(at)
+            if not self.config.enabled or not here:
+                return ()
+            event = (
+                self._appearance_locked(at, sample)
+                or self._question_locked(at)
+                or self._greeting_locked(at)
+            )
+            if event is None:
+                return ()
+            self.events_by_kind[event.kind] = self.events_by_kind.get(event.kind, 0) + 1
+            return (event,)
+
+    def snapshot(self) -> dict[str, object]:
+        """What ``/api/state`` publishes about the owner-event watcher."""
+
+        with self._lock:
+            return {
+                "config": self.config.as_dict(),
+                "present": self._present,
+                "episode": self._episode,
+                "announced_episode": self._announced_episode,
+                "appearances": self.appearances,
+                "samples": self.samples,
+                "events_by_kind": dict(self.events_by_kind),
+                "last_confidence": round(self.last_confidence, 4),
+                "last_source": self.last_source,
+                "question_day": self._question_day,
+            }
+
+    # ------------------------------------------------------------- internals
+    def _at(self, at: float | None) -> float:
+        return self._clock() if at is None else float(at)
+
+    def _enter_locked(self, at: float) -> None:
+        if self._present:
+            return
+        self._present = True
+        self._present_since = at
+        self._episode += 1
+        self.appearances += 1
+
+    def _leave_locked(self, at: float) -> None:
+        if not self._present:
+            return
+        self._present = False
+        self._present_since = None
+        self._absent_since = at
+
+    def _away_seconds(self, at: float) -> float | None:
+        """How long the owner was away before this visit. ``None`` = first ever."""
+
+        if self._absent_since is None:
+            return None
+        return max(0.0, at - self._absent_since)
+
+    def _appearance_locked(self, at: float, sample: OwnerPresence) -> StateEvent | None:
+        since = self._present_since
+        if since is None or self._announced_episode == self._episode:
+            return None
+        if (at - since) < self.config.appear_debounce_s:
+            return None
+        away = self._away_seconds(at)
+        if away is not None and away < self.config.absence_s:
+            # The same visit. The tracker blinked, or the owner stepped behind a
+            # chair; a dog does not greet you twice for walking past a doorway.
+            # The episode is still marked announced so the debounce does not
+            # re-arm on every sample of the same blink.
+            self._announced_episode = self._episode
+            return None
+        self._announced_episode = self._episode
+        # An appearance IS a greeting. Recording it here is what stops
+        # ``greeting_due`` from firing a second hello ten seconds later.
+        self._last_greeting_at = at
+        detail = {
+            "episode": self._episode,
+            "away_s": None if away is None else round(away, 1),
+            "confidence": round(float(sample.confidence), 4),
+            "source": str(sample.source),
+        }
+        long_absence_s = self.config.long_absence_h * 3600.0
+        if away is not None and away >= long_absence_s:
+            hours = max(1, round(away / 3600.0))
+            return StateEvent(
+                kind=KIND_OWNER_RETURNED,
+                key=f"owner_returned:{hours}h",
+                fact=(
+                    "The robot's owner tracking reports the owner has just come back "
+                    f"into view after being away for {_away_phrase(away)}."
+                ),
+                detail=detail,
+            )
+        seen_before = "" if away is None else f" after {_away_phrase(away)} away"
+        return StateEvent(
+            kind=KIND_OWNER_APPEARED,
+            key=f"owner_appeared:{self._episode}",
+            fact=(
+                "The robot's owner tracking reports the owner has just come into "
+                f"view{seen_before}, and the robot has not greeted them yet."
+            ),
+            detail=detail,
+        )
+
+    def _question_locked(self, at: float) -> StateEvent | None:
+        if not self.config.question_of_the_day:
+            return None
+        since = self._present_since
+        if since is None or (at - since) < self.config.appear_debounce_s:
+            return None
+        today = str(self._day_key())
+        if today == self._question_day:
+            return None
+        self._question_day = today
+        return StateEvent(
+            kind=KIND_QUESTION_OF_THE_DAY,
+            key=f"question_of_the_day:{today}",
+            fact=(
+                "The robot has not yet asked the owner its one question of the day, "
+                "and the owner is here now."
+            ),
+            detail={"day": today, "episode": self._episode},
+        )
+
+    def _greeting_locked(self, at: float) -> StateEvent | None:
+        interval = float(self.config.greeting_interval_s)
+        if interval <= 0.0:
+            return None
+        since = self._present_since
+        if since is None or (at - since) < self.config.appear_debounce_s:
+            return None
+        marks = [value for value in (self._last_greeting_at, self._last_turn_at) if value is not None]
+        # No conversation and no greeting yet this session: the owner has been
+        # present since ``since``, and that is the silence being measured.
+        quiet_since = max(marks) if marks else since
+        quiet_for = at - quiet_since
+        if quiet_for < interval:
+            return None
+        self._last_greeting_at = at
+        return StateEvent(
+            kind=KIND_GREETING_DUE,
+            key=f"greeting_due:{self._episode}:{int(quiet_since)}",
+            fact=(
+                "The robot's owner tracking reports the owner has been nearby for a "
+                f"while and neither of them has said anything for {_away_phrase(quiet_for)}."
+            ),
+            detail={"quiet_for_s": round(quiet_for, 1), "episode": self._episode},
+        )
+
+
 def compose(event: StateEvent, *, folded: int = 0) -> str:
     """Fact + speech-act hint + what the budget held back. Deterministic.
 
@@ -1317,22 +1682,30 @@ __all__ = [
     "KIND_EMERGENCY_CLEAR",
     "KIND_EMERGENCY_STOP",
     "KIND_FOLLOW_TICK",
+    "KIND_GREETING_DUE",
     "KIND_MISSION_ARRIVED",
     "KIND_MISSION_BLOCKED",
     "KIND_MISSION_BLOCK_CLEAR",
     "KIND_MISSION_ENDED",
     "KIND_NAV_TICK",
+    "KIND_OWNER_APPEARED",
     "KIND_OWNER_PACE_CHANGE",
+    "KIND_OWNER_RETURNED",
     "KIND_PACE_MISMATCH",
     "KIND_PACE_UNKNOWN",
     "KIND_POSITION",
     "KIND_PROXIMITY_CHURN",
+    "KIND_QUESTION_OF_THE_DAY",
     "KIND_REFUSAL",
     "KIND_REROUTE",
     "KIND_VOICE_REJECTED",
     "MIDDLE_BAND",
     "MIN_GAP_EXEMPT_KINDS",
     "NEVER_BAND",
+    "OWNER_EVENT_KINDS",
+    "OWNER_SOURCE_MOCAP",
+    "OWNER_SOURCE_PIXELS",
+    "OWNER_SOURCE_UWB",
     "PACE_MISMATCH_WINDOW_S",
     "PACE_SKIP_ALREADY_ASKED",
     "PACE_SKIP_NOT_FOLLOWING",
@@ -1361,6 +1734,8 @@ __all__ = [
     "RULE_UNKNOWN_KIND",
     "STATE_DIGEST_VERSION",
     "WALK_CEILING_MPS",
+    "OwnerEventWatcher",
+    "OwnerPresence",
     "StateDigest",
     "StateEvent",
     "Whisperer",

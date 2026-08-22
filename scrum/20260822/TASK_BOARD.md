@@ -49,6 +49,13 @@ wiring cards). One card one executor; cards run in parallel in the SAME tree.
 | **P0-D** navigation & perception unblocks | `task_4/` | MOVE1-D1 compounding smoother, `ranking_margin ≡ 0`, `set_query` person-drop | `runtime.py` 8396–8460 & 557–575 regions, `core/velocity_smoother.py`, `perception_abstention.py`, `online_map/online_map.py`, `camera_channel/ingress.py`, `configs/navigation/*` |
 | **P0-E** gate tiers re-cut | `task_5/` | commit tier = safety core; evidence ratchets → nightly; held-out seat; `pytest -n auto` if xdist-clean | `scripts/ci_gate.py`, `tests/test_ci_gate.py`, `tests/test_held_out_scene.py`, `tests/test_authority_no_literal_drift.py`, `pyproject.toml` (dev extra) |
 
+## CORRECTION 2026-08-22 (owner's statement, authoritative)
+
+**No robot hardware is on hand.** The 'Go2 + D455 + L2 + Orin NX on the bench since 08-13' fact in the
+08-22 audit (§10 Phase 4 'hardware track from day 1'; owner actions H-1 Orin identity dump, H-2, H-3)
+traces to scrum/20260813/task_1/README.md and is FALSE. Only the reSpeaker XVF3800 mic array is present.
+Hardware items below are PURCHASES, not owner actions; the udev rule for the XVF3800 stays real.
+
 ## After this wave (not dispatched)
 
 Phase 1 real camera on the desk · Phase 2 owner model · Phase 3 flywheel ·
@@ -69,18 +76,46 @@ recorded frames.
 
 | Card | Folder | What | Live proof gate |
 |---|---|---|---|
-| **P1-A** real eyes | `task_6/` | UVC + RealSense `CameraBackend`s, `EvidenceOrigin.PHYSICAL`, out-of-process GPU detector daemon, `--camera` launcher switch | camera (owner) |
-| **P1-B** the map learns | `task_7/` | SigLIP-2 `embed_fn` + depth into ingress, runtime map writer under `shadow`, persist-on-close, AU-C2-1 fix, query-batch union | none (dev scene) |
-| **P1-C** which person is you | `task_8/` | person boxes → re-ID gallery → `OwnerTrackV1` via `OwnerFusionStub`; appearance enrollment | camera + enrollment (owner) |
-| **P1-D** ask, don't refuse | `task_9/` | Qwen3-VL-2B veto, ADMIT/ASK/REFUSE roster on P0-D's configurable set, k-consistency naming; supersedes 20260821 task_21 | none |
-| **P2-A** owner facts | `task_10/` | `owner_facts` + real distiller + `owner_notes`, `remember_fact` with consent, full-ledger replay; refuses un-quarantined synthetic rows | none |
-| **P2-B** the dog notices you | `task_11/` | identity as a label per row, hosted-lane affect via `_hosted_affect`, whisperer owner-event bands, voice-tier A/B script | none |
-| **P1-E** social zone is a config | `task_12/` | `SafetyEnvelope.person_social_zone_m` from config with a named hard floor; planner inflation from the same number; overlay lands 0.7 m indoor (P0-A blocker, E2-D2's cousin) | none (MOVE-1 standoff arm re-run) |
+| **P1-A** real eyes | `task_6/` | **ACCEPT_CLOSE** — daemon ~100 ms round trip / ~1 ms boundary, cuda_fp16 honoured, server-side 16-phrase refusal; handoff's missing `origin=` fixed + pinned; RGB-only webcam cannot feed the ingress (D455 is day-one). Live rows OWNER-GATED (camera) | camera (owner) |
+| **P1-B** the map learns | `task_7/` | **ACCEPT_CLOSE** — first persisted experience (run 2 from run 1's 69 places), D-R1/D-R2 closed with live proof; store now closed/checkpointed at persist; vacuous owner-store check re-measured; oracle-side union ships OFF (measured 65% truncation) | none (dev scene) |
+| **P1-C** which person is you | `task_8/` | **ACCEPT_CLOSE** — uncalibrated gallery claims a stranger on occluded frames (fixed: measured boundary, refuses without a negative); 100 GPU tests; runtime still emits owner 1.0 → OT-2 | camera + enrollment (owner) |
+| **P1-D** ask, don't refuse | `task_9/` | **ACCEPT_PARTIAL** — veto seam wired post-verification (product-path row 1 measured); stream-priority claim retracted, budget admission measured; k-gate promotes confident mistakes (45% naming) → NM-1; fixtures committed with CI rows | none |
+| **P2-A** owner facts | `task_10/` | **ACCEPT_CLOSE** — owner_facts + distiller + remember_fact with consent; synthetic-range refusal; credential refusal (the one reasonable refusal) + replay redaction added at review; owner store untouched (02:19 write attributed to the owner's own session) | none |
+| **P2-B** the dog notices you | `task_11/` | **ACCEPT_CLOSE** — identity is a label by construction (56 arming cases byte-identical), affect on the hosted lane via `_hosted_affect`, greet-on-appearance 2.0 s, storms ≤6/min, zero card spend | none |
+| **P1-E** social zone is a config | `task_12/` | **ACCEPT_CLOSE** — approach to 0.71 m with zero contact (MOVE-1 pair reproduced to 0.2 mm), floor 0.68 m named + derived, safety semantics diff empty by the AST ratchet; planner/gate coupling NOT delivered → DOOR-1 | none (MOVE-1 standoff arm re-run) |
 | **FZ-1** frozen historical prompts | `task_13/` | historical SI versions render from per-version frozen snapshots, not the live persona files; removes the two `xfail(strict)` markers the owner's 02:10 edit forced | none |
 | **XD-1** 52-second commit tier | `task_14/` | classify P0-E's seven xdist divergences (`load_sensitive` serial phase, per-worker tmp), flip default-suite to `-n auto` | none |
 | **HY-1** no test leaks a sim | `task_15/` | `test_voice_nav_e2e.py` teardown on setup error, session sim-guard, `launch_sim.sh --pidfile`, `tools/list_parcel_procs.py` | none |
+| **VENUE-1** runtime opens the physical eye | `task_16/` | wire P1-A's backends/daemon into `_attach_configured_camera_ingress` (P1-A's HALT), origin= propagated (verifier's catch), MUJOCO_GL preamble skipped for physical venues | camera (owner) for live rows |
+| **OT-2** robot stops believing the owner at 1.0 | `task_17/` | wire P1-C's OwnerTracker into the runtime; identity gate consumes state + calibrated margin (0.65 constant retired on the cosine scale) | camera + enrollment (owner) for live rows |
+| **NM-1** promotion gate tests correctness | `task_18/` | P1-D's 45% naming / k-gate-promotes-wrong-names miss: detector agreement as an independent judge before a name enters `known_places()` | none |
+| **DOOR-1** through a doorway | `task_19/` | obstacle envelope from config with a floor (P1-E pattern), planner inflation actually wired (`gate_clearance_m` has no production setter), follow standoff from config not import | none |
 
 Owner actions this wave unlocks: plug in a camera (P1-A/P1-C live rows);
 `tools/enroll_owner_voice.py` (1 min) and the appearance enrollment (10 s);
 `tools/quarantine_synthetic_memory.py --apply` BEFORE P2-A's distiller touches
 the real store; one full-size gpt-realtime session for the voice-tier A/B.
+
+## Build order — designed 2026-08-22 · Fable (owner's question: what first?)
+
+Published: https://claude.ai/code/artifact/01deb521-023e-4bf1-90cd-4bf722c3b69c
+Source: `PLAN_ASSESSMENT_FABLE.md` (the Pre-Purchase Queue assessed claim by
+claim: 30 confirmed / 9 stale / 4 refuted; three orderings judged). Answer:
+**software and the mic array first; the D455 on day 1; the Go2 is an
+evidence-gated week-3 decision.** No robot hardware is on hand.
+
+| Card | Folder | What | Owner present |
+|---|---|---|---|
+| **GATE-0** the gate tells the truth on a clean clone | `task_20/` | vendor the Go2 MJCF subset @ `ae6a8403`, per-stage containment so `--json` emits on red, `ruff==0.16.1` stamped, `protocol.py:415`, osmesa; narrowed IG-1/IG-2 | no |
+| **TURN-1** endpointing is a knob | `task_21/` | `turn_detection` object (server/semantic VAD, eagerness, silence, interrupt_response), payload-identity seed, measured on 20 recorded utterances | recording (10 min) |
+| **MARK-1** an interruption tells the truth | `task_22/` | continuous played acks, `audio_end_ms` never 0, \|truncate − heard\| ≤ 150 ms p95, ear takes ch1, backchannel floor | no |
+| **ROAM-1** "go explore" | `task_23/` | PatrolPolicy as a runtime behavior + `TOOL_ROAM` + closed intents + the navigator clock; ≥ 1.0 m net displacement ×3 — a Go2-purchase input | no |
+| **CURIO-1** the dog talks about what it sees | `task_24/` | map/perception whisperer kinds, ChatterScheduler, time-of-day, farewell; 3–6 remarks per 120 s roam, 0 hallucinated | taste (week 2) |
+| **AIR-1** the voice reaches its own mic | `task_25/` | xvf3800 probe, ERLE ≥ 20 dB, false barge-in ≤ 2 %, TV arm, 16 kHz pin, runbook | **yes, ~1.3 h** |
+| **DUPLEX-1** "mm-hmm" survives | `task_26/` | local turn controller (LISTEN/THINK/SPEAK/OVERLAP/YIELD), duck ≤ 100 ms, cancel ≤ 450 ms, backchannel survival ≥ 0.9 — after MARK-1 + TURN-1 | live session |
+| **PO-1** purchase decision record | `task_27/` | D455 now; Go2 EDU Standard quote now, PO at the week-3 gate on three tells; e-stop decision; don't-buy list | **owner decision** |
+| **ENV-1** the dev box may carry a vendor SDK | `task_28/` | seven capture-stack tests pinned "no vendor SDK installed"; P1-A's sanctioned `pyrealsense2`/`cv2` install broke the premise — re-cut to device-absent refusals + preflight-never-imports, seeded RED. **ACCEPT** (Fable 06:15, `AUDIT_WAVE_P1P2_FABLE.md` §ENV-1): found a real masked-`start()` bug; two verifier corrections landed in `clockmap.py` (the `interrogable` fold killed `--check`'s exit-0 path; the L2 gated on ttyACM); minors → **ENV-1b** (same folder, Opus, week-1 close) | no |
+
+Dispatch: GATE-0, TURN-1, MARK-1, ROAM-1, CURIO-1 in parallel (disjoint
+OWNS; `runtime.py`/`lane.py` by marked region, Edit-only); AIR-1 tools now,
+session when the owner sits down; DUPLEX-1 after MARK-1 + TURN-1.

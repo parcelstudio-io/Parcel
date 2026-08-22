@@ -144,6 +144,36 @@ DEFAULT_LEASE_TTL_S = 2.0
 #: Fail-closed default: no generation may START while a safety lease is held.
 DEFAULT_MAX_GENERATION_MS_WHILE_ACTIVE = 0.0
 
+#: Card P1-D. A SECOND budget, for one specific generation, justified by its
+#: measured DURATION and not by any scheduling claim.
+#:
+#: The "Why an ADMISSION RULE and not CUDA streams" section above is unchanged
+#: and :data:`DEFAULT_MAX_GENERATION_MS_WHILE_ACTIVE` stays 0.0: a generation in
+#: llama-server's separate CUDA context cannot be ordered from here.
+#:
+#: An earlier draft of P1-D claimed the 2B veto escaped that argument by running
+#: on a low-priority stream in the detector's own context. **That claim was
+#: false and is withdrawn.** ``torch.cuda.Stream.priority_range()`` reports
+#: least-priority FIRST, so the "low" priority requested was ``0`` — the default
+#: stream's own priority — and CUDA offers nothing below default for the
+#: detector to preempt. The same-context premise also dies as soon as P1-A's
+#: out-of-process detector daemon lands.
+#:
+#: What is left is the honest half, and it is enough: the veto is SHORT and its
+#: length is measurable. Measured on this host over 80 calls, Qwen3-VL-2B
+#: answers a four-token verification in **41.2 ms p50 / 44.9 ms p95**, against a
+#: 300 ms detection TTL. So it gets a budget of its own, and
+#: :class:`~parcel_robot.vlm_veto.VetoRunner` declares its **own running EMA of
+#: observed latency** rather than a constant — the guard decides against what
+#: this seat actually costs, and a COLD seat declares ``inf`` and is refused,
+#: because loading 4.4 GB of weights is seconds and no budget covers it.
+#:
+#: What keeps the loosening honest: the budget is still finite, still validated
+#: below :data:`DETECTION_TTL_MS`, still refusable, and a veto that IS refused
+#: degrades to a question rather than to a refusal — so the detector's frame
+#: budget wins the tie and the owner still gets an answer.
+DEFAULT_VETO_BUDGET_MS_WHILE_ACTIVE = 120.0
+
 
 class ContentionPolicyError(ValueError):
     """Raised for a policy that would disable the guard by construction."""
@@ -161,23 +191,30 @@ class ContentionPolicy:
 
     max_generation_ms_while_active: float = DEFAULT_MAX_GENERATION_MS_WHILE_ACTIVE
     lease_ttl_s: float = DEFAULT_LEASE_TTL_S
+    #: Card P1-D. The VLM veto's own budget, sized on measured latency. See
+    #: :data:`DEFAULT_VETO_BUDGET_MS_WHILE_ACTIVE` for why it is separate.
+    #: Validated by exactly the same three rules as the generation budget, so it
+    #: cannot become the ``inf`` that turns this module into decoration.
+    veto_budget_ms_while_active: float = DEFAULT_VETO_BUDGET_MS_WHILE_ACTIVE
 
     def __post_init__(self) -> None:
-        budget = self.max_generation_ms_while_active
-        if isinstance(budget, bool) or not isinstance(budget, (int, float)):
-            raise ContentionPolicyError("max_generation_ms_while_active must be numeric")
-        if math.isnan(budget) or math.isinf(budget):
-            raise ContentionPolicyError(
-                "max_generation_ms_while_active must be finite; an infinite budget "
-                "admits every generation and silently disables the guard"
-            )
-        if budget < 0.0:
-            raise ContentionPolicyError("max_generation_ms_while_active must be >= 0")
-        if budget >= DETECTION_TTL_MS:
-            raise ContentionPolicyError(
-                f"max_generation_ms_while_active={budget} exceeds the detection freshness "
-                f"TTL ({DETECTION_TTL_MS} ms); admitting it would guarantee a stale detection"
-            )
+        for name in ("max_generation_ms_while_active", "veto_budget_ms_while_active"):
+            budget = getattr(self, name)
+            if isinstance(budget, bool) or not isinstance(budget, (int, float)):
+                raise ContentionPolicyError(f"{name} must be numeric")
+            if math.isnan(budget) or math.isinf(budget):
+                raise ContentionPolicyError(
+                    f"{name} must be finite; an infinite budget admits every "
+                    "generation and silently disables the guard"
+                )
+            if budget < 0.0:
+                raise ContentionPolicyError(f"{name} must be >= 0")
+            if budget >= DETECTION_TTL_MS:
+                raise ContentionPolicyError(
+                    f"{name}={budget} exceeds the detection freshness "
+                    f"TTL ({DETECTION_TTL_MS} ms); admitting it would guarantee a "
+                    "stale detection"
+                )
         ttl = self.lease_ttl_s
         if isinstance(ttl, bool) or not isinstance(ttl, (int, float)) or ttl <= 0.0:
             raise ContentionPolicyError("lease_ttl_s must be a positive number")
@@ -362,6 +399,73 @@ class PerceptionContentionGuard:
             retry_after_s=retry,
         )
 
+    def try_admit_veto(self, *, estimated_ms: float | None) -> Admission:
+        """May the VLM veto run right now? (Card P1-D.)
+
+        The same admission machinery as :meth:`try_admit_generation`, against
+        :attr:`ContentionPolicy.veto_budget_ms_while_active` instead of the
+        generation budget, and it is a *separate method* rather than a ``kind=``
+        argument on purpose: an audit reading call sites can see which callers
+        bought the relaxed budget without reading their arguments, and a future
+        edit cannot widen the llama-server path by typing the wrong string.
+
+        Fail-closed exactly where the generation path is: an undeclared duration
+        is unbounded and refused, a non-sensical one is refused, and the budget
+        is validated below the detection TTL at construction.
+        """
+
+        leases = self.active_leases()
+        if not leases:
+            with self._lock:
+                self._admissions += 1
+            return Admission(True, "no safety lease held; vlm veto admitted")
+
+        budget = self._policy.veto_budget_ms_while_active
+        reasons = tuple(li.reason for li in leases)
+        now = self._clock()
+        retry = max(0.0, max(li.expires_monotonic_s for li in leases) - now)
+
+        if estimated_ms is None:
+            with self._lock:
+                self._refusals += 1
+            return Admission(
+                False,
+                f"vlm veto has an undeclared duration and {len(leases)} safety "
+                "lease(s) are held; an unknown length is treated as unbounded",
+                blocking_leases=reasons,
+                retry_after_s=retry,
+            )
+        est = float(estimated_ms)
+        if math.isnan(est) or est < 0.0:
+            with self._lock:
+                self._refusals += 1
+            return Admission(
+                False,
+                f"vlm veto declared a non-sensical duration {estimated_ms!r}",
+                blocking_leases=reasons,
+                retry_after_s=retry,
+            )
+        if est <= budget:
+            with self._lock:
+                self._admissions += 1
+            return Admission(
+                True,
+                f"vlm veto estimated {est:.1f} ms is within the {budget:.1f} ms "
+                "veto budget; the estimate is the seat's own measured latency, "
+                "not a declared constant",
+                blocking_leases=reasons,
+            )
+        with self._lock:
+            self._refusals += 1
+        return Admission(
+            False,
+            f"vlm veto estimated {est:.1f} ms exceeds the {budget:.1f} ms veto "
+            f"budget while {len(leases)} safety lease(s) are held; the gate will "
+            "ask the owner instead of refusing the place",
+            blocking_leases=reasons,
+            retry_after_s=retry,
+        )
+
     def stats(self) -> dict[str, int]:
         with self._lock:
             return {
@@ -399,6 +503,7 @@ __all__ = [
     "BENCH_INPROCESS_P95_VLM_GENERATING_MS",
     "DEFAULT_LEASE_TTL_S",
     "DEFAULT_MAX_GENERATION_MS_WHILE_ACTIVE",
+    "DEFAULT_VETO_BUDGET_MS_WHILE_ACTIVE",
     "DETECTION_TTL_MS",
     "MEASURED_P95_IDLE_MS",
     "MEASURED_P95_VLM_GENERATING_MS",

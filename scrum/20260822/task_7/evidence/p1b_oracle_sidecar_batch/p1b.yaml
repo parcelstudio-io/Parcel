@@ -1,0 +1,27 @@
+
+skills:
+  root: /home/jaewoo-jang/Desktop/Projects/Parcel/configs/skills
+simulation:
+  scene: /home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml
+navigation:
+  enabled: true
+  config: /home/jaewoo-jang/Desktop/Projects/Parcel/scrum/20260822/task_7/evidence/nav_oracle_sidecar_batch.yaml
+motion:
+  backend: rl
+  max_vx: 0.6
+  max_vy: 0.4
+  max_vyaw: 1.0
+  rl:
+    enabled: true
+    policy_path: ""
+memory:
+  path: ":memory:"
+poses: {}
+modules: []
+perception:
+  spatial_sensors: [camera, lidar]
+  camera_ingress: true
+  camera_ingress_rate_hz: 2.0
+  camera_ingress_queue_capacity: 64
+  camera_ingress_max_detections_per_frame: 8
+  camera_ingress_queries: [person, building, storefront, door, window, lamppost]

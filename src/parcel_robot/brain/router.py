@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import re
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from parcel_robot.navigation.goals import (
     navigation_directive_from_text,
@@ -474,6 +475,94 @@ def explicit_affect_from_text(text: str) -> AffectEvidence | None:
     """
 
     return _explicit_affect(_normalize(text))
+
+
+# ------------------------------------------- card P2-B: the hosted-lane entry
+#: What :func:`affect_for_lane` decided, as a closed vocabulary. Three outcomes,
+#: because "the sentence carried no feeling" and "it carried one the operator's
+#: own bar rejected" are different facts and a caller that cannot tell them apart
+#: cannot log the second one honestly.
+AFFECT_VERDICT_NONE = "no_explicit_affect"
+AFFECT_VERDICT_BELOW_CONFIDENCE = "below_minimum_confidence"
+AFFECT_VERDICT_ADMITTED = "admitted"
+
+AFFECT_VERDICTS: frozenset[str] = frozenset(
+    {AFFECT_VERDICT_NONE, AFFECT_VERDICT_BELOW_CONFIDENCE, AFFECT_VERDICT_ADMITTED}
+)
+
+
+@dataclass(frozen=True)
+class LaneAffect:
+    """One lane's reading of one utterance's affect. Evidence plus the reason."""
+
+    verdict: str
+    evidence: AffectEvidence | None = None
+    minimum_confidence: float = 0.0
+
+    @property
+    def admitted(self) -> bool:
+        return self.verdict == AFFECT_VERDICT_ADMITTED
+
+    @property
+    def label(self) -> str:
+        return "" if self.evidence is None else self.evidence.label
+
+    @property
+    def confidence(self) -> float:
+        return 0.0 if self.evidence is None else float(self.evidence.confidence)
+
+
+def affect_for_lane(text: str, *, minimum_confidence: float) -> LaneAffect:
+    """THE affect entry a conversational lane takes. Card P2-B, deliverable 2.
+
+    THE DEFECT THIS CLOSES, AND WHY IT LIVES HERE
+    ---------------------------------------------
+    "I am feeling sad" moved the body on the LEGACY voice lane and did nothing
+    at all on the hosted one — the lane the product actually ships — because the
+    grammar had exactly one caller and it was ``agent._detect_explicit_affect``.
+    Card P0-B reached into this module from ``runtime._hosted_affect`` and got
+    the behaviour; this function gives the reach a NAME, so that a third lane
+    (or a distiller, or an eval) asks the same question in the same words rather
+    than re-expressing the bar in its own.
+
+    It applies the operator's ``agent.affect.minimum_confidence`` and it applies
+    NOTHING else: it is a reading of a sentence, it starts no gesture, it writes
+    no row and it cannot refuse anything. The caller decides what to do with the
+    reading — that separation is what lets the hosted lane log a below-bar
+    reading as an event while the legacy lane simply drops it.
+    """
+
+    return lane_affect_from_evidence(
+        explicit_affect_from_text(text), minimum_confidence=minimum_confidence
+    )
+
+
+def lane_affect_from_evidence(
+    evidence: AffectEvidence | None, *, minimum_confidence: float
+) -> LaneAffect:
+    """The bar, applied to evidence somebody else already read. Card P2-B.
+
+    Split out from :func:`affect_for_lane` so a caller that has to keep the
+    GRAMMAR call at its own module boundary — ``runtime._hosted_affect``, whose
+    seam P0-B's tests reach through — still shares this module's verdict
+    vocabulary instead of re-expressing the comparison. One bar, two entries,
+    no second copy of ``<`` anywhere.
+    """
+
+    minimum = float(minimum_confidence)
+    if evidence is None:
+        return LaneAffect(
+            verdict=AFFECT_VERDICT_NONE, evidence=None, minimum_confidence=minimum
+        )
+    if float(evidence.confidence) < minimum:
+        return LaneAffect(
+            verdict=AFFECT_VERDICT_BELOW_CONFIDENCE,
+            evidence=evidence,
+            minimum_confidence=minimum,
+        )
+    return LaneAffect(
+        verdict=AFFECT_VERDICT_ADMITTED, evidence=evidence, minimum_confidence=minimum
+    )
 
 
 def _normalize(value: str) -> str:

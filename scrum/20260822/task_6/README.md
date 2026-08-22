@@ -6,6 +6,8 @@ production, shared tree with disjoint OWNS, Edit-only on existing files,
 git read-only, targeted `pytest` + `ruff` for your OWNS only).
 **Roadmap:** audit §10 Phase 1, §3 "What to do" items 2 and 6.
 
+> **CORRECTION 2026-08-22 (owner's statement):** no robot hardware is on hand — no Go2, D455, L2 or Orin. Earlier wording in this card that assumes a D455/Go2 'on the bench' inherited a false fact from scrum/20260813/task_1; the only device present is the reSpeaker XVF3800 mic array. Live rows that need a camera wait for a purchase, not a cable.
+
 ## Why
 Every perception number measured in MuJoCo is structurally unable to mean what
 the prototype needs (audit §1: 0/69 → 1/74 person recall in the sim vs 81–93 %

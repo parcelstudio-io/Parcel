@@ -1683,7 +1683,22 @@ def test_neither_module_imports_a_vendor_sdk_or_the_runtime() -> None:
 
 
 def test_a_full_preflight_run_never_imports_a_vendor_sdk() -> None:
-    """Measured in a subprocess, not reasoned about: run the whole thing and look."""
+    """Measured in a subprocess, not reasoned about: run the whole thing and look.
+
+    Card ENV-1 kept this property WORD FOR WORD and made the code earn it
+    again. ``pyrealsense2`` has been installed in ``.parcel`` since 2026-08-22
+    (P1-A, for the desk-camera venue), and on the day it landed this assertion
+    went red with ``VENDOR ['pyrealsense2', 'pyrealsense2.pyrealsense2']``: the
+    D455 probe reached ``importlib.import_module`` because its only gate was
+    "is the module importable", which had just become yes.
+
+    The property is a good one and it survives, because presence is two facts.
+    ``RealSenseIngest`` now checks the ``/dev`` census — a filesystem lookup,
+    no import — BEFORE it imports, so a box with the wheel and no camera
+    refuses ``device_node_missing`` without the SDK ever entering
+    ``sys.modules``. The second half of this test pins the reason, so the
+    property can never again be satisfied by the probe simply not running.
+    """
 
     script = (
         f"import sys;"
@@ -1708,6 +1723,34 @@ def test_a_full_preflight_run_never_imports_a_vendor_sdk() -> None:
     assert "Traceback" not in proc.stderr
     assert "EXIT 2" in proc.stdout
     assert "VENDOR []" in proc.stdout
+
+    # The six D455 rows must be ABSENT for the DEVICE, named and actionable —
+    # not ABSENT because a probe crashed. Before this card they read
+    # "probe_raised — RuntimeError: stop() cannot be called before start()",
+    # which names the wrong call, no device, and no remedy.
+    for channel_id in ("d455.color", "d455.depth", "d455.infra1", "d455.infra2"):
+        line = next(
+            (
+                item
+                for item in proc.stdout.splitlines()
+                if f"CHANNEL_ABSENT: {channel_id} " in item
+            ),
+            None,
+        )
+        assert line is not None, f"{channel_id} produced no absence finding at all"
+        assert "device_node_missing" in line, line
+        assert "probe_raised" not in line, line
+        assert "/dev/video*" in line, line
+        assert "USB 3 (BLUE)" in line, line
+
+    # The dog's rows still say dependency_missing: that SDK really is absent,
+    # and collapsing the two reasons would cost a session-day of debugging.
+    dog = next(
+        item
+        for item in proc.stdout.splitlines()
+        if "CHANNEL_ABSENT: go2.lowstate " in item
+    )
+    assert "dependency_missing" in dog and "rclpy" in dog
 
 
 def test_the_channel_enumeration_is_ps_a_s_and_this_card_keeps_no_second_list() -> None:

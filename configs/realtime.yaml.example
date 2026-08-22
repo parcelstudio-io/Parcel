@@ -254,6 +254,63 @@ whisperer:
   # `enabled: false` is the off switch that can be seen.
   window_s: 60.0
 
+  # -------------------------------------------------------------------------
+  # WHEN THE DOG NOTICES *YOU* (card P2-B) — DEFAULT OFF.
+  #
+  # Everything above this line is a fact about the ROBOT: it arrived, it is
+  # waiting behind someone, its battery is low. That is why the dog never says
+  # hello — there was no class of fact whose subject was you. These four are
+  # that class:
+  #
+  #   owner_appeared        you came into view after being away
+  #   owner_returned        the same thing after a LONG absence, said differently
+  #   greeting_due          you are here and neither of you has said anything
+  #   question_of_the_day   once a day, it asks you one thing about your day
+  #
+  # THEY BUY NOTHING. Every one of them is banded, deduplicated, min-gapped and
+  # counted against `max_updates_per_minute` exactly like a mission terminal,
+  # and none of them is in the critical set that may spend past your monthly
+  # ceiling. This block decides when a greeting is DUE; the knobs above decide
+  # whether a due greeting is affordable, and they win.
+  #
+  # It is default-off for one reason only: a forward is a billed hosted
+  # response, and a config written before this card must keep costing what it
+  # cost. Turn it on in configs/realtime.prototype.yaml.example.
+  #
+  # Delete the whole block to accept the defaults shown (i.e. off).
+  owner_events:
+    # The opt-in. While it is false the four classes are never PRODUCED — not
+    # produced and suppressed, not produced and deduped. Never produced.
+    enabled: false
+
+    # How sure the owner track has to be before a sighting counts. The mocap /
+    # UWB track reports 1.0; the camera track (card P1-C) reports a measured
+    # similarity, and this is the number that stops a 0.2-confidence stranger
+    # being greeted as you.
+    min_confidence: 0.3
+
+    # How long you must stay in view before a greeting fires. The anti-flicker
+    # guard: a tracker that drops a frame must not buy a hello.
+    appear_debounce_s: 2.0
+
+    # How long you must have been AWAY for a new sighting to count as an
+    # arrival at all. Below this it is the same visit and you have already been
+    # greeted — the most important number here for anyone who has met a dog.
+    absence_s: 60.0
+
+    # Above this, an arrival is a RETURN and gets the other sentence.
+    long_absence_h: 3.0
+
+    # Silence, in seconds, after which a present owner is owed a greeting.
+    # Counts both sides of the conversation, so the robot never interrupts a
+    # conversation it is already having. 0 disables this class alone.
+    greeting_interval_s: 900.0
+
+    # The one question a day, asked while you are actually there. This is the
+    # only thing the robot says whose purpose is to LEARN about you rather than
+    # to report on itself. false disables this class alone.
+    question_of_the_day: true
+
 # ---------------------------------------------------------------------------
 # SESSION AUDIO CAPTURE (card R17) — DEFAULT OFF, and off is the shipped answer.
 #

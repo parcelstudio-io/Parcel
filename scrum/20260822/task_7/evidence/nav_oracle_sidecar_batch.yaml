@@ -1,0 +1,207 @@
+# Active city-navigation stack for Parcel.
+# Full MetaUrban city + pedestrians require a Conda Python 3.9 + GPU host.
+# See docs/NAVIGATION_CITY.md.
+
+# grid_v1: rolling occupancy grid + A* over the calibrated raycast scan.
+# Degrades loudly (scan_missing_fallback note + warning log) to the point-goal
+# stub if the scan contract is absent.
+active_model: grid_v1
+models_root: configs/navigation/models
+pois_path: configs/navigation/cities/demo_pois.yaml
+
+metaurban:
+  enabled: false
+  density_ped: 1.0
+  density_obj: 0.4
+  mode: social_nav   # point_nav | social_nav
+
+# Unknown semantic targets rotate in place and must be observed repeatedly
+# before any translation is authorized.
+semantic_search:
+  max_steps: 80
+  yaw_rate: 0.35
+
+# Re-ground a semantic target when the body makes no meaningful goal progress.
+# At the 10 Hz runtime rate this is 20 s, allowing a bounded obstacle detour;
+# two fresh camera/LiDAR plans are allowed before the mission fails closed.
+# 400->200 (2026-08-05): 40 s windows let the crawl/lease-lapse pathology idle
+# through most of the 240 s step budget; 20 s still allows a 9 m detour at
+# 0.45 m/s, more than this block ever needs, and makes stalls self-reporting.
+progress_watchdog:
+  timeout_steps: 200
+  max_semantic_replans: 2
+
+# Once the geometric goal is reached, request a locomotion stop and wait for
+# fresh measured-velocity confirmation before declaring semantic success.
+terminal_verification:
+  stop_timeout_steps: 30
+
+# Stratum-2 perception noise ladder (docs/STRATA_GENERALIZATION_PLAN.md).
+# The detection_adapter perception chain is the ONE semantic-candidate ingress
+# on the mission path; this block chooses which rung it runs at.
+#
+#   T0  pass-through / clean — THE DEFAULT. The structural round-trip runs, no
+#       RNG is drawn, no row is dropped, and every reconstructed row is the
+#       caller's own object. Byte-identical to the pre-chain oracle read, and
+#       proven so (empty NAV_INSTRUCT minival diff, LANE_D_STATUS.md).
+#   T1  calibrated — every constant datasheet-traceable, none tuned:
+#         * range sigma  = 1.25e-3 * z^2 m   (D455: baseline 0.095 m, f 674.4 px
+#           at 1280 px / 87 deg HFOV, 0.08 px sub-pixel sigma -> 0.02 m at 4 m,
+#           i.e. 0.5 % RMS, consistent with the datasheet "<2 % at 4 m" bound)
+#         * bearing sigma = 1.0e-2 rad (2 px centroid = 3.0e-3 rad, widened for
+#           box jitter under partial occlusion — widened, not derived)
+#         * dropout       = 0.1 at <=1.5 m rising linearly to 0.3 at >=8 m
+#         * false positives = 1.0 per 100 frames (published band 0.5-2.0)
+#         * confidence    = overlapping TP N(0.75, 0.12) / FP N(0.55, 0.15),
+#           scaled by `temperature`; the literal 0.98 is gone
+#
+# T1 is MEASUREMENT, NOT A GATE (plan, eval instrument 2). Never tune against it.
+perception:
+  tier: T0
+  seed: 20260807
+
+  # Card C-3 (scrum/20260821/task_13/) — WHERE semantic candidates come from.
+  #
+  # This is a DIFFERENT AXIS from `tier` above, and the two must never be
+  # conflated. `tier` chooses how much sensor noise is applied to whatever
+  # candidates arrive; both of its rungs read the MuJoCo ground-truth oracle.
+  # `semantic_source` chooses whose map answers "where is the bench".
+  #
+  #   oracle       THE DEFAULT. The GT read, unchanged and byte-identical to
+  #                everything before this card. `extract_city_semantics` /
+  #                `visible_city_semantics` with their stamped 0.98.
+  #   learned_map  C-2's OnlineSemanticMap is the ONLY candidate source. The
+  #                card calls this "T1". Confidences are earned from evidence
+  #                counts and label purity; there is no 0.98. The scene sidecar
+  #                is not read, so the "go to Narnia" refusal stops being a
+  #                property of a declared label set and becomes a property of
+  #                what the robot has actually seen.
+  #   shadow       The card's "T0_shadow_T1". The oracle DRIVES; the learned map
+  #                answers beside it and every disagreement is classified
+  #                {benign_miss, localization_delta, admission_flip,
+  #                refusal_flip} and logged with the frames that produced it.
+  #                Behaviourally identical to `oracle` — it is a measuring
+  #                instrument, not a deployment mode.
+  #
+  # `T1` is REFUSED here, loudly, and that refusal is deliberate: T1 is a
+  # registered *tier* name (see REGISTERED_TIERS) and a config that wrote it
+  # under this key while meaning "read the learned map" would silently get the
+  # oracle with a noise ladder on top. Write `learned_map`.
+  #
+  # Off-oracle this ALSO empties the demo_pois.yaml POI table. `PlaceGrounder`
+  # fires before semantic search and grounds "coffee shop"/"crosswalk"/"park"/
+  # "bookstore" to hardcoded coordinates; it is a second oracle, and a mission
+  # that "succeeds" through it under `learned_map` has measured a lookup table.
+  # See scrum/20260821/cutover_research/res_design_review.md F1.
+  #
+  # Unknown keys starting `semantic_source` are a hard error, for the same
+  # reason the abstention block below makes them one.
+  semantic_source: oracle
+
+  # MEASUREMENT-ONLY OVERLAY (card P1-B, evidence pack
+  # `p1b_oracle_sidecar_batch/`). This file is NOT shipped and nothing selects
+  # it: it exists so the oracle arm of work item 4 — the batch that comes from
+  # `scene_semantics.detector_query_set()` — can be measured with one key
+  # flipped and everything else byte-identical to configs/navigation/default.yaml.
+  # The shipped default keeps `oracle_query_batch_from_scene: false`; the
+  # numbers this run produces are the reason.
+  online_map:
+    oracle_query_batch_from_scene: true
+  # Widens both confidence distributions; 1.0 is the calibrated shape.
+  confidence_temperature: 1.0
+  # Arrival evidence threshold on the MEAN detection score across confirming
+  # frames. `null` = use the goal's own minimum_confidence (0.55), which is the
+  # value the system already used, so T0 cannot move. The calibrated T1 value
+  # from the known-absent trials is recorded in LANE_D_STATUS.md.
+  arrival_confidence_threshold: null
+
+  # Card PG-3 (scrum/20260821/task_8/PG3_STATUS.md) — CALIBRATED ABSTENTION.
+  #
+  # R20 refuses "go to Narnia" because the chain checks a CLOSED LABEL SET from
+  # the simulator's scene sidecar. Delete the labeled world and that honesty
+  # disappears with it: the 2026-08-21 mapping bench measured SigLIP-2 text->
+  # place cosine at 0.049-0.135 for present queries and 0.054-0.107 for absent
+  # ones, so NO threshold separates them and "Narnia" would send the robot to
+  # (-3.19, 4.10). This block is the perception-side replacement — a verdict
+  # earned from detector-label agreement, evidence count, navigability and a
+  # ranking margin instead of from a list the world file happened to declare.
+  #
+  # OFF, and it must stay off until the world work lands. Every threshold below
+  # was fitted on a held-out split of an UNTEXTURED scene in which three
+  # detectors score 0/69 person recall (SYNTHESIS.md 2), so the numbers are
+  # provisional and the measured false-reject rate is 73% (11/15 EVAL present
+  # queries) — every one of them a class the detector could not see, not a
+  # failure of the gate. Turning this on today would refuse almost everything.
+  #
+  # Turning it on is a config change, not a code change: that is the point.
+  # Unknown keys under this block are a hard error, because a typo'd safety
+  # flag that reads as "default" looks exactly like a gate that never fires.
+  abstention:
+    enabled: false
+    # Peak PER-QUERY detector probability before a term counts as observed.
+    # The per-query column, never the argmax label: argmax moves when someone
+    # edits the prompt vocabulary (measured, "a person" 10 -> 2 firing frames
+    # when 17 prompts were added); the per-query column does not (max |delta|
+    # 0.0012 over 20 shared terms x 120 frames).
+    min_label_probability: 0.25
+    min_label_frames: 1
+    # Share of a place's own detections that must carry the queried term.
+    min_label_purity: 0.5
+    # Independent observations (distinct frames) a place needs.
+    min_evidence_frames: 7
+    # Share of a place's depth returns inside `ground_band_m`. A destination is
+    # somewhere you can STAND: this is what refuses corpus row 12, because the
+    # detector calls an untextured lamp head "the moon" 23 times out of 23 with
+    # 100% of its returns 2.7 m overhead.
+    min_ground_evidence_fraction: 0.08
+    # Robust z-score of the top similarity against the map's own background.
+    # Not an absolute cosine: cosine has no absolute scale across queries.
+    min_ranking_margin: 1.0
+    # DERIVED, not fitted: the Go2's own eye height, camera_channel.d455
+    # MOUNT_HEIGHT_M. Changing it is a claim about the robot, not a tuning knob.
+    ground_band_m: 0.35
+    # How many real places a refusal names. R20's PLACE_OFFER_LIMIT.
+    offer_limit: 3
+
+# Card RM-2 (scrum/20260811/task_2/SLAM_M_PLAN.md). Route memory on the product
+# path: the robot remembers routes it has actually driven (a MAP-frame place
+# graph of recorded edges) and, when the global planner has PROVED it cannot
+# route to a committed goal that lies beyond its ~8 m rolling window, consults
+# that memory for an interim waypoint instead of blacklisting the target.
+#
+# OFF by default and byte-identical off. Flag-ON adds no motion authority: the
+# waypoint is an SE2Goal proposal resolved by GoalArbiter (TTL / stale-revision
+# / LETHAL vetoes unchanged), grid_v1 + the reactive gate still own every
+# velocity, and K0 at the TRUE goal remains the only arrival. Memory that has no
+# recorded route answers with an empty tuple and the whole path is inert.
+route_memory: false
+
+safety:
+  # 0.45->0.9 (2026-08-05): completes the 2026-08-04 speed raise that touched
+  # grid.yaml cruise_vx (0.85) and robot.yaml motion.max_vx (1.0) but missed
+  # this clamp, silently capping clear-path speed at 0.45. The runtime
+  # reactive gate, TTC gate, and arbiter SafetyLimits still bound the
+  # actuator; predictive_mode below keeps braking speed-proportional.
+  max_vx: 0.9
+  max_vy: 0.25
+  max_vyaw: 0.8
+  stop_distance_m: 0.8
+  # projected_speed_cap (2026-08-05): proportional directional cap reaching 0
+  # exactly at stop_distance_m, replacing the fixed slow_scale=0.35 cliff and
+  # the stop/creep limit cycle it caused at the 0.8 m boundary. The hard stop
+  # boundary itself is unchanged.
+  predictive_mode: projected_speed_cap
+  # DIVERGENCE, DOCUMENTED (2026-08-11, DOC-1). This planner-side people-cost
+  # band no longer matches the runtime reactive person band: the owner-authorized
+  # E5 retune (2026-08-10) moved `configs/robot.yaml` safety.person_slow_m
+  # 2.0 -> 2.5 (SafetyEnvelope.person_comfort_band_m; see
+  # scrum/20260809/task_15/E5_PERSON_CLEARANCE_STATUS.md). The prior comment here
+  # asserted a match that has not held since. The value below is INTENTIONALLY
+  # left at 2.0 for this batch: moving it moves frozen v3/v4 nav_instruct rows,
+  # so alignment is an owner decision, tracked as OPEN QUESTION 6 in
+  # scrum/20260811/task_1/FOLLOWUP_DESIGNS.md §8. Consequence while it stands: a
+  # pedestrian at 2.0-2.5 m is slow-banded by the runtime gate but carries no
+  # planner-side people cost.
+  person_slow_m: 2.0
+  people_cost_weight: 1.0
+  obstacle_cost_weight: 1.0

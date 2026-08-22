@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import json
 import math
+import subprocess
 import sys
 from pathlib import Path
 
@@ -69,6 +70,7 @@ from scripts.parcel_capture.ingest import (
     NEVER_ALLOWED,
     UNSERVED_TRANSPORTS,
     DdsIngest,
+    DevicePresence,
     FakeIngest,
     IngestFrame,
     IngestRefusedError,
@@ -277,6 +279,29 @@ def test_the_only_place_handed_a_raw_node_keeps_no_attribute_that_yields_it() ->
 # ---------------------------------------------------------------------------
 
 
+def _hide_module(monkeypatch: pytest.MonkeyPatch, module_name: str) -> None:
+    """Make ``find_spec(module_name)`` answer None, as if it were never installed.
+
+    The module-absent arm of the guard below. ``rclpy`` and ``unilidar_sdk2``
+    genuinely are absent here; ``pyrealsense2`` is not, since card P1-A
+    installed it into ``.parcel`` on 2026-08-22 for the desk-camera venue. Both
+    arms must be tested on every adapter regardless, because which of the two a
+    given box is in changes with a `pip install` and the refusal contract must
+    not.
+    """
+
+    import importlib.util
+
+    real = importlib.util.find_spec
+
+    def fake(name: str, package: str | None = None):
+        if name == module_name:
+            return None
+        return real(name, package)
+
+    monkeypatch.setattr(importlib.util, "find_spec", fake)
+
+
 @pytest.mark.parametrize(
     ("factory", "module_name"),
     [
@@ -285,17 +310,38 @@ def test_the_only_place_handed_a_raw_node_keeps_no_attribute_that_yields_it() ->
         (L2Ingest, "unilidar_sdk2"),
     ],
 )
-def test_each_live_adapter_refuses_on_this_box_naming_its_module_and_a_remedy(
-    factory: type, module_name: str
+def test_each_live_adapter_refuses_here_naming_the_missing_module_or_the_missing_device(
+    factory: type, module_name: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Card ENV-1. Two arms, because "installed" and "attached" are two facts.
+
+    The old form of this guard asserted ``not report.satisfied`` for all three
+    adapters, which encoded an ENVIRONMENT PREMISE — "this box has no vendor
+    SDK" — that stopped being true on 2026-08-22 when P1-A installed
+    ``pyrealsense2`` for the desk camera. The PROPERTY it was protecting is
+    kept and strengthened: **no live adapter ever reads on this box, and the
+    refusal names which of the two things is missing, with a remedy, never a
+    traceback.**
+
+    * MODULE-ABSENT arm: ``dependency_missing``, module named, remedy names the
+      Orin. Monkeypatched for whichever adapters happen to be installed here.
+    * MODULE-PRESENT arm: the dependency probe is satisfied and the refusal
+      moves to ``device_node_missing``, naming the ``/dev`` node that is not
+      there. Exercised for real on ``pyrealsense2``; monkeypatched for the two
+      whose SDKs are genuinely absent.
+    """
+
     adapter = factory()
+    entry = adapter.channels()[0]
+
+    # --- arm 1: the module is not installed --------------------------------
+    _hide_module(monkeypatch, module_name)
     report = adapter.dependency_report()
     assert not report.satisfied
     assert module_name in report.missing
     assert module_name in report.remedy
     assert "Orin" in report.remedy
 
-    entry = adapter.channels()[0]
     with pytest.raises(IngestUnavailableError) as caught:
         list(adapter.read(entry, 0.01))
     message = str(caught.value)
@@ -303,6 +349,80 @@ def test_each_live_adapter_refuses_on_this_box_naming_its_module_and_a_remedy(
     assert caught.value.reason.value == "dependency_missing"
     assert caught.value.remedy
     assert ".parcel/" in caught.value.remedy or "Orin" in caught.value.remedy
+
+    # --- arm 2: the module IS installed, and no device is here -------------
+    monkeypatch.undo()
+    if not adapter.device_nodes:
+        # dds and l2 reach the hardware over a network or a socket and declare
+        # no /dev node; the filesystem cannot answer for them and must say so
+        # rather than guessing "attached".
+        assert adapter.device_report().presence is DevicePresence.NOT_ATTESTABLE
+        return
+
+    monkeypatch.setattr(
+        type(adapter),
+        "dependency_report",
+        classmethod(
+            lambda cls: ingest_base.DependencyReport(
+                adapter=cls.adapter_name,
+                satisfied=True,
+                present=(module_name,),
+                missing=(),
+                remedy="",
+            )
+        ),
+    )
+    device = adapter.device_report()
+    assert device.presence is DevicePresence.ABSENT, (
+        f"a {module_name} device is attached to this host; this arm needs an empty bus"
+    )
+
+    with pytest.raises(IngestUnavailableError) as absent:
+        list(adapter.read(entry, 0.01))
+    assert absent.value.reason.value == "device_node_missing"
+    assert "/dev/" in str(absent.value)
+    assert "Traceback" not in str(absent.value)
+    assert absent.value.remedy, "a device refusal with no remedy is one nobody can act on"
+    assert "USB" in absent.value.remedy
+
+
+def test_the_module_present_refusal_never_imported_the_vendor_sdk() -> None:
+    """The device gate must run BEFORE the import, not after it.
+
+    ``pyrealsense2`` is installed here. If the ``/dev`` census ran after the
+    import — or not at all — every preflight on this box would load the vendor
+    SDK to discover there is nothing to talk to, and
+    ``test_a_full_preflight_run_never_imports_a_vendor_sdk`` would be measuring
+    a property the code no longer has.
+    """
+
+    script = (
+        "import sys;"
+        f"sys.path.insert(0, {str(REPO)!r});"
+        "from scripts.parcel_capture.ingest import RealSenseIngest, IngestUnavailableError;"
+        "from parcel_robot.capture import channel;"
+        "adapter = RealSenseIngest();"
+        "assert adapter.dependency_report().satisfied, 'this arm needs the wheel installed';"
+        "\ntry:\n"
+        "    list(adapter.read(channel('d455.color'), 0.01))\n"
+        "except IngestUnavailableError as error:\n"
+        "    print('REASON', error.reason.value)\n"
+        "else:\n"
+        "    print('REASON none')\n"
+        "print('IMPORTED', 'pyrealsense2' in sys.modules)"
+    )
+    proc = subprocess.run(
+        [sys.executable, "-B", "-c", script],
+        capture_output=True,
+        text=True,
+        cwd=REPO,
+        timeout=180,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "Traceback" not in proc.stderr
+    assert "REASON device_node_missing" in proc.stdout, proc.stdout
+    assert "IMPORTED False" in proc.stdout, proc.stdout
 
 
 def test_no_adapter_import_ever_installs_or_imports_a_vendor_module() -> None:
@@ -317,13 +437,44 @@ def test_no_adapter_import_ever_installs_or_imports_a_vendor_module() -> None:
     assert "unilidar_sdk2" not in sys.modules
 
 
-def test_the_dependency_report_is_actionable_text_and_never_a_traceback() -> None:
+def test_the_dependency_report_names_each_module_state_and_is_never_a_traceback() -> None:
+    """Card ENV-1: three states, not two, and every module named in one of them.
+
+    Was ``test_the_dependency_report_is_actionable_text_and_never_a_traceback``,
+    which asserted every module appeared somewhere in the text. That held for
+    the wrong reason once ``pyrealsense2`` was installed: the realsense line
+    read a bare ``READY`` and the module's name only survived inside a note.
+    A report that calls an adapter READY on a box with no camera is precisely
+    the go/no-go lie this package exists to prevent, so the guard now asks the
+    report to distinguish *absent* from *installed but no device*.
+    """
+
     text = dependency_report_text()
     assert "Traceback" not in text
-    assert "UNAVAILABLE" in text
-    for name in ("rclpy", "pyrealsense2", "unilidar_sdk2"):
-        assert name in text
     assert "usbfs_memory_mb" in text  # the reboot-required risk is printed, not buried
+
+    lines = text.splitlines()
+
+    def block(adapter_name: str) -> str:
+        start = next(i for i, line in enumerate(lines) if line.startswith(adapter_name))
+        end = next(
+            (i for i in range(start + 1, len(lines)) if lines[i] == ""), len(lines)
+        )
+        return "\n".join(lines[start:end])
+
+    dds_block = block("dds")
+    assert "UNAVAILABLE (missing: rclpy)" in dds_block
+    assert "not_attestable" in dds_block  # a dog on a network makes no /dev node
+
+    l2_block = block("l2")
+    assert "UNAVAILABLE (missing: unilidar_sdk2)" in l2_block
+
+    # The module P1-A installed: present, and its device is not.
+    rs_block = block("realsense")
+    assert "NO DEVICE (installed: pyrealsense2)" in rs_block
+    assert "READY" not in rs_block
+    assert "/dev/video*" in rs_block
+    assert "USB 3 (BLUE)" in rs_block
 
 
 def test_resolve_live_source_now_resolves_through_the_registry_and_still_refuses_here() -> None:
@@ -1409,15 +1560,25 @@ def _rs_motion_frame() -> object:
     return _FakeMotionFrame(x=0.01, y=-0.02, z=9.81, timestamp=77.0, domain="hardware_clock")
 
 
-def _install_fake_realsense(monkeypatch: pytest.MonkeyPatch, *, honours_config: bool):
+def _install_fake_realsense(
+    monkeypatch: pytest.MonkeyPatch, *, honours_config: bool, devices: int = 1
+):
     """A ``pyrealsense2`` double that either honours ``rs.config`` or ignores it.
 
     ``honours_config=False`` models what librealsense actually does when the
     pipeline is started with no config: it runs the DEFAULT profile — depth and
     colour — whatever stream the caller meant.
+
+    ``devices`` is card ENV-1's addition: the double now also models the BUS.
+    Every read-loop test below is about what happens once a camera is attached,
+    so the default stages one — both halves of the presence question, the
+    ``/dev`` census and ``rs.context().query_devices()``. ``devices=0`` stages
+    the wheel-installed, empty-bus host this dev box actually is.
     """
 
-    log: dict[str, object] = {"started": 0, "stopped": 0, "polls": 0, "enabled": []}
+    log: dict[str, object] = {
+        "started": 0, "stopped": 0, "polls": 0, "queried": 0, "enabled": []
+    }
 
     class _Config:
         def __init__(self) -> None:
@@ -1454,14 +1615,40 @@ def _install_fake_realsense(monkeypatch: pytest.MonkeyPatch, *, honours_config: 
         def hardware_reset(self):  # pragma: no cover - must never run
             raise AssertionError("the adapter reset the device")
 
+    class _Context:
+        def query_devices(self):
+            log["queried"] = int(log["queried"]) + 1
+            return [_Bag(serial=f"D455-{index}") for index in range(devices)]
+
     module = _fake_module("pyrealsense2")
     module.pipeline = _Pipeline
     module.config = _Config
+    module.context = _Context
     # ``rs.stream`` is an enum namespace; the names are all that matter here.
     module.stream = _Bag(color="color", depth="depth", infrared="infrared",
                          accel="accel", gyro="gyro")
     module.format = _Bag(rgb8="rgb8", z16="z16", y8="y8", motion_xyz32f="motion_xyz32f")
     monkeypatch.setitem(sys.modules, "pyrealsense2", module)
+    # The /dev census is import-free and runs BEFORE the import, so a double
+    # installed into sys.modules is not enough to reach the read loop: the node
+    # this host does not have has to be staged too.
+    monkeypatch.setattr(
+        rs_module.RealSenseIngest,
+        "device_report",
+        classmethod(
+            lambda cls: ingest_base.DeviceReport(
+                adapter=cls.adapter_name,
+                presence=(
+                    ingest_base.DevicePresence.ATTACHED
+                    if devices
+                    else ingest_base.DevicePresence.ABSENT
+                ),
+                detail=f"staged: {devices} device(s) on the bus",
+                remedy="plug the D455 into a USB 3 (BLUE) port",
+                nodes=tuple(f"/dev/video{index}" for index in range(devices)),
+            )
+        ),
+    )
     return log
 
 
@@ -1570,6 +1757,80 @@ def test_seeded_failure_a_pipeline_that_ignores_the_config_reads_absent_not_pres
     # ...while the channel the default profile REALLY delivers still reads.
     colour = channel("d455.color")
     assert list(adapter.read(colour, 0.02))
+
+
+def test_a_webcam_on_dev_video_is_not_a_realsense_and_the_enumeration_says_so(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Card ENV-1, the precise half of the presence question.
+
+    ``/dev/video*`` is created by ANY UVC camera, so the import-free census
+    passes on a laptop with a built-in webcam and no RealSense. Without a second
+    gate the adapter then imports the SDK, calls ``pipeline.start()``, and the
+    operator is told ``probe_raised — RuntimeError`` with no device named and no
+    remedy — which is verbatim what this box printed for all six D455 rows
+    before this card. ``rs.context().query_devices()`` is the check that can
+    tell the two apart, and it runs once the SDK is legitimately in memory.
+    """
+
+    log = _install_fake_realsense(monkeypatch, honours_config=True, devices=0)
+    # The census says a camera-shaped node exists; librealsense says it is not
+    # one of ours. The refusal must come from the second fact.
+    monkeypatch.setattr(
+        rs_module.RealSenseIngest,
+        "device_report",
+        classmethod(
+            lambda cls: ingest_base.DeviceReport(
+                adapter=cls.adapter_name,
+                presence=ingest_base.DevicePresence.ATTACHED,
+                detail="staged: a UVC webcam is on /dev/video0",
+                remedy="",
+                nodes=("/dev/video0",),
+            )
+        ),
+    )
+
+    with pytest.raises(IngestUnavailableError) as caught:
+        list(RealSenseIngest().read(channel("d455.color"), 0.02))
+    assert caught.value.reason.value == "device_node_missing"
+    assert "query_devices() enumerates 0 devices" in str(caught.value)
+    assert "USB 3 (BLUE)" in caught.value.remedy
+    assert log["queried"] == 1
+    # And the pipeline was never started, so no vendor RuntimeError can be the
+    # thing the operator reads.
+    assert log["started"] == 0
+
+
+def test_a_failed_start_is_not_masked_by_the_stop_in_the_finally(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Seeded on the exact defect this box printed six times.
+
+    ``read_frames`` unconditionally called ``handle.stop()`` in its ``finally``.
+    When ``start()`` raised — which is what a device-less librealsense does —
+    ``stop()`` raised *its own* ``RuntimeError: stop() cannot be called before
+    start()`` from the ``finally``, replacing the real failure. Preflight filed
+    that second error as the reason, so every D455 row read
+    ``probe_raised — RuntimeError: stop() cannot be called before start()``:
+    the wrong call, no device named, no remedy.
+    """
+
+    _install_fake_realsense(monkeypatch, honours_config=True, devices=1)
+    module = sys.modules["pyrealsense2"]
+    pipeline_class = module.pipeline
+
+    class _DeadPipeline(pipeline_class):
+        def start(self, *args):
+            raise RuntimeError("No device connected")
+
+        def stop(self):
+            raise AssertionError("stop() ran after a start() that never succeeded")
+
+    monkeypatch.setattr(module, "pipeline", _DeadPipeline)
+    with pytest.raises(RuntimeError) as caught:
+        list(RealSenseIngest().read(channel("d455.color"), 0.02))
+    assert "No device connected" in str(caught.value)
+    assert "stop() cannot be called before start()" not in str(caught.value)
 
 
 def test_a_build_that_cannot_select_a_stream_is_a_named_refusal_not_a_default_profile(
@@ -1874,19 +2135,24 @@ def test_the_realsense_motion_decoder_falls_back_to_the_as_motion_frame_spelling
 
 
 @pytest.mark.parametrize(
-    ("adapter_factory", "module_name", "opener"),
+    ("adapter_factory", "module_name", "opener", "attach_device"),
     [
-        (lambda: DdsIngest(), "rclpy", lambda a: a.open_session()),
-        (lambda: L2Ingest(), "unilidar_sdk2", lambda a: a.open_reader()),
+        (lambda: DdsIngest(), "rclpy", lambda a: a.open_session(), False),
+        (lambda: L2Ingest(), "unilidar_sdk2", lambda a: a.open_reader(), False),
         (
             lambda: RealSenseIngest(),
             "pyrealsense2",
             lambda a: a.open_pipeline(channel("d455.color")),
+            True,
         ),
     ],
 )
 def test_a_module_that_vanishes_between_the_probe_and_the_open_is_a_named_refusal(
-    adapter_factory, module_name: str, opener, monkeypatch: pytest.MonkeyPatch
+    adapter_factory,
+    module_name: str,
+    opener,
+    attach_device: bool,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The race the ``except ImportError`` arms exist for, actually run.
 
@@ -1894,9 +2160,16 @@ def test_a_module_that_vanishes_between_the_probe_and_the_open_is_a_named_refusa
     imports. Between the two, an overlay can be unsourced or a PYTHONPATH entry
     can go away — on the Orin, by somebody opening a second shell. The adapter
     must name the module and a remedy, not raise ``ImportError`` out of a probe.
+
+    Card ENV-1: the realsense arm needs two extra fictions now. Its device gate
+    runs before the import and would refuse first on this camera-less box, so
+    the arm pretends a camera is attached; and its module really IS installed,
+    so deleting it from ``sys.modules`` merely re-imports it — the vanish is
+    staged at ``importlib.import_module`` instead. Both fictions are about
+    getting the interpreter INTO the race; the assertions below are unchanged.
     """
 
-    from scripts.parcel_capture.ingest.base import DependencyReport
+    from scripts.parcel_capture.ingest.base import DependencyReport, DeviceReport
 
     adapter = adapter_factory()
     monkeypatch.setattr(
@@ -1912,12 +2185,32 @@ def test_a_module_that_vanishes_between_the_probe_and_the_open_is_a_named_refusa
             )
         ),
     )
+    if attach_device:
+        monkeypatch.setattr(
+            type(adapter),
+            "device_report",
+            classmethod(
+                lambda cls: DeviceReport(
+                    adapter=cls.adapter_name,
+                    presence=DevicePresence.ATTACHED,
+                    detail="staged: a camera is on the bus",
+                    remedy="",
+                    nodes=("/dev/video0",),
+                )
+            ),
+        )
+
+        def vanished(name: str, package: str | None = None):
+            raise ImportError(f"No module named {name!r}")
+
+        monkeypatch.setattr(rs_module.importlib, "import_module", vanished)
     monkeypatch.delitem(sys.modules, module_name, raising=False)
 
     with pytest.raises(IngestUnavailableError) as caught:
         opener(adapter)
     assert "became unimportable between the probe and the open" in str(caught.value)
     assert module_name in str(caught.value)
+    assert caught.value.reason.value == "dependency_missing"
     assert caught.value.remedy, "a refusal with no remedy is a refusal nobody can act on"
     assert "Orin only" in caught.value.remedy
 

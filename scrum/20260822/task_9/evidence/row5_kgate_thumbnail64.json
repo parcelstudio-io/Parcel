@@ -1,0 +1,200 @@
+{
+ "objects": 8,
+ "promotions": 0,
+ "false_promotions": 0,
+ "rows": [],
+ "known_places": [
+  "bench",
+  "bollard",
+  "crate",
+  "door",
+  "lamppost",
+  "traffic light",
+  "tree"
+ ],
+ "per_visit": [
+  {
+   "visit_id": "visit-0",
+   "considered": 7,
+   "asked": 7,
+   "proposals": 5,
+   "promotions": 0,
+   "demotions": 0,
+   "rejected": 0,
+   "budget_exhausted": false,
+   "outcomes": [
+    {
+     "entry_id": "place-17bfe84fa8b54e55",
+     "proposed": "wooden box",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-467aed2637d143c1",
+     "proposed": "tree",
+     "promoted": false,
+     "demoted": [],
+     "skipped": "same as label"
+    },
+    {
+     "entry_id": "place-469485bd8744454f",
+     "proposed": "yellow cylinder",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-5d096090d75d4820",
+     "proposed": "brick wall",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-a87660a464b443fe",
+     "proposed": "pole",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-d0e208f908784fe0",
+     "proposed": "door",
+     "promoted": false,
+     "demoted": [],
+     "skipped": "same as label"
+    },
+    {
+     "entry_id": "place-e52020af617f4de2",
+     "proposed": "black pole",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    }
+   ]
+  },
+  {
+   "visit_id": "visit-1",
+   "considered": 7,
+   "asked": 7,
+   "proposals": 6,
+   "promotions": 0,
+   "demotions": 0,
+   "rejected": 0,
+   "budget_exhausted": false,
+   "outcomes": [
+    {
+     "entry_id": "place-17bfe84fa8b54e55",
+     "proposed": "wooden box",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-467aed2637d143c1",
+     "proposed": "tree stump",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-469485bd8744454f",
+     "proposed": "yellow cup",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-5d096090d75d4820",
+     "proposed": "wooden block",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-a87660a464b443fe",
+     "proposed": "tree trunk",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-d0e208f908784fe0",
+     "proposed": "door",
+     "promoted": false,
+     "demoted": [],
+     "skipped": "same as label"
+    },
+    {
+     "entry_id": "place-e52020af617f4de2",
+     "proposed": "person",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    }
+   ]
+  },
+  {
+   "visit_id": "visit-2",
+   "considered": 7,
+   "asked": 7,
+   "proposals": 7,
+   "promotions": 0,
+   "demotions": 0,
+   "rejected": 0,
+   "budget_exhausted": false,
+   "outcomes": [
+    {
+     "entry_id": "place-17bfe84fa8b54e55",
+     "proposed": "wooden block",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-467aed2637d143c1",
+     "proposed": "tree trunk",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-469485bd8744454f",
+     "proposed": "yellow cylinder",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-5d096090d75d4820",
+     "proposed": "wooden barrel",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-a87660a464b443fe",
+     "proposed": "tree trunk",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-d0e208f908784fe0",
+     "proposed": "wall",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    },
+    {
+     "entry_id": "place-e52020af617f4de2",
+     "proposed": "tree trunk",
+     "promoted": false,
+     "demoted": [],
+     "skipped": ""
+    }
+   ]
+  }
+ ]
+}

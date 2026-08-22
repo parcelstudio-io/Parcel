@@ -80,6 +80,16 @@ RUNTIME_PATH = REPO / "src" / "parcel_robot" / "runtime.py"
 #:   ``PINNED_LOCK_ORDER`` below is unchanged by C-1). It is a leaf: the
 #:   camera worker takes it alone, never while holding another runtime lock,
 #:   and never across a render, an inference, or an evidence-log offer.
+#: * 2026-08-22 (P1-B) — ``_p1b_map_lock`` added, owner: the runtime's own
+#:   online semantic map. It guards the map object and this card's ingest
+#:   counters. Also a LEAF, and for the same reason C-1's is: the camera worker
+#:   takes it alone in ``_p1b_feed_learned_map`` — after ``_camera_stream_lock``
+#:   has been RELEASED, never inside it — and ``close()`` takes it alone in
+#:   ``_p1b_persist_learned_map`` after the camera worker has been stopped, so
+#:   no frame can be in flight against it. It adds exactly ONE ordering edge,
+#:   ``_close_lock -> _p1b_map_lock`` (the persist runs inside ``close()``),
+#:   and it has NO outgoing edges, so it cannot participate in a cycle — see
+#:   ``PINNED_LOCK_ORDER`` below.
 RUNTIME_LOCKS: tuple[str, ...] = (
     "_lock",
     "_agent_lock",
@@ -88,6 +98,7 @@ RUNTIME_LOCKS: tuple[str, ...] = (
     "_close_lock",
     "_transcript_lock",
     "_camera_stream_lock",
+    "_p1b_map_lock",
 )
 
 #: The three hosted motion doors §Arch-1 names. Each must hold ``_agent_lock``
@@ -153,11 +164,24 @@ NAVIGATOR_MUTATIONS: frozenset[tuple[str, str]] = frozenset(
 #:   ``_agent_lock`` sections only reach ``_lock`` lexically (an edge
 #:   ``set_personality`` already stated), the navigator override takes no other
 #:   lock, and the compound writes are all ``_lock`` under an existing outer.
+#: * 2026-08-22 (P1-B) — ONE new edge, ``_close_lock -> _p1b_map_lock``.
+#:   ``close()`` holds ``_close_lock`` and calls ``_p1b_persist_learned_map``,
+#:   which takes the map lock to write the map out. It cannot close a cycle
+#:   because ``_p1b_map_lock`` has no outgoing edges at all: the only two
+#:   places that take it (``_p1b_feed_learned_map`` on the camera worker and
+#:   the persist above) call nothing that takes another runtime lock, and
+#:   nothing anywhere takes ``_close_lock`` — or any other runtime lock —
+#:   while holding it. ``test_the_lock_order_graph_is_acyclic`` is the proof.
+#:   Note what is deliberately NOT here: ``_camera_stream_lock ->
+#:   _p1b_map_lock``. The feed is called from ``_publish_camera_frame`` AFTER
+#:   the stream lock is released, precisely so the map cannot be reached while
+#:   the camera's own lock is held.
 PINNED_LOCK_ORDER: frozenset[tuple[str, str]] = frozenset(
     {
         ("_agent_lock", "_lock"),
         ("_close_lock", "_command_lock"),
         ("_close_lock", "_lock"),
+        ("_close_lock", "_p1b_map_lock"),
         ("_command_lock", "_lock"),
         ("_command_lock", "_navigation_lock"),
     }

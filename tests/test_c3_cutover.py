@@ -1091,20 +1091,68 @@ def test_E2_the_abstention_gate_is_consumed_never_forked() -> None:
     assert "assess_place_query" in semantic_map
 
 
-def test_the_online_map_package_is_not_modified_by_this_card() -> None:
-    """C-2's map is a predecessor deliverable; C-3 reads it, it does not edit it."""
+#: Everything a fork of C-2's map would have to re-declare: the entry/store
+#: types, the schema string, and the lifecycle vocabulary. A second spelling of
+#: any of these inside a C-3 module is the drift this test exists to catch.
+_MAP_DECLARATIONS = (
+    "class MapEntry",
+    "class MapObservation",
+    "class OnlineSemanticMap",
+    "class OnlineMapStore",
+    "class WriterProvenance",
+    "class EmbeddingStamp",
+    "MAP_SCHEMA =",
+    "PARCEL_ONLINE_MAP_PATH",
+)
 
-    result = subprocess.run(
-        ["git", "status", "--porcelain", "--", "src/parcel_robot/online_map/"],
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        check=False,
+
+def test_the_online_map_package_is_consumed_never_forked() -> None:
+    """C-2's map is a predecessor deliverable; C-3 reads it, it does not fork it.
+
+    This was a ``git status`` emptiness pin on ``src/parcel_robot/online_map/``
+    that asserted every porcelain line began with ``??``. It has stopped
+    measuring what it meant, twice over:
+
+    1. The package was UNTRACKED when C-3 wrote this, so "every line is ``??``"
+       happened to mean "unmodified". It is tracked now (commit ``71b39a1``),
+       so the same assertion means "nobody has touched the map since the last
+       commit" — a claim about the working tree of whoever runs the suite, not
+       about card C-3.
+    2. Card P1-B (``scrum/20260822/task_7``) OWNS ``online_map/`` and was
+       chartered to change it: persist the source crop (AU-C2-1), stamp
+       ``EvidenceOrigin``, and give the map a product writer. A
+       diff-is-empty ratchet cannot survive a later card that is supposed to
+       edit the file, and no regeneration can make it true again.
+
+    So it is replaced by the property it stood in for — the same treatment card
+    P0-D gave ``test_E2_the_abstention_gate_is_not_modified_by_this_card``, and
+    strictly stronger than the emptiness check: C-3's own modules must reach
+    the map through its public API and must not re-declare its types, its
+    schema or its store path anywhere of their own.
+    """
+
+    offenders: list[str] = []
+    for relative in C3_OWNED_MODULES:
+        text = (REPO / relative).read_text(encoding="utf-8")
+        for declaration in _MAP_DECLARATIONS:
+            if declaration in text:
+                offenders.append(f"{relative}: {declaration}")
+    assert offenders == [], (
+        "the online map is C-2's, and C-3 consumes it:\n" + "\n".join(offenders)
     )
-    # The whole package is untracked (C-2 created it), so every line must be a
-    # `??` line — a ` M` line would mean this card edited a predecessor's file.
-    for line in result.stdout.splitlines():
-        assert line.startswith("??"), f"C-3 modified a C-2 file: {line}"
+
+    # And "no fork" must not be satisfiable by "no map at all": the consumer
+    # really does reach the installed map, through the package's public API
+    # and through the process seam that says WHICH instance is installed.
+    semantic_map = (REPO / "src/parcel_robot/navigation/semantic_map.py").read_text(
+        encoding="utf-8"
+    )
+    assert "from parcel_robot.online_map import" in semantic_map
+    assert "active_learned_map" in semantic_map
+    selection = (REPO / "src/parcel_robot/perception_source/selection.py").read_text(
+        encoding="utf-8"
+    )
+    assert "def use_learned_map" in selection
 
 
 # --------------------------------------------------------------------------

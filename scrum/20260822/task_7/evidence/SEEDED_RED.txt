@@ -1,0 +1,47 @@
+P1-B seeded-RED harness — 2026-08-22T08:02:49+00:00
+interpreter: /home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python
+repo HEAD  : 904edd24fc910bce5f160de3d2f242a03d447cd7
+protocol   : seed one exact replacement -> purge every __pycache__ -> run the named tests (expect RED) -> restore -> verify sha256 -> purge -> rerun (expect GREEN)
+
+[OK ] S-1  AU-C2-1 returns: as_dict drops the thumbnail again
+        seeded : RED  1 failed, 1 warning in 0.78s
+        restore: sha identical (d866df981bf1)
+        rerun  : GREEN  1 passed, 1 warning in 0.80s
+[OK ] S-2  the store stops refusing a mixed-origin map
+        seeded : RED  1 failed, 1 warning in 0.81s
+        restore: sha identical (2197b595a99b)
+        rerun  : GREEN  1 passed, 1 warning in 0.79s
+[OK ] S-3  the seam accepts an embedding with no space
+        seeded : RED  1 failed, 1 warning in 0.83s
+        restore: sha identical (03fde09773e4)
+        rerun  : GREEN  1 passed, 1 warning in 0.79s
+[OK ] S-4  D-R2 returns: the query union is uncapped
+        seeded : RED  2 failed, 1 warning in 0.80s
+        restore: sha identical (31037829658f)
+        rerun  : GREEN  2 passed, 1 warning in 0.79s
+[OK ] S-5  D-R1 returns: the attach site stops pinning the configured batch
+        seeded : RED  1 failed, 1 warning in 0.82s
+        restore: sha identical (4393178b7b92)
+        rerun  : GREEN  1 passed, 1 warning in 0.80s
+[OK ] S-6  the attach site stops arming the SigLIP-2 encoder
+        seeded : RED  1 failed, 1 warning in 0.80s
+        restore: sha identical (4393178b7b92)
+        rerun  : GREEN  1 passed, 1 warning in 0.78s
+[OK ] S-7  the runtime stops persisting the map on close()
+        seeded : RED  1 failed, 1 warning in 0.82s
+        restore: sha identical (4393178b7b92)
+        rerun  : GREEN  1 passed, 1 warning in 0.81s
+[OK ] S-8  the store is never closed, so persisted rows sit in the WAL
+        seeded : RED  2 failed, 1 warning in 0.80s
+        restore: sha identical (3aff3d5846c6)
+        rerun  : GREEN  2 passed, 1 warning in 0.80s
+[OK ] S-9  the runtime stops closing the store after persisting
+        seeded : RED  1 failed, 1 warning in 0.79s
+        restore: sha identical (4393178b7b92)
+        rerun  : GREEN  1 passed, 1 warning in 0.79s
+[OK ] S-10 scene_id falls back to the robot-config filename again
+        seeded : RED  1 failed, 1 warning in 1.14s
+        restore: sha identical (4393178b7b92)
+        rerun  : GREEN  1 passed, 1 warning in 1.13s
+
+10/10 seeds went RED, restored byte-identically, and came back GREEN.

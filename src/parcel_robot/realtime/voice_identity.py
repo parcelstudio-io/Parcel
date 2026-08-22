@@ -888,6 +888,200 @@ def gate_decision(kind: str, verdict: VoiceVerdict | None) -> VoiceArmingDecisio
     )
 
 
+# =================================================== card P2-B: identity as a LABEL
+#
+# THE DISTINCTION THIS SECTION EXISTS TO KEEP
+# -------------------------------------------
+# Everything above decides whether a turn may ACT. Everything below decides only
+# what a turn is CALLED. They are deliberately different functions with different
+# return types, and the second one has no way to reach the first: a label is
+# computed from a verdict that has already been settled, it takes no lock, it
+# starts no verification, and there is no code path in this module by which a
+# label can turn into a refusal.
+#
+# That is the whole of card P2-B's absolute constraint, stated as structure
+# rather than as a comment: *identity becomes a label, not a gate*. The emergency
+# class labels as :data:`LABEL_UNGATED` and arms exactly as it did before, and a
+# build with no enrolled profile labels every row :data:`LABEL_UNENROLLED` while
+# arming everything, exactly as it did before.
+
+#: The enrolled owner, verified this turn.
+LABEL_OWNER = "owner"
+#: Somebody else: a voice that was verified and did not match the profile.
+LABEL_NOT_OWNER = "not_owner"
+#: The gate exists and could not say. Too short, still pending, or it failed —
+#: three different codes, one label, because "we do not know" is one fact.
+LABEL_UNVERIFIED = "unverified"
+#: No enrolled profile at all (or no embedder to use it with). Identity is not
+#: merely unknown here, it is UNKNOWABLE, and the two must never be conflated:
+#: `unverified` says the check ran and abstained, `unenrolled` says there is no
+#: check. Before ``tools/enroll_owner_voice.py`` is run this is every row.
+LABEL_UNENROLLED = "unenrolled"
+#: The emergency class. Identity had no say and was not consulted; the row is
+#: labelled so an auditor can SEE the exemption in the record rather than infer
+#: it from an absence.
+LABEL_UNGATED = "ungated"
+
+SPEAKER_LABELS: frozenset[str] = frozenset(
+    {
+        LABEL_OWNER,
+        LABEL_NOT_OWNER,
+        LABEL_UNVERIFIED,
+        LABEL_UNENROLLED,
+        LABEL_UNGATED,
+    }
+)
+
+#: The class a row with no ingress class of its own is labelled under — a robot
+#: turn, a system note, a panel line. Deliberately NOT
+#: :data:`~parcel_robot.realtime.ingress.KIND_EMERGENCY`, so ``gates_kind``
+#: returns True for it and no bookkeeping row can borrow the latch's exemption
+#: by accident (the same reasoning ``runtime.VOICE_KIND_TOOL`` is written down
+#: with, and for the same reason).
+VOICE_LABEL_KIND = "turn"
+
+#: Verdict code ⇒ label, for the codes that map one-to-one. Codes outside this
+#: table fall through to :data:`LABEL_UNVERIFIED`, which is the honest answer for
+#: any state this table has not been taught about.
+_CODE_LABELS: Mapping[str, str] = {
+    CODE_ARMED: LABEL_OWNER,
+    CODE_NOT_OWNER: LABEL_NOT_OWNER,
+    CODE_REJECTED_SECTOR: LABEL_NOT_OWNER,
+    CODE_TOO_SHORT: LABEL_UNVERIFIED,
+    CODE_PENDING: LABEL_UNVERIFIED,
+    CODE_VERIFY_ERROR: LABEL_UNVERIFIED,
+    CODE_DISABLED: LABEL_UNENROLLED,
+    CODE_SAFETY_NEVER_GATED: LABEL_UNGATED,
+}
+
+
+@dataclass(frozen=True)
+class SpeakerLabel:
+    """WHOSE VOICE a row is attributed to. Carries no authority of any kind.
+
+    ``blocking`` is on the record and is always ``False``. It is not a knob and
+    nothing reads it to decide anything — it exists so that "did this build ever
+    let a label gate something" is a question an artifact can answer, instead of
+    a property a reader has to re-derive from the source every time.
+    """
+
+    label: str
+    code: str
+    #: Did identity have any say over this class at all? ``False`` only for the
+    #: emergency class, and it is the same predicate :func:`gates_kind` answers —
+    #: read from it, never re-expressed.
+    gated: bool
+    #: Is there an enrolled profile behind this label?
+    enrolled: bool
+    score: float | None = None
+    threshold: float = DEFAULT_THRESHOLD
+    turn: int = 0
+    kind: str = ""
+    #: Structurally always False. See the class docstring.
+    blocking: bool = False
+
+    def __post_init__(self) -> None:
+        if self.label not in SPEAKER_LABELS:
+            raise VoiceIdentityError(f"unknown speaker label {self.label!r}")
+        if self.blocking:
+            raise VoiceIdentityError(
+                "a speaker label may never be blocking: card P2-B makes identity a "
+                "label and not a gate, and arming is decided by gate_decision alone"
+            )
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "label": self.label,
+            "code": self.code,
+            "gated": self.gated,
+            "enrolled": self.enrolled,
+            "score": None if self.score is None else round(float(self.score), 4),
+            "threshold": round(float(self.threshold), 4),
+            "turn": int(self.turn),
+            "kind": self.kind,
+            "blocking": False,
+        }
+
+    def describe(self) -> str:
+        """One machine-readable clause for a ledger row or a panel event."""
+
+        score = "none" if self.score is None else f"{self.score:.4f}"
+        return (
+            f"speaker={self.label} code={self.code} score={score} "
+            f"enrolled={'yes' if self.enrolled else 'no'} "
+            f"gated={'yes' if self.gated else 'no'}"
+        )
+
+
+def speaker_label(
+    kind: str,
+    verdict: VoiceVerdict | None,
+    *,
+    enrolled: bool,
+) -> SpeakerLabel:
+    """Name the speaker of one turn. Pure, total, and never an authority.
+
+    Mirrors :func:`gate_decision`'s ORDER so the two can never disagree about
+    what happened, while disagreeing completely about what it means:
+
+    1. the emergency class is :data:`LABEL_UNGATED` before the verdict is read;
+    2. no verdict, or the disabled verdict, is :data:`LABEL_UNENROLLED`;
+    3. otherwise the verdict's own code names the label.
+
+    ``enrolled`` is passed rather than inferred because the caller is the only
+    one that knows whether a profile exists at all: a gate that has not seen
+    audio yet reports ``pending``, and "pending with a profile" and "pending
+    because there is no profile" are the same code and different facts.
+    """
+
+    kind_text = str(kind)
+    gated = gates_kind(kind_text)
+    if not gated:
+        return SpeakerLabel(
+            label=LABEL_UNGATED,
+            code=CODE_SAFETY_NEVER_GATED,
+            gated=False,
+            enrolled=bool(enrolled),
+            score=None if verdict is None else verdict.score,
+            threshold=DEFAULT_THRESHOLD if verdict is None else verdict.threshold,
+            turn=0 if verdict is None else verdict.turn,
+            kind=kind_text,
+        )
+    if verdict is None or verdict.code == CODE_DISABLED or not enrolled:
+        return SpeakerLabel(
+            label=LABEL_UNENROLLED,
+            code=CODE_DISABLED if verdict is None else verdict.code,
+            gated=True,
+            enrolled=bool(enrolled),
+            score=None if verdict is None else verdict.score,
+            threshold=DEFAULT_THRESHOLD if verdict is None else verdict.threshold,
+            turn=0 if verdict is None else verdict.turn,
+            kind=kind_text,
+        )
+    label = _CODE_LABELS.get(verdict.code, LABEL_UNVERIFIED)
+    if label == LABEL_OWNER and not verdict.passed:
+        # Belt and braces: ``armed`` is only ever set on a passing verdict, and a
+        # hand-built verdict that says otherwise is named for what it proves.
+        label = LABEL_UNVERIFIED
+    return SpeakerLabel(
+        label=label,
+        code=verdict.code,
+        gated=True,
+        enrolled=True,
+        score=verdict.score,
+        threshold=verdict.threshold,
+        turn=verdict.turn,
+        kind=kind_text,
+    )
+
+
+#: The label a build with no identity stack at all stamps on its rows. A
+#: ``mode: text`` session has no gate object; its rows are still labelled, and
+#: they are labelled with the truth.
+def unenrolled_label(kind: str = "") -> SpeakerLabel:
+    return speaker_label(kind, None, enrolled=False)
+
+
 # ==================================================================== the gate
 @dataclass
 class _Turn:
@@ -1109,6 +1303,24 @@ class VoiceIdentityGate:
             return gate_decision(kind, None)
         return gate_decision(kind, self.current(wall))
 
+    def label(self, kind: str, wall: float | None = None) -> SpeakerLabel:
+        """Name the speaker of one turn of class ``kind``. Card P2-B.
+
+        The reading half of :meth:`decide`, and deliberately a separate method:
+        this one may be called on rows nobody is arming — a robot turn, a system
+        note, a transcript that asked for nothing — and it must be impossible for
+        such a call to change what the arming half would have said.
+
+        Total. A gate that is mid-failure still returns a label, because a row
+        with no label at all is the thing card P2-B exists to remove.
+        """
+
+        try:
+            verdict = None if not gates_kind(kind) else self.current(wall)
+        except Exception:  # noqa: BLE001 - a label may never break its caller
+            return speaker_label(kind, None, enrolled=self.enabled)
+        return speaker_label(kind, verdict, enrolled=self.enabled)
+
     def note_rejection(self, wall: float | None = None) -> bool:
         """Count one refused turn; answer whether it may also be SPOKEN.
 
@@ -1116,11 +1328,22 @@ class VoiceIdentityGate:
         never silent. Only the narration is rate-limited, and it is rate-limited
         here rather than in the whisperer because the whisperer's budget is the
         owner's cost knob and this is a security fact, not chatter.
+
+        **Card P2-B: an unenrolled gate never buys a narration slot.** With no
+        profile the gate cannot refuse anything (``gate_decision`` arms on
+        ``verify_disabled``), so this is defence in depth rather than a change of
+        outcome — but it is the structural form of "the gate is silent about
+        itself": a build that has never been enrolled has no path from this
+        object to a spoken sentence, and it does not depend on every caller
+        remembering to check. The count still moves, because a refusal that
+        happened is a refusal that happened.
         """
 
         now = self._wall(wall)
         with self._lock:
             self.voice_rejected += 1
+            if not self.enabled:
+                return False
             last = self._last_narration_at
             if last is not None and now - last < self.narration_interval_s:
                 return False
@@ -1364,6 +1587,13 @@ class VoiceIdentityGate:
             "rejected_sector": None if self._sector is None else list(self._sector),
             "doa": None if doa is None else _doa_snapshot(doa),
             "verdict": verdict.as_dict(),
+            # Card P2-B. The LABEL beside the verdict, for the ordinary command
+            # class, so a panel reader can see what this build is stamping on its
+            # rows without deriving it from the code — and can see, in the same
+            # blob, that it never blocks.
+            "label": speaker_label(
+                VOICE_LABEL_KIND, verdict, enrolled=enabled
+            ).as_dict(),
         }
 
     # ------------------------------------------------------------- internals
@@ -1423,9 +1653,16 @@ __all__ = [
     "DEFAULT_TURN_GAP_S",
     "DOA_COMMAND_ID",
     "DOA_RESOURCE_ID",
+    "LABEL_NOT_OWNER",
+    "LABEL_OWNER",
+    "LABEL_UNENROLLED",
+    "LABEL_UNGATED",
+    "LABEL_UNVERIFIED",
     "MAX_VERIFIES_PER_TURN",
     "REVERIFY_GROWTH_FACTOR",
+    "SPEAKER_LABELS",
     "VERDICT_CODES",
+    "VOICE_LABEL_KIND",
     "VOICE_PROFILE_MODE",
     "VOICE_PROFILE_NAME",
     "VOICE_PROFILE_SCHEMA",
@@ -1438,6 +1675,7 @@ __all__ = [
     "OwnerVoiceProfile",
     "SherpaSpeakerEmbedder",
     "SpeakerEmbedder",
+    "SpeakerLabel",
     "UsbDoaReader",
     "VoiceArmingDecision",
     "VoiceIdentityError",
@@ -1455,4 +1693,6 @@ __all__ = [
     "rejection_fact",
     "save_owner_profile",
     "sector_contains",
+    "speaker_label",
+    "unenrolled_label",
 ]

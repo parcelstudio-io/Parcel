@@ -127,6 +127,78 @@ perception:
   # PROTOTYPE (P0-D): the learned map, not the MuJoCo oracle. See the header —
   # the abstention block below reads evidence the oracle does not carry.
   semantic_source: learned_map
+
+  # Card P1-B (scrum/20260822/task_7/) — THE MAP THAT LEARNS.
+  #
+  # `semantic_source` above decides whether the learned map is READ. This block
+  # decides what happens to the map the robot WRITES while it runs, which until
+  # this card was nothing at all: the online semantic map had zero product
+  # writers, and every entry any run produced died with the process.
+  #
+  # Present only when `semantic_source` is `learned_map` or `shadow`; under
+  # `oracle` the runtime never constructs a map and this block is inert.
+  # Unknown keys here are a HARD ERROR, same reason as the abstention block: a
+  # typo'd key that reads as "the default" is a switch that never flipped.
+  online_map:
+    # Write the map to its store in `close()`. THE line that makes a parameter
+    # persist from the robot's own experience rather than from a person's file.
+    #
+    # WHERE it writes is NOT here and deliberately cannot be: the store path is
+    # `PARCEL_ONLINE_MAP_PATH` (absolute, or `:memory:`), resolved by C-2's own
+    # R27 gate, which refuses a relative path and refuses the owner's
+    # conversation store BY IDENTITY. With no env var there is no store, this
+    # key has nothing to write to, and the runtime says so in the log and in
+    # `learned_map_snapshot()["store_note"]` instead of inventing a temp file.
+    persist_on_close: true
+    # Read it back on start. This is "the dog that walked yesterday knows the
+    # lamppost today", and turning it off is how you get a fresh map without
+    # deleting the old one.
+    reload_on_start: true
+    # Card P1-B work item 4 — what the detector is ASKED, off-oracle.
+    #
+    # The batch handed to the camera at attach is:
+    #     perception.camera_ingress_queries   (the operator's batch, pinned)
+    #   + known_places()                      (below, if true)
+    #   + curiosity_queries                   (below)
+    # and CameraIngress caps the union at 16 phrases with `person` first,
+    # counting and logging anything it drops. A batch over 16 used to make
+    # every frame fail construction and blind the detector in silence
+    # (refutation D-R2); it now degrades visibly instead.
+    #
+    # `known_places` is the confirm-what-you-know half: a robot that has
+    # learned "bench" keeps asking about benches, so the entry either gains
+    # evidence or decays honestly. Set false to ask only the fixed lists.
+    query_batch_from_known_places: true
+    # The oracle arm's half of work item 4, and it is OFF here too — because it
+    # is measured. Under `oracle` the batch would become the scene sidecar's
+    # own `detector_query_set()`, which is the vocabulary the scene ADMITS to
+    # having rather than a list somebody typed twice. For `city_block` that is
+    # 34 phrases: the cap keeps 16 and logs the 18 it drops, and the resulting
+    # frames then run hard into `camera_ingress_max_detections_per_frame`. Two
+    # 25 s oracle runs, same scene, same budget, differing in this one key
+    # (scrum/20260822/task_7/evidence/p1b_oracle_sidecar_batch vs p1b_flag_off):
+    #
+    #     sidecar batch ON : 632 of 1,016 detections TRUNCATED (62.2%)
+    #     operator's batch :  57 of   404 detections truncated (14.1%)
+    #
+    # Under `oracle` the camera grounds nothing (the GT oracle supplies the
+    # candidates), so that cost buys a longer diagnostic stream and no product
+    # behaviour. It is off, and the shipped default's batch is exactly
+    # `perception.camera_ingress_queries`, byte-identical to before card P1-B.
+    # Turn it on to measure the sidecar vocabulary against a real detector;
+    # raise `camera_ingress_max_detections_per_frame` first or most of it is
+    # dropped.
+    oracle_query_batch_from_scene: false
+    # The explore half: things worth asking about that the map has never seen.
+    # Kept SHORT on purpose — every phrase is detector cost on a budget that is
+    # already 16 wide and already carrying the operator's batch.
+    curiosity_queries: [bench, tree, bicycle rack]
+    # Prefix for the visit id every observation this run is stamped with.
+    # Distinct visits are what the k-gate counts and what decay measures, so a
+    # run that reused another run's visit id would make three frames of one
+    # stare look like three independent confirmations.
+    visit_id_prefix: patrol
+
   # Widens both confidence distributions; 1.0 is the calibrated shape.
   confidence_temperature: 1.0
   # Arrival evidence threshold on the MEAN detection score across confirming
@@ -177,7 +249,55 @@ perception:
     #           past. It is the gate that refuses "the moon", and dropping it is
     #           the loosening this profile is FOR: re-enable it once depth
     #           returns populate `ground_evidence_fraction` for real.
-    signals: [label_support, evidence_count, ranking_margin]
+    #
+    # CARD P1-D adds a fourth: `vlm_veto`. It is the only signal that LOOKS at
+    # the place. Qwen3-VL-2B is shown the top candidate's best-view crop and the
+    # query noun, and an "absent" answer removes the admission. It runs LAST,
+    # only on a place that already passed every evidence gate, and it is
+    # subtractive only — so a hallucinating verifier costs a question and never
+    # a place the evidence did not earn.
+    #
+    # It is the only signal that can be UNAVAILABLE at call time (no seat
+    # installed on this host, no crop on this entry, or the contention guard
+    # declining the GPU moment). Unavailable degrades to ASK, never to ADMIT and
+    # never to REFUSE — which is why `ask_below_threshold` below is not optional
+    # here but a construction invariant of the policy.
+    signals: [label_support, evidence_count, ranking_margin, vlm_veto]
+    # CARD P1-D — THE POSTURE. This is the key the whole card is about.
+    #
+    # C-3 measured 0/18: the gate refused every learned-map answer on
+    # perfect-geometry data. Six AND-ed thresholds fitted on a world SYNTHESIS
+    # 2 declared invalid can only ever say no, and a dog that says no to
+    # everything is not being careful, it is being useless.
+    #
+    # With this true, a SHORTFALL against one of those provisional thresholds
+    # becomes a question — "I think it's over there, want me to go?" — instead
+    # of a refusal. `admitted` still means what it always meant, so an ASK
+    # authorizes no motion whatsoever; what changes is what the owner hears.
+    #
+    # What does NOT soften, and each for a reason that is not a threshold:
+    #   no_observations      no candidate exists; there is nothing to ask about
+    #   no_detector_support  the label head never answered; "shall I go to the
+    #                        thing I have no evidence of" is a guess with a
+    #                        question mark on it
+    #   not_navigable        a physical claim. This is the gate that refuses
+    #                        corpus row 12 ("take me to the moon") and softening
+    #                        it would hand that row back
+    #   vlm_veto_absent      something LOOKED and said no
+    ask_below_threshold: true
+    # CARD P1-D — WHICH seat answers the veto. This is the key that makes the
+    # signal above do anything: without it the roster selects a gate that
+    # resolves to no verifier, answers `unavailable` for every place, and the
+    # dog asks about everything. (That was literally the shipped behaviour until
+    # the P1-D verifier caught it: the veto had a keyword argument and no
+    # producer.)
+    #
+    # The weights are NOT a repo dependency. `.parcel` carries no tensor library
+    # and this profile does not add one, so on a host without torch the seat
+    # fails to warm, declares itself cold, and the gate ASKS. Loud in the log,
+    # a question to the owner, never a wrong admission and never a blanket
+    # refusal. Set to `null` to choose that posture deliberately.
+    veto_model: Qwen/Qwen3-VL-2B-Instruct
     # PROVISIONAL. The robust z-score is structurally 0.0 on this map's own
     # background (one non-zero score among zeros => MAD 0 => margin 0 => every
     # query indecisive; measured 0/6 and 0/18). `label_strength` is the

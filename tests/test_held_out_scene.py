@@ -66,6 +66,14 @@ ALLOWED: dict[str, str] = {
         "its fixity is the eval's integrity mechanism and it must name the "
         "scene it governs. Same auditor-granted seat as E2_STATUS.md"
     ),
+    "scrum/20260822/INTEGRITY_GATES_TODO.md": (
+        "a Sol-session corrective TODO (author not a live session at seat time) "
+        "whose IG-1 checklist lists the two tracked product scenes for a planned "
+        "compile-only asset-pack gate. Prose under scrum/, written after its "
+        "author's gate — the doc catch-22 again. Seat granted by the chain "
+        "auditor (AUDIT_WAVE_P1P2_FABLE.md); the asset-pack TEST it plans needs "
+        "its own seat and the load-pair must grow deliberately"
+    ),
     "scrum/20260821/task_20/MOVE1_STATUS.md": (
         "MOVE-1's status record names the scene only to say its exposure stays "
         "UNSPENT while E2-D2 is diagnosed. Prose under scrum/, written after its "
