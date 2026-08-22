@@ -42,8 +42,11 @@ not production; ask-over-refuse; prepare the codebase for a physical mount.
   (~1.3 h of owner time) decides the barge-in floor, the ch1 pin and the
   interrupt latency row; DUPLEX-1's defaults wait for it, its mechanism does
   not.
-* The Go2 purchase input is now honest: 6.5 m net in-block over 120 s with a
-  10 m tether. The next number that matters is *coverage* (ROAM-2), not
+* The Go2 purchase input is now honest — and bimodal: seven product-path
+  tethered 120 s runs give 1.30 / 3.10 / 6.48 / 6.54 / 6.47 / 6.56 / 6.57 m
+  net in-block with 0 contacts (a 6.5 m out-and-back when the 10 m tether
+  engages, a 1.3–3.4 m boxed wander when it does not); every run clears the
+  ≥ 1.0 m tell. The next number that matters is *coverage* (ROAM-2), not
   distance.
 
 ## 3. Wave 2 — the cards (parallel, disjoint OWNS; Opus executes, Fable verifies)

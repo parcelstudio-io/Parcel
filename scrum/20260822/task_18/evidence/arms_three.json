@@ -1,0 +1,1154 @@
+{
+ "A1_fullres": {
+  "prompt": "What is the main object in this image? Answer with one to three words.",
+  "source": "png",
+  "n": 40,
+  "correct": 19,
+  "accuracy": 0.475,
+  "p50_ms": 51.01,
+  "p95_ms": 60.11,
+  "wall_s": 2.1,
+  "per_class": {
+   "bench": "3/4",
+   "bicycle": "0/4",
+   "bollard": "0/4",
+   "building": "3/4",
+   "crate": "2/4",
+   "door": "4/4",
+   "lamppost": "2/4",
+   "planter": "0/4",
+   "traffic light": "1/4",
+   "tree": "4/4"
+  },
+  "rows": [
+   {
+    "id": "orbit_bollard_1_3m_90__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "wooden bench",
+    "normalized": "wooden bench",
+    "correct": true,
+    "ms": 60.42
+   },
+   {
+    "id": "orbit_building_4_3m_180__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "bench",
+    "normalized": "bench",
+    "correct": true,
+    "ms": 40.09
+   },
+   {
+    "id": "orbit_building_4_6m_180__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": false,
+    "ms": 51.84
+   },
+   {
+    "id": "orbit_building_5_3m_90__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "wooden bench",
+    "normalized": "wooden bench",
+    "correct": true,
+    "ms": 56.58
+   },
+   {
+    "id": "orbit_bicycle_6m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "chair",
+    "normalized": "chair",
+    "correct": false,
+    "ms": 40.43
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "black box",
+    "normalized": "black box",
+    "correct": false,
+    "ms": 104.59
+   },
+   {
+    "id": "orbit_bollard_1_4.5m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "black rectangle",
+    "normalized": "black rectangle",
+    "correct": false,
+    "ms": 54.19
+   },
+   {
+    "id": "orbit_building_1_3m_270__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "black block",
+    "normalized": "black block",
+    "correct": false,
+    "ms": 51.86
+   },
+   {
+    "id": "orbit_bench_1_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "yellow cylinder",
+    "normalized": "yellow cylinder",
+    "correct": false,
+    "ms": 50.84
+   },
+   {
+    "id": "orbit_building_1_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "yellow cylinder",
+    "normalized": "yellow cylinder",
+    "correct": false,
+    "ms": 50.92
+   },
+   {
+    "id": "orbit_building_2_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "yellow cylinder",
+    "normalized": "yellow cylinder",
+    "correct": false,
+    "ms": 51.77
+   },
+   {
+    "id": "orbit_building_2_4.5m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "yellow cylinder",
+    "normalized": "yellow cylinder",
+    "correct": false,
+    "ms": 51.17
+   },
+   {
+    "id": "orbit_bench_1_3m_270__building_5",
+    "label": "building",
+    "object_key": "building_5",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 43.12
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__building_3",
+    "label": "building",
+    "object_key": "building_3",
+    "raw": "brick wall",
+    "normalized": "brick wall",
+    "correct": true,
+    "ms": 51.3
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__building_4",
+    "label": "building",
+    "object_key": "building_4",
+    "raw": "brick wall",
+    "normalized": "brick wall",
+    "correct": true,
+    "ms": 60.11
+   },
+   {
+    "id": "orbit_bench_1_4.5m_270__building_5",
+    "label": "building",
+    "object_key": "building_5",
+    "raw": "wall",
+    "normalized": "wall",
+    "correct": true,
+    "ms": 38.52
+   },
+   {
+    "id": "orbit_bench_1_3m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": true,
+    "ms": 51.86
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden wall",
+    "normalized": "wooden wall",
+    "correct": false,
+    "ms": 51.3
+   },
+   {
+    "id": "orbit_bench_1_6m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden wall",
+    "normalized": "wooden wall",
+    "correct": false,
+    "ms": 52.03
+   },
+   {
+    "id": "orbit_bicycle_3m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": true,
+    "ms": 51.05
+   },
+   {
+    "id": "orbit_bench_1_3m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 39.35
+   },
+   {
+    "id": "orbit_building_2_3m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 39.04
+   },
+   {
+    "id": "orbit_building_2_4.5m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 39.07
+   },
+   {
+    "id": "orbit_building_3_6m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 43.81
+   },
+   {
+    "id": "orbit_bicycle_3m_90__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "black pole",
+    "normalized": "black pole",
+    "correct": true,
+    "ms": 55.01
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__lamppost_2",
+    "label": "lamppost",
+    "object_key": "lamppost_2",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 39.99
+   },
+   {
+    "id": "orbit_building_4_3m_180__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 40.82
+   },
+   {
+    "id": "orbit_crate_1_3m_180__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": true,
+    "ms": 39.23
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__planter_2",
+    "label": "planter",
+    "object_key": "planter_2",
+    "raw": "Cylinder",
+    "normalized": "cylinder",
+    "correct": false,
+    "ms": 38.5
+   },
+   {
+    "id": "orbit_bench_1_6m_0__planter_2",
+    "label": "planter",
+    "object_key": "planter_2",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": false,
+    "ms": 50.85
+   },
+   {
+    "id": "orbit_building_5_4.5m_90__planter_1",
+    "label": "planter",
+    "object_key": "planter_1",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": false,
+    "ms": 50.89
+   },
+   {
+    "id": "orbit_building_5_6m_90__planter_1",
+    "label": "planter",
+    "object_key": "planter_1",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": false,
+    "ms": 50.96
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": false,
+    "ms": 40.04
+   },
+   {
+    "id": "orbit_building_6_4.5m_90__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": false,
+    "ms": 41.09
+   },
+   {
+    "id": "orbit_building_6_6m_90__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "black pole",
+    "normalized": "black pole",
+    "correct": false,
+    "ms": 53.06
+   },
+   {
+    "id": "orbit_planter_1_3m_0__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "traffic light",
+    "normalized": "traffic light",
+    "correct": true,
+    "ms": 54.77
+   },
+   {
+    "id": "orbit_bench_1_3m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree",
+    "normalized": "tree",
+    "correct": true,
+    "ms": 41.74
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": true,
+    "ms": 53.69
+   },
+   {
+    "id": "orbit_bench_1_6m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": true,
+    "ms": 55.35
+   },
+   {
+    "id": "orbit_building_1_6m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": true,
+    "ms": 52.92
+   }
+  ]
+ },
+ "A2_thumb64": {
+  "prompt": "What is the main object in this image? Answer with one to three words.",
+  "source": "thumb",
+  "n": 40,
+  "correct": 12,
+  "accuracy": 0.3,
+  "p50_ms": 51.24,
+  "p95_ms": 61.0,
+  "wall_s": 2.1,
+  "per_class": {
+   "bench": "0/4",
+   "bicycle": "0/4",
+   "bollard": "0/4",
+   "building": "2/4",
+   "crate": "3/4",
+   "door": "3/4",
+   "lamppost": "1/4",
+   "planter": "0/4",
+   "traffic light": "0/4",
+   "tree": "3/4"
+  },
+  "rows": [
+   {
+    "id": "orbit_bollard_1_3m_90__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "brick wall",
+    "normalized": "brick wall",
+    "correct": false,
+    "ms": 54.13
+   },
+   {
+    "id": "orbit_building_4_3m_180__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "wooden block",
+    "normalized": "wooden block",
+    "correct": false,
+    "ms": 55.83
+   },
+   {
+    "id": "orbit_building_4_6m_180__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "wooden barrel",
+    "normalized": "wooden barrel",
+    "correct": false,
+    "ms": 53.35
+   },
+   {
+    "id": "orbit_building_5_3m_90__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "legs",
+    "normalized": "legs",
+    "correct": false,
+    "ms": 43.15
+   },
+   {
+    "id": "orbit_bicycle_6m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "transistor",
+    "normalized": "transistor",
+    "correct": false,
+    "ms": 41.37
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "black object",
+    "normalized": "black object",
+    "correct": false,
+    "ms": 52.03
+   },
+   {
+    "id": "orbit_bollard_1_4.5m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "black object",
+    "normalized": "black object",
+    "correct": false,
+    "ms": 52.25
+   },
+   {
+    "id": "orbit_building_1_3m_270__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "black rectangle",
+    "normalized": "black rectangle",
+    "correct": false,
+    "ms": 50.93
+   },
+   {
+    "id": "orbit_bench_1_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "yellow cylinder",
+    "normalized": "yellow cylinder",
+    "correct": false,
+    "ms": 51.41
+   },
+   {
+    "id": "orbit_building_1_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "yellow cup",
+    "normalized": "yellow cup",
+    "correct": false,
+    "ms": 50.56
+   },
+   {
+    "id": "orbit_building_2_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "yellow cylinder",
+    "normalized": "yellow cylinder",
+    "correct": false,
+    "ms": 52.16
+   },
+   {
+    "id": "orbit_building_2_4.5m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "yellow cylinder",
+    "normalized": "yellow cylinder",
+    "correct": false,
+    "ms": 51.99
+   },
+   {
+    "id": "orbit_bench_1_3m_270__building_5",
+    "label": "building",
+    "object_key": "building_5",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 39.35
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__building_3",
+    "label": "building",
+    "object_key": "building_3",
+    "raw": "brick wall",
+    "normalized": "brick wall",
+    "correct": true,
+    "ms": 50.94
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__building_4",
+    "label": "building",
+    "object_key": "building_4",
+    "raw": "brick wall",
+    "normalized": "brick wall",
+    "correct": true,
+    "ms": 51.22
+   },
+   {
+    "id": "orbit_bench_1_4.5m_270__building_5",
+    "label": "building",
+    "object_key": "building_5",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 38.86
+   },
+   {
+    "id": "orbit_bench_1_3m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": true,
+    "ms": 50.93
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": true,
+    "ms": 51.52
+   },
+   {
+    "id": "orbit_bench_1_6m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden block",
+    "normalized": "wooden block",
+    "correct": false,
+    "ms": 51.04
+   },
+   {
+    "id": "orbit_bicycle_3m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": true,
+    "ms": 51.25
+   },
+   {
+    "id": "orbit_bench_1_3m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 39.24
+   },
+   {
+    "id": "orbit_building_2_3m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 38.86
+   },
+   {
+    "id": "orbit_building_2_4.5m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "wall",
+    "normalized": "wall",
+    "correct": false,
+    "ms": 39.82
+   },
+   {
+    "id": "orbit_building_3_6m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 39.37
+   },
+   {
+    "id": "orbit_bicycle_3m_90__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "black pole",
+    "normalized": "black pole",
+    "correct": true,
+    "ms": 52.86
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__lamppost_2",
+    "label": "lamppost",
+    "object_key": "lamppost_2",
+    "raw": "Door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 41.1
+   },
+   {
+    "id": "orbit_building_4_3m_180__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "person",
+    "normalized": "person",
+    "correct": false,
+    "ms": 41.34
+   },
+   {
+    "id": "orbit_crate_1_3m_180__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": false,
+    "ms": 53.13
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__planter_2",
+    "label": "planter",
+    "object_key": "planter_2",
+    "raw": "Tape",
+    "normalized": "tape",
+    "correct": false,
+    "ms": 51.05
+   },
+   {
+    "id": "orbit_bench_1_6m_0__planter_2",
+    "label": "planter",
+    "object_key": "planter_2",
+    "raw": "sandstone block",
+    "normalized": "sandstone block",
+    "correct": false,
+    "ms": 63.51
+   },
+   {
+    "id": "orbit_building_5_4.5m_90__planter_1",
+    "label": "planter",
+    "object_key": "planter_1",
+    "raw": "Cup",
+    "normalized": "cup",
+    "correct": false,
+    "ms": 53.53
+   },
+   {
+    "id": "orbit_building_5_6m_90__planter_1",
+    "label": "planter",
+    "object_key": "planter_1",
+    "raw": "baseball bat",
+    "normalized": "baseball bat",
+    "correct": false,
+    "ms": 68.01
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": false,
+    "ms": 40.89
+   },
+   {
+    "id": "orbit_building_6_4.5m_90__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": false,
+    "ms": 61.0
+   },
+   {
+    "id": "orbit_building_6_6m_90__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": false,
+    "ms": 55.78
+   },
+   {
+    "id": "orbit_planter_1_3m_0__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "tower",
+    "normalized": "tower",
+    "correct": false,
+    "ms": 41.47
+   },
+   {
+    "id": "orbit_bench_1_3m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree",
+    "normalized": "tree",
+    "correct": true,
+    "ms": 40.85
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "Tree stump",
+    "normalized": "tree stump",
+    "correct": true,
+    "ms": 53.74
+   },
+   {
+    "id": "orbit_bench_1_6m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": true,
+    "ms": 54.53
+   },
+   {
+    "id": "orbit_building_1_6m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "brick wall",
+    "normalized": "brick wall",
+    "correct": false,
+    "ms": 54.61
+   }
+  ]
+ },
+ "A3_prompt": {
+  "prompt": "What kind of object is the main object in this image? Answer with the common noun for the object, one to three words. Do not describe its colour or shape.",
+  "source": "png",
+  "n": 40,
+  "correct": 19,
+  "accuracy": 0.475,
+  "p50_ms": 40.1,
+  "p95_ms": 64.66,
+  "wall_s": 2.0,
+  "per_class": {
+   "bench": "3/4",
+   "bicycle": "0/4",
+   "bollard": "0/4",
+   "building": "1/4",
+   "crate": "2/4",
+   "door": "4/4",
+   "lamppost": "2/4",
+   "planter": "2/4",
+   "traffic light": "1/4",
+   "tree": "4/4"
+  },
+  "rows": [
+   {
+    "id": "orbit_bollard_1_3m_90__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "bench",
+    "normalized": "bench",
+    "correct": true,
+    "ms": 40.11
+   },
+   {
+    "id": "orbit_building_4_3m_180__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "bench",
+    "normalized": "bench",
+    "correct": true,
+    "ms": 40.02
+   },
+   {
+    "id": "orbit_building_4_6m_180__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": false,
+    "ms": 67.83
+   },
+   {
+    "id": "orbit_building_5_3m_90__bench_1",
+    "label": "bench",
+    "object_key": "bench_1",
+    "raw": "bench",
+    "normalized": "bench",
+    "correct": true,
+    "ms": 41.13
+   },
+   {
+    "id": "orbit_bicycle_6m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "table",
+    "normalized": "table",
+    "correct": false,
+    "ms": 39.09
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "box",
+    "normalized": "box",
+    "correct": false,
+    "ms": 38.52
+   },
+   {
+    "id": "orbit_bollard_1_4.5m_180__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "sign",
+    "normalized": "sign",
+    "correct": false,
+    "ms": 38.65
+   },
+   {
+    "id": "orbit_building_1_3m_270__bicycle",
+    "label": "bicycle",
+    "object_key": "bicycle",
+    "raw": "block",
+    "normalized": "block",
+    "correct": false,
+    "ms": 38.23
+   },
+   {
+    "id": "orbit_bench_1_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "column",
+    "normalized": "column",
+    "correct": false,
+    "ms": 38.36
+   },
+   {
+    "id": "orbit_building_1_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "cup",
+    "normalized": "cup",
+    "correct": false,
+    "ms": 38.27
+   },
+   {
+    "id": "orbit_building_2_3m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "cylinder",
+    "normalized": "cylinder",
+    "correct": false,
+    "ms": 50.98
+   },
+   {
+    "id": "orbit_building_2_4.5m_270__bollard_1",
+    "label": "bollard",
+    "object_key": "bollard_1",
+    "raw": "cylinder",
+    "normalized": "cylinder",
+    "correct": false,
+    "ms": 51.38
+   },
+   {
+    "id": "orbit_bench_1_3m_270__building_5",
+    "label": "building",
+    "object_key": "building_5",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 39.57
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__building_3",
+    "label": "building",
+    "object_key": "building_3",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 38.63
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__building_4",
+    "label": "building",
+    "object_key": "building_4",
+    "raw": "brick wall",
+    "normalized": "brick wall",
+    "correct": true,
+    "ms": 51.65
+   },
+   {
+    "id": "orbit_bench_1_4.5m_270__building_5",
+    "label": "building",
+    "object_key": "building_5",
+    "raw": "book",
+    "normalized": "book",
+    "correct": false,
+    "ms": 38.88
+   },
+   {
+    "id": "orbit_bench_1_3m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": true,
+    "ms": 64.66
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden wall",
+    "normalized": "wooden wall",
+    "correct": false,
+    "ms": 64.77
+   },
+   {
+    "id": "orbit_bench_1_6m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden wall",
+    "normalized": "wooden wall",
+    "correct": false,
+    "ms": 63.75
+   },
+   {
+    "id": "orbit_bicycle_3m_0__crate_1",
+    "label": "crate",
+    "object_key": "crate_1",
+    "raw": "wooden box",
+    "normalized": "wooden box",
+    "correct": true,
+    "ms": 63.99
+   },
+   {
+    "id": "orbit_bench_1_3m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 39.28
+   },
+   {
+    "id": "orbit_building_2_3m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 38.96
+   },
+   {
+    "id": "orbit_building_2_4.5m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 38.66
+   },
+   {
+    "id": "orbit_building_3_6m_180__door_1",
+    "label": "door",
+    "object_key": "door_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": true,
+    "ms": 38.49
+   },
+   {
+    "id": "orbit_bicycle_3m_90__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": true,
+    "ms": 39.16
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__lamppost_2",
+    "label": "lamppost",
+    "object_key": "lamppost_2",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 39.31
+   },
+   {
+    "id": "orbit_building_4_3m_180__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "door",
+    "normalized": "door",
+    "correct": false,
+    "ms": 38.98
+   },
+   {
+    "id": "orbit_crate_1_3m_180__lamppost_1",
+    "label": "lamppost",
+    "object_key": "lamppost_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": true,
+    "ms": 39.83
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__planter_2",
+    "label": "planter",
+    "object_key": "planter_2",
+    "raw": "cylinder",
+    "normalized": "cylinder",
+    "correct": false,
+    "ms": 54.83
+   },
+   {
+    "id": "orbit_bench_1_6m_0__planter_2",
+    "label": "planter",
+    "object_key": "planter_2",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": false,
+    "ms": 51.56
+   },
+   {
+    "id": "orbit_building_5_4.5m_90__planter_1",
+    "label": "planter",
+    "object_key": "planter_1",
+    "raw": "planter",
+    "normalized": "planter",
+    "correct": true,
+    "ms": 53.9
+   },
+   {
+    "id": "orbit_building_5_6m_90__planter_1",
+    "label": "planter",
+    "object_key": "planter_1",
+    "raw": "planter",
+    "normalized": "planter",
+    "correct": true,
+    "ms": 55.04
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": false,
+    "ms": 41.73
+   },
+   {
+    "id": "orbit_building_6_4.5m_90__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": false,
+    "ms": 40.92
+   },
+   {
+    "id": "orbit_building_6_6m_90__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "pole",
+    "normalized": "pole",
+    "correct": false,
+    "ms": 40.08
+   },
+   {
+    "id": "orbit_planter_1_3m_0__traffic_light_1",
+    "label": "traffic light",
+    "object_key": "traffic_light_1",
+    "raw": "traffic light",
+    "normalized": "traffic light",
+    "correct": true,
+    "ms": 53.34
+   },
+   {
+    "id": "orbit_bench_1_3m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree",
+    "normalized": "tree",
+    "correct": true,
+    "ms": 38.8
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree",
+    "normalized": "tree",
+    "correct": true,
+    "ms": 40.65
+   },
+   {
+    "id": "orbit_bench_1_6m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": true,
+    "ms": 52.9
+   },
+   {
+    "id": "orbit_building_1_6m_0__tree_2",
+    "label": "tree",
+    "object_key": "tree_2",
+    "raw": "tree trunk",
+    "normalized": "tree trunk",
+    "correct": true,
+    "ms": 51.11
+   }
+  ]
+ }
+}

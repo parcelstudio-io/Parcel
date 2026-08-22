@@ -75,6 +75,7 @@ __all__ = [
     "DEFAULT_MAX_CROP_PX",
     "MODEL_REPO",
     "NAME_PROMPT",
+    "NAME_PROMPT_CLASS_ANCHORED",
     "VERIFY_PROMPT_TEMPLATE",
     "VETO_ABSENT",
     "VETO_PRESENT",
@@ -114,6 +115,27 @@ VERIFY_PROMPT_TEMPLATE = (
 #: Likewise verbatim (``common.py::Q_NAME``) — the naming-accuracy figure the
 #: k-gate is sized against was measured with this sentence.
 NAME_PROMPT = "What is the main object in this image? Answer with one to three words."
+
+# ---- CARD NM-1 (task_18) — the prompt arm -----------------------------------
+#
+# P1-D measured 45.0 % naming accuracy against the research's 82-87 % and read
+# the residue correctly: the wrong answers are not hallucinations, they are
+# DESCRIPTIONS OF GEOMETRY ("yellow cylinder" for a bollard, "black rectangle"
+# for a bicycle, "pole" for a traffic light). :data:`NAME_PROMPT` asks what the
+# object *is* and accepts a description as an answer, so a model looking at a
+# textured MuJoCo primitive gives the honest one.
+#
+# This prompt asks the same question with the description arm closed. It is an
+# ARM, not a replacement: :data:`NAME_PROMPT` stays the default everywhere,
+# because the 82-87 % / 89 ms numbers the seat was chosen on were measured with
+# that sentence and a reworded prompt is an unmeasured model. NM-1's status doc
+# reports both on the same 40 crops.
+NAME_PROMPT_CLASS_ANCHORED = (
+    "What kind of object is the main object in this image? Answer with the "
+    "common noun for the object, one to three words. Do not describe its "
+    "colour or shape."
+)
+# ---- END CARD NM-1 (task_18) — the prompt arm -------------------------------
 
 #: Longest edge a crop is resized to before it reaches the model. A best-view
 #: crop of a lamppost can be 1000+ px tall and the vision tower will happily
@@ -224,8 +246,14 @@ class Verifier(Protocol):
     def verify(self, request: VetoRequest) -> VetoAnswer:
         """Is the crop's main object a ``request.noun``?"""
 
-    def describe(self, crop_png: bytes | None) -> NameAnswer:
-        """What is the crop's main object called? Idle-time batch use only."""
+    def describe(self, crop_png: bytes | None, *, prompt: str | None = None) -> NameAnswer:
+        """What is the crop's main object called? Idle-time batch use only.
+
+        ``prompt`` (card NM-1) overrides :data:`NAME_PROMPT` for a measurement
+        arm. Keyword-only and defaulting to ``None`` so every existing caller —
+        ``online_map.naming.run_naming_pass``, ``VetoRunner.run_batch`` — asks
+        exactly the sentence the seat's accuracy was measured with.
+        """
 
 
 class NullVerifier:
@@ -246,7 +274,8 @@ class NullVerifier:
             detail="no VLM verifier is installed on this host",
         )
 
-    def describe(self, crop_png: bytes | None) -> NameAnswer:
+    def describe(self, crop_png: bytes | None, *, prompt: str | None = None) -> NameAnswer:
+        del prompt
         return NameAnswer("", model=self.name, detail="no VLM verifier is installed")
 
 
@@ -560,8 +589,13 @@ class Qwen3VLVerifier:
             answer_text=answer[:96],
         )
 
-    def describe(self, crop_png: bytes | None) -> NameAnswer:
-        """Name the crop's main object. **Idle-time batch only** — see runner."""
+    def describe(self, crop_png: bytes | None, *, prompt: str | None = None) -> NameAnswer:
+        """Name the crop's main object. **Idle-time batch only** — see runner.
+
+        ``prompt`` is card NM-1's measurement seam: ``None`` asks
+        :data:`NAME_PROMPT`, the sentence every accuracy number in this repo was
+        measured with. Nothing on a product path passes it.
+        """
 
         try:
             self.load()
@@ -573,7 +607,10 @@ class Qwen3VLVerifier:
         with self._lock:
             try:
                 answer, ms, _ = self._generate(
-                    image, NAME_PROMPT, max_new_tokens=12, want_probs=False
+                    image,
+                    prompt if prompt else NAME_PROMPT,
+                    max_new_tokens=12,
+                    want_probs=False,
                 )
             except Exception as exc:  # noqa: BLE001
                 return NameAnswer("", model=self.name, detail=f"generate failed: {exc}")

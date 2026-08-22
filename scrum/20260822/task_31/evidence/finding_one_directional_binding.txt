@@ -1,0 +1,23 @@
+CAP-1 finding — the semantic-source binding is one-directional (owner: card P1-B,
+scrum/20260822/task_7, region `_p1b_install_learned_map`; lineage card C-3).
+
+Reproduced through the product path on 2026-08-22 by the executor. A process in
+which anything has already bound `learned_map` (a harness, an earlier runtime,
+an eval driver) starts a runtime whose navigation YAML says `oracle` and keeps
+the learned map: `_p1b_install_learned_map` returns before `use_semantic_source`
+when `policy.reads_learned_map` is false, so the process-global is never RESET
+to what the profile names.
+
+    before start: learned_map
+    after  start (YAML says oracle): learned_map
+    semantic_source_matches_config: False
+    reason: the navigation profile names 'oracle' but the process-global
+            candidate source is 'learned_map' — this run reads a different map
+            than the file describes
+
+CAP-1 does not patch that door: the binding is P1-B's region and this card is a
+view. What CAP-1 delivers is that the disagreement is now VISIBLE (the
+capability row, on `/api/state`) and DECLARABLE (a profile that lists
+`semantic_source_matches_config` under `required_capabilities:` refuses to
+start). Pinned by
+tests/test_cap1_admission.py::test_the_view_reports_a_source_binding_that_is_only_one_directional.

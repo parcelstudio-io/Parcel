@@ -48,7 +48,6 @@ from parcel_robot.navigation.yield_aside import (
 # standing trailing margin. Applied here to the owner keepout ring instead of
 # an object's minimum vicinity, the same two terms give the follow stand-off.
 _OWNER_COLLISION_ENVELOPE_M = 0.55
-_OWNER_KEEPOUT_M = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0) + _OWNER_COLLISION_ENVELOPE_M
 #: ``arrival_radius_m`` (0.06, controller position tolerance at the terminal
 #: pose) + ``stand_off_margin_m`` (0.04). Re-exported from
 #: :mod:`parcel_robot.navigation.reactive_safety`, which is where it moved
@@ -57,7 +56,36 @@ _OWNER_KEEPOUT_M = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0) + _OWNER_COLLISION_E
 #: stand-off are now provably the same ring rather than two computations of the
 #: same formula. Imported, not restated, so the two ``owner_keepout_m + margin``
 #: floors below cannot drift from it either.
-_FOLLOW_DESIRED_DISTANCE_M = _OWNER_KEEPOUT_M + OWNER_STAND_OFF_MARGIN_M
+#
+# ---------------------------------------------------------------------------
+# CARD DOOR-1 (2026-08-22) / design DW-4: "no import-time stand-off constants
+# in profile-dependent behaviour".
+#
+# What used to be here:
+#
+#     _OWNER_KEEPOUT_M = DEFAULT_SAFETY_ENVELOPE.person_stop(0.0) + 0.55   # 1.75
+#     _FOLLOW_DESIRED_DISTANCE_M = _OWNER_KEEPOUT_M + 0.10                 # 1.85
+#
+# — two MODULE-LEVEL numbers frozen at import against the SHIPPED social zone
+# (1.2 m). Both were then used as ``FollowConfig`` field defaults. The defect
+# that made this card's business: card P1-E moved the commissioned person
+# clearance to 0.7 m in ``configs/robot.prototype.yaml`` and the prototype
+# booted with a 0.7 m gate that still held formation at 1.85 m of centre
+# distance, because a constant computed at import cannot re-derive from a
+# profile loaded afterwards. P1-E pinned that as a live assertion and handed
+# the fix here (``P1E_STATUS.md`` §7/§8).
+#
+# The two numbers are now DERIVED PER INSTANCE in ``FollowConfig.__post_init__``
+# from the fields the runtime actually commissions:
+#
+#     owner_keepout_m     = person_stop_m + owner_collision_envelope_m
+#     desired_distance_m  = owner_keepout_m + OWNER_STAND_OFF_MARGIN_M
+#
+# Same formulas, same shipped values (1.2 -> 1.75 -> 1.85, bit for bit), but
+# they now follow the profile instead of the import. An explicit yaml value
+# still wins — ``configs/robot.yaml`` pins ``owner_keepout_m: 1.75`` and that
+# is honoured — so this is a change of DEFAULT, not of precedence.
+# ---------------------------------------------------------------------------
 
 
 def _wrap_angle(angle: float) -> float:
@@ -176,12 +204,15 @@ class FollowConfig:
 
     MODES: ClassVar[frozenset[str]] = frozenset({"direct", "behind"})
 
-    #: DERIVED (see ``_FOLLOW_DESIRED_DISTANCE_M`` above): the owner keepout
-    #: ring plus the authority's stand-off margin. 1.6 -> 1.85 as part of the
-    #: owner-authorized 2026-08-10 person-clearance retune; it is not exposed in
-    #: ``robot.yaml`` on purpose, so it can never be configured back inside the
-    #: keepout it is defined against.
-    desired_distance_m: float = _FOLLOW_DESIRED_DISTANCE_M
+    #: DERIVED AT CONSTRUCTION (card DOOR-1; see the block above the class):
+    #: ``owner_keepout_m + OWNER_STAND_OFF_MARGIN_M``, computed in
+    #: ``__post_init__`` from THIS INSTANCE rather than frozen at import against
+    #: the shipped social zone. ``None`` means "derive"; a caller (or
+    #: ``from_mapping``) may still pass a number, and the floor check below
+    #: still refuses one inside its own keepout. 1.6 -> 1.85 as part of the
+    #: owner-authorized 2026-08-10 person-clearance retune; still not exposed in
+    #: ``robot.yaml`` on purpose.
+    desired_distance_m: float | None = None
     distance_deadband_m: float = 0.18
     max_vx: float = 0.35
     max_vyaw: float = 0.75
@@ -217,8 +248,12 @@ class FollowConfig:
     behind_distance_m: float = 1.9
     max_behind_distance_m: float = 3.0
     formation_deadband_m: float = 0.20
-    #: DERIVED: ``person_stop_m + owner_collision_envelope_m`` (1.55 -> 1.75).
-    owner_keepout_m: float = _OWNER_KEEPOUT_M
+    #: DERIVED AT CONSTRUCTION (card DOOR-1): ``person_stop_m +
+    #: owner_collision_envelope_m`` off THIS INSTANCE (1.55 -> 1.75 shipped,
+    #: 1.25 under the prototype's 0.7 m person clearance). ``None`` means
+    #: "derive"; ``configs/robot.yaml``'s explicit 1.75 still wins, and the
+    #: floor check below still refuses anything under the keepout ring.
+    owner_keepout_m: float | None = None
     staging_radius_m: float = 2.1
     staging_lookahead_rad: float = 0.35
     heading_min_dt_s: float = 0.05
@@ -233,6 +268,24 @@ class FollowConfig:
     prediction_max_m: float = 0.25
 
     def __post_init__(self) -> None:
+        # Card DOOR-1: the two stand-off numbers derive from THIS INSTANCE
+        # before anything else runs, so every check below (and every consumer
+        # afterwards) sees a float and the rest of this method is unchanged.
+        # An explicitly supplied value is left exactly as given — this decides
+        # the DEFAULT, not the precedence. The order matters: the keepout is
+        # derived first because the stand-off is derived from it.
+        if self.owner_keepout_m is None:
+            object.__setattr__(
+                self,
+                "owner_keepout_m",
+                float(self.person_stop_m) + float(self.owner_collision_envelope_m),
+            )
+        if self.desired_distance_m is None:
+            object.__setattr__(
+                self,
+                "desired_distance_m",
+                float(self.owner_keepout_m) + OWNER_STAND_OFF_MARGIN_M,
+            )
         numeric = [
             getattr(self, item.name)
             for item in fields(self)

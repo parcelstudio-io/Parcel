@@ -23,7 +23,13 @@ repo); `scrum/20260805/task_1/P5_PROCUREMENT_BOM.md` (no prices by design).
   LiDAR model and whether a RealSense ships in the kit). **Release the PO at
   the week-3 gate when all three hold:**
   1. the owner backlog is done (udev/DoA, voice enrollment, quarantine);
-  2. ROAM-1 reaches net displacement ≥ 1.0 m in three consecutive sim runs;
+  2. ROAM-1 reaches net displacement ≥ 1.0 m in three consecutive sim runs
+     — **measured 08-22 (week-1 close, verified):** seven product-path
+     tethered 120 s runs, 1.30 / 3.10 / 6.48 / 6.54 / 6.47 / 6.56 / 6.57 m
+     net in-block, 0 contacts, in-bounds 7/7; the roam is bimodal (a 6.5 m
+     out-and-back trajectory when the tether engages, a 1.3–3.4 m boxed
+     wander when it does not); the tell holds on every run, and the number
+     that matters next is coverage (ROAM-2, `task_33`);
   3. through-air false barge-in ≤ 2 % with the TV on (AIR-1).
   Early tells that mean "order now instead": interrupt/false-barge-in
   collapse under the far-field/noise arm (desk acoustics don't transfer), or

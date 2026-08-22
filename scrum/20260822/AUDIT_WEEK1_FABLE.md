@@ -9,6 +9,101 @@ product-path integration), every non-note finding attacked by a skeptic who must
 reproduce it to confirm. Rows are reported as *reproduced through the product
 path*, *harness-only*, or *owner-gated* — never as the executor's number alone.
 
+## Landing gate and commit
+
+**Gate (16:48Z, TMPDIR unset, tree quiescent after FINISH-1): PASS — every
+hard gate green, 10 of 10** — ruff 0.16.1 7/baseline 7/new 0 ·
+**unitree-assets** (revision `ae6a8403` == pin; 19 manifest files, 27.1 MiB;
+shipping closure 20 paths, 0 unmanifested, 0 hidden, 0 gitlinks; both scenes
+compiled in 0.29 s / 0.10 s) · hard-safety (frozen baseline v4 collisions 0)
+· release-parity 91 · assertion-evals 5/20 · tier-coverage 9,070 = 8,989 +
+81 · model-off 23 · release-parity-integrity 10 · owner-store-isolation 6 ·
+default-suite **8,969 passed, 17 skipped, 3 xfailed in 5:33**. Elapsed 353 s.
+Committed as **`21ea2fb`** (155 files by explicit path list; the two `docs/`
+files another lane holds excluded; the pack tracked as 20 plain files;
+`CODEBASE_INDEX.md` regenerated against the staged tree). FINISH-1's own
+verification (three-lens workflow) was still running at commit time; its
+verdict and any correction follow in the next commit.
+
+## FINISH-1 — the close (task_29) · ACCEPT with two corrections
+
+**Reproduced:** every seed's pre/post sha equals the committed file at
+`21ea2fb`; ratchet exactly 7 with `_ruff_fingerprints()` reporting NEW [] /
+GONE []; 347 targeted tests green (`test_unitree_asset_pack.py` 27/27 at
+`-n 26`, serial and `-n auto` — the probe no longer writes under the repo);
+the tethered roam replicated through the product path (`submit_realtime_transcript('Go explore.')`,
+tether 10.0 m from `limits_from_safety`, 11 `turn_tether` samples all at
+10.07 m: path 26.135 m, net 6.565 m in-block, 0 contacts, clearance 1.164 m);
+the in-bounds qualifier replays byte-for-byte; CURIO-1's seed-777 shipped run
+re-derived from its log (3 / 0 / 0 / 0 / 2 / $0.00; ledger and owner store
+unchanged); GATE-0's closure check keeps its real-git positive direction and
+its tmp real-git premise; the held-out scan green without filters and the
+scene never loaded; MARK-1's docs now say what `lane.py` does.
+
+**Confirmed (6; 5 refuted):**
+1. *(major)* **AIR-1 §E: an estimated onset verifies as a PASS.** Twenty
+   owner-burst-only onsets with 0.30–0.45 s gaps → `interrupt_p50_s` 'pass'
+   0.44 s, `verify_scorecard` empty; `onset_is_an_estimate` rides only
+   `sources.latency`, which the verifier never reads. And the "silence" it
+   keys on is frame-arrival silence (the tee cuts an owner segment on
+   `wall − last_frame_wall > owner_gap_s`, no level check) while the panel
+   streams mic frames continuously when armed — in a real session the
+   boundary is absent or a re-arm artefact. Ruling: the row stays
+   `unmeasured` while the onset is an estimate; the estimate is reported as a
+   bound only; TURN-1-ONSET makes it a measurement.
+2. *(major — the purchase number)* **The tethered roam is bimodal.** Seven
+   product-path tethered runs now exist on the same scene/config: the five
+   "escape-branch" runs (6.47–6.57 m) are one near-deterministic trajectory
+   replicated — byte-for-byte the untethered 20.67 m run until the tether
+   fires at ~78 s — and two "boxed-branch" runs (1.30 m under load, 3.10 m
+   quiet) where the tether never engages, the same profile as the untethered
+   arm-B runs 1–2. **The honest Go2 input: 1.30 / 3.10 / 6.48 / 6.54 / 6.47 /
+   6.56 / 6.57 m in-block, 0 contacts, in-bounds 7/7, every run over the
+   ≥ 1.0 m tell; the spread is branch selection, not tether variance.**
+   ROAM-2 owns coverage.
+3. *(minor)* The §A3 "declared miss" is a redundant pair, not a gap — each
+   half independently sufficient; two tests close it.
+4. *(minor)* The roam harness hashes an owner-store path the product does
+   not use; the roam runs wrote `logs/duplex/*.jsonl` into the repo's
+   `logs/`; pre-registration ordering (harness saved 14 s after the prereg);
+   MARK-1 §D2's total is 529 at HEAD.
+
+Refuted: "HEAD moved mid-verification" (the content under test unchanged by
+hash); the staleness clause as a defect (declared, currently a no-op);
+`tether_m` not on `/api/state` (not a pre-registered surface); the clause
+"broader than the seat needs" (declared); "each half sufficient ⇒ drop the
+two-test recommendation" (the two tests still close distinct observables).
+
+**Correction pass 2 returned** (re-check in flight): `CAPTURE_ONSET_KIND`
+out of `ONSET_KINDS`, the estimate reported only as
+`sources.latency.estimated_lower_bound_p50_s`, `build_scorecard` gates on
+`onset_is_an_estimate`, and `verify_scorecard` gained a seventh refusal
+(`pass` on `interrupt_p50_s` while the onset is an estimate) — seeded both
+ways (E2 kind re-added → 2 red; E3 clause deleted → 1 red); "silence"
+reworded to "no mic frames for `owner_gap_s` (mic closed)" in six places;
+the seven-run two-mode statement in the FINISH-1 headline, ROAM1_STATUS's
+headline, R2b, correction-pass §1 and the PO-1 handoff (grep-confirmed:
+ROAM1_STATUS lines 31, 145, 433); the two race tests, each reddening on its
+own half (seeded on a copy); the harness reads `owner_store_paths()[0]`
+(store sha `0373297f…`, mtime 02:19:01, never opened) and logs to scratch.
+My run: 99 passed across the two test files; ruff clean on the pass's files.
+
+**Correction pass 3 — verified, FINISH-1 CLOSED.** The re-check confirmed the
+mechanism but found four residues, all now fixed: both "of silence" sites read
+"no mic frames for `owner_gap_s` (mic closed; no level check)" (grep-clean);
+the docstring no longer claims the caveat rides in the row's `mechanism` (it
+cannot — `verify_scorecard` refuses a mechanism on any non-`fail` row);
+ROAM1_STATUS's correction-pass-1 §2 carries a superseding banner with the
+seven-run line; and **the seventh check was inverted** so it no longer rewards
+deleting evidence — a *scored* `interrupt_p50_s` must carry `sources.latency`
+with an explicit boolean `onset_is_an_estimate` (absent or mistyped ⇒
+refusal), and `false` is checkable against `sources.latency.kinds` (an
+owner-burst boundary with no provider-stamped onset kind contradicts its own
+flag ⇒ refusal). Seeded both directions (CP3a, CP3b), restored byte-identically.
+My run: 102 passed; ruff clean. The tree-wide ratchet is 15 = 7 baseline + 8 in
+NM-1's `task_18/evidence/*.py` scripts — none FINISH-1's; NM-1's verifier
+requires the clean-up before the commit.
+
 ## Interruption — the monthly spend limit (12:00 EDT)
 
 At ~12:00 the account's monthly spend limit terminated four agents mid-flight:

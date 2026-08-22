@@ -134,6 +134,22 @@ OVERLAY_INTRODUCIBLE_KEYS = frozenset(
         # `RobotRuntime.roam_config`, which refuses an unknown key by name and
         # is the roam family's equivalent of `CameraStreamConfig.from_section`.
         "roam",
+        # ---- CARD VENUE-1: which VENUE the eye is on -----------------------
+        # Two scalars, not a subtree, so the exemption cannot hide a typo in a
+        # child the way a bare `perception.camera` would. Both are read by the
+        # VENUE-1 region in `RobotRuntime` (`_venue1_resolve_venue` and
+        # `_venue1_detector`), and both refuse an unknown VALUE by name there —
+        # `camera_backend` through P1-A's `resolve_backend_kind`, which lists
+        # the accepted kinds, and `detector` against {daemon, in_process}.
+        #
+        # They are separate keys rather than a `perception.camera:` block for
+        # the same reason P1-A kept the camera's HARDWARE description out of
+        # `configs/robot.yaml` entirely (`PARCEL_CAMERA_CONFIG`): a camera is
+        # host hardware, not robot policy, and the SHA-locked base cannot grow
+        # a section for it. What belongs in the profile is the one decision the
+        # ROBOT makes — which venue this run's eye is on.
+        "perception.camera_backend",
+        "perception.detector",
     }
 )
 

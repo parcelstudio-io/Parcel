@@ -1,0 +1,20 @@
+DOOR-1 §5.4 BARN probe — saved transcript (verifier catch: the claim had none).
+
+Question asked: if the planner's hard inflation moved 0.42 -> 0.5933 m, how many
+of the 300 BARN worlds would flip from routable to unroutable?
+
+Answer: the probe is INCONCLUSIVE and licenses nothing. Under a pure
+disc-connectivity metric over the raw 30x30 occupancy grids at 0.15 m/cell,
+0/300 worlds are routable at EITHER radius, i.e. this metric does not reproduce
+how the BARN arm actually plans (BARN robots do drive these worlds). It is
+recorded here as a probe that failed to answer, not as evidence either way.
+
+corpus: .cache/external-evals/barn/BARN_dataset/grid_files  worlds: 300
+routable at LEGACY inflation  0.42000 m : 0/300
+routable at COUPLED inflation 0.59330 m : 0/300
+FLIPS routable -> unroutable                : 0/300
+
+VERDICT: inconclusive. 0/300 at the LEGACY radius means the metric does
+not model the BARN arm's planning, so it cannot be used to argue that
+coupling is safe OR unsafe for the frozen BARN evidence. The shipped
+default stays scoped; H-2 remains halted.

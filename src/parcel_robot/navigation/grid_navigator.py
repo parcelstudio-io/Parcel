@@ -15,6 +15,36 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
+from parcel_robot.authority import DEFAULT_CLEARANCE_PROFILE, ClearanceProfile
+
+
+def _planner_coupling_ring_m(
+    requested_ring_m: float | None,
+    *,
+    hard_margin_m: float,
+) -> float:
+    """The gate ring THIS planner profile may couple to (card DOOR-1).
+
+    Shared shape with production site 2 (``navigation/search_owner.py``): the
+    commissioned ring, capped at the ring whose lateral demand this profile's
+    own footprint term already covers. ``None`` resolves to the authority's
+    un-commissioned default rather than to ``None``.
+
+    Tighter-only, deliberately. Raising an inflation moves planned routes and
+    therefore the frozen navigation evidence; that re-cut is DOOR-1's HALTED
+    item H-2 and belongs to whoever owns those baselines, not to this call site.
+    """
+
+    ring = (
+        DEFAULT_CLEARANCE_PROFILE.obstacle_ring_m
+        if requested_ring_m is None
+        else float(requested_ring_m)
+    )
+    return ClearanceProfile(
+        obstacle_ring_m=ring, planner_hard_margin_m=float(hard_margin_m)
+    ).planner_coupling_ring_m
+
+
 from .base import ODOM_FRAME, MidLevelCommand, Mission, ModelSpec, NavObservation
 from .base import pose_in as _pose_in
 
@@ -99,6 +129,15 @@ class GridNavigator:
         map_safety_margin_m: float = 0.10,
         map_hard_safety_margin_m: float | None = None,
         map_comfort_safety_margin_m: float | None = None,
+        # Card DOOR-1 / design DW-4. The FINAL gate's commissioned obstacle ring
+        # (``ReactiveSafetyPolicy.obstacle_stop_m``), in metres, so the planner
+        # inflates by what the gate will actually demand instead of by its own
+        # footprint alone. ``None`` here does NOT mean "unset" downstream — it
+        # resolves to ``DEFAULT_CLEARANCE_PROFILE.obstacle_ring_m`` and the
+        # planner config is always built with a float (see the construction site
+        # below). A commissioned runtime overrides it through the model
+        # profile's ``controller:`` block.
+        map_gate_clearance_m: float | None = None,
         comfort_cost_weight: float = 0.0,
         lidar_range_cap_m: float = 12.0,
         unknown_cost: float = 2.5,
@@ -236,6 +275,27 @@ class GridNavigator:
                     None
                     if map_comfort_safety_margin_m is None
                     else float(map_comfort_safety_margin_m)
+                ),
+                # Card DOOR-1 / design DW-4: production construction site 1 of 2.
+                # ALWAYS a float — never ``None``, because ``None`` is the state
+                # audit §6 named: a planner with no opinion about the gate,
+                # routing through corridors the gate refuses.
+                #
+                # The value is SCOPED (DOOR-1 correction pass): the coupling may
+                # tighten a planner, never loosen the frozen routes by raising an
+                # inflation. The cap is computed from THIS profile's own hard
+                # margin, not from the module-level ``LEGACY_GATE_CLEARANCE_M``,
+                # because the margin is per-profile —
+                # ``configs/navigation/models/grid_clearance.yaml`` runs 0.03 m
+                # and a flat cap would have moved its inflation 0.35 -> 0.42 m.
+                # See ``ClearanceProfile.planner_coupling_ring_m``.
+                gate_clearance_m=_planner_coupling_ring_m(
+                    map_gate_clearance_m,
+                    hard_margin_m=(
+                        float(map_safety_margin_m)
+                        if map_hard_safety_margin_m is None
+                        else float(map_hard_safety_margin_m)
+                    ),
                 ),
                 comfort_cost_weight=float(comfort_cost_weight),
                 lidar_range_cap_m=float(lidar_range_cap_m),

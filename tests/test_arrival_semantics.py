@@ -181,19 +181,52 @@ def test_a_person_refinement_needs_a_person_not_a_polygon() -> None:
 
 
 # ================================================== face is NOT model-reachable
+#: What this pin is actually about: the three arrival knobs the bench measured
+#: the model getting wrong 6/6. They are named here rather than inlined so that
+#: widening the schema (as ASK-1 did) cannot quietly widen the ABSENCE too.
+ARRIVAL_SEMANTICS_FIELDS = frozenset({"face", "standoff", "stop"})
+
+
 def test_the_tool_schema_offers_relation_and_nothing_else_about_arrival() -> None:
     """The bench: face=goal for the door 6/6, both tiers. So no face parameter.
 
     A parameter the model cannot send is a parameter it cannot get wrong. This
     asserts the *absence* deliberately — an added ``face``/``standoff``/``stop``
     field would redden here before it could ever reach a body.
+
+    **Card ASK-1 (scrum/20260822/task_18), 2026-08-22 — the pin was MOVED, not
+    routed around.** ``navigate_to`` gained a third property, ``confirm``, and
+    this test reddened, which is exactly what it is for. The coordinator's
+    ruling was to keep the parameter and move the pin deliberately, and the
+    reason is that ``confirm`` is not a thing the model can get wrong in the
+    sense this test protects: it is an OPAQUE SINGLE-USE TOKEN, compared against
+    a verdict the runtime recompiles at the moment of the call, so an invented
+    value, a stale value and a replayed value all fail identically and none of
+    them reaches a body. It carries no arrival semantics — no face, no standoff,
+    no stopping rule — and those three stay absent and are still asserted BY
+    NAME, first, so the original property survives the widening: an added
+    ``face`` trips that assertion and not merely the set-equality one.
+    ``confirm`` must
+    also stay OPTIONAL: ``required`` is still exactly ``["place"]``, which is
+    what makes a model that has never seen an ``uncertain_place`` result behave
+    byte-identically to before that card.
     """
 
     spec = next(item for item in build_tool_specs() if item["name"] == TOOL_NAVIGATE_TO)
     properties = spec["parameters"]["properties"]
-    assert set(properties) == {"place", "relation"}
+    # The pin's REAL target first, by name, so that this is the assertion an
+    # added arrival knob trips — and so it keeps working if a later card widens
+    # the set below again, the way ASK-1 did.
+    assert not (ARRIVAL_SEMANTICS_FIELDS & set(properties)), (
+        "an arrival-semantics parameter reached the model: "
+        f"{sorted(ARRIVAL_SEMANTICS_FIELDS & set(properties))}"
+    )
+    # ...and the set stays exhaustive, so a FOURTH property cannot arrive
+    # unnoticed either.
+    assert set(properties) == {"place", "relation", "confirm"}
     assert sorted(properties["relation"]["enum"]) == sorted(RELATION_HINTS)
     assert spec["parameters"]["required"] == ["place"]
+    assert "confirm" not in spec["parameters"]["required"]
 
 
 def test_face_and_etiquette_come_only_from_the_table() -> None:

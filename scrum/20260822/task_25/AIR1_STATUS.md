@@ -632,49 +632,102 @@ fixture. MARK-1's correction pass had landed the stamp hours earlier.
   carrying `interrupted_at` (with `interrupted_byte` / `interrupted_t_s`
   travelling as the POSITION in the reply — `robot.wav` is written faster than
   real time, so they are never used as a clock), and `capture.owner_burst`, one
-  per owner segment **after the first**, i.e. the first microphone frame
-  following `owner_gap_s` (0.75 s) of silence.
+  per owner segment **after the first**, i.e. the first microphone frame that
+  arrives after **no mic frames for `owner_gap_s` (0.75 s) — the mic closed**.
+  Not "after silence": there is no level check anywhere in that decision
+  (correction pass 2).
 * **`score_interrupt_latency(rows, capture_events=…)`** — merges the two
   sources on one timeline and **de-duplicates**: a `conversation.item.truncated`
   landing within 2.0 s after the tee's own stamp is the same interrupt seen by a
   second witness, and the tee's stamp — earlier and closer to the instant — is
-  the one that survives. It returns `kinds`, `interrupts_stamped_by_the_tee`,
-  `onsets_estimated_from_owner_bursts`, `onset_is_an_estimate` and
-  `positions_into_reply_s` beside the median.
+  the one that survives. It pairs **twice**: once with provider-stamped onsets
+  for `p50_s`, and once with owner-burst boundaries for
+  `estimated_lower_bound_p50_s`, which is a separate field precisely so the two
+  can never be confused. It returns `kinds`, `interrupts_stamped_by_the_tee`,
+  `onsets_estimated_from_owner_bursts`, `onset_is_an_estimate`,
+  `estimated_lower_bound_pairs` and `positions_into_reply_s` beside them.
 * The CLI passes `--capture`'s index in automatically, so **a session with no
-  `--events` file can now produce this row**.
+  `--events` file can now produce the interrupt half and an honest lower bound**
+  — it cannot produce the row's verdict, and correction pass 2 is why.
 
 ## The honest half, and it is half
 
-**The interrupt instant is stamped; the onset instant is estimated.**
+**The interrupt instant is stamped. The onset instant is not on disk at all,
+and what this file said about that in the first pass was wrong.**
+
 `input_audio_buffer.speech_started` is still not in
-`protocol.RETAINED_EVENT_TYPES` (checked on this tree), so the provider's own
-view of "the owner started talking" reaches no file. The owner-burst boundary
-is the gateway's view of a burst starting: **later** than the acoustic onset by
-the browser's encode-and-send latency, **earlier** than the provider's VAD
-decision. A median built on it is a **bound**, not a measurement, and the
-scorecard says so — in `sources.latency.onset_is_an_estimate`, and in a NOTE
-the CLI prints under the table.
+`protocol.RETAINED_EVENT_TYPES` (checked on this tree), so the provider's view
+of "the owner started talking" reaches no file. The first pass offered the
+tee's owner-burst boundary as a stand-in and called it "the first microphone
+frame after `owner_gap_s` of **silence**". **That word was false and it was
+load-bearing.** `SessionAudioCapture._write_owner` cuts a segment on
+`wall - last_frame_wall > owner_gap_s` and applies **no level check of any
+kind**: what it detects is **no mic frames for `owner_gap_s` — the mic
+closed**. The panel streams frames continuously while the mic is armed, so in a
+real armed session the boundary is either **absent** (the row stays unmeasured,
+which is correct) or a **re-arm/stall artefact** with no defined relation to
+when anybody started speaking.
 
-It is deliberately **not** in the row's `mechanism` field: `verify_scorecard`
-refuses a mechanism on a row that is not a `fail` (a mechanism is an
-explanation of a miss), so putting the caveat there would have made every card
-carrying this row invalid. That is the check doing its job.
+**So it is not an onset and it can no longer become a verdict**
+(correction pass 2, after the verifier built the counter-example: 20 boundaries
+paired with 20 interrupts produced `verdict: pass · value 0.44 · n 20` and
+`verify_scorecard` returned `[]`). Three changes, belt and braces:
 
-**TURN-1-ONSET stands, and is now the only missing half.** One line in
+* `CAPTURE_ONSET_KIND` is **out of `ONSET_KINDS`** — it cannot pair into
+  `p50_s` at all;
+* what it does produce is reported as
+  `sources.latency.estimated_lower_bound_p50_s` (with
+  `estimated_lower_bound_pairs`), a **lower bound** and never the row's value;
+  `build_scorecard` renders the row `unmeasured` and puts the bound in the
+  reason;
+* `verify_scorecard` **refuses** `verdict: pass` on `interrupt_p50_s` whenever
+  `sources.latency.onset_is_an_estimate` is true — the seventh way a scorecard
+  can lie, and the only one of the seven that had a live counter-example rather
+  than a hypothetical one.
+
+**Correction pass 3 hardened that seventh check**, because as first written it
+only fired when the evidence was *present*: a card with `sources` deleted, or
+with `onset_is_an_estimate` mistyped, walked past it (both reproduced by the
+verifier). A check an author can satisfy by removing evidence is not a check, so
+the requirement is now the other way round — **a SCORED `interrupt_p50_s`
+(`pass` or `fail`) must carry `sources.latency` with an explicit boolean
+`onset_is_an_estimate`**, and a missing or mistyped one is itself a refusal. An
+`unmeasured` row owes nothing, because it claims nothing. And an
+`onset_is_an_estimate: false` on a card this tool produced is checked against
+the provenance beside it: if `sources.latency.kinds` names the owner-burst
+boundary and no provider-stamped onset kind, the flag **contradicts its own
+evidence** and the card is refused.
+
+The caveat is deliberately **not** in the row's `mechanism` field:
+`verify_scorecard` refuses a mechanism on a row that is not a `fail` (a
+mechanism is an explanation of a miss), so putting it there would have made
+every card carrying this row invalid. That is the check doing its job.
+
+**TURN-1-ONSET is the whole remaining gap.** One line in
 `protocol.RETAINED_EVENT_TYPES` (`input_audio_buffer.speech_started`, keys
-`("audio_start_ms",)`) turns the bound into a measurement.
+`("audio_start_ms",)`) is what turns this row from "unmeasured, with a bound"
+into a measurement. Until then the honest reading of `interrupt_p50_s` is: the
+tee knows exactly when the robot stopped talking and nothing on disk knows when
+the owner started.
 
 ## Seeded RED
 
 | direction | seed | result |
 |---|---|---|
-| present ⇒ a number | `capture_latency_events` stops reading `interrupted_at` (`when = None`) | **1 failed** — `test_the_tee_alone_yields_an_interrupt_median`; 39 passed |
-| absent ⇒ `unmeasured` | the index's `interrupted_at`/`_byte`/`_t_s` stripped from every robot segment | `p50_s is None`, `interrupts 0`, the row is `unmeasured`, `verify_scorecard == []` — asserted by `test_a_capture_without_the_stamp_is_unmeasured_not_zero` |
+| the stamp is read | `capture_latency_events` stops reading `interrupted_at` (`when = None`) | **1 failed** — the tee-alone test; 39 passed |
+| absent ⇒ nothing | the index's `interrupted_at`/`_byte`/`_t_s` stripped from every robot segment | `p50_s is None`, `interrupts 0`, the row is `unmeasured`, `verify_scorecard == []` — `test_a_capture_without_the_stamp_is_unmeasured_not_zero` |
+| **E2** (pass 2) | `CAPTURE_ONSET_KIND` put back into `ONSET_KINDS` — the laundering path | **2 failed**, 39 passed | 
+| **E3** (pass 2) | the `onset_is_an_estimate` clause deleted from `verify_scorecard` | **1 failed** — `test_an_estimated_onset_can_never_be_scored_as_a_pass`; 40 passed |
+| **CP3a** (pass 3) | the missing-evidence clauses removed — back to "only fires when `sources.latency` is present" | **1 failed** — `test_a_scored_latency_must_show_where_its_onset_came_from`; 43 passed |
+| **CP3b** (pass 3) | the `kinds` cross-check removed, so a flipped flag launders the median | **1 failed** — `test_flipping_the_flag_does_not_launder_an_owner_burst_median`; 43 passed |
 
 `tools/bargein_through_air.py` sha256 `cd8edb3ecabcb539…` identical before and
-after, `__pycache__` purged, **40 passed** restored.
-(`../task_29/evidence/seed_e1.sh`.)
+after seed E1, `1a110098d5912932…` before and after E2/E3,
+`85d0e4ef630eea19…` before and after CP3a/CP3b, `__pycache__` purged,
+**44 passed** restored.
+(`../task_29/evidence/seed_e1.sh`, `seed_e2.sh` → `seeds_correction2_air1.txt`;
+the counter-example itself is `air1_estimate_never_passes.py.txt` with its
+stdout beside it.)
 
 The four new tests build a **real** R17 session through the product tee
 (`SessionAudioCapture` with its own wall clock, so the owner stream really does
@@ -684,7 +737,7 @@ replaced by `test_latency_names_the_one_missing_half_and_no_longer_the_closed_on
 which asserts the reason no longer says `drops the wall stamp`.
 
 ```
-$ unset TMPDIR; .parcel/bin/python -m pytest -q tests/test_air1_scorecard.py  -> 40 passed
+$ unset TMPDIR; .parcel/bin/python -m pytest -q tests/test_air1_scorecard.py  -> 44 passed
 $ .parcel/bin/ruff check tools/bargein_through_air.py tests/test_air1_scorecard.py
                                                                               -> All checks passed!
 ```

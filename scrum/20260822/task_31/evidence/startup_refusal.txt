@@ -1,0 +1,70 @@
+Microphone not armed: no speech recognizer (STT unreachable or disabled).
+Microphone not armed: no speech recognizer (STT unreachable or disabled).
+==============================================================================
+ARM A — required_capabilities: [learned_map_source], semantic_source: oracle
+        (navigation.enabled: true, so the real DirectiveNavigator is built)
+==============================================================================
+RobotRuntime.start() raised CapabilityRefused:
+
+the navigation profile declares required capabilities this process did not bind: learned_map_source
+    - learned_map_source: bound semantic source is 'oracle'; the robot acts on the learned map only under 'learned_map'
+
+  admission table:
+  ok  behavior          follow                          the supervisor's set_behavior arm accepts this mode; reached by follow_owner
+  ok  behavior          follow_behind                   the supervisor's set_behavior arm accepts this mode; no hosted tool routes to it
+  ok  behavior          roam                            the supervisor's set_behavior arm accepts this mode; reached by roam
+  ok  behavior          roam_stop                       the supervisor's set_behavior arm accepts this mode; reached by roam
+  ok  behavior          stay                            the supervisor's set_behavior arm accepts this mode; no hosted tool routes to it
+  ok  tool              get_status                      read-only surface
+  ok  tool              recall_memory                   read-only surface
+  ok  tool              play_gesture                    commits the body (MOTION_TOOLS); may run from a robot-initiated reply
+  ok  tool              set_pose                        commits the body (MOTION_TOOLS); may run from a robot-initiated reply
+  ok  tool              navigate_to                     commits the body (MOTION_TOOLS); owner-initiated replies only
+  ok  tool              circle_owner                    commits the body (MOTION_TOOLS); owner-initiated replies only; validated as run_spatial_behavior('orbit_owner')
+  ok  tool              follow_owner                    commits the body (MOTION_TOOLS); owner-initiated replies only; validated as set_behavior('follow')
+  ok  tool              remember_fact                   read-only surface
+  ok  tool              roam                            commits the body (MOTION_TOOLS); owner-initiated replies only; validated as set_behavior('roam'); validated as set_behavior('roam_stop')
+  NO  proactive_motion  circle_owner                    refused proactively: a travel tool started by nobody (bench finding C1)
+  NO  proactive_motion  follow_owner                    refused proactively: a travel tool started by nobody (bench finding C1)
+  NO  proactive_motion  navigate_to                     refused proactively: a travel tool started by nobody (bench finding C1)
+  ok  proactive_motion  play_gesture                    on the proactive allowlist: worst case is a body that moved in place
+  NO  proactive_motion  roam                            refused proactively: a travel tool started by nobody (bench finding C1)
+  ok  proactive_motion  set_pose                        on the proactive allowlist: worst case is a body that moved in place
+  ok  config_key        battery                         defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        camera_ingress                  absent from the SHA-locked base but listed in OVERLAY_INTRODUCIBLE_KEYS, so a profile overlay may introduce it
+  ok  config_key        control                         defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        duplex                          defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        expression                      defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        language_model                  defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        memory                          defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        metrics                         defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        navigation                      defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        owner_follow                    defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        owner_search                    defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        perception                      defined by the shipped configs/robot.yaml, so an overlay may set it
+  NO  config_key        planner_model                   a runtime region reads this section, the SHA-locked base does not define it, and it is not in OVERLAY_INTRODUCIBLE_KEYS — a profile overlay that sets it is REFUSED at load, so the knob can never be turned
+  ok  config_key        prompting                       defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        query_context                   defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        roam                            absent from the SHA-locked base but listed in OVERLAY_INTRODUCIBLE_KEYS, so a profile overlay may introduce it
+  ok  config_key        robot                           defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        safety                          defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        simulation                      defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        spatial_behaviors               defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  config_key        speech                          defined by the shipped configs/robot.yaml, so an overlay may set it
+  ok  capability        semantic_source_matches_config  the navigation profile names 'oracle' and it is bound
+  NO  capability        learned_map_source              bound semantic source is 'oracle'; the robot acts on the learned map only under 'learned_map'
+  NO  capability        learned_map_installed           no learned map is installed on the mission path
+  NO  capability        poi_oracle_disabled             the demo_pois.yaml POI arm is armed (the shipped oracle default)
+  ok  capability        instructnav                     navigation.pipeline imported instructnav successfully
+  ok  capability        detection_lock_on               navigation.pipeline imported detection_lock_on successfully
+  ok  capability        lock_on_verify                  navigation.pipeline imported lock_on_verify successfully
+  ok  capability        route_memory                    navigation.pipeline imported route_memory successfully
+
+==============================================================================
+ARM B — the same declaration with semantic_source: learned_map
+==============================================================================
+started. bound semantic source = learned_map
+required_capabilities = ['learned_map_source']
+unmet_capabilities    = []
+unreadable door/section sites = []
+table rows = 49 | refused rows = 5

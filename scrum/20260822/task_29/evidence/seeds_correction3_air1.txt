@@ -1,0 +1,11 @@
+tools/bargein_through_air.py sha256 before: 85d0e4ef630eea1910b28e3a8889c65331a2955c9958b00e75ebb4b08405bd1b
+=== SEED CP3a: the missing-evidence clauses removed (back to 'only fires when present')
+FAILED tests/test_air1_scorecard.py::test_a_scored_latency_must_show_where_its_onset_came_from
+1 failed, 43 passed, 1 warning in 9.05s
+
+=== SEED CP3b: the kinds cross-check removed (a flipped flag launders the median)
+FAILED tests/test_air1_scorecard.py::test_flipping_the_flag_does_not_launder_an_owner_burst_median
+1 failed, 43 passed, 1 warning in 9.04s
+RESTORE OK (byte-identical) 85d0e4ef630eea1910b28e3a8889c65331a2955c9958b00e75ebb4b08405bd1b
+--- RESTORED ---
+44 passed, 1 warning in 9.07s

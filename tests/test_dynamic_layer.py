@@ -812,12 +812,86 @@ REACTIVE_SAFETY_PATH = "src/parcel_robot/navigation/reactive_safety.py"
 #:   validation moved. Measurements — including the MOVE-1 owner-standoff arm
 #:   re-run (net displacement 0.31 m -> 0.84 m, zero contact) — are in
 #:   ``scrum/20260822/task_12/P1E_STATUS.md``.
+#: * ``ReactiveSafetyPolicy.__post_init__`` — ``c228b5f8…`` -> ``8c39f4ee…``,
+#:   regenerated 2026-08-22 by card DOOR-1 (``scrum/20260822/task_19``) under the
+#:   same Wave P0/P1/2 board directive P1-E cited ("reactive_safety *distances*
+#:   are config and may move; the *semantics* do not") and the wave-2 design's
+#:   DW-4 exit (``scrum/20260822/WAVE2_DESIGN_FABLE.md`` §1). The ratchet
+#:   reddened unprompted, named this symbol, and the pin was regenerated after
+#:   reading the diff.
+#:   **What moved is the SOURCE of one number — the OBSTACLE twin of what P1-E
+#:   did one entry up.** The obstacle floor compared the configured
+#:   ``obstacle_stop_m`` against ``self.envelope.obstacle_stop_floor_m`` — the
+#:   SHIPPED 0.6 m field — which made the shipped envelope its own floor. The
+#:   consequence, measured: the FINAL gate is directional, so at any ring at or
+#:   above 0.6 m it refuses to translate down every corridor narrower than
+#:   ``2*ring*sin(1.15)`` >= 1.10 m, i.e. every interior doorway (0.8-0.9 m), and
+#:   no profile could commission its way out. Now the configured value
+#:   COMMISSIONS the envelope's obstacle ring
+#:   (``SafetyEnvelope.with_obstacle_stop_ring``) and the floor underneath is the
+#:   authority's named ``OBSTACLE_STOP_FLOOR_M`` (0.41 m = the Go2's ISO/TS-15066
+#:   stopping distance at the APPROACH regime, 0.35 m/s). One check was ADDED
+#:   beside the person physics floor: the obstacle ring may not sit inside the
+#:   body's own hull ``stop_distance(0.0)``, which binds for an injected wider
+#:   envelope. The refusal is unchanged in kind — construction-time, fail-closed,
+#:   naming ``obstacle_stop_m`` AND the floor.
+#:   **``apply_reactive_safety`` is UNCHANGED at ``f52db9c5…`` across this move
+#:   (checked, not assumed), as are ``owner_slow_m`` and ``_owner_comfort_band_m``**.
+#:   NOTE for the verifier: ``_owner_identity_trusted`` also reads as drifted on
+#:   this working tree — that is card OT-2 (``scrum/20260822/task_17``), which
+#:   owns the identity-gate source and regenerates its own pin. DOOR-1 changed
+#:   exactly one digest in this dict and touched no other symbol.
+#:   **UNCOMMISSIONED**: no robot hardware exists (owner, 2026-08-22), so 0.41 m
+#:   is arithmetic over in-tree body constants, not a measured stopping distance.
+#:   Measurements are in ``scrum/20260822/task_19/DOOR1_STATUS.md``.
+#: * ``_owner_identity_trusted`` — ``5262d3ed…`` -> ``646234a1…``, regenerated
+#:   2026-08-22 by card OT-2 (``scrum/20260822/task_17``) under the Wave 2 board
+#:   directive and the card's own OWNS ("``reactive_safety`` identity-gate
+#:   SOURCE only ... regenerate its pin only with a log entry, as P1-E did").
+#:   The ratchet reddened, named exactly this symbol, and the pin was
+#:   regenerated after reading the diff.
+#:   **What moved is WHAT THE QUESTION IS.** Before: "is ``confidence`` >= 0.65".
+#:   That was the right question of a channel PRIOR — the fusion stub's
+#:   hard-coded 0.55 (UWB) / 0.70 (vision) trust in whatever supplied pose, and
+#:   the mocap simulator's flat 1.0. Card P1-C then made ``confidence`` a
+#:   MEASURED SigLIP-2 cosine, on which 0.65 is meaningless: P1-C measured a
+#:   STRANGER at 0.9295 against the owner's own enrolled crops, so a 0.65 floor
+#:   trusts every person-shaped crop in the room. The predicate now branches on
+#:   ``OwnerTrack.identity_source``. A MEASURED identity is judged on the
+#:   producer's ``state`` (``confirmed`` only), on whether the producer's
+#:   boundary was CALIBRATED against a known non-owner, and on the HEADROOM the
+#:   claim had above that boundary (``OWNER_IDENTITY_MARGIN_MIN`` = 0.005,
+#:   derived from the 2.02e-4 fp16/CUDA re-enrollment spread P1-C measured) —
+#:   never on the number. A CHANNEL PRIOR, including every producer predating
+#:   this card (``identity_source`` = ``""``), keeps the pre-OT-2 rule at the
+#:   pre-OT-2 constant.
+#:   **The direction, measured rather than asserted** (corrected under
+#:   verification; the first version of this entry claimed "strictly fewer" and
+#:   that is false). Over a 7,650-case enumeration against the pre-OT-2 rule:
+#:   **1,314 newly REFUSED, 66 newly GRANTED, 6,270 unchanged.** All 66 are
+#:   ``pixel_reid`` + ``confirmed`` + headroom >= 0.005 + a cosine BELOW 0.65 —
+#:   a calibrated operating point that sits low (the in-tree fixture encoder
+#:   calibrates to 0.639943), where refusing would mean re-importing a
+#:   channel-prior number onto the cosine scale. What they buy is the relaxed
+#:   comfort BAND; the stop ring is ``person_stop_m`` on both sides. No stop
+#:   distance, comfort-band value, predictive stop, TTC brake, orbit gate or
+#:   obstacle path is reachable from here.
+#:   **``apply_reactive_safety`` is UNCHANGED at ``f52db9c5…`` across this move
+#:   (checked, not assumed), as are ``owner_slow_m`` and ``_owner_comfort_band_m``**
+#:   — the gate function, the owner band and WHICH band is chosen carry zero
+#:   AST-normalised change; only WHO COUNTS AS THE OWNER moved.
+#:   ``ReactiveSafetyPolicy.__post_init__`` at ``8c39f4ee…`` is DOOR-1's
+#:   concurrent regeneration one entry up and is not this card's; OT-2 changed
+#:   exactly one digest in this dict. 648 reactive-safety cases over tracks with
+#:   no identity provenance hash byte-identically to the pre-OT-2 tree
+#:   (``f16316b3…``). Measurements are in
+#:   ``scrum/20260822/task_17/OT2_STATUS.md``.
 REACTIVE_SAFETY_PIN: dict[str, str] = {
     "apply_reactive_safety": (
         "f52db9c50cd6efe3958471a87d7f53e7ef3ba7b0038c895422dd0d7a4cf6bded"
     ),
     "ReactiveSafetyPolicy.__post_init__": (
-        "c228b5f85688e7275a1783eecb2821cbdbc058224ab75f055c50cc9607e99dcc"
+        "8c39f4eee7eda0090d2d767f06ef82e120959896fb05acb8289ec3d7e78d445a"
     ),
     "ReactiveSafetyPolicy.owner_slow_m": (
         "119af4adb6575f21ebbebe929e77e1e29eba3da345a021a69a2f32959e222f0e"
@@ -826,7 +900,7 @@ REACTIVE_SAFETY_PIN: dict[str, str] = {
         "7d5050eb563e5a8336a94f8eb26d648dc7de6e46680bd1108a68c9f1149848a9"
     ),
     "_owner_identity_trusted": (
-        "5262d3edb03522b558b43b47fbe66117b8ab6eb05ed71abd1041cf60e25e24d5"
+        "646234a120df4b2d54d8b80c00d1ba9b72df681be368e9688571276476a08a77"
     ),
 }
 

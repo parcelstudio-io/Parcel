@@ -69,7 +69,12 @@ from parcel_robot.perception_abstention import (
     VETO_ABSENT,
     VETO_PRESENT,
     VETO_UNAVAILABLE,
+    ControlLoopViolation,
     PlaceEvidence,
+    clear_control_thread,
+    control_thread_ids,
+    in_control_thread,
+    mark_control_thread,
 )
 from parcel_robot.perception_contention import (
     PerceptionContentionGuard,
@@ -92,10 +97,12 @@ __all__ = [
     "LATENCY_EMA_ALPHA",
     "LOOP_FORBIDDEN_CALLS",
     "NULL_SEAT_NAMES",
+    "ControlLoopViolation",
     "CropSource",
     "VetoRunner",
     "clear_control_thread",
     "clear_seats",
+    "control_thread_ids",
     "in_control_thread",
     "mark_control_thread",
     "runner_for",
@@ -136,31 +143,20 @@ LOOP_FORBIDDEN_CALLS = (
     "load",
 )
 
-_CONTROL_THREADS: set[int] = set()
-_CONTROL_LOCK = threading.Lock()
-
-
-def mark_control_thread(thread_id: int | None = None) -> None:
-    """Declare the calling thread (or ``thread_id``) to be the 10 Hz loop."""
-
-    tid = int(thread_id) if thread_id is not None else threading.get_ident()
-    with _CONTROL_LOCK:
-        _CONTROL_THREADS.add(tid)
-
-
-def clear_control_thread(thread_id: int | None = None) -> None:
-    tid = int(thread_id) if thread_id is not None else threading.get_ident()
-    with _CONTROL_LOCK:
-        _CONTROL_THREADS.discard(tid)
-
-
-def in_control_thread() -> bool:
-    with _CONTROL_LOCK:
-        return threading.get_ident() in _CONTROL_THREADS
-
-
-class ControlLoopViolation(RuntimeError):
-    """A veto was requested from the thread that owns the 10 Hz loop."""
+# ---- CARD NM-1 (task_18) — the registry moved, the names did not -----------
+#
+# ``mark_control_thread`` / ``clear_control_thread`` / ``in_control_thread`` and
+# ``ControlLoopViolation`` were defined HERE by card P1-D and had **no product
+# caller**: ``runtime.py`` may not import ``parcel_robot.vlm_veto`` at any scope
+# (``test_p1d_vlm_veto.py::test_the_runtime_imports_no_veto_module``, and that
+# rule is right), so the real 10 Hz loop could never arm the tripwire. NM-1 moved
+# the registry into ``perception_abstention`` — a module the runtime already
+# imports — and re-exports the four names from here unchanged, so every existing
+# import site, test and seed keeps working against the same objects.
+#
+# ``control_thread_ids`` is new: NM-1's FATAL test asserts the loop really marked
+# itself, and asserting on a set beats asserting on a side effect.
+# ---- END CARD NM-1 (task_18) ------------------------------------------------
 
 
 #: How the runner gets a best-view crop for a place. C-2 keeps one bounded

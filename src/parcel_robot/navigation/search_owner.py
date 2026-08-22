@@ -624,6 +624,32 @@ class SearchOwnerController:
                     GridPlannerConfig(
                         resolution_m=self.config.grid_resolution_m,
                         grid_size_cells=self.config.grid_size_cells,
+                        # Card DOOR-1 / design DW-4: production construction site
+                        # 2 of 2. This controller already holds the COMMISSIONED
+                        # gate (``safety_policy`` is the runtime's own
+                        # ``ReactiveSafetyPolicy``, injected at runtime.py:1809),
+                        # so the ring the final gate will enforce is right here
+                        # and there is no excuse for the planner to hold a second
+                        # opinion about it. Never ``None``: a planner blind to the
+                        # gate proposes frontier routes the gate then stands in
+                        # and refuses, which reads as "the search stalled" rather
+                        # than as a disagreement.
+                        #
+                        # ``planner_coupling_ring_m``, NOT ``obstacle_ring_m`` —
+                        # DOOR-1's correction pass, and the correction matters.
+                        # The raw commissioned ring is 0.65 m on the SHIPPED
+                        # ``configs/robot.yaml``, which would have raised this
+                        # planner's hard inflation 0.42 -> 0.5933 m, and
+                        # ``evals/companion_nav/runner.py`` builds this controller
+                        # for the follow-bench: a frozen-evidence row would have
+                        # moved as a side effect of wiring a seam. The coupling is
+                        # TIGHTER-ONLY (see the property's docstring); the
+                        # prototype's 0.45 m still comes through unchanged, the
+                        # shipped 0.65 m is capped and the disagreement stays
+                        # openly deferred as DOOR-1's HALTED item H-2.
+                        gate_clearance_m=(
+                            self._safety_policy.clearance_profile.planner_coupling_ring_m
+                        ),
                     )
                 )
             self._planner.update(

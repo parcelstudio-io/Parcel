@@ -644,22 +644,70 @@ voice_identity:
   # azimuth to compare it against.
   # rejected_sector: [80, 110]
 
-# WHEN YOUR TURN ENDS (card TURN-1) — THE PROTOTYPE CHOICE IS NOT YET MADE. ----
+# WHEN YOUR TURN ENDS (card TURN-1) — AND WHETHER "mm-hmm" KILLS THE REPLY
+# (card DUPLEX-1). THESE TWO KEYS ARE ONE DECISION AND SHIP TOGETHER. ---------
 #
 # The prototype directive wants a companion that "communicates fluidly", and
-# half of that is endpointing: today every pause longer than the provider's
-# ~500 ms silence tail ends your turn, mid-sentence pauses included. This card
-# made that a knob. It did NOT get to pick a value, and the reason is stated
-# rather than hidden: the choice is pre-registered to come from a measurement
-# on the owner's own voice (commit p50 <= 0.6 s, 0/20 mid-sentence commits),
-# and that recording does not exist yet.
+# half of that is endpointing: before TURN-1 every pause longer than the
+# provider's ~500 ms silence tail ended your turn, mid-sentence pauses
+# included, and every noise you made over a reply cancelled it on the frame.
+# TURN-1 made the first a knob. MARK-1 made the second a knob
+# (`backchannel_floor_ms`) and measured that a floor alone gets 0.38 survival.
+# DUPLEX-1 measured the pair and picked these values, and the reasoning is
+# here rather than in a status doc nobody opens:
 #
-# So this block ships COMMENTED, exactly like the shipped example, and the
-# prototype behaves as it does today until the numbers exist. A default guessed
-# in a config file and then never measured is how "semantic" ended up in
-# robot.yaml applying to a loop nobody runs.
+#   * `interrupt_response: false` — WITHOUT THIS THE FLOOR IS INERT. At the
+#     provider's default (`true`) its own VAD cancels the reply the instant it
+#     hears you, so the reply is already dead before any local floor could
+#     protect it. Measured: 0/10 backchannels survive with it left true
+#     (`tests/test_duplex1_rows.py::test_duplex1_d6_...`). Turning it off makes
+#     the LOCAL turn controller the only thing that ends a reply, which is the
+#     whole design (`docs/RESEARCH_2026_ROADMAPS.md:29-75`, architecture 3).
+#   * `silence_duration_ms: 200` — the low end of TURN-1's accepted 200-800.
+#     The lane cannot know you stopped until server VAD says so, so a floor
+#     only buys survival while `floor >= burst + tail`. At the provider's
+#     500 ms tail: 4/10. At 200 ms: 10/10. That is the whole difference.
 #
-# THE TEN MINUTES THAT SETTLES IT (owner):
+# Measured on the R7 rig (fake server + real lane + real gateway + a headless
+# port of this panel's playback path), 2026-08-22, `scrum/20260822/task_26/`.
+#
+# IT STILL SHIPS COMMENTED, AND THAT IS DELIBERATE. TURN-1 pre-registered the
+# TYPE decision to come from a recording of the owner's own voice (commit
+# p50 <= 0.6 s, 0/20 mid-sentence commits) and pinned that with a test
+# (`tests/test_turn1_endpointing.py::test_the_shipped_examples_have_no_live_turn_detection_key`).
+# That recording does not exist yet, and DUPLEX-1's numbers come from stand-in
+# burst durations, not from the owner. So this is a recommendation with its
+# measurements attached, not a default: uncomment the first block below —
+# BOTH keys together, they are one decision — and turn the floor on in the same
+# change. See `scrum/20260822/task_26/DUPLEX1_STATUS.md`, deviation D-a.
+#
+# turn_detection:
+#   type: server_vad
+#   silence_duration_ms: 200   # 200-800 accepted; outside is a refusal
+#   threshold: 0.5             # raise in a room with a television
+#   prefix_padding_ms: 300     # audio kept before the trigger, 0-2000
+#   interrupt_response: false  # the local turn controller decides, not the
+#                              # provider; leave this true and the floor below
+#                              # buys exactly nothing (measured: 0/10)
+#
+# THE THIRD VALUE, AND WHY IT IS NOT A KEY HERE. -----------------------------
+# `backchannel_floor_ms: 700` is the number DUPLEX-1's pre-registered decision
+# rule picked (the smallest floor on 0/250/350/450/700/1000 whose survival over
+# ten acknowledgement tokens reaches 0.9; it reaches 1.0). It is NOT a config
+# key: MARK-1 shipped it as a lane constructor argument and adding a key would
+# be an edit inside TURN-1's `config.py` region. Turning it on is one line
+# where the runtime builds the lane:
+#
+#   RealtimeLane(..., backchannel_floor_ms=700.0)   # runtime.py, _build_lane
+#
+# What it costs, stated so nobody is surprised by it: a genuine interruption is
+# cancelled ~740 ms after you start talking instead of ~0 ms. What makes that
+# livable is DUPLEX-1's other half — the reply DUCKS to 0.18 gain within one
+# control frame of the onset, so the floor is spent with the dog quiet under
+# you rather than talking over you. Both numbers are measured; the cancel one
+# misses DUPLEX-1's own pre-registered 450 ms bar and is recorded as a miss.
+#
+# THE TEN MINUTES THAT WOULD RE-SETTLE THE TYPE (owner):
 #
 #   .parcel/bin/python tools/replay_turn_detection.py --plan \
 #       --out ~/.cache/parcel-turn1/recording
@@ -670,21 +718,17 @@ voice_identity:
 #         --out ~/.cache/parcel-turn1/results
 #   done
 #
-# Then uncomment the winner. The expected one, on the reasoning that a
-# household companion should wait rather than interrupt, is the first:
+# `server_vad` is chosen above because it is the only type with a tunable
+# silence tail, and the tail is what the backchannel floor has to cover. If the
+# recording shows `semantic_vad` is much better on your voice, the trade
+# changes and DUPLEX-1's floor has to be re-derived — `semantic_vad` refuses
+# `silence_duration_ms`, so the floor would have to cover the provider's own
+# tail (700 ms bought 4/10 there, not 10/10):
 #
 # turn_detection:
 #   type: semantic_vad
-#   eagerness: low            # low | medium | high | auto
-#   interrupt_response: true  # the provider cancels its own reply when you talk
-#
-# The patient energy VAD, if semantic_vad turns out to be worse on your voice:
-#
-# turn_detection:
-#   type: server_vad
-#   silence_duration_ms: 700  # 200-800 accepted; outside is a refusal
-#   threshold: 0.5            # raise in a room with a television
-#   prefix_padding_ms: 300    # audio kept before the trigger, 0-2000
+#   eagerness: low             # low | medium | high | auto
+#   interrupt_response: false  # still false, for the same reason
 #
 # `eagerness` under server_vad, and `threshold` / `prefix_padding_ms` /
 # `silence_duration_ms` under semantic_vad, are REFUSED: the provider accepts

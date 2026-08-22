@@ -2489,6 +2489,16 @@
     // hosted audio is rendering. Ten a second is nothing on the wire and it
     // bounds how stale the truncate point can be when a barge-in lands.
     const PLAYED_ACK_INTERVAL_MS = 100;
+    // CARD DUPLEX-1. How long the gain takes to reach a new level. A step
+    // change is an audible click and a click sounds like a dropped connection;
+    // 20 ms is fast enough that the pre-registered "time to quiet" row is
+    // dominated by the socket, not by this ramp.
+    const DUCK_RAMP_S = 0.02;
+    // CARD DUPLEX-1, correction pass. The quietest a duck may go. A duck to
+    // silence is indistinguishable from a dropped connection; a real mute is
+    // the `stop` frame, which is a different act with a different name. Pinned
+    // to `parcel_robot.duplex.turn_controller.MIN_DUCK_GAIN`.
+    const MIN_DUCK_GAIN = 0.05;
 
     function micLabel(text) {
       const button = el("mic-button");
@@ -2518,6 +2528,7 @@
       // on. A tab that closed the mic four times would otherwise carry four
       // live intervals, each of them talking about a socket that is gone.
       try { if (mic.ackTimer) clearInterval(mic.ackTimer); } catch (_) {}
+      try { if (mic.gain) mic.gain.disconnect(); } catch (_) {}  // card DUPLEX-1
       try { if (mic.processor) mic.processor.disconnect(); } catch (_) {}
       try { if (mic.source) mic.source.disconnect(); } catch (_) {}
       try { if (mic.stream) mic.stream.getTracks().forEach((track) => track.stop()); } catch (_) {}
@@ -2564,7 +2575,10 @@
       }
       const source = mic.playback.createBufferSource();
       source.buffer = audio;
-      source.connect(mic.playback.destination);
+      // Card DUPLEX-1: through the duck node when there is one. The fallback is
+      // the pre-DUPLEX-1 path exactly, so a panel whose gain node failed to
+      // build still plays at full volume rather than silently not at all.
+      source.connect(mic.gain || mic.playback.destination);
       const now = mic.playback.currentTime;
       if (mic.playAt < now) {
         mic.playAt = now + 0.02;
@@ -2618,6 +2632,63 @@
       }));
     }
 
+    // CARD DUPLEX-1 — THE DUCK FRAME: A REPLY THAT IS QUIET, NOT GONE
+    // `{"type":"duck","utterance":<seq>,"gain":<0..1>}`. The lane sends one the
+    // instant server VAD hears the owner over a reply and another at gain 1
+    // when that turned out to be a backchannel. Nothing is dropped, nothing is
+    // cancelled and the played-ack arithmetic is untouched — the owner DID hear
+    // that audio, quietly, and MARK-1's truncate mark still has to say so.
+    //
+    // The whole admission decision is this one function so a test can lift it
+    // out of this file and evaluate it in a real JS engine (gjs) against the
+    // frames the product gateway actually emits. `utterance !== mic.utterance`
+    // is the rule that matters: a duck frame from the previous reply, arriving
+    // after the next one started, would attenuate the wrong voice for good.
+    function duckGainFor(mic, body) {
+      if (!mic.gain) return null;
+      const utterance = Number(body.utterance);
+      if (!Number.isInteger(utterance) || utterance <= 0) return null;
+      if (utterance !== mic.utterance) return null;
+      // CORRECTION PASS, finding 1 — MARK-1's blocker, in the same file, one
+      // card later. `Number(x)` is not a type check: ToNumber(null), ToNumber(""),
+      // ToNumber([]) and ToNumber(false) are all `+0`, all finite, and all clamp
+      // to a SILENT reply. A frame with a missing, null or empty gain would have
+      // muted the dog mid-sentence and nothing on the wire would say it was
+      // coming back. Test the type first; coerce nothing.
+      if (typeof body.gain !== "number" || !Number.isFinite(body.gain)) return null;
+      // ...and the clamp bottoms out at the quietest AUDIBLE level, not at
+      // silence: clamping our own out-of-range bug to 0 is the same defect
+      // arriving by a different door. MIN_DUCK_GAIN is pinned to
+      // `parcel_robot.duplex.turn_controller.MIN_DUCK_GAIN` by a test.
+      return Math.max(MIN_DUCK_GAIN, Math.min(1, body.gain));
+    }
+
+    function applyDuck(mic, body) {
+      const level = duckGainFor(mic, body);
+      if (level === null) {
+        mic.ducksDropped += 1;
+        return;
+      }
+      mic.duckGain = level;
+      mic.ducksApplied += 1;
+      try {
+        mic.gain.gain.setTargetAtTime(level, mic.playback.currentTime, DUCK_RAMP_S);
+      } catch (_) {
+        // An engine without setTargetAtTime still gets the level, with a click.
+        mic.gain.gain.value = level;
+      }
+    }
+
+    // Every new utterance and every stop starts at full volume. Without this a
+    // duck that was never resumed (the reply ended while held, say) would make
+    // the NEXT reply quiet for no reason anybody could see.
+    function resetDuck(mic) {
+      mic.duckGain = 1;
+      if (!mic.gain) return;
+      try { mic.gain.gain.cancelScheduledValues(mic.playback.currentTime); } catch (_) {}
+      mic.gain.gain.value = 1;
+    }
+
     // Barge-in, browser half. The lane already cancels the response and tells
     // the provider how much was heard; without this the audio already sitting
     // in this tab's own buffer would keep talking over the owner.
@@ -2632,6 +2703,7 @@
       mic.playStart = 0;
       mic.scheduledMs = 0;
       mic.wasRendering = false;
+      resetDuck(mic);  // card DUPLEX-1: the next reply is not the ducked one
     }
 
     async function startMic() {
@@ -2671,6 +2743,13 @@
         beam: 0,
         ackTimer: null,
         sources: [],
+        // Card DUPLEX-1: the playback gain node, the level it is at, and the
+        // two counters that keep "the duck never fired" distinguishable from
+        // "the duck frames were all dropped as stale".
+        gain: null,
+        duckGain: 1,
+        ducksApplied: 0,
+        ducksDropped: 0,
       };
       state.mic = mic;
       // The played clock must not stop when the CHUNKS stop. Chunks arrive far
@@ -2726,6 +2805,11 @@
           mic.playStart = 0;
           mic.scheduledMs = 0;
           mic.wasRendering = false;
+          resetDuck(mic);  // card DUPLEX-1: a new reply always starts audible
+          return;
+        }
+        if (body.type === "duck") {
+          applyDuck(mic, body);  // card DUPLEX-1
           return;
         }
         if (body.type === "stop") {
@@ -2796,6 +2880,18 @@
       if (mic.processor) return;
       mic.capture = new AudioContext();
       mic.playback = new AudioContext({ sampleRate: mic.rate });
+      // CARD DUPLEX-1 — THE VOICE HAS A VOLUME KNOB NOW
+      // Every playback source is connected through this node instead of
+      // straight to the destination, so the lane can turn the reply DOWN
+      // without stopping it. That is what a provisional barge-in is: the owner
+      // made a noise, we do not yet know whether it was "mm-hmm" or "stop", and
+      // for the length of the backchannel floor the dog goes quiet instead of
+      // either talking over them or losing its sentence. `setTargetAtTime`
+      // rather than an assignment because a step change in gain is an audible
+      // click, and a click is what a dropped connection sounds like.
+      mic.gain = mic.playback.createGain();
+      mic.gain.gain.value = 1;
+      mic.gain.connect(mic.playback.destination);
       mic.source = mic.capture.createMediaStreamSource(mic.stream);
       // ScriptProcessorNode is deprecated but is the only capture node that
       // works here: an AudioWorklet needs a blob: module URL and the panel's

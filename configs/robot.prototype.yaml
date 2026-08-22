@@ -71,6 +71,46 @@ perception:
     - cup
     - backpack
 
+  # ---- CARD VENUE-1: WHICH VENUE the eye is on ----------------------------
+  #
+  # `camera_ingress` above is the runtime's CONSENT to a camera. This key says
+  # WHICH ONE, and it is the switch P1-A built three backends behind and
+  # nothing selected: until VENUE-1, `_attach_configured_camera_ingress` built
+  # the MuJoCo/EGL ingress unconditionally, so a plugged-in camera fed nothing.
+  #
+  #   mujoco     the simulator's renderer (the default; omit this key entirely
+  #              and you get it, byte for byte as before)
+  #   realsense  a D455 — RGB + colour-aligned depth. THE DAY-ONE DEVICE.
+  #   uvc        any V4L2 webcam. RGB ONLY, and that is not a small footnote:
+  #              CameraIngress needs metric depth to place a box, so an
+  #              RGB-only venue proves the detector and the daemon end to end
+  #              and publishes NO frames and teaches the map NOTHING. The
+  #              runtime says `depth_unavailable` on its own surface rather
+  #              than substituting a synthetic depth plane, because world
+  #              coordinates off an assumed plane look like measurements and
+  #              are not.
+  #   recorded   replay a committed clip through the same contract. Frames are
+  #              stamped REPLAY, never PHYSICAL — a file may not mint live
+  #              authority. Point PARCEL_CAMERA_CONFIG at a JSON/YAML naming
+  #              the clip.
+  #
+  # LEFT COMMENTED OUT DELIBERATELY. No camera is attached to this host (owner,
+  # 2026-08-22: only the reSpeaker XVF3800 mic array is on hand), and a profile
+  # that named a venue nobody has would turn every prototype start into a
+  # refusal. `scripts/launch_stack.sh --camera realsense` exports
+  # PARCEL_CAMERA_BACKEND, which takes precedence over this key, so the D455
+  # can be tried the day it arrives without editing a file.
+  #
+  # camera_backend: realsense
+  #
+  # And which detector serves it. `daemon` runs OWLv2 + SigLIP-2 in their own
+  # process behind an AF_UNIX socket (P1-A: ~100 ms p50 round trip, 0.6-1.8 ms
+  # of process boundary), so one CUDA stall cannot land on the control loop. It
+  # is selected automatically when PARCEL_PERCEPTION_SOCKET is set — which
+  # `--camera` does — so this key is only for saying so without the launcher.
+  #
+  # detector: daemon
+
 # ---------------------------------------------------------------------------
 # AFFECT (configs/robot.yaml:218-221)
 #
@@ -109,17 +149,66 @@ agent:
 # (scrum/20260821/task_20/MOVE1_STATUS.md §1.4 — the arithmetic closes to
 # 1.8 mm). 0.7 m is one arm's length: close enough to be a companion, 0.02 m
 # above the floor the body can physically stop in.
+#
+# ---- CARD DOOR-1 (2026-08-22): AND THE OBSTACLE BAND, WHICH IS THE DOORWAY ---
+#
+# NOT COMMISSIONED. THIS IS SIMULATOR POLICY, NOT A PHYSICAL PROOF. No robot
+# hardware is on hand (owner, 2026-08-22: only the reSpeaker XVF3800 mic array),
+# so 0.7 m and 0.45 m below are arithmetic over in-tree body constants that
+# nobody has ever measured against a real Go2 braking on a real floor. Neither
+# number is a default: `configs/robot.yaml` still ships 1.2 m and 0.65 m, and
+# this whole band exists only while `PARCEL_PROFILE=prototype` selects this
+# overlay in the simulator. The day a body exists, both are re-derived from an
+# instrumented stop, not from this file.
+#
+# WHY 0.45 m. The final reactive gate is DIRECTIONAL: it refuses to translate
+# toward anything inside `obstacle_stop_m` within a +/-1.15 rad cone about
+# travel. Down the centreline of a corridor of width w the nearest obstacle
+# INSIDE that cone sits at (w/2)/sin(1.15), so the gate refuses every corridor
+# narrower than 2 * obstacle_stop_m * sin(1.15):
+#
+#     shipped 0.65 m  ->  refuses anything under 1.19 m   <-- no interior door
+#     0.45 m          ->  refuses anything under 0.82 m
+#
+# (0.82 m is the STATIC ring arithmetic. Bisected on the real gate at 0.25 m/s
+# the single-tick admission boundary is 0.8628 m, because the gate's stop test
+# carries a predictive `+ v*tau` term. Both are real; they answer different
+# questions, and neither is a traverse.)
+#
+# A standard interior doorway is 0.80-0.90 m, and the dev scene's own doorway
+# (`entry_wall_1` <-> `entry_wall_2`) is 0.800 m. At the shipped ring the
+# prototype cannot walk through a door — card P1-E measured this and handed it
+# here (scrum/20260822/task_12/P1E_STATUS.md §7/§8).
+#
+# The floor underneath is the authority's named `OBSTACLE_STOP_FLOOR_M` =
+# 0.41 m — the body's ISO/TS-15066 stopping distance at the APPROACH regime
+# (0.32 + 0.35*0.12 + 0.35^2/2.8 = 0.4058). Below it the runtime REFUSES TO
+# BOOT and names the floor, exactly as it does for the person band.
+#
+# WHAT 0.45 m DOES NOT BUY: a 0.80 m doorway. The grid planner models the body
+# as a DISC of radius 0.32 m and adds `map_safety_margin_m` 0.10 m, so it
+# refuses to route through anything under 0.84 m no matter what this key says,
+# and on the product's 0.10 m grid that quantises to exactly 1.0000 m (measured
+# by bisection: 1.0000 m does not route, 1.0001 m does). That is the planner's
+# footprint model, not a safety envelope, and it lives in configs/navigation/
+# (card P0-D's file). So a nominal 1.00 m doorway sits exactly on the knife
+# edge. See scrum/20260822/task_19/DOOR1_STATUS.md.
 safety:
   person_stop_m: 0.7
+  obstacle_stop_m: 0.45
 
-# The follow stand-off is DERIVED from the number above, but `configs/robot.yaml`
+# The follow stand-off is DERIVED from the number above. `configs/robot.yaml`
 # pins `owner_follow.owner_keepout_m` as a LITERAL 1.75 (= the old 1.2 + the
-# 0.55 owner collision envelope), and a literal does not re-derive. Left alone,
-# the prototype would boot with a 0.7 m gate and still hold formation at 1.75 m
-# of centre distance — the gate would be relaxed and the behaviour would not.
-# 1.25 = 0.7 + 0.55 is exactly `RobotRuntime.__init__`'s `minimum_owner_keepout`
-# for this profile; the follow stand-off then re-derives to
-# 1.25 + OWNER_STAND_OFF_MARGIN_M = 1.35 m of centre distance.
+# 0.55 owner collision envelope), and a literal does not re-derive, so this key
+# stays written out: 1.25 = 0.7 + 0.55 is exactly `RobotRuntime.__init__`'s
+# `minimum_owner_keepout` for this profile.
+#
+# Card DOOR-1 closed the half P1-E could not: `FollowConfig.desired_distance_m`
+# was an IMPORT-TIME constant (1.85 m) and stayed 1.85 m under this profile, so
+# the gate was relaxed to 0.7 m and the FORMATION was not. It now derives per
+# instance from `owner_keepout_m + OWNER_STAND_OFF_MARGIN_M`, i.e. 1.35 m of
+# centre distance here and an unchanged 1.85 m on the shipped config. Deleting
+# the key below now derives the same 1.25 m rather than falling back to 1.75.
 owner_follow:
   owner_keepout_m: 1.25
 

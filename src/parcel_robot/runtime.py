@@ -27,7 +27,12 @@ from parcel_robot.audio_arming import (
 )
 from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
-from parcel_robot.backends.base import DynamicAgentTrack, SimObservation, SimulatorBackend
+from parcel_robot.backends.base import (
+    DynamicAgentTrack,
+    OwnerTrack,  # card OT-2: the overlay rebuilds this track
+    SimObservation,
+    SimulatorBackend,
+)
 from parcel_robot.brain import (
     FrozenDict,
     GoalSpec,
@@ -196,6 +201,8 @@ from parcel_robot.navigation.goals import (
 )
 from parcel_robot.navigation.owner_prediction import OwnerMotionPredictor, PredictedPath
 from parcel_robot.navigation.reactive_safety import (
+    # ---- CARD OT-2: the published identity seam (DOOR-1 reads it too) ----
+    IDENTITY_SOURCE_PIXEL_REID_UNCALIBRATED,
     ReactiveSafetyPolicy,
     apply_reactive_safety,
 )
@@ -2480,6 +2487,34 @@ class RobotRuntime:
         self._speaker_labels: deque[dict[str, object]] = deque(maxlen=SPEAKER_LABEL_HISTORY_MAX)
         self._ledger_rows_written = 0
         self._ledger_rows_labelled = 0
+        # ---- CARD OT-2 state: who the robot thinks the owner is -----------
+        # Built unconditionally and inert by default: with ``_ot2_owner_tracker``
+        # None every method in the OT-2 region returns immediately and the
+        # observation is passed through as the SAME OBJECT. Installed by
+        # :meth:`install_owner_tracker` once a camera venue has resolved an
+        # encoder and a gallery. No lock of its own — everything below is
+        # published under ``_lock``, which is why R24's roster is unchanged.
+        self._ot2_owner_tracker: Any = None
+        self._ot2_owner_fusion: Any = None
+        self._ot2_owner_track: Any = None
+        self._ot2_owner_track_at: float = 0.0
+        #: The enrollment's measured operating point. The overlay subtracts it
+        #: from the cosine to get the HEADROOM the reactive gate reads.
+        self._ot2_gallery_threshold: float = 0.0
+        self._ot2_identity_source: str = ""
+        self._ot2_identity_margin: float = 0.0
+        self._ot2_identity_state: str = ""
+        self._ot2_identity_reason: str = ""
+        self._ot2_frames_seen = 0
+        self._ot2_owner_claims = 0
+        self._ot2_errors = 0
+        #: Card OT-2's memory-principal half (DW-3). Counters only; the rule
+        #: itself lives in ``owner_model.principal`` and the doors are in the
+        #: OT-2 memory region beside P2-A's.
+        self._ot2_facts_downgraded = 0
+        self._ot2_facts_confirmed = 0
+        self._ot2_facts_confirm_refused = 0
+        # ---- END CARD OT-2 state ------------------------------------------
         if self.realtime_config.enabled:
             # Card EV-1. Armed BEFORE the lane is built so the session's own
             # construction events are in the record, and only when there IS a
@@ -2605,6 +2640,21 @@ class RobotRuntime:
                     # Card R10 — the two doors that close the tool-surface hole,
                     # plus the place vocabulary the junk-place refusal names.
                     places=self._realtime_places,
+                    # ---- CARD ASK-1 (task_18) --------------------------------
+                    # NOT wrapped in ``_gate_by_voice`` or ``_watch_under_latch``
+                    # and that is deliberate, not an omission. Those two wrappers
+                    # exist for doors that COMMIT THE BODY — an unverified voice
+                    # must not be able to send the dog off, and a motion refused
+                    # under a latch must be written to the safety ring. This door
+                    # starts nothing, claims nothing and can refuse nothing: it
+                    # reads the map and returns a question. Gating it would mean
+                    # the robot went silent about its own uncertainty to a
+                    # stranger, or while stopped — and a stopped robot that will
+                    # not say what it is unsure of is a worse robot, not a safer
+                    # one. The MOTION that a confirmed answer eventually starts
+                    # still goes through ``navigate`` below, wrapped in both.
+                    ask_place=self._realtime_ask_place,
+                    # ---- END CARD ASK-1 (task_18) ----------------------------
                     orbit=self._gate_by_voice(
                         "circle_owner",
                         self._watch_under_latch("tool circle_owner", self._realtime_orbit),
@@ -2635,7 +2685,15 @@ class RobotRuntime:
                     # it is stopped is a different and worse product. The
                     # gating that matters here is the privacy policy, and it
                     # runs inside the broker before any of these is called.
-                    remember_fact=self._realtime_remember_fact,
+                    # ---- CARD OT-2 seam 3 of 3: WHO may write a fact ----
+                    # The write door is P2-A's, wrapped: the wrapper applies
+                    # the memory principal at the last point before the store
+                    # and hands the downgrade back in the result. ``confirm``
+                    # is the new fourth door — the product caller
+                    # ``memory.set_owner_fact_consent`` never had.
+                    remember_fact=self._ot2_remember_fact,
+                    confirm_fact=self._ot2_confirm_fact,
+                    # ---- END CARD OT-2 seam 3 --------------------------
                     forget_fact=self._realtime_forget_fact,
                     known_facts=self._realtime_known_facts,
                 ),
@@ -4243,6 +4301,52 @@ class RobotRuntime:
             # ``known_places()`` — the places the RELOADED map already knows —
             # plus the curiosity list. Off-oracle only; inert by default.
             self._p1b_install_learned_map()
+            # ---- CARD CAP-1: required capabilities are startup-fatal --------
+            # ORDERING IS THE WHOLE CORRECTNESS OF THIS CHECK, and it took two
+            # goes to get right.
+            #
+            # It first sat here on the belief that P1-B's installer, one line
+            # up, was the last word on the process-global candidate source.
+            # VENUE-1 then took CAP-1's one-directional-binding finding into its
+            # own region and put ``_venue1_bind_semantic_source()`` at the TOP of
+            # ``_attach_configured_camera_ingress`` (seam 1a, above C-1's early
+            # return, so it runs on every started runtime — camera on or off).
+            # From that moment this check read the STALE global that the very
+            # next line corrected: a profile that DECLARED a capability could be
+            # refused for a disagreement the composition root was about to
+            # resolve. A false refusal, in the one path this card exists to make
+            # honest. VENUE-1 pinned it and handed it back (their handoff 9).
+            #
+            # The rule is therefore "after the LAST binder", not "after P1-B" —
+            # and the last binder is asserted HERE rather than by moving this
+            # block below the attach, because P1-B's own seam test pins the
+            # source text ``_attach_configured_camera_ingress()`` immediately
+            # followed by ``self._thread`` (tests/test_p1b_map_learns.py:1028)
+            # and nothing may sit between them. This is the first of the two
+            # remedies VENUE-1 offered, taken for that reason.
+            #
+            # Calling it twice is free and deliberate: VENUE-1 documents the
+            # binder as idempotent ("re-asserts the same policy when the
+            # installer already bound it, so the two cannot disagree") and as
+            # never raising. ``getattr`` because a VENUE-1 region that is
+            # reverted must degrade to the previous behaviour, not to an
+            # AttributeError at boot.
+            bind_semantic_source = getattr(self, "_venue1_bind_semantic_source", None)
+            if callable(bind_semantic_source):
+                bind_semantic_source()
+            # INERT BY DEFAULT, and that is the whole design. A profile that
+            # declares no ``required_capabilities:`` requires nothing, this
+            # returns after one already-performed YAML read, and no tree in the
+            # repository today changes behaviour. It adds NO runtime refusal —
+            # ask-over-refuse still governs every tick; this is a
+            # configuration-truth check at the door, once.
+            #
+            # A raise here lands in the ``except BaseException`` below, which
+            # closes the runtime and re-raises, and no thread has started yet.
+            from parcel_robot.admission import check_required_capabilities
+
+            check_required_capabilities(self)
+            # ---- END CARD CAP-1 (startup check) -----------------------------
             self._attach_configured_camera_ingress()
             self._thread = threading.Thread(
                 target=self._control_loop,
@@ -7238,6 +7342,148 @@ class RobotRuntime:
             "blocking": False,
         }
 
+    # ============ CARD DUPLEX-1 (task_26) — RT-TURNS-1 · MARKED REGION ======
+    # AIR-1's handoff, verbatim: "Expose per-turn identity with a WALL stamp …
+    # one JSONL row per ledger row … The data already exists in
+    # ``_stamp_speaker_label``; what is needed is a wall clock instead of
+    # ``time.monotonic()`` and a sink other than a 400-row in-memory ring."
+    #
+    # Both halves are here, and neither one edits P2-B's stamp: the ring keeps
+    # its monotonic ``at_s`` (which is what the rest of the runtime compares
+    # against), and the WALL stamp is derived at export time from one paired
+    # read of the two clocks. That pairing is exact to the precision of the
+    # read and drifts only across a suspend — which is why every row also
+    # carries its raw ``monotonic_s``, so a reader who distrusts the join can
+    # redo it. Editing the stamp would have been the second region this card
+    # opened in a file three other cards are writing to today.
+    #
+    # WHAT THIS DOES NOT ANSWER, SAID HERE AND NOT ONLY IN THE STATUS DOC.
+    # AIR-1's ``score_turns`` reads ``was_robot`` to count "turns credited to
+    # the owner that were really the robot coming back through the mic". The
+    # runtime cannot decide that: an owner turn overlapping robot playback is
+    # what a barge-in IS, so "the robot was speaking" is not evidence, and the
+    # only thing that separates the two is acoustic. So ``was_robot`` is
+    # ``None`` — never ``False`` — and the row says why. A ``False`` here would
+    # make AIR-1's 0/20 row pass for the same vacuous reason its verification
+    # caught in ``hosted_spend_usd``.
+    def realtime_turn_rows(self, limit: int = 0) -> list[dict[str, object]]:
+        """Per-turn identity with a wall stamp. Card DUPLEX-1 / RT-TURNS-1.
+
+        Read-only, never raises, and derived entirely from
+        :meth:`speaker_label_rows` — one row in, one row out, in order.
+        """
+
+        try:
+            rows = self.speaker_label_rows(limit=limit)
+        except (AttributeError, RuntimeError, TypeError, ValueError) as error:
+            self._emit("realtime", f"turn export unavailable: {error}", "info")
+            return []
+        wall_now = time.time()
+        monotonic_now = time.monotonic()
+        out: list[dict[str, object]] = []
+        for row in rows:
+            if not isinstance(row, Mapping):
+                continue
+            at_s = row.get("at_s")
+            monotonic_s = float(at_s) if isinstance(at_s, (int, float)) else None
+            wall = None if monotonic_s is None else wall_now - (monotonic_now - monotonic_s)
+            out.append(
+                {
+                    "wall": None if wall is None else datetime.fromtimestamp(wall, UTC).isoformat(),
+                    "monotonic_s": monotonic_s,
+                    "session_id": row.get("session_id"),
+                    "item_id": row.get("item_id"),
+                    "speaker": row.get("speaker"),
+                    # Every row in this ring is written by the hosted lane's two
+                    # ledger doors. There is no second producer, so the origin is
+                    # a fact about the door and not a guess.
+                    "origin": TRANSCRIPT_ORIGIN_REALTIME,
+                    # See the region header. ``None`` means undecidable here.
+                    "was_robot": None,
+                    "was_robot_reason": (
+                        "undecidable from the runtime: an owner turn during robot "
+                        "playback is what a barge-in is; separating self-echo from "
+                        "the owner is acoustic (AIR-1 session)"
+                    ),
+                    "identity": {
+                        "verdict": row.get("label"),
+                        "code": row.get("code"),
+                        "cosine": row.get("score"),
+                        "threshold": row.get("threshold"),
+                        "enrolled": row.get("enrolled"),
+                        "gated": row.get("gated"),
+                        "kind": row.get("kind"),
+                        # ``doa_deg`` is in AIR-1's schema and this build has no
+                        # producer for it (the XVF3800 udev rule is an owner
+                        # action). Present and null beats absent: the tool can
+                        # then tell "no DoA" from "old file".
+                        "doa_deg": None,
+                    },
+                }
+            )
+        return out
+
+    def export_realtime_turns(self, path: str | Path | None = None) -> dict[str, object]:
+        """Write ``turns.jsonl`` beside the capture. Card DUPLEX-1 / RT-TURNS-1.
+
+        **It has no product caller yet**, and the correction pass says so here
+        rather than describing one it does not have: nothing in the panel, the
+        driver or the shutdown path invokes it. Today it is called by a human
+        at the end of an owner session (``DUPLEX1_STATUS.md`` row OG-4) and by
+        ``tests/test_duplex1_rt_turns.py``. It returns what happened rather
+        than raising because the eventual caller is a runbook step or an HTTP
+        handler, and neither is a place for an exception about a directory.
+
+        With no ``path`` the file lands in the capture session directory — the
+        same folder as ``owner.wav`` / ``robot.wav`` / ``index.json``, which is
+        what makes an index byte range and a turn row joinable at all.
+        """
+
+        import json  # local: the module import block belongs to no one card today
+
+        rows = self.realtime_turn_rows()
+        target = None if path is None else Path(path)
+        if target is None:
+            target = self._realtime_capture_dir()
+            if target is not None:
+                target = target / "turns.jsonl"
+        if target is None:
+            return {
+                "written": 0,
+                "path": None,
+                "reason": (
+                    "no capture directory: realtime.capture is disabled, so there is "
+                    "nowhere beside the WAVs to put this. Pass an explicit path."
+                ),
+            }
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with target.open("w", encoding="utf-8") as handle:
+                for row in rows:
+                    handle.write(json.dumps(row, separators=(",", ":")) + "\n")
+        except OSError as error:
+            self._emit("realtime", f"turn export failed: {error}", "warning")
+            return {"written": 0, "path": str(target), "reason": f"{type(error).__name__}: {error}"}
+        return {"written": len(rows), "path": str(target), "reason": ""}
+
+    def _realtime_capture_dir(self) -> Path | None:
+        """Where the tee is writing this session, from public config only."""
+
+        capture_config = getattr(self.realtime_config, "capture", None)
+        if capture_config is None or not getattr(capture_config, "enabled", False):
+            return None
+        session = self._session_evidence_id
+        if not session:
+            return None
+        try:
+            from parcel_robot.realtime.config import resolve_capture_dir
+
+            return Path(resolve_capture_dir(capture_config.dir)) / str(session)
+        except (AttributeError, ImportError, OSError, TypeError, ValueError):
+            return None
+
+    # ============ END CARD DUPLEX-1 region (RT-TURNS-1) =====================
+
     def _record_affect(
         self,
         *,
@@ -8343,6 +8589,184 @@ class RobotRuntime:
             return ()
         return owner_notes_from_facts(rows, limit=MAX_OWNER_NOTES)
 
+    # =====================================================================
+    # CARD OT-2 — WHO MAY WRITE A DURABLE OWNER FACT.  (NEW REGION, DW-3)
+    #
+    # Sits immediately after P2-A's four doors because it is the missing half
+    # of them, and it touches none of their bodies: this region WRAPS
+    # ``_realtime_remember_fact`` rather than editing it, so P2-A's write path
+    # is still one readable method and the authorization rule is still one
+    # readable module (``owner_model.principal``).
+    #
+    # THE HOLE. P2-A asked what the robot may keep. It never asked who is
+    # asking. ``remember_fact`` arrives from the hosted lane, the deterministic
+    # policy rules on the TEXT, and a row lands ``granted`` — whether the
+    # sentence came from the enrolled owner, from a house guest, from a voice
+    # the verifier ran on and could not identify, or from a television. P2-B
+    # made that distinction visible and deliberately gave it no authority
+    # ("identity is a LABEL, not a gate"), which is right about ARMING: a robot
+    # that will not stop for a stranger is a worse robot.
+    #
+    # Here, and only here, the label acquires exactly one power: an unverified
+    # voice may talk, may interrupt, may STOP the dog — and may not silently
+    # create a durable consented belief about its owner. Nothing is refused.
+    # The fact still lands, as ``pending``, and the model is told it landed
+    # pending and why. Ask-over-refuse, applied to memory.
+    #
+    # AND THE OTHER HALF: ``memory.set_owner_fact_consent`` had NO product
+    # caller before this card — the "yes, remember that" the ``pending`` row
+    # exists for was reachable from one test and nothing else. ``confirm_fact``
+    # below is that caller, and it is a SEPARATE door on purpose: repeating
+    # ``remember_fact`` is a repetition, not a confirmation, and a product that
+    # treats the second attempt as consent has no consent step at all.
+    # =====================================================================
+
+    def _ot2_memory_principal(self) -> Any:
+        """WHO is asking, as a typed value. Total; never raises; never a gate.
+
+        Reads P2-B's ``_speaker_label_for`` — the same label the ledger row for
+        this turn will carry — so "the robot wrote it down as unconfirmed" and
+        "the row says the voice was unverified" can never disagree. A build
+        with no gate at all resolves to ``unenrolled``, which is the truth
+        about this host today and which DOES grant: see
+        ``owner_model.principal.GRANTING_LABELS`` for why that is a decision
+        rather than an oversight.
+        """
+
+        from parcel_robot.owner_model.principal import (
+            CHANNEL_VOICE,
+            principal_from_speaker_label,
+        )
+
+        try:
+            stamp = self._speaker_label_for()
+            return principal_from_speaker_label(
+                str(getattr(stamp, "label", "") or ""),
+                channel=CHANNEL_VOICE,
+                confidence=float(getattr(stamp, "score", 0.0) or 0.0),
+            )
+        except Exception as error:  # noqa: BLE001 - a principal may never end a turn
+            self._emit("realtime", f"memory principal unavailable: {error}", "info")
+            return principal_from_speaker_label("unverified", channel=CHANNEL_VOICE)
+
+    def _ot2_remember_fact(self, key: str, fact: str, decision: object) -> dict[str, object]:
+        """P2-A's write door, with the principal applied at the last moment.
+
+        THE LAST POINT BEFORE THE STORE, deliberately. The alternative — asking
+        the broker to consult the principal before calling the door — puts the
+        rule where a future second caller can route around it. Here, every path
+        that reaches ``add_owner_fact`` through ``ToolDoors`` has already been
+        through :func:`~parcel_robot.owner_model.principal.admit_consent`, and
+        that function can only ever move a verdict toward "not yet".
+
+        The downgrade is never silent. It goes back to the model in the result
+        (``consent_downgraded``, the principal, and a sentence saying what
+        happened), it is counted, and it is emitted on the ``realtime`` channel
+        — three places, because a memory quietly not kept is as bad a product
+        as a memory quietly kept.
+        """
+
+        from parcel_robot.owner_model.principal import admit_consent
+
+        principal = self._ot2_memory_principal()
+        requested = str(getattr(decision, "consent", CONSENT_PENDING))
+        admission = admit_consent(principal, requested)
+        changes: dict[str, object] = {}
+        if admission.downgraded:
+            changes["consent"] = admission.consent
+        if not principal.may_grant_consent:
+            # WHO SPOKE, ON THE DURABLE ROW (Fable, OT-2 item 6). The principal
+            # decides the row's consent and, before this, left no trace on the
+            # row itself: ``provenance`` stayed ``owner_stated`` even for a
+            # voice the verifier said was NOT the owner, so the table asserted
+            # something nobody had established. ``provenance`` is a two-value
+            # column owned by P2-A and widening it is a schema change outside
+            # this card, so the fact travels in ``reason``, which
+            # ``add_owner_fact`` already persists verbatim.
+            #
+            # Stamped only for principals that may not grant: for ``owner`` and
+            # ``unenrolled``, ``owner_stated`` is already true and appending to
+            # every reason would churn P2-A's committed result text for no gain.
+            existing = str(getattr(decision, "reason", "") or "")
+            changes["reason"] = f"{existing} [heard from: {principal.label}]".strip()
+        if changes:
+            decision = dataclasses.replace(decision, **changes)  # type: ignore[type-var]
+        if admission.downgraded:
+            with self._lock:
+                self._ot2_facts_downgraded += 1
+            self._emit(
+                "realtime",
+                f"owner fact parked as {admission.consent}: {admission.reason}",
+                "info",
+            )
+        written = dict(self._realtime_remember_fact(key, fact, decision))
+        written.update(admission.as_dict())
+        written["principal"] = principal.as_dict()
+        written["requested_consent"] = requested
+        return written
+
+    def _ot2_confirm_fact(self, key: str, consent: str = CONSENT_GRANTED) -> dict[str, object]:
+        """"Yes, remember that." THE product caller for ``set_owner_fact_consent``.
+
+        Before this card that store method had exactly one caller in the whole
+        tree and it was a test — the ``pending`` row P2-A's consent arm creates
+        had nothing that could ever move it. This is the door, and it is gated
+        on the same principal as a direct grant: a voice that could not create a
+        granted fact in one step must not be able to create one in two.
+
+        A refusal here is a refusal to CHANGE A CONSENT STATE, which is the one
+        thing consent must be refusable about; the fact itself is untouched and
+        still on the table for the owner to confirm later.
+        """
+
+        principal = self._ot2_memory_principal()
+        if not principal.may_confirm_consent:
+            with self._lock:
+                self._ot2_facts_confirm_refused += 1
+            return {
+                "confirmed": 0,
+                "refused": True,
+                "reason": (
+                    "I need to be sure it is my owner asking before I keep "
+                    "something about them"
+                ),
+                "principal": principal.as_dict(),
+            }
+        verdict = str(consent or CONSENT_GRANTED)
+        try:
+            moved = int(self.agent.memory.set_owner_fact_consent(str(key), verdict))
+        except (RuntimeError, TypeError, ValueError) as error:
+            return {
+                "confirmed": 0,
+                "refused": False,
+                "reason": f"the fact store is unavailable: {error}",
+                "principal": principal.as_dict(),
+            }
+        with self._lock:
+            self._ot2_facts_confirmed += moved
+        return {
+            "confirmed": moved,
+            "refused": False,
+            "consent": verdict,
+            "principal": principal.as_dict(),
+        }
+
+    def memory_principal_snapshot(self) -> dict[str, object]:
+        """What the principal rule has done this run. Public, read-only."""
+
+        with self._lock:
+            downgraded = self._ot2_facts_downgraded
+            confirmed = self._ot2_facts_confirmed
+            refused = self._ot2_facts_confirm_refused
+        return {
+            "principal": self._ot2_memory_principal().as_dict(),
+            "facts_consent_downgraded": downgraded,
+            "facts_confirmed": confirmed,
+            "confirmations_refused": refused,
+        }
+
+    # ================= END CARD OT-2 memory-principal region =============
+
     def _realtime_pose_names(self) -> tuple[str, ...]:
         """Catalog skills whose kind is literally ``pose``. Nothing else."""
 
@@ -8478,6 +8902,132 @@ class RobotRuntime:
                     seen.add(key)
                     names.append(clean)
         return tuple(names)
+
+    # ---- CARD ASK-1 (task_18) — THE ROBOT ASKS INSTEAD OF SETTING OFF -------
+
+    def _realtime_ask_place(self, place: str) -> dict[str, object]:
+        """The abstention gate's ASK for ``place``, or ``{}`` when it does not ask.
+
+        Card P1-D built ``AbstentionVerdict.as_ask()`` and left it unwired — the
+        broker was MUST-NOT-TOUCH for that card, so the payload existed and
+        nothing in the product ever spoke it (``P1D_STATUS.md`` handoff 1). This
+        is the door.
+
+        **It compiles the verdict fresh on every call, and that is the point.**
+        The ``revision`` it returns identifies *what is being confirmed*, so the
+        owner's "yes" cannot be transplanted onto a different question. If the
+        subject changes between the question and the answer the digest moves,
+        the broker's token comparison fails, and the robot asks again rather
+        than acting on a confirmation the owner gave about something else. No
+        pending state is stored anywhere — the recomputation IS the mechanism.
+
+        **Correction pass.** The first version digested the whole verdict,
+        ``signals`` included. Those signals are evidence counters and a
+        similarity — they move on **every camera frame that sees the place** —
+        so the token churned continuously and the owner's "yes" could never
+        arrive in time to match one. A confirmation gate that cannot be
+        satisfied while the robot can see the place is not a gate, it is a
+        refusal with extra steps. :meth:`_ask_revision` now binds the token to
+        the IDENTITY of the subject and not to the numbers behind it.
+
+        Nothing here grants anything: no lease, no door, no motion. It reads the
+        map under the same lock ``_curiosity_ask_candidate`` uses and returns a
+        dict.
+
+        Returns ``{}`` — never raises — when there is no learned map, when the
+        map has nothing to say, or when the verdict is an ADMIT or a REFUSE.
+        Both of those are already handled: an admit walks, a refusal is the
+        broker's existing refusal path, and inventing a question for either
+        would be a new refusal wearing a question mark.
+        """
+
+        learned = getattr(self, "_p1b_learned_map", None)
+        name = " ".join(str(place).split())
+        if learned is None or not name:
+            return {}
+        from parcel_robot.perception_abstention import OUTCOME_ASK
+
+        try:
+            with self._p1b_map_lock:
+                result = learned.resolve(name)
+        except Exception:  # noqa: BLE001 - a query is never worth a tool error
+            return {}
+        verdict = getattr(result, "verdict", None)
+        if verdict is None or str(getattr(verdict, "outcome", "")) != OUTCOME_ASK:
+            return {}
+        try:
+            ask = dict(verdict.as_ask())
+        except Exception:  # noqa: BLE001
+            return {}
+        if not ask:
+            return {}
+        ask["revision"] = self._ask_revision(verdict, self._ask_subject(learned, verdict))
+        return ask
+
+    def _ask_subject(self, learned: Any, verdict: Any) -> Any:
+        """The map entry the ASK is about, or ``None``. Read-only, under the lock."""
+
+        place_id = str(getattr(verdict, "place_id", "") or "")
+        if not place_id:
+            return None
+        try:
+            with self._p1b_map_lock:
+                for entry in learned.active_entries():
+                    if str(entry.entry_id) == place_id:
+                        return entry
+        except Exception:  # noqa: BLE001 - no subject is a token-less question
+            return None
+        return None
+
+    @staticmethod
+    def _ask_revision(verdict: Any, entry: Any = None) -> str:
+        """A digest of WHAT is being confirmed — never of how sure the robot is.
+
+        Three identity fields and three evidence fields, and the choice of which
+        is the whole correction:
+
+          query      what the owner said
+          candidate  what the robot thinks it is — the sentence it just spoke
+          place_id   which entry it means
+          label      the entry's own label
+          position   rounded to 0.1 m: the fused surface median jitters by
+                     millimetres on every new observation, and a confirmation
+                     must survive the robot looking at the thing again
+          crop       sha256 of the best-view thumbnail — the pixels the question
+                     was asked about
+
+        **Deliberately excluded: every number in ``verdict.signals``.**
+        ``evidence_frames``, ``label_support``, ``detection_count`` and the
+        similarity all change the moment the camera sees the place once more.
+        Digesting them made the token change faster than a person can answer,
+        which is a confirmation gate nobody can pass — the defect the verifier
+        found. The token now moves when the *subject* moves (a different
+        candidate, a different place, a new best view, a place that has been
+        re-fused 10 cm away) and not when the evidence for it merely grows.
+        """
+
+        import hashlib
+
+        def _f(value: Any) -> str:
+            try:
+                return f"{float(value):.1f}"
+            except (TypeError, ValueError):
+                return "?"
+
+        crop = getattr(entry, "thumbnail", None) if entry is not None else None
+        parts = (
+            " ".join(str(getattr(verdict, "query", "")).split()),
+            " ".join(str(getattr(verdict, "candidate", "")).split()),
+            str(getattr(verdict, "place_id", "") or ""),
+            str(getattr(entry, "label", "") or "") if entry is not None else "",
+            _f(getattr(entry, "surface_x", 0.0)) if entry is not None else "?",
+            _f(getattr(entry, "surface_y", 0.0)) if entry is not None else "?",
+            _f(getattr(entry, "surface_z", 0.0)) if entry is not None else "?",
+            hashlib.sha256(bytes(crop)).hexdigest() if crop else "no-crop",
+        )
+        return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()[:16]
+
+    # ---- END CARD ASK-1 (task_18) -------------------------------------------
 
     def _realtime_places(self) -> tuple[str, ...]:
         """The place vocabulary ``navigate_to`` is validated against — card R10.
@@ -9365,6 +9915,33 @@ class RobotRuntime:
         camera_stream = self.camera_stream_snapshot()
         if camera_stream is not None:
             state["camera_ingress"] = camera_stream
+        # ---- CARD CAP-1: what the product admits, on the panel ---------------
+        # Two keys, both APPENDED, neither replacing anything.
+        #
+        # ``admission`` is the answer to "why can't it do that": every behavior
+        # the supervisor knows, every hosted tool, every motion tool's proactive
+        # verdict, every config section a runtime region reads against what an
+        # overlay may set, and the capability rows — each with a reason and the
+        # door it was read from. It is a VIEW; nothing here refuses anything.
+        #
+        # ``curiosity`` is CURIO-1's ``curiosity_snapshot()``, which shipped
+        # with no product surface at all — the card said so in its own
+        # docstring. Absent (not ``null``) when chatter is off, the same
+        # discipline C-1's ``camera_ingress`` key follows two lines up.
+        #
+        # Best-effort by construction: a panel refresh must never be the thing
+        # that takes the runtime down, so a broken view degrades to a stated
+        # error instead of an exception on the wire.
+        try:
+            from parcel_robot.admission import admission_snapshot
+
+            state["admission"] = admission_snapshot(self)
+        except Exception as error:  # noqa: BLE001 - the panel is never load-bearing
+            state["admission"] = {"error": f"{type(error).__name__}: {error}"}
+        curiosity = self.curiosity_snapshot()
+        if curiosity is not None:
+            state["curiosity"] = curiosity
+        # ---- END CARD CAP-1 (/api/state keys) -------------------------------
         return state
 
     def latency_snapshot(self) -> dict[str, object]:
@@ -9394,6 +9971,40 @@ class RobotRuntime:
         return str(getattr(self.agent, "last_reasoning_source", "unknown"))
 
     def _control_loop(self) -> None:
+        # ---- CARD NM-1 (task_18) — THIS THREAD IS THE 10 Hz LOOP -----------
+        #
+        # Card P1-D built a tripwire that refuses to run a VLM on the control
+        # thread, and then nothing in the product ever told it which thread that
+        # was: ``mark_control_thread`` had zero callers outside the tests. The
+        # AST check can only see the call sites that exist today; the tripwire is
+        # the one that sees the call site somebody adds tomorrow — and an unarmed
+        # tripwire sees nothing at all.
+        #
+        # The registry lives in ``perception_abstention`` and NOT in
+        # ``parcel_robot.vlm_veto``, because
+        # ``test_p1d_vlm_veto.py::test_the_runtime_imports_no_veto_module``
+        # forbids this module from importing that package at any scope, and that
+        # rule is correct and stays. The import is function-scope for the same
+        # reason every other perception import in this file is.
+        #
+        # Marked here rather than in ``start()`` because what must be marked is
+        # the THREAD, and this is the function that runs on it.
+        from parcel_robot.perception_abstention import (
+            clear_control_thread,
+            mark_control_thread,
+        )
+
+        mark_control_thread()
+        try:
+            self._control_loop_body()
+        finally:
+            # A loop that exits and leaves its id marked would make the next
+            # thread to reuse that id look like a control loop, and the tripwire
+            # would then refuse work that is perfectly legal.
+            clear_control_thread()
+
+    def _control_loop_body(self) -> None:
+        # ---- END CARD NM-1 (task_18) ---------------------------------------
         last_follow_state = ""
         while not self._stop_event.is_set():
             started = time.monotonic()
@@ -9401,6 +10012,14 @@ class RobotRuntime:
             try:
                 observe_started = time.monotonic()
                 observation = self.backend.observe()
+                # ---- CARD OT-2 seam 2 of 3: WHO the owner track is. -------
+                # Immediately after the backend answers and BEFORE anything
+                # reads the observation, so the reactive gate, the follow
+                # controller and P2-B's greeting watcher all read one identity
+                # rather than each reaching for its own. Returns the SAME
+                # object when no OwnerTracker is installed.
+                observation = self._ot2_apply_owner_identity(observation)
+                # ---- END CARD OT-2 seam 2 --------------------------------
                 if self._observation_sink is not None:
                     self._observation_sink.update_observation(observation)
                 self.component_metrics.elapsed("SimulatorObserve", observe_started)
@@ -10732,6 +11351,12 @@ class RobotRuntime:
         # calls back into the producer, so R24's lock roster is unchanged. A
         # no-op unless a learned map is installed (off-oracle only).
         self._p1b_feed_learned_map(frame)
+        # ---- CARD OT-2 seam 1 of 3: the frame reaches the owner tracker. --
+        # Last, outside ``_camera_stream_lock``, on the camera worker thread,
+        # for P1-B's own reason one line up. A no-op unless an OwnerTracker is
+        # installed; never raises.
+        self._ot2_note_camera_frame(frame)
+        # ---- END CARD OT-2 seam 1 ----------------------------------------
 
     def _offer_camera_frame_evidence(self, frame: CameraDetectionFrame) -> None:
         """Card C-1, work item 4. One bounded typed row per frame into EV-1.
@@ -10810,9 +11435,47 @@ class RobotRuntime:
         is the one outcome that must not be possible.
         """
 
+        # ---- CARD VENUE-1 seam 1a of 2: what this run ADMITTED, both venues.
+        # Correction pass, routed by the verifier. Two things that must happen
+        # on EVERY started runtime — including one whose camera is off, which
+        # is why this block sits above C-1's early return and not below it.
+        #
+        # 1. CAP-1's finding, taken here. The semantic-source binding is
+        #    ONE-DIRECTIONAL: ``_p1b_install_learned_map`` returns before it
+        #    calls ``use_semantic_source`` when the policy is ``oracle``, so a
+        #    process that already bound ``learned_map`` — a harness, an earlier
+        #    runtime, an eval driver — starts a runtime whose YAML says
+        #    ``oracle`` and keeps reading the learned map. The composition root
+        #    is where "what the file says" becomes "what the process does", so
+        #    the binding is asserted here, in both directions.
+        # 2. ``perception.detector`` is validated for BOTH venues. It is read
+        #    only on a physical venue, so without this a typo on the simulator
+        #    venue would be silently ignored — the exact class of defect CAP-1
+        #    exists for.
+        self._venue1_bind_semantic_source()
+        detector_choice = self._venue1_detector_choice()
+        # ---- END CARD VENUE-1 seam 1a of 2 ----------------------------------
+
         config = self._camera_stream_config
         if config is None or not config.enabled:
             return
+
+        # ---- CARD VENUE-1 seam 1b of 2: which VENUE, before any GL decision. -
+        # Card VENUE-1 (P1-A's declared HALT). Everything below this block is
+        # C-1's MuJoCo venue and is reached only when no physical venue was
+        # selected, so the flag-off path is unchanged by construction. The
+        # ordering is load-bearing: `MUJOCO_GL` is written, and `mujoco` is
+        # imported, a dozen lines further down, and a USB webcam has no GL
+        # binding to get wrong — refusing to start because `MUJOCO_GL` is
+        # unset would be a nonsense refusal for a camera that renders nothing.
+        # See the VENUE-1 region below `_attach_configured_camera_ingress`.
+        venue = self._venue1_resolve_venue()
+        if venue is not None:
+            self._venue1_attach_physical_ingress(venue, detector_choice)
+            return
+        self._venue1_state = None
+        self._venue1_sim_detector_choice = detector_choice
+        # ---- END CARD VENUE-1 seam 1b of 2 ----------------------------------
 
         import sys
 
@@ -10900,6 +11563,716 @@ class RobotRuntime:
         self.perception_contention = ingress.contention_guard
         self._camera_scene_path = str(scene)
         self.attach_camera_ingress(ingress)
+
+    # =====================================================================
+    # CARD VENUE-1 — the runtime opens the PHYSICAL eye.  (ONE new region.
+    # P1-B's three seams, P0-A's camera-flag regions, P0-D's dispatch and
+    # CAP-1's startup-admission region are all elsewhere in this file.
+    # Everything this card put in ``runtime.py`` carries the string
+    # ``VENUE-1``, so one grep finds all of it: this region, **seam 1 of 2**
+    # at the top of ``_attach_configured_camera_ingress`` above, and
+    # **seam 2 of 2** inside ``camera_stream_snapshot`` below.)
+    #
+    # Why the region exists. P1-A built three physical ``CameraBackend``s
+    # (``uvc``, ``realsense``, ``recorded``), a GPU detector daemon behind an
+    # AF_UNIX socket, and the ``--camera`` launcher switch that exports
+    # ``PARCEL_CAMERA_BACKEND`` — and then declared a HALT, because
+    # ``_attach_configured_camera_ingress`` built the MuJoCo/EGL ingress
+    # UNCONDITIONALLY. Every piece of the physical path existed and nothing
+    # selected it, so a plugged-in camera fed nothing. This is the
+    # composition root that selects the venue.
+    #
+    # Three properties this region holds, each of them a thing that was
+    # silently wrong before it:
+    #
+    #   1. **A physical venue never imports or initializes MuJoCo.** Seam 1
+    #      returns before the ``MUJOCO_GL`` preamble and before
+    #      ``import mujoco``. A USB webcam has no GL binding to get wrong, and
+    #      refusing to start because ``MUJOCO_GL`` is unset would be a
+    #      nonsense refusal for a camera that renders nothing.
+    #   2. **The published frame's origin comes from the backend that made
+    #      the pixels.** ``CameraIngress.origin`` defaults to ``"unknown"``
+    #      and the ingress never reads ``PhysicalCaptureBuffers.origin``
+    #      (P1-B owns that file and the default is deliberate there: a
+    #      renderer that could mint ``physical`` by default is the W0-A
+    #      defect). So an ingress built without ``origin=`` publishes honest
+    #      buffers and dishonest records — the defect Fable caught in P1-A's
+    #      handoff snippet. Every construction here goes through P1-A's
+    #      ``camera_ingress_kwargs``, which derives the declaration from the
+    #      backend, and :meth:`_venue1_declared_origin` refuses to attach if
+    #      the declaration is ever missing.
+    #   3. **The map's writer says which world it is, and it is not inferred
+    #      from "the camera stream is enabled".** See
+    #      :meth:`_venue1_reconcile_map_origin`.
+    #
+    # What it deliberately does NOT do: it does not touch
+    # ``camera_channel/ingress.py`` (P1-B) or the backends/daemon (P1-A), and
+    # it adds no third camera-presence probe — ENV-1's
+    # ``RealSenseIngestAdapter.device_report()`` and P1-A's
+    # ``realsense.connected_devices()`` are the two that exist and the two
+    # the refusal messages below point at.
+    # =====================================================================
+
+    #: Config spellings that mean "the simulator", i.e. no physical venue.
+    #: The physical kinds themselves are P1-A's ``PHYSICAL_BACKEND_KINDS`` and
+    #: are deliberately not re-spelled here — one list, one owner.
+    _VENUE1_SIM_ALIASES: ClassVar[frozenset[str]] = frozenset(
+        {"", "mujoco", "mujoco_egl", "sim", "simulation", "none", "off"}
+    )
+
+    #: The ingress the venue state describes. Compared BY IDENTITY in
+    #: :meth:`_venue1_composition` so the operator surface stops claiming a
+    #: physical camera the moment that ingress is detached or replaced —
+    #: without it, ``detach_camera_ingress()`` leaves the wire saying
+    #: ``real_camera: true`` with nothing attached (Fable, correction item 6).
+    _venue1_ingress: Any = None
+
+    #: ``perception.detector`` as the SIMULATOR venue saw it. The simulator
+    #: does not honour the key; this is what makes that visible instead of
+    #: silent.
+    _venue1_sim_detector_choice: str = ""
+
+    #: What venue this run is on, once one is attached. A class-level DEFAULT
+    #: (never mutated in place; the attach rebinds it on the instance) so every
+    #: runtime has it without this card editing ``__init__``, which belongs to
+    #: another region. ``None`` on every simulator run — which is exactly what
+    #: keeps the flag-off snapshot byte-identical to the build that never had
+    #: this card.
+    _venue1_state: dict[str, Any] | None = None
+
+    def _venue1_resolve_venue(self) -> str | None:
+        """Which venue this run's camera is, or ``None`` for the simulator.
+
+        Precedence: ``PARCEL_CAMERA_BACKEND`` — the ONE spelling
+        ``scripts/launch_stack.sh --camera`` exports, per P1-A's rule that the
+        flag sets this and every consumer reads this — and then
+        ``perception.camera_backend`` in the robot config, so a profile can
+        state a venue without an env var (the key is listed in
+        ``config.OVERLAY_INTRODUCIBLE_KEYS`` because ``configs/robot.yaml`` is
+        SHA-locked and cannot grow it).
+
+        A typo refuses BY NAME through P1-A's ``resolve_backend_kind`` rather
+        than coming up on a different venue than the operator asked for.
+        """
+
+        from parcel_robot.camera_channel.backends.physical import (
+            CAMERA_BACKEND_ENV,
+            resolve_backend_kind,
+        )
+
+        raw = os.environ.get(CAMERA_BACKEND_ENV, "").strip()
+        source = CAMERA_BACKEND_ENV
+        if not raw:
+            source = "perception.camera_backend"
+            raw = str(self.store.section("perception").get("camera_backend", "") or "")
+        raw = raw.strip()
+        if raw.lower() in self._VENUE1_SIM_ALIASES:
+            return None
+        try:
+            return resolve_backend_kind(raw)
+        except ValueError as error:
+            raise ValueError(f"{source}: {error}") from error
+
+    def _venue1_bind_semantic_source(self) -> None:
+        """Make the process-global semantic source equal the one the YAML names.
+
+        CAP-1's finding, taken in this card's region on the verifier's routing.
+        ``_p1b_install_learned_map`` binds the source only when the policy READS
+        the learned map; under ``oracle`` it returns first, so the global is
+        never RESET. In a process that has already bound ``learned_map`` the
+        next runtime inherits it and reads a map its own configuration does not
+        describe — the same defect CAP-1's G4 row guards, in the other
+        direction.
+
+        Binding the SOURCE is the whole fix: ``oracle`` means
+        ``reads_learned_map`` is False, so a stale process-global map object is
+        never consulted. The map object itself is deliberately left alone —
+        clearing it here would tear down a map another runtime in the same
+        process may still own.
+
+        Runs after P1-B's installer (which is one line earlier in ``start()``)
+        and re-asserts the same policy when the installer already bound it, so
+        the two cannot disagree. Never raises: a malformed source has already
+        raised inside the installer by the time this runs.
+        """
+
+        try:
+            from parcel_robot.perception_source import use_semantic_source
+        except ImportError:  # pragma: no cover - frozen bundle path
+            return
+        policy = self._p1b_semantic_source()
+        if policy is None:
+            return
+        try:
+            use_semantic_source(policy)
+        except Exception as error:  # noqa: BLE001 - a binding must not fail a boot
+            logger.warning("could not bind the semantic source: %s", error)
+
+    def _venue1_detector_choice(self) -> str:
+        """``perception.detector``, validated. ``""`` means "decide from the env".
+
+        Validated for EVERY venue, not just a physical one. The simulator venue
+        does not honour the key at all — C-1's path always loads in-process
+        OWLv2 — so without this a typo, or a deliberate ``daemon``, would be
+        read by nothing and refuse nowhere. It is reported honestly on the
+        simulator's composition block (``honoured: false``) rather than being
+        quietly dropped.
+        """
+
+        choice = str(self.store.section("perception").get("detector", "") or "")
+        choice = choice.strip().lower()
+        if choice not in {"", "daemon", "in_process", "owlv2"}:
+            raise ValueError(
+                f"perception.detector must be 'daemon' or 'in_process' "
+                f"(got {choice!r})"
+            )
+        return choice
+
+    def _venue1_sim_detector_note(self) -> dict[str, Any]:
+        """What the SIMULATOR venue does about ``perception.detector``: nothing.
+
+        C-1's path always loads in-process OWLv2, so ``detector: daemon`` on
+        the simulator is a knob the operator set and the product never read.
+        Reported rather than dropped. Never raises — a snapshot is a surface,
+        and an unstarted runtime may hold a value seam 1a has not validated
+        yet, so a bad one is reported as ``invalid`` here and refuses there.
+        """
+
+        choice = self._venue1_sim_detector_choice
+        if not choice:
+            try:
+                choice = self._venue1_detector_choice()
+            except ValueError:
+                choice = "invalid"
+        return {
+            "kind": "in_process",
+            "configured": choice or None,
+            # The simulator honours exactly the choices that MEAN in-process.
+            "honoured": choice in {"", "in_process", "owlv2"},
+        }
+
+    def _venue1_attach_physical_ingress(
+        self, kind: str, detector_choice: str = ""
+    ) -> None:
+        """Build and attach the ingress for a PHYSICAL venue. No MuJoCo.
+
+        This is P1-A's handoff-1 change, landed. It runs the same six wiring
+        lines the MuJoCo path runs — ``on_frame``, ``contention_guard``,
+        ``pose_source``, ``max_detections_per_frame``, ``pinned_queries``,
+        ``set_query`` — so a physical venue is the same runtime with a
+        different eye, not a second code path with its own semantics.
+
+        Raises on any failure, exactly as the MuJoCo path does: ``start()``
+        treats that as a startup failure. Asking for the eye and silently not
+        getting it is the one outcome that must not be possible.
+        """
+
+        config = self._camera_stream_config
+        if config is None or not config.enabled:  # pragma: no cover - seam 1 guards
+            return
+
+        from parcel_robot.camera_channel.backends.physical import (
+            PhysicalCameraUnavailable,
+            camera_ingress_kwargs,
+            open_physical_backend,
+        )
+        from parcel_robot.camera_channel.ingress import (
+            CameraIngress,
+            load_siglip2_embed_fn,
+        )
+        from parcel_robot.perception_contention import default_guard
+
+        try:
+            backend, resolved = open_physical_backend(kind)
+            # OPENED HERE, not lazily on the first poll. Constructing a
+            # `RealSenseCameraBackend` succeeds on a host with no camera —
+            # `PhysicalCameraBackendBase.capture` opens on demand — so without
+            # this line an absent D455 becomes a counted poll error minutes
+            # into a mission instead of a refusal at startup with the device
+            # census in the message. It also means a missing camera refuses
+            # BEFORE 200 MB of onnxruntime is loaded for it.
+            backend.open()
+        except (
+            PhysicalCameraUnavailable,
+            FileNotFoundError,
+            TypeError,
+            ValueError,
+        ) as error:
+            raise RuntimeError(self._venue1_open_failure(kind, error)) from error
+
+        kwargs = camera_ingress_kwargs(backend)
+        origin = self._venue1_declared_origin(kwargs, resolved)
+        detector, detector_note = self._venue1_detector(resolved, detector_choice)
+        depth_available = self._venue1_depth_available(backend, resolved)
+        # An encoder is the same decision on both venues, so it is made the
+        # same way: unavailable => None => no embeddings and frames as before.
+        # P1-A's `DaemonEmbedder` would avoid a second in-process copy of
+        # SigLIP-2 next to the daemon's (3.4 ms warm over the socket) but it
+        # RAISES when the daemon is away, and `CameraIngress` catches an
+        # encoder failure and falls back to the label hash while still
+        # stamping the SigLIP space — so switching to it needs P1-B's stamp
+        # path looked at first. Handed off rather than guessed.
+        embed_space = load_siglip2_embed_fn()
+        ingress = CameraIngress(
+            **kwargs,
+            detector=detector,
+            embed_fn=None if embed_space is None else embed_space[0],
+            embedding_model_id="" if embed_space is None else embed_space[1],
+            embedding_revision="" if embed_space is None else embed_space[2],
+            embedding_preprocessing="" if embed_space is None else embed_space[3],
+            min_poll_interval_s=1.0 / config.rate_hz,
+        )
+        ingress.on_frame = self._publish_camera_frame
+        ingress.contention_guard = default_guard()
+        ingress.pose_source = self._take_camera_pose
+        ingress.max_detections_per_frame = config.max_detections_per_frame
+        ingress.pinned_queries = tuple(config.queries)
+        # ---- OT-2's §9.1 handoff, taken here on the verifier's routing -------
+        # OT-2's ``_ot2_latest_rgb`` duck-types ``latest_rgb()`` on the attached
+        # ingress and degrades to ``no_pixels`` without it, so on a live camera
+        # the owner tracker keeps position tracks and asserts no identity — on
+        # the ONE venue where identity from real pixels is the point. The
+        # accessor OT-2 asks for belongs in ``CameraIngress`` (P1-B's file,
+        # MUST NOT TOUCH), but a PHYSICAL backend already keeps the buffers it
+        # just produced, so the composition root can supply it.
+        #
+        # The synchrony argument OT-2 records holds here for the same reason it
+        # holds there, and it is a property of the caller: ``last_buffers`` is
+        # written inside ``backend.capture()``, in the same ``poll_once`` that
+        # builds and publishes the frame, and ``_ot2_note_camera_frame`` runs
+        # synchronously inside that publish. No later capture can have swapped
+        # the buffer in between. Any consumer that moves behind a queue would
+        # desynchronize silently, which is why OT-2's handoff asks for the
+        # pixels to be carried WITH the frame; this is the stop-gap, not that.
+        ingress.latest_rgb = lambda: getattr(
+            getattr(backend, "last_buffers", None), "color_rgb8", None
+        )
+        # ---- END OT-2 handoff ------------------------------------------------
+        # There is no MuJoCo scene behind these pixels, and `composition.scene`
+        # must not name one. It also makes `_p1b_scene_id()` name the VENUE
+        # rather than resolving a scene file, on the re-derivation below.
+        self._camera_scene_path = f"venue:{resolved}"
+        # The venue is known now, so the runtime's own map can be stamped from
+        # it BEFORE a single frame flows. `_p1b_install_learned_map` reads
+        # `self._camera_ingress`, which is why this assignment is here and not
+        # only inside `attach_camera_ingress` below.
+        self._camera_ingress = ingress
+        try:
+            map_note = self._venue1_reconcile_map_origin(ingress, resolved)
+        except Exception:
+            self._camera_ingress = None
+            self._camera_scene_path = ""
+            try:
+                backend.close()
+            except Exception:  # noqa: BLE001, S110 - teardown best-effort
+                pass
+            raise
+        self._venue1_ingress = ingress
+        self._venue1_state = {
+            "venue": resolved,
+            "origin": origin,
+            "origin_label": str(getattr(backend, "origin_label", "") or ""),
+            "depth_available": depth_available,
+            "detector": detector_note,
+            "map": map_note,
+        }
+        ingress.set_query(self._p1b_query_batch(tuple(config.queries)))
+        self.perception_contention = ingress.contention_guard
+        self._camera_attach_note = ""
+        logger.info(
+            "camera venue=%s origin=%s depth=%s detector=%s map=%s",
+            resolved,
+            origin,
+            depth_available,
+            detector_note.get("kind"),
+            map_note.get("state"),
+        )
+        if not depth_available:
+            # P1-A measured this at the seam: `CameraIngress` needs metric
+            # depth to place a box, so an RGB-only capture is a counted poll
+            # error and NOTHING is published. That is the correct failure — a
+            # constant assumed-depth plane would produce world coordinates
+            # that look like measurements and are not — but it must be said
+            # out loud at startup and on the operator's surface, not
+            # discovered as a stream that never produces a frame.
+            logger.warning(
+                "camera venue=%s is RGB-only: depth_unavailable. The detector "
+                "and the daemon run end to end, and CameraIngress publishes "
+                "NOTHING without metric depth, so the map learns nothing on "
+                "this venue. The D455 is the day-one device; no synthetic "
+                "depth is substituted.",
+                resolved,
+            )
+        self.attach_camera_ingress(ingress)
+
+    def _venue1_declared_origin(self, kwargs: Mapping[str, Any], kind: str) -> str:
+        """The venue's declared ``EvidenceOrigin``, or refuse to attach.
+
+        The one line this whole card turns on. ``camera_ingress_kwargs``
+        derives it from the backend producing the pixels; if it is ever
+        absent or ``unknown`` the ingress would stamp every published frame
+        ``unknown`` while the buffers behind it said ``physical`` — honest
+        buffers and every derived record downstream dishonest, which is worse
+        than no camera at all because it is invisible.
+        """
+
+        origin = str(kwargs.get("origin", "") or "").strip()
+        if not origin or origin == EvidenceOrigin.UNKNOWN.value:
+            raise RuntimeError(
+                f"the {kind!r} camera venue produced no declared EvidenceOrigin "
+                f"(got {origin or '<missing>'!r}). A published frame stamped "
+                "'unknown' would let physical pixels enter the map, the evidence "
+                "log and the store with no world attached to them; refusing to "
+                "attach an eye that cannot say where it is looking from."
+            )
+        return origin
+
+    def _venue1_depth_available(self, backend: Any, kind: str) -> bool:
+        """Does this venue produce metric depth? Declared by the backend."""
+
+        declared = getattr(backend, "has_depth", None)
+        if isinstance(declared, bool):
+            return declared
+        spec = getattr(backend, "spec", None)
+        band = getattr(spec, "depth_max_m", None)
+        return kind != "uvc" and band is not None
+
+    def _venue1_detector(
+        self, kind: str, detector_choice: str = ""
+    ) -> tuple[Any, dict[str, Any]]:
+        """The detector for a physical venue: the daemon, or in-process OWLv2.
+
+        The daemon is selected by ``perception.detector: daemon`` or, with no
+        key, by the presence of ``PARCEL_PERCEPTION_SOCKET`` —
+        ``scripts/launch_stack.sh --camera`` starts the daemon and exports
+        exactly that variable, so the launcher's intent carries through
+        without a second spelling.
+
+        **A daemon that is not answering is NOT a startup refusal.** It is a
+        typed degraded state: ``DaemonDetector`` returns no detections and
+        reports ``stale``, the camera worker keeps its cadence, the 10 Hz
+        control loop never touches the socket at all, and the state is on the
+        operator's surface. That is the whole reason the detector was moved
+        out of process — the worst case is a socket read that fails.
+        """
+
+        choice = detector_choice or self._venue1_detector_choice()
+        socket_path = os.environ.get("PARCEL_PERCEPTION_SOCKET", "").strip()
+        if choice == "daemon" or (not choice and socket_path):
+            from parcel_robot.perception_daemon import DaemonDetector
+
+            detector = DaemonDetector(socket_path or None)
+            health = detector.health()
+            note: dict[str, Any] = {
+                "kind": "daemon",
+                "socket": detector.socket_path,
+                "reachable_at_attach": health is not None,
+                "state": "live" if health is not None else "absent",
+            }
+            if health is None:
+                logger.warning(
+                    "camera venue=%s selected the detector daemon at %s and it "
+                    "did not answer a health probe. Detections degrade to "
+                    "empty+stale and the loop keeps running; start it with "
+                    "scripts/launch_detector_daemon.sh --preload",
+                    kind,
+                    detector.socket_path,
+                )
+            else:
+                note["provider_profile"] = health.get("provider_profile")
+                note["detector"] = health.get("detector")
+            return detector, note
+
+        from parcel_robot.detection_adapter.owlv2_onnx import load_owlv2_detector
+
+        detector = load_owlv2_detector(require_env=False)
+        if detector is None:
+            raise RuntimeError(
+                f"the {kind!r} camera venue has no detector: in-process OWLv2 is "
+                "unavailable (weights, onnxruntime or tokenizers missing) and no "
+                "daemon was selected. Either start the daemon "
+                "(scripts/launch_detector_daemon.sh --preload, which exports "
+                "PARCEL_PERCEPTION_SOCKET) or set perception.detector: daemon; "
+                "refusing to start a camera stream that cannot see."
+            )
+        return detector, {"kind": "in_process", "detector": str(getattr(detector, "name", ""))}
+
+    def _venue1_reconcile_map_origin(self, ingress: Any, kind: str) -> dict[str, Any]:
+        """The map's world is the FRAME's world — and a mismatch is refused.
+
+        Two defects, one method.
+
+        **1. The writer's origin was inferred from "camera streaming
+        enabled".** ``_p1b_install_learned_map`` stamps the map's
+        ``WriterProvenance`` ``simulation`` whenever ``_camera_stream_enabled``
+        is true, and prefers ``self._camera_ingress.origin`` when an ingress
+        exists — but seam 1 installs the map immediately BEFORE the attach
+        (deliberately: off-oracle the query batch is ``known_places()`` of the
+        reloaded map), so the ingress never existed yet and the guess always
+        won. On a physical venue that guess is simply false: every place the
+        dog saw with its own eyes would persist stamped ``simulation``.
+        The caller sets ``self._camera_ingress`` before this runs, so
+        re-running the installer takes P1-B's own declared branch and the
+        writer is derived from the pixels.
+
+        **2. The in-process mixing refusal could never fire.**
+        ``OnlineSemanticMap._refuse_foreign_origin`` compares the writer's
+        origin with the OBSERVATION's — and ``_p1b_feed_learned_map`` passes
+        ``provenance=learned.provenance`` into ``observations_from_frame``, so
+        the two sides of that comparison are the same object and it is
+        vacuous. The mismatch that actually happens is a store of places from
+        one world being reopened by a run whose frames come from another; the
+        store's own refusal only fires on the NEXT load, after the file is
+        already mixed. So it is checked here, at the composition root, before
+        one frame flows: the venue's declared origin against the writer's and
+        against every entry the map just reloaded.
+
+        Returns a note for the operator's surface. Off-oracle only: under the
+        shipping ``oracle`` source there is no learned map and this is inert.
+        """
+
+        learned = self._p1b_learned_map
+        frame_origin = str(getattr(ingress, "origin", "") or "")
+        if learned is None:
+            return {"state": "no_learned_map", "frame_origin": frame_origin}
+
+        from parcel_robot.online_map.entries import origins_conflict
+
+        rederived = False
+        writer_origin = str(learned.provenance.origin)
+        if writer_origin != frame_origin:
+            store_closed = self._p1b_store_closed
+            self._p1b_close_learned_map(learned)
+            try:
+                self._p1b_install_learned_map()
+            except Exception:
+                # The old map's store is CLOSED and the new map never arrived,
+                # so the runtime would otherwise carry a map whose store is
+                # shut while ``_p1b_store_closed`` still read False — teardown
+                # would then try to persist through a closed connection and
+                # report a store it had not written. Say what is true and let
+                # the venue refuse. (Fable, correction item 2.)
+                self._p1b_store_closed = True
+                self._venue1_drop_learned_map()
+                raise
+            self._p1b_store_closed = store_closed
+            learned = self._p1b_learned_map
+            rederived = True
+            writer_origin = "" if learned is None else str(learned.provenance.origin)
+
+        note: dict[str, Any] = {
+            "state": "reconciled" if rederived else "agreed",
+            "frame_origin": frame_origin,
+            "writer_origin": writer_origin,
+            "rederived_from_frame": rederived,
+        }
+        if learned is None:  # pragma: no cover - the installer kept the policy
+            note["state"] = "no_learned_map"
+            return note
+
+        store = learned.store
+        store_path = None if store is None else str(store.path)
+        note["store"] = store_path
+        note["reloaded_entries"] = len(learned)
+        # The WRITER's declaration is a post-condition, not a guard: after the
+        # re-derivation above it equals the frame's by construction. It is
+        # checked anyway because "by construction" is exactly the kind of claim
+        # that stops being true when someone edits the installer, and the cost
+        # of being wrong here is a mixed store nothing can ever load again.
+        if origins_conflict({writer_origin, frame_origin}):  # pragma: no cover
+            self._venue1_drop_learned_map()
+            raise RuntimeError(
+                f"camera venue {kind!r} publishes {frame_origin!r} frames but this "
+                f"run's online map writer is stamped {writer_origin!r}, and the "
+                "re-derivation did not take. One map is one world; refusing to "
+                "start rather than fuse two."
+            )
+        # What the STORE says it is. This fires on a file that declared a world
+        # and holds no rows yet — the case the entry census below cannot see,
+        # and the one a fresh venue is most likely to hit.
+        declared = ""
+        if store is not None:
+            try:
+                declared = str(store.get_meta("origin") or "")
+            except Exception as error:  # noqa: BLE001 - a v1 store has no meta
+                logger.debug("online map store has no origin meta: %s", error)
+        note["store_origin"] = declared or None
+        # What the ROWS say they are. A store can carry rows from a world its
+        # meta never named (a run that never persisted its meta, a v1 file).
+        foreign = sorted(
+            {
+                str(getattr(entry.provenance, "origin", EvidenceOrigin.UNKNOWN.value))
+                for entry in learned.entries()
+            }
+            - {frame_origin}
+        )
+        mixed = [
+            value
+            for value in dict.fromkeys([declared, *foreign])
+            if value and value != frame_origin and origins_conflict({value, frame_origin})
+        ]
+        if mixed:
+            self._venue1_drop_learned_map()
+            raise RuntimeError(
+                f"camera venue {kind!r} publishes {frame_origin!r} frames, but the "
+                f"online map at {store_path} is stamped {mixed} "
+                f"({len(learned)} place(s) reloaded). One store is one world: a "
+                "physical row and a simulated row are indistinguishable downstream, "
+                "so this run would silently lend one world's places the other's "
+                "credibility — and would leave a mixed file that nothing can load "
+                "at all. Point PARCEL_ONLINE_MAP_PATH at a separate file per venue."
+            )
+        note["foreign_but_compatible"] = foreign
+        return note
+
+    def _venue1_drop_learned_map(self) -> None:
+        """Release the map on a refused venue, so teardown cannot persist it.
+
+        Without this, ``close()``'s seam 3 would write a physical-writer map
+        into the very store the refusal was protecting.
+        """
+
+        learned = self._p1b_learned_map
+        if learned is not None:
+            self._p1b_close_learned_map(learned)
+        self._p1b_learned_map = None
+        try:
+            from parcel_robot.perception_source import use_learned_map
+
+            use_learned_map(None)
+        except Exception:  # noqa: BLE001, S110 - teardown best-effort
+            pass
+
+    def _venue1_open_failure(self, kind: str, error: Exception) -> str:
+        """Why the venue would not open, with the remedy for THIS kind.
+
+        The presence answer comes from the two probes that already exist —
+        ENV-1's ``RealSenseIngestAdapter.device_report()`` (a ``/dev`` census
+        with no vendor import) and P1-A's ``connected_devices()`` (serials off
+        the bus). This card adds no third one.
+        """
+
+        detail = f"{type(error).__name__}: {error}"
+        if kind == "recorded":
+            remedy = (
+                "name the clip in the camera config: PARCEL_CAMERA_CONFIG=/path/"
+                "camera.json holding a 'clip' key with the .npz path (see "
+                "camera_channel.backends.recorded.write_clip)."
+            )
+        elif kind == "realsense":
+            serials: list[str] = []
+            try:
+                from parcel_robot.camera_channel.backends.realsense import (
+                    connected_devices,
+                )
+
+                serials = connected_devices()
+            except ImportError:
+                # `connected_devices` already swallows a missing bus and an
+                # unhappy SDK and answers `[]`; the only thing left that can
+                # raise is the module not being importable at all.
+                serials = []
+            remedy = (
+                f"RealSense devices on the bus: {serials or 'none'}. "
+                "Attach the D455 and re-run; "
+                "`.parcel/bin/python -m parcel_capture record --check` prints the "
+                "device census and the attach remedy."
+            )
+        else:
+            nodes = sorted(str(node) for node in Path("/dev").glob("video*"))
+            remedy = (
+                f"/dev/video* on this host: {nodes or 'none'}. Attach a UVC camera "
+                "(and note that an RGB-only webcam cannot feed the depth-dependent "
+                "ingress; the D455 is the day-one device)."
+            )
+        return (
+            f"camera venue {kind!r} was selected (PARCEL_CAMERA_BACKEND or "
+            f"perception.camera_backend) and could not be opened. {detail}. {remedy}"
+        )
+
+    def _venue1_composition(self) -> dict[str, object] | None:
+        """``camera_stream_snapshot``'s ``composition`` block for a real venue.
+
+        ``None`` on every simulator run, which is what keeps the flag-off
+        snapshot byte-identical to the build that never had this card.
+
+        Why it exists: C-1's literal describes the MuJoCo tile — a static
+        scene copy posed from telemetry, ``real_camera: False``. On a physical
+        venue every line of that is false, and an operator surface that says
+        ``real_camera: false`` while a D455 is streaming is the same class of
+        lie as a frame stamped ``unknown``. ``depth_available`` is here for
+        the same reason: an RGB-only venue publishes nothing, and a
+        depth-dependent gate must read ``depth_unavailable`` rather than an
+        empty stream that looks like an empty room.
+        """
+
+        state = self._venue1_state
+        if state is None:
+            return None
+        # Correction item 6. ``_venue1_state`` outlives the ingress it
+        # describes, so this is compared BY IDENTITY rather than trusted:
+        # after ``detach_camera_ingress()`` — or after something attaches a
+        # DIFFERENT ingress — the venue is still the venue this run selected,
+        # and there is no longer a camera behind it. Saying ``real_camera:
+        # true`` with nothing attached is the same shape of lie as a frame
+        # stamped ``unknown``.
+        attached = (
+            self._camera_ingress is not None
+            and self._camera_ingress is self._venue1_ingress
+        )
+        depth_available = bool(state.get("depth_available", True))
+        return {
+            "mode": "physical_camera",
+            "venue": state.get("venue"),
+            "scene": None,
+            "camera_pose_synced": True,
+            # The pixels ARE the world: whatever moved in front of the lens is
+            # in the frame. The static-scene caveat does not apply here.
+            "dynamic_actors_synced": True,
+            "robot_joint_state_synced": False,
+            "attached": attached,
+            "real_camera": attached
+            and state.get("origin") == EvidenceOrigin.PHYSICAL.value,
+            "evidence_origin": state.get("origin"),
+            "origin_label": state.get("origin_label"),
+            "depth_available": depth_available,
+            "depth_note": (
+                ""
+                if depth_available
+                else (
+                    "depth_unavailable: this venue is RGB-only, so CameraIngress "
+                    "publishes no frames and no depth-dependent gate can pass. No "
+                    "synthetic depth is substituted."
+                )
+            ),
+            "detector": dict(state.get("detector") or {}),
+            "map": dict(state.get("map") or {}),
+        }
+
+    def venue_snapshot(self) -> dict[str, object] | None:
+        """What venue this run's eye is on, or ``None`` for the simulator.
+
+        The daemon's typed degraded state is read LIVE here rather than cached
+        from attach time: "the daemon answered at startup" and "the daemon is
+        answering now" are different facts and an operator needs the second.
+        """
+
+        composition = self._venue1_composition()
+        if composition is None:
+            return None
+        ingress = self._camera_ingress
+        snapshot = getattr(getattr(ingress, "detector", None), "snapshot", None)
+        if callable(snapshot):
+            try:
+                composition["detector"] = {
+                    **dict(composition.get("detector") or {}),
+                    **dict(snapshot()),
+                }
+            except Exception as error:  # noqa: BLE001 - a surface must not raise
+                logger.debug("venue detector snapshot failed: %s", error)
+        return composition
+
+    # ================= END CARD VENUE-1 region ===========================
 
     # =====================================================================
     # CARD P1-B — the camera -> online-map writer.  (NEW REGION; P0-A's
@@ -11370,6 +12743,388 @@ class RobotRuntime:
 
     # ================= END CARD P1-B region ==============================
 
+    # =====================================================================
+    # CARD OT-2 — THE ROBOT STOPS BELIEVING THE OWNER AT 1.0.  (NEW REGION)
+    #
+    # P0-A's camera-flag regions, P0-B's transcript region, P0-D's dispatch
+    # regions, P1-B's map region above, P2-A's owner-fact doors and P2-B's
+    # affect/owner-event region are all elsewhere in this file. Three seams
+    # outside this region call in, each ONE line and each marked with this
+    # card's name: ``_publish_camera_frame`` (the frame), ``_control_loop``
+    # (the overlay) and ``__init__`` (the state).
+    #
+    # WHY THIS REGION EXISTS. P1-C built an ``OwnerTracker`` that turns person
+    # pixels into an identity confidence somebody measured, proved its failure
+    # modes on a two-person clip, and wired NOTHING: no code in this file ever
+    # constructed one, ``headless_city`` handed the control loop a mocap body
+    # at confidence 1.0, and ``reactive_safety`` read that 1.0 through a floor
+    # of 0.65. The running robot's answer to "is that your owner?" was a
+    # literal, and the 08-22 audit said so.
+    #
+    # WHAT IT DOES. It owns an ``OwnerTracker`` and an ``OwnerFusionStub``,
+    # feeds the tracker the camera's own detection frames on the camera worker
+    # thread, fuses the result through P1-C's pixel seam, and overlays the
+    # answer onto the observation the control loop is about to hand to
+    # ``apply_reactive_safety``, the follow controller and P2-B's presence
+    # watcher. With no tracker installed — the default, and every MuJoCo run —
+    # every method here is a no-op and the observation passes through
+    # untouched (row R5: 648 reactive-safety cases, byte-identical sha256).
+    #
+    # WHAT IT DELIBERATELY DOES NOT DO. It never writes an identity it did not
+    # get from the producer, it never coasts a claim (a track the tracker has
+    # lost degrades to ``searching`` with confidence 0.0 rather than repeating
+    # the last good number), and it takes no lock of its own: the tracker runs
+    # OUTSIDE every lock and only the finished answer is published under the
+    # runtime's own ``_lock``, so R24's roster is unchanged and the camera
+    # worker can never be found holding anything the control loop wants.
+    # =====================================================================
+
+    #: The producer states this runtime will publish. Mirrors
+    #: ``owner_tracking.tracker``'s vocabulary; a test pins them equal.
+    OT2_STATE_CONFIRMED: ClassVar[str] = "confirmed"
+    OT2_STATE_AMBIGUOUS: ClassVar[str] = "ambiguous"
+    OT2_STATE_SEARCHING: ClassVar[str] = "searching"
+
+    #: How long a fused owner track stays usable. Deliberately the telemetry
+    #: staleness the rest of the runtime already uses rather than a new knob:
+    #: an identity older than the observation it would be attached to is not an
+    #: identity, and inventing a second freshness budget is how two answers to
+    #: "is this current" start disagreeing.
+    def _ot2_track_ttl_s(self) -> float:
+        return float(self.telemetry_stale_s)
+
+    def install_owner_tracker(
+        self,
+        tracker: Any,
+        *,
+        gallery_threshold: float | None = None,
+        fusion: Any = None,
+    ) -> None:
+        """Install P1-C's ``OwnerTracker`` as THE answer to "who is that".
+
+        The composition root for the identity path, and it is a method rather
+        than a constructor argument for the same reason
+        ``attach_camera_ingress`` is: the tracker needs an encoder and a
+        gallery that only exist once a camera venue has been resolved, which
+        happens after this object is built.
+
+        ``gallery_threshold`` is the operating point the ENROLLMENT measured.
+        It is taken from the tracker's own gallery when not supplied, and it is
+        needed here for one purpose: turning the tracker's absolute cosine into
+        the HEADROOM the reactive gate reads (``score - threshold``). A tracker
+        with no gallery can be installed — it will simply never claim anybody,
+        which is P1-C's "zero owner claims without an enrolled gallery" row
+        holding at runtime rather than only in a unit test.
+        """
+
+        threshold = gallery_threshold
+        if threshold is None:
+            gallery = getattr(tracker, "gallery", None)
+            threshold = float(getattr(gallery, "threshold", 0.0) or 0.0)
+        if fusion is None:
+            from parcel_robot.uwb.fusion import OwnerFusionConfig, OwnerFusionStub
+
+            fusion = OwnerFusionStub(OwnerFusionConfig(primary="vision"))
+        with self._lock:
+            self._ot2_owner_tracker = tracker
+            self._ot2_owner_fusion = fusion
+            self._ot2_gallery_threshold = float(threshold)
+            self._ot2_owner_track = None
+            self._ot2_owner_track_at = 0.0
+            self._ot2_identity_state = self.OT2_STATE_SEARCHING
+            self._ot2_identity_reason = "installed"
+
+    @property
+    def owner_track(self) -> Any:
+        """P1-C's ``OwnerTrackV1`` for this tick, or ``None``.
+
+        THE attribute P2-B's ``owner_presence_sample`` already reaches for with
+        ``getattr(self, "owner_track", None)`` — that method was written as a
+        drop-in seam for exactly this card and needs no edit: the moment this
+        property starts returning a track, the greeting stops running on the
+        mocap body's flat 1.0 and starts running on a measured identity.
+
+        Returns ``None`` once the track is stale, which is what makes
+        "I greeted you because I saw you" true rather than "I greeted you
+        because I saw you eleven seconds ago".
+        """
+
+        with self._lock:
+            track = self._ot2_owner_track
+            stamped = self._ot2_owner_track_at
+        if track is None:
+            return None
+        if time.monotonic() - stamped > self._ot2_track_ttl_s():
+            return None
+        return track
+
+    def _ot2_latest_rgb(self) -> Any | None:
+        """The pixels the boxes index, IF the attached ingress can hand them over.
+
+        Duck-typed, and the reason is worth stating because it is the one gap
+        in this card's chain. ``CameraDetectionFrame`` carries boxes and world
+        coordinates and NO IMAGE (P1-C handoff 3), and ``ingress.py`` is P1-B's
+        file, which every wave-2 card is told not to touch — so this card
+        cannot add the frame-buffer handle the tracker wants. It asks for one
+        instead: any ingress exposing ``latest_rgb()`` is used, anything else
+        yields ``None``.
+
+        ``None`` is a DEGRADE and not a failure: the tracker keeps position
+        tracks, asserts no identity, and says ``no_pixels`` when asked why. The
+        identity gate then withholds the relaxed band — the owner keeps a
+        person's clearance, which is the correct answer to "can you see that
+        this is your owner?" when the answer is no.
+
+        **WHY A BARE ACCESSOR IS SAFE HERE, AND ONLY HERE** (Fable, OT-2 item
+        6). ``latest_rgb()`` is a side channel: nothing in its signature ties
+        the pixels to the frame whose boxes are about to index them. It is
+        sound in this caller for one reason, and it is a property of the CALLER
+        rather than of the accessor — ``_ot2_note_camera_frame`` runs
+        synchronously on the camera worker thread, inside the same
+        ``_publish_frame`` call that produced ``frame``, so no later capture can
+        have replaced the buffer in between. Any OTHER consumer, or this one
+        moved onto a queue, would need the pixels carried WITH the frame. That
+        is the shape the handoff in ``OT2_STATUS.md`` §9.1 asks for, and it is
+        why the handoff is not the one-liner the first draft called it.
+        """
+
+        ingress = self._camera_ingress
+        source = getattr(ingress, "latest_rgb", None)
+        if not callable(source):
+            return None
+        try:
+            return source()
+        except Exception as error:  # noqa: BLE001 - the eye may never end a frame
+            logger.warning("owner tracker rgb source failed: %s", error)
+            return None
+
+    def _ot2_note_camera_frame(self, frame: Any) -> None:
+        """Feed ONE published detection frame to the owner tracker.
+
+        Runs on the camera worker thread, after ``_camera_stream_lock`` has
+        been released and after P1-B's map feed, for P1-B's own stated reason:
+        nothing that can take time may be reached while the camera's lock is
+        held. The tracker itself runs under NO lock — it is single-threaded by
+        construction and driven from exactly this one place — and only the
+        finished ``OwnerTrackV1`` is published under ``_lock``.
+
+        Never raises. A tracker that throws must degrade the identity, not kill
+        the eye.
+        """
+
+        # Snapshotted under ``_lock`` (Fable, OT-2 item 6): this runs on the
+        # camera worker while ``install_owner_tracker`` may be replacing the
+        # tracker from another thread. The tracker is then driven OUTSIDE the
+        # lock — it is the only expensive call here and holding ``_lock``
+        # across it would put the control loop behind an encoder.
+        with self._lock:
+            tracker = self._ot2_owner_tracker
+        if tracker is None:
+            return
+        try:
+            update = tracker.update(frame, rgb=self._ot2_latest_rgb())
+        except Exception as error:  # noqa: BLE001 - never break the camera worker
+            logger.warning("owner tracker update failed: %s", error)
+            with self._lock:
+                self._ot2_errors += 1
+                self._ot2_identity_state = self.OT2_STATE_SEARCHING
+                self._ot2_identity_reason = f"tracker_error:{type(error).__name__}"
+                self._ot2_owner_track = None
+            return
+        self._ot2_publish_update(update, frame)
+
+    def _ot2_publish_update(self, update: Any, frame: Any) -> None:
+        """Fuse one tracker update and publish it. The pixel seam, at runtime.
+
+        The fusion call is P1-C's seam used exactly as its docstring describes:
+        the ``vision`` argument carries POSE (bearing/range from the detection)
+        and the ``pixel`` argument carries IDENTITY, and neither can be
+        substituted for the other. Passing both is what makes the resulting
+        ``OwnerTrackV1.identity_score`` a cosine somebody measured rather than
+        ``OwnerFusionStub``'s 0.7 vision channel prior.
+
+        A frame with no owner claim publishes the ABSENCE, not the last answer.
+        """
+
+        owner = getattr(update, "owner_track", None)
+        state = str(getattr(update, "state", "") or self.OT2_STATE_SEARCHING)
+        reason = str(getattr(update, "reason", "") or "")
+        now = time.monotonic()
+        if owner is None or not getattr(owner, "is_owner", False):
+            with self._lock:
+                self._ot2_frames_seen += 1
+                self._ot2_owner_track = None
+                self._ot2_owner_track_at = now
+                self._ot2_identity_state = (
+                    state if state in {self.OT2_STATE_AMBIGUOUS} else self.OT2_STATE_SEARCHING
+                )
+                self._ot2_identity_reason = reason or "no_owner_claim"
+            return
+        with self._lock:
+            fusion = self._ot2_owner_fusion
+            threshold = self._ot2_gallery_threshold
+        if fusion is None:
+            return
+        try:
+            now_ns = int(now * 1e9)
+            source_ts = int(getattr(frame, "source_timestamp_ns", 0) or 0)
+            sequence = int(getattr(frame, "sequence", 0) or 0)
+            detection = owner.as_detection_msg(
+                now_monotonic_ns=now_ns,
+                source_timestamp_ns=source_ts,
+                sequence=sequence,
+            )
+            pixel = owner.as_fusion_input(source_timestamp_ns=source_ts)
+            result = fusion.fuse(
+                robot_x=float(getattr(frame, "robot_x", 0.0) or 0.0),
+                robot_y=float(getattr(frame, "robot_y", 0.0) or 0.0),
+                robot_yaw_rad=float(getattr(frame, "robot_yaw_rad", 0.0) or 0.0),
+                now_monotonic_ns=now_ns,
+                vision=detection,
+                pixel=pixel,
+            )
+        except Exception as error:  # noqa: BLE001 - never break the camera worker
+            logger.warning("owner fusion failed: %s", error)
+            with self._lock:
+                self._ot2_frames_seen += 1
+                self._ot2_errors += 1
+                self._ot2_owner_track = None
+                self._ot2_owner_track_at = now
+                self._ot2_identity_state = self.OT2_STATE_SEARCHING
+                self._ot2_identity_reason = f"fusion_error:{type(error).__name__}"
+            return
+        track = getattr(result, "track", None)
+        # NOTE (Fable, OT-2 item 5): ``identity_score`` is a time-decayed EMA,
+        # not the cosine the tracker compared against its threshold, so this is
+        # the headroom of a SMOOTHED score and can go negative on a frame the
+        # tracker confirmed. The error is one-directional — a lagging EMA can
+        # only withhold the relaxed band, never invent headroom — and the fix
+        # needs a field ``owner_tracking`` does not publish. See
+        # ``OwnerTrack.identity_margin`` and OT2_STATUS.md §10.
+        headroom = float(getattr(owner, "identity_score", 0.0) or 0.0) - float(threshold)
+        with self._lock:
+            self._ot2_frames_seen += 1
+            self._ot2_owner_track = track
+            self._ot2_owner_track_at = now
+            self._ot2_identity_source = str(getattr(result, "identity_source", "") or "")
+            self._ot2_identity_margin = headroom
+            self._ot2_identity_state = str(
+                getattr(track, "state", "") or self.OT2_STATE_SEARCHING
+            )
+            self._ot2_identity_reason = reason or str(getattr(result, "reason", ""))
+            if track is not None and self._ot2_identity_state == self.OT2_STATE_CONFIRMED:
+                self._ot2_owner_claims += 1
+
+    def _ot2_apply_owner_identity(self, observation: Any) -> Any:
+        """Overlay the MEASURED owner identity onto this tick's observation.
+
+        The seam in the control loop, called immediately after
+        ``backend.observe()`` so that everything downstream — the reactive
+        gate, the follow controller, the orbit gate, P2-B's greeting watcher —
+        reads one answer rather than each reaching for its own.
+
+        With no tracker installed this returns the argument object itself, not
+        a copy: the MuJoCo venue's path is not merely equivalent, it is the
+        same object it always was.
+
+        With a tracker installed and no fresh claim, the IDENTITY is replaced
+        and the PERCEPTION is not: ``confidence=0.0``, ``state="searching"``,
+        and ``visible`` carried through from whatever the backend reported.
+        That is the card's rule 3 — after a loss the robot degrades to
+        searching and never guesses — applied to the right field.
+
+        **The split is a safety property and it was wrong in the first version
+        of this method** (Fable, OT-2 verification, item 1). Overwriting
+        ``visible`` with ``False`` does not "treat the owner as a stranger": in
+        ``apply_reactive_safety`` the owner entry is appended only ``if
+        observation.owner.visible``, so a False there **deletes the person from
+        the gate's people list entirely** and costs them their CLEARANCE, not
+        merely the relaxed band. A dog that cannot tell who you are must still
+        not walk into you. So: identity is this method's to overwrite, and
+        presence belongs to the channel that senses bodies. A degraded track at
+        0.7 m still stops
+        (``test_ot2_a_degraded_owner_still_gets_a_persons_clearance``).
+        """
+
+        if observation is None:
+            return observation
+        with self._lock:
+            installed = self._ot2_owner_tracker is not None
+            track = self._ot2_owner_track
+            stamped = self._ot2_owner_track_at
+            source = self._ot2_identity_source
+            margin = self._ot2_identity_margin
+            state = self._ot2_identity_state
+        if not installed:
+            return observation
+        fresh = track is not None and (time.monotonic() - stamped) <= self._ot2_track_ttl_s()
+        previous = observation.owner
+        if not fresh:
+            owner = OwnerTrack(
+                owner_id=previous.owner_id,
+                x=previous.x,
+                y=previous.y,
+                # PRESENCE, not identity: carried from the backend untouched.
+                # See the docstring — a False here removes the owner from the
+                # reactive gate's people list, which is a clearance change and
+                # not a band change. This method may only ever answer "who".
+                visible=previous.visible,
+                confidence=0.0,
+                state=self.OT2_STATE_SEARCHING,
+                identity_source=source or IDENTITY_SOURCE_PIXEL_REID_UNCALIBRATED,
+                identity_margin=0.0,
+            )
+            return dataclasses.replace(observation, owner=owner)
+        pose = getattr(track, "pose", None)
+        owner = OwnerTrack(
+            owner_id=str(getattr(track, "enrolled_owner_id", previous.owner_id)),
+            x=float(getattr(pose, "x", previous.x)),
+            y=float(getattr(pose, "y", previous.y)),
+            # True because a FRESH FUSED TRACK EXISTS — the camera localized a
+            # body at this pose. Not ``state == confirmed``: that was the same
+            # confusion the degrade branch had (Fable, item 1), and it would
+            # have deleted an ``ambiguous`` person from the gate's people list
+            # instead of costing them the relaxed band. Whether the gate
+            # RELAXES around them is ``_owner_identity_trusted``'s question and
+            # it reads ``state`` for itself.
+            visible=True,
+            confidence=float(getattr(track, "identity_score", 0.0) or 0.0),
+            state=state,
+            identity_source=source,
+            identity_margin=float(margin),
+        )
+        return dataclasses.replace(observation, owner=owner)
+
+    def owner_identity_snapshot(self) -> dict[str, object] | None:
+        """What the identity path has done this run, or ``None`` when it is off.
+
+        ``None`` rather than a disabled block, for the same R1 reason
+        ``learned_map_snapshot`` and ``camera_stream_snapshot`` return it: a
+        run with no tracker must produce a snapshot byte-identical to a build
+        that never had this card.
+        """
+
+        with self._lock:
+            if self._ot2_owner_tracker is None:
+                return None
+            return {
+                "frames_seen": self._ot2_frames_seen,
+                "owner_claims": self._ot2_owner_claims,
+                "errors": self._ot2_errors,
+                "state": self._ot2_identity_state,
+                "reason": self._ot2_identity_reason,
+                "identity_source": self._ot2_identity_source,
+                "identity_margin": round(float(self._ot2_identity_margin), 6),
+                "gallery_threshold": round(float(self._ot2_gallery_threshold), 6),
+                # The one number the audit asked for: what the robot currently
+                # believes, and it is never 1.0 unless a producer measured it.
+                "identity_confidence": round(
+                    float(getattr(self._ot2_owner_track, "identity_score", 0.0) or 0.0), 6
+                ),
+            }
+
+    # ================= END CARD OT-2 owner-track region ==================
+
     def camera_stream_snapshot(self) -> dict[str, object] | None:
         """The operator's truth about the eye, or ``None`` when it is off.
 
@@ -11465,13 +13220,35 @@ class RobotRuntime:
             # posed from live telemetry. Moving actors and the robot's own
             # joint state are NOT in the render. An operator reading the tile
             # deserves to know that before trusting an empty person count.
-            "composition": {
+            #
+            # ---- CARD VENUE-1 seam 2 of 2 ------------------------------
+            # ...and when the venue is a real camera, none of the paragraph
+            # above is true. `venue_snapshot()` returns None on every simulator
+            # run, so the literal below is what a flag-off snapshot still gets,
+            # byte for byte. See the VENUE-1 region.
+            #
+            # It is `venue_snapshot()` and NOT `_venue1_composition()`, and the
+            # difference is the whole point of the key: the former merges the
+            # detector's LIVE state, the latter is frozen at attach time. A
+            # daemon that died after startup must not still read `live` here
+            # (Fable, correction item 1 — `venue_snapshot()` had no product
+            # caller at all, so `/api/state` was frozen).
+            # ---- END CARD VENUE-1 seam 2 of 2 --------------------------
+            "composition": self.venue_snapshot() or {
                 "mode": "static_scene_copy_pose_synced",
                 "scene": self._camera_scene_path or None,
                 "camera_pose_synced": True,
                 "dynamic_actors_synced": False,
                 "robot_joint_state_synced": False,
                 "real_camera": False,
+                # ---- CARD VENUE-1: the key this venue does NOT honour ------
+                # `perception.detector` selects the out-of-process daemon on a
+                # physical venue and is read by nothing here — C-1's path
+                # always loads in-process OWLv2. An operator who set it
+                # deserves to see that, rather than to infer it from a latency
+                # number. Validated in seam 1a either way, so a typo refuses on
+                # both venues.
+                "detector": self._venue1_sim_detector_note(),
             },
             "producer": producer_stats,
             # PG-1's process-wide guard, which BOTH halves must share. The

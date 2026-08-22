@@ -139,6 +139,61 @@ REGIME_NAMES: Final[tuple[str, ...]] = ("cruise", "search", "approach", "recover
 #: which reddens if the derivation and the literal ever part company.
 PERSON_SOCIAL_ZONE_FLOOR_M: Final[float] = 0.68
 
+#: **The hard floor under the commissioned OBSTACLE stop ring** (card DOOR-1,
+#: 2026-08-22). Same shape as :data:`PERSON_SOCIAL_ZONE_FLOOR_M` one paragraph
+#: up, and for the same reason: the ring itself is a COMMISSIONING value that
+#: config may move (``safety.obstacle_stop_m``), and what may not move is the
+#: floor under it.
+#:
+#: Why this card needed one. The shipped ring is 0.65 m, and the final gate is
+#: DIRECTIONAL, so it refuses to translate down any corridor narrower than
+#: ``2 * 0.65 * sin(1.15) = 1.19 m`` — a standard 0.8-0.9 m interior doorway
+#: included. An indoor companion that cannot walk through a door is the thing
+#: card P1-E's own status doc named as the next blocker
+#: (``scrum/20260822/task_12/P1E_STATUS.md`` §7/§8). But before the ring can be
+#: commissioned DOWN there has to be something it cannot be commissioned below,
+#: or "indoor profile" becomes a way to switch the obstacle gate off.
+#:
+#: Why 0.41 m. It is the body's own ISO/TS-15066 stopping distance at the
+#: APPROACH regime — the fastest regime the controller uses while it is working
+#: near an obstacle::
+#:
+#:     stop_distance(0.35) = 0.32 + 0.35*0.12 + 0.35^2/(2*1.4) = 0.405750 m
+#:                           ^footprint  ^v*tau   ^braking
+#:
+#: (``SpeedRegime.approach.vx_mps`` = 0.35 m/s, which the authority already
+#: transcribes from ``FollowConfig.max_vx``.) Three properties, each a test:
+#:
+#: 1. It is strictly above the HULL, ``stop_distance(0.0)`` = 0.32 m
+#:    (footprint + Zs + Zr), so no commissioning can put the stop ring inside
+#:    the robot's own body.
+#: 2. It stays strictly below :data:`PERSON_SOCIAL_ZONE_FLOOR_M` (0.68), which
+#:    preserves P1-E's property 1 — a person can never be commissioned LESS
+#:    clearance than a wall.
+#: 3. It is not the number that decides doorways, and that matters. At the
+#:    floor the gate would drive a 0.75 m corridor, but the grid planner models
+#:    the body as a DISC (0.32 m) plus ``map_safety_margin_m`` (0.10 m) and so
+#:    refuses anything under 0.84 m regardless. The binding constraint indoors
+#:    is the planner's footprint model, not this floor.
+#:
+#: **UNCOMMISSIONED.** No robot hardware exists (owner, 2026-08-22: only the
+#: reSpeaker XVF3800 mic array). ``decel_max_mps2`` and ``reaction_latency_s``
+#: are config values, not instrumented ones, so this floor is simulator policy
+#: derived from in-tree constants — never a physical stopping proof.
+#:
+#: Written as a literal for the same reason the person floor is: a floor that
+#: moves when someone retunes ``linear_decel`` is not a floor.
+#:
+#: **Name collision, flagged so nobody reads one for the other:**
+#: ``evals/nav_instruct/route_memory_cells.OBSTACLE_STOP_FLOOR_M`` is a
+#: DIFFERENT quantity with the same spelling — it is
+#: ``DEFAULT_SAFETY_ENVELOPE.obstacle_stop_floor_m`` (0.6 m), the envelope FIELD
+#: used to place eval geometry, not this commissioning floor (0.41 m). Neither
+#: imports the other and this card changed neither value; the collision is a
+#: readability hazard, recorded rather than renamed (that file is an eval, not
+#: this card's OWNS).
+OBSTACLE_STOP_FLOOR_M: Final[float] = 0.41
+
 #: Half-angle of the directional "toward" test the FINAL proximity gate uses
 #: (``navigation.reactive_safety._toward``, its ``half_angle`` default). Named
 #: here, in the authority, so the planner can derive the lateral clearance the
@@ -676,6 +731,19 @@ class SafetyEnvelope(_MetadataMixin):
         _positive(self.obstacle_comfort_band_m, "obstacle_comfort_band_m")
         _positive(self.person_comfort_band_m, "person_comfort_band_m")
         _positive(self.obstacle_stop_floor_m, "obstacle_stop_floor_m")
+        # Card DOOR-1: symmetric with the person floor above. ``obstacle_stop_floor_m``
+        # became a COMMISSIONING value the moment ``with_obstacle_stop_ring`` gave
+        # config a way to move it, so it needs the same thing the social zone got —
+        # a named floor that no construction path can get under. Every path lands
+        # here (``from_mapping``, ``from_profile``, ``replace``,
+        # ``with_obstacle_stop_ring``), and the refusal names the constant.
+        if self.obstacle_stop_floor_m + 1e-12 < OBSTACLE_STOP_FLOOR_M:
+            raise ValueError(
+                f"obstacle_stop_floor_m {self.obstacle_stop_floor_m} m is below the "
+                f"commissioning floor OBSTACLE_STOP_FLOOR_M "
+                f"({OBSTACLE_STOP_FLOOR_M} m) — the Go2's ISO/TS-15066 stopping "
+                "distance at the APPROACH regime. Refusing to build a safety envelope."
+            )
 
     def stop_distance(self, speed_mps: float) -> float:
         """Center-to-surface distance needed to stop from ``speed_mps``."""
@@ -727,6 +795,24 @@ class SafetyEnvelope(_MetadataMixin):
         """
 
         return replace(self, person_social_zone_m=_finite(metres, "person_social_zone_m"))
+
+    def with_obstacle_stop_ring(self, metres: float) -> SafetyEnvelope:
+        """This envelope with its OBSTACLE ring COMMISSIONED from config.
+
+        Card DOOR-1, and the exact mirror of :meth:`with_person_social_zone`.
+        The one constructor the reactive gate uses to turn
+        ``configs/robot*.yaml`` ``safety.obstacle_stop_m`` into an envelope, so
+        the ring the gate enforces and the ring the planner inflates against
+        are the same object rather than two literals that can drift (audit §6,
+        "the planner and the gate disagree on the envelope").
+
+        Nothing is clamped: an under-floor value raises out of
+        :meth:`__post_init__` naming :data:`OBSTACLE_STOP_FLOOR_M`, which is how
+        an over-eager indoor profile becomes a refusal to boot instead of a
+        quietly switched-off obstacle gate.
+        """
+
+        return replace(self, obstacle_stop_floor_m=_finite(metres, "obstacle_stop_floor_m"))
 
     @property
     def social_zone_is_binding(self) -> bool:
@@ -807,6 +893,264 @@ def gate_lateral_clearance_m(
     if not 0.0 < angle <= math.pi:
         raise ValueError("half_angle_rad must be in (0, pi]")
     return ring * math.sin(min(angle, math.pi / 2.0))
+
+
+#: The planner's legacy HARD margin: ``GridPlannerConfig.safety_margin_m`` and
+#: ``configs/navigation/models/grid.yaml`` ``map_safety_margin_m``, which have
+#: both been 0.10 m since the grid planner shipped. Named here so
+#: :class:`ClearanceProfile` can state the planner's inflation without importing
+#: the planner; the planner still owns the value and a profile that moves it
+#: passes its own.
+PLANNER_HARD_MARGIN_M: Final[float] = 0.10
+
+#: The largest obstacle ring whose lateral clearance the LEGACY footprint
+#: inflation already covers: ``(footprint + hard_margin) / sin(half_angle)``.
+#:
+#: This is a COMPATIBILITY constant, not a commissioning claim, and the
+#: distinction is the whole reason it is spelled out here. Coupling the planner
+#: to a ring at or below it changes no planned route anywhere, because
+#: ``inflation_radius_m`` takes a ``max`` and the footprint term still wins;
+#: coupling it to a ring ABOVE it tightens the planner and moves every frozen
+#: navigation baseline at once (at the shipped 0.65 m ring the narrowest
+#: routable corridor goes 0.84 m -> 1.19 m continuous, and 1.00 m -> 1.20 m on
+#: the product's 0.10 m grid). Card DOOR-1 uses it as the default for
+#: un-commissioned callers precisely so that wiring the coupling is not also,
+#: silently, a re-freeze of the navigation evidence.
+#:
+#: **This constant is the cap for the DEFAULT 0.10 m hard margin only.** Card
+#: DOOR-1's correction pass: the margin is per-profile
+#: (``configs/navigation/models/grid_clearance.yaml`` runs 0.03 m, so its own
+#: legacy-equivalent ring is 0.383 m), and capping that profile at this flat
+#: constant would have moved its inflation 0.35 -> 0.42 m. Call sites must use
+#: :attr:`ClearanceProfile.legacy_equivalent_ring_m` /
+#: :attr:`ClearanceProfile.planner_coupling_ring_m`, which compute it from the
+#: profile in hand. This constant remains the value for the default margin and
+#: is what ``DEFAULT_CLEARANCE_PROFILE`` carries.
+LEGACY_GATE_CLEARANCE_M: Final[float] = (
+    DEFAULT_ROBOT_PROFILE.footprint_radius_m + PLANNER_HARD_MARGIN_M
+) / math.sin(GATE_TOWARD_HALF_ANGLE_RAD)
+
+
+@dataclass(frozen=True)
+class ClearanceProfile:
+    """ONE immutable commissioned obstacle envelope; planner and gate both derive.
+
+    Card DOOR-1 / design DW-4. Audit §6's finding was that the planner and the
+    final gate hold two independent opinions about how much room the body needs:
+    the planner inflates obstacles by ``footprint + margin`` (0.42 m) while the
+    gate refuses to translate toward anything inside a ring (0.65 m) that, run
+    through the gate's own directional cone, is a 0.593 m lateral demand. Two
+    numbers, no relationship, and the planner was the LOOSER of the two — it
+    routed through corridors the gate would then stand in and refuse.
+
+    This type is the fix's shape: the commissioned ring is stated ONCE, and
+    both consumers are derived from it.
+
+    * :attr:`planner_inflation_m` — what the planner must inflate by. It is a
+      ``max`` against the footprint term, so it can only ever be TIGHTER than
+      the legacy planner, never looser.
+    * :meth:`final_gate_ring_m` — what the final gate will enforce, recomputed
+      from this profile ALONE. It takes no planner input by construction: the
+      point of an independent recomputation is that a mistake in the planner
+      cannot propagate into the thing that stops the robot.
+
+    Both are monotone non-decreasing in :attr:`obstacle_ring_m`, which is the
+    property that makes "commissioning a smaller ring can only relax the
+    planner, never the gate's relationship to it" checkable rather than
+    asserted.
+
+    **UNCOMMISSIONED.** No robot hardware exists (owner, 2026-08-22). Every
+    number this type produces is arithmetic over in-tree body constants and is
+    simulator policy, not a measured physical clearance.
+    """
+
+    #: The commissioned obstacle stop ring, base-centre to obstacle surface.
+    #: This is ``configs/robot*.yaml`` ``safety.obstacle_stop_m`` wearing the
+    #: authority's type; it is also exactly ``ReactiveSafetyPolicy.obstacle_stop_m``.
+    obstacle_ring_m: float = LEGACY_GATE_CLEARANCE_M
+    #: The body the ring belongs to. Injectable so a scaled robot brings its own
+    #: footprint / latency / braking terms.
+    envelope: SafetyEnvelope = DEFAULT_SAFETY_ENVELOPE
+    #: The planner's own hard margin (``GridPlannerConfig.effective_hard_margin_m``).
+    planner_hard_margin_m: float = PLANNER_HARD_MARGIN_M
+    #: The final gate's directional cone half-angle.
+    gate_half_angle_rad: float = GATE_TOWARD_HALF_ANGLE_RAD
+
+    def __post_init__(self) -> None:
+        _positive(self.obstacle_ring_m, "obstacle_ring_m")
+        _non_negative(self.planner_hard_margin_m, "planner_hard_margin_m")
+        if not isinstance(self.envelope, SafetyEnvelope):
+            raise TypeError("ClearanceProfile.envelope must be a SafetyEnvelope")
+        if not 0.0 < _finite(self.gate_half_angle_rad, "gate_half_angle_rad") <= math.pi:
+            raise ValueError("gate_half_angle_rad must be in (0, pi]")
+        # The hull check, not the commissioning floor. ``OBSTACLE_STOP_FLOOR_M``
+        # is enforced where the ring is COMMISSIONED (``with_obstacle_stop_ring``
+        # -> ``SafetyEnvelope.__post_init__``); what this type refuses is the
+        # physically meaningless case of a ring inside the robot's own body,
+        # which is reachable for an injected wider envelope even when the
+        # Go2-scale floor is not.
+        hull = self.envelope.stop_distance(0.0)
+        if self.obstacle_ring_m + 1e-12 < hull:
+            raise ValueError(
+                f"obstacle_ring_m {self.obstacle_ring_m} m is inside the body hull "
+                f"stop_distance(0.0) = {hull} m — refusing to build a clearance profile."
+            )
+
+    @property
+    def gate_lateral_clearance_m(self) -> float:
+        """Lateral radius this ring implies through the gate's directional cone."""
+
+        return gate_lateral_clearance_m(
+            self.obstacle_ring_m, half_angle_rad=self.gate_half_angle_rad
+        )
+
+    @property
+    def legacy_footprint_term_m(self) -> float:
+        """The inflation this profile's planner used BEFORE any coupling."""
+
+        return self.envelope.footprint_radius_m + self.planner_hard_margin_m
+
+    @property
+    def legacy_equivalent_ring_m(self) -> float:
+        """The largest ring whose lateral demand THIS profile already covers.
+
+        ``LEGACY_GATE_CLEARANCE_M`` is this quantity for the DEFAULT 0.10 m hard
+        margin. It is a property here because the margin is per-profile:
+        ``configs/navigation/models/grid_clearance.yaml`` runs a 0.03 m hard
+        margin, so its legacy term is 0.35 m and its legacy-equivalent ring is
+        0.383 m, not 0.460 m. Card DOOR-1's correction pass — the flat
+        module-level constant was the wrong cap for that profile and would have
+        moved its inflation 0.35 -> 0.42 m.
+        """
+
+        return self.legacy_footprint_term_m / math.sin(
+            min(self.gate_half_angle_rad, math.pi / 2.0)
+        )
+
+    @property
+    def planner_coupling_ring_m(self) -> float:
+        """The ring a planner may couple to WITHOUT moving a frozen route.
+
+        **Card DOOR-1 correction pass, and the whole scope of the coupling as
+        shipped.** The coupling is TIGHTER-ONLY: it is allowed to make a planner
+        agree with a gate that demands LESS room than the planner already
+        leaves, and it is NOT allowed to raise any inflation, because raising an
+        inflation moves planned routes and therefore the frozen navigation
+        evidence (BARN bundles, nav_instruct minival, FOLLOW_BENCH_V1). That
+        re-cut is a deliberate, owner-and-verifier-gated decision, not a side
+        effect of wiring a seam.
+
+        So the ring handed to ``GridPlannerConfig.gate_clearance_m`` is the
+        commissioned ring capped at :attr:`legacy_equivalent_ring_m`. Read the
+        consequence plainly: **for any profile whose gate demands MORE than its
+        planner already leaves, the coupling is inert and the planner and the
+        gate still disagree.** :attr:`planner_coupling_is_deferred` says which
+        case a profile is in, and it is True on the shipped ``configs/robot.yaml``
+        (0.65 m ring) and False on ``configs/robot.prototype.yaml`` (0.45 m).
+        """
+
+        return min(self.obstacle_ring_m, self.legacy_equivalent_ring_m)
+
+    @property
+    def planner_coupling_is_deferred(self) -> bool:
+        """True when the cap binds — i.e. the planner/gate disagreement stands.
+
+        Not a failure and not a silent one: it is the honest state of every
+        un-commissioned profile in the tree, it is asserted by
+        ``tests/test_door1_doorway.py``, and closing it is the HALTED item H-2
+        in ``scrum/20260822/task_19/DOOR1_STATUS.md``.
+        """
+
+        return self.planner_coupling_ring_m + 1e-12 < self.obstacle_ring_m
+
+    @property
+    def planner_inflation_m(self) -> float:
+        """Hard inflation radius the planner uses under the SCOPED coupling.
+
+        ``max(legacy footprint term, lateral demand of the COUPLING ring)``.
+        Because the coupling ring is capped at the legacy-equivalent ring, this
+        is identically the legacy term for every profile in the tree today —
+        which is the point: wiring the seam moved no route. It stops being the
+        legacy term the moment H-2 is closed and the cap is lifted.
+        """
+
+        return max(
+            self.legacy_footprint_term_m,
+            gate_lateral_clearance_m(
+                self.planner_coupling_ring_m, half_angle_rad=self.gate_half_angle_rad
+            ),
+        )
+
+    @property
+    def uncapped_planner_inflation_m(self) -> float:
+        """What the planner WOULD inflate by with the cap lifted (H-2's cost)."""
+
+        return max(self.legacy_footprint_term_m, self.gate_lateral_clearance_m)
+
+    def final_gate_ring_m(self, speed_mps: float = 0.0) -> float:
+        """What the FINAL gate stops at, recomputed from this profile alone.
+
+        ``apply_reactive_safety`` stops translation when a directional obstacle
+        is inside ``obstacle_stop_m + |v| * reaction_time_s``. This restates
+        that arithmetic from the profile — deliberately WITHOUT consulting the
+        planner, the planner's config, or any inflated radius — so the two can
+        be compared rather than assumed equal.
+        """
+
+        speed = max(0.0, _finite(speed_mps, "speed_mps"))
+        return self.obstacle_ring_m + speed * self.envelope.reaction_latency_s
+
+    def narrowest_gate_passable_corridor_m(self, speed_mps: float = 0.0) -> float:
+        """Narrowest straight corridor the FINAL gate will drive down, metres."""
+
+        return 2.0 * gate_lateral_clearance_m(
+            self.final_gate_ring_m(speed_mps), half_angle_rad=self.gate_half_angle_rad
+        )
+
+    def narrowest_planner_routable_corridor_m(self) -> float:
+        """Narrowest straight corridor the PLANNER will route through, metres."""
+
+        return 2.0 * self.planner_inflation_m
+
+    def planner_agrees_with_gate(self, planner_inflation_m: float) -> bool:
+        """True when a planner at this inflation never routes where the gate refuses.
+
+        The comparison is one-directional on purpose. A planner INSIDE the
+        gate's lateral demand proposes corridors the gate will stand in and
+        refuse; a planner outside it is merely conservative, which is the safe
+        direction and is what the shipped footprint term already does.
+        """
+
+        return (
+            _non_negative(planner_inflation_m, "planner_inflation_m") + 1e-12
+            >= self.gate_lateral_clearance_m
+        )
+
+    def with_ring(self, metres: float) -> ClearanceProfile:
+        """This profile at a different commissioned ring (still immutable)."""
+
+        return replace(self, obstacle_ring_m=_finite(metres, "obstacle_ring_m"))
+
+    def as_dict(self) -> dict[str, float | bool]:
+        return {
+            "obstacle_ring_m": float(self.obstacle_ring_m),
+            "planner_hard_margin_m": float(self.planner_hard_margin_m),
+            "gate_half_angle_rad": float(self.gate_half_angle_rad),
+            "gate_lateral_clearance_m": float(self.gate_lateral_clearance_m),
+            "legacy_equivalent_ring_m": float(self.legacy_equivalent_ring_m),
+            "planner_coupling_ring_m": float(self.planner_coupling_ring_m),
+            "planner_coupling_is_deferred": bool(self.planner_coupling_is_deferred),
+            "planner_inflation_m": float(self.planner_inflation_m),
+            "uncapped_planner_inflation_m": float(self.uncapped_planner_inflation_m),
+            "final_gate_ring_m": float(self.final_gate_ring_m(0.0)),
+        }
+
+
+#: The profile an un-commissioned planner call site resolves against. Its ring
+#: is :data:`LEGACY_GATE_CLEARANCE_M`, so its ``planner_inflation_m`` is exactly
+#: the legacy 0.42 m and wiring the coupling changes no shipped route. A
+#: commissioned runtime passes its OWN ring (``ReactiveSafetyPolicy.clearance_profile``).
+DEFAULT_CLEARANCE_PROFILE: ClearanceProfile = ClearanceProfile()
 
 
 # ---------------------------------------------------------------------------
@@ -963,16 +1307,21 @@ DEFAULT_STAND_OFF_ENVELOPE: StandOffEnvelope = StandOffEnvelope()
 
 
 __all__ = [
+    "DEFAULT_CLEARANCE_PROFILE",
     "DEFAULT_SAFETY_ENVELOPE",
     "DEFAULT_SPEED_REGIME",
     "DEFAULT_STAND_OFF_ENVELOPE",
     "GATE_TOWARD_HALF_ANGLE_RAD",
     "GRAVITY_MPS2",
     "HUMAN_BUCKET",
+    "LEGACY_GATE_CLEARANCE_M",
+    "OBSTACLE_STOP_FLOOR_M",
     "PERSON_SOCIAL_ZONE_FLOOR_M",
     "PERSON_SOCIAL_ZONE_M",
+    "PLANNER_HARD_MARGIN_M",
     "REGIME_NAMES",
     "SCALING_BUCKETS",
+    "ClearanceProfile",
     "FieldMeta",
     "RegimeLimits",
     "SafetyEnvelope",

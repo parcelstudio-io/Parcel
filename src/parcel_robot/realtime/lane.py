@@ -70,6 +70,17 @@ from typing import Any, Protocol
 # Card P2-A, post-verification. The SAME privacy policy the broker applies to
 # a proposed fact is applied to the replay tail — one set of rules about what
 # a credential is, not two.
+# ---- CARD DUPLEX-1 (task_26). The local turn state machine. Pure, no I/O, and
+# deliberately in ``duplex/`` rather than here: it has to be drivable from a
+# test, from a replay and one day from a local endpointer, none of which own a
+# socket. ``parcel_robot.duplex`` imports nothing from ``parcel_robot.realtime``.
+from parcel_robot.duplex.turn_controller import (
+    ACTION_DUCK,
+    ACTION_RESUME,
+    STATE_OVERLAP,
+    TurnAction,
+    TurnController,
+)
 from parcel_robot.owner_model import policy as owner_policy
 from parcel_robot.voice_audio import pcm16_wav
 
@@ -762,6 +773,22 @@ class SinkLike(Protocol):
 
     def interrupt(self) -> None: ...
 
+    # ---- CARD DUPLEX-1 (task_26) ----
+    # Deliberately NOT added to this Protocol: ``duck``, ``accepts_gain_duck``
+    # and ``accepts_interrupt_onset``. Every member of a Protocol is mandatory,
+    # and ``DiscardSink`` and ``voice_audio.SpeakerSink`` satisfy this contract
+    # today. Correction pass, finding 3 — the reason it is a FLAG and not a
+    # method name: ``SpeakerSink`` DOES have a gain and DOES have a ``duck``,
+    # but its argument is attenuation in DECIBELS and its unity call is
+    # ``restore()``. Detecting the word would have handed a linear 0.18 to a dB
+    # scale (a silent no-op of a duck, 0.979 gain) on the one path with no
+    # browser to notice. ``accepts_gain_duck`` names the SCALE; the lane gates
+    # on it in ``_apply_turn_action`` and counts the sinks without it — see
+    # ``ducks_unsupported``. Wiring the local speaker path is a separate change
+    # that must convert the level: ``-20 * log10(gain)`` dB, ``restore()`` for
+    # unity.
+    # ---- END CARD DUPLEX-1 ----
+
 
 class ToolHandlerLike(Protocol):
     """The tool broker, as the lane sees it (card R3, task_6).
@@ -1026,6 +1053,42 @@ class RealtimeLane:
         self.backchannels_survived = 0
         self.barge_ins_committed = 0
         self.barge_in_hold_failures = 0
+        # ---- CARD DUPLEX-1 (task_26) — the local turn controller ------------
+        # ONE decider, not two. MARK-1's ``_BargeInHold`` keeps every commit
+        # decision it already owned; the controller is driven from the same
+        # events and owns only the things the hold has no opinion about: the
+        # DUCK while the floor runs, the RESUME when it turns out to have been
+        # a "mm-hmm", and ``initiative_allowed`` — may the robot start talking
+        # on its own right now. Its ``floor_ms`` is the lane's own floor so the
+        # two can never disagree about what a backchannel is, and DUPLEX-1's
+        # rig asserts the agreement rather than assuming it.
+        self.turn_controller = TurnController(floor_ms=self._backchannel_floor_ms)
+        #: When the owner started making the noise that opened the current
+        #: hold, on the lane's clock. Handed to the sink at commit so the
+        #: capture index can stamp the ONSET as well as the cut (MARK-1's H-7).
+        self._barge_in_onset: float | None = None
+        #: Duck / resume frames the lane asked the sink for, and the ones a
+        #: sink could not take. A sink with no ``duck`` is not an error — the
+        #: local ``SpeakerSink`` has no gain to change — but it must be visible,
+        #: because "the duck never fired" and "the duck is not wired" look
+        #: identical from a transcript.
+        self.ducks_requested = 0
+        self.duck_resumes_requested = 0
+        self.ducks_unsupported = 0
+        #: Correction pass, finding 2. Pump passes on which the hold and the
+        #: controller reported different numbers of committed barge-ins. Must
+        #: stay 0; a non-zero here is a reply that may be stuck ducked.
+        self.turn_decider_disagreements = 0
+        #: Whether a spoken turn was already owed when the current hold opened.
+        #: MARK-1's does_not_prove 6 / handoff H-4(c): the ``speech_stopped``
+        #: that ENDS a backchannel also arms the owed-turn accounting, so after
+        #: every "mm-hmm" the lane believed the owner had asked something and
+        #: was waiting for an answer — the watchdog nudged the provider and the
+        #: next reconnect re-asked a question nobody had asked.
+        self._owed_at_hold_open = False
+        #: ...and how many of those the controller has taken back.
+        self.backchannel_turns_retracted = 0
+        # ---- END CARD DUPLEX-1 ----
         #: Replies whose played clock had to fall back to the first enqueue.
         self.played_anchor_fallbacks = 0
         self.protocol_errors: list[str] = []
@@ -1451,6 +1514,17 @@ class RealtimeLane:
         # it is counted as a backchannel the owner never made.
         self._barge_in_hold = None
         self._speech_end_override = None
+        # CARD DUPLEX-1: the state machine belongs to the socket too. Left in
+        # SPEAK or OVERLAP by a hang-up, it would refuse every unprompted remark
+        # for the rest of the process — a companion that goes permanently quiet
+        # because a socket died once. ``keep_owed=False`` MIRRORS the line four
+        # below rather than disagreeing with it: the lane clears the owed turn
+        # here, so the controller must too, or the two would give the panel
+        # opposite answers. The drop is counted (``owed_turns_abandoned``)
+        # instead of being silent.
+        self._barge_in_onset = None
+        self._owed_at_hold_open = False
+        self.turn_controller.reset(keep_owed=False)
         self._pcm.clear()
         self._expecting_server = False
         self._responses_pending = 0
@@ -1651,6 +1725,17 @@ class RealtimeLane:
         # it is counted as a backchannel the owner never made.
         self._barge_in_hold = None
         self._speech_end_override = None
+        # CARD DUPLEX-1: the state machine belongs to the socket too. Left in
+        # SPEAK or OVERLAP by a hang-up, it would refuse every unprompted remark
+        # for the rest of the process — a companion that goes permanently quiet
+        # because a socket died once. ``keep_owed=False`` MIRRORS the line four
+        # below rather than disagreeing with it: the lane clears the owed turn
+        # here, so the controller must too, or the two would give the panel
+        # opposite answers. The drop is counted (``owed_turns_abandoned``)
+        # instead of being silent.
+        self._barge_in_onset = None
+        self._owed_at_hold_open = False
+        self.turn_controller.reset(keep_owed=False)
         self._pcm.clear()
         self._expecting_server = False
         self._responses_pending = 0
@@ -2335,6 +2420,10 @@ class RealtimeLane:
             return
         self._voice_turn_owed = True
         self.voice_turns_owed += 1
+        # CARD DUPLEX-1: the controller keeps the same debt, and keeps it across
+        # every state transition — that is what makes "no owed turn is dropped
+        # by a state change" a measurable row instead of an intention.
+        self.turn_controller.note_turn_owed(self._clock())
         self._arm_watchdog()
         self._note(f"a spoken turn is owed an answer: {why}")
 
@@ -2452,6 +2541,11 @@ class RealtimeLane:
         sink.begin_utterance()
         self._response = _ResponseState(response_id=response_id, item_id=item_id, playing=True)
         self._pcm.clear()
+        # CARD DUPLEX-1: the robot now holds the floor, so initiative is refused
+        # until it gives it back. This is the line that makes "a proactive
+        # remark never collides with a reply in progress" a property of the
+        # state machine rather than of whoever remembers to check.
+        self.turn_controller.note_robot_started(self._clock())
 
     def _on_audio(self, event: OutputAudioDelta) -> None:
         if not self._response.playing or self._response.response_id != event.response_id:
@@ -2562,6 +2656,91 @@ class RealtimeLane:
             )
         return float(anchor)
 
+    # ==================== CARD DUPLEX-1 (task_26) — MARKED REGION ============
+    # The turn controller's two hands on the product: the gain, and the gate on
+    # unprompted speech. Everything else it knows is bookkeeping the panel can
+    # read. Nothing in this region can decide a barge-in — that is MARK-1's
+    # hold, and one decider is the whole design.
+    @property
+    def initiative_allowed(self) -> bool:
+        """May the robot say something nobody asked for, right now? PURE read.
+
+        Correction pass: reading this no longer moves any counter, so a panel
+        or a test may sample it as often as it likes — the previous version
+        incremented the very numbers D-4 is scored from every time it was read.
+        The counted door is :meth:`consult_initiative`.
+        """
+
+        if not self.active:
+            return False
+        return self.turn_controller.initiative_allowed
+
+    def consult_initiative(self) -> bool:
+        """The door the whisperer will knock on, and the one that counts.
+
+        The whisperer's ``offer`` is the intended caller (card DUPLEX-1's
+        README, work item 2) and it does NOT call this yet: ``whisperer.py``
+        belongs to CURIO-1's landing and is outside this card's OWNS. So this
+        is a gate with a test and no production caller, and DUPLEX1_STATUS.md
+        says so in those words rather than counting it as wiring. The seam is
+        one condition at the top of ``Whisperer.offer``.
+        """
+
+        if not self.active:
+            self.turn_controller.initiative_refusals += 1
+            return False
+        return self.turn_controller.consult_initiative()
+
+    def _apply_turn_action(self, action: TurnAction) -> None:
+        """Carry out a DUCK or a RESUME. Never raises; never commits.
+
+        A COMMIT from the controller is deliberately ignored here: the lane
+        already has exactly one thing that cancels a reply
+        (:meth:`_commit_barge_in`, reached through MARK-1's hold), and a second
+        caller would be two authorities racing over one socket. The controller's
+        commit is used as a CHECK — DUPLEX-1's rig asserts its count equals
+        ``barge_ins_committed`` — and never as an instruction.
+        """
+
+        if action.kind not in (ACTION_DUCK, ACTION_RESUME):
+            return
+        sink = self._sink
+        # CORRECTION PASS, finding 3. Feature-detecting the NAME ``duck`` was
+        # wrong and quietly so: ``voice_audio.SpeakerSink`` has a ``duck`` and
+        # its argument is ATTENUATION IN DECIBELS. Handed 0.18 it would not even
+        # raise — 0.18 dB is inside its accepted (0, 60] range — it would set
+        # the gain to 0.979 and the owner would hear no duck at all, on the one
+        # path with no browser to notice. And ``duck(1.0)`` is not its unity
+        # call; ``restore()`` is. So the gate is an explicit capability flag
+        # naming the SCALE, not a method that happens to share a word.
+        if sink is None or not getattr(sink, "accepts_gain_duck", False):
+            self.ducks_unsupported += 1
+            return
+        duck = sink.duck  # type: ignore[attr-defined]
+        try:
+            duck(action.gain)
+        except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
+            # Narrow rather than bare, and it costs nothing: R22's firewall in
+            # ``_dispatch`` is already outside this call, so anything not named
+            # here is counted there instead of taking the pump thread down. What
+            # this branch is for is the ordinary case — a socket that closed
+            # under us — becoming a counter rather than a lost barge-in.
+            self.ducks_unsupported += 1
+            self._note(f"duck could not be applied: {type(error).__name__}: {error}")
+            return
+        if action.kind == ACTION_DUCK:
+            self.ducks_requested += 1
+            self._note(
+                f"reply ducked to {action.gain:.2f} while the {self._backchannel_floor_ms:.0f} ms "
+                "floor runs: the owner is not talked over while we find out whether "
+                "that was a 'mm-hmm'"
+            )
+        else:
+            self.duck_resumes_requested += 1
+            self._note("reply back to full volume: that was a backchannel")
+
+    # ================= END CARD DUPLEX-1 region ==============================
+
     # -------------------------------------------------------------- barge-in
     def _on_speech_started(self) -> None:
         """Server VAD heard noise while the robot was talking. Card R16 + MARK-1.
@@ -2577,10 +2756,15 @@ class RealtimeLane:
         MARK-1 measures, which is why the default is off and the knob is here.
         """
 
+        # CARD DUPLEX-1 — the controller sees every onset, including the ones
+        # that are not barge-ins at all. It sends nothing and decides nothing
+        # here; at floor 0 the frames on the wire are unchanged to the byte.
         if not self._response.playing:
+            self.turn_controller.note_owner_started(self._clock())
             return
         floor_ms = self._backchannel_floor_ms
         if floor_ms <= 0.0:
+            self.turn_controller.note_owner_started(self._clock())
             self._commit_barge_in()
             return
         if self._barge_in_hold is not None:
@@ -2594,11 +2778,25 @@ class RealtimeLane:
             played_at_start_ms=self.played_ms(),
         )
         self.backchannel_holds += 1
+        # CARD DUPLEX-1: what the owed-turn accounting looked like BEFORE this
+        # noise. If the burst turns out to be a backchannel and this was False,
+        # the debt the burst's own ``speech_stopped`` armed is not a real one.
+        self._owed_at_hold_open = self._voice_turn_owed
+        # CARD DUPLEX-1: remember WHEN, so the cut can be stamped with the onset
+        # and not only with the commit (MARK-1's handoff H-7).
+        self._barge_in_onset = now
         self._note(
             f"barge-in held: {floor_ms:.0f} ms backchannel floor on "
             f"{self._response.response_id!r}; the reply keeps playing until the "
             "floor says this was a turn and not a 'mm-hmm'"
         )
+        # CARD DUPLEX-1 — DUCK FIRST, DECIDE SECOND. This is the line that makes
+        # a floor livable: the reply drops to the controller's duck gain on this
+        # frame, so the floor is spent with the dog quiet under the owner rather
+        # than talking over them. Nothing is told to the provider, nothing is
+        # discarded, and MARK-1's played clock keeps running — the owner really
+        # did hear that audio, quietly, and the truncate mark still says so.
+        self._apply_turn_action(self.turn_controller.note_owner_started(now))
 
     def _settle_barge_in_hold(self) -> None:
         """:meth:`_resolve_barge_in_hold` behind R22's firewall. Never raises.
@@ -2616,6 +2814,32 @@ class RealtimeLane:
             self._barge_in_hold = None
             self.barge_in_hold_failures += 1
             self._note(f"barge-in hold could not be settled: {type(error).__name__}: {error}")
+        self._check_turn_deciders_agree()
+
+    def _check_turn_deciders_agree(self) -> None:
+        """Card DUPLEX-1, correction pass, finding 2. The invariant, at runtime.
+
+        "One decider, not two" was asserted in a test and nowhere else, so the
+        only place it could have been caught in a live session was in a
+        transcript nobody reads. The hold and the controller are handed the same
+        events and must reach the same count of committed barge-ins; if they
+        ever do not, a still-playing reply can be left permanently ducked and
+        the owner hears the dog fade out and never come back.
+
+        Counted and noted, never raised: this runs on the pump thread, and an
+        invariant that ends the conversation it is protecting is worse than the
+        drift it found.
+        """
+
+        if self.turn_controller.commits == self.barge_ins_committed:
+            return
+        self.turn_decider_disagreements += 1
+        self._note(
+            "turn deciders disagree: the controller has committed "
+            f"{self.turn_controller.commits} barge-in(s) and the lane "
+            f"{self.barge_ins_committed}; the reply may be left ducked "
+            f"(controller state {self.turn_controller.state!r})"
+        )
 
     def _resolve_barge_in_hold(self) -> str | None:
         """Settle an open hold. Card MARK-1, work item 3. Returns what it did.
@@ -2667,15 +2891,38 @@ class RealtimeLane:
                     f"{hold.response_id!r} itself (interrupt_response), so the mark is "
                     "ours to send even though the cancel is not"
                 )
+                # CARD DUPLEX-1: the controller is told this was a CANCEL during
+                # an overlap, which is a commit and not a survived backchannel —
+                # the same distinction MARK-1's correction pass drew, kept in
+                # one place so the two counts can be asserted equal.
+                self.turn_controller.note_robot_ended(self._clock(), cancelled=True)
                 # No ``response.cancel``: the provider already did that, and a
                 # second one is a refusal frame in the record for nothing.
                 self._commit_barge_in(send_cancel=False)
                 return "provider_cancelled"
             self.backchannels_survived += 1
             self._note("barge-in hold dropped: the reply finished before the floor did")
+            # CARD DUPLEX-1: the reply ended on its own while ducked. Nothing to
+            # turn back up — the next utterance resets the panel's gain — but the
+            # controller must not stay in OVERLAP or it would refuse initiative
+            # forever afterwards.
+            self._barge_in_onset = None
+            self.turn_controller.note_robot_ended(self._clock(), cancelled=False)
             return "finished"
         speech_ended_at = self._speech_ended_after(hold.started_at)
-        if speech_ended_at is not None:
+        # CARD DUPLEX-1, correction pass, finding 2. ``is not None`` was not
+        # enough, and the hole is a real one: if a pump gap spans BOTH the
+        # deadline and the ``speech_stopped`` that follows it, this branch saw a
+        # stop, called it a backchannel and let the reply run — while the
+        # controller, told the same stop with the same clock, correctly read it
+        # as past the deadline and moved to YIELD. Two deciders, opposite
+        # answers, and the visible symptom is the worst one available: nobody
+        # sends the RESUME, so a still-playing reply finishes its sentence
+        # permanently ducked. Comparing against the deadline here is what keeps
+        # the two in step. ``<=`` and not ``<``: a stop landing exactly ON the
+        # deadline is MARK-1's R4d boundary and the earlier branch wins, on
+        # both sides.
+        if speech_ended_at is not None and speech_ended_at <= hold.deadline:
             self._barge_in_hold = None
             self._speech_end_override = None
             self.backchannels_survived += 1
@@ -2685,6 +2932,31 @@ class RealtimeLane:
                 f"stopped inside the {self._backchannel_floor_ms:.0f} ms floor, so the "
                 "reply was never cancelled"
             )
+            # CARD DUPLEX-1 — and the voice comes back up. Without this line the
+            # reply survives the "mm-hmm" and then plays its remaining seconds
+            # at duck level, which is a worse companion than the one that
+            # cancelled: the owner keeps a reply they can no longer hear.
+            self._barge_in_onset = None
+            self._apply_turn_action(self.turn_controller.note_owner_stopped(speech_ended_at))
+            # CARD DUPLEX-1 — MARK-1's handoff H-4(c), taken. "mm-hmm" is not a
+            # question, so it is not owed an answer. The ``speech_stopped`` that
+            # ended this burst went through ``_arm_voice_turn`` like any other,
+            # and left the lane waiting: the watchdog would nudge the provider
+            # for a reply to a noise, and the next reconnect would re-ask it.
+            # Retracted only when the burst itself armed it — a real question
+            # asked BEFORE the reply started is still owed, and stays owed.
+            if self._voice_turn_owed and not self._owed_at_hold_open:
+                self._voice_turn_owed = False
+                # Same line ``_on_response_done`` uses: stop expecting a frame
+                # that nobody asked for, without disarming a response that is
+                # genuinely outstanding.
+                self._expecting_server = self._responses_pending > 0
+                self.backchannel_turns_retracted += 1
+                self.turn_controller.note_turn_answered(self._clock())
+                self._note(
+                    "the owed turn was retracted: that was a backchannel, and a "
+                    "'mm-hmm' is not a question waiting for an answer"
+                )
             return "backchannel"
         if self._clock() < hold.deadline:
             return None
@@ -2693,6 +2965,10 @@ class RealtimeLane:
             f"backchannel floor passed at {self._backchannel_floor_ms:.0f} ms: this is a "
             "turn, not a 'mm-hmm'"
         )
+        # CARD DUPLEX-1: the controller's own deadline, ticked at the same
+        # instant. Its COMMIT is a cross-check, never an instruction — see
+        # ``_apply_turn_action``.
+        self.turn_controller.tick(self._clock())
         self._commit_barge_in()
         return "committed"
 
@@ -2778,7 +3054,19 @@ class RealtimeLane:
         played = self.played_ms()
         sink = self._sink
         if sink is not None:
-            sink.interrupt()
+            # ---- CARD DUPLEX-1 (task_26) — MARK-1's handoff H-7 ----
+            # With the floor at 0 the cut IS the onset and this is the old call
+            # unchanged. Above 0 they are a whole floor apart, and the capture
+            # index has to carry both or AIR-1's latency row measures the floor
+            # instead of the robot. Explicit feature detection, not a swallowed
+            # ``TypeError``: ``DiscardSink`` and ``voice_audio.SpeakerSink``
+            # take no keyword and must keep working exactly as they do.
+            onset = self._barge_in_onset
+            if onset is not None and getattr(sink, "accepts_interrupt_onset", False):
+                sink.interrupt(onset_ago_s=max(0.0, self._clock() - onset))  # type: ignore[call-arg]
+            else:
+                sink.interrupt()
+            # ---- END CARD DUPLEX-1 ----
         if send_cancel:
             self._send(ResponseCancel(response_id=self._response.response_id or None))
         if self._response.item_id:
@@ -2809,6 +3097,8 @@ class RealtimeLane:
         self.barge_ins_committed += 1
         # Card MARK-1: whatever settled this turn cannot settle the next one.
         self._speech_end_override = None
+        # CARD DUPLEX-1: nor can this turn's onset stamp the next cut.
+        self._barge_in_onset = None
         self._note(f"barge-in: cancelled {self._response.response_id!r} at {int(played)} ms")
 
     # --------------------------------------------------------------- content
@@ -3181,6 +3471,12 @@ class RealtimeLane:
     def _on_response_done(self, event: ResponseDone) -> None:
         self._flush_audio(final=True)
         self._response.playing = False
+        # CARD DUPLEX-1: the robot gave the floor back. A hold that is still
+        # open is settled by ``_settle_barge_in_hold`` on the same pump pass and
+        # tells the controller itself (cancelled vs finished); this call is the
+        # ordinary path, where nobody was talking over anything.
+        if self.turn_controller.state != STATE_OVERLAP:
+            self.turn_controller.note_robot_ended(self._clock())
         # One ``response.done`` clears ONE outstanding request, not the whole
         # expectation. A tool turn has two in flight — the owner's, and the
         # follow-up the lane sends with the tool's answer — and clearing the
@@ -3194,6 +3490,10 @@ class RealtimeLane:
         # answered spoken turn stays "owed" forever and every later reconnect
         # re-asks a question the owner already heard the answer to.
         self._voice_turn_owed = False
+        # CARD DUPLEX-1: answered, not abandoned. The controller counts the two
+        # apart so a soak can tell "every owed turn got a reply" from "every
+        # owed turn stopped being owed".
+        self.turn_controller.note_turn_answered(self._clock())
         self._expecting_server = self._responses_pending > 0
         # This response is over: the next ``function_call`` belongs to a new one
         # and inherits none of this one's speech (card R6, Defect 2).
@@ -3740,6 +4040,18 @@ class RealtimeLane:
             "backchannels_survived": self.backchannels_survived,
             "barge_ins_committed": self.barge_ins_committed,
             "barge_in_hold_failures": self.barge_in_hold_failures,
+            # ---- CARD DUPLEX-1 (task_26). Who has the floor, and what the
+            # lane did about the voice while it found out. ``turn_controller``
+            # is nested rather than flattened so the panel can show the state
+            # machine as one object and nothing here collides with a key
+            # another card owns.
+            "turn_controller": self.turn_controller.snapshot(),
+            "ducks_requested": self.ducks_requested,
+            "duck_resumes_requested": self.duck_resumes_requested,
+            "ducks_unsupported": self.ducks_unsupported,
+            "backchannel_turns_retracted": self.backchannel_turns_retracted,
+            "turn_decider_disagreements": self.turn_decider_disagreements,
+            # ---- END CARD DUPLEX-1 ----
         }
 
 

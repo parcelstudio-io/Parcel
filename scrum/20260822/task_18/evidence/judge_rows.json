@@ -1,0 +1,1650 @@
+{
+ "floor": 0.1,
+ "arm_F_judge_off": {
+  "promotions": 2,
+  "false_promotions": 2,
+  "correct_names_blocked": 0,
+  "known_places": [
+   "bench",
+   "bollard",
+   "crate",
+   "door",
+   "lamppost",
+   "pole",
+   "traffic light",
+   "tree",
+   "yellow cylinder"
+  ],
+  "rows": [
+   {
+    "object": "bollard_1",
+    "true_label": "bollard",
+    "name": "yellow cylinder",
+    "provenance": "promoted",
+    "visits": 3,
+    "admissible": true,
+    "correct": false
+   },
+   {
+    "object": "crate_1",
+    "true_label": "crate",
+    "name": "wooden box",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "crate_1",
+    "true_label": "crate",
+    "name": "wooden wall",
+    "provenance": "vlm_proposed",
+    "visits": 2,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "tree_2",
+    "true_label": "tree",
+    "name": "tree trunk",
+    "provenance": "vlm_proposed",
+    "visits": 2,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "black pole",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "door",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "pole",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "traffic_light_1",
+    "true_label": "traffic light",
+    "name": "pole",
+    "provenance": "promoted",
+    "visits": 3,
+    "admissible": true,
+    "correct": false
+   },
+   {
+    "object": "bench_1",
+    "true_label": "bench",
+    "name": "wooden bench",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "bench_1",
+    "true_label": "bench",
+    "name": "wooden box",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": false
+   }
+  ],
+  "per_visit": [
+   {
+    "visit_id": "visit-0",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 5,
+    "promotions": 0,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 0,
+    "judge_accepted": 0,
+    "judge_rejected": 0,
+    "judge_unavailable": 0,
+    "judge_held": 0,
+    "outcomes": [
+     {
+      "entry_id": "place-06cf60828dba4e06",
+      "proposed": "yellow cylinder",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-4dd4182337c34b5a",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-79e1d895f5cc4988",
+      "proposed": "wooden box",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-e09b439bc333474d",
+      "proposed": "tree",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-ea0a48cbfebf474e",
+      "proposed": "black pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-f53966dbacc44ad1",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-f797de406fc44d0e",
+      "proposed": "wooden bench",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     }
+    ]
+   },
+   {
+    "visit_id": "visit-1",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 5,
+    "promotions": 0,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 0,
+    "judge_accepted": 0,
+    "judge_rejected": 0,
+    "judge_unavailable": 0,
+    "judge_held": 0,
+    "outcomes": [
+     {
+      "entry_id": "place-06cf60828dba4e06",
+      "proposed": "yellow cylinder",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-4dd4182337c34b5a",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-79e1d895f5cc4988",
+      "proposed": "wooden wall",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-e09b439bc333474d",
+      "proposed": "tree trunk",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-ea0a48cbfebf474e",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-f53966dbacc44ad1",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-f797de406fc44d0e",
+      "proposed": "bench",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     }
+    ]
+   },
+   {
+    "visit_id": "visit-2",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 6,
+    "promotions": 2,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 0,
+    "judge_accepted": 0,
+    "judge_rejected": 0,
+    "judge_unavailable": 0,
+    "judge_held": 0,
+    "outcomes": [
+     {
+      "entry_id": "place-06cf60828dba4e06",
+      "proposed": "yellow cylinder",
+      "promoted": true,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-4dd4182337c34b5a",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-79e1d895f5cc4988",
+      "proposed": "wooden wall",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-e09b439bc333474d",
+      "proposed": "tree trunk",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-ea0a48cbfebf474e",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-f53966dbacc44ad1",
+      "proposed": "pole",
+      "promoted": true,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-f797de406fc44d0e",
+      "proposed": "wooden box",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     }
+    ]
+   }
+  ]
+ },
+ "arm_J_judge_on": {
+  "promotions": 1,
+  "false_promotions": 1,
+  "correct_names_blocked": 0,
+  "known_places": [
+   "bench",
+   "bollard",
+   "crate",
+   "door",
+   "lamppost",
+   "traffic light",
+   "tree",
+   "yellow cylinder"
+  ],
+  "rows": [
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "black pole",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "door",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "pole",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "bollard_1",
+    "true_label": "bollard",
+    "name": "yellow cylinder",
+    "provenance": "promoted",
+    "visits": 3,
+    "admissible": true,
+    "correct": false
+   },
+   {
+    "object": "crate_1",
+    "true_label": "crate",
+    "name": "wooden box",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "crate_1",
+    "true_label": "crate",
+    "name": "wooden wall",
+    "provenance": "vlm_proposed",
+    "visits": 2,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "bench_1",
+    "true_label": "bench",
+    "name": "wooden bench",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "bench_1",
+    "true_label": "bench",
+    "name": "wooden box",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "traffic_light_1",
+    "true_label": "traffic light",
+    "name": "pole",
+    "provenance": "vlm_proposed",
+    "visits": 3,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "tree_2",
+    "true_label": "tree",
+    "name": "tree trunk",
+    "provenance": "vlm_proposed",
+    "visits": 2,
+    "admissible": false,
+    "correct": true
+   }
+  ],
+  "per_visit": [
+   {
+    "visit_id": "visit-0",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 5,
+    "promotions": 0,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 0,
+    "judge_accepted": 0,
+    "judge_rejected": 0,
+    "judge_unavailable": 0,
+    "judge_held": 0,
+    "outcomes": [
+     {
+      "entry_id": "place-2dd92c08c3d04746",
+      "proposed": "black pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-2f6d98ef5a39475e",
+      "proposed": "yellow cylinder",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-385c0c78ad4a4f86",
+      "proposed": "wooden box",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-40f17c1eb4d44e72",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-6e55867af4e64529",
+      "proposed": "wooden bench",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-843e0bf2f4474e8b",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-daa17832cbb24c45",
+      "proposed": "tree",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     }
+    ]
+   },
+   {
+    "visit_id": "visit-1",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 5,
+    "promotions": 0,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 0,
+    "judge_accepted": 0,
+    "judge_rejected": 0,
+    "judge_unavailable": 0,
+    "judge_held": 0,
+    "outcomes": [
+     {
+      "entry_id": "place-2dd92c08c3d04746",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-2f6d98ef5a39475e",
+      "proposed": "yellow cylinder",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-385c0c78ad4a4f86",
+      "proposed": "wooden wall",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-40f17c1eb4d44e72",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-6e55867af4e64529",
+      "proposed": "bench",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-843e0bf2f4474e8b",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-daa17832cbb24c45",
+      "proposed": "tree trunk",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     }
+    ]
+   },
+   {
+    "visit_id": "visit-2",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 6,
+    "promotions": 1,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 2,
+    "judge_accepted": 1,
+    "judge_rejected": 1,
+    "judge_unavailable": 0,
+    "judge_held": 1,
+    "outcomes": [
+     {
+      "entry_id": "place-2dd92c08c3d04746",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-2f6d98ef5a39475e",
+      "proposed": "yellow cylinder",
+      "promoted": true,
+      "demoted": [],
+      "skipped": "",
+      "judged": "accept",
+      "judge_strength": 0.9315870404243469,
+      "held": false
+     },
+     {
+      "entry_id": "place-385c0c78ad4a4f86",
+      "proposed": "wooden wall",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-40f17c1eb4d44e72",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-6e55867af4e64529",
+      "proposed": "wooden box",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-843e0bf2f4474e8b",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "reject",
+      "judge_strength": 0.0650087296962738,
+      "held": true
+     },
+     {
+      "entry_id": "place-daa17832cbb24c45",
+      "proposed": "tree trunk",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     }
+    ]
+   }
+  ]
+ },
+ "rows_J1_J2": [
+  {
+   "object": "traffic_light_1",
+   "view": "orbit_bench_1_4.5m_0__traffic_light_1",
+   "name": "pole",
+   "outcome": "accept",
+   "strength": 0.5217148661613464
+  },
+  {
+   "object": "traffic_light_1",
+   "view": "orbit_building_6_4.5m_90__traffic_light_1",
+   "name": "pole",
+   "outcome": "accept",
+   "strength": 0.24689632654190063
+  },
+  {
+   "object": "traffic_light_1",
+   "view": "orbit_building_6_6m_90__traffic_light_1",
+   "name": "pole",
+   "outcome": "reject",
+   "strength": 0.0650087296962738
+  },
+  {
+   "object": "bollard_1",
+   "view": "orbit_bench_1_3m_270__bollard_1",
+   "name": "yellow cylinder",
+   "outcome": "accept",
+   "strength": 0.3390612304210663
+  },
+  {
+   "object": "bollard_1",
+   "view": "orbit_building_1_3m_270__bollard_1",
+   "name": "yellow cylinder",
+   "outcome": "accept",
+   "strength": 0.6346564888954163
+  },
+  {
+   "object": "bollard_1",
+   "view": "orbit_building_2_3m_270__bollard_1",
+   "name": "yellow cylinder",
+   "outcome": "accept",
+   "strength": 0.9315870404243469
+  }
+ ],
+ "row_J5_true_names": {
+  "n": 40,
+  "accepted": 19,
+  "recall": 0.475,
+  "per_class": {
+   "bench": "4/4",
+   "bicycle": "0/4",
+   "bollard": "2/4",
+   "building": "1/4",
+   "crate": "3/4",
+   "door": "1/4",
+   "lamppost": "0/4",
+   "planter": "4/4",
+   "traffic light": "1/4",
+   "tree": "3/4"
+  },
+  "rows": [
+   {
+    "id": "orbit_bollard_1_3m_90__bench_1",
+    "label": "bench",
+    "outcome": "accept",
+    "strength": 0.6332968473434448
+   },
+   {
+    "id": "orbit_building_4_3m_180__bench_1",
+    "label": "bench",
+    "outcome": "accept",
+    "strength": 0.48270344734191895
+   },
+   {
+    "id": "orbit_building_4_6m_180__bench_1",
+    "label": "bench",
+    "outcome": "accept",
+    "strength": 0.11899801343679428
+   },
+   {
+    "id": "orbit_building_5_3m_90__bench_1",
+    "label": "bench",
+    "outcome": "accept",
+    "strength": 0.684580385684967
+   },
+   {
+    "id": "orbit_bicycle_6m_180__bicycle",
+    "label": "bicycle",
+    "outcome": "reject",
+    "strength": 0.00029365462251007557
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__bicycle",
+    "label": "bicycle",
+    "outcome": "reject",
+    "strength": 0.0011335690505802631
+   },
+   {
+    "id": "orbit_bollard_1_4.5m_180__bicycle",
+    "label": "bicycle",
+    "outcome": "reject",
+    "strength": 0.0010242064017802477
+   },
+   {
+    "id": "orbit_building_1_3m_270__bicycle",
+    "label": "bicycle",
+    "outcome": "reject",
+    "strength": 0.0006190416752360761
+   },
+   {
+    "id": "orbit_bench_1_3m_270__bollard_1",
+    "label": "bollard",
+    "outcome": "accept",
+    "strength": 0.10875558853149414
+   },
+   {
+    "id": "orbit_building_1_3m_270__bollard_1",
+    "label": "bollard",
+    "outcome": "reject",
+    "strength": 0.06512754410505295
+   },
+   {
+    "id": "orbit_building_2_3m_270__bollard_1",
+    "label": "bollard",
+    "outcome": "accept",
+    "strength": 0.15040281414985657
+   },
+   {
+    "id": "orbit_building_2_4.5m_270__bollard_1",
+    "label": "bollard",
+    "outcome": "reject",
+    "strength": 0.09964530169963837
+   },
+   {
+    "id": "orbit_bench_1_3m_270__building_5",
+    "label": "building",
+    "outcome": "reject",
+    "strength": 0.08181270956993103
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__building_3",
+    "label": "building",
+    "outcome": "reject",
+    "strength": 0.03090895712375641
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__building_4",
+    "label": "building",
+    "outcome": "accept",
+    "strength": 0.11971653997898102
+   },
+   {
+    "id": "orbit_bench_1_4.5m_270__building_5",
+    "label": "building",
+    "outcome": "reject",
+    "strength": 0.048496000468730927
+   },
+   {
+    "id": "orbit_bench_1_3m_0__crate_1",
+    "label": "crate",
+    "outcome": "accept",
+    "strength": 0.2820972800254822
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__crate_1",
+    "label": "crate",
+    "outcome": "accept",
+    "strength": 0.21419788897037506
+   },
+   {
+    "id": "orbit_bench_1_6m_0__crate_1",
+    "label": "crate",
+    "outcome": "reject",
+    "strength": 0.04867657274007797
+   },
+   {
+    "id": "orbit_bicycle_3m_0__crate_1",
+    "label": "crate",
+    "outcome": "accept",
+    "strength": 0.3158414661884308
+   },
+   {
+    "id": "orbit_bench_1_3m_180__door_1",
+    "label": "door",
+    "outcome": "accept",
+    "strength": 0.15380319952964783
+   },
+   {
+    "id": "orbit_building_2_3m_180__door_1",
+    "label": "door",
+    "outcome": "reject",
+    "strength": 0.05953749269247055
+   },
+   {
+    "id": "orbit_building_2_4.5m_180__door_1",
+    "label": "door",
+    "outcome": "reject",
+    "strength": 0.02076474018394947
+   },
+   {
+    "id": "orbit_building_3_6m_180__door_1",
+    "label": "door",
+    "outcome": "reject",
+    "strength": 0.041617803275585175
+   },
+   {
+    "id": "orbit_bicycle_3m_90__lamppost_1",
+    "label": "lamppost",
+    "outcome": "reject",
+    "strength": 0.012920473702251911
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__lamppost_2",
+    "label": "lamppost",
+    "outcome": "reject",
+    "strength": 0.005426943302154541
+   },
+   {
+    "id": "orbit_building_4_3m_180__lamppost_1",
+    "label": "lamppost",
+    "outcome": "reject",
+    "strength": 0.017242778092622757
+   },
+   {
+    "id": "orbit_crate_1_3m_180__lamppost_1",
+    "label": "lamppost",
+    "outcome": "reject",
+    "strength": 0.07737810909748077
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__planter_2",
+    "label": "planter",
+    "outcome": "accept",
+    "strength": 0.22270013391971588
+   },
+   {
+    "id": "orbit_bench_1_6m_0__planter_2",
+    "label": "planter",
+    "outcome": "accept",
+    "strength": 0.2778647243976593
+   },
+   {
+    "id": "orbit_building_5_4.5m_90__planter_1",
+    "label": "planter",
+    "outcome": "accept",
+    "strength": 0.13753247261047363
+   },
+   {
+    "id": "orbit_building_5_6m_90__planter_1",
+    "label": "planter",
+    "outcome": "accept",
+    "strength": 0.35711899399757385
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+    "label": "traffic light",
+    "outcome": "reject",
+    "strength": 0.0012303582625463605
+   },
+   {
+    "id": "orbit_building_6_4.5m_90__traffic_light_1",
+    "label": "traffic light",
+    "outcome": "reject",
+    "strength": 0.002243087626993656
+   },
+   {
+    "id": "orbit_building_6_6m_90__traffic_light_1",
+    "label": "traffic light",
+    "outcome": "reject",
+    "strength": 0.0025809044018387794
+   },
+   {
+    "id": "orbit_planter_1_3m_0__traffic_light_1",
+    "label": "traffic light",
+    "outcome": "accept",
+    "strength": 0.5183176398277283
+   },
+   {
+    "id": "orbit_bench_1_3m_0__tree_2",
+    "label": "tree",
+    "outcome": "reject",
+    "strength": 0.08647765219211578
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__tree_2",
+    "label": "tree",
+    "outcome": "accept",
+    "strength": 0.12315455079078674
+   },
+   {
+    "id": "orbit_bench_1_6m_0__tree_2",
+    "label": "tree",
+    "outcome": "accept",
+    "strength": 0.11777491867542267
+   },
+   {
+    "id": "orbit_building_1_6m_0__tree_2",
+    "label": "tree",
+    "outcome": "accept",
+    "strength": 0.23528406023979187
+   }
+  ]
+ },
+ "row_J6_wrong_names": {
+  "n": 21,
+  "accepted": 12,
+  "accept_rate": 0.5714,
+  "rows": [
+   {
+    "id": "orbit_building_4_6m_180__bench_1",
+    "label": "bench",
+    "vlm_name": "wooden box",
+    "outcome": "accept",
+    "strength": 0.17795369029045105
+   },
+   {
+    "id": "orbit_bicycle_6m_180__bicycle",
+    "label": "bicycle",
+    "vlm_name": "chair",
+    "outcome": "reject",
+    "strength": 0.01615283451974392
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__bicycle",
+    "label": "bicycle",
+    "vlm_name": "black box",
+    "outcome": "accept",
+    "strength": 0.5145832300186157
+   },
+   {
+    "id": "orbit_bollard_1_4.5m_180__bicycle",
+    "label": "bicycle",
+    "vlm_name": "black rectangle",
+    "outcome": "reject",
+    "strength": 0.0832919254899025
+   },
+   {
+    "id": "orbit_building_1_3m_270__bicycle",
+    "label": "bicycle",
+    "vlm_name": "black block",
+    "outcome": "accept",
+    "strength": 0.1225232183933258
+   },
+   {
+    "id": "orbit_bench_1_3m_270__bollard_1",
+    "label": "bollard",
+    "vlm_name": "yellow cylinder",
+    "outcome": "accept",
+    "strength": 0.2890705466270447
+   },
+   {
+    "id": "orbit_building_1_3m_270__bollard_1",
+    "label": "bollard",
+    "vlm_name": "yellow cylinder",
+    "outcome": "accept",
+    "strength": 0.6346564888954163
+   },
+   {
+    "id": "orbit_building_2_3m_270__bollard_1",
+    "label": "bollard",
+    "vlm_name": "yellow cylinder",
+    "outcome": "accept",
+    "strength": 0.9315870404243469
+   },
+   {
+    "id": "orbit_building_2_4.5m_270__bollard_1",
+    "label": "bollard",
+    "vlm_name": "yellow cylinder",
+    "outcome": "accept",
+    "strength": 0.8237541317939758
+   },
+   {
+    "id": "orbit_bench_1_3m_270__building_5",
+    "label": "building",
+    "vlm_name": "door",
+    "outcome": "reject",
+    "strength": 0.01590639352798462
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__crate_1",
+    "label": "crate",
+    "vlm_name": "wooden wall",
+    "outcome": "accept",
+    "strength": 0.49560943245887756
+   },
+   {
+    "id": "orbit_bench_1_6m_0__crate_1",
+    "label": "crate",
+    "vlm_name": "wooden wall",
+    "outcome": "accept",
+    "strength": 0.602587878704071
+   },
+   {
+    "id": "orbit_bollard_1_3m_180__lamppost_2",
+    "label": "lamppost",
+    "vlm_name": "door",
+    "outcome": "reject",
+    "strength": 0.03167862817645073
+   },
+   {
+    "id": "orbit_building_4_3m_180__lamppost_1",
+    "label": "lamppost",
+    "vlm_name": "door",
+    "outcome": "reject",
+    "strength": 0.04858620837330818
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__planter_2",
+    "label": "planter",
+    "vlm_name": "cylinder",
+    "outcome": "reject",
+    "strength": 0.0445975735783577
+   },
+   {
+    "id": "orbit_bench_1_6m_0__planter_2",
+    "label": "planter",
+    "vlm_name": "tree trunk",
+    "outcome": "reject",
+    "strength": 0.057599205523729324
+   },
+   {
+    "id": "orbit_building_5_4.5m_90__planter_1",
+    "label": "planter",
+    "vlm_name": "tree trunk",
+    "outcome": "reject",
+    "strength": 0.005343256052583456
+   },
+   {
+    "id": "orbit_building_5_6m_90__planter_1",
+    "label": "planter",
+    "vlm_name": "tree trunk",
+    "outcome": "reject",
+    "strength": 0.013171949423849583
+   },
+   {
+    "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+    "label": "traffic light",
+    "vlm_name": "pole",
+    "outcome": "accept",
+    "strength": 0.5217148661613464
+   },
+   {
+    "id": "orbit_building_6_4.5m_90__traffic_light_1",
+    "label": "traffic light",
+    "vlm_name": "pole",
+    "outcome": "accept",
+    "strength": 0.24689632654190063
+   },
+   {
+    "id": "orbit_building_6_6m_90__traffic_light_1",
+    "label": "traffic light",
+    "vlm_name": "black pole",
+    "outcome": "accept",
+    "strength": 0.10070160776376724
+   }
+  ]
+ },
+ "row_J7_latency": {
+  "n": 61,
+  "p50_ms": 103.34,
+  "p95_ms": 108.34
+ },
+ "post_hoc_floor_sweep": [
+  {
+   "floor": 0.02,
+   "promotions": 2,
+   "false_promotions": 2,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.75,
+   "wrong_name_accept": 0.8095
+  },
+  {
+   "floor": 0.05,
+   "promotions": 2,
+   "false_promotions": 2,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.625,
+   "wrong_name_accept": 0.6667
+  },
+  {
+   "floor": 0.1,
+   "promotions": 1,
+   "false_promotions": 1,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.475,
+   "wrong_name_accept": 0.5714
+  },
+  {
+   "floor": 0.2,
+   "promotions": 1,
+   "false_promotions": 1,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.275,
+   "wrong_name_accept": 0.4286
+  },
+  {
+   "floor": 0.3,
+   "promotions": 1,
+   "false_promotions": 1,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.15,
+   "wrong_name_accept": 0.3333
+  },
+  {
+   "floor": 0.4,
+   "promotions": 1,
+   "false_promotions": 1,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.1,
+   "wrong_name_accept": 0.3333
+  },
+  {
+   "floor": 0.5,
+   "promotions": 1,
+   "false_promotions": 1,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.075,
+   "wrong_name_accept": 0.2857
+  },
+  {
+   "floor": 0.7,
+   "promotions": 1,
+   "false_promotions": 1,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.0,
+   "wrong_name_accept": 0.0952
+  },
+  {
+   "floor": 0.9,
+   "promotions": 1,
+   "false_promotions": 1,
+   "correct_names_blocked": 0,
+   "true_name_recall": 0.0,
+   "wrong_name_accept": 0.0476
+  }
+ ],
+ "arm_J_thumbnail64": {
+  "promotions": 1,
+  "false_promotions": 1,
+  "correct_names_blocked": 0,
+  "known_places": [
+   "bench",
+   "bollard",
+   "crate",
+   "door",
+   "lamppost",
+   "traffic light",
+   "tree",
+   "yellow cylinder"
+  ],
+  "rows": [
+   {
+    "object": "tree_2",
+    "true_label": "tree",
+    "name": "tree trunk",
+    "provenance": "vlm_proposed",
+    "visits": 2,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "bench_1",
+    "true_label": "bench",
+    "name": "wooden bench",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "bench_1",
+    "true_label": "bench",
+    "name": "wooden box",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "bollard_1",
+    "true_label": "bollard",
+    "name": "yellow cylinder",
+    "provenance": "promoted",
+    "visits": 3,
+    "admissible": true,
+    "correct": false
+   },
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "black pole",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "door",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "lamppost_1",
+    "true_label": "lamppost",
+    "name": "pole",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "crate_1",
+    "true_label": "crate",
+    "name": "wooden box",
+    "provenance": "vlm_proposed",
+    "visits": 1,
+    "admissible": false,
+    "correct": true
+   },
+   {
+    "object": "crate_1",
+    "true_label": "crate",
+    "name": "wooden wall",
+    "provenance": "vlm_proposed",
+    "visits": 2,
+    "admissible": false,
+    "correct": false
+   },
+   {
+    "object": "traffic_light_1",
+    "true_label": "traffic light",
+    "name": "pole",
+    "provenance": "vlm_proposed",
+    "visits": 3,
+    "admissible": false,
+    "correct": false
+   }
+  ],
+  "per_visit": [
+   {
+    "visit_id": "visit-0",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 5,
+    "promotions": 0,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 0,
+    "judge_accepted": 0,
+    "judge_rejected": 0,
+    "judge_unavailable": 0,
+    "judge_held": 0,
+    "outcomes": [
+     {
+      "entry_id": "place-4c690e8322e24f73",
+      "proposed": "tree",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-620501045d244ef9",
+      "proposed": "wooden bench",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-86e6ce2ffaca4baf",
+      "proposed": "yellow cylinder",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-bead1852eff846c1",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-befbc785db1949d2",
+      "proposed": "black pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-c65bef9db6f84581",
+      "proposed": "wooden box",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-cb0b133aca0941fb",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     }
+    ]
+   },
+   {
+    "visit_id": "visit-1",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 5,
+    "promotions": 0,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 0,
+    "judge_accepted": 0,
+    "judge_rejected": 0,
+    "judge_unavailable": 0,
+    "judge_held": 0,
+    "outcomes": [
+     {
+      "entry_id": "place-4c690e8322e24f73",
+      "proposed": "tree trunk",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-620501045d244ef9",
+      "proposed": "bench",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-86e6ce2ffaca4baf",
+      "proposed": "yellow cylinder",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-bead1852eff846c1",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-befbc785db1949d2",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-c65bef9db6f84581",
+      "proposed": "wooden wall",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-cb0b133aca0941fb",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     }
+    ]
+   },
+   {
+    "visit_id": "visit-2",
+    "considered": 7,
+    "asked": 7,
+    "proposals": 6,
+    "promotions": 1,
+    "demotions": 0,
+    "rejected": 0,
+    "budget_exhausted": false,
+    "judged": 2,
+    "judge_accepted": 1,
+    "judge_rejected": 1,
+    "judge_unavailable": 0,
+    "judge_held": 1,
+    "outcomes": [
+     {
+      "entry_id": "place-4c690e8322e24f73",
+      "proposed": "tree trunk",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-620501045d244ef9",
+      "proposed": "wooden box",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-86e6ce2ffaca4baf",
+      "proposed": "yellow cylinder",
+      "promoted": true,
+      "demoted": [],
+      "skipped": "",
+      "judged": "accept",
+      "judge_strength": 0.9581479430198669,
+      "held": false
+     },
+     {
+      "entry_id": "place-bead1852eff846c1",
+      "proposed": "door",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "same as label",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-befbc785db1949d2",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-c65bef9db6f84581",
+      "proposed": "wooden wall",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "",
+      "judge_strength": null,
+      "held": false
+     },
+     {
+      "entry_id": "place-cb0b133aca0941fb",
+      "proposed": "pole",
+      "promoted": false,
+      "demoted": [],
+      "skipped": "",
+      "judged": "reject",
+      "judge_strength": 0.028328312560915947,
+      "held": true
+     }
+    ]
+   }
+  ]
+ }
+}

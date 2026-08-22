@@ -1,0 +1,12 @@
+tools/bargein_through_air.py sha256 before: 1a110098d591293a27b2ce1f60472fe9cc97055a7902be2e710b2c6b8a07e5e0
+=== SEED E2: CAPTURE_ONSET_KIND put back into ONSET_KINDS (the laundering path)
+FAILED tests/test_air1_scorecard.py::test_the_tee_alone_yields_a_lower_bound_and_never_a_median
+FAILED tests/test_air1_scorecard.py::test_a_capture_without_the_stamp_is_unmeasured_not_zero
+2 failed, 39 passed, 1 warning in 9.02s
+
+=== SEED E3: the onset_is_an_estimate clause deleted from verify_scorecard
+FAILED tests/test_air1_scorecard.py::test_an_estimated_onset_can_never_be_scored_as_a_pass
+1 failed, 40 passed, 1 warning in 9.00s
+RESTORE OK (byte-identical) 1a110098d591293a27b2ce1f60472fe9cc97055a7902be2e710b2c6b8a07e5e0
+--- RESTORED ---
+41 passed, 1 warning in 9.00s

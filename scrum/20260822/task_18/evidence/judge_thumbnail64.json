@@ -1,0 +1,400 @@
+{
+ "crop": "thumbnail64 (the crop the map stores and the shipping path feeds)",
+ "true_recall": 0.425,
+ "wrong_accept": 0.4762,
+ "paired_n": 21,
+ "wrong_beats_true": 16,
+ "median_true_paired": 0.043,
+ "median_wrong_paired": 0.0669,
+ "true_rows": [
+  {
+   "id": "orbit_bollard_1_3m_90__bench_1",
+   "label": "bench",
+   "outcome": "accept",
+   "strength": 0.32723817229270935
+  },
+  {
+   "id": "orbit_building_4_3m_180__bench_1",
+   "label": "bench",
+   "outcome": "reject",
+   "strength": 0.08663207292556763
+  },
+  {
+   "id": "orbit_building_4_6m_180__bench_1",
+   "label": "bench",
+   "outcome": "reject",
+   "strength": 0.08108212053775787
+  },
+  {
+   "id": "orbit_building_5_3m_90__bench_1",
+   "label": "bench",
+   "outcome": "accept",
+   "strength": 0.664322555065155
+  },
+  {
+   "id": "orbit_bicycle_6m_180__bicycle",
+   "label": "bicycle",
+   "outcome": "reject",
+   "strength": 0.00019563532259780914
+  },
+  {
+   "id": "orbit_bollard_1_3m_180__bicycle",
+   "label": "bicycle",
+   "outcome": "reject",
+   "strength": 0.0016103574307635427
+  },
+  {
+   "id": "orbit_bollard_1_4.5m_180__bicycle",
+   "label": "bicycle",
+   "outcome": "reject",
+   "strength": 0.00034196206252090633
+  },
+  {
+   "id": "orbit_building_1_3m_270__bicycle",
+   "label": "bicycle",
+   "outcome": "reject",
+   "strength": 0.00030061634606681764
+  },
+  {
+   "id": "orbit_bench_1_3m_270__bollard_1",
+   "label": "bollard",
+   "outcome": "reject",
+   "strength": 0.02859835885465145
+  },
+  {
+   "id": "orbit_building_1_3m_270__bollard_1",
+   "label": "bollard",
+   "outcome": "accept",
+   "strength": 0.10284407436847687
+  },
+  {
+   "id": "orbit_building_2_3m_270__bollard_1",
+   "label": "bollard",
+   "outcome": "accept",
+   "strength": 0.36364689469337463
+  },
+  {
+   "id": "orbit_building_2_4.5m_270__bollard_1",
+   "label": "bollard",
+   "outcome": "accept",
+   "strength": 0.3485342860221863
+  },
+  {
+   "id": "orbit_bench_1_3m_270__building_5",
+   "label": "building",
+   "outcome": "reject",
+   "strength": 0.0040543340146541595
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__building_3",
+   "label": "building",
+   "outcome": "reject",
+   "strength": 0.0018748616566881537
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__building_4",
+   "label": "building",
+   "outcome": "reject",
+   "strength": 0.06359857320785522
+  },
+  {
+   "id": "orbit_bench_1_4.5m_270__building_5",
+   "label": "building",
+   "outcome": "reject",
+   "strength": 0.007876706309616566
+  },
+  {
+   "id": "orbit_bench_1_3m_0__crate_1",
+   "label": "crate",
+   "outcome": "accept",
+   "strength": 0.21239535510540009
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__crate_1",
+   "label": "crate",
+   "outcome": "accept",
+   "strength": 0.4005148708820343
+  },
+  {
+   "id": "orbit_bench_1_6m_0__crate_1",
+   "label": "crate",
+   "outcome": "reject",
+   "strength": 0.025419652462005615
+  },
+  {
+   "id": "orbit_bicycle_3m_0__crate_1",
+   "label": "crate",
+   "outcome": "accept",
+   "strength": 0.464446097612381
+  },
+  {
+   "id": "orbit_bench_1_3m_180__door_1",
+   "label": "door",
+   "outcome": "reject",
+   "strength": 0.04894862323999405
+  },
+  {
+   "id": "orbit_building_2_3m_180__door_1",
+   "label": "door",
+   "outcome": "accept",
+   "strength": 0.17624586820602417
+  },
+  {
+   "id": "orbit_building_2_4.5m_180__door_1",
+   "label": "door",
+   "outcome": "reject",
+   "strength": 0.02590802125632763
+  },
+  {
+   "id": "orbit_building_3_6m_180__door_1",
+   "label": "door",
+   "outcome": "accept",
+   "strength": 0.24131055176258087
+  },
+  {
+   "id": "orbit_bicycle_3m_90__lamppost_1",
+   "label": "lamppost",
+   "outcome": "reject",
+   "strength": 0.014172366820275784
+  },
+  {
+   "id": "orbit_bollard_1_3m_180__lamppost_2",
+   "label": "lamppost",
+   "outcome": "reject",
+   "strength": 0.0012943681795150042
+  },
+  {
+   "id": "orbit_building_4_3m_180__lamppost_1",
+   "label": "lamppost",
+   "outcome": "reject",
+   "strength": 0.043042849749326706
+  },
+  {
+   "id": "orbit_crate_1_3m_180__lamppost_1",
+   "label": "lamppost",
+   "outcome": "reject",
+   "strength": 0.0075479233637452126
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__planter_2",
+   "label": "planter",
+   "outcome": "accept",
+   "strength": 0.14104463160037994
+  },
+  {
+   "id": "orbit_bench_1_6m_0__planter_2",
+   "label": "planter",
+   "outcome": "reject",
+   "strength": 0.05203782394528389
+  },
+  {
+   "id": "orbit_building_5_4.5m_90__planter_1",
+   "label": "planter",
+   "outcome": "accept",
+   "strength": 0.20434190332889557
+  },
+  {
+   "id": "orbit_building_5_6m_90__planter_1",
+   "label": "planter",
+   "outcome": "accept",
+   "strength": 0.25945019721984863
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+   "label": "traffic light",
+   "outcome": "reject",
+   "strength": 0.019681409001350403
+  },
+  {
+   "id": "orbit_building_6_4.5m_90__traffic_light_1",
+   "label": "traffic light",
+   "outcome": "reject",
+   "strength": 0.04401864856481552
+  },
+  {
+   "id": "orbit_building_6_6m_90__traffic_light_1",
+   "label": "traffic light",
+   "outcome": "reject",
+   "strength": 0.010776727460324764
+  },
+  {
+   "id": "orbit_planter_1_3m_0__traffic_light_1",
+   "label": "traffic light",
+   "outcome": "accept",
+   "strength": 0.5397111177444458
+  },
+  {
+   "id": "orbit_bench_1_3m_0__tree_2",
+   "label": "tree",
+   "outcome": "accept",
+   "strength": 0.21800270676612854
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__tree_2",
+   "label": "tree",
+   "outcome": "reject",
+   "strength": 0.06131153553724289
+  },
+  {
+   "id": "orbit_bench_1_6m_0__tree_2",
+   "label": "tree",
+   "outcome": "accept",
+   "strength": 0.343892365694046
+  },
+  {
+   "id": "orbit_building_1_6m_0__tree_2",
+   "label": "tree",
+   "outcome": "accept",
+   "strength": 0.11951085925102234
+  }
+ ],
+ "wrong_rows": [
+  {
+   "id": "orbit_building_4_6m_180__bench_1",
+   "label": "bench",
+   "vlm_name": "wooden box",
+   "outcome": "accept",
+   "strength": 0.10158944875001907
+  },
+  {
+   "id": "orbit_bicycle_6m_180__bicycle",
+   "label": "bicycle",
+   "vlm_name": "chair",
+   "outcome": "reject",
+   "strength": 0.00457386439666152
+  },
+  {
+   "id": "orbit_bollard_1_3m_180__bicycle",
+   "label": "bicycle",
+   "vlm_name": "black box",
+   "outcome": "accept",
+   "strength": 0.2968580424785614
+  },
+  {
+   "id": "orbit_bollard_1_4.5m_180__bicycle",
+   "label": "bicycle",
+   "vlm_name": "black rectangle",
+   "outcome": "reject",
+   "strength": 0.025035422295331955
+  },
+  {
+   "id": "orbit_building_1_3m_270__bicycle",
+   "label": "bicycle",
+   "vlm_name": "black block",
+   "outcome": "reject",
+   "strength": 0.051082734018564224
+  },
+  {
+   "id": "orbit_bench_1_3m_270__bollard_1",
+   "label": "bollard",
+   "vlm_name": "yellow cylinder",
+   "outcome": "accept",
+   "strength": 0.3553273677825928
+  },
+  {
+   "id": "orbit_building_1_3m_270__bollard_1",
+   "label": "bollard",
+   "vlm_name": "yellow cylinder",
+   "outcome": "accept",
+   "strength": 0.36308208107948303
+  },
+  {
+   "id": "orbit_building_2_3m_270__bollard_1",
+   "label": "bollard",
+   "vlm_name": "yellow cylinder",
+   "outcome": "accept",
+   "strength": 0.9581479430198669
+  },
+  {
+   "id": "orbit_building_2_4.5m_270__bollard_1",
+   "label": "bollard",
+   "vlm_name": "yellow cylinder",
+   "outcome": "accept",
+   "strength": 0.9353464841842651
+  },
+  {
+   "id": "orbit_bench_1_3m_270__building_5",
+   "label": "building",
+   "vlm_name": "door",
+   "outcome": "reject",
+   "strength": 0.014559519477188587
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__crate_1",
+   "label": "crate",
+   "vlm_name": "wooden wall",
+   "outcome": "accept",
+   "strength": 0.19915218651294708
+  },
+  {
+   "id": "orbit_bench_1_6m_0__crate_1",
+   "label": "crate",
+   "vlm_name": "wooden wall",
+   "outcome": "accept",
+   "strength": 0.1875787377357483
+  },
+  {
+   "id": "orbit_bollard_1_3m_180__lamppost_2",
+   "label": "lamppost",
+   "vlm_name": "door",
+   "outcome": "reject",
+   "strength": 0.005980330519378185
+  },
+  {
+   "id": "orbit_building_4_3m_180__lamppost_1",
+   "label": "lamppost",
+   "vlm_name": "door",
+   "outcome": "reject",
+   "strength": 0.06693419814109802
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__planter_2",
+   "label": "planter",
+   "vlm_name": "cylinder",
+   "outcome": "reject",
+   "strength": 0.017917344346642494
+  },
+  {
+   "id": "orbit_bench_1_6m_0__planter_2",
+   "label": "planter",
+   "vlm_name": "tree trunk",
+   "outcome": "reject",
+   "strength": 0.002822832902893424
+  },
+  {
+   "id": "orbit_building_5_4.5m_90__planter_1",
+   "label": "planter",
+   "vlm_name": "tree trunk",
+   "outcome": "reject",
+   "strength": 0.0008626077324151993
+  },
+  {
+   "id": "orbit_building_5_6m_90__planter_1",
+   "label": "planter",
+   "vlm_name": "tree trunk",
+   "outcome": "reject",
+   "strength": 0.0032224843744188547
+  },
+  {
+   "id": "orbit_bench_1_4.5m_0__traffic_light_1",
+   "label": "traffic light",
+   "vlm_name": "pole",
+   "outcome": "accept",
+   "strength": 0.11696558445692062
+  },
+  {
+   "id": "orbit_building_6_4.5m_90__traffic_light_1",
+   "label": "traffic light",
+   "vlm_name": "pole",
+   "outcome": "accept",
+   "strength": 0.24508504569530487
+  },
+  {
+   "id": "orbit_building_6_6m_90__traffic_light_1",
+   "label": "traffic light",
+   "vlm_name": "black pole",
+   "outcome": "reject",
+   "strength": 0.04867657274007797
+  }
+ ]
+}

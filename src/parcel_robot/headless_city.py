@@ -34,6 +34,7 @@ from parcel_robot.navigation.follow import FollowOwnerController
 from parcel_robot.navigation.goals import navigation_directive_from_text
 from parcel_robot.navigation.pipeline import DirectiveNavigator
 from parcel_robot.navigation.reactive_safety import (
+    IDENTITY_SOURCE_MOCAP,  # card OT-2: this venue's identity has a NAME now
     ReactiveSafetyPolicy,
     apply_reactive_safety,
 )
@@ -54,6 +55,21 @@ from parcel_robot.pose import (
     update_provider_from_sim,
 )
 from parcel_robot.robot_profile import DEFAULT_ROBOT_PROFILE, RobotProfile
+
+# ---- CARD OT-2: the mocap venue's identity, named ---------------------
+#: The owner confidence this venue reports. GROUND TRUTH, not a measurement:
+#: the simulator is handing over the pose of a body it is drawing, so 1.0 is
+#: the honest number and always was. It is named here so that the ``1.0`` in
+#: the observation is legible as ground truth rather than as a score that
+#: happened to come out perfect — which is the reading the 08-22 audit's
+#: "the robot believes the owner at 1.0" finding actually objected to.
+#:
+#: The VALUE is unchanged and so is every downstream disposition; see row R5.
+MOCAP_OWNER_CONFIDENCE = 1.0
+#: The producer verdict that goes with it. A mocap body is not "probably" the
+#: owner; the venue knows.
+MOCAP_OWNER_STATE = "confirmed"
+# ---- END CARD OT-2 ----------------------------------------------------
 
 DEFAULT_CITY_SCENE = Path(__file__).with_name("scenes") / "city_block.xml"
 DEFAULT_ROBOT_CONFIG = Path(__file__).resolve().parents[2] / "configs" / "robot.yaml"
@@ -362,13 +378,29 @@ class HeadlessCityWorld:
         return SimObservation(
             timestamp=float(self.data.time),
             robot=RobotPose(x=self._x, y=self._y, z=self._z, yaw=self._yaw),
+            # ---- CARD OT-2: the mocap owner track, and what it is ------
+            # The number is UNCHANGED and so is every downstream disposition
+            # (row R5: 648 reactive-safety cases, byte-identical sha). What
+            # changed is that it no longer arrives as a bare literal ``1.0``
+            # that a reader has to guess at. This venue is a simulator handing
+            # over the pose of a body it is DRAWING; 1.0 is not a measurement
+            # that went well, it is ground truth, and the audit's "the robot
+            # believes the owner at 1.0" finding was really "nothing in the
+            # observation says which of those two it is".
+            #
+            # Under the camera venue the runtime REPLACES this whole track
+            # with the measured one (``RobotRuntime._ot2_apply_owner_identity``);
+            # here it stands, stamped.
             owner=OwnerTrack(
                 owner_id="owner-1",
                 x=owner_x,
                 y=owner_y,
                 visible=True,
-                confidence=1.0,
+                confidence=MOCAP_OWNER_CONFIDENCE,
+                state=MOCAP_OWNER_STATE,
+                identity_source=IDENTITY_SOURCE_MOCAP,
             ),
+            # ---- END CARD OT-2 -----------------------------------------
             nearest_obstacle_m=(relevant.distance_m if relevant else None),
             nearest_obstacle_bearing_rad=(relevant.bearing_rad if relevant else None),
             nearest_obstacle_id=(relevant.obstacle_id if relevant else None),

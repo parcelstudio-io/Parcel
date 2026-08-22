@@ -57,6 +57,8 @@ memory:
   path: ":memory:"
 poses: {{}}
 modules: []
+duplex:
+  log_dir: {log_dir}
 perception:
   spatial_sensors: [camera, lidar]
   camera_ingress: true
@@ -168,6 +170,12 @@ def main() -> None:
     #: ``/tmp/parcel_sim.sock``: the name always carries this process's pid, and
     #: a concurrent session can point the whole thing at its own scratch dir.
     parser.add_argument("--socket-dir", default="/tmp")
+    #: Where the duplex session log goes. Correction pass 2: without this the
+    #: runtime writes ``logs/duplex/<session>.jsonl`` INTO THE REPOSITORY (the
+    #: `duplex.log_dir` default is a relative path), so every measurement run
+    #: left a file behind in a directory that already holds 13 000 of them.
+    #: Gitignored, but not this harness's to grow.
+    parser.add_argument("--log-dir", default=None)
     parser.add_argument("--out", default=None)
     args = parser.parse_args()
 
@@ -184,6 +192,8 @@ def main() -> None:
         raise SystemExit(f"no such scene: {scene}")
 
     batch = ingress_queries(8)
+    log_dir = Path(args.log_dir or (Path(args.socket_dir) / "duplex-logs"))
+    log_dir.mkdir(parents=True, exist_ok=True)
     config_path = out_dir / "roam.yaml"
     config_path.write_text(
         CONFIG.format(
@@ -191,12 +201,22 @@ def main() -> None:
             scene=scene,
             queries=", ".join(batch),
             person_stop=args.person_stop,
+            log_dir=log_dir,
         ),
         encoding="utf-8",
     )
 
-    store = Path.home() / ".parcel" / "parcel_memory.sqlite3"
+    # THE OWNER'S STORE, from the product's own authority. Correction pass 2:
+    # this used to hash ``~/.parcel/parcel_memory.sqlite3``, which the product
+    # does not use — the file does not exist on this host, so the run recorded
+    # ``owner_store.unchanged: true`` about nothing at all. ``owner_store_paths()``
+    # is the same function ``memory_path`` uses to decide what an owner store IS,
+    # and its first entry (``<repo>/parcel_memory.sqlite3``) is the real one.
+    from parcel_robot.memory_path import owner_store_paths
+
+    store = Path(owner_store_paths()[0])
     owner_before = sha256_file(store) if store.is_file() else None
+    owner_mtime_before = store.stat().st_mtime if store.is_file() else None
 
     socket_path = Path(args.socket_dir) / f"parcel-roam1-{os.getpid()}.sock"
     process, handle = start_simulator(
@@ -275,6 +295,7 @@ def main() -> None:
         returncode = stop_simulator(process, handle, socket_path)
 
     owner_after = sha256_file(store) if store.is_file() else None
+    owner_mtime_after = store.stat().st_mtime if store.is_file() else None
 
     path_length = 0.0
     for before, after in pairwise(samples):
@@ -318,9 +339,15 @@ def main() -> None:
         "min_person_clearance_m": round(min(clearances), 6) if clearances else None,
         "reasons": dict(sorted(reasons.items())),
         "owner_store": {
+            "path": str(store),
+            "exists": store.is_file(),
             "sha256_before": owner_before,
             "sha256_after": owner_after,
-            "unchanged": owner_before == owner_after,
+            "mtime_before": owner_mtime_before,
+            "mtime_after": owner_mtime_after,
+            # ``unchanged`` on a file that does not exist is a sentence about
+            # nothing, so the two are reported apart.
+            "unchanged": bool(store.is_file()) and owner_before == owner_after,
         },
         **report,
         "trace": samples,

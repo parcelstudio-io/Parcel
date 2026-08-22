@@ -1,0 +1,8 @@
+### correction pass 2 — the verifier's break re-run · 2026-08-22T13:14:02-04:00
+p50_s                      : None
+pairs                      : 0
+estimated_lower_bound_p50_s: 0.3595 over 20 pairs
+onset_is_an_estimate       : True
+verdict                    : unmeasured value None n 0
+verify_scorecard           : []
+forged pass refused with   : ["interrupt_p50_s: verdict 'pass' while sources.latency.onset_is_an_estimate is true — the onset came from the tee's owner-burst boundary ('no mic frames for owner_gap_s'), which is not a speech onset; this row may only be 'unmeasured' until input_audio_buffer.speech_started is retained (TURN-1-ONSET)"]

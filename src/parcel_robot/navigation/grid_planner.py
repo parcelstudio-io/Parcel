@@ -274,6 +274,29 @@ class GridPlannerConfig:
             raise ValueError("grid_size_cells must be an odd integer of at least 11")
         if not 1 <= self.max_expansions <= 10_000_000:
             raise ValueError("max_expansions must be in [1, 10000000]")
+        # Card DOOR-1 / design DW-4: "a planner that relaxes the final gate is
+        # RED". ``inflation_radius_m`` below takes a ``max`` against the gate's
+        # own lateral demand, so this holds by construction TODAY — which is
+        # exactly why it is worth stating as a construction-time refusal. The
+        # guard is what turns "we wrote a max" into "no edit to this class can
+        # ship a planner that routes through corridors the final gate will
+        # stand in and refuse". Seeded RED by deleting that ``max`` (S3).
+        #
+        # SO: this branch is UNREACHABLE while that ``max`` stands. It is a SEED
+        # DETECTOR, not a live gate, and it is worth the four lines only because
+        # the thing it detects (someone "simplifying" the max away) is silent
+        # otherwise. Said plainly here so no reader mistakes it for a runtime
+        # safety check that fires.
+        if (
+            self.gate_clearance_m is not None
+            and self.inflation_radius_m + 1e-12 < self.gate_lateral_clearance_m
+        ):
+            raise ValueError(
+                "planner inflation_radius_m "
+                f"({self.inflation_radius_m}) must not relax the final gate's "
+                f"lateral clearance ({self.gate_lateral_clearance_m}) implied by "
+                f"gate_clearance_m={self.gate_clearance_m}"
+            )
         if self.inflation_radius_m >= self.window_span_m / 2.0:
             raise ValueError("inflated footprint must fit inside half the rolling window")
         if self.comfort_radius_m >= self.window_span_m / 2.0:

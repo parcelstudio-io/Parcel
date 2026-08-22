@@ -204,13 +204,18 @@ __all__ = [
     "VETO_UNAVAILABLE",
     "AbstentionPolicy",
     "AbstentionVerdict",
+    "ControlLoopViolation",
     "DetectorSupport",
     "PlaceEvidence",
     "active_abstention_policy",
     "assess_place_query",
+    "clear_control_thread",
     "clear_veto_cache",
+    "control_thread_ids",
     "detector_prompts_for",
+    "in_control_thread",
     "label_strength_margin",
+    "mark_control_thread",
     "ranking_margin",
     "resolve_veto",
     "use_abstention_policy",
@@ -735,6 +740,79 @@ def use_abstention_policy(policy: AbstentionPolicy | None) -> None:
     _ACTIVE_POLICY = policy if policy is not None else AbstentionPolicy()
 
 
+# ---- CARD NM-1 (task_18) — WHICH THREAD IS THE 10 Hz LOOP ------------------
+#
+# Card P1-D put this registry in ``vlm_veto/runner.py``, and nothing in the
+# product ever called it: ``mark_control_thread`` had zero callers outside the
+# tests, so the tripwire that is supposed to catch "the call site somebody adds
+# tomorrow" was never armed on the real loop. The reason was structural —
+# ``tests/test_p1d_vlm_veto.py::test_the_runtime_imports_no_veto_module`` forbids
+# ``runtime.py`` from importing ``parcel_robot.vlm_veto`` at ANY scope, and that
+# rule is right and stays. So the registry moves here, to a module the runtime
+# already imports and the veto package already depends on, and ``vlm_veto``
+# re-exports these names unchanged.
+#
+# It lives in the abstention gate rather than in the contention guard because
+# this is a fact about ADMISSION — which thread is not allowed to spend 40-90 ms
+# looking at a picture — and the gate is the module that already owns "may this
+# query become a goal".
+#
+# The registry is a set of thread ids and not a flag: a process can run more than
+# one control loop (a test harness driving two runtimes, the panel thread), and
+# "am I one of them" has to be answerable per thread.
+
+_CONTROL_THREADS: set[int] = set()
+_CONTROL_THREAD_LOCK = threading.Lock()
+
+
+class ControlLoopViolation(RuntimeError):
+    """Slow perception work was requested from a thread that owns a control loop.
+
+    Raised rather than returned. A veto that quietly degrades on the control
+    thread is a veto that keeps the 10 Hz loop's frame budget blown and tells
+    nobody; the whole value of the tripwire is that it is impossible to ignore.
+    """
+
+
+def mark_control_thread(thread_id: int | None = None) -> None:
+    """Declare the calling thread (or ``thread_id``) to be a 10 Hz control loop.
+
+    ``RobotRuntime._control_loop`` calls this on entry. Every VLM size measured
+    breaches the 100 ms detector bound *while generating* (``bench_vlm.md``), and
+    OWLv2 is 43-85 ms per call on this host, so a thread that has said this about
+    itself must never reach either seat.
+    """
+
+    tid = int(thread_id) if thread_id is not None else threading.get_ident()
+    with _CONTROL_THREAD_LOCK:
+        _CONTROL_THREADS.add(tid)
+
+
+def clear_control_thread(thread_id: int | None = None) -> None:
+    """Undeclare a thread. Called when a control loop exits, and by tests."""
+
+    tid = int(thread_id) if thread_id is not None else threading.get_ident()
+    with _CONTROL_THREAD_LOCK:
+        _CONTROL_THREADS.discard(tid)
+
+
+def in_control_thread() -> bool:
+    """Is the calling thread one of the declared control loops?"""
+
+    with _CONTROL_THREAD_LOCK:
+        return threading.get_ident() in _CONTROL_THREADS
+
+
+def control_thread_ids() -> frozenset[int]:
+    """Every declared control thread. For assertions and for the status panel."""
+
+    with _CONTROL_THREAD_LOCK:
+        return frozenset(_CONTROL_THREADS)
+
+
+# ---- END CARD NM-1 (task_18) — WHICH THREAD IS THE 10 Hz LOOP --------------
+
+
 # ------------------------------------------------------- the veto's seam ---
 #
 # Card P1-D, post-verification. The veto was originally a keyword argument with
@@ -794,15 +872,28 @@ def resolve_veto(policy: AbstentionPolicy) -> Any:
         if key in _VETO_RUNNERS:
             return _VETO_RUNNERS[key]
     try:
-        from parcel_robot.vlm_veto import runner_for
-
+        # ---- CARD NM-1 (task_18) — THE GATE READS A BOARD, IT DOES NOT INFER --
+        #
         # ``veto_callable()`` and not the runner itself: the gate calls
         # ``veto(query, place)``, and a VetoRunner is not callable. The first
         # draft returned the runner, every call raised TypeError, and the gate
         # dutifully read that as "unavailable" — so the veto looked wired,
         # answered nothing, and the product asked about everything. Caught by
         # the CI eval row in ``tests/test_p1d_eval_rows.py``.
-        runner = runner_for(key).veto_callable()
+        #
+        # NM-1 changes WHOSE callable it is. P1-D's was ``VetoRunner.veto_for``:
+        # correct, and SYNCHRONOUS — a 41 ms GPU generation inside a grounding
+        # call on the mission path. DW-2's rule is that navigation never runs
+        # inference; it reads a verdict somebody else published, or it asks. So
+        # the callable is now the bureau's board reader, which never blocks,
+        # never loads a model, and returns VETO_UNAVAILABLE (⇒ ASK) whenever the
+        # published verdict is missing, expired, or about a revision of the place
+        # that no longer exists. The seat underneath is the same one
+        # ``runner_for`` builds and warms.
+        from parcel_robot.vlm_veto.bureau import bureau_for
+
+        runner = bureau_for(key).veto_callable()
+        # ---- END CARD NM-1 (task_18) ------------------------------------------
     except Exception:
         logger.warning("vlm veto seat %r could not be built; asking instead", key,
                        exc_info=True)

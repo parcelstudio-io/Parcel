@@ -199,7 +199,26 @@ ROAM_ONGOING_WORK_NOTE = (
 FACT_ACTION_REMEMBER = "remember"
 FACT_ACTION_FORGET = "forget"
 FACT_ACTION_LIST = "list"
-FACT_ACTIONS = (FACT_ACTION_REMEMBER, FACT_ACTION_FORGET, FACT_ACTION_LIST)
+# ---- CARD OT-2: "yes, remember that" is its own act ------------------
+#: The fourth action, and it is a SEPARATE one on purpose. P2-A's ``ask`` arm
+#: parks a ``pending`` row precisely so that "yes, keep it" has something to
+#: point at — and then nothing in the product could move it: repeating
+#: ``remember`` re-runs the same policy on the same text and parks it again,
+#: and ``memory.set_owner_fact_consent`` had exactly one caller in the tree
+#: and it was a test.
+#:
+#: It is not folded into ``remember`` because a repetition is not a
+#: confirmation. A product where saying the sentence twice counts as consent
+#: has no consent step at all — it has a retry loop that the model, which is
+#: the party being asked to relay the question, can drive on its own.
+FACT_ACTION_CONFIRM = "confirm"
+# ---- END CARD OT-2 ---------------------------------------------------
+FACT_ACTIONS = (
+    FACT_ACTION_REMEMBER,
+    FACT_ACTION_FORGET,
+    FACT_ACTION_LIST,
+    FACT_ACTION_CONFIRM,  # card OT-2
+)
 
 #: The tools that commit the body. These are the ones the utterance-scoped
 #: dedupe drops when the deterministic ingress already acted, and the ones the
@@ -288,6 +307,36 @@ UNKNOWN_PLACE_ASK = "ask"
 #: precisely what makes the model ASK rather than apologise. Nothing moved, so
 #: it tenses as ``not started`` like every other non-``ok`` activity result.
 STATUS_UNKNOWN_PLACE = "unknown_place"
+
+# ---- CARD ASK-1 (task_18) — "I think I have seen it. Want me to go?" --------
+#
+# P1-D built ``AbstentionVerdict.as_ask()`` and could not wire it: the broker
+# was MUST-NOT-TOUCH for that card, so the payload existed and nothing spoke it
+# (``P1D_STATUS.md`` §7.6, handoff 1). This is the wiring.
+#
+# It is a DIFFERENT status from ``unknown_place`` because the two facts differ.
+# ``unknown_place`` means "no place by that name exists on my map".
+# ``uncertain_place`` means "a place I can SEE might be it, and I am not sure
+# enough to set off on my own" — and a companion that says "I have never heard
+# of it" about a place it can see is lying. The string is imported from
+# ``perception_abstention`` rather than re-typed so the two cannot drift.
+STATUS_UNCERTAIN_PLACE = "uncertain_place"
+
+#: The reason an ``uncertain_place`` result carries when the model asks why.
+REASON_UNCERTAIN_PLACE = "uncertain_place"
+
+#: The key an ASK result puts its revision token under, and the parameter the
+#: model sends back once the owner has said yes. Named ``confirm`` and not
+#: ``yes``/``ok`` because what is being confirmed is a specific compiled
+#: verdict, not a mood.
+CONFIRM_KEY = "confirm"
+CONFIRM_TOKEN_KEY = "confirm_token"
+
+#: How many spent tokens are remembered. A replay guard, not an audit log: the
+#: subject digest changes whenever the place does, so a token older than this
+#: many confirmations is almost certainly stale on its own merits anyway.
+CONFIRM_REPLAY_MEMORY = 64
+# ---- END CARD ASK-1 (task_18) ----------------------------------------------
 
 #: What the model reads on the ask path. It states the gap and the two ways out
 #: — the owner naming the place, or the robot being sent to look — because the
@@ -691,6 +740,20 @@ def build_tool_specs(
                             "and uses its own answer if they disagree."
                         ),
                     },
+                    # ---- CARD ASK-1 (task_18) --------------------------------
+                    CONFIRM_KEY: {
+                        "type": "string",
+                        "description": (
+                            "Only when a previous call came back with status "
+                            "'uncertain_place': send back that result's "
+                            "confirm_token, and ONLY after the owner has "
+                            "actually said yes to the question you asked them. "
+                            "Calling again without it just asks again — which "
+                            "is correct, because the robot will not set off on "
+                            "a place it is unsure of until the owner says so."
+                        ),
+                    },
+                    # ---- END CARD ASK-1 (task_18) ----------------------------
                 },
                 "required": ["place"],
             },
@@ -772,7 +835,11 @@ def build_tool_specs(
                 "IT with action='forget' when they say to forget something, and "
                 "with action='list' when they ask what you know or remember "
                 "about them — answer from what comes back, never from your own "
-                "impression. Record ONLY what the owner actually said; never "
+                "impression. CALL IT with action='confirm' and the key you were "
+                "given when a result came back needing permission and the owner "
+                "then says yes (or no) — repeating action='remember' is NOT a "
+                "confirmation and will park it again. Record ONLY what the "
+                "owner actually said; never "
                 "guess, never infer, and never store anything about yourself. "
                 "The robot's own privacy rules decide what is kept, so do NOT "
                 "say you have remembered anything until the result says so: if "
@@ -786,8 +853,9 @@ def build_tool_specs(
                         "type": "string",
                         "enum": list(FACT_ACTIONS),
                         "description": (
-                            "remember a new fact, forget one, or list what you "
-                            "already know. Defaults to remember."
+                            "remember a new fact, forget one, list what you "
+                            "already know, or confirm one the owner has now "
+                            "given permission for. Defaults to remember."
                         ),
                     },
                     "fact": {
@@ -804,9 +872,20 @@ def build_tool_specs(
                             "A short slug naming WHAT this is a fact about — "
                             "'sister_name', 'coffee_preference'. Reusing a key "
                             "replaces the old fact rather than adding a second "
-                            "one. Required for forget."
+                            "one. Required for forget and for confirm."
                         ),
                     },
+                    # ---- CARD OT-2 ---------------------------------------
+                    "consent": {
+                        "type": "string",
+                        "enum": ["granted", "denied"],
+                        "description": (
+                            "Only for action='confirm': 'granted' when the "
+                            "owner said yes, 'denied' when they said no. "
+                            "Defaults to granted."
+                        ),
+                    },
+                    # ---- END CARD OT-2 -----------------------------------
                 },
                 "required": [],
             },
@@ -884,6 +963,18 @@ def _unwired(*_args: object, **_kwargs: object) -> str:
     raise ValueError("this robot has not wired that ability up")
 
 
+def _no_ask(*_args: object, **_kwargs: object) -> Mapping[str, object]:
+    """Card ASK-1's default: a host with no abstention gate never asks.
+
+    Deliberately NOT :func:`_unwired`. The other unwired doors are ABILITIES —
+    a host that cannot orbit must say so. This one is a QUESTION, and a host
+    that has no opinion about whether a place is uncertain simply has no
+    question to ask; refusing here would invent a refusal out of an absence.
+    """
+
+    return {}
+
+
 @dataclass(frozen=True)
 class ToolDoors:
     """Every runtime affordance the broker is allowed to touch. Nothing else.
@@ -908,6 +999,20 @@ class ToolDoors:
     #: navigation stack will actually accept; it is what makes a junk-place
     #: refusal name real alternatives instead of just saying no.
     places: Callable[[], Sequence[str]] = tuple
+    # ---- CARD ASK-1 (task_18) — the door the ASK comes through -------------
+    #: Compile the abstention verdict for a place NAME and return
+    #: ``AbstentionVerdict.as_ask()`` plus a ``revision`` token when the verdict
+    #: is an ASK, or an EMPTY mapping when it is not. Empty is the default and
+    #: the default is what a host that has not wired this gets, so the broker's
+    #: behaviour is byte-identical to before this card wherever the door is
+    #: absent — no new refusal, no new question, nothing.
+    #:
+    #: It returns the ALREADY-COMPILED verdict rather than the evidence, for the
+    #: same reason ``known_facts`` returns rendered lines: what crosses this
+    #: boundary is the answer, so the broker cannot forget a filter on the way
+    #: out and cannot grow a second copy of the abstention thresholds.
+    ask_place: Callable[[str], Mapping[str, object]] = _no_ask
+    # ---- END CARD ASK-1 (task_18) ------------------------------------------
     orbit: Callable[[str, str, float], str] = _unwired
     follow: Callable[[str], str] = _unwired
     #: Card ROAM-1. ``roam(action, budget_s)`` — ONE door for both actions
@@ -935,6 +1040,18 @@ class ToolDoors:
     remember_fact: Callable[[str, str, object], Mapping[str, object]] = _unwired
     forget_fact: Callable[[str], Mapping[str, object]] = _unwired
     known_facts: Callable[[], Sequence[str]] = tuple
+    # ---- CARD OT-2: the fourth door ----------------------------------
+    #: The product caller for ``memory.set_owner_fact_consent``. A fourth
+    #: door rather than an argument to ``remember_fact`` for the reason
+    #: given at :data:`FACT_ACTION_CONFIRM`, and because it has a fourth
+    #: consequence: it changes a CONSENT STATE, which is the only thing in
+    #: this family the owner's answer — not the policy's — decides.
+    #:
+    #: Unwired by default, so a build that has not adopted this card
+    #: answers ``confirm`` with ``_unwired``'s honest refusal rather than
+    #: with a silent success.
+    confirm_fact: Callable[[str, str], Mapping[str, object]] = _unwired
+    # ---- END CARD OT-2 ------------------------------------------------
 
 
 @dataclass
@@ -1002,6 +1119,26 @@ class RealtimeToolBroker:
         #: A queue of these is the flywheel's shopping list: it is exactly the
         #: set of nouns the owner uses and the robot cannot ground.
         self.unknown_place_asks = 0
+        # ---- CARD ASK-1 (task_18) ------------------------------------------
+        #: Places the map CAN see and is not sure about — the other half of the
+        #: flywheel's shopping list. ``unknown_place_asks`` counts nouns the map
+        #: has never heard of; this counts nouns it has heard of and cannot
+        #: commit to, which is a different and more interesting queue: those are
+        #: the places one confirmation away from being vocabulary.
+        self.uncertain_place_asks = 0
+        #: How many of those questions the owner then confirmed against a
+        #: matching, freshly compiled revision. The ratio is the honest measure
+        #: of whether the ASK is useful or merely polite.
+        self.uncertain_place_confirms = 0
+        #: Tokens already spent. A confirmation is ONE-SHOT: the verifiers
+        #: observed a single valid token starting three trips, because the
+        #: comparison was against a recomputed digest and a digest is stable
+        #: while its subject is. "Yes, go" is permission for a trip, not a
+        #: standing grant that the model may replay whenever it likes, so a
+        #: token that has been honoured is retired and the next call asks
+        #: again. Bounded, oldest-first: this is a replay guard, not a log.
+        self._spent_confirmations: dict[str, None] = {}
+        # ---- END CARD ASK-1 (task_18) --------------------------------------
         #: Card P2-A. The owner model's four numbers, published in the snapshot
         #: because "what has this robot decided to keep about me, and what did
         #: it decline to" is a question an owner must be able to answer from the
@@ -1013,6 +1150,14 @@ class RealtimeToolBroker:
         self.facts_consent_asks = 0
         self.facts_refused = 0
         self.facts_forgotten = 0
+        # ---- CARD OT-2 ------------------------------------------------
+        #: Confirmations the owner actually gave, and the ones a principal was
+        #: not allowed to give. Counted apart from ``facts_consent_asks`` so
+        #: "the robot keeps asking and nothing ever gets confirmed" is a
+        #: readable number rather than an inference.
+        self.facts_confirmed = 0
+        self.facts_consent_downgraded = 0
+        # ---- END CARD OT-2 --------------------------------------------
 
     # ----------------------------------------------------------- lane surface
     def session_events(self) -> tuple[ClientEvent, ...]:
@@ -1111,11 +1256,24 @@ class RealtimeToolBroker:
             "proactive_motion_admissions": self.proactive_motion_admissions,
             "unknown_place_mode": self._unknown_place,
             "unknown_place_asks": self.unknown_place_asks,
+            # ---- CARD ASK-1 (task_18) — the two numbers from outside -------
+            # The flywheel's OTHER shopping list: ``unknown_place_asks`` counts
+            # nouns the map has never heard of, and these count nouns it has
+            # heard of and cannot commit to — the places one confirmation away
+            # from being vocabulary. The ratio says whether the ASK is useful or
+            # merely polite.
+            "uncertain_place_asks": self.uncertain_place_asks,
+            "uncertain_place_confirms": self.uncertain_place_confirms,
+            # ---- END CARD ASK-1 (task_18) ----------------------------------
             # Card P2-A. The owner model, from outside.
             "facts_remembered": self.facts_remembered,
             "facts_consent_asks": self.facts_consent_asks,
             "facts_refused": self.facts_refused,
             "facts_forgotten": self.facts_forgotten,
+            # ---- CARD OT-2 --------------------------------------------
+            "facts_confirmed": self.facts_confirmed,
+            "facts_consent_downgraded": self.facts_consent_downgraded,
+            # ---- END CARD OT-2 ----------------------------------------
             "last": dict(self.calls[-1]) if self.calls else None,
         }
 
@@ -1199,7 +1357,20 @@ class RealtimeToolBroker:
             # transcript half of the same fact: a reader of the tool result can
             # tell that the robot, not the owner, started this movement — which
             # is the one thing the R11 refusal used to guarantee for free.
-            self.proactive_motion_admissions += 1
+            #
+            # ---- CARD ASK-1 (task_18) — an ASK reached NO door ---------------
+            # This counter's published meaning is "a proactive proposal reached
+            # a door", and an ``uncertain_place`` result is the one motion
+            # branch that reaches none: no supervisor admission, no utterance
+            # lease, no navigate. Counting it would inflate the one number an
+            # owner reads to answer "how often did the dog move on its own"
+            # with an event in which it did not move at all. Only ASK-1's own
+            # status is excluded here; P0-B's ``unknown_place`` ask has the same
+            # shape and the same argument, but changing that number is changing
+            # another card's measurement — flagged in NM1_STATUS.md instead.
+            if str(result.get("status", "")) != STATUS_UNCERTAIN_PLACE:
+                self.proactive_motion_admissions += 1
+            # ---- END CARD ASK-1 (task_18) ------------------------------------
             result[PROVENANCE_RESULT_KEY] = self._provenance
         return result
 
@@ -1271,6 +1442,10 @@ class RealtimeToolBroker:
             return self._list_facts()
         if action == FACT_ACTION_FORGET:
             return self._forget_fact(payload)
+        # ---- CARD OT-2: the confirmation door --------------------------
+        if action == FACT_ACTION_CONFIRM:
+            return self._confirm_fact(payload)
+        # ---- END CARD OT-2 ---------------------------------------------
 
         try:
             fact = _text(payload, "fact")
@@ -1319,6 +1494,41 @@ class RealtimeToolBroker:
         except (KeyError, RuntimeError, TypeError, ValueError) as error:
             return _refused(TOOL_REMEMBER_FACT, f"the fact store is unavailable: {error}")
 
+        # ---- CARD OT-2: the door may have parked what the policy admitted --
+        # The policy rules on the TEXT; the write path also rules on WHO ASKED
+        # (``owner_model.principal``). When the two disagree the door wins and
+        # says so, and the model must hear the door's answer rather than the
+        # policy's — otherwise it narrates "I've remembered that" over a row
+        # that is sitting in ``pending``, which is the exact failure P2-A built
+        # the structured result to prevent.
+        #
+        # Read from the RESULT, not re-derived: the broker does not know the
+        # principal and must not learn it, or there would be two places that
+        # decide who may be remembered by.
+        if bool(written.get("consent_downgraded")):
+            self.facts_consent_downgraded += 1
+            self.facts_consent_asks += 1
+            return {
+                "status": STATUS_CONSENT_REQUIRED,
+                "tool": TOOL_REMEMBER_FACT,
+                "detail": (
+                    f"{written.get('consent_downgrade_reason') or 'not keeping that yet'}"
+                    ". Say back what it is and ask the owner whether they want "
+                    "it remembered"
+                ),
+                "action": action,
+                "fact": fact,
+                "key": key,
+                "stored": False,
+                "row_id": written.get("id"),
+                "consent_downgraded": True,
+                "principal": written.get("principal"),
+                **decision.as_dict(),
+                # LAST, so the effective consent is the one the model reads.
+                "consent": str(written.get("consent") or owner_policy.CONSENT_PENDING),
+            }
+        # ---- END CARD OT-2 -------------------------------------------------
+
         if decision.disposition == owner_policy.DISPOSITION_ASK:
             self.facts_consent_asks += 1
             return {
@@ -1357,6 +1567,87 @@ class RealtimeToolBroker:
             "row_id": written.get("id"),
             **decision.as_dict(),
         }
+
+    # ---- CARD OT-2: the confirmation arm ------------------------------
+    def _confirm_fact(self, payload: Mapping[str, Any]) -> dict[str, object]:
+        """"Yes, remember that." The only thing that moves a parked row.
+
+        Three properties, and each one is a defect somewhere else that this
+        shape makes impossible:
+
+        * it does not call the policy. The policy already ruled on the TEXT and
+          said "ask"; asking it again would just produce "ask" again forever.
+          What is being decided here is the OWNER'S answer, and the owner is
+          not a text classifier.
+        * it does not take ``fact``. A confirmation that carried the sentence
+          again would let a repeat of the text arrive as a confirmation of it,
+          which is precisely the equivalence :data:`FACT_ACTION_CONFIRM` exists
+          to break. The key alone, and the key names a row that already exists.
+        * the door may say no. It is the one gate in this family whose answer
+          depends on WHO is asking rather than on what was said — an unverified
+          voice may propose facts all day and may not confirm one. The refusal
+          is a refusal to change a consent state, not a refusal to talk, and
+          the row it declines to promote is still there for the owner.
+        """
+
+        key = " ".join(str(payload.get("key") or "").split())
+        if not key:
+            key = _fact_key(str(payload.get("fact") or ""))
+        if not key:
+            return _refused(
+                TOOL_REMEMBER_FACT,
+                "say which fact to confirm (its key, or the fact itself)",
+            )
+        consent = _enum(
+            payload.get("consent"),
+            (owner_policy.CONSENT_GRANTED, owner_policy.CONSENT_DENIED),
+            default=owner_policy.CONSENT_GRANTED,
+        )
+        try:
+            result = dict(self._doors.confirm_fact(key, consent))
+        except (KeyError, RuntimeError, TypeError, ValueError) as error:
+            return _refused(TOOL_REMEMBER_FACT, f"the fact store is unavailable: {error}")
+        if bool(result.get("refused")):
+            body = _refused(
+                TOOL_REMEMBER_FACT,
+                str(result.get("reason") or "I cannot confirm that right now"),
+            )
+            body.update(
+                {
+                    "action": FACT_ACTION_CONFIRM,
+                    "key": key,
+                    "confirmed": 0,
+                    "stored": False,
+                    "principal": result.get("principal"),
+                }
+            )
+            return body
+        confirmed = int(result.get("confirmed", 0) or 0)
+        self.facts_confirmed += confirmed
+        return {
+            "status": STATUS_OK,
+            "tool": TOOL_REMEMBER_FACT,
+            "detail": (
+                f"kept it: {key.replace('_', ' ')}"
+                if confirmed and consent == owner_policy.CONSENT_GRANTED
+                else (
+                    f"dropped it: {key.replace('_', ' ')}"
+                    if confirmed
+                    else "there was nothing waiting under that name"
+                )
+            ),
+            "action": FACT_ACTION_CONFIRM,
+            "key": key,
+            "confirmed": confirmed,
+            # ``stored`` answers the model's real question — "may I now say I
+            # remember this?" — and it is only true for a row that actually
+            # moved into ``granted``.
+            "stored": bool(confirmed) and consent == owner_policy.CONSENT_GRANTED,
+            "consent": consent,
+            "principal": result.get("principal"),
+        }
+
+    # ---- END CARD OT-2 -------------------------------------------------
 
     def _forget_fact(self, payload: Mapping[str, Any]) -> dict[str, object]:
         """"Don't remember that." Always honoured; never asks the policy.
@@ -1552,6 +1843,41 @@ class RealtimeToolBroker:
                 "valid_places": list(nearest),
                 "reason": REASON_UNKNOWN_PLACE,
             }
+        # ---- CARD ASK-1 (task_18) — THE QUESTION THAT GRANTS NOTHING -------
+        #
+        # The place NAME is fine and the map has heard of it; what the map is
+        # not sure about is whether the thing it can see is the thing the owner
+        # means. P1-D's gate already computes that — an ``AbstentionVerdict``
+        # whose outcome is ASK, carrying the best candidate's label in
+        # ``candidate``. Until this card that verdict could not reach the owner.
+        #
+        # Placed HERE, after ``validate_place`` and BEFORE ``_validated`` /
+        # ``on_dispatch`` / ``navigate``, so that an ASK touches no door: no
+        # supervisor admission is requested, no utterance lease is claimed, no
+        # directive is rendered, and nothing moves. The only thing that changes
+        # is who is asked next.
+        #
+        # The owner's "yes" comes back as ``confirm=<token>``, and the token is
+        # compared against a verdict compiled RIGHT NOW — not against a stored
+        # pending question. That is deliberate and it is the whole safety
+        # property: a token is only good against the state of the world it was
+        # issued for. If the map learned something in between, the recompiled
+        # verdict has a different revision, the token no longer matches, and the
+        # robot asks again with the new one rather than acting on a confirmation
+        # the owner gave about a different world. It also means a token nobody
+        # ever issued cannot match, without the broker keeping any state at all.
+        ask = self._ask_about_place(place)
+        if ask:
+            token = str(ask.get("revision") or "")
+            confirmed = str(payload.get(CONFIRM_KEY) or "").strip()
+            spent = confirmed in self._spent_confirmations
+            if not token or confirmed != token or spent:
+                self.uncertain_place_asks += 1
+                return self._uncertain_place_result(place, ask, token)
+            # Honoured, and retired in the same breath.
+            self._spend_confirmation(confirmed)
+            self.uncertain_place_confirms += 1
+        # ---- END CARD ASK-1 (task_18) ---------------------------------------
         relation = _enum(payload.get("relation"), RELATION_HINTS_TUPLE, default="")
         directive = NAVIGATE_DIRECTIVE_TEMPLATE.format(place=place)
         allowed = self._validated(ToolCall("navigate", {"directive": directive}), TOOL_NAVIGATE_TO)
@@ -1583,6 +1909,73 @@ class RealtimeToolBroker:
             "directive": directive,
             "relation_hint": relation,
         }
+
+    # ---- CARD ASK-1 (task_18) — the two halves of the question --------------
+
+    def _ask_about_place(self, place: str) -> Mapping[str, object]:
+        """The abstention gate's ASK for ``place``, or an empty mapping.
+
+        Never raises out. A door that throws (no map yet, a store mid-write, a
+        host that wired something odd) must not turn a navigation request into
+        an exception — the honest degradation is "no question", which is exactly
+        what a host without the door already gets.
+        """
+
+        try:
+            ask = self._doors.ask_place(place)
+        except Exception as error:  # noqa: BLE001 - a broken door asks nothing
+            self._doors.note(f"ask_place failed for {place!r}: {error}")
+            return {}
+        if not isinstance(ask, Mapping) or not ask:
+            return {}
+        return ask
+
+    def _spend_confirmation(self, token: str) -> None:
+        """Retire a token so it can authorise exactly one trip.
+
+        The token is a digest of WHAT was confirmed, so it stays valid as long
+        as the subject is unchanged — which is what makes it survive the robot
+        looking at the place again, and is also what would make it a standing
+        grant if nothing retired it. Retiring is the difference between "the
+        owner said yes to this trip" and "the owner said yes to this place,
+        forever, as often as the model likes".
+        """
+
+        self._spent_confirmations[token] = None
+        while len(self._spent_confirmations) > CONFIRM_REPLAY_MEMORY:
+            self._spent_confirmations.pop(next(iter(self._spent_confirmations)))
+
+    def _uncertain_place_result(
+        self, place: str, ask: Mapping[str, object], token: str
+    ) -> dict[str, object]:
+        """P1-D's ``as_ask()`` envelope, in the shape the model already reads.
+
+        ``candidate`` is carried through UNCHANGED and on purpose: it is the
+        field card P1-D defined as "the place an ASK is asking ABOUT — the best
+        candidate's label", and CURIO-1's ``_curiosity_ask_candidate`` reads
+        exactly that field off the verdict (``CURIO1_STATUS.md`` §9.1, where
+        reading a field that did not exist was the one real bug). Two consumers,
+        one field, one meaning.
+        """
+
+        detail = str(ask.get("detail") or "")
+        valid = ask.get("valid_places")
+        result: dict[str, object] = {
+            "status": STATUS_UNCERTAIN_PLACE,
+            "tool": TOOL_NAVIGATE_TO,
+            "detail": detail
+            or f"I think I have seen {place}, but I am not sure enough to set "
+            "off on my own. Want me to go and look?",
+            "place": str(ask.get("place") or place),
+            "candidate": str(ask.get("candidate") or ""),
+            "place_id": ask.get("place_id"),
+            "valid_places": list(valid) if isinstance(valid, (list, tuple)) else [],
+            "reason": str(ask.get("reason") or REASON_UNCERTAIN_PLACE),
+            CONFIRM_TOKEN_KEY: token,
+        }
+        return result
+
+    # ---- END CARD ASK-1 (task_18) -------------------------------------------
 
     def _circle_owner(self, payload: Mapping[str, Any]) -> dict[str, object]:
         """``circle_owner`` — card R10 item 3, half of the surface hole.

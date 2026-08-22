@@ -312,10 +312,38 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
 
     base = yaml.safe_load(ROBOT_YAML.read_text(encoding="utf-8"))
     assert all(
-        key.startswith(("perception.camera_ingress", "camera_ingress", "roam"))
+        key.startswith(
+            (
+                "perception.camera_ingress",
+                "camera_ingress",
+                "roam",
+                # ---- CARD VENUE-1: the fourth family, two scalars ----------
+                # `camera_ingress` is the runtime's CONSENT to a camera;
+                # `camera_backend` says WHICH ONE (mujoco/uvc/realsense/
+                # recorded) and `detector` says who serves it. They are NOT in
+                # the `camera_ingress*` family on purpose: that prefix is
+                # `CameraStreamConfig.from_section`'s, and it REFUSES any
+                # `camera_ingress*` key it does not know, so borrowing the
+                # prefix would have made both of these a startup error. Their
+                # values are validated where they are read — `camera_backend`
+                # by P1-A's `resolve_backend_kind` (which lists the accepted
+                # kinds) and `detector` against {daemon, in_process} — which is
+                # the same division of labour the other three families use.
+                "perception.camera_backend",
+                "perception.detector",
+            )
+        )
         for key in OVERLAY_INTRODUCIBLE_KEYS
     )
     check_overlay_keys(base, {"camera_ingress": {"enabled": True}})
+    # ---- CARD VENUE-1: the fourth family is real, and its VALUES are guarded.
+    check_overlay_keys(
+        base, {"perception": {"camera_backend": "recorded", "detector": "daemon"}}
+    )
+    from parcel_robot.camera_channel.backends.physical import resolve_backend_kind
+
+    with pytest.raises(ValueError, match="unknown camera backend"):
+        resolve_backend_kind("relasense")
     # A typo INSIDE an introducible family is still caught, by C-1's own loader.
     from parcel_robot.runtime import CameraStreamConfig
 
@@ -379,19 +407,23 @@ def test_prototype_overlay_resolves_the_documented_values() -> None:
     # ...and the rest of `agent` is the shipped block
     assert proto.section("agent")["brain"] == plain.section("agent")["brain"]
 
-    # Card P1-E landed the indoor person stand-off P0-A could not (see the
-    # test below): the ONLY safety key that moves is person_stop_m, and the
-    # rest of the block is still the shipped one, key by key.
+    # Card P1-E landed the indoor person stand-off P0-A could not, and card
+    # DOOR-1 landed the indoor OBSTACLE ring that a doorway actually needs (see
+    # the test below): those TWO safety keys move, and the rest of the block is
+    # still the shipped one, key by key.
     assert proto.section("safety")["person_stop_m"] == 0.7
     assert plain.section("safety")["person_stop_m"] == 1.2
+    assert proto.section("safety")["obstacle_stop_m"] == 0.45
+    assert plain.section("safety")["obstacle_stop_m"] == 0.65
+    moved = {"person_stop_m", "obstacle_stop_m"}
     assert {
         key: value
         for key, value in proto.section("safety").items()
-        if key != "person_stop_m"
+        if key not in moved
     } == {
         key: value
         for key, value in plain.section("safety").items()
-        if key != "person_stop_m"
+        if key not in moved
     }
     # ...and its paired follow keepout, which is a LITERAL in the base and so
     # cannot re-derive from the number above.
@@ -580,7 +612,8 @@ modules: []
 # so a base used with the real configs/robot.prototype.yaml has to carry these
 # at their shipped values, exactly as configs/robot.yaml does. `safety` and
 # `owner_follow` joined the list when card P1-E landed the indoor person
-# stand-off in the overlay.
+# stand-off in the overlay; `safety.obstacle_stop_m` / `obstacle_slow_m` joined
+# it when card DOOR-1 landed the indoor obstacle ring in the same overlay.
 perception:
   spatial_sensors: [camera, lidar]
 agent:
@@ -589,6 +622,8 @@ agent:
 safety:
   person_stop_m: 1.2
   person_slow_m: 2.5
+  obstacle_stop_m: 0.65
+  obstacle_slow_m: 1.2
 owner_follow:
   owner_keepout_m: 1.75
 """
@@ -718,15 +753,22 @@ def test_the_shipped_prototype_overlay_boots_a_runtime(
         assert runtime.follow.config.owner_keepout_m == 1.25
         assert runtime.reactive_safety_policy.person_stop_m == 0.7
         assert runtime.reactive_safety_policy.owner_slow_m == pytest.approx(0.80)
-        # ...and the one number that does NOT move, pinned as the open handoff
-        # it is rather than left to be discovered: FollowConfig's nominal
-        # stand-off is an IMPORT-TIME constant off DEFAULT_SAFETY_ENVELOPE
-        # (follow.py `_FOLLOW_DESIRED_DISTANCE_M`) and is deliberately not
-        # exposed in yaml, so the formation still sits at 1.85 m of centre
-        # distance even though the gate would now allow 1.25 m. It only has to
-        # CLEAR the keepout ring (1.25 + 0.10), which it does.
-        assert runtime.follow.config.desired_distance_m == pytest.approx(1.85)
-        assert runtime.follow.config.desired_distance_m >= 1.25 + 0.10
+        # ...and the number P1-E pinned here as an OPEN HANDOFF, now closed by
+        # card DOOR-1. It used to read 1.85 m: `FollowConfig.desired_distance_m`
+        # was an IMPORT-TIME constant off DEFAULT_SAFETY_ENVELOPE, so the gate
+        # was relaxed to 0.7 m and the FORMATION was not. It now derives per
+        # instance from `owner_keepout_m + OWNER_STAND_OFF_MARGIN_M`.
+        assert runtime.follow.config.desired_distance_m == pytest.approx(1.35)
+        assert runtime.follow.config.desired_distance_m == pytest.approx(1.25 + 0.10)
+        # The indoor OBSTACLE ring, landed by card DOOR-1: the doorway half of
+        # the same problem. At the shipped 0.65 m the DIRECTIONAL gate refuses
+        # every corridor under 2*0.65*sin(1.15) = 1.19 m, which is every
+        # interior door; at 0.45 m it refuses under 0.82 m.
+        assert runtime.obstacle_stop_m == 0.45
+        assert runtime.reactive_safety_policy.obstacle_stop_m == 0.45
+        assert (
+            runtime.reactive_safety_policy.clearance_profile.obstacle_ring_m == 0.45
+        )
     finally:
         runtime.close()
 

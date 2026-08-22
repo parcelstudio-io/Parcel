@@ -1,0 +1,44 @@
+"""Correction pass 2 — the verifier's break, re-run against the fixed tool.
+
+20 owner-burst boundaries paired with 20 tee-stamped interrupts, 0.30-0.45 s
+apart: the shape that used to yield `verdict: pass, value 0.44, n 20` with
+`verify_scorecard(card) == []`.
+"""
+
+import importlib.util
+import random
+import sys
+
+spec = importlib.util.spec_from_file_location("air", "tools/bargein_through_air.py")
+air = importlib.util.module_from_spec(spec)
+sys.modules["air"] = air
+spec.loader.exec_module(air)
+
+random.seed(7)
+events = []
+t = 1000.0
+for _ in range(20):
+    gap = random.uniform(0.30, 0.45)
+    events.append({"t": t, "kind": air.CAPTURE_ONSET_KIND})
+    events.append({"t": t + gap, "kind": air.CAPTURE_INTERRUPT_KIND})
+    t += 30.0
+
+scored = air.score_interrupt_latency(capture_events=events)
+print("p50_s                      :", scored["p50_s"])
+print("pairs                      :", scored["pairs"])
+print("estimated_lower_bound_p50_s:", scored["estimated_lower_bound_p50_s"],
+      "over", scored["estimated_lower_bound_pairs"], "pairs")
+print("onset_is_an_estimate       :", scored["onset_is_an_estimate"])
+
+card = air.build_scorecard(latency=scored, evidence={"capture": "sess_x"})
+row = next(r for r in card["rows"] if r["id"] == "interrupt_p50_s")
+print("verdict                    :", row["verdict"], "value", row["value"], "n", row["n"])
+print("verify_scorecard           :", air.verify_scorecard(card))
+
+row["verdict"] = "pass"
+row["value"] = 0.44
+row["n"] = 20
+row["evidence"] = ["sess_x"]
+row["unmeasured_reason"] = ""
+print("forged pass refused with   :",
+      [p for p in air.verify_scorecard(card) if "interrupt_p50_s" in p])

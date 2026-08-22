@@ -734,8 +734,12 @@ reply must not open holding the previous reply's number).
 
 **Corrected by FINISH-1 (task_29 §D2).** The table used to credit TURN-1 with
 `+73 / −0` in `lane.py` and that number is wrong. Re-attributed from
-`git diff -U0 8862220 -- src/parcel_robot/realtime/lane.py` (522 added lines in
-29 hunks): the hunks that mention **only** TURN-1 sum to **151** added lines
+`git diff -U0 8862220 21ea2fb -- src/parcel_robot/realtime/lane.py` (**529**
+added lines in 29 hunks — corrected in FINISH-1's second pass: the first count
+said 522, taken before FINISH-1's own 7-line docstring edit to
+`_response_was_cancelled` landed in the same file, so the total was one pass out
+of date while the attribution below was not): the hunks that mention **only**
+TURN-1 sum to **151** added lines
 (`+8` at 459, `+25` at 1246, `+6` at 1467, `+5` at 1496, `+6` at 2134, `+14` at
 2192, `+82` at 2341, `+5` at 2488). Three further hunks are shared and cannot be
 split by hunk — most of all the `+189` barge-in-hold block at 2582, which is

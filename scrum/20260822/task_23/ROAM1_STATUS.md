@@ -21,14 +21,26 @@ is structurally incapable of being proactive; `roam` / `go explore` /
 `stop roaming` execute locally before the model speaks. The navigator's frozen
 clock is fixed in the two places it was missing.
 
-> **READ THE CORRECTION PASS FIRST (bottom of this file).** The verifier
-> found that one of the three arm-B runs quoted below — the 20.67 m one — left
-> the rendered map at t = 85 s. The Go2-purchase input is **not** 3.37 / 2.05 /
-> 20.67. It is: *two in-block runs ≥ 1.0 m (3.37, 2.05) plus one run that
-> exited the scene (20.67, of which 8.66 m accrued off the 24 × 24 m road
-> plane); with the 10 m tether that the correction pass added,* **6.540 /
-> 6.475 / 6.559 m in-block, three for three, 0 contacts.** Every number in this
-> section is the pre-tether measurement and is kept for the record.
+> **READ THE CORRECTION PASSES FIRST (bottom of this file).** Two things below
+> are superseded. The verifier found that one of the three arm-B runs quoted
+> here — the 20.67 m one — left the rendered map at t = 85 s; and the three
+> tethered runs that replaced it are one trajectory sampled three times, so
+> quoting three near-identical numbers overstated how repeatable the behaviour
+> is. **The Go2-purchase input, as it stands after correction pass 2:**
+>
+> > **Seven product-path tethered runs: 1.30 / 3.10 / 6.48 / 6.54 / 6.47 /
+> > 6.56 / 6.57 m net displacement in-block, 0 contacts each, `in_bounds` 7/7.**
+> > The tether engaged on **5 of 7** (the escape branch: out to ~10 m, turned
+> > back at ~78 s). The other 2 are the **boxed branch** — the wander stays
+> > within ~3.4 m of home and never reaches the tether at all — and which
+> > branch a run takes is timing- and load-sensitive, not a setting. **Every
+> > one of the seven clears the ≥ 1.0 m tell**, and the pre-tether record is:
+> > two in-block runs ≥ 1.0 m (3.37, 2.05) plus one run that exited the scene
+> > (20.67 raw, 12.02 at the last in-plane sample, 8.66 m of it banked off the
+> > rendered map).
+>
+> Every number in the section below is the pre-tether measurement and is kept
+> for the record.
 
 **THE PURCHASE NUMBER, reported exactly, both arms.** The card's
 `≥ 1.0 m net displacement` row was measured twice, because the first
@@ -130,7 +142,7 @@ Hosted spend: **$0.00** — no live turn was needed.
 |---|---|---|---|
 | **R1** | "go explore" → patrol ticking ≤ 2.0 s | ingress returns in **0.0003–0.0005 s**; first roam tick at **0.081–0.102 s** | **MET** (20× margin) |
 | **R2a** | 3 × 120 s static, path ≥ 5.0 m | 17.83 / 21.22 / 27.61 m | **MET 3/3** |
-| **R2b** | 3 × 120 s static, net ≥ 1.0 m | **3.366806 / 2.048318 / 20.674462 m** — but the third run **left the 24 × 24 m road plane at t = 85 s**, so as a claim about this scene it is **3.366806 / 2.048318 / 12.015434** (the last in-plane sample). Re-measured with the tether ON (correction pass): **6.540060 / 6.474798 / 6.558471 m, `in_bounds: true` 3/3** | **MET 3/3** in-block with the tether · MET 2/3 in-block without it · **MISSED 3/3** on the shipped policy (arm A) |
+| **R2b** | 3 × 120 s static, net ≥ 1.0 m | **3.366806 / 2.048318 / 20.674462 m** — but the third run **left the 24 × 24 m road plane at t = 85 s**, so as a claim about this scene it is **3.366806 / 2.048318 / 12.015434** (the last in-plane sample). With the tether ON, **seven** product-path runs (three mine, four the verifier's): **1.30 / 3.10 / 6.48 / 6.54 / 6.47 / 6.56 / 6.57 m in-block, `in_bounds` 7/7, 0 contacts** — bimodal, 5 escape-branch and 2 boxed-branch | **MET 7/7** in-block with the tether · MET 2/3 in-block without it · **MISSED 3/3** on the shipped policy (arm A) |
 | **R2c** | 0 robot-initiated contacts | `collision_ticks` 0 / 0 / 0 | **MET 3/3** |
 | **R2d** | prototype social zone (0.7 m) respected | min person clearance **1.099 / 1.058 / 1.161 m** | **MET 3/3** |
 | **R3** | "stop roaming" latches in one tick | `roam.active` is **False on return of the ingress call** (0 ticks, not 1) | **MET** |
@@ -417,11 +429,15 @@ against either. Two rows the owner *may* want, with their exact commands:
   verification and the correction pass — this is the sentence PO-1 should
   quote:
 
-  > **Two in-block runs ≥ 1.0 m (3.37 m, 2.05 m) plus one run that exited the
-  > scene (20.67 m raw, 12.02 m at the last in-plane sample). With the 10 m
-  > tether the roam behavior now sets: 6.540 m, 6.475 m, 6.559 m net
-  > displacement in-block, three consecutive 120 s static-city runs, 0 contacts
-  > each, ≥ 1.13 m person clearance each, `in_bounds: true` 3/3.**
+  > **Seven product-path tethered runs, 120 s static-city, three by the
+  > executor and four by the verifier: 1.30 / 3.10 / 6.48 / 6.54 / 6.47 / 6.56
+  > / 6.57 m net displacement in-block, 0 contacts each, `in_bounds` 7/7,
+  > person clearance ≥ 1.08 m each. The tether engaged on 5 of 7 (escape
+  > branch: ~10 m out, turned back at ~78 s); the other 2 are the boxed branch
+  > (≤ 3.4 m from home, tether never reached), which is the same wander in its
+  > other mode and is timing/load-sensitive. Every one of the seven clears the
+  > ≥ 1.0 m tell. Pre-tether, for the record: two in-block runs ≥ 1.0 m (3.37,
+  > 2.05) plus one that exited the scene (20.67 raw, 12.02 in-block).**
 
   The tell the build order named — *"ROAM-1 missing 1.0 m
   twice ⇒ the nav stack, not hardware, is the bottleneck"* — **fired on the
@@ -476,6 +492,11 @@ the doc. **Pre-registration for the new measurement:**
 edit that preceded it (the qualifier, which is a metric and not a threshold).
 
 ## 1. The three tethered runs — the Go2-purchase input
+
+> **Superseded as the headline number by correction pass 2 §1:** these three
+> runs are one trajectory sampled three times, and four further runs (the
+> verifier's) show the wander has a second mode. The seven-run statement is the
+> one PO-1 reads. The three runs below stand as measured.
 
 **The tether that was ON, and where the number comes from.** The harness config
 carries no `roam:` section, so `RobotRuntime.roam_config` is `{}` and
@@ -556,10 +577,23 @@ six runs apart is the metric that produced the wrong purchase number.
 
 ## 2. The purchase number, restated in all three places
 
-Headline (quote block at the top), row R2b, and the PO-1 handoff now all read:
-**two in-block runs ≥ 1.0 m (3.37, 2.05) + one run that exited the scene
-(20.67 raw, 12.02 at the last in-plane sample); with the tether: 6.540, 6.475,
-6.559 m in-block, 3/3, 0 contacts.**
+> **SUPERSEDED BY CORRECTION PASS 2 §1 — do not read this section as current.**
+> What the headline block, row R2b and the PO-1 handoff say **today** is the
+> seven-run, two-mode statement:
+>
+> > **Seven product-path tethered runs: 1.30 / 3.10 / 6.48 / 6.54 / 6.47 / 6.56
+> > / 6.57 m in-block, 0 contacts, `in_bounds` 7/7; the tether engaged on 5/7
+> > (escape branch, ~10 m out, turned back at ~78 s); the boxed branch
+> > (1.3–3.4 m, tether never reached) is the other mode of the same wander and
+> > is timing/load-sensitive; every run clears the ≥ 1.0 m tell.**
+>
+> The paragraph below is kept as the record of what pass 1 wrote into those
+> three places, and it is what pass 2 replaced.
+
+Headline (quote block at the top), row R2b, and the PO-1 handoff ~~now all
+read~~ *(pass 1)*: **two in-block runs ≥ 1.0 m (3.37, 2.05) + one run that
+exited the scene (20.67 raw, 12.02 at the last in-plane sample); with the
+tether: 6.540, 6.475, 6.559 m in-block, 3/3, 0 contacts.**
 
 ## 3. The race fix, and the seed that finally reddened
 
@@ -581,14 +615,19 @@ both (`../task_29/evidence/seed_s7.py.txt`,
 `runtime.py` sha256 `0ba366aef198a2f0…` identical before and after every
 variant, `__pycache__` purged between.
 
-**Read it as it is: the guard is a PAIR and neither half is load-bearing
-alone.** Belt and braces really are belt and braces here — the lock closes the
-window, and the post-check catches the one command that could get through it.
-The card asked for "the race fix (seeded)"; the honest answer is that the fix
-is seeded only as a pair, and a future edit that removes *either* half will not
-be caught by this test. That is a real gap and it is named rather than dressed
-up: closing it needs two tests, one per half, and DUPLEX-1 is the card that
-will be in this code next.
+**Read it as it is: the guard is a redundant PAIR.** Belt and braces really are
+belt and braces here — the lock closes the window, and the post-check catches
+the one command that could get through it — so *this* test, which asks the
+arbiter what it holds, is **correctly** green when either half is seeded out
+alone.
+
+> **Superseded by correction pass 2 (below).** This section originally called
+> that "a real gap … a future edit that removes either half will not be
+> caught", and the verifier was right that the framing was wrong: redundancy is
+> not a coverage gap. What was actually missing was a test for each half's own
+> distinct property — the post-check owns the snapshot after a stop, the lock
+> owns the ordering — and both now exist and redden on their own half. See
+> correction pass 2 §2.
 
 ## 4. Seed S8 — the roam knobs — now PROVEN
 
@@ -674,3 +713,127 @@ $ .parcel/bin/ruff check src/parcel_robot/patrol/mission.py \
 no coverage objective), anything on a robot (no Go2, no D455, no Orin exist on
 this host — every number is MuJoCo through a sim socket), that a hosted model
 reaches for `TOOL_ROAM`, and whether it feels like a dog going off on its own.
+
+---
+
+# Correction pass 2 — FINISH-1, after Fable's verification of it · 2026-08-22
+
+The verification **accepted** the pass above and then found that its headline
+number said more than the data supports. Three corrections, one of them the
+purchase number itself.
+
+## 1. The roam is BIMODAL, and three runs could not show it
+
+**What the three tethered runs actually were: one trajectory, sampled three
+times.** Measured here from the stored traces — pairwise maximum separation
+between the five escape-branch runs (my three plus the verifier's two) over the
+whole 120 s:
+
+```
+mine1 vs mine2 0.180 m   mine1 vs mine3 0.227 m   mine1 vs ppi 0.101 m
+mine2 vs mine3 0.336 m   mine2 vs tsw2 0.114 m    mine3 vs tsw2 0.336 m
+```
+
+Over a 26 m path, five runs that never separate by more than 0.34 m are one
+trajectory. And that trajectory is the **untethered 20.67 m run's own**: my
+tethered run 1 tracks it to within **0.17 m for the first 77 s**, the tether
+fires at ~78 s (|y| = 10.01 m), and from there they separate — 9.3 m apart by
+t = 100 s, 14.2 m by t = 119 s. First `turn_tether` sample across the five:
+**77.4 / 77.4 / 77.9 / 77.9 / 78.4 s**.
+
+**The verifier's other two runs are the second mode.** Same harness, same
+config, same product path — one taken under load, one on a quiet machine:
+
+| run | net in-block (m) | path (m) | `turn_tether` | reasons |
+|---|---|---|---|---|
+| `tests-seeds-weakening/…verify` | **1.303764** | 17.75 | **never** | advance 289 · turn_blocked 92 · turn_hold 98 |
+| `product-correctness-owns/roam/run1` | **3.096841** | 20.23 | **never** | advance 329 · turn_blocked 89 · turn_hold 61 |
+
+These two never get near the 10 m radius; they spend the budget negotiating
+blocked lanes close to home (`turn_hold` 61–98 samples against 7–12 on the
+escape branch) and end 1.3–3.1 m out. They are the same shape as the
+**untethered** arm-B runs 1 and 2 (3.37 m, 2.05 m, max |y| ≈ 2.7 m). So the
+2.05 → 20.67 m spread was never noise around one behaviour: **the wander has
+two modes**, and which one a run takes depends on timing and machine load, not
+on a setting.
+
+**The restated purchase input, everywhere it appears** (headline, R2b, the PO-1
+handoff, and `../task_29/FINISH1_STATUS.md`):
+
+> **Seven product-path tethered runs: 1.30 / 3.10 / 6.48 / 6.54 / 6.47 / 6.56 /
+> 6.57 m in-block, 0 contacts, `in_bounds` 7/7; the tether engaged on 5/7
+> (escape branch, ~10 m out, turned back at ~78 s); the boxed branch
+> (1.3–3.4 m, tether never reached) is the other mode of the same wander and is
+> timing/load-sensitive; every run clears the ≥ 1.0 m tell.**
+
+**Evidence, read-only, the verifier's own runs:**
+`~/.cache/parcel-fable-verify-task_29/ppi/roam_static_tethered_verify/`,
+`…/tests-seeds-weakening/roam_run/roam_static_tethered_verify{,2}/`,
+`…/product-correctness-owns/roam/run1/` — each with its `summary.json` and
+full 4 Hz trace. Mine: `evidence/roam_static_tethered_{1,2,3}/`.
+
+**No more roams were run to "improve" the spread.** The honest statement is the
+fix; a fourth escape-branch run would only have deepened the sampling error.
+Coverage is **ROAM-2 (`../task_33`)**, and the tell it should carry is not a
+bigger number but a smaller spread.
+
+## 2. The race guard: a redundant pair, not a coverage gap
+
+§3 of the first correction pass called the pair "a real gap … a future edit
+that removes either half will not be caught". **That framing was wrong and the
+verifier is right:** the lock and the post-check are each *independently
+sufficient* to keep a stale command off the arbiter, so a test that asks the
+arbiter what it holds is *correctly* green when either half is seeded out
+alone. Redundancy is not a gap. What was missing was a test for each half's
+**own** distinct property, and there are two:
+
+| new test | property | seeded RED (on a COPY of `src/`) |
+|---|---|---|
+| `test_a_stop_that_wins_the_race_owns_the_snapshot` | after a stop wins the race, `roam_snapshot()["reason"]` is `owner_stopped` and `ticks` has not moved — only the **post-check** provides this; without it the in-flight tick writes `advance` and `ticks + 1` over the stop | **post-check removed → 1 failed**, 57 passed |
+| `test_no_roam_command_is_submitted_after_the_stop_returns` | no `voice` command is submitted after `stop_roam` has returned to its caller — only the **lock** provides this ordering; the post-check cancels the stale command microseconds later and leaves no trace in `arbiter.snapshot()` | **lock removed → 1 failed**, 57 passed |
+
+Control on the unseeded copy: **58 passed**. Seeded on a **copy** of `src/`
+(`../task_29/evidence/seeds_correction2_race.txt`), not in the tree, because
+Batch-A executors are editing `runtime.py` right now and a seed in place would
+put a defect into somebody else's targeted run; the child process asserts it
+imported `parcel_robot` from the copy before any test runs, and the product
+`runtime.py` sha256 (`998f67939dc26739…`) is identical before and after.
+
+## 3. The harness hashed a store the product does not use
+
+`run_roam1.py` hashed `~/.parcel/parcel_memory.sqlite3`, which **does not exist
+on this host** — so `owner_store.unchanged: true` in all three run summaries was
+a sentence about nothing. It now reads `memory_path.owner_store_paths()[0]`,
+the product's own authority, exactly as `run_curio1_roam.py` does, and records
+`path`, `exists`, both sha256s **and both mtimes**.
+
+**The claim the old check could not make, made properly.** The product's owner
+store is `<repo>/parcel_memory.sqlite3`; it exists; its mtime is
+**2026-08-22 02:19:01**, hours before the 12:09–12:16 measurement window, with
+no `-wal`/`-shm` beside it. The three tethered runs did not open it. A
+15-second smoke run of the corrected harness reports
+`sha256 0373297f8187…` unchanged, `mtime` unchanged, `unchanged: true` — about
+the right file this time.
+
+## 4. The harness was writing into the repository's `logs/`
+
+`duplex.log_dir` defaults to the relative path `logs/duplex`, so every
+measurement run left a session log inside the repository (gitignored, but the
+directory already holds ~13 000 files and 305 MB and none of it is this
+harness's to grow). The harness now writes a `duplex:` section pointing at
+`<--socket-dir>/duplex-logs`, with `--log-dir` to override. Verified on the
+smoke run: the session log `ad1324146b5b.jsonl` landed in the scratch directory.
+The three files the measurement runs left behind are **not** deleted — other
+sessions were writing into that directory in the same minutes (61 files in the
+seven minutes before the smoke run alone) and deleting somebody else's log to
+tidy up mine is the worse trade.
+
+## 5. The pre-registration ordering, stated
+
+`PREREGISTRATION.md` was written at **12:08:50** and `run_roam1.py` was saved
+again **14 s later**. What changed in those fourteen seconds was the
+`--socket-dir` argument and nothing else — the metric
+(`in_block_metrics`, named in the pre-registration itself) and every threshold
+were already in the file when the pre-registration was hashed. The
+`--log-dir`/`owner_store_paths` changes above are correction pass 2's and are
+declared here rather than folded into that file.

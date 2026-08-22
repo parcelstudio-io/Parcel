@@ -1,0 +1,22 @@
+[S1 the duck is asked for at all] seeded=RED restored=GREEN sha=identical (f894f360ea9f, 1 site(s)) -> OK
+[S2 the reply comes back up after a backchannel] seeded=RED restored=GREEN sha=identical (f894f360ea9f, 1 site(s)) -> OK
+[S3 a 'mm-hmm' does not leave a turn owed (MARK-1 H-4c)] seeded=RED restored=GREEN sha=identical (f894f360ea9f, 1 site(s)) -> OK
+[S4 the onset reaches the capture index (MARK-1 H-7)] seeded=RED restored=GREEN sha=identical (fac88519db09, 1 site(s)) -> OK
+[S5 a duck with no reply to attenuate is refused] seeded=RED restored=GREEN sha=identical (fac88519db09, 1 site(s)) -> OK
+[S6 every playback source goes through the gain node] seeded=RED restored=GREEN sha=identical (aa70ea860fe0, 1 site(s)) -> OK
+[S7 a stale duck cannot attenuate the next reply (gjs)] seeded=RED restored=GREEN sha=identical (aa70ea860fe0, 1 site(s)) -> OK
+[S8 stop puts the panel's gain back to unity] seeded=RED restored=GREEN sha=identical (aa70ea860fe0, 1 site(s)) -> OK
+[S9 initiative is refused while anyone holds the floor] seeded=RED restored=GREEN sha=identical (d3d9e76c1b87, 1 site(s)) -> OK
+[S10 an owed turn survives every transition] seeded=RED restored=GREEN sha=identical (d3d9e76c1b87, 1 site(s)) -> OK
+[S11 one overlap per reply: a second VAD start does not re-arm the floor] seeded=RED restored=GREEN sha=identical (d3d9e76c1b87, 1 site(s)) -> OK
+[S12 RT-TURNS-1 stamps a WALL clock, not a monotonic one] seeded=RED restored=GREEN sha=identical (89f4c43b77a8, 1 site(s)) -> OK
+[S14 the state machine does not outlive its socket] seeded=RED restored=GREEN sha=identical (f894f360ea9f, 2 site(s)) -> OK
+[S15 the panel refuses a non-number gain (correction pass, finding 1)] seeded=RED restored=GREEN sha=identical (aa70ea860fe0, 1 site(s)) -> OK
+[S16 no duck may be clamped to silence (correction pass, finding 1)] seeded=RED restored=GREEN sha=identical (aa70ea860fe0, 1 site(s)) -> OK
+[S17 a stop past the deadline is a commit, not a backchannel (finding 2)] seeded=RED restored=GREEN sha=identical (f894f360ea9f, 1 site(s)) -> OK
+[S18 a linear gain never reaches a decibel duck (finding 3)] seeded=RED restored=GREEN sha=identical (f894f360ea9f, 1 site(s)) -> OK
+[S19 the LANE derives the onset the capture index stamps (finding 4)] seeded=RED restored=GREEN sha=identical (f894f360ea9f, 1 site(s)) -> OK
+[S20 reading the gate does not move the counters it is scored from] seeded=RED restored=GREEN sha=identical (d3d9e76c1b87, 1 site(s)) -> OK
+[S13 was_robot is null, never a vacuous false] seeded=RED restored=GREEN sha=identical (89f4c43b77a8, 1 site(s)) -> OK
+
+20/20 seeds behaved

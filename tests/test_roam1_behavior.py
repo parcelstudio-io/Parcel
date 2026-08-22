@@ -935,6 +935,139 @@ def test_a_stop_racing_an_in_flight_tick_leaves_no_stale_roam_command(
         runtime.close()
 
 
+def test_a_stop_that_wins_the_race_owns_the_snapshot(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SEED S7b′. Remove the tick's post-check alone -> RED.
+
+    Correction pass 2. The race guard is a redundant PAIR — the command lock and
+    the post-check are each independently sufficient to stop a stale command
+    reaching the arbiter — so the test above (which asks the ARBITER what it
+    holds) is correctly green when either half is seeded out on its own. That
+    made "no seed reddens a single half" look like a coverage gap when it was
+    really an untested SECOND property.
+
+    This is that second property, and only the post-check provides it: after a
+    stop wins the race, the tick that was in flight must not write its own
+    reason and tick count over the stop's. Without the post-check the tick
+    falls through to ``self._roam_reason = command.reason`` and
+    ``self._roam_ticks += 1``, so the owner who said "stop roaming" reads
+    ``advance`` in ``/api/state`` and a tick counter that moved after the roam
+    ended.
+    """
+
+    import threading
+
+    runtime = _runtime(tmp_path / "race_snapshot", monkeypatch)
+    try:
+        runtime.start_roam()
+        runtime._step_roam(_observation(runtime))
+        ticks_before = int(runtime.roam_snapshot()["ticks"])
+        assert ticks_before >= 1
+
+        entered = threading.Event()
+        release = threading.Event()
+        original_submit = runtime.submit_motion
+
+        def _slow_submit(source, command, **kwargs):
+            if source == "voice":
+                entered.set()
+                release.wait(2.0)
+            return original_submit(source, command, **kwargs)
+
+        runtime.submit_motion = _slow_submit  # type: ignore[method-assign]
+        runtime._roam_last_tick_at = 0.0
+
+        tick = threading.Thread(target=runtime._step_roam, args=(_observation(runtime),))
+        tick.start()
+        assert entered.wait(2.0), "the tick never reached its submit"
+        stopper = threading.Thread(target=runtime.stop_roam, args=("owner_stopped",))
+        stopper.start()
+        stopper.join(0.5)
+        release.set()
+        tick.join(3.0)
+        stopper.join(3.0)
+
+        snapshot = runtime.roam_snapshot()
+        assert snapshot["active"] is False
+        assert snapshot["reason"] == "owner_stopped", (
+            f"the in-flight tick overwrote the stop's reason with {snapshot['reason']!r}"
+        )
+        assert int(snapshot["ticks"]) == ticks_before, (
+            "a roam that has been stopped cannot go on counting ticks"
+        )
+    finally:
+        runtime.submit_motion = original_submit  # type: ignore[method-assign]
+        runtime.close()
+
+
+def test_no_roam_command_is_submitted_after_the_stop_returns(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SEED S7a′. Drop the `_command_lock` around the tick alone -> RED.
+
+    Correction pass 2, the other half of the pair. The arbiter-level test cannot
+    see this one because the post-check cancels the channel immediately
+    afterwards, so the stale command exists for microseconds and leaves no trace
+    in ``arbiter.snapshot()``. What it does leave is an ORDERING: with the lock
+    held, ``stop_roam`` cannot return until the tick's submit is finished, so no
+    ``voice`` command may be submitted after the stop has returned to its
+    caller. Without the lock, the stop returns first and the tick submits into a
+    stopped roam — one command, up to ``loop_period * 3`` of TTL, and the
+    post-check then races to cancel it.
+    """
+
+    import threading
+    import time as _time
+
+    runtime = _runtime(tmp_path / "race_order", monkeypatch)
+    try:
+        runtime.start_roam()
+        runtime._step_roam(_observation(runtime))
+
+        entered = threading.Event()
+        release = threading.Event()
+        submits: list[float] = []
+        original_submit = runtime.submit_motion
+
+        def _slow_submit(source, command, **kwargs):
+            if source == "voice":
+                entered.set()
+                release.wait(2.0)
+                submits.append(_time.monotonic())
+            return original_submit(source, command, **kwargs)
+
+        runtime.submit_motion = _slow_submit  # type: ignore[method-assign]
+        runtime._roam_last_tick_at = 0.0
+
+        tick = threading.Thread(target=runtime._step_roam, args=(_observation(runtime),))
+        tick.start()
+        assert entered.wait(2.0), "the tick never reached its submit"
+
+        stopped_at: list[float] = []
+
+        def _stop() -> None:
+            runtime.stop_roam("owner_stopped")
+            stopped_at.append(_time.monotonic())
+
+        stopper = threading.Thread(target=_stop)
+        stopper.start()
+        stopper.join(0.5)
+        release.set()
+        tick.join(3.0)
+        stopper.join(3.0)
+
+        assert stopped_at, "stop_roam never returned"
+        late = [when for when in submits if when > stopped_at[0]]
+        assert not late, (
+            f"{len(late)} roam command(s) were submitted AFTER stop_roam returned; "
+            "the tick's submit and the stop are not mutually exclusive"
+        )
+    finally:
+        runtime.submit_motion = original_submit  # type: ignore[method-assign]
+        runtime.close()
+
+
 def test_the_owners_roam_knobs_reach_the_behavior(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

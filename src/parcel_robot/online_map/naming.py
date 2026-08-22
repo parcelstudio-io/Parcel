@@ -47,10 +47,37 @@ Every VLM size measured breaches the 100 ms detector bound while generating.
 control thread), and is meant to be called when the dog is idle — the same
 contract ``propose_name``'s own docstring states.
 
+Card NM-1: consistency is not correctness
+-----------------------------------------
+Everything above assumed the research's 82-87 % naming accuracy. P1-D measured
+**45.0 %** on this world, and measured the shape of the residue: the wrong
+answers are descriptions of geometry ("yellow cylinder" for a bollard, "pole"
+for a traffic light), which a model gives *consistently*, from every angle. On
+the full-resolution arm three independent visits agreed on each of those two
+names and **both were promoted into** ``known_places()`` — 2 promotions, 2
+false. The k-gate is a consistency filter, and a systematically wrong model is
+systematically consistent.
+
+So :func:`run_naming_pass` takes a ``judge``
+(:mod:`parcel_robot.vlm_veto.judge`) — the open-vocabulary DETECTOR, an
+independent seat the VLM cannot collude with — and a k-agreed name becomes
+vocabulary only if the judge also fires on it over the entry's best view. A name
+the judge rejects is **held at** ``vlm_proposed``: it keeps its visits, keeps
+accruing evidence, and never reaches ``known_places()``.
+
+``judge=None`` is the default and means *exactly* HEAD's behaviour, byte for
+byte. That is deliberate: this is a prototype, the rule is ask-over-refuse, and
+a card that made "no judge installed" mean "promote nothing" would have shipped
+a new fail-closed default in the module whose entire job is to grow a
+vocabulary.
+
 Scope note: ``online_map/`` is P1-B's package. This module is P1-D's only file
 in it and it touches the rest **through the public API** —
 ``active_entries()``, ``propose_name()``, ``entry.note()``, ``entry.names`` —
-adding no method and changing no line anywhere else in the package.
+adding no method and changing no line anywhere else in the package. NM-1 keeps
+that rule: the hold rewrites the public ``entry.names`` tuple with public
+``ProposedName`` constructors, exactly as ``demote_disagreed_names`` already
+does.
 """
 
 from __future__ import annotations
@@ -76,12 +103,14 @@ logger = logging.getLogger(__name__)
 __all__ = [
     "DEFAULT_BATCH_BUDGET_S",
     "DEMOTION_EVENT",
+    "HOLD_EVENT",
     "MAX_NAME_WORDS",
     "NAME_PROMOTION_VISITS",
     "NamingOutcome",
     "NamingReport",
     "demote_disagreed_names",
     "entries_needing_a_name",
+    "hold_at_hypothesis",
     "normalize_proposal",
     "run_naming_pass",
 ]
@@ -100,6 +129,13 @@ MAX_NAME_WORDS = 3
 #: History event a demotion writes, so the audit trail says which way a name
 #: moved and not just that it moved.
 DEMOTION_EVENT = "name_demoted"
+
+#: Card NM-1. History event a JUDGE-HELD name writes. Deliberately not
+#: :data:`DEMOTION_EVENT`: a demotion means "later visits disagreed with this
+#: name", and a hold means "k visits agreed and the independent judge did not".
+#: Reading a map's history later, those are different stories about the world and
+#: only one of them is about the VLM being inconsistent.
+HOLD_EVENT = "name_held"
 
 #: Words that are the model declining, dressed as an answer. A name has to name
 #: something; "object", "unknown" and "thing" are what a VLM says when it does
@@ -137,6 +173,13 @@ class NamingOutcome:
     promoted: bool = False
     demoted: tuple[str, ...] = ()
     skipped: str = ""
+    #: Card NM-1. What the independent judge said about ``proposed`` — one of
+    #: ``accept`` / ``reject`` / ``unavailable``, or ``""`` when no judge was
+    #: configured or the name never reached k and so was never worth asking
+    #: about. ``held`` is True when the judge is why this name is not vocabulary.
+    judged: str = ""
+    judge_strength: float | None = None
+    held: bool = False
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -145,6 +188,9 @@ class NamingOutcome:
             "promoted": self.promoted,
             "demoted": list(self.demoted),
             "skipped": self.skipped,
+            "judged": self.judged,
+            "judge_strength": self.judge_strength,
+            "held": self.held,
         }
 
 
@@ -160,6 +206,14 @@ class NamingReport:
     demotions: int = 0
     rejected: int = 0
     budget_exhausted: bool = False
+    #: Card NM-1. How many k-agreed names the independent judge was asked about,
+    #: and how it answered. ``judge_held`` counts the names that would have
+    #: entered ``known_places()`` under the k-gate alone and did not.
+    judged: int = 0
+    judge_accepted: int = 0
+    judge_rejected: int = 0
+    judge_unavailable: int = 0
+    judge_held: int = 0
     outcomes: list[NamingOutcome] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
@@ -172,6 +226,11 @@ class NamingReport:
             "demotions": self.demotions,
             "rejected": self.rejected,
             "budget_exhausted": self.budget_exhausted,
+            "judged": self.judged,
+            "judge_accepted": self.judge_accepted,
+            "judge_rejected": self.judge_rejected,
+            "judge_unavailable": self.judge_unavailable,
+            "judge_held": self.judge_held,
             "outcomes": [o.as_dict() for o in self.outcomes],
         }
 
@@ -293,6 +352,60 @@ def demote_disagreed_names(
     return tuple(demoted)
 
 
+def hold_at_hypothesis(
+    entry: MapEntry, text: str, *, wall_s: float, reason: str = ""
+) -> bool:
+    """Card NM-1. Strip a name's STANDING without touching its evidence.
+
+    The k-gate said yes; the independent judge did not. The name goes back to
+    ``vlm_proposed`` — out of ``known_places()``, out of the text channel's
+    admissible set — while **keeping every supporting visit id it had earned**.
+    That distinction is the whole design:
+
+    * a **demotion** (:func:`demote_disagreed_names`) takes a supporting visit
+      away, because a later visit contradicted the name. Evidence changed.
+    * a **hold** takes none away, because nothing about the visits changed — what
+      happened is that a second, independent seat looked at the same crop and did
+      not see the thing. Evidence did not change; the name simply never earned
+      the right the k-gate was about to hand it.
+
+    Keeping the visits matters. If a hold also removed one, a name the judge
+    cannot check today (no weights, no GPU moment) would decay toward nothing
+    just for being unverifiable, and the next pass would have to re-earn three
+    visits before it could ask again. Instead the name sits at k with no
+    standing, and the moment the judge agrees it is vocabulary.
+
+    Returns whether anything changed. Detector labels are never touched: they are
+    the label channel, not a hypothesis, and this function has no business in it.
+    """
+
+    wanted = normalize_label(text)
+    if not wanted:
+        return False
+    rebuilt: list[ProposedName] = []
+    changed = False
+    for name in entry.names:
+        if name.text != wanted or name.provenance == NAME_DETECTOR_LABEL:
+            rebuilt.append(name)
+            continue
+        if not name.admissible:
+            rebuilt.append(name)
+            continue
+        rebuilt.append(
+            ProposedName(
+                text=name.text,
+                provenance=NAME_VLM_PROPOSED,
+                visits=len(name.supporting_visit_ids),
+                supporting_visit_ids=name.supporting_visit_ids,
+            )
+        )
+        changed = True
+        entry.note(wall_s, HOLD_EVENT, f"{name.text} ({reason or 'judge disagreed'})"[:160])
+    if changed:
+        entry.names = tuple(rebuilt)
+    return changed
+
+
 def run_naming_pass(
     online_map: Any,
     describe: Callable[[bytes | None], Any],
@@ -303,6 +416,7 @@ def run_naming_pass(
     include_promoted: bool = True,
     limit: int = 64,
     clock: Callable[[], float] | None = None,
+    judge: Any = None,
 ) -> NamingReport:
     """Name every unnamed place the map can show a crop of. **Idle time only.**
 
@@ -315,6 +429,23 @@ def run_naming_pass(
     would let one stare promote a name in three ticks, which is precisely the
     property the gate exists to prevent. The caller owns that contract; this
     function does not invent visit ids.
+
+    ``judge`` (card NM-1) is the independent correctness seat —
+    :class:`parcel_robot.vlm_veto.judge.OwlV2NamingJudge` or anything with its
+    shape, injected for the same reason ``describe`` is. It is asked about a name
+    only when that name **has standing** (the k-gate has admitted it), which is
+    both the cheapest place to ask and the only place it matters:
+
+    * ``accept``      -> the name is vocabulary. Both gates agreed.
+    * ``reject``      -> :func:`hold_at_hypothesis`. The name keeps its visits and
+                         loses its standing; it never reaches ``known_places()``.
+    * ``unavailable`` -> **nothing is taken away.** A name promoted on an earlier
+                         pass keeps its standing; a name promoting on THIS pass
+                         is held, because vocabulary granted on an unchecked name
+                         is the thing this card exists to stop. It promotes for
+                         real as soon as the judge can answer.
+
+    ``judge=None`` is the default and reproduces HEAD exactly.
     """
 
     now = clock if clock is not None else time.monotonic
@@ -358,6 +489,47 @@ def run_naming_pass(
         )
         report.proposals += 1
         promoted = proposed.admissible and proposed.text not in before
+        # ---- CARD NM-1 — the second gate. Consistency, then correctness. ----
+        #
+        # Asked whenever the name HAS STANDING, not only on the promotion edge:
+        # a name that was promoted on an earlier pass while the judge was
+        # unavailable must be re-examined, or "unavailable once" would become
+        # "vocabulary forever". Costs one detector call per admissible name per
+        # idle pass, which is 43-85 ms on this host and nowhere near the loop.
+        judged = ""
+        strength: float | None = None
+        held = False
+        if judge is not None and proposed.admissible:
+            verdict = _ask_the_judge(judge, proposed.text, entry)
+            judged = str(getattr(verdict, "outcome", "") or "")
+            strength = getattr(verdict, "strength", None)
+            report.judged += 1
+            if judged == "accept":
+                report.judge_accepted += 1
+            elif judged == "reject":
+                report.judge_rejected += 1
+                held = hold_at_hypothesis(
+                    entry,
+                    proposed.text,
+                    wall_s=stamp,
+                    reason=f"judge {getattr(verdict, 'model', '')} "
+                    f"scored {strength} < {getattr(verdict, 'floor', '')}",
+                )
+            else:
+                report.judge_unavailable += 1
+                # Nothing is taken away from a name that already had standing;
+                # only a promotion happening RIGHT NOW is withheld.
+                if promoted:
+                    held = hold_at_hypothesis(
+                        entry,
+                        proposed.text,
+                        wall_s=stamp,
+                        reason="judge unavailable",
+                    )
+            if held:
+                report.judge_held += 1
+                promoted = False
+        # ---- END CARD NM-1 ---------------------------------------------------
         report.promotions += promoted
         demoted = demote_disagreed_names(entry, proposed.text, wall_s=stamp)
         report.demotions += len(demoted)
@@ -367,9 +539,37 @@ def run_naming_pass(
                 proposed=proposed.text,
                 promoted=promoted,
                 demoted=demoted,
+                judged=judged,
+                judge_strength=strength,
+                held=held,
             )
         )
     return report
+
+
+def _ask_the_judge(judge: Any, name: str, entry: MapEntry) -> Any:
+    """One judgement, and never a crash. A broken judge HOLDS, it never accepts.
+
+    The failure direction is the whole point: an exception from the judge must
+    not be readable as agreement, because "the check errored" and "the check
+    passed" would then be the same event to the only caller that matters.
+    """
+
+    from parcel_robot.perception_abstention import ControlLoopViolation
+    from parcel_robot.vlm_veto.judge import JUDGE_UNAVAILABLE, JudgeVerdict
+
+    try:
+        return judge.judge(name, entry.thumbnail, entry_id=entry.entry_id)
+    except ControlLoopViolation:
+        # NEVER softened. A naming pass on the 10 Hz thread is the FATAL defect
+        # DW-2 (a) is about; swallowing it here would turn the loudest possible
+        # signal into a quiet "unavailable" and the name would merely hold.
+        raise
+    except Exception as exc:  # noqa: BLE001 - a broken judge holds, never promotes
+        logger.warning("naming pass: judge failed for %s: %s", entry.entry_id, exc)
+        return JudgeVerdict(
+            JUDGE_UNAVAILABLE, name=name, entry_id=entry.entry_id, detail=str(exc)[:120]
+        )
 
 
 def replay_visits(

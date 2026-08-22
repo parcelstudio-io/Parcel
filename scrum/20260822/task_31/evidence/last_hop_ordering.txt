@@ -1,0 +1,25 @@
+Microphone not armed: no speech recognizer (STT unreachable or disabled).
+Microphone not armed: no speech recognizer (STT unreachable or disabled).
+==============================================================================
+ARM E — a stale process-global the composition root is about to correct.
+  process already bound : learned_map   (a harness, an earlier runtime)
+  navigation YAML says  : oracle
+  profile declares      : [semantic_source_matches_config]
+  MUST START — VENUE-1's seam-1a binder resolves the disagreement, and
+  CAP-1's gate now asserts that binder before it judges.
+==============================================================================
+started. bound semantic source = oracle
+required_capabilities = ['semantic_source_matches_config']
+unmet_capabilities    = []
+
+==============================================================================
+ARM F — nothing binds the declared capability. MUST STILL REFUSE.
+  navigation YAML says  : oracle
+  profile declares      : [learned_map_source]
+==============================================================================
+RobotRuntime.start() raised CapabilityRefused:
+
+the navigation profile declares required capabilities this process did not bind: learned_map_source
+    - learned_map_source: bound semantic source is 'oracle'; the robot acts on the learned map only under 'learned_map'
+
+  ...followed by the full 47 row admission table.

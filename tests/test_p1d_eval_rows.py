@@ -380,6 +380,28 @@ def test_rows_1_to_3_with_the_real_seat() -> None:
 
     policy = _prototype_policy()
     smap, present = _build_map(policy)
+    # ---- CARD NM-1 (task_18) — the board has to be warm before the assertions.
+    #
+    # DECLARED EDIT to another card's test, made because NM-1 changed the
+    # behaviour this test measures and leaving it broken-when-ungated would be
+    # worse than touching it. The veto is no longer computed inside the
+    # grounding call: ``resolve_veto`` now hands the gate a BOARD READER
+    # (``vlm_veto.bureau``), so the first resolve of a place is an ASK that
+    # SCHEDULES the judgement and a later resolve consumes it. Navigation never
+    # waits on a model — that is the whole point — so a harness that wants the
+    # steady state has to say so.
+    #
+    # The PROPERTIES this test asserts are unchanged and so are its numbers:
+    # measured on the product path with the bureau installed, pass 2 gives 5 of
+    # 7 present admitted and 0 of 8 absent — P1-D's own figures
+    # (``task_18/evidence/product_bureau.json``).
+    from parcel_robot.vlm_veto.bureau import bureau_for
+
+    queries = list(present) + list(ABSENT) + ["a coffee shop"]
+    for query in queries:
+        smap.resolve(query)
+    assert bureau_for(policy.veto_model).drain(timeout=120.0), "the veto worker stalled"
+    # ---- END CARD NM-1 (task_18) -----------------------------------------
     present_out = _outcomes(smap, present)
     absent_out = _outcomes(smap, ABSENT)
 

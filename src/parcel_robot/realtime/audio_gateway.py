@@ -103,6 +103,12 @@ from websockets.protocol import OPEN
 from websockets.server import ServerProtocol
 from websockets.typing import Subprotocol
 
+# ---- CARD DUPLEX-1 (task_26), correction pass. One source of truth for the
+# floor under a duck. ``parcel_robot.duplex`` imports nothing from
+# ``parcel_robot.realtime``, so this is a leaf dependency, and ``lane.py``
+# already carries it.
+from parcel_robot.duplex.turn_controller import MIN_DUCK_GAIN
+
 from .protocol import PCM16_SAMPLE_RATE_HZ
 
 LOGGER = logging.getLogger(__name__)
@@ -162,6 +168,27 @@ SERVER_MIC = "mic"
 SERVER_STOP = "stop"
 SERVER_UTTERANCE = "utterance"
 SERVER_REFUSED = "refused"
+
+# ---- CARD DUPLEX-1 (task_26) — the frame that turns the voice DOWN ----
+#: ``{"type": "duck", "utterance": <seq>, "gain": <0..1>}``. The one control
+#: frame in this protocol that changes how a reply SOUNDS without changing
+#: whether it exists: nothing is dropped, nothing is discarded, and the
+#: provider is told nothing at all. It carries the utterance sequence for the
+#: same reason ``stop`` does — a duck that arrives after the next reply started
+#: would attenuate the wrong voice, and the panel drops a mismatched one.
+SERVER_DUCK = "duck"
+#: Gain outside this range is clamped rather than refused. Prototype, not
+#: production: an out-of-range gain from our own lane is a bug in our own code,
+#: and the failure a companion can least afford is a barge-in path that raises.
+#:
+#: Correction pass, finding 1: the low end is ``MIN_DUCK_GAIN`` and NOT 0.0.
+#: Clamping a nonsensical gain to silence is silencing the dog, which is the
+#: outcome the whole "not zero on purpose" rule exists to prevent — so the
+#: clamp bottoms out at the quietest AUDIBLE level instead. Imported from the
+#: turn controller rather than restated so the two cannot drift; the panel's
+#: literal is pinned to it by ``tests/test_duplex1_panel_duck.py``.
+DUCK_GAIN_RANGE: tuple[float, float] = (MIN_DUCK_GAIN, 1.0)
+# ---- END CARD DUPLEX-1 ----
 
 
 #: Card R17. How many frames may wait for the capture writer thread before the
@@ -470,7 +497,7 @@ class _CaptureStream:
         if self._open is not None:
             self._open["frames"] = int(self._open["frames"]) + 1
 
-    def mark_interrupted(self, wall: float | None = None) -> None:
+    def mark_interrupted(self, wall: float | None = None, onset_ago_s: float | None = None) -> None:
         """Mark the open robot segment barged in on, and say WHEN.
 
         Card MARK-1, correction pass, defect 5 — AIR-1's handoff. ``interrupted``
@@ -494,6 +521,18 @@ class _CaptureStream:
             self._open["interrupted_at"] = _iso(wall)
             self._open["interrupted_byte"] = self.data_bytes
             self._open["interrupted_t_s"] = self.data_bytes / self.bytes_per_second
+            # ---- CARD DUPLEX-1 (task_26) — MARK-1's H-7, taken ----
+            # ``interrupted_at`` is the COMMIT. With a backchannel floor > 0 the
+            # owner started talking a whole floor earlier, and the latency AIR-1
+            # measures starts there. ``onset_ago_s`` is a duration so the two
+            # clocks (the lane's monotonic, the tee's wall) never have to be
+            # reconciled; absent ⇒ nothing is written and the index is exactly
+            # what MARK-1 shipped.
+            if onset_ago_s is not None:
+                ago = max(0.0, float(onset_ago_s))
+                self._open["interrupted_onset_at"] = _iso(wall - ago)
+                self._open["interrupt_hold_ms"] = round(ago * 1000.0, 3)
+            # ---- END CARD DUPLEX-1 ----
 
     def close_segment(self, wall: float | None = None) -> None:
         segment = self._open
@@ -677,10 +716,18 @@ class SessionAudioCapture:
 
         self._offer("utterance", int(sequence))
 
-    def note_interrupt(self, sequence: int) -> None:
-        """Mark the current robot segment as barged in on."""
+    def note_interrupt(self, sequence: int, onset_ago_s: float | None = None) -> None:
+        """Mark the current robot segment as barged in on.
 
-        self._offer("interrupt", int(sequence))
+        Card DUPLEX-1: the queued payload carries how long BEFORE this call the
+        owner started speaking, because with MARK-1's floor at 0 the two were
+        the same instant and with a floor they are not. ``sequence`` has never
+        been read on the writer side (the open segment IS the current
+        utterance) and is kept in the signature for its callers.
+        """
+
+        del sequence
+        self._offer("interrupt", None if onset_ago_s is None else float(onset_ago_s))
 
     def _offer(self, kind: str, payload: Any) -> bool:
         # THE RELAY-PATH CONTRACT lives in these eight lines. No file I/O, no
@@ -743,7 +790,8 @@ class SessionAudioCapture:
             elif kind == "interrupt":
                 # Card MARK-1, correction pass: the wall stamp ``note_interrupt``
                 # queued, not ``self._wall()`` now. See ``mark_interrupted``.
-                self._robot.mark_interrupted(wall)
+                # Card DUPLEX-1: the payload is the onset offset, or None.
+                self._robot.mark_interrupted(wall, onset_ago_s=payload)
                 touched.add("robot")
             if self._over_cap():
                 self._stop_at_cap()
@@ -1072,6 +1120,17 @@ class BrowserAudioGateway:
         #: What the browser last reported about the ear it actually opened.
         self.capture_channels_reported: int | None = None
         self.capture_beam_reported: int | None = None
+        # ---- CARD DUPLEX-1 (task_26) — the duck, from outside ----
+        #: Duck frames actually sent, of which how many were a return to unity,
+        #: and the level of the last one. ``duck_refusals`` is a duck with no
+        #: reply to attenuate (or nobody listening) — counted rather than sent,
+        #: because a duck applied to the NEXT reply is a bug that would only
+        #: ever be heard, never logged.
+        self.ducks = 0
+        self.duck_resumes = 0
+        self.duck_refusals = 0
+        self.last_duck_gain: float | None = None
+        # ---- END CARD DUPLEX-1 ----
         self.control_errors = 0
 
     # --------------------------------------------------------------- lifecycle
@@ -1517,6 +1576,10 @@ class BrowserAudioGateway:
             # regression and silently pin the mark at the first reply's length.
             self._played_ack_ms = 0.0
             self._playback_drained_ms = None
+            # Card DUPLEX-1: the panel puts its gain back to unity on this
+            # frame, so the gateway's idea of the level has to reset with it or
+            # the snapshot describes a duck nobody is applying.
+            self.last_duck_gain = None
             conn = self._live_connection()
             seq = self._utterance_seq
             capture = self._capture
@@ -1565,13 +1628,60 @@ class BrowserAudioGateway:
                 f"{self._max_outbound_bytes} bytes)"
             )
 
-    def interrupt(self) -> None:
+    # ---- CARD DUPLEX-1 (task_26) — the sink may now turn the voice DOWN ----
+    #: Advertised to :class:`~parcel_robot.realtime.browser_sink.BrowserSink` so
+    #: it can pass the onset without probing a signature.
+    accepts_interrupt_onset = True
+
+    def duck(self, gain: float) -> None:
+        """Attenuate the reply in the browser. Nothing is dropped or cancelled.
+
+        The whole point of a provisional barge-in is that it costs nothing when
+        it turns out to be a "mm-hmm": the schedule keeps running, the played
+        clock keeps advancing, the provider is told nothing, and MARK-1's ack
+        arithmetic is untouched — the owner heard the ducked audio, quietly, and
+        the truncate mark still has to say so. So this method deliberately does
+        NOT touch ``_played_started``, ``_sent_bytes_this_utterance`` or the
+        outbox: it sends one control frame and counts it.
+
+        Never raises. It is called from the pump thread on the barge-in path.
+        """
+
+        low, high = DUCK_GAIN_RANGE
+        try:
+            level = max(low, min(high, float(gain)))
+        except (TypeError, ValueError):
+            with self._lock:
+                self.duck_refusals += 1
+            return
+        with self._lock:
+            conn = self._live_connection()
+            seq = self._utterance_seq
+            if conn is None or seq <= 0:
+                # No reply is playing (or nobody is listening): a duck frame now
+                # would attenuate whatever comes next. Counted, not sent.
+                self.duck_refusals += 1
+                return
+            self.ducks += 1
+            self.last_duck_gain = level
+            if level >= high:
+                self.duck_resumes += 1
+        self._send_control(conn, {"type": SERVER_DUCK, "utterance": seq, "gain": level})
+
+    # ---- END CARD DUPLEX-1 ----
+
+    def interrupt(self, *, onset_ago_s: float | None = None) -> None:
         """Barge-in. Drop what is queued and tell the browser to stop playing.
 
         The lane already cancels the response and truncates the provider's
         transcript; without this frame the browser would keep playing the audio
         already in its own buffer and the owner would be talked over by a reply
         the model has been told it never finished.
+
+        Card DUPLEX-1: ``onset_ago_s`` is how long before this call the owner
+        started speaking — a duration, not a stamp, so the lane's monotonic
+        clock never has to be reconciled with the tee's wall clock. It reaches
+        the capture index as ``interrupted_onset_at`` (MARK-1's handoff H-7).
         """
 
         with self._lock:
@@ -1594,7 +1704,7 @@ class BrowserAudioGateway:
             self.frames_discarded_interrupt += discarded
             capture = self._capture
         if capture is not None:
-            capture.note_interrupt(seq)
+            capture.note_interrupt(seq, onset_ago_s=onset_ago_s)
         if conn is not None:
             self._send_control(conn, {"type": SERVER_STOP, "utterance": seq})
 
@@ -1843,6 +1953,14 @@ class BrowserAudioGateway:
                 "capture_channels_reported": self.capture_channels_reported,
                 "capture_beam_reported": self.capture_beam_reported,
                 "capture_pin_refusals": self.capture_pin_refusals,
+                # ---- CARD DUPLEX-1 (task_26). The provisional barge-in, from
+                # outside: how often the reply was turned down instead of cut
+                # off, how often it came back up, and the level right now.
+                "ducks": self.ducks,
+                "duck_resumes": self.duck_resumes,
+                "duck_refusals": self.duck_refusals,
+                "last_duck_gain": self.last_duck_gain,
+                # ---- END CARD DUPLEX-1 ----
                 "control_errors": self.control_errors,
             }
 

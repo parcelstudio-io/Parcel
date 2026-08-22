@@ -43,16 +43,21 @@ read the row's own ``n`` before believing it.
   to stand here — "``note_interrupt`` queues a wall stamp and
   ``mark_interrupted`` throws it away" — is **closed**, and it was the half that
   could only be fixed in a product file this card does not own.
-* **The onset instant is still an estimate.**
+* **The onset instant is not on disk at all.**
   ``input_audio_buffer.speech_started`` is not in
-  ``protocol.RETAINED_EVENT_TYPES``, so the provider's own view of "the owner
-  started talking" reaches no file. What the tee has instead is the OWNER
-  stream's segmentation: a new ``owner_turn`` segment opens on the first
-  microphone frame that follows ``owner_gap_s`` (0.75 s) of silence, and that
-  frame is the gateway's view of a burst starting. It is later than the
-  acoustic onset by the browser's encode-and-send latency and earlier than the
-  provider's VAD decision, so a median built on it is a **bound, not a
-  measurement**, and the scorecard says so in the row's mechanism.
+  ``protocol.RETAINED_EVENT_TYPES`` (handoff **TURN-1-ONSET**), so the
+  provider's own view of "the owner started talking" reaches no file. What the
+  tee has instead is the OWNER stream's segmentation, and it is **not a
+  substitute**: a new ``owner_turn`` segment opens on the first microphone
+  frame that arrives after **no mic frames for ``owner_gap_s`` (0.75 s) — the
+  mic closed; there is no level check anywhere in that decision**. So it is
+  excluded from :data:`ONSET_KINDS` and can never become this row's value.
+  What it does produce is reported as
+  ``sources.latency.estimated_lower_bound_p50_s`` — a LOWER BOUND — while the
+  row itself renders **unmeasured** with that bound named in its
+  ``unmeasured_reason``. It is deliberately NOT in the row's ``mechanism``:
+  a mechanism explains a MISS, and :func:`verify_scorecard` refuses one on any
+  row that is not a ``fail``.
 
 ``robot.wav`` is still no clock — the tee records what the gateway was asked to
 play, which arrives faster than real time — so ``interrupted_t_s`` is used as a
@@ -220,14 +225,17 @@ def make_row(row_id: str, value: float | None, *, n: int = 0,
 def verify_scorecard(card: Any) -> list[str]:
     """Check a scorecard against its own invariants. Empty list ⇒ it holds.
 
-    Six ways a scorecard can lie, and this is the list of them:
+    Seven ways a scorecard can lie, and this is the list of them:
 
     1. it is not the schema the gate reads;
     2. a row is missing, duplicated, or invented;
     3. a threshold or direction was edited — the goalposts moved;
     4. a verdict does not follow from its own value;
     5. a ``pass`` cites no evidence, or an ``unmeasured`` gives no reason;
-    6. a row claims a median of twenty from four samples.
+    6. a row claims a median of twenty from four samples;
+    7. ``interrupt_p50_s`` passes on an ESTIMATED onset (correction pass 2 —
+       the only check here that reads ``sources``, and the only one that had a
+       live counter-example rather than a hypothetical one).
     """
 
     problems: list[str] = []
@@ -335,6 +343,79 @@ def verify_scorecard(card: Any) -> list[str]:
     for row_id, count in sorted(seen.items()):
         if count > 1:
             problems.append(f"row {row_id!r} appears {count} times")
+
+    # ---- 7. an ESTIMATED onset may never become a pass. Correction pass 2.
+    #
+    # This is the braces half of the belt-and-braces the verifier asked for, and
+    # it is deliberately a check on the CARD rather than on the builder: a
+    # scorecard is a file that outlives the run that made it, and the failure it
+    # closes was a real one — 20 owner-burst boundaries paired with 20
+    # interrupts produced `verdict: pass, value 0.44, n 20` and this function
+    # returned [] on it, because nothing here had ever read `sources`. A
+    # boundary that fires on "no mic frames for owner_gap_s (mic closed)" is not
+    # an onset, and a purchase gate must not be able to read one as a latency.
+    # CORRECTION PASS 3 closed the hole in the check itself: as first written it
+    # only fired when ``sources.latency`` was PRESENT, so deleting ``sources``
+    # — or flipping ``onset_is_an_estimate`` to ``false`` — walked straight
+    # past it (both reproduced by the verifier). A check that an author can
+    # satisfy by removing evidence is not a check. So the requirement is
+    # inverted: a SCORED ``interrupt_p50_s`` must PROVE its onset was stamped,
+    # and the absence of that proof is itself the refusal.
+    latency = None
+    sources = card.get("sources")
+    if isinstance(sources, Mapping):
+        candidate = sources.get("latency")
+        if isinstance(candidate, Mapping):
+            latency = candidate
+    for entry in rows:
+        if not isinstance(entry, Mapping) or entry.get("id") != "interrupt_p50_s":
+            continue
+        verdict = entry.get("verdict")
+        if verdict not in {"pass", "fail"}:
+            # ``unmeasured`` claims nothing about an onset, so it owes nothing.
+            continue
+        if latency is None:
+            problems.append(
+                f"interrupt_p50_s: verdict {verdict!r} but the card carries no "
+                "sources.latency — a scored latency must show where its ONSET came "
+                "from, because the only onset this tree can produce today is the tee's "
+                "owner-burst boundary ('no mic frames for owner_gap_s (mic closed)'), "
+                "which is not a speech onset. Carry sources.latency with an explicit "
+                "onset_is_an_estimate"
+            )
+            continue
+        flag = latency.get("onset_is_an_estimate")
+        if not isinstance(flag, bool):
+            problems.append(
+                f"interrupt_p50_s: verdict {verdict!r} but sources.latency."
+                f"onset_is_an_estimate is {flag!r}, not a bool — a scored latency must "
+                "state, explicitly and in the card, whether its onset was estimated"
+            )
+        elif flag and verdict == "pass":
+            problems.append(
+                "interrupt_p50_s: verdict 'pass' while sources.latency."
+                "onset_is_an_estimate is true — the onset came from the tee's "
+                "owner-burst boundary ('no mic frames for owner_gap_s (mic closed)'), "
+                "which is not a speech onset; this row may only be 'unmeasured' until "
+                "input_audio_buffer.speech_started is retained (TURN-1-ONSET)"
+            )
+        elif not flag:
+            # ``false`` is a CLAIM — "a provider stamp produced this" — and a
+            # claim can be checked against the provenance the scorer writes
+            # beside it. Where ``kinds`` is present it settles the question, so
+            # flipping the flag on a card this tool produced no longer buys a
+            # pass: the kinds list still says the only onset in the session was
+            # an owner-burst boundary.
+            kinds = latency.get("kinds")
+            if isinstance(kinds, (list, tuple)):
+                named = {str(kind) for kind in kinds}
+                if CAPTURE_ONSET_KIND in named and not (named & set(ONSET_KINDS)):
+                    problems.append(
+                        f"interrupt_p50_s: verdict {verdict!r} with "
+                        "onset_is_an_estimate=false, but sources.latency.kinds carries "
+                        f"{CAPTURE_ONSET_KIND!r} and no provider-stamped onset kind — "
+                        "the flag contradicts the evidence beside it"
+                    )
     return problems
 
 
@@ -557,16 +638,28 @@ def score_turns(rows: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
 
 
 #: Event names this tool will accept as "the owner started speaking".
-#: The kind the R17 tee's OWNER segmentation contributes. Not a provider event:
-#: the first microphone frame of a burst that follows ``owner_gap_s`` of
-#: silence. Named apart from the provider's ``speech_started`` so a reader of
-#: the scorecard's ``sources`` can always tell which clock a pair came from.
+#: The kind the R17 tee's OWNER segmentation contributes. Not a provider event
+#: and not an onset: the first microphone frame that arrives after **no mic
+#: frames for ``owner_gap_s`` (mic closed; no level check)**. Named apart from
+#: the provider's ``speech_started`` so a reader of the scorecard's ``sources``
+#: can always tell which clock a pair came from.
 CAPTURE_ONSET_KIND = "capture.owner_burst"
 #: ... and the kind MARK-1's ``interrupted_at`` contributes.
 CAPTURE_INTERRUPT_KIND = "capture.interrupted"
 
+#: **NOT in :data:`ONSET_KINDS`, and correction pass 2 is the reason.** An
+#: owner-burst boundary is not an onset: ``_write_owner`` cuts a segment on
+#: ``wall - last_frame_wall > owner_gap_s`` with **no level check at all**, so
+#: what it detects is "no microphone frames arrived for 0.75 s" — the mic
+#: closed, the socket stalled, the tab re-armed — and the panel streams frames
+#: continuously while the mic is armed. In a real armed session the boundary is
+#: therefore either absent (the row stays unmeasured, correctly) or an artefact
+#: with no defined relation to when the owner started speaking. Pairing it with
+#: an interrupt yields a number that LOOKS like a latency, and a scorecard that
+#: let it become a ``pass`` would launder an artefact into the purchase gate.
+#: It is reported as ``estimated_lower_bound_p50_s`` and nothing else.
 ONSET_KINDS: frozenset[str] = frozenset(
-    {"speech_started", "onset", "input_audio_buffer.speech_started", CAPTURE_ONSET_KIND}
+    {"speech_started", "onset", "input_audio_buffer.speech_started"}
 )
 #: ... and as "the lane cut the robot off".
 INTERRUPT_KINDS: frozenset[str] = frozenset(
@@ -632,14 +725,21 @@ def capture_latency_events(index: Mapping[str, Any]) -> list[dict[str, Any]]:
       audio stopped (``robot.wav`` is written faster than real time, so they are
       never used as a clock).
     * ``capture.owner_burst`` — one per owner segment AFTER the first, i.e. the
-      first microphone frame following ``owner_gap_s`` of silence. The first
-      segment is skipped on purpose: it starts when the microphone opens, which
-      is a gesture rather than an onset. This is an estimate of the onset, and
-      the caller is expected to say so.
+      first microphone frame that arrives after **no mic frames for
+      ``owner_gap_s`` (the mic closed)**. Read that literally, because
+      correction pass 2 had to: ``SessionAudioCapture._write_owner`` compares
+      ``wall - last_frame_wall`` and applies **no level check whatsoever**, so
+      this boundary means "frames stopped arriving", not "the room went quiet"
+      and certainly not "the owner started talking". The panel streams frames
+      continuously while the mic is armed, so in a real armed session this kind
+      is either absent or a re-arm/stall artefact. The first segment is skipped
+      on purpose (it starts when the microphone opens, which is a gesture).
+      **It is not an onset and it is not in :data:`ONSET_KINDS`;** it only ever
+      produces ``estimated_lower_bound_p50_s``, never the row's value.
 
-    A capture whose owner stream never went quiet yields no onsets at all — one
-    long segment — which is exactly the shape of the silent monologue arm, and
-    is why the row can still come back ``unmeasured`` on a capture that carries
+    A capture whose mic never stopped sending yields none of the second kind —
+    one long segment — which is exactly the shape of the silent monologue arm,
+    and is why the row correctly stays ``unmeasured`` on a capture that carries
     interrupts.
     """
 
@@ -697,16 +797,24 @@ def score_interrupt_latency(
       precise of the two. Both are accepted and the pair is de-duplicated within
       :data:`INTERRUPT_DEDUPE_S` so one barge-in seen by two witnesses stays one
       barge-in.
-    * **the onset half is estimated, never stamped.**
-      ``input_audio_buffer.speech_started`` is still not a retained type, so the
-      only onset available is the tee's owner-burst boundary. A session with no
-      burst boundaries — the owner silent, the microphone streaming
-      continuously — yields interrupts with nothing to subtract them from, and
-      this returns ``p50_s: None`` with ``onsets: 0`` rather than a number.
+    * **the onset half is not on disk at all.**
+      ``input_audio_buffer.speech_started`` is still not a retained type
+      (handoff **TURN-1-ONSET**: adding it to ``protocol.RETAINED_EVENT_TYPES``
+      with keys ``("audio_start_ms",)`` is the one change that turns this row
+      into a measurement). The tee's owner-burst boundary is **not** a
+      substitute — it fires on "no mic frames for ``owner_gap_s``", with no
+      level check — so it is excluded from :data:`ONSET_KINDS` and cannot
+      produce ``p50_s``.
 
-    ``sources`` in the result says which clock every pair came from, because a
-    median built on the estimate and a median built on a provider stamp are not
-    the same number and must never look alike.
+    **Two numbers, and only one of them can ever become a verdict.**
+    ``p50_s`` is built from provider-stamped onsets and is ``None`` unless the
+    session has them. ``estimated_lower_bound_p50_s`` is built from owner-burst
+    boundaries and is exactly what its name says: a lower bound, because the
+    boundary can only ever be at or after the moment the owner actually started
+    (frames stop arriving no earlier than the mic closes) and is often unrelated
+    to it. ``build_scorecard`` renders the estimate as ``unmeasured`` with the
+    bound in the reason, and :func:`verify_scorecard` refuses a ``pass`` on this
+    row whenever ``onset_is_an_estimate`` is set.
     """
 
     events = normalise_events(rows)
@@ -725,36 +833,53 @@ def score_interrupt_latency(
                 and any(0.0 <= entry["t"] - when <= INTERRUPT_DEDUPE_S for when in stamped)
             )
         ]
-    onsets: list[float] = []
-    interrupts = 0
-    gaps: list[float] = []
-    pending: float | None = None
-    for entry in events:
-        kind = entry["kind"]
-        when = entry["t"]
-        if kind in ONSET_KINDS:
-            pending = when
-            onsets.append(when)
-        elif kind in INTERRUPT_KINDS:
-            interrupts += 1
-            if pending is not None:
-                gaps.append(when - pending)
-                pending = None
+    def _pair(onset_kinds: frozenset[str] | set[str]) -> tuple[list[float], list[float], int]:
+        """Onsets, the gaps they paired into, and the interrupt count."""
+
+        found: list[float] = []
+        paired: list[float] = []
+        seen = 0
+        pending: float | None = None
+        for entry in events:
+            kind = entry["kind"]
+            when = entry["t"]
+            if kind in onset_kinds:
+                pending = when
+                found.append(when)
+            elif kind in INTERRUPT_KINDS:
+                seen += 1
+                if pending is not None:
+                    paired.append(when - pending)
+                    pending = None
+        return found, [gap for gap in paired if gap >= 0.0], seen
+
+    # The real pairing: provider-stamped onsets only.
+    onsets, gaps, interrupts = _pair(ONSET_KINDS)
+    # The estimate, computed the same way but kept in its own field so it can
+    # never be mistaken for the row's value.
+    burst_onsets, burst_gaps, _ = _pair({CAPTURE_ONSET_KIND})
+    burst_gaps.sort()
+    estimated_bound = round(burst_gaps[len(burst_gaps) // 2], 4) if burst_gaps else None
     gaps = [gap for gap in gaps if gap >= 0.0]
     gaps.sort()
     kinds = sorted({str(entry["kind"]) for entry in events})
     stamped_interrupts = sum(1 for entry in events if entry["kind"] == CAPTURE_INTERRUPT_KIND)
-    estimated_onsets = sum(1 for entry in events if entry["kind"] == CAPTURE_ONSET_KIND)
     unpaired = ""
     if not gaps:
         if interrupts and not onsets:
             unpaired = (
-                f"{interrupts} interrupt event(s) and 0 onsets: "
+                f"{interrupts} interrupt event(s) and 0 provider-stamped onsets: "
                 "input_audio_buffer.speech_started is not in "
-                "protocol.RETAINED_EVENT_TYPES, and this capture's owner stream never "
-                "went quiet for owner_gap_s, so it carries no burst boundary to use "
-                "instead — the onset is the half that is missing, not the interrupt"
+                "protocol.RETAINED_EVENT_TYPES (handoff TURN-1-ONSET), so the onset is "
+                "the half that is missing, not the interrupt"
             )
+            if burst_gaps:
+                unpaired += (
+                    f"; {len(burst_gaps)} owner-burst boundary/ies pair into an "
+                    f"estimated LOWER BOUND of {estimated_bound} s, which is not a "
+                    "latency: the boundary is 'no mic frames for owner_gap_s (mic "
+                    "closed)', measured with no level check"
+                )
         elif not interrupts and not onsets:
             unpaired = "neither the event file nor the capture carries onsets or interrupts"
         else:
@@ -770,6 +895,11 @@ def score_interrupt_latency(
         # owner-burst estimate is a bound; one built on a provider stamp is a
         # measurement; they must never be indistinguishable in the record.
         "kinds": kinds,
+        # THE ESTIMATE, in its own field and never in ``p50_s``. Owner-burst
+        # boundaries paired with interrupts. A LOWER BOUND on the true latency
+        # at best, an artefact of a mic re-arm at worst.
+        "estimated_lower_bound_p50_s": estimated_bound,
+        "estimated_lower_bound_pairs": len(burst_gaps),
         # Where in the reply each barge-in landed, from MARK-1's
         # ``interrupted_t_s``. A POSITION, never a time: ``robot.wav`` is
         # written faster than real time, so this says how much of the sentence
@@ -785,8 +915,11 @@ def score_interrupt_latency(
             if entry.get("interrupted_byte") is not None
         ],
         "interrupts_stamped_by_the_tee": stamped_interrupts,
-        "onsets_estimated_from_owner_bursts": estimated_onsets,
-        "onset_is_an_estimate": bool(estimated_onsets) and estimated_onsets == len(onsets),
+        "onsets_estimated_from_owner_bursts": len(burst_onsets),
+        # True when the ONLY thing this session offers for the onset half is the
+        # owner-burst estimate. ``build_scorecard`` renders that as unmeasured
+        # and ``verify_scorecard`` refuses a pass on it.
+        "onset_is_an_estimate": bool(burst_gaps) and not gaps,
         "unpaired_reason": unpaired,
     }
 
@@ -958,6 +1091,15 @@ def build_scorecard(
 
     latency_value = None if latency is None else latency.get("p50_s")
     latency_evidence = [paths[key] for key in ("events", "capture") if key in paths]
+    # CORRECTION PASS 2, the belt half. ``p50_s`` is already built from
+    # provider-stamped onsets only, so this can no longer fire from inside this
+    # tool — it is here for a ``latency`` dict assembled by someone else, and
+    # because a row that must never carry an estimate should say so in the one
+    # place it is built rather than only in the one place it is checked.
+    estimated_only = bool((latency or {}).get("onset_is_an_estimate"))
+    bound = (latency or {}).get("estimated_lower_bound_p50_s")
+    if estimated_only:
+        latency_value = None
     rows.append(
         make_row(
             "interrupt_p50_s",
@@ -967,9 +1109,10 @@ def build_scorecard(
             # NOT ``mechanism``: a mechanism is an explanation of a MISS and
             # ``verify_scorecard`` refuses one on a row that passed. The
             # provenance of this median — which clock each half came off, and
-            # whether the onset was estimated — rides ``sources.latency``
-            # (``kinds``, ``onset_is_an_estimate``) and is printed under the
-            # table by the CLI.
+            # whether an estimate exists at all — rides ``sources.latency``
+            # (``kinds``, ``onset_is_an_estimate``,
+            # ``estimated_lower_bound_p50_s``) and is printed under the table by
+            # the CLI.
             unmeasured_reason=(
                 ""
                 if isinstance(latency_value, (int, float))
@@ -977,11 +1120,21 @@ def build_scorecard(
                     "the INTERRUPT half is on disk — MARK-1's mark_interrupted now writes "
                     "interrupted_at/interrupted_byte/interrupted_t_s onto the robot "
                     "segment, and this tool reads it (handoff MARK-1-STAMP is CLOSED). "
-                    "The ONSET half is not: input_audio_buffer.speech_started is not in "
-                    "protocol.RETAINED_EVENT_TYPES, so the only onset available is the "
-                    "tee's owner-burst boundary, and this session supplied none. Give it "
-                    "a --capture whose owner stream goes quiet between bursts, or retain "
-                    "speech_started. See handoff TURN-1-ONSET in AIR1_STATUS.md."
+                    "The ONSET half is not on disk at all: "
+                    "input_audio_buffer.speech_started is not in "
+                    "protocol.RETAINED_EVENT_TYPES, and the tee's owner-burst boundary is "
+                    "NOT a substitute — it fires on 'no mic frames for owner_gap_s (mic "
+                    "closed)', with no level check, so it cannot become this row's value. "
+                    "Retain speech_started (handoff TURN-1-ONSET in AIR1_STATUS.md) and "
+                    "this row measures itself."
+                    + (
+                        f" This session offers an estimated LOWER BOUND of {bound} s from "
+                        f"{latency.get('estimated_lower_bound_pairs')} owner-burst "
+                        "pair(s); it is reported as sources.latency."
+                        "estimated_lower_bound_p50_s and is not a verdict."
+                        if estimated_only and bound is not None
+                        else ""
+                    )
                     + (f" This session: {latency['unpaired_reason']}" if latency else "")
                 )
             ),
@@ -1211,12 +1364,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{arrow} {entry['threshold']}"
             + (f"   ({entry['unmeasured_reason']})" if entry["verdict"] == "unmeasured" else "")
         )
-    if (latency or {}).get("onset_is_an_estimate") and latency.get("pairs"):
+    if (latency or {}).get("onset_is_an_estimate"):
         print(
-            "\nNOTE  interrupt_p50_s: the interrupt instant is MARK-1's own "
-            "interrupted_at stamp, but the onset is ESTIMATED from the tee's owner-burst "
-            "boundary (first mic frame after owner_gap_s of silence). This median is a "
-            "bound, not a provider-stamped measurement."
+            "\nNOTE  interrupt_p50_s stays UNMEASURED. The interrupt instant is MARK-1's "
+            "own interrupted_at stamp, but this session has no provider-stamped onset: "
+            "what it has is the tee's owner-burst boundary, which fires on 'no mic frames "
+            f"for owner_gap_s (mic closed)' with no level check. Estimated LOWER BOUND: "
+            f"{latency.get('estimated_lower_bound_p50_s')} s from "
+            f"{latency.get('estimated_lower_bound_pairs')} pair(s) — reported, never "
+            "scored. Retain input_audio_buffer.speech_started (TURN-1-ONSET) to measure it."
         )
     summary = card["summary"]
     print(f"\n{summary['pass']} pass · {summary['fail']} fail · {summary['unmeasured']} unmeasured")

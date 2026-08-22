@@ -151,11 +151,20 @@ def _barge_in_session(tmp_path: Path, *, gaps: list[float]) -> Path:
 
 
 def _good_card(air) -> dict:
-    """A complete, honest card: every row measured, every row passing."""
+    """A complete, honest card: every row measured, every row passing.
+
+    It carries ``sources.latency`` because correction pass 3 made that a
+    REQUIREMENT of a scored ``interrupt_p50_s``: a card that claims a latency
+    must say where its onset came from, and a card that simply omits the
+    evidence must not thereby pass. ``onset_is_an_estimate: False`` is the
+    honest claim for a 0.41 s median — it says a provider stamp produced it.
+    """
 
     return {
         "schema": air.SCORECARD_SCHEMA,
         "note": "seeded",
+        "sources": {"latency": {"p50_s": 0.41, "pairs": 20,
+                                "onset_is_an_estimate": False}},
         "rows": [
             air.make_row("erle_db", 23.4, evidence=["erle.json"]),
             air.make_row("robot_utterances_as_owner_turns", 0, n=20, evidence=["turns.jsonl"]),
@@ -633,13 +642,20 @@ def test_latency_names_the_one_missing_half_and_no_longer_the_closed_one(air) ->
 
 
 # ================== the seam MARK-1 opened: the tee times its own barge-in
-def test_the_tee_alone_yields_an_interrupt_median(air, tmp_path: Path) -> None:
-    """SEED E1. Stop reading ``interrupted_at`` in ``capture_latency_events``
-    (or drop the field from the index) and this median disappears.
+def test_the_tee_alone_yields_a_lower_bound_and_never_a_median(air, tmp_path: Path) -> None:
+    """SEED E1, re-cut by correction pass 2.
 
-    A real product-tee session: the owner stream goes quiet between bursts, so
-    each burst opens a new ``owner_turn`` segment, and every robot segment
+    A real product-tee session in which the mic stops sending between bursts, so
+    each burst opens a new ``owner_turn`` segment and every robot segment
     carries MARK-1's wall stamp. No ``--events`` file is involved.
+
+    **What the tee alone can and cannot produce.** It stamps the INTERRUPT (that
+    is MARK-1-STAMP, closed). It does NOT produce an onset: the boundary it
+    offers fires on "no mic frames for ``owner_gap_s``", with no level check, so
+    it is a lower bound at best. The row's value must stay ``None`` and the
+    bound must live in its own field.
+
+    Seed: put ``CAPTURE_ONSET_KIND`` back into ``ONSET_KINDS`` → this reddens.
     """
 
     directory = _barge_in_session(tmp_path, gaps=[0.30, 0.41, 0.55, 0.44])
@@ -649,23 +665,137 @@ def test_the_tee_alone_yields_an_interrupt_median(air, tmp_path: Path) -> None:
     events = air.capture_latency_events(index)
     kinds = [entry["kind"] for entry in events]
     assert kinds.count(air.CAPTURE_INTERRUPT_KIND) == 4
-    assert kinds.count(air.CAPTURE_ONSET_KIND) == 4, "the first owner segment is not an onset"
+    assert kinds.count(air.CAPTURE_ONSET_KIND) == 4, "the first owner segment is not a boundary"
     assert all(
         entry.get("interrupted_byte") is not None and entry.get("interrupted_t_s") is not None
         for entry in events
         if entry["kind"] == air.CAPTURE_INTERRUPT_KIND
     )
+    assert air.CAPTURE_ONSET_KIND not in air.ONSET_KINDS, (
+        "a mic-frame gap is not a speech onset and must not be pairable as one"
+    )
 
     scored = air.score_interrupt_latency(capture_events=events)
-    assert scored["pairs"] == 4
-    assert scored["p50_s"] == pytest.approx(0.44, abs=0.02)
+    assert scored["p50_s"] is None, "an estimated onset may never become the row's value"
+    assert scored["pairs"] == 0
+    assert scored["estimated_lower_bound_p50_s"] == pytest.approx(0.44, abs=0.02)
+    assert scored["estimated_lower_bound_pairs"] == 4
     assert scored["interrupts_stamped_by_the_tee"] == 4
     assert scored["onset_is_an_estimate"] is True
     assert scored["positions_into_reply_s"], "interrupted_t_s rides along as a POSITION"
 
+    card = air.build_scorecard(latency=scored, evidence={"capture": str(directory)})
+    row = next(entry for entry in card["rows"] if entry["id"] == "interrupt_p50_s")
+    assert row["verdict"] == "unmeasured"
+    assert row["value"] is None
+    assert "LOWER BOUND" in row["unmeasured_reason"]
+    assert "mic closed" in row["unmeasured_reason"]
+    assert "TURN-1-ONSET" in row["unmeasured_reason"]
+    assert air.verify_scorecard(card) == []
+
+
+def test_an_estimated_onset_can_never_be_scored_as_a_pass(air) -> None:
+    """The braces half. A card that claims a pass on an estimate is REFUSED.
+
+    This is the exact shape the verifier built to break the first pass: 20
+    owner-burst boundaries, 20 interrupts, 0.30–0.45 s apart, ``verdict: pass``,
+    ``value 0.44``, ``n 20`` — and ``verify_scorecard`` used to return ``[]``
+    because nothing in it had ever read ``sources``.
+
+    Seed: delete the ``onset_is_an_estimate`` clause at the end of
+    ``verify_scorecard`` → this reddens.
+    """
+
+    card = _good_card(air)
+    card["sources"] = {"latency": {"p50_s": 0.44, "pairs": 20, "onset_is_an_estimate": True,
+                                   "estimated_lower_bound_p50_s": 0.44}}
+    problems = air.verify_scorecard(card)
+
+    assert problems, "a pass built on an estimated onset must be refused"
+    assert any("interrupt_p50_s" in problem and "onset_is_an_estimate" in problem
+               for problem in problems)
+    # ... and the same card with a provider-stamped onset is fine.
+    card["sources"]["latency"]["onset_is_an_estimate"] = False
+    assert air.verify_scorecard(card) == []
+
+
+def test_a_scored_latency_must_show_where_its_onset_came_from(air) -> None:
+    """SEED CP3. Correction pass 3: deleting the evidence must not buy a pass.
+
+    The seventh check as first written only fired when ``sources.latency`` was
+    present, so a card with ``sources`` removed — or with
+    ``onset_is_an_estimate`` mistyped — walked straight past it. A check an
+    author can satisfy by deleting evidence is not a check, so a SCORED
+    ``interrupt_p50_s`` now has to carry its provenance.
+
+    Seed: drop the ``latency is None`` / ``not isinstance(flag, bool)`` clauses
+    from ``verify_scorecard`` → this reddens.
+    """
+
+    # 1. no sources at all
+    card = _good_card(air)
+    card.pop("sources")
+    problems = air.verify_scorecard(card)
+    assert any("no sources.latency" in problem for problem in problems), problems
+
+    # 2. sources present, latency missing
+    card = _good_card(air)
+    card["sources"] = {"monologue": {}, "spend": {}}
+    assert any("no sources.latency" in problem for problem in air.verify_scorecard(card))
+
+    # 3. latency present, the flag missing entirely
+    card = _good_card(air)
+    card["sources"]["latency"].pop("onset_is_an_estimate")
+    assert any("not a bool" in problem for problem in air.verify_scorecard(card))
+
+    # 4. the flag mistyped — the JSON-round-trip shape that looks true enough
+    for mistyped in ("false", 0, None, "true"):
+        card = _good_card(air)
+        card["sources"]["latency"]["onset_is_an_estimate"] = mistyped
+        assert any("not a bool" in problem for problem in air.verify_scorecard(card)), mistyped
+
+    # ... and the honest card still verifies.
+    assert air.verify_scorecard(_good_card(air)) == []
+
+
+def test_flipping_the_flag_does_not_launder_an_owner_burst_median(air) -> None:
+    """The other half of the hole: ``onset_is_an_estimate: false`` is a CLAIM.
+
+    A claim can be checked against the provenance the scorer writes beside it.
+    On any card this tool produced, ``kinds`` still names the owner-burst
+    boundary as the only onset in the session, and that contradicts the flag.
+    """
+
+    card = _good_card(air)
+    card["sources"]["latency"] = {
+        "p50_s": 0.41,
+        "pairs": 20,
+        "onset_is_an_estimate": False,          # the lie
+        "kinds": [air.CAPTURE_ONSET_KIND, air.CAPTURE_INTERRUPT_KIND],
+    }
+    problems = air.verify_scorecard(card)
+    assert any("contradicts the evidence" in problem for problem in problems), problems
+
+    # A real provider-stamped onset in the same list is not contradicted.
+    card["sources"]["latency"]["kinds"] = [
+        "input_audio_buffer.speech_started", air.CAPTURE_INTERRUPT_KIND,
+    ]
+    assert air.verify_scorecard(card) == []
+
+
+def test_an_unmeasured_row_owes_no_onset_provenance(air) -> None:
+    """The requirement is on a SCORED row. ``unmeasured`` claims nothing."""
+
+    card = _good_card(air)
+    card.pop("sources")
+    rows = [entry for entry in card["rows"] if entry["id"] != "interrupt_p50_s"]
+    rows.append(air.make_row("interrupt_p50_s", None, unmeasured_reason="the onset half"))
+    card["rows"] = rows
+    assert air.verify_scorecard(card) == []
+
 
 def test_a_capture_without_the_stamp_is_unmeasured_not_zero(air, tmp_path: Path) -> None:
-    """The other half of seed E1: absent ``interrupted_at`` ⇒ no median at all."""
+    """The other half of seed E1: absent ``interrupted_at`` ⇒ nothing at all."""
 
     directory = _barge_in_session(tmp_path, gaps=[0.30, 0.41, 0.55, 0.44])
     index = json.loads((directory / "index.json").read_text(encoding="utf-8"))
@@ -679,7 +809,9 @@ def test_a_capture_without_the_stamp_is_unmeasured_not_zero(air, tmp_path: Path)
     scored = air.score_interrupt_latency(capture_events=events)
     assert scored["p50_s"] is None
     assert scored["interrupts"] == 0
-    assert scored["onsets"] == 4
+    assert scored["onsets"] == 0, "provider-stamped onsets, of which there are none"
+    assert scored["onsets_estimated_from_owner_bursts"] == 4
+    assert scored["estimated_lower_bound_p50_s"] is None, "no interrupt to pair with"
 
     card = air.build_scorecard(latency=scored, evidence={"capture": str(directory)})
     row = next(entry for entry in card["rows"] if entry["id"] == "interrupt_p50_s")
@@ -735,5 +867,8 @@ def test_an_evidence_log_with_truncates_and_no_onsets_yields_no_median(air) -> N
     assert scored["p50_s"] is None
     # FINISH-1: the sentence moved with the seam. The interrupt half is stamped
     # now; what this log is missing is the ONSET, and the reason has to say so.
-    assert "no burst boundary" in scored["unpaired_reason"]
+    # Correction pass 2: "provider-stamped" is the load-bearing word — the tee's
+    # owner-burst boundary is not an onset and is not offered as one here.
+    assert "0 provider-stamped onsets" in scored["unpaired_reason"]
+    assert "TURN-1-ONSET" in scored["unpaired_reason"]
     assert "the onset is the half that is missing" in scored["unpaired_reason"]

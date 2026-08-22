@@ -446,14 +446,54 @@ def test_the_module_present_refusal_never_imported_the_vendor_sdk() -> None:
 
 def test_no_adapter_import_ever_installs_or_imports_a_vendor_module() -> None:
     """The dependency probe uses ``find_spec``. Importing to check availability
-    would already have done the thing the board forbids."""
+    would already have done the thing the board forbids.
 
-    assert "rclpy" not in sys.modules
-    assert "pyrealsense2" not in sys.modules
-    assert "unilidar_sdk2" not in sys.modules
-    dependency_report_text()
-    assert "rclpy" not in sys.modules
-    assert "unilidar_sdk2" not in sys.modules
+    Card GREEN-1: measured in a FRESH INTERPRETER, because ``sys.modules`` is
+    process-global and this cell used to read whatever the rest of the sweep had
+    already loaded into it. ``tests/test_venue1_physical_venue.py`` calls
+    ``connected_devices()`` at MODULE scope (it feeds a ``skipif``), so
+    ``pyrealsense2`` is in ``sys.modules`` before a single cell of this file
+    runs — and the guard went red in the sweep while passing alone, for a reason
+    that has nothing to do with the probe. Deleting the ``pyrealsense2`` line
+    would have made it green and blind.
+
+    The subprocess is the instrument the rest of the stack already uses for this
+    question (``test_the_module_present_refusal_never_imported_the_vendor_sdk``
+    directly above, ``test_a_full_preflight_run_never_imports_a_vendor_sdk`` in
+    ``tests/test_capture_preflight.py``), and it measures the property STRICTLY
+    HARDER than the in-process version did: the report now runs against a
+    ``sys.modules`` nothing else has touched, so ``BEFORE`` is a real starting
+    line rather than an accident of ordering, and ``pyrealsense2`` is checked
+    AFTER the call too — which the in-process version could not do on a box
+    where P1-A's wheel had already been dragged in by a neighbour.
+    """
+
+    script = (
+        "import sys;"
+        f"sys.path.insert(0, {str(REPO)!r});"
+        "from scripts.parcel_capture.ingest import dependency_report_text;"
+        "vendor = ('rclpy', 'pyrealsense2', 'unilidar_sdk2');"
+        "print('BEFORE', sorted(m for m in vendor if m in sys.modules));"
+        "text = dependency_report_text();"
+        "print('AFTER', sorted(m for m in vendor if m in sys.modules));"
+        "print('REPORTED', all(m in text for m in vendor))"
+    )
+    proc = subprocess.run(
+        [sys.executable, "-B", "-c", script],
+        capture_output=True,
+        text=True,
+        cwd=REPO,
+        timeout=180,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "Traceback" not in proc.stderr
+    assert "BEFORE []" in proc.stdout, proc.stdout
+    assert "AFTER []" in proc.stdout, proc.stdout
+    # ...and the report was not empty of them: every vendor module is NAMED in
+    # the text it produced without importing any of them, so "AFTER []" cannot
+    # be satisfied by a probe that simply never ran.
+    assert "REPORTED True" in proc.stdout, proc.stdout
 
 
 def test_the_dependency_report_names_each_module_state_and_is_never_a_traceback() -> None:

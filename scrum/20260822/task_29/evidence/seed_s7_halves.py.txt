@@ -1,0 +1,103 @@
+"""Correction pass 2 — each half of the roam race guard, seeded on a COPY.
+
+A copy and not the tree: Batch-A executors are editing ``runtime.py`` right now,
+so mutating it in place — even for the two seconds it takes to watch a test
+fail — would put a defect into somebody else's targeted run and race their
+edits. This is CURIO-1's method (``seed_curio1.py``), and the copy's provenance
+is asserted inside the child process rather than assumed.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import os
+import shutil
+import subprocess
+from pathlib import Path
+
+REPO = Path("/home/jaewoo-jang/Desktop/Projects/Parcel")
+SCRATCH = Path("/home/jaewoo-jang/.cache/parcel-finish1/seed_src")
+PYTHON = REPO / ".parcel/bin/python"
+TESTS = "tests/test_roam1_behavior.py"
+TARGET = "parcel_robot/runtime.py"
+
+LOCK_OLD = """        with self._command_lock:
+            with self._lock:
+                still_roaming = self._roam_policy is policy"""
+LOCK_NEW = """        if True:  # SEED S7a': the command lock dropped around the tick
+            with self._lock:
+                still_roaming = self._roam_policy is policy"""
+
+POST_OLD = """            accepted = self._submit_roam_command(command)
+            with self._lock:
+                if self._roam_policy is not policy:
+                    self.arbiter.cancel("voice")
+                    return
+"""
+POST_NEW = """            accepted = self._submit_roam_command(command)
+            with self._lock:
+"""
+
+PROVENANCE = (
+    "import parcel_robot, sys; "
+    "assert str(parcel_robot.__file__).startswith(sys.argv[1]), parcel_robot.__file__; "
+    "print('imported from the COPY:', parcel_robot.__file__)"
+)
+
+
+def build_copy() -> Path:
+    shutil.rmtree(SCRATCH, ignore_errors=True)
+    SCRATCH.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(REPO / "src", SCRATCH / "src", dirs_exist_ok=True)
+    return SCRATCH / "src"
+
+
+def run(src: Path, selection: str = "") -> str:
+    env = dict(os.environ)
+    env.pop("TMPDIR", None)
+    env["PYTHONPATH"] = str(src)
+    args = [str(PYTHON), "-m", "pytest", TESTS, "-q", "--no-header", "-p", "no:cacheprovider"]
+    if selection:
+        args += ["-k", selection]
+    proc = subprocess.run(args, cwd=REPO, capture_output=True, text=True, env=env, check=False)
+    lines = [line for line in proc.stdout.strip().splitlines() if line.strip()]
+    failed = [line.split(" - ")[0] for line in lines if line.startswith("FAILED")]
+    return " | ".join([*failed, lines[-1] if lines else "no output"])
+
+
+def main() -> None:
+    tree_before = hashlib.sha256((REPO / "src" / TARGET).read_bytes()).hexdigest()
+    print(f"product runtime.py sha256 before: {tree_before}")
+
+    src = build_copy()
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(src)
+    proc = subprocess.run(
+        [str(PYTHON), "-c", PROVENANCE, str(src)],
+        cwd=REPO, capture_output=True, text=True, env=env, check=False,
+    )
+    print((proc.stdout or proc.stderr).strip())
+    assert proc.returncode == 0, "the copy is not the module under test"
+    print(f"CONTROL (unseeded copy) : {run(src)}")
+
+    for label, pairs in (
+        ("S7a' lock only", [(LOCK_OLD, LOCK_NEW)]),
+        ("S7b' post-check only", [(POST_OLD, POST_NEW)]),
+    ):
+        src = build_copy()
+        target = src / TARGET
+        text = target.read_text(encoding="utf-8")
+        for old, new in pairs:
+            assert text.count(old) == 1, f"{label}: anchor count {text.count(old)}"
+            text = text.replace(old, new)
+        target.write_text(text, encoding="utf-8")
+        print(f"{label:22s}: {run(src)}")
+
+    shutil.rmtree(SCRATCH, ignore_errors=True)
+    tree_after = hashlib.sha256((REPO / "src" / TARGET).read_bytes()).hexdigest()
+    print(f"product runtime.py sha256 after : {tree_after}")
+    print("product tree untouched:", tree_before == tree_after)
+
+
+if __name__ == "__main__":
+    main()

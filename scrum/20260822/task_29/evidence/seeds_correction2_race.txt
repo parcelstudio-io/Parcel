@@ -1,0 +1,7 @@
+product runtime.py sha256 before: 998f67939dc26739bcb09d1538073a4c48cb431b8d9bc63040c57adb12e18c8f
+imported from the COPY: /home/jaewoo-jang/.cache/parcel-finish1/seed_src/src/parcel_robot/__init__.py
+CONTROL (unseeded copy) : 58 passed, 1 warning in 2.93s
+S7a' lock only        : FAILED tests/test_roam1_behavior.py::test_no_roam_command_is_submitted_after_the_stop_returns | 1 failed, 57 passed, 1 warning in 1.59s
+S7b' post-check only  : FAILED tests/test_roam1_behavior.py::test_a_stop_that_wins_the_race_owns_the_snapshot | 1 failed, 57 passed, 1 warning in 3.06s
+product runtime.py sha256 after : 998f67939dc26739bcb09d1538073a4c48cb431b8d9bc63040c57adb12e18c8f
+product tree untouched: True

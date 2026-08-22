@@ -1,0 +1,92 @@
+=== byte-identity of the scratch copy against the repo ===
+
+################ SEED S1 — parcel_robot/authority.py
+S1: obstacle floor check disabled
+--- with the seed applied (expect RED):
+FAILED tests/test_door1_doorway.py::test_an_under_floor_obstacle_ring_refuses_and_names_the_floor
+FAILED tests/test_door1_doorway.py::test_every_envelope_construction_path_lands_on_the_obstacle_floor
+2 failed, 1 warning in 0.47s
+--- restored sha256 e7e8027b0daf53ee2bc21810aebf27c964487e134a1a1fb7a9c05fa81aeb402b ; repo sha256 e7e8027b0daf53ee2bc21810aebf27c964487e134a1a1fb7a9c05fa81aeb402b ; match=YES
+--- after restore (expect GREEN):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2 passed, 1 warning in 0.49s
+
+################ SEED S2 — parcel_robot/navigation/grid_navigator.py
+Traceback (most recent call last):
+  File "<stdin>", line 9, in <module>
+AssertionError: S2 anchor not unique
+--- with the seed applied (expect RED):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 2 warnings in 0.34s
+--- restored sha256 c8b14a878ec97aa85a7abea34cd0af3289394b031d98469e3f2b1cd5dbff6b8b ; repo sha256 c8b14a878ec97aa85a7abea34cd0af3289394b031d98469e3f2b1cd5dbff6b8b ; match=YES
+--- after restore (expect GREEN):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 2 warnings in 0.47s
+
+################ SEED S3 — parcel_robot/navigation/grid_planner.py
+S3: planner inflation no longer covers the gate
+--- with the seed applied (expect RED):
+=========================== short test summary info ============================
+FAILED tests/test_door1_doorway.py::test_a_planner_that_relaxes_the_final_gate_refuses_to_construct
+1 failed, 1 warning in 0.30s
+--- restored sha256 25fcb6a02c1f091e58e92d89382f4f1b834a073fea061ea849ca893446a39336 ; repo sha256 25fcb6a02c1f091e58e92d89382f4f1b834a073fea061ea849ca893446a39336 ; match=YES
+--- after restore (expect GREEN):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 0.54s
+
+################ SEED S4 — parcel_robot/navigation/follow.py
+S4: follow stand-off silently constant again
+--- with the seed applied (expect RED):
+FAILED tests/test_door1_doorway.py::test_the_follow_stand_off_derives_from_the_instance_not_the_import
+FAILED tests/test_door1_doorway.py::test_no_module_level_stand_off_constant_survives_in_follow
+2 failed, 1 warning in 0.33s
+--- restored sha256 30b6fbf4198dbbba4e23798ab4b345b822b650272efe72a5626a8125d8beaff9 ; repo sha256 30b6fbf4198dbbba4e23798ab4b345b822b650272efe72a5626a8125d8beaff9 ; match=YES
+--- after restore (expect GREEN):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2 passed, 1 warning in 0.47s
+
+################ SEED S5 — parcel_robot/navigation/search_owner.py
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+AssertionError: S5 anchor not unique
+--- with the seed applied (expect RED):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 1 warning in 0.28s
+--- restored sha256 2596557c51739de8076685e24a130ce21465859e93ec5367f3bee264e611d768 ; repo sha256 2596557c51739de8076685e24a130ce21465859e93ec5367f3bee264e611d768 ; match=YES
+--- after restore (expect GREEN):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 1 warning in 0.59s
+
+################ SEED S6 — parcel_robot/navigation/search_owner.py
+S6: site 2 back to the RAW commissioned ring
+--- with the seed applied (expect RED):
+=========================== short test summary info ============================
+FAILED tests/test_door1_doorway.py::test_the_owner_search_planner_keeps_its_legacy_inflation_when_shipped
+1 failed, 1 passed, 1 warning in 0.31s
+--- restored sha256 2596557c51739de8076685e24a130ce21465859e93ec5367f3bee264e611d768 ; repo sha256 2596557c51739de8076685e24a130ce21465859e93ec5367f3bee264e611d768 ; match=YES
+--- after restore (expect GREEN):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+2 passed, 1 warning in 0.44s
+
+################ SEED S7 — parcel_robot/navigation/grid_navigator.py
+S7: site 1 cap removed (flat, un-scoped ring)
+--- with the seed applied (expect RED):
+=========================== short test summary info ============================
+FAILED tests/test_door1_doorway.py::test_every_grid_model_profile_keeps_its_legacy_inflation
+1 failed, 2 warnings in 0.33s
+--- restored sha256 c8b14a878ec97aa85a7abea34cd0af3289394b031d98469e3f2b1cd5dbff6b8b ; repo sha256 c8b14a878ec97aa85a7abea34cd0af3289394b031d98469e3f2b1cd5dbff6b8b ; match=YES
+--- after restore (expect GREEN):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 2 warnings in 0.64s
+
+=== final byte-identity check of the whole scratch tree ===
+MISMATCH

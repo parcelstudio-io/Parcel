@@ -1,0 +1,346 @@
+{
+ "pass1": {
+  "pass_": "1-cold-board",
+  "admit": 0,
+  "ask": 8,
+  "refuse": 7,
+  "present_admitted": 0,
+  "present_n": 7,
+  "absent_admitted": 0,
+  "absent_n": 8,
+  "ask_rate": 0.5333,
+  "wall_ms_for_all_queries": 1.42,
+  "mean_ms_per_resolve": 0.094,
+  "bureau": {
+   "read": 8,
+   "hit": 0,
+   "miss": 8,
+   "stale": 0,
+   "mismatched": 0,
+   "unusable": 0,
+   "requested": 8,
+   "dropped": 0,
+   "published": 0,
+   "declined": 0,
+   "worker_errors": 0
+  },
+  "veto": {
+   "asked": 0,
+   "present": 0,
+   "absent": 0,
+   "unavailable": 0,
+   "budget_declined": 0,
+   "loop_refusals": 0,
+   "mean_ms": 0.0
+  }
+ },
+ "pass2": {
+  "pass_": "2-published",
+  "admit": 5,
+  "ask": 0,
+  "refuse": 10,
+  "present_admitted": 5,
+  "present_n": 7,
+  "absent_admitted": 0,
+  "absent_n": 8,
+  "ask_rate": 0.0,
+  "wall_ms_for_all_queries": 1.37,
+  "mean_ms_per_resolve": 0.092,
+  "bureau": {
+   "read": 16,
+   "hit": 8,
+   "miss": 8,
+   "stale": 0,
+   "mismatched": 0,
+   "unusable": 0,
+   "requested": 8,
+   "dropped": 0,
+   "published": 8,
+   "declined": 0,
+   "worker_errors": 0
+  },
+  "veto": {
+   "asked": 8,
+   "present": 5,
+   "absent": 3,
+   "unavailable": 0,
+   "budget_declined": 0,
+   "loop_refusals": 0,
+   "mean_ms": 67.115
+  }
+ },
+ "rows_pass1": [
+  {
+   "query": "bench",
+   "set": "present",
+   "outcome": "ask",
+   "admitted": false,
+   "reason": "vlm_veto_unavailable",
+   "candidate": "bench",
+   "p_yes": null
+  },
+  {
+   "query": "bollard",
+   "set": "present",
+   "outcome": "ask",
+   "admitted": false,
+   "reason": "vlm_veto_unavailable",
+   "candidate": "bollard",
+   "p_yes": null
+  },
+  {
+   "query": "crate",
+   "set": "present",
+   "outcome": "ask",
+   "admitted": false,
+   "reason": "vlm_veto_unavailable",
+   "candidate": "crate",
+   "p_yes": null
+  },
+  {
+   "query": "door",
+   "set": "present",
+   "outcome": "ask",
+   "admitted": false,
+   "reason": "vlm_veto_unavailable",
+   "candidate": "door",
+   "p_yes": null
+  },
+  {
+   "query": "lamppost",
+   "set": "present",
+   "outcome": "ask",
+   "admitted": false,
+   "reason": "vlm_veto_unavailable",
+   "candidate": "lamppost",
+   "p_yes": null
+  },
+  {
+   "query": "traffic light",
+   "set": "present",
+   "outcome": "ask",
+   "admitted": false,
+   "reason": "vlm_veto_unavailable",
+   "candidate": "traffic light",
+   "p_yes": null
+  },
+  {
+   "query": "tree",
+   "set": "present",
+   "outcome": "ask",
+   "admitted": false,
+   "reason": "vlm_veto_unavailable",
+   "candidate": "tree",
+   "p_yes": null
+  },
+  {
+   "query": "Narnia",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "my office",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "the moon",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "a coffee shop",
+   "set": "absent",
+   "outcome": "ask",
+   "admitted": false,
+   "reason": "vlm_veto_unavailable",
+   "candidate": "shop",
+   "p_yes": null
+  },
+  {
+   "query": "a fire hydrant",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "a swimming pool",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "the airport",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "a shopping trolley",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  }
+ ],
+ "rows_pass2": [
+  {
+   "query": "bench",
+   "set": "present",
+   "outcome": "admit",
+   "admitted": true,
+   "reason": "grounded",
+   "candidate": "",
+   "p_yes": 0.8418051439190353
+  },
+  {
+   "query": "bollard",
+   "set": "present",
+   "outcome": "admit",
+   "admitted": true,
+   "reason": "grounded",
+   "candidate": "",
+   "p_yes": 0.9863616864503655
+  },
+  {
+   "query": "crate",
+   "set": "present",
+   "outcome": "admit",
+   "admitted": true,
+   "reason": "grounded",
+   "candidate": "",
+   "p_yes": 0.998073172073076
+  },
+  {
+   "query": "door",
+   "set": "present",
+   "outcome": "admit",
+   "admitted": true,
+   "reason": "grounded",
+   "candidate": "",
+   "p_yes": 0.8774680541883929
+  },
+  {
+   "query": "lamppost",
+   "set": "present",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "vlm_veto_absent",
+   "candidate": "lamppost",
+   "p_yes": 0.23370468564058805
+  },
+  {
+   "query": "traffic light",
+   "set": "present",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "vlm_veto_absent",
+   "candidate": "traffic light",
+   "p_yes": 0.03410028949976039
+  },
+  {
+   "query": "tree",
+   "set": "present",
+   "outcome": "admit",
+   "admitted": true,
+   "reason": "grounded",
+   "candidate": "",
+   "p_yes": 0.9693145494382823
+  },
+  {
+   "query": "Narnia",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "my office",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "the moon",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "a coffee shop",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "vlm_veto_absent",
+   "candidate": "shop",
+   "p_yes": 0.007815849118966201
+  },
+  {
+   "query": "a fire hydrant",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "a swimming pool",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "the airport",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  },
+  {
+   "query": "a shopping trolley",
+   "set": "absent",
+   "outcome": "refuse",
+   "admitted": false,
+   "reason": "no_observations",
+   "candidate": "",
+   "p_yes": null
+  }
+ ]
+}

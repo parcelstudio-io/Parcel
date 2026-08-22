@@ -356,8 +356,21 @@ def test_the_person_floor_guard_is_now_symmetric_with_the_obstacle_guard() -> No
     manifest SHA-locks ``configs/robot.yaml``.
     """
 
+    # Card DOOR-1 (2026-08-22) did to the OBSTACLE half exactly what P1-E did to
+    # the person half two paragraphs down: it moved WHERE this floor comes from.
+    # It used to be the shipped ``SafetyEnvelope.obstacle_stop_floor_m`` (0.6 m),
+    # which made the shipped envelope its own floor — and at 0.6 m the
+    # DIRECTIONAL gate still refuses every corridor narrower than 1.10 m, so no
+    # profile could commission a ring that fits through an interior doorway. It
+    # is now ``OBSTACLE_STOP_FLOOR_M`` (0.41 m), the body's ISO/TS-15066 stopping
+    # distance at the APPROACH regime. The guard is unchanged in kind — still a
+    # refusal at construction, still naming ``obstacle_stop_m`` — so the probe
+    # moves from the retired 0.5 to a value under the new floor.
     with pytest.raises(ValueError, match="obstacle_stop_m"):
-        ReactiveSafetyPolicy(obstacle_stop_m=0.5)
+        ReactiveSafetyPolicy(obstacle_stop_m=0.40)
+    # ...and the prototype's indoor ring, which is the DOOR-1 deliverable, is
+    # accepted where 0.5 used to be refused.
+    assert ReactiveSafetyPolicy(obstacle_stop_m=0.45).obstacle_stop_m == pytest.approx(0.45)
     # Card P1-E (2026-08-22) moved WHERE this floor comes from: it used to be
     # the shipped social zone (1.2 m), which made the commissioning value its
     # own floor and made an indoor 0.7 m profile a refusal to boot; it is now
