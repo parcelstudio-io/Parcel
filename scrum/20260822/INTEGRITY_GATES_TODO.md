@@ -4,10 +4,15 @@
 hardware-motion, and god-object-refactor work until the exit gate at the end of
 this document is green.
 
-**Starting point:** `main` / `origin/main` at `904edd24fc910bce5f160de3d2f242a03d447cd7`.
-The active worktree contains unrelated in-flight owner work. Preserve it. Run
-implementation lanes in isolated branches/worktrees or serialize them through one
-integrator; do not revert, overwrite, stage, or commit another lane’s files.
+**Starting point, reassessed 2026-08-22:** `main` / `origin/main` at
+`c9251d2e9bdef30393046f96d7ed7b9e4ed6bb27`. That commit is documentation-only;
+the executable baseline remains the earlier committed Wave-P0 code plus the local
+dirty P1/P2 wave. The active `main` worktree currently has 41 modified tracked
+files (`+5,748/-171`) and 138 untracked paths, including 23 untracked product
+modules (about 8,792 lines) and 14 untracked test modules (about 8,900 lines).
+Preserve it. Run implementation lanes in isolated branches/worktrees or serialize
+them through one integrator; do not revert, overwrite, stash, broadly stage, or
+commit another lane’s files.
 
 ## Baseline being closed
 
@@ -15,10 +20,92 @@ Do not convert these failures into skips or silently move the denominator:
 
 | Integrity break | Current evidence | Closure signal |
 |---|---|---|
-| Unitree assets are ignored and not fetched | Workflow-equivalent gate aborts at the first hard stage; 118 of 170 observed failures share this cause | Clean checkout contains and validates the exact minimal asset pack; every stage still reports when the pack is deliberately damaged |
-| Python support claim is false on 3.11 | `RetainedEvent.fields` is rejected during import and 2,214 tests disappear from collection | Every claimed minor installs, imports, collects the same node IDs, and runs its required behavioral lane |
-| Eager package barrels amplify cycles | Cold `parcel_robot.core` or `parcel_robot.navigation` import loads 118 Parcel modules and reaches `navigation.pipeline` | Leaf imports have forbidden-edge tests; production code consumes leaves, not barrels |
-| Semantic navigation can fail open | A seven-hop import cycle can set `_HAS_INSTRUCTNAV=False` and let a green suite exercise a no-op path | Required capability admission is explicit and startup-fatal; a real semantic mission is exercised |
+| Unitree assets are ignored and not fetched | A tracked-only archive raises from `hard-safety` while opening `third_party/unitree_mujoco/.../go2.xml`; no summary or JSON is emitted. The earlier 118-of-170 reproduction identified a shared cause but is not a trustworthy current denominator. | Clean checkout contains and validates the exact minimal asset pack; every stage still reports when the pack is deliberately damaged |
+| Python support claim is false on 3.11 | `RetainedEvent.fields` is rejected during import; the fresh 3.11 audit collected 6,067 nodes with 69 errors, 2,634 current nodes absent relative to the 8,701-node 3.14 tree | Every claimed minor installs, imports, collects the same node IDs, and runs its required behavioral lane |
+| Eager package barrels amplify cycles | Cold core/navigation leaf imports load 118 Parcel modules and reach `navigation.pipeline`, simulator environments, MetaUrban, and InstructNav | Leaf imports have forbidden-edge tests; production code consumes leaves, not barrels |
+| Semantic navigation admission remains structurally fragile | The narrow mitigation currently holds (`_HAS_INSTRUCTNAV=True`; 10 import-order tests pass), but eager barrels and product soft-capability branches remain | Required capability admission is explicit and startup-fatal; a real semantic mission is exercised |
+
+## Current assessment, including dirty `main`
+
+**Verdict:** promising R&D platform, **release-red**, integrated maturity **L2
+simulator/development**, and physical companion maturity **L0-L1**. The dirty wave
+improves isolated mechanisms; it does not create a synchronized physical
+sense-localize-plan-act loop or raise procurement readiness for immediate autonomy.
+
+### Evidence recorded in this reassessment
+
+| Check | Current result | What it proves |
+|---|---|---|
+| CPython 3.14 collection | 8,701 nodes in 2.51 s | Current inventory only; not a suite verdict |
+| Dirty P1/P2 focused suite | 528 passed, 8 skipped, 1 expected failure in 7.20 s | Strong component-level software evidence; live camera/owner/hardware rows remain absent |
+| CI-runner and import-order tests | 55 passed, 1 warning | Narrow runner/import regressions hold; they do not make the aggregate hermetic |
+| Ruff ratchet | PASS: 7 grandfathered findings, 0 new | Current lint ratchet is not adding debt |
+| RealSense-dependent committed probes | 3 failed, 4 passed | Tests are coupled to the old assumption that the sanctioned optional SDK is absent |
+| Clean tracked-only archive | Unhandled missing-Go2 `ValueError`; no final report/JSON | Release truth remains unavailable |
+| Full current default suite | Not completed green | No full-suite claim is admitted |
+
+### Executive recommendation
+
+1. **Freeze feature promotion, not feature preservation.** Keep the dirty work and
+   its evidence intact, but do not merge it wholesale or call any card a product
+   capability merely because its local mechanism is complete.
+2. **Close GATE-0 / IG-1 and IG-2 first.** Hermetic assets, per-stage exception
+   containment, the Python contract, deterministic dependency identity, and the
+   optional-SDK test correction are the prerequisites for every later denominator.
+3. **Fix package boundaries before splitting the god objects.** Thin the eager
+   barrels and make required capability admission explicit before decomposing the
+   13,132-line runtime or 6,604-line navigation coordinator.
+4. **Integrate the dirty wave as vertical, atomic slices.** Tracked files already
+   import untracked `owner_model` modules; a partial commit can create an
+   unimportable repository. Each slice must contain producer, composition,
+   configuration, tests, rollback, and its exact evidence boundary.
+5. **Promote physical truth in order:** physical camera and provenance; synchronized
+   observation; localization/SLAM and transforms; owner identity; native sole-writer
+   Unitree gateway; measured stopping; then bounded companion missions.
+6. **Do not spend simulator margins as physical margins.** The prototype 0.70 m
+   person band is simulator policy, not a commissioned Go2 stopping result. No
+   source/config/status text may describe it as physical proof until body trials
+   measure the complete sensor-to-stop tail.
+
+## Today’s consolidated priority checklist
+
+### P0 — must close or remain explicitly red today
+
+- [ ] Capture an immutable inventory: HEAD/origin SHA, complete dirty path list,
+  tracked/untracked dependency edges, Python/dependency identities, asset revision,
+  and the exact commands/results in the table above.
+- [ ] Execute GATE-0 / IG-1: tracked manifest-pinned Go2 MJCF closure, independent
+  stage containment, valid JSON on red, and clean-archive proof.
+- [ ] Execute the protocol/Python part of IG-2: fix the dataclass default, settle
+  the supported range and voice dependency split, and make every claimed minor
+  import/collect the same node IDs.
+- [ ] Execute ENV-1: rewrite the seven capture probes around device absence and
+  import discipline instead of assuming `pyrealsense2`/`cv2` are not installed.
+  Seed the old assumption red; retain the three currently reproduced failures as
+  evidence until the corrected tests pass.
+- [ ] Execute IG-3: thin package initializers, leaf imports, forbidden-edge tests,
+  and startup-fatal admission for required navigation capabilities.
+- [ ] Run IG-4 from a truly fresh checkout and hosted Actions. If that cannot
+  complete today, record the unchecked rows and leave release/procurement red.
+
+### P1 — prepare today; implement only after the P0 denominator is trustworthy
+
+- [ ] Produce an atomic commit graph for P1-A through P2-B. For every tracked file
+  that imports an untracked package, put both in the same slice or remove the
+  dependency. Never use `git add .` on this worktree.
+- [ ] Add regression specifications for the two newly confirmed composition bugs:
+
+  - a physical `CameraDetectionFrame` must remain `physical` through
+    `observations_from_frame` and must be refused by a simulation-stamped map;
+  - navigation may never construct, warm, or invoke a VLM on the 10 Hz control
+    thread, and an ASK verdict must reach the interaction layer without granting
+    motion.
+
+- [ ] Mark all task-16 through task-27 cards as **planned specifications**, not
+  implemented capability, until code, default wiring, and exit evidence exist.
+- [ ] Correct dirty source/config/status wording that calls the 0.68/0.70 m
+  simulator derivation a physically measured Go2 stop. Preserve the calculation as
+  a provisional software bound and name all unmeasured terms.
 
 ## Today’s execution model
 
@@ -369,8 +456,144 @@ Stop and keep the integrity gate red if any of the following occurs:
 - closing the gate would require weakening, deleting, skipping, or re-pinning a
   failing test without an independently reviewed behavioral reason.
 
+## Dirty-wave integration queue — after IG-4
+
+These rows are ordered promotion gates, not parallel claims that all dirty code is
+ready. A row remains unchecked until its normal product path, failure path, and
+evidence path all pass on a committed clean checkout.
+
+### DW-0 — Make the dirty wave reviewable and recoverable
+
+- [ ] Partition the wave into dependency-closed slices: P1-A camera/daemon, P1-B
+  map writer, P1-C owner tracking, P1-D abstention/VLM, P1-E envelope, P2-A owner
+  facts, and P2-B labels/affect/initiative.
+- [ ] Record each slice's tracked and untracked files, imports, configuration,
+  fixtures, test selection, feature default, rollback, and `does_not_prove` boundary.
+- [ ] Rebase/reconcile only after the integrator proves no slice silently consumes
+  another slice's uncommitted symbol. Tracked-only and slice-only archive imports
+  must pass.
+- [ ] Keep status records subordinate to executable evidence: “COMPLETE” means the
+  named mechanism, not runtime composition, physical verification, or release.
+
+**DW-0 exit:** every proposed commit imports and collects independently; no tracked
+file relies on an omitted untracked package; rollback removes one capability without
+breaking unrelated imports.
+
+### DW-1 — VENUE-1 plus provenance-safe learned mapping
+
+- [ ] Make `PARCEL_CAMERA_BACKEND=uvc|realsense|recorded` reach
+  `RobotRuntime._attach_configured_camera_ingress`; physical venues must not import
+  or initialize MuJoCo/EGL.
+- [ ] Connect the detector daemon through the existing bounded `Detector` contract;
+  daemon absence, restart, stale response, schema mismatch, and backpressure must be
+  typed degraded states and must never block motion deadlines.
+- [ ] Build the learned map only after the selected ingress declares its origin, or
+  make map origin an explicit composition input. Never infer `simulation` merely
+  because camera streaming is enabled.
+- [ ] Derive every `MapObservation`'s origin from the frame and compare it against
+  the map/store writer origin. Do not overwrite `frame.origin` with
+  `learned.provenance` before the mixed-world guard.
+- [ ] Seed a physical-frame/simulation-map mismatch and prove it is refused on the
+  exact runtime product path. Add the inverse mismatch and replay/unknown cases.
+- [ ] Run recorded replay first, then an attached D455/UVC live row with capture
+  time, receipt time, calibration, drops, p50/p95/p99 age, and origin retained.
+
+**DW-1 exit:** a selected physical camera drives the runtime without MuJoCo, frame
+origin survives into the map, mixed venues cannot fuse, and loss/staleness yields an
+observable HOLD/ASK rather than oracle fallback.
+
+### DW-2 — Move VLM work out of the control loop and deliver ASK
+
+- [ ] Mark the real control thread and add a fatal test if any VLM constructor,
+  warm-up, inference, image encode, model load, disk read, or network call is reached
+  from it.
+- [ ] Run veto/naming in a bounded worker or daemon. Publish immutable verdicts with
+  query/place/revision identity, model identity, capture time, result time, expiry,
+  and contention outcome.
+- [ ] Navigation consumes only a ready, matching, fresh verdict. Missing, stale,
+  mismatched, or budget-declined verdicts produce ASK/HOLD according to policy and
+  never synchronous inference or implicit admission.
+- [ ] Wire `AbstentionVerdict.as_ask()` through the broker/conversation path; prove
+  the question grants no resource lease or motion until the owner explicitly
+  confirms a newly compiled task revision.
+- [ ] Replace the naming k-consistency claim with an independent correctness judge.
+  The current 18/40 naming result and two-of-two consistently wrong promotions stay
+  hard evidence until the new gate rejects them.
+
+**DW-2 exit:** worst-case VLM latency cannot delay the control tick; ASK is audible,
+revision-safe, and non-actuating; a consistently wrong name cannot promote merely
+by repeating.
+
+### DW-3 — Close owner identity and durable-memory principal authority
+
+- [ ] Construct `OwnerTracker` in the runtime from physical detections and an
+  enrolled, calibrated gallery. Simulator mocap remains a simulator-only provider
+  and must be unavailable in physical profiles.
+- [ ] Replace raw confidence-only owner trust with typed identity state, calibrated
+  similarity/margin, freshness, continuity, provenance, and ambiguity. Ambiguous,
+  stale, uncalibrated, or absent identity yields HOLD and bounded give-up.
+- [ ] Collect held-out owner/household-negative evidence across clothing, lighting,
+  pose, occlusion, crossing, and days; report false-owner rate and ID switches, not
+  only average recall.
+- [ ] Decide and encode who may write durable owner facts. Until speaker/principal
+  attribution is commissioned, unverified audio may request STOP and conversation
+  but must not silently create consent-granted owner memory.
+- [ ] Add an explicit confirmation path for pending consent and a production caller
+  for `set_owner_fact_consent`; repeating `remember_fact` is not confirmation.
+- [ ] Prove forget/export/delete across source rows, prompt notes, summaries,
+  embeddings, indexes, caches, and derived artifacts. Label soft deletion honestly.
+
+**DW-3 exit:** the running physical profile follows only a calibrated enrolled owner,
+identity ambiguity stops motion, and durable memory has a verified human principal,
+consent transition, and complete deletion story.
+
+### DW-4 — Make indoor navigation geometrically executable
+
+- [ ] Wire the authoritative obstacle/gate envelope into both production
+  `GridPlannerConfig` construction sites; do not leave `gate_clearance_m=None`.
+- [ ] Derive planner inflation and final safety from one immutable commissioned
+  profile while retaining independent final recomputation and monotone restriction.
+- [ ] Remove import-time follow/arrival standoff constants from profile-dependent
+  behavior. Configuration changes must affect planning, following, arrival, and
+  narration coherently.
+- [ ] Add doorway/corridor scenarios at the proposed first-ODD widths and prove the
+  planner neither proposes paths the final gate will always refuse nor relaxes the
+  final gate to force progress.
+- [ ] Keep the 0.70 m prototype band non-default and simulator-only until physical
+  stopping trials measure velocity, latency, deceleration, pose/perception error,
+  footprint, surface, battery, payload, controller state, and margin.
+
+**DW-4 exit:** the robot can plan and execute representative first-ODD doorways in
+simulation/replay with planner/gate agreement, and every physical clearance remains
+uncommissioned until measured on the body.
+
+### DW-5 — Build the physical estimation-control spine
+
+- [ ] Define a backend-neutral synchronized observation containing sensor capture
+  times, clock mapping, calibration/extrinsics, `map->odom->base_link` transforms,
+  covariance/health, controller feedback, range/local map, dynamic tracks, owner
+  belief, and evidence origin.
+- [ ] Benchmark established odometry/localization/SLAM providers on identical bags;
+  measure trajectory error, drift, transform age, loss, false relocalization,
+  recovery, loop-closure jumps, compute, and restart behavior.
+- [ ] Implement the native restart-disarmed sole-writer Unitree gateway with boot
+  epoch, lease, sequence, TTL, local limits, watchdog, `Move`/`StopMove`, feedback,
+  and stationary witness. Revoke robot-network write credentials elsewhere.
+- [ ] Prepare the independent stop, tether/clearance area, trained operator,
+  acceptance checklist, data capture, and hazard review before first motion.
+- [ ] Commission read-only state, then axes/frame/modes, then minimum-speed one-axis
+  motion, then stopping/fault campaigns. No semantic autonomy precedes these rows.
+
+**DW-5 exit:** a physical profile cannot arm without healthy synchronized evidence
+and a commissioned gateway; client death, expired authority, invalid state, and
+operator stop independently produce verified zero motion.
+
 ## Procurement consequence
 
-The Go2 EDU quote/vendor-compatibility work may continue in parallel. The hardware
-purchase order and every Parcel-driven physical-motion test remain **HOLD** until
-IG-4 closes on a clean, reproducible commit.
+The Go2 EDU quote/vendor-compatibility work may continue in parallel. A D455/UVC
+camera, capture compute, network equipment, and independent-stop hardware may be
+procured as evidence-generating lab infrastructure. The Go2 purchase order remains
+**HOLD for autonomy justification** until IG-4 closes on a clean, reproducible
+commit and the lab/operator/acceptance plan is approved. If purchased earlier for a
+commercial reason, it must be budgeted and labeled as supervised R&D equipment; no
+Parcel-driven physical motion begins before the DW-5 commissioning prerequisites.
