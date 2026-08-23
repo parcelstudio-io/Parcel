@@ -17,6 +17,13 @@ gateway bench in parallel with the smallest characterization/observation
 slices. Broader imports, config, packaging, and facade extraction follow
 without delaying that bench.
 
+Post-landing application: `CLAUDE_WAVE3_DECOMPOSITION.md` applies this method
+to every new/modified declaration group in Claude's exact `c1b8405` Wave 3
+delta. Its scan-age, hard-skip, and resolved-profile corrections precede file
+movement. Go2, array audio, CI, config, and web remain compatibility facades;
+commissioned latches, replay cursors, pure LiDAR/resampler leaves, motion
+refusals, and duplex lifecycle atomicity remain preserve-first boundaries.
+
 ## Required dependency direction
 
 ```text

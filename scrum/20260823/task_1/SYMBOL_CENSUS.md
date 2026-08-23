@@ -1,8 +1,10 @@
 # ARCH-1 threshold-complete symbol census
 
 Generated at 2026-08-23 15:39 EDT from committed base `0ce1c5f8bb4a` plus the
-then-current Wave 3 dirty overlay. This appendix makes
-the word “all” auditable: every class with at least 300 lines or 10 direct
+then-current Wave 3 dirty overlay. That overlay later landed as `c1b84055bd57`;
+the exact landing-only declaration census and decomposition are in
+`CLAUDE_WAVE3_DECOMPOSITION.md`, with `be86b7861322` as an index-only successor.
+This appendix makes the word “all” auditable: every class with at least 300 lines or 10 direct
 methods, and every function with at least 100 lines or an approximate decision
 count of 20, appears exactly once below. It is a snapshot, not a generated
 product artifact or a demand to split every row.

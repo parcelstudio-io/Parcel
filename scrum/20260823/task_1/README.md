@@ -21,6 +21,8 @@ that work as today's task. Include the full concern register—architecture,
 robotics, physical evidence, testing, language, deployment, Claude spend,
 indexing, follow-up-card efficiency, and process risks—so Claude can review and
 disposition it later rather than silently turning each note into a new card.
+Also decompose the code Claude newly included in Wave 3, including its product
+symbols, tests, configuration, packaging, CI, and Orin deployment artifacts.
 
 ## Decision requested from Fable
 
@@ -55,12 +57,16 @@ and rollback before implementation cards are cut.
 
 ## Snapshot and collision boundary
 
-- Committed reference: `0ce1c5f8bb4a`.
-- Audit snapshot: 2026-08-23 15:39 EDT.
-- The working tree had 64 status entries and contained uncommitted Wave 3
-  hardware work when this packet was written.
-- Metrics include that overlay because the request concerns the current tree;
-  they must not be represented as released code.
+- Original committed reference: `0ce1c5f8bb4a`.
+- Original moving-tree audit: 2026-08-23 15:39 EDT over the then-dirty Wave 3
+  overlay.
+- Claude's exact implementation landing is now `c1b84055bd57`; the subsequent
+  `be86b7861322` commit changes only `CODEBASE_INDEX.md`.
+- At the post-landing freeze, `HEAD == origin/main == be86b7861322` and the
+  worktree was clean. `CLAUDE_WAVE3_DECOMPOSITION.md` regenerates the exact
+  `0ce1c5f..c1b8405` delta rather than treating dirty-tree estimates as final.
+- The landing's own evidence ceiling is desktop/synthetic/replay. A clean
+  commit and commit-tier gate record are not target or physical proof.
 
 **OWNS:** `scrum/20260823/task_1/**` only.
 
@@ -68,20 +74,22 @@ and rollback before implementation cards are cut.
 `tools/**`, `configs/**`, `deploy/**`, `.github/**`, `pyproject.toml`,
 `requirements*.txt`, the index, the Git index, or any running process.
 
-No implementation card may start until all conditions hold:
+No implementation card may start until all remaining conditions hold:
 
-1. Wave 3 has a quiescent, integrated commit with its required gate record.
+1. Fable has narrowly reviewed the exact Wave 3 delta and resolved the
+   scan-age, hard-skip, SDK/venv, resolved-profile, blocking-I/O, and lifecycle
+   findings in `CLAUDE_WAVE3_DECOMPOSITION.md`.
 2. Fable has written an accepted verdict for the revised ARCH-1 design.
 3. The owner has approved the exact tranche, integrator, constituent cards,
    risk tier/model/reviewer fanout, spend/compute/documentation/diff budget,
    prototype outcome, and stop/continue gate.
 
 Fable accepts or rejects architecture; only the owner authorizes spend and
-dispatch. `CONFIRM_OPEN` or provisional is not closure. X08/X16 block all
-dispatch until the reviewed integrated snapshot exists; unresolved X11/X12
-block acceptance of the unchanged sequence. Other physical blockers prohibit
-the affected physical milestone, while only an explicitly scoped,
-dependency-safe foundation tranche may work toward closing them.
+dispatch. `CONFIRM_OPEN` or provisional is not closure. The initial verdict
+records X08/X16 closed, X11 revised, and an X12 co-location decision; its other
+required changes plus this later delta supplement remain review inputs. Other
+physical blockers prohibit the affected physical milestone, while only an
+explicitly scoped, dependency-safe tranche may work toward closing them.
 
 ## Packet
 
@@ -89,18 +97,21 @@ dependency-safe foundation tranche may work toward closing them.
 |---|---|
 | `CURRENT_STRUCTURE_AUDIT.md` | Measured system, class, and function inventory; action vs preserve decisions |
 | `SYMBOL_CENSUS.md` | Threshold-complete list: 94 product classes/140 functions plus 9 operational-tooling classes/59 functions |
+| `CLAUDE_WAVE3_DECOMPOSITION.md` | Exact `0ce1c5f..c1b8405` Claude delta: all changed declaration groups, boundaries, test splits, blockers, and refuters |
 | `DESIGN.md` | Target boundaries, dependency direction, staged extraction DAG, follow-on cards, and rollback |
 | `TEST_AND_EVAL_PLAN.md` | Unit, contract, integration, replay, SIL, HIL, physical, and quality-eval gates |
 | `CONCERNS_REGISTER.md` | Required concern-by-concern risk, evidence, consequence, response, and batching review |
 | `PREREGISTRATION.md` | Claims and thresholds pinned before Fable review or implementation |
 | `FABLE_REVIEW_BRIEF.md` | Required review lenses, questions, and verdict format |
-| `FABLE_VERDICT.md` | Reserved for Fable; intentionally absent at authorship |
+| `FABLE_VERDICT.md` | External initial verdict: `ACCEPT_WITH_REQUIRED_CHANGES` for the original eight-file packet; preserve unchanged and supplement narrowly for the later Claude-delta addendum |
 
 ## Scope definition: what “all” means
 
 The inventory is threshold-complete rather than line-count-driven:
 
 - every product subsystem is assigned a disposition;
+- every new or definition-body-modified Wave 3 product/tooling declaration is
+  accounted for in grouped exhaustive rows in `CLAUDE_WAVE3_DECOMPOSITION.md`;
 - every product and operational-tooling class with at least 300 lines or 10
   direct methods is triaged by name;
 - every product and operational-tooling function with at least 100 lines or an
@@ -148,10 +159,11 @@ after the owner authorizes a tranche is implementation cut into smaller cards
 with disjoint OWNS.
 
 The table below is the proposal under review, not an accepted schedule.
-`CONCERNS_REGISTER.md` X11–X16 require Fable to verify the revised early native
-rail and resolve deployment, localization, ROS, evidence, composition, and
-final-authority choices; Claude must not dispatch the table merely because it
-appears here.
+The initial Fable verdict revises the early native rail and renders X11/X12/
+X16 dispositions, while retaining deployment, evidence, composition, and
+physical blockers. The later Claude-delta supplement must address its exact
+new findings; Claude must not dispatch the table merely because it appears
+here or because an architecture verdict exists.
 
 Numbers express prerequisites, not a single global queue. Rows 6A and 6B are
 independent branches after their named contracts; ROS/localization is a hard
@@ -183,6 +195,8 @@ share runtime, configuration, CI runner, or test-hook semantics are sequential.
 
 - [x] Current structure measured without product changes.
 - [x] Candidate systems, classes, and high-risk functions inventoried.
+- [x] Claude's exact landed Wave 3 code, operational assets, and 8,863-line new
+  hardware-card test suite decomposed into extract/preserve/target-proof seams.
 - [x] Preserve boundaries identified so line count does not drive unsafe churn.
 - [x] Target dependency direction and staged extraction order proposed.
 - [x] Unit, integration, quality, replay, target, and physical verification
@@ -192,13 +206,18 @@ share runtime, configuration, CI runner, or test-hook semantics are sequential.
 - [x] Fable questions and verdict vocabulary preregistered.
 - [ ] Fable has accounted for every concern ID in `CONCERNS_REGISTER.md` using
   compact family/range rows plus explicit exceptions; no omitted ID is closed.
-- [ ] Fable has reviewed the packet and written `FABLE_VERDICT.md`.
+- [x] Fable has written an initial verdict for the original eight-file packet.
+- [ ] Fable has supplemented that verdict for
+  `CLAUDE_WAVE3_DECOMPOSITION.md`, its newly recorded false-green/config/
+  lifecycle findings, and questions 21–26.
 - [ ] Any required changes have been incorporated and re-reviewed.
 
 ## What this task does not prove
 
-This is a static architecture review of a moving tree. It proves no behavior,
-timing, target installation, sensor accuracy, stopping distance, conversational
-quality, or physical safety. It does not establish that all proposed target
-names are final. Those facts belong to the preregistered implementation and
-hardware gates after Fable accepts the design.
+This is a static architecture review whose original measurements were made on
+a moving tree and whose Claude-specific addendum is now frozen to the exact
+landing. It proves no behavior, timing, target installation, sensor accuracy,
+stopping distance, conversational quality, or physical safety. It does not
+independently reproduce the landing's commit-tier result or establish that all
+proposed target names are final. Those facts belong to the preregistered
+implementation and hardware gates after Fable accepts the design.

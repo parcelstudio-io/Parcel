@@ -1,8 +1,11 @@
 # ARCH-1 current structure audit and decomposition register
 
-Snapshot: current working tree at 2026-08-23 15:39 EDT, committed base
+Original snapshot: working tree at 2026-08-23 15:39 EDT, committed base
 `0ce1c5f8bb4a`, with 64 uncommitted/untracked status entries owned by the
-in-flight Wave 3 work.
+in-flight Wave 3 work. Post-landing note: that implementation is now
+`c1b84055bd57`, followed by index-only `be86b7861322`; see
+`CLAUDE_WAVE3_DECOMPOSITION.md` for the exact regenerated delta and current
+preserve/extract findings.
 
 ## Census and selection rule
 

@@ -16,6 +16,21 @@ A golden trace is never the sole oracle because it can freeze an existing
 defect. Known defects are labeled in the baseline and must either remain an
 honest known red or move only under a separately approved behavior-change card.
 
+### Wave 3 exact-delta addendum
+
+`CLAUDE_WAVE3_DECOMPOSITION.md` maps all nine new hardware-card test modules
+(8,863 lines/244 tests) into seam-owned unit, integration, target, and
+refutation suites. Before any file split, the landing needs explicit reds for:
+
+- V2 scan age omitted from the actual stopping gate;
+- any required hard capability converted to a zero-exit `SKIPPED/PASS` result;
+- an injected blocking/corrupt-flood LiDAR socket defeating the drain bound;
+- a fully resolved physical profile inheriting simulated battery/NIC/policy;
+- direct/runtime and HTTP mic lifecycle transitions racing one another.
+
+Those are correctness/characterization prerequisites. Moving tests, helpers,
+or production symbols before their mutants redden does not satisfy ARCH-1.
+
 ## Proposed scope and cadence markers
 
 The current suite is divided mostly by `slow`, with `load_sensitive` and

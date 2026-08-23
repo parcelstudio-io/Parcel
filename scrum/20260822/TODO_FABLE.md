@@ -219,3 +219,11 @@ workflows so a crash keeps finished phases.
 * ~16:10 — process exit; the five resumed executors + the design workflow lost.
 * ~16:20 — process exit; the resumed design workflow lost (journal empty —
   no agent had finished); parcel-4a and parcel-bc gone.
+
+## 2026-08-23 late — program pivot + ARCH-1 + tranche 1
+- [x] Wave 3 integrated close: gate green run 3, committed c1b8405 + be86b78, pushed.
+- [x] ARCH-1 reviewed: FABLE_VERDICT.md = ACCEPT_WITH_REQUIRED_CHANGES (+ post-landing addendum; X08/X16 closed, X12 decided co-located, X06/T12 reproduced).
+- [x] Sim-vs-hardware answered for the owner: hardware is the path (see verdict/memory).
+- [ ] Tranche 1 wave A: PROX-1 (task_2) + SENSE-1 (task_3) — Opus executing, Fable verify on landing.
+- [ ] Tranche 1 wave B after A: AWARE-1 (task_4, runtime.py toucher) + GATE-1 (task_5).
+- [ ] Owner decisions still open: HW-4 O1 through-air session, HW-8 runbook sign + Unitree ticket send, TRUTH-1 R3, ROAM-2 T1/H2.

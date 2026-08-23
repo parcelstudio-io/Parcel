@@ -7,9 +7,10 @@ with attribution; original rows remain readable.
 ## Review subject
 
 The subject is the architecture packet in this folder, assessed against the
-current tree snapshot described in `README.md`. The subject is **not** the
-correctness of uncommitted Wave 3 implementation and is not a request to run
-or integrate that work.
+tree snapshots described in `README.md`. The original audit covered the moving
+Wave 3 overlay; `CLAUDE_WAVE3_DECOMPOSITION.md` now freezes its implementation
+subject at `0ce1c5f8bb4a..c1b84055bd57`, with `be86b7861322` as the subsequent
+index-only head. This is not a request to run, repair, or refactor that work.
 
 ## Baseline claims
 
@@ -24,6 +25,7 @@ or integrate that work.
 | B7 | No product action | `git diff --name-only -- scrum/20260823/task_1` and overall status attribution | no product/test/tool/config/deploy/index/Git-index/process mutation by ARCH-1 |
 | B8 | Concern coverage | inspect `CONCERNS_REGISTER.md` and prior progress/spend/language/robotics/structure findings | architecture, physical robotics, tests/evals, language/packaging, deployment/security, Claude spend/indexing/process, and preserve/no-churn risks have named IDs and required responses |
 | B9 | Moving-tree honesty | compare the integrated Wave 3 commit with the packet snapshot before dispatch | census/import/API/lock/test and high-severity concern delta is regenerated and narrowly re-reviewed; dirty corrections are not silently treated as closed |
+| B10 | Exact Claude landing coverage | compare `0ce1c5f..c1b8405`; inspect `CLAUDE_WAVE3_DECOMPOSITION.md` | all new or definition-body-modified product/tooling declarations are covered by exhaustive grouped rows; all 59 non-scrum paths are classified; tests/config/CI/package/deploy assets receive a split/preserve/target-proof decision |
 
 `B4` is collection only. It does not establish that 9,918 tests pass.
 
@@ -41,6 +43,9 @@ or integrate that work.
 | D8 | New process/native boundaries need timing, crash, credential, vendor, GPU, ROS, or throughput justification | a proposed process boundary cites only file size or stylistic modularity | reject that process boundary |
 | D9 | Each cutover deletes/disables the legacy live path | accepted design needs two authorities or writers indefinitely | reject unless formal arbitration and safety proof exist |
 | D10 | Maximum WIP two and shared-facade cards are sequential | dependency/ownership proof shows disjoint edits and no shared state/contract | Fable may approve narrow parallelism |
+| D11 | Wave 3 is retained and decomposed behind landed facades rather than rewritten or split by file size | a facade cannot preserve required behavior/authority, or a cohesive state machine is demonstrably safer as multiple owners | require the exact alternative boundary and interleaving evidence |
+| D12 | The six-term stopping model and hard-capability truth table are correctness prerequisites, not cleanup | the current V1/skip paths provably cannot produce a false promotion result | Fable may refute only with an end-to-end gate trace and seeded falsifier |
+| D13 | Fully resolved physical configuration, not overlay source text, is the admission subject | deep merge demonstrably deletes or invalidates inherited simulated values before any consumer can read them | otherwise require explicit deletion/required semantics and product-launcher refusal |
 
 ## Concern-review claims
 
@@ -69,6 +74,8 @@ or integrate that work.
 | T8 | Evidence strength is labeled | every artifact states scope, origin, hashes, denominator, and `does_not_prove` |
 | T9 | Test restructuring preserves hard-gate addressability | existing named node IDs remain or an explicit checked old→new mapping lands first |
 | T10 | Coverage/mutation ratchets are changed-code first | no blanket percentage creates fake urgency or rewards deleting difficult tests |
+| T11 | Wave 3 test restructuring is seam-owned | the 8,863-line card suite receives a checked old-node→new-node map; protocol fakes are shared only after stable contracts; source-shape pins are removed only after stronger behavioral/boundary mutants exist |
+| T12 | Target truth cannot be skipped into green | missing hard capabilities, native tooling, target artifacts, or required six-term evidence produce nonzero incomplete/fail in the applicable promotion mode; fake/QEMU/structural evidence remains explicitly below target proof |
 
 ## Proposed initial structural thresholds
 
@@ -131,13 +138,15 @@ Fable must not accept an implementation sequence if any of these applies:
 
 ## Review completion condition
 
-ARCH-1 remains `REVIEW-ONLY / NOT DISPATCHED` until Fable writes a verdict using
-the vocabulary in `README.md` and covers every ID in `CONCERNS_REGISTER.md`
-through compact family/exception dispositions. No verdict vocabulary is
-execution authority. X08/X16 must close before any dispatch; unresolved
-sequence/authority blockers X11/X12 prevent accepting the unchanged DAG; each
-remaining blocker gates its affected milestone. Only the owner may approve a
-dependency-safe tranche after every required change has a named owner,
-boundary, falsifiable regression, budget/stop gate, and re-review result. The
-accepted output is a small set of boundary-owned tranches containing bounded
-cards, not one card per concern or one mega-card.
+ARCH-1 remains `REVIEW-ONLY / NOT DISPATCHED`. Fable's initial
+`ACCEPT_WITH_REQUIRED_CHANGES` verdict covers the original eight files and all
+147 concern IDs, and it records X08/X16's integration/census requirements as
+closed. The later `CLAUDE_WAVE3_DECOMPOSITION.md` adds B10, D11–D13, T11–T12,
+six new review questions, and exact false-green/config/lifecycle evidence; it
+requires a narrow supplement, not a repeated broad review. No verdict
+vocabulary is execution authority. Each remaining blocker gates its affected
+milestone. Only the owner may approve a dependency-safe tranche after every
+required change has a named owner, boundary, falsifiable regression,
+budget/stop gate, and re-review result. The accepted output is a small set of
+boundary-owned tranches containing bounded cards, not one card per concern or
+one mega-card.

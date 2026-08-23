@@ -3,11 +3,17 @@
 ## Assignment
 
 Adversarially review this packet as an architecture and verification proposal.
-Do not implement it. Do not repair, stage, commit, or attribute the current
-Wave 3 dirty tree. Read-only code inspection is allowed; product, test, tool,
-config, deployment, prior-sprint, and Git-index writes are forbidden.
+Do not implement it. Do not repair, stage, commit, or amend the Wave 3 landing.
+Read-only code inspection is allowed; product, test, tool, config, deployment,
+prior-sprint, and Git-index writes are forbidden. Review the implementation
+delta at exactly `0ce1c5f8bb4a..c1b84055bd57`; `be86b7861322` is the subsequent
+index-only head at the addendum freeze.
 
-Write the result to `FABLE_VERDICT.md` in this folder.
+An initial `FABLE_VERDICT.md` now exists and records
+`ACCEPT_WITH_REQUIRED_CHANGES` for the original eight-file packet. Preserve its
+authorship and text. Add a clearly dated `## Claude Wave 3 exact-delta
+supplement` only after reviewing `CLAUDE_WAVE3_DECOMPOSITION.md`; do not repeat
+the original broad review.
 
 `CONCERNS_REGISTER.md` is required review input, not background reading. Record
 coverage of every concern ID using compact family/range rows plus explicit
@@ -67,6 +73,19 @@ or create one implementation card per ID.
 - Are follow-up cards admitted only for independently owned/blocking outcomes,
   with lesser notes batched, amended, deferred, refuted, or accepted as risk?
 
+### Lens D — Claude Wave 3 landed delta
+
+- Reproduce the grouped declaration coverage and dispositions in
+  `CLAUDE_WAVE3_DECOMPOSITION.md`; do not infer completeness from line count.
+- Decide whether the stopping gate's V1 path, hard-capability skip behavior,
+  product/vendor-venv contradiction, resolved-profile simulator inheritance,
+  socket deadline, and split mic serialization are confirmed defects.
+- Protect cohesive leaves: motion refusals, commissioned sticky latch, replay
+  cursor, resampler, pure codec/band math, and duplex lifecycle atomicity.
+- Verify that test decomposition preserves every hard oracle/node ID and does
+  not promote source-shape, fake transport, custom parser, or QEMU metadata to
+  target/physical evidence.
+
 ## Questions Fable must answer explicitly
 
 1. Should import/package integrity and test characterization precede runtime
@@ -117,10 +136,28 @@ or create one implementation card per ID.
     limit, per-tranche spend/ROI stop gate, context-index policy, and CI compute
     SLA sufficient? Name required corrections rather than creating one card per
     concern.
+21. Does `scripts/ci_gate.py` have to evaluate the six-term V2 envelope before
+    any printed `FITS` result can support promotion, and must missing/broken
+    terms or active-regime mismatch fail the applicable admission mode?
+22. Can an absent required hard capability ever become a skipped row while the
+    gate exits zero or prints `PASS`? State the accepted hard/soft/report-only
+    truth table.
+23. Is a read-only Unitree/Mid-360 sidecar required because the SDK-free product
+    venv cannot construct `LiveGo2Sources`, and what bounded IPC/deadline owns
+    that seam?
+24. Does the fully resolved Go2 physical profile refuse inherited simulated
+    battery, desktop NIC, placeholder extrinsics, and uncommissioned simulator
+    thresholds rather than checking only the overlay text?
+25. Are bounded dedicated LiDAR ingest and gateway-owned mic lifecycle state
+    required before the current lock/deadline claims are accepted?
+26. Which Wave 3 symbols and tests should be extracted, preserved, deferred, or
+    target-proved, and how are those outcomes batched into existing ARCH cards
+    without a follow-up card per symbol or finding?
 
 ## Review method
 
-1. Verify snapshot/collision facts and the census method read-only.
+1. Verify snapshot/collision facts, the threshold census, and the exact Claude
+   delta census read-only.
 2. Trace at least one real product path for runtime control, navigation,
    realtime tool motion, camera ingress, browser/array audio, and Go2 evidence.
 3. Attempt one counterexample against each non-negotiable authority invariant.
@@ -130,8 +167,9 @@ or create one implementation card per ID.
    and legacy paths that could stay live.
 6. State which rows were not independently reproduced.
 
-A full gate is neither required nor meaningful for this docs-only review on an
-active dirty tree. Do not run it merely to produce a green number.
+A full gate is not required for this docs-only review. Do not rerun it merely
+to produce a green number; distinguish the landing's recorded commit-tier
+claim from evidence Fable independently reproduces.
 
 ## Required verdict format
 
@@ -178,9 +216,10 @@ owner/integrator, tranche budget, and stop/continue gate.
 ## Authorization
 State which dependency-safe foundation tranche, if any, is architecturally
 eligible for owner consideration. Fable does not authorize spend/dispatch or
-physical motion. `CONFIRM_OPEN`/provisional is not closure; X08/X16 block all
-dispatch, unresolved X11/X12 block the unchanged sequence, and other physical
-blockers block their affected milestones.
+physical motion. `CONFIRM_OPEN`/provisional is not closure. The initial verdict
+records X08/X16 refuted, X11 revised, and the X12 co-location decision; other
+physical blockers and every required change still block their affected
+milestones.
 ```
 
 Every blocking finding must identify an owner, violated invariant, exact
@@ -188,3 +227,9 @@ boundary, falsifiable regression, and whether it blocks only the refactor or
 the physical prototype. A non-empty `Does not prove` section is mandatory.
 Every concern ID must be covered by exactly one family/exception row or merged
 with `DUPLICATE_OF`; acceptance does not authorize one follow-up card per row.
+
+For the narrow supplement, return one of the same three dispositions, answer
+questions 21–26, state which initial-verdict findings remain unchanged, and
+disposition only the new/changed exact-delta findings. Do not regenerate the
+147-ID partition or repeat the reported nine-agent/556k-token review unless a
+specific contradiction makes that necessary.
