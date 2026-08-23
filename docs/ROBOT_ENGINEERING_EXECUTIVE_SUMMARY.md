@@ -7,8 +7,8 @@ architecture, current-code truth, quality, hardware readiness, and next gates**
 | --- | --- |
 | Status | Current-code engineering explanation and executive decision brief |
 | Audit date | Base audit 2026-08-22; implementation delta 2026-08-23 |
-| Last audited software baseline | `939001ea1038c8861773dca0da629d5ab441aea5`; Wave 2 Batches A and B are committed through the reliability/coverage landing. This documentation delta does not promote the active Wave-3 implementation. |
-| Worktree scope | Active Wave 3 hardware-transition work: Python/Jetson portability, Mid-360 ingestion, XVF3800 audio, stopping-envelope evidence and box-day preparation, followed by started but unevidenced Go2 backend/profile/firewall work and defined aarch64/microphone-arm cards. In-flight mechanisms are never counted as released or commissioned. |
+| Last audited implementation baseline | `c1b84055bd57`; Wave 3 is committed. The intervening `be86b78` changes only the codebase index, while pre-documentation tip `3792288` adds the ARCH-1 review packet/task stubs rather than product behavior. |
+| Worktree scope | Post-Wave-3 PROX-1, SENSE-1 and GATE-1 work is actively changing proximity, pose/scan evidence, physical configuration, capture preflight and gate paths. A new AWARE-1 addendum proposes bundling the PROX/SENSE runtime wire-ins. All remain in-flight and are not promoted into the committed baseline. |
 | Audience | Senior software engineers learning robotics, engineering/product leaders, robotics and safety reviewers, and procurement owners |
 | Brief length | Approximately 7,000 words, or about 11–14 dense technical pages depending on rendering, tables, and code blocks |
 | Canonical detail | [Parcel companion robot engineering handbook](CONVERSATIONAL_AUTONOMY_HIGH_LEVEL_DESIGN.md) |
@@ -25,11 +25,11 @@ but no robotics background. It answers six questions:
 
 The answer in one sentence is:
 
-> Parcel is a credible, safety-conscious simulator autonomy stack with strong
-> semantic/task boundaries and a clean committed Batch-B gate. It has now entered a
-> physical-substrate-first implementation phase, but it is not a physical companion
-> product because the Go2 observation path, localization/SLAM, owner identity,
-> native command isolation, measured stopping and body commissioning are not closed.
+> Parcel is a credible simulator autonomy stack with a committed observe-only Wave-3
+> hardware rail and strong semantic/safety boundaries. It is still not a mount-and-run
+> companion: the neutral physical observation contract, target deployment,
+> localization, person/terrain sensing, sole-writer authority, stopping evidence and
+> body commissioning remain open.
 
 ### How to read every capability claim
 
@@ -54,49 +54,56 @@ This dated section supersedes earlier progress, release-integrity and procuremen
 statements where they conflict; the underlying architecture and robotics analysis
 remain unchanged.
 
-The last audited software baseline is `939001e`. Its accepted eight-worker commit gate
-passed all ten hard stages, collected 9,512 tests and reported 9,403 passed, 17
-skipped and one expected failure in the parallel default suite, followed by the
-serial rows. That closes the earlier tracked-source aggregate failure at the
-declared local gate shape. Hosted/branch-protection evidence, a documented
-load-sensitive WebSocket flake and target-device execution remain separate open
-claims.
+The last audited implementation baseline is `c1b8405`. Wave 3 changed 150 paths
+(+32,082/-214), including 24 product paths and 11 test/replay paths. Fable reports a
+third commit-tier run with 9,813 passes at that exact commit. Treat that as recorded
+desktop evidence: this documentation update did not independently rerun the full
+gate, and nothing in it proves aarch64, Orin, DDS, Mid-360, D455 or robot motion.
 
-Wave 3 is deliberately changing the center of gravity from simulator capability to
-physical substrate. Its current uncommitted status is:
+The subsequent ARCH-1 review is
+**ACCEPT_WITH_REQUIRED_CHANGES · SUPPLEMENT PARTIAL · NOT DISPATCHED**. It accepts
+the hybrid direction and preserve-first boundaries, not implementation spend,
+credentials or physical authority. Its reconciliation still needs one narrow
+correction: the concern partition omits L11, several delta questions lack their
+explicit truth table/schema/disposition, and status/tranche/owner statements
+conflict. See the [review packet](../scrum/20260823/task_1/README.md).
 
-| Card | Current verdict | What changed | What is still not proved |
+| Plane | Current status | What exists | What remains open |
 | --- | --- | --- | --- |
-| HW-1 Python/Jetson portability | Final **ACCEPT-WITH-NOTES** | Source imports across the Python 3.10 floor; CPython 3.12 product-venv direction and 3.10 vendor-venv split; aarch64 locks | Execution on the Orin and the Jetson ORT-GPU supply path |
-| HW-3 Mid-360 band | Final **ACCEPT-WITH-NOTES** | Pure-Python synthesized-packet ingestion emits no scan for empty/under-populated input; seam tests show downstream HOLD when propagated | A `Go2Backend` that propagates it, plus real packets, transport, extrinsics, clock mapping and physical authority |
-| HW-4 XVF3800 audio | **HOLD; correction active** | Verification established that the array streams when silent playback clocks capture | A green correction, product arm route, through-air AEC/false-barge-in and on-dog audio |
-| HW-6 stopping envelope | Final **ACCEPT-WITH-NOTES** | Executable, provenance-bearing stopping-envelope calculation and gate | Measure gateway period, command-to-standstill and localization jump; HW-2 must first add scan age as a sixth term, then measure it |
-| HW-8 box-day preparation | Closed **ACCEPT-WITH-NOTES** | EDU Plus Stage-0 run sheet, unknowns register and support-ticket draft | Owner sign-off, sent ticket, delivered hardware and execution of the runbook |
-| Wave-3b physical substrate | **ACTIVE; UNVERIFIED** | Go2 backend/profile/firewall design and implementation have started; aarch64 and microphone-arm cards are defined | Executor status, independent verification, integrated gate and target-device evidence |
+| Wave 3 hardware rail | **COMMITTED; DESKTOP/REPLAY + HOST ARRAY BENCH; NO TARGET/BODY** | Observe-only Go2/replay backend, commissioned scan latch, Mid-360 codec/band, XVF3800 duplex gateway and mic route, Go2 overlay/envelope records, host/aarch64 gate machinery, box-day and static Orin deployment artifacts | Go2/Orin/Mid-360/D455/on-dog execution, neutral observations, commissioned pose/frames/clocks, native writer/stop and physical trials |
+| ARCH-1 | **ACCEPT_WITH_REQUIRED_CHANGES; PARTIAL SUPPLEMENT; NOT DISPATCHED** | Boundary/symbol census, concern register, proportional test plan and preserve/extract direction | Narrow verdict correction plus an owner-approved tranche, budget, integrator and stop gate |
+| PROX-1 | **IN-FLIGHT; UNWIRED LIBRARY SEAM** | Typed context/profile selector and focused tests are visible in the worktree | No base-config or runtime wiring; context currently commits a tighter policy without deterministic acceptance, expiry, revision or fallback; no physical person/stopping evidence |
+| SENSE-1 / GATE-1 | **IN-FLIGHT; UNVERIFIED** | Pose/receipt, drain/config/preflight and gate corrections are actively changing | Quiescent integration, independent review, product-path refuters, target execution and physical evidence |
+| AWARE-1 addendum | **PLANNED; SCOPE CONFLICT** | Assigns one future `runtime.py` card both periodic head-turn behavior and the PROX/SENSE wire-ins | Runtime-file ownership is not authority approval: split the evidence seam from the proximity-policy decision, and do not expose a reasoning-model setter or narrower profile without proposal/accept/expiry/revision/fallback rules |
 
-ROAM-2 is an equally important negative result: its coverage objective engages and
-stays collision-free in the retained static runs, but the current metric saturates
-before motion and the policy homes/circles instead of exploring. It therefore stays
-off by default and is not frontier exploration or SLAM.
+The committed rail is directionally useful but contains known integration blockers:
+the product process constructs a vendor-SDK source despite the documented isolated
+vendor environment; physical truth still rides `SimObservation` plus identity side
+channels; arbitrary injected transports can inherit PHYSICAL; the six-term stopping
+model exists but the committed gate still evaluates V1; hard capability skips can
+false-green; and the resolved Go2 profile can inherit simulator battery/controller/
+NIC truth. No bounded reactive person/dropoff channel or commissioned ODOM/MAP chain
+exists.
 
-The next implementation chain is intentionally concrete:
+The next implementation chain is therefore:
 
-1. close and reverify the physical-array HOLD;
-2. add an observe-only `Go2Backend` with typed physical scan authority;
-3. add one capability-admitting EDU Plus profile with measured, versioned
-   extrinsics and no simulator truth;
-4. prove the deployment shape on aarch64, check in the Orin firewall and expose the
-   authenticated microphone-arm route;
-5. execute read-only box-day capture before modifying the body;
-6. commission LIO/SLAM, the native sole-writer gateway, independent stop and the
-   measured stopping envelope; and
-7. progress through stationary, stand-mounted and tethered minimum-speed trials
-   before semantic navigation, following or roaming receives physical authority.
+1. obtain the narrow ARCH-1 correction and owner-approved tranche/budget;
+2. independently verify the SENSE/GATE corrections; reject AWARE-1's bundled
+   runtime wire-in until the seams have separate acceptance, while keeping PROX
+   unwired and widest-by-default;
+3. build `ARCH-OBS-MIN`: a read-only Unitree vendor-state sidecar, separate bounded
+   LiDAR ingest, production-only PHYSICAL minting and immutable navigation snapshot;
+4. execute real mount-day capture plus aarch64/Orin install, clock, DDS and service-
+   order proof;
+5. bench the co-located native governor/sole-writer, strip Python writer credentials,
+   and prove TTL/epoch/second-writer/independent-stop behavior; then
+6. progress through restrained command-path and inspected ground-stop trials before
+   leashed crawl or any people/dropoff/autonomous ODD.
 
-This is the right direction, but it does not promote overall maturity: normal
-composition is still MuJoCo-first, no Go2 is on hand, Wave-3 implementation remains
-outside the last audited software baseline, and no integrated Wave-3 gate or physical
-motion result exists.
+This is retain-and-characterize work, followed by decomposition behind landed
+facades—not a wholesale Python, ROS or god-object rewrite. Integrated maturity stays
+L2 simulation; the physical system remains L0–L1 until target and body evidence
+closes the corresponding gates.
 
 ## 1. Executive decision
 
@@ -129,9 +136,9 @@ The strongest product assets are worth preserving:
 - learned components are proposal/shadow/subtractive-veto sources, and tests include
   negative, frozen, provenance and seeded-defect evidence.
 
-The immediate problem is not a shortage of AI models. Batch B closes the declared
-local tracked-source gate, and Wave 3 has an explicit interpreter split in flight,
-but the target deployment and physical evidence chain remain incomplete. More
+The immediate problem is not a shortage of AI models. Wave 3 is committed and its
+desktop gate is recorded green, but the interpreter/process split has not executed
+on target and the physical evidence chain remains incomplete. More
 semantic features should not be used to defer the following foundations:
 
 1. hosted clean-checkout evidence plus honest Python/import capabilities;
@@ -489,12 +496,15 @@ still encounter downstream safety in the simulator runtime, but task resources,
 pause/resume, progress and verification are not uniform. The target is one semantic
 task gateway for every non-emergency physical effect, plus a separate dominant STOP.
 
-### 4.2 Normal composition remains simulation-first
+### 4.2 Default composition remains simulation-first
 
-The normal UI/runtime builder constructs a `MujocoSocketBackend`; the stack launcher
-ultimately starts the simulator. The runtime's central observation is still
-`SimObservation`, carrying truth pose, ray-cast scan, simulator owner/dynamic tracks
-and semantic sidecars.
+With no physical profile, the UI/runtime builder and stack launcher still select
+MuJoCo. Wave 3 also makes the EDU Plus overlay select an observe-only `Go2Backend`,
+but that path still returns simulator-shaped `SimObservation` plus keyed evidence
+side channels and refuses every positive-motion method. Its in-process
+`LiveGo2Sources` construction also conflicts with the documented isolated vendor
+environment. It is a useful integration seam, not a neutral or commissioned
+physical observation path.
 
 Canonical configuration reinforces this:
 
@@ -539,8 +549,9 @@ it is not an independent power cut.
 ## 5. Committed experimental capability snapshot
 
 Wave P1/P2 landed in `b74f0bf`; `21ea2fb` landed Week 1; Wave 2 Batches A and B
-then landed in `e15e466` and `939001e`. Committed is still not synonymous with
-commissioned: normal composition remains simulation-first and none of these
+then landed in `e15e466` and `939001e`; Wave 3 landed in `c1b8405`. Committed is
+still not synonymous with commissioned: normal composition remains simulation-first
+and none of these
 mechanisms has closed its intended-hardware rows. The table records committed
 engineering progress while retaining the **experimental** maturity label.
 
@@ -553,6 +564,7 @@ engineering progress while retaining the **experimental** maturity label.
 | P1-E social zone | Configurable prototype band and derived authority floor | Large targeted simulator sweep recorded | No physical braking/comfort evidence; full planner/final-gate envelope unification not delivered |
 | P2-A owner facts | Structured fact store, consent, replay, remember/forget tools | Nine deterministic probe families met | Hosted model-chosen row unrun; privacy/distillation lifecycle incomplete |
 | P2-B identity/affect/initiative | Labels rather than gates, affect and bounded event plumbing | Targeted software matrices recorded | No speaker enrollment or physical owner event source; no base authority |
+| Wave 3 hardware rail | Observe-only Go2/replay, Mid-360 band, array gateway/mic route, physical overlay/envelopes, host/aarch64 gate and Orin deployment artifacts | Fable reports 9,813 desktop commit-tier passes at `c1b8405`; targeted synthetic/replay tests plus retained real XVF3800 host-array runs | No Go2/Orin/Mid-360/D455/on-dog run; physical carrier, provenance, resolved config, stopping/gate truth and process topology remain incomplete |
 
 Week 1 adds several meaningful committed results:
 
@@ -575,6 +587,7 @@ roam all crossed the software release boundary. ROAM-2's coverage objective is
 wired and default-off, but its registered 1.5× improvement claim missed because the
 metric saturated and the policy remained too home-seeking. It is evidence of a
 remaining exploration gap, not a promoted autonomy capability. Wave 3 is the new
+committed hardware rail; current PROX/SENSE/GATE follow-on work is the separate
 in-flight plane and remains uncommitted.
 
 The correct promotion pattern is consistent across these features:
@@ -591,12 +604,12 @@ The correct promotion pattern is consistent across these features:
 
 ### 6.1 Scale and collection
 
-At committed `939001e`, the accepted Batch-B gate collected 9,512 tests. Under the
-declared eight-worker/CPU shape, all ten hard stages passed; the parallel default
-suite reported 9,403 passes, 17 skips and one expected failure, and its serial rows
-also passed. The result was repeated from a tracked-only clean clone at the accepted
-resource shape. The active Wave-3 tree is changing underneath this update, so its
-larger counts and targeted card results are not promoted into a new denominator.
+At `c1b8405`, Fable records the third bounded Wave-3 commit-tier run as 9,813
+passes, with the expected skip/xfail and serial confirmations documented in the
+landing record. The earlier `939001e` Batch-B result remains useful historical
+evidence. This update did not independently rerun either full gate, and the active
+post-Wave-3 tree is changing underneath it, so PROX/SENSE/GATE targeted results are
+not promoted into a committed denominator.
 
 This is a substantial engineering test surface and the earlier clean-source
 aggregate defect is closed for the declared local gate. It is still not hosted,
@@ -611,11 +624,12 @@ at eight workers. GATE-0b reproduced the complete pass from a tracked-only clean
 clone. Hosted execution and a pre-existing load-sensitive WebSocket test remain
 separate release risks rather than reasons to reopen the clean-clone result.
 
-**2. Python portability has a useful uncommitted answer, not a released target
-answer.** HW-1 proves the source/import floor on real CPython 3.10 and selects a
+**2. Python portability has a committed desktop answer, not a target answer.** HW-1
+proves the source/import floor on real CPython 3.10 and selects a
 CPython 3.12 product environment with 3.10 vendor/capture environments. Its aarch64
 locks resolve, but nothing has executed on the Orin and the Jetson ORT-GPU source is
-still unresolved. HW-7 must turn that design into an honest target-device gate.
+still unresolved. The product still constructs a vendor-SDK source in process, so
+OBS-MIN must also resolve the topology rather than treating lockfiles as deployment.
 
 **3. Eager package barrels still collapse module boundaries.** Importing a
 core/navigation leaf can load roughly 118 Parcel modules, including the large
@@ -625,25 +639,28 @@ into a no-op while other tests remained green. Thin package initializers, leaf
 imports and startup-fatal capability admission remain higher leverage than merely
 splitting the god objects.
 
-**4. Hosted, aarch64 and the current wave remain separate promotion gates.** Workflow
-text is not a retained hosted run or branch-protection proof. The uncommitted Wave-3
-tree must earn its own integrated gate, and the Orin must produce an explicit
-run/skip-with-reason report rather than inherit a desktop verdict.
+**4. Hosted, aarch64 and the active follow-on remain separate promotion gates.**
+Workflow text is not a retained hosted run or branch-protection proof. Wave 3 has a
+recorded integrated desktop result; PROX/SENSE/GATE must earn a quiescent commit and
+independent review, while the Orin must produce an explicit run/skip-with-reason
+report rather than inherit that desktop verdict.
 
 ### 6.3 Current execution evidence
 
-The accepted `939001e` landing gate passed all ten hard stages on the quiescent
-developer tree with the eight-worker setting: Ruff retained seven baseline
-fingerprints and added none; tier coverage was 9,512; the parallel default suite
-reported **9,403 passed, 17 skipped and one expected failure**, followed by passing
-serial rows. GATE-0b separately established the tracked-only clean-clone shape.
+Fable reports **9,813 passed** on the third commit-tier run at `c1b8405`; Ruff
+retained seven baseline fingerprints and added none. The earlier accepted
+`939001e`/GATE-0b records separately establish the Wave-2 tracked-only shape. These
+are retained records, not a claim that this document independently executed the
+suite.
 
 That evidence is unusually candid about its limitations. ROAM-2's coverage objective
 does not yet explore effectively; AIR-1's estimated speech onset cannot pass as a
 measured latency; no camera or Go2 hardware row ran; and one loopback-WebSocket test
 is documented as load-sensitive. Hosted Actions, branch protection, aarch64 execution
-and physical campaigns still require independent closure. Wave 3 is uncommitted and
-has targeted card evidence only, not a stable integrated result.
+and physical campaigns still require independent closure. Wave 3 has crossed the
+desktop integration boundary, but no target or physical row did.
+The moving PROX/SENSE/GATE follow-on has targeted reports only and no stable
+integrated result.
 
 There are useful narrow positives: 100 packaged assets are byte-parity checked;
 frozen navigation and safety/latency/freshness panels reproduce expected results;
@@ -654,7 +671,7 @@ The executive quality statement is therefore:
 
 > Strong local regression engineering with a tracked-source gate that is green at
 > the declared eight-CPU shape; hosted, load-sensitive, aarch64 and physical
-> assurance remain, and Wave 3 must earn its own integrated verdict.
+> assurance remain, and the active follow-on must earn its own integrated verdict.
 
 ## 7. Physical Unitree readiness
 
@@ -669,6 +686,9 @@ Parcel has a useful high-level Unitree foundation:
   stationary confirmation in `ControlManager`;
 - explicit axes/frame/mode commissioning records and CLI concepts;
 - evidence-origin controls intended to distinguish physical from synthetic state.
+- an opt-in observe-only Go2/replay backend with positive-motion refusals;
+- a Mid-360 UDP decoder/band, commissioned scan latch and box-day capture design;
+- array-audio and mic-arm seams plus static aarch64/Orin deployment artifacts.
 
 Using Unitree Sport for the first ODD is the correct tradeoff. The vendor controller
 owns high-rate balance, contact and gait, while Parcel supplies bounded body-velocity
@@ -677,13 +697,15 @@ safety and controls program without being necessary for initial companion behavi
 
 ### 7.2 What is missing
 
-The normal runtime does not instantiate the Unitree manager and a physical sensor
-spine together. It lacks:
+The physical-profile builder can select the observe-only Go2 backend, but it does
+not assemble a commissioned sensor/control spine. It lacks:
 
 - synchronized camera/LiDAR/IMU/joint/controller evidence;
 - hardware clock mapping and commissioned extrinsics;
+- a production-consumed pose provenance seam and strict physical-origin factory;
 - physical odometry/localization/SLAM and transform health;
 - a backend-neutral physical observation accepted by navigation/safety;
+- a bounded reactive person/dropoff channel;
 - a calibrated owner/stranger belief;
 - a native restart-disarmed sole-writer gateway;
 - an external independent stop integrated into the test plan;
@@ -744,18 +766,22 @@ application with a few deliberately isolated physical/timing domains.
 
 ### 8.2 Structural refactor order
 
-The order matters:
+ARCH-1 changes the near-term order from broad file splitting to bounded physical
+contracts:
 
-1. make `core`, `navigation`, `navigation.envs` and `instructnav` initializers thin;
-2. migrate production consumers to leaf imports;
-3. add forbidden-import/order and capability-admission tests;
-4. define synchronized observation, transforms and gateway contracts;
-5. then split the 14,293-line `runtime.py` and 6,604-line navigation coordinator
-   into lifecycle-owned services.
+1. correct and characterize the live gate, resolved-config, origin/receipt and
+   blocking-I/O defects;
+2. make only the minimum package/barrel changes required to expose dependency-light
+   contracts without soft-degrading required capabilities;
+3. land navigation-only OBS-MIN, separate vendor-state and LiDAR ingest owners, and
+   an immutable snapshot handoff behind the existing facade;
+4. bench the native governor/gateway and target deployment boundaries; and
+5. extract larger runtime/navigation/audio owners only on a forced change with a
+   measured coupling, timing or authority benefit.
 
-Splitting the giant files first would move code while preserving the import cycle
-and ambiguous capability boundary. Package integrity is the higher-leverage first
-step.
+Preserve cohesive state machines, replay cursors, evidence latches, LiDAR math,
+motion refusals, resampling and gateway lifecycle locking. At most one
+Python-product card runs beside one genuinely disjoint native/capture/CI lane.
 
 ## 9. Principal design tradeoffs
 
@@ -784,7 +810,7 @@ Two policies should remain non-negotiable:
 
 | Gate | Work | Exit evidence |
 | --- | --- | --- |
-| **A. Release integrity** | Preserve the green tracked-only eight-worker gate; close the load-sensitive WebSocket case, add hosted evidence, land the explicit product/vendor Python split, prove aarch64 disposition and keep required capabilities startup-fatal | Local, hosted and target reports name the same admitted rows or explicit target-only skips. No Wave-3 promotion inherits Batch B's verdict. |
+| **A. Release integrity** | Preserve the recorded Wave-3 commit result; integrate the hard-skip/V2 correction without false-green nightly behavior; close the load-sensitive WebSocket case, add hosted evidence, resolve the product/vendor process split and prove aarch64 disposition | Local, hosted and target reports name the same admitted rows or explicit target-only skips; required hard rows can never become zero-exit SKIP/PASS. |
 | **B. Lab readiness** | Freeze EDU SKU/firmware/SDK/BOM; prepare controlled area, stop/tether, operator, network, capture and privacy procedures | Signed R&D acceptance plan; read-only data can be captured on day one. |
 | **C. Physical substrate** | Inventory/telemetry; clock and extrinsic calibration; physical bags/replay; native gateway; axes/frame/mode and fault commissioning | Tethered minimum-speed motion independently stops on expiry, client death, state loss and operator action. |
 | **D. Estimation/perception shadow** | Compare SLAM on common bags; publish MAP↔ODOM health; wire RGB-D/LiDAR; measure metric perception, semantics and owner ROC/ID switches | Frozen timing/accuracy/health thresholds pass independent visits without synthetic/physical mixing; learned output remains proposal-only. |
@@ -832,11 +858,13 @@ It should not be named “autonomous companion dog.” That later milestone beco
 credible only after the physical estimation–perception–control evidence spine and
 repeated first-ODD companion missions exist.
 
-The immediate implementation order is: close HW-4; build the observe-only
-`Go2Backend` and typed physical scan authority; admit one physical EDU Plus profile;
-prove the aarch64 deployment shape; land the Orin firewall and microphone-arm route;
-then perform read-only box-day capture before LIO/SLAM, native-gateway and tethered
-minimum-speed commissioning. New semantic breadth should not displace that chain.
+The immediate implementation order is: finish and independently review SENSE/GATE;
+keep PROX as an unwired, widest-default library until its authority/person/stopping
+preconditions exist; land OBS-MIN with separate vendor-state and LiDAR ingest;
+perform real mount-day capture and prove the aarch64/Orin service topology; then
+bench and cut over the native sole writer before restrained command-path, inspected
+ground-stop and leashed minimum-speed commissioning. New semantic breadth and broad
+god-object refactors should not displace that chain.
 
 ## 12. Source map and further reading
 
@@ -849,12 +877,15 @@ minimum-speed commissioning. New semantic breadth should not displace that chain
   Python/asset warnings.
 - [Motion and Unitree commissioning](MOTION.md) — controller lifecycle and cautious
   physical bring-up.
-- [Wave 3 hardware design](../scrum/20260822/WAVE3_HW_DESIGN_FABLE.md) — current
-  dependency order, hardware unknowns and software-now/box-day split.
+- [ARCH-1 review packet](../scrum/20260823/task_1/README.md) — current verdict,
+  concern census, bounded test plan and preserve/extract direction.
+- [Wave 3 hardware design](../scrum/20260822/WAVE3_HW_DESIGN_FABLE.md) — committed
+  Wave-3 dependency basis, hardware unknowns and software-now/box-day split.
 - [Runtime concurrency and clocks](RUNTIME_CONCURRENCY_AND_CLOCKS.md) — threads,
   queues, clock domains and scheduling limits.
-- [Integrity-gate corrective TODO](../scrum/20260822/INTEGRITY_GATES_TODO.md) — exact
-  current closure work.
+- [Integrity-gate corrective TODO](../scrum/20260822/INTEGRITY_GATES_TODO.md) —
+  preceding release-integrity foundation; the dated delta and ARCH-1 packet govern
+  current closure.
 
 The engineering rule for every future status update is simple: name the exact
 artifact, default configuration, evidence environment and highest maturity level
