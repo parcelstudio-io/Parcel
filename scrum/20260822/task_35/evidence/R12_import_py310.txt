@@ -1,0 +1,5 @@
+interpreter: 3.10.21 (main, Aug 14 2026, 15:33:52) [Clang 22.1.3 ]
+imported: /home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/runtime.py
+UTC identity: True | repr: datetime.timezone.utc
+hasattr datetime.UTC on 3.10: False
+stamp: 2026-08-23T12:00:00+00:00

@@ -49,7 +49,40 @@ WHISPER_MODEL_URL="${PARCEL_WHISPER_MODEL_URL:-https://huggingface.co/ggerganov/
 WHISPER_MODEL_SHA256="${PARCEL_WHISPER_MODEL_SHA256:-a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002}"
 
 PIPER_TAG="${PARCEL_PIPER_TAG:-2023.11.14-2}"
-PIPER_ASSET="${PARCEL_PIPER_ASSET:-piper_linux_x86_64.tar.gz}"
+# ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) -------------------
+# Piper ships a PREBUILT BINARY, so unlike whisper.cpp (built from source here,
+# and therefore already portable) the asset name is the one thing in this file
+# that decided the architecture. It was hard-coded to x86_64; on the Go2 EDU+'s
+# aarch64 Orin that tarball downloads, extracts, and produces a binary that
+# cannot run.
+#
+# MEASURED 2026-08-23 against the pinned release's asset list
+# (https://api.github.com/repos/rhasspy/piper/releases/tags/2023.11.14-2 ->
+# https://github.com/rhasspy/piper/releases/tag/2023.11.14-2, published
+# 2023-11-14): the tag carries piper_linux_x86_64.tar.gz (26,460,462 B),
+# piper_linux_aarch64.tar.gz (26,004,717 B) and piper_linux_armv7l.tar.gz
+# (25,445,955 B). So the aarch64 asset exists at the version this repo already
+# pins -- no version move, no second pin block, one name.
+#
+# NOT SOLVED HERE, stated so nobody assumes it is: `--piper-only`'s fallback
+# for the STT half is the official prebuilt tree
+# third_party/whisper.cpp-bin/whisper-bin-ubuntu-x64, and that release has no
+# ubuntu-arm64 equivalent. On the dog the whisper half is the from-source build
+# this script already does; a toolchain-free aarch64 STT install is UNSOLVED.
+PARCEL_TARGET_ARCH="${PARCEL_TARGET_ARCH:-$(uname -m)}"
+case "$PARCEL_TARGET_ARCH" in
+  x86_64 | amd64) PIPER_ARCH_ASSET="piper_linux_x86_64.tar.gz" ;;
+  aarch64 | arm64) PIPER_ARCH_ASSET="piper_linux_aarch64.tar.gz" ;;
+  armv7l | armhf) PIPER_ARCH_ASSET="piper_linux_armv7l.tar.gz" ;;
+  *)
+    PIPER_ARCH_ASSET="piper_linux_$PARCEL_TARGET_ARCH.tar.gz"
+    echo "install_speech_services: WARNING: $PARCEL_TARGET_ARCH is not one of the three" \
+      "linux assets published at $PIPER_TAG (x86_64, aarch64, armv7l);" \
+      "guessing $PIPER_ARCH_ASSET, which will 404 if it does not exist" >&2
+    ;;
+esac
+PIPER_ASSET="${PARCEL_PIPER_ASSET:-$PIPER_ARCH_ASSET}"
+# ---- END CARD HW-7 gate-on-aarch64 ----------------------------------------
 PIPER_URL="${PARCEL_PIPER_URL:-https://github.com/rhasspy/piper/releases/download/$PIPER_TAG/$PIPER_ASSET}"
 # rhasspy/piper publishes no checksums with its release assets, so the
 # tarball hash is reported, not enforced. Set PARCEL_PIPER_SHA256 to pin it.
@@ -78,6 +111,8 @@ PIPER_VOICE="$PIPER_VOICE_DIR/voice.onnx"
 PIPER_VOICE_JSON="$PIPER_VOICE_DIR/voice.onnx.json"
 
 FORCE=0
+# ---- CARD HW-7: say what it would do, fetch nothing. -----------------------
+DRY_RUN=0
 JOBS=""
 DOWNLOADER=""
 STAGE_DIR=""
@@ -110,6 +145,11 @@ them with scripts/run_speech_services.sh --check.
 Options:
   -h, --help        Show this help and exit
   -f, --force       Redo every step even if it already looks complete
+      --dry-run     Print the resolved pins, the target architecture and every
+                    URL this run would fetch, then exit 0 without touching the
+                    network or the disk (card HW-7). PARCEL_TARGET_ARCH
+                    overrides `uname -m`, which is how the aarch64 plan is
+                    inspected from an x86_64 box.
   -j, --jobs N      Parallel build jobs (default: nproc, capped at 16)
       --piper-only  Install ONLY the TTS half (piper binary + voice + JSON).
                     Needs no git, no cmake and no C++ compiler — the pinned
@@ -138,6 +178,7 @@ Requires on the host (checked, never installed by this script):
 Environment overrides:
   PARCEL_WHISPER_REPO_URL, PARCEL_WHISPER_TAG, PARCEL_WHISPER_BUILD_TARGET
   PARCEL_WHISPER_MODEL_URL, PARCEL_WHISPER_MODEL_SHA256
+  PARCEL_TARGET_ARCH (default `uname -m`; selects the piper release asset)
   PARCEL_PIPER_TAG, PARCEL_PIPER_ASSET, PARCEL_PIPER_URL, PARCEL_PIPER_SHA256
   PARCEL_PIPER_VOICE_NAME, PARCEL_PIPER_VOICE_BASE_URL
   PARCEL_PIPER_VOICE_SHA256, PARCEL_PIPER_VOICE_JSON_SHA256
@@ -420,6 +461,37 @@ install_piper_voice() {
   fi
 }
 
+# ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) -------------------
+print_plan() {
+  local tool state
+  echo "install_speech_services: DRY RUN — nothing is downloaded, built or written"
+  echo "  target arch (PARCEL_TARGET_ARCH or uname -m): $PARCEL_TARGET_ARCH"
+  echo "  piper release asset:  $PIPER_ASSET"
+  echo "  piper url:            $PIPER_URL"
+  echo "  piper sha256 pin:     ${PIPER_SHA256:-(none — reported, not enforced)}"
+  echo "  piper voice:          $PIPER_VOICE_NAME"
+  echo "  piper voice url:      $PIPER_VOICE_BASE_URL/$PIPER_VOICE_NAME.onnx"
+  echo "  piper voice sha256:   $PIPER_VOICE_SHA256"
+  echo "  whisper repo/tag:     $WHISPER_REPO_URL @ $WHISPER_TAG (built from source — arch-independent)"
+  echo "  whisper model url:    $WHISPER_MODEL_URL"
+  echo "  whisper model sha256: $WHISPER_MODEL_SHA256"
+  echo "  destinations:         $PIPER_BIN, $PIPER_VOICE, $WHISPER_SERVER, $WHISPER_MODEL"
+  if ((PIPER_ONLY == 1)); then
+    echo "  --piper-only:         the whisper half is SKIPPED (no clone, no build)"
+    case "$PARCEL_TARGET_ARCH" in
+      x86_64 | amd64) : ;;
+      *) echo "  NOTE: the toolchain-free STT fallback (whisper-bin-ubuntu-x64) is x86_64 only;" \
+           "on $PARCEL_TARGET_ARCH the whisper half needs the from-source build" ;;
+    esac
+  fi
+  echo "  host tools:"
+  for tool in git cmake tar sha256sum awk curl wget python3; do
+    if command -v "$tool" >/dev/null 2>&1; then state="present"; else state="MISSING"; fi
+    printf "    %-12s %s\n" "$tool" "$state"
+  done
+}
+# ---- END CARD HW-7 gate-on-aarch64 ----------------------------------------
+
 print_summary() {
   echo
   echo "install_speech_services: INSTALL COMPLETE"
@@ -454,6 +526,7 @@ main() {
         exit 0
         ;;
       -f | --force) FORCE=1 ;;
+      --dry-run) DRY_RUN=1 ;;
       --piper-only) PIPER_ONLY=1 ;;
       -j | --jobs)
         shift
@@ -468,6 +541,14 @@ main() {
   done
   (($# == 0)) || die "unexpected extra arguments: $*"
 
+  # ---- CARD HW-7: the dry run happens BEFORE preflight on purpose. preflight
+  # `die`s on a missing toolchain, and "what would you fetch" is exactly the
+  # question an operator asks on a host that does not have one yet.
+  if ((DRY_RUN == 1)); then
+    print_plan
+    exit 0
+  fi
+  # ---- END CARD HW-7
   preflight
   log "installing into $ROOT/third_party and $ROOT/models (both gitignored)"
   if ((PIPER_ONLY == 1)); then

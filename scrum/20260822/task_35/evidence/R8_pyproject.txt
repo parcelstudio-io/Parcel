@@ -1,0 +1,10 @@
+requires-python: >=3.10
+dependencies   : ['mujoco>=3.3,<4', 'numpy>=2,<3', 'PyYAML>=6,<7']
+extras: ['base', 'camera', 'camera-realsense', 'dev', 'perception', 'perception-jetson', 'voice']
+   base = []
+   camera = ['opencv-python-headless>=4.10,<6']
+   camera-realsense = ['opencv-python-headless>=4.10,<6', 'pyrealsense2>=2.55,<3']
+   dev = ['pytest>=8,<9', 'pytest-xdist>=3,<4', 'ruff==0.16.1']
+   perception = ['onnxruntime-gpu[cuda,cudnn]>=1.28,<2']
+   perception-jetson = ['onnxruntime-gpu']
+   voice = ['msgpack>=1.1,<2', 'sounddevice>=0.5,<1', 'websockets>=17,<18']

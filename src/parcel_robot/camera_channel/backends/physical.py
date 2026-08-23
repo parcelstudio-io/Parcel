@@ -49,7 +49,7 @@ import os
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, Self
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 
@@ -66,6 +66,18 @@ from parcel_robot.camera_channel.d455 import (
 )
 from parcel_robot.camera_channel.frames import CameraFrameEnvelope
 from parcel_robot.evidence_origin import EvidenceOrigin
+
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# ``typing.Self`` is 3.11+ and the dog's Orin NX runs JetPack's CPython 3.10
+# (WAVE3_HW_DESIGN_FABLE.md §5.1, seam S22). This module opens with ``from
+# __future__ import annotations``, so its one use of the name — the return
+# annotation of ``PhysicalCameraBackendBase.__enter__`` — is a *string* at
+# runtime and no ``typing.Self`` object is ever built. The ``TYPE_CHECKING``
+# form (already used by ``commissioning/session.py:77`` before this card)
+# therefore leaves ``__annotations__`` byte-for-byte what it was.
+if TYPE_CHECKING:  # pragma: no cover - annotations only; never evaluated at runtime
+    from typing import Self
+# ---- END CARD HW-1 py310-clean ----
 
 #: The backend kinds the ``--camera`` launcher switch accepts. ``synthetic`` and
 #: ``mujoco_egl`` are deliberately NOT here: they are selected by the existing

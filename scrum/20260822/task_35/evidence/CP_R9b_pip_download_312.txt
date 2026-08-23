@@ -1,0 +1,72 @@
+Collecting mujoco<4,>=3.3
+  Using cached mujoco-3.12.0-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl.metadata (232 kB)
+Collecting numpy<3,>=2
+  Using cached numpy-2.5.2-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl.metadata (6.6 kB)
+Collecting PyYAML<7,>=6
+  Using cached pyyaml-6.0.3-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (2.4 kB)
+Collecting msgpack<2,>=1.1
+  Using cached msgpack-1.2.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (8.3 kB)
+Collecting sounddevice<1,>=0.5
+  Using cached sounddevice-0.5.6-py3-none-any.whl.metadata (1.4 kB)
+Collecting websockets<18,>=17
+  Using cached websockets-17.0.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl.metadata (6.3 kB)
+Collecting opencv-python-headless<6,>=4.10
+  Using cached opencv_python_headless-5.0.0.93-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl.metadata (19 kB)
+Collecting pyrealsense2<3,>=2.55
+  Using cached pyrealsense2-2.58.3.10794-cp312-cp312-manylinux2014_aarch64.whl.metadata (1.9 kB)
+Collecting absl-py (from mujoco<4,>=3.3)
+  Using cached absl_py-2.5.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting etils[epath] (from mujoco<4,>=3.3)
+  Using cached etils-1.14.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting glfw (from mujoco<4,>=3.3)
+  Using cached glfw-2.10.2-py2.py3-none-manylinux2014_aarch64.whl.metadata (5.5 kB)
+Collecting pyopengl (from mujoco<4,>=3.3)
+  Using cached pyopengl-3.1.10-py3-none-any.whl.metadata (3.3 kB)
+Collecting cffi (from sounddevice<1,>=0.5)
+  Using cached cffi-2.1.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl.metadata (2.5 kB)
+Collecting pycparser (from cffi->sounddevice<1,>=0.5)
+  Using cached pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Collecting fsspec (from etils[epath]->mujoco<4,>=3.3)
+  Using cached fsspec-2026.7.0-py3-none-any.whl.metadata (10 kB)
+Collecting typing_extensions (from etils[epath]->mujoco<4,>=3.3)
+  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting zipp (from etils[epath]->mujoco<4,>=3.3)
+  Using cached zipp-4.1.0-py3-none-any.whl.metadata (3.6 kB)
+Using cached mujoco-3.12.0-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl (18.5 MB)
+Using cached numpy-2.5.2-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl (15.6 MB)
+Using cached pyyaml-6.0.3-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (775 kB)
+Using cached msgpack-1.2.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (410 kB)
+Using cached sounddevice-0.5.6-py3-none-any.whl (32 kB)
+Using cached websockets-17.0.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl (221 kB)
+Using cached opencv_python_headless-5.0.0.93-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl (36.5 MB)
+Using cached pyrealsense2-2.58.3.10794-cp312-cp312-manylinux2014_aarch64.whl (6.5 MB)
+Using cached absl_py-2.5.0-py3-none-any.whl (137 kB)
+Using cached cffi-2.1.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl (222 kB)
+Using cached etils-1.14.0-py3-none-any.whl (172 kB)
+Using cached fsspec-2026.7.0-py3-none-any.whl (206 kB)
+Using cached glfw-2.10.2-py2.py3-none-manylinux2014_aarch64.whl (235 kB)
+Using cached pycparser-3.0-py3-none-any.whl (48 kB)
+Using cached pyopengl-3.1.10-py3-none-any.whl (3.2 MB)
+Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Using cached zipp-4.1.0-py3-none-any.whl (10 kB)
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/mujoco-3.12.0-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/numpy-2.5.2-cp312-cp312-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/pyyaml-6.0.3-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/msgpack-1.2.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/sounddevice-0.5.6-py3-none-any.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/websockets-17.0.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/opencv_python_headless-5.0.0.93-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/pyrealsense2-2.58.3.10794-cp312-cp312-manylinux2014_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/absl_py-2.5.0-py3-none-any.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/cffi-2.1.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/etils-1.14.0-py3-none-any.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/fsspec-2026.7.0-py3-none-any.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/glfw-2.10.2-py2.py3-none-manylinux2014_aarch64.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/pycparser-3.0-py3-none-any.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/pyopengl-3.1.10-py3-none-any.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/typing_extensions-4.16.0-py3-none-any.whl
+Saved /home/jaewoo-jang/.cache/parcel-hw1/jetson-wheels-312/zipp-4.1.0-py3-none-any.whl
+Successfully downloaded mujoco numpy PyYAML msgpack sounddevice websockets opencv-python-headless pyrealsense2 absl-py cffi etils fsspec glfw pycparser pyopengl typing_extensions zipp
+
+[notice] A new release of pip is available: 26.2 -> 26.2.1
+[notice] To update, run: /home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python -m pip install --upgrade pip

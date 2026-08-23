@@ -1,0 +1,26 @@
+IMPORT-VERIFIED: /home/jaewoo-jang/.cache/parcel-hw1/tree/src/parcel_robot/__init__.py
+=========== S1: re-introduce datetime.UTC at observability.py:12 (HEAD form)
+--- expect RED:
+=========================== short test summary info ============================
+1 failed in 1.15s
+  RESTORED byte-identical (aa527d67d0ed85f70ef7846ab841499e46b27d4e57b623838e6a5dd3568ff730)
+=========== S2: re-introduce unguarded typing.Self at online_map/store.py:40 (HEAD form)
+--- expect RED:
+=========================== short test summary info ============================
+1 failed in 1.09s
+  RESTORED byte-identical (bb6076140a3f4d2d553fff57c2dd8140d87bd43a5f4c07d51f351909589b4a29)
+=========== S3: PEP 695 type alias (3.12 syntax) in evidence_origin.py
+--- expect RED (grammar cell):
+=========================== short test summary info ============================
+1 failed in 0.51s
+--- expect RED (name cell, PEP 695 is also in the table):
+=========================== short test summary info ============================
+1 failed in 1.10s
+  RESTORED byte-identical (82b615072a96ed6d1220275d6c6231c74f3f09cd39ea97d094884e8698a6ec8a)
+=========== S4: tomllib + StrEnum + itertools.batched in memory_path.py
+--- expect RED:
+=========================== short test summary info ============================
+1 failed in 1.09s
+  RESTORED byte-identical (3817a81606912ddddaa4224613d96b7b84820115514c037b3e53779bd939788d)
+=========== S5: negative control — no mutation, the whole file must be green
+23 passed, 1 warning in 2.04s

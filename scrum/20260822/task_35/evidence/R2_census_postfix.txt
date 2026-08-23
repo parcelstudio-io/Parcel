@@ -1,0 +1,11 @@
+root=src/parcel_robot  files=313  findings=7
+  from typing import Self: 7  unguarded=0
+--- sites ---
+  bridge/client.py:30 from typing import Self (since 3.11) [GUARDED]
+  camera_channel/backends/physical.py:79 from typing import Self (since 3.11) [GUARDED]
+  commissioning/session.py:77 from typing import Self (since 3.11) [GUARDED]
+  online_map/store.py:64 from typing import Self (since 3.11) [GUARDED]
+  perception_daemon/client.py:68 from typing import Self (since 3.11) [GUARDED]
+  perception_daemon/server.py:80 from typing import Self (since 3.11) [GUARDED]
+  providers.py:25 from typing import Self (since 3.11) [GUARDED]
+UNGUARDED_TOTAL 0

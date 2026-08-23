@@ -1,0 +1,55 @@
+# requirements-lock-jetson.txt — the BASE dependency resolution for the dog.
+#
+# Card HW-1 (scrum/20260822/task_35), design WAVE3_HW_DESIGN_FABLE.md §5.1,
+# seam S22. This is NOT a second desktop lock: `requirements-lock.txt` stays the
+# CPython 3.14 / x86_64 snapshot the gate runs against and is untouched by this
+# card. This file is the resolution for the ONE other interpreter the project
+# has to work on — the Orin NX's system CPython 3.10 on JetPack 6 (aarch64).
+#
+# HOW IT WAS PRODUCED (2026-08-23, re-run it rather than trusting it):
+#
+#   pip download --dest <scratch> --only-binary=:all: \
+#     --python-version 3.10 --implementation cp --abi cp310 \
+#     --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 \
+#     --platform manylinux_2_28_aarch64 --platform manylinux_2_31_aarch64 \
+#     --platform linux_aarch64 \
+#     'mujoco>=3.3,<4' 'numpy>=2,<3' 'PyYAML>=6,<7'
+#
+# It is a RESOLUTION, not an installation: no aarch64 code ran on the dev box.
+# Whether these wheels import on the box's actual L4T is B9's read (design §7).
+#
+# The three resolutions worth knowing:
+#   * numpy 2.2.6 — the LAST numpy with cp310 wheels. The desktop lock's 2.5.1
+#     requires >=3.12. This pin is the whole reason the two locks differ.
+#   * mujoco 3.12.0 — cp310 aarch64, manylinux_2_27/2_28 (glibc >= 2.28;
+#     JetPack 6 is Ubuntu 22.04 / glibc 2.35).
+#   * PyYAML 6.0.3 — cp310 aarch64 wheel published.
+#
+# EXTRAS ON THIS INTERPRETER, measured the same way on 2026-08-23:
+#   * dev            OK  (pytest 8.4.2, pytest-xdist 3.8.0, ruff 0.16.1 aarch64)
+#   * camera         OK  (opencv-python-headless 5.0.0.93 cp37-abi3 aarch64)
+#   * camera-realsense OK (pyrealsense2 2.58.3.10794 cp310 aarch64)
+#   * voice          NO  — msgpack and sounddevice resolve, but
+#                    websockets>=17 declares Requires-Python >=3.11 (17.0 and
+#                    17.0.1 both). Highest resolvable on cp310: 16.1.1.
+#   * perception     NO  — onnxruntime-gpu publishes NO aarch64 wheel on PyPI
+#                    at any version ("from versions: none"). The Orin's
+#                    detector venv installs the Jetson-index wheel instead;
+#                    see the `perception-jetson` extra in pyproject.toml and
+#                    HW-7's installer script.
+#
+# Nothing reads this file automatically. `scripts/ci_gate.py` does not.
+
+-e .
+
+absl-py==2.5.0
+etils==1.13.0
+fsspec==2026.7.0
+glfw==2.10.2
+importlib_resources==7.1.0
+mujoco==3.12.0
+numpy==2.2.6
+PyOpenGL==3.1.10
+PyYAML==6.0.3
+typing_extensions==4.16.0
+zipp==4.1.0

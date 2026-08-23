@@ -38,6 +38,36 @@ MAX_REQUEST_BYTES = 65_536
 #: would have been a second, weaker front door.
 REALTIME_AUDIO_PATH = "/api/realtime/audio"
 
+# ---- CARD HW-MIC array-arm-route (scrum/20260822/task_44) ------------------
+#
+# ONE ARM AT A TIME, ACROSS THE WHOLE PROCESS (verifier finding F1, reproduced
+# on the real array). `ThreadingHTTPServer` gives every request its own thread,
+# and `ArrayAudioGateway.set_mic` is not re-entrant: it reads `_mic_open` under
+# its lock, then opens the duplex pair and calls the runtime's mic gesture
+# OUTSIDE it, and only then writes `_mic_open = True`. Two POSTs inside that
+# window — one double-click on the panel button — end one of two ways, and both
+# are bad: a device that accepts a second open leaks a second input stream and
+# a second reader thread, and a device that does not (this array's exclusive
+# `hw:` node) refuses the second caller, whose `except ArrayDeviceError` arm
+# then writes `_mic_open = False` OVER the first caller's armed state. What the
+# owner gets is the worst shape available: both endpoints running, the hosted
+# session open and billing, the panel saying "Listening", and every captured
+# frame dropped as unarmed. A deaf, paid-for ear from one extra click.
+#
+# This lock makes the route the serial door the gateway assumes it already has.
+# The second caller waits, then finds `_mic_open` true and is answered 200 with
+# the state that holds — never a 503 that clobbers a live ear. It is held only
+# around `set_mic`, so it can never be held while this handler talks to a
+# socket, and nothing under `set_mic` ever calls back into the panel.
+#
+# It is deliberately process-wide rather than per-server or per-gateway: there
+# is one array on a machine, and two panels in one process sharing one lock is
+# strictly safer than two panels racing for one sound card. The gateway itself
+# should also carry an "opening" state under its own lock — that is HW-4's file
+# and this card's handoff, not a second copy of the rule written here.
+_ARRAY_MIC_ROUTE_LOCK = threading.Lock()
+# ---- END CARD HW-MIC --------------------------------------------------------
+
 #: Ordered (prefix, class) pairs; the first matching prefix wins, so longer
 #: prefixes ("tree_top_") must appear before their shorter siblings ("tree_").
 SEMANTIC_GEOM_PREFIXES: tuple[tuple[str, str], ...] = (
@@ -345,6 +375,99 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
                     HTTPStatus.ACCEPTED,
                 )
                 return
+            # ---- CARD HW-MIC array-arm-route (scrum/20260822/task_44) --------
+            #
+            # THE DOOR THE ARRAY EAR DID NOT HAVE. Until this route, the only
+            # thing in the whole product that ever called `set_mic(True)` was
+            # `BrowserAudioGateway`'s own websocket control frame, reached
+            # through `_serve_realtime_audio` below — which serves the browser
+            # gateway and refuses everything else. So a runtime booted with
+            # `audio: {gateway: array}` (card HW-4) constructed the array
+            # gateway, probed it, said out loud what it found, and then never
+            # listened: no ear, no hosted session, and therefore no mouth
+            # either, because opening the microphone is what opens the session
+            # (`RobotRuntime._realtime_mic_gesture`).
+            #
+            # A POST and not a socket, because in array mode the owner's audio
+            # never crosses this wire: the PCM goes device -> gateway -> lane
+            # inside the runtime's own process, and the only thing the browser
+            # has left to say is "arm" or "disarm". It stands behind the same
+            # `_authorize_post()` as every other control POST — loopback Host,
+            # JSON body, the per-process CSRF token, same origin — and adds no
+            # authority of its own.
+            #
+            # WHAT THIS ROUTE MUST NOT DO IS ORDER ANYTHING. `set_mic` opens the
+            # device BEFORE it asks the runtime for the gesture (HW-4 finding
+            # F5), so that a device refusal can never leave a billed hosted
+            # session open with nothing listening. Any ordering written here
+            # would be a second copy of that rule, free to disagree with it.
+            if path == "/api/realtime/mic":
+                # Strict, not truthy: `{"open": "no"}` and `{"open": 0}` are the
+                # shapes that would arm an ear the owner asked to shut.
+                if not isinstance(payload.get("open"), bool):
+                    raise TypeError("open must be a boolean")
+                want_open = bool(payload["open"])
+                gateway = getattr(self.server.runtime, "realtime_gateway", None)
+                if gateway is None:
+                    config = getattr(self.server.runtime, "realtime_config", None)
+                    mode = getattr(config, "mode", "unknown")
+                    self._send_json(
+                        {
+                            "detail": (
+                                "no realtime audio gateway is constructed, so there is "
+                                f"no ear to arm (realtime mode is {mode!r})"
+                            ),
+                            "kind": None,
+                        },
+                        HTTPStatus.NOT_FOUND,
+                    )
+                    return
+                # Imported here, not at module scope: `audio_gateway` imports
+                # `websockets`, an optional dependency, and a build without it
+                # must still serve the whole panel. Reaching this line means a
+                # gateway object exists, so the module is already imported.
+                from parcel_robot.realtime.audio_gateway import (
+                    AUDIO_GATEWAY_ARRAY,
+                    ArrayDeviceError,
+                )
+
+                snapshot = getattr(gateway, "snapshot", None)
+                kind = str(snapshot().get("kind", "")) if callable(snapshot) else ""
+                if kind != AUDIO_GATEWAY_ARRAY:
+                    self._send_json(
+                        {
+                            "detail": (
+                                f"the fitted ear is {kind or 'unknown'}, not the array: a "
+                                f"browser microphone is armed over the WebSocket at "
+                                f"{REALTIME_AUDIO_PATH}, not through this route"
+                            ),
+                            "kind": kind,
+                        },
+                        HTTPStatus.CONFLICT,
+                    )
+                    return
+                try:
+                    # The whole call, not just the open: a close racing an open
+                    # is the same corruption with the operands swapped.
+                    with _ARRAY_MIC_ROUTE_LOCK:
+                        now_open = bool(gateway.set_mic(want_open))
+                except ArrayDeviceError as error:
+                    # 503 and not 409: the door is right, the microphone behind
+                    # it is missing or refusing. The gateway's own text names
+                    # the USB id, `scripts/env-audio.sh` and the udev rule, and
+                    # it is passed through verbatim rather than summarised.
+                    self._send_json(
+                        {"detail": str(error), "kind": kind},
+                        HTTPStatus.SERVICE_UNAVAILABLE,
+                    )
+                    return
+                # The state that NOW HOLDS, which is not always what was asked
+                # for: a runtime that refuses the gesture leaves `set_mic`
+                # returning False with the streams closed again, and saying
+                # `{"open": false}` is the honest report of that.
+                self._send_json({"open": now_open, "kind": kind})
+                return
+            # ---- END CARD HW-MIC --------------------------------------------
             if path == "/api/voice/barge-in":
                 self._send_json({"message": self.server.runtime.interrupt_voice()})
                 return
@@ -492,10 +615,27 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
             return
         gateway = getattr(self.server.runtime, "realtime_gateway", None)
         if not isinstance(gateway, BrowserAudioGateway):
+            # ---- CARD HW-MIC (scrum/20260822/task_44): the same refusal, said
+            # truthfully. "mode is not audio" became false the day card HW-4
+            # landed: in array mode the gateway IS constructed and the runtime
+            # IS in `mode: audio` — the ear is simply a different one, armed by
+            # POST /api/realtime/mic above. The CONDITION is untouched; this
+            # socket still serves the browser ear and only the browser ear.
+            snapshot = getattr(gateway, "snapshot", None)
+            fitted = str(snapshot().get("kind", "")) if callable(snapshot) else ""
             self._send_json(
-                {"detail": "the realtime audio gateway is not constructed (mode is not audio)"},
+                {
+                    "detail": (
+                        "this socket is the browser ear's door and the fitted ear is "
+                        f"{fitted or 'none'}: an array ear is armed with POST "
+                        "/api/realtime/mic, and a runtime with no gateway (mode: text) "
+                        "has no ear to arm at all"
+                    ),
+                    "kind": fitted or None,
+                },
                 HTTPStatus.NOT_FOUND,
             )
+            # ---- END CARD HW-MIC ------------------------------------------------
             return
         if "websocket" not in self.headers.get("Upgrade", "").lower():
             self._send_json(
@@ -696,6 +836,138 @@ def _check_planner_model_section(section: Any) -> dict[str, Any]:
 # ---- END CARD TRUTH-1 -------------------------------------------------------
 
 
+# ---- CARD HW-2 go2-backend (scrum/20260822/task_40) ------------------------
+#
+# WHICH EYE: A MUJOCO SOCKET, OR THE DOG?
+#
+# `MujocoSocketBackend` is the only `SimulatorBackend` in the tree and
+# `observe()` is the runtime's ONE source of pose, scan and obstacle facts
+# (wave-3 design §4 row S1). On the Orin there is no MuJoCo — by construction,
+# design §3 — so without a branch here nothing starts on the robot at all.
+#
+# `backend:` is absent from the SHA-locked `configs/robot.yaml`, so with no
+# profile `_resolve_backend` returns None and the call below constructs
+# byte-for-byte what it constructed before this card existed. That identity is
+# asserted through THIS function in `tests/test_hw2_go2_backend.py`, not
+# through a stub.
+#
+# INERT UNTIL HW-5, said plainly (HW-3's finding F4 is this same shape): an
+# overlay cannot INTRODUCE a `backend:` block until `"backend"` is in
+# `config.OVERLAY_INTRODUCIBLE_KEYS` — ONE entry, exempting the whole subtree,
+# because listing the children would look like a spelling guard and be inert
+# (ROAM-1 finding 6). That entry and `configs/profiles/go2_edu_plus.yaml` are
+# card HW-5's. The spelling guard for this family lives HERE instead, at the
+# read site, which is TRUTH-1's rule and the reason `_check_planner_model_section`
+# is called above rather than trusted to the loader.
+
+#: Every key `_build_backend` reads. A key outside this set is a typo, and a
+#: typo that merges silently leaves the setting at its shipped value while the
+#: file on disk says otherwise — the defect the overlay loader exists for.
+_BACKEND_KEYS = frozenset(
+    {
+        "kind",
+        "fixture",
+        "band",
+        "livox",
+        "interface",
+        "domain_id",
+        "session_epoch",
+        "max_frames_per_drain",
+        "drain_budget_s",
+    }
+)
+
+#: `backend.livox:` — where the Mid-360 sends its point stream, and therefore
+#: what the live source binds. Added under verification (finding F3): the class
+#: docstring declared a "bound UDP socket" while nothing on the product path
+#: passed one, so `drain()` returned `()` for ever and box-day would have been
+#: asked to prove code that did not exist. The VALUE is a box-day measurement
+#: (design §8 Q-wire, host 192.168.1.5x); the code that consumes it is not.
+#: `port` defaults to HW-3's `HOST_POINT_DATA_PORT`.
+_BACKEND_LIVOX_KEYS = frozenset({"host", "port"})
+
+#: The kinds this launcher can construct. Named in the refusal so an operator
+#: reads the vocabulary instead of guessing at it.
+_BACKEND_KINDS = ("mujoco", "go2")
+
+
+def _build_backend(section: Any, socket_path: Path) -> Any:
+    """The `backend:` section -> a `SimulatorBackend`. Refuses a typo BY NAME."""
+
+    if not isinstance(section, dict) or not section:
+        return MujocoSocketBackend(socket_path)
+    unknown = sorted(str(key) for key in section if str(key) not in _BACKEND_KEYS)
+    if unknown:
+        raise ValueError(
+            f"unknown backend config key(s): {', '.join(unknown)}; "
+            f"allowed: {', '.join(sorted(_BACKEND_KEYS))}"
+        )
+    kind = str(section.get("kind", "mujoco"))
+    if kind == "mujoco":
+        return MujocoSocketBackend(socket_path)
+    if kind != "go2":
+        raise ValueError(
+            f"unknown backend kind {kind!r}; this launcher builds: "
+            f"{', '.join(_BACKEND_KINDS)}"
+        )
+
+    # Imported HERE, not at module scope: `backends.go2` is cheap and vendor-free,
+    # but the import still names exactly where the physical branch begins.
+    from parcel_robot.backends.go2 import (
+        Go2Backend,
+        LiveGo2Sources,
+        RecordedStage0Source,
+        band_profile_from_config,
+    )
+
+    livox = section.get("livox")
+    if livox is not None:
+        if not isinstance(livox, dict):
+            raise TypeError("backend.livox must be a mapping")
+        unknown_livox = sorted(
+            str(key) for key in livox if str(key) not in _BACKEND_LIVOX_KEYS
+        )
+        if unknown_livox:
+            raise ValueError(
+                f"unknown backend.livox key(s): {', '.join(unknown_livox)}; "
+                f"allowed: {', '.join(sorted(_BACKEND_LIVOX_KEYS))}"
+            )
+    livox = livox or {}
+
+    fixture = section.get("fixture")
+    if fixture:
+        if livox:
+            raise ValueError(
+                "backend.fixture and backend.livox are two different sensors: a "
+                "recording and a Mid-360. Set one."
+            )
+        # A RECORDING. The source declares REPLAY because it reads a file, so a
+        # replayed scan does NOT acquire physical authority at the health join —
+        # it latches under a physical requirements table, which is the correct
+        # answer and what the desktop measures.
+        source: Any = RecordedStage0Source(Path(str(fixture)))
+    else:
+        # THE DOG. Refuses on a host without the vendor SDK, naming the venv.
+        source = LiveGo2Sources(
+            interface=str(section.get("interface", "")),
+            domain_id=int(section.get("domain_id", 0)),
+            livox_host=str(livox.get("host", "")),
+            livox_port=int(livox.get("port", 0)),
+            max_frames_per_drain=int(section.get("max_frames_per_drain", 32)),
+            drain_budget_s=float(
+                section.get("drain_budget_s", LiveGo2Sources.DEFAULT_DRAIN_BUDGET_S)
+            ),
+        )
+    return Go2Backend(
+        source,
+        band_profile=band_profile_from_config(section.get("band")),
+        session_epoch=str(section.get("session_epoch", "")),
+    )
+
+
+# ---- END CARD HW-2 go2-backend ----------------------------------------------
+
+
 def build_runtime(
     config_path: Path,
     socket_path: Path,
@@ -725,7 +997,9 @@ def build_runtime(
         planner_model = LlamaCppProvider.from_config(planner_config)
     return RobotRuntime(
         config_path,
-        MujocoSocketBackend(socket_path),
+        # ---- CARD HW-2 go2-backend (task_40): the one branch ----
+        _build_backend(store.section("backend"), socket_path),
+        # ---- END CARD HW-2 ----
         language_model=language_model,
         planner_model=planner_model,
     )

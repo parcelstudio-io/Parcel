@@ -60,8 +60,15 @@ import math
 import os
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
+
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# ``datetime.UTC`` is 3.11+; the Orin's JetPack CPython is 3.10 (design §5.1,
+# seam S22). ``datetime.UTC`` IS ``timezone.utc`` — the same singleton — so the
+# alias keeps every call site, ``tzinfo`` identity and ``isoformat`` unchanged.
+UTC = timezone.utc
+# ---- END CARD HW-1 py310-clean ----
 
 #: Schema tag written into every gallery file. A file that does not carry it is
 #: refused rather than guessed at.

@@ -1,0 +1,62 @@
+# requirements-lock-jetson-py312.txt — the ORIN PRODUCT VENV resolution.
+#
+# Card HW-1 (scrum/20260822/task_35), correction pass, on the integrator's
+# design-level decision of 2026-08-23 (verifier option (b), recorded in
+# `task_35/HW1_STATUS.md` §Handoffs H11):
+#
+#   the Orin PRODUCT venv is a uv-provisioned CPython **3.12**; CPython 3.10
+#   stays the floor for the perception-daemon, capture and motion venvs.
+#
+# Why there are now two jetson locks. On cp310 aarch64 the `voice` extra does
+# not resolve at all (websockets >=17 declares Requires-Python >=3.11) and numpy
+# stops at 2.2.6, two minors behind the desktop gate. On **cp312 aarch64**
+# `base` + `voice` + `camera` + `camera-realsense` ALL resolve from plain PyPI,
+# at the desktop lock's own family: numpy 2.5.2, websockets 17.0.1,
+# pyrealsense2 2.58.3.10794 cp312. `requirements-lock-jetson.txt` (cp310) is
+# still the lock the perception/capture/motion venvs use — that is where
+# onnxruntime-gpu's only aarch64 CUDA wheels (cp310) and the capture tree's
+# 3.10 floor live — which is why HW-1's 3.10-clean work stays load-bearing
+# under this decision, not superseded by it.
+#
+# HOW IT WAS PRODUCED (2026-08-23; a resolution, NOT an installation — no
+# aarch64 code ran on the dev box; whether these wheels import on the box's L4T
+# is B9, and whether uv's 3.12 aarch64 build runs there is a box-day read):
+#
+#   pip download --dest <scratch> --only-binary=:all: \
+#     --python-version 3.12 --implementation cp --abi cp312 \
+#     --platform manylinux2014_aarch64 --platform manylinux_2_17_aarch64 \
+#     --platform manylinux_2_28_aarch64 --platform manylinux_2_31_aarch64 \
+#     --platform linux_aarch64 \
+#     'mujoco>=3.3,<4' 'numpy>=2,<3' 'PyYAML>=6,<7' \
+#     'msgpack>=1.1,<2' 'sounddevice>=0.5,<1' 'websockets>=17,<18' \
+#     'opencv-python-headless>=4.10,<6' 'pyrealsense2>=2.55,<3'
+#
+# 17 packages, **zero without a cp312 aarch64 wheel**. Deltas against the cp310
+# lock worth knowing: numpy 2.2.6 -> 2.5.2, etils 1.13.0 -> 1.14.0 (etils 1.14
+# dropped 3.10), and websockets/msgpack/sounddevice/pyrealsense2/opencv exist
+# here and do not there.
+#
+# NOT covered: `perception` — onnxruntime-gpu publishes no aarch64 wheel on
+# PyPI at ANY version or interpreter. That venv is cp310 + the Jetson index
+# (`perception-jetson` extra, HW-7's installer). Nothing reads this file
+# automatically; `scripts/ci_gate.py` does not.
+
+-e .
+
+absl-py==2.5.0
+cffi==2.1.1
+etils==1.14.0
+fsspec==2026.7.0
+glfw==2.10.2
+msgpack==1.2.1
+mujoco==3.12.0
+numpy==2.5.2
+opencv-python-headless==5.0.0.93
+pycparser==3.0
+pyopengl==3.1.10
+pyrealsense2==2.58.3.10794
+PyYAML==6.0.3
+sounddevice==0.5.6
+typing_extensions==4.16.0
+websockets==17.0.1
+zipp==4.1.0

@@ -1564,9 +1564,28 @@
       badge.classList.toggle("realtime-live", active);
       // Only offer the microphone when the runtime actually built a gateway.
       el("mic-button").hidden = realtime.mode !== "audio";
+      // ---- CARD HW-MIC (scrum/20260822/task_44) — verifier note N1 ----
+      // THE RUNTIME CAN SHUT THIS EAR AND THE TAB WOULD NEVER HEAR ABOUT IT.
+      // `RobotRuntime` calls `close_mic(...)` on an idle hang-up; the browser
+      // ear learns that from a `mic` frame on its socket, and the array ear has
+      // no socket to learn it on. So the button would go on saying "Listening"
+      // over a microphone that is shut. This poll already carries the gateway's
+      // own `mic_open`, so the correction costs nothing extra on the wire — and
+      // it is the same line that repairs the label after any lost response.
+      if (realtime.gateway && realtime.gateway.kind === "array"
+          && state.arrayMic && realtime.gateway.mic_open === false) {
+        state.arrayMic = false;
+        micLabel(MIC_LABEL_IDLE);
+      }
+      // ---- END CARD HW-MIC ----
       const broker = realtime.broker || {};
       const spend = Number(realtime.spend_usd || 0);
       el("realtime-detail").textContent = [
+        // ---- CARD HW-MIC (scrum/20260822/task_44): which ear is fitted ----
+        // Empty for every non-array kind, and `.filter(Boolean)` below drops
+        // it, so the browser panel's status line is unchanged to the character.
+        realtime.gateway && realtime.gateway.kind === "array" ? "ear: array" : "",
+        // ---- END CARD HW-MIC ----
         lane.session_id ? `session ${lane.session_id}` : "no session yet",
         `tools ${broker.executed || 0}/${broker.calls || 0}`,
         `~$${spend.toFixed(4)} (assumed rates)`,
@@ -2485,6 +2504,13 @@
     const MIC_LABEL_IDLE = "🎙 Enable microphone";
     const MIC_LABEL_LIVE = "🔴 Listening · click to stop";
     const MIC_LABEL_BUSY = "🎙 Connecting…";
+    // ---- CARD HW-MIC array-arm-route (scrum/20260822/task_44) ----
+    // The array ear says WHICH ear it is, because the owner cannot see it from
+    // here: with the array fitted this tab holds no microphone at all, and a
+    // button that said "Listening" would leave them looking for a Chrome
+    // permission prompt that is never coming.
+    const MIC_LABEL_ARRAY_LIVE = "🔴 Listening · mic array · click to stop";
+    // ---- END CARD HW-MIC ----
     // Card MARK-1. How often this tab reports what the owner has heard while
     // hosted audio is rendering. Ten a second is nothing on the wire and it
     // bounds how stale the truncate point can be when a barge-in lands.
@@ -2707,6 +2733,69 @@
     }
 
     async function startMic() {
+      // ---- CARD HW-MIC array-arm-route (scrum/20260822/task_44) ----
+      // WHICH EAR IS FITTED IS THE SERVER'S FACT, AND THE PAGE ALREADY HAS IT.
+      // `/api/state`'s realtime block carries the gateway's own snapshot, and
+      // `renderRealtime` parks it in `state.realtime` — so the kind is read,
+      // never guessed. `"array"` means the microphone is a piece of hardware on
+      // the machine the runtime runs on (card HW-4's XVF3800): its PCM never
+      // crosses this wire, so there is nothing here to open — no getUserMedia,
+      // no socket, no AudioContext. All this tab does is say "arm" and "disarm"
+      // through the one authorised POST, and the button becomes that toggle.
+      //
+      // EVERY OTHER VALUE FALLS THROUGH to the browser path below, byte for
+      // byte: "browser_audio", a realtime block with no gateway, an unknown
+      // future kind. Falling through means using the ear this tab can actually
+      // open, which is the safe direction to be wrong in.
+      const fittedEar = (state.realtime && state.realtime.gateway && state.realtime.gateway.kind) || "";
+      if (fittedEar === "array") {
+        // ONE ARM IN FLIGHT AT A TIME (verifier finding F1). The old version
+        // set the label to "Connecting…" and left the button live, and
+        // `state.arrayMic` stays false until the first response lands — so a
+        // double-click sent a second `{"open": true}` into the window where the
+        // gateway has opened the device but not yet marked itself armed. On the
+        // real array the second POST is refused by the exclusive `hw:` node and
+        // its failure path wrote "shut" over the first click's live ear: a
+        // billed session, a button reading "Listening", and nothing heard. The
+        // route now serialises the calls; this stops the second one being sent
+        // at all, which is the half a browser can do.
+        if (state.arrayMicBusy) return;
+        state.arrayMicBusy = true;
+        const micButton = el("mic-button");
+        if (micButton) micButton.disabled = true;
+        // `state.arrayMic` is set here rather than in the `state` literal on
+        // purpose: an absent property is already falsy, and the literal stays
+        // exactly as the browser path left it.
+        const wantOpen = !state.arrayMic;
+        micLabel(MIC_LABEL_BUSY);
+        let result = null;
+        let refused = false;
+        try {
+          // A refusal (409 wrong door, 503 no device, 403 no token) is thrown
+          // by `api()` with the server's own text and toasted by `postJson`.
+          // Nothing is retried and nothing is invented.
+          result = await postJson("/api/realtime/mic", { open: wantOpen });
+        } catch (_) {
+          refused = true;
+        } finally {
+          // The guard is released on EVERY path, including the throw: a tab
+          // that lost one POST must not need a reload to try again.
+          state.arrayMicBusy = false;
+          if (micButton) micButton.disabled = false;
+        }
+        if (refused) {
+          state.arrayMic = false;
+          micLabel(MIC_LABEL_IDLE);
+          return;
+        }
+        // The state that NOW HOLDS, from the server, not the state we asked
+        // for: the runtime is allowed to refuse the gesture and answer false.
+        state.arrayMic = Boolean(result && result.open);
+        micLabel(state.arrayMic ? MIC_LABEL_ARRAY_LIVE : MIC_LABEL_IDLE);
+        localEvent(state.arrayMic ? "array ear armed" : "array ear closed", "info");
+        return;
+      }
+      // ---- END CARD HW-MIC ----
       if (!navigator.mediaDevices || !window.AudioContext) {
         showToast("This browser exposes no microphone API");
         return;

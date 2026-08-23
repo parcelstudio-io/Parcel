@@ -1,0 +1,2 @@
+fingerprints: 7 | baseline: 7 | new: []
+GATE ROW ruff: status=pass hard=True :: ruff 0.16.1: 7 violation(s), baseline 7, new 0

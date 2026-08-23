@@ -51,6 +51,30 @@ owner's word.
 regen after the commit. Nothing crashed: ~14 agent runs, every pytest
 through the cgroup wrapper, zero exit-137, host ≥ 228 GB free throughout.
 
+**12:5x EDT — wave 3a dispatched (owner: "start executing on the
+implementation now using opus and verify with fable").** Batch B + GATE-0b
++ the CLAUDE.md anti-crash rule are STAGED (118 paths), not committed —
+"commit and upload" still owed. Cards cut from `WAVE3_HW_DESIGN_FABLE.md`
+§9: HW-1 `task_35` py310-clean, HW-3 `task_36` mid360-band, HW-4 `task_37`
+array-gateway, HW-6 `task_38` stopping-envelope, HW-8 `task_39`
+box-day-runbook (board: wave-3 section). Record file:
+`WAVE3_DISPATCH_FABLE_6c.md`. Wave 3b (HW-2, HW-5, HW-7) after 3a verifies.
+
+**16:3x EDT — wave 3a: HW-1/HW-3/HW-6/HW-8 CLOSED (ACCEPT-WITH-NOTES
+after HOLD→correction→re-verify for HW-3 and HW-8), HW-4 in its
+correction pass (HOLD: the gateway must open DUPLEX — the XVF3800 works,
+its capture is clocked off playback; `arecord` alone is not a valid
+check). Design amended from the verdicts: §5.1 Orin product venv = uv
+CPython 3.12 (py312 aarch64 lock delivered, 17 packages, zero missing);
+§4 S1/§5.4 physical scan authority needs a typed scan-evidence source;
+§5.6 duplex + the arm route; §7 every command re-spelled from the tree
+(no `parcel-capture` console script; firmware is read in the app;
+`observe` has no duration mode); one-axis = the 0.02–0.05 m/s band (the
+0.10 triple was the retired 08-03 cap). Wave 3b dispatched: HW-2 go2-
+backend, HW-5 physical-profile, HW-7 gate-on-aarch64, HW-FW orin-firewall;
+HW-MIC after HW-4. Batch B still staged, uncommitted — "commit and
+upload" owed. Host never below 228 GB; zero crashes.**
+
 ## 2026-08-23 · parcel-81 (session 23d56828) takes the whole close
 
 **05:3x EDT.** Fresh session; `ListAgents` shows ZERO peers — parcel-8a

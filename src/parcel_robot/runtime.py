@@ -10,7 +10,7 @@ import time
 from collections import OrderedDict, deque
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, ClassVar, NoReturn
 from urllib.error import HTTPError, URLError
@@ -370,6 +370,18 @@ from parcel_robot.voice_pipeline import (
     VoiceStage,
     VoiceTurn,
 )
+
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# ``datetime.UTC`` is 3.11+ and this module is the one whose import failure
+# means nothing runs at all: the dog's Orin NX ships JetPack's system CPython
+# 3.10 (WAVE3_HW_DESIGN_FABLE.md §5.1, seam S22). CPython defines
+# ``datetime.UTC`` as an alias *of this exact object* — ``datetime.UTC is
+# timezone.utc`` — so re-exporting the name leaves all nine call sites below
+# untouched and every stamp's ``tzinfo`` identity, ``repr`` and ``isoformat``
+# byte-for-byte what they were. ``tests/test_hw1_py310_clean.py`` holds the
+# floor for the whole package.
+UTC = timezone.utc
+# ---- END CARD HW-1 py310-clean ----
 
 logger = logging.getLogger(__name__)
 
@@ -4756,7 +4768,38 @@ class RobotRuntime:
             # source, so an operator can see whether this deployment is reading
             # a physical stream or a synthesized one.
             "state_source_origin": EvidenceOrigin(self._control_state_origin).value,
+            # ---- CARD HW-2 go2-backend (scrum/20260822/task_40) ------------
+            # The same question for the SCAN channel, and it is a different
+            # channel with a different producer. `state_source_origin` above
+            # answers it for pose/feedback; until this card there was nothing
+            # to read for the scan, so an operator could not tell whether the
+            # geometry authorizing (or refusing) motion came from a robot, a
+            # recording, or nothing at all.
+            #
+            # It is also the visible half of a deliberate acceptance: code CAN
+            # declare PHYSICAL untruthfully (`LiveGo2Sources` IS such a
+            # declaration, and no typed check can distinguish an honest one
+            # from a liar). What the product owes is not a check it cannot
+            # write but a RECORD of what was declared and by whom — hence the
+            # name too, which is the SOURCE's (`go2_live` /
+            # `go2_stage0_replay`), never the bare backend kind.
+            **self._scan_source_record(),
+            # ---- END CARD HW-2 ---------------------------------------------
         }
+
+    # ---- CARD HW-2 go2-backend (scrum/20260822/task_40) --------------------
+    def _scan_source_record(self) -> dict[str, object]:
+        """`scan_source_origin` / `scan_source_name` for the latch record."""
+
+        source = getattr(self.backend, "scan_evidence_source", None)
+        if source is None:
+            return {"scan_source_origin": None, "scan_source_name": None}
+        return {
+            "scan_source_origin": declared_origin(source).value,
+            "scan_source_name": str(getattr(source, "name", "") or ""),
+        }
+
+    # ---- END CARD HW-2 -----------------------------------------------------
 
     def clear_input_health_latch(self, *, now: float | None = None) -> str:
         """Operator acknowledgement for a latched input-health stop (P0-B).
@@ -8227,13 +8270,52 @@ class RobotRuntime:
             )
         identity = self._build_voice_identity_gate()
         self.realtime_voice_identity = identity
-        gateway = BrowserAudioGateway(
-            on_audio=self._realtime_owner_audio,
-            on_mic=self._realtime_mic_gesture,
-            on_event=lambda message: self._emit("realtime", message, "info"),
-            capture=capture,
-            voice_identity=identity,
+        # ---- CARD HW-4 (task_37) — WHICH EAR: A CHROME TAB, OR THE XVF3800? -
+        # The ONE branch this card adds to the runtime. `audio.gateway` is
+        # absent from the SHA-locked base and resolves to `browser`, so with no
+        # profile the `else` arm below constructs byte-for-byte what this method
+        # constructed before this card existed — same class, same five keyword
+        # arguments, same order. That identity is asserted through THIS method
+        # in `tests/test_hw4_array_gateway.py`, not through a stub.
+        #
+        # A typo or an unknown value RAISES here, at boot, with the key named:
+        # the `audio` subtree is exempt from `config.check_overlay_keys` (the
+        # loader stops descending at an exempt parent), so this call is the only
+        # thing between `gatewayy: array` and a robot that silently kept the
+        # browser ear while the file on disk said otherwise.
+        from parcel_robot.realtime.audio_gateway import (
+            AUDIO_GATEWAY_ARRAY,
+            resolve_audio_gateway_selection,
         )
+
+        gateway_kind, gateway_device = resolve_audio_gateway_selection(self.store.section("audio"))
+        if gateway_kind == AUDIO_GATEWAY_ARRAY:
+            # Constructing this opens NO audio device and starting it opens no
+            # audio device either: the capture stream opens on the owner's mic
+            # gesture and the playback stream on the first hosted chunk. A host
+            # with no array therefore still boots, says so loudly through
+            # `on_event`, and refuses — with a typed `ArrayDeviceError` naming
+            # the udev rule — the moment anything asks it to listen. It never
+            # falls back to the browser.
+            from parcel_robot.realtime.audio_gateway import ArrayAudioGateway
+
+            gateway: object = ArrayAudioGateway(
+                on_audio=self._realtime_owner_audio,
+                on_mic=self._realtime_mic_gesture,
+                on_event=lambda message: self._emit("realtime", message, "info"),
+                device=gateway_device,
+                capture=capture,
+                voice_identity=identity,
+            )
+        else:
+            gateway = BrowserAudioGateway(
+                on_audio=self._realtime_owner_audio,
+                on_mic=self._realtime_mic_gesture,
+                on_event=lambda message: self._emit("realtime", message, "info"),
+                capture=capture,
+                voice_identity=identity,
+            )
+        # ---- END CARD HW-4 --------------------------------------------------
         self.realtime_gateway = gateway
         if self._realtime_panel_token:
             gateway.bind_token(self._realtime_panel_token)
@@ -13771,6 +13853,64 @@ class RobotRuntime:
                 fixture_label=pose_label,
             )
             scan = scan_evidence_from_observation(observation)
+            # ---- CARD HW-2 go2-backend (scrum/20260822/task_40) ------------
+            #
+            # The line above stamps the scan from the OBSERVATION, and
+            # ``evidence_origin`` returns SIMULATION for every observation by
+            # construction (board D-1: the carrier type is the authority).
+            # That is right for a simulated scan and it is why HW-3's verifier
+            # measured a real Mid-360 band latching ``SCAN:
+            # sim_fixture_forbidden`` under
+            # ``requirements_requiring_physical_inputs()`` — the correct
+            # fail-closed answer to "a physical sensor with no typed seam".
+            #
+            # This is the typed seam. A backend may carry a scan-evidence
+            # source that DECLARES its origin
+            # (``core/input_health.py:CommissionedScanSource``); when — and
+            # only when — that declaration is PHYSICAL, the join reads the
+            # source instead of the observation stamp.
+            #
+            # THREE THINGS MAKE THIS SAFE TO ADD HERE:
+            #  1. ``declared_origin`` is a TYPED lookup (``control/base.py``):
+            #     the string ``"physical"`` is not a declaration and reads back
+            #     as UNKNOWN, so no name and no config value can reach this
+            #     branch. The producer declares the origin by construction —
+            #     ``backends/go2.py``'s recorded-fixture source declares
+            #     REPLAY *because it reads a file* and still latches here.
+            #  2. ``MujocoSocketBackend`` has no such attribute, so every
+            #     pre-HW-2 path takes ``source is None`` and is byte-identical.
+            #     The flag-off identity is structural, not a config read.
+            #  3. ``evidence()`` returns None for NO SCAN, which the join reads
+            #     as *missing* -> recoverable HOLD. It can only ever replace
+            #     the stamp with a stricter or equal verdict, never manufacture
+            #     a sample the sensor did not produce.
+            #
+            # ...AND ONLY AS A RE-STAMP. Corrected under verification (finding
+            # H2, reproduced through a real runtime). `observe()` also runs on
+            # HTTP handler threads (:6210, :9551) while the loop joins on an
+            # observation it may have taken several ticks ago, so a source that
+            # answered "what is the LATEST sweep?" let this join grade
+            # observation N against sweep N+1 — and in one direction that
+            # REMOVED a fault: a scan-less observation drew no SCAN fault at
+            # all, where `scan_evidence_from_observation` says `missing ->
+            # HOLD`. Two rules make claim #3 above true instead of hopeful:
+            #
+            #   1. `scan is None` (the observation carries no scan) short-
+            #      circuits — the source may RE-STAMP the origin of a scan the
+            #      observation HAS, and may never supply presence it lacks;
+            #   2. `evidence(observation)` is KEYED: the source returns the
+            #      datum built from the frames that produced THIS observation's
+            #      ranges, or None, which leaves the observation's own stamp.
+            source = getattr(self.backend, "scan_evidence_source", None)
+            if (
+                scan is not None
+                and source is not None
+                and declared_origin(source) is EvidenceOrigin.PHYSICAL
+            ):
+                restamped = source.evidence(observation)
+                if restamped is not None:
+                    scan = restamped
+            # ---- END CARD HW-2 ---------------------------------------------
 
         feedback: InputEvidence | None = None
         state = (

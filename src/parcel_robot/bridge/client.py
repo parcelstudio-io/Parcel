@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import socket
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING
 
 from .protocol import (
     MAX_GATEWAY_PACKET_BYTES,
@@ -17,6 +17,18 @@ from .protocol import (
     decode_gateway_message,
     encode_gateway_message,
 )
+
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# ``typing.Self`` is 3.11+ and the dog's Orin NX runs JetPack's CPython 3.10
+# (WAVE3_HW_DESIGN_FABLE.md §5.1, seam S22). This module opens with ``from
+# __future__ import annotations``, so its one use of the name — the return
+# annotation of ``FakeGatewayClientV1.__enter__`` — is a *string* at runtime
+# and no ``typing.Self`` object is ever built. The ``TYPE_CHECKING`` form
+# (already used by ``commissioning/session.py:77`` before this card) therefore
+# leaves ``__annotations__`` byte-for-byte what it was.
+if TYPE_CHECKING:  # pragma: no cover - annotations only; never evaluated at runtime
+    from typing import Self
+# ---- END CARD HW-1 py310-clean ----
 
 
 class FakeGatewayClientV1:

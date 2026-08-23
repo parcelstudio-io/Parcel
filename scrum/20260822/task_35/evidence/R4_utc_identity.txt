@@ -1,0 +1,3 @@
+all UTC is timezone.utc is datetime.UTC: True
+reprs: {'runtime': 'datetime.timezone.utc', 'observability': 'datetime.timezone.utc', 'models': 'datetime.timezone.utc', 'builder': 'datetime.timezone.utc', 'gallery': 'datetime.timezone.utc'}
+sample isoformat tz: 2026-08-23T12:00:00+00:00

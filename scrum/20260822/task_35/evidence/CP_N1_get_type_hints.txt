@@ -1,0 +1,7 @@
+FakeGatewayClientV1.__enter__                           __annotations__='Self'   get_type_hints -> NameError: name 'Self' is not defined
+PhysicalCameraBackendBase.__enter__                     __annotations__='Self'   get_type_hints -> NameError: name 'Self' is not defined
+OnlineMapStore.__enter__                                __annotations__='Self'   get_type_hints -> NameError: name 'Self' is not defined
+DaemonClient.__enter__                                  __annotations__='Self'   get_type_hints -> NameError: name 'Self' is not defined
+PerceptionDaemon.__enter__                              __annotations__='Self'   get_type_hints -> NameError: name 'Self' is not defined
+SpeechChunk.__new__                                     __annotations__='Self'   get_type_hints -> NameError: name 'Self' is not defined
+CommissioningSession.__enter__ (guarded at HEAD too)    __annotations__='Self'   get_type_hints -> NameError: name 'Self' is not defined

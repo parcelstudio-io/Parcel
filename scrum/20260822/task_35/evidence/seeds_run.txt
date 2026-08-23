@@ -1,0 +1,53 @@
+IMPORT-VERIFIED: /home/jaewoo-jang/.cache/parcel-hw1/tree/src/parcel_robot/__init__.py
+=========== S1: re-introduce datetime.UTC at observability.py:12 (HEAD form)
+  before sha aa527d67d0ed85f70ef7846ab841499e46b27d4e57b623838e6a5dd3568ff730
+--- expect RED:
+E         Use -v to get more diff
+
+tests/test_hw1_py310_clean.py:238: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.14s
+  RESTORED byte-identical (aa527d67d0ed85f70ef7846ab841499e46b27d4e57b623838e6a5dd3568ff730)
+=========== S2: re-introduce unguarded typing.Self at online_map/store.py:40 (HEAD form)
+  before sha bb6076140a3f4d2d553fff57c2dd8140d87bd43a5f4c07d51f351909589b4a29
+--- expect RED:
+E         Use -v to get more diff
+
+tests/test_hw1_py310_clean.py:238: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.10s
+  RESTORED byte-identical (bb6076140a3f4d2d553fff57c2dd8140d87bd43a5f4c07d51f351909589b4a29)
+=========== S3: PEP 695 type alias (3.12 syntax) in evidence_origin.py
+--- expect RED (grammar cell):
+E         Use -v to get more diff
+
+tests/test_hw1_py310_clean.py:256: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_every_product_module_parses_under_310_grammar
+1 failed in 0.52s
+--- expect RED (name cell, PEP 695 is also in the table):
+E         Use -v to get more diff
+
+tests/test_hw1_py310_clean.py:238: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.09s
+  RESTORED byte-identical (82b615072a96ed6d1220275d6c6231c74f3f09cd39ea97d094884e8698a6ec8a)
+=========== S4: tomllib + StrEnum + itertools.batched in memory_path.py
+--- expect RED:
+E         Use -v to get more diff
+
+tests/test_hw1_py310_clean.py:238: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.10s
+  RESTORED byte-identical (3817a81606912ddddaa4224613d96b7b84820115514c037b3e53779bd939788d)
+=========== S5: negative control — no mutation, the whole file must be green
+tests/test_hw1_py310_clean.py::test_the_utc_alias_is_the_same_object_the_import_gave
+  /home/jaewoo-jang/.cache/parcel-hw1/tree/src/parcel_robot/navigation/pipeline.py:12: DeprecationWarning: parcel_robot.geometry.ROBOT_FOOTPRINT_RADIUS_M is retired; read RobotProfile.footprint_radius_m (or SafetyEnvelope.footprint_radius_m). It still returns the Go2 value and will be removed once no lane imports it (see scrum/20260806/task_3/LANE_A_STATUS.md).
+    from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+23 passed, 1 warning in 2.08s

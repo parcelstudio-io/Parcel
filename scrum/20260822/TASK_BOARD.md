@@ -122,3 +122,31 @@ evidence-gated week-3 decision.** No robot hardware is on hand.
 Dispatch: GATE-0, TURN-1, MARK-1, ROAM-1, CURIO-1 in parallel (disjoint
 OWNS; `runtime.py`/`lane.py` by marked region, Edit-only); AIR-1 tools now,
 session when the owner sits down; DUPLEX-1 after MARK-1 + TURN-1.
+
+## Wave 3 — hardware, software-now rail · cut 2026-08-23 12:5x · Fable (session 31fcc2a0, parcel-6c)
+
+Design: `WAVE3_HW_DESIGN_FABLE.md` (complete, §1–§10). Rule from batch B's
+close: every pytest run goes through `~/.cache/parcel-guard/pytest_guard.sh`
+(never `-n auto`; 8 workers; 40 GB cgroup) — the four crashes of 08-22/23
+were kernel OOM kills, see `BATCHB_DISPATCH_FABLE_4a.md` § parcel-6c.
+Roles: **Opus executes, Fable verifies.** Design-first: each card writes
+`DESIGN.md` (seams, product-path caller, §e hardware-compat) before code.
+
+| Card | Folder | What | Owner present |
+|---|---|---|---|
+| **HW-1** py310-clean | `task_35/` | `src/parcel_robot` imports on CPython 3.10 (12 unguarded `datetime.UTC`/`typing.Self` sites), AST guard, per-extra Python ranges, `perception-jetson` extra, jetson lock dry-run, CI 3.10 `base` job | no |
+| **HW-3** mid360-band | `task_36/` | `parcel_robot/lidar/`: Livox UDP frame parser + planar band filter → `SimObservation.lidar_ranges` layout; `SourceDevice.MID360`; unilidar L2 path retired; proven on synthesised frames | no |
+| **HW-4** array-gateway | `task_37/` | `ArrayAudioGateway` (XVF3800 ch1 16 kHz ↔ lane 24 kHz), `audio.gateway` key default `browser`, real-array desktop capture; through-air TV-on session owner-gated | session (1.3 h, later) |
+| **HW-6** stopping-envelope | `task_38/` | `bridge/timing.py` envelope derivation with measured/UNMEASURED inputs, soft gate row hard-red on a measured over-budget sum, box-day input plan | no |
+| **HW-8** box-day-runbook | `task_39/` | `docs/BOX_DAY.md` from design §7 (+ JetPack-5 branch), EDU+ Stage-0 run sheet, Unitree support ticket (owner sends), unknowns register with "blocks" | read + sign; send the ticket |
+| **HW-2** go2-backend | `task_40/` | `backends/go2.py` observe-only from recorded DDS + HW-3's band; a typed physical scan-evidence source read at `_evaluate_dispatch_input_health`; scan age as the sixth envelope term; `observe --duration` | no |
+| **HW-5** physical-profile | `task_41/` | `configs/robot.go2_edu_plus.yaml` declaring `required_capabilities`, `backend`, `lidar` band/extrinsic, `venue`; CAP-1 refuses on the desktop; `venue=` wired at `ingest/__init__.py:117` | no |
+| **HW-7** gate-on-aarch64 | `task_42/` | host-capabilities probe + typed SKIP rows; `uname -m` branches in `env-audio.sh`/`install_speech_services.sh`; `install_perception_jetson.sh`; emulated aarch64 gate (≤ 2 runs, container only); nightly job | no |
+| **HW-FW** orin-firewall | `task_43/` | `deploy/orin/nftables.conf` + service + README; structural test without nft (+ `nft -c` if present); B-fw runbook row | no |
+| **HW-MIC** array-arm-route | `task_44/` | `POST /api/realtime/mic` behind `_authorize_post()` → `set_mic`; `startMic()` branches on gateway kind; real-array 10 s arm — after HW-4 closes | no |
+| HW-9…HW-12 box-day rail | — | gated on delivery: first two hours (§7), LIO bake-off, native gateway on the Orin, first armed step | **yes** |
+
+Batch B + GATE-0b (`task_13/14/15/30/32/33`): closed 09:15, six
+ACCEPT-WITH-NOTES, commit tier green — staged, awaiting the owner's
+"commit and upload". Owner decisions open: TRUTH-1 R3 (accept the miss),
+ROAM-2 T1 ceiling + H2 (the coverage objective homes).

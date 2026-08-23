@@ -1,0 +1,56 @@
+INTERPRETER: 3.14.4  (/home/jaewoo-jang/Desktop/Projects/Parcel/.parcel/bin/python)
+IMPORT-VERIFIED: /home/jaewoo-jang/.cache/parcel-hw1/tree/src/parcel_robot/__init__.py
+=========== S1: re-introduce datetime.UTC at observability.py:12 (HEAD form)
+--- expect RED:
+tests/test_hw1_py310_clean.py:320: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.13s
+  RESTORED byte-identical (aa527d67d0ed85f70ef7846ab841499e46b27d4e57b623838e6a5dd3568ff730)
+=========== S2: re-introduce unguarded typing.Self at online_map/store.py:40 (HEAD form)
+--- expect RED:
+tests/test_hw1_py310_clean.py:320: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.08s
+  RESTORED byte-identical (bb6076140a3f4d2d553fff57c2dd8140d87bd43a5f4c07d51f351909589b4a29)
+=========== S3: PEP 695 type alias (3.12 syntax) in evidence_origin.py
+--- expect RED (grammar cell):
+tests/test_hw1_py310_clean.py:338: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_every_product_module_parses_under_310_grammar
+1 failed in 0.55s
+--- expect RED (name cell):
+tests/test_hw1_py310_clean.py:320: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.05s
+  RESTORED byte-identical (82b615072a96ed6d1220275d6c6231c74f3f09cd39ea97d094884e8698a6ec8a)
+=========== S4: tomllib + StrEnum + itertools.batched in memory_path.py
+--- expect RED:
+tests/test_hw1_py310_clean.py:320: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.07s
+  RESTORED byte-identical (3817a81606912ddddaa4224613d96b7b84820115514c037b3e53779bd939788d)
+=========== V1 (verifier): 'if not TYPE_CHECKING:' in bridge/client.py
+--- the mutated module on THIS interpreter:
+--- expect RED:
+tests/test_hw1_py310_clean.py:320: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.05s
+  RESTORED byte-identical (d361ae137ea0e3ada4a7a092524a72e2b9df4657aab9b4f3b7cd385e2912b69a)
+=========== V2 (verifier): the Self import in an 'else:' arm, providers.py
+--- the mutated module on THIS interpreter:
+--- expect RED:
+tests/test_hw1_py310_clean.py:320: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_hw1_py310_clean.py::test_the_product_package_has_no_unguarded_post_310_names
+1 failed in 1.07s
+  RESTORED byte-identical (0db9b4c14195a8e6aab2c9f5656186749e8a1a05ea906c8eb7b06c525e6df2dc)
+=========== S5: negative control — no mutation, the whole file must be green
+    from parcel_robot.geometry import ROBOT_FOOTPRINT_RADIUS_M
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+30 passed, 1 warning in 2.03s

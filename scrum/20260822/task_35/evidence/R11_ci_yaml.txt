@@ -1,0 +1,4 @@
+jobs: ['commit-gate', 'nightly-gate', 'py310-base']
+runs-on: ubuntu-latest | if: github.event_name != 'schedule' && (github.event.inputs.tier || 'commit') == 'commit'
+python-version: ['3.10']
+steps: ['actions/checkout@v4', 'actions/setup-python@v5', 'System libraries the import needs', 'Install the base extra ONLY', 'The product package imports on CPython 3.10', 'The 3.10 idiom guard']

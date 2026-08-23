@@ -1,0 +1,288 @@
+# Parcel — the GO2 EDU PLUS profile (card HW-5, scrum/20260822/task_41).
+#
+# THIS FILE IS AN OVERLAY, NOT A CONFIG. It is deep-merged ON TOP OF
+# configs/robot.yaml by parcel_robot.config.ConfigStore; every key absent here
+# keeps the shipped value, and mappings merge key by key (a list replaces).
+#
+#     PARCEL_PROFILE=go2_edu_plus .parcel/bin/python -m parcel_robot.web_panel ...
+#     ... --profile go2_edu_plus
+#
+# It names a SIBLING of configs/robot.yaml — that is what
+# `config.profile_overlay_path` builds and what `config._PROFILE_NAME` allows;
+# a profile may not name a path. (The design's §5.8 spelling
+# `configs/profiles/go2_edu_plus.yaml` is not loadable by this tree; see
+# scrum/20260822/task_41/DESIGN.md finding F4.)
+#
+# THE RIG. Go2 EDU Plus with a factory-fitted Livox Mid-360, Jetson Orin NX
+# 16 GB onboard, a 1280x720 / 120-degree RGB front camera with NO depth, the
+# built-in wide-angle head LiDAR (model unknown until the box), Wi-Fi 6 / 4G.
+# Design: scrum/20260822/WAVE3_HW_DESIGN_FABLE.md §2, §3, §5.8.
+#
+# WHAT THIS FILE MAY NOT CONTAIN, and this is the rule the file exists to keep
+# (HLD Phase 1; card work item 1). No field the runtime could read as GROUND
+# TRUTH instead of sensing it:
+#
+#   simulation.*                        MuJoCo scene + dynamic-city sidecars;
+#                                       `extract_city_semantics` reads them as
+#                                       fact. There is no scene on the dog.
+#   poses:                              hand-authored world coordinates — a
+#                                       gazetteer of places nobody surveyed.
+#   battery.simulated_percent           a fabricated hardware reading. The
+#                                       shipped 90.0 exists because the sim has
+#                                       no battery; the dog has one.
+#   perception.semantic_source          lives in the NAVIGATION file, and on
+#   perception.tier                     this rig it must be `learned_map` (see
+#                                       `navigation.config` below). `oracle` is
+#                                       a MuJoCo read that cannot happen here.
+#   perception.maps.enabled             an external route authority.
+#   control.controller                  the WRITER axis. `RobotRuntime` refuses
+#                                       any value but `simulator` without an
+#                                       injected control_manager —
+#                                       "configuration alone cannot arm
+#                                       hardware" — and this profile does not
+#                                       try. Autonomous motion waits for the
+#                                       native sole-writer gateway (design
+#                                       §5.5, docs/MOTION.md).
+#   control.unitree_sport.axes_commissioned
+#   control.unitree_sport.state_frame_commissioned
+#   control.unitree_sport.lateral_sign / yaw_sign / allowed_modes
+#                                       every one of these is a CLAIM THAT A
+#                                       MEASUREMENT WAS MADE. Nobody has run
+#                                       Stage 0 on this robot. They are written
+#                                       by the commissioning record, never by a
+#                                       profile.
+#   safety.obstacle_stop_m              no band is relaxed for hardware nobody
+#   safety.obstacle_slow_m              has braked. The prototype's 0.7 / 0.45
+#   safety.person_stop_m                are simulator policy (see
+#   safety.person_slow_m                configs/robot.prototype.yaml) and are
+#   safety.telemetry_stale_s            re-derived from an instrumented stop
+#   safety.time_to_collision            the day a body exists.
+#
+# The rule there is DIRECTIONAL, not a blanket ban on the section: what a
+# physical profile may not do is LOOSEN a threshold on a body nobody has
+# measured. `safety.require_physical_inputs: true` below moves the only
+# direction a profile is allowed to move — it makes the dispatch health join
+# STRICTER and can loosen nothing — so it is written here, and the test that
+# greps this file allows exactly that one key and pins its VALUE as well as
+# its name.
+#
+# `tests/test_hw5_physical_profile.py::...no_oracle...` greps this file for
+# every name above, so the rule is enforced and not merely written down.
+#
+# NUMBERS. Everything numeric below says which box-day step measures it.
+# Nothing is guessed: a value that is not known yet is COMMENTED OUT with the
+# step that produces it, because an unmeasured number written as a number is
+# itself a truth field.
+
+# ---------------------------------------------------------------------------
+# WHICH RIG. Card HW-5; the same string as
+# parcel_robot.capture.channels.GO2_EDU_PLUS_VENUE and
+# scripts/parcel_capture/ingest/l2.py:GO2_EDU_PLUS_VENUE.
+#
+# This is the key that retires the add-on Unitree L2 path (card HW-3, design
+# §2.3): `scripts/parcel_capture/ingest/__init__.py:adapter_for` reads it from
+# the ACTIVE profile and hands it to the adapter that accepts a `venue=`, so
+# `L2Ingest` refuses this rig by name and points the operator at the Mid-360
+# decoder instead of at a three-hour build of a vendor SDK for a device that is
+# not on the robot. With no profile selected nothing is passed and every
+# adapter is constructed exactly as before.
+venue: go2_edu_plus
+
+# ---------------------------------------------------------------------------
+# WHICH SOURCE OF FACTS. Design seam S1: the runtime has exactly one source of
+# pose / scan / obstacle facts, and this section names it and configures it.
+#
+# READ BY `web_panel._build_backend`, which `build_runtime` calls — card HW-2
+# (scrum/20260822/task_40). The vocabulary below is HW-2's and nothing else:
+# `_BACKEND_KEYS` refuses an unknown `backend.*` key BY NAME at that read site,
+# and `backends.go2.band_profile_from_config` refuses an unknown
+# `backend.band.*` key by name under it. The overlay loader exempts the whole
+# `backend:` subtree (one entry in `config.OVERLAY_INTRODUCIBLE_KEYS`, card
+# HW-5) precisely because those two validators exist; without them a subtree
+# exemption would merge `kin: go2` in silence.
+#
+# Not `control.controller` (the WRITER axis; see the forbidden list above) and
+# not `motion.backend` (the locomotion policy, `rl`). Three different axes.
+backend:
+  # `mujoco` (the default, and what an absent section gives) or `go2`.
+  kind: go2
+
+  # THE MID-360's PLANAR BAND -> `SimObservation.lidar_ranges` (design §5.3),
+  # via HW-3's `parcel_robot.lidar.band`. Only the three numbers this venue
+  # actually decides are written; the five layout numbers (`bins`,
+  # `angle_min_rad`, `range_min_m`, `range_max_m`, `corridor_half_angle_rad`)
+  # keep `BandProfile`'s defaults, which are the sim's layout and are what
+  # makes a dog scan and a sim scan the same shape.
+  band:
+    # 0.10-0.60 m above the mount plane is the design's opening pair: below
+    # 0.10 m the non-repetitive pattern is mostly floor return, above 0.60 m it
+    # is mostly ceiling and door lintel, and the body it protects stands 0.32 m
+    # in plan radius with an obstacle-clearance height of 0.9 m.
+    # TUNE AT B11, from real sweeps in the owner's rooms — not from this file.
+    z_lo_m: 0.10
+    z_hi_m: 0.60
+
+    # How many populated bins a sweep must carry before it is a SCAN at all.
+    # HW-3's verifier F1: a silent sensor used to produce 360 NaN bins that
+    # read as a present scan and cleared the reactive gate; below this floor
+    # the scan is `()` and the gate stops the dog. 1 is the floor and the
+    # shipped default (no behaviour change). TUNE AT B11: the right minimum for
+    # a non-repetitive pattern is measured per-frame coverage, not a choice.
+    min_populated_bins: 1
+
+    # WHERE THE SENSOR IS. `backend.band.extrinsic` is DELIBERATELY ABSENT and
+    # `BandProfile`'s identity default stands. Nobody has put a tape on this
+    # robot; a plausible mount written here would be exactly the truth field
+    # this file's header forbids. B11 measures it and B11 writes it.
+    #
+    # FORM, decided by the integrator and owed to HW-2 as a correction: six
+    # reals `extrinsic_xyz_rpy: [x, y, z, roll, pitch, yaw]`, NOT the 4x4
+    # `band_profile_from_config` accepts today. Any six reals are a valid rigid
+    # transform, so the file cannot express a wrong one; nine of a 4x4's
+    # sixteen numbers are a rotation under an orthonormality constraint no YAML
+    # loader checks, so a typo there is a silent shear that reads as a
+    # measurement. Six numbers are also exactly what a tape and a level
+    # produce. The key is not written here until HW-2 can read it — a key its
+    # validator would refuse is worse than no key.
+
+  # THE ROBOT NIC, in the PRODUCT venv. `LiveGo2Sources` subscribes to
+  # `rt/sportmodestate` over DDS on this interface and REFUSES without it:
+  #   Go2SdkUnavailable: the live Go2 source needs the robot NIC name
+  #   (backend.interface); read it from `ls /sys/class/net` on the Orin
+  #
+  # NOT SET, because the Orin's name for its robot-LAN port is UNKNOWN until
+  # somebody reads it there (box-day step B-con / B9), and a wrong NIC name
+  # written here would be a confident lie in the one place a commissioning
+  # session reads. ONE B9 read fills BOTH of this file's NIC keys — this one
+  # and `control.unitree_sport.interface` at the bottom — because they are the
+  # same wire seen by two different processes (design §3: the product venv's
+  # observer and the motion venv's commissioning writer never share one, since
+  # CycloneDDS is process-global). A test pins that this file sets both or
+  # neither, so B-con cannot fill one and forget the other.
+  #
+  # interface: <read from /sys/class/net on the Orin>   # <- B9 / B-con
+
+  # ALSO NOT SET: `fixture:` (a recorded Stage-0 JSONL, which is how a desktop
+  # exercises `Go2Backend` without the vendor SDK — HW-2's own tests own that
+  # path, and a profile that named a recording would make the dog's own profile
+  # replay a file), `domain_id` (0, the shipped DDS domain), `session_epoch`
+  # and `max_frames_per_drain` (HW-2's defaults).
+
+# ---------------------------------------------------------------------------
+# THE NAVIGATION STACK, and where this profile DECLARES WHAT IT NEEDS.
+#
+# CAP-1's `required_capabilities:` is read from the NAVIGATION file, not from
+# this one (`admission.navigation_config_mapping` -> `required_capabilities` ->
+# `check_required_capabilities`, one line before the ingress attach in
+# `RobotRuntime.start`). So the declaration lives in the file this key selects,
+# and `configs/navigation/venues/go2_edu_plus.yaml` is that file: default.yaml
+# with exactly two deltas — the learned map instead of the MuJoCo oracle (there
+# is no oracle on a real dog), and the eight capabilities this rig cannot run
+# without.
+navigation:
+  config: configs/navigation/venues/go2_edu_plus.yaml
+
+# ---------------------------------------------------------------------------
+# THE EYE. Card VENUE-1 / P1-A / C-1.
+perception:
+  # The runtime's CONSENT to a camera (P0-A's word). This is a SENSOR
+  # declaration, not a behaviour flag: the dog's semantic map is written from
+  # depth-placed detections and there is no other way to get one. It is also
+  # what makes this profile REFUSE on a desk with no D455, which is the point —
+  # a profile that names a venue must not come up on a different one.
+  camera_ingress: true
+
+  # WHICH camera. The D455 on the Orin's USB 3.0 A port (design S9, box-day
+  # step Q-usb). The front camera the robot ships with is RGB-only at
+  # 1280x720 / 120 degrees and `CameraIngress` needs metric depth to place a
+  # box, so it stays capture-only and is not this key's value.
+  #
+  # On a host with no D455 this refuses at startup with the device census:
+  #   camera venue 'realsense' was selected (PARCEL_CAMERA_BACKEND or
+  #   perception.camera_backend) and could not be opened. RealSenseUnavailable:
+  #   ... No device connected. ... Attach the D455 and re-run
+  camera_backend: realsense
+
+  # WHO serves it. OWLv2 + SigLIP-2 in their own process behind an AF_UNIX
+  # socket, so one CUDA stall on a 100-TOPS Orin cannot land on the control
+  # loop (design §5.2). PARCEL_PERCEPTION_SOCKET selects the daemon's address.
+  detector: daemon
+
+  # The open-vocabulary batch. "person" is MANDATORY (the loader refuses a
+  # batch without it: the person-relevant inference lease is taken on the
+  # strength of this list). The shipped [person, lamppost] is the city sim's
+  # street furniture; a companion dog lives indoors.
+  camera_ingress_queries:
+    - person
+    - chair
+    - table
+    - door
+    - couch
+    - laptop
+    - cup
+    - backpack
+
+  # THE MID-360's numbers are NOT here. HW-5's first pass put them in four
+  # flat `perception.lidar_*` scalars, which nothing read; the read-site
+  # validator for that family is HW-2's `band_profile_from_config` and it
+  # lives under `backend.band:` above. See scrum/20260822/task_41/HW5_STATUS.md
+  # "Correction pass".
+
+# ---------------------------------------------------------------------------
+# WHAT THE RUNTIME WILL ACCEPT AS EVIDENCE. Board decision D-2, read at
+# `runtime.py:1707-1711`; card HW-2's verifier finding F6, taken by the
+# integrator.
+#
+# THE DEFECT THIS CLOSES. With this key absent (the shipped default, False)
+# `RobotRuntime` selects `requirements_allowing_sim_fixtures()`, on which a
+# REPLAY or SIMULATION sample carrying a fixture label SATISFIES a
+# requirement. So on this profile — a rig that is supposed to BE a robot — a
+# recorded scan and a synthesised pose would pass the dispatch health join and
+# the dog would translate on geometry nobody sensed. Board D-2 is explicit
+# that `DEFAULT_REQUIRED_INPUTS` is the SIMULATOR default and still admits
+# fixture SCAN geometry.
+#
+# `true` selects `requirements_requiring_physical_inputs()`, on which no
+# synthetic origin satisfies anything: a replayed scan latches
+# `sim_fixture_forbidden`, and MISSING calibrated geometry holds (recoverable)
+# rather than being substituted. It is the one safety-adjacent key a physical
+# profile may carry, because it only ever makes the join stricter.
+#
+# NOT MEASURED AND NOT NEEDED: this changes no threshold, no envelope and no
+# gate. It changes which evidence counts.
+safety:
+  require_physical_inputs: true
+
+# ---------------------------------------------------------------------------
+# THE EAR. Card HW-4 (design §5.6, seam S11).
+#
+# `array` selects `realtime.audio_gateway.ArrayAudioGateway` — the reSpeaker
+# XVF3800 on the robot's own body, ch1 = the ASR beam at 16 kHz, resampled to
+# the hosted lane's 24 kHz inside the gateway — instead of the shipped
+# `browser` (the ear is a Chrome tab). The gateway is armed but idle at boot
+# and opens nothing until the owner's own gesture.
+#
+# `device:` (a PortAudio index or a case-insensitive name substring) is NOT set:
+# the array's enumeration on the Orin is unknown until it is plugged into it
+# (box-day step Q-usb). Unset means the system default, which is the honest
+# answer until somebody looks.
+audio:
+  gateway: array
+
+# ---------------------------------------------------------------------------
+# THE ROBOT LAN, SEEN BY THE OTHER PROCESS. NOT SET, and for the same reason
+# `backend.interface` above is not set.
+#
+# `control.unitree_sport.interface` is the NIC the COMMISSIONING writer binds
+# in the motion venv (`parcel_robot.unitree_control`), where the vendor SDK
+# lives; `backend.interface` is the same wire as the PRODUCT venv's observer
+# sees it. Two keys because they are two processes that must never share one
+# (design §3: CycloneDDS is process-global), one value because it is one cable.
+# The shipped base carries this desktop's `enp3s0`; the Orin's name is read
+# once at B9 and written into BOTH keys, and
+# `tests/test_hw5_physical_profile.py` pins that this file sets both or
+# neither.
+#
+# control:
+#   unitree_sport:
+#     interface: <read from /sys/class/net on the Orin>   # <- B9 / B-con

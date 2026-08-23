@@ -124,3 +124,140 @@ jobs:
             evals/nightly/
           if-no-files-found: error
           retention-days: 90
+
+  # ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+  py310-base:
+    # The DOG's interpreter, not the dev box's. The Orin NX on the Go2 EDU+
+    # runs JetPack's system CPython 3.10 (WAVE3_HW_DESIGN_FABLE.md §5.1, seam
+    # S22), and GATE-0 recorded 3.10 and 3.13 as UNPROVEN — the gate above runs
+    # 3.12 only. `src/parcel_robot` did not import on 3.10 at all before this
+    # card (11 unguarded `datetime.UTC` / `typing.Self` sites).
+    #
+    # SCOPE, stated so the job is not read as more than it is: this proves the
+    # INTERPRETER, on x86_64. It does not prove aarch64 — no aarch64 wheel is
+    # executed anywhere in this workflow (that is HW-7's qemu job) — and it does
+    # not run the suite: `voice` needs >= 3.11 (websockets 17) and `perception`
+    # has no aarch64 wheel at any version, so only the `base` extra is
+    # installable here. The full gate stays on 3.12 in `commit-gate`.
+    if: github.event_name != 'schedule' && (github.event.inputs.tier || 'commit') == 'commit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Same reason as the jobs above: no GPU, no EGL vendor ICD on a hosted
+      # runner. Importing the runtime pulls mujoco in.
+      MUJOCO_GL: osmesa
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: System libraries the import needs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libosmesa6
+      - name: Install the base extra ONLY
+        # Deliberately not `[dev,voice]`: the point of the job is that the set
+        # the Orin can actually resolve is enough to load the product package.
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[base]"
+      - name: The product package imports on CPython 3.10
+        run: |
+          python -VV
+          python -c "import parcel_robot.runtime; print(parcel_robot.runtime.__file__)"
+      - name: The 3.10 idiom guard
+        # pytest is added here, after the import proof above has already been
+        # taken with base alone, so the two claims stay separable. `python -m
+        # pytest` (not bare `pytest`) so the repo root is on sys.path for
+        # tests/conftest.py's `scripts.load_guard` import.
+        run: |
+          pip install "pytest>=8,<9"
+          python -m pytest tests/test_hw1_py310_clean.py -q
+  # ---- END CARD HW-1 py310-clean ----
+
+  # ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) ----
+  aarch64-nightly:
+    # THE ARCHITECTURE, not just the interpreter. `py310-base` above proves
+    # CPython 3.10 on x86_64 and says so; `commit-gate` proves 3.12 on x86_64.
+    # Nothing in this workflow has ever executed an aarch64 wheel, and the dog's
+    # Orin NX is aarch64 — so every claim about the gate "on the Orin" is, until
+    # this job records a run, a claim about metadata resolution.
+    #
+    # EMULATED, and slow on purpose rather than fast and wrong. qemu-user under
+    # `docker/setup-qemu-action` runs the real aarch64 wheels — mujoco, numpy,
+    # websockets, pyrealsense2 all resolve on cp312/aarch64 (card HW-1,
+    # requirements-lock-jetson-py312.txt) — at a large constant factor. That is
+    # why it is on the NIGHTLY trigger and never on a push.
+    #
+    # NEVER RUN, DECLARED. `continue-on-error: true` is not a shrug: this job
+    # has produced no recorded run anywhere, the same way the whole workflow
+    # was unverified until B20, and a job whose first execution reddens `main`
+    # teaches everyone to ignore it. It uploads its JSON on every outcome; the
+    # day a run is recorded, the `continue-on-error` line comes off in the same
+    # commit that records it. What is UNVERIFIED, specifically: the apt set
+    # below, the emulated wall-clock (the default suite is 9.4k tests; under
+    # qemu the factor is unknown and the 300-minute cap may not be enough), and
+    # whether GitHub's native `ubuntu-24.04-arm` runners are available to this
+    # repository — if they are, they replace the emulator and this whole job
+    # becomes `runs-on: ubuntu-24.04-arm` with the ordinary steps.
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.tier == 'nightly')
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Register the aarch64 emulator
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+      - name: The emulator is actually there
+        # Card HW-7's row E1, as a CI step: the executor's own desktop had no
+        # docker, no podman and no qemu binary at all (binfmt_misc registered
+        # only python3.14), so this precondition is checked, never assumed.
+        run: |
+          got="$(docker run --rm --platform linux/arm64 python:3.12 uname -m)"
+          echo "emulated uname -m: $got"
+          test "$got" = aarch64
+      - name: Commit-tier gate on aarch64
+        # MUJOCO_GL=osmesa for the same reason the x86_64 jobs set it: no GPU
+        # and no EGL vendor ICD on a hosted runner. PARCEL_XDIST_WORKERS is
+        # pinned low because the emulated workers contend for the host's cores
+        # and `auto` is what OOM-killed this project's dev box (card XD-1).
+        #
+        # `set -eo pipefail`, NOT `set -e`: the gate is piped into `tee`, so
+        # without pipefail the step exits with tee's status and a RED gate
+        # passes silently. Harmless only while `continue-on-error: true` is
+        # above; the day that line comes off, this one is what makes the job
+        # mean anything (card HW-7's verifier, F6).
+        #
+        # The aarch64 resolution is CONSTRAINED to card HW-1's measured lock
+        # (`base`+`voice`+`camera`+`camera-realsense` on cp312 aarch64, 17
+        # packages, zero missing) rather than resolved freely from PyPI on the
+        # day the cron fires. The `grep -v "^-e "` is not cosmetic and was
+        # measured: the lock's line 44 is `-e .`, and pip refuses a constraint
+        # file that contains an editable requirement ("ERROR: Editable
+        # requirements are not allowed as constraints"). Constraints pin what
+        # they list and say nothing about the rest, so `dev` (pytest, xdist,
+        # ruff — absent from that lock) still resolves normally.
+        run: |
+          docker run --rm --platform linux/arm64 \
+            -v "$PWD:/parcel" -w /parcel \
+            -e MUJOCO_GL=osmesa -e PARCEL_XDIST_WORKERS=2 \
+            python:3.12 bash -c '
+              set -eo pipefail
+              apt-get update -qq
+              apt-get install -y --no-install-recommends libosmesa6 libportaudio2
+              python -m pip install --upgrade pip
+              grep -v "^-e " requirements-lock-jetson-py312.txt > /tmp/jetson-constraints.txt
+              pip install -c /tmp/jetson-constraints.txt -e ".[dev,voice]"
+              python scripts/ci_gate.py --tier commit --json | tee /parcel/aarch64-gate.json
+            '
+      - name: Upload the aarch64 gate JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aarch64-gate
+          path: aarch64-gate.json
+          if-no-files-found: warn
+          retention-days: 90
+  # ---- END CARD HW-7 gate-on-aarch64 ----

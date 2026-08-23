@@ -1,0 +1,63 @@
+# Stopping-envelope measurement record for the OWNER'S DEV BOX — card HW-6.
+# See configs/envelope/default.yaml for the shape and the resolution order.
+#
+# Two of the five terms can be measured here, because the N24 fake gateway is a
+# real process behind a real AF_UNIX SOCK_SEQPACKET socket. Three cannot: they
+# need the dog. The row this file produces therefore reads
+# `UNMEASURED — gateway_period_s, stop_command_to_standstill_s, localization_jump_m`
+# and claims no verdict — which is the whole point of the sentinel.
+schema: parcel.stopping_envelope.v1
+host: jaewoo-jang-parcel
+active_regime: one_axis
+measurements:
+  candidate_age_s:
+    value: 0.0000018
+    provenance: >-
+      MEASURED 2026-08-23 on the N24 fake-gateway path: p99 of
+      GatewayStateV1.state_age_ms over 2000 commands, worst of three runs
+      (1.65 / 1.76 / 1.73 us). Command:
+      PARCEL_HW6_SAMPLES=2000 pytest tests/test_hw6_stopping_envelope.py
+      ::test_the_two_dev_box_terms_are_measurable_on_the_n24_path.
+      THIS IS A FLOOR, NOT A PREDICTION: the fake sport service refreshes its
+      state on every command, so the age here is a function of the test loop.
+      On the dog it is set by the 50 Hz rt/sportmodestate publisher (~20 ms) and
+      this number must be replaced, not scaled.
+  ipc_delay_s:
+    value: 0.000329
+    provenance: >-
+      MEASURED 2026-08-23 on the N24 fake-gateway path: p99 of the
+      client.command() submit->ack round trip over AF_UNIX SOCK_SEQPACKET,
+      2000 samples, worst of three runs (302.1 / 328.5 / 308.6 us); medians
+      184-216 us. Same command as candidate_age_s. Same process shape as the
+      native gateway, different kernel, CPU and load — a Jetson Orin NX number
+      replaces it, it is not carried over. NOT A CEILING: a 300-sample run in
+      the same session saw a p99 of 354 us, because a p99 over 300 samples is
+      the 3rd-worst value. The recorded number is the 2000-sample protocol's,
+      and the protocol is part of the claim.
+  gateway_period_s:
+    value: UNMEASURED
+    provenance: >-
+      Needs the native sole-writer gateway on the Orin (HW-11); the fake
+      gateway has no watchdog thread whose period means anything about the dog.
+      BOX_DAY_INPUTS.md row B1.
+  stop_command_to_standstill_s:
+    value: UNMEASURED
+    provenance: >-
+      Needs the dog on a stand and the foot-force sensor as the clock (design
+      §7 Q-stop). No robot hardware is on hand. BOX_DAY_INPUTS.md row B2.
+  localization_jump_m:
+    value: UNMEASURED
+    provenance: >-
+      Needs the B17 LIO bake-off recording (HW-10). BOX_DAY_INPUTS.md row B3.
+
+# ---- CARD HW-2 go2-backend (scrum/20260822/task_40): the sixth term --------
+# See configs/envelope/default.yaml for why this is a top-level block.
+scan_age:
+  value: UNMEASURED
+  provenance: >-
+    Needs a Mid-360 publishing into `Go2Backend` on the Orin (box-day B11,
+    HW-9). NOT measurable on this host: there is no LiDAR here, and a recorded
+    fixture's scan age is a property of the replay loop rather than of the
+    sensor — unlike candidate_age_s/ipc_delay_s above, whose N24 numbers are
+    real floors of a real process. Measured as the p99 of
+    `Go2Backend.latest_scan_age_s()` under load.

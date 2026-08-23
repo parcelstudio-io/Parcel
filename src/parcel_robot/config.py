@@ -172,6 +172,122 @@ OVERLAY_INTRODUCIBLE_KEYS = frozenset(
         # `planner_config.get("enabled", False)` is still False on every run
         # that does not write one; this entry only makes writing one possible.
         "planner_model",
+        # ---- CARD HW-4 (task_37): WHICH EAR THIS VENUE HAS ------------------
+        # `audio.gateway: browser|array` chooses between
+        # `realtime.audio_gateway.BrowserAudioGateway` (the shipped default: the
+        # ear is a Chrome tab) and `ArrayAudioGateway` (the ear is the reSpeaker
+        # XVF3800 on the robot's own body). `runtime._build_realtime_sink` reads
+        # `store.section("audio")` and the SHA-locked base omits the section, so
+        # without this entry a profile that wrote `audio:` would make the whole
+        # config load REFUSE and the array could never be selected by anyone —
+        # ROAM-1 finding 6 and TRUTH-1's `planner_model`, a third time.
+        #
+        # ONE ENTRY, NOT TWO, for the reason written beside `roam` and
+        # `planner_model` above: `check_overlay_keys` stops descending at an
+        # exempt parent, so listing `audio.gateway` here would LOOK like a
+        # spelling guard and be inert. The real typo check lives where the
+        # section is READ — `audio_gateway.resolve_audio_gateway_selection`,
+        # which refuses an unknown KEY by name and an unknown gateway VALUE by
+        # name. It sits in that module rather than in the runtime because that
+        # module owns both gateways, so the thing that chooses sits beside the
+        # things being chosen.
+        #
+        # DEFAULTS ARE UNCHANGED. The base still omits the block, so an absent
+        # section resolves to `browser` and `_build_realtime_sink` constructs
+        # byte-for-byte what it constructed before this card.
+        "audio",
+        # ---- END CARD HW-4 --------------------------------------------------
+        # ---- CARD HW-5 (task_41): WHICH RIG THIS RUN IS ON -------------------
+        # TWO entries for `configs/robot.go2_edu_plus.yaml`, the one overlay
+        # that describes the Go2 EDU+ with the factory-fitted Livox Mid-360
+        # (design `scrum/20260822/WAVE3_HW_DESIGN_FABLE.md` §5.8). Both are
+        # READ TODAY, by two different lanes, and each is a different SHAPE for
+        # a stated reason.
+        #
+        # `venue` — the rig identity, a SCALAR. Same string as
+        # `parcel_robot.capture.channels.GO2_EDU_PLUS_VENUE` and
+        # `scripts/parcel_capture/ingest/l2.py:GO2_EDU_PLUS_VENUE`. Read by
+        # this card's region in `scripts/parcel_capture/ingest/__init__.py:
+        # adapter_for`, which passes it to the adapter that accepts a `venue=`
+        # and so makes HW-3's `refuse_retired_venue` reachable at last (it had
+        # no caller: HW-3's own region says so, verifier finding F4).
+        #
+        # A scalar has no inside, so the loader below is its whole spelling
+        # guard: `venu:` is refused here, by name, with no read site required.
+        "venue",
+        # `backend` — which source of FACTS the runtime observes through
+        # (design seam S1): `MujocoSocketBackend` on a desktop, HW-2's
+        # `Go2Backend` on the dog. Read by card HW-2 at
+        # `web_panel._build_backend`, called from `build_runtime`.
+        #
+        # ONE ENTRY, NOT SEVEN, and this is the `roam` / `planner_model` /
+        # `audio` shape rather than `venue`'s: `check_overlay_keys` stops
+        # descending at an exempt parent, so listing `backend.kind` beside it
+        # would LOOK like a spelling guard and be inert. The real typo check
+        # lives where the section is READ, and HW-2 put it there — TWICE:
+        # `web_panel._BACKEND_KEYS` refuses an unknown `backend.*` key by name,
+        # and `backends.go2.band_profile_from_config` refuses an unknown
+        # `backend.band.*` key by name. HW-2's DESIGN names this entry as
+        # HW-5's to write; `tests/test_hw2_go2_backend.py` has the branch that
+        # takes effect the moment it exists.
+        #
+        # NOT `control.controller`, and the difference is a safety boundary,
+        # not a naming preference: `control.controller` is the WRITER axis and
+        # `RobotRuntime.__init__` refuses any value but `simulator` unless a
+        # `control_manager` was injected — "configuration alone cannot arm
+        # hardware". A profile may say what the robot LOOKS through; it may not
+        # say what moves it. NOT `motion.backend` either: that is the
+        # locomotion policy (`rl`), a third axis again.
+        #
+        # DEFAULTS ARE UNCHANGED. The base omits the section, so
+        # `_build_backend({})` returns `MujocoSocketBackend(socket_path)`
+        # byte-for-byte as before; this entry only makes writing one possible.
+        "backend",
+        # `safety.require_physical_inputs` — the hardware-readiness switch, a
+        # SCALAR nested under a parent the base already defines, so the loader
+        # descends into `safety:` and checks this exact path itself. Read at
+        # `runtime.py:1707-1711`; default False.
+        #
+        # WHAT IT DOES, and why a physical profile is the thing that must carry
+        # it. With it False the runtime chooses
+        # `requirements_allowing_sim_fixtures()`, on which a REPLAY or
+        # SIMULATION sample with a fixture label SATISFIES a requirement. So on
+        # the shipped base a recorded scan and a synthesised pose pass the
+        # dispatch health join on a rig that is supposed to be a robot — stub
+        # geometry admitted on a physically commissioned deployment, which is
+        # board decision D-2's whole subject. True selects
+        # `requirements_requiring_physical_inputs()`, on which no synthetic
+        # origin satisfies anything and a replayed scan latches
+        # `sim_fixture_forbidden`.
+        #
+        # IT IS A CONFIG KEY, NOT SAFETY-CORE LOGIC, and it only moves in one
+        # direction: True is strictly STRICTER than the shipped default, the
+        # requirements tables and the join are untouched, and no card may write
+        # `false` here to buy a looser join — HW-5's profile test pins the value
+        # as well as the key. Before this entry the only way to set it was to
+        # edit the SHA-locked base, which is why HW-2's own tests write it into
+        # a modified copy and say so (`tests/test_hw2_go2_backend.py:179-183`).
+        "safety.require_physical_inputs",
+        # NOT HERE, deliberately, and each for a measured reason.
+        #
+        # `required_capabilities`: CAP-1 reads that key from the NAVIGATION
+        # config (`admission.navigation_config_mapping` ->
+        # `required_capabilities`), which the robot profile selects with the
+        # base key `navigation.config` — so a top-level entry here would be
+        # admitted, merged, read by nothing, and would look exactly like a
+        # declaration. `admission.REQUIRED_CAPABILITIES_KEY`'s own docstring
+        # says which file it lives in; this card obeys it instead of adding a
+        # second spelling. The declaration is in
+        # `configs/navigation/venues/go2_edu_plus.yaml`.
+        #
+        # `perception.lidar_*`: HW-5's first pass put the Mid-360's band and
+        # extrinsic in four flat scalars here, on the reasoning that a family
+        # with NO read-site validator is only honest as scalars. The premise
+        # was wrong in this tree: the validator exists — HW-2's
+        # `band_profile_from_config` — and it lives under `backend.band`. Four
+        # keys nothing reads is exactly the defect this list's own docstring
+        # warns about, so they are gone and the numbers are in `backend.band`.
+        # ---- END CARD HW-5 ---------------------------------------------------
     }
 )
 

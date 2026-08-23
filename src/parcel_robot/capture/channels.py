@@ -152,6 +152,14 @@ class SourceDevice(str, Enum):
     GNSS = "gnss"
     UWB = "uwb"
     MIC = "mic"
+    # ---- CARD HW-3 (mid360-band, scrum/20260822/task_36) ----------------
+    #: The Livox Mid-360 that ships fitted on the Go2 EDU+ (design §2.3).
+    #: A distinct box from the built-in head LiDAR (:attr:`L2`): different
+    #: vendor, different transport, different mount. Its rows are
+    #: :data:`MID360_CHANNELS`, beside the payload matrix — see the CARD HW-3
+    #: block further down for why they are not in :data:`CHANNELS`.
+    MID360 = "mid360"
+    # ---- END CARD HW-3 ---------------------------------------------------
 
 
 class Transport(str, Enum):
@@ -1823,6 +1831,276 @@ for _support in SUPPORT_ARTIFACTS:  # pragma: no cover - import-time invariant
                 f"{_support.support_id}: supports unknown channel {_cid!r} — an "
                 f"artifact for a stream we do not record vouches for nothing"
             )
+
+
+# ---- CARD HW-3 (mid360-band, scrum/20260822/task_36) --------------------
+#
+# The venue changed. ``CHANNEL_MATRIX.md`` (immutable, 20260813) describes one
+# rig: a Go2 EDU with an ADD-ON Unitree L2, a D455 and an Orin on a dock. The
+# owner bought a different one — a Go2 EDU+ with a **Livox Mid-360 fitted at
+# the factory** (design §2.3, hardware facts 5-7) — and the Mid-360's streams
+# are on no numbered row of that document.
+#
+# They are declared BESIDE the matrix, exactly as card S-1 declared
+# :data:`SUPPORT_ARTIFACTS` beside it, and for the same reason in reverse: the
+# 25 rows / 28 channels / 11 field rows the whole tranche quotes are a
+# TRANSCRIPTION, and inventing rows 26-27 in code would make this table claim
+# a document that does not say that. Growing table A is a document change
+# first, a table change second and a pin change third — a handoff to the
+# capture-matrix owner on box-day (HW-9), recorded in ``HW3_STATUS.md``.
+#
+# What is NOT compromised: these rows carry every field a :class:`Channel`
+# carries, their ids cannot collide with a payload channel's, and a DDS row
+# still states both namings. What they do NOT get is a payload sequence space
+# in the 28 — until the matrix says so.
+#
+# Transport: ``Transport.DDS`` describes the CAPTURE path only — the vendor
+# ``livox_ros_driver2`` node in the rclpy capture venv, which is the reader
+# that needs no new dependency (hardware fact 6). The RUNTIME path is
+# ``parcel_robot.lidar`` decoding raw UDP off port 56300 with no ROS at all,
+# and that is not a capture transport: a ``LIVOX_UDP`` member would have to
+# land in ``scripts/parcel_capture/record.py``'s two dependency tables in the
+# same commit (an unmapped transport raises at its import) and is therefore a
+# cross-card change, per :class:`Transport`'s own docstring. Also a handoff.
+
+#: How many venue rows this table declares. Pinned like
+#: :data:`SUPPORT_ARTIFACT_ROWS` so a dropped row reddens a gate.
+VENUE_CHANNEL_ROWS = 2
+
+#: The venue these rows belong to — the same name HW-5's physical profile
+#: takes (``configs/profiles/go2_edu_plus.yaml``, design §5.8).
+GO2_EDU_PLUS_VENUE = "go2_edu_plus"
+
+
+@dataclass(frozen=True, slots=True)
+class VenueChannel:
+    """A payload stream of a venue ``CHANNEL_MATRIX.md`` does not describe.
+
+    Deliberately NOT a :class:`Channel`: a ``Channel`` asserts, in its
+    ``__post_init__``, that it came off a numbered row of that document. This
+    class asserts the opposite and names the venue instead. Everything else —
+    the declared expectations, the DDS double-naming rule, the "a rate nobody
+    chose is not an expectation" rule — is the same, because the reason for
+    each of them is the same.
+    """
+
+    channel_id: str
+    human_name: str
+    device: SourceDevice
+    transport: Transport
+    address: str
+    wire_address: str | None
+    message_type: str
+    rate_kind: RateKind
+    nominal_rate_hz: float | None
+    source_clock: SourceClock
+    frame_id: str
+    criticality: Criticality
+    presence: ChannelPresence
+    confidence: Confidence
+    #: Which rig this stream exists on. Not a row number: there is no row.
+    venue: str
+    note: str
+
+    def __post_init__(self) -> None:
+        if not self.channel_id or set(self.channel_id) - _ID_ALPHABET:
+            raise CaptureError(
+                f"channel_id must be lowercase [a-z0-9_.]: {self.channel_id!r}"
+            )
+        if "." not in self.channel_id.strip("."):
+            raise CaptureError(
+                f"channel_id must be dotted <device>.<path>: {self.channel_id!r}"
+            )
+        # Spelled out rather than looped over field names with ``getattr``:
+        # ``tests/test_no_arm_pin.py`` censuses every reach builtin in this
+        # package by (file, function, builtin) and an exact census is worth
+        # more here than six saved lines.
+        for name, value in (
+            ("human_name", self.human_name),
+            ("address", self.address),
+            ("message_type", self.message_type),
+            ("frame_id", self.frame_id),
+            ("venue", self.venue),
+            ("note", self.note),
+        ):
+            if not str(value).strip():
+                raise CaptureError(f"{self.channel_id}: {name} must be non-empty")
+        if not isinstance(self.source_clock, SourceClock):
+            raise CaptureError(
+                f"{self.channel_id}: source_clock must be a SourceClock member, got "
+                f"{self.source_clock!r} — an undeclared payload clock is how a null "
+                f"timestamp becomes an assumed one"
+            )
+        if not isinstance(self.confidence, Confidence):
+            raise CaptureError(
+                f"{self.channel_id}: confidence must be a Confidence member, got "
+                f"{self.confidence!r} — an unmarked external claim reads as a fact"
+            )
+        if self.rate_kind is RateKind.PERIODIC:
+            rate = self.nominal_rate_hz
+            if not isinstance(rate, float) or not rate > 0.0 or rate == float("inf"):
+                raise CaptureError(
+                    f"{self.channel_id}: PERIODIC requires a finite positive "
+                    f"nominal_rate_hz, got {rate!r}"
+                )
+        elif self.nominal_rate_hz is not None:
+            raise CaptureError(
+                f"{self.channel_id}: {self.rate_kind.value} must not carry a "
+                f"nominal_rate_hz ({self.nominal_rate_hz!r}) — a rate nobody chose "
+                f"is not an expectation"
+            )
+        if self.transport is Transport.DDS:
+            if self.address.startswith(DDS_ROS_TOPIC_PREFIX):
+                raise CaptureError(
+                    f"{self.channel_id}: address {self.address!r} is the raw-DDS name; "
+                    f"address holds the ROS name and wire_address holds the "
+                    f"{DDS_ROS_TOPIC_PREFIX!r}-mangled one"
+                )
+            expected = DDS_ROS_TOPIC_PREFIX + self.address
+            if self.wire_address != expected:
+                raise CaptureError(
+                    f"{self.channel_id}: DDS wire_address must be {expected!r}, got "
+                    f"{self.wire_address!r} — a raw-DDS reader on the wrong name is "
+                    f"silent, not noisy"
+                )
+        elif self.wire_address is not None:
+            raise CaptureError(
+                f"{self.channel_id}: wire_address is DDS-only, but transport is "
+                f"{self.transport.value} and wire_address is {self.wire_address!r}"
+            )
+
+    @property
+    def bag_topic(self) -> str:
+        return self.channel_id.replace(".", "/")
+
+    @property
+    def is_spatial(self) -> bool:
+        return self.frame_id != NON_SPATIAL_FRAME
+
+    @property
+    def carries_a_time_anchor(self) -> bool:
+        return self.source_clock.is_usable_anchor
+
+
+_MID360_SOURCES = (
+    "Read 2026-08-23: livox-SDK2 include/livox_lidar_def.h (frame layout), "
+    "livox_ros_driver2 README (frame_id 'livox_frame', publish_freq 5/10/20/50, "
+    "max 100, default 10; xfer_format 0 = 'Livox pointcloud2(PointXYZRTLT)'; "
+    "HAP/Mid360/Mid360s/Avia2 supported) and samples/livox_lidar_quick_start/"
+    "mid360_config.json (lidar ports cmd 56100 / push 56200 / point 56300 / imu "
+    "56400 / log 56500, host ports +1, sample host 192.168.1.5). The TOPIC NAMES "
+    "below are the driver's conventional defaults and are UNVERIFIED against a "
+    "read of lddc.cpp — the one field of this row a session must check first."
+)
+
+MID360_CHANNELS: tuple[VenueChannel, ...] = (
+    VenueChannel(
+        channel_id="mid360.cloud",
+        human_name="Livox Mid-360 point cloud",
+        device=SourceDevice.MID360,
+        transport=Transport.DDS,
+        address="livox/lidar",
+        wire_address="rt/livox/lidar",
+        message_type="sensor_msgs/msg/PointCloud2 (Livox PointXYZRTLT)",
+        rate_kind=RateKind.CONFIGURED,
+        nominal_rate_hz=None,
+        source_clock=SourceClock.UNVERIFIED,
+        frame_id="livox_frame",
+        criticality=Criticality.CRITICAL,
+        presence=ChannelPresence.AWAITING_HARDWARE,
+        confidence=Confidence.UNVERIFIED,
+        venue=GO2_EDU_PLUS_VENUE,
+        note=(
+            "The runtime's planar scan comes from this sensor, but NOT through this "
+            "row: parcel_robot.lidar decodes the raw UDP point frames off port 56300 "
+            "and parcel_robot.lidar.band bins them into SimObservation.lidar_ranges "
+            "(card HW-3, design §5.3). This row is the CAPTURE path — the vendor node "
+            "in the rclpy venv, which is also what feeds a rosbag2 primary recording. "
+            "SOURCE CLOCK UNVERIFIED on purpose: the frame carries a uint64 ns "
+            "timestamp whose zero depends on the header's time_type (0 = since LiDAR "
+            "power-on, which is NOT an absolute anchor; 1 = gPTP master), and which "
+            "one a fitted Mid-360 emits is read off the unit, not from a table. "
+            "Vertical FOV -7°..+52°: it sees up, not down — floor drops are the "
+            "D455's job. " + _MID360_SOURCES
+        ),
+    ),
+    VenueChannel(
+        channel_id="mid360.imu",
+        human_name="Livox Mid-360 IMU (ICM40609)",
+        device=SourceDevice.MID360,
+        transport=Transport.DDS,
+        address="livox/imu",
+        wire_address="rt/livox/imu",
+        message_type="sensor_msgs/msg/Imu",
+        rate_kind=RateKind.UNKNOWN,
+        nominal_rate_hz=None,
+        source_clock=SourceClock.UNVERIFIED,
+        frame_id="livox_frame",
+        criticality=Criticality.IMPORTANT,
+        presence=ChannelPresence.AWAITING_HARDWARE,
+        confidence=Confidence.UNVERIFIED,
+        venue=GO2_EDU_PLUS_VENUE,
+        note=(
+            "RateKind.UNKNOWN and not a number: the Mid-360's IMU output rate is in "
+            "none of the sources read, and a rate nobody measured must read as "
+            "unassessable rather than as nominal. The raw path is data_type 0 on port "
+            "56400, six float32s per sample; parcel_robot.lidar REFUSES that data_type "
+            "in its point parser rather than claim units it has not read. Second-best "
+            "IMU on the rig after the Go2's own LowState, and the input B17's LIO "
+            "bake-off needs. " + _MID360_SOURCES
+        ),
+    ),
+)
+
+MID360_CHANNELS_BY_ID: Mapping[str, VenueChannel] = MappingProxyType(
+    {entry.channel_id: entry for entry in MID360_CHANNELS}
+)
+
+if len(MID360_CHANNELS_BY_ID) != len(MID360_CHANNELS):  # pragma: no cover
+    raise CaptureError("duplicate channel_id in MID360_CHANNELS")
+
+if len(MID360_CHANNELS) != VENUE_CHANNEL_ROWS:  # pragma: no cover
+    raise CaptureError(
+        f"MID360_CHANNELS declares {len(MID360_CHANNELS)} rows, the pinned count is "
+        f"{VENUE_CHANNEL_ROWS}; change both together or not at all"
+    )
+
+for _venue_channel in MID360_CHANNELS:  # pragma: no cover - import-time invariant
+    if _venue_channel.channel_id in CHANNELS_BY_ID:
+        raise CaptureError(
+            f"{_venue_channel.channel_id}: collides with a payload channel id — a "
+            f"venue row must never shadow a row of the matrix"
+        )
+    if _venue_channel.channel_id in SUPPORT_ARTIFACTS_BY_ID:
+        raise CaptureError(
+            f"{_venue_channel.channel_id}: collides with a support artifact id"
+        )
+
+
+def venue_channel(channel_id: str) -> VenueChannel:
+    """Look up a venue channel, refusing anything not in the table.
+
+    Refuses rather than falling through to :data:`CHANNELS`: "this stream is
+    on the EDU+ but not in the matrix" and "this stream is in the matrix" are
+    different answers and must not share a lookup.
+    """
+
+    try:
+        return MID360_CHANNELS_BY_ID[channel_id]
+    except (KeyError, TypeError) as exc:
+        raise UnknownChannelError(
+            f"unknown venue channel_id {channel_id!r}; known ids: "
+            f"{', '.join(sorted(MID360_CHANNELS_BY_ID))}"
+        ) from exc
+
+
+def venue_channels_for(venue: str) -> tuple[VenueChannel, ...]:
+    """Every declared venue row for one rig, in table order."""
+
+    return tuple(entry for entry in MID360_CHANNELS if entry.venue == venue)
+
+
+# ---- END CARD HW-3 -------------------------------------------------------
 
 
 def support_artifact(support_id: str) -> SupportArtifact:

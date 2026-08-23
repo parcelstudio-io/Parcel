@@ -1,0 +1,67 @@
+# Parcel — load the robot-LAN firewall before any interface comes up.
+#
+#   Card     HW-FW `orin-firewall` (scrum/20260822/task_43/DESIGN.md §f)
+#   Install  sudo install -D -m 0644 nftables.service \
+#                /etc/systemd/system/parcel-nftables.service
+#   Ruleset  /etc/parcel/nftables.conf         (from deploy/orin/nftables.conf)
+#            /etc/parcel/nftables-bridge.conf  (from deploy/orin/nftables-bridge.conf)
+#   Fallback parcel-nftables-lockdown.service  (OnFailure, see below)
+#
+# Deliberately NOT the distro's /etc/nftables.conf + nftables.service:
+#   * the L4T / Unitree image may already own that file and that unit;
+#   * one path per owner keeps provenance readable a year from now;
+#   * `systemctl disable --now parcel-nftables` is then a COMPLETE rollback;
+#   * ExecStop deletes OUR two tables instead of flushing the ruleset, so
+#     stopping this unit cannot take Docker's or the distro's tables with it.
+#
+# The verifier's gap 1 on the runbook stopgap was "runtime-only: `nft add`
+# rules vanish at reboot". This unit is the answer to that gap; README.md's
+# reboot re-check is the proof.
+#
+# THE BOOT FAILURE MODE, and why there are three ExecStart lines and an
+# OnFailure. `nft -f` is ONE atomic kernel batch: any error aborts the whole
+# transaction, so a single unloadable table would otherwise mean NO parcel
+# tables at all — while `Before=network-pre.target` is ordering only and
+# NetworkManager brings the WAN up regardless. Hence:
+#   1. `-c -f` the main file: a bad edit fails here, before anything loads.
+#   2. `-f` the main file: the boundary itself. If THIS fails, OnFailure fires.
+#   3. `-f` the bridge file, `-`-prefixed: a kernel without
+#      CONFIG_NF_TABLES_BRIDGE loses the L2 half and keeps the L3 boundary.
+#   4. OnFailure=parcel-nftables-lockdown.service: a variable-free ruleset that
+#      re-asserts `forward policy drop` when everything above has failed.
+
+[Unit]
+Description=Parcel robot-LAN firewall (card HW-FW)
+Documentation=file:///etc/parcel/nftables.conf
+Documentation=man:nft(8)
+DefaultDependencies=no
+Wants=network-pre.target
+Before=network-pre.target shutdown.target
+After=systemd-modules-load.service
+Conflicts=shutdown.target
+OnFailure=parcel-nftables-lockdown.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+StandardInput=null
+ProtectSystem=full
+ProtectHome=true
+# Check before load: an edit that does not parse, or a rule this kernel will not
+# take, fails HERE with nothing loaded. It says nothing about the bridge table —
+# that lives in its own file and is checked by the third, `-`-prefixed line
+# below; its requirement is the kernel config CONFIG_NF_TABLES_BRIDGE (read with
+# `zcat /proc/config.gz`), not a loadable module.
+ExecStart=/usr/sbin/nft -c -f /etc/parcel/nftables.conf
+ExecStart=/usr/sbin/nft -f /etc/parcel/nftables.conf
+# `-`: the L2 half is best-effort. Losing it must never cost us the L3 boundary.
+ExecStart=-/usr/sbin/nft -f /etc/parcel/nftables-bridge.conf
+ExecReload=/usr/sbin/nft -c -f /etc/parcel/nftables.conf
+ExecReload=/usr/sbin/nft -f /etc/parcel/nftables.conf
+ExecReload=-/usr/sbin/nft -f /etc/parcel/nftables-bridge.conf
+# `-` so that stopping a unit whose tables are already gone is not a failure.
+ExecStop=-/usr/sbin/nft delete table inet parcel
+ExecStop=-/usr/sbin/nft delete table bridge parcel_l2
+
+[Install]
+WantedBy=sysinit.target

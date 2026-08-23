@@ -1,0 +1,16 @@
+ M .github/workflows/ci.yml
+ M pyproject.toml
+ M src/parcel_robot/bridge/client.py
+ M src/parcel_robot/camera_channel/backends/physical.py
+ M src/parcel_robot/context/builder.py
+ M src/parcel_robot/context/models.py
+ M src/parcel_robot/observability.py
+ M src/parcel_robot/online_map/store.py
+ M src/parcel_robot/owner_tracking/gallery.py
+ M src/parcel_robot/perception_daemon/client.py
+ M src/parcel_robot/perception_daemon/server.py
+ M src/parcel_robot/providers.py
+ M src/parcel_robot/runtime.py
+?? requirements-lock-jetson.txt
+?? scrum/20260822/task_35/
+?? tests/test_hw1_py310_clean.py

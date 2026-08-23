@@ -7,6 +7,35 @@ name = "parcel-robot-dog"
 version = "0.1.0"
 description = "Extensible ROS 2 voice-agent controls for a Unitree robot dog"
 requires-python = ">=3.10"
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# TESTED INTERPRETER RANGE PER EXTRA. The floor above is the package's own and
+# it is now TRUE rather than aspirational: `src/parcel_robot` imports on
+# CPython 3.10, held there by `tests/test_hw1_py310_clean.py`. The dog's Orin
+# NX runs JetPack's system CPython 3.10 (WAVE3_HW_DESIGN_FABLE.md §5.1, seam
+# S22). Wheel metadata has no per-extra floor, so the ranges are published
+# here — each one MEASURED against PyPI for cp310/aarch64 on 2026-08-23, not
+# remembered (`pip download --only-binary=:all: --python-version 3.10
+# --implementation cp --abi cp310 --platform manylinux2014_aarch64 ...`):
+#
+#   (core)             >= 3.10  mujoco 3.12.0, numpy 2.2.6, PyYAML 6.0.3 all
+#                               have cp310 aarch64 wheels. numpy 2.2.6 is the
+#                               LAST numpy that does — 2.5.1 (the desktop lock)
+#                               needs >= 3.12. See requirements-lock-jetson.txt.
+#   base               >= 3.10  the core dependencies, named as an extra so the
+#                               design's `pip install -e '.[base]'` resolves.
+#   dev                >= 3.10  pytest 8.4.2, pytest-xdist 3.8.0, ruff 0.16.1.
+#   camera             >= 3.10  opencv-python-headless 5.0.0.93 (cp37-abi3).
+#   camera-realsense   >= 3.10  pyrealsense2 2.58.3.10794 cp310 aarch64.
+#   voice              >= 3.11  websockets 17.0/17.0.1 declare Requires-Python
+#                               >= 3.11; the highest resolvable on 3.10 is
+#                               16.1.1. NOT installable on the dog.
+#   perception         >= 3.11  onnxruntime-gpu >= 1.28 is >= 3.11 AND
+#                               publishes no aarch64 wheel at ANY version.
+#                               NOT installable on the dog — see below.
+#   perception-jetson  == 3.10  the Orin's own detector venv (design §5.2).
+#
+# The 3.14/x86_64 lock `requirements-lock.txt` is untouched by this card.
+# ---- END CARD HW-1 py310-clean ----
 dependencies = [
   "mujoco>=3.3,<4",
   "numpy>=2,<3",
@@ -14,6 +43,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# `base` is deliberately EMPTY: an extra's requirements are added TO the core
+# `dependencies`, never instead of them, so `pip install -e '.[base]'` installs
+# exactly mujoco + numpy + PyYAML and nothing else. Naming it costs nothing and
+# buys two things: the §5.1 install command resolves instead of warning
+# "does not provide the extra", and there is one obvious name for "the set the
+# Orin's 3.10 venv gets" that cannot drift out of step with `dependencies`
+# above the way a copied list would.
+base = []
+# ---- END CARD HW-1 py310-clean ----
 dev = [
   "pytest>=8,<9",
   # Card P0-E: parallel default suite (`pytest -n auto`) if the suite proves
@@ -57,6 +96,29 @@ dev = [
 perception = [
   "onnxruntime-gpu[cuda,cudnn]>=1.28,<2",
 ]
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# The same detector on the dog's Orin NX, which the `perception` extra above
+# cannot serve: measured 2026-08-23, `onnxruntime-gpu` publishes NO aarch64
+# wheel on PyPI at any version ("from versions: none"), and >= 1.28 also
+# requires >= 3.11 while JetPack 6 gives us CPython 3.10
+# (WAVE3_HW_DESIGN_FABLE.md §2.2, §5.2).
+#
+# So this extra is UNPINNED on purpose. The wheel that satisfies it does not
+# come from PyPI: it comes from the Jetson index (jetson-ai-lab / Ultralytics
+# `onnxruntime_gpu-1.23.0-cp310-linux_aarch64`), installed by HW-7's script
+# with its own `--extra-index-url`. Pinning a range here would only encode a
+# PyPI resolution that does not exist on this platform. `pip install
+# '.[perception-jetson]'` against plain PyPI is EXPECTED to fail; that is the
+# honest failure, and the script is the remedy.
+#
+# The runtime never imports onnxruntime (design §5.2): the detector lives
+# behind `perception_daemon/`'s AF_UNIX boundary in its own venv, and an absent
+# daemon is a typed degrade. Nothing in `src/parcel_robot` changes with this
+# extra installed or not.
+perception-jetson = [
+  "onnxruntime-gpu",
+]
+# ---- END CARD HW-1 py310-clean ----
 # Card P1-A: real eyes. The physical camera backends
 # (`camera_channel/backends/{uvc,realsense,recorded}.py`).
 #

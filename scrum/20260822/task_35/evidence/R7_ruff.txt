@@ -1,0 +1,46 @@
+=== ruff on the 12 touched python files ===
+All checks passed!
+rc=0
+=== ruff tree-wide (fingerprints) ===
+total findings: 23 | distinct (file,rule): 13
+   src/parcel_robot/camera_channel/__init__.py RUF022
+   src/parcel_robot/camera_channel/backends/factory.py ISC004
+   src/parcel_robot/camera_channel/backends/factory.py S110
+   src/parcel_robot/camera_channel/channel.py I001
+   src/parcel_robot/detection_adapter/noise.py I001
+   src/parcel_robot/detection_adapter/sim_bridge.py B009
+   src/parcel_robot/detection_adapter/sim_bridge.py ISC004
+   src/parcel_robot/lidar/band.py PLR0124
+   src/parcel_robot/lidar/band.py RUF022
+   src/parcel_robot/lidar/band.py TRY004
+   src/parcel_robot/lidar/livox_udp.py RUF022
+   tests/test_hw3_mid360_band.py I001
+   tests/test_hw3_mid360_band.py PLR0124
+=== baseline ===
+7
+   src/parcel_robot/camera_channel/__init__.py::RUF022
+   src/parcel_robot/camera_channel/backends/factory.py::ISC004
+   src/parcel_robot/camera_channel/backends/factory.py::S110
+   src/parcel_robot/camera_channel/channel.py::I001
+   src/parcel_robot/detection_adapter/noise.py::I001
+   src/parcel_robot/detection_adapter/sim_bridge.py::B009
+   src/parcel_robot/detection_adapter/sim_bridge.py::ISC004
+=== noqa added by HW-1? ===
+src/parcel_robot/providers.py:1285:                except Exception as error:  # noqa: BLE001 - observe path must not kill TTS
+src/parcel_robot/perception_daemon/server.py:192:                except Exception as exc:  # noqa: BLE001
+src/parcel_robot/perception_daemon/server.py:270:            except (TimeoutError, socket.timeout):  # noqa: UP041
+src/parcel_robot/perception_daemon/server.py:355:        except Exception as exc:  # noqa: BLE001 - one bad request must not end the daemon
+--- runtime.py noqa count now vs at HEAD ---
+now:  63
+HEAD: 63
+src/parcel_robot/observability.py                            now=0 head=0 SAME
+src/parcel_robot/context/builder.py                          now=0 head=0 SAME
+src/parcel_robot/context/models.py                           now=0 head=0 SAME
+src/parcel_robot/runtime.py                                  now=63 head=63 SAME
+src/parcel_robot/owner_tracking/gallery.py                   now=0 head=0 SAME
+src/parcel_robot/camera_channel/backends/physical.py         now=0 head=0 SAME
+src/parcel_robot/providers.py                                now=1 head=1 SAME
+src/parcel_robot/perception_daemon/client.py                 now=0 head=0 SAME
+src/parcel_robot/perception_daemon/server.py                 now=3 head=3 SAME
+src/parcel_robot/bridge/client.py                            now=0 head=0 SAME
+src/parcel_robot/online_map/store.py                         now=0 head=0 SAME

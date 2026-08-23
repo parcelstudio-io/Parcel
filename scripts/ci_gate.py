@@ -943,6 +943,658 @@ def evaluate_skip_list(*, tier: str = "commit", root: Path = REPO) -> GateResult
 # ---- END CARD GATE-0b ------------------------------------------------------
 
 
+# ---- CARD HW-6 stopping-envelope (scrum/20260822/task_38) ------------------
+#
+# THE SENTENCE THIS ROW MAKES EXECUTABLE. HLD 8.8: "'Short TTL' is an evidence
+# requirement, not a convenient constant: worst-case candidate age, IPC delay,
+# gateway scheduling/watchdog period, vendor braking latency, and sensor/
+# localization uncertainty must fit inside the commissioned stopping envelope
+# at the active speed regime."  Wave-3 design 6 turns that into a gate:  "the
+# RC-4 derivation is re-run with the measured numbers before the leashed stage
+# -- that re-run is a gate row, not a note."  This is the row.
+#
+# ONE OF HLD'S FIVE PHRASES IS AMBIGUOUS AND THIS ROW DISAMBIGUATES IT.
+# "Vendor braking latency" can be read as the reaction delay before the robot
+# begins to decelerate, or as the whole time to standstill.  The record's term
+# is named ``stop_command_to_standstill_s`` because only the second reading is
+# safe: a reaction-only number drops the deceleration distance ``v^2/(2 a_b)``
+# entirely -- 22 mm at 0.25 m/s with the profile's 1.4 m/s^2, 62 mm at a
+# quadruped-realistic 0.5 m/s^2, against a 330 mm envelope whose seeded margin
+# is 6 mm.  BOX_DAY_INPUTS.md B2 measures it command-to-standstill.
+#
+# WHY IT IS SOFT ALMOST ALWAYS.  Three of the five terms cannot be measured
+# without the dog.  A row that went red for a term nobody can measure yet
+# would be switched off within a week, and a row that PASSED with three terms
+# missing would be a lie.  So it has three states: UNMEASURED (soft, and it
+# NAMES the terms), FITS (soft, with the arithmetic), and OVER -- hard-red,
+# reachable only when every term is measured AND the active regime's sum does
+# not fit.  On this desktop it prints UNMEASURED, forever, until a box-day
+# record replaces it.
+#
+# WHY IT READS A FILE AND COMPUTES NOTHING ITSELF.  The arithmetic lives in
+# `parcel_robot.bridge.timing` beside the RC-4 derivation it extends, so the
+# gate, a commissioning check (HW-12) and a status doc all get the same
+# number.  This stage is a file read plus a pure call: no subprocess, no
+# pytest, no import of the test tree (card XD-1's lesson), ~2 kB of IO.
+#
+# CONTAINMENT ASYMMETRY, DECLARED.  `run_commit_tier`'s loop hands
+# `hard=stage_name != "skip-list"` to `run_stage` -- that line is inside card
+# GATE-0b's region and is not this card's to edit -- so an UNCAUGHT crash in
+# this evaluator is reported as a HARD error row even though the row itself is
+# soft.  Every expected failure (missing file, unreadable YAML, bad shape) is
+# caught below and returned as a non-gating `error`; anything left is a defect
+# in this file, and a defect in the gate SHOULD be loud.
+
+#: Set by a test rig or a measurement run to point the row at another record;
+#: the resolution order lives in `bridge/timing.py` beside the loader.
+STOPPING_ENVELOPE_ROW = "stopping-envelope"
+
+
+def evaluate_stopping_envelope(
+    *, tier: str = "commit", root: Path = REPO, record: Path | None = None
+) -> GateResult:
+    """Does the measured stop chain fit the commissioned envelope? (HLD 8.8)"""
+
+    from parcel_robot.bridge.timing import (
+        derive_envelope_rows,
+        load_stopping_envelope_record,
+        resolve_stopping_envelope_record,
+    )
+
+    path = record if record is not None else resolve_stopping_envelope_record(root)
+    try:
+        inputs = load_stopping_envelope_record(path)
+    except (OSError, TypeError, ValueError) as exc:
+        # Non-gating on purpose (GATE-0b's trade): a broken evidence file is a
+        # visible error, not a red build. `tests/test_hw6_stopping_envelope.py`
+        # is what makes a broken SHIPPED record a RED somewhere.
+        return GateResult(
+            STOPPING_ENVELOPE_ROW, tier, False, "error",
+            f"{path}: unreadable stopping-envelope record: {type(exc).__name__}: {exc}",
+            extra={"record": str(path)},
+        )
+
+    rows = derive_envelope_rows(inputs)
+    active = next(row for row in rows if row.regime == inputs.active_regime)
+    lines = [
+        ("ACTIVE " if row.regime == inputs.active_regime else "       ") + row.line()
+        for row in rows
+    ]
+    extra = {
+        "record": str(path),
+        "host": inputs.host,
+        "active_regime": inputs.active_regime,
+        "state": active.state,
+        "missing": list(active.missing),
+        "required_m": active.required_m,
+        "envelope_m": active.envelope_m,
+        "headroom_m": active.headroom_m,
+        "regimes": {
+            row.regime: {"state": row.state, "required_m": row.required_m}
+            for row in rows
+        },
+    }
+    if active.state == "OVER":
+        detail = (
+            f"the measured stop chain does NOT fit the commissioned envelope at the "
+            f"active regime {active.regime!r}: needs {active.required_m:.3f} m, envelope "
+            f"{active.envelope_m:.3f} m, over by {abs(active.headroom_m):.3f} m "
+            f"(record {path.name})\n    " + "\n    ".join(lines)
+        )
+        return GateResult(STOPPING_ENVELOPE_ROW, tier, True, "fail", detail, extra=extra)
+
+    if active.state == "UNMEASURED":
+        head = (
+            f"UNMEASURED — {', '.join(active.missing)} (record {path.name}, host "
+            f"{inputs.host}); no verdict is claimed until every term is measured"
+        )
+    else:
+        head = (
+            f"fits at the active regime {active.regime!r}: needs "
+            f"{active.required_m:.3f} m of {active.envelope_m:.3f} m, "
+            f"{active.headroom_m:.3f} m spare (record {path.name})"
+        )
+    # STATUS `pass`, NOT `report`, for the same reason card GATE-0b gave: it is
+    # `hard=False` that makes a row non-gating, and `tests/test_ci_gate.py`
+    # (card XD-1's file, not edited here) holds every stage of a clean tier to
+    # `pass`.
+    return GateResult(
+        STOPPING_ENVELOPE_ROW, tier, False, "pass",
+        head + "\n    " + "\n    ".join(lines),
+        extra=extra,
+    )
+
+
+# ---- END CARD HW-6 stopping-envelope ---------------------------------------
+
+
+# ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) --------------------
+#
+# THE QUESTION THIS ANSWERS. `--tier commit` has only ever run on this desktop
+# and on nothing else. The dog's Orin NX is aarch64 with no discrete GPU, and
+# three of its four venvs (perception, capture, motion) are deliberately NOT
+# the product venv. Run the gate in one of those, or in a bare interpreter, and
+# the rows that need something absent do not say so: `tier-coverage` RAISES out
+# of `_collect_ids` and is reported as a hard ERROR by the GATE-0 wrapper, and
+# `unitree-assets` returns a hard FAIL that reads "scene does not compile:
+# ModuleNotFoundError". Neither sentence tells the operator what to install.
+#
+# WHAT THE MEASUREMENT ACTUALLY FOUND, because the card's premise was that
+# CUDA, x86-only wheels and the RTX detector were the obstacle:
+#
+#   * NO commit-tier stage needs CUDA, a GPU, `onnxruntime` or an x86-only
+#     wheel. GATE-0b's clean clone installed `-e '.[dev,voice]'` -- no
+#     `perception` extra, therefore no onnxruntime-gpu and no `nvidia-*` -- and
+#     reported RESULT: PASS, 10/10 hard gates (task_30/GATE0B_STATUS.md,
+#     2026-08-23). Every onnxruntime / sounddevice / pyrealsense2 / cv2 / torch
+#     import under `src/` is lazy, inside a function; none is module-level.
+#   * MuJoCo IS on aarch64: mujoco 3.12.0 ships
+#     cp310/cp312 manylinux_2_28_aarch64 wheels, and both jetson locks pin it
+#     (requirements-lock-jetson{,-py312}.txt, card HW-1).
+#   * `parcel_robot.runtime` imports with mujoco hidden from the interpreter
+#     (measured 2026-08-23). Nine TEST modules do not: they `import mujoco` at
+#     module scope with no guard, which is why a mujoco-less venv turns the two
+#     collection-wide rows into red rather than into an honest skip.
+#
+# So the skip decision is made on CAPABILITY, never on `platform.machine()`.
+# The architecture is reported because a `--json` artifact with no host line
+# cannot be read six months later, not because any row branches on it.
+#
+# WHY A PRE-CHECK AND NOT A RESCUE. This transform decides BEFORE the evaluator
+# runs, and only on an absent capability. It can therefore never turn a red
+# into a green: a stage whose requirements are all present is handed through
+# UNCHANGED, thunk object and all. The failure mode it must not have -- "the
+# suite failed, so call it a skip" -- is structurally impossible here.
+#
+# WHY THE REQUIREMENTS ARE NARROW. Each entry in `STAGE_REQUIREMENTS` below is
+# cited to the line that needs it. A requirement declared too broadly is a
+# masking risk, so `assertion-evals` (measured: imports and runs with mujoco
+# hidden) and the three node-id stages (measured: none of their six test
+# modules imports mujoco) declare only what they use.
+#
+# CONTAINMENT ASYMMETRY, DECLARED (the same one card HW-6 records). The
+# `host` row returns `hard=False` and cannot change an exit code, but the loop
+# in `run_commit_tier` passes `hard=stage_name != "skip-list"` to `run_stage`
+# -- GATE-0b's line, not this card's -- so an UNCAUGHT crash inside
+# `evaluate_host_capabilities` would be reported as a HARD error row. Every
+# expected failure below is caught and reported; anything left is a defect in
+# this file, and a defect in the gate should be loud.
+
+#: Override for the reported architecture. It exists because there is no
+#: aarch64 box and no emulator on this host (measured 2026-08-23: no `docker`,
+#: `podman` or `qemu-*` binary; `/proc/sys/fs/binfmt_misc` registers only
+#: `python3.14`), so the only way to evaluate the row set as the Orin would see
+#: it is to say so out loud. It is ALWAYS printed as an override next to the
+#: measured value: an override that looked like a measurement would be worse
+#: than no override at all.
+HOST_ARCH_ENV = "PARCEL_HOST_ARCH"
+
+# Imported here rather than in the shared header block at the top of the file:
+# the header is not this card's to edit, and a mid-file module-level import is
+# clean under this repo's ruff selection (verified: no E402 fingerprint).
+import contextlib  # see _HW7Recorded below for why this card needs it
+
+#: Where `libportaudio.so.2` may be, in the order a reader should look. The
+#: private prefix is what `scripts/env-audio.sh` builds (this host has no
+#: system libportaudio2 package); the multiarch directory is where a
+#: `sudo apt install libportaudio2` would put it, on either architecture.
+PORTAUDIO_SO_ENV = "PARCEL_PORTAUDIO_SO"
+PORTAUDIO_CANDIDATE_DIRS: tuple[str, ...] = (
+    "~/.local/opt/portaudio/usr/lib/{multiarch}",
+    "/usr/lib/{multiarch}",
+    "/usr/local/lib",
+)
+
+
+class _HW7Recorded(contextlib.suppress):
+    """``contextlib.suppress`` that remembers what it swallowed.
+
+    WHY NOT A ``try/except``. Card HW-4's verifier ruled that a ``# noqa`` in a
+    new region is a rule violation here, and every blind ``except`` (``Exception``
+    AND ``BaseException``) is BLE001 in this tree's ratchet — so a total
+    fail-safe written as an ``except`` clause costs a lint fingerprint. A
+    context manager is neither, and ``contextlib.suppress`` already has the
+    exact semantics this card needs: swallow ``Exception``, let ``KeyboardInterrupt``
+    and ``SystemExit`` through (card GATE-0's rule — an operator's Ctrl-C is not
+    a gate result).
+
+    The one thing `suppress` will not do is tell you what it swallowed, and
+    card HW-7's correction pass needs precisely that: a probe that fails has to
+    say WHY in the `host` row (F3 is about evidence, not conclusions). Hence
+    this three-line subclass rather than a bare `contextlib.suppress(Exception)`.
+    """
+
+    def __init__(self, *exceptions: type[BaseException]) -> None:
+        super().__init__(*exceptions)
+        self.error: BaseException | None = None
+
+    def __exit__(self, exctype, excinst, exctb) -> bool:  # type: ignore[override]
+        handled = bool(super().__exit__(exctype, excinst, exctb))
+        if handled:
+            self.error = excinst
+        return handled
+
+
+def _hw7_find_spec(name: str) -> tuple[Any | None, BaseException | None]:
+    """``importlib.util.find_spec``, TOTAL: returns ``(spec, error)``, never raises.
+
+    `find_spec` is the same test `tests/_external_roots.py:_present` uses for an
+    optional wheel, and it is the reason this probe costs microseconds and has
+    no side effects. It can RAISE as well as return ``None`` — a broken parent
+    package (`ImportError`), a relative name (`ValueError`), or a meta-path
+    finder that refuses with anything at all. The verifier's F2 reproduction
+    was exactly that last case: a `sys.meta_path` finder raising `RuntimeError`
+    for `mujoco` escaped the old three-class `except` and killed
+    `run_commit_tier` before row one. Nothing escapes this.
+    """
+
+    import importlib.util
+
+    recorded = _HW7Recorded(Exception)
+    spec = None
+    with recorded:
+        spec = importlib.util.find_spec(name)
+    return spec, recorded.error
+
+
+def _hw7_spec_present(name: str) -> bool:
+    """The VERDICT half of the module probe. Seedable on purpose.
+
+    Kept as its own one-line function because it is where a lying probe is
+    seeded (the verifier's V1, and this card's own `test_hw7_*` seed): patch
+    this, and `host_capabilities` reports the lie — while
+    :func:`_hw7_spec_evidence` keeps reporting what `find_spec` ACTUALLY
+    returned, so the contradiction shows up in the printed row instead of
+    hiding behind it.
+    """
+
+    spec, _ = _hw7_find_spec(name)
+    return spec is not None
+
+
+def _hw7_spec_evidence(name: str) -> str:
+    """The EVIDENCE half: what was observed, not what was concluded.
+
+    Card HW-7's F3. "mujoco is absent" is a conclusion; on a four-venv Orin it
+    cannot be told apart from "you ran the gate in a vendor venv, which is
+    expected". `find_spec('mujoco') -> None` under `/usr/bin/python3.10` can.
+    """
+
+    spec, error = _hw7_find_spec(name)
+    if error is not None:
+        return f"importlib.util.find_spec({name!r}) raised {type(error).__name__}: {error}"
+    if spec is None:
+        return f"importlib.util.find_spec({name!r}) -> None"
+    return f"importlib.util.find_spec({name!r}) -> spec at {getattr(spec, 'origin', None) or '(namespace)'}"
+
+
+def _hw7_portaudio() -> tuple[bool, str]:
+    """The PortAudio shared object, by stat. Never `ctypes.util.find_library`.
+
+    `find_library` shells out to `gcc`/`objdump`; a probe that runs a compiler
+    is not a probe. This looks where the two install paths actually put the
+    file. Reported only -- no gate row depends on it, because nothing in the
+    commit tier imports `sounddevice` at collection time.
+    """
+
+    import sysconfig
+
+    recorded = _HW7Recorded(Exception)
+    looked: list[str] = []
+    with recorded:
+        multiarch = sysconfig.get_config_var("MULTIARCH") or ""
+        explicit = (os.environ.get(PORTAUDIO_SO_ENV) or "").strip()
+        if explicit and Path(explicit).exists():
+            return True, f"stat {explicit} -> exists (from {PORTAUDIO_SO_ENV})"
+        for template in PORTAUDIO_CANDIDATE_DIRS:
+            directory = Path(os.path.expanduser(template.format(multiarch=multiarch)))
+            candidate = directory / "libportaudio.so.2"
+            looked.append(str(candidate))
+            if candidate.exists():
+                return True, f"stat {candidate} -> exists"
+        return False, f"stat -> absent at {len(looked)} path(s): {', '.join(looked)}"
+    raised = f"{type(recorded.error).__name__}: {recorded.error}"
+    return False, f"the portaudio stat probe raised {raised}"
+
+
+def _hw7_cuda() -> tuple[bool, str]:
+    """Evidence of a CUDA device, and an honest label on the answer.
+
+    UNCONFIRMED ON TEGRA, deliberately. `nvidia-smi` does not ship on a Jetson,
+    so `shutil.which("nvidia-smi")` reports ABSENT on the one box in this
+    project that definitely has a GPU. The device nodes differ too
+    (`/dev/nvidiactl` on a discrete card, `/dev/nvhost-ctrl` on Tegra). This
+    returns the evidence it found and says which kind it is; NO gate row
+    consumes it, because no commit-tier row needs CUDA.
+    """
+
+    import shutil
+
+    recorded = _HW7Recorded(Exception)
+    found: list[str] = []
+    with recorded:
+        found = [path for path in ("/dev/nvidiactl", "/dev/nvhost-ctrl") if Path(path).exists()]
+        smi = shutil.which("nvidia-smi")
+        if smi:
+            found.append(smi)
+        if found:
+            return True, f"stat/which -> {', '.join(found)}"
+        return False, (
+            "stat -> no /dev/nvidiactl, no /dev/nvhost-ctrl; which -> no nvidia-smi "
+            "(UNCONFIRMED on Tegra: a Jetson has a GPU and ships none of these)"
+        )
+    return False, f"the cuda probe raised {type(recorded.error).__name__}: {recorded.error}"
+
+
+def host_capabilities(
+    *, root: Path = REPO, env: dict[str, str] | None = None
+) -> dict[str, dict[str, object]]:
+    """What this host is and what it can run. One table, read by two callers.
+
+    ``kind`` separates the two sorts of entry: a ``fact`` describes the host and
+    is never a reason to skip anything; a ``capability`` is stat-or-spec
+    checkable and MAY be named in :data:`STAGE_REQUIREMENTS`. ``unskip`` is the
+    exact command a reader should run, because "absent" is only half an answer
+    (`tests/_external_roots.py`'s rule, applied to the gate's own stages).
+
+    ``evidence`` and ``probe`` are the correction pass's F3: WHAT WAS OBSERVED
+    and HOW, beside the conclusion. "mujoco is absent" is a verdict; on a
+    four-venv Orin it cannot be told apart from "you ran this in the perception
+    venv, which is expected". ``find_spec('mujoco') -> None`` under
+    ``/usr/bin/python3.10`` can be. The ``interpreter`` fact carries the second
+    half of that: WHICH python was asked.
+    """
+
+    import platform
+    import sys as _sys
+
+    source = os.environ if env is None else env
+    measured_arch = platform.machine()
+    override = (source.get(HOST_ARCH_ENV) or "").strip()
+    if override:
+        arch_detail = f"{override} (OVERRIDE {HOST_ARCH_ENV}; measured {measured_arch})"
+    else:
+        arch_detail = f"{measured_arch} (measured)"
+    libc_name, libc_version = platform.libc_ver()
+    try:
+        usable_cpus = len(os.sched_getaffinity(0))
+    except AttributeError:  # pragma: no cover - not Linux
+        usable_cpus = os.cpu_count() or 1
+    portaudio_present, portaudio_evidence = _hw7_portaudio()
+    cuda_present, cuda_evidence = _hw7_cuda()
+
+    def fact(detail: str) -> dict[str, object]:
+        return {"kind": "fact", "present": True, "detail": detail, "unskip": "", "evidence": ""}
+
+    def module(name: str, detail: str, unskip: str) -> dict[str, object]:
+        """A capability answered by a spec lookup. Verdict and evidence are
+        taken from two independent calls ON PURPOSE: seed the verdict function
+        and the evidence still reports what `find_spec` really returned, so a
+        lying probe contradicts itself in the printed row (F3/F4)."""
+
+        return {
+            "kind": "capability",
+            "present": _hw7_spec_present(name),
+            "detail": detail,
+            "unskip": unskip,
+            "probe": "importlib.util.find_spec",
+            "module": name,
+            "evidence": _hw7_spec_evidence(name),
+        }
+
+    def measured(present: bool, detail: str, unskip: str, evidence: str) -> dict[str, object]:
+        return {
+            "kind": "capability",
+            "present": present,
+            "detail": detail,
+            "unskip": unskip,
+            "probe": "path stat",
+            "module": "",
+            "evidence": evidence,
+        }
+
+    table: dict[str, dict[str, object]] = {
+        "arch": fact(arch_detail),
+        "cpython": fact(f"{platform.python_implementation()} {platform.python_version()}"),
+        "libc": fact(f"{libc_name or 'unknown'} {libc_version or '?'}"),
+        "cpus": fact(f"{usable_cpus} usable of {os.cpu_count() or '?'}"),
+        "repo": fact(str(root)),
+        # WHICH python was asked. On the Orin there are four venvs and the
+        # answer to "is mujoco here" is different in each; without this line a
+        # `--json` artifact cannot say whether an absence was expected.
+        "interpreter": fact(f"{_sys.executable} (prefix {_sys.prefix})"),
+        "mujoco": module(
+            "mujoco",
+            "the simulator: scene compilation and the live mutation panel",
+            "pip install 'mujoco>=3.3,<4'  (cp310/cp312 aarch64 wheels exist: "
+            "mujoco 3.12.0 -- requirements-lock-jetson-py312.txt)",
+        ),
+        "pytest": module(
+            "pytest",
+            "every stage that runs a pytest selection or a collection",
+            "pip install -e '.[dev]'",
+        ),
+        "xdist": module(
+            "xdist",
+            "the default suite's parallel phase (card XD-1)",
+            "pip install -e '.[dev]'",
+        ),
+        "ruff": module(
+            "ruff",
+            "the pinned-version lint ratchet",
+            "pip install -e '.[dev]'  (the version is pinned: ruff==0.16.1)",
+        ),
+        "portaudio": measured(
+            portaudio_present,
+            "REPORT ONLY -- no commit-tier row needs it",
+            "scripts/env-audio.sh --install   (aarch64: the arm64 .debs, same script)",
+            portaudio_evidence,
+        ),
+        "onnxruntime": module(
+            "onnxruntime",
+            "REPORT ONLY -- the detector daemon's runtime, never the gate's",
+            "x86_64: pip install -e '.[perception]'; aarch64: "
+            "scripts/install_perception_jetson.sh (no PyPI aarch64 wheel exists)",
+        ),
+        "cuda": measured(
+            cuda_present,
+            "REPORT ONLY -- no commit-tier row needs it",
+            "(nothing to un-skip: the commit tier is CPU-only by design)",
+            cuda_evidence,
+        ),
+    }
+    return table
+
+
+#: stage name -> the capabilities it cannot run without. Every entry is cited
+#: to the line that needs it; a stage absent from this table is NEVER skipped.
+#:
+#:   ruff                      `_ruff_fingerprints` / `ruff_version` run
+#:                             `[PYTHON, "-m", "ruff", ...]`.
+#:   unitree-assets            `import mujoco; mujoco.MjModel.from_xml_path`
+#:                             in the scene-compile loop.
+#:   hard-safety               `_panel_safety_fields_live` ->
+#:                             `scripts.mutation_panel.live_clean_safety_fields`
+#:                             re-derives the panel's clean run in-process.
+#:   tier-coverage             three `--collect-only` runs of the WHOLE tree via
+#:                             `_collect_ids`, which RAISES on a collection
+#:                             error; nine test modules import mujoco at module
+#:                             scope (test_sim, test_mujoco_lidar,
+#:                             test_raycast_lidar, test_dynamic_city,
+#:                             test_city_orbit_clearance, test_city_semantics,
+#:                             test_scene_assets, test_portal_world,
+#:                             test_next_to_band_achievability).
+#:   default-suite             the same tree, run rather than collected, in two
+#:                             phases under xdist (card XD-1).
+#:   the three node-id stages  pytest only. MEASURED 2026-08-23: none of their
+#:                             six test modules imports mujoco.
+#:
+#: NOT here, and why: `assertion-evals` imports `evals.assertions.gate` and runs
+#: no pytest -- measured to import and run with mujoco hidden; `release-parity`,
+#: `stopping-envelope`, `skip-list` and `host` are file reads and arithmetic.
+STAGE_REQUIREMENTS: dict[str, tuple[str, ...]] = {
+    "ruff": ("ruff",),
+    "unitree-assets": ("mujoco",),
+    "hard-safety": ("mujoco",),
+    "tier-coverage": ("pytest", "mujoco"),
+    "model-off-non-inferiority": ("pytest",),
+    "release-parity-integrity": ("pytest",),
+    "owner-store-isolation": ("pytest",),
+    "default-suite": ("pytest", "xdist", "mujoco"),
+}
+
+
+def hw7_skip_result(
+    stage: str, missing: list[str], caps: dict[str, dict[str, object]], tier: str
+) -> GateResult:
+    """The typed SKIP row: what did not run, WHAT WAS OBSERVED, and how to fix it.
+
+    Correction pass F3. The first version of this row printed the capability's
+    PURPOSE ("mujoco is absent (the simulator: scene compilation …)"). That is
+    the conclusion restated. What a reader of a `--json` artifact from a
+    four-venv Orin actually needs is the observation and the interpreter it was
+    made in: `find_spec('mujoco') -> None` under `/usr/bin/python3.10` is an
+    expected vendor-venv run; the same line under `~/parcel-venv/bin/python` is
+    a defect. Both now print, in the row and in `extra`.
+    """
+
+    parts = []
+    evidence: dict[str, str] = {}
+    for name in missing:
+        entry = caps.get(name, {})
+        observed = str(entry.get("evidence") or "(no evidence recorded)")
+        evidence[name] = observed
+        parts.append(
+            f"{name} is absent — evidence: {observed}; needed for "
+            f"{entry.get('detail', 'no detail')}; "
+            f"un-skip: {entry.get('unskip', '(unknown)')}"
+        )
+    arch = str(caps.get("arch", {}).get("detail", "unknown"))
+    interpreter = str(caps.get("interpreter", {}).get("detail", "unknown interpreter"))
+    detail = f"SKIPPED on this host [{arch}; {interpreter}]: " + " | ".join(parts)
+    return GateResult(
+        stage, tier, True, "skip", detail,
+        extra={
+            "hw7_missing": list(missing),
+            "hw7_arch": arch,
+            "hw7_interpreter": interpreter,
+            "hw7_evidence": evidence,
+        },
+    )
+
+
+def hw7_apply_host_skips(
+    stages: tuple[tuple[str, Callable[[], Any]], ...],
+    *,
+    tier: str,
+    caps: dict[str, dict[str, object]] | None = None,
+) -> tuple[tuple[str, Callable[[], Any]], ...]:
+    """Replace the thunk of every stage this host cannot run with a typed SKIP.
+
+    IDENTITY when nothing is missing -- same names, same order, same thunk
+    OBJECTS -- so on a provisioned host (this desktop, `ubuntu-latest`, and the
+    Orin's product venv, which installs mujoco because it is a core dependency)
+    this function changes nothing at all, and `tests/test_ci_gate.py`'s
+    "every stage in a clean tier is `pass`" contract is untouched.
+    """
+
+    table: dict[str, dict[str, object]] | None = caps
+    if table is None:
+        # THE ONE PLACE IN THIS CARD THAT IS NOT INSIDE `run_stage`. This
+        # transform runs BEFORE the loop, so an exception here kills the whole
+        # runner before a single row prints — card GATE-0's original disease,
+        # reintroduced by a reporting feature. The first version caught four
+        # named classes; the verifier (F2) drove a `sys.meta_path` finder that
+        # raises `RuntimeError` for `mujoco` straight through it and the runner
+        # died with no rows and no JSON. The suppression is now TOTAL over
+        # `Exception` (KeyboardInterrupt and SystemExit still propagate, card
+        # GATE-0's rule) and it is a context manager rather than an `except`
+        # clause, so it costs no BLE001 fingerprint and needs no directive.
+        #
+        # A probe that cannot answer declares NOTHING: the tier runs exactly as
+        # it did before this card existed. The failure is not lost — the `host`
+        # row re-runs the same probe under `run_stage` and reports it as a
+        # non-gating `error` carrying the exception text.
+        recorded = _HW7Recorded(Exception)
+        with recorded:
+            table = host_capabilities()
+        if recorded.error is not None or table is None:
+            return tuple(stages)
+    out: list[tuple[str, Callable[[], Any]]] = []
+    for name, thunk in stages:
+        missing = [
+            required
+            for required in STAGE_REQUIREMENTS.get(name, ())
+            if not table.get(required, {}).get("present", False)
+        ]
+        if not missing:
+            out.append((name, thunk))
+            continue
+        out.append((name, lambda n=name, m=missing: hw7_skip_result(n, m, table, tier)))
+    return tuple(out)
+
+
+def evaluate_host_capabilities(*, tier: str = "commit", root: Path = REPO) -> GateResult:
+    """The `host` row: which box produced this verdict, and what it can run.
+
+    `hard=False` -- it reports, it never gates. `status="pass"` because the
+    status says whether the row DID ITS JOB (producing the list is the job),
+    which is also how card GATE-0b's `skip-list` row states itself and what
+    keeps `tests/test_ci_gate.py`'s clean-tier contract green.
+    """
+
+    # TOTAL, and with the exception text kept. The earlier version named four
+    # classes and a `RuntimeError` from a hostile meta-path finder walked past
+    # it (correction pass F2). `_HW7Recorded` is `contextlib.suppress(Exception)`
+    # that remembers what it swallowed: no `except` clause (so no BLE001, so no
+    # directive), KeyboardInterrupt and SystemExit still propagate, and the row
+    # can still say WHAT failed rather than merely THAT it did.
+    recorded = _HW7Recorded(Exception)
+    caps: dict[str, dict[str, object]] | None = None
+    with recorded:
+        caps = host_capabilities(root=root)
+    if recorded.error is not None or caps is None:
+        exc = recorded.error
+        return GateResult(
+            "host", tier, False, "error",
+            "the host probe failed, so this run declared NO skips and every "
+            f"stage ran as it would have without card HW-7: "
+            f"{type(exc).__name__ if exc else 'no result'}: {exc if exc else '(probe returned None)'}",
+            extra={"hw7_probe_error": f"{type(exc).__name__}: {exc}" if exc else "returned None"},
+        )
+    facts = [f"{name}={entry['detail']}" for name, entry in caps.items() if entry["kind"] == "fact"]
+    absent = sorted(
+        name
+        for name, entry in caps.items()
+        if entry["kind"] == "capability" and not entry["present"]
+    )
+    gating_absent = sorted(
+        {name for required in STAGE_REQUIREMENTS.values() for name in required} & set(absent)
+    )
+    skipped = sorted(
+        stage
+        for stage, required in STAGE_REQUIREMENTS.items()
+        if any(name in gating_absent for name in required)
+    )
+    detail = "; ".join(facts)
+    detail += f" | capabilities absent: {', '.join(absent) if absent else 'none'}"
+    detail += f" | rows this host will SKIP: {', '.join(skipped) if skipped else 'none'}"
+    for name in gating_absent:
+        detail += f"\n    {name}: evidence: {caps[name].get('evidence') or '(none)'}"
+        detail += f"\n    {name}: un-skip: {caps[name]['unskip']}"
+    return GateResult(
+        "host", tier, False, "pass", detail,
+        extra={
+            "capabilities": caps,
+            "absent": absent,
+            "skipped_stages": skipped,
+        },
+    )
+
+
+# ---- END CARD HW-7 gate-on-aarch64 -----------------------------------------
+
+
 # ---------------------------------------------------------------------------
 # Pure artifact checks (seedable — the self-test feeds these corrupted inputs)
 # ---------------------------------------------------------------------------
@@ -2044,6 +2696,14 @@ COMMIT_TIER_STAGE_NAMES: tuple[str, ...] = (
     "release-parity",
     "assertion-evals",
     "tier-coverage",
+    # ---- CARD HW-6 stopping-envelope (scrum/20260822/task_38) -------------
+    # Named here because this literal is the contract `tests/test_ci_gate.py`
+    # holds `run_commit_tier` to — the shape card GATE-0b used to register a
+    # stage from a helper region without editing card XD-1's test file.
+    # Placed with the cheap deterministic checks, before the pytest stages,
+    # because it is a 2 kB file read that can hard-fail: fast-fail signal.
+    "stopping-envelope",
+    # ---- END CARD HW-6 stopping-envelope -----------------------------------
     "model-off-non-inferiority",
     "release-parity-integrity",
     "owner-store-isolation",
@@ -2054,6 +2714,19 @@ COMMIT_TIER_STAGE_NAMES: tuple[str, ...] = (
     # `tests/test_ci_gate.py` holds `run_commit_tier` to.
     "skip-list",
     # ---- END CARD GATE-0b --------------------------------------------------
+    # ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) ---------------
+    # LAST, beside the other report-only row, and NOT first — which is where a
+    # legend belongs and where this row started. `tests/test_ci_gate.py`
+    # (card XD-1's file, closed, not edited here) seeds the FIRST evaluator to
+    # raise and then asserts `payload["gates"][0]["status"] == "error"`, so
+    # position 0 is contractually the first HARD gate. Being second-to-last is
+    # no loss: `summarize` prints every row and then RESULT, so "which box is
+    # this" and "what did it not run" end up together, directly above the
+    # verdict. Named here because this literal is the contract `run_commit_tier`
+    # is held to — the shape cards GATE-0b and HW-6 used to register a stage
+    # from a helper region without touching that test file.
+    "host",
+    # ---- END CARD HW-7 gate-on-aarch64 -------------------------------------
 )
 
 
@@ -2119,6 +2792,15 @@ def run_commit_tier() -> list[GateResult]:
         # Card R26: cheap (three collections, no execution) and it is the only gate
         # that can see a whole tier going dark.
         ("tier-coverage", lambda: evaluate_tier_coverage(tier=tier)),
+        # ---- CARD HW-6 stopping-envelope (scrum/20260822/task_38) ---------
+        # Pure: one YAML read plus arithmetic from `bridge/timing.py`. Soft in
+        # both its normal states (UNMEASURED on any host that has not measured
+        # the dog, FITS when it has); HARD-red only when every term is measured
+        # AND the active regime's sum exceeds its envelope. It sits here, ahead
+        # of the pytest stages, so an over-budget envelope is reported in the
+        # first second rather than after the suite.
+        ("stopping-envelope", lambda: evaluate_stopping_envelope(tier=tier)),
+        # ---- END CARD HW-6 stopping-envelope -------------------------------
         # Targeted hard-gate pytest selections (small, fast).
         ("model-off-non-inferiority",
          lambda: _pytest_gate("model-off-non-inferiority", tier, MODEL_OFF_NODE_IDS, timeout=900)),
@@ -2148,7 +2830,31 @@ def run_commit_tier() -> list[GateResult]:
         # (file reads only), report-only, cannot change the exit code.
         ("skip-list", lambda: evaluate_skip_list(tier=tier)),
         # ---- END CARD GATE-0b ----------------------------------------------
+        # ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) -----------
+        # Pure: `platform` values, a handful of `find_spec` lookups and three
+        # path stats, ~2 ms. Last, with the skip list, so the bottom of a
+        # `--json` artifact answers "which machine, and what did it not run"
+        # in two adjacent rows. Report-only: `hard=False`, it cannot change an
+        # exit code.
+        ("host", lambda: evaluate_host_capabilities(tier=tier)),
+        # ---- END CARD HW-7 gate-on-aarch64 ---------------------------------
     )
+    # ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) ---------------
+    # THE ONE HOOK THAT REACHES EVERY STAGE. A stage whose declared capability
+    # is absent on this host has its thunk replaced by a typed SKIP row that
+    # names the capability and the command that un-skips it; a stage whose
+    # requirements are all present is handed through UNCHANGED (same name, same
+    # order, same thunk object), which is why this line is a no-op on this
+    # desktop, on `ubuntu-latest` and on the Orin's product venv.
+    #
+    # It sits HERE, between the tuple and the loop, for a reason that is about
+    # ownership as much as design: the individual call sites belong to other
+    # closed cards — `default-suite` is inside card XD-1's fence, `skip-list`
+    # inside GATE-0b's, `stopping-envelope` inside HW-6's — and wrapping them
+    # one by one would mean editing three other cards' regions. One transform
+    # over the whole tuple touches none of them and covers all of them.
+    stages = hw7_apply_host_skips(stages, tier=tier)
+    # ---- END CARD HW-7 gate-on-aarch64 -------------------------------------
     results: list[GateResult] = []
     for stage_name, evaluate in stages:
         # ---- CARD GATE-0b skip-list reporting (scrum/20260822/task_30) -----
@@ -2248,7 +2954,38 @@ def summarize(results: list[GateResult], tier: str, elapsed: float) -> str:
     if gating:
         lines.append(f"RESULT: FAIL — {len(gating)} hard gate(s) red: {', '.join(r.name for r in gating)}")
     else:
-        lines.append("RESULT: PASS — every hard gate green.")
+        # ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) -----------
+        # THE ONE LINE AN OPERATOR READS MUST NOT LIE ON A SKIPPING HOST.
+        # Until this card there was no way for a hard gate to end in any state
+        # but pass/fail/error, so "every hard gate green" was true whenever
+        # nothing was gating-red. A typed SKIP breaks that: on a venv without
+        # mujoco this sentence used to print directly underneath four
+        # `[  skip] HARD` rows (the verifier's F1 reproduction). The per-row
+        # output and the JSON were already truthful; the summary was not.
+        #
+        # NOT verdict logic: `gating_red` is untouched, the exit code is
+        # untouched, and this branch is still the PASS branch. Only the
+        # sentence changes, and only when a hard row actually skipped — with no
+        # skips the string is byte-identical to what it has always been, which
+        # is pinned by a test on both branches. Touch authorised by the
+        # integrator (parcel-6c) because `summarize` is unfenced shared
+        # reporting code.
+        #
+        # The FAIL branch above is deliberately NOT changed: "N hard gate(s)
+        # red: …" is a true sentence whether or not other rows skipped, and the
+        # skips are printed above it. Only the PASS branch could state a
+        # falsehood.
+        hard_skipped = [r for r in results if r.hard and r.status == "skip"]
+        if hard_skipped:
+            green = len([r for r in results if r.hard and r.status == "pass"])
+            lines.append(
+                f"RESULT: PASS — {green} hard gate(s) green, "
+                f"{len(hard_skipped)} SKIPPED on this host: "
+                + ", ".join(r.name for r in hard_skipped)
+            )
+        else:
+            lines.append("RESULT: PASS — every hard gate green.")
+        # ---- END CARD HW-7 gate-on-aarch64 ---------------------------------
     if soft_red:
         lines.append(f"  (report-only red, non-gating: {', '.join(r.name for r in soft_red)})")
     lines.append(f"  elapsed {elapsed:.1f}s")

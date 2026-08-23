@@ -1,0 +1,118 @@
+=== git diff --stat (index vs working tree = this wave's edits) on HW-1 OWNS ===
+ .github/workflows/ci.yml                           | 50 ++++++++++++++++
+ pyproject.toml                                     | 62 ++++++++++++++++++++
+ src/parcel_robot/bridge/client.py                  | 14 ++++-
+ .../camera_channel/backends/physical.py            | 14 ++++-
+ src/parcel_robot/context/builder.py                |  9 ++-
+ src/parcel_robot/context/models.py                 |  9 ++-
+ src/parcel_robot/observability.py                  | 13 ++++-
+ src/parcel_robot/online_map/store.py               | 14 ++++-
+ src/parcel_robot/owner_tracking/gallery.py         |  9 ++-
+ src/parcel_robot/perception_daemon/client.py       | 14 ++++-
+ src/parcel_robot/perception_daemon/server.py       | 14 ++++-
+ src/parcel_robot/providers.py                      | 14 ++++-
+ src/parcel_robot/runtime.py                        | 67 +++++++++++++++++++---
+ 13 files changed, 285 insertions(+), 18 deletions(-)
+
+=== full runtime.py diff (must be HW-1 only) ===
+diff --git a/src/parcel_robot/runtime.py b/src/parcel_robot/runtime.py
+index 210ba3d..4fa114c 100644
+--- a/src/parcel_robot/runtime.py
++++ b/src/parcel_robot/runtime.py
+@@ -10,7 +10,7 @@ import time
+ from collections import OrderedDict, deque
+ from collections.abc import Callable, Mapping, Sequence
+ from dataclasses import dataclass
+-from datetime import UTC, datetime
++from datetime import datetime, timezone
+ from pathlib import Path
+ from typing import Any, ClassVar, NoReturn
+ from urllib.error import HTTPError, URLError
+@@ -371,6 +371,18 @@ from parcel_robot.voice_pipeline import (
+     VoiceTurn,
+ )
+ 
++# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
++# ``datetime.UTC`` is 3.11+ and this module is the one whose import failure
++# means nothing runs at all: the dog's Orin NX ships JetPack's system CPython
++# 3.10 (WAVE3_HW_DESIGN_FABLE.md §5.1, seam S22). CPython defines
++# ``datetime.UTC`` as an alias *of this exact object* — ``datetime.UTC is
++# timezone.utc`` — so re-exporting the name leaves all nine call sites below
++# untouched and every stamp's ``tzinfo`` identity, ``repr`` and ``isoformat``
++# byte-for-byte what they were. ``tests/test_hw1_py310_clean.py`` holds the
++# floor for the whole package.
++UTC = timezone.utc
++# ---- END CARD HW-1 py310-clean ----
++
+ logger = logging.getLogger(__name__)
+ 
+ #: FIX-A/F3 transcript provenance. A turn's text either came off the capture
+@@ -8227,13 +8239,52 @@ class RobotRuntime:
+             )
+         identity = self._build_voice_identity_gate()
+         self.realtime_voice_identity = identity
+-        gateway = BrowserAudioGateway(
+-            on_audio=self._realtime_owner_audio,
+-            on_mic=self._realtime_mic_gesture,
+-            on_event=lambda message: self._emit("realtime", message, "info"),
+-            capture=capture,
+-            voice_identity=identity,
+-        )
++        # ---- CARD HW-4 (task_37) — WHICH EAR: A CHROME TAB, OR THE XVF3800? -
++        # The ONE branch this card adds to the runtime. `audio.gateway` is
++        # absent from the SHA-locked base and resolves to `browser`, so with no
++        # profile the `else` arm below constructs byte-for-byte what this method
++        # constructed before this card existed — same class, same five keyword
++        # arguments, same order. That identity is asserted through THIS method
++        # in `tests/test_hw4_array_gateway.py`, not through a stub.
++        #
++        # A typo or an unknown value RAISES here, at boot, with the key named:
++        # the `audio` subtree is exempt from `config.check_overlay_keys` (the
++        # loader stops descending at an exempt parent), so this call is the only
++        # thing between `gatewayy: array` and a robot that silently kept the
++        # browser ear while the file on disk said otherwise.
++        from parcel_robot.realtime.audio_gateway import (
++            AUDIO_GATEWAY_ARRAY,
++            resolve_audio_gateway_selection,
++        )
++
++        gateway_kind, gateway_device = resolve_audio_gateway_selection(self.store.section("audio"))
++        if gateway_kind == AUDIO_GATEWAY_ARRAY:
++            # Constructing this opens NO audio device and starting it opens no
++            # audio device either: the capture stream opens on the owner's mic
++            # gesture and the playback stream on the first hosted chunk. A host
++            # with no array therefore still boots, says so loudly through
++            # `on_event`, and refuses — with a typed `ArrayDeviceError` naming
++            # the udev rule — the moment anything asks it to listen. It never
++            # falls back to the browser.
++            from parcel_robot.realtime.audio_gateway import ArrayAudioGateway
++
++            gateway: object = ArrayAudioGateway(
++                on_audio=self._realtime_owner_audio,
++                on_mic=self._realtime_mic_gesture,
++                on_event=lambda message: self._emit("realtime", message, "info"),
++                device=gateway_device,
++                capture=capture,
++                voice_identity=identity,
++            )
++        else:
++            gateway = BrowserAudioGateway(
++                on_audio=self._realtime_owner_audio,
++                on_mic=self._realtime_mic_gesture,
++                on_event=lambda message: self._emit("realtime", message, "info"),
++                capture=capture,
++                voice_identity=identity,
++            )
++        # ---- END CARD HW-4 --------------------------------------------------
+         self.realtime_gateway = gateway
+         if self._realtime_panel_token:
+             gateway.bind_token(self._realtime_panel_token)
+=== commissioning/session.py untouched? ===
+bd64fd93b03ccd774a84f73d0d6723c9d81869265a47df3fc4f0cf80c4a4cc1d  src/parcel_robot/commissioning/session.py
+bd64fd93b03ccd774a84f73d0d6723c9d81869265a47df3fc4f0cf80c4a4cc1d  -
+=== requirements-lock.txt untouched? ===
+e23a1e36b9cda8f07d6359dbca30e16fbadcb84b9f566b94a54d9a43416fe9d7  requirements-lock.txt
+=== untracked new files by HW-1 ===
+?? requirements-lock-jetson.txt
+?? scrum/20260822/task_35/
+?? tests/test_hw1_py310_clean.py

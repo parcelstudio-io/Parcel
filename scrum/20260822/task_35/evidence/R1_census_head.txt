@@ -1,0 +1,17 @@
+root=/home/jaewoo-jang/.cache/parcel-hw1/head-src/src/parcel_robot  files=313  findings=12
+  from datetime import UTC: 5  unguarded=5
+  from typing import Self: 7  unguarded=6
+--- sites ---
+  bridge/client.py:7 from typing import Self (since 3.11) [UNGUARDED]
+  camera_channel/backends/physical.py:52 from typing import Self (since 3.11) [UNGUARDED]
+  commissioning/session.py:77 from typing import Self (since 3.11) [GUARDED]
+  context/builder.py:5 from datetime import UTC (since 3.11) [UNGUARDED]
+  context/models.py:5 from datetime import UTC (since 3.11) [UNGUARDED]
+  observability.py:12 from datetime import UTC (since 3.11) [UNGUARDED]
+  online_map/store.py:40 from typing import Self (since 3.11) [UNGUARDED]
+  owner_tracking/gallery.py:63 from datetime import UTC (since 3.11) [UNGUARDED]
+  perception_daemon/client.py:39 from typing import Self (since 3.11) [UNGUARDED]
+  perception_daemon/server.py:48 from typing import Self (since 3.11) [UNGUARDED]
+  providers.py:10 from typing import Self (since 3.11) [UNGUARDED]
+  runtime.py:13 from datetime import UTC (since 3.11) [UNGUARDED]
+UNGUARDED_TOTAL 11

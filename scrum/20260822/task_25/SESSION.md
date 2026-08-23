@@ -468,3 +468,66 @@ Nothing here says anything about a Go2, a D455, or an Orin — none of them exis
 on this desk. It settles one question: whether the robot's voice can come out of
 a speaker and not be mistaken for yours coming back in. That is the input the
 week-3 purchase gate reads, and it is the cheapest one on the list to retire.
+
+<!-- ---- CARD HW-4 (task_37) — run this session on the ARRAY GATEWAY ---- -->
+
+## Addendum · the array ear (card HW-4), and the one thing to check first
+
+The ear in step 6 above is a Chrome tab. Card HW-4 (`../task_37/`) built the
+other one: `realtime.audio_gateway.ArrayAudioGateway` takes the XVF3800's ch1
+(ASR beam) at 16 kHz through PortAudio, resamples it to the lane's 24 kHz inside
+the gateway, and plays the reply back through the array's own DAC/amp at 16 kHz
+— which is the arrangement `asr_beam_echo_attenuation_db` is actually about.
+Measured on 2026-08-23 through the product gateway with the real array: **751
+frames of 1 920 bytes in 30.04 s, 16 kHz in / 24 kHz out at a ratio of exactly
+1.5, −42.5 dBFS, zero capture errors.**
+
+> ### THE ONE THING TO CHECK FIRST, AND IT IS NOT `arecord` ALONE
+>
+> **This array's capture endpoint is clocked off its playback endpoint.** Both
+> USB endpoints are SYNC; ask it for the microphone alone and ALSA, PipeWire and
+> PortAudio all get `Input/output error` and zero frames. That looks exactly
+> like a broken array and is not one — it cost this card a whole measurement to
+> learn. So the sixty-second check is DUPLEX:
+>
+> ```bash
+> aplay -q -D hw:1,0 -f S16_LE -c 2 -r 16000 /dev/zero &
+> arecord -D hw:1,0 -f S16_LE -c 2 -r 16000 -d 3 /tmp/duplex.wav ; kill %1
+> ls -l /tmp/duplex.wav        # ~192 kB = 3.00 s ⇒ the array is fine
+> ```
+>
+> A 44-byte file means the array really is not streaming. The card number moves
+> between reboots (`hw:2,0` on 08-22, `hw:1,0` on 08-23) — step 1's probe prints
+> the current one. The gateway holds the playback stream open for exactly this
+> reason, and emits digital zeros through it whenever nobody is talking.
+
+### What the profile block does today, and what it does NOT
+
+```yaml
+audio:
+  gateway: array          # browser (default) | array
+  # device: ReSpeaker     # optional; a PortAudio index or a name fragment.
+                          # Indices move between reboots — the array was index 5
+                          # on 08-22 and index 4 on 08-23 — so the default is a
+                          # NAME match, preferring the raw `hw:` node over the
+                          # PipeWire one (the PipeWire node remixes, which is
+                          # the downmix of step 4).
+```
+
+With that block the runtime constructs the array gateway instead of the browser
+one, and TURN-1's endpointing, the hotword stop, the R17 tee and the voice
+identity gate all keep working unchanged — they sit downstream of
+`lane.send_audio` and cannot tell which ear produced a frame. Omit the block and
+you get exactly the browser session written above.
+
+> **DO NOT RUN THIS SESSION ON THE ARRAY EAR YET.** Nothing in the product can
+> ARM it. The panel's microphone button reaches a gateway through
+> `web_panel.py`'s websocket route, and that route is gated on the gateway being
+> the *browser* one — so in array mode the button 404s, no hosted session opens
+> (arming is what opens it), and there is no ear AND no mouth. The missing piece
+> is one small panel route (`POST /api/realtime/mic`), filed as handoff **H-1**
+> in `../task_37/HW4_STATUS.md` and scheduled for wave 3b. Until it lands, the
+> array gateway is reachable from a script and not from the panel, and **steps
+> 6–10 above must be run on the browser ear as written.**
+
+<!-- ---- END CARD HW-4 ---- -->

@@ -1,0 +1,13 @@
+ruff exit: 1
+fingerprints seen: 7
+   src/parcel_robot/camera_channel/__init__.py::RUF022
+   src/parcel_robot/camera_channel/backends/factory.py::ISC004
+   src/parcel_robot/camera_channel/backends/factory.py::S110
+   src/parcel_robot/camera_channel/channel.py::I001
+   src/parcel_robot/detection_adapter/noise.py::I001
+   src/parcel_robot/detection_adapter/sim_bridge.py::B009
+   src/parcel_robot/detection_adapter/sim_bridge.py::ISC004
+baseline count: 7
+NEW beyond baseline: []
+GATE ROW  name=ruff status=pass hard=True
+detail: ruff 0.16.1: 7 violation(s), baseline 7, new 0

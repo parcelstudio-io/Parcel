@@ -1,0 +1,72 @@
+# Stopping-envelope measurement record — card HW-6 (scrum/20260822/task_38).
+#
+# HLD 8.8: "'Short TTL' is an evidence requirement, not a convenient constant:
+# worst-case candidate age, IPC delay, gateway scheduling/watchdog period,
+# vendor braking latency, and sensor/localization uncertainty must fit inside
+# the commissioned stopping envelope at the active speed regime."  This file is
+# where a host writes down the five terms it has measured.
+#
+# THIS IS THE FALLBACK RECORD and it is deliberately empty of numbers: a host
+# with no `configs/envelope/<hostname>.yaml` has measured nothing, and saying so
+# is the honest answer. The `stopping-envelope` gate row prints
+# `UNMEASURED — <terms>` and never claims a verdict.
+#
+# Read by `parcel_robot.bridge.timing:load_stopping_envelope_record`; resolution
+# order is `$PARCEL_ENVELOPE_RECORD` -> `configs/envelope/<hostname>.yaml` ->
+# this file. Shape is fail-closed: exactly the five terms, each with `value`
+# (a finite non-negative number of seconds/metres, or the literal UNMEASURED)
+# and `provenance` (never empty — an unmeasured term must say what will
+# measure it). How each box-day term is measured: `scrum/20260822/task_38/
+# BOX_DAY_INPUTS.md`.
+schema: parcel.stopping_envelope.v1
+host: default
+# Until this record is complete and green the commissioned regime is the
+# slowest one (wave-3 design §6).
+active_regime: one_axis
+measurements:
+  candidate_age_s:
+    value: UNMEASURED
+    provenance: >-
+      Age of the freshest robot state the writer can consult. On the Go2 EDU+
+      its floor is one publish period of rt/sportmodestate (50 Hz -> 20 ms);
+      measure it as the p99 of GatewayStateV1.state_age_ms observed by the
+      command writer under load. BOX_DAY_INPUTS.md row I1.
+  ipc_delay_s:
+    value: UNMEASURED
+    provenance: >-
+      Command submit -> ack round trip over the local socket to the sole-writer
+      gateway. Measure as p99 over >= 2000 commands. BOX_DAY_INPUTS.md row I2.
+  gateway_period_s:
+    value: UNMEASURED
+    provenance: >-
+      Watchdog wake period of the native gateway UNDER LOAD (design §7 Q-dev,
+      HW-11). Not the nominal 50 Hz — the measured worst wake interval.
+      BOX_DAY_INPUTS.md row B1.
+  stop_command_to_standstill_s:
+    value: UNMEASURED
+    provenance: >-
+      StopMove/Damp receipt -> stationary witness, on a stand, foot-force sensor
+      as the clock (design §6, §7 Q-stop). BOX_DAY_INPUTS.md row B2.
+  localization_jump_m:
+    value: UNMEASURED
+    provenance: >-
+      Worst-case MAP-frame jump of the LIO provider over a 10-minute loop
+      closure (design §7 B17, HW-10); ISO/TS-15066 Zr, which authority.py:620
+      pins at 0.0 while pose is sim truth. BOX_DAY_INPUTS.md row B3.
+
+# ---- CARD HW-2 go2-backend (scrum/20260822/task_40): the sixth term --------
+# Scan age is not one of HLD 8.8's five, which is why it is not under
+# `measurements:` above: `bridge/timing.py:load_stopping_envelope_record` reads
+# exactly the five and this block is invisible to it, so this file is still a
+# valid V1 record and HW-6's gate row is unchanged.
+# `load_stopping_envelope_record_v2` reads both halves.
+scan_age:
+  value: UNMEASURED
+  provenance: >-
+    Seconds. Age of the Mid-360 band scan at the moment a command candidate is
+    built — the term wave-3 design §6 assigns to HW-2 because the leashed and
+    restricted-free envelopes ARE the LiDAR ring, so a stale scan is travel
+    made against an obstacle nobody re-measured. Measure it as the p99 of
+    `backends/go2.py:Go2Backend.latest_scan_age_s()` under load on the Orin,
+    with the Mid-360 publishing (box-day B11/HW-9). A desktop replay measures
+    the replay loop, not the robot, so nothing here is a floor.

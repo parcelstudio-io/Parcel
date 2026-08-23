@@ -1,0 +1,9 @@
+bridge/client.py::FakeGatewayClientV1.__enter__  HEAD=[('FakeGatewayClientV1', 'Self')]  NOW=[('FakeGatewayClientV1', 'Self')]  same=True
+camera_channel/backends/physical.py::PhysicalCameraBackendBase.__enter__  HEAD=[('PhysicalCameraBackendBase', 'Self')]  NOW=[('PhysicalCameraBackendBase', 'Self')]  same=True
+online_map/store.py::OnlineMapStore.__enter__  HEAD=[('OnlineMapStore', 'Self')]  NOW=[('OnlineMapStore', 'Self')]  same=True
+perception_daemon/client.py::DaemonClient.__enter__  HEAD=[('DaemonClient', 'Self')]  NOW=[('DaemonClient', 'Self')]  same=True
+perception_daemon/server.py::PerceptionDaemon.__enter__  HEAD=[('PerceptionDaemon', 'Self')]  NOW=[('PerceptionDaemon', 'Self')]  same=True
+providers.py::SpeechChunk.__new__  HEAD=[('SpeechChunk', 'Self')]  NOW=[('SpeechChunk', 'Self')]  same=True
+commissioning/session.py::*.__enter__  HEAD=[('CommissioningObserver', 'Self'), ('CommissioningSession', 'Self')]  NOW=[('CommissioningObserver', 'Self'), ('CommissioningSession', 'Self')]  same=True
+live __annotations__['return']: {'FakeGatewayClientV1': 'Self', 'PhysicalCameraBackendBase': 'Self', 'OnlineMapStore': 'Self', 'DaemonClient': 'Self', 'PerceptionDaemon': 'Self', 'SpeechChunk.__new__': 'Self'}
+R5 MET

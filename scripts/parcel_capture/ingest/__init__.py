@@ -40,6 +40,8 @@ which is the **secondary** copy and never the sole copy of anything.
 
 from __future__ import annotations
 
+import functools  # ---- CARD HW-5 (task_41): the venue region below ----
+import inspect  # ---- CARD HW-5 (task_41): the venue region below ----
 from collections.abc import Sequence
 from typing import Any
 
@@ -109,6 +111,108 @@ UNSERVED_TRANSPORTS: dict[Transport, str] = {
 }
 
 
+# ---- CARD HW-5 (task_41): WHICH RIG THIS PROCESS IS CAPTURING FROM ---------
+#
+# HW-3 built a venue gate on ``L2Ingest`` — the add-on Unitree L2 path is
+# RETIRED for the Go2 EDU+, which has no such device — and said plainly in its
+# own region that the gate was INERT because nothing anywhere passed
+# ``venue=``, naming this function as the injection point and this card as its
+# owner (verifier finding F4). This is that one argument.
+#
+# WHERE THE VENUE COMES FROM. The active robot profile's top-level ``venue:``
+# key (``config.OVERLAY_INTRODUCIBLE_KEYS``, card HW-5), read through the same
+# ``ConfigStore`` every other entrypoint uses, so the capture lane and the
+# runtime cannot disagree about which rig this is. NO PROFILE MEANS NO VENUE:
+# ``resolve_profile()`` returns ``None``, this returns ``None``, and every
+# adapter below is constructed ``factory()`` byte-for-byte as before. That is
+# the flag-off path and it is the default on every host in this tree today.
+#
+# A PROFILE THAT CANNOT BE READ IS A REFUSAL, never a fallback to "no venue"
+# AND NEVER A STATED GAP. ``$PARCEL_PROFILE`` naming a file that does not exist
+# already refuses at every other door; answering it here with the legacy rig
+# would be the silent-default failure the config loader exists to prevent.
+#
+# The first pass wrapped that refusal in ``IngestRefusedError`` — which is the
+# class ``coverage()`` and ``preflight.py`` both read as "this transport has no
+# reader, and here is the stated reason". So a one-character typo in
+# ``PARCEL_PROFILE`` printed ``served: 0  unserved: 28`` and a remedy for
+# twenty-eight transports, with the actual reason discarded (verifier finding
+# F2). The refusal now PROPAGATES as whatever the config layer raised —
+# ``ProfileError`` names the file it looked for — because "I could not read the
+# configuration" and "this channel has no adapter" are different answers and
+# only one of them is this package's to give.
+_VENUE_KEY = "venue"
+
+
+@functools.lru_cache(maxsize=8)
+def _venue_for_profile(config_path: str, profile: str, stamp: tuple[int, ...]) -> str | None:
+    """One YAML load per (config, profile, file stamp). ``stamp`` is in the key.
+
+    Stamped rather than cached on the name alone for
+    ``admission._load_navigation_config``'s reason: an operator — or a test —
+    who edits the overlay they just pointed at must see the new bytes, and a
+    cache that answered from the old ones would be its own version of the
+    defect this key exists to close.
+    """
+
+    from parcel_robot.config import ConfigStore
+
+    del stamp  # in the key, not in the body
+    raw = ConfigStore(config_path, profile=profile).data.get(_VENUE_KEY)
+    text = "" if raw is None else str(raw).strip()
+    return text or None
+
+
+def active_venue() -> str | None:
+    """The rig the ACTIVE robot profile names, or ``None`` when none is active.
+
+    Raises whatever the config layer raises — ``ProfileError`` for a profile
+    that does not exist or is not a mapping, ``OSError`` for a base config that
+    cannot be opened. Deliberately NOT translated into an ``IngestError``: see
+    the region header above. With no profile named, no file is touched at all.
+    """
+
+    from parcel_robot.config import profile_overlay_path, resolve_profile
+    from parcel_robot.paths import resolve_config_yaml
+
+    profile = resolve_profile()
+    if not profile:
+        return None
+    base = resolve_config_yaml()
+    stamp: list[int] = []
+    for path in (base, profile_overlay_path(base, profile)):
+        info = path.stat() if path.is_file() else None
+        stamp += [0, 0] if info is None else [info.st_mtime_ns, info.st_size]
+    return _venue_for_profile(str(base), profile, tuple(stamp))
+
+
+@functools.lru_cache(maxsize=8)
+def _accepts_venue(factory: type[IngestAdapter]) -> bool:
+    """Does this adapter's constructor take a ``venue=``? Asked, never assumed."""
+
+    return "venue" in inspect.signature(factory).parameters
+
+
+def _venue_bound(factory: type[IngestAdapter], adapter: IngestAdapter) -> IngestAdapter:
+    """The serving adapter, re-built for the active venue when it has one.
+
+    Applied to the ONE adapter that serves the channel, not to the whole table,
+    and that placement is the point. ``L2Ingest.__init__`` RAISES for the EDU+,
+    so binding the venue inside the resolution loop would turn every unserved
+    transport's honest "no adapter is registered" into the L2 retirement notice
+    — a refusal about a device the caller never asked for. Constructing twice
+    is free here: these constructors validate arguments and open nothing.
+    """
+
+    venue = active_venue()
+    if venue is None or not _accepts_venue(factory):
+        return adapter
+    return factory(venue=venue)
+
+
+# ---- END CARD HW-5 ---------------------------------------------------------
+
+
 def adapter_for(entry: Channel) -> IngestAdapter:
     """The live adapter that serves this channel, or a refusal naming the gap."""
 
@@ -117,7 +221,9 @@ def adapter_for(entry: Channel) -> IngestAdapter:
     for factory in LIVE_ADAPTERS:
         adapter = factory()
         if adapter.serves(entry):
-            return adapter
+            # ---- CARD HW-5 (task_41) ----
+            return _venue_bound(factory, adapter)
+            # ---- END CARD HW-5 ----
     reason = UNSERVED_TRANSPORTS.get(
         entry.transport, "no adapter is registered for this transport"
     )
@@ -177,7 +283,16 @@ def coverage() -> dict[str, list[str]]:
     for entry in CHANNELS:
         try:
             adapter_for(entry)
-        except IngestRefusedError:
+        # ---- CARD HW-5 (task_41): a venue-RETIRED adapter is an unserved
+        # channel, not a crashed census. `_venue_bound` above lets HW-3's
+        # `refuse_retired_venue` raise `IngestUnavailableError` — a sibling of
+        # `IngestRefusedError`, not a subclass — so without this arm the whole
+        # coverage report died on `l2.cloud` the moment a profile named the
+        # EDU+. Both arms are named rather than widened to `IngestError`,
+        # because `IngestContractError` is OUR OWN defect and must still crash
+        # the census instead of being reported as a missing reader.
+        except (IngestRefusedError, IngestUnavailableError):
+            # ---- END CARD HW-5 ----
             unserved.append(entry.channel_id)
         else:
             served.append(entry.channel_id)
@@ -251,6 +366,7 @@ __all__ = [
     "RealSenseIngest",
     "RecorderFeed",
     "Requirement",
+    "active_venue",  # ---- CARD HW-5 (task_41) ----
     "adapter_for",
     "capabilities",
     "channel_reader_factory",

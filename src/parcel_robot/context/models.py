@@ -2,8 +2,15 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
+
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# ``datetime.UTC`` is 3.11+; the Orin's JetPack CPython is 3.10 (design §5.1,
+# seam S22). ``datetime.UTC`` IS ``timezone.utc`` — the same singleton — so the
+# alias keeps every call site, ``tzinfo`` identity and ``isoformat`` unchanged.
+UTC = timezone.utc
+# ---- END CARD HW-1 py310-clean ----
 
 CONTEXT_KINDS = ("location", "time", "map", "scene")
 

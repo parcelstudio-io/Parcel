@@ -38,7 +38,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import math  # ---- CARD HW-2 (task_40): the --duration finiteness check ----
 import sys
+import time  # ---- CARD HW-2 (task_40): the observe --duration clock ----
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -102,20 +104,76 @@ def _run_observe(args: argparse.Namespace, parser: argparse.ArgumentParser) -> i
     store = ConfigStore(args.config)
     observer = build_unitree_sport_observer(store.section("control"))
     _echo("Read-only observation. No lease is claimed and no controller exists.")
+    # ---- CARD HW-2 go2-backend (scrum/20260822/task_40): --duration ---------
+    #
+    # HANDOFF HO-6, from HW-8's box-day runbook: step S19 wants the operator to
+    # WATCH the state stream for a while ("ten runs"), and `observe` had no way
+    # to say that -- it returns the moment it has `--min-samples` distinct
+    # samples, so a longer look meant running the command ten times by hand.
+    #
+    # It is a LOOP OVER THE EXISTING WINDOW, not a new observation mode, and
+    # deliberately so: `CommissioningObserver.observe` (commissioning/session.py
+    # :293) is not this card's to edit, and its refusals -- not stationary,
+    # vendor fault, too few samples -- are exactly the ones an operator needs
+    # to keep. So `--min-samples`/`--timeout` keep their meanings per window,
+    # each window is a real `ObservationEvidence`, and a refusal in ANY window
+    # ends the command rc=1 the way one window always did.
+    #
+    # With `--duration` absent (the default) the loop runs once and every byte
+    # of this subcommand's behaviour is what it was before this card.
+    windows = []
+    deadline = None if args.duration is None else time.monotonic() + float(args.duration)
     try:
         observer.start()
-        evidence = observer.observe(min_samples=args.min_samples, timeout_s=args.timeout)
+        while True:
+            windows.append(observer.observe(min_samples=args.min_samples, timeout_s=args.timeout))
+            if deadline is None or time.monotonic() >= deadline:
+                break
     except CommissioningError as error:
         _echo(f"observation refused: {error}")
         return 1
     finally:
         observer.close()
+    evidence = windows[-1]
+    # ---- END CARD HW-2 ------------------------------------------------------
     _echo(json.dumps(evidence.as_dict(), indent=2, sort_keys=True))
     if args.out:
         target = Path(args.out)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(evidence.as_dict(), indent=2, sort_keys=True) + "\n")
         _echo(f"observation written to {target}; pass it to `run --observation {target}`")
+    # ---- CARD HW-2 (task_40): what a multi-window look actually measured ----
+    # Sample counts are NOT summed: each window de-duplicates by sequence
+    # within itself, so adding them across windows would double-count a stream
+    # that went quiet. The three numbers that DO compose are reported instead,
+    # and `--out` still writes ONE window's evidence in the shape
+    # `run --observation` reads -- the last one, named as such.
+    if args.duration is not None:
+        _echo(
+            json.dumps(
+                {
+                    "duration_summary": {
+                        "requested_duration_s": float(args.duration),
+                        "windows": len(windows),
+                        "wall_clock_s": round(sum(w.duration_s for w in windows), 4),
+                        "worst_max_interval_s": max(w.max_interval_s for w in windows),
+                        "max_linear_speed_mps": max(w.max_linear_speed_mps for w in windows),
+                        "max_yaw_speed_rad_s": max(w.max_yaw_speed_rad_s for w in windows),
+                        "modes_seen": sorted({m for w in windows for m in w.modes_seen}),
+                        "error_codes_seen": sorted(
+                            {c for w in windows for c in w.error_codes_seen}
+                        ),
+                        "note": (
+                            "per-window sample counts are not summed; the JSON above is "
+                            "the LAST window, which is also what --out writes"
+                        ),
+                    }
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+    # ---- END CARD HW-2 ------------------------------------------------------
     _echo(
         "Arm the next phase with these modes: --mode "
         + " --mode ".join(str(mode) for mode in evidence.modes_seen)
@@ -256,6 +314,21 @@ def _run_apply(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int
 # --------------------------------------------------------------------- plumbing
 
 
+# ---- CARD HW-2 (task_40) ----
+def _positive_seconds(value: str) -> float:
+    """A duration argparse can refuse at parse time, with the reason."""
+
+    seconds = float(value)
+    if not math.isfinite(seconds) or seconds <= 0.0:
+        raise argparse.ArgumentTypeError(
+            f"a duration must be a positive, finite number of seconds; got {value!r}"
+        )
+    return seconds
+
+
+# ---- END CARD HW-2 ----
+
+
 def _build_parser() -> argparse.ArgumentParser:
     default_config = DEFAULT_CONFIG if DEFAULT_CONFIG.is_file() else FALLBACK_CONFIG
     parser = argparse.ArgumentParser(
@@ -272,6 +345,17 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="write the observation evidence here so `run --observation` can carry it",
     )
+    # ---- CARD HW-2 (task_40): HO-6, the duration mode ----
+    observe.add_argument(
+        "--duration",
+        type=_positive_seconds,
+        default=None,
+        help=(
+            "keep observing for this many seconds, repeating the --min-samples "
+            "window until it elapses (box-day step S19); absent = one window"
+        ),
+    )
+    # ---- END CARD HW-2 ----
 
     run = subparsers.add_parser("run", help="armed, one-axis-at-a-time commissioning steps")
     run.add_argument("--config", default=str(default_config))

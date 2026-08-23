@@ -1,0 +1,32 @@
+# Parcel — the fallback firewall. Card HW-FW.
+#
+#   Install  sudo install -D -m 0644 nftables-lockdown.service \
+#                /etc/systemd/system/parcel-nftables-lockdown.service
+#   Ruleset  /etc/parcel/nftables-lockdown.conf
+#
+# NOT enabled, and it has no [Install] section on purpose: the only thing that
+# starts it is `OnFailure=` in parcel-nftables.service. It exists so that a
+# failure to load the real ruleset does not leave the Orin with no rules at all
+# while the WAN comes up — the fail-open mode the HW-FW verifier called H2.
+#
+# Its ruleset is variable-free: a wrong interface name is one of the failures it
+# has to survive. It is a degraded state (DDS does not pass, so the runtime
+# cannot see the robot) and the owner is meant to notice: README.md §4's reboot
+# re-check reads `systemctl is-failed parcel-nftables`.
+
+[Unit]
+Description=Parcel firewall LOCKDOWN (parcel-nftables failed to load)
+Documentation=file:///etc/parcel/nftables-lockdown.conf
+DefaultDependencies=no
+Before=network-pre.target shutdown.target
+Conflicts=shutdown.target
+After=systemd-modules-load.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+StandardInput=null
+ProtectSystem=full
+ProtectHome=true
+ExecStart=/usr/sbin/nft -f /etc/parcel/nftables-lockdown.conf
+ExecStop=-/usr/sbin/nft delete table inet parcel_lockdown

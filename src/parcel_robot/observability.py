@@ -9,8 +9,19 @@ import time
 import uuid
 from collections import Counter, deque
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
+
+# ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
+# ``datetime.UTC`` is 3.11+ and this module must import on the dog's Orin NX,
+# whose JetPack image ships the system CPython 3.10 (WAVE3_HW_DESIGN_FABLE.md
+# §5.1, seam S22). CPython defines ``datetime.UTC`` as an alias *of this exact
+# object* — ``datetime.UTC is timezone.utc`` — so re-exporting the name keeps
+# every call site below unchanged and every stamp's ``tzinfo`` identity,
+# ``repr`` and ``isoformat`` byte-for-byte what they were.
+# ``tests/test_hw1_py310_clean.py`` holds the floor.
+UTC = timezone.utc
+# ---- END CARD HW-1 py310-clean ----
 
 PLANNING_STAGE_DEFINITIONS = {
     "intent_routed": (

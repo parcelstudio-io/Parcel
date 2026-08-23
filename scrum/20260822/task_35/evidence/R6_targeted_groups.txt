@@ -1,0 +1,33 @@
+###### group a: runtime.py
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+115 passed, 2 warnings in 11.31s
+###### group b: observability.py
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+45 passed, 1 warning in 0.36s
+###### group c: context/{builder,models}.py
+...                                                                      [100%]
+3 passed in 0.15s
+###### group d: owner_tracking/gallery.py
+...................................................                      [100%]
+51 passed in 0.71s
+###### group e: camera_channel/backends/physical.py
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+218 passed, 1 warning in 26.32s
+###### group f: perception_daemon/{client,server}.py
+[P1-A C5] round-trip overhead 640x480x3: p50=0.27 ms p95=0.30 ms
+.                                     [100%]
+35 passed, 1 xfailed in 4.55s
+###### group g: online_map/store.py
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+105 passed, 1 warning in 0.80s
+###### group h: bridge/client.py
+.........................................                                [100%]
+41 passed in 0.58s
+###### group i: providers.py
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+43 passed, 1 warning in 0.50s

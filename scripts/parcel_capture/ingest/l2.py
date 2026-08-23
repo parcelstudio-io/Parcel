@@ -65,6 +65,83 @@ STREAM_NOTE = (
 #: mode-changing name is absent, and also on NEVER_ALLOWED.
 _READER_ALLOWLIST = ("getPointCloud", "getImu", "checkInit", "initialize")
 
+# ---- CARD HW-3 (mid360-band, scrum/20260822/task_36) --------------------
+#
+# The rig this adapter was written for no longer exists. It assumes a Go2 EDU
+# with an ADD-ON Unitree L2 bought separately and read over ``unilidar_sdk2``.
+# The owner bought a **Go2 EDU+ with a Livox Mid-360 fitted at the factory**
+# (design ``scrum/20260822/WAVE3_HW_DESIGN_FABLE.md`` §2.3): there is no add-on
+# L2 on it, the built-in head LiDAR is reachable ONLY over DDS ``rt/utlidar/*``
+# from 192.168.123.161 (hardware fact 4) and never over this SDK, and the
+# planar scan the runtime consumes now comes from ``parcel_robot.lidar``
+# decoding raw Livox UDP off port 56300 (card HW-3).
+#
+# The file, the class and ``SourceDevice.L2`` all stay: bags recorded on the
+# old rig join on ``l2.cloud`` / ``l2.imu`` and renaming an id under a
+# six-month-old bag is exactly what ``channels.py`` forbids. The L2 ->
+# HEAD_LIDAR rename is HW-2/HW-9's, once the box says which unit is fitted.
+#
+# What changes here is that this adapter can no longer be pointed at the new
+# venue by accident. ``venue=`` is refused for the EDU+, and the retirement
+# note rides on every refusal this adapter emits, so an operator who reaches
+# it on a session morning is sent to the Mid-360 decoder rather than to a
+# three-hour build of a vendor SDK for a device that is not on the robot.
+#
+# STATE IT PLAINLY: **the venue gate is INERT today.** Nothing passes
+# ``venue=``. ``ingest/__init__.py:117-118 adapter_for`` constructs every entry of
+# ``LIVE_ADAPTERS`` as ``factory()``, ``orin_rehearsal.py:2072`` does
+# ``L2Ingest()``, no ``configs/profiles/`` exists yet and no venue concept
+# exists anywhere outside this card. The only effect reachable today is
+# ``RETIREMENT_NOTE`` riding on :attr:`L2Ingest.notes`. The mechanism is here
+# so the wiring is a one-argument change; the wiring itself belongs to HW-5,
+# which owns the physical profile that names the venue, and the injection
+# point is ``ingest/__init__.py:117-118``. It is deliberately NOT an unconditional
+# raise in ``__init__``: that would break ``adapter_for`` for every adapter,
+# and an unconditional refusal in ``open_reader()`` would redden the legacy
+# rig's own contract (``tests/test_capture_ingest.py:1615,1637,2459``), which
+# is not this card's to change (verifier finding F4).
+
+#: The rig this adapter was written for: Go2 EDU + separately-bought L2.
+LEGACY_ADDON_L2_VENUE = "go2_edu_addon_l2"
+
+#: The rig the project is now building for. Same name as HW-5's physical
+#: profile and ``capture/channels.py:GO2_EDU_PLUS_VENUE``.
+GO2_EDU_PLUS_VENUE = "go2_edu_plus"
+
+RETIREMENT_NOTE = (
+    "RETIRED for the Go2 EDU+ venue (design §2.3): that rig has no add-on Unitree L2. "
+    "Its built-in head LiDAR is DDS-only (rt/utlidar/*, 192.168.123.161) and its Livox "
+    "Mid-360 is decoded by parcel_robot.lidar (raw UDP, port 56300) and banded into "
+    "SimObservation.lidar_ranges by parcel_robot.lidar.band — card HW-3, "
+    "scrum/20260822/task_36. This adapter remains only for bags and preflights of the "
+    "older Go2 EDU + add-on L2 rig."
+)
+
+_RETIRED_REMEDY = (
+    "read the Mid-360 with parcel_robot.lidar (parse_point_frame / scan_from_frames, no "
+    "SDK and no ROS) or record it through livox_ros_driver2 in the rclpy capture venv — "
+    "see capture/channels.py:MID360_CHANNELS. Do NOT build unilidar_sdk2 for this rig: "
+    "there is no add-on L2 on it, and the built-in head LiDAR does not speak that SDK."
+)
+
+
+def refuse_retired_venue(venue: str) -> None:
+    """Refuse the venues this adapter is retired for. Pure; no I/O.
+
+    Named and exported so HW-9's box-day run sheet and any future venue-aware
+    caller ask this once rather than restating the rule.
+    """
+
+    if venue == GO2_EDU_PLUS_VENUE:
+        raise IngestUnavailableError(
+            AbsenceReason.NOT_ATTEMPTED,
+            f"the add-on Unitree L2 path is retired for venue {venue!r}: {RETIREMENT_NOTE}",
+            _RETIRED_REMEDY,
+        )
+
+
+# ---- END CARD HW-3 -------------------------------------------------------
+
 L2_CLOUD = "l2.cloud"
 L2_IMU = "l2.imu"
 
@@ -217,11 +294,28 @@ class L2Ingest(IngestAdapter):
             "PYTHONPATH. Never into .parcel/.",
         ),
     )
-    notes: ClassVar[tuple[str, ...]] = (STREAM_NOTE, NETWORK_NOTE)
+    # ---- CARD HW-3: the retirement note rides on every report this adapter
+    # emits, so the pointer at parcel_robot.lidar reaches the operator on the
+    # path they actually hit (a missing unilidar_sdk2), not only in a docstring.
+    notes: ClassVar[tuple[str, ...]] = (STREAM_NOTE, NETWORK_NOTE, RETIREMENT_NOTE)
+    # ---- END CARD HW-3 ---------------------------------------------------
 
-    def __init__(self, *, endpoint: str = "udp://192.168.1.2") -> None:
+    def __init__(
+        self,
+        *,
+        endpoint: str = "udp://192.168.1.2",
+        # ---- CARD HW-3: which rig this adapter is being pointed at. The
+        # default is the rig it was written for, so nothing that exists today
+        # changes; the EDU+ is refused by refuse_retired_venue(). ----------
+        venue: str = LEGACY_ADDON_L2_VENUE,
+        # ---- END CARD HW-3 -----------------------------------------------
+    ) -> None:
         if not endpoint.strip():
             raise IngestRefusedError("endpoint must be non-empty")
+        # ---- CARD HW-3 ---------------------------------------------------
+        refuse_retired_venue(venue)
+        self.venue = venue
+        # ---- END CARD HW-3 -----------------------------------------------
         self.endpoint = endpoint
 
     def open_reader(self) -> ReadOnlyHandle:

@@ -347,6 +347,54 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
                 # site, asserted below.
                 "planner_model",
                 # ---- END CARD TRUTH-1 --------------------------------------
+                # ---- CARD HW-4 (task_37): the sixth family, one subtree -----
+                # `audio.gateway: browser|array` picks which ear the hosted
+                # lane has — a Chrome tab (`BrowserAudioGateway`, the shipped
+                # default) or the reSpeaker XVF3800 on the robot's own body
+                # (`ArrayAudioGateway`). `runtime._build_realtime_sink` reads
+                # `store.section("audio")` and the SHA-locked base omits it, so
+                # without this entry no profile could ever select the array.
+                # One entry, not two, for the reason written above: the loader
+                # stops descending at an exempt parent. The downstream
+                # validator is `audio_gateway.resolve_audio_gateway_selection`,
+                # which refuses an unknown key AND an unknown gateway value by
+                # name; exercised in `tests/test_hw4_array_gateway.py`.
+                "audio",
+                # ---- END CARD HW-4 -----------------------------------------
+                # ---- CARD HW-5 (task_41): the seventh family, two shapes ----
+                # `configs/robot.go2_edu_plus.yaml` — which rig this run is on
+                # (`venue`) and which source of facts it observes through
+                # (`backend`).
+                #
+                # ONE OF EACH SHAPE, deliberately. `venue` is a SCALAR: it has
+                # no inside, so the loader below is its whole spelling guard and
+                # `venu:` is refused here, by name. `backend` is a SUBTREE like
+                # `roam` / `planner_model` / `audio`, so the loader will merge a
+                # typo inside it — legitimate only because card HW-2 put the
+                # guard at the read site, TWICE: `web_panel._BACKEND_KEYS` for
+                # `backend.*` and `backends.go2.band_profile_from_config` for
+                # `backend.band.*`. Both halves asserted below.
+                #
+                # The Mid-360's numbers are in `backend.band` and NOT in a
+                # `perception.lidar_*` family: HW-5's first pass put four flat
+                # scalars there on the reasoning that a family with no
+                # read-site validator is only honest as scalars, and the premise
+                # was wrong — the validator exists, and it reads `backend.band`.
+                #
+                # `safety.require_physical_inputs` (addendum, HW-2 verdict F6)
+                # is the third: a scalar under a parent the base DOES define,
+                # so the loader descends into `safety:` and checks that exact
+                # path — the C-1 `camera_ingress_rate_hz` shape. It is the one
+                # safety-adjacent key a profile may carry, because `true` only
+                # makes the dispatch health join STRICTER (board D-2: it swaps
+                # `requirements_allowing_sim_fixtures()` for
+                # `requirements_requiring_physical_inputs()`), and HW-5's own
+                # test pins the VALUE as well as the key so no profile can buy
+                # a looser join with `false`.
+                "venue",
+                "backend",
+                "safety.require_physical_inputs",
+                # ---- END CARD HW-5 -----------------------------------------
             )
         )
         for key in OVERLAY_INTRODUCIBLE_KEYS
@@ -384,6 +432,32 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
         "listing planner_model's children would look like a spelling guard and be inert"
     )
     check_overlay_keys(base, {"planner_model": {"plan_timeoutt": 5}})  # merges; not the guard
+
+    # ---- CARD HW-5 (task_41): both shapes, and where each one's guard is ----
+    # `venue` is a scalar and the LOADER is its guard; `backend` is a subtree
+    # and HW-2's two read sites are its guards. Asserted together so the
+    # division of labour cannot rot in either direction.
+    check_overlay_keys(base, {"venue": "go2_edu_plus"})
+    check_overlay_keys(base, {"backend": {"kind": "go2"}})
+    for _key in ("venue", "backend"):
+        assert not any(other.startswith(f"{_key}.") for other in OVERLAY_INTRODUCIBLE_KEYS), (
+            f"an entry under {_key!r} would look like a spelling guard and be inert"
+        )
+    with pytest.raises(ProfileError, match="venu"):
+        check_overlay_keys(base, {"venu": "go2_edu_plus"})
+    check_overlay_keys(base, {"safety": {"require_physical_inputs": True}})
+    with pytest.raises(ProfileError, match="require_physical_input'"):
+        check_overlay_keys(base, {"safety": {"require_physical_input": True}})
+
+    from parcel_robot.backends.go2 import band_profile_from_config
+    from parcel_robot.web_panel import _build_backend
+
+    check_overlay_keys(base, {"backend": {"kin": "go2"}})  # merges; not the guard
+    with pytest.raises(ValueError, match="unknown backend config key"):
+        _build_backend({"kin": "go2"}, Path("/nonexistent.sock"))
+    with pytest.raises(ValueError, match="unknown backend.band key"):
+        band_profile_from_config({"z_lo": 0.10})
+    # ---- END CARD HW-5 ------------------------------------------------------
 
     from parcel_robot.web_panel import _check_planner_model_section
 
