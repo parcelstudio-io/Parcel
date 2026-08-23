@@ -395,6 +395,31 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
                 "backend",
                 "safety.require_physical_inputs",
                 # ---- END CARD HW-5 -----------------------------------------
+                # ---- CARD SENSE-1 (scrum/20260823/task_3): the eighth -------
+                # `physical_resolution` — what a profile that claims a physical
+                # rig does about the SIMULATOR PREMISES it inherits from the
+                # SHA-locked base. The ARCH-1 addendum reproduced four of them
+                # riding into `go2_edu_plus` unnoticed (a fabricated battery
+                # reading, the simulator controller, and this desktop's NIC
+                # under two spellings), because a commented-out key does not
+                # delete a base value.
+                #
+                # A SUBTREE, like `roam` / `planner_model` / `audio` / `backend`
+                # — so the loader merges a typo inside it, and the guard is at
+                # the read site as this roster's own rule requires:
+                # `config.validate_physical_resolution` refuses an unknown
+                # disposition BY NAME, refuses a declared path that is not one
+                # of `config.PHYSICAL_PREMISE_KEYS`, and refuses the same path
+                # declared twice. It runs inside `ConfigStore.__init__`, one
+                # line after the exemption admits the section, and is exercised
+                # in `tests/test_sense1_mount_readiness.py`.
+                "physical_resolution",
+                # ---- END CARD SENSE-1 --------------------------------------
+                # ---- CARD AWARE-1: the idle head-turn sweep's subtree ------
+                # Read-site guard: `awareness_limits_from_config` refuses an
+                # unknown key by name (tests/test_aware1_head_turn.py).
+                "awareness",
+                # ---- END CARD AWARE-1 --------------------------------------
             )
         )
         for key in OVERLAY_INTRODUCIBLE_KEYS

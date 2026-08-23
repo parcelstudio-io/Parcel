@@ -286,3 +286,59 @@ audio:
 # control:
 #   unitree_sport:
 #     interface: <read from /sys/class/net on the Orin>   # <- B9 / B-con
+
+# ---------------------------------------------------------------------------
+# WHAT THIS RIG DOES ABOUT WHAT IT INHERITS. Card SENSE-1
+# (scrum/20260823/task_3), from the ARCH-1 verdict's addendum (X06 / A08 / R14,
+# reproduced twice).
+#
+# THE DEFECT THIS SECTION CLOSES. Every comment above that says a key "may not
+# be written here" is true and enforced — and none of it deleted anything. A
+# commented-out key does not remove a base value, so the RESOLVED config this
+# profile produces still carried, silently:
+#
+#   battery.simulated_percent        90.0      (a fabricated hardware reading,
+#                                               read at runtime.py:2174 and
+#                                               reported as the battery)
+#   control.controller               simulator
+#   control.unitree_sport.interface  enp3s0    (a DESKTOP's NIC name)
+#   wifi_cards.robot.interface       enp3s0    (the same desktop NIC)
+#
+# The file looked clean; the robot would have run on four simulator premises.
+# So a profile that sets `safety.require_physical_inputs: true` now has to SAY
+# what happens to each one, and `config.validate_physical_resolution` refuses
+# the load — by name, with the fix — if it says nothing. Naming a key here
+# does NOT delete it from the merged config (the loader stays transparent);
+# it declares which of two things is true, and `config.require_physical_value`
+# is the read that honours the declaration instead of handing back the
+# simulator's number.
+physical_resolution:
+  # THE BASE'S VALUE IS NOT THIS RIG'S TRUTH. A read is refused by name.
+  no_value_on_this_rig:
+    # The dog has a battery and it is SENSED. 90.0 exists because the
+    # simulator has none. This profile may not write the key (it would be the
+    # fabricated reading itself), so this is the only way to disown it.
+    - battery.simulated_percent
+    # ONE CABLE, TWO KEYS, and no reading yet: the Orin's name for that port
+    # is unknown until `ls /sys/class/net` is run on it (box-day B9). The base
+    # ships this desktop's `enp3s0`, which is a confident lie about a port the
+    # robot does not have. Both are disowned together, exactly as the pinned
+    # rule above says they are written together.
+    - control.unitree_sport.interface
+    - wifi_cards.robot.interface
+    # DELIBERATELY UNSET, not forgotten: the base does not define it at all,
+    # so there is nothing to inherit and nothing to fabricate. Naming it here
+    # is what turns "absent" into a STATEMENT. The USE refusal is already
+    # live and measured — `LiveGo2Sources` refuses to construct without it and
+    # names `/sys/class/net` in the refusal
+    # (`tests/test_hw5_physical_profile.py` pins that message).
+    - backend.interface
+  # THE BASE'S VALUE IS THIS RIG'S TRUTH AND STANDS.
+  inherited_deliberately:
+    # `simulator` is the ACCURATE answer while Parcel commands no motion on
+    # this robot: `RobotRuntime` refuses any other value without an injected
+    # control_manager ("configuration alone cannot arm hardware"), and the
+    # writer that would replace it is the native sole-writer gateway that does
+    # not exist yet (docs/MOTION.md, design §5.5). Inheriting it is a decision,
+    # and this is where the decision is recorded.
+    - control.controller

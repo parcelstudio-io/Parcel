@@ -440,6 +440,9 @@ def receive_frames(
     max_frames: int,
     on_refusal: Callable[[LivoxDecodeError], None] | None = None,
     max_datagram_bytes: int = _MAX_UDP_PAYLOAD_BYTES,
+    # ---- CARD SENSE-1 (scrum/20260823/task_3): the two budgets ----
+    max_datagrams: int | None = None,
+    expired: Callable[[], bool] | None = None,
 ) -> Iterator[LivoxPointFrame]:
     """Read up to ``max_frames`` datagrams off an ALREADY-BOUND socket.
 
@@ -452,13 +455,40 @@ def receive_frames(
     ``on_refusal`` is how a reader thread survives one corrupt datagram: given
     a callback, refusals are reported and the datagram skipped; left ``None``,
     the refusal propagates to the caller.
+
+    THE TWO BUDGETS (card SENSE-1, ARCH-1 register item A23). ``max_frames``
+    alone does not bound this loop, because a refused datagram deliberately
+    does NOT consume a frame slot — that is what makes one corrupt datagram
+    cost one datagram instead of the whole sweep, and HW-3's own row pins it —
+    so a sender emitting nothing but corrupt datagrams spins here for ever, on
+    the caller's control-loop thread. Both budgets are OFF by default, so every
+    existing caller reads exactly as many datagrams as it did before:
+
+    * ``max_datagrams`` counts EVERY datagram taken off the socket, delivered
+      or refused. It is the belt that does not depend on a clock.
+    * ``expired`` is asked before every ``recv``, so a caller can bound the
+      wall clock. It cannot interrupt a ``recv`` that is already blocked —
+      nothing inside this loop can — so a blocking socket costs at most one
+      recv here, and refusing to read one at all is the caller's decision
+      (``backends/go2.py:LiveGo2Sources.drain``).
+
+    Both stop the generator the way an empty socket does: by returning, with
+    every frame already yielded kept.
     """
 
     if max_frames <= 0:
         raise ValueError("max_frames must be positive")
+    if max_datagrams is not None and max_datagrams <= 0:
+        raise ValueError("max_datagrams must be positive when given")
     delivered = 0
+    datagrams = 0
     while delivered < max_frames:
+        if max_datagrams is not None and datagrams >= max_datagrams:
+            return
+        if expired is not None and expired():
+            return
         payload = sock.recv(max_datagram_bytes)
+        datagrams += 1
         try:
             frame = parse_point_frame(payload)
         except LivoxDecodeError as error:

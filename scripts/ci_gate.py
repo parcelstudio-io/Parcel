@@ -59,8 +59,12 @@ truth checks:
   candidate false-arrival) reports. The frozen baseline's
   no-new-false-arrival invariant remains hard separately.
 
-Any hard gate red ==> non-zero exit. Report-only gates never change the exit
-code; they are printed so a human sees the trend.
+Exit codes (card GATE-1, ``scrum/20260823/task_5``): ``0`` every hard gate ran
+and none is red; ``1`` some hard gate is red (this wins over ``2``); ``2`` the
+run is INCOMPLETE — nothing is red, but a hard gate could not run on this host
+and printed a typed ``skip``. ``--json`` carries the same fact as
+``"incomplete"``. Report-only gates never change the exit code; they are
+printed so a human sees the trend.
 
 Self-test
 ---------
@@ -430,7 +434,9 @@ class GateResult:
     """One gate and its verdict.
 
     ``status`` is one of ``pass`` / ``fail`` / ``error`` / ``skip`` / ``report``.
-    A run's exit code is non-zero iff some ``hard`` gate is ``fail`` or ``error``.
+    A run exits ``1`` iff some ``hard`` gate is ``fail`` or ``error``, and ``2``
+    when none is red but a ``hard`` gate ``skip``ped (card GATE-1: a host that
+    could not run a gate is incomplete, not green — see ``gate_exit_code``).
     ``report`` gates (``hard=False``) are printed but never change the exit code.
     """
 
@@ -996,14 +1002,13 @@ def evaluate_stopping_envelope(
     """Does the measured stop chain fit the commissioned envelope? (HLD 8.8)"""
 
     from parcel_robot.bridge.timing import (
-        derive_envelope_rows,
-        load_stopping_envelope_record,
+        derive_envelope_rows_v2,  # CARD GATE-1: six terms, not five (R09/HW-6b)
         resolve_stopping_envelope_record,
     )
 
     path = record if record is not None else resolve_stopping_envelope_record(root)
     try:
-        inputs = load_stopping_envelope_record(path)
+        inputs = load_envelope_inputs_v2(path)  # CARD GATE-1: see its own region
     except (OSError, TypeError, ValueError) as exc:
         # Non-gating on purpose (GATE-0b's trade): a broken evidence file is a
         # visible error, not a red build. `tests/test_hw6_stopping_envelope.py`
@@ -1014,7 +1019,7 @@ def evaluate_stopping_envelope(
             extra={"record": str(path)},
         )
 
-    rows = derive_envelope_rows(inputs)
+    rows = derive_envelope_rows_v2(inputs)  # CARD GATE-1: six-term arithmetic
     active = next(row for row in rows if row.regime == inputs.active_regime)
     lines = [
         ("ACTIVE " if row.regime == inputs.active_regime else "       ") + row.line()
@@ -1026,6 +1031,9 @@ def evaluate_stopping_envelope(
         "active_regime": inputs.active_regime,
         "state": active.state,
         "missing": list(active.missing),
+        # CARD GATE-1: the sixth term's evidence pointer, so a reader can tell a
+        # record that predates the term from one that carries it unmeasured.
+        "scan_age_provenance": inputs.scan_age_provenance,
         "required_m": active.required_m,
         "envelope_m": active.envelope_m,
         "headroom_m": active.headroom_m,
@@ -1066,6 +1074,78 @@ def evaluate_stopping_envelope(
 
 
 # ---- END CARD HW-6 stopping-envelope ---------------------------------------
+
+
+# ---- CARD GATE-1 six-term envelope read (scrum/20260823/task_5) ------------
+#
+# WHY THIS EXISTS. The row above was still calling the five-term V1 loader
+# while the six-term V2 layer (`derive_envelope_rows_v2` /
+# `load_stopping_envelope_record_v2`, landed by task_40) sat beside it unused.
+# The ARCH-1 review addendum names the consequence (R09, carried as the HW-6b
+# debt): on the day the five HLD 8.8 terms are all measured on the dog, the row
+# would print `FITS` with the age of the Mid-360 scan silently absent from the
+# sum -- and the leashed and restricted-free envelopes ARE the LiDAR ring, so a
+# stale scan is travel already made against an obstacle nobody re-measured. A
+# five-term FITS is the one output this row must never be able to produce.
+#
+# WHY THE READ IS A HELPER AND NOT THREE MORE LINES IN THE EVALUATOR. The
+# evaluator's body is inside another card's fenced region; this card's rule is
+# that its logic lives in its own region and the region above changes only at
+# the call sites (each marked with an inline `CARD GATE-1:` comment). The
+# swap is therefore two names and this function. Those inline marks are NOT
+# fences: a marker-balance check like the one in `tests/test_hw7_gate_aarch64
+# .py` must count the `# ---- CARD GATE-1` form, which is balanced 3 for 3.
+#
+# WHAT A RECORD WITHOUT THE SIXTH TERM MEANS, DECLARED. `..._v2` refuses a
+# record with no top-level `scan_age:` block, because for the writer of a
+# record that block is mandatory evidence. For the GATE the honest reading is
+# softer and is the whole point of the sentinel: a term nobody wrote down is
+# UNMEASURED, not a broken file. So a document that the V1 reader accepts and
+# the V2 reader does not is loaded as five measured terms plus an UNMEASURED
+# sixth, and the provenance says which record and what the V2 reader objected
+# to. A document that BOTH readers refuse is still a shape error and still
+# returns the evaluator's non-gating `error` row -- unchanged.
+#
+# The fallback cannot loosen a verdict: UNMEASURED is the state that claims
+# nothing. The only thing it can do is turn an `error` row into an UNMEASURED
+# row, which is strictly more informative -- the five terms are still derived,
+# printed per regime, and the missing sixth is named.
+
+
+def load_envelope_inputs_v2(path: Path):
+    """Read one stopping-envelope record as SIX terms.
+
+    Returns a `StoppingEnvelopeInputsV2`. Raises exactly what the V1 reader
+    raises for a record neither reader can parse, so the evaluator's existing
+    `except (OSError, TypeError, ValueError)` row is unchanged.
+    """
+
+    from parcel_robot.bridge.timing import (
+        UNMEASURED,
+        StoppingEnvelopeInputsV2,
+        load_stopping_envelope_record,
+        load_stopping_envelope_record_v2,
+    )
+
+    try:
+        return load_stopping_envelope_record_v2(path)
+    except (TypeError, ValueError) as exc:
+        # Not a bare `except`: OSError (no such file, unreadable) is never a
+        # sixth-term question and must reach the caller as the error row.
+        base = load_stopping_envelope_record(path)
+        return StoppingEnvelopeInputsV2(
+            base=base,
+            scan_age_s=UNMEASURED,
+            scan_age_provenance=(
+                f"not readable from {path.name} ({type(exc).__name__}: {exc}); the "
+                "record carries the five HLD 8.8 terms only. Measured as the p99 of "
+                "`backends/go2.py:Go2Backend.latest_scan_age_s()` under load with the "
+                "Mid-360 publishing (box-day B11)."
+            ),
+        )
+
+
+# ---- END CARD GATE-1 six-term envelope read --------------------------------
 
 
 # ---- CARD HW-7 gate-on-aarch64 (scrum/20260822/task_42) --------------------
@@ -2939,6 +3019,58 @@ def run_nightly_tier() -> list[GateResult]:
 # ---------------------------------------------------------------------------
 
 
+# ---- CARD GATE-1 incomplete exit status (scrum/20260823/task_5) ------------
+#
+# THE DEFECT, IN ONE SENTENCE. `GateResult.is_red` is `status in {fail, error}`
+# and `main()` returned `1 if any(gating_red) else 0`, so a host where a HARD
+# row could not run at all -- a typed skip -- exited **0**. The rows said
+# `[  skip] HARD`, the summary (fixed by task_42) said "N green, M SKIPPED on
+# this host", and the exit code, the only thing an automation reads, said the
+# same thing it says for a fully green run. The review addendum reproduced it
+# as T12: "a CI consumer keying on the exit code reads a skipping host as
+# green."
+#
+# WHY A THIRD CODE AND NOT A RED. A skip is not a failure: three of the dog's
+# four venvs are deliberately absent on this desktop and on the Orin, and a
+# card that turned "mujoco is not installed here" into a red build would be
+# switched off within the week -- the same argument that made the stopping row
+# soft. But it is not a pass either. Incomplete is its own answer and gets its
+# own number, so a caller can choose: `rc == 0` for "everything ran and was
+# green", `rc < 2` for "nothing is broken", `rc != 0` for "do not promote".
+#
+# PRECEDENCE, DECLARED. Red wins. A run with a red row AND a skipped row exits
+# 1, because the red is the actionable fact and an operator who sees 2 would go
+# looking for a missing tool instead of a broken gate.
+#
+# WHAT DID NOT CHANGE. `gating_red`, `is_red`, the per-row statuses, the stage
+# order, and every character of `summarize`'s output. The summary sentence was
+# already truthful on both branches; this is the other half of the same repair.
+
+#: Every hard gate ran and none is red.
+GATE_EXIT_GREEN = 0
+#: At least one hard gate is `fail` or `error`. Takes precedence over 2.
+GATE_EXIT_RED = 1
+#: Nothing is red, but at least one hard gate did not run on this host.
+GATE_EXIT_INCOMPLETE = 2
+
+
+def hard_skips(results: list[GateResult]) -> list[GateResult]:
+    """The HARD rows that did not run here -- the same set the summary names."""
+
+    return [r for r in results if r.hard and r.status == "skip"]
+
+
+def gate_exit_code(results: list[GateResult]) -> int:
+    """0 green / 1 red / 2 incomplete. The one place the mapping is written."""
+
+    if any(r.gating_red for r in results):
+        return GATE_EXIT_RED
+    return GATE_EXIT_INCOMPLETE if hard_skips(results) else GATE_EXIT_GREEN
+
+
+# ---- END CARD GATE-1 incomplete exit status --------------------------------
+
+
 def summarize(results: list[GateResult], tier: str, elapsed: float) -> str:
     lines = [
         f"CI GATE — tier={tier}  ({time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())})",
@@ -3010,12 +3142,22 @@ def main(argv: list[str] | None = None) -> int:
     elapsed = time.perf_counter() - started
 
     print(summarize(results, args.tier, elapsed))
+    # ---- CARD GATE-1 incomplete exit status (scrum/20260823/task_5) --------
+    # `incomplete` is emitted on every run, true and false alike: a key that
+    # appears only when it is true cannot be told apart from an old gate that
+    # never wrote it, and this field exists precisely for a machine.
     if args.json:
         print(json.dumps(
-            {"tier": args.tier, "elapsed_s": elapsed, "gates": [r.as_dict() for r in results]},
+            {
+                "tier": args.tier,
+                "elapsed_s": elapsed,
+                "gates": [r.as_dict() for r in results],
+                "incomplete": bool(hard_skips(results)),
+            },
             indent=2, sort_keys=True,
         ))
-    return 1 if any(r.gating_red for r in results) else 0
+    return gate_exit_code(results)
+    # ---- END CARD GATE-1 incomplete exit status ----------------------------
 
 
 if __name__ == "__main__":

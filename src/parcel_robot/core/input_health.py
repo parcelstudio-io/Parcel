@@ -484,6 +484,206 @@ class CommissionedScanSource:
 # ---- END CARD HW-2 go2-backend ---------------------------------------------
 
 
+# ---- CARD SENSE-1 pose seam (scrum/20260823/task_3) ------------------------
+#
+# THE HOLE THIS FILLS, and it is the one ``evidence_origin``'s docstring names
+# and HW-2 explicitly deferred (``tests/test_hw2_go2_backend.py
+# ::test_b3_pose_authority_is_not_in_this_card``). HW-2 gave SCAN a typed
+# source; POSE was left riding ``evidence_origin``, which stamps SIMULATION on
+# every sample that arrives on a ``SimObservation`` — so under
+# :func:`requirements_requiring_physical_inputs` a LIVE dog's pose latches
+# ``POSE: sim_fixture_forbidden``. The fail direction is closed (a refusal, not
+# an acceptance), but the ``go2_edu_plus`` profile — which sets
+# ``safety.require_physical_inputs: true`` — can never run live without this
+# seam. ARCH-1 verdict, blocking finding 4.
+#
+# WHAT IS DIFFERENT FROM THE SCAN TWIN, and it is one thing: pose has no
+# "absence" that is also a legitimate steady state. An empty sweep is a real
+# answer for a LiDAR ("nothing in the band"), so ``CommissionedScanSource``
+# returning ``None`` is routine; a backend with no pose has nothing to publish
+# at all and ``backends/go2.py`` refuses the whole tick (``Go2StateUnavailable``,
+# verifier finding F2). ``None`` here therefore means the join is grading an
+# observation this source has no pose datum for — an older tick, or another
+# backend's — and it leaves the caller's own stamp in place, which is the
+# fail-closed direction.
+#
+# THIS IS A DELIBERATE PARALLEL, NOT A SHARED BASE. Folding the two latches
+# into one generic class would rewrite ``CommissionedScanSource``, whose
+# identity-exemption semantics are verified, pinned behaviour (HW-2 rows B6/H1,
+# and ``control/base.py:CommissionedStateSource``'s audit item 1 before that).
+# The card's rule is to extend the pattern, not to re-cut it, so the ordering
+# rules below are the same rules stated again over a different datum.
+#
+# THE CLOCK. ``PoseDatum.captured_at`` is the STATE's own host receipt — the
+# moment the ``rt/sportmodestate`` sample arrived — never the clock the
+# observation was assembled at. X04: ``go2.py`` stamped pose and scan with one
+# ``received_at`` taken at ``observe()``, so a buffered pose from a DDS stream
+# that had gone quiet was re-stamped fresh on every tick and could never go
+# stale. Freshness is measured against the clock that actually took delivery.
+
+
+@dataclass(frozen=True)
+class PoseDatum:
+    """One pose sample, with the two clocks and the ordering key kept apart.
+
+    The pose twin of :class:`ScanDatum`, field for field where the fields mean
+    the same thing. ``captured_at`` is the HOST monotonic receipt of the state
+    sample this pose was read from (``RobotMotionState.received_at``), and the
+    vendor/device clock stays beside it in ``source_time_s``, unconverted, for
+    a later ``ClockMapper`` to fuse.
+
+    ``frame_id`` defaults to ``odom`` because that is what
+    :data:`DEFAULT_REQUIRED_INPUTS` requires of POSE; a producer publishing in
+    another frame says so here and the join latches ``frame_inconsistent``.
+    """
+
+    captured_at: float
+    sequence: int
+    frame_id: str = "odom"
+    payload_valid: bool = True
+    source_time_s: float | None = None
+    #: The producer's boot/session identity. ``sequence`` is only comparable
+    #: within one epoch, so a change of epoch is an ordering fault.
+    session_epoch: str = ""
+
+
+class PoseEvidenceSource(Protocol):
+    """A source of pose evidence that DECLARES where its poses come from.
+
+    ``origin`` is read with :func:`parcel_robot.control.base.declared_origin`
+    at the read site, so a ``str`` attribute spelled ``"physical"`` is not a
+    declaration and reads back as UNKNOWN.
+
+    ``evidence`` takes the DATUM KEY it is being asked about -- in the runtime
+    this is the ``SimObservation`` being graded -- so a join can never be handed
+    the pose of a different tick. ``None`` means "I have nothing for that one",
+    which leaves the caller's own stamp in place.
+    """
+
+    origin: EvidenceOrigin
+
+    def evidence(self, key: object) -> InputEvidence | None: ...
+
+
+class CommissionedPoseSource:
+    """Read-only, origin-declaring, order-checked view over a pose producer.
+
+    ``inner`` is anything with a callable ``pose_datum_for(key) -> PoseDatum |
+    None``; ``Go2Backend`` is the first one. The origin is a constructor
+    argument the PRODUCER declares by construction — ``LiveGo2Sources`` is
+    PHYSICAL because it is a DDS subscriber on a robot's NIC, and
+    ``RecordedStage0Source`` is REPLAY because it reads a file, so a replayed
+    pose still latches under a physical requirements table. No configuration
+    key reaches PHYSICAL from here.
+    """
+
+    def __init__(
+        self,
+        inner: object,
+        *,
+        origin: EvidenceOrigin,
+        session_epoch: str = "",
+        fixture_label: str = "",
+        name: str = "",
+    ) -> None:
+        if not isinstance(origin, EvidenceOrigin):
+            raise TypeError("commissioned pose origin must be an EvidenceOrigin")
+        if origin is EvidenceOrigin.UNKNOWN:
+            raise ValueError("commissioning must declare a real origin; UNKNOWN is not one")
+        if not callable(getattr(inner, "pose_datum_for", None)):
+            raise TypeError("commissioned pose source must expose a callable pose_datum_for()")
+        if not isinstance(session_epoch, str) or len(session_epoch) > 80:
+            raise ValueError("session_epoch must be a short string")
+        label = str(fixture_label or "")
+        if origin in SYNTHETIC_ORIGINS and not label.strip():
+            # The join latches an unlabeled fixture (``sim_fixture_unlabeled``).
+            # Refusing here instead makes it a construction error with a name.
+            raise ValueError(
+                f"a {origin.value} pose source must name its fixture; an unlabeled "
+                "fixture is refused by the health join anyway"
+            )
+        if origin is EvidenceOrigin.PHYSICAL and label.strip():
+            # ``physical_input_has_fixture_label`` is a LATCHED_STOP above.
+            raise ValueError("a physical pose source must not carry a fixture label")
+        self._inner = inner
+        self.origin = origin
+        self.session_epoch = session_epoch
+        self.fixture_label: str | None = label or None
+        self.name = str(name or getattr(inner, "name", "") or "commissioned_pose")
+        self._lock = threading.Lock()
+        self._last_sequence: int | None = None
+        self._last_captured_at: float | None = None
+        self._last_datum: PoseDatum | None = None
+        self._latched_reason: str | None = None
+
+    @property
+    def latched_reason(self) -> str | None:
+        """The ordering fault that latched this view, or ``None``."""
+
+        return self._latched_reason
+
+    def evidence(self, key: object) -> InputEvidence | None:
+        """``InputEvidence`` for the pose behind ``key``, or ``None``."""
+
+        datum = self._inner.pose_datum_for(key)
+        if datum is None:
+            return None
+        if not isinstance(datum, PoseDatum):
+            # A producer that returns something else is a boundary defect, not
+            # a transient gap: hand the join a sample it will latch on rather
+            # than dropping the evidence (which would only HOLD).
+            return InputEvidence(
+                captured_at=float("nan"),
+                frame_id="",
+                payload_valid=False,
+                origin=self.origin,
+                fixture_label=self.fixture_label,
+            )
+        with self._lock:
+            reason = self._latched_reason
+            if reason is None:
+                reason = self._ordering_fault(datum)
+                if reason is None:
+                    self._last_sequence = datum.sequence
+                    self._last_captured_at = datum.captured_at
+                    self._last_datum = datum
+                else:
+                    self._latched_reason = reason
+        return InputEvidence(
+            captured_at=datum.captured_at,
+            frame_id=datum.frame_id,
+            payload_valid=bool(datum.payload_valid) and reason is None,
+            origin=self.origin,
+            fixture_label=self.fixture_label,
+        )
+
+    def _ordering_fault(self, datum: PoseDatum) -> str | None:
+        if datum.session_epoch and datum.session_epoch != self.session_epoch:
+            return "session_epoch_mismatch"
+        if self._last_sequence is not None:
+            if datum.sequence == self._last_sequence:
+                # RE-READING THE SAME DATUM IS NOT A FAULT — the same exemption
+                # ``CommissionedScanSource`` carries, for the same measured
+                # reason. The join re-reads one observation automatically (an
+                # ``observe()`` exception leaves the previous one in place) and
+                # deliberately (``clear_input_health_latch`` re-joins on it), so
+                # a duplicate fault here would latch the very thing the operator
+                # was clearing. Identity first, then full field equality for a
+                # source that rebuilds equal values; a DIFFERENT datum carrying
+                # a repeated sequence is still a producer defect and latches.
+                if datum is self._last_datum or datum == self._last_datum:
+                    return None
+                return "sequence_duplicate"
+            if datum.sequence < self._last_sequence:
+                return "sequence_reordered"
+        if self._last_captured_at is not None and datum.captured_at < self._last_captured_at:
+            return "receipt_regression"
+        return None
+
+
+# ---- END CARD SENSE-1 pose seam --------------------------------------------
+
+
 def _global_latched_fault(reason: str) -> InputHealthVerdict:
     return InputHealthVerdict(
         action=HealthAction.LATCHED_STOP,

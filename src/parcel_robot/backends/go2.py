@@ -42,6 +42,32 @@ The origin is declared BY CONSTRUCTION, never by configuration:
   declares ``PHYSICAL``. It cannot be constructed without the vendor SDK, and
   it says which venv provides it.
 
+WHAT MAKES A POSE BELIEVABLE HERE (card SENSE-1, scrum/20260823/task_3)
+-----------------------------------------------------------------------
+The same thing, one channel later. HW-2 gave SCAN the typed seam and said in
+its own rows that POSE was not in that card; the ARCH-1 verdict's blocking
+finding 4 is that the omission makes ``go2_edu_plus`` — a profile whose whole
+point is ``safety.require_physical_inputs: true`` — unrunnable live, because a
+real dog's pose latches ``POSE: sim_fixture_forbidden``.
+:attr:`Go2Backend.pose_evidence_source` is the twin:
+:class:`~parcel_robot.core.input_health.CommissionedPoseSource`, declared by
+the same construction (live = PHYSICAL, recording = REPLAY, and a replayed pose
+still latches under a physical requirements table).
+
+AND TWO CLOCKS, NOT ONE (X04). ``observe()`` used to stamp pose and scan with a
+single ``received_at`` read at the top of the tick. Both channels are BUFFERED
+— ``latest()`` returns the last DDS sample when none has arrived since, and the
+socket may have gone quiet — so one tick-clock stamp made a stale pose and a
+stale scan look equally fresh for ever, and freshness is the whole of the
+health join's staleness branch. Each datum now carries the clock that actually
+took delivery: :attr:`~parcel_robot.core.input_health.PoseDatum.captured_at` is
+the state sample's own host receipt, and
+:attr:`~parcel_robot.core.input_health.ScanDatum.captured_at` is the host clock
+read as the last datagram of the sweep came off the socket.
+``SimObservation.timestamp`` is unchanged — it is the assembly clock and half
+the tree reads it — so the two receipts ride the typed datums, which is where
+the join reads ``captured_at`` from anyway.
+
 No vendor SDK is imported at module scope anywhere in this file: the vendor
 imports happen inside :class:`LiveGo2Sources`, and a fresh interpreter that
 imports this module has no ``unitree_sdk2py``, ``mujoco`` or ``rclpy`` in
@@ -97,7 +123,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     # `from __future__ import annotations` keeps every annotation below a
     # string, and the one runtime construction imports it inside the function.
     from parcel_robot.control.models import RobotMotionState
-    from parcel_robot.core.input_health import ScanDatum
+    from parcel_robot.core.input_health import PoseDatum, ScanDatum
 
 #: The one sentence every refusal quotes. ``docs/MOTION.md`` is doctrine and
 #: this module is not where it is revisited.
@@ -300,6 +326,11 @@ class RecordedStage0Source:
         self._frame_cursor = 0
         self._sequence = 0
         self._last_state: RobotMotionState | None = None
+        #: Host clock read as the last replayed frame was handed over — the
+        #: replay's answer to ``LiveGo2Sources.last_frame_received_at`` (X04).
+        #: A recording's receipt is when THIS process took delivery, not the
+        #: recording's own ``t_s``, which is a different clock entirely.
+        self.last_frame_received_at: float | None = None
         self._load()
 
     # -- loading -----------------------------------------------------------
@@ -417,6 +448,7 @@ class RecordedStage0Source:
                 break
             self._frame_cursor += 1
             drained.append(frame)
+            self.last_frame_received_at = float(self._clock())
         if not drained and self._loop and self._frames and self._frame_cursor >= len(self._frames):
             self._frame_cursor = 0
             self._state_cursor = 0
@@ -467,6 +499,16 @@ class LiveGo2Sources:
     #: tick is bounded.
     DEFAULT_DRAIN_BUDGET_S = 0.02
 
+    #: Datagrams one ``drain()`` may READ per frame slot it is allowed to
+    #: deliver — card SENSE-1's third belt, and the one that holds when the
+    #: clock cannot help. A corrupt datagram is skipped without consuming a
+    #: frame slot (F4, and HW-3's row pins it), so an ALL-CORRUPT flood never
+    #: reaches ``max_frames`` and the wall budget is the only thing between the
+    #: control loop and a sender that is faster than the clock's resolution.
+    #: Four says: tolerate three corrupt datagrams per good frame this tick,
+    #: then give up and publish the sweep as it stands.
+    DEFAULT_DATAGRAM_BUDGET_FACTOR = 4
+
     def __init__(
         self,
         *,
@@ -478,6 +520,7 @@ class LiveGo2Sources:
         livox_port: int = 0,
         max_frames_per_drain: int = 32,
         drain_budget_s: float = DEFAULT_DRAIN_BUDGET_S,
+        datagram_budget_factor: int = DEFAULT_DATAGRAM_BUDGET_FACTOR,
         clock=time.monotonic,
     ) -> None:
         self._clock = clock
@@ -487,9 +530,28 @@ class LiveGo2Sources:
         self.drain_budget_s = float(drain_budget_s)
         if not math.isfinite(self.drain_budget_s) or self.drain_budget_s <= 0.0:
             raise ValueError("drain_budget_s must be positive and finite")
+        factor = int(datagram_budget_factor)
+        if factor < 1:
+            raise ValueError("datagram_budget_factor must be at least 1")
+        self.max_datagrams_per_drain = self._max_frames * factor
         #: Datagrams this source refused (F4). One bad datagram costs one
         #: datagram, not the tick and not the session.
         self.refused_datagrams = 0
+        #: Drains that read NOTHING because the socket reported itself blocking
+        #: (card SENSE-1). Not an error: an empty band is "no scan", which
+        #: HOLDs. It is counted so a rig that quietly went blocking is visible.
+        self.refused_blocking_drains = 0
+        #: Drains that ended on the wall-clock budget or the datagram budget
+        #: rather than on an empty socket — the tick was bounded by this class
+        #: and not by the sensor. Box-day reads it as "the Mid-360 is out-
+        #: running the drain", which is a real finding and not a fault.
+        self.bounded_drains = 0
+        #: Host monotonic clock read as the LAST frame of the most recent
+        #: non-empty drain came off the socket. This is the scan's own receipt
+        #: (X04) and it is what ``Go2Backend`` stamps onto the ``ScanDatum``;
+        #: ``None`` until a frame has been delivered.
+        self.last_frame_received_at: float | None = None
+        self._budget_spent = False
         self._owns_socket = False
         if socket is not None:
             self._socket = self._checked_socket(socket)
@@ -626,32 +688,98 @@ class LiveGo2Sources:
         del error
         self.refused_datagrams += 1
 
+    def _socket_reports_blocking(self) -> bool:
+        """True when the socket says, NOW, that its ``recv`` may block.
+
+        ``_checked_socket`` asks this once, at construction. Card SENSE-1 asks
+        it again on every drain, because a socket's blocking mode is mutable
+        state on an object this class does not always own: an injected
+        transport, or a reconnect path that calls ``setblocking(True)``, turns
+        a bounded drain into an unbounded one silently, and the failure only
+        shows up when the sensor goes quiet — which is when the control loop
+        most needs its tick. A transport that cannot answer ``gettimeout()`` is
+        still taken at its word (see ``_checked_socket``); the deadline below
+        then bounds it to ONE recv per drain rather than to none.
+        """
+
+        gettimeout = getattr(self._socket, "gettimeout", None)
+        return callable(gettimeout) and gettimeout() is None
+
     def _read_until_empty(self) -> Iterator[LivoxPointFrame]:
-        """Yield frames until the socket has none ready or the budget is spent.
+        """Yield frames until the socket has none ready or a budget is spent.
 
         A generator, so frames already read are KEPT when the socket runs dry
         mid-drain -- `tuple(...)` below has them. Draining nothing is not an
         error: it becomes an empty band, which becomes "no scan", which HOLDs.
+
+        THE BUDGETS ARE INSIDE ``receive_frames`` NOW, and that is card
+        SENSE-1's fix (A23). This loop used to check the deadline only BETWEEN
+        yields, so neither shape of unbounded drain was actually bounded:
+
+        * an ALL-CORRUPT FLOOD never yields. ``receive_frames`` skips a corrupt
+          datagram without consuming a frame slot -- correctly, that is F4's
+          "one datagram, not the tick" -- so it span inside ``next(frames)``
+          for as long as the sender kept sending, and the deadline outside was
+          never reached again;
+        * a BLOCKING recv never returns, so the first ``next(frames)`` parked
+          the control loop until a datagram arrived.
+
+        ``expired`` is therefore checked by ``receive_frames`` itself, before
+        every ``recv``, and ``max_datagrams`` bounds the flood even if the
+        clock does not advance between reads.
         """
 
         from parcel_robot.lidar import receive_frames
 
         deadline = float(self._clock()) + self.drain_budget_s
+
+        def expired() -> bool:
+            # It RECORDS that it fired rather than letting `drain()` infer it
+            # from elapsed time afterwards: `started + budget` and
+            # `sum of the reads` are two different floats and the comparison
+            # between them was wrong by one ulp in the measured case.
+            if float(self._clock()) < deadline:
+                return False
+            self._budget_spent = True
+            return True
+
         frames = receive_frames(
-            self._socket, max_frames=self._max_frames, on_refusal=self._count_refusal
+            self._socket,
+            max_frames=self._max_frames,
+            on_refusal=self._count_refusal,
+            max_datagrams=self.max_datagrams_per_drain,
+            expired=expired,
         )
-        while float(self._clock()) < deadline:
+        while True:
             try:
-                yield next(frames)
+                frame = next(frames)
             except StopIteration:
                 return
             except (BlockingIOError, TimeoutError, OSError):
                 return
+            # THE SCAN'S OWN RECEIPT (X04), read here and not at the top of
+            # `observe()`: this is the closest a host clock gets to the moment
+            # the datagram came off the socket.
+            self.last_frame_received_at = float(self._clock())
+            yield frame
 
     def drain(self) -> Sequence[LivoxPointFrame]:
         if self._socket is None:
             return ()
-        return tuple(self._read_until_empty())
+        if self._socket_reports_blocking():
+            # Refusing to READ is the only bound that exists for a blocking
+            # recv, and it costs exactly what a quiet sensor costs: an empty
+            # band -> no scan -> HOLD. It never costs the pose, which
+            # `observe()` has already taken.
+            self.refused_blocking_drains += 1
+            return ()
+        self._budget_spent = False
+        refused_before = self.refused_datagrams
+        drained = tuple(self._read_until_empty())
+        datagrams = len(drained) + (self.refused_datagrams - refused_before)
+        if self._budget_spent or datagrams >= self.max_datagrams_per_drain:
+            self.bounded_drains += 1
+        return drained
 
 
 class Go2Backend:
@@ -693,7 +821,7 @@ class Go2Backend:
         # module card W0-A carved out for exactly this, and the two health
         # types are imported where they are used. Same idiom as
         # `runtime.py:_evaluate_dispatch_input_health`.
-        from parcel_robot.core.input_health import CommissionedScanSource
+        from parcel_robot.core.input_health import CommissionedPoseSource, CommissionedScanSource
 
         for method in ("latest", "drain"):
             if not callable(getattr(source, method, None)):
@@ -725,9 +853,36 @@ class Go2Backend:
         # "no datum", which leaves the observation's own stamp in place: the
         # fail-closed direction.
         self._graded: deque[tuple[int, SimObservation, ScanDatum]] = deque(maxlen=GRADED_HISTORY)
+        # ---- CARD SENSE-1 (scrum/20260823/task_3): the pose half -----------
+        # A SECOND deque rather than a fourth slot in the one above, and the
+        # reason is HW-2's semantics, not tidiness: `_graded` is appended to
+        # only when the sweep WAS a scan, so its eviction order is part of
+        # what rows H2a/H2b measure. Pose exists on every observation this
+        # backend publishes — including the scan-less ones — so sharing the
+        # deque would change which observations `scan_datum_for` can still
+        # answer for. Same bound, same identity keying, same fail-closed
+        # "older than the window reads as no datum".
+        self._graded_pose: deque[tuple[int, SimObservation, PoseDatum]] = deque(
+            maxlen=GRADED_HISTORY
+        )
         #: The typed seam. ``runtime.py:_evaluate_dispatch_input_health`` reads
         #: it INSTEAD of the observation stamp when it declares PHYSICAL.
         self.scan_evidence_source = CommissionedScanSource(
+            self,
+            origin=origin,
+            session_epoch=self._session_epoch,
+            fixture_label=str(getattr(source, "fixture_label", "") or ""),
+            name=self.name,
+        )
+        #: The pose twin (verdict blocking finding 4). Same declaration, same
+        #: latch, one channel over. It has NO product read site yet — the join
+        #: still stamps pose through ``evidence_origin`` and
+        #: ``tests/test_hw2_go2_backend.py::test_b3_pose_authority_is_not_in_
+        #: this_card`` still measures that — because the read site is
+        #: ``runtime.py``, which this card may not touch. What lands here is
+        #: the seam and its proof at the join itself: a live pose passes the
+        #: physical table through this source, a replayed one latches.
+        self.pose_evidence_source = CommissionedPoseSource(
             self,
             origin=origin,
             session_epoch=self._session_epoch,
@@ -783,6 +938,46 @@ class Go2Backend:
                     return datum
         return None
 
+    # -- the pose seam (card SENSE-1) --------------------------------------
+
+    def pose_datum_for(self, key: object) -> PoseDatum | None:
+        """The `PoseDatum` built from the state sample that produced ``key``.
+
+        The pose half of :meth:`scan_datum_for`, keyed the same way and for the
+        same measured reason (H2): ``observe()`` also runs on HTTP handler
+        threads and the join may be grading an observation several ticks old,
+        so answering "what is the LATEST pose?" would let it grade observation
+        N against state N+1. Identity, not equality — two ticks of a standing
+        dog produce equal poses that are not the same evidence.
+        """
+
+        with self._lock:
+            for identity, observation, datum in reversed(self._graded_pose):
+                if identity == id(key) and observation is key:
+                    return datum
+        return None
+
+    def _scan_receipt(self, frames: Sequence[LivoxPointFrame], *, fallback: float) -> float:
+        """The host clock the last frame of this sweep was received at (X04).
+
+        ``fallback`` — the assembly clock — is used when the source keeps no
+        receipt, or reports one that is not a finite number, or when the drain
+        produced nothing at all (there is no sweep to date, and the no-scan
+        branch throws the value away anyway). It is the PERMISSIVE direction,
+        so it is deliberately narrow: both shipped sources keep a receipt, and
+        a source that does not is a third-party one whose scan must still get a
+        number the freshness check can read.
+        """
+
+        if not frames:
+            return fallback
+        receipt = getattr(self.source, "last_frame_received_at", None)
+        if isinstance(receipt, bool) or not isinstance(receipt, (int, float)):
+            return fallback
+        if not math.isfinite(float(receipt)):
+            return fallback
+        return float(receipt)
+
     def latest_scan_age_s(self, now: float | None = None) -> float | None:
         """Age of the scan behind the last observation, in seconds.
 
@@ -801,7 +996,7 @@ class Go2Backend:
     # -- the SimulatorBackend contract ------------------------------------
 
     def observe(self) -> SimObservation:
-        from parcel_robot.core.input_health import ScanDatum  # see __init__'s note
+        from parcel_robot.core.input_health import PoseDatum, ScanDatum  # see __init__'s note
 
         with self._lock:
             # THE POSE COMES FIRST, and it comes before the socket is drained
@@ -818,10 +1013,45 @@ class Go2Backend:
                     "fresh. Check that the Sport service is up and that the DDS "
                     "domain/interface are the robot's (design §4 S4)."
                 )
-            received_at = float(self._clock())
+            # THE ASSEMBLY CLOCK, and from here on it is ONLY that (X04). It
+            # is what `SimObservation.timestamp` has always been and half the
+            # tree reads it, so it does not move; what moves is that it is no
+            # longer also passed off as the receipt of two buffered channels
+            # that took delivery at their own moments.
+            timestamp = float(self._clock())
+
+            # THE POSE'S OWN RECEIPT: the host clock at which the DDS sample
+            # this pose was read from arrived. `latest()` is a POLL over a
+            # buffer, so on a quiet stream it returns the same sample tick
+            # after tick; stamping it with `timestamp` made a pose from a
+            # stream that had stopped look permanently fresh to the health
+            # join's staleness branch, which is the one branch that exists to
+            # notice a stream that stopped.
+            pose_datum = PoseDatum(
+                captured_at=float(state.received_at),
+                sequence=int(state.sequence),
+                frame_id="odom",
+                payload_valid=True,
+                source_time_s=state.source_time_s,
+                # The epoch this BACKEND was commissioned under, exactly as the
+                # `ScanDatum` below carries it. The producer's own
+                # `state.session_epoch` is `CommissionedStateSource`'s axis on
+                # the feedback channel and is deliberately not re-checked here:
+                # the shipped replay fixture declares an epoch
+                # (`hw2-synthetic-2026-08-23`) that no backend config names, so
+                # checking it would latch tick one of every desktop replay —
+                # a refusal with no defect behind it.
+                session_epoch=self._session_epoch,
+            )
+
             frames = tuple(self.source.drain())
             scan = scan_from_frames(frames, self.band_profile)
-            timestamp = received_at
+            # THE SCAN'S OWN RECEIPT: the host clock read as the last datagram
+            # of this sweep came off the socket, which the source records
+            # (`LiveGo2Sources.last_frame_received_at`). A source that does not
+            # keep one leaves the assembly clock in place; both shipped sources
+            # keep one.
+            received_at = self._scan_receipt(frames, fallback=timestamp)
 
             if not scan.ranges_m:
                 # HW-3's branch, verbatim: this sweep is NOT a scan. Publish the
@@ -832,7 +1062,13 @@ class Go2Backend:
                 # join sees `missing` through BOTH paths.
                 self._latest_scan = None
                 self._scan_received_at = None
-                return self._observation(state, timestamp=timestamp)
+                scanless = self._observation(state, timestamp=timestamp)
+                # The POSE is recorded even here, and that is the difference
+                # between the two channels: a sweep with no returns is a real
+                # answer from the LiDAR, but this tick still has a pose — the
+                # one `Go2StateUnavailable` above refused to fabricate.
+                self._graded_pose.append((id(scanless), scanless, pose_datum))
+                return scanless
 
             self._scan_sequence += 1
             self._scan_received_at = received_at
@@ -862,6 +1098,7 @@ class Go2Backend:
                 lidar_range_max_m=scan.range_max_m,
             )
             self._graded.append((id(observation), observation, datum))
+            self._graded_pose.append((id(observation), observation, pose_datum))
             return observation
 
     def _observation(

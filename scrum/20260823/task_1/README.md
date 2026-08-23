@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-23
 
-**Status:** REVIEW-ONLY · NOT DISPATCHED
+**Status:** ACCEPT_WITH_REQUIRED_CHANGES · SUPPLEMENT PARTIAL · NOT DISPATCHED
 
 **Author:** Codex (repository audit and review packet)
 
@@ -36,6 +36,12 @@ This task designs the work. It does **not** authorize a refactor, behavior
 change, safety change, dependency migration, process launch, gate run, commit,
 or push.
 
+**Returned outcome:** Fable recorded `ACCEPT_WITH_REQUIRED_CHANGES` and later
+dispositioned the exact delta's highest-severity findings. Reconciliation found
+the supplement incomplete: L11 is absent from the 147-ID partition, questions
+21–26 are not all explicitly answered, and its status/tranche/owner statements
+contain contradictions. The required corrections remain open.
+
 ## Why this is a separate review card
 
 The repository contains strong safety contracts and broad synthetic tests, but
@@ -67,6 +73,12 @@ and rollback before implementation cards are cut.
   `0ce1c5f..c1b8405` delta rather than treating dirty-tree estimates as final.
 - The landing's own evidence ceiling is desktop/synthetic/replay. A clean
   commit and commit-tier gate record are not target or physical proof.
+- During final packet QA after `3792288`, external implementation began in
+  Go2/input-health/Livox and a new proximity-profile module/test/status, then
+  additional config/gate/hardware-test paths. The six-path 17:00 snapshot is
+  decomposed provisionally at the end of `CLAUDE_WAVE3_DECOMPOSITION.md`;
+  later moving bytes are excluded. None is part of the exact Wave 3 audit or
+  modified by task 1.
 
 **OWNS:** `scrum/20260823/task_1/**` only.
 
@@ -74,22 +86,27 @@ and rollback before implementation cards are cut.
 `tools/**`, `configs/**`, `deploy/**`, `.github/**`, `pyproject.toml`,
 `requirements*.txt`, the index, the Git index, or any running process.
 
-No implementation card may start until all remaining conditions hold:
+This task does not dispatch implementation. Any implementation start requires
+all conditions to hold:
 
-1. Fable has narrowly reviewed the exact Wave 3 delta and resolved the
-   scan-age, hard-skip, SDK/venv, resolved-profile, blocking-I/O, and lifecycle
-   findings in `CLAUDE_WAVE3_DECOMPOSITION.md`.
-2. Fable has written an accepted verdict for the revised ARCH-1 design.
-3. The owner has approved the exact tranche, integrator, constituent cards,
+1. Fable supplies a narrow attributed correction covering L11, the accepted
+   hard/soft/report-only truth table, exact vendor-state-sidecar and separate
+   LiDAR-ingest schemas/deadlines, and the
+   extract/preserve/defer disposition for questions 21–26; no broad re-review.
+2. The owner has approved the exact final tranche, integrator, constituent cards,
    risk tier/model/reviewer fanout, spend/compute/documentation/diff budget,
    prototype outcome, and stop/continue gate.
+3. Each card inherits the verdict/addendum's exact required corrections,
+   preserve boundaries, refuters, evidence ceiling, and rollback.
 
 Fable accepts or rejects architecture; only the owner authorizes spend and
-dispatch. `CONFIRM_OPEN` or provisional is not closure. The initial verdict
-records X08/X16 closed, X11 revised, and an X12 co-location decision; its other
-required changes plus this later delta supplement remain review inputs. Other
-physical blockers prohibit the affected physical milestone, while only an
-explicitly scoped, dependency-safe tranche may work toward closing them.
+dispatch. `CONFIRM_OPEN` or provisional is not closure. The verdict/addendum
+record X16's original regeneration closed, X11 revised, and an X12 co-location
+decision. X08's integration evidence supports closure, but the addendum's
+“now PARTIAL” wording conflicts with the main verdict and needs correction;
+T12/target evidence stays open either way. Other physical blockers prohibit
+the affected physical milestone, while only an explicitly scoped,
+dependency-safe tranche may work toward closing them.
 
 ## Packet
 
@@ -103,7 +120,23 @@ explicitly scoped, dependency-safe tranche may work toward closing them.
 | `CONCERNS_REGISTER.md` | Required concern-by-concern risk, evidence, consequence, response, and batching review |
 | `PREREGISTRATION.md` | Claims and thresholds pinned before Fable review or implementation |
 | `FABLE_REVIEW_BRIEF.md` | Required review lenses, questions, and verdict format |
-| `FABLE_VERDICT.md` | External initial verdict: `ACCEPT_WITH_REQUIRED_CHANGES` for the original eight-file packet; preserve unchanged and supplement narrowly for the later Claude-delta addendum |
+| `FABLE_VERDICT.md` | External `ACCEPT_WITH_REQUIRED_CHANGES` verdict plus partial post-landing supplement; preserve unchanged; reconciliation below remains open |
+
+## Verdict reconciliation — open
+
+The external verdict is preserved verbatim. These are packet status facts, not
+silent edits to its attribution:
+
+| Issue | Exact reconciliation needed |
+|---|---|
+| 147-ID coverage | The family row covers L02–L03, L05–L10, L12–L13 and exceptions cover L01/L04; L11 is absent, so actual coverage is 146/147 despite the verdict's claim. |
+| Delta questions | Q21/Q24 and parts of Q22/Q25 are addressed; Q22 lacks the complete hard/soft/report-only truth table, Q23 lacks an exact IPC schema/deadline, and Q26 lacks an explicit exhaustive symbol/test disposition. |
+| X08 status | Main verdict/Authorization says refuted/closed; addendum says “now PARTIAL.” Reviewer must state one final status without weakening the still-open T12/target rows. |
+| Final tranche | Main list is AWARE/PROX/SENSE/IG; addendum's final list is PROX/SENSE/AWARE/GATE. It says it “only” adds GATE, but it also removes IG. Exact intended set is unresolved. |
+| Accepted-risk owners | A24 and the mic deferral name Fable as owner and give no expiry; Fable is reviewer, not operational owner. T05/T06/T20 cite an unnamed directive. Name accountable owner, trigger, expiry/review date. |
+| Mic premise | Runtime directly calls `close_mic`, but gateway stop/set/close already share `_mic_lock`; existing HW4 races cover real transitions. The addendum's “route is the only arm path”/accepted-race premise is incomplete. Characterize the candidate-redundant web lock and seed a failure before deferral or refactor; PortAudio callbacks must remain nonblocking. |
+| Post-verdict bytes | Current delta audit adds injected-origin, static-vs-live authority, odometry/MAP, reactive person/terrain, installer, and physical-ladder refinements after the verdict commit. They map to existing open concerns but were not reviewed byte-for-byte. |
+| Dispatch authority | Verdict phrases such as “Tranche 1 (final),” “Opus executes,” and “owner already has” are reviewer assertions of architectural eligibility, not evidence of owner dispatch. Broad direction cannot expand this review-only scope; an exact tranche approval must name integrator, budgets, and stop gate. The four created task stubs remain proposals. |
 
 ## Scope definition: what “all” means
 
@@ -159,23 +192,25 @@ after the owner authorizes a tranche is implementation cut into smaller cards
 with disjoint OWNS.
 
 The table below is the proposal under review, not an accepted schedule.
-The initial Fable verdict revises the early native rail and renders X11/X12/
-X16 dispositions, while retaining deployment, evidence, composition, and
-physical blockers. The later Claude-delta supplement must address its exact
-new findings; Claude must not dispatch the table merely because it appears
-here or because an architecture verdict exists.
+The Fable verdict revises the early native rail and renders X11/X12/X16
+dispositions, while retaining deployment, evidence, composition, and physical
+blockers. Its Claude-delta supplement assigns several new findings but remains
+incomplete under the reconciliation above. Claude must not dispatch the table
+merely because it appears here, because task stubs exist, or because an
+architecture verdict exists.
 
 Numbers express prerequisites, not a single global queue. Rows 6A and 6B are
 independent branches after their named contracts; ROS/localization is a hard
 prerequisite for map-relative/custom navigation, not for audio. Physical-rail
-blockers retain priority and the owner still caps WIP at two.
+blockers retain priority. The accepted lane rule is at most one Python-product
+card plus one genuinely disjoint native/capture/CI lane.
 
 | Order | Proposed card | Outcome | Dispatch rule |
 |---:|---|---|---|
 | 0 | `ARCH-F0-MIN` characterization and contract freeze | Accepted critical traces, API/lock graph, bridge authority/protocol | Minimal slice; behavior-free |
 | 0P | native gateway/final-governor bench | No-credential host/CI native process against fake Sport | Parallel after protocol freeze; no target/robot claim or writer credential |
 | 1 | `ARCH-IG` + `ARCH-TEST` | Thin imports, forbidden edges, hermetic bounded launcher | Bounded foundation; must not delay gateway bench |
-| 2 | `ARCH-OBS-MIN` neutral navigation evidence | Multi-rate stamped navigation/world snapshots; sim/replay/live read adapters | Before product credential or autonomous motion |
+| 2 | `ARCH-OBS-MIN` neutral navigation evidence | High-rate stamped `NavigationSnapshotV2`; sim/replay/live read adapters; slower `WorldSnapshotV2` explicitly deferred | Before product credential or autonomous motion |
 | 3 | `ARCH-CONFIG` + `ARCH-PKG` bounded slices | Typed physical composition and clean target artifacts | Only minimum required for target rail first |
 | 4 | `ARCH-DEPLOY` | Process/artifact matrix, systemd topology, identities, restart-disarmed, rollback | First-class owner before B16/B30 |
 | 5 | B25 + Orin gateway rebench, then B16/B30 | Repeat the same native artifact on Orin; independent stop, commissioning credential, then product-path HIL | Owner/hardware gates; inspected progression |
@@ -188,8 +223,9 @@ blockers retain priority and the owner still caps WIP at two.
 | 10 | `ARCH-CONTROL` decision | Keep, retire, or decompose Python `ControlManager` after native cutover | Default preserve unless live risk justifies extraction |
 | P | `ARCH-CAPTURE-*`, `ARCH-CI`, `ARCH-SIM`, `ARCH-UI`, `ARCH-PROVIDERS` | Parallel supporting decomposition | Must not delay physical blockers |
 
-Maximum work in progress after approval: two implementation cards. Cards that
-share runtime, configuration, CI runner, or test-hook semantics are sequential.
+After approval: at most one Python-product card plus one genuinely disjoint
+native/capture/CI lane. Cards sharing runtime, configuration, CI runner,
+pinned symbols, structural-oracle tests, or lifecycle semantics are sequential.
 
 ## Definition of done for this review card
 
@@ -207,7 +243,7 @@ share runtime, configuration, CI runner, or test-hook semantics are sequential.
 - [ ] Fable has accounted for every concern ID in `CONCERNS_REGISTER.md` using
   compact family/range rows plus explicit exceptions; no omitted ID is closed.
 - [x] Fable has written an initial verdict for the original eight-file packet.
-- [ ] Fable has supplemented that verdict for
+- [ ] Fable has completed the supplement for
   `CLAUDE_WAVE3_DECOMPOSITION.md`, its newly recorded false-green/config/
   lifecycle findings, and questions 21–26.
 - [ ] Any required changes have been incorporated and re-reviewed.

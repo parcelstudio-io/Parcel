@@ -420,6 +420,13 @@ VALID_RECORD = {
         "stop_command_to_standstill_s": {"value": 0.450, "provenance": "rig"},
         "localization_jump_m": {"value": 0.200, "provenance": "rig"},
     },
+    # CARD GATE-1 (scrum/20260823/task_5): the gate row now reads SIX terms, so
+    # a fixture record has to carry the sixth or every row below would be
+    # UNMEASURED and the arithmetic these tests pin would stop being exercised.
+    # It is 0.0 — a rig with no LiDAR — which leaves every sum, headroom and
+    # missing-set assertion in this file numerically identical to what card
+    # HW-6 pinned. The six-term behaviour itself is proved in task_5's tests.
+    "scan_age": {"value": 0.0, "provenance": "rig"},
 }
 
 
@@ -658,7 +665,9 @@ def test_the_shipped_records_are_valid_and_the_row_follows_the_resolved_one(
 
     resolved = timing.resolve_stopping_envelope_record(REPO, hostname=hostname, env={})
     assert resolved.is_file(), f"no shipped record resolves for {hostname!r}"
-    record = timing.load_stopping_envelope_record(resolved)
+    # CARD GATE-1: read with the loader the GATE now uses, so "the row reports
+    # THAT record's missing terms" keeps meaning what it says.
+    record = timing.load_stopping_envelope_record_v2(resolved)
     result = ci_gate.evaluate_stopping_envelope(record=resolved)
 
     # Invariant 1: a shipped record never gates. This is what seed S1 targets.
@@ -681,10 +690,11 @@ def test_the_shipped_records_are_valid_and_the_row_follows_the_resolved_one(
             "gateway_period_s",
             "stop_command_to_standstill_s",
             "localization_jump_m",
+            "scan_age_s",  # CARD GATE-1: the sixth term, UNMEASURED on this box
         }
     else:
         assert resolved.name == "default.yaml"
-        assert record.missing() == timing.ENVELOPE_TERMS_V1
+        assert record.missing() == timing.ENVELOPE_TERMS_V2  # CARD GATE-1
     assert record.active_regime == "one_axis"
 
 
@@ -722,7 +732,7 @@ def test_the_row_resolves_by_hostname_on_its_own_default_path(monkeypatch) -> No
     )
     override = ci_gate.evaluate_stopping_envelope()
     assert Path(override.extra["record"]).name == "default.yaml"
-    assert len(override.extra["missing"]) == len(timing.ENVELOPE_TERMS_V1)
+    assert len(override.extra["missing"]) == len(timing.ENVELOPE_TERMS_V2)  # CARD GATE-1
 
 
 def test_the_stage_is_registered_the_way_gate_0b_registered_its_own() -> None:
@@ -746,3 +756,144 @@ def test_the_stage_is_registered_the_way_gate_0b_registered_its_own() -> None:
         for chunk in source.split(f"# ---- {region}")[1:]:
             body = chunk.split("# ---- END CARD")[0]
             assert "HW-6" not in body, f"HW-6 text leaked into a {region} region"
+
+
+# ===========================================================================
+# CARD GATE-1 (scrum/20260823/task_5) — the row reads SIX terms.
+#
+# The addendum's R09 (the HW-6b debt): `evaluate_stopping_envelope` called the
+# five-term V1 loader while the six-term V2 layer sat beside it, so the row
+# could one day print `FITS` with the age of the Mid-360 scan silently absent
+# from the sum. The four tests below are the capability, not the plumbing:
+# the sixth term is NAMED when it is missing, it ENTERS the arithmetic when it
+# is measured, a record written before the term existed still produces a row,
+# and both shipped records say UNMEASURED with a provenance that says what
+# will measure it. Nothing here runs a tier (the file's standing rule).
+# ===========================================================================
+
+
+def _v2_row(tmp_path: Path, *, scan_age: object = 0.0, **overrides: object):
+    """`_row`, but with a well-formed top-level `scan_age:` block.
+
+    `_row` writes any unknown key as a bare value, which is exactly the shape
+    the V2 reader refuses — useful for the fallback test below, wrong for the
+    arithmetic ones.
+    """
+
+    document = copy.deepcopy(VALID_RECORD)
+    for key, value in overrides.items():
+        if key in document["measurements"]:
+            document["measurements"][key]["value"] = value
+        else:
+            document[key] = value
+    if scan_age is None:
+        document.pop("scan_age")
+    else:
+        document["scan_age"] = {"value": scan_age, "provenance": "rig"}
+    record = _write_record(tmp_path / "row_v2.yaml", document)
+    return ci_gate.evaluate_stopping_envelope(record=record)
+
+
+def test_gate1_an_unmeasured_scan_age_alone_stops_the_row_claiming_a_verdict(
+    tmp_path,
+) -> None:
+    """The defect, negated. Five measured terms USED to print `FITS`.
+
+    This is the state the dog reaches first: box-day B1/B2/B3 land the three
+    hard terms and B11 has not run, so every HLD 8.8 term is measured and the
+    scan age is not. Before this card that record printed a five-term FITS —
+    a verdict backed by an envelope that IS the LiDAR ring, computed without
+    the age of the scan the ring came from.
+    """
+
+    result = _v2_row(tmp_path, scan_age="UNMEASURED")
+    assert result.status == "pass"
+    assert result.hard is False
+    assert result.gating_red is False
+    assert result.extra["state"] == "UNMEASURED"
+    assert result.extra["missing"] == ["scan_age_s"]
+    assert result.extra["required_m"] is None
+    assert result.detail.startswith("UNMEASURED — scan_age_s")
+    assert "fits at the active regime" not in result.detail
+    # The five that ARE measured are still on the page, per regime.
+    for regime in ("one_axis", "leashed", "restricted_free"):
+        assert regime in result.detail
+
+
+def test_gate1_a_measured_scan_age_is_travel_and_can_redden_the_row(tmp_path) -> None:
+    """The sixth term is in the SUM, not in a footnote.
+
+    The seed record fits `restricted_free` with 6.25 mm to spare. At 0.25 m/s a
+    25 ms scan age is exactly 6.25 mm of travel, so it lands the sum precisely
+    on the 0.330 m envelope (`<=`, no epsilon — HW-6's rule), and 30 ms puts it
+    over. A row that ignored the term would report 6.25 mm of headroom in both.
+    """
+
+    exact = _v2_row(tmp_path, scan_age=0.025)
+    assert exact.extra["state"] == "FITS"
+    assert exact.hard is False
+    assert exact.extra["headroom_m"] == pytest.approx(0.0, abs=1e-12)
+
+    over = _v2_row(tmp_path, scan_age=0.030)
+    assert over.extra["state"] == "OVER"
+    assert over.hard is True
+    assert over.status == "fail"
+    assert over.gating_red is True
+    assert over.extra["headroom_m"] == pytest.approx(-0.00125, abs=1e-12)
+    assert "does NOT fit" in over.detail
+
+
+def test_gate1_a_five_term_record_is_unmeasured_not_unreadable(tmp_path) -> None:
+    """A record written before the sixth term existed still gets a row.
+
+    `load_stopping_envelope_record_v2` refuses a document with no `scan_age:`
+    block, because for a record's WRITER that block is mandatory. For the gate
+    the honest reading is softer and is the whole point of the sentinel: a term
+    nobody wrote down is UNMEASURED, not a broken file. The five terms are
+    still derived and printed; the sixth is named; nothing claims a verdict.
+    """
+
+    result = _v2_row(tmp_path, scan_age=None)
+    assert result.status == "pass", result.detail
+    assert result.hard is False
+    assert result.extra["state"] == "UNMEASURED"
+    assert result.extra["missing"] == ["scan_age_s"]
+    assert result.detail.startswith("UNMEASURED — scan_age_s")
+    # ... and the row says WHY the term is missing, pointing at the record.
+    assert "row_v2.yaml" in result.extra["scan_age_provenance"]
+    assert "latest_scan_age_s" in result.extra["scan_age_provenance"]
+
+    # A malformed block reads the same way — UNMEASURED, with the reader's own
+    # objection kept — while a document NEITHER reader accepts is still the
+    # non-gating `error` row card HW-6 defined.
+    document = copy.deepcopy(VALID_RECORD)
+    document["scan_age"] = 0.030  # a bare number where a block belongs
+    malformed = ci_gate.evaluate_stopping_envelope(
+        record=_write_record(tmp_path / "malformed.yaml", document)
+    )
+    assert malformed.status == "pass"
+    assert malformed.extra["state"] == "UNMEASURED"
+    assert malformed.extra["missing"] == ["scan_age_s"]
+    assert "ValueError" in malformed.extra["scan_age_provenance"]
+    assert "malformed.yaml" in malformed.extra["scan_age_provenance"]
+
+    (tmp_path / "junk.yaml").write_text("schema: nope\n", encoding="utf-8")
+    broken = ci_gate.evaluate_stopping_envelope(record=tmp_path / "junk.yaml")
+    assert broken.status == "error"
+    assert broken.hard is False
+
+
+@pytest.mark.parametrize("hostname", HOSTNAMES_THE_ROW_MUST_SURVIVE)
+def test_gate1_every_shipped_record_names_the_sixth_term_unmeasured(hostname: str) -> None:
+    """On every host in the tree, today and until box-day B11 measures it."""
+
+    resolved = timing.resolve_stopping_envelope_record(REPO, hostname=hostname, env={})
+    result = ci_gate.evaluate_stopping_envelope(record=resolved)
+    assert result.hard is False
+    assert result.status == "pass"
+    assert result.extra["state"] == "UNMEASURED"
+    assert "scan_age_s" in result.extra["missing"]
+    assert "scan_age_s" in result.detail
+    # Invariant 3 of the shipped-record row, extended to the sixth term: an
+    # unmeasured term must say what will measure it.
+    assert len(result.extra["scan_age_provenance"].strip()) > 40

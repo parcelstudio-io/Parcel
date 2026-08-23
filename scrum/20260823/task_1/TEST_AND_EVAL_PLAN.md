@@ -26,10 +26,20 @@ refutation suites. Before any file split, the landing needs explicit reds for:
 - any required hard capability converted to a zero-exit `SKIPPED/PASS` result;
 - an injected blocking/corrupt-flood LiDAR socket defeating the drain bound;
 - a fully resolved physical profile inheriting simulated battery/NIC/policy;
-- direct/runtime and HTTP mic lifecycle transitions racing one another.
+- gateway/HTTP/runtime mic interleavings characterizing whether the web lock is
+  redundant; no race is presumed without a seeded failing case.
 
 Those are correctness/characterization prerequisites. Moving tests, helpers,
 or production symbols before their mutants redden does not satisfy ARCH-1.
+
+The post-freeze SENSE-1/PROX-1 snapshot adds four immediate reds before either
+feature is wired: an injected simulated Go2 source must not mint PHYSICAL pose;
+an opaque blocking `recv` must return within the hard ingest bound; missing or
+invalid physical receipt must never fall back fresh; and a model context call
+must remain a proposal until a deterministic, expiring authority publishes one
+atomic policy/context/source/revision snapshot. The exact unit, integration,
+target, and people-ODD cases are enumerated in the live appendix of
+`CLAUDE_WAVE3_DECOMPOSITION.md`.
 
 ## Proposed scope and cadence markers
 

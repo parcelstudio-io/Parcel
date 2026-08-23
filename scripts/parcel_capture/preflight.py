@@ -3444,6 +3444,460 @@ def probe_builtin_lidar(
 
 
 # ---------------------------------------------------------------------------
+# Mount-day channel readiness — card SENSE-1 (scrum/20260823/task_3)
+# ---------------------------------------------------------------------------
+#
+# WHAT THIS ANSWERS, and why the 28-row channel matrix above does not answer it.
+# That matrix is the RECORDING plan: every row is a DDS/vendor topic a capture
+# session writes to a bag, and on a box with no dog every one of them is
+# correctly ABSENT. Mount day asks a smaller and more urgent question first —
+# *can this host take data from the three things about to be bolted on at all?*
+# — and the honest answer has two halves that the matrix conflates:
+#
+#   the SOFTWARE half   the port binds, the decoder decodes, the module imports
+#   the DEVICE half     something is actually on the wire
+#
+# A row that says only ABSENT cannot tell an operator whether they are waiting
+# on a cable or on a `pip install`, and those are different mornings. So a
+# readiness row carries three states and an absence REASON from the same closed
+# vocabulary the channel probes use (:class:`AbsenceReason`): READY is both
+# halves, PARTIAL is "the software path is proven and nothing is on the wire",
+# ABSENT is "the software path is missing, so nothing was even attempted".
+#
+# THE MID-360 ROW IS A REAL BIND AND A REAL DECODE, not a description of one.
+# ``parcel_robot.lidar.receive_frames`` deliberately owns no socket, so nothing
+# in this tree had ever proved that the host can bind the port the sensor sends
+# to. This row does: it binds, listens for a fraction of a second, and runs any
+# datagram that arrives through the SAME ``parse_point_frame`` the backend
+# uses. On a desk that is PARTIAL/no_message; on the bench with the dog
+# powered it is the first thing that goes READY.
+#
+# NOT AN ``Observation`` AND NOT A 29TH ``ChannelProbe``, deliberately. The
+# attestation refuses observation keys it does not know
+# (``attest.HardwareAttestationV1``) and the channel enumeration is pinned to
+# the matrix; a readiness row is neither of those things, so it rides in its
+# own field with its own default and no existing consumer changes.
+
+#: How long the Mid-360 row listens before reporting no_message. A Mid-360
+#: streaming points fills a socket buffer in single-digit milliseconds, so this
+#: is generous for the question "is anything on this wire?" and cheap enough to
+#: run on every preflight.
+MID360_LISTEN_S = 0.05
+
+#: Where the kernel lists sound cards. A text read, never a PortAudio open:
+#: opening the array is the audio stack's job and it has an owner.
+ASOUND_CARDS = "/proc/asound/cards"
+
+#: Substrings that identify the array in a card line. Both spellings appear on
+#: this host (`reSpeaker XVF3800 4-Mic Array`, `Seeed Studio reSpeaker`).
+_ARRAY_CARD_TOKENS = ("xvf3800", "respeaker")
+
+#: The modules that can open a USB audio device here. Either is enough.
+_ARRAY_MODULES = ("sounddevice", "pyaudio")
+
+_MID360_REMEDY_NO_MESSAGE = (
+    "the socket is bound and the decoder is sound; nothing is sending. Power the "
+    "Mid-360, confirm the sensor's host-IP/port configuration points at this host "
+    "(Livox default host point port 56301), and check the robot LAN cable."
+)
+_MID360_REMEDY_BIND = (
+    "the host could not bind the point-data port. Something else is already on it, "
+    "or the address is not one of this host's. Check with `ss -ulpn` and free it; "
+    "no capture can receive a point cloud until it binds."
+)
+_MID360_REMEDY_DECODER = (
+    "the Livox decoder in this interpreter could not read a frame it built itself, "
+    "so the install is broken, not the sensor. Reinstall the project into this venv "
+    "and re-run before touching the robot."
+)
+_D455_MOUNT_REMEDY_DEVICE = (
+    "plug the D455 into a USB 3 (BLUE) port, direct, no hub, and confirm it "
+    "enumerates (`ls /dev/video*`, `lsusb | grep -i intel`). Do not pip install "
+    "anything for this row."
+)
+_XVF3800_REMEDY_DEVICE = (
+    "plug the reSpeaker XVF3800 in over USB and confirm the kernel lists it "
+    "(`cat /proc/asound/cards`). Nothing here opens the device; the audio stack "
+    "does that on the owner's own gesture."
+)
+_XVF3800_REMEDY_MODULE = (
+    "the kernel lists the array but no host audio module can open it. Install "
+    "sounddevice into the capture venv (`.parcel/bin/pip install sounddevice`)."
+)
+
+
+class MountReadiness(str, Enum):
+    """The three answers a mount-day row is allowed to give.
+
+    Its own enum rather than :class:`ProbeStatus`, and not only because the
+    structural pin allows exactly one producer of ``ProbeStatus.PRESENT`` per
+    module: these are different questions. A channel probe grades a STREAM over
+    a window; this grades whether the path to a device exists at all.
+    """
+
+    READY = "ready"
+    PARTIAL = "partial"
+    ABSENT = "absent"
+
+
+@dataclass(frozen=True, slots=True)
+class MountChannelRow:
+    """One mount-day channel, and what is true about it right now."""
+
+    channel: str
+    #: One line: what has to work on mount day for this channel to carry data.
+    what: str
+    readiness: MountReadiness
+    evidence: str
+    absence: AbsenceReason | None = None
+    absence_detail: str = ""
+    remedy: str = ""
+
+    def __post_init__(self) -> None:
+        # The same invariant :class:`ChannelProbe` keeps, restated over this
+        # row's vocabulary: anything short of READY names a typed reason, and
+        # READY may not carry one. A row that is not ready and cannot say why
+        # is the "unknown read as fine" failure this whole module exists to
+        # prevent.
+        if self.readiness is MountReadiness.READY:
+            if self.absence is not None:
+                raise ProbeContractError(f"{self.channel}: a READY row carries no absence")
+        elif self.absence is None:
+            raise ProbeContractError(
+                f"{self.channel}: {self.readiness.value} must name an AbsenceReason"
+            )
+        if self.readiness is not MountReadiness.READY and not self.remedy.strip():
+            raise ProbeContractError(f"{self.channel}: an unready row must name a remedy")
+        if not self.evidence.strip():
+            raise ProbeContractError(f"{self.channel}: every row states its evidence")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "channel": self.channel,
+            "what": self.what,
+            "readiness": self.readiness.value,
+            "evidence": self.evidence,
+            "absence": None if self.absence is None else self.absence.value,
+            "absence_detail": self.absence_detail,
+            "remedy": self.remedy,
+        }
+
+
+def _open_point_socket(host: str, port: int) -> Any:
+    """Bind a NON-BLOCKING UDP socket for the Mid-360's point stream.
+
+    The same call ``backends/go2.py:LiveGo2Sources.open_livox_socket`` makes on
+    the robot, spelled here because preflight may not import the runtime.
+    """
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.setblocking(False)
+        sock.bind((host, port))
+    except OSError:
+        sock.close()
+        raise
+    return sock
+
+
+def probe_mid360_udp(
+    *,
+    host: str = "",
+    port: int | None = None,
+    listen_s: float = MID360_LISTEN_S,
+    opener: Callable[[str, int], Any] | None = None,
+    clock: Callable[[], float] = time.monotonic,
+) -> MountChannelRow:
+    """Bind the point-data port, listen briefly, decode whatever arrives."""
+
+    what = "bind the Livox point-data port and decode one datagram"
+    try:
+        from parcel_robot.lidar import (
+            HOST_POINT_DATA_PORT,
+            LivoxDecodeError,
+            build_point_frame,
+            parse_point_frame,
+            receive_frames,
+        )
+    except ImportError as error:
+        return MountChannelRow(
+            channel="mid360.udp",
+            what=what,
+            readiness=MountReadiness.ABSENT,
+            evidence=f"parcel_robot.lidar is not importable in {sys.executable}",
+            absence=AbsenceReason.DEPENDENCY_MISSING,
+            absence_detail=str(error),
+            remedy=_MID360_REMEDY_DECODER,
+        )
+
+    # THE DECODER HALF, proved against the module's own wire builder. This is
+    # not a tautology: `build_point_frame` is product code and box-day (HW-9)
+    # falsifies IT against one real datagram, so a decoder that cannot read it
+    # is a broken install and this row says so before the sensor is blamed.
+    probe_frame = build_point_frame(
+        [(1000, 0, 100, 10, 0), (2000, 0, 100, 12, 0)], udp_cnt=1, frame_cnt=1
+    )
+    try:
+        decoded = parse_point_frame(probe_frame)
+    except LivoxDecodeError as error:
+        return MountChannelRow(
+            channel="mid360.udp",
+            what=what,
+            readiness=MountReadiness.ABSENT,
+            evidence="parse_point_frame refused a frame build_point_frame produced",
+            absence=AbsenceReason.UNPARSEABLE,
+            absence_detail=str(error),
+            remedy=_MID360_REMEDY_DECODER,
+        )
+
+    bind_port = int(HOST_POINT_DATA_PORT) if port is None else int(port)
+    open_socket = _open_point_socket if opener is None else opener
+    shown_host = host or "0.0.0.0"
+    try:
+        sock = open_socket(host, bind_port)
+    except OSError as error:
+        return MountChannelRow(
+            channel="mid360.udp",
+            what=what,
+            readiness=MountReadiness.ABSENT,
+            evidence=f"UDP {shown_host}:{bind_port} could not be bound",
+            absence=AbsenceReason.PROBE_RAISED,
+            absence_detail=str(error),
+            remedy=_MID360_REMEDY_BIND,
+        )
+
+    refused: list[str] = []
+    frames: list[Any] = []
+    deadline = float(clock()) + max(0.0, float(listen_s))
+    try:
+        stream = receive_frames(
+            sock,
+            max_frames=1,
+            on_refusal=lambda error: refused.append(str(error)),
+            max_datagrams=64,
+            expired=lambda: float(clock()) >= deadline,
+        )
+        while True:
+            try:
+                frames.append(next(stream))
+            except StopIteration:
+                break
+            except (BlockingIOError, TimeoutError, OSError):
+                break
+    finally:
+        _close_quietly(sock)
+
+    decoder_note = (
+        f"decoder round-trips its own wire layout ({decoded.dot_num} points, "
+        f"{decoded.data_type.name})"
+    )
+    if frames:
+        arrived = frames[0]
+        return MountChannelRow(
+            channel="mid360.udp",
+            what=what,
+            readiness=MountReadiness.READY,
+            evidence=(
+                f"UDP {shown_host}:{bind_port} bound; {arrived.dot_num} points decoded "
+                f"from a live datagram in {listen_s:.2f}s; {decoder_note}"
+            ),
+        )
+    if refused:
+        return MountChannelRow(
+            channel="mid360.udp",
+            what=what,
+            readiness=MountReadiness.PARTIAL,
+            evidence=(
+                f"UDP {shown_host}:{bind_port} bound; {len(refused)} datagram(s) arrived "
+                f"and none decoded; {decoder_note}"
+            ),
+            absence=AbsenceReason.UNPARSEABLE,
+            absence_detail=refused[0],
+            remedy=(
+                "datagrams are reaching this port but are not Livox point frames: "
+                "check that the port belongs to the point stream and not to the "
+                "command or IMU stream."
+            ),
+        )
+    return MountChannelRow(
+        channel="mid360.udp",
+        what=what,
+        readiness=MountReadiness.PARTIAL,
+        evidence=(
+            f"UDP {shown_host}:{bind_port} bound and quiet for {listen_s:.2f}s; "
+            f"{decoder_note}"
+        ),
+        absence=AbsenceReason.NO_MESSAGE,
+        absence_detail=f"no datagram arrived on {shown_host}:{bind_port}",
+        remedy=_MID360_REMEDY_NO_MESSAGE,
+    )
+
+
+def probe_d455_mount(
+    reports: Callable[[], tuple[Any, Any]] | None = None,
+) -> MountChannelRow:
+    """Readiness of the D455 path: the wheel, then the device node."""
+
+    what = "import the RealSense path and see a camera enumerate"
+    try:
+        from .ingest.base import DevicePresence
+
+        if reports is None:
+            from .ingest.realsense import RealSenseIngest
+
+            dependencies = RealSenseIngest.dependency_report()
+            device = RealSenseIngest.device_report()
+        else:
+            dependencies, device = reports()
+    except (ImportError, OSError, AttributeError, TypeError, ValueError) as error:
+        return MountChannelRow(
+            channel="d455.path",
+            what=what,
+            readiness=MountReadiness.ABSENT,
+            evidence="the RealSense adapter could not be asked",
+            absence=AbsenceReason.PROBE_RAISED,
+            absence_detail=f"{type(error).__name__}: {error}",
+            remedy=_D455_IDENTITY_REMEDY_MODULE_MISSING,
+        )
+    if not dependencies.satisfied:
+        return MountChannelRow(
+            channel="d455.path",
+            what=what,
+            readiness=MountReadiness.ABSENT,
+            evidence=f"missing: {', '.join(dependencies.missing)}",
+            absence=AbsenceReason.DEPENDENCY_MISSING,
+            absence_detail=dependencies.remedy,
+            remedy=_D455_IDENTITY_REMEDY_MODULE_MISSING,
+        )
+    if device.presence is DevicePresence.ATTACHED:
+        return MountChannelRow(
+            channel="d455.path",
+            what=what,
+            readiness=MountReadiness.READY,
+            evidence=(
+                f"{', '.join(dependencies.present)} importable; device {device.detail}"
+            ),
+        )
+    absence = (
+        AbsenceReason.DEVICE_NODE_MISSING
+        if device.presence is DevicePresence.ABSENT
+        else AbsenceReason.NOT_ATTEMPTED
+    )
+    return MountChannelRow(
+        channel="d455.path",
+        what=what,
+        readiness=MountReadiness.PARTIAL,
+        evidence=f"{', '.join(dependencies.present)} importable; no camera enumerates",
+        absence=absence,
+        absence_detail=device.detail,
+        remedy=_D455_MOUNT_REMEDY_DEVICE,
+    )
+
+
+def probe_xvf3800_mount(
+    *,
+    asound_cards: Path | str = ASOUND_CARDS,
+    modules: Sequence[str] = _ARRAY_MODULES,
+) -> MountChannelRow:
+    """Readiness of the mic array: the kernel's card list, then a host module.
+
+    It READS ``/proc/asound/cards``. It does not open PortAudio, enumerate
+    devices or touch a stream: this module runs on a host whose audio stack may
+    be armed, and a preflight that opened the microphone would be doing the one
+    thing the gateway is careful to do only on the owner's gesture.
+    """
+
+    what = "see the reSpeaker array in the kernel's card list"
+    listing = _read_text_or_none(Path(asound_cards))
+    present = [name for name in modules if _module_present(name)]
+    if listing is None:
+        return MountChannelRow(
+            channel="xvf3800.array",
+            what=what,
+            readiness=MountReadiness.ABSENT,
+            evidence=f"{asound_cards} does not exist, so no card list can be read",
+            absence=AbsenceReason.DEVICE_NODE_MISSING,
+            absence_detail=f"{asound_cards} is absent on this host",
+            remedy=_XVF3800_REMEDY_DEVICE,
+        )
+    matched = [
+        line.strip()
+        for line in listing.splitlines()
+        if any(token in line.lower() for token in _ARRAY_CARD_TOKENS)
+    ]
+    if not matched:
+        return MountChannelRow(
+            channel="xvf3800.array",
+            what=what,
+            readiness=MountReadiness.PARTIAL,
+            evidence=(
+                f"{len(listing.splitlines())} line(s) in {asound_cards}, none naming the "
+                f"array; host audio modules present: {', '.join(present) or 'none'}"
+            ),
+            absence=AbsenceReason.DEVICE_NODE_MISSING,
+            absence_detail="no card line matches the XVF3800 / reSpeaker name",
+            remedy=_XVF3800_REMEDY_DEVICE,
+        )
+    if not present:
+        return MountChannelRow(
+            channel="xvf3800.array",
+            what=what,
+            readiness=MountReadiness.ABSENT,
+            evidence=f"the kernel lists {matched[0]!r} but nothing here can open it",
+            absence=AbsenceReason.DEPENDENCY_MISSING,
+            absence_detail=f"none of {', '.join(modules)} importable in {sys.executable}",
+            remedy=_XVF3800_REMEDY_MODULE,
+        )
+    return MountChannelRow(
+        channel="xvf3800.array",
+        what=what,
+        readiness=MountReadiness.READY,
+        evidence=f"kernel card {matched[0]!r}; {', '.join(present)} importable",
+    )
+
+
+def probe_mount_readiness(
+    *,
+    mid360_opener: Callable[[str, int], Any] | None = None,
+    mid360_listen_s: float = MID360_LISTEN_S,
+    d455_reports: Callable[[], tuple[Any, Any]] | None = None,
+    asound_cards: Path | str = ASOUND_CARDS,
+) -> tuple[MountChannelRow, ...]:
+    """The three mount-day channels, in the order they get bolted on."""
+
+    return (
+        probe_mid360_udp(opener=mid360_opener, listen_s=mid360_listen_s),
+        probe_d455_mount(d455_reports),
+        probe_xvf3800_mount(asound_cards=asound_cards),
+    )
+
+
+#: One character per state, the same shape ``_STATUS_MARK`` uses above.
+_MOUNT_MARK: Mapping[MountReadiness, str] = {
+    MountReadiness.READY: "+",
+    MountReadiness.PARTIAL: "~",
+    MountReadiness.ABSENT: " ",
+}
+
+
+def format_mount_readiness(rows: Sequence[MountChannelRow]) -> list[str]:
+    """The block an operator reads before the matrix, or nothing if unprobed."""
+
+    if not rows:
+        return []
+    width = max(len(row.channel) for row in rows)
+    lines = ["", "MOUNT READINESS (the three things being bolted on)"]
+    for row in rows:
+        lines.append(f"  [{_MOUNT_MARK[row.readiness]}] {row.channel:<{width}}  {row.what}")
+        lines.append(f"      {row.evidence}")
+        if row.absence is not None:
+            lines.append(f"      why: {row.absence.value} — {row.absence_detail}")
+        if row.remedy:
+            lines.append(f"      remedy: {row.remedy}")
+    return lines
+
+
+# ---------------------------------------------------------------------------
 # Support-artifact reconciliation — card S-1 (scrum/20260814/task_1)
 # ---------------------------------------------------------------------------
 #
@@ -3683,6 +4137,12 @@ class PreflightReport:
     #: The operator's rest attestation for this window, if one was made. ``None``
     #: is the default and it keeps every rest-dependent rule UNKNOWN.
     rest: RestPeriod | None = None
+    #: ---- CARD SENSE-1 ---- The three mount-day channels. Its own field, with
+    #: an empty default, because a readiness row is neither an ``Observation``
+    #: (the attestation refuses keys it does not know) nor a 29th channel probe
+    #: (the enumeration is the matrix). Empty means "not probed", which every
+    #: caller that predates this card gets.
+    mount_readiness: tuple[MountChannelRow, ...] = ()
 
     def __post_init__(self) -> None:
         keys = [obs.key for obs in self.observations]
@@ -3723,6 +4183,9 @@ class PreflightReport:
             "observations": [obs.to_dict() for obs in self.observations],
             "channels": [probe.to_dict() for probe in self.channels],
             "findings": [finding.to_dict() for finding in self.findings],
+            # ---- CARD SENSE-1 ---- additive; a reader that predates this card
+            # ignores it, and the schema name does not move for a new key.
+            "mount_readiness": [row.to_dict() for row in self.mount_readiness],
         }
 
 
@@ -3745,6 +4208,9 @@ def run_preflight(
     channels: Sequence[Channel] = CHANNELS,
     clock: Callable[[], int] = time.monotonic_ns,
     rest_period: RestPeriod | None = None,
+    # ---- CARD SENSE-1 ---- injectable whole, the way every other hardware
+    # seam here is: a test names the three rows it wants and no socket is bound.
+    mount_readiness: Sequence[MountChannelRow] | None = None,
 ) -> PreflightReport:
     """Probe everything, refuse nothing, decide nothing.
 
@@ -3784,12 +4250,17 @@ def run_preflight(
     findings.extend(_channel_findings(probes, channels))
     findings.extend(_plausibility_findings(probes, channels))
     findings.extend(cross_check_imus(probes, channels, rest=rest_period))
+    # ---- CARD SENSE-1 ---- last, and after the matrix, because it is the row
+    # an operator reads FIRST: it says which of the three things being bolted on
+    # this host can already take data from.
+    rows = tuple(probe_mount_readiness()) if mount_readiness is None else tuple(mount_readiness)
     return PreflightReport(
         observations=tuple(observations),
         channels=probes,
         findings=tuple(sorted(findings, key=lambda f: (f.severity.rank, f.code))),
         window_s=window_s,
         rest=rest_period,
+        mount_readiness=rows,
     )
 
 
@@ -4249,6 +4720,7 @@ def format_report(report: PreflightReport, channels: Sequence[Channel] = CHANNEL
         lines.append(f"  {'':<{width}}    [{obs.kind.value}] {obs.evidence}")
         if obs.remedy:
             lines.append(f"  {'':<{width}}    remedy: {obs.remedy}")
+    lines.extend(format_mount_readiness(report.mount_readiness))
     lines.extend(["", f"CHANNELS ({len(report.channels)} probed, window {report.window_s:.2f}s)"])
     id_width = max((len(p.channel_id) for p in report.channels), default=10)
     for probe in report.channels:
@@ -4481,6 +4953,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 __all__ = [
     "ACCEL_REST_TOLERANCE_MPS2",
     "ACCEL_SENSOR_CEILING_MPS2",
+    "ASOUND_CARDS",  # CARD SENSE-1
     "BUILTIN_LIDAR_CLAIMS",
     "CELL_VOLTAGE_MAX_V",
     "CELL_VOLTAGE_MIN_V",
@@ -4499,6 +4972,7 @@ __all__ = [
     "IMU_CROSS_CHECK_TOLERANCE_MPS2",
     "L4T_TO_JETPACK",
     "MAX_GAP_PERIODS",
+    "MID360_LISTEN_S",  # CARD SENSE-1
     "MIN_RATE_SAMPLES",
     "PACK_CONSISTENCY_TOLERANCE_FRACTION",
     "PACK_CONSISTENCY_TOLERANCE_V",
@@ -4527,6 +5001,8 @@ __all__ = [
     "ImuCrossCheck",
     "ImuSample",
     "ImuStreamKind",
+    "MountChannelRow",  # CARD SENSE-1
+    "MountReadiness",  # CARD SENSE-1
     "Observation",
     "OperatorObservation",
     "PhysicalSample",
@@ -4549,6 +5025,7 @@ __all__ = [
     "cross_check_imus",
     "default_reader_factory",
     "expected_rate_for",
+    "format_mount_readiness",  # CARD SENSE-1
     "format_plausibility_block",
     "format_report",
     "imu_cross_check",
@@ -4562,12 +5039,16 @@ __all__ = [
     "probe_builtin_lidar",
     "probe_channel",
     "probe_d455",
+    "probe_d455_mount",  # CARD SENSE-1
     "probe_free_disk",
     "probe_host",
     "probe_jetpack",
     "probe_l2",
+    "probe_mid360_udp",  # CARD SENSE-1
+    "probe_mount_readiness",  # CARD SENSE-1
     "probe_network",
     "probe_robot_identity",
+    "probe_xvf3800_mount",  # CARD SENSE-1
     "reader_factory_from_args",
     "rest_period_from_args",
     "run_preflight",

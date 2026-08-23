@@ -180,6 +180,17 @@ from parcel_robot.navigation.arrival_semantics import (
     arrival_policy,
     classify_place,
 )
+
+# ---- CARD AWARE-1 (scrum/20260823/task_4) — the head-turn proposer and the
+# executable half of the R28 axis table. -------------------------------------
+from parcel_robot.navigation.awareness_sweep import (
+    AwarenessLimits,
+    AwarenessSweep,
+    awareness_limits_from_config,
+    awareness_yaw_permitted,
+)
+
+# ---- END CARD AWARE-1 ------------------------------------------------------
 from parcel_robot.navigation.dynamic_layer import (
     TimeToCollisionConfig,
     time_to_collision_verdict,
@@ -200,6 +211,17 @@ from parcel_robot.navigation.goals import (
     pace_from_directive,
 )
 from parcel_robot.navigation.owner_prediction import OwnerMotionPredictor, PredictedPath
+
+# ---- CARD AWARE-1 (scrum/20260823/task_4) — card PROX-1's context seam, which
+# this card is the wave's designated wire-in for. -----------------------------
+from parcel_robot.navigation.proximity_profiles import (
+    ProximityContext,
+    ProximityContextOwner,
+    load_proximity_profiles,
+    proximity_context_for_venue,
+)
+
+# ---- END CARD AWARE-1 ------------------------------------------------------
 from parcel_robot.navigation.reactive_safety import (
     # ---- CARD OT-2: the published identity seam (DOOR-1 reads it too) ----
     IDENTITY_SOURCE_PIXEL_REID_UNCALIBRATED,
@@ -452,6 +474,15 @@ MISSION_LOG_BLOCKED_MAX = MISSION_LOG_MAX // 2
 #: whisperer is the 8 s block debounce, so a second of resolution is ample and a
 #: 10 Hz digest would only fill its decision ring with duplicates.
 WHISPERER_TICK_INTERVAL_S = 1.0
+# ---- CARD AWARE-1 (scrum/20260823/task_4) ----------------------------------
+#: How often the control loop consults the awareness sweep. The sweep's own
+#: cadence is its ``idle_period_s`` (tens of seconds); this is only the rate at
+#: which the loop ASKS, and it is deliberately the patrol's own sub-rate rather
+#: than the full 10 Hz: a look is not a control loop, and re-joining input
+#: health ten times a second to decide whether to turn later is work nobody
+#: needs. The proposal TTL below is sized off this, not off ``loop_period``.
+AWARENESS_TICK_S = 0.25
+# ---- END CARD AWARE-1 ------------------------------------------------------
 #: Card P2-B. How many affect observations the in-process history keeps. The
 #: ledger is the durable record; this ring is the index P2-A's distiller reads
 #: through :meth:`RobotRuntime.affect_history`, and it is bounded because a
@@ -1770,6 +1801,48 @@ class RobotRuntime:
             orbit_clearance_margin_m=spatial_limits.orbit_clearance_margin_m,
             orbit_waypoint_tolerance_m=spatial_limits.waypoint_tolerance_m,
         )
+        # ---- CARD AWARE-1 (scrum/20260823/task_4) — the PROX-1 wire-in -----
+        #
+        # Card PROX-1 (scrum/20260823/task_2) built the context -> profile seam
+        # and handed the wire-in to this card, at this one construction site.
+        # Two rules decide its shape, and the first is measured rather than
+        # assumed:
+        #
+        # 1. THE COMMISSIONED GATE IS THE BASE, AND AN UNKNOWN VENUE MOVES
+        #    NOTHING. PROX-1's `default` rung is derived from the shipped
+        #    envelope (1.2 / 2.5), so applying it unconditionally would
+        #    OVERWRITE a deliberately retuned deployment rather than preserve
+        #    it: `configs/robot.prototype.yaml:197` commissions
+        #    `person_stop_m: 0.7` under the owner authorisation recorded there,
+        #    and `tests/test_prototype_profile.py:886` pins that the runtime
+        #    reports it. Applying `default` over that would leave
+        #    `self.person_stop_m` reading 0.7 while the gate enforced 1.2 —
+        #    the reported and the enforced distance silently disagreeing, which
+        #    is a worse failure than either number on its own. So a profile is
+        #    applied at build ONLY when the venue actually names a context;
+        #    every other deployment keeps the policy constructed above, byte
+        #    for byte.
+        # 2. The owner is held either way, so `set_proximity_context` stays
+        #    reachable for the later reasoning-model tool, and any switch it
+        #    makes is applied to the base policy THIS deployment commissioned.
+        self._proximity_context_owner = ProximityContextOwner(
+            base_policy=self.reactive_safety_policy,
+            profiles=load_proximity_profiles(
+                safety_config, base_policy=self.reactive_safety_policy
+            ),
+            context=ProximityContext.DEFAULT,
+        )
+        raw_venue = self.store.data.get("venue")
+        venue_context = proximity_context_for_venue(
+            raw_venue if isinstance(raw_venue, str) else None
+        )
+        if venue_context is not ProximityContext.DEFAULT:
+            self.reactive_safety_policy = (
+                self._proximity_context_owner.set_proximity_context(
+                    venue_context, source="venue"
+                )
+            )
+        # ---- END CARD AWARE-1 ----------------------------------------------
         follow_config = self.store.section("owner_follow")
         # The shared runtime safety envelope is authoritative. A formation
         # cannot configure itself to pass closer to a person/owner than the
@@ -2008,6 +2081,24 @@ class RobotRuntime:
         # ``_roam_policy is not None`` IS the "am I roaming" flag — one field,
         # not a bool beside an object that can disagree with it. Everything else
         # here is a record for the panel and the status doc.
+        # ---- CARD AWARE-1 (scrum/20260823/task_4) — the head-turn state ----
+        # Owned entirely by the control thread (`_step_awareness` is its only
+        # mutator, and it runs nowhere else), so it takes no runtime lock and
+        # adds no edge to R24's lock-order roster.
+        # The section name is the string literal, not AWARENESS_CONFIG_KEY:
+        # CAP-1's G2 cross-check resolves only literal `store.section(...)`
+        # names, and an unresolvable name is an UNCHECKED overlay key. The
+        # literal is pinned equal to the constant in test_aware1_head_turn.
+        self._awareness_limits: AwarenessLimits = awareness_limits_from_config(
+            self.store.section("awareness")
+            if "awareness" in self.store.data
+            else None
+        )
+        self._awareness_sweep = AwarenessSweep(self._awareness_limits)
+        self._awareness_last_tick_at = 0.0
+        self._awareness_refused = 0
+        self._awareness_suppressed_reason: str | None = None
+        # ---- END CARD AWARE-1 ----------------------------------------------
         self._roam_policy: PatrolPolicy | None = None
         self._roam_started_at = 0.0
         self._roam_last_tick_at = 0.0
@@ -5520,6 +5611,150 @@ class RobotRuntime:
         except (RuntimeError, ValueError):
             return False
         return True
+
+    # ---- CARD AWARE-1 (scrum/20260823/task_4) — the head turn --------------
+    #
+    # "The robot should periodically turn its head to stay aware of its
+    # surroundings — there may be people around." (owner, 2026-08-23)
+    #
+    # This proposes a bounded yaw and nothing else. It creates no authority: it
+    # goes through `submit_motion` -> the arbiter -> `_collision_safe` like
+    # every other producer, it rides the channel roam already rides, and it is
+    # the LOWEST thing in the loop — every named behaviour above it suppresses
+    # it by simply existing. People seen during a sweep reach perception by the
+    # ordinary path; nothing here touches detection, the owner track or the
+    # semantic map.
+
+    def _awareness_idle(
+        self, observation: SimObservation | None, now: float
+    ) -> tuple[bool, str | None]:
+        """Is the body free for a discretionary look? The reason, if not.
+
+        Deliberately NOT "the arbiter has no active intent": while a sweep is
+        running the sweep itself is that intent, and a predicate that read the
+        arbiter would end every sweep one tick after it began. Idle here means
+        no NAMED behaviour wants the body. An owner who grabs it anyway —
+        manual teleop at priority 80 — outbids the sweep at the arbiter, which
+        is the refusal path below and needs no predicate of its own.
+        """
+
+        if self._closed:
+            return False, "runtime_closed"
+        if self.arbiter.emergency_stopped or self.agent.safety.emergency_stopped:
+            return False, "emergency_stop"
+        if self._input_health_latched:
+            return False, "input_health_latched"
+        with self._lock:
+            navigating = self._navigation_directive is not None
+            roaming = self._roam_policy is not None
+        if navigating or self.follow.enabled or self.search.enabled or self.spatial.active:
+            return False, "owner_command"
+        if roaming:
+            # Roam is already turning the body and already looking; a second
+            # proposer nudging the same yaw would be two behaviours arguing.
+            return False, "roaming"
+        if observation is None or not self._observation_is_fresh(observation):
+            return False, "no_observation"
+        return True, None
+
+    def _step_awareness(self, observation: SimObservation | None) -> None:
+        """One awareness tick. Proposes nothing on the overwhelming majority."""
+
+        if not self._awareness_limits.enabled:
+            return
+        now = time.monotonic()
+        if now - self._awareness_last_tick_at < AWARENESS_TICK_S:
+            return
+        self._awareness_last_tick_at = now
+
+        idle, reason = self._awareness_idle(observation, now)
+        permitted = False
+        if idle:
+            # THE R28 TABLE, consulted before anything is proposed. This is a
+            # READ of the join, not a second gate: `_evaluate_dispatch_input_health`
+            # sets nothing (only `_collision_safe` latches), and re-joining the
+            # same observation is already a supported call — `clear_input_health_latch`
+            # does exactly it, and both commissioned sources exempt a re-read
+            # of the same datum from their ordering check for that reason.
+            verdict = self._evaluate_dispatch_input_health(observation, now=now)
+            permitted = awareness_yaw_permitted(
+                verdict, latched=self._input_health_latched
+            )
+            if not permitted:
+                reason = "r28_axis_table"
+        self._awareness_suppressed_reason = None if (idle and permitted) else reason
+
+        proposal = self._awareness_sweep.step(now, idle=idle, yaw_permitted=permitted)
+        if proposal is None:
+            return
+        try:
+            self.submit_motion(
+                "voice",
+                VelocityCommand(vyaw=proposal.vyaw),
+                # Long enough to bridge the gap to the next ask, whichever of
+                # the two rates is slower. Taking the max rather than
+                # AWARENESS_TICK_S alone keeps this a positive duration even if
+                # the ask rate is turned all the way down — an intent with a
+                # non-positive TTL is refused at construction, which would have
+                # made the whole behaviour look like a permanent refusal.
+                ttl=max(AWARENESS_TICK_S, self.loop_period) * 3.0,
+            )
+        except (RuntimeError, ValueError):
+            # A refusal is DATA, never an error — `_submit_roam_command`'s rule,
+            # and the one that matters most here: on the hardware that exists
+            # today the body refuses motion, so this is the path the feature
+            # actually takes. Abandon the sweep rather than retry into a wall;
+            # the cadence brings it back.
+            self._awareness_refused += 1
+            self._awareness_sweep.reset()
+
+    def awareness_snapshot(self) -> dict[str, object]:
+        """What the head turn is doing, for the panel and the status doc."""
+
+        limits = self._awareness_limits
+        return {
+            "enabled": bool(limits.enabled),
+            "sweeping": bool(self._awareness_sweep.sweeping),
+            "swept_rad": round(float(self._awareness_sweep.swept_rad), 6),
+            "sweeps_started": int(self._awareness_sweep.sweeps_started),
+            "sweeps_completed": int(self._awareness_sweep.sweeps_completed),
+            "refused": int(self._awareness_refused),
+            "suppressed_reason": self._awareness_suppressed_reason,
+            "idle_period_s": float(limits.idle_period_s),
+            "sweep_arc_rad": float(limits.sweep_arc_rad),
+            "sweep_vyaw": float(limits.sweep_vyaw),
+        }
+
+    def set_proximity_context(self, context: object, *, source: str = "tool") -> str:
+        """PROPOSE a proxemics context; returns the context now in force.
+
+        Card PROX-1's seam, kept reachable for the reasoning-model tool that
+        will call it. It takes a preregistered CONTEXT NAME and nothing else —
+        `ProximityContext.parse` refuses anything number-shaped — so a model
+        may choose among operator-preregistered distances and may never mint
+        one. The rebind is a single atomic attribute write of a frozen
+        dataclass, which is what makes it safe from the 10 Hz tick without a
+        lock; it must stay that way.
+        """
+
+        policy = self._proximity_context_owner.set_proximity_context(
+            context, source=source
+        )
+        self.reactive_safety_policy = policy
+        return self._proximity_context_owner.context.value
+
+    def proximity_snapshot(self) -> dict[str, object]:
+        """The proxemics context in force, and where it came from."""
+
+        owner = self._proximity_context_owner
+        return {
+            "context": owner.context.value,
+            "source": owner.last_source,
+            "person_stop_m": float(self.reactive_safety_policy.person_stop_m),
+            "person_slow_m": float(self.reactive_safety_policy.person_slow_m),
+        }
+
+    # ---- END CARD AWARE-1 --------------------------------------------------
 
     def _realtime_roam(self, action: str, budget_s: float = 0.0) -> str:
         """The hosted ``roam`` tool's door. One door, both actions.
@@ -10469,6 +10704,16 @@ class RobotRuntime:
             self._step_roam(observation)
             self.component_metrics.elapsed("RoamBehavior", roam_started)
 
+            # ---- CARD AWARE-1 (scrum/20260823/task_4) ----------------------
+            # BELOW roam, which is already the last motion producer, because
+            # awareness is the only behaviour here that nobody asked for: it
+            # yields to roam the way roam yields to an owner command, and it
+            # observes roam's state for this tick rather than one tick stale.
+            awareness_started = time.monotonic()
+            self._step_awareness(observation)
+            self.component_metrics.elapsed("AwarenessSweep", awareness_started)
+            # ---- END CARD AWARE-1 ------------------------------------------
+
             self._enforce_perception_invariant(observation)
             self._step_brain()
             self._step_dialogue_state(observation)
@@ -13911,6 +14156,45 @@ class RobotRuntime:
                 if restamped is not None:
                     scan = restamped
             # ---- END CARD HW-2 ---------------------------------------------
+            # ---- CARD AWARE-1 (scrum/20260823/task_4) — SENSE-1 pose seam --
+            #
+            # The scan's twin, deliberately written as its own region rather
+            # than folded into HW-2's: card SENSE-1 (scrum/20260823/task_3)
+            # built `CommissionedPoseSource` (core/input_health.py:568) as the
+            # parallel of `CommissionedScanSource` and proved its three rows AT
+            # THE SEAM, but could not read it here — `runtime.py` was that
+            # card's MUST-NOT-TOUCH, so its own STATUS names this join as the
+            # one line it did not land. This is that line.
+            #
+            # ONE DELIBERATE DIFFERENCE FROM THE SCAN, and it is not an
+            # oversight. HW-2 above may only ever RE-STAMP a scan the
+            # observation HAS (`scan is not None`), because a source must never
+            # supply presence the observation lacks. A pose is the other way
+            # round: the block above stamps one UNCONDITIONALLY from the
+            # observation, so there is no absence for the source to invent —
+            # and if a commissioned PHYSICAL pose source has no datum for this
+            # tick, the truth is "no physical pose", not "a simulated one".
+            # Keeping the observation's SIMULATION stamp there would latch
+            # `pose:sim_fixture_forbidden` on a real dog whose DDS stream
+            # merely skipped a sample. So a declared-PHYSICAL source is
+            # AUTHORITATIVE for pose: its answer replaces the stamp, and its
+            # `None` becomes `pose:missing` -> recoverable HOLD, which is
+            # exactly the row SENSE-1 measured
+            # (`test_a_pose_the_source_has_no_datum_for_holds_and_never_stubs`).
+            #
+            # The same three things that make HW-2 safe make this safe:
+            # `declared_origin` is a TYPED lookup so no string or config value
+            # reaches this branch; `MujocoSocketBackend` has no such attribute
+            # so every simulator path is byte-identical; and a REPLAY source
+            # never satisfies the PHYSICAL test, so a replayed pose keeps the
+            # observation's synthetic stamp and still latches.
+            pose_source = getattr(self.backend, "pose_evidence_source", None)
+            if (
+                pose_source is not None
+                and declared_origin(pose_source) is EvidenceOrigin.PHYSICAL
+            ):
+                pose = pose_source.evidence(observation)
+            # ---- END CARD AWARE-1 ------------------------------------------
 
         feedback: InputEvidence | None = None
         state = (

@@ -9,11 +9,14 @@ prior-sprint, and Git-index writes are forbidden. Review the implementation
 delta at exactly `0ce1c5f8bb4a..c1b84055bd57`; `be86b7861322` is the subsequent
 index-only head at the addendum freeze.
 
-An initial `FABLE_VERDICT.md` now exists and records
-`ACCEPT_WITH_REQUIRED_CHANGES` for the original eight-file packet. Preserve its
-authorship and text. Add a clearly dated `## Claude Wave 3 exact-delta
-supplement` only after reviewing `CLAUDE_WAVE3_DECOMPOSITION.md`; do not repeat
-the original broad review.
+`FABLE_VERDICT.md` records `ACCEPT_WITH_REQUIRED_CHANGES` and a post-landing
+addendum. Preserve its authorship and text. A narrow correction remains: cover
+omitted L11; resolve the X08/tranche/accepted-risk-owner contradictions; answer
+the missing Q22/Q23/Q26 truth-table/schema/disposition requirements; and
+review only the post-verdict QA rows in `CLAUDE_WAVE3_DECOMPOSITION.md`.
+Correct the mic premise using the gateway's existing `_mic_lock` and runtime
+`close_mic` caller; require a failing interleaving before accepting/refactoring
+a race. Do not repeat the original broad review.
 
 `CONCERNS_REGISTER.md` is required review input, not background reading. Record
 coverage of every concern ID using compact family/range rows plus explicit
@@ -142,9 +145,10 @@ or create one implementation card per ID.
 22. Can an absent required hard capability ever become a skipped row while the
     gate exits zero or prints `PASS`? State the accepted hard/soft/report-only
     truth table.
-23. Is a read-only Unitree/Mid-360 sidecar required because the SDK-free product
-    venv cannot construct `LiveGo2Sources`, and what bounded IPC/deadline owns
-    that seam?
+23. Is a read-only Unitree vendor-state sidecar required because the SDK-free
+    product venv cannot construct the vendor source, with Mid-360 owned by a
+    separate bounded ingest path; what exact IPC schemas/deadlines apply, and
+    what evidence would justify co-location?
 24. Does the fully resolved Go2 physical profile refuse inherited simulated
     battery, desktop NIC, placeholder extrinsics, and uncommissioned simulator
     thresholds rather than checking only the overlay text?
@@ -228,8 +232,8 @@ the physical prototype. A non-empty `Does not prove` section is mandatory.
 Every concern ID must be covered by exactly one family/exception row or merged
 with `DUPLICATE_OF`; acceptance does not authorize one follow-up card per row.
 
-For the narrow supplement, return one of the same three dispositions, answer
-questions 21–26, state which initial-verdict findings remain unchanged, and
-disposition only the new/changed exact-delta findings. Do not regenerate the
-147-ID partition or repeat the reported nine-agent/556k-token review unless a
-specific contradiction makes that necessary.
+For the narrow correction, state which initial findings remain unchanged,
+explicitly disposition the missing question/ID/errata/post-verdict-QA items,
+and return the supplement's one-of-three disposition. Do not regenerate the
+other 146 concern dispositions or repeat the reported nine-agent/556k-token
+review unless a specific contradiction makes that necessary.

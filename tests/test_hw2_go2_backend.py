@@ -695,12 +695,26 @@ def test_b2_a_sim_scan_still_latches(tmp_path: Path, monkeypatch: pytest.MonkeyP
 def test_b3_pose_authority_is_not_in_this_card(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Row B3. What the card does NOT buy, asserted so nobody has to guess.
+    """Row B3, RE-PINNED by card AWARE-1 (scrum/20260823/task_4) — the pose
+    seam this row measured the ABSENCE of is now wired.
 
-    With the scan believed, the verdict is STILL `LATCHED_STOP` — for POSE,
-    which `evidence_origin` stamps SIMULATION and this card does not migrate —
-    and `CONTROLLER_FEEDBACK` is missing, because an eye has no controller.
-    Both are the correct fail-closed answers for observe-only.
+    CAUSE OF THE RE-PIN, stated so nobody has to reconstruct it. This row was
+    written by HW-2 to assert what HW-2 did not buy: with the scan believed,
+    the verdict was still `LATCHED_STOP`, for POSE, which `evidence_origin`
+    stamped SIMULATION. Card SENSE-1 (scrum/20260823/task_3) then built
+    `CommissionedPoseSource` — the scan seam's twin — and proved its rows AT
+    THE SEAM, but could not read it at the join because `runtime.py` was that
+    card's MUST-NOT-TOUCH; its STATUS deviation 1 names this row as the one
+    that would move when someone landed the wiring. AWARE-1 landed it
+    (`runtime.py`, marked region `# ---- CARD AWARE-1 ... SENSE-1 pose seam`).
+
+    So the pose fault is GONE — a live pose is PHYSICAL through the seam and
+    passes `requirements_requiring_physical_inputs()` — and what remains is
+    `CONTROLLER_FEEDBACK: missing`, because an eye still has no controller.
+    That is a recoverable HOLD, not a latch, and translation is still refused.
+    The function NAME is kept deliberately: `core/input_health.py:491` and
+    `backends/go2.py:880` both cite it by name, and those files are SENSE-1's,
+    not this card's, to edit.
     """
 
     from parcel_robot.runtime import RobotRuntime
@@ -711,9 +725,13 @@ def test_b3_pose_authority_is_not_in_this_card(
     runtime = RobotRuntime(base, backend)
     try:
         verdict = runtime._evaluate_dispatch_input_health(backend.observe(), now=clock.t + 0.01)
-        assert verdict.action is HealthAction.LATCHED_STOP
-        assert ("pose", "sim_fixture_forbidden") in _faults(verdict)
+        # The pose no longer latches, and it no longer faults at all.
+        assert not [f for f in verdict.faults if f.required_input is RequiredInput.POSE]
+        assert ("pose", "sim_fixture_forbidden") not in _faults(verdict)
+        # What the eye still does not have, unchanged.
         assert ("controller_feedback", "missing") in _faults(verdict)
+        assert verdict.action is HealthAction.HOLD
+        assert verdict.stop_latched is False
         assert verdict.translation_allowed is False
     finally:
         runtime.close()
@@ -1338,22 +1356,14 @@ def test_e6_the_rc4_tables_are_byte_identical() -> None:
     assert hashlib.sha256(h2.encode("utf-8")).hexdigest() == h2_sha
 
 
-def test_e7_the_gate_row_still_prints_the_five_term_verdict() -> None:
-    """Not a row — a DECLARED LIMIT, pinned so it cannot be forgotten.
-
-    `scripts/ci_gate.py:evaluate_stopping_envelope` is card HW-7's file in wave
-    3b and its region is HW-6's, so this card does not wire the sixth term into
-    the gate. The term is derived, recorded and tested; it is NOT gate-printed.
-    When a later card swaps the call to `derive_envelope_rows_v2`, this test
-    reddens and its docstring says what to do: delete it and say so.
-    """
-
-    source = (REPO / "scripts" / "ci_gate.py").read_text(encoding="utf-8")
-    assert "derive_envelope_rows" in source
-    assert "derive_envelope_rows_v2" not in source, (
-        "the gate now reads six terms — update HW-6's five assertions in "
-        "tests/test_hw6_stopping_envelope.py and delete this test"
-    )
+# Row E7 was `test_e7_the_gate_row_still_prints_the_five_term_verdict`: a
+# DECLARED LIMIT pinning that the gate still read five terms while this card
+# derived six. Card GATE-1 (scrum/20260823/task_5) swapped
+# `scripts/ci_gate.py:evaluate_stopping_envelope` onto
+# `derive_envelope_rows_v2`, which is the event that test's own docstring
+# said to delete it on. The limit is gone, so the pin is gone with it; what
+# replaces it lives in task_5's tests and in HW-6's updated shipped-record
+# assertions.
 
 
 def test_e8_the_backend_can_measure_the_term_it_registered() -> None:

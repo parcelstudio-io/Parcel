@@ -7,6 +7,7 @@ import os
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from types import MappingProxyType  # ---- CARD SENSE-1: the premise table ----
 from typing import Any
 
 import yaml
@@ -268,6 +269,34 @@ OVERLAY_INTRODUCIBLE_KEYS = frozenset(
         # edit the SHA-locked base, which is why HW-2's own tests write it into
         # a modified copy and say so (`tests/test_hw2_go2_backend.py:179-183`).
         "safety.require_physical_inputs",
+        # ---- CARD SENSE-1 (scrum/20260823/task_3) --------------------------
+        # `physical_resolution` — what a physical profile does about the
+        # SIMULATOR PREMISES it inherits from the base. See the region below
+        # `deep_merge` for the whole mechanism and the defect it closes.
+        #
+        # ONE ENTRY EXEMPTING A SUBTREE, the `roam` / `backend` shape, and
+        # legitimate for the same stated reason: the read-site validator
+        # exists and is `validate_physical_resolution`, which refuses an
+        # unknown key inside the section BY NAME, refuses a declared path that
+        # is not one of the premises, and refuses the same path declared two
+        # ways. It runs at load, one line after this exemption admits the
+        # section, so a typo cannot ride in unnoticed.
+        "physical_resolution",
+        # ---- END CARD SENSE-1 ----------------------------------------------
+        # ---- CARD AWARE-1 (scrum/20260823/task_4) --------------------------
+        # `awareness` — the idle head-turn sweep's knobs (enabled, cadence,
+        # rate, arc). The SHA-locked base cannot grow the section, and CAP-1's
+        # G2 survey found the read (`RobotRuntime.__init__` reads
+        # `store.section("awareness")`) with no way for any operator to turn
+        # the knob — the ROAM-1 / TRUTH-1 finding, a third time. ONE ENTRY
+        # EXEMPTING A SUBTREE, the roster's own shape, and legitimate for the
+        # stated reason: the read-site validator is
+        # `awareness_limits_from_config`, which refuses an unknown key inside
+        # the section BY NAME and type-checks every value. The feature ships
+        # disabled; an overlay that sets `awareness.enabled: true` is how it
+        # turns on without re-pinning the base.
+        "awareness",
+        # ---- END CARD AWARE-1 ----------------------------------------------
         # NOT HERE, deliberately, and each for a measured reason.
         #
         # `required_capabilities`: CAP-1 reads that key from the NAVIGATION
@@ -359,6 +388,341 @@ def deep_merge(base: Mapping[str, Any], overlay: Mapping[str, Any]) -> dict[str,
     return merged
 
 
+# ---- CARD SENSE-1 resolved-profile validation (scrum/20260823/task_3) ------
+#
+# THE DEFECT, reproduced by the ARCH-1 verifier and again by this card before
+# a line was written (X06 / A08 / R14). `deep_merge(configs/robot.yaml,
+# configs/robot.go2_edu_plus.yaml)` resolves, on the profile whose entire
+# purpose is `safety.require_physical_inputs: true`:
+#
+#     battery.simulated_percent        90.0        <- a fabricated reading
+#     control.controller               simulator   <- the writer axis
+#     control.unitree_sport.interface  enp3s0      <- a DESKTOP's NIC
+#     wifi_cards.robot.interface       enp3s0      <- the same desktop NIC
+#
+# Not one of them is written by the profile. The profile's own header FORBIDS
+# writing the first two, and `tests/test_hw5_physical_profile.py` greps the
+# file to enforce that — correctly, because a profile that WROTE
+# `battery.simulated_percent` would be handing the runtime a fabricated
+# hardware reading. But a commented-out key does not delete a base value, so
+# the rule produced a file that looks clean and a RESOLVED CONFIG that is not:
+# on the dog, `runtime.py:2174` reads that 90.0 and reports it as the battery.
+#
+# THE FIX IS NOT "let the profile set them". It is that a profile claiming a
+# physical rig must SAY, for every simulator premise it inherits, which of
+# three things is true — and that a profile which says nothing is refused at
+# load, by name, with the fix in the message:
+#
+#   * the profile sets the key itself (a real value, measured on the rig);
+#   * `physical_resolution.no_value_on_this_rig` — the base's value is not
+#     this rig's truth and reading it is refused (:func:`require_physical_value`);
+#   * `physical_resolution.inherited_deliberately` — the base's value IS this
+#     rig's truth and stands, which for `control.controller: simulator` is the
+#     accurate answer: Parcel commands no motion on this robot, so the only
+#     writer is the one that writes nothing (docs/MOTION.md, design §5.5).
+#
+# WHAT THE MERGE STILL DOES, unchanged and on purpose: nothing is deleted from
+# the resolved mapping. `ConfigStore.data` is still `deep_merge`'s output
+# byte for byte — HW-5's row asserting `merged["battery"] ==
+# base["battery"]` is a statement about the loader's transparency and it is
+# still true. What changes is that a rig may no longer be SILENT about a
+# premise, and that a declared-absent key has a typed refusal at USE instead
+# of a plausible simulator value.
+#
+# WHY THE TRIGGER IS THE OVERLAY'S OWN DECLARATION, not the merged value.
+# `safety.require_physical_inputs: true` in the merged config can also come
+# from a base that a test or an operator edited by hand
+# (`tests/test_hw2_go2_backend.py:_config_tree` does exactly that, and there
+# is no overlay in sight). Inheritance is a question only a PROFILE can be
+# asked: it is the file that chose to leave a key behind. So the check runs
+# when the OVERLAY declares the rig physical, and a base config with the
+# switch flipped is left exactly as it was.
+
+
+class PhysicalProfileError(ProfileError):
+    """A profile claimed a physical rig and left a simulator premise unresolved.
+
+    A ``ProfileError`` subclass so every existing ``except ProfileError`` — the
+    launcher's, ``ingest.active_venue``'s — keeps catching it.
+    """
+
+
+#: The section a physical profile resolves its inheritance in.
+PHYSICAL_RESOLUTION_KEY = "physical_resolution"
+
+#: Its two WRITABLE dispositions. ``no_value_on_this_rig`` means a read is
+#: REFUSED; ``inherited_deliberately`` means the base's value stands.
+PHYSICAL_RESOLUTION_ABSENT = "no_value_on_this_rig"
+PHYSICAL_RESOLUTION_KEPT = "inherited_deliberately"
+PHYSICAL_RESOLUTION_DISPOSITIONS = (PHYSICAL_RESOLUTION_ABSENT, PHYSICAL_RESOLUTION_KEPT)
+
+#: The third disposition, which is never written because it is DEMONSTRATED:
+#: the profile set the key itself. A measured value is the strongest answer to
+#: "what does this rig do about the base's?", so it supersedes a declaration —
+#: including a stale ``no_value_on_this_rig`` entry left behind when box-day
+#: step B9 finally fills a NIC in. That order is not a convenience: HW-5's
+#: pinned launcher row fills `backend.interface` into the shipped profile and
+#: nothing else, which is exactly the operator gesture the card describes, and
+#: a loader that then refused would be refusing the fix.
+PHYSICAL_RESOLUTION_SET = "set_by_profile"
+
+#: Every simulator premise a physical profile must resolve: ``path -> (why,
+#: fix)``. The list is short and closed on purpose — it is the four keys the
+#: ARCH-1 verifier reproduced plus the one box-day key HW-5 deliberately left
+#: unset — because a validator that guesses which keys are premises would
+#: either miss the ones that matter or refuse a profile for a key nobody meant.
+PHYSICAL_PREMISE_KEYS: Mapping[str, tuple[str, str]] = MappingProxyType(
+    {
+        "battery.simulated_percent": (
+            (
+                "a fabricated battery reading the base ships because the simulator "
+                "has no battery; a robot has one and it is SENSED"
+            ),
+            (
+                f"declare it under {PHYSICAL_RESOLUTION_KEY}."
+                f"{PHYSICAL_RESOLUTION_ABSENT} (the profile may not write this key: "
+                "it would be the fabricated reading itself)"
+            ),
+        ),
+        "control.controller": (
+            (
+                "the WRITER axis: it says what moves the robot, and a physical "
+                "profile may not arm hardware by configuration"
+            ),
+            (
+                f"declare it under {PHYSICAL_RESOLUTION_KEY}."
+                f"{PHYSICAL_RESOLUTION_KEPT} if the base's `simulator` is the truth "
+                "on this rig (it is, while Parcel commands no motion — "
+                "docs/MOTION.md)"
+            ),
+        ),
+        "control.unitree_sport.interface": (
+            (
+                "the NIC the MOTION venv's commissioning writer binds; the base "
+                "ships a desktop's name for a port that does not exist on the robot"
+            ),
+            (
+                "set it to the NIC read from `ls /sys/class/net` on the Orin "
+                f"(box-day step B9), or declare it under {PHYSICAL_RESOLUTION_KEY}."
+                f"{PHYSICAL_RESOLUTION_ABSENT} until that reading exists"
+            ),
+        ),
+        "wifi_cards.robot.interface": (
+            (
+                "the same cable under its second spelling; a desktop NIC name here "
+                "sends the panel's network card at a port the robot does not have"
+            ),
+            (
+                "set it to the same NIC as control.unitree_sport.interface, or "
+                f"declare it under {PHYSICAL_RESOLUTION_KEY}."
+                f"{PHYSICAL_RESOLUTION_ABSENT}"
+            ),
+        ),
+        "backend.interface": (
+            (
+                "the NIC the PRODUCT venv's observer binds for `rt/sportmodestate`; "
+                "the base does not define it at all, so there is nothing to inherit "
+                "and nothing to fabricate"
+            ),
+            (
+                "set it from the same box-day reading, or declare it under "
+                f"{PHYSICAL_RESOLUTION_KEY}.{PHYSICAL_RESOLUTION_ABSENT} while it "
+                "is unmeasured (`LiveGo2Sources` then refuses at USE, by name)"
+            ),
+        ),
+    }
+)
+
+
+def _dotted(mapping: Mapping[str, Any] | object, path: str) -> tuple[bool, Any]:
+    """``(found, value)`` for a dotted path in a nested mapping."""
+
+    node: Any = mapping
+    for part in path.split("."):
+        if not isinstance(node, Mapping) or part not in node:
+            return False, None
+        node = node[part]
+    return True, node
+
+
+def physical_resolution_dispositions(
+    resolved: Mapping[str, Any],
+) -> Mapping[str, str]:
+    """``path -> disposition`` as the resolved config DECLARES it.
+
+    The written half only: it cannot see :data:`PHYSICAL_RESOLUTION_SET`, which
+    is a fact about the overlay rather than about the merge.
+    :func:`validate_physical_resolution` returns the effective map, and
+    :attr:`ConfigStore.physical_resolution` is where a read site finds it.
+
+    Empty when the config declares nothing, which is every configuration in the
+    tree but a physical profile's.
+    """
+
+    section = resolved.get(PHYSICAL_RESOLUTION_KEY)
+    if not isinstance(section, Mapping):
+        return MappingProxyType({})
+    declared: dict[str, str] = {}
+    for disposition in PHYSICAL_RESOLUTION_DISPOSITIONS:
+        paths = section.get(disposition)
+        if not isinstance(paths, (list, tuple)):
+            continue
+        for path in paths:
+            declared[str(path)] = disposition
+    return MappingProxyType(declared)
+
+
+def declares_physical_rig(overlay: Mapping[str, Any]) -> bool:
+    """True when ``overlay`` is a profile for a NAMED PHYSICAL RIG.
+
+    Both halves are load-bearing and each one is protected by a shipped row
+    this card is not allowed to move:
+
+    * ``safety.require_physical_inputs`` is read from the OVERLAY, not from the
+      merge, because a BASE configuration can carry it too — ``tests/
+      test_hw2_go2_backend.py:_config_tree`` writes it into a copy of the base
+      and merges an unrelated one-key overlay on top. There is no inheritance
+      question to ask there: with no profile, the file on disk is the whole
+      truth.
+    * ``venue`` is the rig identity, and requiring it is what separates a
+      profile from a FRAGMENT. ``tests/test_hw5_physical_profile.py::
+      test_a_misspelling_of_each_new_key_refuses_by_name_at_the_real_loader``
+      loads ``{safety: {require_physical_inputs: true}}`` and nothing else, to
+      prove the spelling guard admits the good spelling; a file that does not
+      say which rig it is on is not making a claim about hardware.
+    """
+
+    return (
+        _dotted(overlay, "safety.require_physical_inputs")[1] is True
+        and bool(str(overlay.get("venue", "") or "").strip())
+    )
+
+
+def validate_physical_resolution(
+    overlay: Mapping[str, Any],
+    resolved: Mapping[str, Any],
+    *,
+    source: str = "profile",
+) -> Mapping[str, str]:
+    """Refuse a physical profile that inherited a simulator premise silently.
+
+    ``overlay`` is the profile as written (what it EXPLICITLY set); ``resolved``
+    is the merge (what the runtime will actually read). Both are needed: the
+    defect is precisely the difference between them.
+
+    Returns the EFFECTIVE disposition of every premise — the declared one, or
+    :data:`PHYSICAL_RESOLUTION_SET` where the profile answered with a value.
+    """
+
+    section = resolved.get(PHYSICAL_RESOLUTION_KEY, {})
+    if not isinstance(section, Mapping):
+        raise PhysicalProfileError(
+            f"{source}: {PHYSICAL_RESOLUTION_KEY} must be a mapping of "
+            f"{' / '.join(PHYSICAL_RESOLUTION_DISPOSITIONS)} to lists of key paths"
+        )
+    unknown_sections = sorted(
+        str(key) for key in section if str(key) not in PHYSICAL_RESOLUTION_DISPOSITIONS
+    )
+    if unknown_sections:
+        raise PhysicalProfileError(
+            f"{source}: unknown {PHYSICAL_RESOLUTION_KEY} key(s) "
+            f"{', '.join(unknown_sections)}; the dispositions are "
+            f"{' and '.join(PHYSICAL_RESOLUTION_DISPOSITIONS)}"
+        )
+    for disposition in PHYSICAL_RESOLUTION_DISPOSITIONS:
+        if disposition in section and not isinstance(section[disposition], (list, tuple)):
+            raise PhysicalProfileError(
+                f"{source}: {PHYSICAL_RESOLUTION_KEY}.{disposition} must be a list of "
+                f"key paths, got {type(section[disposition]).__name__}"
+            )
+    seen: set[str] = set()
+    for disposition in PHYSICAL_RESOLUTION_DISPOSITIONS:
+        for path in section.get(disposition, ()) or ():
+            path = str(path)
+            if path not in PHYSICAL_PREMISE_KEYS:
+                raise PhysicalProfileError(
+                    f"{source}: {PHYSICAL_RESOLUTION_KEY}.{disposition} names "
+                    f"{path!r}, which is not one of the simulator premises this "
+                    f"loader knows: {', '.join(sorted(PHYSICAL_PREMISE_KEYS))}. A "
+                    f"declaration about a key nothing checks is a decoration."
+                )
+            if path in seen:
+                raise PhysicalProfileError(
+                    f"{source}: {path!r} is declared twice under "
+                    f"{PHYSICAL_RESOLUTION_KEY}; a premise has one disposition"
+                )
+            seen.add(path)
+
+    declared = physical_resolution_dispositions(resolved)
+    effective: dict[str, str] = {}
+    for path, (why, fix) in PHYSICAL_PREMISE_KEYS.items():
+        set_by_profile, _own_value = _dotted(overlay, path)
+        disposition = declared.get(path)
+        if set_by_profile:
+            # A MEASURED VALUE WINS over any declaration, including a stale
+            # `no_value_on_this_rig` — see PHYSICAL_RESOLUTION_SET.
+            effective[path] = PHYSICAL_RESOLUTION_SET
+            continue
+        if disposition is not None:
+            effective[path] = disposition
+            continue
+        found, inherited = _dotted(resolved, path)
+        carries = (
+            f"resolves to {inherited!r}, inherited from the base configuration"
+            if found
+            else "is not defined anywhere in the resolved configuration"
+        )
+        raise PhysicalProfileError(
+            f"{source}: this profile declares safety.require_physical_inputs: true, "
+            f"so it is a ROBOT — but {path} {carries} and the profile says nothing "
+            f"about it. {why.capitalize()}. Fix: {fix}."
+        )
+    return MappingProxyType(effective)
+
+
+def require_physical_value(
+    resolved: Mapping[str, Any],
+    path: str,
+    *,
+    dispositions: Mapping[str, str] | None = None,
+) -> Any:
+    """The value at ``path``, or a typed refusal naming the key and the fix.
+
+    The USE half of the mechanism above, and the answer to "what does a
+    deliberately unset box-day key do when something finally reads it?" — it
+    refuses by name, which is the same thing ``LiveGo2Sources`` already does
+    for ``backend.interface`` and for the same reason: a fabricated default is
+    a confident lie, and a NIC name nobody read is not a NIC name.
+
+    ``dispositions`` is the EFFECTIVE map (:attr:`ConfigStore.
+    physical_resolution`). Left out, the declaration is read from ``resolved``
+    itself, which cannot see a value the profile supplied over a stale
+    declaration — so a read site with a store should pass the store's map.
+    """
+
+    if dispositions is None:
+        dispositions = physical_resolution_dispositions(resolved)
+    disposition = dispositions.get(path)
+    why, fix = PHYSICAL_PREMISE_KEYS.get(path, ("", ""))
+    if disposition == PHYSICAL_RESOLUTION_ABSENT:
+        raise PhysicalProfileError(
+            f"{path} has no value on this rig: the profile declared it "
+            f"{PHYSICAL_RESOLUTION_ABSENT}"
+            + (f" ({why})" if why else "")
+            + (f". Fix: {fix}." if fix else ".")
+        )
+    found, value = _dotted(resolved, path)
+    if not found:
+        raise PhysicalProfileError(
+            f"{path} is not defined in this configuration and has no default worth "
+            f"inventing" + (f". Fix: {fix}." if fix else ".")
+        )
+    return value
+
+
+# ---- END CARD SENSE-1 resolved-profile validation ---------------------------
+
+
 class ConfigStore:
     """Loads user-editable poses, network cards, and extension modules.
 
@@ -406,6 +770,11 @@ class ConfigStore:
         #: want, and what the byte-identity proof runs under).
         self.profile = resolve_profile() if profile is None else _clean_profile(profile)
         self.overlay_path: Path | None = None
+        #: ---- CARD SENSE-1 ---- The effective disposition of every simulator
+        #: premise (``path -> set_by_profile / no_value_on_this_rig /
+        #: inherited_deliberately``). EMPTY for every configuration that is not
+        #: a named physical rig's, which is all of them but ``go2_edu_plus``.
+        self.physical_resolution: Mapping[str, str] = MappingProxyType({})
         with self.path.open(encoding="utf-8") as stream:
             data: dict[str, Any] = yaml.safe_load(stream) or {}
         if self.profile:
@@ -415,6 +784,17 @@ class ConfigStore:
             # pass is how `minimum_confidenc: 0.5` booted at 0.75.
             check_overlay_keys(data, overlay, source=str(self.overlay_path))
             data = deep_merge(data, overlay)
+            # ---- CARD SENSE-1 (scrum/20260823/task_3) --------------------
+            # Third and last: a profile that claims a physical rig must have
+            # resolved what it inherits. The gate is the OVERLAY's own
+            # declaration, so a base configuration with the switch flipped by
+            # hand is untouched — see the region above `ConfigStore` for why
+            # the merged value would be the wrong question to ask.
+            if declares_physical_rig(overlay):
+                self.physical_resolution = validate_physical_resolution(
+                    overlay, data, source=str(self.overlay_path or self.path)
+                )
+            # ---- END CARD SENSE-1 ----------------------------------------
         self.data: dict[str, Any] = data
 
     def _load_overlay(self, profile: str) -> dict[str, Any]:
@@ -597,3 +977,20 @@ class ConfigStore:
         if not isinstance(value, dict):
             raise TypeError(f"configuration section {name!r} must be a mapping")
         return dict(value)
+
+    # ---- CARD SENSE-1 (scrum/20260823/task_3) ---------------------------
+
+    def physical_value(self, path: str) -> Any:
+        """One value, honouring what a physical profile declared about it.
+
+        The read a mount-day caller should use for anything in
+        :data:`PHYSICAL_PREMISE_KEYS`: on a rig that disowned the key it
+        REFUSES by name with the fix, instead of handing back the simulator's
+        number the merge still carries. On every other configuration — no
+        profile, the prototype, a simulator run — nothing is declared and this
+        is a plain lookup that refuses only a genuinely absent key.
+        """
+
+        return require_physical_value(
+            self.data, path, dispositions=self.physical_resolution
+        )

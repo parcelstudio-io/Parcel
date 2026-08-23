@@ -25,6 +25,7 @@ and a change to either side reddens.
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -33,9 +34,14 @@ import pytest
 
 from scripts.ci_gate import (
     COMMIT_TIER_STAGE_NAMES,
+    GATE_EXIT_GREEN,
+    GATE_EXIT_INCOMPLETE,
+    GATE_EXIT_RED,
     STAGE_REQUIREMENTS,
     GateResult,
     evaluate_host_capabilities,
+    gate_exit_code,
+    hard_skips,
     host_capabilities,
     hw7_apply_host_skips,
     summarize,
@@ -347,7 +353,14 @@ def test_the_result_line_says_so_when_a_hard_gate_skipped() -> None:
 
 def test_a_red_gate_still_reads_as_fail_whatever_else_skipped() -> None:
     """The FAIL branch is deliberately untouched: "N hard gate(s) red: …" is
-    true whether or not other rows skipped, and the exit code is unchanged."""
+    true whether or not other rows skipped.
+
+    Card GATE-1 (`scrum/20260823/task_5`) corrected the second half of this
+    docstring, which used to end "and the exit code is unchanged": a red run
+    still exits 1, but a run whose only anomaly is a hard SKIP now exits 2
+    instead of 0. The sentence above is still byte-for-byte what it was; the
+    exit code below it is what changed. See the GATE-1 section at the end of
+    this file."""
 
     rows = _row_set({"ruff": "fail", "tier-coverage": "skip"})
     result = summarize(rows, "commit", 1.0).splitlines()[-2]
@@ -685,6 +698,116 @@ def test_this_card_did_not_edit_another_cards_region() -> None:
         opens = text.count(marker) - closes
         assert opens == closes > 0, f"{marker}: {opens} open, {closes} close"
     assert "CARD HW-7" not in (REPO / "tests" / "test_ci_gate.py").read_text(encoding="utf-8")
+
+
+# ===========================================================================
+# CARD GATE-1 (scrum/20260823/task_5) — the EXIT CODE is honest too.
+#
+# This card fixed the sentence an operator reads. The addendum's T12 is the
+# other half: `main()` returned `1 if any(gating_red) else 0`, so the number a
+# CI job reads was the same on a host where four HARD rows could not run at
+# all as on a host where every one of them ran green. The rows and the summary
+# said "SKIPPED"; the exit code said "PASS".
+#
+# The tests below drive the REAL `main()` with `run_commit_tier` replaced by a
+# canned row set — no evaluator runs, no pytest is spawned, no tier executes.
+# They live in this file because the skip sentence they sit beside is the
+# thing whose truthfulness they complete.
+# ===========================================================================
+
+SKIPPING_HOST_ROWS = ("unitree-assets", "hard-safety", "tier-coverage", "default-suite")
+
+
+def _run_main(monkeypatch, capsys, statuses: dict[str, str], *, json_flag: bool = True):
+    """`main()` over a canned tier. Returns (exit code, summary, payload)."""
+
+    import scripts.ci_gate as gate
+
+    rows = _row_set(statuses)
+    monkeypatch.setattr(gate, "run_commit_tier", lambda: rows)
+    argv = ["--tier", "commit"] + (["--json"] if json_flag else [])
+    code = gate.main(argv)
+    out = capsys.readouterr().out
+    summary, brace, raw = out.partition("\n{")
+    payload = json.loads("{" + raw) if json_flag else None
+    assert brace or not json_flag
+    return code, summary, payload
+
+
+def test_gate1_a_run_with_every_hard_gate_green_still_exits_zero(monkeypatch, capsys) -> None:
+    """The control. 0 keeps meaning exactly what it has always meant, and the
+    summary line is byte-identical to the one this file already pins."""
+
+    code, summary, payload = _run_main(monkeypatch, capsys, {})
+    assert code == 0
+    assert summary.splitlines()[-2] == "RESULT: PASS — every hard gate green."
+    assert payload["incomplete"] is False
+
+
+def test_gate1_a_hard_skip_exits_incomplete_and_says_so_in_the_json(
+    monkeypatch, capsys
+) -> None:
+    """T12, closed. The mujoco-less venv: four HARD rows skip, nothing is red.
+
+    Before this card the exit code was 0 — indistinguishable from the test
+    above, which is the whole defect. The summary text is unchanged (that half
+    was already fixed): only the number and the new JSON field move.
+    """
+
+    code, summary, payload = _run_main(
+        monkeypatch, capsys, dict.fromkeys(SKIPPING_HOST_ROWS, "skip")
+    )
+    assert code == 2, "a host that could not run four hard gates is not green"
+    assert code != 0 and code != 1
+    assert summary.splitlines()[-2] == (
+        "RESULT: PASS — 6 hard gate(s) green, 4 SKIPPED on this host: "
+        "unitree-assets, hard-safety, tier-coverage, default-suite"
+    )
+    assert payload["incomplete"] is True
+    # Additive: everything the payload carried before is still there.
+    assert payload["tier"] == "commit"
+    assert [g["name"] for g in payload["gates"]] == list(COMMIT_TIER_STAGE_NAMES)
+
+
+def test_gate1_a_red_row_still_exits_one_however_much_else_skipped(
+    monkeypatch, capsys
+) -> None:
+    """Precedence, declared: red wins over incomplete.
+
+    An operator who saw 2 here would go looking for a missing tool instead of
+    a broken gate. The JSON keeps both facts, because they are both true.
+    """
+
+    statuses = dict.fromkeys(SKIPPING_HOST_ROWS, "skip")
+    statuses["ruff"] = "fail"
+    code, summary, payload = _run_main(monkeypatch, capsys, statuses)
+    assert code == 1
+    assert summary.splitlines()[-2] == "RESULT: FAIL — 1 hard gate(s) red: ruff"
+    assert payload["incomplete"] is True
+
+
+def test_gate1_only_a_hard_row_can_make_a_run_incomplete(monkeypatch, capsys) -> None:
+    """A soft row that skips is not a gate that did not run.
+
+    `stopping-envelope`, `skip-list` and `host` are `hard=False`; a report row
+    has never been able to change an exit code and this card does not give it
+    one. The predicate is the same set `summarize` names, which is why the two
+    can never disagree.
+    """
+
+    code, summary, payload = _run_main(
+        monkeypatch, capsys, dict.fromkeys(("stopping-envelope", "skip-list", "host"), "skip")
+    )
+    assert code == 0
+    assert payload["incomplete"] is False
+    assert summary.splitlines()[-2] == "RESULT: PASS — every hard gate green."
+    # The mapping itself, written down once so a caller can read it.
+    assert (GATE_EXIT_GREEN, GATE_EXIT_RED, GATE_EXIT_INCOMPLETE) == (0, 1, 2)
+    assert gate_exit_code(_row_set({})) == GATE_EXIT_GREEN
+    assert gate_exit_code(_row_set({"ruff": "skip"})) == GATE_EXIT_INCOMPLETE
+    assert gate_exit_code(_row_set({"ruff": "error"})) == GATE_EXIT_RED
+    assert [r.name for r in hard_skips(_row_set({"ruff": "skip"}))] == ["ruff"]
+    assert hard_skips(_row_set({"host": "skip"})) == []
 
 
 if __name__ == "__main__":  # pragma: no cover

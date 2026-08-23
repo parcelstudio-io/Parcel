@@ -47,6 +47,10 @@ index-only head. This is not a request to run, repair, or refactor that work.
 | D12 | The six-term stopping model and hard-capability truth table are correctness prerequisites, not cleanup | the current V1/skip paths provably cannot produce a false promotion result | Fable may refute only with an end-to-end gate trace and seeded falsifier |
 | D13 | Fully resolved physical configuration, not overlay source text, is the admission subject | deep merge demonstrably deletes or invalidates inherited simulated values before any consumer can read them | otherwise require explicit deletion/required semantics and product-launcher refusal |
 
+Post-review disposition: Fable replaced D10's generic WIP-two claim with at
+most one Python-product card plus one genuinely disjoint native/capture/CI
+lane. The original preregistered row remains above for auditability.
+
 ## Concern-review claims
 
 | ID | Claim | Falsifier | Required disposition |
@@ -139,14 +143,15 @@ Fable must not accept an implementation sequence if any of these applies:
 ## Review completion condition
 
 ARCH-1 remains `REVIEW-ONLY / NOT DISPATCHED`. Fable's initial
-`ACCEPT_WITH_REQUIRED_CHANGES` verdict covers the original eight files and all
-147 concern IDs, and it records X08/X16's integration/census requirements as
-closed. The later `CLAUDE_WAVE3_DECOMPOSITION.md` adds B10, D11–D13, T11–T12,
-six new review questions, and exact false-green/config/lifecycle evidence; it
-requires a narrow supplement, not a repeated broad review. No verdict
-vocabulary is execution authority. Each remaining blocker gates its affected
-milestone. Only the owner may approve a dependency-safe tranche after every
-required change has a named owner, boundary, falsifiable regression,
-budget/stop gate, and re-review result. The accepted output is a small set of
-boundary-owned tranches containing bounded cards, not one card per concern or
-one mega-card.
+`ACCEPT_WITH_REQUIRED_CHANGES` verdict covers the original eight files but its
+partition omits L11 despite claiming 147/147. Its later addendum dispositions
+several high-severity delta findings but does not return the full Q21–Q26
+truth-table/schema/disposition output, and post-verdict QA has added further
+exact physical refuters to `CLAUDE_WAVE3_DECOMPOSITION.md`. One narrow
+attributed correction is still required; no repeated broad review. No verdict
+vocabulary, task stub, or reviewer assertion is execution authority. Each
+remaining blocker gates its affected milestone. Only the owner may approve a
+dependency-safe tranche after every required change has a named accountable
+owner, boundary, falsifiable regression, budget/stop gate, and re-review
+result. The accepted output is a small set of boundary-owned tranches
+containing bounded cards, not one card per concern or one mega-card.
