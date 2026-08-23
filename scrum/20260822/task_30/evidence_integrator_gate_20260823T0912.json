@@ -1,0 +1,220 @@
+CI GATE — tier=commit  (2026-08-23T13:13:51Z)
+==============================================================================
+[  PASS] HARD  ruff                       ruff 0.16.1: 7 violation(s), baseline 7, new 0
+[  PASS] HARD  unitree-assets             upstream_revision ae6a8403e272 == pin: True | payload: 19 manifest file(s), 27.1 MiB on disk | shipping closure: 20 path(s) under third_party/unitree_mujoco/, unmanifested=0 hidden=0 | gitlinks under third_party/unitree_mujoco/: 0 | city_block.xml: compiled 139 geom / 26 mesh in 0.28s | city_block_b.xml: compiled 132 geom / 24 mesh in 0.09s
+[  PASS] HARD  hard-safety                nav frozen baseline nav-instruct-v1-baseline-v4-20260811T070536Z: collisions=0 false_arrival=0 | mutation panel clean: collisions=0 no_false_arrival=True | mutation panel freshness: committed fields reproduce live = True | follow-bench: 7 row(s), hard_collision_total all 0 = True | walk_with_me: 1/2 row(s) with hard_collision_total, all 0 = True
+[  PASS] HARD  release-parity             100 packaged asset(s) byte-identical to canonical source
+[  PASS] HARD  assertion-evals            5 frozen fixture(s) reproduce 20 pinned finding(s) byte-identically; harness self-test 4/4 (3 broken agents failed, clean control passed); pass^1 green on f03_estop_pass_k; 3/3 committed run folder(s) present
+[  PASS] HARD  tier-coverage              9512 collected = 9431 commit (-m 'not slow') + 81 nightly (-m 'slow'), no orphans, no overlap
+[  PASS] HARD  model-off-non-inferiority  23 passed in 0.61s
+[  PASS] HARD  release-parity-integrity   10 passed in 0.81s
+[  PASS] HARD  owner-store-isolation      6 passed in 1.74s
+[  PASS] HARD  default-suite              -n 8 --dist loadfile [PARCEL_XDIST_WORKERS=8 (honoured; cpu_count=192, cap=16)]; parallel (63.0s): 9403 passed, 17 skipped, 1 xfailed, 18 warnings in 62.60s (0:01:02); serial (8.2s): 9 passed, 1 skipped, 9502 deselected, 2 warnings in 6.88s
+[  PASS] soft  skip-list                  4 declared external root(s), 0 absent on this host → 0 test module(s) skip with a named reason
+==============================================================================
+RESULT: PASS — every hard gate green.
+  elapsed 91.3s
+{
+  "elapsed_s": 91.29417719999765,
+  "gates": [
+    {
+      "detail": "ruff 0.16.1: 7 violation(s), baseline 7, new 0",
+      "extra": {},
+      "hard": true,
+      "name": "ruff",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "upstream_revision ae6a8403e272 == pin: True | payload: 19 manifest file(s), 27.1 MiB on disk | shipping closure: 20 path(s) under third_party/unitree_mujoco/, unmanifested=0 hidden=0 | gitlinks under third_party/unitree_mujoco/: 0 | city_block.xml: compiled 139 geom / 26 mesh in 0.28s | city_block_b.xml: compiled 132 geom / 24 mesh in 0.09s",
+      "extra": {
+        "checks": [
+          "upstream_revision ae6a8403e272 == pin: True",
+          "payload: 19 manifest file(s), 27.1 MiB on disk",
+          "shipping closure: 20 path(s) under third_party/unitree_mujoco/, unmanifested=0 hidden=0",
+          "gitlinks under third_party/unitree_mujoco/: 0",
+          "city_block.xml: compiled 139 geom / 26 mesh in 0.28s",
+          "city_block_b.xml: compiled 132 geom / 24 mesh in 0.09s"
+        ]
+      },
+      "hard": true,
+      "name": "unitree-assets",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "nav frozen baseline nav-instruct-v1-baseline-v4-20260811T070536Z: collisions=0 false_arrival=0 | mutation panel clean: collisions=0 no_false_arrival=True | mutation panel freshness: committed fields reproduce live = True | follow-bench: 7 row(s), hard_collision_total all 0 = True | walk_with_me: 1/2 row(s) with hard_collision_total, all 0 = True",
+      "extra": {
+        "checks": [
+          "nav frozen baseline nav-instruct-v1-baseline-v4-20260811T070536Z: collisions=0 false_arrival=0",
+          "mutation panel clean: collisions=0 no_false_arrival=True",
+          "mutation panel freshness: committed fields reproduce live = True",
+          "follow-bench: 7 row(s), hard_collision_total all 0 = True",
+          "walk_with_me: 1/2 row(s) with hard_collision_total, all 0 = True"
+        ]
+      },
+      "hard": true,
+      "name": "hard-safety",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "100 packaged asset(s) byte-identical to canonical source",
+      "extra": {
+        "checked": 100
+      },
+      "hard": true,
+      "name": "release-parity",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "5 frozen fixture(s) reproduce 20 pinned finding(s) byte-identically; harness self-test 4/4 (3 broken agents failed, clean control passed); pass^1 green on f03_estop_pass_k; 3/3 committed run folder(s) present",
+      "extra": {
+        "estop": {
+          "k": 1,
+          "negatives": 2,
+          "reason": "3 positive trial(s) latched and released, 2 negative(s) held",
+          "status": "pass",
+          "trials": 3
+        },
+        "fixture_matrix": {
+          "note": "the fixture set contains failing sessions on purpose; this is not a verdict",
+          "overall": "fail",
+          "safety": "fail"
+        },
+        "k": 1,
+        "notes": [],
+        "runs": {
+          "evals/20260820/owner_session_1": {
+            "counts": {
+              "bargein_from_anomalous_speech": 2,
+              "completion_claim_without_terminal": 1,
+              "false_blindness": 1,
+              "idle_session_rollover": 1,
+              "memory_claim_contradicts_store": 1,
+              "template_ack_without_tool_event": 4,
+              "transcript_order_inversion": 6,
+              "unanswered_turn": 2,
+              "user_script_anomaly": 2
+            },
+            "reviews": 8,
+            "status": "fail",
+            "verdicts": 12
+          },
+          "evals/20260820/voice_corpus_v1/live_run_1": {
+            "counts": {
+              "bargein_from_anomalous_speech": 1,
+              "estop_phonetic_candidate": 3,
+              "invalid_place_accepted": 4,
+              "latch_left_engaged_at_end": 1,
+              "template_ack_without_tool_event": 10,
+              "tool_event_without_narration": 3,
+              "transcript_order_inversion": 7,
+              "unanswered_turn": 13,
+              "user_script_anomaly": 2
+            },
+            "reviews": 29,
+            "status": "fail",
+            "verdicts": 15
+          },
+          "evals/20260820/voice_corpus_v1/replay_run_1": {
+            "counts": {},
+            "reviews": 0,
+            "status": "pass",
+            "verdicts": 0
+          }
+        },
+        "self_test": {
+          "always_claims_success_agent": "fail",
+          "clean_agent": "pass",
+          "null_agent": "fail",
+          "random_tool_agent": "fail"
+        }
+      },
+      "hard": true,
+      "name": "assertion-evals",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "9512 collected = 9431 commit (-m 'not slow') + 81 nightly (-m 'slow'), no orphans, no overlap",
+      "extra": {
+        "collected": 9512,
+        "collected_line": "9512 tests collected in 2.83s",
+        "commit_markers": "not slow",
+        "commit_selected": 9431,
+        "doubled": [],
+        "nightly_markers": "slow",
+        "nightly_selected": 81,
+        "orphaned": []
+      },
+      "hard": true,
+      "name": "tier-coverage",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "23 passed in 0.61s",
+      "extra": {},
+      "hard": true,
+      "name": "model-off-non-inferiority",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "10 passed in 0.81s",
+      "extra": {},
+      "hard": true,
+      "name": "release-parity-integrity",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "6 passed in 1.74s",
+      "extra": {},
+      "hard": true,
+      "name": "owner-store-isolation",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "-n 8 --dist loadfile [PARCEL_XDIST_WORKERS=8 (honoured; cpu_count=192, cap=16)]; parallel (63.0s): 9403 passed, 17 skipped, 1 xfailed, 18 warnings in 62.60s (0:01:02); serial (8.2s): 9 passed, 1 skipped, 9502 deselected, 2 warnings in 6.88s",
+      "extra": {
+        "returncodes": {
+          "parallel": 0,
+          "serial": 0
+        },
+        "seconds": {
+          "parallel": 63.03,
+          "serial": 8.19
+        },
+        "workers": "8",
+        "workers_provenance": "PARCEL_XDIST_WORKERS=8 (honoured; cpu_count=192, cap=16)"
+      },
+      "hard": true,
+      "name": "default-suite",
+      "status": "pass",
+      "tier": "commit"
+    },
+    {
+      "detail": "4 declared external root(s), 0 absent on this host \u2192 0 test module(s) skip with a named reason",
+      "extra": {
+        "absent": [],
+        "declared": [
+          "barn-generator-checkout",
+          "barn-policy-bundles",
+          "habitat-challenge-2020-checkout",
+          "pyrealsense2"
+        ],
+        "modules_skipped": 0,
+        "undeclared_used": []
+      },
+      "hard": false,
+      "name": "skip-list",
+      "status": "pass",
+      "tier": "commit"
+    }
+  ],
+  "tier": "commit"
+}

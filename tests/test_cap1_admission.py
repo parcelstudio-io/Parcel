@@ -275,21 +275,29 @@ def test_the_product_survey_names_every_file_that_reads_a_config_section() -> No
     )
 
 
-def test_the_wider_survey_finds_one_unreachable_section_and_names_it() -> None:
-    """A finding this card REPORTS — owner: `web_panel.py` / the `config.py` door.
+def test_the_wider_survey_finds_no_unreachable_section() -> None:
+    """CAP-1's finding, and TRUTH-1's fix — the pin the fix had to redden.
 
     Widening the survey past G2's pre-registered scope found ROAM-1 finding 6 a
     SECOND time, in the product launcher: ``web_panel.build_runtime`` reads
     ``store.section("planner_model")`` to decide whether to construct a separate
-    planner LLM, and ``planner_model`` is absent from the SHA-locked
-    ``configs/robot.yaml`` AND absent from ``OVERLAY_INTRODUCIBLE_KEYS``. So with
-    no profile the block reads ``{}`` and the planner can never be enabled, and a
-    profile that tries to set it makes the whole config load REFUSE.
+    planner LLM, and ``planner_model`` was absent from the SHA-locked
+    ``configs/robot.yaml`` AND absent from ``OVERLAY_INTRODUCIBLE_KEYS``. With no
+    profile the block read ``{}`` and the planner could never be enabled, and a
+    profile that tried to set it made the whole config load REFUSE.
 
-    CAP-1 does not patch it: `web_panel.py` is not this card's OWNS and the fix
-    is one entry in another card's frozenset. What is pinned here is that the
-    set of unreachable sections is EXACTLY this one — so a second instance
-    reddens, and so does the fix, which is the signal to delete this test.
+    CAP-1 did not patch it — `web_panel.py` was not that card's OWNS and the fix
+    was one entry in another card's frozenset — and pinned instead that the set
+    of unreachable sections was EXACTLY ``{"planner_model"}``, so that a second
+    instance would redden AND so would the fix.
+
+    ---- CARD TRUTH-1 (task_32) ---- the fix landed, and this is it reddening.
+    ``planner_model`` is on ``OVERLAY_INTRODUCIBLE_KEYS`` with a reason, the
+    typo guard lives at the read site (``web_panel._check_planner_model_section``),
+    and the expected set is now EMPTY. The assertion is kept rather than deleted
+    because empty is the property worth holding: the next product file that reads
+    a section no overlay can introduce reddens here, with its name in the message.
+    ---- END CARD TRUTH-1 ----
     """
 
     from parcel_robot.config import OVERLAY_INTRODUCIBLE_KEYS
@@ -301,9 +309,10 @@ def test_the_wider_survey_finds_one_unreachable_section_and_names_it() -> None:
         for name in admission.product_config_sections()
         if name not in base and name not in OVERLAY_INTRODUCIBLE_KEYS
     }
-    assert unreachable == {"planner_model"}, (
-        "the set of product-read config sections no overlay can introduce has "
-        f"changed: {sorted(unreachable)}"
+    assert unreachable == set(), (
+        "a product file reads these config sections, the SHA-locked base does not "
+        "define them, and no profile overlay may introduce them — the knobs cannot "
+        f"be turned: {sorted(unreachable)}"
     )
 
     row = next(
@@ -311,8 +320,8 @@ def test_the_wider_survey_finds_one_unreachable_section_and_names_it() -> None:
         for r in admission.admitted()
         if r.domain == DOMAIN_CONFIG_KEY and r.name == "planner_model"
     )
-    assert row.admitted is False
-    assert "can never be turned" in row.reason
+    assert row.admitted is True
+    assert "OVERLAY_INTRODUCIBLE_KEYS" in row.reason
 
 
 # ======================================================================

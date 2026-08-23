@@ -4,11 +4,13 @@ import json
 from pathlib import Path
 
 import pytest
+from _external_roots import skip_unless
 
 from evals.external import barn_v9_supervisory_gap_s2 as challenger
 from evals.external.barn_policy_sidecar import verify_policy_bundle
 
 
+@skip_unless("barn-policy-bundles")
 def test_exact_scratch_freeze_and_one_factor_plan_verify() -> None:
     verified = challenger.verify_supervisory_gap_s2()
 
@@ -40,6 +42,7 @@ def test_raw_freeze_mutation_is_rejected(tmp_path: Path) -> None:
         challenger.verify_supervisory_gap_s2(freeze_path=changed)
 
 
+@skip_unless("barn-policy-bundles")
 def test_source_mutation_is_rejected_after_freeze() -> None:
     tracker = challenger.EXPERIMENT_ROOT / "experimental_sampled_predictive_tracker.py"
     original = tracker.read_bytes()
@@ -55,6 +58,7 @@ def test_source_mutation_is_rejected_after_freeze() -> None:
     )
 
 
+@skip_unless("barn-policy-bundles")
 def test_materialized_scratch_bundle_is_read_only_and_exact(tmp_path: Path) -> None:
     prepared = challenger.prepare_supervisory_gap_s2_bundle(destination_root=tmp_path)
     verified = verify_policy_bundle(

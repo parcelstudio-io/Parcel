@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from _external_roots import skip_unless
 
 from evals.external import run_barn_v9_supervisory_gap_s4_training as runner
 from evals.external import run_sampled_predictive_tracker_v9_training as shared
@@ -14,6 +15,7 @@ from evals.external.barn_v9_supervisory_gap_s4 import (
 )
 
 
+@skip_unless("barn-generator-checkout")
 def test_real_preflight_authenticates_s4_bundle_corpus_and_isolated_pair() -> None:
     preflight = runner._preflight_training_inputs()
 

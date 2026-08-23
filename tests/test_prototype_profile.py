@@ -35,6 +35,11 @@ import json
 import os
 import shutil
 import subprocess
+
+# ---- CARD GATE-0b (scrum/20260822/task_30) — read by the fenced region at
+# `_fake_root` below; the END marker is inline on the import so the block stays
+# one sorted unit (ruff I001).
+import sys  # ---- END CARD GATE-0b ----
 import time
 from pathlib import Path
 
@@ -331,6 +336,17 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
                 # the same division of labour the other three families use.
                 "perception.camera_backend",
                 "perception.detector",
+                # ---- CARD TRUTH-1 (task_32): the fifth family, one subtree --
+                # `web_panel.build_runtime` reads `store.section("planner_model")`
+                # to decide whether to build a SECOND llama.cpp provider for the
+                # planner, and the SHA-locked base omits the block — CAP-1's
+                # carried finding, ROAM-1 finding 6 a second time. One entry,
+                # not four: the loader stops descending at an exempt parent, so
+                # listing `planner_model.enabled` beside it would look like a
+                # spelling guard and be inert. The typo check is at the read
+                # site, asserted below.
+                "planner_model",
+                # ---- END CARD TRUTH-1 --------------------------------------
             )
         )
         for key in OVERLAY_INTRODUCIBLE_KEYS
@@ -360,6 +376,25 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
     )
     check_overlay_keys(base, {"roam": {"budget_st": 90.0}})  # merges; not the guard
 
+    # ---- CARD TRUTH-1 (task_32): the planner family, both halves ------------
+    # Same division of labour as roam's, asserted the same way. The exemption
+    # makes the block writable at all; the read site is what refuses a typo.
+    assert "planner_model" in OVERLAY_INTRODUCIBLE_KEYS
+    assert not any(key.startswith("planner_model.") for key in OVERLAY_INTRODUCIBLE_KEYS), (
+        "listing planner_model's children would look like a spelling guard and be inert"
+    )
+    check_overlay_keys(base, {"planner_model": {"plan_timeoutt": 5}})  # merges; not the guard
+
+    from parcel_robot.web_panel import _check_planner_model_section
+
+    with pytest.raises(ValueError, match="unknown planner_model config key"):
+        _check_planner_model_section({"enabled": True, "plan_timeoutt": 5})
+    assert _check_planner_model_section({"enabled": True, "plan_timeout": 5.0}) == {
+        "enabled": True,
+        "plan_timeout": 5.0,
+    }
+    # ---- END CARD TRUTH-1 ---------------------------------------------------
+
     from parcel_robot.runtime import RobotRuntime
 
     assert RobotRuntime.ROAM_CONFIG_KEYS == {
@@ -368,6 +403,11 @@ def test_introducible_keys_are_exactly_the_three_documented_families() -> None:
         "turn_vyaw",
         "alternate_turns",
         "tether_m",
+        # Card ROAM-2 (task_33): the learned-map coverage objective. This pin
+        # exists to force exactly this edit — a sixth roam key is a decision
+        # somebody has to write down — so the row is added and nothing else in
+        # this assertion moves.
+        "coverage",
     }
 
 
@@ -789,7 +829,24 @@ def _fake_root(tmp_path: Path) -> Path:
     (root / "scripts").mkdir(parents=True)
     (root / "configs").mkdir()
     shutil.copyfile(LAUNCHER, root / "scripts" / "launch_stack.sh")
-    (root / ".parcel").symlink_to(REPO / ".parcel")
+    # ---- CARD GATE-0b (scrum/20260822/task_30) -----------------------------
+    # This used to be `(root / ".parcel").symlink_to(REPO / ".parcel")`, which
+    # pins the fake root to ONE developer's virtualenv directory. `.parcel/` is
+    # gitignored, so in every fresh clone — and on the hosted `ubuntu-latest`
+    # runner, and on the Orin, where the environment is `.venv/` or the system
+    # python — that symlink dangles and `launch_stack.sh:203` refuses with
+    # "missing Parcel environment". All five launcher tests died that way in a
+    # clean-clone gate run (card GATE-0b baseline, 2026-08-23) while testing
+    # nothing about the launcher.
+    #
+    # The launcher only needs an executable interpreter at that path (it runs
+    # `"$PYTHON" - <<PY` to parse YAML), so point it at the interpreter that is
+    # RUNNING THIS TEST. Hermetic, host-independent, and it still exercises the
+    # real script end to end.
+    parcel_bin = root / ".parcel" / "bin"
+    parcel_bin.mkdir(parents=True)
+    (parcel_bin / "python").symlink_to(sys.executable)
+    # ---- END CARD GATE-0b --------------------------------------------------
     return root
 
 

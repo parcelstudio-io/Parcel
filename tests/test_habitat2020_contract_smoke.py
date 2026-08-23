@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from _external_roots import skip_unless
 
 from evals.external.habitat2020_py36_bridge import PROTOCOL_VERSION
 from evals.external.run_habitat2020_contract_smoke import (
@@ -43,6 +44,7 @@ class _DeterministicTransport:
         self.closed = True
 
 
+@skip_unless("habitat-challenge-2020-checkout")
 def test_full_public_contract_smoke_records_no_fake_navigation_metric() -> None:
     transports: list[_DeterministicTransport] = []
 
@@ -77,6 +79,7 @@ def test_full_public_contract_smoke_records_no_fake_navigation_metric() -> None:
     )
 
 
+@skip_unless("habitat-challenge-2020-checkout")
 def test_real_subprocess_sidecar_smoke_uses_unchanged_config() -> None:
     report = run_contract_smoke(
         navigation_config=DEFAULT_NAVIGATION_CONFIG,

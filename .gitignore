@@ -7,6 +7,8 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
+# XD-1: _HOT_SKIP premise; hypothesis' runtime .gitignore is not tracked
+.hypothesis/
 .tmp_ci/
 .tmp/
 .cache/external-evals/

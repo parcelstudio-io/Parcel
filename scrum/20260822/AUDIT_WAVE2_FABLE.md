@@ -51,6 +51,18 @@ comparison settles it. I accept NM-1's measurement over the note: it measured
 directly and published the rows. The lesson runs both ways — a verifier's note
 is a claim too, and it owes the same evidence it demands.
 
+## Batch A LANDED — `e15e466`
+
+**Re-gate (19:16Z): PASS — every hard gate green, 10 of 10.** ruff 7/baseline
+7/new 0 · unitree-assets (revision pinned, 20 paths, 0 gitlinks, both scenes
+compiled) · **hard-safety** (frozen baseline v4, mutation panel clean and
+fresh, all 7 follow-bench rows, walk_with_me) · release-parity 91 ·
+assertion-evals · tier-coverage 9,361 = 9,280 + 81 · model-off ·
+release-parity-integrity · owner-store-isolation · **default-suite 9,259
+passed, 18 skipped, 3 xfailed in 6:47**. Elapsed 442 s. Committed as
+**`e15e466`** (96 files by explicit path list; the owner's `docs/` lane
+excluded; `CODEBASE_INDEX.md` regenerated against the staged tree) and pushed.
+
 ## Batch-A gate (18:47Z) — 9/10, and what the three reds were
 
 **hard-safety PASS** — the question DOOR-1 raised is answered: the frozen nav

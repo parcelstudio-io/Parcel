@@ -1,0 +1,330 @@
+{
+  "admission": {
+    "parcel_adapter_execution_allowed": false,
+    "rank_threshold_freeze_allowed": false,
+    "reason": "The pinned implementation does not yet expose a task-correct, injectable, backend-specific evaluator contract.",
+    "resolution_required": [
+      "Organizer-published immutable runner with an explicit external-agent action/observation hook.",
+      "One authoritative seed/reset/timeout contract shared by docs and code.",
+      "Correct PointNav success and traveled-path accounting.",
+      "ObjectNav observations that reveal category but never target coordinates.",
+      "A real Exploration controller/evaluator and authoritative coverage/efficiency metric.",
+      "A working simulator backend and a frozen Unitree Go2 embodiment contract.",
+      "A scene whose geometry, pose manifests, and sensor bridge share one coordinate/world contract.",
+      "One submission schema and a real provenance-preserving submission path.",
+      "Backend-specific leaderboard cohorts, ranking metric, tie rule, and provenance."
+    ],
+    "simulator_execution_allowed": false,
+    "status": "not_admitted"
+  },
+  "aggregate": {
+    "critical_contract_blockers": 13,
+    "eligible_navigation_scores": 0,
+    "targets_remaining_unresolved": 3
+  },
+  "audit_id": "threewe-contract-audit-20260803-baseline01",
+  "audit_implementation": {
+    "path": "evals/external/threewe_contract_audit.py",
+    "sha256": "e1d30c8a413c3f3b07fb304f539a2a8cd7a4b8adc978466c95e9b9d66c2f1750",
+    "upstream_python_imported": false
+  },
+  "created_at_utc": "2026-08-03T15:24:04Z",
+  "execution": {
+    "episodes_run": 0,
+    "metrics_emitted": false,
+    "parcel_policy_executed": false,
+    "rank_eligible": false,
+    "simulator_started": false,
+    "source_code_executed": false
+  },
+  "findings": [
+    {
+      "evidence": [
+        "docs/leaderboard.md:26",
+        "sdk/threewe/src/threewe/benchmark/runner.py:67",
+        "sdk/threewe/src/threewe/benchmark/runner.py:79",
+        "sdk/threewe/src/threewe/benchmark/objectnav_runner.py:68",
+        "sdk/threewe/src/threewe/benchmark/objectnav_runner.py:106",
+        "sdk/threewe/src/threewe/cli.py:35"
+      ],
+      "id": "protocol_seed_and_reset_mismatch",
+      "implication": "One RNG seeded with 42 samples goals while one persistent Robot instance carries state between episodes; no documented start-pose reset or per-episode seed hook exists.",
+      "severity": "critical",
+      "summary": "The published 0-99 episode seed protocol is not what the PointNav runner executes."
+    },
+    {
+      "evidence": [
+        "docs/leaderboard.md:135",
+        "sdk/threewe/src/threewe/benchmark/runner.py:87",
+        "sdk/threewe/src/threewe/benchmark/runner.py:106",
+        "sdk/threewe/src/threewe/benchmark/objectnav_runner.py:22",
+        "sdk/threewe/src/threewe/benchmark/objectnav_runner.py:95"
+      ],
+      "id": "task_timeout_mismatch",
+      "implication": "PointNav uses 30 rather than 60 seconds, ObjectNav config uses 60 rather than 120, and Exploration uses 120 rather than 180.",
+      "severity": "critical",
+      "summary": "All three implemented task time limits conflict with the published protocol."
+    },
+    {
+      "evidence": [
+        "sdk/threewe/src/threewe/benchmark/tasks.py:32",
+        "sdk/threewe/src/threewe/benchmark/runner.py:93",
+        "sdk/threewe/src/threewe/backends/_ros2_node.py:441"
+      ],
+      "id": "pointnav_success_boundary_not_enforced",
+      "implication": "The runner trusts the backend boolean, while the ROS backend reports success after an accepted action completes without checking the action result status or final radius.",
+      "severity": "critical",
+      "summary": "The documented 0.5 m PointNav success condition is not evaluated by the runner."
+    },
+    {
+      "evidence": [
+        "sdk/threewe/src/threewe/backends/_ros2_node.py:438"
+      ],
+      "id": "spl_path_length_is_displacement",
+      "implication": "Obstacle detours are omitted, so the resulting value cannot implement standard SPL path-efficiency semantics.",
+      "severity": "critical",
+      "summary": "The ROS backend reports endpoint displacement, not traveled path length, to SPL."
+    },
+    {
+      "evidence": [
+        "sdk/threewe/src/threewe/benchmark/objectnav_runner.py:86",
+        "sdk/threewe/src/threewe/benchmark/objectnav_runner.py:85",
+        "sdk/threewe/src/threewe/benchmark/objectnav_runner.py:40"
+      ],
+      "id": "objectnav_hidden_coordinate_oracle",
+      "implication": "A category and an unrelated goal pose are sampled, then hidden target coordinates are sent directly to Robot.move_to; the generated start pose is also never applied.",
+      "severity": "critical",
+      "summary": "ObjectNav never presents the generated semantic category to an agent."
+    },
+    {
+      "evidence": [
+        "sdk/threewe/src/threewe/backends/_ros2_node.py:562",
+        "sdk/threewe/src/threewe/backends/_ros2_node.py:573",
+        "sdk/threewe/src/threewe/backends/mock.py:465"
+      ],
+      "id": "exploration_backend_is_stub",
+      "implication": "Gazebo samples map coverage after at most one second, while the mock backend returns perfect coverage. Neither path evaluates a Parcel exploration policy.",
+      "severity": "critical",
+      "summary": "The Gazebo/ROS Exploration implementation issues no exploration action."
+    },
+    {
+      "evidence": [
+        "sdk/threewe/src/threewe/benchmark/runner.py:79",
+        "sdk/threewe/src/threewe/benchmark/runner.py:87"
+      ],
+      "id": "runner_owns_navigation_stack",
+      "implication": "There is no immutable external policy/agent hook. Replacing Robot.move_to or the Nav2 server would change the evaluation boundary and/or the wheeled embodiment.",
+      "severity": "critical",
+      "summary": "The benchmark constructs 3WE Robot and delegates navigation to its backend."
+    },
+    {
+      "evidence": [
+        "sdk/threewe/src/threewe/backends/isaac_sim.py:100",
+        "sdk/threewe/src/threewe/backends/isaac_sim.py:146",
+        "sdk/threewe/src/threewe/backends/isaac_sim.py:242",
+        "sdk/threewe/src/threewe/backends/isaac_sim.py:247"
+      ],
+      "id": "isaac_backend_is_stub",
+      "implication": "It returns constant sensor state, ignores velocity commands, reports instant goal success, and suppresses both Isaac import failures. Its leaderboard row cannot establish a valid GPU-evaluation cohort.",
+      "severity": "critical",
+      "summary": "The advertised GPU/Isaac backend does not connect actions or observations to a simulator."
+    },
+    {
+      "evidence": [
+        "ros2_ws/robot_description/urdf/robot.urdf.xacro:58",
+        "ros2_ws/robot_simulation/urdf/robot_gazebo.urdf.xacro:123"
+      ],
+      "id": "simulated_embodiment_is_not_go2",
+      "implication": "Replacing this wheeled holonomic body with Unitree Go2 dynamics would be a substantive benchmark change rather than a neutral Parcel policy adapter.",
+      "severity": "critical",
+      "summary": "The official simulation assets describe a four-wheel mecanum robot with planar motion."
+    },
+    {
+      "evidence": [
+        "sdk/threewe/src/threewe/scenes/office_v2/metadata.yaml:2",
+        "ros2_ws/robot_simulation/worlds/office_v2.sdf:4",
+        "ros2_ws/robot_simulation/worlds/office_v2.sdf:6",
+        "ros2_ws/robot_simulation/config/bridge_params.yaml:21",
+        "sdk/threewe/src/threewe/scenes/office_v2/start_poses.yaml:2",
+        "sdk/threewe/src/threewe/scenes/office_v2/goal_poses.yaml:2"
+      ],
+      "id": "office_scene_coordinate_contract_mismatch",
+      "implication": "The metadata says 20x15 m while the enclosed world is 15x10 m in positive coordinates; 15/20 starts and 34/50 goals are outside or on that boundary. Sensor topics name empty_world, not office.",
+      "severity": "critical",
+      "summary": "The bundled office metadata, Gazebo walls, pose manifests, and bridge topics disagree."
+    },
+    {
+      "evidence": [
+        "docs/leaderboard.md:71",
+        "docs/leaderboard.md:77",
+        "sdk/threewe/src/threewe/benchmark/leaderboard.py:26",
+        "sdk/threewe/src/threewe/cli.py:236",
+        "sdk/threewe/src/threewe/cli.py:256"
+      ],
+      "id": "report_submission_schema_divergence",
+      "implication": "Documentation nests metrics and software and requires episode/seed metadata; the validator expects flat success_rate, spl, hardware, and timestamp fields and rejects all 6 static rows. The submit command only validates and prints; it contains no upload transport.",
+      "severity": "critical",
+      "summary": "The documented submission schema and implemented validator are incompatible."
+    },
+    {
+      "evidence": [
+        "docs/leaderboard.md:30",
+        "data/leaderboard.json (3we-baseline-v2 SR 0.915, SPL 0.87)",
+        "sdk/threewe/src/threewe/benchmark/baselines.py:29",
+        "sdk/threewe/src/threewe/benchmark/baselines.py:30"
+      ],
+      "id": "published_baseline_references_diverge",
+      "implication": "Documentation reports SR/SPL 0.85/0.72, the static snapshot reports 0.915/0.87, and the comparison module reports 0.82/0.65, with no authoritative selection rule.",
+      "severity": "critical",
+      "summary": "Three first-party locations report different office PointNav baselines."
+    },
+    {
+      "evidence": [
+        "data/leaderboard.json (SHA-256 5740907e0aafcf38eaf08ebd0cbb1c366465aa7e790401e9f723ab96fefa4323)"
+      ],
+      "id": "leaderboard_cohort_not_rankable",
+      "implication": "PointNav mixes Gazebo, Isaac Sim, and mock results; ObjectNav and Exploration each contain only one entry. A top-decile cutoff or tie rule cannot be inferred defensibly.",
+      "severity": "critical",
+      "summary": "The pinned snapshot has no sufficiently large backend-specific cohort for top-decile ranking."
+    }
+  ],
+  "kind": "source_contract_compatibility_audit",
+  "leaderboard_snapshot": {
+    "entry_count": 6,
+    "last_updated": "2025-05-17",
+    "rows_rejected_by_implemented_validator": 6,
+    "sha256": "5740907e0aafcf38eaf08ebd0cbb1c366465aa7e790401e9f723ab96fefa4323",
+    "task_backend_entry_counts": {
+      "exploration": {
+        "gazebo": 1
+      },
+      "objectnav": {
+        "gazebo": 1
+      },
+      "pointnav": {
+        "gazebo": 2,
+        "isaac_sim": 1,
+        "mock": 1
+      }
+    },
+    "task_entry_counts": {
+      "exploration": 1,
+      "objectnav": 1,
+      "pointnav": 4
+    },
+    "version": "1.0.0"
+  },
+  "published_contract": {
+    "documentation": "https://docs.3we.org/leaderboard/",
+    "episodes_per_task": 100,
+    "page": "https://3we.org/benchmarks",
+    "scene": "office_v2",
+    "seed_start": 0,
+    "timeouts_seconds": {
+      "exploration": 180,
+      "objectnav": 120,
+      "pointnav": 60
+    }
+  },
+  "scene_snapshot": {
+    "gazebo_enclosed_coordinate_bounds": {
+      "x": [
+        0,
+        15
+      ],
+      "y": [
+        0,
+        10
+      ]
+    },
+    "goal_pose_count": 50,
+    "goal_poses_outside_or_on_boundary": 34,
+    "metadata_area": "20x15m",
+    "start_pose_count": 20,
+    "start_poses_outside_or_on_boundary": 15
+  },
+  "schema_version": 1,
+  "source": {
+    "checkout_clean": true,
+    "checkout_commit": "6073a1bd0a30b6ca1348027ac35b05832b97bfe9",
+    "expected_commit": "6073a1bd0a30b6ca1348027ac35b05832b97bfe9",
+    "files": {
+      "baselines": {
+        "path": "sdk/threewe/src/threewe/benchmark/baselines.py",
+        "sha256": "dc6de17f41e4e1ba5a97a75a6795979c0503fbe37fc35fdf0d57a7141ed0f751"
+      },
+      "bridge": {
+        "path": "ros2_ws/robot_simulation/config/bridge_params.yaml",
+        "sha256": "2baec0d7b594e3431acdd024b07732ac4f4685e53c02ae3cfe3ba73d2c8fefa2"
+      },
+      "cli": {
+        "path": "sdk/threewe/src/threewe/cli.py",
+        "sha256": "f5bafdc4a0861784ad9791aea17ad0ec3ef3c6304734eb43d8f427129777dd93"
+      },
+      "docs": {
+        "path": "docs/leaderboard.md",
+        "sha256": "d91d937e530c3432b21057851392fbd436021420c422f82baf8a1d2c63831abd"
+      },
+      "gazebo_urdf": {
+        "path": "ros2_ws/robot_simulation/urdf/robot_gazebo.urdf.xacro",
+        "sha256": "54c50f6c740dde6a0dbcc0f1ba8dfc8e4a7bb7c5b7fc00f6ff0d231a7de785a3"
+      },
+      "goal_poses": {
+        "path": "sdk/threewe/src/threewe/scenes/office_v2/goal_poses.yaml",
+        "sha256": "db9dc3629277f0155ca17fdb928b160c4248e262e59250cbaa83490c528f0c78"
+      },
+      "isaac_backend": {
+        "path": "sdk/threewe/src/threewe/backends/isaac_sim.py",
+        "sha256": "b2feda4ad92cf09d5e127d00295793163c1f9eb4b621dce5fa75cd4207d823c3"
+      },
+      "leaderboard": {
+        "path": "data/leaderboard.json",
+        "sha256": "5740907e0aafcf38eaf08ebd0cbb1c366465aa7e790401e9f723ab96fefa4323"
+      },
+      "mock_backend": {
+        "path": "sdk/threewe/src/threewe/backends/mock.py",
+        "sha256": "09aefff2d121f434fe90989beb0442feee070434874d474be353880174701c63"
+      },
+      "objectnav": {
+        "path": "sdk/threewe/src/threewe/benchmark/objectnav_runner.py",
+        "sha256": "c2adc2df0e88ff3df231faf5556a711e48de16ff197612f2b01e0263c29d1bd7"
+      },
+      "office_world": {
+        "path": "ros2_ws/robot_simulation/worlds/office_v2.sdf",
+        "sha256": "92482b7c6f626c613aa28886a06e6a3940eb0b8071f8e645dbe406b48c29a741"
+      },
+      "robot_urdf": {
+        "path": "ros2_ws/robot_description/urdf/robot.urdf.xacro",
+        "sha256": "546b686d13afe8b1702569ad1ca61d6ed67da3e412030a31f5d1520d94e2ac94"
+      },
+      "ros2_backend": {
+        "path": "sdk/threewe/src/threewe/backends/_ros2_node.py",
+        "sha256": "36870e4a4382d62b62947701459795f3d4f4e433bad28db14a081f18fdfd7d46"
+      },
+      "runner": {
+        "path": "sdk/threewe/src/threewe/benchmark/runner.py",
+        "sha256": "ed42c354405fcd7cd9148d07398ff206dae71f8db21dc6c0a2909e77a7940782"
+      },
+      "scene_metadata": {
+        "path": "sdk/threewe/src/threewe/scenes/office_v2/metadata.yaml",
+        "sha256": "4b19e73d689399c0aa816e97bcc36b983a364a8d2e18b4a31ecf19f3f0503a5f"
+      },
+      "start_poses": {
+        "path": "sdk/threewe/src/threewe/scenes/office_v2/start_poses.yaml",
+        "sha256": "b464878c851fc91d5866a59885d56197ddba98b94d2339fd701d99b86bb9473a"
+      },
+      "submission": {
+        "path": "sdk/threewe/src/threewe/benchmark/leaderboard.py",
+        "sha256": "9b6112764c251954e491aed4c822d950c6aff0e3327ebe8a870d33e9fa8d8996"
+      },
+      "tasks": {
+        "path": "sdk/threewe/src/threewe/benchmark/tasks.py",
+        "sha256": "df0453c378de4614d0397fa080a66e4f244d555b3b9549823b4affdf8f5cf0c1"
+      }
+    },
+    "lock_key": "threewe_robot_platform",
+    "portfolio_sha256": "227d8f59791f1fbc69c87f21f9bd9fc01dda8f7c239bb68b7c8720940576bc8c",
+    "source_lock_sha256": "aa2e31a551d551711fecb15d3881e8fc320990700d35c11974b225be97ef38e8",
+    "url": "https://github.com/telleroutlook/3we-robot-platform.git"
+  }
+}

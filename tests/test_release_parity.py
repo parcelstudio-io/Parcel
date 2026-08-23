@@ -31,7 +31,12 @@ PACKAGED = packaged_assets_root()
 
 # Pinned literal, in the tests/test_ci_gate.py house style: a shrinking ship set
 # must fail loudly rather than quietly packaging less.
-EXPECTED_ASSET_COUNT = 90
+# 2026-08-22, card FZ-1 (scrum/20260822/task_13): 90 → 99. The ship set grew by
+# the nine per-version persona snapshots under
+# prompts/personalities/_frozen/<si_version>/ (3 versions × 3 personalities),
+# which a wheel must carry or a packaged install cannot render any historical
+# si_version at all. Moved deliberately, which is what this pin is for.
+EXPECTED_ASSET_COUNT = 99
 
 # Every asset a product entry point resolves by a repo-relative name.
 DEFAULT_FILE_ASSETS = (

@@ -25,7 +25,21 @@ def test_threewe_contract_audit_is_immutable_source_evidence_not_a_score() -> No
     report = _report()
 
     assert _sha256(REPORT) == "544fd5c6ac53db6a13244d976ac7797826ff9367bf289bb5fe7e0afb079d78f7"
-    assert REPORT.stat().st_mode & 0o222 == 0
+    # ---- CARD GATE-0b (scrum/20260822/task_30) -----------------------------
+    # `assert REPORT.stat().st_mode & 0o222 == 0` used to stand here. It was
+    # reachable only because this evidence file was NOT in git
+    # (`evals/external/.gitignore:1` ignored `results/*`); the same card that
+    # tracked it turned that line red, because git records one permission bit
+    # and it is not this one — a checkout writes `0666 & ~umask`, i.e. `644`,
+    # on this box, on the hosted runner and on the Orin alike.
+    #
+    # The immutability being claimed is CONTENT immutability, and the line
+    # above already asserts it against a pinned sha256 — a far stronger claim
+    # than "nobody has chmod +w", and one that survives being cloned. Same
+    # decision, same reasoning, as the V9 training manifest
+    # (`evals/external/generate_sampled_predictive_tracker_v9_training.py`
+    # `_require_immutable_regular_file`); recorded in `task_30/DESIGN.md` §g.
+    # ---- END CARD GATE-0b --------------------------------------------------
     assert report["kind"] == "source_contract_compatibility_audit"
     assert report["admission"]["status"] == "not_admitted"
     assert report["admission"]["parcel_adapter_execution_allowed"] is False

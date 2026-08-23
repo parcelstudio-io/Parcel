@@ -4,6 +4,8 @@ import json
 import math
 from pathlib import Path
 
+from _external_roots import skip_unless
+
 from evals.external.barn_native import BarnObservation
 from evals.external.barn_policy_sidecar import HISTORICAL_CONFIG
 from evals.external.barn_policy_specs import parcel_isolated_bundle_candidate_spec
@@ -25,6 +27,7 @@ EXPERIMENT_ROOT = (
 )
 
 
+@skip_unless("barn-policy-bundles")
 def test_exact_candidate_bundle_runs_through_the_isolated_policy_sidecar(tmp_path) -> None:
     plan = plan_v9_candidate_bundle()
     freeze = json.loads((EXPERIMENT_ROOT / "CANDIDATE_FREEZE.json").read_bytes())

@@ -1,1 +1,18 @@
 runs/
+
+# ---- CARD GATE-0b (scrum/20260822/task_30): the ledger's own runs ----------
+# `runs/` above has no leading slash, so git applies it at EVERY depth below
+# this directory -- including `ledger/runs/`, which is not the bulky raw
+# evidence the rule is aimed at but the four run files
+# `ledger/runs.jsonl` POINTS AT by name. The ledger is tracked and its rows
+# were unreadable in every clone:
+# `test_barn_frontier_detour_v4.py::test_development_ledger_pins_full_report_hashes_without_requiring_reports`
+# died on `ledger/runs/barn-v4-dev-reference-frontier-v3-20260803-run02.json`.
+# A tracked index whose entries are ignored is a dangling pointer.
+#
+# MANIFEST: 4 files, 24 KB, under `ledger/runs/` only. `results/runs/`
+# (4 files of raw candidate/reference dumps) stays ignored, which is what the
+# rule above was written for.
+!ledger/runs/
+!ledger/runs/**
+# ---- END CARD GATE-0b ------------------------------------------------------

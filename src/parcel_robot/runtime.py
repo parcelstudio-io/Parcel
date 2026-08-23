@@ -2007,6 +2007,14 @@ class RobotRuntime:
         #: checkpoint", as a readable predicate. True when not roaming, because
         #: a robot standing still is nothing but a checkpoint.
         self._roam_idle_checkpoint = True
+        # ---- CARD ROAM-2 state: the coverage objective ---------------------
+        # A RECORD, never an authority. The objective itself is recomputed from
+        # the learned map every tick and is handed to the policy as one bearing
+        # and one age; what is kept here is only what the panel, the status doc
+        # and the harness need to say WHICH place the last leg was aimed at.
+        self._roam_coverage: dict[str, object] = {}
+        self._roam_coverage_legs = 0
+        # ---- END CARD ROAM-2 state ----------------------------------------
         # ---- END CARD ROAM-1 state ----------------------------------------
         agent_config = self.store.agent_config()
         context_config = ContextBuildConfig.from_mapping(self.store.section("query_context"))
@@ -4318,12 +4326,17 @@ class RobotRuntime:
             # honest. VENUE-1 pinned it and handed it back (their handoff 9).
             #
             # The rule is therefore "after the LAST binder", not "after P1-B" —
-            # and the last binder is asserted HERE rather than by moving this
-            # block below the attach, because P1-B's own seam test pins the
-            # source text ``_attach_configured_camera_ingress()`` immediately
-            # followed by ``self._thread`` (tests/test_p1b_map_learns.py:1028)
-            # and nothing may sit between them. This is the first of the two
-            # remedies VENUE-1 offered, taken for that reason.
+            # and the last binder is asserted HERE, by calling it, rather than by
+            # moving this block below the attach. This is the first of the two
+            # remedies VENUE-1 offered.
+            #
+            # Card XD-1 (scrum/20260822/task_14): the SECOND reason this comment
+            # used to give — that P1-B's seam test pinned the literal source text
+            # ``_attach_configured_camera_ingress()`` immediately followed by
+            # ``self._thread``, so nothing could sit between them — is GONE. That
+            # test now compares the two call offsets and pins only the ordering
+            # it means (install before attach), so the composition root is
+            # extensible again. The placement above is kept on its own merits.
             #
             # Calling it twice is free and deliberate: VENUE-1 documents the
             # binder as idempotent ("re-asserts the same policy when the
@@ -4838,7 +4851,14 @@ class RobotRuntime:
     #: ``safety.person_stop_m`` / ``safety.obstacle_stop_m`` so the patrol can
     #: never be tuned inside the gate that refuses it.
     ROAM_CONFIG_KEYS: ClassVar[frozenset[str]] = frozenset(
-        {"budget_s", "cruise_vx", "turn_vyaw", "alternate_turns", "tether_m"}
+        # ---- CARD ROAM-2 -----------------------------------------------
+        # ``coverage`` is card ROAM-2's: the learned-map objective, **OFF by
+        # default** and turn-on-able by name. It is a key rather than a
+        # constant because the two arms of that card's measurement have to
+        # differ by a CONFIG line and nothing else, or they are not two arms of
+        # the same product path.
+        {"budget_s", "cruise_vx", "turn_vyaw", "alternate_turns", "tether_m", "coverage"}
+        # ---- END CARD ROAM-2 config key ---------------------------------
     )
 
     #: The roam budget when the owner does not say how long. Two minutes is
@@ -4897,6 +4917,11 @@ class RobotRuntime:
                 self._roam_idle_checkpoint = True
                 self._roam_ticks = 0
                 self._roam_refused = 0
+                # ---- CARD ROAM-2: a new roam has covered nothing yet, and
+                # the previous roam's objective is not this one's.
+                self._roam_coverage = {}
+                self._roam_coverage_legs = 0
+                # ---- END CARD ROAM-2 start reset --------------------------
                 self._behavior_generation += 1
         message = f"Roaming for the next {budget:g} seconds"
         self._emit("roam", message, "success")
@@ -4917,6 +4942,12 @@ class RobotRuntime:
             self._roam_last_tick_at = 0.0
             self._roam_reason = str(reason)
             self._roam_idle_checkpoint = True
+            # ---- CARD ROAM-2: the LEG COUNT SURVIVES the stop on purpose —
+            # it is what the run just did, and a caller reading the snapshot
+            # after a budget-exhausted roam wants the total, not a zero. The
+            # live objective does not survive: nothing is being aimed at.
+            self._roam_coverage = {}
+            # ---- END CARD ROAM-2 stop reset -------------------------------
             if was_active:
                 self._behavior_generation += 1
         if not was_active:
@@ -4986,6 +5017,10 @@ class RobotRuntime:
             ticks = self._roam_ticks
             refused = self._roam_refused
             checkpoint = self._roam_idle_checkpoint
+            # ---- CARD ROAM-2: read under the same lock as the rest --------
+            coverage = dict(self._roam_coverage)
+            coverage_legs = self._roam_coverage_legs
+            # ---- END CARD ROAM-2 snapshot read ----------------------------
         active = policy is not None
         elapsed = max(0.0, time.monotonic() - started) if active and started else 0.0
         return {
@@ -4997,6 +5032,23 @@ class RobotRuntime:
             "ticks": ticks,
             "refused": refused,
             "idle_checkpoint": checkpoint,
+            # ---- CARD ROAM-2: what the coverage objective is doing ---------
+            # ``enabled`` is the LIMITS' own flag rather than a copy of the
+            # config, so a snapshot can never say the objective is on while the
+            # running policy has it off. ``target``/``age_s`` are ``None`` on
+            # every tick the map had nothing to offer, which is the honest
+            # rendering of a degrade to ROAM-1's wander.
+            "coverage": {
+                "enabled": bool(policy.limits.coverage_bias) if policy is not None else False,
+                "legs": int(coverage_legs),
+                "target": coverage.get("entry_id"),
+                "label": coverage.get("label"),
+                "bearing_rad": coverage.get("bearing_rad"),
+                "age_s": coverage.get("age_s"),
+                "distance_m": coverage.get("distance_m"),
+                "candidates": int(coverage.get("candidates") or 0),
+            },
+            # ---- END CARD ROAM-2 status block -----------------------------
             "min_person_clearance_m": (
                 round(policy.limits.min_person_clearance_m, 3) if policy is not None else None
             ),
@@ -5056,6 +5108,28 @@ class RobotRuntime:
             # null`` in the profile must mean "no tether", not "use the
             # default".
             tether_m=None if tether is None else float(tether),
+            # ---- CARD ROAM-2: the coverage objective, OFF unless asked -----
+            # CORRECTED at the third attempt: the 17:38 draft read this key
+            # with a default of ``True``, which made the learned-map objective
+            # the shipped roam behaviour without anybody writing it in a
+            # profile. The standing rule for this wave is defaults OFF for
+            # behaviour (``scrum/20260822/TASK_BOARD.md`` rule 1), so the
+            # default is ``False`` and the objective exists only where a
+            # profile says ``roam: {coverage: true}``.
+            #
+            # Flag-off, the roam is ROAM-1's byte for byte: ``PatrolLimits``
+            # defaults it off, ``limits_from_safety`` defaults it off, and
+            # ``PatrolPolicy._cruise_or_cover`` returns the same ``advance``
+            # command it always did. That identity is what makes ROAM-2's
+            # baseline arm a real baseline rather than a different robot
+            # (``scrum/20260822/task_33/PREREGISTRATION.md`` §2).
+            #
+            # ``bool()`` of a YAML value is deliberate and matches
+            # ``alternate_turns`` above: the section's spelling is guarded by
+            # name in ``roam_config``, and a well-spelled key with a nonsense
+            # value reads as truthy exactly as it does for every other flag.
+            coverage_bias=bool(overrides.get("coverage", False)),
+            # ---- END CARD ROAM-2 limits key --------------------------------
         )
 
     @property
@@ -5091,7 +5165,124 @@ class RobotRuntime:
             )
         return dict(section)
 
-    def _roam_sense(self, observation: SimObservation, elapsed_s: float) -> PatrolSense | None:
+    # ---- CARD ROAM-2: the coverage objective, read from P1-B's map --------
+    #
+    # THE LOCK, first, because it is the only structural risk this card adds.
+    # ``_p1b_map_lock`` is a LEAF in R24's roster: the only two places that
+    # take it call nothing that takes another runtime lock, and its single
+    # pinned edge is ``_close_lock -> _p1b_map_lock``. This method keeps it a
+    # leaf — it is called from ``_step_roam`` OUTSIDE ``_lock`` and OUTSIDE
+    # ``_command_lock``, it holds the map lock across one pure query, and it
+    # calls nothing back into the runtime. ``PINNED_LOCK_ORDER`` is unchanged
+    # and ``test_the_lock_order_is_the_pinned_one`` is the proof.
+    #
+    # It is also a READER of the map and never a writer: ``coverage_candidates``
+    # derives everything from fields the camera worker already maintains.
+
+    def _roam_coverage_objective(self, observation: SimObservation) -> dict[str, object]:
+        """Where has the map not looked lately? ``{}`` when it cannot say.
+
+        Every failure — no learned map installed (the shipping ``oracle``
+        source, and every run before P1-B), an empty map, a map whose entries
+        are all in view, a query that raises — returns ``{}``, which the policy
+        reads as "no objective" and answers with ROAM-1's wander. There is no
+        path through this method that can end a roam, and that is the whole
+        contract: a coverage objective is a preference, and a preference that
+        can stop a dog is a bug.
+        """
+
+        learned = getattr(self, "_p1b_learned_map", None)
+        if learned is None:
+            return {}
+        try:
+            with self._p1b_map_lock:
+                rows = learned.coverage_candidates(
+                    float(observation.robot.x),
+                    float(observation.robot.y),
+                    float(observation.robot.yaw),
+                    # The map stamps entries on the WALL clock
+                    # (``MapObservation.observed_wall_s``), so the age has to be
+                    # asked on the wall clock too. ``time.monotonic()`` here
+                    # would produce an age of "-1.7e9 seconds" and the query
+                    # would answer ``None`` for every entry — correct, and
+                    # useless.
+                    now_wall_s=time.time(),
+                    limit=self.ROAM_COVERAGE_CANDIDATES,
+                )
+        except (
+            # CARD ROAM-2, F2 of the verifier's correction pass: this handler
+            # used to be a blind ``except Exception`` carrying a lint-suppression
+            # directive. The COMMON brief forbids suppression directives, so the
+            # handler now NAMES every exception it catches instead.
+            #
+            # WHY A WIDE TUPLE IS STILL RIGHT HERE. ``_step_roam`` is called from
+            # ``_control_loop_body`` at :10347, which is OUTSIDE that method's
+            # only ``except`` (:10254, which guards ``backend.observe()`` alone),
+            # and ``_control_loop`` wraps the body in ``try/finally`` — no
+            # ``except``. So an exception raised here does not degrade a
+            # behaviour, it KILLS THE 10 Hz CONTROL THREAD. A coverage objective
+            # is a preference; a preference that can stop a dog is a bug.
+            #
+            # The shape is the one this file already uses for exactly that job
+            # and carries no suppression directive: the thread-boundary tuple at
+            # ``runtime.py:10254`` — ``(OSError, RuntimeError, TypeError,
+            # ValueError)``. Extended here by what the query path adds:
+            #
+            #   AttributeError  ``self._visibility_range_m`` / ``entry.surface_x``
+            #                   / ``.last_seen_wall_s`` on an object that is not
+            #                   a real map (``_p1b_learned_map`` is typed ``Any``)
+            #   TypeError       non-numeric ``surface_x/y`` into ``math.hypot``,
+            #                   ``round``, or the ``rows.sort`` key
+            #   ValueError      the ``float()`` conversions in the query
+            #   ArithmeticError ``math.hypot``/``atan2`` overflow on absurd coords
+            #   LookupError     a mapping-shaped entry row missing a key
+            #   OSError         a future store-backed ``active_entries()``
+            #   RuntimeError    a map implementation declaring itself broken
+            #
+            # ``online_map.py``'s own query (:1112-1200) already swallows the
+            # conversion errors it can see and answers ``()``; this tuple is for
+            # the map objects it cannot vouch for.
+            ArithmeticError,
+            AttributeError,
+            LookupError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ):
+            logger.debug("the learned map could not offer a coverage objective")
+            return {}
+        for row in rows:
+            if row.get("age_s") is None:
+                # Rows are ordered ages-first, unknown-last, so the first
+                # unknown means there are no known ages left to consider.
+                break
+            return {
+                "entry_id": row.get("entry_id"),
+                "label": row.get("label"),
+                "bearing_rad": float(row["bearing_rad"]),
+                "age_s": float(row["age_s"]),
+                "distance_m": float(row.get("distance_m") or 0.0),
+                "candidates": len(rows),
+            }
+        return {"candidates": len(rows)}
+
+    #: How many map entries the objective query is allowed to rank per tick.
+    #: Small on purpose: this runs inside the control loop's period and the
+    #: only row that is ever used is the first one with a known age.
+    ROAM_COVERAGE_CANDIDATES: ClassVar[int] = 8
+
+    # ---- END CARD ROAM-2 coverage-objective reader ------------------------
+
+    def _roam_sense(
+        self,
+        observation: SimObservation,
+        elapsed_s: float,
+        # ---- CARD ROAM-2: the objective arrives as ONE optional mapping.
+        # Defaulting to ``None`` keeps every existing caller byte-identical.
+        coverage: Mapping[str, object] | None = None,
+        # ---- END CARD ROAM-2 sense argument -------------------------------
+    ) -> PatrolSense | None:
         """This tick's sensing, through the patrol package's TESTED adapter.
 
         ``sense_from_snapshot`` is fed a compact mapping shaped exactly like the
@@ -5137,6 +5328,16 @@ class RobotRuntime:
             # and carries this extra radius, and forgetting it is what parked
             # C-1's robot 0.31 m from the origin.
             owner_envelope_m=self.spatial.config.owner_collision_envelope_m,
+            # ---- CARD ROAM-2: two scalars, and they are the WHOLE coupling
+            # between the learned map and the patrol: the policy stays a pure
+            # function of numbers and never learns that a map exists.
+            coverage_bearing_rad=(
+                None if not coverage else coverage.get("bearing_rad")  # type: ignore[arg-type]
+            ),
+            coverage_age_s=(
+                None if not coverage else coverage.get("age_s")  # type: ignore[arg-type]
+            ),
+            # ---- END CARD ROAM-2 sense wiring -----------------------------
         )
 
     def _step_roam(self, observation: SimObservation | None) -> None:
@@ -5184,7 +5385,19 @@ class RobotRuntime:
         if now - last_tick < self.ROAM_TICK_S:
             return
 
-        sense = self._roam_sense(observation, elapsed)
+        # ---- CARD ROAM-2: LAST of the inputs and OUTSIDE every runtime lock — the
+        # ladder above has already decided this tick is allowed to propose
+        # something, so the map is asked only once nothing else objects. That
+        # is the card's yield order made structural rather than commented:
+        # safety gates, e-stop, owner command, budget, freshness, then (inside
+        # the policy) tether, then coverage.
+        coverage = (
+            self._roam_coverage_objective(observation)
+            if policy.limits.coverage_bias
+            else {}
+        )
+        # ---- END CARD ROAM-2 objective call -------------------------------
+        sense = self._roam_sense(observation, elapsed, coverage)
         if sense is None:
             return
         command = policy.step(sense)
@@ -5233,7 +5446,24 @@ class RobotRuntime:
                 # The patrol prompt's idle checkpoint: cruising or idle is a
                 # moment a social action may take; a turn is the robot
                 # negotiating a lane.
-                self._roam_idle_checkpoint = command.reason in {"advance", "idle"}
+                #
+                # ---- CARD ROAM-2 adds ``advance_coverage`` — walking a coverage
+                # leg — and deliberately does NOT add ``turn_coverage``: the
+                # alignment onto a new objective is the robot deciding where to
+                # go next, which is the same kind of moment as negotiating a
+                # blocked lane. So the checkpoint OPENS the instant a coverage
+                # leg starts being walked, which is the "idle checkpoint after
+                # each coverage leg" the card asks for, and CURIO-1's
+                # ``roam_idle_checkpoint()`` consumer needs no change at all.
+                self._roam_idle_checkpoint = command.reason in {
+                    "advance",
+                    "advance_coverage",
+                    "idle",
+                }
+                # Card ROAM-2's record for the panel and the harness.
+                self._roam_coverage = dict(coverage)
+                self._roam_coverage_legs = int(policy.coverage_legs)
+                # ---- END CARD ROAM-2 checkpoint + record ------------------
 
     def _submit_roam_command(self, command: PatrolCommand) -> bool:
         """Hand one proposal to the arbiter. A refusal is data, never an error."""

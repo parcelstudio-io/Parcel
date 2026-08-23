@@ -178,7 +178,17 @@ def _install_time_shim(offset: float) -> None:
 #: or a provenance phrase through numpy or msgpack, so no time bomb hides behind
 #: this list — but if the sweep ever errors with ``datetime_CAPI`` or the tzinfo
 #: TypeError above, the module that raised belongs here.
-CAPI_CONSUMERS: tuple[str, ...] = ("numpy", "msgpack")
+# ---- CARD GATE-0b (scrum/20260822/task_30): zoneinfo is a C-API consumer too
+# `_zoneinfo` reads `datetime.datetime_CAPI` at import; the pure-Python
+# `datetime` this shim installs does not export that capsule, so ANY module
+# that first imports `zoneinfo` after the swap dies with
+# `AttributeError: module 'datetime' has no attribute 'datetime_CAPI'`.
+# `parcel_robot.context.providers:7` does exactly that, so the +400d sweep
+# could not even COLLECT `tests/test_scene_and_memory_answers.py` on CPython
+# 3.12 (measured in a clean clone, card GATE-0b, 2026-08-23). Preloading it
+# here — while the C `datetime` is still in force — is what this list is for.
+CAPI_CONSUMERS: tuple[str, ...] = ("numpy", "msgpack", "zoneinfo")
+# ---- END CARD GATE-0b
 
 #: Strong references that must outlive the swap — see ``_install_datetime_shim``.
 _KEEPALIVE: list[Any] = []
@@ -197,6 +207,12 @@ def _preload_capi_consumers() -> list[str]:
             continue
         loaded.append(name)
     return loaded
+
+
+#: Card GATE-0b. What ``datetime.datetime.__module__`` reads as once the C
+#: accelerator is out of the way — ``"_pydatetime"`` on CPython 3.12 (where the
+#: pure bodies live in their own module) and ``"datetime"`` on 3.13+/3.14.
+_PURE_DATETIME_MODULES = frozenset({"datetime", "_pydatetime"})
 
 
 def _install_datetime_shim() -> Any:
@@ -222,11 +238,27 @@ def _install_datetime_shim() -> Any:
     sys.modules["_datetime"] = None  # type: ignore[assignment]
     import datetime as shifted
 
-    if shifted.datetime.__module__ != "datetime":  # pragma: no cover - defensive
+    # ---- CARD GATE-0b (scrum/20260822/task_30) -----------------------------
+    # THE NAME OF THE PURE IMPLEMENTATION IS VERSION-DEPENDENT. CPython 3.12
+    # moved the pure-Python bodies into `_pydatetime.py`, so after the swap
+    # above `datetime.datetime.__module__` is `"_pydatetime"` there, and
+    # `"datetime"` on the interpreter this repo's `.parcel/` venv happens to
+    # run (3.14). Comparing against the single string `"datetime"` therefore
+    # made this guard REFUSE TO ARM on CPython 3.12 — which is exactly the
+    # interpreter `.github/workflows/ci.yml` pins for the hosted runner, and
+    # close to the JetPack CPython on the Orin. Measured in a clean clone on
+    # 3.12.13: four `tests/test_future_clock_guard.py` rows red with "the C
+    # datetime accelerator is still in force" while the accelerator was in fact
+    # already gone. Accept either name; the property being asserted is "not the
+    # C accelerator", and `_datetime` is what that would say.
+    if shifted.datetime.__module__ not in _PURE_DATETIME_MODULES:  # pragma: no cover
         raise FutureClockNotArmed(
-            "the C datetime accelerator is still in force; datetime.now() would not "
-            "follow the shifted clock and the sweep would be silently vacuous"
+            "the C datetime accelerator is still in force "
+            f"(datetime.datetime.__module__ == {shifted.datetime.__module__!r}); "
+            "datetime.now() would not follow the shifted clock and the sweep "
+            "would be silently vacuous"
         )
+    # ---- END CARD GATE-0b --------------------------------------------------
     # sqlite3 keys its default adapters on the exact class object. If it was
     # imported before the swap it holds the C classes and would refuse to bind a
     # pure-Python date; re-register against the classes now in force.

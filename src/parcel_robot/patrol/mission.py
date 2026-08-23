@@ -87,6 +87,20 @@ class PatrolSense:
     #: unlocated person blocks translation exactly like one dead ahead.
     person_bearing_rad: float | None = None
     collision: bool = False
+    # ---- CARD ROAM-2: the coverage objective, and it is OPTIONAL ---------
+    #: Bearing to the LEAST RECENTLY SEEN place the learned map knows about,
+    #: in the BODY frame, exactly like :attr:`person_bearing_rad`. ``None``
+    #: means "the map has nothing to send me at" — no map, no entries, every
+    #: known place already in view — and it FAILS OPEN, which is the opposite
+    #: of the person bearing and is deliberate: an absent coverage objective
+    #: degrades to ROAM-1's wander, never to a stop. A stopped dog is the one
+    #: failure mode a companion behaviour must not have.
+    coverage_bearing_rad: float | None = None
+    #: How long ago that place was last seen, seconds. ``None`` means the age
+    #: is UNKNOWN (no clock, a reloaded map from another host, a stepped wall
+    #: clock) and is treated as no objective at all — never as zero, which
+    #: would read as "just seen" and would hide the place worth visiting.
+    coverage_age_s: float | None = None
 
     def __post_init__(self) -> None:
         for name in ("elapsed_s", "x", "y", "yaw"):
@@ -99,6 +113,17 @@ class PatrolSense:
             float(self.person_bearing_rad)
         ):
             raise ValueError("PatrolSense.person_bearing_rad must be finite")
+        # Card ROAM-2. Validated exactly like the person bearing: a NaN
+        # objective would compare False against every threshold and silently
+        # mean "no coverage" instead of saying so.
+        if self.coverage_bearing_rad is not None and not math.isfinite(
+            float(self.coverage_bearing_rad)
+        ):
+            raise ValueError("PatrolSense.coverage_bearing_rad must be finite")
+        if self.coverage_age_s is not None:
+            age = float(self.coverage_age_s)
+            if not math.isfinite(age) or age < 0.0:
+                raise ValueError("PatrolSense.coverage_age_s must be finite and >= 0")
         for name in ("forward_clearance_m", "person_clearance_m"):
             value = getattr(self, name)
             if value is None:
@@ -188,6 +213,39 @@ class PatrolLimits:
     #: :func:`limits_from_safety` sets it.
     tether_m: float | None = None
 
+    # ---- CARD ROAM-2 — WANDERING IS NOT EXPLORING ------------------------
+    #
+    # ROAM-1's own closing sentence: "It does not prove the dog explores. It
+    # proves the dog WANDERS under a budget without hitting anything. There is
+    # no coverage objective, no frontier, no memory of where it has been."
+    # This is the objective, and it is one bearing.
+    #
+    # DEFAULT OFF, for the same reason ``alternate_turns`` and ``tether_m``
+    # are: MOVE-1's and ROAM-1's measured numbers are the baselines a Go2
+    # purchase is read against, and a default that moved them would move the
+    # baseline silently. And OFF ALL THE WAY DOWN — :func:`limits_from_safety`
+    # defaults it off too, so the objective is on only where a profile says
+    # ``roam: {coverage: true}`` in words. Flag-off, this class is byte-for-byte
+    # the ROAM-1 policy: :meth:`PatrolPolicy._cruise_or_cover` returns
+    # ``PatrolCommand(vx=cruise_vx, reason="advance")`` on its first branch.
+    coverage_bias: bool = False
+    #: How close to dead ahead the objective must be before the patrol simply
+    #: cruises at it. Wider than a heading controller would want on purpose:
+    #: this is a proposer nudging a wander, not a tracker closing an error, and
+    #: a tight tolerance would turn every lane deviation into a correction
+    #: turn. 0.35 rad = 20 degrees.
+    coverage_align_tolerance_rad: float = 0.35
+    #: A place seen more recently than this is not a coverage objective. The
+    #: map refreshes ``last_seen_wall_s`` the instant the detector fires, so
+    #: without a floor the objective would flicker between two places the robot
+    #: is already looking at.
+    coverage_min_age_s: float = 20.0
+    #: A coverage alignment that has not converged in this long gives up and
+    #: cruises. NOT a safety bound — the gate is untouched — it is the same
+    #: promise ``turn_giveup_after_s`` makes for avoidance turns: the objective
+    #: may never spend the whole budget turning on the spot.
+    coverage_giveup_after_s: float = 6.0
+
     def __post_init__(self) -> None:
         positive = (
             "budget_s",
@@ -197,6 +255,12 @@ class PatrolLimits:
             "min_person_clearance_m",
             "turn_flip_after_s",
             "turn_giveup_after_s",
+            # Card ROAM-2. Both are refusal thresholds like every other field
+            # here, and both are validated whether or not the objective is on:
+            # a nonsense number must be refused at construction, not on the
+            # first tick after somebody flips the flag.
+            "coverage_align_tolerance_rad",
+            "coverage_giveup_after_s",
         )
         for name in positive:
             value = getattr(self, name)
@@ -206,6 +270,10 @@ class PatrolLimits:
                 raise ValueError(f"PatrolLimits.{name} must be positive and finite")
         if not math.isfinite(self.clearance_release_margin_m) or self.clearance_release_margin_m < 0.0:
             raise ValueError("PatrolLimits.clearance_release_margin_m must be >= 0")
+        # Card ROAM-2. Zero is a legitimate floor ("any age counts"), so this
+        # one is >= 0 rather than > 0.
+        if not math.isfinite(self.coverage_min_age_s) or self.coverage_min_age_s < 0.0:
+            raise ValueError("PatrolLimits.coverage_min_age_s must be >= 0")
         # Card ROAM-1. ``None`` is unbounded; a number must be a real radius.
         if self.tether_m is not None:
             if not isinstance(self.tether_m, (int, float)) or isinstance(self.tether_m, bool):
@@ -259,6 +327,7 @@ def limits_from_safety(
     turn_vyaw: float = 0.8,
     alternate_turns: bool = True,
     tether_m: float | None = DEFAULT_ROAM_TETHER_M,
+    coverage_bias: bool = False,
 ) -> PatrolLimits:
     """Build :class:`PatrolLimits` from the reactive gate's own thresholds.
 
@@ -289,6 +358,22 @@ def limits_from_safety(
         # comfortably inside the 24 x 24 m road plane the dev scene renders, so
         # a roam cannot walk off the edge of the world and call it progress.
         tether_m=tether_m,
+        # Card ROAM-2, CORRECTED at the third attempt. OFF here as well as on
+        # ``PatrolLimits`` itself.
+        #
+        # The 17:38 draft defaulted this argument to ``True`` on the reasoning
+        # that this function is the roam behaviour's only constructor, so
+        # "prototype explores, package untouched" could be said in one place.
+        # That reasoning is real and it is still WRONG against the wave's
+        # standing rule (``../TASK_BOARD.md`` rule 1, the dispatch brief's
+        # "defaults OFF for behaviour"): a default that turns a behaviour on is
+        # a behaviour nobody wrote down. With this ``False``, the ONLY thing in
+        # the tree that can turn the coverage objective on is an explicit
+        # ``roam: {coverage: true}`` in a profile — which is also what makes
+        # ROAM-2's two measurement arms differ by exactly one config line
+        # (``../../scrum/20260822/task_33/PREREGISTRATION.md`` §2) instead of
+        # by a code default nobody can see from the config.
+        coverage_bias=bool(coverage_bias),
     )
 
 
@@ -313,6 +398,23 @@ class PatrolPolicy:
         #: does not get one from a map: a tether that depended on localisation
         #: would fail in exactly the situation it exists for.
         self._home: tuple[float, float] | None = None
+        #: Card ROAM-2. ``elapsed_s`` at which the current coverage ALIGNMENT
+        #: began, or ``None`` when the patrol is not aligning. Deliberately a
+        #: second clock rather than a reuse of ``_turning_since``: an avoidance
+        #: turn that runs long is ``boxed_in`` and ends the mission, and a
+        #: coverage turn that runs long is merely a bad objective — conflating
+        #: them would let the map end a roam.
+        self._coverage_since: float | None = None
+        #: ``elapsed_s`` before which no coverage objective is adopted, after an
+        #: alignment gave up. Without the cool-off, giving up and immediately
+        #: re-adopting the same unreachable bearing is a patrol that turns for
+        #: six seconds, walks for one tick, and turns again.
+        self._coverage_hold_until: float | None = None
+        #: Completed coverage legs — an alignment that converged and became a
+        #: cruise. Published so "remarks per leg" is a countable thing. A tick
+        #: that was ALREADY pointing at the objective needed no alignment and
+        #: is not a leg: the count is deliberately the conservative one.
+        self._coverage_legs = 0
 
     @property
     def turning_since(self) -> float | None:
@@ -321,6 +423,18 @@ class PatrolPolicy:
     @property
     def turn_sign(self) -> int:
         return self._turn_sign
+
+    @property
+    def coverage_legs(self) -> int:
+        """Card ROAM-2. How many coverage legs this policy has completed."""
+
+        return self._coverage_legs
+
+    @property
+    def coverage_aligning(self) -> bool:
+        """Card ROAM-2. Is the patrol turning onto a coverage objective now?"""
+
+        return self._coverage_since is not None
 
     @staticmethod
     def _person_blocks(sense: PatrolSense, threshold_m: float) -> bool:
@@ -441,7 +555,72 @@ class PatrolPolicy:
             # left turns from closing into a circle.
             if limits.alternate_turns:
                 self._turn_sign = -self._turn_sign
-        return PatrolCommand(vx=limits.cruise_vx, reason="advance")
+        # ---- CARD ROAM-2. THE LAST RUNG, and it has to be the last one ----
+        #
+        # Everything above this line is a YIELD: contact, a person, the tether,
+        # a wall, the hysteresis that stops the patrol chattering on any of
+        # them. The coverage objective is the only rung that expresses a
+        # PREFERENCE rather than a refusal, so it is the only one that may be
+        # overruled by all the others, and putting it anywhere else in this
+        # ladder would let a map argue with a wall.
+        return self._cruise_or_cover(sense)
+
+    def _cruise_or_cover(self, sense: PatrolSense) -> PatrolCommand:
+        """Cruise — but toward the least recently seen place, when there is one.
+
+        Card ROAM-2. Reached ONLY with the lane ahead clear, no person in the
+        way and the tether satisfied, which is why it may turn without asking
+        anything else: the tick has already established that turning here is
+        free.
+
+        THE DEGRADE PATH IS THE POINT. Four different kinds of "the map has
+        nothing for me" — the objective is off, there is no bearing, the age is
+        unknown, the place was seen a moment ago — and every one of them
+        returns ROAM-1's ``advance``. There is no branch in this function that
+        can return a stop, and ``test_a_stale_map_wanders_it_never_stops``
+        exists to keep it that way.
+        """
+
+        limits = self.limits
+        cruise = PatrolCommand(vx=limits.cruise_vx, reason="advance")
+        if not limits.coverage_bias:
+            return cruise
+        bearing = sense.coverage_bearing_rad
+        age = sense.coverage_age_s
+        if bearing is None or age is None or age < limits.coverage_min_age_s:
+            # A stale, empty or silent map is a wander, exactly as before.
+            self._coverage_since = None
+            return cruise
+        if (
+            self._coverage_hold_until is not None
+            and sense.elapsed_s < self._coverage_hold_until
+        ):
+            # Cooling off after an alignment that could not converge.
+            return cruise
+        self._coverage_hold_until = None
+        wrapped = math.atan2(math.sin(bearing), math.cos(bearing))
+        if abs(wrapped) <= limits.coverage_align_tolerance_rad:
+            if self._coverage_since is not None:
+                # The leg's alignment converged: this is where a leg BEGINS to
+                # be walked, and it is the idle checkpoint the patrol prompt
+                # promises between legs (``RobotRuntime._step_roam`` publishes
+                # it; CURIO-1's remarks ride it).
+                self._coverage_since = None
+                self._coverage_legs += 1
+            return PatrolCommand(vx=limits.cruise_vx, reason="advance_coverage")
+        if self._coverage_since is None:
+            self._coverage_since = sense.elapsed_s
+        elif sense.elapsed_s - self._coverage_since >= limits.coverage_giveup_after_s:
+            # An objective that cannot be reached by turning — the map's
+            # nearest unseen place is behind a building, the bearing keeps
+            # moving — must not spend the budget on the spot. Give up on THIS
+            # objective and walk; the cool-off keeps the next tick from
+            # re-adopting the same bearing straight away.
+            self._coverage_since = None
+            self._coverage_hold_until = sense.elapsed_s + limits.coverage_giveup_after_s
+            return cruise
+        sign = 1 if wrapped > 0.0 else -1
+        return PatrolCommand(vyaw=limits.turn_vyaw * sign, reason="turn_coverage")
 
 
 @dataclass(frozen=True)
@@ -571,11 +750,19 @@ def sense_from_snapshot(
     *,
     elapsed_s: float,
     owner_envelope_m: float = 0.55,
+    coverage_bearing_rad: float | None = None,
+    coverage_age_s: float | None = None,
 ) -> PatrolSense | None:
     """Build a :class:`PatrolSense` from the runtime's public state snapshot.
 
     Returns ``None`` when the snapshot carries no robot pose — an absent pose
     is not a pose at the origin, and the runner must not drive on one.
+
+    Card ROAM-2: the coverage objective arrives as two arguments rather than
+    as two more snapshot keys, because it does not come from the SNAPSHOT — it
+    comes from the learned map, under the map's own lock, on the caller's side.
+    Both default to ``None``, so every existing caller builds a byte-identical
+    sense.
     """
 
     robot = snapshot.get("robot")
@@ -660,6 +847,8 @@ def sense_from_snapshot(
         person_clearance_m=nearest_person[0] if clearances else None,
         person_bearing_rad=nearest_person[1] if clearances else None,
         collision=bool(snapshot.get("collision")),
+        coverage_bearing_rad=coverage_bearing_rad,
+        coverage_age_s=coverage_age_s,
     )
 
 

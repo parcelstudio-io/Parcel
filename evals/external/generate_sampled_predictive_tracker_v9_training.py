@@ -196,7 +196,34 @@ def _reject_symlink_components(path: Path) -> None:
             raise ValueError(f"V9 training path contains a symbolic link: {component}")
 
 
-def _require_immutable_regular_file(path: Path, description: str) -> os.stat_result:
+# ---- CARD GATE-0b (scrum/20260822/task_30): the mode bit, and who it is for --
+# THE DECISION, WRITTEN DOWN. This function refuses any file that carries a
+# write bit. That is exactly right for the corpus this module GENERATES and
+# then freezes (`_freeze_generated_tree` chmods every file 0o444 under
+# `.cache/external-evals/generated/...`): there, the mode bit is the only
+# statement of "published, do not edit" that exists.
+#
+# It is a category error for the TRACKED manifest
+# `evals/external/training/barn_sampled_predictive_tracker_v9/split.json`.
+# That file is `100644` in the index, is `444` in the tree that generated it
+# only because this module chmodded it at creation, and git checks it out
+# `0666 & ~umask` -- i.e. `644` -- in EVERY clone. A bit that differs between
+# the index, the author's tree and every checkout is a statement about the
+# author's umask, not about the data. Measured: a fresh clone of this repo
+# failed seven commit-tier tests with `V9 training manifest must be immutable`
+# (card GATE-0b baseline, 2026-08-23), and no `chmod` a test could do would
+# make that honest -- it would be writing to the reader's checkout to satisfy
+# an assertion about the reader's checkout.
+#
+# For a tracked file, GIT is the immutability mechanism: content-addressed,
+# diffable, reviewable, and the manifest's own sha256 is pinned in
+# `barn_v9_protocol.TRAINING_MANIFEST_SHA256` -- which is a far stronger claim
+# than "nobody has chmod +w". So the read-only requirement becomes a parameter,
+# ON by default (every generated-asset call site keeps it), and the single
+# tracked-manifest call site turns it off with this reason.
+def _require_immutable_regular_file(
+    path: Path, description: str, *, require_read_only: bool = True
+) -> os.stat_result:
     _reject_symlink_components(path)
     try:
         metadata = os.lstat(path)
@@ -206,9 +233,10 @@ def _require_immutable_regular_file(path: Path, description: str) -> os.stat_res
         raise ValueError(f"{description} must be a regular file")
     if metadata.st_nlink != 1:
         raise ValueError(f"{description} must not be hard-linked")
-    if metadata.st_mode & _WRITE_BITS:
+    if require_read_only and metadata.st_mode & _WRITE_BITS:
         raise ValueError(f"{description} must be immutable")
     return metadata
+# ---- END CARD GATE-0b -------------------------------------------------------
 
 
 def _freeze_generated_tree(root: Path) -> None:
@@ -367,7 +395,11 @@ def verify_training_corpus(manifest_path: Path = DEFAULT_MANIFEST) -> dict[str, 
 
     _validate_identity_partition()
     path = _lexical_absolute(manifest_path)
-    _require_immutable_regular_file(path, "V9 training manifest")
+    # ---- CARD GATE-0b: the tracked manifest is version-controlled, not chmodded
+    # (see `_require_immutable_regular_file`). Its identity is still checked --
+    # by sha256, below and in `barn_v9_protocol.TRAINING_MANIFEST_SHA256`.
+    _require_immutable_regular_file(path, "V9 training manifest", require_read_only=False)
+    # ---- END CARD GATE-0b
     payload = _strict_json_object(path.read_bytes(), "V9 training manifest")
     if (
         set(payload) != _MANIFEST_FIELD_NAMES

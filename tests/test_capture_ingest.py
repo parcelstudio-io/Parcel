@@ -324,7 +324,11 @@ def test_each_live_adapter_refuses_here_naming_the_missing_module_or_the_missing
     traceback.**
 
     * MODULE-ABSENT arm: ``dependency_missing``, module named, remedy names the
-      Orin. Monkeypatched for whichever adapters happen to be installed here.
+      place that module actually comes from — the Orin's ROS 2 environment for
+      the two vendor SDKs, and this project's own ``camera-realsense`` extra
+      for ``pyrealsense2``, which is a pip wheel and is installed here (card
+      TRUTH-1 / SDK-REM-1; "Orin" was the stale half of this assertion).
+      Monkeypatched for whichever adapters happen to be installed here.
     * MODULE-PRESENT arm: the dependency probe is satisfied and the refusal
       moves to ``device_node_missing``, naming the ``/dev`` node that is not
       there. Exercised for real on ``pyrealsense2``; monkeypatched for the two
@@ -340,7 +344,13 @@ def test_each_live_adapter_refuses_here_naming_the_missing_module_or_the_missing
     assert not report.satisfied
     assert module_name in report.missing
     assert module_name in report.remedy
-    assert "Orin" in report.remedy
+    # Card TRUTH-1: per device. A D455 remedy that names the Orin sends a desk
+    # operator to hardware they do not have, for a wheel `pip` already carries.
+    if module_name == "pyrealsense2":
+        assert "camera-realsense" in report.remedy
+        assert "Orin only" not in report.remedy
+    else:
+        assert "Orin" in report.remedy
 
     with pytest.raises(IngestUnavailableError) as caught:
         list(adapter.read(entry, 0.01))
@@ -2340,7 +2350,15 @@ def test_a_module_that_vanishes_between_the_probe_and_the_open_is_a_named_refusa
     assert module_name in str(caught.value)
     assert caught.value.reason.value == "dependency_missing"
     assert caught.value.remedy, "a refusal with no remedy is a refusal nobody can act on"
-    assert "Orin only" in caught.value.remedy
+    # Card TRUTH-1: `unitree_sdk2py` and `unilidar_sdk2` really are Orin-only
+    # vendor builds; `pyrealsense2` is a pip wheel this project declares in its
+    # own extra and which is already installed in `.parcel`, so "Orin only" in
+    # its remedy was the stale claim SDK-REM-1 removed.
+    if module_name == "pyrealsense2":
+        assert "camera-realsense" in caught.value.remedy
+        assert "Orin only" not in caught.value.remedy
+    else:
+        assert "Orin only" in caught.value.remedy
 
 
 def test_the_dds_adapter_refuses_rather_than_serving_nothing_if_the_matrix_loses_its_rows(

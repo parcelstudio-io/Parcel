@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from _external_roots import skip_unless
 
 from evals.external import barn_v9_protocol as protocol
 
@@ -128,6 +129,7 @@ def test_development_and_scaled_holdout_gates_are_frozen() -> None:
     assert scope["official_score_or_rank_requires_external_organizer_attestation"] is True
 
 
+@skip_unless("barn-generator-checkout")
 def test_checked_in_protocol_and_complete_training_corpus_verify_fail_closed() -> None:
     verified = protocol.verify_v9_protocol()
     checked_in = json.loads(protocol.PROTOCOL_PATH.read_bytes())
@@ -194,6 +196,7 @@ def test_any_authority_threshold_or_provenance_mutation_is_rejected(
             protocol.verify_v9_protocol(protocol_path=candidate)
 
 
+@skip_unless("barn-generator-checkout")
 def test_protocol_parser_rejects_duplicates_links_and_unauthorized_assets(
     tmp_path: Path,
 ) -> None:
@@ -222,6 +225,7 @@ def test_protocol_parser_rejects_duplicates_links_and_unauthorized_assets(
         protocol.verify_v9_protocol(protocol_path=hardlink)
 
 
+@skip_unless("barn-generator-checkout")
 def test_training_reverification_and_raw_identity_drift_are_rejected(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

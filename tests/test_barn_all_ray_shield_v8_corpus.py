@@ -12,6 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from _external_roots import skip_unless
 
 from evals.external import generate_all_ray_shield_v8_corpus as corpus
 
@@ -456,6 +457,7 @@ def test_loaded_generator_modules_must_come_from_the_verified_checkout(
         corpus._verify_loaded_generator_modules(modules["gen_world_ca"], root)
 
 
+@skip_unless("barn-generator-checkout")
 def test_current_evaluator_and_generator_source_closure_is_freezable() -> None:
     state = corpus._frozen_generation_state(corpus.DEFAULT_GENERATOR_ROOT)
     source_files = state["source_files"]

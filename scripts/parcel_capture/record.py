@@ -1406,7 +1406,20 @@ INSTALL_HINTS: Mapping[str, str] = {
         "Orin only, and NEVER into .parcel/ — its absence from the Parcel venv is the "
         "project's strongest motion guarantee (PHYSICAL_SESSION_PLAN.md)"
     ),
-    "pyrealsense2": "Orin only: pip install pyrealsense2 inside the deploy venv",
+    # Card TRUTH-1 (SDK-REM-1): NOT "Orin only", and not Orin-hard either.
+    # pyrealsense2 is an ordinary pip wheel on both hosts: the project declares
+    # it in the `camera-realsense` extra, 2.58.3.10794 (cp314) is installed in
+    # .parcel here (measured 2026-08-22), and the same release ships a cp310
+    # aarch64 wheel for JetPack's interpreter. The real caveat is narrow and is
+    # stated in full where the adapter states it (ingest/realsense.py): aarch64
+    # wheels exist for cp39/cp310/cp312 ONLY.
+    "pyrealsense2": (
+        ".parcel/bin/pip install -e '.[camera-realsense]' on this box (already "
+        "installed here: 2.58.3.10794, measured 2026-08-22); `pip install "
+        "pyrealsense2` in the Orin's DEPLOY venv IF it runs CPython 3.10 (JetPack "
+        "6.x), where the cp310 aarch64 wheel exists — aarch64 wheels are published "
+        "for cp39/cp310/cp312 ONLY, so a JetPack 5.1.1 dock on 3.8 is a source build"
+    ),
     "serial": "Orin only: pip install pyserial inside the deploy venv",
     "sounddevice": "Orin only: pip install sounddevice inside the deploy venv",
     "mcap": (
@@ -1468,12 +1481,51 @@ def missing_dependencies(channels: Iterable[Channel]) -> dict[str, tuple[str, ..
     return report
 
 
+def device_presence(entry: Channel) -> tuple[str, str]:
+    """What the FILESYSTEM says about this channel's hardware. Card TRUTH-1.
+
+    This is ENV-1's seam, reused rather than re-implemented:
+    :meth:`IngestAdapter.device_report` is a ``/dev`` glob census that imports
+    no vendor SDK, and it is the only thing in this tree that can tell "the
+    wheel is installed" from "the camera is plugged in". Before this card
+    ``--check`` had no access to it and answered the second question with the
+    first, which is how six ``d455.*`` rows read "reader deps present" on a box
+    with no camera on 2026-08-22.
+
+    Returns ``(presence, detail)``. ``"unknown"`` is returned — never
+    ``"attached"`` — when no ingest adapter serves the transport or the
+    subpackage is absent, because "we could not ask" must not read as "it is
+    there". The import is local for the same reason
+    :func:`resolve_live_source`'s is: ``ingest`` imports this module.
+    """
+
+    try:
+        from .ingest import IngestError, adapter_for
+    except ImportError as error:  # pragma: no cover - the subpackage ships beside this file
+        return ("unknown", f"the ingest subpackage is not importable ({error})")
+    try:
+        adapter = adapter_for(entry)
+    except IngestError as error:
+        return ("unknown", str(error))
+    report = adapter.device_report()
+    return (report.presence.value, report.detail)
+
+
 def dependency_report(channels: Iterable[Channel]) -> str:
     """Human-readable, actionable. Printed by ``--check``; never a traceback.
 
     The presence column is PS-A's prior, not a probe: ``LIVE`` here means "we
     expect this on the confirmed hardware", never "it is there". PS-D settles
     that against the unit.
+
+    **Card TRUTH-1.** The state column used to be a module-only census, so
+    "reader deps present" meant nothing more than ``find_spec`` succeeding —
+    and once P1-A legitimately installed ``pyrealsense2`` into ``.parcel`` it
+    started saying that about a D455 nobody owns. It now carries three states,
+    the same three ``ingest.dependency_report_text`` carries: the modules are
+    missing, the modules are here and the DEVICE is not, or both halves hold.
+    A transport whose presence cannot be attested (a dog on a network, a
+    channel no adapter serves) says so in those words and is never called ready.
     """
 
     entries = tuple(channels)
@@ -1481,11 +1533,19 @@ def dependency_report(channels: Iterable[Channel]) -> str:
     lines = [f"channels requested: {len(entries)}"]
     for entry in entries:
         absent = missing.get(entry.channel_id, ())
-        state = (
-            "reader deps present"
-            if not absent
-            else f"UNAVAILABLE (missing: {', '.join(absent)})"
-        )
+        if absent:
+            state = f"UNAVAILABLE (missing: {', '.join(absent)})"
+        else:
+            installed = ", ".join(
+                (*TRANSPORT_DEPENDENCIES[entry.transport], *TRANSPORT_EXECUTABLES[entry.transport])
+            ) or "nothing required"
+            presence, _detail = device_presence(entry)
+            if presence == "absent":
+                state = f"NO DEVICE (installed: {installed})"
+            elif presence == "attached":
+                state = f"READY (installed: {installed}; device attached)"
+            else:
+                state = f"deps present (installed: {installed}); DEVICE NOT ATTESTABLE"
         lines.append(
             f"  {entry.channel_id:<24} {entry.transport.value:<15} "
             f"{entry.presence.value:<18} {state}"
@@ -1508,10 +1568,15 @@ def resolve_live_source(entry: Channel) -> Any:
     blocking defect. :mod:`scripts.parcel_capture.ingest` now owns the DDS,
     RealSense and L2 readers, and this seam resolves through it.
 
-    The refusal path is unchanged and still fires here, because none of
-    ``rclpy``, ``pyrealsense2`` or ``unilidar_sdk2`` is installed on this box and
-    the board forbids installing them. What changed is that the refusal now
-    means "the dependency is absent", not "nobody wrote the reader".
+    The refusal path is unchanged and still fires here for ``rclpy`` and
+    ``unilidar_sdk2``, which are not installed on this box. **Card TRUTH-1
+    corrects the third name:** ``pyrealsense2`` IS installed in ``.parcel``
+    (2.58.3.10794, since 2026-08-22, sanctioned by P1-A for the desk-camera
+    venue), so the D455 rows do not refuse here on the dependency — they refuse
+    on the DEVICE, in ``RealSenseIngest.require_device``, because no camera is
+    attached. What changed with PS-G is that the refusal means "the dependency
+    is absent", not "nobody wrote the reader"; what changed with ENV-1 is that
+    those are two different refusals with two different remedies.
 
     The import is deliberately local: ``ingest`` imports ``preflight``, and
     keeping the edge inside the call means neither module's import graph grows a
@@ -1668,6 +1733,33 @@ def _cli_check(args: argparse.Namespace) -> int:
     entries = CHANNELS
     print(dependency_report(entries))
     print()
+    # Card TRUTH-1: ENV-1's per-ADAPTER report had no product caller — its
+    # three-state text ("NO DEVICE (installed: ...)") existed only in a test.
+    # It is the block that names the device remedy (a cable) separately from
+    # the module remedy (a pip line), which is the whole ENV-1/ENV-1b split, so
+    # `--check` prints it. Local import and a soft failure for the same reason
+    # `resolve_live_source`'s is: this file must stay usable with the
+    # subpackage absent.
+    try:
+        from .ingest import dependency_report_text
+    except ImportError as error:  # pragma: no cover - the subpackage ships beside this file
+        print(f"ingest adapters: unavailable ({error})")
+    else:
+        print(dependency_report_text())
+    print()
+    absent_devices = sorted(
+        entry.channel_id
+        for entry in entries
+        if not missing_requirements(entry) and device_presence(entry)[0] == "absent"
+    )
+    if absent_devices:
+        print(
+            f"{len(absent_devices)} channel(s) have every reader module and NO DEVICE "
+            f"attached: {', '.join(absent_devices)}. --check does not refuse on that — "
+            f"the exit code below is about modules and space — but a session planned "
+            f"against these rows records nothing. Attach the hardware first."
+        )
+        print()
     budget = None
     if args.bytes_per_second is not None and args.duration_s is not None:
         budget = SpaceBudget(

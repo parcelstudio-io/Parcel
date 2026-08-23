@@ -66,16 +66,25 @@ OWNER_STORE = REPO / "parcel_memory.sqlite3"
 #: Every shipped config that names a conversation store. Discovered rather than
 #: listed: a new copy of ``robot.yaml`` must inherit this test, and a list would
 #: quietly not cover it.
+# ---- CARD GATE-0b (scrum/20260822/task_30) ---------------------------------
+# The exclusions are matched against the path RELATIVE TO THE REPO, not against
+# the absolute path. They are about directories INSIDE this checkout (the
+# virtualenv, vendored trees, the external-eval cache, agent scratchpads); an
+# absolute match makes the whole test depend on where the repo happens to live.
+# Measured: a clean clone built under `~/.cache/parcel-gate0b/clean` matched
+# `.cache` in every single path, `SHIPPED_CONFIGS` came out EMPTY, and the
+# suite's own vacuity guard fired — "no robot*.yaml found" — in a checkout
+# holding five of them. That is the `owner-store-isolation` gate row going red
+# for a reason that has nothing to do with the owner's store.
+_EXCLUDED_DIRS = (".parcel", "third_party", ".cache", "scratchpad")
 SHIPPED_CONFIGS = tuple(
     sorted(
         path
         for path in REPO.glob("**/robot*.yaml")
-        if ".parcel" not in path.parts
-        and "third_party" not in path.parts
-        and ".cache" not in path.parts
-        and "scratchpad" not in path.parts
+        if not set(path.relative_to(REPO).parts) & set(_EXCLUDED_DIRS)
     )
 )
+# ---- END CARD GATE-0b ------------------------------------------------------
 
 
 def _clean_env(monkeypatch: pytest.MonkeyPatch) -> None:

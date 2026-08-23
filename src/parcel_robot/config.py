@@ -150,6 +150,28 @@ OVERLAY_INTRODUCIBLE_KEYS = frozenset(
         # ROBOT makes — which venue this run's eye is on.
         "perception.camera_backend",
         "perception.detector",
+        # ---- CARD TRUTH-1: the planner LLM's own section -------------------
+        # CAP-1 surveyed every config section the PRODUCT reads and found this
+        # one unreachable: `web_panel.build_runtime` reads
+        # `store.section("planner_model")` to decide whether to construct a
+        # SECOND llama.cpp provider for the planner, and `configs/robot.yaml`
+        # is SHA-locked and omits the block. So with no profile the section
+        # read `{}` and the planner could never be enabled, and a profile that
+        # tried to set it made the whole config load REFUSE. The knob existed
+        # and no operator could ever turn it — ROAM-1 finding 6, a second time,
+        # in the product launcher.
+        #
+        # ONE ENTRY, NOT FOUR, for the reason written beside `roam` above: the
+        # loop stops descending at an exempt parent, so listing
+        # `planner_model.enabled` alongside it would LOOK like a spelling guard
+        # and be inert. The real typo check lives where the section is READ, in
+        # `web_panel._check_planner_model_section`, which refuses an unknown
+        # key by name — this family's `CameraStreamConfig.from_section`.
+        #
+        # DEFAULTS ARE UNCHANGED. The base still omits the block, so
+        # `planner_config.get("enabled", False)` is still False on every run
+        # that does not write one; this entry only makes writing one possible.
+        "planner_model",
     }
 )
 

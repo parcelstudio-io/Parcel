@@ -1024,8 +1024,22 @@ def test_the_runtime_region_wires_all_three_seams() -> None:
     assert "self._p1b_install_learned_map()" in runtime_src
     assert "self._p1b_feed_learned_map(frame)" in runtime_src
     assert "self._p1b_persist_learned_map()" in runtime_src
-    # install must precede attach, or the first frames land in no map and the
+    # Install must precede attach, or the first frames land in no map and the
     # query batch cannot be built from what the reloaded map knows.
-    assert runtime_src.index("self._p1b_install_learned_map()") < runtime_src.index(
-        "self._attach_configured_camera_ingress()\n            self._thread"
+    #
+    # Card XD-1 (scrum/20260822/task_14), carried finding from AUDIT_WAVE2_FABLE:
+    # this used to pin the attach with the LITERAL two-line string
+    # ``"self._attach_configured_camera_ingress()\n            self._thread"``.
+    # That suffix asserts a second, unintended property — that NOTHING may ever
+    # sit between the attach and the first thread start — which is not this
+    # card's business and is not true of the composition root. It broke on
+    # CAP-1's region insertion and forced VENUE-1's remedy into a shape it did
+    # not want (see the CAP-1 comment block in ``RobotRuntime.start``). Two
+    # index comparisons protect exactly the ordering above and leave the
+    # composition root extensible.
+    install_at = runtime_src.index("self._p1b_install_learned_map()")
+    attach_at = runtime_src.index("self._attach_configured_camera_ingress()")
+    assert install_at < attach_at, (
+        "the learned map must be installed before the camera ingress attaches: "
+        f"install at offset {install_at}, attach at offset {attach_at}"
     )

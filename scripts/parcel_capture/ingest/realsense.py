@@ -268,9 +268,44 @@ class RealSenseIngest(IngestAdapter):
     requirements: ClassVar[tuple[Requirement, ...]] = (
         Requirement(
             "pyrealsense2",
-            "Orin only: pip install pyrealsense2 into the DEPLOY venv on CPython 3.10 or "
-            "3.12 (no wheel exists for 3.11+). Check per-frame metadata survives; if it "
-            "does not, a source build is 2-3 hours and is not a session-morning task.",
+            # Card TRUTH-1 (SDK-REM-1). The old text scoped the whole remedy
+            # to the Orin, named CPython 3.10 and 3.12 as the only usable
+            # interpreters, and denied that any wheel existed above 3.10 — the
+            # two stale strings this card's greps keep dead, DESCRIBED here and
+            # deliberately not reproduced, because a retraction that quotes the
+            # claim defeats the guard that hunts it (see the module docstring
+            # of tests/test_truth1_texts.py). It was wrong three ways: it sent
+            # a DESK operator to hardware they do not have; the interpreter
+            # claim was never measured and is false; and it implied the Orin
+            # needs something other than pip, which it does not.
+            # TWO HOSTS now exist for real — this x86_64
+            # dev box on CPython 3.14, and the Jetson Orin NX 16 GB that ships
+            # with the Go2 EDU PLUS the owner ordered on 2026-08-22 — so the
+            # remedy names both and says what is true on each. Everything
+            # below was measured on 2026-08-22 from this box (`pip index
+            # versions pyrealsense2` + the PyPI file list for that release) and
+            # is dated so the next reader re-measures rather than inherits.
+            "HERE (x86_64, CPython 3.14): `.parcel/bin/pip install -e "
+            "'.[camera-realsense]'` — already installed, 2.58.3.10794, a cp314 "
+            "manylinux1_x86_64 wheel, reported INSTALLED and LATEST on "
+            "2026-08-22. ON THE ORIN NX (aarch64) the answer depends on which "
+            "JetPack the EDU dock boots, and that is UNCONFIRMED until the box "
+            "is opened: reseller and forum reports have Go2 EDU docks shipping "
+            "JetPack 5.1.1 (Ubuntu 20.04, CPython 3.8) AND being flashed to "
+            "6.2.1 (Ubuntu 22.04, CPython 3.10). On JetPack 6.x: `pip install "
+            "pyrealsense2` into the DEPLOY venv and NEVER into .parcel/ — the "
+            "wheel exists, "
+            "pyrealsense2-2.58.3.10794-cp310-cp310-manylinux2014_aarch64.whl, "
+            "though nobody has run it on the unit yet, and librealsense has an "
+            "open 'D455 not detected on JetPack 6.2' report whose workaround is "
+            "a source build with -DFORCE_RSUSB_BACKEND=ON. On JetPack 5.1.1 "
+            "there is no aarch64 wheel for CPython 3.8 at all. That release "
+            "ships 13 files: manylinux1_x86_64 for cp310-cp314, "
+            "manylinux2014_aarch64 for cp39/cp310/cp312 ONLY, win_amd64 for "
+            "cp310-cp314 — so every other aarch64 interpreter (3.8, 3.11, 3.13, "
+            "3.14) needs a source build, 2-3 hours and not a session-morning "
+            "task. Check per-frame metadata survives whichever build you land "
+            "on.",
         ),
     )
     notes: ClassVar[tuple[str, ...]] = (

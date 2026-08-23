@@ -4,6 +4,7 @@ import json
 
 import pytest
 import yaml
+from _external_roots import skip_unless
 
 from evals.external.barn_profile_candidate_bundle import (
     V8_REFERENCE_MANIFEST_SHA256,
@@ -18,6 +19,7 @@ from evals.external.barn_v10_planner_profile_candidate import (
 from parcel_robot.navigation.registry import ModelRegistry
 
 
+@skip_unless("barn-policy-bundles")
 def test_real_v10_candidate_is_a_read_only_one_profile_plan() -> None:
     plan = plan_v10_planner_profile_candidate()
 

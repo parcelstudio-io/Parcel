@@ -1,0 +1,103 @@
+{
+  "aggregate_metrics": {
+    "adapter_act_count": 17264.0,
+    "adapter_act_max_ms": 121.744089,
+    "adapter_act_mean_ms": 10.949880784233086,
+    "adapter_act_p50_ms": 10.906499,
+    "adapter_act_p95_ms": 12.460709,
+    "adapter_act_p99_ms": 86.250627,
+    "collision_rate": 0.0,
+    "controller_step_count": 17264.0,
+    "controller_step_max_ms": 121.671428,
+    "controller_step_mean_ms": 10.750193065743744,
+    "controller_step_p50_ms": 10.690953,
+    "controller_step_p95_ms": 12.231312,
+    "controller_step_p99_ms": 86.132019,
+    "episodes": 30.0,
+    "evaluator_diagnostics": {
+      "failure_counts": {
+        "stopped_outside_goal": 16
+      },
+      "mean_closest_goal_distance_m": 4.724229842769677,
+      "mean_episode_minimum_signed_obstacle_clearance_m": 0.37972445680617095,
+      "mean_goal_progress_efficiency": 0.8497172033046143,
+      "mean_maximum_goal_progress_fraction": 0.5275770157230322,
+      "mean_maximum_goal_progress_m": 5.275770157230323,
+      "mean_net_goal_progress_m": 5.275770157230323,
+      "mean_successful_reference_route_efficiency": 1.2500819541354027,
+      "mean_translational_speed_mps": 0.19318893655663982,
+      "mean_traveled_to_reference_path_ratio": 0.47724584549943166,
+      "minimum_signed_obstacle_clearance_m": 0.09426590376146617,
+      "outcome_counts": {
+        "stopped_outside_goal": 16,
+        "succeeded": 14
+      },
+      "private_state_not_exposed_to_policy": true
+    },
+    "mean_elapsed_time_s": 57.49333333333333,
+    "mean_final_distance_to_goal_m": 4.724229842769677,
+    "mean_success_time_s": 25.25714285714286,
+    "mean_traveled_distance_m": 5.5305732150676565,
+    "navigation_metric": 0.11192757399934702,
+    "policy_diagnostics": {
+      "controller_phase_counts": {
+        "grid_align": 608,
+        "grid_detour_align": 115,
+        "grid_recover_scan": 12670,
+        "grid_track": 3855,
+        "navigation_no_progress": 16
+      },
+      "note": "Policy-provided notes are not evaluator failure labels.",
+      "safety_phase_counts": {
+        "<none>": 16,
+        "clear": 8234,
+        "obstacle_slow": 9014
+      },
+      "terminal_action_note_counts": {
+        "grid_track err=-0.0 goal=1.0 route=2 status=planned|clear": 3,
+        "grid_track err=0.0 goal=1.0 route=2 status=planned|clear": 11,
+        "navigation_no_progress": 16
+      }
+    },
+    "stopped_outside_goal_rate": 0.5333333333333333,
+    "success_rate": 0.4666666666666667,
+    "timeout_rate": 0.0,
+    "trials_per_world": 1.0,
+    "worlds": 30.0
+  },
+  "benchmark": {
+    "id": "barn-native-headless-non-official",
+    "source": "https://github.com/Daffan/the-barn-challenge",
+    "source_commit": "bf5a226f6088ec96bf0d2dbee3253a8ea6119b83"
+  },
+  "change_description": "Frozen bounded-detour v4 challenger on only the predeclared 30-world hash-ranked development split; configuration and promotion gate fixed before outcomes; sealed 20-world confirmation excluded",
+  "components": {
+    "adapter": {
+      "hash": "34e8f48cd0333d8beaf5b08b16f66493297b3550f7d29a9151ec9fe676ceb838",
+      "id": "parcel-directive-navigator-barn-sensor-adapter-v1"
+    },
+    "agent": {
+      "id": "DirectiveNavigator"
+    },
+    "config": {
+      "hash": "8a566799a74e49f5ac00a8d7961dad1ec8943e3f8f6d497568775ef8b68b7e66",
+      "id": "configs/navigation/experiments/barn_grid_frontier_detour_v4.yaml"
+    },
+    "model": {
+      "hash": "6afae0c3e7b76c1b55717f81cca11d49a7664c28c2f59f543870fdf59958b44b",
+      "id": "grid_frontier_detour_v4"
+    }
+  },
+  "parcel": {
+    "git_commit": "22c97214df0516774cac31c51864b575d2c29542",
+    "git_dirty": true
+  },
+  "report": {
+    "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/evals/external/development/barn_frontier_detour_v4/results/runs/barn-v4-dev-candidate-frontier-detour-v4-20260803-run01.json",
+    "sha256": "c797eafabfb21a4c61b8c59b201b1cbb9db48021043e44cdb2330683b4e1f073",
+    "size_bytes": 84341
+  },
+  "run_id": "barn-v4-dev-candidate-frontier-detour-v4-20260803-run01",
+  "schema_version": 1,
+  "timestamp_utc": "2026-08-03T13:19:18.612320Z"
+}

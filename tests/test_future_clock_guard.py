@@ -29,7 +29,12 @@ from pathlib import Path
 
 import pytest
 
-from scripts.future_clock import DAYS_ENV, FutureClockNotArmed, read_days
+from scripts.future_clock import (
+    _PURE_DATETIME_MODULES,
+    DAYS_ENV,
+    FutureClockNotArmed,
+    read_days,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 SWEEP_DAYS = 400
@@ -115,7 +120,14 @@ def test_every_python_clock_moves_together() -> None:
     assert payload["now"].startswith(expected.isoformat())
     real_now = datetime.now().timestamp()  # noqa: DTZ005
     assert abs(payload["time_time"] - (real_now + SWEEP_DAYS * 86400)) < 120
-    assert payload["impl"] == "datetime", "the C accelerator must be out of the way"
+    # ---- CARD GATE-0b (scrum/20260822/task_30): the pure implementation's
+    # module name is version-dependent ("_pydatetime" on CPython 3.12, which is
+    # what ci.yml pins for the hosted runner; "datetime" on 3.13+). Read the set
+    # from the module under test so there is one source of truth for the name.
+    assert payload["impl"] in _PURE_DATETIME_MODULES, (
+        "the C accelerator must be out of the way"
+    )
+    # ---- END CARD GATE-0b
 
 
 def test_monotonic_clocks_are_deliberately_left_alone() -> None:

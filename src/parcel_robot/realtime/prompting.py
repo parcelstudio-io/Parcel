@@ -38,6 +38,20 @@ capture readable evidence rather than a grandfathered number — the v1 pins in
 :data:`SI_DIGESTS` remain *reproducible from this tree*, not merely remembered.
 An unregistered version is a refusal at render time, not a silent default.
 
+WHY A HISTORICAL VERSION READS A FROZEN SNAPSHOT (card FZ-1, 2026-08-22)
+-----------------------------------------------------------------------
+Selecting the *guardrails* by version was only two thirds of the job: the
+personality YAML was still read LIVE for every version, so on 2026-08-22 a
+one-line persona edit by the owner changed what ``version="si-companion-v1"``
+rendered, and the v1 pins stopped being reproducible — the 25-thread corpus's
+provenance broke on a prompt tweak. Re-pinning v1 to the new text would have
+been a lie about which words those threads were captured under, so the fix is
+structural: each version's persona files are snapshotted once into
+``prompts/personalities/_frozen/<si_version>/`` and :func:`personality_source`
+reads the snapshot for every version that is not :data:`SI_VERSION`. The live
+files are the source for exactly one version — the current one — which is the
+version whose digest the pin test is supposed to move.
+
 WHY DI IS A PURE FUNCTION OF A SNAPSHOT
 ---------------------------------------
 ``render_developer_instruction`` takes :class:`DeveloperFlags` and returns text.
@@ -99,6 +113,16 @@ SI_V2 = "si-companion-v2"
 #: recorded sessions remain attributable to the text that produced them.
 SI_V3 = "si-companion-v3"
 SI_VERSION = SI_V3
+
+#: Card FZ-1 (``scrum/20260822/task_13``). Subdirectory of
+#: ``prompts/personalities`` holding one immutable persona snapshot per SI
+#: version: ``prompts/personalities/_frozen/<si_version>/<personality>.yaml``.
+#: These files are a RECORD, not a source to edit — written once by
+#: ``tools/freeze_si_version.py`` at bump time and read forever after by
+#: :func:`personality_source`. The leading underscore keeps them out of
+#: ``PromptLibrary.list_personalities`` (which globs ``personalities/*.yaml``,
+#: not directories), so the live library still lists exactly the shipped three.
+FROZEN_PERSONAS_DIRNAME = "_frozen"
 
 #: Bumped by hand whenever the DI *layout* changes. Flag VALUES change every
 #: session and are not a version event; the shape of the note is.
@@ -299,6 +323,84 @@ def default_prompt_library() -> PromptLibrary:
     return PromptLibrary(resolve_prompts_root())
 
 
+class _FrozenPromptLibrary(PromptLibrary):
+    """A :class:`PromptLibrary` whose personalities come from ONE snapshot dir.
+
+    Everything else — ``system/``, ``functions/``, ``schemas/``, ``dynamic/`` —
+    still resolves against the live prompts root, because none of it is part of
+    the SI text this module renders. Only the personality YAML is version-frozen.
+
+    This is a redirect of the personality *section*, not a re-implementation of
+    the loader: the same validation, the same caching and the same
+    root-containment check apply, so a malformed snapshot is refused by the same
+    code that refuses a malformed live profile.
+    """
+
+    def __init__(self, root: str | Path, snapshot: str | Path) -> None:
+        super().__init__(root)
+        self.snapshot = Path(snapshot).resolve()
+
+    def _dir(self, section: str) -> Path:
+        if section == "personalities":
+            return self.snapshot
+        return super()._dir(section)
+
+
+def frozen_personas_dir(version: str, *, prompts_root: str | Path | None = None) -> Path:
+    """Where one SI version's persona snapshot lives. Never read for writing."""
+
+    root = Path(prompts_root) if prompts_root is not None else resolve_prompts_root()
+    return root / "personalities" / FROZEN_PERSONAS_DIRNAME / version
+
+
+def frozen_prompt_library(version: str, *, prompts_root: str | Path | None = None) -> PromptLibrary:
+    """The persona source for one frozen SI version. Missing snapshot ⇒ refusal.
+
+    The refusal is the point. Falling back to the live persona files is exactly
+    the 2026-08-22 defect: a one-line owner edit silently changed what
+    ``version="si-companion-v1"`` rendered, and the 52-query corpus captured
+    under v1 lost its provenance. A version whose snapshot is absent has no text
+    this tree can honestly claim to reproduce, so it says so and names the tool
+    that fixes it.
+    """
+
+    root = Path(prompts_root) if prompts_root is not None else resolve_prompts_root()
+    snapshot = frozen_personas_dir(version, prompts_root=root)
+    if not snapshot.is_dir():
+        raise PromptPlaneError(
+            f"si_version {version!r} is not the current version ({SI_VERSION}) and has "
+            f"no frozen persona snapshot at {snapshot}. A historical version must not "
+            f"be re-rendered from the LIVE persona files — that is what made v1 "
+            f"unreproducible when the personas were edited on 2026-08-22. Create the "
+            f"snapshot with: tools/freeze_si_version.py --version {version}"
+        )
+    return _FrozenPromptLibrary(root, snapshot)
+
+
+def personality_source(
+    version: str = SI_VERSION, *, library: PromptLibrary | None = None
+) -> PromptLibrary:
+    """Version → the persona files that version's SI text was composed from.
+
+    THE resolution this card exists for. The current version reads the LIVE
+    ``prompts/personalities`` — it is the text the robot ships today, and the
+    :data:`SI_DIGESTS` row for it is what reddens when someone edits a persona
+    without bumping. Every other registered version reads its own frozen
+    snapshot, so an owner editing a persona file can no longer move what a
+    historical version renders.
+
+    ``library`` therefore selects the LIVE source only. Passing one alongside a
+    historical ``version`` does not resurrect the live files; it selects which
+    prompts ROOT the snapshot is looked up under, which is what lets a test (or
+    a wheel) point the whole prompt plane somewhere else.
+    """
+
+    if version == SI_VERSION:
+        return library if library is not None else default_prompt_library()
+    root = library.root if library is not None else resolve_prompts_root()
+    return frozen_prompt_library(version, prompts_root=root)
+
+
 def _supersede(base: str, *, old: str, new: str, what: str) -> str:
     """Replace one guardrail sentence, or refuse. Never a silent no-op.
 
@@ -398,12 +500,16 @@ def render_system_instruction(
         text = f"{COMPANION_PREAMBLE}\n\n{body}\n\n{COMPANION_CONTRACT}"
         return SystemInstruction(profile_id=PERSONA_PROFILE_ID, version=version, text=text)
 
-    resolved = library if library is not None else default_prompt_library()
+    # Guardrails first, deliberately: an UNREGISTERED version has no text at all,
+    # and it must keep saying so by name rather than failing later on a missing
+    # persona snapshot it was never going to have.
+    guardrails = si_guardrails(version)
+    resolved = personality_source(version, library=library)
     personality = resolved.personality(profile_id)
     body = build_instructions(
         personality=personality.instruction,
         reply_style=personality.reply_style,
-        guardrails=si_guardrails(version),
+        guardrails=guardrails,
     )
     text = f"{COMPANION_PREAMBLE}\n\n{body}\n\n{COMPANION_CONTRACT}"
     return SystemInstruction(profile_id=personality.id, version=version, text=text)
@@ -827,6 +933,7 @@ __all__ = [
     "COMPANION_CONTRACT",
     "COMPANION_PREAMBLE",
     "DI_VERSION",
+    "FROZEN_PERSONAS_DIRNAME",
     "MAX_HISTORY_LINES",
     "MAX_OWNER_NOTES",
     "MAX_SCENE_LINES",
@@ -852,7 +959,10 @@ __all__ = [
     "SessionInstructions",
     "SystemInstruction",
     "default_prompt_library",
+    "frozen_personas_dir",
+    "frozen_prompt_library",
     "history_digest_from_turns",
+    "personality_source",
     "prompts_root",
     "render_developer_instruction",
     "render_session_instructions",

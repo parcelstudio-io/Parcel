@@ -60,6 +60,92 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = Path(__file__).resolve().parent / "results"
 LEDGER = Path(__file__).resolve().parent / "results" / "ledger.jsonl"
 
+# ---- CARD GATE-0b (scrum/20260822/task_30): the ledger appends ON PURPOSE ----
+#
+# THE DEFECT. Every run of this CLI appended one row to append-only provenance
+# — including runs that were never provenance. Card ROAM-1 wrote two rows from
+# two verification minivals, one of them from a tree with `time_s` seeded OUT,
+# and the verifier had to restore the file by hand
+# (`AUDIT_WEEK1_FABLE.md` §ROAM-1 finding 4). A ledger that records
+# experiments nobody meant to keep is a ledger you cannot cite.
+#
+# THE RULE. The default is UNCHANGED — a plain `--minival --mode candidate`
+# still appends exactly where it always did, because `ci_gate`'s
+# `evaluate_nav_instruct_candidate` diffs this file before and after the run
+# and the frozen-baseline pointer `evaluate_hard_safety` follows lives in it.
+# What is new is that a run can SAY it is not provenance:
+#
+#   --no-ledger        measure and report; append nothing
+#   --ledger PATH      append somewhere else (a scratch ledger for a seed run)
+#   PARCEL_NAV_LEDGER  the same choice for a harness that cannot edit argv:
+#                      a path, or `off`/`none` for --no-ledger
+#
+# AND THE GUARD. A run started from inside pytest that did not say where to
+# append does not append to the tracked ledger: it says so, by name, and
+# carries on. This is a provenance rule, not a fail-closed one — nothing
+# refuses, the run still measures and still writes its report, and an EXPLICIT
+# `--ledger <the tracked path>` is honoured, because a person who typed the
+# path is not overruled by a heuristic (the rule card XD-1 chose for
+# `resolve_xdist_workers`).
+
+#: THE FILE THE GUARD PROTECTS. Deliberately a SECOND name for the same path:
+#: `LEDGER` above is the module's default target and callers monkeypatch it to
+#: redirect a run (`tests/test_dr2_pose_drift_arm.py:722` does exactly that, and
+#: has since long before this card). A redirect IS a caller saying where to
+#: append, so the guard below must not fire on it — it fires only when the
+#: resolved target is still this, the tracked provenance file.
+TRACKED_LEDGER = Path(__file__).resolve().parent / "results" / "ledger.jsonl"
+
+#: Redirect (a path) or disable (`off` / `none`) the ledger without touching argv.
+LEDGER_ENV = "PARCEL_NAV_LEDGER"
+
+#: Set by pytest in every test process. Its presence is how a verification run
+#: is recognised; nothing else about pytest is imported or assumed.
+PYTEST_MARKER_ENV = "PYTEST_CURRENT_TEST"
+
+_LEDGER_OFF_WORDS = frozenset({"off", "none", "no", "0"})
+
+
+def resolve_ledger_path(
+    *,
+    no_ledger: bool = False,
+    ledger: Path | None = None,
+    env: dict[str, str] | None = None,
+    default: Path | None = None,
+) -> tuple[Path | None, str]:
+    """Return ``(target, provenance)``; ``None`` means "append nothing".
+
+    Pure with respect to its arguments so both directions are testable without
+    running a matrix. Precedence: ``--no-ledger`` > ``--ledger`` > the
+    environment > the default. ``default`` is read from the module global at
+    CALL time (not captured as an argument default) so a caller that
+    monkeypatches :data:`LEDGER` still redirects the run, and the pytest guard
+    only withholds when the target is still :data:`TRACKED_LEDGER`.
+    """
+
+    import os
+
+    source = os.environ if env is None else env
+    resolved_default = LEDGER if default is None else default
+    if no_ledger:
+        return None, "--no-ledger"
+    if ledger is not None:
+        return Path(ledger), f"--ledger {ledger}"
+    raw = (source.get(LEDGER_ENV) or "").strip()
+    if raw:
+        if raw.lower() in _LEDGER_OFF_WORDS:
+            return None, f"{LEDGER_ENV}={raw}"
+        return Path(raw), f"{LEDGER_ENV}={raw}"
+    if source.get(PYTEST_MARKER_ENV) and resolved_default == TRACKED_LEDGER:
+        return None, (
+            f"withheld: this run is inside pytest ({PYTEST_MARKER_ENV} is set) and "
+            f"did not say where to append, so the tracked ledger {TRACKED_LEDGER} is "
+            "left alone. Pass --ledger <path> to record somewhere, or --ledger "
+            f"{TRACKED_LEDGER} to append here on purpose."
+        )
+    return resolved_default, "default"
+# ---- END CARD GATE-0b -------------------------------------------------------
+
 
 def _run_scene_split(args: argparse.Namespace) -> int:
     """``--scenes``: the val_seen / val_unseen generalization split.
@@ -203,6 +289,27 @@ def main(argv: list[str] | None = None) -> int:
             "Candidate-only and never a frozen baseline."
         ),
     )
+    # ---- CARD GATE-0b (scrum/20260822/task_30) -----------------------------
+    ledger_group = parser.add_mutually_exclusive_group()
+    ledger_group.add_argument(
+        "--no-ledger",
+        action="store_true",
+        help=(
+            "measure and write the report, but append NOTHING to "
+            "evals/nav_instruct/results/ledger.jsonl. For verification and "
+            "seeded runs, whose numbers are not provenance."
+        ),
+    )
+    ledger_group.add_argument(
+        "--ledger",
+        type=Path,
+        default=None,
+        help=(
+            "append the run's row to this file instead of the tracked ledger "
+            f"(env {LEDGER_ENV} does the same; `off` there means --no-ledger)"
+        ),
+    )
+    # ---- END CARD GATE-0b --------------------------------------------------
     parser.add_argument(
         "--scenes",
         default=None,
@@ -439,8 +546,19 @@ def main(argv: list[str] | None = None) -> int:
     report_path.write_text(
         json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8"
     )
-    with LEDGER.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(ledger_row, sort_keys=True) + "\n")
+    # ---- CARD GATE-0b (scrum/20260822/task_30) -----------------------------
+    ledger_target, ledger_provenance = resolve_ledger_path(
+        no_ledger=args.no_ledger, ledger=args.ledger
+    )
+    if ledger_target is None:
+        print(f"ledger: not appended [{ledger_provenance}]")
+    else:
+        ledger_target.parent.mkdir(parents=True, exist_ok=True)
+        with ledger_target.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(ledger_row, sort_keys=True) + "\n")
+        if ledger_provenance != "default":
+            print(f"ledger: appended to {ledger_target} [{ledger_provenance}]")
+    # ---- END CARD GATE-0b --------------------------------------------------
 
     # K0: append freeze under 20260805/task_1/freeze — never rewrite the
     # 20260804/task_6 historical baseline pointer.

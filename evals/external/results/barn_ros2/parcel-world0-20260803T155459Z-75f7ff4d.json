@@ -1,0 +1,94 @@
+{
+  "change_description": "Calibrated Parcel ROS2 LiDAR transport v2 with explicit base-to-LiDAR extrinsic, robot self-return invalidation, and scan/odometry synchronization; the unchanged grid_v1 DirectiveNavigator is packaged through upstream launch_navigation_stack for one local public-world-0 cache-only compatibility episode.",
+  "claims": {
+    "leaderboard_claim_allowed": false,
+    "official_protocol": false,
+    "organizer_attested": false,
+    "top_decile_evidence": false
+  },
+  "classification": {
+    "official_score": false,
+    "package_only": false,
+    "parcel_adapter_single_episode_metric": true,
+    "public_suite_result": false,
+    "top_decile_evidence": false
+  },
+  "episode": {
+    "collision": 0,
+    "elapsed_time_s": 100.007,
+    "navigation_metric": 0.0,
+    "success": 0,
+    "timeout": 1,
+    "world_idx": 0
+  },
+  "evaluation_kind": "barn-ros2-parcel-world0-rootless-compatibility-v1",
+  "launch_log": {
+    "ignored_cache_path": ".cache/external-evals/runtime/barn-parcel-runs/barn-ros2-parcel-20260803T155459Z-world0-75f7ff4d/launch.log",
+    "parcel_adapter_startup_observed": true,
+    "sha256": "e585c74f1f90d2ce306bbae8547efd0fa1bd2d2e1284bfebe8c03126e5a9ce75",
+    "size_bytes": 46893
+  },
+  "navigation": {
+    "adapter_exercised": true,
+    "adapter_id": "parcel-barn-ros2-calibrated-sensor-transport-v2",
+    "adapter_sha256": "b3a7372c208c47a73553533d1cc3f38b4105e049b4d23ff7db028ad42c60431d",
+    "config": "configs/navigation/experiments/barn_grid_v1.yaml",
+    "config_sha256": "807909c4e58868e3e6023fea0113a71b00d7036276e29fb1ed5caa6d848df0c1",
+    "controller_id": "parcel-directive-navigator-grid-v1-unchanged",
+    "controller_source_unchanged": true,
+    "documented_launch_navigation_stack_hook_only": true,
+    "evaluator_success_collision_timeout_metric_modified": false,
+    "model_config_sha256": "0d0700f8568d62f17d8b8c707ba2ec46e9c8539c626fb95d3eda201fa08f297b",
+    "production_package_modified": false,
+    "ros_node_sha256": "cae33d3e68339c4b2811a57e4925feed3201730219c0ca024b89d37651e8cf43"
+  },
+  "package": {
+    "content_addressed_cache_path": ".cache/external-evals/runtime/barn-parcel-bundles/parcel-world0-75f7ff4dfbf45d36",
+    "kind": "barn-ros2-parcel-submission-hook-bundle-v1",
+    "launch_overlay_sha256": "866e22bf07654c8af1a37a8f6e094dc88d30fb0c5f78a9b3494634cf0fb2b4c9",
+    "manifest_sha256": "41256fa28177ddcbdbee294307355cc2af3877f5bf7235ed665057fef7dc26ef",
+    "package_sha256": "75f7ff4dfbf45d36f67cdf3eb3eac6a7e9d05abf48350db449ca23d93b597813"
+  },
+  "raw_result": {
+    "columns": [
+      "world_idx",
+      "success",
+      "collision",
+      "timeout",
+      "elapsed_time_s",
+      "navigation_metric"
+    ],
+    "path": "parcel-world0-20260803T155459Z-75f7ff4d.raw.txt",
+    "sha256": "911b216bd77e7799c025ecb5df01e366750d229b357ed10ae9ee6b2b2175e531",
+    "size_bytes": 24
+  },
+  "run_id": "barn-ros2-parcel-20260803T155459Z-world0-75f7ff4d",
+  "runtime": {
+    "driver": "bubblewrap-plus-proot-cache-only-diagnostic-rootfs",
+    "gpu_used": false,
+    "host_system_packages_installed": false,
+    "launch_return_code": 0,
+    "software_rendering_forced": true,
+    "upstream_tested_singularity_path_used": false
+  },
+  "schema_version": 1,
+  "scope": {
+    "episode_count": 1,
+    "trials_per_world": 1,
+    "world_indices": [
+      0
+    ]
+  },
+  "source": {
+    "checkout_clean_before_and_after": true,
+    "commit": "d6c575b51e477bd524d634e12cffeb34036fcd1e",
+    "critical_files_sha256": {
+      "jackal_helper/config/nav2.yaml": "de82e458e199051858c9c8ba42a7813217a23fc47c14e5b53defb55ba0cac901",
+      "jackal_helper/launch/BARN_runner.launch.py": "eb72c149b41c996922ed739b217c2ecd8fca242a06c05440d3b04289dbda0ec5",
+      "jackal_helper/launch/nav2_bringup.launch.py": "2f2f0de14b00b7b6798db57bcc4e1c89bee7ec10b979d1c6f387dd71b627611e",
+      "jackal_helper/scripts/barn_runner.py": "a4794ea1c271ca89b2d5496e954a5709d78f4a024a211a707c4a07b84b10f3a3"
+    },
+    "repository": "https://github.com/Saadmaghani/The-Barn-Challenge-Ros2.git"
+  },
+  "timestamp_utc": "2026-08-03T15:54:59Z"
+}

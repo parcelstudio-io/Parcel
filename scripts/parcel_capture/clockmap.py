@@ -2588,6 +2588,69 @@ def _selftest_map() -> ClockMapV1:
     )
 
 
+#: Card TRUTH-1 (SDK-REM-1): what a MODULE-MISSING refusal tells the operator to
+#: do, **per device**. ENV-1b split "the SDK is missing" from "the cable is
+#: missing" but left one sentence for all three devices, so a desk operator whose
+#: `pyrealsense2` import failed was sent to an Orin they do not have, for an SDK
+#: that is a plain pip wheel. The go2 and the L2 genuinely do need the vendor
+#: ROS 2 environment; the D455 does not, and never did.
+_ORIN_ROS2_REMEDY = (
+    "Run this on the Orin inside the ROS 2 Humble environment that owns the vendor SDKs. "
+    "The Python path to the dog itself is `unitree_sdk2py` over CycloneDDS 0.10.2 on the "
+    "192.168.123.0/24 robot LAN, which needs no ROS at all; ROS 2 Humble is what the L2's "
+    "and the video path's vendor packages want. WHICH ROS THE DOCK ALREADY HAS IS "
+    "UNCONFIRMED and so is which JetPack it boots: reports have Go2 EDU docks on "
+    "JetPack 5.1.1, whose Ubuntu 20.04 pairs with ROS 2 Foxy rather than Humble, and "
+    "docks flashed to 6.2.1 (Ubuntu 22.04, the Humble pairing this tree's other hints "
+    "assume). Check what is actually on the box — `ls /opt/ros/` — before trusting any "
+    "of those hints, including this one."
+)
+#: Measured on this box on 2026-08-22, not inherited: `pip index versions
+#: pyrealsense2` reports 2.58.3.10794 INSTALLED and LATEST, and PyPI serves that
+#: release as 13 files — manylinux1_x86_64 for cp310-cp314, manylinux2014_aarch64
+#: for cp39/cp310/cp312 only, win_amd64 for cp310-cp314.
+_D455_WHEEL_REMEDY = (
+    "pyrealsense2 is an ordinary pip wheel, not a vendor SDK build, and BOTH hosts "
+    "have one. On THIS dev box (x86_64, CPython 3.14): `.parcel/bin/pip install -e "
+    "'.[camera-realsense]'` — already installed, 2.58.3.10794 cp314, measured "
+    "2026-08-22. On the Orin NX (aarch64) it depends on WHICH JetPack the dock "
+    "boots, and that is UNCONFIRMED until the box is opened: on JetPack 6.x "
+    "(Ubuntu 22.04, CPython 3.10) `pip install pyrealsense2` into the DEPLOY venv, "
+    "never into .parcel/, because PyPI serves "
+    "pyrealsense2-2.58.3.10794-cp310-cp310-manylinux2014_aarch64.whl; on JetPack "
+    "5.1.1 (Ubuntu 20.04, CPython 3.8) there is NO aarch64 wheel and pip cannot "
+    "help you. That release publishes aarch64 for cp39/cp310/cp312 ONLY, so every "
+    "other aarch64 interpreter — 3.8 included — needs a source build. Nobody has "
+    "run any of this on the unit."
+)
+MODULE_MISSING_REMEDIES: Mapping[str, str] = {
+    "d455": _D455_WHEEL_REMEDY,
+    "go2": _ORIN_ROS2_REMEDY,
+    "l2": _ORIN_ROS2_REMEDY,
+}
+#: A device with no entry above is a vendor device until someone measures
+#: otherwise — the conservative default, and the one that was wrong only for the
+#: D455.
+DEFAULT_MODULE_MISSING_REMEDY = _ORIN_ROS2_REMEDY
+
+
+def module_missing_remedies(devices: Iterable[str]) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    """Group absent devices by the remedy they take. Card TRUTH-1.
+
+    Grouped rather than printed one line per device so the go2 and the L2 keep
+    sharing the sentence that is true of both, and the D455 gets the one line
+    that is true of it. Sorted so the output is stable for a test to pin.
+    """
+
+    grouped: dict[str, list[str]] = {}
+    for name in sorted(set(devices)):
+        remedy = MODULE_MISSING_REMEDIES.get(name, DEFAULT_MODULE_MISSING_REMEDY)
+        grouped.setdefault(remedy, []).append(name)
+    return tuple(
+        (remedy, tuple(names)) for remedy, names in sorted(grouped.items(), key=lambda kv: kv[1])
+    )
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="clockmap",
@@ -2656,11 +2719,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             print("\nREFUSED: no clock probe is possible for: " + ", ".join(missing))
             print("This host cannot record offset triples for those devices.")
             if module_missing:
-                print(
+                # Card TRUTH-1: one paragraph, one line per REMEDY. The block
+                # stays a single "\n\n"-delimited paragraph so the existing
+                # MODULE/DEVICE split still parses.
+                lines = [
                     "\n  MODULE MISSING — the SDK is not on this interpreter's import "
-                    "path: " + ", ".join(sorted(module_missing)) + "\n  Run this on the "
-                    "Orin inside the ROS 2 Humble environment that owns the vendor SDKs."
+                    "path: " + ", ".join(sorted(module_missing))
+                ]
+                lines.extend(
+                    f"    {', '.join(names)}: {remedy}"
+                    for remedy, names in module_missing_remedies(module_missing)
                 )
+                print("\n".join(lines))
             for name, nodes in sorted(device_missing):
                 print(
                     f"\n  DEVICE MISSING — {name}: the SDK is installed and nothing is "

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -90,6 +91,10 @@ class _LiveRuntime:
         argv = [sys.executable, "-m", "parcel_robot.sim", "--socket", str(self.socket)]
         if static_city:
             argv.append("--static-city")
+        # Card HY-1. ``start_new_session`` makes the sim the leader of its own
+        # process group, which is what lets :meth:`_stop_sim` signal the whole
+        # group. Without it the sim shares pytest's group and a group signal
+        # would kill the test runner.
         self.sim = subprocess.Popen(
             argv,
             cwd=REPO,
@@ -97,27 +102,47 @@ class _LiveRuntime:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            start_new_session=True,
         )
-        deadline = time.monotonic() + 20.0
-        while not self.socket.exists():
-            if self.sim.poll() is not None:
-                raise RuntimeError(
-                    "sim died during startup:\n"
-                    + (self.sim.stdout.read() if self.sim.stdout else "")[-2000:]
-                )
-            if time.monotonic() > deadline:
-                raise RuntimeError("sim socket never appeared")
-            time.sleep(0.1)
-        self.runtime = build_runtime(
-            REPO / "configs" / "robot.yaml", self.socket, use_llm=False
-        )
-        self.runtime.start()
-        deadline = time.monotonic() + 10.0
-        while self.runtime._observation is None:
-            if time.monotonic() > deadline:
-                raise RuntimeError("runtime never received an observation")
-            time.sleep(0.1)
-        time.sleep(1.0)  # let sensor freshness and control feedback settle
+        # Card HY-1. Everything from here to the end of __init__ runs under
+        # this guard, because everything from here on can raise while a real
+        # simulator is already running. On 2026-08-22 eighteen orphaned sims
+        # were found on pytest scratch sockets: ``build_runtime`` below raised
+        # ``MemoryPathRefused`` (card R27, no PARCEL_MEMORY_PURPOSE declared),
+        # __init__ never returned an object, and the ``finally`` in the
+        # fixture had nothing to close. A process spawned before the try that
+        # would tear it down is a leak waiting for its first bad day.
+        try:
+            deadline = time.monotonic() + 20.0
+            while not self.socket.exists():
+                if self.sim.poll() is not None:
+                    raise RuntimeError(
+                        "sim died during startup:\n"
+                        + (self.sim.stdout.read() if self.sim.stdout else "")[-2000:]
+                    )
+                if time.monotonic() > deadline:
+                    raise RuntimeError("sim socket never appeared")
+                time.sleep(0.1)
+            self.runtime = build_runtime(
+                REPO / "configs" / "robot.yaml", self.socket, use_llm=False
+            )
+            self.runtime.start()
+            deadline = time.monotonic() + 10.0
+            while self.runtime._observation is None:
+                if time.monotonic() > deadline:
+                    raise RuntimeError("runtime never received an observation")
+                time.sleep(0.1)
+            time.sleep(1.0)  # let sensor freshness and control feedback settle
+        except BaseException:
+            # BaseException, not Exception: a KeyboardInterrupt or a pytest
+            # timeout during a 20-second startup wait leaks a sim just as
+            # thoroughly as a config refusal does.
+            runtime = getattr(self, "runtime", None)
+            if runtime is not None:
+                with contextlib.suppress(RuntimeError, OSError, ValueError):
+                    runtime.close()
+            self._stop_sim()
+            raise
 
     def pose(self) -> tuple[float, float]:
         robot = self.runtime._observation.robot
@@ -190,14 +215,46 @@ class _LiveRuntime:
     def pace_scale(self) -> float:
         return float(self.runtime._pace_cap.scale)
 
+    def _stop_sim(self) -> None:
+        """Card HY-1. Take down the simulator and anything it spawned, and wait.
+
+        The signal goes to the process *group* — ``terminate()`` reaches only
+        the immediate child, so a sim that had forked a helper would leave the
+        helper holding the socket. ``killpg`` is used only after confirming the
+        sim leads its own group: if a future edit drops ``start_new_session``
+        the group id becomes pytest's, and this must degrade to signalling the
+        one pid rather than killing the run.
+        """
+
+        if self.sim.poll() is None:
+            try:
+                leads_group = os.getpgid(self.sim.pid) == self.sim.pid
+            except (ProcessLookupError, PermissionError):
+                leads_group = False
+            try:
+                if leads_group:
+                    os.killpg(self.sim.pid, signal.SIGTERM)
+                else:
+                    self.sim.terminate()
+            except (ProcessLookupError, PermissionError):
+                pass
+            try:
+                self.sim.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                if leads_group:
+                    with contextlib.suppress(ProcessLookupError, PermissionError):
+                        os.killpg(self.sim.pid, signal.SIGKILL)
+                self.sim.kill()
+                with contextlib.suppress(subprocess.TimeoutExpired):
+                    self.sim.wait(timeout=5)
+        if self.sim.stdout is not None:
+            with contextlib.suppress(OSError, ValueError):
+                self.sim.stdout.close()
+
     def close(self) -> None:
         with contextlib.suppress(RuntimeError, OSError, ValueError):
             self.runtime.close()
-        self.sim.terminate()
-        try:
-            self.sim.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            self.sim.kill()
+        self._stop_sim()
 
 
 @pytest.fixture()

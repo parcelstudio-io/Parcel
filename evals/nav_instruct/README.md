@@ -161,7 +161,34 @@ may only hit one acceptable answer understates how easy the question was.
 
 `results/ledger.jsonl` is append-only. Every measured row carries
 `baseline_version` and `arrival_rule`, so two rows can never be differenced
-without seeing whether they are comparable. `results/bridge_v1_v2.json`,
+without seeing whether they are comparable.
+
+**Append on purpose (card GATE-0b, `scrum/20260822/task_30`).** Append-only
+also means *every row you add is permanent*, so a run that is not provenance
+must say so:
+
+| you are | run it as |
+|---|---|
+| recording a measurement worth citing | `--minival --mode candidate …` (unchanged; the row lands here) |
+| verifying, re-measuring, or running a seeded tree | `--no-ledger` |
+| wanting the row, but not in the tracked file | `--ledger <path>` (or `PARCEL_NAV_LEDGER=<path>`; `off` there means `--no-ledger`) |
+
+A run started **from inside pytest** that says none of the above does not
+append here: it prints the path it left alone and the flag that would have
+recorded it. Nothing refuses — the matrix still runs and the report is still
+written — and an explicit `--ledger <this file>` is honoured, because a person
+who typed the path is not overruled by a heuristic.
+
+**THE ANNOTATION RULE.** A row that reaches this file from anything other than
+an ordinary measured run — an audit re-run, a diagnostic, a re-scoring — is
+annotated in `results/README.md` with its `report_id`, who wrote it and why,
+in the same pass that writes it. Two rows arrived unannotated on 2026-08-22
+from card ROAM-1's verification minivals (one from a tree with `time_s` seeded
+out) and had to be identified afterwards by `report_id` and restored by hand
+(`scrum/20260822/AUDIT_WEEK1_FABLE.md` §ROAM-1 finding 4). A row nobody can
+attribute is worse than no row: it is provenance that lies.
+`tests/test_nav_instruct_ledger_guard.py` pins the mechanism; the annotation is
+a discipline, and this is where it is written down. `results/bridge_v1_v2.json`,
 `results/scene_split_{mode}.json` and `results/mutation_panel.json` are
 diagnostics and are never baselines (`frozen_baseline: false`); so are
 `results/bridge_v2_v3.json` and `results/bridge_v3_v4.json`.

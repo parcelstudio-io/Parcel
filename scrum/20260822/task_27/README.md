@@ -1,5 +1,18 @@
 # Task 27 — PO-1: the purchase decision record
 
+> **DECISION TAKEN (owner, 2026-08-22, afternoon): Go2 EDU PLUS with Mid-360
+> LiDAR** — robostore, $17,055: Jetson Orin NX 16 GB (100 TOPS) onboard,
+> Livox Mid-360 plus the built-in wide-angle LiDAR, 720p/120° RGB front
+> camera, Wi-Fi 6 + 4G, 12 kg payload. This supersedes the "EDU Standard;
+> decline the Orin dock and the L2 add-on; desktop GPU tethered" recommendation
+> below. What survives unchanged: the RealSense buy (the front camera has no
+> depth), the JST speaker, the independent hardware e-stop + watchdog outside
+> this repo, and the three tells — which now gate the **first armed step**,
+> not the purchase. The design that follows from the decision is
+> `../WAVE3_HW_DESIGN_FABLE.md` (compute placement, compatibility matrix,
+> seams, cards, the order before first motion). The rest of this card is kept
+> as the record of the recommendation as it stood at 06:00.
+
 **Owner's decision card** (no executor; Fable keeps the record). **Board:**
 `../TASK_BOARD.md`. **Evidence:** `PLAN_ASSESSMENT_FABLE.md` (the answer +
 build order); the three proposals' converged buy/don't-buy lists; the

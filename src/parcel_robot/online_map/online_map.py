@@ -1084,6 +1084,120 @@ class OnlineSemanticMap:
         out.sort(key=lambda row: (row["distance_m"], row["entry_id"]))
         return tuple(out[: max(0, int(limit))])
 
+    # ============ CARD ROAM-2 (task_33) — THE ONE COVERAGE QUERY ==========
+    #
+    # ONE new public reader and NOT ONE LINE of the writer. Everything below
+    # is derived from fields ``observe``/``_fuse`` already maintain
+    # (``last_seen_wall_s``, ``surface_x/y``, ``status``); nothing here can
+    # change what the map remembers, and a caller that never calls it gets a
+    # byte-identical map.
+    #
+    # WHY IT LIVES HERE rather than in the patrol package: the visibility rule
+    # is the MAP's (``_visibility_range_m``, the same number ``close_visit``
+    # decays against in ``_was_expected_visible``), and a second copy of it in
+    # a policy would drift the day somebody constructs a map with a different
+    # range. The patrol stays pure by taking ONE bearing and ONE age.
+    # =====================================================================
+
+    def coverage_candidates(
+        self,
+        x: float,
+        y: float,
+        yaw_rad: float,
+        *,
+        now_wall_s: float | None = None,
+        limit: int = 8,
+        exclude_visible: bool = True,
+        max_radius_m: float | None = None,
+    ) -> tuple[dict[str, Any], ...]:
+        """Which known places has this map NOT seen lately, and which way are they?
+
+        The coverage objective card ROAM-2 needs, answered by the only thing
+        that knows it: **least recently seen first**, each row carrying its own
+        body-frame bearing and its own age, so the consumer never has to invent
+        either. Rows are ordered oldest-age first; a row whose age cannot be
+        computed sorts LAST and carries ``age_s: None`` rather than a zero,
+        because "I do not know when I last saw it" is not "I saw it just now".
+
+        ``exclude_visible`` drops entries the robot can see from where it is
+        standing, by the MAP's own ``visibility_range_m`` — the same rule
+        :meth:`close_visit` decays against. That is what makes this a coverage
+        objective rather than a compass: a bench four metres behind the robot
+        is already being observed, and pointing the dog back at it would spend
+        the whole budget spinning on the spot.
+
+        Never raises on an empty or a broken clock: an empty tuple is a real
+        answer and means "nothing to go and look at", which the consumer is
+        required to read as *wander*, never as *stop*.
+        """
+
+        try:
+            ox = float(x)
+            oy = float(y)
+            yaw = float(yaw_rad)
+        except (TypeError, ValueError):
+            return ()
+        if not all(math.isfinite(value) for value in (ox, oy, yaw)):
+            return ()
+
+        clock: float | None
+        try:
+            clock = None if now_wall_s is None else float(now_wall_s)
+        except (TypeError, ValueError):
+            clock = None
+        if clock is not None and not math.isfinite(clock):
+            clock = None
+
+        reach = self._visibility_range_m
+        ceiling = None if max_radius_m is None else float(max_radius_m)
+        rows: list[dict[str, Any]] = []
+        for entry in self.active_entries():
+            dx = entry.surface_x - ox
+            dy = entry.surface_y - oy
+            distance = math.hypot(dx, dy)
+            if ceiling is not None and distance > ceiling:
+                continue
+            visible_now = distance <= reach
+            if exclude_visible and visible_now:
+                continue
+            bearing = math.atan2(dy, dx) - yaw
+            bearing = (bearing + math.pi) % (2.0 * math.pi) - math.pi
+            age: float | None = None
+            if clock is not None:
+                delta = clock - entry.last_seen_wall_s
+                # A negative age is a clock that disagrees with the store (a
+                # reloaded map stamped by another host, a wall clock stepped
+                # backwards). Unknown, not zero: zero would read as "seen just
+                # now" and would hide the very place the robot should visit.
+                if math.isfinite(delta) and delta >= 0.0:
+                    age = delta
+            rows.append(
+                {
+                    "entry_id": entry.entry_id,
+                    "label": entry.label,
+                    "surface_x": round(entry.surface_x, 6),
+                    "surface_y": round(entry.surface_y, 6),
+                    "distance_m": round(distance, 3),
+                    "bearing_rad": round(bearing, 4),
+                    "last_seen_wall_s": entry.last_seen_wall_s,
+                    "age_s": None if age is None else round(age, 3),
+                    "within_visibility": visible_now,
+                    "visibility_range_m": reach,
+                }
+            )
+        # Oldest first; unknown ages last; entry_id breaks every tie so the
+        # order is stable and a test can pin it.
+        rows.sort(
+            key=lambda row: (
+                1 if row["age_s"] is None else 0,
+                -(row["age_s"] or 0.0),
+                row["entry_id"],
+            )
+        )
+        return tuple(rows[: max(0, int(limit))])
+
+    # ============ END CARD ROAM-2 coverage query ==========================
+
     def known_places(self) -> tuple[str, ...]:
         """R20 vocabulary: what this map can be asked about — learned, not labelled.
 

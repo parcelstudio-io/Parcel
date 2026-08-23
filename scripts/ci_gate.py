@@ -548,6 +548,16 @@ def run_pytest(
     env = _base_env()
     # Guarantee ``scripts.*`` (seed plugin) is importable in the subprocess.
     env["PYTHONPATH"] = os.pathsep.join(filter(None, [str(REPO), env.get("PYTHONPATH", "")]))
+    # ---- CARD XD-1 nesting mark (scrum/20260822/task_14) ----
+    # Stamp every pytest the gate spawns, so a gate evaluator that runs INSIDE
+    # that pytest can see it is already a child and refuse to run the whole
+    # suite again. The constant and the refusal live in the XD-1 region below
+    # (:data:`CI_GATE_NESTED_ENV`, :func:`evaluate_default_suite`); this is the
+    # one line that has to sit in the shared driver, because the driver is what
+    # creates the child. ``env_extra`` is applied after it on purpose: a test
+    # that needs an unmarked child says so explicitly.
+    env[CI_GATE_NESTED_ENV] = "1"
+    # ---- END CARD XD-1 nesting mark ----
     if env_extra:
         env.update(env_extra)
     return subprocess.run(
@@ -588,6 +598,349 @@ def _pytest_gate(
         detail = (proc.stderr or "").strip().splitlines()[-1:] or ["pytest failed"]
         detail = detail[0]
     return GateResult(name, tier, hard, "fail", detail, extra={"returncode": proc.returncode})
+
+
+# ---- CARD XD-1 default-suite two-phase runner (scrum/20260822/task_14) ----
+#
+# THE DEFAULT SUITE RUNS IN PARALLEL, IN TWO PHASES, AND THE TWO ARE A
+# PARTITION OF THE COMMIT TIER BY CONSTRUCTION.
+#
+# Five to six minutes per commit gate was the largest single drag on iteration
+# in this repo. ``pytest -n auto`` runs the same suite roughly six times faster
+# on this host, and P0-E measured exactly that (51.9 s vs 317 s) — but it also
+# measured SEVEN tests that diverged under xdist, so the gate stayed serial.
+# Divergence is the only thing that matters here: a gate that is fast and
+# reports a different answer than the serial run is not a gate.
+#
+# The split is between tests whose subject is WALL-CLOCK DURATION and everything
+# else. A wall-clock assertion cannot be measured while 191 sibling workers are
+# saturating the machine — that is not an xdist defect, it is what the
+# ``load_sensitive`` marker (card R26, ``scripts/load_guard.py``) already means
+# — so those run afterwards, serially, in the same process budget as before.
+# Every OTHER divergence was FIXED AT THE SOURCE rather than marked: marking a
+# behaviour test ``load_sensitive`` would make it skippable under contention,
+# which is silencing it, not fixing it.
+#
+# WHY THE MARKERS ARE DERIVED AND NOT WRITTEN TWICE. Both phases are built from
+# ``COMMIT_MARKERS`` by :func:`default_suite_phases`, so their union is exactly
+# the tier the ``tier-coverage`` gate counts and their intersection is empty --
+# there is no edit that can make the two phases disagree about what the commit
+# tier is, and no test can fall between them. ``tests/test_ci_gate.py`` proves
+# both directions against the real function.
+#
+# The NIGHTLY tier's ``default-suite`` is deliberately left serial: it runs with
+# ``PARCEL_LOAD_GUARD=off`` precisely so the wall-clock assertions cannot skip,
+# and the nightly is the tier where wall-clock time is available and
+# determinism is worth more than speed.
+
+#: Workers for phase A. An operator on a small box, or a bisect that wants
+#: determinism, pins this; otherwise the count is DERIVED and CAPPED (below).
+XDIST_WORKERS_ENV = "PARCEL_XDIST_WORKERS"
+
+#: Marks a pytest the gate itself spawned. Read on entry to
+#: :func:`evaluate_default_suite`; written by :func:`run_pytest`.
+CI_GATE_NESTED_ENV = "PARCEL_CI_GATE_NESTED"
+
+#: THE CEILING, AND WHY THERE IS ONE.
+#:
+#: ``-n auto`` asks pytest-xdist for one worker per usable CPU. On the dev box
+#: that is 192 workers at roughly a quarter of a gigabyte each, and on
+#: 2026-08-22/23 that number, multiplied by concurrent runs and by a gate that
+#: could re-enter itself (see :data:`CI_GATE_NESTED_ENV`), took the machine
+#: down four times: python held 91-237 GB across 339-986 processes and the
+#: kernel OOM-killed the editor, every agent session and the runs themselves.
+#: A gate that can kill the host it is gating is not a gate.
+#:
+#: So the default is ``min(os.cpu_count(), XDIST_MAX_WORKERS)`` and the word
+#: ``auto`` is never handed to xdist. The cap is a MAXIMUM, not a target: on
+#: an 8-core Jetson Orin NX -- the Go2 EDU+'s onboard computer -- the default
+#: resolves to 8, exactly as ``auto`` would have, so nothing is lost on the
+#: hardware this repo is heading for; the cap only bites on a machine with
+#: more cores than the suite can use, where the marginal worker buys ~nothing
+#: and costs memory. The resolved number and WHERE IT CAME FROM are recorded
+#: in the gate row, so no reader has to guess what ran.
+XDIST_MAX_WORKERS = 16
+
+
+def resolve_xdist_workers(
+    explicit: str | None = None, env: dict[str, str] | None = None
+) -> tuple[str, str]:
+    """Return ``(workers, provenance)`` for phase A -- never ``auto``.
+
+    ``explicit`` (the caller's argument) wins over :data:`XDIST_WORKERS_ENV`,
+    which wins over the derived default. An operator's pin is HONOURED as
+    written, including above the cap: the cap exists to stop an accident, not
+    to overrule a person who typed a number. ``auto``/``logical`` and anything
+    that is not a positive integer fall back to the default WITH A REASON that
+    travels into the gate row -- silently substituting a different worker count
+    is how a timing row becomes a lie.
+    """
+
+    source = os.environ if env is None else env
+    raw = (explicit if explicit is not None else source.get(XDIST_WORKERS_ENV, "")) or ""
+    raw = str(raw).strip()
+    cpus = os.cpu_count() or 1
+    default = str(min(cpus, XDIST_MAX_WORKERS))
+    origin = "argument" if explicit is not None else XDIST_WORKERS_ENV
+    if not raw:
+        return default, f"derived min(cpu_count={cpus}, cap={XDIST_MAX_WORKERS})"
+    if raw.lower() in ("auto", "logical"):
+        return default, (
+            f"{origin}={raw!r} REFUSED (one worker per CPU is what OOM-killed this "
+            f"host); derived min(cpu_count={cpus}, cap={XDIST_MAX_WORKERS})"
+        )
+    if not raw.isdigit() or int(raw) < 1:
+        return default, (
+            f"{origin}={raw!r} is not a positive worker count; derived "
+            f"min(cpu_count={cpus}, cap={XDIST_MAX_WORKERS})"
+        )
+    return raw, f"{origin}={raw} (honoured; cpu_count={cpus}, cap={XDIST_MAX_WORKERS})"
+
+#: ``loadfile`` keeps every test in a file on ONE worker. Chosen over the
+#: default ``load`` for a correctness reason, not a speed one: module- and
+#: class-scoped fixtures (HY-1's per-file simulator census among them) are
+#: written on the assumption that one file is one process, and ``load`` breaks
+#: that assumption silently by scattering a file's tests across workers.
+XDIST_DIST_MODE = "loadfile"
+
+
+def default_suite_phases(commit_markers: str = COMMIT_MARKERS) -> tuple[str, str]:
+    """The commit tier's selection, partitioned into (parallel, serial).
+
+    Derived from one argument so the two halves cannot drift apart. The
+    parenthesisation matters: ``COMMIT_MARKERS`` is an expression, and
+    ``not slow and load_sensitive`` would bind differently from
+    ``(not slow) and load_sensitive`` the day the tier expression grows an
+    ``or``.
+    """
+
+    return (
+        f"({commit_markers}) and not load_sensitive",
+        f"({commit_markers}) and load_sensitive",
+    )
+
+
+def evaluate_default_suite(
+    *,
+    tier: str = "commit",
+    env_extra: dict[str, str] | None = None,
+    timeout: int = 1800,
+    workers: str | None = None,
+) -> GateResult:
+    """``default-suite`` as one gate row, run as two phases."""
+
+    # THE RECURSION GUARD. ``run_pytest`` stamps CI_GATE_NESTED_ENV into every
+    # child it spawns, so if this evaluator is reached from INSIDE a pytest the
+    # gate started, running the whole suite again would be a fork bomb with a
+    # 9,000-test fuse -- five chained levels is what put 986 python processes
+    # and 237 GB on this host on 2026-08-23. Targeted ``_pytest_gate`` runs are
+    # deliberately still allowed nested: they are bounded node-id lists, they
+    # are what the gate's own self-tests exercise, and nothing about them grows.
+    if (os.environ.get(CI_GATE_NESTED_ENV) or "").strip():
+        return GateResult(
+            "default-suite", tier, True, "error",
+            f"refused: {CI_GATE_NESTED_ENV} is set, so this is already running "
+            "inside a pytest the gate spawned. The default suite does not run "
+            "itself; run `ci_gate.py --tier commit` from a shell, not from a test.",
+            extra={"nested": True},
+        )
+    parallel_markers, serial_markers = default_suite_phases()
+    resolved_workers, workers_provenance = resolve_xdist_workers(workers)
+    phases: list[tuple[str, subprocess.CompletedProcess[str], float]] = []
+    for label, markers, extra_args in (
+        ("parallel", parallel_markers, ["-n", resolved_workers, "--dist", XDIST_DIST_MODE]),
+        ("serial", serial_markers, []),
+    ):
+        started = time.monotonic()
+        try:
+            proc = run_pytest(
+                (), markers=markers, env_extra=env_extra,
+                extra_args=extra_args, timeout=timeout,
+            )
+        except subprocess.TimeoutExpired:
+            return GateResult(
+                "default-suite", tier, True, "error",
+                f"{label} phase timed out after {timeout}s",
+            )
+        phases.append((label, proc, time.monotonic() - started))
+
+    summaries = []
+    fails: list[str] = []
+    for label, proc, elapsed in phases:
+        lines = (proc.stdout or "").strip().splitlines()
+        summaries.append(f"{label} ({elapsed:.1f}s): {lines[-1] if lines else '(no output)'}")
+        fails.extend(ln for ln in lines if ln.startswith(("FAILED", "ERROR")))
+    detail = (
+        f"-n {resolved_workers} --dist {XDIST_DIST_MODE} [{workers_provenance}]; "
+        + "; ".join(summaries)
+    )
+    codes = {label: proc.returncode for label, proc, _ in phases}
+    extra = {
+        "returncodes": codes,
+        "workers": resolved_workers,
+        "workers_provenance": workers_provenance,
+        "seconds": {label: round(elapsed, 2) for label, _, elapsed in phases},
+    }
+    if not any(codes.values()):
+        return GateResult("default-suite", tier, True, "pass", detail, extra=extra)
+    if fails:
+        detail += "\n    " + "\n    ".join(fails[:12])
+    return GateResult("default-suite", tier, True, "fail", detail, extra=extra)
+
+
+# ---- END CARD XD-1 default-suite two-phase runner --------------------------
+
+
+# ---- CARD GATE-0b skip-list reporting (scrum/20260822/task_30) -------------
+#
+# WHAT A CLEAN CLONE USED TO SAY, AND WHAT IT SAYS NOW.
+#
+# `git clone` + `pip install -e '.[dev,voice]'` + `--tier commit` produced 48
+# red tests on 2026-08-23, and 28 of them needed an EXTERNAL EVIDENCE ROOT that
+# is deliberately not in git: the external-eval scratch under
+# `.cache/external-evals` is 21 GB on the dev box, and vendoring it is not an
+# option at any size. Those tests now SKIP with a named reason
+# (`tests/_external_roots.py`) — and a skip nobody prints is a test that
+# quietly stopped existing, which is why this stage exists.
+#
+# WHY IT IS A REPORT ROW AND NEVER A GATE. `hard=False`, so `GateResult
+# .gating_red` is False by construction and this stage cannot change an exit
+# code. It answers one question — "what did this host not run, and how would
+# you get it?" — and the answer is printed on every run, green or red.
+#
+# WHY IT READS THE TABLE STATICALLY. `ast.literal_eval` of one assignment,
+# plus a substring scan of `tests/*.py`. It does NOT import the test tree and
+# it does NOT start a pytest: this file is what XD-1 taught the repo never to
+# re-enter (`CI_GATE_NESTED_ENV` above), and a reporting row is the last place
+# that should spawn nine thousand tests. Cost: ~10 MB of file reads.
+#
+# HARDWARE. A declaration is a PATH STAT or an import check, never a platform
+# test, so the same `--tier commit` command gives an honest verdict on this
+# x86-64 box, on the hosted `ubuntu-latest` runner (B20) and on the Go2 EDU+'s
+# aarch64 Jetson Orin NX: a row that needs CUDA, an x86-only wheel or a
+# generated corpus resolves to the same printed skip-with-reason on all three
+# instead of to a red nobody can act on.
+
+#: The single table of declared external roots and optional wheels. Read from
+#: source rather than imported — see above.
+EXTERNAL_ROOTS_TABLE = REPO / "tests" / "_external_roots.py"
+
+#: The assignment inside it this stage reads, and the call the test tree uses.
+EXTERNAL_ROOTS_SYMBOL = "EXTERNAL_ROOTS"
+EXTERNAL_ROOTS_CALL = "skip_unless("
+
+
+def read_external_root_declarations(
+    table: Path = EXTERNAL_ROOTS_TABLE,
+) -> dict[str, dict[str, str]]:
+    """The declared roots, parsed out of the test tree's one table."""
+
+    import ast
+
+    tree = ast.parse(table.read_text(encoding="utf-8"), filename=str(table))
+    for node in tree.body:
+        if isinstance(node, ast.AnnAssign):
+            names = [node.target]
+        elif isinstance(node, ast.Assign):
+            names = list(node.targets)
+        else:
+            continue
+        for name in names:
+            if isinstance(name, ast.Name) and name.id == EXTERNAL_ROOTS_SYMBOL:
+                return dict(ast.literal_eval(node.value))
+    raise ValueError(f"{EXTERNAL_ROOTS_SYMBOL} not found in {table}")
+
+
+def external_root_users(root: Path = REPO) -> dict[str, list[str]]:
+    """name -> the test modules that carry ``@skip_unless(name)``."""
+
+    users: dict[str, list[str]] = {}
+    table = (root / "tests" / "_external_roots.py").name
+    for path in sorted((root / "tests").glob("*.py")):
+        # The table declares the call in its own docstring; it is not a user.
+        if path.name == table:
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if EXTERNAL_ROOTS_CALL not in text:
+            continue
+        for chunk in text.split(EXTERNAL_ROOTS_CALL)[1:]:
+            quote = chunk[:1]
+            if quote not in ("'", '"'):
+                continue
+            name = chunk[1:].split(quote, 1)[0]
+            entry = users.setdefault(name, [])
+            if path.name not in entry:
+                entry.append(path.name)
+    return users
+
+
+def external_root_present(entry: dict[str, str], root: Path = REPO) -> bool:
+    """Is this declaration satisfied on THIS host?"""
+
+    if entry.get("kind") == "module":
+        import importlib.util
+
+        try:
+            return importlib.util.find_spec(entry["target"]) is not None
+        except (ImportError, ValueError):  # pragma: no cover - broken parent package
+            return False
+    return (root / entry["target"]).exists()
+
+
+def evaluate_skip_list(*, tier: str = "commit", root: Path = REPO) -> GateResult:
+    """The honest list of what this host did not run, and how to get it."""
+
+    try:
+        declared = read_external_root_declarations(root / "tests" / "_external_roots.py")
+    except (OSError, SyntaxError, ValueError) as exc:
+        return GateResult(
+            "skip-list", tier, False, "error",
+            f"the external-root table is unreadable: {type(exc).__name__}: {exc}",
+        )
+    users = external_root_users(root)
+    absent: list[str] = []
+    modules = 0
+    lines: list[str] = []
+    for name in sorted(declared):
+        entry = declared[name]
+        carriers = users.get(name, [])
+        if external_root_present(entry, root):
+            continue
+        absent.append(name)
+        modules += len(carriers)
+        lines.append(
+            f"{name}: ABSENT — {entry['target']} ({entry.get('kind', 'path')}); "
+            f"{len(carriers)} module(s) skip: {', '.join(carriers) or '(none)'}"
+        )
+        lines.append(f"    {entry['hint']}")
+    unused = sorted(set(users) - set(declared))
+    detail = (
+        f"{len(declared)} declared external root(s), {len(absent)} absent on this host "
+        f"→ {modules} test module(s) skip with a named reason"
+    )
+    if lines:
+        detail += "\n    " + "\n    ".join(lines)
+    if unused:
+        detail += f"\n    UNDECLARED name(s) used by tests: {', '.join(unused)}"
+    # STATUS `pass`, NOT `report`, AND WHY. `hard=False` is what makes this row
+    # unable to change an exit code (`GateResult.gating_red`); the status says
+    # whether the row DID ITS JOB, and producing the list is the job. It also
+    # keeps `tests/test_ci_gate.py`'s "no stage in a clean tier is anything but
+    # pass" contract (card XD-1's file, closed and verified — not edited here)
+    # exactly as XD-1 left it. An unreadable table returns `error` above, which
+    # is visible and still non-gating.
+    return GateResult(
+        "skip-list", tier, False, "pass", detail,
+        extra={
+            "declared": sorted(declared),
+            "absent": absent,
+            "modules_skipped": modules,
+            "undeclared_used": unused,
+        },
+    )
+
+
+# ---- END CARD GATE-0b ------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------
@@ -1695,6 +2048,12 @@ COMMIT_TIER_STAGE_NAMES: tuple[str, ...] = (
     "release-parity-integrity",
     "owner-store-isolation",
     "default-suite",
+    # ---- CARD GATE-0b skip-list reporting (scrum/20260822/task_30) --------
+    # A REPORT row (hard=False), printed last so the skip list sits directly
+    # above RESULT. Named here because this literal is the contract
+    # `tests/test_ci_gate.py` holds `run_commit_tier` to.
+    "skip-list",
+    # ---- END CARD GATE-0b --------------------------------------------------
 )
 
 
@@ -1767,13 +2126,41 @@ def run_commit_tier() -> list[GateResult]:
          lambda: _pytest_gate("release-parity-integrity", tier, RELEASE_PARITY_NODE_IDS, timeout=600)),
         ("owner-store-isolation",
          lambda: _pytest_gate("owner-store-isolation", tier, OWNER_STORE_NODE_IDS, timeout=900)),
-        # The full default gate last (latest recorded: 7,715 passed on 2026-08-21).
-        ("default-suite",
-         lambda: _pytest_gate("default-suite", tier, (), markers="not slow", timeout=1800)),
+        # ---- CARD XD-1 default-suite row (scrum/20260822/task_14) ----------
+        # THE THIRD AND LAST XD-1 HUNK IN THIS FILE, and the only one inside
+        # GATE-0's containment region — it is a call site, so it cannot live
+        # anywhere else. It changes ONE tuple: the `default-suite` stage now
+        # calls the two-phase evaluator instead of `_pytest_gate`. The stage
+        # NAME is unchanged, so `COMMIT_TIER_STAGE_NAMES`, `run_stage`'s
+        # containment and every `--json` consumer are untouched; no other
+        # stage in this tuple is XD-1's.
+        #
+        # Two phases, `-n min(cpu_count, XDIST_MAX_WORKERS)` then the
+        # wall-clock assertions serially; see the XD-1 runner region above for
+        # why the two marker expressions are derived from COMMIT_MARKERS and
+        # not written out twice, and why the worker count is capped rather
+        # than `auto`. (Latest recorded serial figure: 9,259 passed in 407 s.)
+        ("default-suite", lambda: evaluate_default_suite(tier=tier, timeout=1800)),
+        # ---- END CARD XD-1 default-suite row -------------------------------
+        # ---- CARD GATE-0b skip-list reporting (scrum/20260822/task_30) -----
+        # LAST, and deliberately after the suite: the reader has just seen "32
+        # skipped" go by and this is the line that says which 32 and why. Pure
+        # (file reads only), report-only, cannot change the exit code.
+        ("skip-list", lambda: evaluate_skip_list(tier=tier)),
+        # ---- END CARD GATE-0b ----------------------------------------------
     )
     results: list[GateResult] = []
     for stage_name, evaluate in stages:
-        results.extend(run_stage(stage_name, evaluate, tier=tier))
+        # ---- CARD GATE-0b skip-list reporting (scrum/20260822/task_30) -----
+        # `skip-list` is the one report-only row in this tier. The evaluator
+        # already returns `hard=False`; this passes the same hardness to
+        # `run_stage`, so a CRASH in the reporting row is contained and printed
+        # WITHOUT turning a green tier red — a row that only describes what did
+        # not run must not be able to fail the build.
+        results.extend(
+            run_stage(stage_name, evaluate, tier=tier, hard=stage_name != "skip-list")
+        )
+        # ---- END CARD GATE-0b ----------------------------------------------
     return results
 # === end GATE-0 region =====================================================
 

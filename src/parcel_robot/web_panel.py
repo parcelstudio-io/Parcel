@@ -629,6 +629,73 @@ class RuntimeRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
+# ---- CARD TRUTH-1: the planner section's spelling guard, at the read site ----
+#
+# `config.OVERLAY_INTRODUCIBLE_KEYS` now carries `planner_model`, which is what
+# makes the block writable at all (CAP-1's carried finding: `build_runtime` read
+# a section the SHA-locked base omits and no overlay could introduce, so the
+# planner could never be turned on). That exemption covers the WHOLE SUBTREE —
+# the overlay loader stops descending at an exempt parent — so `check_overlay_keys`
+# will merge `plan_timeoutt: 5` without a word. Every introducible family in this
+# project answers that the same way, by refusing an unknown key WHERE THE SECTION
+# IS READ: `CameraStreamConfig.from_section` for the camera family,
+# `RobotRuntime.roam_config` for roam, and this for the planner.
+#
+# Without it the failure is the `minimum_confidenc` failure verbatim: the file on
+# disk says `plan_timeoutt: 5`, the provider is built at the shipped 90 s, and
+# nothing anywhere says the operator's edit did nothing.
+#: Every key `LlamaCppProvider.from_config` reads, plus `enabled`, which
+#: `build_runtime` reads itself. Derived from that classmethod's own
+#: `config.get(...)` calls and pinned against them by
+#: `tests/test_truth1_texts.py`, so a new provider knob cannot make this guard
+#: start refusing a legitimate key.
+_PLANNER_MODEL_KEYS: frozenset[str] = frozenset(
+    {
+        "enabled",
+        "base_url",
+        "model",
+        "timeout",
+        "streaming",
+        "temperature",
+        "top_p",
+        "context_messages",
+        "context_char_budget",
+        "max_tokens",
+        "enable_thinking",
+        "plan_timeout",
+        "plan_max_tokens",
+        "plan_enable_thinking",
+        "plan_temperature",
+        "max_stream_events",
+        "max_response_bytes",
+    }
+)
+
+
+def _check_planner_model_section(section: Any) -> dict[str, Any]:
+    """Refuse an unknown ``planner_model:`` key BY NAME. Card TRUTH-1.
+
+    Returns the section as a plain dict. A non-mapping (or an absent section,
+    which :meth:`ConfigStore.section` returns as ``{}``) is not an error here —
+    it is the default, no-planner case — but a mapping with a key nothing reads
+    is, because merging it changes nothing and the setting silently keeps its
+    shipped value.
+    """
+
+    if not isinstance(section, dict):
+        return {}
+    unknown = sorted(str(key) for key in section if str(key) not in _PLANNER_MODEL_KEYS)
+    if unknown:
+        raise ValueError(
+            f"unknown planner_model config key(s): {', '.join(unknown)}; "
+            f"allowed: {', '.join(sorted(_PLANNER_MODEL_KEYS))}"
+        )
+    return dict(section)
+
+
+# ---- END CARD TRUTH-1 -------------------------------------------------------
+
+
 def build_runtime(
     config_path: Path,
     socket_path: Path,
@@ -637,7 +704,15 @@ def build_runtime(
 ) -> RobotRuntime:
     store = ConfigStore(config_path)
     model_config = store.section("language_model")
-    planner_config = store.section("planner_model")
+    # ---- CARD TRUTH-1: the planner section's read site --------------------
+    # `config.OVERLAY_INTRODUCIBLE_KEYS` exempts the whole `planner_model`
+    # subtree, so the overlay loader will merge a typo inside it without a
+    # word. THIS CALL is the guard — not the function alone, which is why
+    # `tests/test_truth1_texts.py` pins `build_runtime` itself and not only
+    # `_check_planner_model_section`. Delete this call and a misspelled key
+    # boots at the shipped default in silence.
+    planner_config = _check_planner_model_section(store.section("planner_model"))
+    # ---- END CARD TRUTH-1 -------------------------------------------------
     enabled = bool(model_config.get("enabled", False)) if use_llm is None else use_llm
     planner_enabled = bool(planner_config.get("enabled", False))
     if use_llm is False:

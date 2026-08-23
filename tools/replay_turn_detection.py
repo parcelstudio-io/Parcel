@@ -64,6 +64,23 @@ Each result therefore carries ``audio_offset_ms`` — the audio already fed when
 that file started — and the reported commit is ``raw - offset``. Both numbers
 are in the report so the arithmetic can be checked from the file alone.
 
+AND THE ORIGIN ITSELF IS AN OPEN QUESTION, SO THE REPORT CARRIES BOTH (card TRUTH-1)
+------------------------------------------------------------------------------------
+Nothing in this repository settles whether the provider indexes ``audio_end_ms``
+in APPENDED AUDIO or in the session's WALL CLOCK. The stream is paced in real
+time, so on any single file the two are the same number and no measurement can
+tell them apart. What separates them is ``--settle-s``: after each file this
+tool pumps for ``settle_s`` seconds, adding wall milliseconds and no audio
+milliseconds, so by file *n* the two origins differ by roughly ``n * settle_s``.
+
+So every row carries ``wall_offset_ms`` and ``wall_elapsed_ms`` beside
+``audio_offset_ms``, plus ``commits_wall_relative_ms`` and
+``commit_latency_wall_ms`` — the same commits resolved against the other origin
+— and the report carries ``settle_s`` and ``wall_minus_audio_ms_max`` at the
+top. TURN-1's handoff said the first live run could *detect* a wall-indexed
+``audio_end_ms`` but not *correct* it. With both columns in the file it can do
+both, from one run, without re-recording the owner.
+
 USAGE
 -----
     .parcel/bin/python tools/replay_turn_detection.py --arms
@@ -103,7 +120,11 @@ from parcel_robot.realtime.protocol import PCM16_SAMPLE_RATE_HZ, SessionUpdate
 #: Report schema id. Versioned for the same reason the capture index is: the
 #: status doc and any later comparison both read these files, and a silently
 #: changed shape is a silently wrong comparison.
-REPORT_SCHEMA = "parcel.turn1.replay.v1"
+#: v2 (card TRUTH-1) adds ``settle_s``, ``wall_minus_audio_ms_max`` and the five
+#: per-row wall columns. The bump costs nothing: ``--replay`` is owner-gated on a
+#: recording that does not exist yet, so no v1 report has ever been written, and
+#: a reader that finds v1 in the wild is reading something hand-made.
+REPORT_SCHEMA = "parcel.turn1.replay.v2"
 
 #: The arms card TURN-1 names: today's endpointer, and semantic VAD at each
 #: eagerness. Each value is exactly what goes under ``turn_detection:`` in
@@ -530,6 +551,19 @@ class UtteranceResult:
     #: without this every file after the first reports a latency that includes
     #: every file before it.
     audio_offset_ms: float = 0.0
+    #: WALL milliseconds since ``open_session`` returned, when this file's first
+    #: frame went out — and when its settle window closed. Card TRUTH-1, from
+    #: TURN-1's handoff: nothing in this repo settles whether the provider's
+    #: ``audio_end_ms`` indexes APPENDED AUDIO or the session's WALL CLOCK, and
+    #: the two are indistinguishable in a single-file report because the stream
+    #: is paced in real time. They separate as soon as there is a second file:
+    #: every settle window adds wall milliseconds and no audio milliseconds, so
+    #: ``wall_offset_ms - audio_offset_ms`` grows by roughly ``settle_s`` per
+    #: file. With both offsets in the report the first live run can DETECT which
+    #: index the provider used and CORRECT the latency without re-recording —
+    #: which is exactly what the report could not do before.
+    wall_offset_ms: float = 0.0
+    wall_elapsed_ms: float = 0.0
     commits_raw: list[int] = field(default_factory=list)
     commit_latency_ms: float | None = None
     response_created_ms: float | None = None
@@ -542,6 +576,35 @@ class UtteranceResult:
 
         return len(self.commits) > 1
 
+    @property
+    def wall_minus_audio_ms(self) -> float:
+        """How far the two candidate origins have diverged by this file.
+
+        Near zero on the first file whatever the truth is. If it is still near
+        zero on the last file, the settle windows are not landing where this
+        harness thinks they are and neither hypothesis is testable from the run.
+        """
+
+        return self.wall_offset_ms - self.audio_offset_ms
+
+    @property
+    def commits_wall_relative(self) -> list[float]:
+        """The same raw commits, made file-relative against the WALL origin.
+
+        The correction half. If the live run shows the provider indexing wall
+        time, these are the numbers, and ``commit_latency_wall_ms`` is the row.
+        """
+
+        return [value - self.wall_offset_ms for value in self.commits_raw]
+
+    @property
+    def commit_latency_wall_ms(self) -> float | None:
+        """:attr:`commit_latency_ms` computed against the wall origin instead."""
+
+        if not self.commits_raw:
+            return None
+        return round(self.commits_wall_relative[0] - self.end_of_speech_ms, 1)
+
     def as_dict(self) -> dict[str, Any]:
         return {
             "utterance_id": self.utterance_id,
@@ -551,6 +614,14 @@ class UtteranceResult:
             # alone: file-relative commit = raw - offset.
             "commits_raw_ms": list(self.commits_raw),
             "audio_offset_ms": round(self.audio_offset_ms, 1),
+            # Card TRUTH-1: the second candidate origin, published beside the
+            # first so the arithmetic for BOTH hypotheses is in the file. See
+            # `wall_offset_ms` for what separates them.
+            "wall_offset_ms": round(self.wall_offset_ms, 1),
+            "wall_elapsed_ms": round(self.wall_elapsed_ms, 1),
+            "wall_minus_audio_ms": round(self.wall_minus_audio_ms, 1),
+            "commits_wall_relative_ms": [round(c, 1) for c in self.commits_wall_relative],
+            "commit_latency_wall_ms": self.commit_latency_wall_ms,
             "commit_latency_ms": self.commit_latency_ms,
             "response_created_ms": self.response_created_ms,
             "first_audio_ms": self.first_audio_ms,
@@ -598,8 +669,20 @@ def _build_live_lane(arm: str, *, port_note: str = "") -> Any:
 
     ``ws_transport`` reaches the network. Keeping the import inside the only
     function that opens a session means ``--arms``, ``--check`` and ``--plan``
-    cannot reach it even by accident, which is the same rule
-    ``voice_tier_ab.py`` states as "there is no provider client in this file".
+    never import it, which is the same rule ``voice_tier_ab.py`` states as
+    "there is no provider client in this file".
+
+    **Card TRUTH-1 corrects the older, wider claim.** This docstring used to
+    extend the guarantee to ``lane`` as well, and that half was false — the
+    claim is described rather than reproduced here, because the way a stale
+    claim is kept dead is a grep for it. Every mode does reach ``lane``:
+    the module-level ``from parcel_robot.realtime.config import ...`` executes
+    ``parcel_robot.realtime.__init__``, which imports ``lane``, so
+    ``parcel_robot.realtime.lane`` is in ``sys.modules`` for every mode
+    (measured 2026-08-22: ``--arms`` → lane True, ws_transport False).
+    ``ws_transport`` is the property that matters and the only one claimed here:
+    importing ``lane`` opens nothing; importing ``ws_transport`` is what puts a
+    websocket client in the process.
     """
 
     from parcel_robot.realtime.lane import RealtimeLane
@@ -650,11 +733,14 @@ def _live_failure_types() -> tuple[type[BaseException], ...]:
     """Exceptions a hosted attempt raises, resolved lazily.
 
     Imported here rather than at the top of the file for exactly the reason
-    :func:`_build_live_lane` imports late: ``lane`` and ``ws_transport`` are the
-    two modules that can reach a socket, and ``--arms`` / ``--check`` / ``--plan``
-    must not be able to touch them even by accident. ``RealtimeAuthError``,
-    ``RealtimeConnectError`` and ``RealtimeQuotaError`` are all subclasses of
-    ``RealtimeTransportError`` and are covered by naming the base.
+    :func:`_build_live_lane` imports late: ``ws_transport`` is the module that
+    can reach a socket, and ``--arms`` / ``--check`` / ``--plan`` never import
+    it. Card TRUTH-1: ``lane`` is NOT in that claim — the realtime package's
+    ``__init__`` imports it, so every mode of this tool already has it in
+    ``sys.modules``, and saying otherwise made a true, checkable property look
+    like a broken one. ``RealtimeAuthError``, ``RealtimeConnectError`` and
+    ``RealtimeQuotaError`` are all subclasses of ``RealtimeTransportError`` and
+    are covered by naming the base.
     """
 
     try:
@@ -703,6 +789,10 @@ def replay(
     frame_bytes = int(PROVIDER_RATE_HZ * FRAME_MS / 1000) * 2
     # The lane refuses a falsy handshake token outright; see the constant.
     lane.open_session(handshake_token=REPLAY_HANDSHAKE_TOKEN, mic_gesture=True)
+    #: Card TRUTH-1: the WALL origin, taken the instant the session is open.
+    #: Everything wall-indexed in the report is measured from here, so the two
+    #: candidate origins for ``audio_end_ms`` share a zero and can be compared.
+    session_opened_at = time.monotonic()
     #: Milliseconds of audio fed to THIS session so far. ``audio_end_ms`` is an
     #: index into the session's whole input buffer, so this is what makes a
     #: per-file latency a per-file latency.
@@ -711,6 +801,7 @@ def replay(
         for utterance_id, path in files:
             stream = to_provider_rate(read_pcm(path))
             offset_ms = audio_sent_ms
+            wall_offset_ms = (time.monotonic() - session_opened_at) * 1000.0
             before_commits = len(lane.turn_timings)
             before_truncations = len(lane.truncations)
             for index in range(0, len(stream), frame_bytes):
@@ -735,6 +826,8 @@ def replay(
                 end_of_speech_ms=end_of_speech_ms(stream, rate_hz=PROVIDER_RATE_HZ),
                 commits=[value - offset_ms for value in raw],
                 audio_offset_ms=offset_ms,
+                wall_offset_ms=wall_offset_ms,
+                wall_elapsed_ms=(time.monotonic() - session_opened_at) * 1000.0,
                 commits_raw=raw,
                 truncations=len(lane.truncations) - before_truncations,
             )
@@ -762,6 +855,16 @@ def replay(
         "schema": REPORT_SCHEMA,
         "recording": str(recording),
         "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        # Card TRUTH-1. `settle_s` is a FIELD, not a flag someone remembers to
+        # write down, because it is the whole reason the wall clock and the
+        # appended-audio clock separate: each file's settle window adds wall
+        # milliseconds and no audio. A report without it cannot be read for the
+        # `audio_end_ms` question at all, and a reader cannot tell the answer
+        # from a report that simply used a different value.
+        "settle_s": settle_s,
+        "wall_minus_audio_ms_max": (
+            round(max((r.wall_minus_audio_ms for r in results), default=0.0), 1)
+        ),
         **summarise(arm, results),
     }
     text = json.dumps(report, indent=2, sort_keys=False)

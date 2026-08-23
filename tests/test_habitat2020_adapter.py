@@ -8,6 +8,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from _external_roots import skip_unless
 
 from evals.external.habitat2020_doctor import (
     MANIFEST_PATH,
@@ -107,6 +108,7 @@ def test_manifest_freezes_ineligible_official_code_contract() -> None:
     assert "simulator_agent_state" in manifest["adapter"]["privileged_inputs_forbidden"]
 
 
+@skip_unless("habitat-challenge-2020-checkout")
 def test_doctor_confirms_pinned_source_and_reports_every_blocker_explicitly() -> None:
     report = audit_habitat2020()
     checks = {check["id"]: check for check in report["checks"]}

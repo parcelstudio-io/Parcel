@@ -256,7 +256,6 @@ def test_the_shipped_si_never_tells_the_robot_it_cannot_act(
     assert "claim an outcome those systems have not reported" in rendered.text
 
 
-@pytest.mark.xfail(strict=True, reason="FZ-1 (scrum/20260822/task_13): the owner edited prompts/personalities on 2026-08-22; historical SI versions render from the LIVE persona files, so v1/v2 text is no longer reproducible from source until frozen per-version snapshots land. Digests stay registered so recorded sessions remain attributable. strict: flips to a failure the day FZ-1 restores it.")
 def test_the_v1_si_still_renders_to_its_v1_pins(library: PromptLibrary) -> None:
     """The corpus's provenance chain stays REPRODUCIBLE, not grandfathered.
 
@@ -264,6 +263,14 @@ def test_the_v1_si_still_renders_to_its_v1_pins(library: PromptLibrary) -> None:
     v2 on ``si_version`` selects the text, so this tree can still render the
     exact words those threads were captured under — which is what keeps every
     fixture's stored ``si_digest`` a checkable claim instead of a stale number.
+
+    Carried as ``xfail(strict=True)`` from 2026-08-22 02:10 until card FZ-1
+    (``scrum/20260822/task_13``): selecting the *guardrails* by version was not
+    enough, because the personality YAML was still read live, so the owner's
+    persona edit moved what v1 rendered. It passes again because v1 now composes
+    from ``prompts/personalities/_frozen/si-companion-v1/`` — not because
+    anything was re-pinned. ``tests/test_fz1_frozen_si_snapshots.py`` is the
+    guard that the live files can no longer reach this render.
     """
 
     for profile_id in PERSONALITIES:

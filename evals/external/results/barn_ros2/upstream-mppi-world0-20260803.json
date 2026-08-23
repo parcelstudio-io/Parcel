@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "evaluation_kind": "barn-ros2-upstream-mppi-single-world-rootless-smoke",
+  "run_id": "barn-ros2-upstream-mppi-20260803T133200Z-world0-01",
+  "timestamp_utc": "2026-08-03T13:33:04.717759Z",
+  "source": {
+    "repository": "https://github.com/Saadmaghani/The-Barn-Challenge-Ros2.git",
+    "commit": "d6c575b51e477bd524d634e12cffeb34036fcd1e",
+    "checkout_clean": true
+  },
+  "source_file_sha256": {
+    "jackal_helper/config/nav2.yaml": "de82e458e199051858c9c8ba42a7813217a23fc47c14e5b53defb55ba0cac901",
+    "jackal_helper/launch/BARN_runner.launch.py": "eb72c149b41c996922ed739b217c2ecd8fca242a06c05440d3b04289dbda0ec5",
+    "jackal_helper/launch/nav2_bringup.launch.py": "2f2f0de14b00b7b6798db57bcc4e1c89bee7ec10b979d1c6f387dd71b627611e",
+    "jackal_helper/scripts/barn_runner.py": "a4794ea1c271ca89b2d5496e954a5709d78f4a024a211a707c4a07b84b10f3a3"
+  },
+  "runtime": {
+    "build_driver": "bubblewrap-plus-proot-cache-only-diagnostic",
+    "upstream_tested_runtime": "singularity-ce-4.3.0",
+    "used_upstream_tested_runtime_for_launch": false,
+    "base_image": "docker.io/library/ros:jazzy",
+    "base_image_index_digest": "sha256:31daab66eef9139933379fb67159449944f4e2dcf2e22c2d12cc715f29873e0f",
+    "base_image_linux_amd64_manifest_digest": "sha256:567b81bc54f44479e16ef1b75e4984d132f154b6511ea4fc851ee6bde76c30f8",
+    "ros_discovery_isolation": "ROS_LOCALHOST_ONLY=1;ROS_DOMAIN_ID=177",
+    "software_rendering_forced": true,
+    "gpu_used": false,
+    "host_system_packages_installed": false
+  },
+  "navigation": {
+    "stack": "upstream-default-nav2-mppi",
+    "parcel_adapter_exercised": false,
+    "official_evaluator_modified": false
+  },
+  "scope": {
+    "world_indices": [0],
+    "trials_per_world": 1,
+    "episode_count": 1
+  },
+  "episode": {
+    "world_idx": 0,
+    "success": 1,
+    "collision": 0,
+    "timeout": 0,
+    "elapsed_time_s": 37.715,
+    "navigation_metric": 0.1802
+  },
+  "raw_result": {
+    "path": "upstream-mppi-world0-20260803.raw.txt",
+    "sha256": "9f144d85d2914745c6af72464987adc8074d62e10705da4f599e7563d28ea4b6",
+    "size_bytes": 23,
+    "columns": [
+      "world_idx",
+      "success",
+      "collision",
+      "timeout",
+      "elapsed_time_s",
+      "navigation_metric"
+    ]
+  },
+  "launch_log": {
+    "ignored_cache_path": ".cache/external-evals/runtime/barn-current-rootfs/jackal_ws/rootless_world0_20260803.launch.log",
+    "sha256": "9774584d1a8a8a2ca69343a9ef40c94dd124f1edab30c849e957b9ca8b697c9a",
+    "size_bytes": 44016
+  },
+  "claims": {
+    "official_protocol": false,
+    "organizer_attested": false,
+    "parcel_navigation_score": false,
+    "top_decile_evidence": false
+  },
+  "change_description": "Untouched upstream Nav2 MPPI single-world runtime compatibility smoke; no Parcel adapter, policy, or model was exercised."
+}

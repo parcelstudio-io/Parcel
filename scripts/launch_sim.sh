@@ -30,6 +30,8 @@ Options:
   --kd VALUE          Simulator joint damping gain
   --sim-arg ARG       Pass one additional argument to parcel-sim (repeatable)
   --panel-arg ARG     Pass one additional argument to parcel-panel (repeatable)
+  --pidfile PATH      Write the simulator's pid here so it can be stopped
+                      deliberately later; removed on exit (card HY-1)
   -h, --help          Show this help
 
 Environment:
@@ -73,6 +75,11 @@ LLM_MODE=""
 NO_BROWSER=0
 SIM_ARGS=()
 PANEL_ARGS=()
+# Card HY-1. Empty means "no pidfile" — the documented owner launch is
+# unchanged. It exists for harnesses that start a sim and must be able to stop
+# exactly that one afterwards, without a `pgrep` that might match somebody
+# else's simulator or the owner's own stack.
+PIDFILE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -126,6 +133,12 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     --panel-arg=*) PANEL_ARGS+=("${1#*=}"); shift ;;
+    --pidfile)
+      need_value "$@"
+      PIDFILE="$2"
+      shift 2
+      ;;
+    --pidfile=*) PIDFILE="${1#*=}"; shift ;;
     -h|--help) usage; exit 0 ;;
     *) die "unknown option: $1 (see --help)" ;;
   esac
@@ -142,6 +155,27 @@ fi
 SOCKET_PARENT="$(dirname "$SOCKET")"
 [[ -d "$SOCKET_PARENT" ]] || die "socket parent directory does not exist: $SOCKET_PARENT"
 [[ -w "$SOCKET_PARENT" ]] || die "socket parent directory is not writable: $SOCKET_PARENT"
+
+# Card HY-1 — pidfile preflight. Validated here, beside the socket checks, so a
+# bad path fails before anything is spawned rather than after.
+if [[ -n "$PIDFILE" ]]; then
+  [[ "$PIDFILE" = /* ]] || PIDFILE="$ROOT/$PIDFILE"
+  PIDFILE_PARENT="$(dirname "$PIDFILE")"
+  [[ -d "$PIDFILE_PARENT" ]] || die "pidfile directory does not exist: $PIDFILE_PARENT"
+  [[ -w "$PIDFILE_PARENT" ]] || die "pidfile directory is not writable: $PIDFILE_PARENT"
+  [[ ! -e "$PIDFILE" || -f "$PIDFILE" ]] || die "pidfile path is not a regular file: $PIDFILE"
+  # A stale pidfile is normal and gets overwritten. A pidfile naming a LIVE
+  # simulator is not: overwriting it would erase the only record of how to stop
+  # that process, which is the exact harm this flag exists to prevent.
+  if [[ -f "$PIDFILE" ]]; then
+    EXISTING_PID="$(head -n 1 -- "$PIDFILE" 2>/dev/null | tr -dc '0-9')"
+    if [[ -n "$EXISTING_PID" ]] && kill -0 "$EXISTING_PID" 2>/dev/null; then
+      if ps -o args= -p "$EXISTING_PID" 2>/dev/null | grep -q 'parcel_robot\.sim'; then
+        die "pidfile $PIDFILE names a running simulator (pid $EXISTING_PID); stop it first"
+      fi
+    fi
+  fi
+fi
 
 if [[ -n "$CONFIG" ]]; then
   [[ "$CONFIG" = /* ]] || CONFIG="$ROOT/$CONFIG"
@@ -276,11 +310,23 @@ os.unlink(path)
 PY
 }
 
+# Card HY-1. Remove the pidfile only when it still names the pid we wrote.
+# Another launch may have taken the path over; deleting its record would leave
+# that simulator unreapable, which is the failure this flag exists to prevent.
+cleanup_pidfile() {
+  [[ -n "$PIDFILE" && -f "$PIDFILE" ]] || return 0
+  local recorded
+  recorded="$(head -n 1 -- "$PIDFILE" 2>/dev/null | tr -dc '0-9')"
+  [[ "$recorded" == "$SIM_PID" ]] || return 0
+  rm -f -- "$PIDFILE"
+}
+
 cleanup() {
   trap - EXIT INT TERM
   terminate_child "$PANEL_PID"
   terminate_child "$SIM_PID"
   cleanup_owned_socket
+  cleanup_pidfile
 }
 
 trap cleanup EXIT
@@ -292,6 +338,14 @@ export PYTHONUNBUFFERED=1
 echo "Starting parcel-sim on $SOCKET"
 "${SIM_CMD[@]}" &
 SIM_PID=$!
+
+# Card HY-1. Written immediately after the spawn — before the readiness wait,
+# which is where this script can still die — so the pid is on disk for every
+# outcome except "the fork itself failed".
+if [[ -n "$PIDFILE" ]]; then
+  printf '%s\n' "$SIM_PID" >| "$PIDFILE" || die "could not write pidfile: $PIDFILE"
+  echo "Simulator pid $SIM_PID recorded in $PIDFILE"
+fi
 
 for _ in {1..200}; do
   if [[ -S "$SOCKET" ]]; then

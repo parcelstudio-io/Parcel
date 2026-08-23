@@ -28,13 +28,17 @@ from types import SimpleNamespace
 import pytest
 
 from scripts.ci_gate import (
+    CI_GATE_NESTED_ENV,
     COMMIT_MARKERS,
     COMMIT_TIER_STAGE_NAMES,
     DIGEST_SENTINELS,
     MODEL_OFF_NODE_IDS,
     NIGHTLY_SLOW_MARKERS,
     RELEASE_PARITY_MANIFEST,
+    XDIST_MAX_WORKERS,
+    XDIST_WORKERS_ENV,
     GateResult,
+    evaluate_default_suite,
     evaluate_frozen_digest_sentinels,
     evaluate_hard_safety,
     evaluate_latency_ledger,
@@ -43,6 +47,7 @@ from scripts.ci_gate import (
     evaluate_ruff,
     evaluate_tier_coverage,
     main,
+    resolve_xdist_workers,
     run_commit_tier,
     run_nightly_tier,
     run_pytest,
@@ -640,8 +645,9 @@ def _parity_fixture(tmp_path: Path) -> tuple[Path, Path]:
 def test_release_parity_is_green_on_the_committed_tree() -> None:
     result = evaluate_release_parity()
     assert result.status == "pass", result.detail
-    # LITERAL, per the sentinel convention: 90 packaged assets + 1 side mirror.
-    assert result.extra["checked"] == 91
+    # LITERAL, per the sentinel convention: 99 packaged assets + 1 side mirror
+    # (FZ-1 added the nine frozen persona snapshots; see task_13).
+    assert result.extra["checked"] == 100
 
 
 def test_release_parity_reddens_when_a_packaged_asset_drifts_from_source(tmp_path: Path) -> None:
@@ -905,6 +911,22 @@ def fast_commit_tier(monkeypatch):
     monkeypatch.setattr(
         gate, "_pytest_gate", lambda name, tier, ids, **kw: _stub_stage(name, tier)
     )
+    # ---- CARD XD-1 addendum A1 --------------------------------------------
+    # `default-suite` used to be one more `_pytest_gate` call, so the stub above
+    # covered it. When this card made it two phases it moved to its own
+    # evaluator, and this fixture -- unchanged -- stopped covering the one stage
+    # that runs NINE THOUSAND tests. Every test below then called the real
+    # `evaluate_default_suite`, which launched the whole suite in a subprocess
+    # FROM INSIDE A TEST; under xdist those nest, and on 2026-08-23 five chained
+    # runs put 986 python processes and 237 GB on this host and the kernel
+    # OOM-killed the machine. `test_without_the_stub_...` below is the seeded
+    # proof that the hole was real; this line is its closure.
+    monkeypatch.setattr(
+        gate,
+        "evaluate_default_suite",
+        lambda **kw: _stub_stage("default-suite", kw.get("tier", "commit")),
+    )
+    # ---- END CARD XD-1 addendum A1 ----------------------------------------
     return gate
 
 
@@ -926,11 +948,19 @@ def test_the_asset_stage_runs_before_the_gate_that_used_to_die_on_it() -> None:
 
 #: The victim, and how many of the ten commit-tier rows it can cost. One per
 #: stage that calls it: ``evaluate_ruff`` and ``evaluate_hard_safety`` back one
-#: stage each, while ``_pytest_gate`` is the shared helper behind FOUR
-#: (model-off-non-inferiority, release-parity-integrity, owner-store-isolation,
-#: default-suite). The number is written down rather than counted from the
-#: result, so a fifth pytest stage reddens this test on purpose.
-EXPLODING_VICTIMS = [("evaluate_ruff", 1), ("evaluate_hard_safety", 1), ("_pytest_gate", 4)]
+#: stage each, while ``_pytest_gate`` is the shared helper behind THREE
+#: (model-off-non-inferiority, release-parity-integrity, owner-store-isolation).
+#: It backed FOUR until card XD-1 moved ``default-suite`` onto its own
+#: ``evaluate_default_suite``; that stage is listed separately now, so the total
+#: is unchanged and the move is visible instead of silent. The number is written
+#: down rather than counted from the result, so a fifth pytest stage reddens
+#: this test on purpose.
+EXPLODING_VICTIMS = [
+    ("evaluate_ruff", 1),
+    ("evaluate_hard_safety", 1),
+    ("_pytest_gate", 3),
+    ("evaluate_default_suite", 1),
+]
 
 
 @pytest.mark.parametrize(("victim", "expected_rows"), EXPLODING_VICTIMS)
@@ -1064,3 +1094,430 @@ def test_the_traceback_tail_is_bounded() -> None:
     assert row.status == "error"
     assert len(row.extra["traceback_tail"]) <= STAGE_TRACEBACK_TAIL_CHARS
     assert len(row.detail) < 400, "a gate report is read by humans"
+
+
+# ---------------------------------------------------------------------------
+# THE PARALLEL DEFAULT SUITE (card XD-1, scrum/20260822/task_14)
+#
+# The commit tier's `default-suite` runs `-n min(cpu_count, XDIST_MAX_WORKERS)`
+# — 16 here, 8 on the Orin, NEVER `auto`, see addendum A3 below — and then the
+# wall-clock assertions serially. The thing that can go silently wrong is not
+# speed, it is COVERAGE: a phase-A marker expression that stops excluding
+# `load_sensitive` puts wall-clock pins back under worker contention (they
+# measure the machine and redden an unrelated card's gate), and a phase-B
+# expression that is not the exact complement drops tests out of the tier while
+# both phases stay green.
+#
+# So the partition is proved SEMANTICALLY — the two expressions are evaluated
+# over every combination of the two markers — rather than by string-matching the
+# source, which would pass for any pair of literals that happened to contain the
+# right words.
+# ---------------------------------------------------------------------------
+
+
+def _selects(expr: str, *, slow: bool, load_sensitive: bool) -> bool:
+    """Evaluate a pytest ``-m`` expression the way pytest does: as a boolean."""
+
+    return bool(eval(expr, {"__builtins__": {}}, {"slow": slow, "load_sensitive": load_sensitive}))
+
+
+def test_the_two_default_suite_phases_partition_the_commit_tier() -> None:
+    from scripts.ci_gate import default_suite_phases
+
+    parallel, serial = default_suite_phases()
+    for slow in (False, True):
+        for load_sensitive in (False, True):
+            flags = {"slow": slow, "load_sensitive": load_sensitive}
+            in_tier = _selects(COMMIT_MARKERS, **flags)
+            in_a = _selects(parallel, **flags)
+            in_b = _selects(serial, **flags)
+            assert in_a or in_b or not in_tier, (
+                f"{flags} is in the commit tier and in NEITHER phase — the two "
+                f"phases are not a cover: {parallel!r} / {serial!r}"
+            )
+            assert not (in_a and in_b), (
+                f"{flags} is in BOTH phases — it would be run twice and a "
+                f"wall-clock pin would be measured under xdist: {parallel!r} / {serial!r}"
+            )
+            assert (in_a or in_b) == in_tier, (
+                f"{flags} is selected by a phase but is not in the commit tier"
+            )
+
+
+def test_no_wall_clock_assertion_can_reach_the_parallel_phase() -> None:
+    """The card's named seed: a ``load_sensitive`` test run under xdist."""
+
+    from scripts.ci_gate import default_suite_phases
+
+    parallel, _serial = default_suite_phases()
+    assert not _selects(parallel, slow=False, load_sensitive=True)
+
+
+def test_the_phases_are_derived_from_the_tier_and_not_written_out_twice() -> None:
+    """Change the tier expression and BOTH phases must follow it."""
+
+    from scripts.ci_gate import default_suite_phases
+
+    parallel, serial = default_suite_phases("not slow and not e2e")
+    assert "not slow and not e2e" in parallel and "not slow and not e2e" in serial
+    # ... and the parenthesisation must survive, or `and`/`or` would rebind.
+    assert parallel.startswith("(") and serial.startswith("(")
+
+
+def _capture_phases(monkeypatch, returncodes=(0, 0), stdouts=("1 passed", "1 passed")):
+    from scripts import ci_gate
+
+    calls: list[dict] = []
+
+    def fake_run_pytest(selection, **kwargs):
+        index = len(calls)
+        calls.append({"selection": selection, **kwargs})
+        return SimpleNamespace(
+            returncode=returncodes[index], stdout=stdouts[index], stderr=""
+        )
+
+    monkeypatch.setattr(ci_gate, "run_pytest", fake_run_pytest)
+    # These tests are about the phases, not about the A2 recursion guard; when
+    # this file is itself run BY the gate the mark is set in the environment and
+    # `evaluate_default_suite` would (correctly) refuse before reaching them.
+    monkeypatch.delenv(CI_GATE_NESTED_ENV, raising=False)
+    result = ci_gate.evaluate_default_suite(tier="commit")
+    return result, calls
+
+
+def test_the_parallel_phase_is_parallel_and_the_serial_phase_is_serial(monkeypatch) -> None:
+    result, calls = _capture_phases(monkeypatch)
+
+    assert result.status == "pass", result.detail
+    assert len(calls) == 2, "default-suite is exactly two phases"
+    parallel, serial = calls
+    assert "not load_sensitive" in parallel["markers"]
+    assert "-n" in parallel["extra_args"], "phase A must actually run under xdist"
+    assert "--dist" in parallel["extra_args"]
+    assert "load_sensitive" in serial["markers"]
+    assert "not load_sensitive" not in serial["markers"]
+    assert "-n" not in (serial["extra_args"] or []), (
+        "phase B exists BECAUSE it is serial; running it under xdist is the "
+        "defect this split repairs"
+    )
+    assert result.extra["seconds"].keys() == {"parallel", "serial"}
+
+
+def test_a_red_serial_phase_reddens_the_row_even_when_the_parallel_phase_is_green(
+    monkeypatch,
+) -> None:
+    """A fast green phase A must not be able to hide phase B's verdict."""
+
+    result, calls = _capture_phases(
+        monkeypatch,
+        returncodes=(0, 1),
+        stdouts=("9000 passed", "FAILED tests/test_dynamic_costs.py::t\n1 failed"),
+    )
+    assert len(calls) == 2, "phase B runs even when phase A is green"
+    assert result.status == "fail"
+    assert "tests/test_dynamic_costs.py::t" in result.detail
+
+
+def test_a_red_parallel_phase_still_runs_the_serial_phase(monkeypatch) -> None:
+    """A gate that stops at the first red reports half a verdict."""
+
+    result, calls = _capture_phases(
+        monkeypatch,
+        returncodes=(1, 0),
+        stdouts=("FAILED tests/test_x.py::t\n1 failed", "10 passed"),
+    )
+    assert len(calls) == 2
+    assert result.status == "fail"
+    assert result.extra["returncodes"] == {"parallel": 1, "serial": 0}
+
+
+def test_the_commit_tier_runs_the_two_phase_default_suite() -> None:
+    import inspect
+
+    source = inspect.getsource(run_commit_tier)
+    assert "evaluate_default_suite" in source, (
+        "the commit tier stopped calling the two-phase runner — that is a "
+        "deliberate edit, and it belongs in this test too"
+    )
+    assert "default-suite" in source
+
+
+def test_the_nightly_default_suite_is_still_serial_and_that_is_deliberate() -> None:
+    """Card XD-1 changed the COMMIT tier only.
+
+    The nightly runs with ``PARCEL_LOAD_GUARD=off`` precisely so the wall-clock
+    assertions cannot skip; it is the tier where time is available and
+    determinism is worth more than speed. Flipping it is allowed — but it is a
+    decision, and this test is where it becomes visible.
+    """
+
+    import inspect
+
+    source = inspect.getsource(run_nightly_tier)
+    assert "evaluate_default_suite" not in source
+    assert 'markers=COMMIT_MARKERS' in source
+
+
+# ---------------------------------------------------------------------------
+# THE GATE MUST NOT BE ABLE TO RUN ITSELF (card XD-1 addendum, rows A1-A3)
+#
+# Owner-mandated after 2026-08-23 05:38. The failure was not a bug in a test; it
+# was a bug in a FIXTURE, and its blast radius was the whole machine:
+#
+#   1. `default-suite` moved from `_pytest_gate` to `evaluate_default_suite`.
+#   2. `fast_commit_tier` stubbed the former and not the latter, so ~8 tests in
+#      this file called the REAL evaluator and each spawned the entire 9,000-test
+#      suite in a subprocess.
+#   3. Under `-n auto` (192 workers here) those subprocesses each spawned 192
+#      more. Five chained runs 29 s apart = 986 python processes, 237 GB; the
+#      kernel OOM-killed Cursor and every agent session on the box.
+#
+# Three independent things had to be wrong at once, so three things are pinned
+# here: the fixture covers every stage (A1), the gate refuses to run the default
+# suite from inside a gate-spawned pytest (A2), and the worker count is derived
+# and capped rather than `auto` (A3). Any ONE of them would have been enough.
+# ---------------------------------------------------------------------------
+
+
+class _SeededSuiteLaunch(RuntimeError):
+    """Raised by the tripwire below INSTEAD of running a real pytest."""
+
+
+def _run_pytest_tripwire(calls: list[dict]):
+    """A `run_pytest` that RECORDS what would have run and then refuses to.
+
+    This is what makes the A1 proof affordable: the hole is demonstrated by the
+    arguments the gate was about to hand to a subprocess, not by paying for the
+    subprocess. Nothing in this file ever starts a real suite.
+    """
+
+    def record_and_raise(selection, **kwargs):
+        calls.append({"selection": tuple(selection), **kwargs})
+        raise _SeededSuiteLaunch(
+            "seeded tripwire: a stubbed commit tier tried to spawn pytest"
+        )
+
+    return record_and_raise
+
+
+def test_the_stubbed_commit_tier_never_spawns_a_pytest_subprocess(
+    fast_commit_tier, monkeypatch
+) -> None:
+    """Row A1, the closure. Not one stage of `run_commit_tier` reaches a
+    subprocess once `fast_commit_tier` has stubbed it -- which is the whole
+    premise of every containment seed in this file."""
+
+    monkeypatch.delenv(CI_GATE_NESTED_ENV, raising=False)
+    calls: list[dict] = []
+    monkeypatch.setattr(fast_commit_tier, "run_pytest", _run_pytest_tripwire(calls))
+
+    results = run_commit_tier()
+
+    assert calls == [], (
+        "a stubbed tier reached a real pytest: "
+        + "; ".join(f"markers={c.get('markers')!r} args={c.get('extra_args')!r}" for c in calls)
+    )
+    assert tuple(r.name for r in results) == COMMIT_TIER_STAGE_NAMES
+    assert all(r.status == "pass" for r in results), [
+        (r.name, r.status) for r in results if r.status != "pass"
+    ]
+
+
+def test_without_the_stub_the_default_suite_stage_would_launch_the_whole_suite(
+    fast_commit_tier, monkeypatch
+) -> None:
+    """Row A1, SEEDED RED: the hole, reproduced, without paying for it.
+
+    Undo exactly the one line A1 added to `fast_commit_tier` -- the fixture as
+    it stood between 16:19 on 08-22 and this addendum -- and the tripwire
+    catches the default-suite stage about to run `pytest -m "(not slow) and not
+    load_sensitive" -n <N>` from inside a test. That is the recursion. With the
+    stub in place (the test above) the tripwire records nothing.
+    """
+
+    monkeypatch.delenv(CI_GATE_NESTED_ENV, raising=False)
+    calls: list[dict] = []
+    monkeypatch.setattr(fast_commit_tier, "run_pytest", _run_pytest_tripwire(calls))
+    monkeypatch.setattr(fast_commit_tier, "evaluate_default_suite", evaluate_default_suite)
+
+    results = run_commit_tier()
+
+    assert len(calls) == 1, "exactly the default-suite stage had the hole"
+    launched = calls[0]
+    assert launched["selection"] == (), "no node-id list: this is the WHOLE suite"
+    assert launched["markers"] == "(not slow) and not load_sensitive", launched["markers"]
+    assert "-n" in launched["extra_args"], (
+        "and it is the parallel phase, so the subprocess fans out again"
+    )
+
+    # The stage is contained (GATE-0's wrapper), which is exactly why nobody
+    # noticed: the tier still reported ten rows and the runaway was invisible.
+    errored = [r for r in results if r.status == "error"]
+    assert [r.name for r in errored] == ["default-suite"]
+    assert "_SeededSuiteLaunch" in errored[0].detail
+    assert tuple(r.name for r in results) == COMMIT_TIER_STAGE_NAMES
+
+
+def test_run_pytest_stamps_the_nesting_mark_into_every_child(monkeypatch) -> None:
+    """Row A2. The mark is set by the DRIVER, so it covers every gate stage."""
+
+    from scripts import ci_gate
+
+    seen: dict[str, str] = {}
+
+    def fake_run(cmd, **kwargs):
+        seen.update(kwargs["env"])
+        return SimpleNamespace(returncode=0, stdout="1 passed", stderr="")
+
+    monkeypatch.setattr(ci_gate.subprocess, "run", fake_run)
+    run_pytest(("tests/test_ci_gate.py::test_the_traceback_tail_is_bounded",))
+
+    assert seen[CI_GATE_NESTED_ENV] == "1"
+
+
+def test_the_default_suite_refuses_to_run_inside_a_gate_spawned_pytest(
+    monkeypatch,
+) -> None:
+    """Row A2. The refusal is a NAMED ERROR ROW, not a silent skip and not a
+    pass: a gate that quietly did not run the suite would be worse than one that
+    ran it twice."""
+
+    from scripts import ci_gate
+
+    calls: list[dict] = []
+    monkeypatch.setenv(CI_GATE_NESTED_ENV, "1")
+    monkeypatch.setattr(ci_gate, "run_pytest", _run_pytest_tripwire(calls))
+
+    row = ci_gate.evaluate_default_suite(tier="commit")
+
+    assert calls == [], "the refusal has to come BEFORE the subprocess"
+    assert row.status == "error"
+    assert row.hard, "a gate that could not run its suite is not a pass"
+    assert row.extra["nested"] is True
+    assert CI_GATE_NESTED_ENV in row.detail, "the row has to name the cause"
+
+
+def test_a_targeted_gate_stage_is_still_allowed_inside_a_gate_spawned_pytest(
+    monkeypatch,
+) -> None:
+    """Row A2's boundary. `_pytest_gate` runs a BOUNDED node-id list; nesting one
+    costs a few tests, not a fan-out, and the gate's own self-tests depend on it.
+    Refusing everything would have been the easy over-correction."""
+
+    from scripts import ci_gate
+
+    calls: list[tuple] = []
+
+    def fake_run_pytest(selection, **kwargs):
+        calls.append(tuple(selection))
+        return SimpleNamespace(returncode=0, stdout="3 passed", stderr="")
+
+    monkeypatch.setenv(CI_GATE_NESTED_ENV, "1")
+    monkeypatch.setattr(ci_gate, "run_pytest", fake_run_pytest)
+
+    row = ci_gate._pytest_gate("model-off-non-inferiority", "commit", ("tests/a.py::t",))
+
+    assert row.status == "pass"
+    assert calls == [("tests/a.py::t",)]
+
+
+def test_the_mark_run_pytest_writes_is_the_mark_the_default_suite_refuses_on(
+    monkeypatch,
+) -> None:
+    """Row A2, end to end. Two halves that agree only because they share a
+    constant would still pass if the constant were never actually written into
+    the child; this feeds the ACTUAL child environment back in."""
+
+    from scripts import ci_gate
+
+    child_env: dict[str, str] = {}
+
+    def fake_run(cmd, **kwargs):
+        child_env.update(kwargs["env"])
+        return SimpleNamespace(returncode=0, stdout="1 passed", stderr="")
+
+    monkeypatch.setattr(ci_gate.subprocess, "run", fake_run)
+    run_pytest(("tests/a.py::t",))
+    assert child_env, "the driver built no environment at all"
+
+    # Become that child.
+    monkeypatch.setattr(ci_gate.os, "environ", child_env)
+    calls: list[dict] = []
+    monkeypatch.setattr(ci_gate, "run_pytest", _run_pytest_tripwire(calls))
+    row = ci_gate.evaluate_default_suite(tier="commit")
+
+    assert row.status == "error" and calls == []
+
+
+@pytest.mark.parametrize(
+    "raw", ["auto", "logical", "AUTO", " auto ", "", "   ", "eight", "0", "-4", "3.5"]
+)
+def test_the_worker_count_is_never_auto_and_never_nonsense(raw: str) -> None:
+    """Row A3. `auto` is 192 workers on this host; that is the number that
+    OOM-killed it. No input reaches xdist as anything but a positive integer."""
+
+    workers, why = resolve_xdist_workers(None, {XDIST_WORKERS_ENV: raw})
+
+    assert workers.isdigit(), workers
+    assert 1 <= int(workers) <= XDIST_MAX_WORKERS
+    assert why, "a substituted worker count must carry its reason"
+
+
+def test_a_refused_worker_setting_says_so_instead_of_silently_substituting() -> None:
+    """Row A3. The provenance string is not decoration -- it is what makes a
+    timing row honest about what actually ran."""
+
+    _workers, why = resolve_xdist_workers(None, {XDIST_WORKERS_ENV: "auto"})
+    assert "REFUSED" in why and "auto" in why
+
+    _workers, why = resolve_xdist_workers(None, {XDIST_WORKERS_ENV: "eight"})
+    assert "not a positive worker count" in why
+
+
+def test_an_explicit_worker_pin_is_honoured_even_above_the_cap() -> None:
+    """Row A3. The cap stops an ACCIDENT (`auto` on a 192-thread box). A person
+    who types a number is not an accident, and a gate that overrules them would
+    make `PARCEL_XDIST_WORKERS` a lie."""
+
+    workers, why = resolve_xdist_workers(None, {XDIST_WORKERS_ENV: "48"})
+    assert workers == "48"
+    assert "honoured" in why and XDIST_WORKERS_ENV in why
+
+    workers, why = resolve_xdist_workers("2", {XDIST_WORKERS_ENV: "48"})
+    assert workers == "2", "the caller's argument outranks the environment"
+    assert "argument" in why
+
+
+@pytest.mark.parametrize(
+    ("cpus", "expected"),
+    [(8, "8"), (16, "16"), (192, "16"), (1, "1")],
+    ids=["orin-nx-8-core", "at-the-cap", "dev-box-192-thread", "single-core"],
+)
+def test_the_default_worker_count_is_cpu_count_capped(
+    monkeypatch, cpus: int, expected: str
+) -> None:
+    """Row A3 + the hardware row. On the Go2 EDU+'s onboard Orin NX (8 cores)
+    the default resolves to 8 -- exactly what `auto` would have chosen, so the
+    cap costs the target hardware nothing. It only bites this dev box."""
+
+    monkeypatch.setattr("os.cpu_count", lambda: cpus)
+    workers, why = resolve_xdist_workers(None, {})
+
+    assert workers == expected
+    assert f"cpu_count={cpus}" in why and f"cap={XDIST_MAX_WORKERS}" in why
+
+
+def test_the_resolved_worker_count_reaches_the_command_line_and_the_row(
+    monkeypatch,
+) -> None:
+    """Row A3. A recorded number that is not the number that ran is worse than
+    no number, so the same value is asserted in both places."""
+
+    monkeypatch.setenv(XDIST_WORKERS_ENV, "3")
+    result, calls = _capture_phases(monkeypatch)
+
+    parallel = calls[0]
+    assert parallel["extra_args"][:2] == ["-n", "3"]
+    assert result.extra["workers"] == "3"
+    assert "honoured" in result.extra["workers_provenance"]
+    assert "-n 3" in result.detail

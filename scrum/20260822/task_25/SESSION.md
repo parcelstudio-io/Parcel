@@ -143,14 +143,51 @@ Pre-registered: **≥ 20 dB** at 1 m at normal level, first 2 s excluded.
 **What this number is.** It is the echo attenuation of the whole XVF3800
 pipeline on the beam the ASR listens to — the linear canceller, the residual
 suppressor, the beamformer's spatial rejection, and the capture gain, together.
-The card and the plan both spell it "ERLE ≥ 20 dB" and the tools keep `erle_db`
-as an alias, but the field is `asr_beam_echo_attenuation_db`, because textbook
-ERLE is one stage of that chain and this measures all of them. It is the right
-number for the gate — it is what a barge-in detector actually lives with.
+It is the right number for the gate — it is what a barge-in detector actually
+lives with.
+
+**What it is called, exactly** (card TRUTH-1, so the runbook and the tools agree
+in writing). The measured field is **`asr_beam_echo_attenuation_db`**: textbook
+ERLE is *one stage* of that chain and this number measures all of them. Three
+facts, each true of the code as it stands today:
+
+* `tools/measure_erle.py` writes **both** keys into the report with the same
+  value — `asr_beam_echo_attenuation_db` and `erle_db` — so nothing that reads
+  the old name breaks.
+* `tools/bargein_through_air.py` reads `asr_beam_echo_attenuation_db` **first**
+  and falls back to `erle_db`. The long name is the source of the number.
+* The **scorecard row id stays `erle_db`** — it is the pre-registered row's
+  identifier, frozen in `ROWS`, and renaming an id mid-card would silently
+  break the ≥ 20 dB gate's continuity. So: long name for the measurement, short
+  name for the row. If a document says only "ERLE", it means this.
 
 ### 5A · The short way (preferred): one recording, no second speaker
 
-**This only works once step 3's udev rule is in.** Check:
+**Prerequisites for the mux path — all of them, once, here** (card TRUTH-1; they
+were scattered across step 3, this section and two tool docstrings, and a
+prerequisite you have to assemble from three places is one you find out about by
+failing):
+
+1. **Step 3's udev rule, plus `pyusb`.** The mux is selected over the same EP0
+   vendor control interface the DoA read uses. Without the rule every control
+   transfer on this host is `Errno 13`; without `pyusb` there is no transfer at
+   all. Both are installed by step 3 above — do not run them twice.
+2. **Firmware v2.0.6 is what this array has and is enough.** Measured on this
+   host as `bcdDevice 0206` (`task_25/AIR1_STATUS.md`). It predates the
+   `AUDIO_MGR_OP_CH3..CH6` additions, and it does not matter: the two channels
+   this path needs — the canceller's input and its output — are both selectable
+   on it.
+3. **Never flash the 6-channel image.** It is a separate DFU image
+   (`respeaker_xvf3800_usb_dfu_firmware_6chl_*.bin`), not a USB alternate
+   setting; this host's descriptors carry exactly one 2-channel altset. Flashing
+   re-enumerates the array with a different channel count, which breaks every
+   ALSA/PipeWire/PortAudio assumption in the voice stack, resets parameters, and
+   is recoverable only through a bundled `4mb_all_ff.bin`. The mux makes it
+   unnecessary — that is the whole point of this path
+   (`tools/xvf3800_probe.py`, "THE 6-CHANNEL FIRMWARE IS NOT THE ANSWER";
+   `task_25/AIR1_STATUS.md`).
+
+Then check:
 
 ```bash
 .parcel/bin/python tools/xvf3800_probe.py --mux
@@ -385,7 +422,7 @@ the unmeasured rows, which are findings.
 
 | row | gate | where the number comes from |
 |---|---|---|
-| `erle_db` (`asr_beam_echo_attenuation_db`) | **≥ 20 dB** | step 5A, or 5B-vi |
+| `asr_beam_echo_attenuation_db` (scorecard row id: `erle_db`) | **≥ 20 dB** | step 5A, or 5B-vi |
 | `robot_utterances_as_owner_turns` | **0** of 20 | ⚠ **OWNER-GATED ON A TOOL THAT DOES NOT EXIST YET** |
 | `interrupt_p50_s` | **≤ 0.52 s** (n = 20) | ⚠ **not recoverable from any artefact this tree writes** |
 | `false_barge_in_rate` | **≤ 2 %** | step 8, from the R17 index |

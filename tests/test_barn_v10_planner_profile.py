@@ -7,6 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from _external_roots import skip_unless
 
 from evals.external import barn_v10_planner_profile as frozen
 from evals.external import barn_v10_planner_profile_candidate as declaration
@@ -16,6 +17,7 @@ def _sha256(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+@skip_unless("barn-policy-bundles")
 def test_exact_freeze_authenticates_recomputed_one_file_plan_and_training_scope() -> None:
     verified = frozen.verify_v10_planner_profile()
 
@@ -62,6 +64,7 @@ def test_gate_threshold_mutation_is_rejected_even_with_matching_raw_hash(
         frozen.verify_v10_planner_profile(freeze_path=changed)
 
 
+@skip_unless("barn-policy-bundles")
 def test_profile_source_mutation_is_rejected_after_freeze(tmp_path: Path) -> None:
     changed = tmp_path / "changed-grid.yaml"
     changed.write_bytes(declaration.PROFILE_SOURCE.read_bytes() + b"\n")
@@ -70,6 +73,7 @@ def test_profile_source_mutation_is_rejected_after_freeze(tmp_path: Path) -> Non
         frozen.verify_v10_planner_profile(profile_source_path=changed)
 
 
+@skip_unless("barn-policy-bundles")
 def test_s4_numeric_screen_is_exact_except_declared_identity_substitutions() -> None:
     candidate = frozen.verify_v10_planner_profile().freeze["scratch_screen"]
     s4 = json.loads(frozen.S4_FREEZE_PATH.read_bytes())["scratch_screen"]
@@ -80,6 +84,7 @@ def test_s4_numeric_screen_is_exact_except_declared_identity_substitutions() -> 
     assert candidate == expected
 
 
+@skip_unless("barn-policy-bundles")
 def test_authenticated_wrapper_is_only_candidate_specific_materialization_entry_point(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

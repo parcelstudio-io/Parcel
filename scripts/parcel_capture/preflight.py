@@ -65,9 +65,14 @@ question, and cards ENV-1/ENV-1b exist because collapsing the two produced a
 false READY: ``pyrealsense2`` was installed into ``.parcel`` on 2026-08-22 for
 the desk-camera venue, and every D455 probe promptly reported itself satisfied
 on a host that has never had a camera plugged into it. (A venv built from
-``pip install .[dev]`` carries no such wheel — there is no aarch64 build, so the
-``dev`` extra must not declare it or the install breaks on the Orin — so both
-states are supported and neither is assumed.)
+``pip install .[dev]`` carries no such wheel, because the project declares it in
+the ``camera-realsense`` extra rather than in ``dev`` — so both states are
+supported and neither is assumed. Card TRUTH-1: the reason written here used to
+be an aarch64 claim, and that claim was never measured and is false. Measured
+2026-08-22, re-measured 2026-08-23: pyrealsense2 2.58.3.10794 ships 13 files and
+publishes ``manylinux2014_aarch64`` for cp39/cp310/cp312, which includes
+JetPack 6's CPython 3.10. The narrow true statement is that every OTHER aarch64
+interpreter — 3.8 on a JetPack 5.1.1 dock included — needs a source build.)
 
 So the default reader for every transport is a reader that **refuses with a
 remedy naming which half is missing**: the module is not on the import path
@@ -2324,11 +2329,24 @@ _TRANSPORT_MODULES: Mapping[str, tuple[tuple[str, ...], str]] = {
             f"VideoClient / WebRTC path. {_VENDOR_SDK_WARNING}"
         ),
     ),
+    # Card TRUTH-1 (SDK-REM-1): the D455 is the one transport here whose SDK is
+    # a plain pip wheel — on BOTH hosts. The four remedies around it name the
+    # Orin because those SDKs are vendor builds that exist nowhere else; this
+    # one names the Orin only to say that pip works there too. Measured
+    # 2026-08-22 from this box; the Orin NX (Go2 EDU PLUS, ordered 2026-08-22)
+    # is not on hand, so its half is a wheel that EXISTS, not one that has run.
     "realsense": (
         ("pyrealsense2",),
         (
-            "install pyrealsense2 in the Orin's capture environment and check the D455 "
-            "is on a USB3 port (a USB2 cable silently halves the available streams)."
+            "on this dev box run `.parcel/bin/pip install -e '.[camera-realsense]'` — "
+            "already installed here, 2.58.3.10794 cp314, measured 2026-08-22; on the "
+            "Orin NX run `pip install pyrealsense2` in the DEPLOY venv, never into "
+            ".parcel/, IF the dock boots a JetPack 6.x (CPython 3.10) — the cp310 "
+            "manylinux2014_aarch64 wheel exists for that release, untried on the "
+            "unit. On a JetPack 5.1.1 dock (CPython 3.8) that release publishes no "
+            "aarch64 wheel and this is a source build. Which JetPack the unit ships "
+            "with is UNCONFIRMED. Then check the D455 is on a USB3 (blue) port: a "
+            "USB2 cable silently halves the available streams."
         ),
     ),
     "vendor_uwb": (
@@ -3130,7 +3148,22 @@ def _relpath(path: Path | str) -> str:
 DeviceReader = Callable[[], Mapping[str, str]]
 
 
-def _unavailable_device_reader(device: str, modules: Sequence[str], remedy: str) -> DeviceReader:
+def _unavailable_device_reader(
+    device: str,
+    modules: Sequence[str],
+    remedy: str,
+    remedy_when_present: str | None = None,
+) -> DeviceReader:
+    """A reader that refuses, naming WHICH half is missing.
+
+    Card TRUTH-1 (SDK-REM-1): the two branches below are two different facts and
+    deserve two different remedies. Until this card they shared one string, and
+    for the D455 that string said "install pyrealsense2" on a box where
+    ``pyrealsense2`` is installed — the module-present branch printing the
+    module-missing remedy. ``remedy_when_present`` defaults to ``remedy``, so
+    every caller that has only one true sentence (go2, l2, uwb) is unchanged.
+    """
+
     def _reader() -> Mapping[str, str]:
         missing = [name for name in modules if not _module_present(name)]
         if missing:
@@ -3142,7 +3175,7 @@ def _unavailable_device_reader(device: str, modules: Sequence[str], remedy: str)
         raise TransportUnavailableError(
             AbsenceReason.NOT_ATTEMPTED,
             f"{device}: this build ships no live identity reader",
-            remedy,
+            remedy if remedy_when_present is None else remedy_when_present,
         )
 
     return _reader
@@ -3243,14 +3276,46 @@ def probe_robot_identity(reader: DeviceReader | None = None) -> tuple[Observatio
     )
 
 
+#: Card TRUTH-1 (SDK-REM-1): the D455 identity probe's remedy, split in two.
+#:
+#: This is the SECOND D455 remedy on the preflight product path
+#: (``run_preflight`` -> ``probe_d455`` -> the rendered observation table), and
+#: R3's registration named only ``_TRANSPORT_MODULES["realsense"]``, so it went
+#: unmeasured in the first pass. It said "install pyrealsense2 in the Orin
+#: capture environment" on a box where ``pyrealsense2`` is installed and where
+#: no Orin exists — SDK-REM-1 verbatim, one function away from the site the card
+#: fixed. Both strings below are the same measured facts as
+#: ``_TRANSPORT_MODULES["realsense"]``, worded for the branch that reaches them.
+_D455_IDENTITY_REMEDY_MODULE_MISSING = (
+    "pyrealsense2 is an ordinary pip wheel, not a vendor SDK build. On this dev box run "
+    "`.parcel/bin/pip install -e '.[camera-realsense]'` (already installed here: "
+    "2.58.3.10794 cp314, measured 2026-08-22). On the Orin NX run `pip install "
+    "pyrealsense2` in the DEPLOY venv, never into .parcel/, IF the dock boots a JetPack "
+    "6.x (CPython 3.10) — that release publishes aarch64 wheels for cp39/cp310/cp312 "
+    "ONLY, so a JetPack 5.1.1 dock (CPython 3.8) is a source build. Which JetPack the "
+    "unit ships with is UNCONFIRMED."
+)
+#: The branch this box actually takes. The module IS importable; what is missing
+#: is a live identity READER and, on this host, the camera itself. Telling the
+#: operator to install the wheel here is the false-READY failure ENV-1b exists to
+#: prevent, pointing the other way.
+_D455_IDENTITY_REMEDY_MODULE_PRESENT = (
+    "pyrealsense2 is importable here, so this is NOT a missing wheel: this build ships no "
+    "live D455 identity reader, and the firmware/serial come from PS-D against the "
+    "attached unit. Plug the D455 into a USB 3 (BLUE) port, direct, no hub, confirm it "
+    "enumerates (`ls /dev/video*`, `lsusb | grep -i intel`), then read the identity there. "
+    "Do not pip install anything for this row."
+)
+
+
 def probe_d455(reader: DeviceReader | None = None) -> tuple[Observation, ...]:
     return _device_observations(
         reader
         or _unavailable_device_reader(
             "d455",
             ("pyrealsense2",),
-            "install pyrealsense2 in the Orin capture environment; check the D455 is on "
-            "a USB3 port.",
+            _D455_IDENTITY_REMEDY_MODULE_MISSING,
+            _D455_IDENTITY_REMEDY_MODULE_PRESENT,
         ),
         fields={"d455.firmware_version": "firmware_version", "d455.serial": "serial"},
         label="d455",
