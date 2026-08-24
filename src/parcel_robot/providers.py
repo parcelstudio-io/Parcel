@@ -41,6 +41,31 @@ class LanguageModel(Protocol):
     ) -> AgentDecision: ...
 
 
+class StructuredJsonModel(Protocol):
+    """One constrained JSON completion that is NOT a conversational turn.
+
+    Card A9 (H5 defect 2). :meth:`LanguageModel.decide` is Parcel's dialogue
+    call: the server-side grammar pins the reply to
+    ``_decision_response_schema`` (``reply`` is a 500-character string) under a
+    system prompt that frames the request as the robot answering its owner. A
+    caller that needs a *list of objects* back — the owner-fact proposer — was
+    therefore asking a question the seam could not express, and got a friendly
+    sentence 13 times out of 13 (measured, H5 §4.2). ``plan`` already showed the
+    shape of the answer: a second constrained mode on the same loaded backbone,
+    with its own schema and its own system prompt.
+    """
+
+    def complete_json(
+        self,
+        transcript: str,
+        *,
+        system_prompt: str,
+        response_schema: dict[str, Any],
+        max_tokens: int = 512,
+        temperature: float = 0.0,
+    ) -> str: ...
+
+
 class PlanningModel(Protocol):
     def plan(
         self,
@@ -213,6 +238,71 @@ class LlamaCppProvider:
             mode="fast",
             parser=parse_model_decision,
         )
+
+    def complete_json(
+        self,
+        transcript: str,
+        *,
+        system_prompt: str,
+        response_schema: dict[str, Any],
+        max_tokens: int = 512,
+        temperature: float = 0.0,
+    ) -> str:
+        """One non-conversational constrained completion. Returns raw content.
+
+        Card A9 (H5 defect 2) — see :class:`StructuredJsonModel`. Three
+        deliberate differences from :meth:`decide`:
+
+        * the caller supplies the schema, so a proposer can ask for the array
+          its own parser wants instead of receiving ``reply``-shaped prose;
+        * the caller supplies the system prompt, so the request is not framed
+          as Parcel's conversational turn;
+        * it does NOT go through ``_request_structured``, which registers the
+          call as *the* active generation and cancels whatever was streaming.
+          This mode belongs to background passes (distillation at session close
+          or on idle); one of them cancelling a live spoken turn would be a
+          worse defect than the one it fixes. No streaming, no cancel token, no
+          ``last_metrics`` clobber — the conversation owns those.
+
+        ``reasoning_effort``/``chat_template_kwargs`` are copied verbatim from
+        :meth:`decide` because this server runs ``--reasoning auto``: without
+        them the whole budget is spent in ``reasoning_content`` and the content
+        comes back empty (measured in the H5 harness).
+        """
+
+        clean = str(system_prompt).strip()
+        if not clean:
+            raise ValueError("complete_json requires a system prompt")
+        if not isinstance(response_schema, dict) or not response_schema:
+            raise TypeError("complete_json requires a non-empty response schema")
+        payload: dict[str, Any] = {
+            "model": self.model,
+            "temperature": float(temperature),
+            "top_p": self.top_p,
+            "max_tokens": int(max_tokens),
+            "stream": False,
+            "reasoning_effort": "none",
+            "chat_template_kwargs": {"enable_thinking": False},
+            "messages": [
+                {"role": "system", "content": clean},
+                {"role": "user", "content": str(transcript)},
+            ],
+            "response_format": {"type": "json_object", "schema": response_schema},
+        }
+        body = _post_json(
+            f"{self.base_url.rstrip('/')}/v1/chat/completions",
+            payload,
+            self.timeout,
+            max_response_bytes=self.max_response_bytes,
+        )
+        choices = body.get("choices")
+        if not isinstance(choices, list) or not choices:
+            raise RuntimeError("constrained completion returned no choices")
+        message = choices[0].get("message") if isinstance(choices[0], dict) else None
+        content = message.get("content") if isinstance(message, dict) else None
+        if not isinstance(content, str) or not content.strip():
+            raise RuntimeError("constrained completion returned empty content")
+        return content.strip()
 
     def plan(
         self,

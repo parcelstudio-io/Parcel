@@ -84,6 +84,19 @@ FACT_PROVENANCES: frozenset[str] = frozenset({FACT_OWNER_STATED, FACT_MODEL_PROP
 #: class filters on it) — what survives is the record that the robot once
 #: believed it and was told to stop. A hard-delete path is one DELETE away and
 #: is the owner's to ask for; it is not this card's to take unilaterally.
+#:
+#: THE TOMBSTONE AND THE UPSERT (card A9, H5 defect 3). ``add_owner_fact``'s
+#: lookup used to read ``key = ? AND deleted_at IS NULL``, so a soft-deleted row
+#: was invisible to the very write that should have found it: a re-add INSERTED
+#: a second row and the table held 1 live / 2 total for one key (measured, H5
+#: ``defect3_via_distil_session``). An upsert that cannot see the tombstone is
+#: not an upsert. The lookup now spans both states and REVIVES the row in place,
+#: so a key has exactly one row for the life of the store and "the owner said it
+#: again" edits the thing they forgot instead of duplicating it. That is a
+#: statement about the table's shape and NOT a policy: whether a *model*
+#: proposal may re-state what the owner revoked is decided one layer up, on the
+#: distillation path, where the caller and the provenance are both known
+#: (``owner_model.distiller.distil_session(respect_revocations=…)``).
 OWNER_FACTS_DDL = (
     f"CREATE TABLE IF NOT EXISTS {OWNER_FACTS_TABLE} ("
     "id INTEGER PRIMARY KEY, "
@@ -444,7 +457,7 @@ class ConversationMemory:
             self.connection.execute(f"ALTER TABLE messages ADD COLUMN {column} {sql_type}")
         self.connection.commit()
 
-    def add(self, role: str, content: str) -> None:
+    def add(self, role: str, content: str, *, session_id: str | None = None) -> None:
         """The LEGACY write path — the panel/voice one that wrote all 2,618.
 
         Card R27 work item 2: this now stamps ``writer``. It is the path that
@@ -452,14 +465,23 @@ class ConversationMemory:
         the shipped config), so leaving it unstamped while annotating only the
         Realtime lane would have instrumented the one writer that was never the
         problem.
+
+        Card A9 (H5 defect 1, half of two): ``session_id`` is now writable here.
+        It was NULL on every row this path wrote, which is one of the two
+        reasons ``distil_session(session_id=…)`` read zero turns — the other
+        being that :meth:`conversation_turns` never reported the column
+        (measured: 3 turns in, ``turns_read 0``). Keyword-only and defaulting to
+        ``None``, so every existing caller writes exactly the row it wrote
+        before.
         """
 
         if role not in {"user", "assistant", "tool"}:
             raise ValueError(f"unsupported memory role: {role}")
+        session = str(session_id) if session_id is not None else None
         with self._lock:
             self.connection.execute(
-                "INSERT INTO messages(role, content, writer) VALUES (?, ?, ?)",
-                (role, content, self.writer),
+                "INSERT INTO messages(role, content, writer, session_id) VALUES (?, ?, ?, ?)",
+                (role, content, self.writer, session),
             )
             self.connection.commit()
 
@@ -645,12 +667,12 @@ class ConversationMemory:
 
         with self._lock:
             rows = self.connection.execute(
-                "SELECT id, role, content, created_at, speaker, origin FROM messages "
-                "ORDER BY id DESC LIMIT ?",
+                "SELECT id, role, content, created_at, speaker, origin, session_id "
+                "FROM messages ORDER BY id DESC LIMIT ?",
                 (int(limit),),
             ).fetchall()
         turns: list[dict[str, object]] = []
-        for row_id, role, content, created_at, speaker, origin in rows:
+        for row_id, role, content, created_at, speaker, origin, session_id in rows:
             who = str(speaker or _ROLE_SPEAKERS.get(str(role), "")).strip().lower()
             if who not in RECALL_SPEAKERS:
                 continue
@@ -664,6 +686,13 @@ class ConversationMemory:
                     "content": text,
                     "created_at": created_at,
                     "origin": str(origin) if origin else "local",
+                    # Card A9 (H5 defect 1). ``distil_session`` filters on this
+                    # key; before this line it was never present, so ANY session
+                    # id filtered every turn away and the pass read zero turns on
+                    # every store, silently. ``None`` for the legacy rows is the
+                    # honest answer and keeps "no session id" distinguishable
+                    # from "a session id that does not match".
+                    "session_id": str(session_id) if session_id else None,
                 }
             )
         return turns
@@ -805,13 +834,11 @@ class ConversationMemory:
     ) -> int:
         """Write ONE owner fact. Returns its row id; ``0`` on a read-only store.
 
-        UPSERT BY KEY, AND WHY IT IS NOT AN APPEND. ``messages`` is append-only
-        because a conversation is a sequence of events. A profile is not: when
-        the owner moves house, "they live in Brooklyn" does not join "they live
-        in Manhattan" as a second true thing. So a live row with the same
-        ``key`` is UPDATED in place, its ``updated_at`` moves, and the previous
-        value is gone from the profile. The event that changed it is still in
-        ``messages``, which is where the history belongs.
+        UPSERT BY KEY, AND WHY IT IS NOT AN APPEND. A profile is not an event
+        log: when the owner moves house, "they live in Brooklyn" does not join
+        "they live in Manhattan" as a second true thing. The row with that
+        ``key`` is UPDATED in place — a soft-deleted one included; see THE
+        TOMBSTONE AND THE UPSERT beside :data:`OWNER_FACTS_DDL`.
 
         THE CONSENT STATE IS NOT VALIDATED AGAINST THE PROVENANCE, deliberately.
         An ``owner_stated`` fact can be ``pending`` (the owner said something
@@ -842,9 +869,11 @@ class ConversationMemory:
             return 0
         ids = ",".join(str(int(i)) for i in source_turn_ids)
         with self._lock:
+            # Card A9 (H5 defect 3): the lookup spans BOTH states and revives
+            # the tombstone in place. See THE TOMBSTONE AND THE UPSERT above.
             existing = self.connection.execute(
-                f"SELECT id FROM {OWNER_FACTS_TABLE} "
-                "WHERE key = ? AND deleted_at IS NULL ORDER BY id DESC LIMIT 1",
+                f"SELECT id, deleted_at FROM {OWNER_FACTS_TABLE} "
+                "WHERE key = ? ORDER BY id DESC LIMIT 1",
                 (clean_key,),
             ).fetchone()
             if existing is not None:
@@ -853,6 +882,7 @@ class ConversationMemory:
                     f"UPDATE {OWNER_FACTS_TABLE} SET value = ?, category = ?, "
                     "provenance = ?, consent = ?, confidence = ?, reason = ?, "
                     "session_id = ?, source_turn_ids = ?, writer = ?, "
+                    "deleted_at = NULL, "
                     "updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                     (
                         clean_value,
@@ -985,6 +1015,37 @@ class ConversationMemory:
             )
             self.connection.commit()
             return int(cursor.rowcount or 0)
+
+    def revoked_fact_keys(self) -> frozenset[str]:
+        """Keys the owner soft-deleted and has not since re-stated. Read-only.
+
+        Card A9 moves the canonical implementation here, beside the two writes
+        it reads (:meth:`add_owner_fact`, :meth:`forget_owner_fact`), so the
+        distillation path can ask the question without importing the scheduler
+        that used to own it (``memory.scheduler`` imports the distiller; the
+        other direction would close the cycle).
+        ``memory.scheduler.revoked_fact_keys`` delegates here and keeps its
+        name and signature.
+
+        A key that also has a LIVE row is not revoked — the owner told the robot
+        again, and the newer statement is the one that counts. Since A9's
+        tombstone-aware upsert a key has exactly one row, so "live" and
+        "revoked" are now the two states of that row rather than a race between
+        two of them; the union/difference below stays because a store written
+        before this card can still hold both.
+        """
+
+        live: set[str] = set()
+        dead: set[str] = set()
+        for row in self.owner_facts(include_deleted=True):
+            key = "_".join(str(row.get("key", "")).strip().lower().split())
+            if not key:
+                continue
+            if row.get("deleted_at"):
+                dead.add(key)
+            else:
+                live.add(key)
+        return frozenset(dead - live)
 
     def ledger_tail(self, *, limit: int = 200) -> list[dict[str, object]]:
         """Card P2-A work item 4 — the FULL ledger, both lanes, oldest last.

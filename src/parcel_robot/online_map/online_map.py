@@ -52,10 +52,12 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from parcel_robot.perception.abstention import (
+    RANKING_MARGIN_LABEL_STRENGTH,
     AbstentionPolicy,
     AbstentionVerdict,
     DetectorSupport,
     PlaceEvidence,
+    active_abstention_policy,
     assess_place_query,
 )
 
@@ -1031,7 +1033,7 @@ class OnlineSemanticMap:
             query,
             support=support,
             places=places,
-            policy=self._policy,
+            policy=self._background_policy(),
             map_similarities=background,
         )
         diagnostics = {
@@ -1047,6 +1049,39 @@ class OnlineSemanticMap:
             "ranking_background_degenerate": _mad(background) <= 0.0,
         }
         return verdict, diagnostics
+
+    def _background_policy(self) -> AbstentionPolicy | None:
+        """The gate, with the estimator that fits the background THIS map builds.
+
+        CARD A9 — H5 DEFECT 4, at the site the verdict names ("the runtime
+        passes no policy"). The background assembled above is an
+        evidence-weighted **label strength**: non-zero for the places whose
+        label matches the query, exactly ``0.0`` for every other place. PG-3's
+        robust z-score was fitted on a *cosine* background where every place
+        carries a score; fed this one it sees median 0 and MAD 0 and returns
+        ``ranking_margin 0.0`` — measured, ``ranking_margin([5.2] + [0.0]*7)
+        == 0.0`` against a ``min_ranking_margin`` of 1.0, so a map holding one
+        lamppost calls "lamppost" indecisive forever (H5 M6: 0/20 admitted at
+        the shipped estimator, 20/20 at ``label_strength``, margin 24.244).
+        Card P0-D built and fitted the estimator that does fit this background;
+        nothing shipped ever selected it, because selecting it lived in a
+        navigation profile the robot profile does not include.
+
+        So the choice is made here, where the background is BUILT, and only
+        when nobody chose: an explicit policy handed to this map wins
+        unchanged, including an explicit ``robust_z`` — which is what keeps
+        P0-D's own seeded-red arm red and lets an operator still ask for the
+        cosine estimator on a cosine background. Every other field of the
+        process policy (enabled, thresholds, signal roster, veto seat) is
+        carried through untouched: this replaces an estimator, not a gate.
+        """
+
+        if self._policy is not None:
+            return self._policy
+        active = active_abstention_policy()
+        if active.ranking_margin_mode == RANKING_MARGIN_LABEL_STRENGTH:
+            return active
+        return replace(active, ranking_margin_mode=RANKING_MARGIN_LABEL_STRENGTH)
 
     # -- R18 / R20 consumers ----------------------------------------------
 

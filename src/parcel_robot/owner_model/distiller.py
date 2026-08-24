@@ -141,6 +141,13 @@ class DistillationReport:
     refused: tuple[DistilledFact, ...] = ()
     written: int = 0
     guard: dict[str, object] = field(default_factory=dict)
+    #: Card A9 (H5 defect 3). Rows the policy would have kept and the WRITE
+    #: dropped because the owner had already revoked that key. Reported rather
+    #: than merged into ``refused`` because the reason is different in kind: the
+    #: policy did not object, the owner did, and "the model proposed it again
+    #: and we did not write it" is the sentence this field exists to make
+    #: answerable.
+    revoked: tuple[DistilledFact, ...] = ()
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -149,6 +156,7 @@ class DistillationReport:
             "kept": [f.as_dict() for f in self.kept],
             "asked": [f.as_dict() for f in self.asked],
             "refused": [f.as_dict() for f in self.refused],
+            "revoked": [f.as_dict() for f in self.revoked],
             "written": self.written,
             "guard": dict(self.guard),
         }
@@ -329,21 +337,86 @@ _LM_PROMPT = (
     "Turns:\n"
 )
 
+#: The same instruction as :data:`_LM_PROMPT`, restated as a SYSTEM message for
+#: the constrained mode. Same words on purpose: card A9 changes the shape of the
+#: request, not its wording, so "the model cannot do this" and "the model was
+#: never asked properly" stay separable (H5 §4.2 measured the second).
+_LM_SYSTEM_PROMPT = _LM_PROMPT.replace("Turns:\n", "").strip()
+
+#: The grammar the server converts the reply into. A bare array is not a valid
+#: top-level ``json_object`` on every llama.cpp build, so the array is wrapped in
+#: an object with one key and unwrapped by :func:`_unwrap_facts` on the way out —
+#: the shape the H5 harness measured at 0.96 precision over 12/12 parsed replies.
+FACT_RESPONSE_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "facts": {
+            "type": "array",
+            "maxItems": MAX_FACTS_PER_PASS,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "key": {"type": "string"},
+                    "value": {"type": "string"},
+                    "confidence": {"type": "number"},
+                },
+                "required": ["key", "value"],
+            },
+        }
+    },
+    "required": ["facts"],
+}
+
+
+def _unwrap_facts(reply: str) -> str:
+    """``{"facts": [...]}`` -> ``[...]``; anything else passes through."""
+
+    text = str(reply or "").strip()
+    try:
+        body = json.loads(text)
+    except (TypeError, ValueError):
+        return text
+    if isinstance(body, Mapping) and isinstance(body.get("facts"), list):
+        return json.dumps(body["facts"])
+    return text
+
 
 @dataclass
 class LanguageModelFactProposer:
-    """The real proposer, over the ``LanguageModel.decide`` seam already wired.
+    """The real proposer. Asks for a LIST when the model can be asked for one.
 
     Degrades to :class:`DeterministicFactProposer` on ANY failure, on an empty
     reply, and on a reply that is not a JSON array — the same contract
     ``runtime.LLMSummarizer`` already holds on the write path next door. A
     distillation pass must never break the thing that triggered it, and an
     offline run must stay deterministic.
+
+    CARD A9 — H5 DEFECT 2. Until this card the only seam was
+    ``LanguageModel.decide``, which is Parcel's *conversational* call: the
+    server-side grammar pins the answer to ``_decision_response_schema``
+    (``reply`` is a 500-character string) under a system prompt that frames the
+    request as the robot talking to its owner. So the model answered *"I have
+    noted that your sister's name is Hana…"*, ``_parse_candidates`` returned
+    ``[]``, and this class silently equalled :class:`DeterministicFactProposer`
+    on 13 of 13 measured calls — a total degrade that looked like a policy
+    decision. A provider that offers
+    :meth:`~parcel_robot.providers.StructuredJsonModel.complete_json` is now
+    asked for the array the parser wants; one that does not is asked exactly as
+    before, so an old provider (and every test double) keeps working.
+
+    ``calls``/``structured_calls``/``fallbacks`` are counted because H5's other
+    finding about this family was that a silent fallback is unmeasurable: the
+    live summarizer next door fell back at least once per pack and nothing
+    recorded it.
     """
 
     model: LanguageModel
     fallback: DeterministicFactProposer = field(default_factory=DeterministicFactProposer)
     owner_speakers: frozenset[str] = frozenset({"owner", "user"})
+    #: Measured, not assumed. See the class docstring.
+    calls: int = 0
+    structured_calls: int = 0
+    fallbacks: int = 0
 
     def __call__(self, turns: Sequence[Mapping[str, Any]]) -> Sequence[FactCandidate]:
         lines: list[str] = []
@@ -356,13 +429,26 @@ class LanguageModelFactProposer:
             lines.append(f"{who}: {text}")
         if not lines:
             return ()
+        self.calls += 1
+        constrained = getattr(self.model, "complete_json", None)
         try:
-            decision = self.model.decide(_LM_PROMPT + "\n".join(lines), [], [])
-            payload = _parse_candidates(str(decision.reply))
+            if callable(constrained):
+                self.structured_calls += 1
+                reply = constrained(
+                    "Turns:\n" + "\n".join(lines),
+                    system_prompt=_LM_SYSTEM_PROMPT,
+                    response_schema=FACT_RESPONSE_SCHEMA,
+                )
+                payload = _parse_candidates(_unwrap_facts(str(reply)))
+            else:
+                decision = self.model.decide(_LM_PROMPT + "\n".join(lines), [], [])
+                payload = _parse_candidates(str(decision.reply))
         except Exception as error:  # noqa: BLE001 - degrade, never break the caller
             logger.warning("owner-fact proposer failed; using the offline one: %s", error)
+            self.fallbacks += 1
             return self.fallback(turns)
         if not payload:
+            self.fallbacks += 1
             return self.fallback(turns)
         return payload[:MAX_FACTS_PER_PASS]
 
@@ -465,6 +551,7 @@ def distil_session(
     proposer: FactProposer | None = None,
     turn_window: int = DEFAULT_TURN_WINDOW,
     store_label: str = "",
+    respect_revocations: bool = True,
 ) -> DistillationReport:
     """The product path: guard, read, propose, decide, write.
 
@@ -478,6 +565,29 @@ def distil_session(
     come back to it ("you told me about your medication; do you want me to
     remember that?"). They never render and never appear in an answer until the
     owner grants them. Rows it refused are written nowhere at all.
+
+    CARD A9 — TWO H5 DEFECTS CLOSED HERE.
+
+    * ``session_id`` now filters what it says it filters. It reads
+      ``turn["session_id"]``, and until A9 ``ConversationMemory.
+      conversation_turns`` did not emit that key at all, so ANY session id made
+      this pass read zero turns on every store, silently and forever (measured:
+      3 turns added, ``turns_read 0``; ``session_id=None`` read 3). The reader
+      reports the column now and :meth:`ConversationMemory.add` can stamp it.
+      A session id that matches no row still reads zero turns — that is the
+      filter working, and it is why the scheduler distils by ``turn_window``
+      over a store whose legacy rows carry no session at all.
+    * ``respect_revocations`` (default ON) stops a MODEL proposal from
+      re-stating what the owner told the robot to forget. The store's upsert is
+      tombstone-aware since A9, so a re-add revives the row rather than
+      inserting a second one — which is right for the owner saying it again and
+      wrong for a scheduled pass re-reading the same sentence. The tombstone
+      check therefore lives on the write path, where the provenance is
+      ``model_proposed`` by construction, and covers EVERY caller of this
+      function rather than only the one that wraps its proposer
+      (``memory.scheduler.RevocationAwareProposer``, which stays: it saves the
+      policy call). ``False`` reproduces the pre-A9 behaviour exactly, so the
+      difference stays measurable.
     """
 
     label = store_label or getattr(getattr(memory, "store", None), "path", "")
@@ -493,9 +603,19 @@ def distil_session(
     report = distil_turns(ordered, proposer=proposer)
     report.guard = survey.as_dict()
 
+    revoked_keys: frozenset[str] = frozenset()
+    if respect_revocations:
+        reader = getattr(memory, "revoked_fact_keys", None)
+        if callable(reader):
+            revoked_keys = frozenset(reader())
+
     written = 0
+    revoked_rows: list[DistilledFact] = []
     for row in report.kept + report.asked:
-        memory.add_owner_fact(
+        if _fact_key_slug(row.candidate.key) in revoked_keys:
+            revoked_rows.append(row)
+            continue
+        row_id = memory.add_owner_fact(
             key=row.candidate.key,
             value=row.candidate.value,
             provenance="model_proposed",
@@ -506,9 +626,19 @@ def distil_session(
             source_turn_ids=row.candidate.source_turn_ids,
             reason=row.decision.reason,
         )
-        written += 1
+        # A read-only store answers 0 and writes nothing; counting it as a write
+        # would report a memory the robot does not have.
+        if row_id:
+            written += 1
+    report.revoked = tuple(revoked_rows)
     report.written = written
     return report
+
+
+def _fact_key_slug(key: object) -> str:
+    """The normalization ``ConversationMemory.add_owner_fact`` applies to a key."""
+
+    return "_".join(str(key).strip().lower().split())
 
 
 # --- the tiered-memory protocol implementation ----------------------------------

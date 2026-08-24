@@ -173,6 +173,7 @@ from parcel_robot.models import (
     ToolResult,
     VelocityCommand,
 )
+from parcel_robot.motion.body_lane import BodyIntentLane, install_body_lane
 from parcel_robot.motion.expression import (
     BeatLayer,
     ExpressionEngine,
@@ -1596,6 +1597,12 @@ class RobotRuntime:
             raise ValueError("expression.rate_hz must be between 5 and 200")
         self._expression_sent: dict[str, float] | None = None
         self._expression_publish_failing = False
+        # Card A9 (DEC-0 pin: no new marked region — the invariants live in
+        # ``motion/body_lane.py`` and ``attention/initiative.py``).
+        # The 50 Hz body-intent lane rides the expression channel and
+        # COPIES the finalized velocity (``_last_sent``); it commands nothing.
+        # Initiative ships OFF inside the lease's own limits.
+        self._body_lane: BodyIntentLane | None = install_body_lane()
         self.loop_period = 1.0 / loop_hz
         self.arbiter = CommandArbiter(self.store.safety_limits())
         self._synchronous_control_dispatch = control_manager is None
@@ -7628,6 +7635,21 @@ class RobotRuntime:
         """Advance the expressive layer and publish its additive overlay."""
 
         offsets = self.expression.step(time.monotonic(), self._expression_gate())
+        # Card A9: one body intent per expression tick, HOLD included. Beneath
+        # the dispatch chain by construction — ``_last_sent`` is what
+        # ``finalize_command`` produced and the actuator accepted. Never allowed
+        # to disturb the overlay it rides on.
+        lane = self._body_lane
+        if lane is not None:
+            try:
+                lane.tick(
+                    offsets=offsets,
+                    finalized_velocity=self._last_sent if self._was_moving else None,
+                    emergency=self.arbiter.emergency_stopped,
+                    owner_active=self.arbiter.current() is not None,
+                )
+            except (OSError, RuntimeError, TypeError, ValueError) as error:
+                logger.warning("body intent lane tick failed: %s", error)
         joint_offsets = self.expression.joint_offsets() if not offsets.is_zero else {}
         if joint_offsets == self._expression_sent:
             return

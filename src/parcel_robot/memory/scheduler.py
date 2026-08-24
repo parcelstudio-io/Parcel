@@ -171,6 +171,14 @@ def revoked_fact_keys(memory: ConversationMemory) -> frozenset[str]:
     is the one that counts.
     """
 
+    # Card A9: the implementation moved to ``ConversationMemory`` (beside the
+    # two writes it reads) so the distillation path can ask the same question
+    # without importing this module. The name, signature and answer are
+    # unchanged; the duck-typed fallback keeps the stub stores H5's harness
+    # passes in working.
+    reader = getattr(memory, "revoked_fact_keys", None)
+    if callable(reader):
+        return frozenset(reader())
     live: set[str] = set()
     dead: set[str] = set()
     for row in memory.owner_facts(include_deleted=True):
@@ -392,6 +400,12 @@ class ContinualMemoryScheduler:
                 session_id=None,
                 proposer=self._active_proposer(),
                 turn_window=self.config.turn_window,
+                # Card A9: the same flag, now reaching BOTH layers. The wrapper
+                # above keeps a revoked candidate away from the policy; this
+                # keeps it away from the WRITE, which is the half that covers a
+                # caller who supplied its own proposer. ``False`` still turns the
+                # whole behaviour off, so the measured difference stays one flag.
+                respect_revocations=self.config.respect_revocations,
             )
         except SyntheticRowsUnquarantined as refusal:
             # LATCHED, and loud. See the module docstring: a scheduled caller
