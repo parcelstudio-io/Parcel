@@ -24,13 +24,15 @@ from parcel_robot.instructnav.scoring import (
     object_near_goal_region,
     p_inside_goal_region,
 )
-from parcel_robot.navigation import DirectiveNavigator, ModelRegistry, PlaceGrounder
 from parcel_robot.navigation.detection_lock_on import (
     LOCK_ON_PROPOSER_SOURCE,
     T_CAM_ORACLE_SR_MARGIN,
     DetectionLockOnSession,
     covariance_from_candidate,
 )
+from parcel_robot.navigation.grounder import PlaceGrounder
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.navigation.semantic_map import SemanticCandidate
 
 REPO = Path(__file__).resolve().parents[1]

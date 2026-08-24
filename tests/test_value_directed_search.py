@@ -28,12 +28,14 @@ from parcel_robot.instructnav.search_entity import (
     ring_frontier_candidates,
     select_frontier,
 )
-from parcel_robot.navigation import DirectiveNavigator, ModelRegistry, PlaceGrounder
 from parcel_robot.navigation.base import NavObservation
+from parcel_robot.navigation.grounder import PlaceGrounder
 from parcel_robot.navigation.instructnav_recovery import (
     ScanBehaviorController,
     select_search_entity_frontier,
 )
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.navigation.value_directed_scan import (
     SCAN_PROPOSER_SOURCE,
     ScanLookDecision,

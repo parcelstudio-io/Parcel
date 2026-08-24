@@ -11,12 +11,10 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.navigation import (
-    DirectiveNavigator,
-    ModelRegistry,
-    NavObservation,
-    PlaceGrounder,
-)
+from parcel_robot.navigation.base import NavObservation
+from parcel_robot.navigation.grounder import PlaceGrounder
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.pose import (
     POSE_PROVIDER_KEY,
     DriftingOdomProvider,

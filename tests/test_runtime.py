@@ -22,8 +22,9 @@ from parcel_robot.models import (
     ToolCall,
     VelocityCommand,
 )
-from parcel_robot.navigation import GoalPose, MidLevelCommand, Mission, SemanticGoal
+from parcel_robot.navigation.base import GoalPose, MidLevelCommand, Mission
 from parcel_robot.navigation.follow import FollowOwnerController
+from parcel_robot.navigation.goals import SemanticGoal
 from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
     apply_reactive_safety,

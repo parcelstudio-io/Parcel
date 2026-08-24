@@ -143,7 +143,7 @@ class Dog:
                 "navigation config missing; set navigation.config in robot.yaml "
                 "or pass configs/navigation/default.yaml"
             )
-        from parcel_robot.navigation import DirectiveNavigator
+        from parcel_robot.navigation.pipeline import DirectiveNavigator
 
         self._navigator = DirectiveNavigator.from_config(self.navigation_config)
         return self._navigator
@@ -200,7 +200,7 @@ class Dog:
         proximity to continue the mission; ``MetaUrbanNavEnv`` currently provides
         only an offline kinematic RL-loop scaffold.
         """
-        from parcel_robot.navigation import NavObservation
+        from parcel_robot.navigation.base import NavObservation
 
         nav = self._ensure_navigator()
         if model_id is not None:

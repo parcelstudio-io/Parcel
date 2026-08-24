@@ -4,17 +4,15 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.navigation import (
-    DirectiveNavigator,
-    GoalPose,
-    Mission,
-    ModelRegistry,
-    NavObservation,
-    PlaceGrounder,
+from parcel_robot.navigation.base import GoalPose, Mission, NavObservation
+from parcel_robot.navigation.goals import (
     SemanticGoal,
     navigation_directive_from_text,
     semantic_goal_from_directive,
 )
+from parcel_robot.navigation.grounder import PlaceGrounder
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 
 REPO = Path(__file__).resolve().parents[1]
 MODELS = REPO / "configs" / "navigation" / "models"

@@ -20,20 +20,17 @@ from __future__ import annotations
 import math
 import pathlib
 
-from parcel_robot.navigation import (
-    DirectiveNavigator,
-    GoalPose,
-    ModelRegistry,
-    NavObservation,
-    PlaceGrounder,
-    SemanticGoal,
-)
 from parcel_robot.navigation.arrival_semantics import (
     CLASS_OBJECT,
     CLASS_PORTAL,
     FACE_OWNER,
     FACE_TRAVEL,
 )
+from parcel_robot.navigation.base import GoalPose, NavObservation
+from parcel_robot.navigation.goals import SemanticGoal
+from parcel_robot.navigation.grounder import PlaceGrounder
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.navigation.semantic_map import SemanticCandidate
 
 MODELS = pathlib.Path(__file__).resolve().parents[1] / "configs" / "navigation" / "models"

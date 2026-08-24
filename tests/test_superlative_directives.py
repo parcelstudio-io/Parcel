@@ -26,17 +26,12 @@ from parcel_robot.audio_io import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.instructnav.grounding import GroundingOutcome, resolve_grounding
 from parcel_robot.models import VelocityCommand
-from parcel_robot.navigation import (
-    DirectiveNavigator,
-    ModelRegistry,
-    NavObservation,
-    PlaceGrounder,
-)
 from parcel_robot.navigation.attributes import (
     SIZE_POLARITY_TABLE,
     filter_candidates_by_attributes,
     supported_attributes,
 )
+from parcel_robot.navigation.base import NavObservation
 from parcel_robot.navigation.goals import (
     ATTRIBUTE_TABLE,
     PACE_ADVERB_TABLE,
@@ -46,6 +41,9 @@ from parcel_robot.navigation.goals import (
     pace_from_directive,
     semantic_goal_from_directive,
 )
+from parcel_robot.navigation.grounder import PlaceGrounder
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.runtime import RobotRuntime
 from parcel_robot.voice.closed_intents import ClosedIntent
 from parcel_robot.voice.executive_caps import PACE_DEFAULT, PACE_STEP, resolve_cap

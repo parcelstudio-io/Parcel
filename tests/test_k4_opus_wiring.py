@@ -24,16 +24,14 @@ from parcel_robot.brain.validator import (
     SkillContractRegistry,
 )
 from parcel_robot.instructnav.memory import SemanticMemory2D
-from parcel_robot.navigation import (
-    DirectiveNavigator,
-    ModelRegistry,
-    NavObservation,
-    PlaceGrounder,
-)
+from parcel_robot.navigation.base import NavObservation
+from parcel_robot.navigation.grounder import PlaceGrounder
 from parcel_robot.navigation.instructnav_recovery import (
     ScanBehaviorController,
     select_search_entity_frontier,
 )
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 
 REPO = Path(__file__).resolve().parents[1]
 MODELS = REPO / "configs" / "navigation" / "models"

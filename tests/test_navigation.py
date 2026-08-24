@@ -5,24 +5,24 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.navigation import (
-    DirectiveNavigator,
+from parcel_robot.navigation.base import (
     GoalPose,
-    MetaUrbanNavEnv,
     MidLevelCommand,
     Mission,
-    ModelRegistry,
     ModelSpec,
     NavObservation,
-    PlaceGrounder,
-    SemanticGoal,
 )
 from parcel_robot.navigation.collision import CollisionPolicy, apply_collision_brake
+from parcel_robot.navigation.envs.metaurban_env import MetaUrbanNavEnv
 from parcel_robot.navigation.goals import (
+    SemanticGoal,
     navigation_directive_from_text,
     semantic_goal_from_directive,
 )
+from parcel_robot.navigation.grounder import PlaceGrounder
 from parcel_robot.navigation.models import StubNavigator, build_navigator
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.skills import Dog
 
 REPO = Path(__file__).resolve().parents[1]

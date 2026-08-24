@@ -33,13 +33,6 @@ import mujoco
 import pytest
 
 from parcel_robot.city_semantics import extract_city_semantics
-from parcel_robot.navigation import (
-    DirectiveNavigator,
-    GoalPose,
-    ModelRegistry,
-    NavObservation,
-    PlaceGrounder,
-)
 from parcel_robot.navigation.arrival_semantics import (
     CLASS_OBJECT,
     CLASS_PORTAL,
@@ -49,7 +42,11 @@ from parcel_robot.navigation.arrival_semantics import (
     arrival_policy,
     classify_place,
 )
+from parcel_robot.navigation.base import GoalPose, NavObservation
 from parcel_robot.navigation.goals import semantic_goal_from_directive
+from parcel_robot.navigation.grounder import PlaceGrounder
+from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.navigation.registry import ModelRegistry
 from parcel_robot.navigation.semantic_map import (
     SemanticCandidate,
     semantic_candidates_from_observation,

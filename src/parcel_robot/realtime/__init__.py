@@ -12,6 +12,22 @@ constructed and the runtime boots byte-identically.
 
 from __future__ import annotations
 
+# DEC-IG-1: the eight ``lane`` SYMBOL re-exports (GUARDRAILS, RealtimeLane,
+# build_instructions, RealtimeArmingDecision, RealtimeLaneError,
+# SinkOwnershipError, TOOL_REFUSAL_OUTPUT, decide_realtime_arming) are gone --
+# an AST sweep of src/, tests/, scripts/, tools/ and examples/ found zero
+# importers of any of them through this barrel.
+#
+# The submodule import below is deliberately RETAINED.  Dropping it would stop
+# this ``__init__`` from executing lane.py, which is a real structural win
+# (lane.py + tool_broker.py, ~6.8k lines, leave the import path and this
+# package's import SCC falls 7 -> 5) -- but it flips a documented, test-pinned
+# import side effect owned by another card:
+#   tools/replay_turn_detection.py:679  (docstring asserting the side effect)
+#   tests/test_truth1_texts.py::test_the_offline_modes_reach_lane_and_never_reach_ws_transport
+# Both are outside this card's OWNS, so the side effect is preserved here and
+# the decision is handed on.  See scrum/20260823/task_15/DECIG1_STATUS.md.
+from . import lane
 from .config import (
     RealtimeConfig,
     RealtimeConfigError,
@@ -30,16 +46,6 @@ from .ingress import (
     RealtimeTranscriptOutcome,
     normalize,
     scan,
-)
-from .lane import (
-    GUARDRAILS,
-    TOOL_REFUSAL_OUTPUT,
-    RealtimeArmingDecision,
-    RealtimeLane,
-    RealtimeLaneError,
-    SinkOwnershipError,
-    build_instructions,
-    decide_realtime_arming,
 )
 from .protocol import (
     MalformedEvent,
@@ -67,25 +73,19 @@ from .voice_identity import (
 )
 
 __all__ = [
-    "GUARDRAILS",
     "KIND_CLOSED_INTENT",
     "KIND_EMERGENCY",
     "KIND_FOLLOW",
     "KIND_HOLD",
     "KIND_NONE",
     "SPEND_LEDGER_NAME",
-    "TOOL_REFUSAL_OUTPUT",
     "IngressScan",
     "MalformedEvent",
     "MonthToDateSpend",
-    "RealtimeArmingDecision",
     "RealtimeConfig",
     "RealtimeConfigError",
-    "RealtimeLane",
-    "RealtimeLaneError",
     "RealtimeProtocolError",
     "RealtimeTranscriptOutcome",
-    "SinkOwnershipError",
     "SpeakerLabel",
     "SpendLedger",
     "Transport",
@@ -95,11 +95,10 @@ __all__ = [
     "VoiceIdentityError",
     "VoiceIdentityGate",
     "VoiceVerdict",
-    "build_instructions",
-    "decide_realtime_arming",
     "default_realtime_config",
     "gate_decision",
     "gates_kind",
+    "lane",
     "load_realtime_config",
     "month_key",
     "normalize",

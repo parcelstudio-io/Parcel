@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
-from parcel_robot.navigation import DirectiveNavigator, MetaUrbanNavEnv, NavObservation
+from parcel_robot.navigation.base import NavObservation
+from parcel_robot.navigation.envs.metaurban_env import MetaUrbanNavEnv
+from parcel_robot.navigation.pipeline import DirectiveNavigator
 
 
 def main() -> None:
