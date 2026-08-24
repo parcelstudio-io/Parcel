@@ -886,9 +886,22 @@ REACTIVE_SAFETY_PATH = "src/parcel_robot/navigation/reactive_safety.py"
 #:   no identity provenance hash byte-identically to the pre-OT-2 tree
 #:   (``f16316b3…``). Measurements are in
 #:   ``scrum/20260822/task_17/OT2_STATUS.md``.
+#:   A4 SPINE (scrum/20260824/task_2) re-froze exactly two of the five digests:
+#:   ``apply_reactive_safety`` and ``_owner_comfort_band_m``. The ONLY change to
+#:   either body is the observation parameter's annotation, which moved off the
+#:   simulator backend type onto the transitional carrier Protocol
+#:   (``SimObservation`` -> ``ObservationCarrierV1``) so this module stops
+#:   importing ``backends.base`` (audit row K3). Proved by diffing
+#:   ``ast.unparse`` of each symbol against HEAD f1a6a92: exactly one changed
+#:   line each, the ``def`` line. No threshold, branch, ordering or clearance
+#:   moved; the three untouched digests (``__post_init__``, ``owner_slow_m``,
+#:   ``_owner_identity_trusted``) are the evidence that nothing else in the
+#:   authority shifted. The card's V2 entry point
+#:   (``apply_reactive_safety_from_snapshot``) is a STRICTLY stronger wrapper
+#:   around this unmodified function, never a replacement for it.
 REACTIVE_SAFETY_PIN: dict[str, str] = {
     "apply_reactive_safety": (
-        "f52db9c50cd6efe3958471a87d7f53e7ef3ba7b0038c895422dd0d7a4cf6bded"
+        "520211afbd060bfb31362402f9aeb438411367019e7af1cd7cbe62f71ffa484f"
     ),
     "ReactiveSafetyPolicy.__post_init__": (
         "8c39f4eee7eda0090d2d767f06ef82e120959896fb05acb8289ec3d7e78d445a"
@@ -897,7 +910,7 @@ REACTIVE_SAFETY_PIN: dict[str, str] = {
         "119af4adb6575f21ebbebe929e77e1e29eba3da345a021a69a2f32959e222f0e"
     ),
     "_owner_comfort_band_m": (
-        "7d5050eb563e5a8336a94f8eb26d648dc7de6e46680bd1108a68c9f1149848a9"
+        "b88d9f3544e8bf947372a251337040331f9ef27162d5c5b9411933f15621d764"
     ),
     "_owner_identity_trusted": (
         "646234a120df4b2d54d8b80c00d1ba9b72df681be368e9688571276476a08a77"

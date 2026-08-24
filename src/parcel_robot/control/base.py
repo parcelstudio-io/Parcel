@@ -4,8 +4,10 @@ import threading
 from dataclasses import replace
 from typing import Any, Protocol
 
-from parcel_robot.backends.base import SimObservation
+from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
+from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 from parcel_robot.evidence_origin import EvidenceOrigin
+from parcel_robot.observation.carrier_view import carrier_view
 
 from .models import ControllerCapabilities, FaultReason, RobotMotionState, TimedVelocitySetpoint
 
@@ -40,7 +42,7 @@ class RobotStateSource(Protocol):
 
 
 class ObservationSink(Protocol):
-    """SIMULATOR-ONLY write seam: synthesize feedback from a ``SimObservation``.
+    """SIMULATOR-ONLY write seam: synthesize feedback from an observation carrier.
 
     Only a source that is *fed by the simulator* implements this. A physical
     vendor source must not — its feedback comes from the robot, and writing a
@@ -50,7 +52,7 @@ class ObservationSink(Protocol):
     holds even against a source that implements the method by mistake.
     """
 
-    def update_observation(self, observation: SimObservation) -> RobotMotionState: ...
+    def update_observation(self, observation: ObservationCarrierV1) -> RobotMotionState: ...
 
 
 def declared_origin(candidate: object) -> EvidenceOrigin:
@@ -246,3 +248,21 @@ class LocomotionController(Protocol):
     def clear_emergency_stop(self) -> None: ...
 
     def close(self) -> None: ...
+
+
+def update_sink_from_snapshot(
+    sink: ObservationSink, snapshot: NavigationSnapshotV2
+) -> RobotMotionState:
+    """Card A4's V2 entry point for the simulator-only feedback sink.
+
+    The sink's rule is unchanged, and it is why this is a helper rather than a
+    widened annotation: only a simulator-fed source may be written to, so a
+    snapshot whose base evidence declares a physical origin is refused here
+    instead of manufacturing fake physical feedback further down.
+    """
+
+    if snapshot.base.header.origin is EvidenceOrigin.PHYSICAL:
+        raise ValueError(
+            "a physically-sourced snapshot must not be written into the simulator sink"
+        )
+    return sink.update_observation(carrier_view(snapshot))

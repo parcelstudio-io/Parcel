@@ -871,12 +871,21 @@ STOPPING_PREDICATE_PIN: dict[str, dict[str, str]] = {
         "RobotRuntime._finalize_for_actuator": (
             "e8d737068343a2945a2484a542d241d2ec0a737dcd6be1d69e1cb8c936769e7a"
         ),
+        # A4 SPINE (scrum/20260824/task_2) re-froze the next two digests. The
+        # ONLY change to either body is the observation annotation, which moved
+        # off the simulator backend type onto the transitional carrier Protocol
+        # (``SimObservation | None`` -> ``ObservationCarrierV1 | None``) so that
+        # runtime.py stops importing ``backends.base.SimObservation`` (audit row
+        # K3). Proved by diffing ``ast.unparse`` of each symbol against HEAD
+        # f1a6a92: exactly one changed line each, the ``def`` line. No predicate,
+        # threshold or ordering moved, so the runtime/replica parity claim this
+        # pin protects is unchanged and the replica needed no edit.
         "RobotRuntime._nominal_stop_ramp_tick": (
-            "8f8afb235249db495c6fd6b243903ccf422af2bac157ab78091e4c67c03b75eb"
+            "92a5ccdc69d8c442b63e97f0091c02e2c07dc9646aa5f3b9a105a0e7956a0d6f"
         ),
         # AF-1: the re-gate itself — both authorities it consults, in order.
         "RobotRuntime._regate_nominal_stop": (
-            "581b41416eeac1f55411b5a8e5c68d2562fdf1c2af87097fce56a269b4fe9d0a"
+            "4ddc8c1ae2b3a2a89b2994575ea3244c7a5d08c966d46f021ee8ba9299731457"
         ),
         # AF-1: the thresholds the ramp's disposition is read against. A moved
         # tolerance here reclassifies stops without touching any method above.

@@ -1,0 +1,52 @@
+# Parcel — the one capture rail. SKELETON: never run on an Orin.
+#
+#   Card     A4 SPINE (scrum/20260824/task_2), finding EMBODIMENT-KERNEL K6
+#   Design   research/20260824/PORTABLE_LIVING_DOG_HLD.md §3, §7.1
+#   Decided  VOICE-GATE v2: push-to-talk for M1 (owner recall 1.000,
+#            0 non-owner hosted bytes, 0 false openings/day)
+#
+# TODO before this unit can start anything:
+#   * /opt/parcel/bin/parcel-audio does not exist. The capture rail exists as
+#     desktop code (parcel_robot/realtime/, parcel_robot/audio/) and has never
+#     been packaged as a service.
+#   * AEC/barge-in is UNMEASURABLE on the development host (no loudspeaker but
+#     the reSpeaker XVF3800's own DAC), so every arm of the voice study is an
+#     honest `replay` tier. Mounted acoustics is a box-day decision.
+#   * the identity threshold ships recalibrated on the deployment channel
+#     (~0.352, not 0.55) — card A7 owns that, and it is not set here.
+#
+# The rejected-audio ring buffer is SHORT and local. This unit gets no network
+# access at all: hosted calls belong to the runtime's connector, behind the
+# spend and privacy governors.
+
+[Unit]
+Description=Parcel audio rail (capture, AEC/VAD, local STOP, engagement gate)
+Documentation=file:///opt/parcel/doc/PORTABLE_LIVING_DOG_HLD.md
+After=sound.target parcel-safety.service
+Wants=sound.target
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=parcel-audio
+Group=parcel-audio
+SupplementaryGroups=audio
+Environment=PARCEL_ARMED=0
+Environment=PARCEL_ROLE=audio
+Environment=PARCEL_VOICE_MODE=push_to_talk
+EnvironmentFile=-/etc/parcel/audio.env
+ExecStartPre=/usr/bin/test -x /opt/parcel/bin/parcel-audio
+ExecStart=/opt/parcel/bin/parcel-audio --disarmed --local-stop
+Restart=on-failure
+RestartSec=2
+WatchdogSec=5
+StateDirectory=parcel/audio
+LogsDirectory=parcel/audio
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+# The rail speaks to the array and to the local bus, and to nothing else.
+PrivateNetwork=true
+DeviceAllow=char-alsa rw
+MemoryMax=1G

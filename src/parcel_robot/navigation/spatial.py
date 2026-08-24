@@ -6,12 +6,14 @@ import time
 from dataclasses import asdict, dataclass
 
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
-from parcel_robot.backends.base import SimObservation
+from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
+from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 from parcel_robot.models import SpatialIntent, VelocityCommand
 from parcel_robot.navigation.orbit_feasibility import (
     OrbitFeasibility,
     evaluate_orbit_annulus,
 )
+from parcel_robot.observation.carrier_view import carrier_view
 
 NUMBER_WORDS = {
     "once": 1,
@@ -323,7 +325,7 @@ class SpatialBehaviorController:
     def assess_orbit(
         self,
         intent: SpatialIntent,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         *,
         obstacle_stop_m: float,
     ) -> OrbitFeasibility:
@@ -383,7 +385,7 @@ class SpatialBehaviorController:
     def _remember_refusal(
         self,
         verdict: OrbitFeasibility,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         centre: tuple[float, float] | None,
     ) -> None:
         if verdict.feasible:
@@ -398,7 +400,7 @@ class SpatialBehaviorController:
     def start(
         self,
         intent: SpatialIntent,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         *,
         now: float | None = None,
     ) -> dict[str, object]:
@@ -470,7 +472,7 @@ class SpatialBehaviorController:
 
     def step(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         *,
         now: float | None = None,
     ) -> SpatialDecision:
@@ -513,7 +515,7 @@ class SpatialBehaviorController:
             "progress": round(self._orbit_progress, 4) if intent else 0.0,
         }
 
-    def _step_distance(self, observation: SimObservation) -> SpatialDecision:
+    def _step_distance(self, observation: ObservationCarrierV1) -> SpatialDecision:
         assert self._intent is not None
         robot = observation.robot
         dx = robot.x - self._start_x
@@ -545,7 +547,7 @@ class SpatialBehaviorController:
             fraction,
         )
 
-    def _step_orbit(self, observation: SimObservation) -> SpatialDecision:
+    def _step_orbit(self, observation: ObservationCarrierV1) -> SpatialDecision:
         assert self._intent is not None
         robot = observation.robot
         dx = robot.x - self._center[0]
@@ -640,7 +642,7 @@ class SpatialBehaviorController:
 
     def _lookahead_feasibility(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         angle: float,
         direction_sign: float,
     ) -> OrbitFeasibility | None:
@@ -713,12 +715,12 @@ class SpatialBehaviorController:
             min(self.config.max_yaw_rate, heading_error * self.config.yaw_gain),
         )
 
-    def _require_owner(self, observation: SimObservation) -> None:
+    def _require_owner(self, observation: ObservationCarrierV1) -> None:
         owner = observation.owner
         if not owner.visible or owner.confidence < self.config.owner_confidence_min:
             raise RuntimeError("owner_not_visible_to_camera")
 
-    def _owner_moved(self, observation: SimObservation) -> bool:
+    def _owner_moved(self, observation: ObservationCarrierV1) -> bool:
         if self._owner_anchor is None:
             return False
         return (
@@ -729,7 +731,7 @@ class SpatialBehaviorController:
             > self.config.owner_anchor_tolerance_m
         )
 
-    def _motion_stalled(self, observation: SimObservation, timestamp: float) -> bool:
+    def _motion_stalled(self, observation: ObservationCarrierV1, timestamp: float) -> bool:
         previous_x, previous_y, previous_yaw = self._last_motion_pose
         robot = observation.robot
         translated = math.hypot(robot.x - previous_x, robot.y - previous_y) >= 0.025
@@ -764,7 +766,7 @@ _OWNER_MATCH_M = 0.6
 
 
 def _surface_points(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
     *,
     exclude: tuple[float, float] | None,
 ) -> tuple[tuple[str, float, float], ...]:
@@ -796,7 +798,7 @@ def _surface_points(
 
 
 def _keepout_discs(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
     *,
     exclude: tuple[float, float] | None,
 ) -> tuple[tuple[str, float, float, float], ...]:
@@ -822,7 +824,7 @@ def _keepout_discs(
 
 
 def _ring_start_deg(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
     centre: tuple[float, float] | None,
 ) -> float:
     """Where the ring sweep begins: the robot's own bearing about the centre."""
@@ -838,7 +840,7 @@ def _ring_start_deg(
 
 
 def _owner_reference_deg(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
     centre: tuple[float, float] | None,
 ) -> float | None:
     """The heading "on your left" is measured from.
@@ -877,3 +879,14 @@ def _wrap(angle: float) -> float:
 
 def _angle_error(target: float, current: float) -> float:
     return _wrap(target - current)
+
+
+def step_from_snapshot(
+    behavior: SpatialBehaviorController,
+    snapshot: NavigationSnapshotV2,
+    *,
+    now: float | None = None,
+) -> SpatialDecision:
+    """Card A4's V2 entry point for one spatial-behavior step."""
+
+    return behavior.step(carrier_view(snapshot), now=now)

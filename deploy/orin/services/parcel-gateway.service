@@ -1,0 +1,61 @@
+# Parcel — the sole writer to the body. SKELETON: nothing here has been run.
+#
+#   Card     A4 SPINE (scrum/20260824/task_2), finding EMBODIMENT-KERNEL K6
+#   Design   research/20260824/PORTABLE_LIVING_DOG_HLD.md §3, §12 Gate 2
+#   Install  a box-day step, not a commit. See README.md in this directory.
+#
+# TODO before this unit can start anything (each is a card, none is this one):
+#   * /opt/parcel/bin/parcel-gateway does not exist — card A1 M1-0 GATEWAY owns
+#     the process; this file owns only its supervision contract.
+#   * the `parcel-gateway` system user, /var/lib/parcel/gateway and
+#     /var/log/parcel/gateway must be created by the image build.
+#   * credentials: the vendor DDS/SDK credential lives ONLY in this unit's
+#     environment file, mode 0400, owned by parcel-gateway. It is the single
+#     reason this process has its own principal.
+#   * the audit ring buffer's size and rotation are unmeasured.
+#
+# WHY Restart is rate-limited rather than aggressive: a crash-looping sole
+# writer that re-acquires its lease every 200 ms is a second writer in all but
+# name. Five restarts in five minutes is a fault to be reported, not survived.
+
+[Unit]
+Description=Parcel motion gateway (sole vendor writer, lease/TTL/stop latch)
+Documentation=file:///opt/parcel/doc/PORTABLE_LIVING_DOG_HLD.md
+After=network-pre.target parcel-nftables.service
+Wants=parcel-nftables.service
+# The firewall is a hard prerequisite: 192.168.123.0/24 is unauthenticated
+# CycloneDDS. Starting the writer before the boundary is loaded is the one
+# ordering mistake that cannot be undone by stopping the unit afterwards.
+Requires=parcel-nftables.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=parcel-gateway
+Group=parcel-gateway
+# Boot is disarmed. Reaching `active` grants no motion authority; arming is an
+# operator transaction the runtime performs against a running gateway.
+Environment=PARCEL_ARMED=0
+Environment=PARCEL_ROLE=gateway
+EnvironmentFile=-/etc/parcel/gateway.env
+ExecStartPre=/usr/bin/test -x /opt/parcel/bin/parcel-gateway
+ExecStart=/opt/parcel/bin/parcel-gateway --disarmed
+# A stop request must reach the vendor stop path even if the main loop is
+# wedged; the gateway installs its own bounded stop on SIGTERM.
+KillSignal=SIGTERM
+TimeoutStopSec=5
+Restart=on-failure
+RestartSec=2
+StartLimitIntervalSec=300
+StartLimitBurst=5
+WatchdogSec=2
+StateDirectory=parcel/gateway
+LogsDirectory=parcel/gateway
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+MemoryMax=512M
+
+[Install]
+WantedBy=parcel.target

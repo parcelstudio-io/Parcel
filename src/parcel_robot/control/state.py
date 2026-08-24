@@ -4,8 +4,10 @@ import math
 import threading
 from dataclasses import replace
 
-from parcel_robot.backends.base import SimObservation
+from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
+from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 from parcel_robot.models import VelocityCommand
+from parcel_robot.observation.carrier_view import carrier_view
 
 from .models import RobotMotionState
 
@@ -39,7 +41,7 @@ class BufferedRobotStateSource:
                     raise ValueError("robot state timestamps must not move backward")
             self._latest = state
 
-    def update_observation(self, observation: SimObservation) -> RobotMotionState:
+    def update_observation(self, observation: ObservationCarrierV1) -> RobotMotionState:
         with self._lock:
             previous = self._latest
             self._sequence += 1
@@ -86,3 +88,11 @@ class BufferedRobotStateSource:
             self._closed = True
             self._started = False
             self._latest = None
+
+
+def update_state_source_from_snapshot(
+    source: BufferedRobotStateSource, snapshot: NavigationSnapshotV2
+) -> RobotMotionState:
+    """Card A4's V2 entry point: synthesize feedback from a stamped snapshot."""
+
+    return source.update_observation(carrier_view(snapshot))

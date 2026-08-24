@@ -6,11 +6,14 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
+from parcel_robot.observation.carrier_view import carrier_view
+
 from .base import NavObservation
 from .goals import SemanticGoal
 
 if TYPE_CHECKING:
-    from parcel_robot.backends.base import SimObservation
+    from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
+    from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 
 
 @dataclass(frozen=True)
@@ -249,7 +252,7 @@ def _abstention_filtered(
 
 
 def semantic_candidates_from_observation(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
     *,
     chain: Any = None,
 ) -> list[dict[str, Any]]:
@@ -348,7 +351,7 @@ def evidence_confidence(entry: Any) -> float:
 
 
 def learned_map_candidates(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
     *,
     learned_map: Any = None,
     radius_m: float | None = None,
@@ -497,7 +500,7 @@ def _active_chain() -> Any:
     return active_perception_chain()
 
 
-def lidar_payload_from_observation(observation: SimObservation) -> list[dict[str, Any]]:
+def lidar_payload_from_observation(observation: ObservationCarrierV1) -> list[dict[str, Any]]:
     return [
         {
             "id": item.obstacle_id,
@@ -706,3 +709,22 @@ def _without_determiner(value: object) -> str:
     while words and words[0] in _DETERMINERS:
         words = words[1:]
     return "".join(words)
+
+
+def semantic_candidates_from_snapshot(
+    snapshot: NavigationSnapshotV2, *, chain: Any = None
+) -> list[dict[str, Any]]:
+    """Card A4's V2 entry point for the semantic-candidate ingress.
+
+    ``SemanticObservationV1`` carries the evidence id that produced it, which
+    the carrier shape could not; the re-projection drops that link, so reading
+    ``snapshot.semantics`` natively is the cutover this path is waiting for.
+    """
+
+    return semantic_candidates_from_observation(carrier_view(snapshot), chain=chain)
+
+
+def lidar_payload_from_snapshot(snapshot: NavigationSnapshotV2) -> list[dict[str, Any]]:
+    """Card A4's V2 entry point for the LiDAR payload."""
+
+    return lidar_payload_from_observation(carrier_view(snapshot))

@@ -1,0 +1,50 @@
+# Parcel — the companion runtime. SKELETON: never run as a service.
+#
+#   Card     A4 SPINE (scrum/20260824/task_2), finding EMBODIMENT-KERNEL K6
+#   Design   research/20260824/PORTABLE_LIVING_DOG_HLD.md §3, §6
+#
+# TODO before this unit can start anything:
+#   * /opt/parcel/bin/parcel-runtime does not exist. `parcel_robot.runtime`
+#     runs today as a desktop process against a simulator backend; packaging it
+#     for pinned aarch64 is Gate 2's other half and has not been done.
+#   * the runtime must hold NO vendor SDK or device handle (HLD §3). Today it
+#     holds a `SimulatorBackend`; on the robot it must hold a
+#     MotionGatewayClient and nothing else.
+#   * the hosted connector's spend governor (card A7) is not built. Until it
+#     is, this unit must not be given network credentials.
+#
+# The owner's live desktop stack (:8765, /tmp/parcel_sim.sock, :8080) is a
+# DIFFERENT thing from this unit and is never touched by it.
+
+[Unit]
+Description=Parcel companion runtime (world model, conversation, drives, memory)
+Documentation=file:///opt/parcel/doc/PORTABLE_LIVING_DOG_HLD.md
+After=parcel-gateway.service parcel-safety.service parcel-lio.service parcel-audio.service
+Wants=parcel-lio.service parcel-audio.service
+# Requires the two authority services and nothing else: losing LIO or audio
+# degrades the companion, losing the gateway or the supervisor ends motion.
+Requires=parcel-gateway.service parcel-safety.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+User=parcel-runtime
+Group=parcel-runtime
+Environment=PARCEL_ARMED=0
+Environment=PARCEL_ROLE=runtime
+Environment=PARCEL_PROFILE=physical
+EnvironmentFile=-/etc/parcel/runtime.env
+ExecStartPre=/usr/bin/test -x /opt/parcel/bin/parcel-runtime
+# --profile physical is what makes the observation spine refuse simulation and
+# replay evidence (parcel_robot/contracts/evidence_header.py::physical_profile).
+ExecStart=/opt/parcel/bin/parcel-runtime --disarmed --profile physical
+Restart=on-failure
+RestartSec=5
+WatchdogSec=10
+StateDirectory=parcel/runtime
+LogsDirectory=parcel/runtime
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+MemoryMax=6G

@@ -12,7 +12,9 @@ from parcel_robot.authority import (
     SafetyEnvelope,
     gate_lateral_clearance_m,
 )
-from parcel_robot.backends.base import OwnerTrack, SimObservation
+from parcel_robot.backends.base import OwnerTrack
+from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
+from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 from parcel_robot.core.input_health import (
     InputEvidence,
     RequiredInput,
@@ -21,6 +23,7 @@ from parcel_robot.core.input_health import (
     evidence_origin,
 )
 from parcel_robot.models import VelocityCommand
+from parcel_robot.observation.carrier_view import carrier_view
 
 #: robot.yaml ``safety.obstacle_stop_m`` commissioning floor. Stricter than
 #: ``SafetyEnvelope.obstacle_stop_floor_m`` (0.6); unifying downward would
@@ -467,7 +470,7 @@ class ReactiveSafetyPolicy:
 
 def apply_reactive_safety(
     command: VelocityCommand,
-    observation: SimObservation | None,
+    observation: ObservationCarrierV1 | None,
     *,
     policy: ReactiveSafetyPolicy,
     owner_orbit: bool = False,
@@ -607,7 +610,7 @@ def apply_reactive_safety(
 
 
 def _owner_comfort_band_m(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
     policy: ReactiveSafetyPolicy,
 ) -> float:
     """Which comfort band the owner entry gets this tick. Returns metres.
@@ -753,7 +756,7 @@ def _translating(command: VelocityCommand) -> bool:
     return math.hypot(command.vx, command.vy) > 1e-6
 
 
-def scan_present(observation: SimObservation) -> bool:
+def scan_present(observation: ObservationCarrierV1) -> bool:
     """True when any commissioned scan channel carries a sample this tick."""
 
     if observation.lidar_obstacles:
@@ -763,7 +766,7 @@ def scan_present(observation: SimObservation) -> bool:
     return bool(observation.lidar_ranges)
 
 
-def scan_evidence_from_observation(observation: SimObservation) -> InputEvidence | None:
+def scan_evidence_from_observation(observation: ObservationCarrierV1) -> InputEvidence | None:
     """Build scan ``InputEvidence`` for the core health join, or ``None`` if missing."""
 
     if not scan_present(observation):
@@ -782,7 +785,7 @@ def scan_evidence_from_observation(observation: SimObservation) -> InputEvidence
     )
 
 
-def _scan_health_allows_translation(observation: SimObservation, *, now: float) -> bool:
+def _scan_health_allows_translation(observation: ObservationCarrierV1, *, now: float) -> bool:
     """Fail closed on missing/stale/malformed scan via the core health join."""
 
     verdict = evaluate_input_health(
@@ -825,3 +828,77 @@ def _stop_translation(command: VelocityCommand) -> tuple[VelocityCommand, str]:
 
 def _wrap(angle: float) -> float:
     return (angle + math.pi) % (2.0 * math.pi) - math.pi
+
+
+def scan_evidence_from_snapshot(snapshot: NavigationSnapshotV2) -> InputEvidence | None:
+    """Stamp the scan channel from the SNAPSHOT'S header, not from a backend string.
+
+    This is the one place where the V2 path differs from the carrier path in
+    substance rather than in shape, and the difference is a safety one.  The
+    carrier path routes ``observation.backend`` through
+    :func:`~parcel_robot.core.input_health.evidence_origin`, which returns
+    ``SIMULATION`` for every sample by construction (board decision D-1: the
+    carrier type is the authority).  A snapshot header DECLARES its origin, so
+    a physical LiDAR publishing through the physical adapter stamps PHYSICAL
+    here directly — which is what the HW-2 re-stamp in ``runtime.py`` exists to
+    compensate for while the carrier is the only path.
+
+    The re-stamping semantics are otherwise unchanged and stay where they are:
+    this function may not invent presence the snapshot lacks, exactly as HW-2's
+    ``scan is not None`` short-circuit requires.
+    """
+
+    traversability = snapshot.traversability
+    if not traversability.scan_present:
+        return None
+    header = traversability.header
+    return InputEvidence(
+        captured_at=header.capture_monotonic_ns / 1e9,
+        frame_id=header.frame_id,
+        payload_valid=True,
+        origin=header.origin,
+        fixture_label=header.fixture_label,
+    )
+
+
+def apply_reactive_safety_from_snapshot(
+    command: VelocityCommand,
+    snapshot: NavigationSnapshotV2 | None,
+    *,
+    policy: ReactiveSafetyPolicy,
+    owner_orbit: bool = False,
+    orbit_radius_m: float = 0.0,
+    now: float | None = None,
+    require_fresh_telemetry: bool = True,
+) -> tuple[VelocityCommand, str]:
+    """Card A4's V2 entry point.  STRICTLY stronger than the carrier path.
+
+    Nothing here moves what :func:`apply_reactive_safety` enforces — that
+    function is untouched and still decides every clearance.  This wrapper adds
+    one gate in front of it: a snapshot the assembler refused (stale,
+    mixed-epoch, missing channel, synthetic origin under a physical profile) or
+    one whose localization has latched a discontinuity may not authorize
+    translation at all, whatever the geometry says.
+    """
+
+    if snapshot is None:
+        return apply_reactive_safety(
+            command,
+            None,
+            policy=policy,
+            owner_orbit=owner_orbit,
+            orbit_radius_m=orbit_radius_m,
+            now=now,
+            require_fresh_telemetry=require_fresh_telemetry,
+        )
+    if not snapshot.translation_allowed:
+        return _stop_translation(command) if _translating(command) else (command, "clear")
+    return apply_reactive_safety(
+        command,
+        carrier_view(snapshot),
+        policy=policy,
+        owner_orbit=owner_orbit,
+        orbit_radius_m=orbit_radius_m,
+        now=now,
+        require_fresh_telemetry=require_fresh_telemetry,
+    )

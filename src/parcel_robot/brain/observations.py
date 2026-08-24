@@ -8,8 +8,10 @@ import time
 from collections.abc import Iterable, Mapping
 
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
-from parcel_robot.backends.base import SimObservation
+from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
+from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 from parcel_robot.models import VelocityCommand
+from parcel_robot.observation.carrier_view import carrier_view
 
 from .contracts import (
     SCHEMA_VERSION,
@@ -26,7 +28,7 @@ from .contracts import (
 
 
 def build_observation_snapshot(
-    observation: SimObservation | None,
+    observation: ObservationCarrierV1 | None,
     *,
     snapshot_id: str,
     now: float | None = None,
@@ -185,7 +187,7 @@ def _sensor(
 
 
 def _entities(
-    observation: SimObservation | None,
+    observation: ObservationCarrierV1 | None,
     *,
     owner_heading_available: bool,
 ) -> tuple[ObservedEntity, ...]:
@@ -250,3 +252,18 @@ def _optional_int(value: object) -> int | None:
 
 
 __all__ = ["build_observation_snapshot", "task_state_from_executive"]
+
+
+def build_observation_snapshot_from_v2(
+    snapshot: NavigationSnapshotV2,
+    **kwargs: object,
+) -> ObservationSnapshot:
+    """Card A4's V2 entry point: build the planning snapshot from a stamped one.
+
+    The keyword tail passes through unchanged, so a caller that has migrated to
+    :class:`NavigationSnapshotV2` needs no other edit.  See
+    :mod:`parcel_robot.observation.carrier_view` for what the re-projection
+    does and does not yet buy.
+    """
+
+    return build_observation_snapshot(carrier_view(snapshot), **kwargs)  # type: ignore[arg-type]

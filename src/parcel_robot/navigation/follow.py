@@ -8,7 +8,8 @@ from dataclasses import dataclass, fields, replace
 from typing import Any, ClassVar
 
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
-from parcel_robot.backends.base import SimObservation
+from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
+from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.owner_prediction import PredictedPath
 from parcel_robot.navigation.reactive_safety import (
@@ -22,6 +23,7 @@ from parcel_robot.navigation.yield_aside import (
     planar_free_range,
     propose_yield_aside,
 )
+from parcel_robot.observation.carrier_view import carrier_view
 
 # ---------------------------------------------------------------------------
 # The owner stand-off family, DERIVED (owner-authorized person-clearance
@@ -574,7 +576,7 @@ class FollowOwnerController:
 
     def observe_owner(
         self,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         now: float | None = None,
     ) -> str:
         """Passively update camera-track motion history without producing motion.
@@ -614,7 +616,7 @@ class FollowOwnerController:
 
     def step(
         self,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         now: float | None = None,
         *,
         prediction: PredictedPath | None = None,
@@ -632,7 +634,7 @@ class FollowOwnerController:
 
     def _step_locked(
         self,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         now: float | None,
         prediction: PredictedPath | None = None,
     ) -> FollowDecision:
@@ -726,7 +728,7 @@ class FollowOwnerController:
     def _clamped_lead(
         self,
         lead: _LeadPoint | None,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         standoff_m: float,
     ) -> _LeadPoint | None:
         """Limit how far ahead of the *measured* owner the aim point may sit.
@@ -769,7 +771,7 @@ class FollowOwnerController:
 
     def _yield_aim(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         aim_x: float,
         aim_y: float,
     ) -> tuple[float, float]:
@@ -855,7 +857,7 @@ class FollowOwnerController:
 
     def _step_direct(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         lead: _LeadPoint | None = None,
     ) -> FollowDecision:
         owner = observation.owner
@@ -925,7 +927,7 @@ class FollowOwnerController:
 
     def _step_behind(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         current: float,
         motion_status: str,
         lead: _LeadPoint | None = None,
@@ -1055,7 +1057,7 @@ class FollowOwnerController:
 
     def _observe_owner_locked(
         self,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         current: float,
     ) -> str:
         if observation is None:
@@ -1093,7 +1095,7 @@ class FollowOwnerController:
 
     def _update_motion_estimate(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         current: float,
     ) -> str:
         owner = observation.owner
@@ -1188,7 +1190,7 @@ class FollowOwnerController:
 
     def _staging_target(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         *,
         target_heading: float,
     ) -> tuple[float, float, str]:
@@ -1241,7 +1243,7 @@ class FollowOwnerController:
 
     def _command_to_target(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         target_x: float,
         target_y: float,
     ) -> VelocityCommand:
@@ -1353,7 +1355,7 @@ class FollowOwnerController:
             }
 
 
-def _stranger_tracks(observation: SimObservation) -> tuple[object, ...]:
+def _stranger_tracks(observation: ObservationCarrierV1) -> tuple[object, ...]:
     """The ``dynamic_agents`` set with the owner's own track removed.
 
     A perception stack that publishes the owner as a person track would
@@ -1380,7 +1382,7 @@ def _stranger_tracks(observation: SimObservation) -> tuple[object, ...]:
     return tuple(kept)
 
 
-def _scan_free_range(observation: SimObservation):
+def _scan_free_range(observation: ObservationCarrierV1):
     """Bind the observation's planar scan into the proposer's free-range query.
 
     Returns ``None`` when no calibrated scan is available, which the proposer
@@ -1408,7 +1410,7 @@ def _scan_free_range(observation: SimObservation):
     return free_range
 
 
-def _finite_track(observation: SimObservation) -> bool:
+def _finite_track(observation: ObservationCarrierV1) -> bool:
     return all(
         math.isfinite(value)
         for value in (
@@ -1441,3 +1443,31 @@ def _segment_origin_clearance(
     projection = -(start[0] * dx + start[1] * dy) / length_sq
     fraction = max(0.0, min(1.0, projection))
     return math.hypot(start[0] + fraction * dx, start[1] + fraction * dy)
+
+
+def observe_owner_from_snapshot(
+    follower: FollowOwnerController,
+    snapshot: NavigationSnapshotV2,
+    now: float | None = None,
+) -> str:
+    """Card A4's V2 entry point for the owner-track observation."""
+
+    return follower.observe_owner(carrier_view(snapshot), now)
+
+
+def step_from_snapshot(
+    follower: FollowOwnerController,
+    snapshot: NavigationSnapshotV2,
+    now: float | None = None,
+    *,
+    prediction: PredictedPath | None = None,
+) -> FollowDecision:
+    """Card A4's V2 entry point for one Follow step.
+
+    ``OwnerBeliefV1`` already carries the ambiguity/loss evidence Gate 6 needs
+    (``snapshot.owner.ambiguous`` / ``.lost``).  This path does not consume it
+    yet: Follow's HOLD-on-ambiguity behaviour is card A8's, and it will read
+    those two properties instead of re-deriving them from a confidence float.
+    """
+
+    return follower.step(carrier_view(snapshot), now, prediction=prediction)

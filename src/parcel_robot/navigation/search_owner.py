@@ -18,7 +18,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, fields
 from typing import Any
 
-from parcel_robot.backends.base import SimObservation
+from parcel_robot.contracts.navigation_snapshot_v2 import NavigationSnapshotV2
+from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.grid_planner import (
     CellState,
@@ -31,6 +32,7 @@ from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
     apply_reactive_safety,
 )
+from parcel_robot.observation.carrier_view import carrier_view
 
 logger = logging.getLogger(__name__)
 
@@ -292,7 +294,7 @@ class SearchOwnerController:
         self._paused_at = None
         self._reason = "search_resumed"
 
-    def step(self, observation: SimObservation | None, now: float) -> SearchDecision:
+    def step(self, observation: ObservationCarrierV1 | None, now: float) -> SearchDecision:
         zero = VelocityCommand()
         if not self._enabled or self._started_at is None:
             return self._decision(zero, "search_disabled")
@@ -363,7 +365,7 @@ class SearchOwnerController:
 
     def _step_goto(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         now: float,
         elapsed: float,
     ) -> SearchDecision:
@@ -394,7 +396,7 @@ class SearchOwnerController:
 
     def _enter_sweep(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         now: float,
         elapsed: float,
         reason: str,
@@ -409,7 +411,7 @@ class SearchOwnerController:
 
     def _step_sweep(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         now: float,
         elapsed: float,
     ) -> SearchDecision:
@@ -445,7 +447,7 @@ class SearchOwnerController:
 
     def _step_frontier(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         now: float,
         elapsed: float,
     ) -> SearchDecision:
@@ -499,7 +501,7 @@ class SearchOwnerController:
 
     def _select_frontier(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         now: float,
     ) -> tuple[float, float] | None:
         reach = self._reachable_radius(now)
@@ -577,7 +579,7 @@ class SearchOwnerController:
 
     # --- perception ---------------------------------------------------------
 
-    def _reacquired(self, observation: SimObservation) -> bool:
+    def _reacquired(self, observation: ObservationCarrierV1) -> bool:
         owner = observation.owner
         confident = (
             owner.visible
@@ -595,7 +597,7 @@ class SearchOwnerController:
         self._last_observed = (float(owner.x), float(owner.y))
         return self._confident_frames >= self.config.reacquire_min_frames
 
-    def _record_viewpoint(self, observation: SimObservation) -> None:
+    def _record_viewpoint(self, observation: ObservationCarrierV1) -> None:
         position = (observation.robot.x, observation.robot.y)
         spacing = self.config.sensor_radius_m * 0.5
         if not self._viewpoints or all(
@@ -606,7 +608,7 @@ class SearchOwnerController:
         if len(self._viewpoints) > 256:
             del self._viewpoints[:128]
 
-    def _update_map(self, observation: SimObservation) -> None:
+    def _update_map(self, observation: ObservationCarrierV1) -> None:
         """Integrate the planar scan into the grid_v1 planner map."""
 
         scan = self._scan(observation)
@@ -667,7 +669,7 @@ class SearchOwnerController:
             self._degraded = ""
 
     @staticmethod
-    def _scan(observation: SimObservation) -> LidarScan | None:
+    def _scan(observation: ObservationCarrierV1) -> LidarScan | None:
         if (
             not observation.lidar_ranges
             or observation.lidar_angle_min_rad is None
@@ -695,7 +697,7 @@ class SearchOwnerController:
 
     def _command_toward(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         target_x: float,
         target_y: float,
     ) -> VelocityCommand:
@@ -735,7 +737,7 @@ class SearchOwnerController:
 
     def _command_to(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         target_x: float,
         target_y: float,
     ) -> VelocityCommand:
@@ -775,7 +777,7 @@ class SearchOwnerController:
         )
 
 
-def _finite_pose(observation: SimObservation) -> bool:
+def _finite_pose(observation: ObservationCarrierV1) -> bool:
     return all(
         math.isfinite(value)
         for value in (
@@ -802,3 +804,11 @@ __all__ = [
     "SearchOwnerConfig",
     "SearchOwnerController",
 ]
+
+
+def step_from_snapshot(
+    search: SearchOwnerController, snapshot: NavigationSnapshotV2, now: float
+) -> SearchDecision:
+    """Card A4's V2 entry point for one owner-search step."""
+
+    return search.step(carrier_view(snapshot), now)

@@ -36,7 +36,6 @@ from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import (
     DynamicAgentTrack,
     OwnerTrack,  # card OT-2: the overlay rebuilds this track
-    SimObservation,
     SimulatorBackend,
 )
 from parcel_robot.brain.compiler import compile_plan_contracts, materialize_planner_output
@@ -88,6 +87,11 @@ from parcel_robot.config import ConfigStore
 from parcel_robot.context.builder import ContextBuilder
 from parcel_robot.context.models import ContextBuildConfig, ContextField
 from parcel_robot.context.providers import CallableContextProvider, ClockContextProvider
+from parcel_robot.contracts.navigation_snapshot_v2 import (
+    RANGE_CONVENTION_BODY_SURFACE,
+    NavigationSnapshotV2,
+)
+from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
 from parcel_robot.contracts.v1 import DialogueActV1
 from parcel_robot.control.base import (
     ObservationSink,
@@ -119,6 +123,8 @@ from parcel_robot.core.input_health import (
     EvidenceOrigin,
     HealthAction,
     InputEvidence,
+    InputFault,
+    InputHealthVerdict,
     RequiredInput,
     evaluate_input_health,
     evidence_origin,
@@ -146,6 +152,7 @@ from parcel_robot.core.yield_policy import (
 )
 from parcel_robot.duplex.config import DuplexConfig
 from parcel_robot.duplex.coordinator import DuplexCoordinator
+from parcel_robot.localization.installer import install_localization
 from parcel_robot.memory.conversation import FACT_OWNER_STATED, ConversationMemory
 from parcel_robot.memory.tiered import ConcatSummarizer
 from parcel_robot.models import (
@@ -238,6 +245,8 @@ from parcel_robot.observability import (
     latency_ledger_row,
     resolve_latency_ledger_path,
 )
+from parcel_robot.observation.assembler import SnapshotAssembler
+from parcel_robot.observation.sources import CarrierObservationSource
 from parcel_robot.owner_model.notes import known_facts_answer, owner_notes_from_facts
 from parcel_robot.owner_model.policy import CONSENT_GRANTED, CONSENT_PENDING
 from parcel_robot.patrol.mission import (
@@ -715,7 +724,7 @@ class LLMSummarizer:
 
 
 def _dynamic_agent_payload(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
 ) -> tuple[dict[str, float], ...]:
     """Serialize non-owner dynamic tracks for the planner and the TTC gate."""
 
@@ -946,7 +955,7 @@ def _learned_map_scene_rows(learned_map: object, robot: object) -> list[dict[str
 
 
 def scene_report(
-    observation: SimObservation | None,
+    observation: ObservationCarrierV1 | None,
     *,
     max_regions: int = SCENE_MAX_REGIONS,
     learned_map: object | None = None,
@@ -1076,7 +1085,7 @@ def scene_report(
 
 
 def _scene_closest(
-    observation: SimObservation,
+    observation: ObservationCarrierV1,
     things: Sequence[Mapping[str, object]],
     nearest_person: Mapping[str, object] | None,
 ) -> dict[str, object] | None:
@@ -1889,7 +1898,7 @@ class RobotRuntime:
         self._spatial_detail: dict[str, object] = self.spatial.snapshot()
         self._monitor_audio = audio_status is None
         self.audio_status = audio_status or detect_audio_devices()
-        self._observation: SimObservation | None = None
+        self._observation: ObservationCarrierV1 | None = None
         self._follow_detail: dict[str, object] = self.follow.snapshot()
         self._navigation_directive: str | None = None
         self._navigation_detail: dict[str, object] = NavigationDetail().as_dict()
@@ -2165,6 +2174,35 @@ class RobotRuntime:
         # already carried, so installing it changes no behavior. Swapping in a
         # real localizer is a one-line change here and nowhere else.
         self._pose_provider = TruthPoseProvider()
+        # A3's discontinuity latch, jump journal and whole-map matcher reach the
+        # product HERE and nowhere else (card A4 SPINE). A3 shipped them with no
+        # installer on purpose, so until this line they were inert. The shipping
+        # default commissions no localizer: `install_localization` then returns
+        # the empty installation and the truth provider above stands unchanged,
+        # byte for byte. Commissioning one replaces MAP only — ODOM keeps
+        # receiving exactly what it received before.
+        self._localization = install_localization(
+            (self.store.section("navigation") or {}).get("localization"),
+            odom_provider=self._pose_provider,
+        )
+        if self._localization.provider is not None:
+            self._pose_provider = self._localization.provider
+        # The observation spine (card A4 SPINE, HLD Gate 2). One stamped
+        # NavigationSnapshotV2 per tick, published BESIDE the carrier rather
+        # than instead of it: the nine migrated modules still receive the
+        # carrier until the Gate-4 cutover, and the snapshot is what their
+        # V2 entry points read. The range convention is stamped by the SOURCE
+        # here (A2 NAV-GLUE's handoff): both product scan sources — mujoco_lidar
+        # and the Go2 band seam — publish footprint-subtracted clearance, so the
+        # snapshot says so and carries the footprint that was subtracted.
+        self._snapshot_source = CarrierObservationSource(
+            self.backend.observe,
+            range_convention=RANGE_CONVENTION_BODY_SURFACE,
+            footprint_radius_m=float(self.robot_profile.footprint_radius_m),
+        )
+        self._snapshot_assembler = SnapshotAssembler()
+        self._navigation_snapshot: NavigationSnapshotV2 | None = None
+        self._navigation_snapshot_error = ""
         # Stratum-2 perception authority. The detection_adapter chain is the one
         # semantic-candidate ingress; the runtime installs the tier the
         # navigation config names. T0 (the shipping default) is pass-through and
@@ -3737,7 +3775,7 @@ class RobotRuntime:
             "activity_created_at": created_at,
         }
 
-    def _enforce_perception_invariant(self, observation: SimObservation | None) -> None:
+    def _enforce_perception_invariant(self, observation: ObservationCarrierV1 | None) -> None:
         """Enforce the compiled ``stop_on_stale_perception`` plan invariant.
 
         Plans that admitted perception-dependent steps compiled this invariant;
@@ -4085,7 +4123,7 @@ class RobotRuntime:
             )
             return directive.reply if directive.reply else gate.reply
 
-    def _step_reaction_bridge(self, observation: SimObservation | None) -> None:
+    def _step_reaction_bridge(self, observation: ObservationCarrierV1 | None) -> None:
         """Tick StimulusBus/ReactionArbiter; never preempt base (K6/B2)."""
 
         del observation  # reserved for future affect/prosody fusion
@@ -4127,7 +4165,7 @@ class RobotRuntime:
             "drained": len(result.drained),
         }
 
-    def _step_dialogue_state(self, observation: SimObservation | None) -> None:
+    def _step_dialogue_state(self, observation: ObservationCarrierV1 | None) -> None:
         """Publish DialogueStateMsg @ 10 Hz and apply T2 gaze/pace influence."""
 
         now_s = time.monotonic()
@@ -5298,7 +5336,7 @@ class RobotRuntime:
     # It is also a READER of the map and never a writer: ``coverage_candidates``
     # derives everything from fields the camera worker already maintains.
 
-    def _roam_coverage_objective(self, observation: SimObservation) -> dict[str, object]:
+    def _roam_coverage_objective(self, observation: ObservationCarrierV1) -> dict[str, object]:
         """Where has the map not looked lately? ``{}`` when it cannot say.
 
         Every failure — no learned map installed (the shipping ``oracle``
@@ -5395,7 +5433,7 @@ class RobotRuntime:
 
     def _roam_sense(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         elapsed_s: float,
         # ---- CARD ROAM-2: the objective arrives as ONE optional mapping.
         # Defaulting to ``None`` keeps every existing caller byte-identical.
@@ -5459,7 +5497,7 @@ class RobotRuntime:
             # ---- END CARD ROAM-2 sense wiring -----------------------------
         )
 
-    def _step_roam(self, observation: SimObservation | None) -> None:
+    def _step_roam(self, observation: ObservationCarrierV1 | None) -> None:
         """One roam tick. Yields before it senses; senses before it proposes."""
 
         with self._lock:
@@ -5611,7 +5649,7 @@ class RobotRuntime:
     # semantic map.
 
     def _awareness_idle(
-        self, observation: SimObservation | None, now: float
+        self, observation: ObservationCarrierV1 | None, now: float
     ) -> tuple[bool, str | None]:
         """Is the body free for a discretionary look? The reason, if not.
 
@@ -5642,7 +5680,7 @@ class RobotRuntime:
             return False, "no_observation"
         return True, None
 
-    def _step_awareness(self, observation: SimObservation | None) -> None:
+    def _step_awareness(self, observation: ObservationCarrierV1 | None) -> None:
         """One awareness tick. Proposes nothing on the overwhelming majority."""
 
         if not self._awareness_limits.enabled:
@@ -5969,7 +6007,7 @@ class RobotRuntime:
 
     def _step_owner_prediction(
         self,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
     ) -> PredictedPath | None:
         """Feed the owner predictor and return this tick's path, if any.
 
@@ -6018,7 +6056,7 @@ class RobotRuntime:
         self._owner_predictor_id = None
         self._owner_prediction = None
 
-    def _record_owner_sighting(self, observation: SimObservation | None) -> None:
+    def _record_owner_sighting(self, observation: ObservationCarrierV1 | None) -> None:
         """Remember where the owner last was, confidently, and when.
 
         This is the seed for ``go_to_last_observed`` and the origin of the
@@ -6035,7 +6073,7 @@ class RobotRuntime:
         with self._lock:
             self._last_confident_owner = (owner.x, owner.y, time.monotonic())
 
-    def _step_search(self, observation: SimObservation | None) -> None:
+    def _step_search(self, observation: ObservationCarrierV1 | None) -> None:
         if not self.search.enabled:
             return
         with self._lock:
@@ -6076,7 +6114,7 @@ class RobotRuntime:
     def _finish_owner_search(
         self,
         decision,
-        observation: SimObservation | None = None,
+        observation: ObservationCarrierV1 | None = None,
     ) -> None:
         """Terminal search state: resume following via stored intent, or hold."""
 
@@ -6331,7 +6369,7 @@ class RobotRuntime:
         channel: str,
         *,
         now_s: float | None = None,
-        observation: SimObservation | None = None,
+        observation: ObservationCarrierV1 | None = None,
     ) -> ResumeIntent:
         """Central resume coordinator: take intent, enforce freshness, resume.
 
@@ -6443,7 +6481,7 @@ class RobotRuntime:
         if self._closed:
             raise RuntimeError("runtime is closed")
         owner_relative = intent.direction == "away_from_owner" or intent.behavior == "orbit_owner"
-        observation: SimObservation | None = None
+        observation: ObservationCarrierV1 | None = None
         with self._command_lock:
             if self.arbiter.emergency_stopped:
                 self._refuse_under_latch("spatial behavior")
@@ -8045,7 +8083,7 @@ class RobotRuntime:
             self._emit("realtime", f"owner-event turn note skipped: {error}", "info")
 
     def owner_presence_sample(
-        self, observation: SimObservation | None, now: float
+        self, observation: ObservationCarrierV1 | None, now: float
     ) -> OwnerPresence:
         """Adapt WHATEVER owner track this build has into one presence sample.
 
@@ -8088,7 +8126,7 @@ class RobotRuntime:
         )
 
     def _step_owner_events(
-        self, observation: SimObservation | None, now: float
+        self, observation: ObservationCarrierV1 | None, now: float
     ) -> tuple[StateEvent, ...]:
         """One owner-presence tick. Offers at most one event to the whisperer.
 
@@ -9789,7 +9827,7 @@ class RobotRuntime:
             directive_text,
         )
 
-    def _fresh_observation_for_owner_relative(self) -> SimObservation:
+    def _fresh_observation_for_owner_relative(self) -> ObservationCarrierV1:
         """A fresh observation for an owner-relative admission check.
 
         Same contract ``_start_brain_spatial_behavior`` uses for owner-relative
@@ -10552,6 +10590,7 @@ class RobotRuntime:
                 # object when no OwnerTracker is installed.
                 observation = self._ot2_apply_owner_identity(observation)
                 # ---- END CARD OT-2 seam 2 --------------------------------
+                self._publish_navigation_snapshot(observation)
                 if self._observation_sink is not None:
                     self._observation_sink.update_observation(observation)
                 self.component_metrics.elapsed("SimulatorObserve", observe_started)
@@ -10996,7 +11035,7 @@ class RobotRuntime:
     def _nominal_stop_ramp_tick(
         self,
         command: VelocityCommand,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         *,
         now: float,
     ) -> tuple[VelocityCommand, bool]:
@@ -11043,7 +11082,7 @@ class RobotRuntime:
     def _regate_nominal_stop(
         self,
         candidate: VelocityCommand,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         *,
         now: float,
     ) -> tuple[VelocityCommand, str]:
@@ -11275,7 +11314,7 @@ class RobotRuntime:
         ):
             self.control_manager.start(threaded=False)
 
-    def _step_navigation(self, observation: SimObservation | None) -> None:
+    def _step_navigation(self, observation: ObservationCarrierV1 | None) -> None:
         with self._lock:
             directive = self._navigation_directive
             generation = self._generation.current("navigation")
@@ -11655,7 +11694,7 @@ class RobotRuntime:
         use_perception_chain(chain)
         self._perception_chain = chain
 
-    def _navigation_extras(self, observation: SimObservation) -> dict[str, object]:
+    def _navigation_extras(self, observation: ObservationCarrierV1) -> dict[str, object]:
         """Build the sensor-limited navigation view used by runtime and tests."""
 
         status = self.control_manager.snapshot()
@@ -11765,7 +11804,7 @@ class RobotRuntime:
             return False
         return self._camera_ingress_config_enabled or self._camera_stream_enabled
 
-    def _semantic_candidates(self, observation: SimObservation) -> list[dict[str, Any]]:
+    def _semantic_candidates(self, observation: ObservationCarrierV1) -> list[dict[str, Any]]:
         """The one semantic ingress: pixel detections when armed, else the oracle.
 
         Card B4: when camera ingress is enabled AND attached AND has published a
@@ -11818,7 +11857,7 @@ class RobotRuntime:
                 pass
 
     # ---------------------------------------------------- Card C-1: the stream
-    def _offer_camera_pose(self, observation: SimObservation) -> None:
+    def _offer_camera_pose(self, observation: ObservationCarrierV1) -> None:
         """Control-loop half of the pose mailbox. Cheap, bounded, non-foreign.
 
         Card C-1. Called from the 10 Hz loop AFTER emergency-stop adoption, so
@@ -13838,7 +13877,7 @@ class RobotRuntime:
 
     def _owner_track_payload(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
     ) -> tuple[dict[str, float], ...]:
         """Return the owner as a velocity track, using the predictor when live.
 
@@ -13870,7 +13909,7 @@ class RobotRuntime:
 
     def _observation_is_fresh(
         self,
-        observation: SimObservation,
+        observation: ObservationCarrierV1,
         *,
         now: float | None = None,
     ) -> bool:
@@ -13891,7 +13930,7 @@ class RobotRuntime:
             self._last_sent = VelocityCommand()
             self._was_moving = False
 
-    def _step_spatial(self, observation: SimObservation | None) -> None:
+    def _step_spatial(self, observation: ObservationCarrierV1 | None) -> None:
         event: tuple[str, str] | None = None
         #: Card R15. (activity label, completed, reason) for the ONE terminal
         #: this pass produced, or ``None``. Collected under the command lock and
@@ -13998,7 +14037,7 @@ class RobotRuntime:
     def _collision_safe(
         self,
         command: VelocityCommand,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         *,
         source: str | None = None,
         now: float | None = None,
@@ -14056,9 +14095,34 @@ class RobotRuntime:
             proximity_state = "stopped"
         return self._time_to_collision_gate(command, observation, proximity_state)
 
+    def _publish_navigation_snapshot(self, observation: ObservationCarrierV1) -> None:
+        """Stamp this tick's carrier as a ``NavigationSnapshotV2`` and publish it.
+
+        Never raises into the control loop.  A carrier the contract refuses
+        (a non-finite pose, a negative stamp) leaves the previous snapshot in
+        place and records the reason — the spine may report that it has no
+        fresh view of the world, and it may not take the loop down with it.
+        """
+
+        try:
+            snapshot = self._snapshot_source.snapshot_for(observation)
+            reviewed = self._snapshot_assembler.review(
+                snapshot, now_monotonic_ns=snapshot.assembled_monotonic_ns
+            )
+        except (TypeError, ValueError) as exc:
+            self._navigation_snapshot_error = str(exc)
+            return
+        self._navigation_snapshot_error = ""
+        self._navigation_snapshot = reviewed
+
+    def navigation_snapshot(self) -> NavigationSnapshotV2 | None:
+        """The most recent stamped snapshot, or ``None`` before the first tick."""
+
+        return self._navigation_snapshot
+
     def _evaluate_dispatch_input_health(
         self,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         *,
         now: float,
     ):
@@ -14208,7 +14272,7 @@ class RobotRuntime:
                 ),
             )
 
-        return evaluate_input_health(
+        verdict = evaluate_input_health(
             {
                 RequiredInput.POSE: pose,
                 RequiredInput.SCAN: scan,
@@ -14217,11 +14281,34 @@ class RobotRuntime:
             now=now,
             requirements=self._input_health_requirements,
         )
+        return self._compose_localization_latch(verdict)
+
+    def _compose_localization_latch(self, verdict: InputHealthVerdict) -> InputHealthVerdict:
+        """Join A3's discontinuity latch into the health verdict.  Stricter only.
+
+        NAV-CORE refuter 4b measured what a HEALTHY localizer is worth after a
+        kidnap: 824/840 HEALTHY ticks while the arm kept translating 0.84 m.
+        So once the latch has fired, translation is refused whatever the join
+        says, until a journalled re-arm — ``max(verdict.action, latch.action)``,
+        the composition A3's card specified.
+
+        With no localizer commissioned (the shipping default) there is no
+        latch, and the verdict is returned unchanged, byte for byte.
+        """
+
+        latch = self._localization.latch
+        if latch is None or not latch.latched:
+            return verdict
+        action = max(verdict.action, latch.action)
+        if action is verdict.action:
+            return verdict
+        fault = InputFault(RequiredInput.POSE, "localization_discontinuity_latched", action)
+        return InputHealthVerdict(action=action, faults=verdict.faults + (fault,))
 
     def _time_to_collision_gate(
         self,
         command: VelocityCommand,
-        observation: SimObservation | None,
+        observation: ObservationCarrierV1 | None,
         proximity_state: str,
     ) -> tuple[VelocityCommand, str]:
         """Scale the outgoing command down when contact is predicted.
@@ -15150,7 +15237,7 @@ class RobotRuntime:
             subject=label,
         )
 
-    def _whisperer_digest(self, observation: SimObservation | None, now: float) -> StateDigest:
+    def _whisperer_digest(self, observation: ObservationCarrierV1 | None, now: float) -> StateDigest:
         """One versioned snapshot of the robot for the whisperer. READS ONLY.
 
         Every value here is read from a subsystem's own snapshot; nothing in
@@ -15236,7 +15323,7 @@ class RobotRuntime:
         )
 
     def _step_whisperer(
-        self, observation: SimObservation | None, now: float | None = None
+        self, observation: ObservationCarrierV1 | None, now: float | None = None
     ) -> None:
         """Offer the robot's own state to the whisperer, once a second.
 
@@ -15747,7 +15834,7 @@ class RobotRuntime:
         return False
 
     def _step_curiosity(
-        self, observation: SimObservation | None, now: float
+        self, observation: ObservationCarrierV1 | None, now: float
     ) -> tuple[StateEvent, ...]:
         """One chatter tick. At most one remark, at most one farewell.
 
@@ -16177,7 +16264,7 @@ class RobotRuntime:
                 self._duplex_sync_epoch()
             self._duplex_record_turn_outcome(int(stage.turn_id))
 
-    def _step_duplex(self, observation: SimObservation | None) -> None:
+    def _step_duplex(self, observation: ObservationCarrierV1 | None) -> None:
         if not self.duplex.enabled:
             return
         self._duplex_sync_epoch()
