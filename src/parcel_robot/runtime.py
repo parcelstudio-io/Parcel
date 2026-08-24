@@ -98,6 +98,7 @@ from parcel_robot.context.models import ContextBuildConfig, ContextField
 from parcel_robot.context.providers import CallableContextProvider, ClockContextProvider
 from parcel_robot.contracts.navigation_snapshot_v2 import (
     RANGE_CONVENTION_BODY_SURFACE,
+    LocalizationHealthV1,
     NavigationSnapshotV2,
 )
 from parcel_robot.contracts.observation_carrier import ObservationCarrierV1
@@ -207,6 +208,13 @@ from parcel_robot.navigation.follow import (
     FollowPredictionConfig,
     FollowYieldConfig,
 )
+from parcel_robot.navigation.follow_compose import (
+    FOLLOW_HOLD_VETOES,
+    FollowComposeDecision,
+    FollowComposer,
+    OfflineFloor,
+    offline_floor,
+)
 from parcel_robot.navigation.goals import (
     PLACE_NO_VOCABULARY,
     PLACE_UNKNOWN,
@@ -258,6 +266,11 @@ from parcel_robot.observation.assembler import SnapshotAssembler
 from parcel_robot.observation.sources import CarrierObservationSource
 from parcel_robot.owner_model.notes import known_facts_answer, owner_notes_from_facts
 from parcel_robot.owner_model.policy import CONSENT_GRANTED, CONSENT_PENDING
+from parcel_robot.owner_tracking.install import (
+    TRACKER_MODE_OFF,
+    OwnerTrackerSettings,
+    build_owner_tracker,
+)
 from parcel_robot.patrol.mission import (
     DEFAULT_ROAM_TETHER_M,
     PatrolCommand,
@@ -1921,6 +1934,13 @@ class RobotRuntime:
         if not isinstance(raw_yield, dict):
             raise TypeError("owner_follow.yield_aside must be a mapping")
         follow_yield = FollowYieldConfig.from_mapping(raw_yield)
+        # Card A8 FOLLOW-COMPOSE. The owner tracker's knob, popped here for the
+        # same reason the two above are: `FollowConfig.from_mapping` refuses an
+        # unknown top-level follow key, so the nested block must leave before
+        # it. It is BUILT later (`_build_owner_tracker`), once `_emit` exists,
+        # because a refusal has to be loud and this is before the event ring.
+        self._owner_tracker_section = follow_config.pop("tracker", {})
+        self._owner_tracker_detail = "not built"
         self.follow = FollowOwnerController(
             FollowConfig.from_mapping(follow_config),
             safety_policy=self.reactive_safety_policy,
@@ -1941,6 +1961,16 @@ class RobotRuntime:
             safety_policy=self.reactive_safety_policy,
         )
         self._search_detail: dict[str, object] = self.search.snapshot()
+        # Card A8 FOLLOW-COMPOSE (HLD Gate 6). Follow's snapshot-side veto:
+        # unsynchronized owner/range evidence, A3's latch and owner AMBIGUITY
+        # each turn a follow tick into a HOLD before the controller is asked.
+        # The reacquisition window is the owner-search route's OWN timeout, so
+        # no second answer to "how long do we look" is invented here.
+        self._follow_compose = FollowComposer(
+            self.follow, reacquire_window_s=self.search.config.lost_timeout_s
+        )
+        self._follow_hold: FollowComposeDecision | None = None
+        self._follow_hold_state = ""
         self._last_confident_owner: tuple[float, float, float] | None = None
         self._owner_lost_since: float | None = None
         self._owner_search_sequence = 0
@@ -2732,6 +2762,11 @@ class RobotRuntime:
         self._ot2_facts_confirmed = 0
         self._ot2_facts_confirm_refused = 0
         # ---- END CARD OT-2 state ------------------------------------------
+        # Card A8 FOLLOW-COMPOSE: the PRODUCT caller `install_owner_tracker`
+        # never had. `off` (the shipped default, because Follow's ENABLE is
+        # gated on the box-day identity study) builds nothing and leaves every
+        # `_ot2_*` seam returning its argument as the same object.
+        self._owner_tracker_detail = self._build_owner_tracker(self._owner_tracker_section)
         if self.realtime_config.enabled:
             # Card EV-1. Armed BEFORE the lane is built so the session's own
             # construction events are in the record, and only when there IS a
@@ -6399,6 +6434,83 @@ class RobotRuntime:
             return
         self._owner_lost_since = None
         self._submit_owner_search_plan()
+
+    def _announce_follow_hold(self, compose: FollowComposeDecision) -> None:
+        """Card A8. Say ONE honest sentence when Follow's hold reason changes.
+
+        Edge-triggered, never per tick: a dog that repeats "I can see two
+        people who might be you" at 10 Hz is not being honest, it is being a
+        smoke alarm. The record (the ``_follow_hold`` snapshot and the event
+        ring) carries every tick; the SPEAKER carries the transitions.
+        """
+
+        self._follow_hold = compose
+        if compose.hold == self._follow_hold_state:
+            return
+        self._follow_hold_state = compose.hold
+        if not compose.line:
+            return
+        self._emit(
+            "follow",
+            f"{compose.hold}: {', '.join(compose.reasons) or 'hold'}",
+            "warning",
+        )
+        try:
+            self._brain_vocalize(compose.line)
+        except Exception as error:  # noqa: BLE001 - a HOLD must not need a voice
+            logger.warning("follow hold line could not be spoken: %s", error)
+
+    def follow_hold_snapshot(self) -> dict[str, object] | None:
+        """Card A8's hold verdict for the operator, or ``None`` when idle.
+
+        ``None`` rather than a disabled block, the R1 discipline the OT-2 and
+        camera snapshots already use: a run that never held is byte-identical
+        on the wire to a build without this card.
+        """
+
+        compose = self._follow_hold
+        if compose is None or not compose.holding:
+            return None
+        return {
+            "hold": compose.hold,
+            "line": compose.line,
+            "reasons": list(compose.reasons),
+            "reacquire_remaining_s": compose.reacquire_remaining_s,
+            "vetoed_controller": compose.hold in FOLLOW_HOLD_VETOES,
+        }
+
+    def _owner_identity_commissioned(self) -> bool:
+        """The SOFTWARE half of Follow's ENABLE gate — necessary, never sufficient.
+
+        A calibrated gallery behind an installed tracker is what this process
+        can check. The half that actually decides ENABLE is PHYSICAL and has no
+        representation here and cannot have one on a host with no robot and no
+        camera: the box-day two-person crossing, occlusion/reacquisition and
+        clothing/lighting study (F5, HLD Gate 6). ``A8_STATUS.md`` says so in
+        the same words, so nobody reads a True here as a commissioning.
+        """
+
+        tracker = self._ot2_owner_tracker
+        if tracker is None:
+            return False
+        return bool(getattr(getattr(tracker, "gallery", None), "calibrated", False))
+
+    def offline_floor(self) -> OfflineFloor:
+        """Card A8. What survives a loss of the hosted lane, and the line for it.
+
+        **What the connectivity signal actually is, stated.** ``_model_status``
+        is ``_refresh_model_health``'s verdict over the CONFIGURED INFERENCE
+        LANES (an HTTP readiness probe every 10 s), not a test of the Internet
+        and not a link-layer signal. It is the honest proxy this build has —
+        "the model lanes are unreachable" is the loss class the canned line is
+        about — and replacing it with a real connectivity check is named as a
+        box-day/M1 follow-up rather than faked here.
+        """
+
+        return offline_floor(
+            connected=self._model_status != "offline",
+            follow_commissioned=self._owner_identity_commissioned(),
+        )
 
     def _submit_owner_search_plan(self) -> None:
         if not self._brain_enabled or self._closed:
@@ -11298,9 +11410,22 @@ class RobotRuntime:
                 follow_generation = self._generation.current("follow")
             if self.follow.enabled:
                 follow_started = time.monotonic()
-                decision = self.follow.step(
-                    observation, now=time.monotonic(), prediction=prediction
+                # Card A8 FOLLOW-COMPOSE. The snapshot-side veto runs FIRST and
+                # the controller is not asked at all when it fires: an
+                # ambiguous or unsynchronized frame that reached
+                # ``follow.step`` would enter its motion history, and the next
+                # confident frame would inherit a heading estimated from a
+                # person who may not be the owner.
+                compose = self._follow_compose.step(
+                    self._navigation_snapshot, follow_started, prediction=prediction
                 )
+                if compose.hold in FOLLOW_HOLD_VETOES:
+                    decision = compose.decision
+                else:
+                    decision = self.follow.step(
+                        observation, now=time.monotonic(), prediction=prediction
+                    )
+                self._announce_follow_hold(compose)
                 self.component_metrics.elapsed("FollowController", follow_started)
                 with self._lock:
                     still_following = (
@@ -11353,6 +11478,11 @@ class RobotRuntime:
                     # that observes it. Idle ticks keep feeding the filter so a
                     # later follow starts warm instead of in fallback.
                     self._reset_owner_prediction()
+                    # Card A8: the reacquisition clock and the spoken hold
+                    # state belong to ONE follow episode, so they end with it.
+                    self._follow_compose.reset()
+                    self._follow_hold = None
+                    self._follow_hold_state = ""
                 last_follow_state = "idle"
                 self._owner_lost_since = None
 
@@ -12495,6 +12625,12 @@ class RobotRuntime:
         self._camera_ingress = ingress
         if ingress is not None and start:
             ingress.start()
+        # Card A8: the camera venue is what `install_owner_tracker`'s docstring
+        # says the tracker waits for ("an encoder and a gallery that only exist
+        # once a camera venue has been resolved"). Re-attempt exactly once per
+        # attach, and never over an already-installed tracker.
+        if ingress is not None and self._ot2_owner_tracker is None:
+            self._owner_tracker_detail = self._build_owner_tracker(self._owner_tracker_section)
 
     def detach_camera_ingress(self) -> None:
         ingress = self._camera_ingress
@@ -14022,6 +14158,41 @@ class RobotRuntime:
     def _ot2_track_ttl_s(self) -> float:
         return float(self.telemetry_stale_s)
 
+    def _build_owner_tracker(self, section: object) -> str:
+        """Card A8. Resolve ``owner_follow.tracker:`` into an install, or say why not.
+
+        The composition root's caller, and it degrades LOUDLY and ADDITIVELY in
+        the ``_build_stop_hotword`` shape: on any refusal no tracker is
+        installed, the reason is emitted and kept, and the identity path is
+        exactly what it was — which, because ``_ot2_apply_owner_identity``
+        overwrites identity and never presence, means the owner keeps a
+        PERSON's clearance rather than losing it.
+
+        Called twice by design: once from ``__init__`` and again from
+        ``attach_camera_ingress``, because the encoder this needs is the one
+        the camera venue loaded and that object does not exist yet at
+        construction. The second call is a no-op once a tracker is installed.
+        """
+
+        try:
+            settings = OwnerTrackerSettings.from_mapping(section)
+        except (TypeError, ValueError) as error:
+            self._emit("perception", f"Owner tracker refused its config: {error}", "error")
+            return f"refused: {error}"
+        if settings.mode == TRACKER_MODE_OFF:
+            return "off (owner_follow.tracker.mode=off)"
+        build = build_owner_tracker(settings, ingress=self._camera_ingress)
+        if build.tracker is None:
+            self._emit(
+                "perception",
+                f"Owner tracker not installed: {build.detail}",
+                "error" if build.refused else "warning",
+            )
+            return build.detail
+        self.install_owner_tracker(build.tracker, gallery_threshold=build.gallery_threshold)
+        self._emit("perception", f"Owner tracker installed: {build.detail}", "info")
+        return build.detail
+
     def install_owner_tracker(
         self,
         tracker: Any,
@@ -14184,8 +14355,22 @@ class RobotRuntime:
                 self._ot2_frames_seen += 1
                 self._ot2_owner_track = None
                 self._ot2_owner_track_at = now
+                # Card A8. The tracker's frame-level state collapses "I saw two
+                # people and could not tell which was you" into ``searching``
+                # (``tracker.py``'s no-owner branch reports ``no_gallery_match``),
+                # while the evidence for it survives PER TRACK as the reason
+                # ``ambiguous_margin`` — the margin gate saying the best
+                # candidate cleared the gallery threshold with a runner-up
+                # inside ``min_margin``. That is precisely Gate 6's "two
+                # plausible owners", so it is read here rather than re-derived
+                # from a confidence float, and it is the ONLY thing that turns
+                # this branch ambiguous: a stale ``confirmed`` never does.
+                ambiguous = state == self.OT2_STATE_AMBIGUOUS or any(
+                    str(getattr(candidate, "reason", "")) == "ambiguous_margin"
+                    for candidate in getattr(update, "tracks", ())
+                )
                 self._ot2_identity_state = (
-                    state if state in {self.OT2_STATE_AMBIGUOUS} else self.OT2_STATE_SEARCHING
+                    self.OT2_STATE_AMBIGUOUS if ambiguous else self.OT2_STATE_SEARCHING
                 )
                 self._ot2_identity_reason = reason or "no_owner_claim"
             return
@@ -14299,7 +14484,19 @@ class RobotRuntime:
                 # not a band change. This method may only ever answer "who".
                 visible=previous.visible,
                 confidence=0.0,
-                state=self.OT2_STATE_SEARCHING,
+                # Card A8: AMBIGUOUS survives to the observation; everything
+                # else degrades to SEARCHING. A stale ``confirmed`` may never
+                # be published here — that would hand the reactive gate's
+                # relaxed band to a claim nobody made this tick — and
+                # ``OWNER_IDENTITY_TRUSTED_STATES`` is ``{"confirmed"}``, so
+                # ambiguous and searching cost the same clearance. What the
+                # distinction buys is Follow's HOLD being able to say WHICH
+                # thing went wrong.
+                state=(
+                    self.OT2_STATE_AMBIGUOUS
+                    if state == self.OT2_STATE_AMBIGUOUS
+                    else self.OT2_STATE_SEARCHING
+                ),
                 identity_source=source or IDENTITY_SOURCE_PIXEL_REID_UNCALIBRATED,
                 identity_margin=0.0,
             )
@@ -14754,7 +14951,9 @@ class RobotRuntime:
         """
 
         try:
-            snapshot = self._snapshot_source.snapshot_for(observation)
+            snapshot = self._stamp_localization_health(
+                self._snapshot_source.snapshot_for(observation)
+            )
             reviewed = self._snapshot_assembler.review(
                 snapshot, now_monotonic_ns=snapshot.assembled_monotonic_ns
             )
@@ -14763,6 +14962,41 @@ class RobotRuntime:
             return
         self._navigation_snapshot_error = ""
         self._navigation_snapshot = reviewed
+
+    def _stamp_localization_health(self, snapshot: NavigationSnapshotV2) -> NavigationSnapshotV2:
+        """Card A8. Publish A3's latch on the field the contract reserves for it.
+
+        ``LocalizationHealthV1.motion_latched`` is the contract's own words for
+        A3's latch and until now nothing populated it, so every consumer that
+        obeyed it was obeying a constant False. The latch itself is unchanged
+        and is still enforced where it always was (the input-health join in
+        ``_compose_localization_latch``); this only makes the SNAPSHOT tell the
+        truth about it, which is what lets Follow refuse without a second
+        route to the same fact.
+
+        With no localizer commissioned — the shipping default — the argument is
+        returned as the SAME OBJECT and the published snapshot is byte-identical
+        to what card A4 published.
+        """
+
+        latch = self._localization.latch
+        if latch is None:
+            return snapshot
+        # ``last_margin`` is ``inf`` until a whole-map match has produced one,
+        # and the contract refuses a non-finite margin BY DESIGN (an unbounded
+        # margin is not evidence). ``None`` is the contract's own word for
+        # "this localizer has not answered that question yet".
+        margin = float(latch.last_margin)
+        return dataclasses.replace(
+            snapshot,
+            localization=LocalizationHealthV1(
+                health=snapshot.localization.health,
+                jump_m=snapshot.localization.jump_m,
+                motion_latched=bool(latch.latched),
+                relocalization_margin=margin if math.isfinite(margin) else None,
+                reasons=tuple(latch.triggers),
+            ),
+        )
 
     def navigation_snapshot(self) -> NavigationSnapshotV2 | None:
         """The most recent stamped snapshot, or ``None`` before the first tick."""
