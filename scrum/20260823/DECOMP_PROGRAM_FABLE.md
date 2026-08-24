@@ -151,3 +151,13 @@ No behavior change, no config-default change, no new features (owner
 directive), no test deletion without a classified replacement (N04), no
 `utils/` dumping ground, no rewrite of ControlManager (D07 post-gateway
 decision stands), no touching the frozen eval baselines.
+
+## 5. Integration handoff (2026-08-23 ~20:20)
+Wave 1 (DEC-0 ACCEPT · DEC-IG-1 ACCEPT-WITH-NOTES) closed under parcel-6c;
+DEC-0 committed as cf55751 by session parcel-fb, which — on the owner's
+direction — now integrates the program: Opus executes DEC-IG-2 (task_16) →
+DEC-R1 (task_17) → onward; parcel-fb verifies and commits. parcel-6c remains
+design owner and second Fable verifier on request. Tranche-2 wave A
+(NARR-1/EAR-1) never executed (executors died at dispatch) and stays
+cancelled until DECOMP delivers. Verifier verdicts live in
+~/.cache/parcel-verify/<card>/VERDICT.md.
