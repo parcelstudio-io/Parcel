@@ -27,3 +27,16 @@ the hosted model converses and compiles plans when connected.** No further
 model comparisons; Orin sizing moves to the box-day co-residency soak.
 Product path: `brain/monologue.py` has no product caller (harness-only);
 `WorldDigestV1` is retained as the digest contract for the drives' logging.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**ACCEPT the refutation and close model-size research for M1.** Neither the
+8B nor 26B model should own a periodic decision tick, and a desk GPU must not
+be an architectural dependency of the dog. The useful remnants are the
+digest contract, optional local phrasing, and the box-day co-residency
+profile. Deterministic drives and perception own continuous life; hosted
+cognition is invoked by admitted events and returns proposals only.
+
+The 8B is therefore optional degradation capacity, not a prerequisite for
+mounting or compound instructions. If Orin memory or thermal headroom is
+tight, it is the first resident model to remove; do not reopen the 26B arm.

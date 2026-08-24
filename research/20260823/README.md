@@ -1,5 +1,11 @@
 # Research program 2026-08-23 — "the living dog" · design owner Fable (parcel-fb)
 
+> **Status note, 2026-08-24:** this is the program launch record. Final H1–H7
+> states and mountability consequences are reconciled in
+> [`../20260824/CODEX_RESEARCH_CROSS_REVIEW.md`](../20260824/CODEX_RESEARCH_CROSS_REVIEW.md).
+> In particular, H2 is closed/refuted, H3 has a verdict with travel blocked,
+> and H8 remains design-only.
+
 Owner directive (verbatim intent): assess progress toward a prototype that
 mounts on a Unitree Go2 EDU+ — and later on our own custom robot — and
 behaves like a living dog: seamless, interesting conversation; autonomous

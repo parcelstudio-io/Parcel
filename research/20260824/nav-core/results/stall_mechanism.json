@@ -1,0 +1,131 @@
+{
+ "obstacle_stop_m": 0.65,
+ "reaction_time_s": 0.12,
+ "grid_v1_cruise_vx_mps": 0.85,
+ "planner_inflation_m_shipped": 0.42,
+ "pipeline_collision_brake_m": 0.8,
+ "gate_stops_fraction": 0.375,
+ "stalled_inside_a_brake_ring_fraction": 1.0,
+ "rows": [
+  {
+   "arm": "A",
+   "episode": 2,
+   "goal_id": "place_couch",
+   "final_xy": [
+    -2.319,
+    -0.172
+   ],
+   "truth_clearance_m": 0.799,
+   "scan_clearance_m": 0.789,
+   "requested_vx_mps": 0.0,
+   "gate_demand_m": 0.65,
+   "gate_stops": false,
+   "note": "grid_track err=0.0 goal=4.1 route=7 status=planned|obstacle_stop"
+  },
+  {
+   "arm": "A",
+   "episode": 3,
+   "goal_id": "place_bowl",
+   "final_xy": [
+    1.761,
+    -1.066
+   ],
+   "truth_clearance_m": 0.801,
+   "scan_clearance_m": 0.799,
+   "requested_vx_mps": 0.0,
+   "gate_demand_m": 0.65,
+   "gate_stops": false,
+   "note": "grid_track err=-0.0 goal=2.9 route=4 status=planned|obstacle_stop"
+  },
+  {
+   "arm": "B",
+   "episode": 3,
+   "goal_id": "place_bowl",
+   "final_xy": [
+    1.703,
+    -1.105
+   ],
+   "truth_clearance_m": 0.743,
+   "scan_clearance_m": 0.737,
+   "requested_vx_mps": 0.85,
+   "gate_demand_m": 0.752,
+   "gate_stops": true,
+   "note": "grid_track err=0.0 goal=4.3 route=3 status=planned"
+  },
+  {
+   "arm": "A",
+   "episode": 5,
+   "goal_id": "place_counter",
+   "final_xy": [
+    0.391,
+    -2.221
+   ],
+   "truth_clearance_m": 0.801,
+   "scan_clearance_m": 0.794,
+   "requested_vx_mps": 0.0,
+   "gate_demand_m": 0.65,
+   "gate_stops": false,
+   "note": "grid_track err=1.2 goal=2.9 route=3 status=planned|obstacle_stop"
+  },
+  {
+   "arm": "B",
+   "episode": 5,
+   "goal_id": "place_counter",
+   "final_xy": [
+    0.426,
+    -2.168
+   ],
+   "truth_clearance_m": 0.748,
+   "scan_clearance_m": 0.742,
+   "requested_vx_mps": 0.85,
+   "gate_demand_m": 0.752,
+   "gate_stops": true,
+   "note": "grid_track err=-0.5 goal=3.7 route=3 status=planned"
+  },
+  {
+   "arm": "A",
+   "episode": 7,
+   "goal_id": "place_desk",
+   "final_xy": [
+    -0.921,
+    1.462
+   ],
+   "truth_clearance_m": 0.801,
+   "scan_clearance_m": 0.8,
+   "requested_vx_mps": 0.0,
+   "gate_demand_m": 0.65,
+   "gate_stops": false,
+   "note": "grid_track err=-3.9 goal=2.4 route=3 status=planned|obstacle_stop"
+  },
+  {
+   "arm": "B",
+   "episode": 7,
+   "goal_id": "place_desk",
+   "final_xy": [
+    -0.86,
+    1.5
+   ],
+   "truth_clearance_m": 0.74,
+   "scan_clearance_m": 0.739,
+   "requested_vx_mps": 0.85,
+   "gate_demand_m": 0.752,
+   "gate_stops": true,
+   "note": "grid_track err=0.0 goal=3.4 route=3 status=planned"
+  },
+  {
+   "arm": "A",
+   "episode": 9,
+   "goal_id": "place_bowl",
+   "final_xy": [
+    -1.3,
+    0.949
+   ],
+   "truth_clearance_m": 0.794,
+   "scan_clearance_m": 0.787,
+   "requested_vx_mps": 0.0,
+   "gate_demand_m": 0.65,
+   "gate_stops": false,
+   "note": "grid_track err=-0.1 goal=2.3 route=3 status=planned|obstacle_stop"
+  }
+ ]
+}

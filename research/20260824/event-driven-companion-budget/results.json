@@ -1,0 +1,86 @@
+{
+  "clock_driven_tick": {
+    "calls_per_month": 1296000,
+    "input_tokens_per_call": 600,
+    "monthly_usd": 777.6,
+    "output_tokens_per_call": 100
+  },
+  "continuous_local_loops_hosted_calls": 0,
+  "days_per_month": 30,
+  "months": 10000,
+  "scenarios": [
+    {
+      "monthly_usd": {
+        "max": 31.0496,
+        "p50": 30.486,
+        "p95": 30.7237
+      },
+      "scenario": {
+        "consolidation_calls_per_day": 24,
+        "false_opens_per_day": 16,
+        "hosted_proactive_calls_per_day": 0,
+        "name": "nominal",
+        "owner_turns_per_day": 174,
+        "planner_calls_per_day": 48
+      }
+    },
+    {
+      "monthly_usd": {
+        "max": 77.4841,
+        "p50": 76.5639,
+        "p95": 76.9501
+      },
+      "scenario": {
+        "consolidation_calls_per_day": 24,
+        "false_opens_per_day": 16,
+        "hosted_proactive_calls_per_day": 0,
+        "name": "heavy_social",
+        "owner_turns_per_day": 500,
+        "planner_calls_per_day": 48
+      }
+    },
+    {
+      "monthly_usd": {
+        "max": 32.5187,
+        "p50": 31.9025,
+        "p95": 32.1315
+      },
+      "scenario": {
+        "consolidation_calls_per_day": 24,
+        "false_opens_per_day": 16,
+        "hosted_proactive_calls_per_day": 96,
+        "name": "hosted_proactive_stress",
+        "owner_turns_per_day": 174,
+        "planner_calls_per_day": 48
+      }
+    },
+    {
+      "monthly_usd": {
+        "max": 573.5936,
+        "p50": 571.2909,
+        "p95": 572.363
+      },
+      "scenario": {
+        "consolidation_calls_per_day": 24,
+        "false_opens_per_day": 3842,
+        "hosted_proactive_calls_per_day": 0,
+        "name": "ungated_tv",
+        "owner_turns_per_day": 174,
+        "planner_calls_per_day": 48
+      }
+    }
+  ],
+  "schema": "parcel.event_budget.v1",
+  "seed": 20260824,
+  "text_rates_per_million": {
+    "cached_discount_assumed": false,
+    "input": 0.6,
+    "output": 2.4
+  },
+  "voice_distribution": {
+    "n": 174,
+    "per_turn_usd_p50": 0.00437101,
+    "per_turn_usd_p95": 0.00791034,
+    "source": "research/20260823/ambient-ear-cost-ladder/results/per_turn_prices.json"
+  }
+}

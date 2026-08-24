@@ -155,3 +155,19 @@ back to concatenation at least once per pack, so no number here says the *shippe
 distils anything. Still assumed: real-owner quality (three authored histories, gold by the same
 hand), keep-category revocation on real transcripts beyond one keep fact, synonym/partial-token
 behaviour of world answers, and that any runtime will ever construct these leaves.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**KEEP the overall REFUTED status.** The append-only log, tiers and consent
+ideas are useful primitives, but four product-path failures remain material:
+session filtering reads zero turns, the product proposer silently degrades,
+tombstones can resurrect outside the scheduler, and a single-label world
+query is refused. The scheduler, episode log and world-answer path are not
+wired into the runtime.
+
+M1 should promise **governed accumulation and retrieval**, not recursive
+model-weight learning. Ship explicit remember/forget plus deterministic,
+provenance-bearing candidates first. No model writes facts, code or weights
+directly. Automatic consolidation is promoted only after a product-path test
+proves consent, revocation, restart persistence and zero tombstone
+resurrection.

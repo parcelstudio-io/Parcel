@@ -27,3 +27,17 @@ flag. The design may rely on: drives produce a bounded, attributable, quiet-
 and night-respecting initiative economy that yields inside a tick; it must
 add a return/stand-aside terminal to every initiated leg and a side-closing
 person gate before any self-initiated travel is enabled on a body.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**ACCEPT the bounded-drive mechanism; block self-initiated travel.** The
+initiative-rate, quiet-window and immediate-preemption rows support local
+speech, gaze and posture initiative. They do not support autonomous approach
+or roaming on hardware: 1,222 contacts, the missing return/stand-aside
+terminal and the lateral closing-person gap are promotion blockers, and no
+product runtime constructs this drive module.
+
+M1 should keep proactive travel radius at zero. Promote only non-translating
+behaviors until every admitted travel goal has a terminal policy, all-around
+dynamic clearance, cancellation ownership and supervised physical evidence.
+The LLM may phrase an admitted remark; it must not decide when to move.

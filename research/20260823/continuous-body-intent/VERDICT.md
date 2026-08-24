@@ -35,3 +35,18 @@ Go2's Sport primitives accept posture/gaze at this rate without upsetting
 balance, and that jerk bounds chosen in sim are the right ones for a real
 body. What the design may rely on: `BodyIntentV1` + `BodyCapabilityManifest`
 as the portability contract, and `degrade()` never inventing motion.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**ACCEPT as a harness-level semantic contract only.** The important meaning
+of “continuous motion” is a continuously refreshed safe intent, including
+`HOLD`; it is not a high-level planner perpetually emitting non-zero
+trajectories. Keep locomotion, gaze and posture as distinct capability-
+degraded channels.
+
+Physical promotion still requires a sole-writer gateway, a commissioned
+Unitree Sport driver, measured per-axis limits and signs, a deployable service
+and stand tests. The current Go2 adapter refuses by design and no runtime
+caller consumes `BodyIntentV1`. A hung vendor stop/state call must also be
+shown unable to freeze the independent watchdog before this can be described
+as the physical safety boundary.

@@ -33,3 +33,17 @@ CPU-bound. Renders are under-confident, not blind (person recall 0 @0.10,
 0.66 @0.02), which reframes the 2026-08-21 bench. Overall: CONFIRMED-WITH-
 NOTES on P3/P4/P6/P8, REFUTED on P5, INCONCLUSIVE on P1/P2/P7 until a quiet-
 host re-measure — scheduled for the first verifier that can run.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**ACCEPT the negative/partial findings; do not claim generalized
+perception.** The real-photo person point is useful, but pure visual novelty
+is refuted, RGB-only evidence produces no metric map writes, latency is
+unresolved on the target, and the noticing module has no product caller.
+
+The next design should fuse label novelty with a spatial cell/track prior and
+consume synchronized depth, pose, frame identity and age. The only remaining
+decision evidence is a short mounted/Orin co-residency and real-depth run;
+more contended desktop detector sweeps will not decide mountability. Hosted
+VLM calls, if later used, are keyframe/event escalations rather than a
+continuous perception loop.

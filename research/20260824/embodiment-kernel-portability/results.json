@@ -1,0 +1,29 @@
+{
+  "deploy_disclaims_orin_artifact": true,
+  "deploy_service_files": [
+    "deploy/orin/nftables-lockdown.service",
+    "deploy/orin/nftables.service"
+  ],
+  "high_level_vendor_name_references": [],
+  "navigation_snapshot_v2_modules": [],
+  "rows": {
+    "K1_vendor_sdk_leaks": 0,
+    "K2_high_level_vendor_modules": 0,
+    "K3_sim_observation_modules": 9,
+    "K4_navigation_snapshot_v2_exists": false,
+    "K6_service_file_count": 2
+  },
+  "schema": "parcel.embodiment_kernel_audit.v1",
+  "sim_observation_coupled_modules": [
+    "brain/observations.py",
+    "control/base.py",
+    "control/state.py",
+    "navigation/follow.py",
+    "navigation/reactive_safety.py",
+    "navigation/search_owner.py",
+    "navigation/semantic_map.py",
+    "navigation/spatial.py",
+    "runtime.py"
+  ],
+  "vendor_sdk_import_leaks": []
+}

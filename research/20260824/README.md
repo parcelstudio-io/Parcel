@@ -71,3 +71,27 @@ Early-exit every study at its decision. Sol's RTP-1 card
 `../20260823/MILESTONE1_DESIGN_FABLE.md` is updated in place (it remains the
 milestone document); this folder's items feed its §2 topology, §4.1/4.2
 (offline floor), §4.8 (exploration), and a new §2b platform decision.
+
+## Codex cross-review addendum · 2026-08-24
+
+The repository/product-path audit and proposed replacement system synthesis
+are:
+
+- [`CODEX_RESEARCH_CROSS_REVIEW.md`](CODEX_RESEARCH_CROSS_REVIEW.md) — every
+  H1–H10/NAV/VOICE finding, current maturity, implementation-direction
+  verdict, remaining decision research and box-day unknowns;
+- [`PORTABLE_LIVING_DOG_HLD.md`](PORTABLE_LIVING_DOG_HLD.md) — portable
+  Unitree-now/custom-body-later architecture, contracts, continuous local
+  cognition, governed learning, cost policy, build order and M1 acceptance;
+- [`event-driven-companion-budget/`](event-driven-companion-budget/) — new
+  reproducible EVENT-BUDGET result: architecture confirmed, product hard-cap
+  enforcement still absent;
+- [`embodiment-kernel-portability/`](embodiment-kernel-portability/) — new
+  reproducible portability audit: actuation seams partial; observation and
+  target deployment refuted.
+
+This addendum supersedes stale status text above where it conflicts: H3 now
+has a verdict (non-travel drives useful, travel unsafe); H8 remains design
+only/deferred; H9 remains design only and must remove its superseded grammar
+arm; NAV-CORE and VOICE-GATE have no canonical result/verdict at this review.
+Fable cross-review is pending.

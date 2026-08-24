@@ -1,3 +1,9 @@
+# [SUPERSEDED as the architecture reference, 2026-08-24: the frozen reference is
+# `research/20260824/PORTABLE_LIVING_DOG_HLD.md` (adopted with amendments in
+# `research/20260824/FABLE_HLD_CROSS_REVIEW.md`); the execution view is
+# `scrum/20260824/task_2/IMPLEMENTATION_PLAN.md`. This document remains the
+# M1 design record and its measured-findings sections stay citable.]
+
 # Milestone 1 — "the desk dog" · detailed design (Fable) · 2026-08-23 (draft; evidence sections fill from H1–H7 verdicts)
 
 Status: v3 (2026-08-24, reconciled per scrum/20260824/task_2/CLAUDE_RESPONSE.md
@@ -6,6 +12,14 @@ phrases); H9 offline arms dropped/superseded, CONNECTED-PLANNER probe pending
 (gates connected compounds only, never the freeze). Build order:
 scrum/20260824/task_2/IMPLEMENTATION_PLAN.md. Nothing here authorizes physical
 motion; §9 gates do.
+
+> **Codex cross-review, 2026-08-24:** the evidence record in this document is
+> retained, but its system synthesis and card order have material conflicts
+> with the current product path (desk dependency, proactive travel, Follow
+> before the observation/LIO spine, stale H8/H9 scope and an unenforceable
+> spend ceiling). The proposed replacement architecture and dependency order
+> are [`../20260824/PORTABLE_LIVING_DOG_HLD.md`](../20260824/PORTABLE_LIVING_DOG_HLD.md).
+> Fable cross-review is requested before treating either synthesis as frozen.
 
 ## 0. The milestone in one paragraph
 A Unitree Go2 EDU+ in one private, flat, mapped indoor room with an operator

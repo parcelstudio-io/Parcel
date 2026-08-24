@@ -1,0 +1,7171 @@
+{
+ "environment": {
+  "generated_utc": "2026-08-24T08:20:31+00:00",
+  "host": "jaewoo-jang-parcel",
+  "python": "3.14.4",
+  "obstacle_stop_m": 0.65,
+  "obstacle_slow_m": 1.2,
+  "reaction_time_s": 0.12,
+  "planner_inflation_m": 0.5932965611693387,
+  "gate_demand_at_cruise_m": 0.752,
+  "room_worst_clearance_m": 0.88,
+  "alias_scan_max_disagreement_m": 8.881784197001252e-15
+ },
+ "rows": [
+  {
+   "arm": "A",
+   "episode": 100,
+   "seed": 101,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.070972625156473,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.3165626763260785,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.4 goal=2.1 route=5 status=planned|clear",
+   "status": "running",
+   "hold_ticks": 1,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.009072301834169245,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.2048148148148148,
+   "detector_jitter_rms_m": 0.21085155549548265,
+   "journal": [],
+   "extra": {},
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "B",
+   "episode": 100,
+   "seed": 101,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.115238027247673,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.2595060039302868,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.0 goal=3.1 route=4 status=planned",
+   "status": "running",
+   "hold_ticks": 682,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.009898305279025002,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.2048148148148148,
+   "detector_jitter_rms_m": 0.21085155549548265,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "A",
+   "episode": 101,
+   "seed": 101,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": false,
+   "truth_distance_m": 5.095618867260031,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.6321527463676964,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=2.5 goal=3.7 route=2 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 1,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.003754788243910614,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20222222222222222,
+   "detector_jitter_rms_m": 0.21507825107216813,
+   "journal": [],
+   "extra": {},
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "B",
+   "episode": 101,
+   "seed": 101,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.4958303867161039,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 868,
+   "time_to_goal_s": 86.7,
+   "path_m": 5.238480027220298,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=111.7",
+   "status": "arrived",
+   "hold_ticks": 516,
+   "gap_ticks": 45,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 40,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.010234656993865363,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20353302611367127,
+   "detector_jitter_rms_m": 0.21483549276667657,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "arrival_confidence": 1.0
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "A",
+   "episode": 102,
+   "seed": 101,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 5.048385766801025,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.7421530255562431,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=3.7 route=4 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 687,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.10721488898359338,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19425925925925927,
+   "detector_jitter_rms_m": 0.21070391434803318,
+   "journal": [],
+   "extra": {
+    "moved_obstacle_xy": [
+     0.95,
+     -1.324
+    ]
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "B",
+   "episode": 102,
+   "seed": 101,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": true,
+   "truth_distance_m": 0.47982985225342467,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 216,
+   "time_to_goal_s": 21.5,
+   "path_m": 6.293653495834812,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=-88.0",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.08807727876102263,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19984567901234568,
+   "detector_jitter_rms_m": 0.21239144688981637,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "arrival_confidence": 1.0,
+    "moved_obstacle_xy": [
+     1.024,
+     -1.237
+    ]
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 2.9593510538361834,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.26256868040575,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.3 goal=2.1 route=5 status=planned|clear",
+   "status": "running",
+   "hold_ticks": 413,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.8428765931007871,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.012453442600700866,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [],
+   "extra": {
+    "kidnap_displacement_m": 3.7307558305213075
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 2.885217645213215,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.203629750841451,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.0 goal=3.2 route=6 status=planned",
+   "status": "running",
+   "hold_ticks": 704,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.23418087956923195,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.009366697650741778,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 3.262042797608577
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 893,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.007640634282875668,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014900083613741612
+    }
+   ],
+   "extra": {
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.005049005005930944,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0038088035167679916
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 2.97465484382607,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.1843392009440166,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.0 goal=3.8 route=8 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 433,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 2.1843392009440166,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.27373597880279815,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014900083613741612
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01136527179823442
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0002855955954455779
+    },
+    {
+     "t_s": 12.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011395811120945207
+    },
+    {
+     "t_s": 13.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002158120113286147
+    },
+    {
+     "t_s": 13.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011797035070378747
+    },
+    {
+     "t_s": 14.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010403056803175502
+    },
+    {
+     "t_s": 14.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010774350615712372
+    },
+    {
+     "t_s": 15.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0005660723898307243
+    },
+    {
+     "t_s": 15.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01107367431495841
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.007372075685308525
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01093202109677179
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0012394866701194809
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011138572752762445
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0012534550653319869
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011558239204794287
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0011458036485299575
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012004092333995728
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00119777659117899
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011774315123873492
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0012240562947188622
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011829438867292982
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0018020460147851961
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011784826755720025
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001818389894872527
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01146383989493995
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0018175826513864995
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011197079893166885
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0017508011350198562
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012129114386555106
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0017201537020990372
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011844251243482392
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0017515983859375504
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.0112494380037994
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00231557515879454
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011307193281311384
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0021813282055386956
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011356658147438333
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 6.199422114971132e-06
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012081144168426249
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009273842986345472
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011335793432744464
+    },
+    {
+     "t_s": 32.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009387178663338114
+    },
+    {
+     "t_s": 32.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011038533738799983
+    },
+    {
+     "t_s": 33.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009931538508333828
+    },
+    {
+     "t_s": 33.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012486814451202647
+    },
+    {
+     "t_s": 34.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.000947820941724278
+    },
+    {
+     "t_s": 34.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01163563375539175
+    },
+    {
+     "t_s": 35.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008919662630852687
+    },
+    {
+     "t_s": 35.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011633503325720572
+    },
+    {
+     "t_s": 36.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008974869218378876
+    },
+    {
+     "t_s": 36.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011624932294905788
+    },
+    {
+     "t_s": 37.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008480536004808307
+    },
+    {
+     "t_s": 37.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011116446360243556
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009046894601932011
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01101709544082783
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009213529673107321
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011797500127149325
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008998751230290632
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01169414975704845
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009165936017948176
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011437170557638073
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008920970060170512
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011898629155756362
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008751579400462539
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011376615071581345
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008939134350962168
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011532663172141544
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008463337220966625
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01135827986053938
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009049261018175457
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011785044325028459
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008822927014323402
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010996014891027037
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008830399461378939
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011785975798231192
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009099917346233793
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011441769058367197
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008068189237143229
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011307747471880023
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009182307180353651
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011733027020794153
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009204345508175933
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011431616901276793
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.000825909017760481
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011697463691857389
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008874545987836886
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01057499429908651
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009523665942938013
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011000011741734867
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009325882468285308
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011401071191576111
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008305116117048245
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012033972048650357
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0003772207817823181
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011644302854978014
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.000997074977516803
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011743055361904547
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008892811100374609
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011304061760093354
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009417814560658699
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01181379984766987
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008253454473722874
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01107941569770746
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008435744583199453
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011109723838803823
+    },
+    {
+     "t_s": 64.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010000302943261401
+    },
+    {
+     "t_s": 64.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011664735504052922
+    },
+    {
+     "t_s": 65.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008101115412384668
+    },
+    {
+     "t_s": 65.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011771076445299839
+    },
+    {
+     "t_s": 66.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009704980685889061
+    },
+    {
+     "t_s": 66.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011658564382801046
+    },
+    {
+     "t_s": 67.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001009583698046245
+    },
+    {
+     "t_s": 67.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010554814673507567
+    },
+    {
+     "t_s": 68.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.000910212463149849
+    },
+    {
+     "t_s": 68.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011579784446848337
+    },
+    {
+     "t_s": 69.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008575775677394149
+    },
+    {
+     "t_s": 69.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011341428034188606
+    },
+    {
+     "t_s": 70.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.000875696553841708
+    },
+    {
+     "t_s": 70.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011722450267042937
+    },
+    {
+     "t_s": 71.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008583123349235114
+    },
+    {
+     "t_s": 71.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011692769509631903
+    },
+    {
+     "t_s": 72.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010420685916753603
+    },
+    {
+     "t_s": 72.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011172156174719165
+    },
+    {
+     "t_s": 73.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008842381258347385
+    },
+    {
+     "t_s": 73.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01124204544275178
+    },
+    {
+     "t_s": 74.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008588382863029233
+    },
+    {
+     "t_s": 74.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011036816140501712
+    },
+    {
+     "t_s": 75.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009002639695876139
+    },
+    {
+     "t_s": 75.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011103628723699367
+    },
+    {
+     "t_s": 76.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008831428472738452
+    },
+    {
+     "t_s": 76.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011359159324753601
+    },
+    {
+     "t_s": 77.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009373661453274384
+    },
+    {
+     "t_s": 77.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010986523332718727
+    },
+    {
+     "t_s": 78.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008546999355888342
+    },
+    {
+     "t_s": 78.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011404081489010775
+    },
+    {
+     "t_s": 79.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009275131438772834
+    },
+    {
+     "t_s": 79.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011638434423274582
+    },
+    {
+     "t_s": 80.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008574096052474326
+    },
+    {
+     "t_s": 80.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011125801247660456
+    },
+    {
+     "t_s": 81.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.000946087882048961
+    },
+    {
+     "t_s": 81.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011242822368199666
+    },
+    {
+     "t_s": 82.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008709287858696886
+    },
+    {
+     "t_s": 82.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011165331488726988
+    },
+    {
+     "t_s": 83.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009984598811808507
+    },
+    {
+     "t_s": 83.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011569240888350537
+    },
+    {
+     "t_s": 84.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008405659216068824
+    },
+    {
+     "t_s": 84.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011332502292980261
+    },
+    {
+     "t_s": 85.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008205163627450822
+    },
+    {
+     "t_s": 85.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01116616732634909
+    },
+    {
+     "t_s": 86.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008998943647159906
+    },
+    {
+     "t_s": 86.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01050605196282812
+    },
+    {
+     "t_s": 87.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008394420853115686
+    },
+    {
+     "t_s": 87.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011203927375571628
+    },
+    {
+     "t_s": 88.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0008320959588394293
+    },
+    {
+     "t_s": 88.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011467787087481168
+    },
+    {
+     "t_s": 89.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0009309028338877504
+    },
+    {
+     "t_s": 89.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.0111700710328481
+    }
+   ],
+   "extra": {
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 101,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.0565019543776266,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.2669472960998545,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.0 goal=3.2 route=5 status=planned",
+   "status": "running",
+   "hold_ticks": 711,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 2.2669472960998545,
+   "post_kidnap_healthy_ticks": 840,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.27945343018069857,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19166666666666668,
+   "detector_jitter_rms_m": 0.21371821018603698,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0038088035167679916
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011365271798234423
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0011183691397783418
+    },
+    {
+     "t_s": 12.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01139581112094519
+    },
+    {
+     "t_s": 13.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0029757639868505316
+    },
+    {
+     "t_s": 13.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011797035070378754
+    },
+    {
+     "t_s": 14.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013991458625553406
+    },
+    {
+     "t_s": 14.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010774350615712368
+    },
+    {
+     "t_s": 15.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001111519362091562
+    },
+    {
+     "t_s": 15.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011073674314958417
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013299272091694138
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010932021096771785
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013892823609183698
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011138572752762447
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013569679916429292
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011558239204794287
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0012508016130039572
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012004092333995723
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014855581997781683
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011774315123873497
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005249273062511265
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011829438867292982
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00521450198029326
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011784826755720023
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005179016408103357
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011463839894939947
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005250582134618014
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011197079893166883
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005155165645708975
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012129114386555107
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052051942336128285
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01184425124348239
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005259002934373148
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011249438003799399
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005113046942766481
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011307193281311382
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005196897709148958
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011356658147438334
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005142110194808927
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012081144168426245
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005259326155902726
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01133579343274447
+    },
+    {
+     "t_s": 32.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005240493115869954
+    },
+    {
+     "t_s": 32.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011038533738799977
+    },
+    {
+     "t_s": 33.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005152423328961076
+    },
+    {
+     "t_s": 33.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01248681445120265
+    },
+    {
+     "t_s": 34.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005208865920546679
+    },
+    {
+     "t_s": 34.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01163563375539175
+    },
+    {
+     "t_s": 35.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0050405197792799976
+    },
+    {
+     "t_s": 35.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011633503325720575
+    },
+    {
+     "t_s": 36.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052464113614461285
+    },
+    {
+     "t_s": 36.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01162493229490579
+    },
+    {
+     "t_s": 37.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052173727675297165
+    },
+    {
+     "t_s": 37.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01111644636024356
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005203706983623499
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011017095440827825
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005251871947154866
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011797500127149323
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005263955398224697
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011694149757048451
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052042046180240335
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011437170557638075
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005157485400656335
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011898629155756364
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005227562515028571
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011376615071581346
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005248116316977702
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01153266317214154
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005269726154405425
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011358279860539383
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051695265998187535
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011785044325028466
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005172927215863154
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010996014891027032
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005212223673438995
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011785975798231192
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005211384065599029
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011441769058367197
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005276993040568651
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011307747471880023
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005206785499638804
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011733027020794153
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00510284398955536
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.0114316169012768
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005185490202993113
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011697463691857386
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005230958539731716
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010574994299086506
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005223921451840964
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011000011741734868
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005244516038091742
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011401071191576111
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005207668725419041
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012033972048650362
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005202308071231676
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011644302854978014
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005291207809445571
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01174305536190455
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051962448363815006
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011304061760093354
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005225442448368013
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011813799847669866
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00516840997766993
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01107941569770746
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005105219378511336
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011109723838803823
+    },
+    {
+     "t_s": 64.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005241686800841923
+    },
+    {
+     "t_s": 64.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011664735504052923
+    },
+    {
+     "t_s": 65.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005131882681763023
+    },
+    {
+     "t_s": 65.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011771076445299839
+    },
+    {
+     "t_s": 66.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005191105291261086
+    },
+    {
+     "t_s": 66.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011658564382801046
+    },
+    {
+     "t_s": 67.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00515593771431579
+    },
+    {
+     "t_s": 67.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010554814673507567
+    },
+    {
+     "t_s": 68.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005239357194423457
+    },
+    {
+     "t_s": 68.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011579784446848337
+    },
+    {
+     "t_s": 69.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005148442877569911
+    },
+    {
+     "t_s": 69.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011341428034188602
+    },
+    {
+     "t_s": 70.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005240618615721961
+    },
+    {
+     "t_s": 70.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011722450267042939
+    },
+    {
+     "t_s": 71.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00528126386637587
+    },
+    {
+     "t_s": 71.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01169276950963191
+    },
+    {
+     "t_s": 72.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00513853848350828
+    },
+    {
+     "t_s": 72.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011172156174719162
+    },
+    {
+     "t_s": 73.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005119325560127335
+    },
+    {
+     "t_s": 73.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01124204544275178
+    },
+    {
+     "t_s": 74.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005144377404565624
+    },
+    {
+     "t_s": 74.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011036816140501705
+    },
+    {
+     "t_s": 75.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005126999629283002
+    },
+    {
+     "t_s": 75.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011103628723699365
+    },
+    {
+     "t_s": 76.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005219198704293434
+    },
+    {
+     "t_s": 76.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011359159324753607
+    },
+    {
+     "t_s": 77.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005150077745438171
+    },
+    {
+     "t_s": 77.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010986523332718724
+    },
+    {
+     "t_s": 78.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051433383566788045
+    },
+    {
+     "t_s": 78.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011404081489010771
+    },
+    {
+     "t_s": 79.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005221321725835552
+    },
+    {
+     "t_s": 79.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011638434423274578
+    },
+    {
+     "t_s": 80.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005203202121925225
+    },
+    {
+     "t_s": 80.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011125801247660456
+    },
+    {
+     "t_s": 81.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005288286099917479
+    },
+    {
+     "t_s": 81.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011242822368199666
+    },
+    {
+     "t_s": 82.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051770785862093665
+    },
+    {
+     "t_s": 82.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011165331488726988
+    },
+    {
+     "t_s": 83.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0053642702648248105
+    },
+    {
+     "t_s": 83.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011569240888350537
+    },
+    {
+     "t_s": 84.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005242520946296924
+    },
+    {
+     "t_s": 84.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01133250229298026
+    },
+    {
+     "t_s": 85.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00515265255089959
+    },
+    {
+     "t_s": 85.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011166167326349093
+    },
+    {
+     "t_s": 86.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005206643318641445
+    },
+    {
+     "t_s": 86.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010506051962828118
+    },
+    {
+     "t_s": 87.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005259125473582508
+    },
+    {
+     "t_s": 87.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011203927375571628
+    },
+    {
+     "t_s": 88.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00526193455547233
+    },
+    {
+     "t_s": 88.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011467787087481165
+    },
+    {
+     "t_s": 89.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005191347980219261
+    },
+    {
+     "t_s": 89.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.0111700710328481
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "refuter": "R4_place_absent",
+   "arm": "door",
+   "seed": 101,
+   "door_status": "rejected",
+   "admitted": false,
+   "detail": "not started: the robot's map has no place called 'kitchen counter'; the places it does know nearby are the bookshelf, the water bowl and the desk; ask the owner which of those they mean, or which real",
+   "declared_arrival": false,
+   "false_arrival": false,
+   "failure_type": "door_refused"
+  },
+  {
+   "arm": "A",
+   "episode": 100,
+   "seed": 202,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.0562196802497845,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.319694889674403,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=1.7 route=5 status=planned|clear",
+   "status": "running",
+   "hold_ticks": 1,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.0076028138510140396,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.2051851851851852,
+   "detector_jitter_rms_m": 0.2092429096828729,
+   "journal": [],
+   "extra": {},
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "B",
+   "episode": 100,
+   "seed": 202,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.1040869999108547,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.247727417258079,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=3.1 route=4 status=planned",
+   "status": "running",
+   "hold_ticks": 100,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.0081908898588249,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.2051851851851852,
+   "detector_jitter_rms_m": 0.2092429096828729,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "A",
+   "episode": 101,
+   "seed": 202,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": false,
+   "truth_distance_m": 5.105256379008761,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.6226739224500737,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=3.7 route=2 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 1,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.006358256950201994,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20462962962962963,
+   "detector_jitter_rms_m": 0.21131179993389115,
+   "journal": [],
+   "extra": {},
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "B",
+   "episode": 101,
+   "seed": 202,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.4987452196627372,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 212,
+   "time_to_goal_s": 21.1,
+   "path_m": 5.248125802193977,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=118.7",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 45,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 40,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.010314222818726005,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19732704402515724,
+   "detector_jitter_rms_m": 0.2141405590152651,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "arrival_confidence": 0.9703
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "A",
+   "episode": 102,
+   "seed": 202,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 4.589176783940923,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.438286332688512,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.8 goal=3.3 route=2 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 12,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.09451896950661666,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20685185185185184,
+   "detector_jitter_rms_m": 0.21208358760391965,
+   "journal": [],
+   "extra": {
+    "moved_obstacle_xy": [
+     1.084,
+     -1.375
+    ]
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "B",
+   "episode": 102,
+   "seed": 202,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": true,
+   "truth_distance_m": 0.45247758149650225,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 272,
+   "time_to_goal_s": 27.1,
+   "path_m": 6.620674567011857,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=-90.8",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.08289649927953713,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20894607843137256,
+   "detector_jitter_rms_m": 0.2139789091136808,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "arrival_confidence": 1.0,
+    "moved_obstacle_xy": [
+     1.139,
+     -1.313
+    ]
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 2.972335264921259,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.250578778356921,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=1.6 route=5 status=planned|clear",
+   "status": "running",
+   "hold_ticks": 614,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.26959088079061977,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.010055573380326584,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [],
+   "extra": {
+    "kidnap_displacement_m": 3.52999181125982
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.0164919327113155,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.250476918615669,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.0 goal=3.2 route=5 status=planned",
+   "status": "running",
+   "hold_ticks": 696,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.055377348611793664,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.010471510353917678,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 3.4798962801433295
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 892,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.008069006613437932,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0038498406256662686
+    }
+   ],
+   "extra": {
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.007989080059470983,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0003782964297920922
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 2.9933348722664275,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.1934591802360597,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=2.2 route=5 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 192,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 2.1934591802360597,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.2666378741903635,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0038498406256662686
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011145425051660482
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0005902333249084636
+    },
+    {
+     "t_s": 12.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011335267048895053
+    },
+    {
+     "t_s": 13.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0015975753032987765
+    },
+    {
+     "t_s": 13.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011834057057562242
+    },
+    {
+     "t_s": 14.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0020604399193535692
+    },
+    {
+     "t_s": 14.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011270262863232471
+    },
+    {
+     "t_s": 15.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0021130834848487236
+    },
+    {
+     "t_s": 15.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01153132826548033
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032410643083296033
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011775083276166744
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0034789909372824825
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010842123239147954
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003513729577267675
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010999107247684718
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003506873520002818
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010908143998911619
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014474441195775855
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011601611315154012
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014453315850835827
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011478105238489746
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014824817102367237
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011246667900159765
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0015191745340298146
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011603476048422228
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013912470096510063
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011115172869479129
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014564103727320791
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011323505133481085
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014666035652807444
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011554723428955856
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014640645725566815
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011454700655127105
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001460843979351454
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011461452760449187
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014903620925661098
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011717067240257199
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014818858456149549
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010996444054238306
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014198027104711437
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011524158244668037
+    },
+    {
+     "t_s": 32.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014973638543576593
+    },
+    {
+     "t_s": 32.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011773236722972796
+    },
+    {
+     "t_s": 33.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014331625004500052
+    },
+    {
+     "t_s": 33.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011793369656796138
+    },
+    {
+     "t_s": 34.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014409146406053315
+    },
+    {
+     "t_s": 34.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010728908497560368
+    },
+    {
+     "t_s": 35.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001505714644467069
+    },
+    {
+     "t_s": 35.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010970514273671473
+    },
+    {
+     "t_s": 36.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0015090581572215597
+    },
+    {
+     "t_s": 36.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011363042742008783
+    },
+    {
+     "t_s": 37.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013637528330033874
+    },
+    {
+     "t_s": 37.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011474308109583843
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0015902439242839299
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011425884574253043
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014574035285279438
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010592330824474921
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014396718349930279
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011858252518414466
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014546901421034573
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011293637720492865
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014642504166020043
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011299707493214252
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0014212518262875003
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011654415304185109
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003477934156445712
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011717301974687365
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032989853440292343
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01072834957121349
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032113021444711916
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011381911757066432
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003300794491779666
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011693819772800478
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003301161577785421
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010762353025183916
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003159001523972632
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01136319100345001
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032457382207919197
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011848072824635153
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003226959868804475
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011243852222616086
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032915021920814414
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011792070458076485
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003307516612141121
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011436226545991687
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003261026869720523
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011602595760302915
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0033077648270057607
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010897263769829186
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032223810031688145
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01195666005938427
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003256010897589394
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01145686412097009
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003140343504042119
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011531244397489258
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0033154357233600306
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01133065881542941
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0031259332183498152
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011620842015455322
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003242251155204255
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01167875998119697
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003180345135104309
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011419521274911297
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003197254858547293
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011306260194718937
+    },
+    {
+     "t_s": 64.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003365659946211581
+    },
+    {
+     "t_s": 64.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01081867312649932
+    },
+    {
+     "t_s": 65.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0033626680319791776
+    },
+    {
+     "t_s": 65.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.0117689602749156
+    },
+    {
+     "t_s": 66.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003182955419276266
+    },
+    {
+     "t_s": 66.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01074383199286452
+    },
+    {
+     "t_s": 67.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032796393811197495
+    },
+    {
+     "t_s": 67.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011213154727331674
+    },
+    {
+     "t_s": 68.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003489783332173963
+    },
+    {
+     "t_s": 68.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010738341165835668
+    },
+    {
+     "t_s": 69.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003135318561554592
+    },
+    {
+     "t_s": 69.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01182236524002767
+    },
+    {
+     "t_s": 70.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003174320775781721
+    },
+    {
+     "t_s": 70.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011556889901725374
+    },
+    {
+     "t_s": 71.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0031395450236003475
+    },
+    {
+     "t_s": 71.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010973441428500834
+    },
+    {
+     "t_s": 72.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001812833953409953
+    },
+    {
+     "t_s": 72.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010606251452431536
+    },
+    {
+     "t_s": 73.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001850682667325619
+    },
+    {
+     "t_s": 73.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011052445046375278
+    },
+    {
+     "t_s": 74.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0029740109695289138
+    },
+    {
+     "t_s": 74.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01117767537750287
+    },
+    {
+     "t_s": 75.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003027789069313576
+    },
+    {
+     "t_s": 75.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011239574169788517
+    },
+    {
+     "t_s": 76.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0030648471789193952
+    },
+    {
+     "t_s": 76.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011700502840239303
+    },
+    {
+     "t_s": 77.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002934692257159426
+    },
+    {
+     "t_s": 77.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011978724083206622
+    },
+    {
+     "t_s": 78.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0030412720344105697
+    },
+    {
+     "t_s": 78.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01105669243590729
+    },
+    {
+     "t_s": 79.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0030966082373456087
+    },
+    {
+     "t_s": 79.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011402986964657144
+    },
+    {
+     "t_s": 80.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0004715569278200684
+    },
+    {
+     "t_s": 80.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011292274078176134
+    },
+    {
+     "t_s": 81.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002919036537674708
+    },
+    {
+     "t_s": 81.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011384343116738839
+    },
+    {
+     "t_s": 82.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0031202317699352837
+    },
+    {
+     "t_s": 82.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011381910083250128
+    },
+    {
+     "t_s": 83.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0031841748060870475
+    },
+    {
+     "t_s": 83.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011214514116211317
+    },
+    {
+     "t_s": 84.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0031130666337663183
+    },
+    {
+     "t_s": 84.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01106262396946538
+    },
+    {
+     "t_s": 85.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003191179120150982
+    },
+    {
+     "t_s": 85.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010929041890434622
+    },
+    {
+     "t_s": 86.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0030546137751867584
+    },
+    {
+     "t_s": 86.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01197729235657562
+    },
+    {
+     "t_s": 87.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032498955364329576
+    },
+    {
+     "t_s": 87.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011707481838356721
+    },
+    {
+     "t_s": 88.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0031584470724917687
+    },
+    {
+     "t_s": 88.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01176357304272781
+    },
+    {
+     "t_s": 89.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0028748249621714864
+    },
+    {
+     "t_s": 89.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011690809328896452
+    }
+   ],
+   "extra": {
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 202,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.037948250982478,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.2498936077938745,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.0 goal=3.2 route=5 status=planned",
+   "status": "running",
+   "hold_ticks": 750,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 2.2498936077938745,
+   "post_kidnap_healthy_ticks": 834,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.26223865898883447,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20203703703703704,
+   "detector_jitter_rms_m": 0.20991217571742526,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0003782964297920922
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011145425051660492
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0005788503196093824
+    },
+    {
+     "t_s": 12.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011335267048895061
+    },
+    {
+     "t_s": 13.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00021621059400460274
+    },
+    {
+     "t_s": 13.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011834057057562243
+    },
+    {
+     "t_s": 14.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0011617215657091368
+    },
+    {
+     "t_s": 14.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011270262863232475
+    },
+    {
+     "t_s": 15.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0006202744021494149
+    },
+    {
+     "t_s": 15.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011531328265480333
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005151519750726147
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011775083276166748
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052041812372814545
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01084212323914795
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005162593425207779
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010999107247684718
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005212352263526189
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010908143998911622
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00511603129218414
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011601611315154012
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005192066106378136
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011478105238489748
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005252023074214007
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011246667900159768
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005212921178167942
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011603476048422217
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051978655781636735
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011115172869479129
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005210554030993761
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011323505133481083
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005076197488622365
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011554723428955858
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051512188026113
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011454700655127109
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005160110831292547
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011461452760449183
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005107918634351324
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011717067240257197
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005159366126085192
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01099644405423831
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00516544366377155
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011524158244668037
+    },
+    {
+     "t_s": 32.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005205695617503944
+    },
+    {
+     "t_s": 32.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011773236722972796
+    },
+    {
+     "t_s": 33.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005328900607744761
+    },
+    {
+     "t_s": 33.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01179336965679614
+    },
+    {
+     "t_s": 34.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005109946422819807
+    },
+    {
+     "t_s": 34.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010728908497560367
+    },
+    {
+     "t_s": 35.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005237951547036241
+    },
+    {
+     "t_s": 35.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01097051427367147
+    },
+    {
+     "t_s": 36.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051017960482031095
+    },
+    {
+     "t_s": 36.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011363042742008781
+    },
+    {
+     "t_s": 37.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005246677088121172
+    },
+    {
+     "t_s": 37.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011474308109583846
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005267578225322189
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011425884574253047
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005133459603468771
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010592330824474925
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005178570803152855
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011858252518414462
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005121891803817937
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011293637720492872
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0022049479500865893
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011299707493214243
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005071158938489293
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011654415304185109
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005204075849240424
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011717301974687365
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00515165334455377
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010728349571213491
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005138128365352411
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011381911757066432
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005117810644565942
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011693819772800469
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005274992732392359
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010762353025183918
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051410578144942265
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011363191003450006
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052650009194435046
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011848072824635148
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00514913068967285
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011243852222616093
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005156613968030529
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011792070458076483
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005217703800750975
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011436226545991683
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005111872641991545
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011602595760302913
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0050946890543089795
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010897263769829184
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005273623303228022
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01195666005938427
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005170383995153057
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01145686412097009
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00516135822693821
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011531244397489258
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005187834355400144
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011330658815429405
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051891208904538775
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01162084201545532
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005173148420770207
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01167875998119697
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005212632651816021
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011419521274911297
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005190491979418331
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011306260194718937
+    },
+    {
+     "t_s": 64.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00515918241250456
+    },
+    {
+     "t_s": 64.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01081867312649932
+    },
+    {
+     "t_s": 65.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005185266380622245
+    },
+    {
+     "t_s": 65.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011768960274915597
+    },
+    {
+     "t_s": 66.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005165022633777075
+    },
+    {
+     "t_s": 66.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010743831992864515
+    },
+    {
+     "t_s": 67.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052184035925352205
+    },
+    {
+     "t_s": 67.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011213154727331677
+    },
+    {
+     "t_s": 68.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005100012582930461
+    },
+    {
+     "t_s": 68.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010738341165835668
+    },
+    {
+     "t_s": 69.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005165750263011922
+    },
+    {
+     "t_s": 69.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011822365240027666
+    },
+    {
+     "t_s": 70.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005097894461686216
+    },
+    {
+     "t_s": 70.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011556889901725374
+    },
+    {
+     "t_s": 71.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005179606734290428
+    },
+    {
+     "t_s": 71.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01097344142850083
+    },
+    {
+     "t_s": 72.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052178123719020565
+    },
+    {
+     "t_s": 72.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010606251452431539
+    },
+    {
+     "t_s": 73.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005209973130632844
+    },
+    {
+     "t_s": 73.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01105244504637528
+    },
+    {
+     "t_s": 74.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004998450351115569
+    },
+    {
+     "t_s": 74.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01117767537750287
+    },
+    {
+     "t_s": 75.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005188925831844444
+    },
+    {
+     "t_s": 75.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011239574169788515
+    },
+    {
+     "t_s": 76.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005230703705935089
+    },
+    {
+     "t_s": 76.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011700502840239303
+    },
+    {
+     "t_s": 77.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005210494959560317
+    },
+    {
+     "t_s": 77.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011978724083206618
+    },
+    {
+     "t_s": 78.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005260494296085228
+    },
+    {
+     "t_s": 78.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011056692435907288
+    },
+    {
+     "t_s": 79.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005170815154306283
+    },
+    {
+     "t_s": 79.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011402986964657143
+    },
+    {
+     "t_s": 80.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0050176317151699795
+    },
+    {
+     "t_s": 80.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011292274078176139
+    },
+    {
+     "t_s": 81.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.007319423138733958
+    },
+    {
+     "t_s": 81.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01138434311673884
+    },
+    {
+     "t_s": 82.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005205794016434316
+    },
+    {
+     "t_s": 82.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011381910083250128
+    },
+    {
+     "t_s": 83.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0050930314727383325
+    },
+    {
+     "t_s": 83.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011214514116211318
+    },
+    {
+     "t_s": 84.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00523865365633123
+    },
+    {
+     "t_s": 84.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011062623969465378
+    },
+    {
+     "t_s": 85.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005247204854590065
+    },
+    {
+     "t_s": 85.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010929041890434624
+    },
+    {
+     "t_s": 86.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052136258377108715
+    },
+    {
+     "t_s": 86.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011977292356575625
+    },
+    {
+     "t_s": 87.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0050194790953984264
+    },
+    {
+     "t_s": 87.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011707481838356723
+    },
+    {
+     "t_s": 88.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051925885809857705
+    },
+    {
+     "t_s": 88.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01176357304272781
+    },
+    {
+     "t_s": 89.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005086281273401599
+    },
+    {
+     "t_s": 89.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011690809328896457
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "refuter": "R4_place_absent",
+   "arm": "door",
+   "seed": 202,
+   "door_status": "rejected",
+   "admitted": false,
+   "detail": "not started: the robot's map has no place called 'kitchen counter'; the places it does know nearby are the bookshelf, the water bowl and the bed; ask the owner which of those they mean, or which real ",
+   "declared_arrival": false,
+   "false_arrival": false,
+   "failure_type": "door_refused"
+  },
+  {
+   "arm": "A",
+   "episode": 100,
+   "seed": 303,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.05187813990097,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.3415591346598315,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=1.9 route=5 status=planned|clear",
+   "status": "running",
+   "hold_ticks": 76,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.010707758762492345,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19814814814814816,
+   "detector_jitter_rms_m": 0.211263856735031,
+   "journal": [],
+   "extra": {},
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "B",
+   "episode": 100,
+   "seed": 303,
+   "layout": "1",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.1105371807048363,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.247456686060464,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.0 goal=3.1 route=4 status=planned",
+   "status": "running",
+   "hold_ticks": 682,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.015665356020919716,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.19814814814814816,
+   "detector_jitter_rms_m": 0.211263856735031,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0
+   },
+   "refuter": "R1_scan_dropout"
+  },
+  {
+   "arm": "A",
+   "episode": 101,
+   "seed": 303,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": false,
+   "truth_distance_m": 5.1094036755630645,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.6186511769213868,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=1.4 goal=3.8 route=2 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 1,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.004644070700394577,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.18907407407407406,
+   "detector_jitter_rms_m": 0.20978086198586332,
+   "journal": [],
+   "extra": {},
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "B",
+   "episode": 101,
+   "seed": 303,
+   "layout": "0",
+   "goal_id": "place_bowl",
+   "declared_arrival": true,
+   "truth_distance_m": 0.4840694296371399,
+   "arrived": true,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 597,
+   "time_to_goal_s": 59.6,
+   "path_m": 5.249827579791045,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "align_terminal err=116.5",
+   "status": "arrived",
+   "hold_ticks": 221,
+   "gap_ticks": 45,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 40,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.011147121869297802,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.18816303740926857,
+   "detector_jitter_rms_m": 0.21053732013141932,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     -2.4,
+     -2.4
+    ],
+    "arrival_confidence": 1.0
+   },
+   "refuter": "R2_pose_degraded"
+  },
+  {
+   "arm": "A",
+   "episode": 102,
+   "seed": 303,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": false,
+   "truth_distance_m": 4.654479703525139,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.395248066624263,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-1.1 goal=3.5 route=2 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 2,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.10643783494385986,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20185185185185187,
+   "detector_jitter_rms_m": 0.20998183870137443,
+   "journal": [],
+   "extra": {
+    "moved_obstacle_xy": [
+     1.101,
+     -1.375
+    ]
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "B",
+   "episode": 102,
+   "seed": 303,
+   "layout": "0",
+   "goal_id": "place_desk",
+   "declared_arrival": true,
+   "truth_distance_m": 0.5342876303288435,
+   "arrived": false,
+   "false_arrival": true,
+   "contacts": 0,
+   "steps": 275,
+   "time_to_goal_s": 27.400000000000002,
+   "path_m": 6.501189493188698,
+   "optimal_m": 5.727128425310541,
+   "failure_type": "",
+   "note": "grid_track err=-0.1 goal=0.5 route=2 status=planned",
+   "status": "arrived",
+   "hold_ticks": 0,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 0,
+   "post_kidnap_ticks": 0,
+   "max_jump_m": 0.0944240320160671,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.20424242424242425,
+   "detector_jitter_rms_m": 0.2125043499838552,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     2.4
+    ],
+    "arrival_confidence": 0.9922,
+    "moved_obstacle_xy": [
+     1.147,
+     -1.317
+    ]
+   },
+   "refuter": "R3_moved_obstacle"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.463662702898448,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.7604597596944123,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_recover_scan status=goal_blocked|clear",
+   "status": "running",
+   "hold_ticks": 3,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.7126789417461699,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.019227316001289598,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [],
+   "extra": {
+    "kidnap_displacement_m": 3.5087138033004046
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.0677289379973915,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.279383339338944,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=3.2 route=4 status=planned",
+   "status": "running",
+   "hold_ticks": 420,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.009176739147620516,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.018984723593822802,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 3.5118478065727587
+   },
+   "refuter": "R4b_kidnap_shipped"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.606211022799171,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.252,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 892,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.009093897506577568,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0029714413732761153
+    }
+   ],
+   "extra": {
+    "kidnap_displacement_m": 5.235109177790939
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 1.6492422502470643,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 0.0,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "arming_latched",
+   "note": "arming_latched",
+   "status": "running",
+   "hold_ticks": 891,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 0.0,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.005571452869154601,
+   "final_health": "healthy",
+   "latched": true,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0012621301857619282
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated"
+  },
+  {
+   "arm": "A",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 2.9458257344464767,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.2044641490214554,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=-0.0 goal=3.5 route=10 status=planned|obstacle_stop",
+   "status": "running",
+   "hold_ticks": 337,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 1.9524641490214554,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.2777867339164716,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0029714413732761153
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011568467969425917
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0005786897984759089
+    },
+    {
+     "t_s": 12.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011505565395771886
+    },
+    {
+     "t_s": 13.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005710005757426028
+    },
+    {
+     "t_s": 13.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01135892055056671
+    },
+    {
+     "t_s": 14.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002675363405452013
+    },
+    {
+     "t_s": 14.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011030270463422165
+    },
+    {
+     "t_s": 15.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.006729365334138331
+    },
+    {
+     "t_s": 15.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011673805124888642
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0007649586213819645
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011533450703120533
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0012876299431183703
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011328799162121189
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0028356006687223546
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01145503042779943
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002278465214050243
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01173944726693669
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004442868916412211
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011039492874532493
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004314276198826498
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010755957398937373
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005430021109586546
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01108147630040568
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.006004489807917682
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011012633080180715
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002563512491216435
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012206296213238222
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005091194933876309
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01159111140701984
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00445453103184655
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011052103986945718
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005224416019956859
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011666965977454166
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004590361697335503
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011577057865405353
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0036803930816589727
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011069625130964532
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00320327654512576
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011273147205000335
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004190501975767402
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011998297655028058
+    },
+    {
+     "t_s": 32.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004542989519652672
+    },
+    {
+     "t_s": 32.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010941001656986561
+    },
+    {
+     "t_s": 33.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005244338257860603
+    },
+    {
+     "t_s": 33.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010902674585360426
+    },
+    {
+     "t_s": 34.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032391413354259
+    },
+    {
+     "t_s": 34.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011764525416239235
+    },
+    {
+     "t_s": 35.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032781653865150764
+    },
+    {
+     "t_s": 35.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011416140143763376
+    },
+    {
+     "t_s": 36.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0024409096004282763
+    },
+    {
+     "t_s": 36.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011426148429927884
+    },
+    {
+     "t_s": 37.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004721073630927892
+    },
+    {
+     "t_s": 37.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01156469069976923
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051099125135371645
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010975856470580565
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004235791755923333
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011585814048245163
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004632836284237187
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01088879052059483
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0034014111526504366
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011085721809862871
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004443422799630194
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011509379057273698
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004237306669675482
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011051797555170667
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0034435558930169708
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011744480733699235
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0045090040516550115
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011743504748363042
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005645428556950246
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011029051990774696
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004942328995338363
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01148261369916233
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.006673655152712263
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011854540005992911
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0038137661481016383
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011257152077989795
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003735979521891296
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011147548726315716
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003710755813029084
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011492101010778577
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004735898321758473
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01041621131276357
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002488477064364862
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011241256087925781
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004430819139242242
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010965278856738087
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0031025352567553522
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011497116739196565
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005916658653678387
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011288604475309409
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002465122462831203
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011953591090768524
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004041914261796959
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01109741783867323
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005059707068234267
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011368418755345944
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005542019645407183
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011664535779366861
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003223645531652871
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011324799920807233
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005933335014063703
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011492550197780898
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0067186437586603835
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011598915652152542
+    },
+    {
+     "t_s": 64.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004094000400295583
+    },
+    {
+     "t_s": 64.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011519622987432053
+    },
+    {
+     "t_s": 65.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005308827888399453
+    },
+    {
+     "t_s": 65.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011192864336633064
+    },
+    {
+     "t_s": 66.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.002872810525713729
+    },
+    {
+     "t_s": 66.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011705847702669329
+    },
+    {
+     "t_s": 67.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.006330028381057567
+    },
+    {
+     "t_s": 67.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011116957498842766
+    },
+    {
+     "t_s": 68.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0037759745851094254
+    },
+    {
+     "t_s": 68.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011126495470513266
+    },
+    {
+     "t_s": 69.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004796051627026454
+    },
+    {
+     "t_s": 69.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011708657033321355
+    },
+    {
+     "t_s": 70.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005844481496892027
+    },
+    {
+     "t_s": 70.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010561206556404478
+    },
+    {
+     "t_s": 71.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004160613454325584
+    },
+    {
+     "t_s": 71.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010689560969059686
+    },
+    {
+     "t_s": 72.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004188107504044886
+    },
+    {
+     "t_s": 72.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010988353851562119
+    },
+    {
+     "t_s": 73.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0053680993110264575
+    },
+    {
+     "t_s": 73.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01146493000913803
+    },
+    {
+     "t_s": 74.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004139265226454941
+    },
+    {
+     "t_s": 74.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011439467680509928
+    },
+    {
+     "t_s": 75.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003640821939180881
+    },
+    {
+     "t_s": 75.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011274398607267231
+    },
+    {
+     "t_s": 76.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005294753019251525
+    },
+    {
+     "t_s": 76.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011555057357738152
+    },
+    {
+     "t_s": 77.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052273326409348906
+    },
+    {
+     "t_s": 77.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011273863596858521
+    },
+    {
+     "t_s": 78.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0022269513592355944
+    },
+    {
+     "t_s": 78.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011578555747863912
+    },
+    {
+     "t_s": 79.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0030917474467200253
+    },
+    {
+     "t_s": 79.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011385876904399465
+    },
+    {
+     "t_s": 80.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0038488495404832485
+    },
+    {
+     "t_s": 80.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011403889482137775
+    },
+    {
+     "t_s": 81.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.000952784876769815
+    },
+    {
+     "t_s": 81.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011104490482803354
+    },
+    {
+     "t_s": 82.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0045427642088520185
+    },
+    {
+     "t_s": 82.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011088876684689247
+    },
+    {
+     "t_s": 83.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0030829340782796526
+    },
+    {
+     "t_s": 83.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011656458647163323
+    },
+    {
+     "t_s": 84.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0060470278500807245
+    },
+    {
+     "t_s": 84.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01129707879593961
+    },
+    {
+     "t_s": 85.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.004767955048616535
+    },
+    {
+     "t_s": 85.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011249527039203401
+    },
+    {
+     "t_s": 86.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.003178052444403595
+    },
+    {
+     "t_s": 86.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011651563202975206
+    },
+    {
+     "t_s": 87.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005132771078002549
+    },
+    {
+     "t_s": 87.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01134603037730691
+    },
+    {
+     "t_s": 88.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00579511752083966
+    },
+    {
+     "t_s": 88.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011379366299136945
+    },
+    {
+     "t_s": 89.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0032894771316949924
+    },
+    {
+     "t_s": 89.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011357196570771218
+    }
+   ],
+   "extra": {
+    "kidnap_displacement_m": 5.235109177790939
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "arm": "B",
+   "episode": 103,
+   "seed": 303,
+   "layout": "aliased",
+   "goal_id": "place_counter",
+   "declared_arrival": false,
+   "truth_distance_m": 3.0511457820357366,
+   "arrived": false,
+   "false_arrival": false,
+   "contacts": 0,
+   "steps": 900,
+   "time_to_goal_s": null,
+   "path_m": 2.264233181437971,
+   "optimal_m": 5.215361924162118,
+   "failure_type": "silent_stall_step_limit",
+   "note": "grid_track err=0.0 goal=3.2 route=4 status=planned",
+   "status": "running",
+   "hold_ticks": 528,
+   "gap_ticks": 20,
+   "gap_translating_ticks": 0,
+   "degraded_ticks": 18,
+   "post_kidnap_path_m": 2.264233181437971,
+   "post_kidnap_healthy_ticks": 824,
+   "post_kidnap_ticks": 840,
+   "max_jump_m": 0.26583970637947063,
+   "final_health": "healthy",
+   "latched": false,
+   "detector_dropout": 0.1937037037037037,
+   "detector_jitter_rms_m": 0.21162748050122687,
+   "journal": [
+    {
+     "t_s": 0.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0012621301857619282
+    },
+    {
+     "t_s": 12.0,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01156846796942593
+    },
+    {
+     "t_s": 12.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.006593095565216887
+    },
+    {
+     "t_s": 12.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01150556539577187
+    },
+    {
+     "t_s": 13.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.009009313221172655
+    },
+    {
+     "t_s": 13.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011358920550566717
+    },
+    {
+     "t_s": 14.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.000976591275801904
+    },
+    {
+     "t_s": 14.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011030270463422167
+    },
+    {
+     "t_s": 15.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005219953090761224
+    },
+    {
+     "t_s": 15.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011673805124888645
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013490684727369532
+    },
+    {
+     "t_s": 16.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01153345070312053
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013179506016480777
+    },
+    {
+     "t_s": 17.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011328799162121189
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013463098171029332
+    },
+    {
+     "t_s": 18.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01145503042779943
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001248859938022299
+    },
+    {
+     "t_s": 19.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011739447266936693
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001443187781279426
+    },
+    {
+     "t_s": 20.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011039492874532491
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013113533674715802
+    },
+    {
+     "t_s": 21.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010755957398937376
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013128643865747225
+    },
+    {
+     "t_s": 22.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01108147630040568
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013036614466228032
+    },
+    {
+     "t_s": 23.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011012633080180712
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013472434002751138
+    },
+    {
+     "t_s": 24.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.012206296213238219
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013345645063427892
+    },
+    {
+     "t_s": 25.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011591111407019837
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0013230822544563912
+    },
+    {
+     "t_s": 26.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011052103986945708
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.100203631899733
+    },
+    {
+     "t_s": 27.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011666965977454164
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0973908110671597
+    },
+    {
+     "t_s": 28.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01157705786540535
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0953721748451708
+    },
+    {
+     "t_s": 29.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011069625130964534
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09686671468797503
+    },
+    {
+     "t_s": 30.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011273147205000333
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09694243744701826
+    },
+    {
+     "t_s": 31.900000000000002,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01199829765502805
+    },
+    {
+     "t_s": 32.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09768556422444118
+    },
+    {
+     "t_s": 32.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010941001656986558
+    },
+    {
+     "t_s": 33.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09637649111930324
+    },
+    {
+     "t_s": 33.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010902674585360421
+    },
+    {
+     "t_s": 34.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0998577486098767
+    },
+    {
+     "t_s": 34.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011764525416239235
+    },
+    {
+     "t_s": 35.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.10017054638600416
+    },
+    {
+     "t_s": 35.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011416140143763376
+    },
+    {
+     "t_s": 36.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09820558828671883
+    },
+    {
+     "t_s": 36.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01142614842992788
+    },
+    {
+     "t_s": 37.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09821357034281102
+    },
+    {
+     "t_s": 37.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01156469069976923
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09620459992664426
+    },
+    {
+     "t_s": 38.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010975856470580563
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09687224074761716
+    },
+    {
+     "t_s": 39.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011585814048245163
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09903300696819355
+    },
+    {
+     "t_s": 40.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010888790520594833
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09774961399373802
+    },
+    {
+     "t_s": 41.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011085721809862864
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09685016258096722
+    },
+    {
+     "t_s": 42.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011509379057273698
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09832377050575668
+    },
+    {
+     "t_s": 43.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011051797555170665
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09846586839806219
+    },
+    {
+     "t_s": 44.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01174448073369924
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0987325662020894
+    },
+    {
+     "t_s": 45.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011743504748363038
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.10090570431262996
+    },
+    {
+     "t_s": 46.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.0110290519907747
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09854891074367456
+    },
+    {
+     "t_s": 47.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011482613699162326
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09559216830477867
+    },
+    {
+     "t_s": 48.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011854540005992911
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09945787800007314
+    },
+    {
+     "t_s": 49.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011257152077989791
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.07698374696221738
+    },
+    {
+     "t_s": 50.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01114754872631571
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09795144681019835
+    },
+    {
+     "t_s": 51.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011492101010778575
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09705183756356515
+    },
+    {
+     "t_s": 52.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010416211312763568
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.09724973019470923
+    },
+    {
+     "t_s": 53.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01124125608792578
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.10249967997156524
+    },
+    {
+     "t_s": 54.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010965278856738087
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010848780935142366
+    },
+    {
+     "t_s": 55.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011497116739196563
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010888968606503305
+    },
+    {
+     "t_s": 56.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011288604475309398
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.001064036208030216
+    },
+    {
+     "t_s": 57.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011953591090768524
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0010642565495746455
+    },
+    {
+     "t_s": 58.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01109741783867323
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005261416847740515
+    },
+    {
+     "t_s": 59.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011368418755345942
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005254233250414484
+    },
+    {
+     "t_s": 60.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011664535779366858
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005295514704209475
+    },
+    {
+     "t_s": 61.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011324799920807226
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051423233187560926
+    },
+    {
+     "t_s": 62.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011492550197780895
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005267503349190901
+    },
+    {
+     "t_s": 63.900000000000006,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011598915652152536
+    },
+    {
+     "t_s": 64.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0051538294510162395
+    },
+    {
+     "t_s": 64.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011519622987432046
+    },
+    {
+     "t_s": 65.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005253995210538036
+    },
+    {
+     "t_s": 65.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011192864336633064
+    },
+    {
+     "t_s": 66.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005227806040102727
+    },
+    {
+     "t_s": 66.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01170584770266932
+    },
+    {
+     "t_s": 67.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005277863160475516
+    },
+    {
+     "t_s": 67.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011116957498842764
+    },
+    {
+     "t_s": 68.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005187377492202045
+    },
+    {
+     "t_s": 68.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011126495470513262
+    },
+    {
+     "t_s": 69.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005181647092098663
+    },
+    {
+     "t_s": 69.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011708657033321357
+    },
+    {
+     "t_s": 70.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052241093447035
+    },
+    {
+     "t_s": 70.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010561206556404482
+    },
+    {
+     "t_s": 71.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0053219373891119385
+    },
+    {
+     "t_s": 71.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010689560969059672
+    },
+    {
+     "t_s": 72.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052260763990363435
+    },
+    {
+     "t_s": 72.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.010988353851562117
+    },
+    {
+     "t_s": 73.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005280714967185509
+    },
+    {
+     "t_s": 73.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011464930009138027
+    },
+    {
+     "t_s": 74.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005317735664893088
+    },
+    {
+     "t_s": 74.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01143946768050993
+    },
+    {
+     "t_s": 75.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005290621051038597
+    },
+    {
+     "t_s": 75.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011274398607267234
+    },
+    {
+     "t_s": 76.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005272054094875177
+    },
+    {
+     "t_s": 76.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011555057357738154
+    },
+    {
+     "t_s": 77.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005189774859255173
+    },
+    {
+     "t_s": 77.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011273863596858518
+    },
+    {
+     "t_s": 78.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005214822642979577
+    },
+    {
+     "t_s": 78.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011578555747863909
+    },
+    {
+     "t_s": 79.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00524178757291533
+    },
+    {
+     "t_s": 79.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011385876904399465
+    },
+    {
+     "t_s": 80.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00524344390790329
+    },
+    {
+     "t_s": 80.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011403889482137776
+    },
+    {
+     "t_s": 81.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.0052910345876426845
+    },
+    {
+     "t_s": 81.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01110449048280336
+    },
+    {
+     "t_s": 82.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005191778738857102
+    },
+    {
+     "t_s": 82.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011088876684689247
+    },
+    {
+     "t_s": 83.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005333402871395034
+    },
+    {
+     "t_s": 83.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011656458647163321
+    },
+    {
+     "t_s": 84.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005180011029727108
+    },
+    {
+     "t_s": 84.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011297078795939608
+    },
+    {
+     "t_s": 85.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005231225034541025
+    },
+    {
+     "t_s": 85.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011249527039203403
+    },
+    {
+     "t_s": 86.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005194976876901272
+    },
+    {
+     "t_s": 86.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01165156320297521
+    },
+    {
+     "t_s": 87.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005269814295997328
+    },
+    {
+     "t_s": 87.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011346030377306903
+    },
+    {
+     "t_s": 88.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.00515585570792996
+    },
+    {
+     "t_s": 88.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.01137936629913694
+    },
+    {
+     "t_s": 89.9,
+     "event": "latched",
+     "trigger": "global_match_ambiguity",
+     "value": 0.005147468243885186
+    },
+    {
+     "t_s": 89.9,
+     "event": "rearmed",
+     "trigger": "operator_pose_reset",
+     "value": 0.011357196570771218
+    }
+   ],
+   "extra": {
+    "stored_goal_xy": [
+     2.4,
+     1.0
+    ],
+    "arrival_confidence": 0.0,
+    "kidnap_displacement_m": 5.727128425310541
+   },
+   "refuter": "R4b_kidnap_gated_operator"
+  },
+  {
+   "refuter": "R4_place_absent",
+   "arm": "door",
+   "seed": 303,
+   "door_status": "rejected",
+   "admitted": false,
+   "detail": "not started: the robot's map has no place called 'kitchen counter'; the places it does know nearby are the bookshelf, the couch and the desk; ask the owner which of those they mean, or which real plac",
+   "declared_arrival": false,
+   "false_arrival": false,
+   "failure_type": "door_refused"
+  }
+ ]
+}

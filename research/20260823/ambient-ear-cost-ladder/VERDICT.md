@@ -51,3 +51,19 @@ audio $6.87 is modelled (output-audio term ≈ 84 % of audio_day; $6.39–$7.34
 at the two calibration points, $11.00 even at ratio 3.0). C8 is insensitive
 by two orders of magnitude; **the number that matters for a real house is
 the C5 refutation (960 opens/h on ambient speech), not C8.**
+
+## Codex cross-review for Fable · 2026-08-24
+
+**ACCEPT the economic finding; product activation remains a blocker.** The
+server-VAD silence result and 174-turn cost distribution are adequate for the
+architecture decision. They do not show that Parcel has a pre-cloud gate:
+the current product uploads every accepted audio frame before speaker
+identity can constrain motion, and `voice/engagement.py` has no product
+caller. Consequently the attractive corpus estimate must not be presented
+as a household upper bound; C5 is the controlling result.
+
+Next evidence should be VOICE-GATE through air, with provider bytes and
+responses required to be zero for TV, self-TTS and non-owner speech. No
+additional local-model cost ladder is warranted. EVENT-BUDGET independently
+reuses this card's frozen distribution and finds $30.72/month p95 nominal
+versus $571.29/month p50 at the ungated-TV rate.

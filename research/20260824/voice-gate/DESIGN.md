@@ -9,7 +9,17 @@ owner-recording REPLAY row (acceptance measured per arm; wake+ID does NOT
 defeat a replay containing both — accepted-risk disposition documented),
 limited wind, and a defined restricted-listening arm. Arms run SEQUENTIALLY
 with early stop; ONE consolidated pass rule — an arm passes only if every
-row passes.
+row passes. **Consolidated pass rule (final, per Codex cross-review + HLD
+§7.1, supersedes any partial list):** owner committed-turn recall ≥ 0.95 at
+1–3 m ≤ 60°; **zero hosted bytes** for TV / self-TTS / non-owner input
+(measured at the transport, not inferred); ≤ 1 false hosted opening / 24 h;
+local STOP recall ≥ 0.99 with the A9 tail bars (p95 ≤ 800 ms AND n ≥ 60 all
+≤ 1.0 s) and ≤ 1 false STOP / 24 h; no self-transcribed motion command; AEC
+≥ 20 dB through the XVF3800→CQRobot path; barge-in stop p50 ≤ 0.52 s (p95
+reported vs envelope); cancel p95 ≤ 700 ms; critical-slot ≥ 0.95;
+first-word loss ≤ 2 %; endpoint p50 ≤ 0.8 s; projected p95 spend within the
+$160 application envelope. Failure of every ambient arm selects
+push-to-talk for M1 (the honest default until mounted bars pass).
 
 ## The one decision (RTP-1 C9; H1's C5 refutation is the motivating number)
 Choose the activation policy for the all-day ear: **owner-voice gating**,
@@ -68,3 +78,18 @@ wpctl profile selection (memory: profile Off ⇒ device not found — set it
 back), the owner's stack. Enrollment uses `tools/enroll_owner_voice.py`
 against a RESEARCH gallery path, never the owner's live gallery. $0 hosted.
 Guard label `voicegate`.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**DECISION-CRITICAL but not yet runnable as a canonical preregistration.**
+The later v2 requirements add the real XVF DAC/speaker, live people,
+restricted arms, replay/wind/AEC tails and cost, while earlier experiment and
+body tables still describe a desk speaker and four arms. Consolidate these
+into one frozen matrix before execution.
+
+Add explicit product bars: local spoken STOP works with network/runtime down;
+owner committed-turn recall >=95%; STOP recall >=99%; hosted bytes and
+responses for non-owner, TV and self-TTS are exactly zero; false hosted opens
+<=1 per 24 h; self-transcribed physical motion is zero. If the buffered
+local gate cannot meet them, M1 ships push-to-talk. Identity after cloud
+upload is not a privacy or cost gate.

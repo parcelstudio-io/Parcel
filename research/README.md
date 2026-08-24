@@ -54,3 +54,5 @@ VERDICT.md is a claim, not a finding.
 
 ## Index
 - `20260823/` — first program: see `20260823/README.md`.
+- `20260824/` — mountability decisions, Codex cross-review and the proposed
+  portable living-dog HLD: see `20260824/README.md`.

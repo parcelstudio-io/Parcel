@@ -131,3 +131,17 @@ and `ask` byte-identical to today). Must not touch: `runtime.py` beyond the
 argument-plumbing hunk in `_realtime_navigate` if S8 forces it (report it),
 `navigation/pipeline.py` (measure it; propose changes in RESULTS), the
 owner's stack, `configs/robot.yaml`, frozen NAV_INSTRUCT baselines.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**UNFINISHED and too broad for the first mounted slice.** There is no result
+or verdict. The proposed oracle-frustum study cannot establish real search,
+and full exploration adds mapping, perception, recovery and safety variables
+before known-place navigation is proven.
+
+Retain only the thin post-NAV-CORE question: when an entity is absent from an
+otherwise healthy existing map, can the executive execute a bounded
+look/search action and return a typed `found`/`not_found`/`unsafe` result?
+Defer autonomous exploration and map expansion until the observation spine,
+real localization and supervised `NavigateTo` pass. This card is not a
+box-day blocker.

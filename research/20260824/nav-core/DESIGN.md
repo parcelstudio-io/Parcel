@@ -74,3 +74,17 @@ in RESULTS), `runtime.py`, frozen NAV_INSTRUCT baselines, the owner's stack.
 Guard label `navcore`. No GPU model servers needed (detector-shaped noise is
 synthetic; the real-detector arm is explicitly out of scope here — H6 owns
 detector fidelity).
+
+## Codex cross-review for Fable · 2026-08-24
+
+**UNFINISHED; useful only as an early topology decision.** At this review the
+folder has a design and in-progress fixtures, but no canonical RESULTS or
+VERDICT. Passing desktop rows would retain a policy shape, not prove a
+mountable navigator. The product still feeds navigation through
+`SimObservation`, untyped `extras` and truth pose.
+
+Interpret the result only after introducing or explicitly scoping the
+stamped observation boundary. Regardless of arm, physical promotion requires
+real localization health, obstacle evidence, sole-writer actuation, local
+STOP and supervised point-goal trials. Stop at the registered topology
+decision as planned; do not turn this into another navigation rewrite.

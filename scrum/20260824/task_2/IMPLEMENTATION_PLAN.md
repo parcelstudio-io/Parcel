@@ -6,7 +6,7 @@ running; **every card below is bound to the measured findings it implements**
 `research/20260824/PORTABLE_LIVING_DOG_HLD.md` §12 (Gates 0–8) — Follow moved
 AFTER the observation spine (it imports `SimObservation` and its tracker has
 no product installer; EMBODIMENT-KERNEL K3/K4). Governing record:
-`CLAUDE_RESPONSE.md` + addenda; HLD cross-review by Fable pending (its Gate
+`CLAUDE_RESPONSE.md` + addenda; HLD cross-review by Fable DONE — ADOPT-WITH-AMENDMENTS (its Gate
 order and M1 acceptance contract are adopted here ahead of that review; the
 review may amend details, not the order). WIP: one integration lane + one
 decision study. Roles: Opus implements, Fable designs/verifies, humans own
@@ -16,7 +16,7 @@ residual risk (owner: Jae).
 | # | card | implements which findings | done when |
 |---|---|---|---|
 | A1 | **M1-0 GATEWAY** (running) | HLD Gate 1; ARCH-1 X12 (co-located); bridge fixtures. **Added from Codex's live-code note: hung-vendor-call isolation** — `stop_move`/`state`/ledger I/O must be bounded or contained so a hung call cannot freeze the watchdog; fault set gains hung-I/O, lease theft, second writer, slow client, audit-full (HLD Gate 1 list) | seeded-fault suite green ×3; exact-zero on every loss class; watchdog provably non-blocking |
-| A2 | **NAV-GLUE** (next; from NAV-CORE's fix list — the decision card) | Fix 3: ONE clearance authority — wire `ReactiveSafetyPolicy.planner_inflation_m` so planner inflation ≥ brake rings (0.42 m vs 0.752/0.80 m today; 8/8 stalls "inside a brake ring, route still planned") + a brake→replan signal. Fix 1: region/object kind-tolerant learned-map query (12/12 `bed` episodes `not_found`). Fix 2: off-oracle arrival verification (metric band + detector confirmation; `target_surface_unobserved` on 15/60). Then **re-run the frozen NAV-CORE corpus unchanged**: arm A ≥ 0.80 ⇒ retain; only arm B ⇒ simplify (fixes 1–2 stay post-M1) | corpus re-run decides retain/simplify; N4 typed-failure = 1.00 |
+| A2 | **NAV-GLUE** (next; from NAV-CORE's fix list — the decision card) | Fix 3: ONE clearance authority (0.42 m planner vs 0.752/0.80 m brakes; 8/8 stalls "inside a brake ring, route still planned"). **Measured refinement: this is a DESIGN change, not a parameter wire** — `planner_inflation_m` has no call site and `_planner_coupling_ring_m` caps tighter-only by design (pending DOOR-1 H-2); `map_safety_margin_m`=0.45 recovered only 1/8 sampled stalls. A2 owns the DOOR-1 H-2 decision + a brake→replan signal. Fix 1: region/object kind-tolerant learned-map query (12/12 `bed` episodes `not_found`). Fix 2: off-oracle arrival verification (metric band + detector confirmation; `target_surface_unobserved` on 15/60). Then **re-run the frozen NAV-CORE corpus unchanged**: arm A ≥ 0.80 ⇒ retain; only arm B ⇒ simplify (fixes 1–2 stay post-M1) | corpus re-run decides retain/simplify; N4 typed-failure = 1.00 |
 | A3 | **DISCONTINUITY-LATCH** (BUILD_BLOCKER regardless of A2's outcome) | NAV-CORE refuter 4b: shipped arms kept translating on HEALTHY after a kidnap (824–840/840 HEALTHY ticks, 0.84 m moved); the modelled A4/A10 latch caught 3/3 and the operator pose-reset re-armed cleanly; the whole-map second-best margin **does not exist in the product** (`ScanMatchLocalizer._relocalize` keeps no runner-up — fix 4) and correctly refused in the aliased world (margins 0.002–0.03 vs 0.25). Build: the latch + trigger journal + runner-up margin + the operator reset transaction. Also fix 5: no arrival claim from uncalibrated covariance (R3's false arrival at p=0.9922, 0.534 m out) — arrival confidence needs a calibration floor or detector confirmation | latch regression (kidnap ⇒ 0.00 m); margin published; R3 case refuses |
 | A4 | **SPINE** (HLD Gate 2; was M1-7 — moved up, Follow depends on it) | `NavigationSnapshotV2` assembler replacing `SimObservation` in the 9 audited modules (EMBODIMENT-KERNEL list: brain/observations, control/base, control/state, navigation/{follow, reactive_safety, search_owner, semantic_map, spatial}, runtime.py); stamped evidence header (HLD principle 5); simulator/replay/physical adapters; Orin service packaging skeleton | K3 = 0 modules; K4 = exists; adapters pass the existing suites |
 | A5 | **C8-FIX** (parallel-safe per HLD §12; before any replanning ships) | Addendum A8: transactional suspend-only, atomic/rollback, `_amendment_pending` gated on arbiter quiescence, HOLD on partial failure; regression observes the command stream | multi-task forced-failure regression green; r24/nominal-stop unchanged |
@@ -55,7 +55,7 @@ gateway, event capture survive their loss (Codex/HLD principle 1).
 
 ## Freeze
 Software architecture freezes after: A2's corpus re-run decision +
-VOICE-GATE v2 + my HLD cross-review reconciling
+VOICE-GATE v2 + the applied HLD reconciliation (done: FABLE_HLD_CROSS_REVIEW.md adopts
 `PORTABLE_LIVING_DOG_HLD.md` with `MILESTONE1_DESIGN_FABLE.md` into ONE
 frozen reference. Electrical/mechanical/physical freeze: vendor written
 answers + box-day packets (HLD Gates 3–6).

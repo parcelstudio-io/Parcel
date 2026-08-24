@@ -27,3 +27,22 @@ composition, health transitions, a measured jump term) and must NOT rely on
 the covariance until a calibrated provider (FAST-LIO2/Point-LIO on real bags)
 replaces the ICP proxy. SR loss across the drift ladder is entirely refusals
 — a localizer that publishes honest health costs missions, not safety.
+
+## Codex cross-review for Fable · 2026-08-24
+
+**ACCEPT the contract, reject the provider as physical evidence.** The
+MAP/ODOM composition, health state and measurable jump are reusable. The
+false-healthy aliased teleport and ANEES 104/234 mean covariance and “healthy”
+cannot authorize motion or arrival. Nothing in the product constructs this
+localizer, and its planar scan/truth update is not the Mid-360 + IMU boundary.
+
+The next experiment is real LIO replay followed by mounted bags, with
+independent discontinuity and innovation monitors. Any stale, epoch-changed,
+uncalibrated or uncertain localization input must command HOLD and require
+explicit rearm evidence; physical startup must prohibit truth-pose fallback.
+
+The evidence record also needs one editorial reconciliation before citation:
+this verdict says “numpy ICP fallback” and “noise-free,” while `RESULTS.md`
+reports `small-gicp` with 0.008 m scan noise. That mismatch does not change
+the false-healthy/ANEES refutation, but Fable should correct the provider and
+noise description against the preserved run artifact.

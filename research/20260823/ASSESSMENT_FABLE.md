@@ -1,5 +1,12 @@
 # Where the living-dog prototype actually stands · assessment (Fable) · 2026-08-23
 
+> **Historical snapshot.** H1–H7 results, the 2026-08-24 product audit and
+> two new refuters now supersede readiness percentages, economics and open
+> questions in this file. See
+> [`../20260824/CODEX_RESEARCH_CROSS_REVIEW.md`](../20260824/CODEX_RESEARCH_CROSS_REVIEW.md)
+> for the evidence reconciliation; Fable cross-review of that packet is
+> pending.
+
 Reviewed tree: `0ad83a0` on `origin/main` plus the in-flight DEC-FS-1
 working-tree overlay (feature-package moves; no behavior change). Grounded
 by seven independent read-only surveys of the tree (conversation/cost,
