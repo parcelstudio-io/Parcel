@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.core.hard_stop import ZERO_COMMAND
@@ -492,7 +492,7 @@ def test_no_hardcoded_one_metre_person_fallback_remains() -> None:
     )
     for path in (
         REPO / "src" / "parcel_robot" / "runtime.py",
-        REPO / "src" / "parcel_robot" / "headless_city.py",
+        REPO / "src" / "parcel_robot" / "simulation" / "headless_city.py",
         REPO / "src" / "parcel_robot" / "brain" / "observations.py",
         REPO / "src" / "parcel_robot" / "navigation" / "follow.py",
         REPO / "evals" / "companion_nav" / "runner.py",

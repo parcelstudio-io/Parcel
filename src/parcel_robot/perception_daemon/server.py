@@ -24,7 +24,7 @@ Design commitments, and the reason for each
   the runtime would then have to be restarted to get its eyes back.
 * **The socket is user-private (mode 0600)** and refuses to replace a path that
   is not already a socket — the same rule
-  :class:`parcel_robot.sim_ipc.PoseSocketServer` applies, for the same reason.
+  :class:`parcel_robot.simulation.ipc.PoseSocketServer` applies, for the same reason.
 
 HONESTY
 -------

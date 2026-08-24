@@ -7,16 +7,16 @@ import pytest
 
 from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import VelocityCommand
-from parcel_robot.mujoco_lidar import (
-    MAX_LIDAR_OBSTACLES,
-    planar_geom_surface_hit,
-    scan_mujoco_lidar,
-)
 from parcel_robot.navigation.reactive_safety import (
     ReactiveSafetyPolicy,
     apply_reactive_safety,
 )
 from parcel_robot.robot_profile import DEFAULT_ROBOT_PROFILE
+from parcel_robot.simulation.mujoco_lidar import (
+    MAX_LIDAR_OBSTACLES,
+    planar_geom_surface_hit,
+    scan_mujoco_lidar,
+)
 
 _SCENE = """
 <mujoco model="lidar_geometry_test">

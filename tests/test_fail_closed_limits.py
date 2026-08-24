@@ -342,7 +342,7 @@ def test_shipped_config_still_launches(tmp_path: Path, monkeypatch: pytest.Monke
     exactly one test doing so, and it was this one.
 
     ``PARCEL_MEMORY_PATH`` is the documented escape hatch (see
-    ``src/parcel_robot/memory_path.py``); pointing it at ``tmp_path`` is what
+    ``src/parcel_robot/memory/path.py``); pointing it at ``tmp_path`` is what
     every test that needs a real runtime should now do. Without it the
     constructor raises ``MemoryPathRefused`` rather than writing — which is the
     point of the card, and which

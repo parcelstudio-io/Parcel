@@ -54,9 +54,9 @@ from typing import Any
 
 import numpy as np
 
-from parcel_robot import prosody
-from parcel_robot.endpointing import SileroVad, TurnEndpointer
-from parcel_robot.voice_audio import (
+from parcel_robot.audio import prosody
+from parcel_robot.audio.endpointing import SileroVad, TurnEndpointer
+from parcel_robot.audio.voice_loop import (
     FRAME_SAMPLES,
     SAMPLE_RATE_HZ,
     MicrophoneVoiceLoop,

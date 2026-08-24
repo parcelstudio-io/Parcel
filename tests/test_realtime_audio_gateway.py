@@ -38,7 +38,8 @@ import pytest
 from websockets.exceptions import ConnectionClosed
 from websockets.sync.client import connect
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
+from parcel_robot.audio.voice_loop import pcm16_wav
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.realtime.audio_gateway import (
@@ -68,7 +69,6 @@ from parcel_robot.realtime.fake_server import (
 from parcel_robot.realtime.protocol import PCM16_SAMPLE_RATE_HZ
 from parcel_robot.realtime.transport import TransportClosed, transport_pair
 from parcel_robot.runtime import RobotRuntime
-from parcel_robot.voice_audio import pcm16_wav
 from parcel_robot.web_panel import RuntimeHTTPServer
 
 REPO = Path(__file__).resolve().parents[1]

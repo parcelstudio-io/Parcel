@@ -28,14 +28,14 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.brain.contracts import FrozenDict, SuccessCondition
 from parcel_robot.brain.executive import DispatchRequest
 from parcel_robot.models import VelocityCommand
 from parcel_robot.observability import STAGES, LatencyTracker
 from parcel_robot.runtime import RobotRuntime
-from parcel_robot.voice_pipeline import SYSTEM_UTTERANCE_KIND, DuplexVoiceSession, VoiceStage
+from parcel_robot.voice.pipeline import SYSTEM_UTTERANCE_KIND, DuplexVoiceSession, VoiceStage
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -719,7 +719,7 @@ def test_the_runtime_seam_carries_an_utterance_all_the_way_to_the_speaker(
     ``_brain_vocalize`` wrote chat and returned, and ``played`` stayed empty.
     """
 
-    from parcel_robot.voice_audio import SpeakerSink, pcm16_wav
+    from parcel_robot.audio.voice_loop import SpeakerSink, pcm16_wav
 
     class _WavSynth:
         def synthesize(self, text: str) -> bytes:

@@ -40,8 +40,8 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot import audio_io
-from parcel_robot.audio_arming import (
+from parcel_robot.audio import devices
+from parcel_robot.audio.arming import (
     CODE_ARMED,
     CODE_MONITOR,
     CODE_NO_INPUT_ENDPOINT,
@@ -52,7 +52,7 @@ from parcel_robot.audio_arming import (
     decide_microphone_arming,
     resolve_allow_monitor_capture,
 )
-from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
+from parcel_robot.audio.devices import AudioDeviceStatus, detect_audio_devices
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.providers import SpeechStack, build_speech_stack
@@ -315,7 +315,7 @@ _MONITOR_SOURCE_INSPECT = """id 90, type PipeWire:Interface:Node
 
 
 def _wpctl_probe(monkeypatch: pytest.MonkeyPatch, *, status: str, inspects: dict[str, str]):
-    monkeypatch.setattr(audio_io.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(devices.shutil, "which", lambda name: f"/usr/bin/{name}")
 
     def _fake(command: list[str], *, max_chars: int = 16_384) -> str:
         del max_chars
@@ -325,9 +325,9 @@ def _wpctl_probe(monkeypatch: pytest.MonkeyPatch, *, status: str, inspects: dict
             return inspects.get(command[2], "")
         return ""
 
-    monkeypatch.setattr(audio_io, "_command_output", _fake)
+    monkeypatch.setattr(devices, "_command_output", _fake)
     monkeypatch.setattr(
-        audio_io.subprocess,
+        devices.subprocess,
         "run",
         lambda *a, **k: (_ for _ in ()).throw(OSError("no arecord in this test")),
     )

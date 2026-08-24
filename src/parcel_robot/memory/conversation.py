@@ -9,8 +9,8 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from .conversation_store import ConversationStore, mirror_realtime_turn, parse_sqlite_utc
-from .memory_path import ResolvedStore, resolve_memory_path
+from .path import ResolvedStore, resolve_memory_path
+from .store import ConversationStore, mirror_realtime_turn, parse_sqlite_utc
 
 logger = logging.getLogger(__name__)
 
@@ -352,7 +352,7 @@ class ConversationMemory:
         conversation memory" for every process started from the repo root —
         tests, harnesses and in-process runtimes included — and 256 synthetic
         rows are the measured cost. It is now resolved by
-        :func:`~parcel_robot.memory_path.resolve_memory_path`, which refuses
+        :func:`~parcel_robot.memory.path.resolve_memory_path`, which refuses
         rather than guesses; see that module for the three rules and the reason
         each one is shaped the way it is.
 
@@ -491,7 +491,7 @@ class ConversationMemory:
         Returns the new row id so a caller can correlate without re-querying.
 
         ``store`` (card R2-D) is an optional
-        :class:`~parcel_robot.conversation_store.ConversationStore` to dual-write
+        :class:`~parcel_robot.memory.store.ConversationStore` to dual-write
         the same turn into. **Default ``None`` means byte-identical behaviour**:
         no store, no extra statement, no extra commit. This is the wiring point
         rather than ``runtime.py`` because the raw-conversation store must be
@@ -1027,7 +1027,7 @@ def _row_instant(created_at: object) -> datetime | None:
     """``messages.created_at`` → a local-time ``datetime``, or ``None``.
 
     SQLite stamps ``CURRENT_TIMESTAMP`` in UTC with no suffix;
-    :func:`~parcel_robot.conversation_store.parse_sqlite_utc` is the one place
+    :func:`~parcel_robot.memory.store.parse_sqlite_utc` is the one place
     in this repo that knows it, so this reuses it rather than re-deciding.
 
     The result is converted to the MACHINE's local time on purpose: the words

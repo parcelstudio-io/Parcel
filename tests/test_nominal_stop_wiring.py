@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from parcel_robot import runtime as runtime_module
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import (
     DynamicAgentTrack,
     OwnerTrack,

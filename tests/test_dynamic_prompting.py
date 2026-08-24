@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.agent import VoiceAgent
-from parcel_robot.dynamic_prompting import (
+from parcel_robot.models import AgentDecision, ToolCall
+from parcel_robot.prompting.dynamic import (
     CallableContextSource,
     ConversationTool,
     ConversationToolRegistry,
@@ -18,7 +18,7 @@ from parcel_robot.dynamic_prompting import (
     build_prompting_stack,
     build_weather_tool,
 )
-from parcel_robot.models import AgentDecision, ToolCall
+from parcel_robot.voice.agent import VoiceAgent
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -179,7 +179,7 @@ def test_agent_rejects_unregistered_information_tool() -> None:
 def test_runtime_wires_prompting_into_system_prompt(tmp_path: Path) -> None:
     import time as _time
 
-    from parcel_robot.audio_io import AudioDeviceStatus
+    from parcel_robot.audio.devices import AudioDeviceStatus
     from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
     from parcel_robot.runtime import RobotRuntime
 

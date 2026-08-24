@@ -13,7 +13,6 @@ from evals.nav_instruct.generator import (
     _relative_goal,
     episode_set_spec,
 )
-from parcel_robot.city_semantics import extract_city_semantics
 from parcel_robot.instructnav.scoring import (
     NEXT_TO_BAND_M,
     AttributionLayer,
@@ -26,6 +25,7 @@ from parcel_robot.instructnav.scoring import (
     object_towards_goal_region,
     score_episode,
 )
+from parcel_robot.perception.city_semantics import extract_city_semantics
 
 
 def test_semantics_and_eval_object_goal_regions_agree():

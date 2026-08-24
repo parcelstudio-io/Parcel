@@ -14,9 +14,9 @@ from typing import Protocol, runtime_checkable
 
 from parcel_robot.camera_channel.d455 import (
     CALIBRATION_ID_NOMINAL,
+    D455_DEPTH_FPS,
     D455_DEPTH_MAX_M,
     D455_DEPTH_MIN_M,
-    D455_DEPTH_FPS,
     D455_RGB_FPS,
     MOUNT_HEIGHT_M,
     CameraIntrinsics,

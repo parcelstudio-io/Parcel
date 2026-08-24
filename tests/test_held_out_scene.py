@@ -122,6 +122,12 @@ ALLOWED: dict[str, str] = {
         "name the scene (it globs), so it gets no seat, and this entry does not "
         "join LOAD_ALLOWED — an index never opens what it lists."
     ),
+    "scrum/20260822/task_30/evidence_integrator_gate_20260823T0912.json": (
+        "GATE-0b's integrator-gate evidence record: the gate's own JSON output "
+        "names the scene inside a test id / skip reason it captured. Evidence under "
+        "scrum/, written by the gate after the fact; nothing loads it. Same "
+        "doc catch-22 as the MOVE1 entry below (integrator Fable, 2026-08-23)."
+    ),
     "scrum/20260821/task_20/MOVE1_STATUS.md": (
         "MOVE-1's status record names the scene only to say its exposure stays "
         "UNSPENT while E2-D2 is diagnosed. Prose under scrum/, written after its "

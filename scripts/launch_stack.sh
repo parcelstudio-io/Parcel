@@ -12,7 +12,7 @@ PYTHON="$ROOT/.parcel/bin/python"
 # real conversation memory" for anything started from the repo root — tests and
 # in-process runtimes included. 256 synthetic rows are the measured cost.
 #
-# src/parcel_robot/memory_path.py now REFUSES that file to any process that has
+# src/parcel_robot/memory/path.py now REFUSES that file to any process that has
 # not declared itself the owner's stack. This line is that declaration. It lives
 # in the launcher and not in the library on purpose: an executor who imports the
 # runtime cannot accidentally acquire it, which is the entire mechanism. Under

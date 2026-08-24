@@ -32,8 +32,8 @@ from parcel_robot.detection_adapter.owlv2_onnx import (
     source_max_edge,
 )
 from parcel_robot.detection_adapter.pixel_detections import Detector, PixelDetection
-from parcel_robot.perception_contention import PerceptionContentionGuard
-from parcel_robot.perception_providers import PROVIDER_CPU_INT8, PROVIDER_CUDA_FP16
+from parcel_robot.perception.contention import PerceptionContentionGuard
+from parcel_robot.perception.providers import PROVIDER_CPU_INT8, PROVIDER_CUDA_FP16
 
 # ---------------------------------------------------------------------------
 # loud degrade / additive-opt-in

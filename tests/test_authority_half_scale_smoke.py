@@ -24,7 +24,7 @@ pytest.importorskip("mujoco")
 
 from evals.nav_instruct.generator import generate_minival
 from evals.nav_instruct.runner import NavInstructRunner
-from parcel_robot.headless_city import (
+from parcel_robot.simulation.headless_city import (
     DEFAULT_ROBOT_CONFIG,
     HeadlessCityQualityHarness,
     HeadlessCityWorld,

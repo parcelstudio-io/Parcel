@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.online_map.entries import (
@@ -1088,7 +1088,7 @@ def test_an_ask_verdict_from_the_map_becomes_an_ask_about_remark(
     true when P1-D's thresholds move.
     """
 
-    from parcel_robot.perception_abstention import OUTCOME_ASK
+    from parcel_robot.perception.abstention import OUTCOME_ASK
 
     lane, clock, _learned = _wire(runtime)
 
@@ -1151,7 +1151,7 @@ def test_an_ask_verdict_naming_an_unadmitted_place_is_dropped(
 ) -> None:
     """The hard row again, at the one seam that does not come from the scan."""
 
-    from parcel_robot.perception_abstention import OUTCOME_ASK
+    from parcel_robot.perception.abstention import OUTCOME_ASK
 
     lane, clock, _learned = _wire(runtime)
 

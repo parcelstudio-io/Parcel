@@ -346,7 +346,7 @@ def test_band_profile_defaults_match_the_sim_scan_contract() -> None:
     would drag mujoco into an aarch64 ``base`` venv) — so the pin lives here,
     where importing the sim is free."""
 
-    from parcel_robot import mujoco_lidar
+    from parcel_robot.simulation import mujoco_lidar
 
     profile = BandProfile()
     assert profile.bins == mujoco_lidar.DEFAULT_SCAN_RAYS == 360
@@ -569,7 +569,7 @@ def test_those_absolute_indices_are_the_sims_own_ray_order() -> None:
     ``(b + pi) / increment``.
     """
 
-    from parcel_robot import mujoco_lidar
+    from parcel_robot.simulation import mujoco_lidar
 
     rays = mujoco_lidar.DEFAULT_SCAN_RAYS
     increment = 2.0 * math.pi / rays

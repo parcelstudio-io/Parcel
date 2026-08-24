@@ -140,7 +140,7 @@ def _w0a_config(tmp_path):
 
 
 def _silent_audio():
-    from parcel_robot.audio_io import AudioDeviceStatus
+    from parcel_robot.audio.devices import AudioDeviceStatus
 
     return AudioDeviceStatus(
         status="text mode",

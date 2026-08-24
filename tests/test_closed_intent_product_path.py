@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.brain.router import DeterministicIntentRouter
 from parcel_robot.models import ActionProposal, AgentDecision, VelocityCommand
@@ -256,8 +256,8 @@ def test_every_stop_phrase_latches_the_emergency_stop(
 def test_the_stop_grammar_has_exactly_one_source() -> None:
     """Three copies of "which words stop the robot" is how "halt" got lost."""
 
-    from parcel_robot.agent import EMERGENCY_STOP_PHRASES
     from parcel_robot.brain import router
+    from parcel_robot.voice.agent import EMERGENCY_STOP_PHRASES
 
     canonical = closed_intent_phrases(ClosedIntent.STOP)
     assert EMERGENCY_STOP_PHRASES == canonical
@@ -544,7 +544,7 @@ def test_a_compound_without_a_planner_clarifies_instead_of_compiling_a_literal()
 
     import tempfile
 
-    from parcel_robot.audio_io import AudioDeviceStatus as _Status
+    from parcel_robot.audio.devices import AudioDeviceStatus as _Status
 
     with tempfile.TemporaryDirectory() as tmp:
         cfg = Path(tmp) / "robot.yaml"
@@ -782,8 +782,8 @@ def test_a_conversation_lane_physical_proposal_never_leaks_the_validator_string(
     """The model proposes a stripped physical tool; the owner must never see the
     raw ``Unknown proposed skill`` string — a clarify stands in its place."""
 
-    from parcel_robot.agent import VoiceAgent
     from parcel_robot.skills.api import Dog
+    from parcel_robot.voice.agent import VoiceAgent
 
     dog = Dog.from_config(REPO / "configs" / "robot.yaml")
     agent = VoiceAgent(

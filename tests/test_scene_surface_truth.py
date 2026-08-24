@@ -67,7 +67,6 @@ from evals.nav_instruct.surface_scoring import (
     surface_error_m,
     visible_facade,
 )
-from parcel_robot.city_semantics import extract_city_semantics
 from parcel_robot.instructnav.scoring import object_near_goal_region
 from parcel_robot.navigation.arrival_semantics import (
     ARRIVAL_TABLE,
@@ -84,7 +83,8 @@ from parcel_robot.navigation.arrival_semantics import (
     localization_target,
     planner_relation,
 )
-from parcel_robot.scene_semantics import scene_semantics
+from parcel_robot.perception.city_semantics import extract_city_semantics
+from parcel_robot.perception.scene_semantics import scene_semantics
 
 #: The six buildings, their geom centre and half-extent, read straight off
 #: ``city_block.xml``. Kept here as the INDEPENDENT half of the proof: the

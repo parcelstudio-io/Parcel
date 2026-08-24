@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
-from .models import VelocityCommand
+from ..models import VelocityCommand
 
 
 class MotionBackend(Protocol):

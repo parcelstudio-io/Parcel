@@ -20,7 +20,7 @@ from parcel_robot.instructnav.siglip2_onnx import (
     resolve_text_provider,
     resolve_vision_provider,
 )
-from parcel_robot.perception_providers import PROVIDER_CPU_INT8, PROVIDER_CUDA_FP16
+from parcel_robot.perception.providers import PROVIDER_CPU_INT8, PROVIDER_CUDA_FP16
 
 CUDA_BOX = ("CUDAExecutionProvider", "CPUExecutionProvider")
 CPU_BOX = ("CPUExecutionProvider",)

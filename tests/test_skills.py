@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.gait import TrajectoryPlayer
+from parcel_robot.motion.gait import TrajectoryPlayer
 from parcel_robot.skills.api import Dog
 from parcel_robot.skills.catalog import SkillCatalog
 from parcel_robot.skills.executor import SkillExecutor

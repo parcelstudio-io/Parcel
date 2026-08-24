@@ -9,14 +9,14 @@ from pathlib import Path
 import pytest
 import yaml
 
-from parcel_robot.agent import VoiceAgent
 from parcel_robot.attention.stimuli import StimulusKind
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.contracts.v1 import SCHEMA_VERSION, DialogueStateMsg
 from parcel_robot.instructnav.grounding import GroundingOutcome, GroundingResult
 from parcel_robot.models import VelocityCommand
 from parcel_robot.runtime import RobotRuntime
+from parcel_robot.voice.agent import VoiceAgent
 from parcel_robot.voice.amendment import (
     begin_goal_amend,
     clarification_from_grounding,

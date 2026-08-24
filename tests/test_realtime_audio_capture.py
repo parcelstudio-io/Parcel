@@ -29,6 +29,7 @@ from pathlib import Path
 
 import pytest
 
+from parcel_robot.audio.voice_loop import pcm16_wav
 from parcel_robot.realtime.audio_gateway import (
     CAPTURE_INDEX_NAME,
     CAPTURE_INDEX_SCHEMA,
@@ -46,7 +47,6 @@ from parcel_robot.realtime.config import (
     realtime_config_from_mapping,
     resolve_capture_dir,
 )
-from parcel_robot.voice_audio import pcm16_wav
 
 RATE = 24_000
 FRAME = b"\x11\x22" * 480  # 20 ms of 24 kHz mono PCM16

@@ -129,7 +129,7 @@ GRANDFATHERED_CYCLES: dict[str, tuple[tuple[frozenset[str], str], ...]] = {
         (
             frozenset(
                 {
-                    "parcel_robot.perception_abstention",
+                    "parcel_robot.perception.abstention",
                     "parcel_robot.vlm_veto.bureau",
                     "parcel_robot.vlm_veto.runner",
                     "parcel_robot.vlm_veto.verifier",
@@ -213,7 +213,7 @@ GRANDFATHERED_CYCLES: dict[str, tuple[tuple[frozenset[str], str], ...]] = {
         (
             frozenset(
                 {
-                    "parcel_robot.perception_abstention",
+                    "parcel_robot.perception.abstention",
                     "parcel_robot.vlm_veto.bureau",
                     "parcel_robot.vlm_veto.runner",
                     "parcel_robot.vlm_veto.verifier",
@@ -252,7 +252,7 @@ FORBIDDEN_EDGES: tuple[tuple[str, tuple[str, ...], tuple[str, ...], frozenset[st
         (
             "parcel_robot.runtime",
             "parcel_robot.web_panel",
-            "parcel_robot.agent",
+            "parcel_robot.voice.agent",
             "parcel_robot.realtime",
             "parcel_robot.providers",
             "parcel_robot.backends",
@@ -270,8 +270,8 @@ FORBIDDEN_EDGES: tuple[tuple[str, tuple[str, ...], tuple[str, ...], frozenset[st
         ("parcel_robot.backends.go2", "parcel_robot.control"),
         (
             "parcel_robot.sim",
-            "parcel_robot.mujoco_lidar",
-            "parcel_robot.headless_city",
+            "parcel_robot.simulation.mujoco_lidar",
+            "parcel_robot.simulation.headless_city",
             "parcel_robot.backends.mujoco",
         ),
         frozenset(),

@@ -37,7 +37,7 @@ FIRST_IMPORTS = (
     "parcel_robot.instructnav",
     "parcel_robot.instructnav.arbiter",
     "parcel_robot.core.arbiter",
-    "parcel_robot.headless_city",
+    "parcel_robot.simulation.headless_city",
     "evals.nav_instruct.runner",
     "parcel_robot.counterfactual",
     "parcel_robot.authority",

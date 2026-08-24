@@ -51,7 +51,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     AbstentionPolicy,
     AbstentionVerdict,
     DetectorSupport,
@@ -142,7 +142,7 @@ def _mad(values: Sequence[float]) -> float:
 
     Computed here purely as a DIAGNOSTIC, so a caller can see the measured
     reason a verdict came back ``indecisive_ranking``:
-    :func:`~parcel_robot.perception_abstention.ranking_margin` returns exactly
+    :func:`~parcel_robot.perception.abstention.ranking_margin` returns exactly
     ``0.0`` when this is ``0.0``, and an evidence-weighted background where the
     well-observed places tie has a MAD of exactly ``0.0``. C-2 reports that
     rather than tuning the gate it does not own.
@@ -232,7 +232,7 @@ class MapQueryResult:
     """The query API's answer: candidates, evidence, and a PG-3 verdict.
 
     The verdict is **always** present, including on refusals, and is produced by
-    :func:`parcel_robot.perception_abstention.assess_place_query` — the shipped
+    :func:`parcel_robot.perception.abstention.assess_place_query` — the shipped
     gate, not a local re-implementation. Seed 6 exists because a query API that
     returns candidates without a verdict is an abstention mechanism that has
     been quietly switched off.

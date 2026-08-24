@@ -92,7 +92,7 @@ NEVER ON THE CONTROL THREAD
 Same rule as the VLM seat and for the same measured reason: OWLv2 is 43-85 ms
 per call on this host and it holds a mission lease for person-shaped phrases.
 :meth:`OwlV2NamingJudge.judge` refuses to run on a thread that has declared
-itself the 10 Hz loop (:func:`~parcel_robot.perception_abstention.in_control_thread`).
+itself the 10 Hz loop (:func:`~parcel_robot.perception.abstention.in_control_thread`).
 """
 
 from __future__ import annotations
@@ -104,7 +104,7 @@ import time
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     ControlLoopViolation,
     in_control_thread,
 )

@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 import yaml
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import (
     DynamicAgentTrack,
     OwnerTrack,

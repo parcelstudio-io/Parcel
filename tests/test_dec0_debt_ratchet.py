@@ -71,7 +71,11 @@ GRAPH_ROOT = "src"
 # frozen baseline — measured at DEC-0 authorship (2026-08-23, HEAD 92245a1) and
 # RE-FROZEN DOWNWARD by DEC-IG-2 (scrum/20260823/task_16): barrel thinning took
 # the package-edge model from 25 cycles / max SCC 81 to 8 / 5 and the leaf-only
-# model from 8 / 4 to 4 / 4.  Regenerate from the repo root with:
+# model from 8 / 4 to 4 / 4.  DEC-FS-1 (scrum/20260823/task_18) then moved 26
+# flat modules into feature packages: every debt number here is unchanged, four
+# oversized entries were RE-KEYED to their new paths (a rename is not new debt),
+# and ``scoped_files`` rose by the five new package ``__init__.py`` files.
+# Regenerate from the repo root with:
 #     .parcel/bin/python -c "import sys; sys.path.insert(0, 'tests'); \
 #         import test_dec0_debt_ratchet as t; t.print_measured_baseline()"
 # then paste the output over this dict and re-run `ruff format`.  Only ever
@@ -94,7 +98,6 @@ BASELINE: dict[str, object] = {
             "scripts/parcel_capture/stage0_addendum.py",
             "scripts/parcel_capture/syncevents.py",
             "src/parcel_robot/admission.py",
-            "src/parcel_robot/agent.py",
             "src/parcel_robot/authority.py",
             "src/parcel_robot/backends/go2.py",
             "src/parcel_robot/brain/contracts.py",
@@ -103,16 +106,15 @@ BASELINE: dict[str, object] = {
             "src/parcel_robot/capture/channels.py",
             "src/parcel_robot/contracts/v1.py",
             "src/parcel_robot/control/manager.py",
-            "src/parcel_robot/headless_city.py",
             "src/parcel_robot/instructnav/scoring.py",
-            "src/parcel_robot/memory.py",
+            "src/parcel_robot/memory/conversation.py",
             "src/parcel_robot/navigation/approach.py",
             "src/parcel_robot/navigation/follow.py",
             "src/parcel_robot/navigation/grid_navigator.py",
             "src/parcel_robot/navigation/grid_planner.py",
             "src/parcel_robot/navigation/pipeline.py",
             "src/parcel_robot/online_map/online_map.py",
-            "src/parcel_robot/perception_abstention.py",
+            "src/parcel_robot/perception/abstention.py",
             "src/parcel_robot/pose.py",
             "src/parcel_robot/providers.py",
             "src/parcel_robot/realtime/audio_gateway.py",
@@ -122,6 +124,8 @@ BASELINE: dict[str, object] = {
             "src/parcel_robot/realtime/voice_identity.py",
             "src/parcel_robot/realtime/whisperer.py",
             "src/parcel_robot/runtime.py",
+            "src/parcel_robot/simulation/headless_city.py",
+            "src/parcel_robot/voice/agent.py",
             "src/parcel_robot/web_panel.py",
             "tools/bargein_through_air.py",
             "tools/run_voice_corpus.py",
@@ -287,7 +291,7 @@ BASELINE: dict[str, object] = {
     "cycles_leaf_only": 4,
     "max_scc_leaf_only": 4,
     "card_markers": 176,
-    "scoped_files": 364,
+    "scoped_files": 369,
 }
 
 #: Frozen SCC membership, not merely aggregate counts.  A current SCC may be
@@ -316,7 +320,7 @@ BASELINE_CYCLE_COMPONENTS: dict[str, tuple[frozenset[str], ...]] = {
         ),
         frozenset(
             [
-                "parcel_robot.perception_abstention",
+                "parcel_robot.perception.abstention",
                 "parcel_robot.vlm_veto.bureau",
                 "parcel_robot.vlm_veto.runner",
                 "parcel_robot.vlm_veto.verifier",
@@ -369,7 +373,7 @@ BASELINE_CYCLE_COMPONENTS: dict[str, tuple[frozenset[str], ...]] = {
         ),
         frozenset(
             [
-                "parcel_robot.perception_abstention",
+                "parcel_robot.perception.abstention",
                 "parcel_robot.vlm_veto.bureau",
                 "parcel_robot.vlm_veto.runner",
                 "parcel_robot.vlm_veto.verifier",

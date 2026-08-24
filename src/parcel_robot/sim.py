@@ -9,25 +9,25 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 
-from .city_semantics import extract_city_semantics, visible_city_semantics
 from .config import ConfigStore
-from .dynamic_city import DynamicCity, select_social_collision_candidate
-from .gait import ScriptedTrotGait, TrajectoryPlayer
 from .models import Pose, VelocityCommand
-from .mujoco_lidar import (
-    MAX_LIDAR_OBSTACLES,
-    planar_scan_payload,
-    raycast_planar_scan,
-    scan_mujoco_lidar,
-)
+from .motion.gait import ScriptedTrotGait, TrajectoryPlayer
+from .perception.city_semantics import extract_city_semantics, visible_city_semantics
 from .robot_profile import RobotProfile
-from .sim_control import PoseController
-from .sim_ipc import (
+from .simulation.control import PoseController
+from .simulation.dynamic_city import DynamicCity, select_social_collision_candidate
+from .simulation.ipc import (
     DEFAULT_SOCKET,
     PoseSocketServer,
     message_to_expression,
     message_to_pose,
     message_to_velocity,
+)
+from .simulation.mujoco_lidar import (
+    MAX_LIDAR_OBSTACLES,
+    planar_scan_payload,
+    raycast_planar_scan,
+    scan_mujoco_lidar,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

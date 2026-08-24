@@ -4,7 +4,7 @@ The NAV_INSTRUCT generator's landmark table was hand-transcribed from
 ``city_block.xml``. That is the golden-file defect the audit names: edit the
 scene and every episode goal silently moves with nothing to notice. This module
 is the derived path — landmark and goal tables computed from
-:func:`~parcel_robot.city_semantics.extract_city_semantics` over the actual
+:func:`~parcel_robot.perception.city_semantics.extract_city_semantics` over the actual
 scene file — plus a checked-in artifact (``scene_truth.json``) that a PR-tier
 test regenerates and diffs. A hand edit of the artifact, or a scene edit that
 does not regenerate it, is a red build.
@@ -185,7 +185,7 @@ def derive_scene_truth(scene: str | Path = SCENE_PATH) -> dict[str, Any]:
 
     import mujoco  # local: keeps the pure eval path free of the sim dependency
 
-    from parcel_robot.city_semantics import extract_city_semantics
+    from parcel_robot.perception.city_semantics import extract_city_semantics
 
     model = mujoco.MjModel.from_xml_path(str(scene))
     regions, objects = extract_city_semantics(model)
@@ -238,13 +238,13 @@ def derive_scene_surfaces(scene: str | Path = SCENE_PATH) -> dict[str, Any]:
 
     import mujoco  # local: keeps the pure eval path free of the sim dependency
 
-    from parcel_robot.city_semantics import extract_city_semantics
     from parcel_robot.navigation.arrival_semantics import (
         LOCALIZATION_INTERIOR,
         classify_place,
         localization_target,
     )
-    from parcel_robot.scene_semantics import scene_semantics
+    from parcel_robot.perception.city_semantics import extract_city_semantics
+    from parcel_robot.perception.scene_semantics import scene_semantics
 
     model = mujoco.MjModel.from_xml_path(str(scene))
     regions, objects = extract_city_semantics(model)

@@ -9,9 +9,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from parcel_robot.agent import MOTION_TOOLS, VoiceAgent
 from parcel_robot.attention.stimuli import StimulusKind
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.brain.compiler import compile_plan_sketch
 from parcel_robot.brain.contracts import PlanIR
@@ -23,6 +22,7 @@ from parcel_robot.brain.validator import SkillContractRegistry
 from parcel_robot.contracts.v1 import ReactionProposalV1, SocialCueV1
 from parcel_robot.models import AgentDecision, SpatialIntent, ToolCall, VelocityCommand
 from parcel_robot.runtime import RobotRuntime
+from parcel_robot.voice.agent import MOTION_TOOLS, VoiceAgent
 from parcel_robot.voice.closed_intents import CLOSED_INTENT_NAMES, ClosedIntent, parse_closed_intent
 from parcel_robot.voice.dialogue_lane import (
     PHYSICAL_TOOL_NAMES,

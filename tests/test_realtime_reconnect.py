@@ -47,7 +47,7 @@ from collections.abc import Callable
 
 import pytest
 
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory.conversation import ConversationMemory
 from parcel_robot.realtime.config import RealtimeConfig
 from parcel_robot.realtime.fake_server import (
     FakeRealtimeServer,

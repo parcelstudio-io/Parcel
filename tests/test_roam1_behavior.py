@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.config import PROFILE_ENV
 from parcel_robot.models import AgentDecision
@@ -694,8 +694,8 @@ def test_the_navigation_extras_carry_the_observation_clock(
 def test_the_headless_eval_builder_carries_the_same_clock() -> None:
     """The evals ran on the frozen clock too, which is why they never saw it."""
 
-    from parcel_robot.headless_city import _nav_observation
     from parcel_robot.models import VelocityCommand
+    from parcel_robot.simulation.headless_city import _nav_observation
 
     observation = SimObservation(
         timestamp=42.5,

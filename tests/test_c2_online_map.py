@@ -518,14 +518,14 @@ def test_the_owner_conversation_store_is_refused_by_name(tmp_path: Path) -> None
     # The filename is read from the authority rather than typed here: the
     # owner-store isolation gate treats a hardcoded copy as the next pollution
     # vector, and it is right to — it caught this very test.
-    from parcel_robot.memory_path import OWNER_STORE_NAME
+    from parcel_robot.memory.path import OWNER_STORE_NAME
 
     with pytest.raises(MapStoreRefused, match="conversation store"):
         resolve_map_store_path(tmp_path / OWNER_STORE_NAME)
 
 
 def test_the_owner_conversation_store_is_refused_by_identity() -> None:
-    from parcel_robot.memory_path import owner_store_paths
+    from parcel_robot.memory.path import owner_store_paths
 
     for owner in owner_store_paths():
         with pytest.raises(MapStoreRefused, match="conversation store"):
@@ -872,7 +872,9 @@ def test_route_memory_is_bound_to_never_forked_by_this_card() -> None:
         "class PlaceEdge",
     )
     offenders: list[str] = []
+    scanned: list[str] = []
     for path in sorted(package.rglob("*.py")):
+        scanned.append(path.name)
         text = path.read_text(encoding="utf-8")
         tree = ast.parse(text)
         for node in ast.walk(tree):
@@ -886,6 +888,10 @@ def test_route_memory_is_bound_to_never_forked_by_this_card() -> None:
         for declaration in forbidden_declarations:
             if declaration in text:
                 offenders.append(f"{path.name}: {declaration}")
+    # Anti-vacuity floor: an absent or emptied package would pass the scan
+    # above with zero offenders; the property is only meaningful if the
+    # modules that do the binding were actually read.
+    assert {"online_map.py", "store.py", "entries.py"} <= set(scanned), scanned
     assert offenders == [], (
         "route memory is P-4's; C-2 binds to a graph it is handed:\n" + "\n".join(offenders)
     )

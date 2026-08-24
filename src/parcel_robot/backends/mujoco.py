@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 from parcel_robot.models import Pose, VelocityCommand
-from parcel_robot.sim_ipc import (
+from parcel_robot.simulation.ipc import (
     DEFAULT_SOCKET,
     publish_clear_emergency_stop,
     publish_emergency_stop,

@@ -24,14 +24,14 @@ from parcel_robot.brain.contracts import ObservationSnapshot, PlanIR
 from parcel_robot.brain.executive import TaskExecutive
 from parcel_robot.brain.runtime_adapter import SemanticRuntimeState, SemanticTaskRuntimeAdapter
 from parcel_robot.brain.validator import PlanValidator, SkillContractRegistry
-from parcel_robot.headless_city import (
+from parcel_robot.models import SpatialIntent
+from parcel_robot.simulation.headless_city import (
     DEFAULT_CITY_SCENE,
     DEFAULT_ROBOT_CONFIG,
     HeadlessCityQualityHarness,
     HeadlessCityWorld,
     HeadlessTaskResult,
 )
-from parcel_robot.models import SpatialIntent
 
 SUITE_ID = "parcel-embodied-plan-v1"
 RUNNER_VERSION = "headless-executive-adapter-v1"

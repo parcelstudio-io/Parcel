@@ -44,7 +44,7 @@ import pytest
 import yaml
 
 from evals.companion.realtime_convo_v1.schema import Fixture, fixture_to_script, load_fixtures
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory.conversation import ConversationMemory
 from parcel_robot.realtime.audio_gateway import (
     ARRAY_ASR_CHANNEL,
     ARRAY_CAPTURE_CHANNELS,

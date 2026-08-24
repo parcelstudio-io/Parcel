@@ -17,7 +17,7 @@ from parcel_robot.duplex.filler_policy import FillerPolicy
 from parcel_robot.duplex.fillers import FillerPool
 from parcel_robot.duplex.session_log import DuplexSessionLog
 from parcel_robot.providers import SentenceChunkedSynthesizer
-from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage
+from parcel_robot.voice.pipeline import DuplexVoiceSession, VoiceStage
 
 
 def test_duplex_config_fail_closed_unknown_key() -> None:

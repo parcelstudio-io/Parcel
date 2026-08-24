@@ -11,19 +11,19 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
+from parcel_robot.audio.endpointing import TurnEndpointer
+from parcel_robot.audio.prosody import analyze_pcm16, analyze_wav_chunk
+from parcel_robot.audio.voice_loop import FRAME_SAMPLES, MicrophoneVoiceLoop, SpeakerSink
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.endpointing import TurnEndpointer
-from parcel_robot.expression import (
+from parcel_robot.motion.expression import (
     MAX_HEAD_PITCH_RAD,
     BeatLayer,
     ExpressionEngine,
     ExpressionGate,
 )
-from parcel_robot.prosody import analyze_pcm16, analyze_wav_chunk
 from parcel_robot.robot_profile import RobotProfile
 from parcel_robot.runtime import RobotRuntime
-from parcel_robot.voice_audio import FRAME_SAMPLES, MicrophoneVoiceLoop, SpeakerSink
 
 REPO = Path(__file__).resolve().parents[1]
 SR = 22050

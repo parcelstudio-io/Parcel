@@ -42,7 +42,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, ClassVar, Protocol, runtime_checkable
 
-from parcel_robot.tiered_memory import (
+from parcel_robot.memory.tiered import (
     ConcatSummarizer,
     TieredMemory,
     TieredMemoryConfig,

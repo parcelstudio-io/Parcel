@@ -51,7 +51,7 @@ from evals.companion_nav.scenarios import (
     interpolate_velocity,
     scenario_by_id,
 )
-from parcel_robot.headless_city import HeadlessCityWorld
+from parcel_robot.simulation.headless_city import HeadlessCityWorld
 
 OWNER_RADIUS_M = 0.22
 

@@ -10,14 +10,7 @@ import wave
 import numpy as np
 import pytest
 
-from parcel_robot.providers import (
-    PiperSpeechProvider,
-    SentenceChunkedSynthesizer,
-    SpeechServiceError,
-    build_speech_stack,
-    split_speech_sentences,
-)
-from parcel_robot.voice_audio import (
+from parcel_robot.audio.voice_loop import (
     FRAME_SAMPLES,
     EnergyVad,
     MicrophoneVoiceLoop,
@@ -25,7 +18,14 @@ from parcel_robot.voice_audio import (
     pcm16_wav,
     resolve_audio_device,
 )
-from parcel_robot.voice_pipeline import DuplexVoiceSession
+from parcel_robot.providers import (
+    PiperSpeechProvider,
+    SentenceChunkedSynthesizer,
+    SpeechServiceError,
+    build_speech_stack,
+    split_speech_sentences,
+)
+from parcel_robot.voice.pipeline import DuplexVoiceSession
 
 
 def _silence(frames: int = 1) -> np.ndarray:

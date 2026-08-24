@@ -44,12 +44,6 @@ from evals.nav_instruct.rescore import (
     derived_arrival,
     promoted_derived_score,
 )
-from parcel_robot.headless_city import (
-    DEFAULT_ROBOT_CONFIG,
-    HeadlessCityQualityHarness,
-    HeadlessCityWorld,
-    _nav_observation,
-)
 from parcel_robot.instructnav.scoring import (
     ARRIVAL_BOUNDARY_EPSILON_M,
     AuthorityCategory,
@@ -68,6 +62,12 @@ from parcel_robot.pose import (
     PoseHealth,
     PoseProvider,
     provider_from_config,
+)
+from parcel_robot.simulation.headless_city import (
+    DEFAULT_ROBOT_CONFIG,
+    HeadlessCityQualityHarness,
+    HeadlessCityWorld,
+    _nav_observation,
 )
 
 RUNNER_VERSION = "nav-instruct-v1.1-k0-arrival"

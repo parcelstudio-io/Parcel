@@ -99,7 +99,7 @@ def test_geometry_shim_rejects_anything_it_never_owned() -> None:
 
 
 def test_lidar_scan_height_equals_the_retired_literal() -> None:
-    from parcel_robot.mujoco_lidar import DEFAULT_SCAN_HEIGHT_M
+    from parcel_robot.simulation.mujoco_lidar import DEFAULT_SCAN_HEIGHT_M
 
     assert DEFAULT_SCAN_HEIGHT_M == RETIRED_SCAN_HEIGHT_M
     assert DEFAULT_SCAN_HEIGHT_M == DEFAULT_ROBOT_PROFILE.scan_height_m
@@ -119,7 +119,7 @@ def test_proxemic_config_honours_an_injected_profile() -> None:
 
 
 def test_lidar_defaults_resolve_from_an_injected_profile() -> None:
-    from parcel_robot.mujoco_lidar import _resolve_body
+    from parcel_robot.simulation.mujoco_lidar import _resolve_body
 
     half = RobotProfile(name="half", footprint_radius_m=0.16, obstacle_clearance_height_m=0.45)
     assert _resolve_body(None, None, None) == (
@@ -131,7 +131,7 @@ def test_lidar_defaults_resolve_from_an_injected_profile() -> None:
 
 
 def test_headless_world_resolves_radius_from_an_injected_profile() -> None:
-    from parcel_robot.headless_city import HeadlessCityWorld
+    from parcel_robot.simulation.headless_city import HeadlessCityWorld
 
     world = HeadlessCityWorld()
     assert world.robot_radius_m == RETIRED_FOOTPRINT_RADIUS_M

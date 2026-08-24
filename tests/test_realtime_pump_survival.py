@@ -46,9 +46,9 @@ from typing import Any
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory.conversation import ConversationMemory
 from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.realtime.config import REALTIME_CONFIG_ENV, RealtimeConfig
 from parcel_robot.realtime.driver import (

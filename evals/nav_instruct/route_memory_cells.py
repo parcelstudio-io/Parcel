@@ -158,7 +158,6 @@ from evals.nav_instruct.generator import (
     landmarks_for,
 )
 from evals.nav_instruct.runner import route_memory_record
-from parcel_robot.headless_city import HeadlessCityWorld, _nav_observation
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.goals import navigation_directive_from_text
 from parcel_robot.navigation.reactive_safety import (
@@ -169,6 +168,7 @@ from parcel_robot.route_memory.place_graph import (
     DEFAULT_ATTACH_RADIUS_M,
     DEFAULT_KEYFRAME_SPACING_M,
 )
+from parcel_robot.simulation.headless_city import HeadlessCityWorld, _nav_observation
 
 #: The set's name. NOT a member of ``generator.EPISODE_SETS`` — additive,
 #: candidate-only namespace (DR-2's ``v4d`` precedent and its stated reason).

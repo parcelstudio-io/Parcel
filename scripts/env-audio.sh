@@ -3,7 +3,7 @@
 # project venv WITHOUT root.
 #
 # WHY THIS EXISTS
-#   src/parcel_robot/voice_audio.py opens capture/playback through
+#   src/parcel_robot/audio/voice_loop.py opens capture/playback through
 #   `sounddevice`, which loads libportaudio.so.2 via ctypes. This host has no
 #   libportaudio2 package installed and `sudo apt install libportaudio2` is not
 #   available to the build. `apt-get download` + `dpkg -x` need no root at all,

@@ -18,7 +18,7 @@ from parcel_robot.backends.mujoco import MujocoSocketBackend
 from parcel_robot.config import ConfigStore
 from parcel_robot.providers import LlamaCppProvider
 from parcel_robot.runtime import RobotRuntime
-from parcel_robot.sim_ipc import DEFAULT_SOCKET
+from parcel_robot.simulation.ipc import DEFAULT_SOCKET
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = REPO_ROOT / "configs" / "robot.yaml"
@@ -197,7 +197,7 @@ def _extract_scene_geometry(scene_path: Path) -> dict[str, Any]:
     regions: list[dict[str, Any]] = []
     objects: list[dict[str, Any]] = []
     try:
-        from parcel_robot.city_semantics import extract_city_semantics
+        from parcel_robot.perception.city_semantics import extract_city_semantics
 
         regions, objects = extract_city_semantics(model)
     except (ImportError, AttributeError, KeyError, TypeError, ValueError):

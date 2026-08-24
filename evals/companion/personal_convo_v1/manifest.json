@@ -32,7 +32,7 @@
   "locked_files": [
     {
       "path": "evals/companion/personal_convo_v1/build_memory_fixture.py",
-      "sha256": "5d4cd23d6843ae12f1fa77781f8a77163ada03777a2c0b92d491882c52d2352d"
+      "sha256": "2dcf2ee928568b205820793887887794659495050d09f01da57e52ec0083c345"
     },
     {
       "path": "evals/companion/personal_convo_v1/calibration/known_bad/cold_dismissive.json",
@@ -152,6 +152,27 @@
         "process_finding": "NEXT_BATCH_PLAN rule 2 required STOP-and-report on any frozen digest move with no self-service re-freeze in this batch. That STOP did not happen and the batch record asserted three times that no digest moved. Recorded retroactively by lane E3 (scrum/20260809/task_15/E3_EVAL_INTEGRITY_STATUS.md) after Fable's independent audit (AUDIT_FABLE_INDEPENDENT.md, BLOCKING 2) caught it.",
         "independently_verified": "Fable recomputed the lock delta: 15 -> 23 locked files, ADDED 8, REMOVED 0, REPINNED 0. No existing locked file's sha256 was altered and no locked file content was rewritten. The digest move is fully explained by the 8 additions; there is no tampering.",
         "digest_moves_because": "entries were added, not because any pin changed"
+      },
+      {
+        "at_utc": "2026-08-23T00:00:00Z",
+        "batch": "scrum/20260823/task_18",
+        "card": "DEC-FS-1 (package-by-feature: 26 flat modules into feature packages)",
+        "change_class": "repin-only",
+        "locked_files_before": 23,
+        "locked_files_after": 23,
+        "added": 0,
+        "removed": 0,
+        "repinned": 1,
+        "repinned_paths": [
+          "evals/companion/personal_convo_v1/build_memory_fixture.py"
+        ],
+        "pack_digest_before": "fc1af2f76f2b491451558ef51c375723f070b9ed9fa94ea40344a3e194006b04",
+        "pack_digest_after": "353e2d779b03f93effb33cd2d8142e31fa6ae18182a69c6f4ac7f096b16a1c0a",
+        "authorized_by": "Fable integrator parcel-fb, DEC-FS-1 close, 2026-08-23",
+        "owner_authorized_at_the_time": false,
+        "digest_moves_because": "a locked file's import path was rewritten by a package move; no locked content semantics changed",
+        "what_changed_in_the_locked_file": "Two lines of evals/companion/personal_convo_v1/build_memory_fixture.py: `from parcel_robot.memory import ConversationMemory` -> `from parcel_robot.memory.conversation import ConversationMemory`, and the matching :class: reference in its module docstring. DEC-FS-1 moved src/parcel_robot/memory.py to src/parcel_robot/memory/conversation.py. The class, the event-graph replay, the authored YAML rows and the fixture the builder produces are byte-for-byte what they were.",
+        "process": "The executor STOPPED this row on finding the lock (NEXT_BATCH_PLAN rule 2, and the process finding in scrum/20260809/task_15/E3_EVAL_INTEGRITY_STATUS.md), reported it in scrum/20260823/task_18/DECFS1_STATUS.md section 2, and executed the re-pin only after the integrator authorized it. No self-service re-freeze."
       }
     ]
   }

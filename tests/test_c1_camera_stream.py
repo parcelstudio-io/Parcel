@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.camera_channel.ingress import (
     DEFAULT_DETECTION_TTL_NS,
@@ -43,7 +43,7 @@ from parcel_robot.camera_channel.ingress import (
     CameraDetectionRecord,
     CameraIngress,
 )
-from parcel_robot.perception_contention import (
+from parcel_robot.perception.contention import (
     PerceptionContentionGuard,
 )
 from parcel_robot.runtime import (

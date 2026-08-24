@@ -59,14 +59,14 @@ from evals.companion.personal_convo_v1.session_schema import (
     PROBE_FAMILIES,
     validate_session_script,
 )
-from parcel_robot.dynamic_prompting import UserProfileSource, build_weather_tool
-from parcel_robot.providers import LlamaCppProvider
-from parcel_robot.tiered_memory import (
+from parcel_robot.memory.tiered import (
     TieredMemory,
     TieredMemoryConfig,
     Turn,
     null_distiller,
 )
+from parcel_robot.prompting.dynamic import UserProfileSource, build_weather_tool
+from parcel_robot.providers import LlamaCppProvider
 
 SUITE_ID = "parcel-personal-convo-v1"
 MEMORY_BACKENDS = ("tiered", "recency")

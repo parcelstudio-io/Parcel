@@ -57,8 +57,8 @@ from evals.nav_instruct.runner import (
     episode_pose_seed,
     pose_drift_record,
 )
-from parcel_robot.headless_city import HeadlessCityQualityHarness, _nav_observation
 from parcel_robot.pose import Frame, PoseHealth, provider_from_config
+from parcel_robot.simulation.headless_city import HeadlessCityQualityHarness, _nav_observation
 
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "evals" / "nav_instruct" / "results"

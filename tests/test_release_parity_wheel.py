@@ -103,7 +103,7 @@ def test_wheel_imports_the_previously_broken_modules(installed_venv: Path, tmp_p
 
     result = _run_in(
         installed_venv,
-        "import parcel_robot.city_semantics as c;"
+        "import parcel_robot.perception.city_semantics as c;"
         "from parcel_robot.pose import load_pose_config;"
         "load_pose_config();"
         "print('ok')",

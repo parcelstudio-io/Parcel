@@ -7,7 +7,7 @@ CARD R27 WORK ITEM 4. THE OWNER'S DATA IS THEIRS.
 Between 2026-08-20 21:12 and 2026-08-21 13:48 (UTC, the stamps the store itself
 carries) **256 synthetic rows** were written into ``parcel_memory.sqlite3`` by
 four consecutive card-chains running proofs from the repo root with the shipped
-config. ``src/parcel_robot/memory_path.py`` stops the next one. This tool is
+config. ``src/parcel_robot/memory/path.py`` stops the next one. This tool is
 about the rows already there, and it deliberately does **less** than it could:
 
 * **It never deletes.** ``--apply`` moves rows into a side table,
@@ -68,8 +68,8 @@ REPO = Path(__file__).resolve().parents[1]
 if str(REPO / "src") not in sys.path:
     sys.path.insert(0, str(REPO / "src"))
 
-from parcel_robot.memory import ConversationMemory
-from parcel_robot.memory_path import (
+from parcel_robot.memory.conversation import ConversationMemory
+from parcel_robot.memory.path import (
     ENV_PURPOSE,
     PURPOSE_OWNER,
     WRITER_OWNER_STACK,

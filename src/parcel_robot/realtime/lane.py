@@ -67,6 +67,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
+from parcel_robot.audio.voice_loop import pcm16_wav
+
 # Card P2-A, post-verification. The SAME privacy policy the broker applies to
 # a proposed fact is applied to the replay tail — one set of rules about what
 # a credential is, not two.
@@ -82,7 +84,6 @@ from parcel_robot.duplex.turn_controller import (
     TurnController,
 )
 from parcel_robot.owner_model import policy as owner_policy
-from parcel_robot.voice_audio import pcm16_wav
 
 from .config import RealtimeConfig
 from .ingress import RealtimeTranscriptOutcome

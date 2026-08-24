@@ -5,17 +5,17 @@ from pathlib import Path
 import mujoco
 import pytest
 
-from parcel_robot.dynamic_city import (
-    DynamicCity,
-    circle_contact_ttc,
-    default_dynamic_agent_specs,
-    select_social_collision_candidate,
-)
 from parcel_robot.models import VelocityCommand
 from parcel_robot.sim import (
     is_logical_obstacle_name,
     lidar_obstacle_payload,
     select_relevant_obstacle,
+)
+from parcel_robot.simulation.dynamic_city import (
+    DynamicCity,
+    circle_contact_ttc,
+    default_dynamic_agent_specs,
+    select_social_collision_candidate,
 )
 
 REPO = Path(__file__).resolve().parents[1]

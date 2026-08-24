@@ -18,7 +18,7 @@ import threading
 
 import pytest
 
-from parcel_robot.perception_contention import (
+from parcel_robot.perception.contention import (
     BENCH_INPROCESS_P95_IDLE_MS,
     BENCH_INPROCESS_P95_VLM_GENERATING_MS,
     DETECTION_TTL_MS,
@@ -210,7 +210,7 @@ def test_a_lease_expires_so_a_crashed_mission_cannot_starve_speech(
     assert guard.try_admit_generation(estimated_ms=500.0).admitted is False
 
     clock.advance(guard.policy.lease_ttl_s + 0.01)
-    with caplog.at_level(logging.WARNING, logger="parcel_robot.perception_contention"):
+    with caplog.at_level(logging.WARNING, logger="parcel_robot.perception.contention"):
         verdict = guard.try_admit_generation(estimated_ms=500.0)
 
     assert verdict.admitted is True, "an abandoned lease must not block speech forever"

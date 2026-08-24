@@ -8,7 +8,7 @@ import mujoco
 import numpy as np
 import pytest
 
-from parcel_robot.mujoco_lidar import (
+from parcel_robot.simulation.mujoco_lidar import (
     PlanarScan,
     planar_scan_payload,
     raycast_planar_scan,

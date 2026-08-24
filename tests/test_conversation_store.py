@@ -40,7 +40,8 @@ from typing import Any
 
 import pytest
 
-from parcel_robot.conversation_store import (
+from parcel_robot.memory.conversation import OWNER_FACTS_TABLE, ConversationMemory
+from parcel_robot.memory.store import (
     ITEM_INDEX,
     ORIGIN_SOURCES,
     SESSION_TS_INDEX,
@@ -61,7 +62,6 @@ from parcel_robot.conversation_store import (
     source_for_origin,
     utc_now,
 )
-from parcel_robot.memory import OWNER_FACTS_TABLE, ConversationMemory
 
 #: A round, fixed instant: 2023-11-14T22:13:20+00:00. Pinned rather than
 #: "now" so the ISO rendering below is an assertion and not a restatement.
@@ -273,7 +273,7 @@ def test_an_unknown_speaker_is_refused_not_coerced(speaker: Any) -> None:
 def test_the_speaker_vocabulary_matches_the_ledger_s(store: ConversationStore) -> None:
     """The two stores must agree about who speaks or migration is guesswork."""
 
-    from parcel_robot.memory import _SPEAKER_ROLES
+    from parcel_robot.memory.conversation import _SPEAKER_ROLES
 
     assert set(_SPEAKER_ROLES) == set(SPEAKERS)
 
@@ -836,7 +836,7 @@ def test_a_store_failure_never_kills_a_turn(
 
     memory = ConversationMemory(tmp_path / "ledger3.sqlite3")
     store = _ExplodingStore(error)
-    with caplog.at_level(logging.WARNING, logger="parcel_robot.conversation_store"):
+    with caplog.at_level(logging.WARNING, logger="parcel_robot.memory.store"):
         row_id = memory.write_realtime_turn(
             session_id="s", speaker="owner", text="still here", origin="realtime", store=store
         )
@@ -851,7 +851,7 @@ def test_an_unmappable_origin_is_logged_and_the_turn_still_lands(
 ) -> None:
     memory = ConversationMemory(tmp_path / "ledger4.sqlite3")
     store = SqliteConversationStore(tmp_path / "turns4.sqlite3", clock=_Clock())
-    with caplog.at_level(logging.WARNING, logger="parcel_robot.conversation_store"):
+    with caplog.at_level(logging.WARNING, logger="parcel_robot.memory.store"):
         memory.write_realtime_turn(
             session_id="s", speaker="owner", text="from nowhere", origin="teleport", store=store
         )
@@ -1081,7 +1081,7 @@ def test_the_backfill_refuses_rather_than_guesses_an_unmapped_origin(
     memory.write_realtime_turn(
         session_id="s", speaker="owner", text="from nowhere", origin="teleport"
     )
-    with caplog.at_level(logging.WARNING, logger="parcel_robot.conversation_store"):
+    with caplog.at_level(logging.WARNING, logger="parcel_robot.memory.store"):
         result = import_realtime_turns(memory, store)
     assert result.as_dict() == {"scanned": 1, "imported": 0, "duplicates": 0, "refused": 1}
     assert store.count() == 0

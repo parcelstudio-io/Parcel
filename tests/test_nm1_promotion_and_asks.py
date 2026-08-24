@@ -47,7 +47,7 @@ from parcel_robot.online_map.naming import (
     hold_at_hypothesis,
     run_naming_pass,
 )
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     OUTCOME_ASK,
     VETO_ABSENT,
     VETO_PRESENT,
@@ -106,7 +106,7 @@ def _cold_runtime(tmp_path: Any, *, realtime: bool = False) -> Any:
     session, so nothing connects and nothing is spent.
     """
 
-    from parcel_robot.audio_io import AudioDeviceStatus
+    from parcel_robot.audio.devices import AudioDeviceStatus
     from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
     from parcel_robot.runtime import RobotRuntime
 
@@ -799,7 +799,7 @@ def test_the_gate_reads_the_bureau_and_not_the_runner() -> None:
 
     import dataclasses
 
-    from parcel_robot.perception_abstention import (
+    from parcel_robot.perception.abstention import (
         AbstentionPolicy,
         clear_veto_cache,
         resolve_veto,
@@ -1120,7 +1120,7 @@ def _ask_map(tmp_path: Any) -> tuple[Any, Any, Any]:
 
     from parcel_robot.online_map.entries import MapObservation
     from parcel_robot.online_map.online_map import OnlineSemanticMap
-    from parcel_robot.perception_abstention import AbstentionPolicy
+    from parcel_robot.perception.abstention import AbstentionPolicy
 
     # The prototype operating point, minus the VLM seat: this test is about the
     # TOKEN, and a policy that needs a model on the GPU to produce an ASK would
@@ -1673,7 +1673,7 @@ def test_clearing_the_bureaus_does_not_leave_a_dead_reader_installed() -> None:
 
     import dataclasses
 
-    from parcel_robot.perception_abstention import (
+    from parcel_robot.perception.abstention import (
         AbstentionPolicy,
         clear_veto_cache,
         resolve_veto,

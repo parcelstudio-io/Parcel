@@ -17,18 +17,18 @@ from __future__ import annotations
 
 import pytest
 
-from parcel_robot.dynamic_prompting import (
-    DynamicPromptComposer,
-    MemorySource,
-    build_prompting_stack,
-)
-from parcel_robot.tiered_memory import (
+from parcel_robot.memory.tiered import (
     ConcatSummarizer,
     FactProposal,
     TieredMemory,
     TieredMemoryConfig,
     keyword_overlap,
     null_distiller,
+)
+from parcel_robot.prompting.dynamic import (
+    DynamicPromptComposer,
+    MemorySource,
+    build_prompting_stack,
 )
 
 
@@ -316,7 +316,7 @@ def test_prompting_memory_is_off_by_default_and_fails_closed_on_unknown_keys() -
 
 def test_concat_summarizer_default_is_bounded() -> None:
     summarizer = ConcatSummarizer(max_chars=40)
-    from parcel_robot.tiered_memory import Turn
+    from parcel_robot.memory.tiered import Turn
 
     text = summarizer("", [Turn(1, "s", "user", "x" * 200)])
     assert len(text) <= 40

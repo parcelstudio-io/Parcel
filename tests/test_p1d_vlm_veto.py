@@ -32,7 +32,7 @@ from parcel_robot.online_map.naming import (
     demote_disagreed_names,
     normalize_proposal,
 )
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     ABSTAIN_INDECISIVE_RANKING,
     ABSTAIN_NO_OBSERVATIONS,
     ABSTAIN_VETO_UNAVAILABLE,
@@ -55,7 +55,7 @@ from parcel_robot.perception_abstention import (
     PlaceEvidence,
     assess_place_query,
 )
-from parcel_robot.perception_contention import (
+from parcel_robot.perception.contention import (
     ContentionPolicy,
     ContentionPolicyError,
     PerceptionContentionGuard,

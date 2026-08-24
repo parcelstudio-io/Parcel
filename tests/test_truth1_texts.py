@@ -587,6 +587,7 @@ def test_the_offline_modes_reach_neither_lane_nor_ws_transport() -> None:
         "spec.loader.exec_module(m)\n"
         "rc = m.main(['--arms'])\n"
         "print('RC', rc)\n"
+        "print('config', 'parcel_robot.realtime.config' in sys.modules)\n"
         "print('lane', 'parcel_robot.realtime.lane' in sys.modules)\n"
         "print('ws', 'parcel_robot.realtime.ws_transport' in sys.modules)\n"
     )
@@ -597,6 +598,13 @@ def test_the_offline_modes_reach_neither_lane_nor_ws_transport() -> None:
     # hides the child's stderr, which is the only thing that says WHY.
     assert proc.returncode == 0, proc.stderr[-2000:]
     assert "RC 0" in proc.stdout
+    # The positive anchor: the tool still reaches the realtime package's config
+    # leaf, so the two negative pins below are measured against a live import
+    # path rather than against a process that imported nothing at all.
+    assert "config True" in proc.stdout, (
+        "the offline modes must still import parcel_robot.realtime.config — "
+        "without this anchor the 'lane False' / 'ws False' pins are vacuous"
+    )
     assert "lane False" in proc.stdout, (
         "DEC-IG-2 drained the realtime barrel, so the offline modes no longer reach "
         "lane at all — the stronger claim TRUTH-1's docstring originally tried to make"

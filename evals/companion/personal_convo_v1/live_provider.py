@@ -17,8 +17,8 @@ from typing import Any
 
 from evals.companion.personal_convo_v1.fixture_provider import TurnResult, looks_degraded
 from parcel_robot.contracts.v1 import SCHEMA_VERSION, DialogueActV1, DialogueClaimV1
+from parcel_robot.memory.tiered import ConcatSummarizer, Turn
 from parcel_robot.providers import LlamaCppProvider
-from parcel_robot.tiered_memory import ConcatSummarizer, Turn
 
 _TOKEN = re.compile(r"[a-z0-9']+")
 

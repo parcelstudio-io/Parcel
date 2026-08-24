@@ -36,7 +36,7 @@ import yaml
 
 from parcel_robot import admission
 from parcel_robot.admission import CapabilityRefused
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.config import (
     OVERLAY_FREEFORM_PATHS,

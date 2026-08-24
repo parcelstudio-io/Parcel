@@ -415,7 +415,7 @@ def test_every_v4s_start_pose_is_collision_free_in_the_world(
     world, which the pure tests above deliberately do not.
     """
 
-    from parcel_robot.headless_city import HeadlessCityWorld
+    from parcel_robot.simulation.headless_city import HeadlessCityWorld
 
     world = HeadlessCityWorld()
     for start in {(ep.start_pose[0], ep.start_pose[1]) for ep in v4s_episodes}:

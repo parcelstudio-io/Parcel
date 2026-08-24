@@ -279,7 +279,7 @@ class AcousticRig:
         private lookup that could drift from it.
         """
 
-        from parcel_robot.voice_audio import resolve_audio_device
+        from parcel_robot.audio.voice_loop import resolve_audio_device
 
         index, _detail = resolve_audio_device(name, kind=kind)
         if index is None:

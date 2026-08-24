@@ -32,7 +32,6 @@ from pathlib import Path
 import mujoco
 import pytest
 
-from parcel_robot.city_semantics import extract_city_semantics
 from parcel_robot.navigation.arrival_semantics import (
     CLASS_OBJECT,
     CLASS_PORTAL,
@@ -51,7 +50,8 @@ from parcel_robot.navigation.semantic_map import (
     SemanticCandidate,
     semantic_candidates_from_observation,
 )
-from parcel_robot.scene_semantics import DEFAULT_SIDECAR, load_scene_semantics
+from parcel_robot.perception.city_semantics import extract_city_semantics
+from parcel_robot.perception.scene_semantics import DEFAULT_SIDECAR, load_scene_semantics
 
 REPO = Path(__file__).resolve().parents[1]
 SCENE = REPO / "src" / "parcel_robot" / "scenes" / "city_block.xml"
@@ -186,7 +186,7 @@ def test_the_portals_approach_band_is_clear_of_the_pedestrian_routes(portal) -> 
     would be measuring yield policy instead.
     """
 
-    from parcel_robot.dynamic_city import default_dynamic_agent_specs
+    from parcel_robot.simulation.dynamic_city import default_dynamic_agent_specs
 
     cx, cy = float(portal["position"][0]), float(portal["position"][1])
     outer = float(portal["metadata"]["vicinity_radius_m"])
@@ -414,7 +414,7 @@ def test_witness_R14_D2_the_do_not_cross_guard_has_no_polygon_to_test(portal) ->
     end to end.
     """
 
-    from parcel_robot.headless_city import HeadlessCityWorld
+    from parcel_robot.simulation.headless_city import HeadlessCityWorld
 
     world = HeadlessCityWorld(SCENE)
     doors: list[dict] = []
@@ -565,8 +565,8 @@ def test_witness_R14_D4_the_portal_is_not_in_the_headless_obstacle_set() -> None
     **When R14-D4 is fixed**, delete this witness.
     """
 
-    from parcel_robot import headless_city
-    from parcel_robot.scene_semantics import scene_semantics
+    from parcel_robot.perception.scene_semantics import scene_semantics
+    from parcel_robot.simulation import headless_city
 
     prefixes = headless_city._STATIC_OBSTACLE_PREFIXES
     assert "door_" not in prefixes, (

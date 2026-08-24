@@ -40,10 +40,10 @@ TWO ENTRY POINTS, ONE PIPELINE
 ------------------------------
 
 * :func:`distil_session` is the product path: point it at a
-  :class:`~parcel_robot.memory.ConversationMemory` and it reads that session's
+  :class:`~parcel_robot.memory.conversation.ConversationMemory` and it reads that session's
   turns, guards, proposes, decides, and writes ``owner_facts`` rows.
 * :class:`OwnerFactDistiller` is the
-  :class:`~parcel_robot.tiered_memory.Distiller` protocol implementation, so the
+  :class:`~parcel_robot.memory.tiered.Distiller` protocol implementation, so the
   same proposer can be dropped into ``TieredMemory`` in place of
   ``null_distiller`` and produce real Tier-3 ``ProfileFact`` rows. It shares the
   proposer and the policy with the product path; only the row type differs.
@@ -58,12 +58,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from ..tiered_memory import FactProposal, SummaryRecord
+from ..memory.tiered import FactProposal, SummaryRecord
 from . import policy as privacy
 from .guard import assert_store_is_distillable
 
 if TYPE_CHECKING:  # pragma: no cover - typing only, no runtime import cycle
-    from ..memory import ConversationMemory
+    from ..memory.conversation import ConversationMemory
     from ..providers import LanguageModel
 
 logger = logging.getLogger(__name__)
@@ -516,7 +516,7 @@ def distil_session(
 
 @dataclass
 class OwnerFactDistiller:
-    """A real :class:`~parcel_robot.tiered_memory.Distiller`.
+    """A real :class:`~parcel_robot.memory.tiered.Distiller`.
 
     Drop-in for ``null_distiller``: same signature, same return type, so
     ``TieredMemory``'s Tier-2 overflow starts producing ``ProfileFact`` rows

@@ -16,7 +16,7 @@ from parcel_robot.providers import (
     ModelRequestCancelled,
     SpeechServiceError,
 )
-from parcel_robot.voice_pipeline import DuplexVoiceSession
+from parcel_robot.voice.pipeline import DuplexVoiceSession
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -550,8 +550,8 @@ def test_barge_in_flushes_queued_audio_after_output_worker_exits() -> None:
 
     import time as _time
 
+    from parcel_robot.audio.voice_loop import SpeakerSink, pcm16_wav
     from parcel_robot.providers import SentenceChunkedSynthesizer
-    from parcel_robot.voice_audio import SpeakerSink, pcm16_wav
 
     class _InstantSynth:
         def synthesize(self, text: str) -> bytes:

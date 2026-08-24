@@ -8,8 +8,8 @@ import stat
 from collections.abc import Callable
 from pathlib import Path
 
-from .models import Pose, VelocityCommand
-from .safety import SafetyLimits
+from ..models import Pose, VelocityCommand
+from ..safety import SafetyLimits
 
 DEFAULT_SOCKET = Path("/tmp/parcel_sim.sock")
 PROTOCOL_VERSION = 1

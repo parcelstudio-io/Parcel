@@ -296,7 +296,7 @@ inject **structured profiles + rolling summaries**, not per-turn RAG
 (ChatGPT memory, Replika, Letta memory-blocks; hosted memory services cost
 150–650 ms p95 per turn — wrong for a robot).
 
-**Implemented now** (`src/parcel_robot/dynamic_prompting.py`, wired through
+**Implemented now** (`src/parcel_robot/prompting/dynamic.py`, wired through
 runtime/agent/safety/panel — see §"What shipped" in the module docstring):
 
 - `DynamicPromptComposer` — named sections, two placement planes

@@ -175,7 +175,7 @@ def resample_to_16k(pcm: np.ndarray) -> np.ndarray:
 def silero_speech_bounds(pcm16k: np.ndarray) -> tuple[float | None, float | None]:
     """(first, last) speech-frame times in seconds, from the pinned Silero."""
 
-    from parcel_robot.endpointing import SileroVad
+    from parcel_robot.audio.endpointing import SileroVad
 
     vad = SileroVad(str(SILERO))
     if not vad.available:

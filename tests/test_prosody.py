@@ -9,7 +9,7 @@ import wave
 import numpy as np
 import pytest
 
-from parcel_robot.prosody import Accent, BeatTrack, analyze_pcm16, analyze_wav_chunk
+from parcel_robot.audio.prosody import Accent, BeatTrack, analyze_pcm16, analyze_wav_chunk
 
 SAMPLE_RATE = 16_000
 

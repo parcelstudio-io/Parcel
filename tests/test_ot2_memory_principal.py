@@ -29,9 +29,9 @@ from typing import Any
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory.conversation import ConversationMemory
 from parcel_robot.owner_model import policy as owner_policy
 from parcel_robot.owner_model.principal import (
     CONSENT_DENIED,
@@ -546,7 +546,7 @@ def test_ot2_confirm_needs_a_key_and_never_the_sentence_again(
 def test_ot2_the_owner_store_is_not_the_one_under_test(store_path: Path) -> None:
     """The scratch store is a scratch store. Stated as a test, not a promise."""
 
-    from parcel_robot.memory_path import owner_store_paths
+    from parcel_robot.memory.path import owner_store_paths
 
     owned = {Path(p).resolve() for p in owner_store_paths()}
     assert store_path.resolve() not in owned

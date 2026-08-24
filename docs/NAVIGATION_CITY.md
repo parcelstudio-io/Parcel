@@ -85,7 +85,7 @@ src/parcel_robot/navigation/
 
 src/parcel_robot/runtime.py    # sensor adapter, arbitration, terminal stop proof
 src/parcel_robot/core/hard_stop.py  # final post-shaper stop disposition
-src/parcel_robot/mujoco_lidar.py
+src/parcel_robot/simulation/mujoco_lidar.py
 evals/companion_nav/           # product-oriented companion scenarios
 evals/external/                # research proxies (BARN / Habitat)
 ```

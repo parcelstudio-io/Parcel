@@ -91,7 +91,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from .paths import parcel_roots
+from ..paths import parcel_roots
 
 #: The override. Absolute path, or ``:memory:``. Wins over any config.
 ENV_PATH = "PARCEL_MEMORY_PATH"

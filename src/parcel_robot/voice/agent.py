@@ -6,18 +6,18 @@ from collections.abc import Callable
 from dataclasses import replace
 from typing import Any
 
-from .brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
-from .brain.plan_sketch import PlanSketch
-from .brain.router import (
+from ..brain.contracts import IntentFrame, ObservationSnapshot, PlanIR
+from ..brain.plan_sketch import PlanSketch
+from ..brain.router import (
     DeterministicIntentRouter,
     explicit_affect_from_text,
     physical_cue_present,
     split_compound_clauses,
 )
-from .brain.runtime_adapter import bind_plan_context, contextual_planner_schema
-from .brain.validator import PlanValidationError
-from .memory import ConversationMemory
-from .models import (
+from ..brain.runtime_adapter import bind_plan_context, contextual_planner_schema
+from ..brain.validator import PlanValidationError
+from ..memory.conversation import ConversationMemory
+from ..models import (
     ActionProposal,
     AffectEstimate,
     AgentDecision,
@@ -26,23 +26,23 @@ from .models import (
     ToolCall,
     VelocityCommand,
 )
-from .motion import MotionRouter
-from .navigation.goals import PlaceAdmission, navigation_directive_from_text
-from .navigation.spatial import parse_spatial_intent, spatial_intent_from_arguments
-from .providers import LanguageModel
-from .safety import SafetyLimits, SafetySupervisor
-from .voice.amendment import strip_amend_prefix
-from .voice.closed_intents import ClosedIntent, closed_intent_phrases, parse_closed_intent
-from .voice.dialogue_lane import conversation_tool_definitions, dialogue_act_from_text
-from .voice.executive_caps import CapDirective, resolve_cap
-from .voice.local_plans import (
+from ..motion.router import MotionRouter
+from ..navigation.goals import PlaceAdmission, navigation_directive_from_text
+from ..navigation.spatial import parse_spatial_intent, spatial_intent_from_arguments
+from ..providers import LanguageModel
+from ..safety import SafetyLimits, SafetySupervisor
+from .amendment import strip_amend_prefix
+from .closed_intents import ClosedIntent, closed_intent_phrases, parse_closed_intent
+from .dialogue_lane import conversation_tool_definitions, dialogue_act_from_text
+from .executive_caps import CapDirective, resolve_cap
+from .local_plans import (
     sketch_come,
     sketch_follow,
     sketch_hold,
     sketch_navigate,
     sketch_spatial,
 )
-from .voice.scene_reference import (
+from .scene_reference import (
     clarification_for,
     dangling_reference,
     resolve_pending_reference,
@@ -801,7 +801,7 @@ class VoiceAgent:
     ) -> str:
         """Mid-task amendment: pause/snapshot via executive, then replan remainder."""
 
-        from .voice.executive_caps import resolve_cap
+        from .executive_caps import resolve_cap
 
         directive = resolve_cap(ClosedIntent.GOAL_AMEND)
         self.last_brain_metrics["closed_intent"] = ClosedIntent.GOAL_AMEND.value

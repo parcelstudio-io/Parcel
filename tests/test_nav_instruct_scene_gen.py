@@ -83,7 +83,7 @@ def test_checked_in_scene_equals_a_fresh_generation(seed: int) -> None:
 def test_every_scene_carries_a_loadable_semantics_sidecar(seed: int) -> None:
     """The sidecar is an artifact, not decoration: the real loader must accept it."""
 
-    from parcel_robot.scene_semantics import load_scene_semantics
+    from parcel_robot.perception.scene_semantics import load_scene_semantics
 
     manifest = json.loads((OUT_DIR / f"val_unseen_{seed}.truth.json").read_text())
     sidecar = load_scene_semantics(REPO / manifest["semantics_sidecar"])
@@ -294,8 +294,9 @@ def test_every_mutation_restores_what_it_patched() -> None:
     """A panel that leaks a defect into the process is the defect."""
 
     panel = _panel()
-    from parcel_robot import authority, headless_city
+    from parcel_robot import authority
     from parcel_robot.instructnav import scoring
+    from parcel_robot.simulation import headless_city
 
     watched = [
         (scoring.GoalRegion, "contains"),

@@ -60,7 +60,7 @@ class ObservationSemanticMap:
     default** — ``None`` consults the process-default policy, which ships
     disabled, and a disabled policy is short-circuited before a single field is
     read, so the shipping path is the pre-PG-3 path by construction rather than
-    by measurement. See :mod:`parcel_robot.perception_abstention` for why a
+    by measurement. See :mod:`parcel_robot.perception.abstention` for why a
     cosine ranking cannot say "I don't know" and what replaces it.
     """
 
@@ -107,7 +107,7 @@ def _abstention_filtered(
     """
 
     try:
-        from parcel_robot.perception_abstention import (
+        from parcel_robot.perception.abstention import (
             ABSTAIN_LABEL_DISAGREEMENT,
             OUTCOME_ASK,
             RANKING_MARGIN_LABEL_STRENGTH,
@@ -616,7 +616,7 @@ def _match_strength(query: str, label: str, aliases: Any) -> str:
     if any(_without_determiner(text) == bare_query for text in texts):
         return MATCH_ALIAS
     try:
-        from parcel_robot.city_semantics import CLASS_ALIASES
+        from parcel_robot.perception.city_semantics import CLASS_ALIASES
 
         for class_label, class_aliases in CLASS_ALIASES.items():
             class_norm = _without_determiner(class_label)

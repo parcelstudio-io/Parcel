@@ -19,7 +19,7 @@ Four modules, and the split is the design:
 * :mod:`.notes` — rows to ``owner_notes`` lines, with the consent filter living
   in the renderer so a forgetful caller is filtered anyway.
 
-The table itself lives in :mod:`parcel_robot.memory` beside ``messages``,
+The table itself lives in :mod:`parcel_robot.memory.conversation` beside ``messages``,
 because it is the same store and card R27's owner-store isolation guard is on
 that constructor. There is no second database and no second set of rules about
 which file may be opened.

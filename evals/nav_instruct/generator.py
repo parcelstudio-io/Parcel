@@ -269,7 +269,7 @@ FROZEN_FOLLOW_OWNER_GOAL_RADIUS_M = 1.8
 CIRCLE_OWNER_GOAL_RADIUS_M = 2.2
 
 #: The observation frustum the *world* reports through — the defaults of
-#: ``parcel_robot.city_semantics.visible_city_semantics``. They are repeated
+#: ``parcel_robot.perception.city_semantics.visible_city_semantics``. They are repeated
 #: here because this module is deliberately sim-free (``city_semantics``
 #: imports ``mujoco`` at module scope), and they are pinned equal to the world's
 #: by ``tests/test_nav_instruct_episodes_v2.py::

@@ -42,7 +42,7 @@ from parcel_robot.admission import (
     DOMAIN_TOOL,
     CapabilityRefused,
 )
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import ToolCall, VelocityCommand
 from parcel_robot.runtime import RobotRuntime

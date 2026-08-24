@@ -1,12 +1,12 @@
-from parcel_robot.agent import VoiceAgent
 from parcel_robot.models import Pose, ToolCall, VelocityCommand
-from parcel_robot.motion import (
+from parcel_robot.motion.router import (
     MotionRouter,
     RLPolicyBackend,
     VendorVelocityBackend,
     build_motion_router,
 )
 from parcel_robot.safety import SafetySupervisor
+from parcel_robot.voice.agent import VoiceAgent
 
 
 def _router(**hooks):

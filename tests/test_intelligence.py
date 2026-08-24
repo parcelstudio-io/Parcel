@@ -3,14 +3,14 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.agent import VoiceAgent
 from parcel_robot.brain.contracts import PlanIR
 from parcel_robot.brain.observations import build_observation_snapshot
 from parcel_robot.models import ActionProposal, AffectEstimate, AgentDecision, Pose, ToolCall
 from parcel_robot.providers import parse_model_decision
 from parcel_robot.safety import SafetySupervisor
 from parcel_robot.skills.api import Dog
-from parcel_robot.voice_pipeline import VoicePipeline
+from parcel_robot.voice.agent import VoiceAgent
+from parcel_robot.voice.pipeline import VoicePipeline
 
 REPO = Path(__file__).resolve().parents[1]
 

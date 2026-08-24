@@ -37,7 +37,7 @@ from parcel_robot.navigation.goals import (
     admit_navigation_place,
 )
 from parcel_robot.navigation.semantic_map import ObservationSemanticMap, SemanticCandidate
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     ABSTAIN_INDECISIVE_RANKING,
     ABSTAIN_INSUFFICIENT_EVIDENCE,
     ABSTAIN_LABEL_DISAGREEMENT,
@@ -397,7 +397,7 @@ def test_the_module_imports_on_a_cold_interpreter() -> None:
     """Found by this card's own seed canary and worth a permanent cell: the
     module reads R20's refusal sentence out of ``navigation.goals``, so a
     top-level import of it from ``navigation.pipeline`` closes a cycle and
-    ``import parcel_robot.perception_abstention`` fails on a fresh interpreter.
+    ``import parcel_robot.perception.abstention`` fails on a fresh interpreter.
     Nothing else in the tree imports it first, so no other test would notice.
     """
 
@@ -408,7 +408,7 @@ def test_the_module_imports_on_a_cold_interpreter() -> None:
             sys.executable,
             "-c",
             (
-                "import parcel_robot.perception_abstention as m;"
+                "import parcel_robot.perception.abstention as m;"
                 " print(m.AbstentionPolicy().enabled)"
             ),
         ],
@@ -558,7 +558,7 @@ def test_r20s_live_gate_refuses_the_same_rows_through_its_real_code(cls: str) ->
     template — never "one refuses and the other guesses".
     """
 
-    from parcel_robot.scene_semantics import scene_semantics
+    from parcel_robot.perception.scene_semantics import scene_semantics
 
     # The vocabulary, assembled the way runtime._realtime_scene_vocabulary
     # assembles it (class names + aliases from the sidecar) — minus the live

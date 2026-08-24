@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.gait import TrajectoryPlayer
+from parcel_robot.motion.gait import TrajectoryPlayer
 from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.robot_profile import RobotProfile
 from parcel_robot.runtime import RobotRuntime

@@ -22,7 +22,7 @@ The shape
 * Navigation calls :meth:`VerdictBureau.read` — the callable
   ``resolve_veto`` installs. It **never blocks, never loads a model and never
   generates**. It looks the query up on the board and returns either the
-  published answer or :data:`~parcel_robot.perception_abstention.VETO_UNAVAILABLE`,
+  published answer or :data:`~parcel_robot.perception.abstention.VETO_UNAVAILABLE`,
   which the abstention gate already reads as ASK.
 * A miss (or a stale or mismatched verdict) also *requests* a fresh judgement.
   The worker takes it, runs the seat off the caller's thread, and publishes.
@@ -73,7 +73,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     VETO_UNAVAILABLE,
     PlaceEvidence,
     in_control_thread,
@@ -519,7 +519,7 @@ def clear_bureaus() -> None:
     left for each caller to remember.
     """
 
-    from parcel_robot.perception_abstention import clear_veto_cache
+    from parcel_robot.perception.abstention import clear_veto_cache
 
     with _BUREAUS_LOCK:
         bureaus = list(_BUREAUS.values())

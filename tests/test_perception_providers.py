@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.perception_providers import (
+from parcel_robot.perception.providers import (
     KNOWN_PROVIDERS,
     MEASURED_PRECISION_QUALITY,
     PRECISION_QUALITY_CONFOUND,
@@ -150,7 +150,7 @@ def test_a_silent_degrade_is_impossible_because_the_log_level_escalates(
     levels = {}
     for label, resolution in (("clean", clean), ("degraded", degraded), ("refused", refused)):
         caplog.clear()
-        with caplog.at_level(logging.INFO, logger="parcel_robot.perception_providers"):
+        with caplog.at_level(logging.INFO, logger="parcel_robot.perception.providers"):
             log_resolution(resolution, model="owlv2")
         assert len(caplog.records) == 1, f"{label}: expected exactly one line at construction"
         levels[label] = caplog.records[0].levelno

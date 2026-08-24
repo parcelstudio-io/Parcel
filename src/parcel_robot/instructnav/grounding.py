@@ -191,7 +191,7 @@ def _abstain_if_unsupported(
     if result.outcome not in (GroundingOutcome.RESOLVED, GroundingOutcome.MEMORY_HIT):
         return result
     try:
-        from parcel_robot.perception_abstention import (
+        from parcel_robot.perception.abstention import (
             active_abstention_policy,
             assess_place_query,
             detector_prompts_for,

@@ -37,14 +37,13 @@ from typing import Any
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import (
     LidarObstacle,
     OwnerTrack,
     RobotPose,
     SimObservation,
 )
-from parcel_robot.headless_city import MOCAP_OWNER_CONFIDENCE, MOCAP_OWNER_STATE
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation import reactive_safety as rs
 from parcel_robot.owner_tracking.gallery import build_gallery
@@ -61,6 +60,7 @@ from parcel_robot.owner_tracking.tracker import (
     OwnerTracker,
 )
 from parcel_robot.runtime import RobotRuntime
+from parcel_robot.simulation.headless_city import MOCAP_OWNER_CONFIDENCE, MOCAP_OWNER_STATE
 
 REPO = Path(__file__).resolve().parents[1]
 RUNTIME_PATH = REPO / "src" / "parcel_robot" / "runtime.py"
@@ -653,7 +653,7 @@ def test_ot2_the_mocap_venue_says_it_is_ground_truth() -> None:
         state=MOCAP_OWNER_STATE,
         identity_source=rs.IDENTITY_SOURCE_MOCAP,
     )
-    source = (REPO / "src" / "parcel_robot" / "headless_city.py").read_text()
+    source = (REPO / "src" / "parcel_robot" / "simulation" / "headless_city.py").read_text()
     assert "confidence=1.0," not in source, (
         "the mocap owner emission is back to a bare literal; the venue must say "
         "whether 1.0 is a measurement or ground truth"

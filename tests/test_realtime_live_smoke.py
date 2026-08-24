@@ -44,7 +44,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import SimObservation
 from parcel_robot.models import VelocityCommand
 from parcel_robot.realtime.config import REALTIME_CONFIG_ENV
@@ -101,7 +101,7 @@ class _MujocoCityBackend:
     name = "headless_mujoco_city"
 
     def __init__(self) -> None:
-        from parcel_robot.headless_city import HeadlessCityWorld
+        from parcel_robot.simulation.headless_city import HeadlessCityWorld
 
         self.world = HeadlessCityWorld()
         self.poses: list[object] = []

@@ -4,8 +4,13 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 
 from parcel_robot.models import Pose, VelocityCommand
-from parcel_robot.motion import MotionRouter
-from parcel_robot.sim_ipc import publish_pose, publish_stop, publish_trajectory, publish_velocity
+from parcel_robot.motion.router import MotionRouter
+from parcel_robot.simulation.ipc import (
+    publish_pose,
+    publish_stop,
+    publish_trajectory,
+    publish_velocity,
+)
 
 from .catalog import SkillCatalog
 from .schema import (

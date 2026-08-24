@@ -8,7 +8,7 @@ import wave
 
 import pytest
 
-from parcel_robot import audio_io
+from parcel_robot.audio import devices
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.models import SpatialIntent, ToolCall
 from parcel_robot.navigation.spatial import (
@@ -16,7 +16,7 @@ from parcel_robot.navigation.spatial import (
     parse_spatial_intent,
 )
 from parcel_robot.observability import ComponentMetrics, LatencyTracker
-from parcel_robot.perception import NullMapProvider, PerceptionContract
+from parcel_robot.perception.contract import NullMapProvider, PerceptionContract
 from parcel_robot.safety import SafetySupervisor
 
 
@@ -528,7 +528,7 @@ def test_perception_contract_rejects_extra_sensors_and_maps_never_networks():
 
 
 def test_audio_probe_reports_bluetooth_duplex_without_exposing_device_address(monkeypatch):
-    monkeypatch.setattr(audio_io.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(devices.shutil, "which", lambda name: f"/usr/bin/{name}")
 
     def fake_run(command, **kwargs):
         joined = " ".join(command)
@@ -550,8 +550,8 @@ def test_audio_probe_reports_bluetooth_duplex_without_exposing_device_address(mo
             output = ""
         return subprocess.CompletedProcess(command, 0, stdout=output, stderr="")
 
-    monkeypatch.setattr(audio_io.subprocess, "run", fake_run)
-    status = audio_io.detect_audio_devices()
+    monkeypatch.setattr(devices.subprocess, "run", fake_run)
+    status = devices.detect_audio_devices()
 
     assert status.bluetooth_controller
     assert status.bluetooth_powered
@@ -563,14 +563,14 @@ def test_audio_probe_reports_bluetooth_duplex_without_exposing_device_address(mo
 
 def test_pipewire_audio_uses_default_nodes_and_produces_whisper_wav(monkeypatch):
     commands = []
-    monkeypatch.setattr(audio_io.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(devices.shutil, "which", lambda name: f"/usr/bin/{name}")
 
     def fake_run(command, **kwargs):
         commands.append((command, kwargs))
         return subprocess.CompletedProcess(command, 0, stdout=b"\x01\x00" * 1600, stderr=b"")
 
-    monkeypatch.setattr(audio_io.subprocess, "run", fake_run)
-    adapter = audio_io.PipeWireAudioIO()
+    monkeypatch.setattr(devices.subprocess, "run", fake_run)
+    adapter = devices.PipeWireAudioIO()
     captured = adapter.capture_wav(0.1)
     with wave.open(io.BytesIO(captured), "rb") as wav:
         assert wav.getframerate() == 16_000

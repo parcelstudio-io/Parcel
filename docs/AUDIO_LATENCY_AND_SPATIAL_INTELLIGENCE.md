@@ -71,7 +71,7 @@ Inspect the host without changing configuration:
 bluetoothctl devices Connected
 wpctl status
 .parcel/bin/python - <<'PY'
-from parcel_robot.audio_io import detect_audio_devices
+from parcel_robot.audio.devices import detect_audio_devices
 print(detect_audio_devices().as_dict())
 PY
 

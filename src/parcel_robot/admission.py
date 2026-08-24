@@ -401,10 +401,10 @@ _PRODUCT_CONFIG_SOURCES = (
     "admission.py",
     "cli.py",
     "config.py",
-    "headless_city.py",
     "ros_node.py",
     "runtime.py",
     "sim.py",
+    "simulation/headless_city.py",
     "unitree_control.py",
     "web_panel.py",
 )

@@ -3,7 +3,7 @@ from pathlib import Path
 import mujoco
 import pytest
 
-from parcel_robot.city_semantics import extract_city_semantics, visible_city_semantics
+from parcel_robot.perception.city_semantics import extract_city_semantics, visible_city_semantics
 
 REPO = Path(__file__).resolve().parents[1]
 SCENE = REPO / "src" / "parcel_robot" / "scenes" / "city_block.xml"

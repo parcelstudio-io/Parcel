@@ -7,7 +7,7 @@ import random
 
 import pytest
 
-from parcel_robot.expression import (
+from parcel_robot.motion.expression import (
     MAX_BODY_HEIGHT_M,
     MAX_BODY_PITCH_RAD,
     MAX_HEAD_PITCH_RAD,

@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from parcel_robot.voice_audio import (
+from parcel_robot.audio.voice_loop import (
     FRAME_SAMPLES,
     SAMPLE_RATE_HZ,
     AecStage,

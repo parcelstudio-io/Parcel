@@ -16,7 +16,7 @@ is enforced three ways, deliberately overlapping:
    not belt-and-braces decoration: the AST check can only see the call sites
    that exist today, and the tripwire sees the one somebody adds tomorrow.
 3. **By admission** — the runner asks
-   :class:`~parcel_robot.perception_contention.PerceptionContentionGuard`
+   :class:`~parcel_robot.perception.contention.PerceptionContentionGuard`
    before every call, so the guard's counters record what ran while a mission
    lease was held.
 
@@ -49,7 +49,7 @@ covers it. The load is paid at install (:func:`runner_for`), off any lease.
 
 Card §9's instruction was "nothing is refused". This runner's honest version of
 that is: nothing is refused *for contention*, and a veto that would exceed its
-budget degrades to :data:`~parcel_robot.perception_abstention.VETO_UNAVAILABLE`
+budget degrades to :data:`~parcel_robot.perception.abstention.VETO_UNAVAILABLE`
 — which the gate reads as ASK. The dog asks; it does not refuse, and it does not
 push the detector off its frame budget either.
 """
@@ -65,7 +65,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Any
 
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     VETO_ABSENT,
     VETO_PRESENT,
     VETO_UNAVAILABLE,
@@ -76,7 +76,7 @@ from parcel_robot.perception_abstention import (
     in_control_thread,
     mark_control_thread,
 )
-from parcel_robot.perception_contention import (
+from parcel_robot.perception.contention import (
     PerceptionContentionGuard,
     default_guard,
 )

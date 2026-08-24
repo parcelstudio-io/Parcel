@@ -6,8 +6,8 @@ import math
 
 import pytest
 
-from parcel_robot.gait import ScriptedTrotGait
 from parcel_robot.models import VelocityCommand
+from parcel_robot.motion.gait import ScriptedTrotGait
 from parcel_robot.robot_profile import RobotProfile
 
 

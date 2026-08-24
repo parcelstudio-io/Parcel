@@ -3,8 +3,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from .models import VelocityCommand
-from .robot_profile import RobotProfile
+from ..models import VelocityCommand
+from ..robot_profile import RobotProfile
 
 # Backwards-compatible module constant, now derived from the default profile
 # instead of a second hand-maintained copy of the Go2 joint table.

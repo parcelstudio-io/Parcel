@@ -857,7 +857,7 @@ def generate_scene(seed: int, *, out_dir: Path = OUT_DIR, write: bool = True) ->
 def _validate_sidecar(path: Path) -> None:
     """A sidecar that does not load is not an artifact — fail at emission time."""
 
-    from parcel_robot.scene_semantics import load_scene_semantics
+    from parcel_robot.perception.scene_semantics import load_scene_semantics
 
     load_scene_semantics(path)
 

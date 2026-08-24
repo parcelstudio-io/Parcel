@@ -4,7 +4,7 @@ The rows are AUTHORED and frozen in the YAML, never model-produced. A
 LoCoMo-style event graph is a flat, ordered list of conversation events
 (evidence rows the probe will later ask about, plus distractor rows that push
 that evidence out of today's recency window). The builder replays those events
-in order into a *fresh* :class:`~parcel_robot.memory.ConversationMemory`, so
+in order into a *fresh* :class:`~parcel_robot.memory.conversation.ConversationMemory`, so
 each cross-session probe measures the memory subsystem itself, not context
 carried over in a live turn buffer.
 
@@ -22,7 +22,7 @@ from typing import Any
 
 import yaml
 
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory.conversation import ConversationMemory
 
 VALID_ROLES = frozenset({"user", "assistant", "tool"})
 VALID_KINDS = frozenset({"evidence", "distractor"})

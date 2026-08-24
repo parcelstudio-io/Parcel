@@ -105,7 +105,7 @@ class WalkWithMeRunner:
             self._init_headless()
 
     def _init_headless(self) -> None:
-        from parcel_robot.headless_city import (
+        from parcel_robot.simulation.headless_city import (
             DEFAULT_ROBOT_CONFIG,
             HeadlessCityQualityHarness,
             HeadlessCityWorld,

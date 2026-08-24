@@ -388,7 +388,7 @@ def mutate_dropped_detections(*, probability: float = 0.5, seed: int = 41) -> It
 
     import random as _random
 
-    from parcel_robot import headless_city
+    from parcel_robot.simulation import headless_city
 
     original = headless_city.semantic_candidates_from_observation
     rng = _random.Random(seed)
@@ -478,7 +478,7 @@ def mutate_phantom_view_consistent() -> Iterator[None]:
     (untouched) goal region says it is not — ``false_arrival``.
     """
 
-    from parcel_robot import headless_city
+    from parcel_robot.simulation import headless_city
 
     original = headless_city.semantic_candidates_from_observation
     state: dict[str, Any] = {"time": None, "origin": (0.0, 0.0), "phantoms": {}}

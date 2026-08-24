@@ -47,7 +47,7 @@ from parcel_robot.instructnav.siglip2_onnx import (
     resolve_text_provider,
     resolve_vision_provider,
 )
-from parcel_robot.perception_providers import (
+from parcel_robot.perception.providers import (
     PROVIDER_CPU_INT8,
     PROVIDER_CUDA_FP16,
     PROVIDER_ENV,
@@ -259,7 +259,7 @@ def test_a_cuda_session_ort_ran_on_the_cpu_degrades_the_LOADER_to_none(
     wd = _fp16_tree(tmp_path)
     monkeypatch.setenv(PROVIDER_ENV, PROVIDER_CUDA_FP16)
     monkeypatch.setattr(
-        "parcel_robot.perception_providers._live_execution_providers", lambda: CUDA_BOX
+        "parcel_robot.perception.providers._live_execution_providers", lambda: CUDA_BOX
     )
     reached: list[str] = []
 
@@ -287,7 +287,7 @@ def test_the_siglip2_loader_degrades_the_same_way(
     monkeypatch.setenv(PROVIDER_ENV, PROVIDER_CUDA_FP16)
     monkeypatch.setenv(siglip2_onnx.ONNX_ENABLE_ENV, "1")
     monkeypatch.setattr(
-        "parcel_robot.perception_providers._live_execution_providers", lambda: CUDA_BOX
+        "parcel_robot.perception.providers._live_execution_providers", lambda: CUDA_BOX
     )
 
     class EmbedderThatLies:
@@ -325,7 +325,7 @@ def test_the_installed_onnxruntime_is_reported_not_assumed() -> None:
     under test reads the LIVE build rather than a constant, which is the only
     reason the resolution table means anything on a real machine."""
 
-    import parcel_robot.perception_providers as pp
+    import parcel_robot.perception.providers as pp
 
     live = pp._live_execution_providers()
     assert isinstance(live, tuple)

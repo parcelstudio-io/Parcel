@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 
-from parcel_robot import audio_io
+from parcel_robot.audio import devices
 
 
 def _install_probe(
@@ -10,7 +10,7 @@ def _install_probe(
     responses: dict[tuple[str, ...], str],
 ) -> list[tuple[str, ...]]:
     commands: list[tuple[str, ...]] = []
-    monkeypatch.setattr(audio_io.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(devices.shutil, "which", lambda name: f"/usr/bin/{name}")
 
     def fake_run(command, **kwargs):
         command_key = tuple(command)
@@ -26,7 +26,7 @@ def _install_probe(
             stderr="",
         )
 
-    monkeypatch.setattr(audio_io.subprocess, "run", fake_run)
+    monkeypatch.setattr(devices.subprocess, "run", fake_run)
     return commands
 
 
@@ -56,7 +56,7 @@ def test_unrelated_bluetooth_connection_does_not_make_alsa_defaults_duplex(monke
     )
     _install_probe(monkeypatch, responses)
 
-    status = audio_io.detect_audio_devices()
+    status = devices.detect_audio_devices()
 
     assert status.connected_input
     assert status.connected_output
@@ -82,7 +82,7 @@ def test_a2dp_output_with_separate_input_is_not_bluetooth_duplex(monkeypatch):
     )
     _install_probe(monkeypatch, responses)
 
-    status = audio_io.detect_audio_devices()
+    status = devices.detect_audio_devices()
 
     assert not status.bluetooth_duplex_ready
     assert status.transport == "bluetooth_a2dp"
@@ -108,7 +108,7 @@ def test_hfp_defaults_must_resolve_to_same_bluez_device(monkeypatch):
     )
     _install_probe(monkeypatch, responses)
 
-    status = audio_io.detect_audio_devices()
+    status = devices.detect_audio_devices()
 
     assert not status.bluetooth_duplex_ready
     assert status.transport == "bluetooth"
@@ -131,7 +131,7 @@ def test_hfp_probe_is_read_only_bounded_and_caches_parent_device(monkeypatch):
     )
     commands = _install_probe(monkeypatch, responses)
 
-    status = audio_io.detect_audio_devices()
+    status = devices.detect_audio_devices()
 
     assert status.bluetooth_duplex_ready
     assert status.transport == "bluetooth_hfp"
@@ -158,7 +158,7 @@ def test_dummy_nondefault_does_not_hide_real_default_output(monkeypatch):
     )
     _install_probe(monkeypatch, responses)
 
-    status = audio_io.detect_audio_devices()
+    status = devices.detect_audio_devices()
 
     assert status.connected_output
     assert status.transport == "pipewire"

@@ -51,12 +51,6 @@ from pathlib import Path
 from typing import Any
 
 from evals.nav_instruct.generator import EpisodeSpec, generate_minival
-from parcel_robot.headless_city import (
-    DEFAULT_ROBOT_CONFIG,
-    HeadlessCityQualityHarness,
-    HeadlessCityWorld,
-    _nav_observation,
-)
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.base import GoalPose, Mission
 from parcel_robot.navigation.person_keepout import (
@@ -66,6 +60,12 @@ from parcel_robot.navigation.person_keepout import (
 )
 from parcel_robot.navigation.pipeline import DirectiveNavigator
 from parcel_robot.navigation.reactive_safety import apply_reactive_safety
+from parcel_robot.simulation.headless_city import (
+    DEFAULT_ROBOT_CONFIG,
+    HeadlessCityQualityHarness,
+    HeadlessCityWorld,
+    _nav_observation,
+)
 
 #: The episode this cell is the declared-bystander variant of.
 D15_EPISODE_ID = "nav-object_goal-D-15-109547e2"

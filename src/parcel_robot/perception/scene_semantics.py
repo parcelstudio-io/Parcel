@@ -5,7 +5,7 @@ name prefixes mean which class, what a person may call that class, which
 spatial relations are achievable with it, what role it plays as a landmark —
 had to live as literals in Python. This module reads it from one YAML sidecar
 instead (``configs/scenes/<scene>.semantics.yaml``) and hands
-:mod:`parcel_robot.city_semantics` the same tables it used to spell out.
+:mod:`parcel_robot.perception.city_semantics` the same tables it used to spell out.
 
 **Fail closed.** Every unknown key, at every level, is an error rather than a
 silently ignored typo: an affordance that is not a registered relation, a

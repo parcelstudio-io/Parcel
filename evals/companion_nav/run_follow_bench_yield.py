@@ -145,7 +145,7 @@ def validate_free_space(scenarios: tuple[Scenario, ...]) -> list[str]:
     invocation instead of being asserted nowhere.
     """
 
-    from parcel_robot.headless_city import HeadlessCityWorld
+    from parcel_robot.simulation.headless_city import HeadlessCityWorld
 
     world = HeadlessCityWorld()
     world.reset(robot=(0.0, 0.0, 0.0), owner=(1.0, 0.0))

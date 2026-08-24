@@ -24,7 +24,7 @@ specific to being a second store:
    gets deleted.
 4. **The owner's conversation store is refused by identity, not by convention.**
    The candidate is compared against
-   :func:`parcel_robot.memory_path.owner_store_paths` — the same authority the
+   :func:`parcel_robot.memory.path.owner_store_paths` — the same authority the
    conversation side uses — so the two cannot drift apart. Seed 4 pins it.
 """
 
@@ -39,7 +39,7 @@ from contextlib import closing
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from parcel_robot.memory_path import OWNER_STORE_NAME, owner_store_paths
+from parcel_robot.memory.path import OWNER_STORE_NAME, owner_store_paths
 
 from .entries import (
     ENV_MAP_PATH,

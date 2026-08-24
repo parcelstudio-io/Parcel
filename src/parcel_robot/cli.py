@@ -3,15 +3,15 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .agent import VoiceAgent
 from .config import ConfigStore
-from .memory import ConversationMemory
+from .memory.conversation import ConversationMemory
 from .models import Pose, VelocityCommand
-from .motion import build_motion_router
+from .motion.router import build_motion_router
 from .providers import LlamaCppProvider
 from .ros_node import run
-from .sim_ipc import DEFAULT_SOCKET
+from .simulation.ipc import DEFAULT_SOCKET
 from .skills.api import Dog
+from .voice.agent import VoiceAgent
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG = REPO_ROOT / "configs" / "robot.yaml"

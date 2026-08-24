@@ -42,8 +42,8 @@ from evals.nav_instruct.person_cell import (
     run_cell,
     write_report,
 )
-from parcel_robot.headless_city import HeadlessCityQualityHarness, HeadlessCityWorld
 from parcel_robot.navigation.reactive_safety import ReactiveSafetyPolicy
+from parcel_robot.simulation.headless_city import HeadlessCityQualityHarness, HeadlessCityWorld
 
 REPO = Path(__file__).resolve().parents[1]
 

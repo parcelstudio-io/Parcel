@@ -180,7 +180,7 @@ def test_sqlite_current_timestamp_moves_with_python() -> None:
 _SEEDED_BOMB_TEMPLATE = """
 import datetime, sys, tempfile
 from pathlib import Path
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory.conversation import ConversationMemory
 
 PINNED_NOW = datetime.datetime.fromisoformat({pin!r})   # a fixed pin, as in the original
 root = Path(tempfile.mkdtemp())

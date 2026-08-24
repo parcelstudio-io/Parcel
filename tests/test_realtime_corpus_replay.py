@@ -72,7 +72,7 @@ from evals.companion.realtime_convo_v1.scrape_realtime_convo import (
     self_test,
     spend_usd,
 )
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory.conversation import ConversationMemory
 from parcel_robot.realtime.config import RealtimeConfig
 from parcel_robot.realtime.fake_server import FakeRealtimeServer, pcm_tone
 from parcel_robot.realtime.lane import TOOL_REFUSAL_OUTPUT, RealtimeLane

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.brain.compiler import compile_plan_contracts
 from parcel_robot.brain.contracts import (
@@ -28,10 +28,10 @@ from parcel_robot.brain.validator import (
     PlanValidator,
     SkillContractRegistry,
 )
-from parcel_robot.dynamic_prompting import EmotePolicySource
+from parcel_robot.prompting.dynamic import EmotePolicySource
 from parcel_robot.providers import SentenceChunkedSynthesizer, strip_emote_tags
 from parcel_robot.runtime import RobotRuntime
-from parcel_robot.voice_pipeline import VoiceTurn
+from parcel_robot.voice.pipeline import VoiceTurn
 
 REPO = Path(__file__).resolve().parents[1]
 EMOTES = ("bow", "paw_wave", "play_bow")

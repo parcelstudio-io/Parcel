@@ -34,7 +34,7 @@ import threading
 from collections import deque
 from dataclasses import dataclass, replace
 
-from parcel_robot.gait import leg_ik
+from parcel_robot.motion.gait import leg_ik
 from parcel_robot.robot_profile import RobotProfile
 
 # The single amplitude authority. Values are what a standing quadruped can

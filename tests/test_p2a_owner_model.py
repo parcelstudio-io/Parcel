@@ -39,13 +39,19 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.memory import (
+from parcel_robot.memory.conversation import (
     FACT_MODEL_PROPOSED,
     FACT_OWNER_STATED,
     OWNER_FACTS_TABLE,
     ConversationMemory,
 )
-from parcel_robot.memory_path import MemoryPathRefused, owner_store_paths
+from parcel_robot.memory.path import MemoryPathRefused, owner_store_paths
+from parcel_robot.memory.tiered import (
+    ConcatSummarizer,
+    SummaryRecord,
+    TieredMemory,
+    TieredMemoryConfig,
+)
 from parcel_robot.models import ToolCall, ToolResult
 from parcel_robot.owner_model import policy as privacy
 from parcel_robot.owner_model.distiller import (
@@ -82,12 +88,6 @@ from parcel_robot.realtime.tool_broker import (
     RealtimeToolBroker,
     ToolDoors,
     build_tool_specs,
-)
-from parcel_robot.tiered_memory import (
-    ConcatSummarizer,
-    SummaryRecord,
-    TieredMemory,
-    TieredMemoryConfig,
 )
 
 #: The three runs the pre-registration marks rows 7 and 8 pass^3 over. Each

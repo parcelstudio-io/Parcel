@@ -6,13 +6,13 @@ from pathlib import Path
 import pytest
 import yaml
 
-from parcel_robot.headless_city import (
+from parcel_robot.models import VelocityCommand
+from parcel_robot.navigation.spatial import SpatialBehaviorConfig
+from parcel_robot.simulation.headless_city import (
     DEFAULT_ROBOT_CONFIG,
     HeadlessCityQualityHarness,
     HeadlessCityWorld,
 )
-from parcel_robot.models import VelocityCommand
-from parcel_robot.navigation.spatial import SpatialBehaviorConfig
 
 
 @pytest.fixture(scope="module")

@@ -43,7 +43,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import (
     DynamicAgentTrack,
     OwnerTrack,
@@ -52,7 +52,7 @@ from parcel_robot.backends.base import (
     SemanticRegionTrack,
     SimObservation,
 )
-from parcel_robot.memory import (
+from parcel_robot.memory.conversation import (
     RECALL_MIN_CHARS,
     RECALL_SELF_MARKERS,
     ConversationMemory,

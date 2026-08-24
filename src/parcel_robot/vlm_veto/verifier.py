@@ -63,7 +63,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     VETO_ABSENT,
     VETO_PRESENT,
     VETO_UNAVAILABLE,

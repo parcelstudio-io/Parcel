@@ -931,7 +931,7 @@ class DirectiveNavigator:
         #
         # 1. `perception_abstention` reads R20's refusal sentence out of
         #    `navigation.goals`, so a top-level import would close a cycle and
-        #    make `import parcel_robot.perception_abstention` fail on a cold
+        #    make `import parcel_robot.perception.abstention` fail on a cold
         #    interpreter. Found by card PG-3's own seed canary, which is the
         #    only thing in the tree that imports that module first.
         # 2. The frozen BARN v8 policy bundle REPLACES this file into a
@@ -942,7 +942,7 @@ class DirectiveNavigator:
         #    import, and the same fail-safe: a tree with no abstention module
         #    has no abstention, which IS the pre-PG-3 path.
         try:
-            from parcel_robot.perception_abstention import (
+            from parcel_robot.perception.abstention import (
                 AbstentionPolicy,
                 use_abstention_policy,
             )

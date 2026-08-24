@@ -24,7 +24,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import (
     OwnerTrack,
     RobotPose,

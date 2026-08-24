@@ -187,8 +187,8 @@ lane; the explicit legacy/local path submits a whole committed utterance to
 whisper.cpp before local reasoning and cancellable TTS. Partial transcripts may
 prepare or interrupt work, but only a committed/final turn can dispatch an
 action. Audio codec tokens remain inside a speech provider. See
-[`voice_audio.py`](../src/parcel_robot/voice_audio.py),
-[`voice_pipeline.py`](../src/parcel_robot/voice_pipeline.py), and
+[`audio/voice_loop.py`](../src/parcel_robot/audio/voice_loop.py),
+[`voice/pipeline.py`](../src/parcel_robot/voice/pipeline.py), and
 [`providers.py`](../src/parcel_robot/providers.py).
 
 The D0 10 Hz TEXT+ACT frame overlay is an aligned observation/logging contract,
@@ -238,8 +238,8 @@ role, including cold start and resource contention with STT/TTS/navigation.
 chooses fine timing. Idle, reaction, and beat layers are additive, clamped,
 epoch-scoped, and gated off by skills, hazards, critical battery, or E-stop.
 The expression loop runs at 50 Hz because timing needs are different from the
-10 Hz decision loop. See [`expression.py`](../src/parcel_robot/expression.py)
-and [`prosody.py`](../src/parcel_robot/prosody.py).
+10 Hz decision loop. See [`motion/expression.py`](../src/parcel_robot/motion/expression.py)
+and [`audio/prosody.py`](../src/parcel_robot/audio/prosody.py).
 
 **Advantages:** personality does not become locomotion authority; interruption
 can atomically cancel speech-synchronized motion; deterministic motion remains
@@ -337,7 +337,7 @@ mapping and retained product gates.
 composed in separate budgeted planes. Context sources must return snapshots
 without blocking; information tools are named, read-only, and fail closed.
 Arbitrary UI-provided system prompts are not accepted. See
-[`dynamic_prompting.py`](../src/parcel_robot/dynamic_prompting.py) and the
+[`prompting/dynamic.py`](../src/parcel_robot/prompting/dynamic.py) and the
 trusted [`prompts/`](../prompts) tree.
 
 The live `current_situation` source already renders in the volatile `turn`

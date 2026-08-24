@@ -456,11 +456,11 @@ def test_an_interrupted_robot_segment_carries_the_moment_it_was_cut(tmp_path) ->
 
     import wave
 
+    from parcel_robot.audio.voice_loop import pcm16_wav
     from parcel_robot.realtime.audio_gateway import (
         CAPTURE_INDEX_NAME,
         SessionAudioCapture,
     )
-    from parcel_robot.voice_audio import pcm16_wav
 
     capture = SessionAudioCapture(
         root=tmp_path / "recordings", session_id="sess_mark1", sample_rate_hz=24_000
@@ -489,11 +489,11 @@ def test_an_interrupted_robot_segment_carries_the_moment_it_was_cut(tmp_path) ->
 def test_an_uninterrupted_segment_gains_no_interrupt_stamp(tmp_path) -> None:
     """The field is evidence, not decoration: absent when nothing was cut."""
 
+    from parcel_robot.audio.voice_loop import pcm16_wav
     from parcel_robot.realtime.audio_gateway import (
         CAPTURE_INDEX_NAME,
         SessionAudioCapture,
     )
-    from parcel_robot.voice_audio import pcm16_wav
 
     capture = SessionAudioCapture(
         root=tmp_path / "recordings", session_id="sess_mark1", sample_rate_hz=24_000

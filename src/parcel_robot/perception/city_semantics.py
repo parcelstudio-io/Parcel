@@ -8,7 +8,7 @@ the NAV_INSTRUCT scorer, and the viewer (K0).
 The vocabulary itself is **no longer literal here**: prefixes, class kinds, and
 aliases are read from the per-scene semantics sidecar
 (``configs/scenes/city_block.semantics.yaml``) by
-:mod:`parcel_robot.scene_semantics`, which fails closed on anything it does not
+:mod:`parcel_robot.perception.scene_semantics`, which fails closed on anything it does not
 recognize. ``tests/test_scene_semantics.py`` pins the derived tables
 bit-for-bit against the literals that used to live in this module. Geometry is
 still read from the MJCF and never from the sidecar.
@@ -22,7 +22,7 @@ from typing import Any
 import mujoco
 
 from parcel_robot.instructnav.scoring import object_near_envelope_m, object_near_goal_region
-from parcel_robot.scene_semantics import scene_semantics
+from parcel_robot.perception.scene_semantics import scene_semantics
 
 _SCENE = scene_semantics()
 

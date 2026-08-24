@@ -33,21 +33,8 @@ from parcel_robot.config import ConfigStore
 from parcel_robot.core.motion_shaping import MotionShapingConfig
 from parcel_robot.core.stop_ramp import enforce_monotone_stop, nominal_stop_step
 from parcel_robot.core.velocity_smoother import VelocitySmoother
-from parcel_robot.dynamic_city import select_social_collision_candidate
-from parcel_robot.expression import ExpressionEngine, ExpressionGate
-
-# Production-parity helpers are imported (not forked) from the headless rig so
-# this eval cannot drift from the observation contract the runtime harness
-# uses; they are module-private there but stable and covered by its tests.
-from parcel_robot.headless_city import (
-    DEFAULT_ROBOT_CONFIG,
-    HeadlessCityWorld,
-    _nav_observation,
-    _navigation_config_from_store,
-    _reactive_safety_from_store,
-    _spatial_config_from_store,
-)
 from parcel_robot.models import VelocityCommand
+from parcel_robot.motion.expression import ExpressionEngine, ExpressionGate
 from parcel_robot.navigation.dynamic_layer import (
     TimeToCollisionConfig,
     time_to_collision_verdict,
@@ -65,6 +52,19 @@ from parcel_robot.navigation.reactive_safety import apply_reactive_safety
 from parcel_robot.navigation.search_owner import SearchOwnerConfig, SearchOwnerController
 from parcel_robot.navigation.velocity_shaping import SCurveVelocityShaper
 from parcel_robot.robot_profile import RobotProfile
+from parcel_robot.simulation.dynamic_city import select_social_collision_candidate
+
+# Production-parity helpers are imported (not forked) from the headless rig so
+# this eval cannot drift from the observation contract the runtime harness
+# uses; they are module-private there but stable and covered by its tests.
+from parcel_robot.simulation.headless_city import (
+    DEFAULT_ROBOT_CONFIG,
+    HeadlessCityWorld,
+    _nav_observation,
+    _navigation_config_from_store,
+    _reactive_safety_from_store,
+    _spatial_config_from_store,
+)
 
 # 1.1 adds the card-W9 dispatch replica (pre-gate smoother, predictive brake,
 # actuator shaper), the owner-search trigger, and the expression channels.

@@ -25,7 +25,7 @@ CLIP mean/std). No PIL, no torch, no sudo.
 Execution provider (card PG-1)
 ------------------------------
 Which (execution provider, artifact) pair runs is no longer hard-coded: it is
-resolved by :mod:`parcel_robot.perception_providers` with the documented
+resolved by :mod:`parcel_robot.perception.providers` with the documented
 fallback order ``cuda_fp16 -> cpu_int8``, and **logged once at construction** on
 :attr:`OwlV2Detector.resolution`. A machine with no ``CUDAExecutionProvider``
 resolves to ``cpu_int8`` and is byte-for-byte the incumbent path. Nothing about
@@ -90,8 +90,8 @@ from pathlib import Path
 from typing import Any
 
 from parcel_robot.detection_adapter.pixel_detections import PixelDetection
-from parcel_robot.perception_contention import PerceptionContentionGuard, default_guard
-from parcel_robot.perception_providers import (
+from parcel_robot.perception.contention import PerceptionContentionGuard, default_guard
+from parcel_robot.perception.providers import (
     PROVIDER_CPU_INT8,
     ProviderResolution,
     assert_provider_honoured,

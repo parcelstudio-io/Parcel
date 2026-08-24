@@ -117,7 +117,7 @@ is marked ✓✓.
 5. ✓✓ **A speaker next to the mic makes software-only AEC marginal.** The
    2026 answer is hardware DSP AEC (XVF3800-class mic array) with software
    residual suppression. Until then, the echo-guard multiplier is an honest
-   stopgap (documented in `voice_audio.py`).
+   stopgap (documented in `audio/voice_loop.py`).
 6. ✓ **CMU `autonomy_stack_go2`** (Point-LIO + FAR Planner + terrain analysis
    on the stock Go2 L1 LiDAR) is the proven reference stack for the hardware
    bring-up phase.

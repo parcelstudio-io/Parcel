@@ -128,8 +128,8 @@ def test_a_rate_the_array_cannot_open_is_refused_with_the_error_you_will_see(pro
 def test_every_producer_in_this_stack_is_accounted_for(probe) -> None:
     """The rates the tools resample from ARE the product's own constants."""
 
+    from parcel_robot.audio.voice_loop import SAMPLE_RATE_HZ as LEGACY_LOOP_RATE_HZ
     from parcel_robot.realtime.protocol import PCM16_SAMPLE_RATE_HZ
-    from parcel_robot.voice_audio import SAMPLE_RATE_HZ as LEGACY_LOOP_RATE_HZ
 
     assert probe.PRODUCER_RATES_HZ["hosted_realtime"] == PCM16_SAMPLE_RATE_HZ
     assert probe.PRODUCER_RATES_HZ["legacy_loop"] == LEGACY_LOOP_RATE_HZ

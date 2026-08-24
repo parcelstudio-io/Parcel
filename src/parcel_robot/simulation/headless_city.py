@@ -18,16 +18,9 @@ from parcel_robot.backends.base import (
     SemanticRegionTrack,
     SimObservation,
 )
-from parcel_robot.city_semantics import extract_city_semantics, visible_city_semantics
 from parcel_robot.config import ConfigStore
 from parcel_robot.instructnav.scoring import object_near_envelope_m, object_near_goal_region
 from parcel_robot.models import VelocityCommand
-from parcel_robot.mujoco_lidar import (
-    MAX_LIDAR_OBSTACLES,
-    planar_geom_surface_hit,
-    raycast_planar_scan,
-    scan_mujoco_lidar,
-)
 from parcel_robot.navigation.approach import point_in_polygon_with_clearance
 from parcel_robot.navigation.base import NavObservation
 from parcel_robot.navigation.follow import FollowOwnerController
@@ -48,6 +41,7 @@ from parcel_robot.navigation.spatial import (
     parse_follow_intent,
     parse_spatial_intent,
 )
+from parcel_robot.perception.city_semantics import extract_city_semantics, visible_city_semantics
 from parcel_robot.pose import (
     POSE_PROVIDER_KEY,
     PoseProvider,
@@ -55,6 +49,12 @@ from parcel_robot.pose import (
     update_provider_from_sim,
 )
 from parcel_robot.robot_profile import DEFAULT_ROBOT_PROFILE, RobotProfile
+from parcel_robot.simulation.mujoco_lidar import (
+    MAX_LIDAR_OBSTACLES,
+    planar_geom_surface_hit,
+    raycast_planar_scan,
+    scan_mujoco_lidar,
+)
 
 # ---- CARD OT-2: the mocap venue's identity, named ---------------------
 #: The owner confidence this venue reports. GROUND TRUTH, not a measurement:
@@ -71,8 +71,8 @@ MOCAP_OWNER_CONFIDENCE = 1.0
 MOCAP_OWNER_STATE = "confirmed"
 # ---- END CARD OT-2 ----------------------------------------------------
 
-DEFAULT_CITY_SCENE = Path(__file__).with_name("scenes") / "city_block.xml"
-DEFAULT_ROBOT_CONFIG = Path(__file__).resolve().parents[2] / "configs" / "robot.yaml"
+DEFAULT_CITY_SCENE = Path(__file__).resolve().parents[1] / "scenes" / "city_block.xml"
+DEFAULT_ROBOT_CONFIG = Path(__file__).resolve().parents[3] / "configs" / "robot.yaml"
 _STATIC_OBSTACLE_PREFIXES = (
     "obstacle_",
     "bldg_",
@@ -1015,7 +1015,7 @@ def _navigation_config_from_store(store: ConfigStore) -> Path:
     path = (
         configured.resolve()
         if configured.is_absolute()
-        else (Path(__file__).resolve().parents[2] / configured).resolve()
+        else (Path(__file__).resolve().parents[3] / configured).resolve()
     )
     if not path.is_file():
         raise FileNotFoundError(f"navigation configuration not found: {path}")

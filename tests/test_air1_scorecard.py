@@ -38,8 +38,8 @@ from pathlib import Path
 
 import pytest
 
+from parcel_robot.audio.voice_loop import pcm16_wav
 from parcel_robot.realtime.audio_gateway import SessionAudioCapture, verify_capture_index
-from parcel_robot.voice_audio import pcm16_wav
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TOOL_PATH = REPO_ROOT / "tools" / "bargein_through_air.py"

@@ -149,7 +149,7 @@ any authored line containing an arrival or completion claim, and the check is
 rather than authored text.
 
 This is the first production path in the repo that puts a *backed* claim on a
-`DialogueActV1` — `agent.py`'s conversation act ships with an empty `claims`
+`DialogueActV1` — `voice/agent.py`'s conversation act ships with an empty `claims`
 tuple, so the veracity/evidence machinery had never been exercised live.
 
 ## Where it runs

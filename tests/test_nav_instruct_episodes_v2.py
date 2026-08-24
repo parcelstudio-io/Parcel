@@ -274,7 +274,7 @@ def test_visibility_constants_match_the_world() -> None:
 
     import inspect
 
-    from parcel_robot.city_semantics import visible_city_semantics
+    from parcel_robot.perception.city_semantics import visible_city_semantics
 
     signature = inspect.signature(visible_city_semantics)
     assert signature.parameters["max_range_m"].default == VISIBILITY_MAX_RANGE_M
@@ -286,7 +286,7 @@ def test_visibility_constants_match_the_world() -> None:
 def test_visibility_predicate_matches_the_worlds_predicate() -> None:
     """Same inputs, same answer — not just the same constants."""
 
-    from parcel_robot.city_semantics import _visible
+    from parcel_robot.perception.city_semantics import _visible
 
     poses = [(0.0, 0.0, 0.0), (0.1, -0.05, 1.0), (-6.0, -6.0, 2.5), (2.0, 2.0, -1.4)]
     targets = [(5.0, 3.1), (-5.0, 3.15), (0.2, 3.15), (13.0, 0.0), (0.0, 0.0)]

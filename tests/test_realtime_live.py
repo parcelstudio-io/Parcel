@@ -34,7 +34,7 @@ import time
 
 import pytest
 
-from parcel_robot.memory import ConversationMemory
+from parcel_robot.memory.conversation import ConversationMemory
 from parcel_robot.realtime.config import RealtimeConfig
 from parcel_robot.realtime.lane import SPEAKER_OWNER, SPEAKER_ROBOT, RealtimeLane
 from parcel_robot.realtime.protocol import ConversationItemCreate, ResponseCreate

@@ -555,7 +555,7 @@ def _ask_the_judge(judge: Any, name: str, entry: MapEntry) -> Any:
     passed" would then be the same event to the only caller that matters.
     """
 
-    from parcel_robot.perception_abstention import ControlLoopViolation
+    from parcel_robot.perception.abstention import ControlLoopViolation
     from parcel_robot.vlm_veto.judge import JUDGE_UNAVAILABLE, JudgeVerdict
 
     try:

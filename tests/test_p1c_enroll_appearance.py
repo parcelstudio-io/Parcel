@@ -331,7 +331,7 @@ def test_the_tool_never_reaches_the_owner_store(tool) -> None:
     # An AST walk and not a text scan: the module DOCSTRING names the store, on
     # purpose, to say it is not touched. A grep would fail on the sentence that
     # promises the property.
-    forbidden = ("sqlite3", "parcel_robot.memory", "parcel_robot.memory_path",
-                 "parcel_robot.conversation_store", "parcel_robot.tiered_memory")
+    forbidden = ("sqlite3", "parcel_robot.memory.conversation", "parcel_robot.memory.path",
+                 "parcel_robot.memory.store", "parcel_robot.memory.tiered")
     reached = sorted(name for name in imported if name.startswith(forbidden))
     assert reached == [], f"the enroller imports {reached}"

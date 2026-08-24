@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from typing_extensions import Self
 
+from ..providers import SpeechRecognizer, SpeechSynthesizer
 from .agent import VoiceAgent
-from .providers import SpeechRecognizer, SpeechSynthesizer
 
 
 class VoicePipeline:

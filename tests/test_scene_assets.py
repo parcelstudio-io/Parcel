@@ -37,9 +37,9 @@ os.environ.setdefault("MUJOCO_GL", "egl")
 
 import mujoco
 
-from parcel_robot.city_semantics import OBJECT_PREFIX_TABLE, REGION_PREFIX_TABLE
-from parcel_robot.headless_city import _STATIC_OBSTACLE_PREFIXES
+from parcel_robot.perception.city_semantics import OBJECT_PREFIX_TABLE, REGION_PREFIX_TABLE
 from parcel_robot.sim import LOGICAL_OBSTACLE_PREFIXES, is_logical_obstacle_name
+from parcel_robot.simulation.headless_city import _STATIC_OBSTACLE_PREFIXES
 
 REPO = Path(__file__).resolve().parents[1]
 SCENES = REPO / "src" / "parcel_robot" / "scenes"
@@ -324,7 +324,7 @@ def test_the_orbit_clearance_prefixes_do_not_reach_the_visual_namespace() -> Non
 def test_texturing_added_no_semantic_instance(scene_name: str) -> None:
     """The extraction must see exactly the classes the sidecar declares."""
 
-    from parcel_robot.city_semantics import extract_city_semantics
+    from parcel_robot.perception.city_semantics import extract_city_semantics
 
     model = mujoco.MjModel.from_xml_path(str(SCENES / scene_name))
     regions, objects = extract_city_semantics(model)
@@ -348,7 +348,7 @@ def test_texturing_added_no_semantic_instance(scene_name: str) -> None:
 def test_the_block_still_grounds_exactly_one_door(city: mujoco.MjModel) -> None:
     """R14's invariant: the storefront art must not create rival door candidates."""
 
-    from parcel_robot.city_semantics import extract_city_semantics
+    from parcel_robot.perception.city_semantics import extract_city_semantics
 
     _, objects = extract_city_semantics(city)
     doors = [item for item in objects if item["label"] == "door"]
@@ -486,7 +486,7 @@ def test_the_held_out_scene_shares_no_texture_with_the_development_scene() -> No
 def test_the_held_out_scene_has_a_different_layout(
     city: mujoco.MjModel, held_out: mujoco.MjModel
 ) -> None:
-    from parcel_robot.city_semantics import extract_city_semantics
+    from parcel_robot.perception.city_semantics import extract_city_semantics
 
     a_regions, a_objects = extract_city_semantics(city)
     b_regions, b_objects = extract_city_semantics(held_out)

@@ -26,7 +26,7 @@ from parcel_robot.instructnav.scoring import (
 )
 from parcel_robot.navigation.attributes import SIZE_METADATA_KEYS
 from parcel_robot.navigation.relation_registry import RELATIONS, RelationAnchor
-from parcel_robot.scene_semantics import (
+from parcel_robot.perception.scene_semantics import (
     DEFAULT_SIDECAR,
     LANDMARK_ROLES,
     SceneSemanticsError,
@@ -111,7 +111,7 @@ def _without_added(
 
 
 def test_sidecar_reproduces_the_retired_object_prefix_table_exactly() -> None:
-    from parcel_robot import city_semantics
+    from parcel_robot.perception import city_semantics
 
     for table in (
         city_semantics.OBJECT_PREFIX_TABLE,
@@ -122,7 +122,7 @@ def test_sidecar_reproduces_the_retired_object_prefix_table_exactly() -> None:
 
 
 def test_sidecar_reproduces_the_retired_region_prefix_table_exactly() -> None:
-    from parcel_robot import city_semantics
+    from parcel_robot.perception import city_semantics
 
     for table in (
         city_semantics.REGION_PREFIX_TABLE,
@@ -133,7 +133,7 @@ def test_sidecar_reproduces_the_retired_region_prefix_table_exactly() -> None:
 
 
 def test_sidecar_reproduces_the_retired_alias_table_exactly() -> None:
-    from parcel_robot import city_semantics
+    from parcel_robot.perception import city_semantics
 
     expected = {**RETIRED_CLASS_ALIASES, **ADDED_CLASS_ALIASES}
     for table in (
@@ -177,7 +177,7 @@ def test_every_class_the_scene_gained_since_the_migration_is_declared_with_its_c
 def test_instance_label_lookup_is_no_longer_a_second_copy_of_the_prefix_table() -> None:
     """``_label_for_instance`` used to repeat the table by hand."""
 
-    from parcel_robot import city_semantics
+    from parcel_robot.perception import city_semantics
 
     expected = {
         "lamp_post_1": "lamppost",
@@ -219,7 +219,7 @@ def test_extraction_is_bit_identical_to_the_retired_literals() -> None:
 
     import mujoco
 
-    from parcel_robot import city_semantics
+    from parcel_robot.perception import city_semantics
 
     def retired_label_for_instance(instance_id: str) -> str:
         if instance_id.startswith("lamp_post_"):
@@ -283,7 +283,7 @@ def test_extraction_is_bit_identical_to_the_retired_literals() -> None:
 def test_no_class_declares_attribute_metadata_yet_so_extraction_is_unchanged() -> None:
     """The seam exists; nothing rides it, which is why bit-equality holds."""
 
-    from parcel_robot import city_semantics
+    from parcel_robot.perception import city_semantics
 
     assert all(not values for values in city_semantics.CLASS_ATTRIBUTE_METADATA.values())
 

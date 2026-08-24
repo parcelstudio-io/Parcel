@@ -37,7 +37,7 @@ the *time to quiet*, not the time to cancel, and DUPLEX-1 measures both.
 WHAT IS NOT HERE, AND WHERE IT WOULD GO
 ---------------------------------------
 The card's design wants the offset signal to come from a LOCAL endpointer on
-ch1 (Silero, ``parcel_robot.endpointing``) rather than from the provider's
+ch1 (Silero, ``parcel_robot.audio.endpointing``) rather than from the provider's
 server VAD, because the local one sees the owner's last syllable and the
 provider's trails it by the whole silence tail. **No such producer exists in
 this tree**: ``TurnEndpointer`` is wired to the local voice pipeline, not to

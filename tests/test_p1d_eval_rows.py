@@ -36,7 +36,7 @@ import pytest
 
 from parcel_robot.online_map.entries import EmbeddingStamp, MapObservation, WriterProvenance
 from parcel_robot.online_map.online_map import OnlineSemanticMap
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     OUTCOME_ADMIT,
     OUTCOME_ASK,
     OUTCOME_REFUSE,
@@ -301,7 +301,7 @@ def test_the_resolved_seat_is_a_CALLABLE_the_gate_can_actually_invoke() -> None:
     SEED: ``return runner_for(key)`` instead of ``runner_for(key).veto_callable()``.
     """
 
-    from parcel_robot.perception_abstention import PlaceEvidence, resolve_veto
+    from parcel_robot.perception.abstention import PlaceEvidence, resolve_veto
 
     policy = _null_seat_policy()
     clear_veto_cache()

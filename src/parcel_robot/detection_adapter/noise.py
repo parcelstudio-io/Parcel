@@ -6,7 +6,6 @@ import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
-
 DEFAULT_SIM_VOCABULARY = frozenset(
     {
         "person",

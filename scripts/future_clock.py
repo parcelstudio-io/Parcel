@@ -55,7 +55,7 @@ Shifted (these are the clocks the product actually reads):
   ``from datetime import datetime`` before the plugin loaded.
 * SQLite's ``CURRENT_TIMESTAMP``, by rewriting that one token in SQL text passed
   through ``sqlite3.connect``-ed connections to a shifted ``datetime('now', …)``.
-  This is NOT cosmetic: ``src/parcel_robot/memory.py`` stamps every conversation
+  This is NOT cosmetic: ``src/parcel_robot/memory/conversation.py`` stamps every conversation
   row with a ``DEFAULT CURRENT_TIMESTAMP`` column, and leaving SQLite on the real
   clock while Python runs 400 days ahead would manufacture a clock split the
   product never has, and drown the real bombs in artefacts of the shim.
@@ -87,7 +87,7 @@ from typing import Any
 DAYS_ENV = "PARCEL_FUTURE_CLOCK_DAYS"
 
 #: SQLite's own clock keyword. Exactly one committed DDL uses it
-#: (``src/parcel_robot/memory.py``: ``created_at TEXT NOT NULL DEFAULT
+#: (``src/parcel_robot/memory/conversation.py``: ``created_at TEXT NOT NULL DEFAULT
 #: CURRENT_TIMESTAMP``), and it is the write half of the auditor's bomb.
 _CURRENT_TIMESTAMP = re.compile(r"\bCURRENT_TIMESTAMP\b", re.IGNORECASE)
 

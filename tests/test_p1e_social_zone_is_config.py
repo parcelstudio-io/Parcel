@@ -277,7 +277,7 @@ class _Backend:
 def _runtime(tmp_path: Path, *, safety_block: str):
     """A real ``RobotRuntime`` on a minimal config plus one safety block."""
 
-    from parcel_robot.audio_io import AudioDeviceStatus
+    from parcel_robot.audio.devices import AudioDeviceStatus
     from parcel_robot.runtime import RobotRuntime
 
     tmp_path.mkdir(parents=True, exist_ok=True)

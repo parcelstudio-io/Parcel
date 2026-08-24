@@ -8,13 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import LidarObstacle, OwnerTrack, RobotPose, SimObservation
 from parcel_robot.control.factory import build_backend_control_manager
 from parcel_robot.core.arbiter import CommandArbiter
 from parcel_robot.core.commands import MotionIntent
 from parcel_robot.core.resume import ResumeIntent
-from parcel_robot.expression import ReactionHooks
 from parcel_robot.models import (
     ActionProposal,
     AgentDecision,
@@ -23,6 +22,7 @@ from parcel_robot.models import (
     ToolCall,
     VelocityCommand,
 )
+from parcel_robot.motion.expression import ReactionHooks
 from parcel_robot.navigation.base import GoalPose, MidLevelCommand, Mission
 from parcel_robot.navigation.follow import FollowOwnerController
 from parcel_robot.navigation.goals import SemanticGoal
@@ -33,7 +33,7 @@ from parcel_robot.navigation.reactive_safety import (
 from parcel_robot.navigation.spatial import SpatialDecision
 from parcel_robot.runtime import RobotRuntime
 from parcel_robot.safety import SafetyLimits
-from parcel_robot.voice_pipeline import VoiceStage
+from parcel_robot.voice.pipeline import VoiceStage
 from scripts import load_guard
 
 REPO = Path(__file__).resolve().parents[1]

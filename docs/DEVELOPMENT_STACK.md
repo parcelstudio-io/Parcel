@@ -261,7 +261,7 @@ source .parcel/bin/activate
 .parcel/bin/python -m ruff check .
 
 python - <<'PY'
-from parcel_robot.audio_io import detect_audio_devices
+from parcel_robot.audio.devices import detect_audio_devices
 print(detect_audio_devices())
 PY
 ```

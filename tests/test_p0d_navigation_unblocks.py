@@ -28,7 +28,7 @@ import pytest
 import yaml
 
 from parcel_robot import runtime as runtime_module
-from parcel_robot.audio_io import AudioDeviceStatus
+from parcel_robot.audio.devices import AudioDeviceStatus
 from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
 from parcel_robot.camera_channel.ingress import SAFETY_LEASE_QUERY, CameraIngress
 from parcel_robot.core.velocity_smoother import VelocitySmoother
@@ -36,7 +36,7 @@ from parcel_robot.models import AgentDecision, VelocityCommand
 from parcel_robot.navigation.reactive_safety import apply_reactive_safety
 from parcel_robot.online_map.entries import MapObservation, WriterProvenance
 from parcel_robot.online_map.online_map import OnlineSemanticMap
-from parcel_robot.perception_abstention import (
+from parcel_robot.perception.abstention import (
     DEFAULT_SIGNALS,
     RANKING_MARGIN_LABEL_STRENGTH,
     RANKING_MARGIN_ROBUST_Z,

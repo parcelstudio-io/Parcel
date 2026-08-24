@@ -33,11 +33,6 @@ import pytest
 
 from evals.nav_instruct.generator import generate_episode_matrix
 from evals.nav_instruct.runner import NavInstructRunner
-from parcel_robot.headless_city import (
-    HeadlessCityQualityHarness,
-    HeadlessCityWorld,
-    _nav_observation,
-)
 from parcel_robot.instructnav.near_arrival import (
     DEFAULT_BEARING_SAMPLES,
     near_band_fallback_point,
@@ -45,6 +40,11 @@ from parcel_robot.instructnav.near_arrival import (
 from parcel_robot.models import VelocityCommand
 from parcel_robot.navigation.goals import navigation_directive_from_text
 from parcel_robot.navigation.pipeline import DirectiveNavigator
+from parcel_robot.simulation.headless_city import (
+    HeadlessCityQualityHarness,
+    HeadlessCityWorld,
+    _nav_observation,
+)
 
 # A budget wide enough that the ~7 s opening full-turn scan + the slow terminal
 # approach (both the seamless-pacing card's problem, not this one) do not

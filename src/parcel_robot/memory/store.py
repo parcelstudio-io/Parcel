@@ -15,13 +15,13 @@ plus one implementation*, not a schema commitment:
   same parametrized suite; nothing else in the codebase has to move.
 - :class:`SqliteConversationStore` is today's backend. It owns a **new** table,
   ``conversation_turns``. The pre-existing ``messages`` table that
-  :class:`~parcel_robot.memory.ConversationMemory` writes is **not touched, not
+  :class:`~parcel_robot.memory.conversation.ConversationMemory` writes is **not touched, not
   read, and not migrated in place** — the two stores coexist, which is what
   makes this card reversible: delete the file and the robot still works.
 
 **"Raw" is the other load-bearing word.** A :class:`TurnRecord` is the turn as
 spoken or heard, plus its provenance — never a distilled summary. Summarizing
-is :mod:`parcel_robot.tiered_memory`'s job and a different consumer's read.
+is :mod:`parcel_robot.memory.tiered`'s job and a different consumer's read.
 
 Design decisions that are contracts, not preferences
 ----------------------------------------------------
@@ -79,7 +79,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
-from .memory_path import resolve_memory_path
+from .path import resolve_memory_path
 
 logger = logging.getLogger(__name__)
 
@@ -317,7 +317,7 @@ class SqliteConversationStore:
     One writer, many readers — the repo's ledger discipline. Writes take an
     ``RLock`` and commit; reads are lock-free at the SQLite level but take the
     same lock to keep a read from observing a half-written batch, exactly as
-    :class:`~parcel_robot.memory.ConversationMemory` does.
+    :class:`~parcel_robot.memory.conversation.ConversationMemory` does.
     """
 
     def __init__(

@@ -16,16 +16,22 @@ from typing import Any, ClassVar, NoReturn
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
-from parcel_robot.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
 from parcel_robot.attention.stimuli import StimulusKind
-from parcel_robot.audio_arming import (
+from parcel_robot.audio.arming import (
     CODE_ARMED,
     MicArmingDecision,
     capture_identity,
     decide_microphone_arming,
     resolve_allow_monitor_capture,
 )
-from parcel_robot.audio_io import AudioDeviceStatus, detect_audio_devices
+from parcel_robot.audio.devices import AudioDeviceStatus, detect_audio_devices
+from parcel_robot.audio.endpointing import SileroVad, TurnEndpointer
+from parcel_robot.audio.prosody import analyze_wav_chunk
+from parcel_robot.audio.voice_loop import (
+    MicrophoneVoiceLoop,
+    SpeakerSink,
+    resolve_audio_device,
+)
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
 from parcel_robot.backends.base import (
     DynamicAgentTrack,
@@ -140,21 +146,8 @@ from parcel_robot.core.yield_policy import (
 )
 from parcel_robot.duplex.config import DuplexConfig
 from parcel_robot.duplex.coordinator import DuplexCoordinator
-from parcel_robot.dynamic_prompting import (
-    CallableContextSource,
-    EmotePolicySource,
-    RecentToolResultsSource,
-    build_prompting_stack,
-)
-from parcel_robot.endpointing import SileroVad, TurnEndpointer
-from parcel_robot.expression import (
-    BeatLayer,
-    ExpressionEngine,
-    ExpressionGate,
-    IdleLayer,
-    ReactionHooks,
-)
-from parcel_robot.memory import FACT_OWNER_STATED, ConversationMemory
+from parcel_robot.memory.conversation import FACT_OWNER_STATED, ConversationMemory
+from parcel_robot.memory.tiered import ConcatSummarizer
 from parcel_robot.models import (
     ActionProposal,
     Pose,
@@ -163,7 +156,14 @@ from parcel_robot.models import (
     ToolResult,
     VelocityCommand,
 )
-from parcel_robot.motion import build_motion_router
+from parcel_robot.motion.expression import (
+    BeatLayer,
+    ExpressionEngine,
+    ExpressionGate,
+    IdleLayer,
+    ReactionHooks,
+)
+from parcel_robot.motion.router import build_motion_router
 from parcel_robot.navigation.arrival_semantics import (
     arrival_fact,
     arrival_policy,
@@ -249,14 +249,19 @@ from parcel_robot.patrol.mission import (
     limits_from_safety,
     sense_from_snapshot,
 )
-from parcel_robot.perception import NullMapProvider, PerceptionContract
+from parcel_robot.perception.contract import NullMapProvider, PerceptionContract
 from parcel_robot.pose import (
     POSE_PROVIDER_KEY,
     TruthPoseProvider,
     update_provider_from_sim,
 )
+from parcel_robot.prompting.dynamic import (
+    CallableContextSource,
+    EmotePolicySource,
+    RecentToolResultsSource,
+    build_prompting_stack,
+)
 from parcel_robot.prompting.loader import PromptLibrary
-from parcel_robot.prosody import analyze_wav_chunk
 from parcel_robot.providers import (
     LanguageModel,
     SentenceChunkedSynthesizer,
@@ -353,7 +358,7 @@ from parcel_robot.runtime_channels import (
 )
 from parcel_robot.skills.api import Dog
 from parcel_robot.skills.executor import ExecutionResult
-from parcel_robot.tiered_memory import ConcatSummarizer
+from parcel_robot.voice.agent import EMERGENCY_STOP_PHRASES, VoiceAgent
 from parcel_robot.voice.amendment import AMEND_SUSPEND_REASON, begin_goal_amend
 from parcel_robot.voice.closed_intents import ClosedIntent
 from parcel_robot.voice.dialogue_state import DialogueStateChannel
@@ -364,19 +369,14 @@ from parcel_robot.voice.local_plans import (
     sketch_navigate,
     sketch_spatial,
 )
-from parcel_robot.voice.reaction_bridge import SocialReactionBridge
-from parcel_robot.voice.yield_speech import yield_dialogue_act
-from parcel_robot.voice_audio import (
-    MicrophoneVoiceLoop,
-    SpeakerSink,
-    resolve_audio_device,
-)
-from parcel_robot.voice_pipeline import (
+from parcel_robot.voice.pipeline import (
     SYSTEM_UTTERANCE_KIND,
     DuplexVoiceSession,
     VoiceStage,
     VoiceTurn,
 )
+from parcel_robot.voice.reaction_bridge import SocialReactionBridge
+from parcel_robot.voice.yield_speech import yield_dialogue_act
 
 # ---- CARD HW-1 py310-clean (scrum/20260822/task_35) ----
 # ``datetime.UTC`` is 3.11+ and this module is the one whose import failure
@@ -9017,7 +9017,7 @@ class RobotRuntime:
            a hit could not be said with provenance.
 
         The retrieval and the provenance rendering live in
-        :mod:`parcel_robot.memory`, beside the rows, and are unit-tested against
+        :mod:`parcel_robot.memory.conversation`, beside the rows, and are unit-tested against
         an in-memory store. This method is the wiring plus the sentence.
         """
 
@@ -9477,7 +9477,7 @@ class RobotRuntime:
         name = " ".join(str(place).split())
         if learned is None or not name:
             return {}
-        from parcel_robot.perception_abstention import OUTCOME_ASK
+        from parcel_robot.perception.abstention import OUTCOME_ASK
 
         try:
             with self._p1b_map_lock:
@@ -9619,7 +9619,7 @@ class RobotRuntime:
             for _distance, label in sorted(visible, key=lambda row: (row[0], row[1])):
                 _add(label)
         try:
-            from parcel_robot.city_semantics import CLASS_ALIASES
+            from parcel_robot.perception.city_semantics import CLASS_ALIASES
 
             for class_label in sorted(CLASS_ALIASES):
                 _add(class_label)
@@ -10105,7 +10105,7 @@ class RobotRuntime:
             regions.extend(str(region.label) for region in observation.semantic_regions)
             objects.extend(str(item.label) for item in observation.semantic_objects)
         try:
-            from parcel_robot.scene_semantics import scene_semantics
+            from parcel_robot.perception.scene_semantics import scene_semantics
 
             for scene_class in scene_semantics().classes:
                 bucket = regions if scene_class.kind == "region" else objects
@@ -10521,7 +10521,7 @@ class RobotRuntime:
         #
         # Marked here rather than in ``start()`` because what must be marked is
         # the THREAD, and this is the function that runs on it.
-        from parcel_robot.perception_abstention import (
+        from parcel_robot.perception.abstention import (
             clear_control_thread,
             mark_control_thread,
         )
@@ -12038,7 +12038,7 @@ class RobotRuntime:
             load_siglip2_embed_fn,
         )
         from parcel_robot.detection_adapter.owlv2_onnx import load_owlv2_detector
-        from parcel_robot.perception_contention import default_guard
+        from parcel_robot.perception.contention import default_guard
         from parcel_robot.sim import resolve_scene
 
         # `require_env=False` is correct here and is not a loosened gate: the
@@ -12322,7 +12322,7 @@ class RobotRuntime:
             CameraIngress,
             load_siglip2_embed_fn,
         )
-        from parcel_robot.perception_contention import default_guard
+        from parcel_robot.perception.contention import default_guard
 
         try:
             backend, resolved = open_physical_backend(kind)
@@ -13110,7 +13110,7 @@ class RobotRuntime:
             # batch exactly ``perception.camera_ingress_queries``, as before
             # this card. Raise the per-frame cap before turning it on.
             try:
-                from parcel_robot.scene_semantics import load_scene_semantics
+                from parcel_robot.perception.scene_semantics import load_scene_semantics
 
                 _extend(load_scene_semantics().detector_query_set())
             except Exception:  # noqa: BLE001 - the sidecar is optional
@@ -15518,7 +15518,7 @@ class RobotRuntime:
         learned = getattr(self, "_p1b_learned_map", None)
         if learned is None or not admitted:
             return None
-        from parcel_robot.perception_abstention import OUTCOME_ASK
+        from parcel_robot.perception.abstention import OUTCOME_ASK
 
         for label in sorted(admitted):
             key = f"{KIND_ASK_ABOUT}:{label}"

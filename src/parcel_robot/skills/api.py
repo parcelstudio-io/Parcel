@@ -8,7 +8,7 @@ import yaml
 
 from parcel_robot.config import ConfigStore
 from parcel_robot.models import Pose, VelocityCommand
-from parcel_robot.motion import MotionRouter, build_motion_router
+from parcel_robot.motion.router import MotionRouter, build_motion_router
 from parcel_robot.paths import resolve_config_yaml, resolve_navigation_config
 
 from .catalog import SkillCatalog

@@ -25,7 +25,11 @@ import re
 from functools import lru_cache
 
 from parcel_robot.navigation.relation_registry import RELATIONS, RelationSpec
-from parcel_robot.scene_semantics import SceneSemantics, SceneSemanticsError, scene_semantics
+from parcel_robot.perception.scene_semantics import (
+    SceneSemantics,
+    SceneSemanticsError,
+    scene_semantics,
+)
 
 #: Relations that are never offered about a *scene object* because they are
 #: owner-anchored: "I can come to you" is not an answer to "the bench".

@@ -1,7 +1,7 @@
 """Typed request/response contract for the perception daemon (card P1-A).
 
 One AF_UNIX stream, one framing rule, three operations. The framing follows the
-pattern :mod:`parcel_robot.sim_ipc` already uses — a Unix socket carrying a JSON
+pattern :mod:`parcel_robot.simulation.ipc` already uses — a Unix socket carrying a JSON
 object — with one change forced by the payload: a 1280×720 RGB frame is 2.7 MB,
 and base64 inside JSON would cost a copy, a 33 % inflation and a parse on every
 frame of a 10 Hz stream. So each message is::

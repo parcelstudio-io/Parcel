@@ -20,7 +20,7 @@ string fallback. This is the honest "don't silently make it in-loop" lever.
 
 Execution provider (card PG-1, item 3)
 --------------------------------------
-The execution provider is resolved by :mod:`parcel_robot.perception_providers`
+The execution provider is resolved by :mod:`parcel_robot.perception.providers`
 with the same documented fallback order as the detector — ``cuda_fp16 ->
 cpu_int8`` — and logged once at construction. A machine with no
 ``CUDAExecutionProvider`` resolves to ``cpu_int8``: the same artifacts, the same
@@ -45,7 +45,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from parcel_robot.perception_providers import (
+from parcel_robot.perception.providers import (
     PROVIDER_CPU_INT8,
     ProviderResolution,
     assert_provider_honoured,

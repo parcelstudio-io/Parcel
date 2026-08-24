@@ -12,7 +12,7 @@ A real :class:`~parcel_robot.realtime.lane.RealtimeLane` driving the repo's
 scripted ``FakeRealtimeServer`` over a real transport pair, a real
 :class:`~parcel_robot.realtime.tool_broker.RealtimeToolBroker` with the real
 privacy policy inside it, a real
-:class:`~parcel_robot.memory.ConversationMemory` on a scratch file, and the
+:class:`~parcel_robot.memory.conversation.ConversationMemory` on a scratch file, and the
 real :func:`~parcel_robot.realtime.prompting.render_developer_instruction`.
 The only fakes are the socket, the clock and the speaker.
 
@@ -40,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from parcel_robot.memory import FACT_OWNER_STATED, ConversationMemory
+from parcel_robot.memory.conversation import FACT_OWNER_STATED, ConversationMemory
 from parcel_robot.models import ToolResult
 from parcel_robot.owner_model.notes import known_facts_answer, owner_notes_from_facts
 from parcel_robot.owner_model.policy import CONSENT_GRANTED, CONSENT_PENDING
@@ -293,7 +293,7 @@ def test_row2_a_stated_preference_comes_back_unprompted(tmp_path: Path, run: int
     """pass^3. The DISTILLER derives it — nobody called ``remember_fact`` — and
     it is in the next session's developer instruction with nothing asked for."""
 
-    from parcel_robot.memory import FACT_MODEL_PROPOSED
+    from parcel_robot.memory.conversation import FACT_MODEL_PROPOSED
     from parcel_robot.owner_model.distiller import distil_session
 
     store = tmp_path / f"probe_row2_{run}.sqlite3"
@@ -510,7 +510,7 @@ def test_row12_nothing_in_this_file_can_reach_the_owners_store() -> None:
     ``P2A_STATUS.md`` is the outside half of the same claim.
     """
 
-    from parcel_robot.memory_path import MemoryPathRefused, owner_store_paths
+    from parcel_robot.memory.path import MemoryPathRefused, owner_store_paths
 
     with pytest.raises(MemoryPathRefused):
         ConversationMemory(owner_store_paths()[0])
@@ -562,7 +562,7 @@ modules: []
 def wired_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """A real runtime, hosted lane on, text mode, on a scratch store."""
 
-    from parcel_robot.audio_io import AudioDeviceStatus
+    from parcel_robot.audio.devices import AudioDeviceStatus
     from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
     from parcel_robot.models import AgentDecision, VelocityCommand
     from parcel_robot.realtime.config import REALTIME_CONFIG_ENV

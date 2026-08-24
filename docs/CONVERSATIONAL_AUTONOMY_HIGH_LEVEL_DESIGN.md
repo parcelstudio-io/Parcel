@@ -422,7 +422,7 @@ the simulator path; the Unitree HAL and capture tools are parallel foundations.
 
 | Concern | Current owner |
 | --- | --- |
-| Main turn routing and model/tool handling | [`agent.py`](../src/parcel_robot/agent.py) |
+| Main turn routing and model/tool handling | [`voice/agent.py`](../src/parcel_robot/voice/agent.py) |
 | Hosted Realtime transport, admission, tools, evidence and spend | [`realtime/`](../src/parcel_robot/realtime/) |
 | Runtime composition and final dispatch | [`runtime.py`](../src/parcel_robot/runtime.py) |
 | Deterministic intent | [`brain/router.py`](../src/parcel_robot/brain/router.py) |
@@ -440,17 +440,17 @@ the simulator path; the Unitree HAL and capture tools are parallel foundations.
 | Semantic-source selection/shadow comparison | [`perception_source/`](../src/parcel_robot/perception_source/) |
 | Bounded patrol/evaluation driver | [`patrol/`](../src/parcel_robot/patrol/) |
 | Owner appearance gallery and tracking | Committed opt-in [`owner_tracking/`](../src/parcel_robot/owner_tracking/), [`uwb/fusion.py`](../src/parcel_robot/uwb/fusion.py); not runtime-composed |
-| VLM abstention/veto | Committed opt-in [`vlm_veto/`](../src/parcel_robot/vlm_veto/), [`perception_abstention.py`](../src/parcel_robot/perception_abstention.py) |
-| Consent-governed owner model | Committed opt-in [`owner_model/`](../src/parcel_robot/owner_model/), [`memory.py`](../src/parcel_robot/memory.py) |
+| VLM abstention/veto | Committed opt-in [`vlm_veto/`](../src/parcel_robot/vlm_veto/), [`perception/abstention.py`](../src/parcel_robot/perception/abstention.py) |
+| Consent-governed owner model | Committed opt-in [`owner_model/`](../src/parcel_robot/owner_model/), [`memory/conversation.py`](../src/parcel_robot/memory/conversation.py) |
 | Owner follow and search | [`navigation/follow.py`](../src/parcel_robot/navigation/follow.py), [`navigation/search_owner.py`](../src/parcel_robot/navigation/search_owner.py) |
 | Route/place memory | [`route_memory/`](../src/parcel_robot/route_memory/) |
 | Footway/crossing policy | [`maps/`](../src/parcel_robot/maps/) |
 | Command admission and final stop | [`core/arbiter.py`](../src/parcel_robot/core/arbiter.py), [`core/input_health.py`](../src/parcel_robot/core/input_health.py), [`core/hard_stop.py`](../src/parcel_robot/core/hard_stop.py) |
 | Physical control lifecycle | [`control/manager.py`](../src/parcel_robot/control/manager.py) |
 | Authority/envelope derivation | [`authority.py`](../src/parcel_robot/authority.py) |
-| Conversation memories | [`memory.py`](../src/parcel_robot/memory.py), [`tiered_memory.py`](../src/parcel_robot/tiered_memory.py) |
-| Model provider and voice/audio loops | [`providers.py`](../src/parcel_robot/providers.py), [`voice_audio.py`](../src/parcel_robot/voice_audio.py), [`duplex/`](../src/parcel_robot/duplex/) |
-| Voice arming and reaction selection | [`audio_arming.py`](../src/parcel_robot/audio_arming.py), [`voice/reaction_bridge.py`](../src/parcel_robot/voice/reaction_bridge.py) |
+| Conversation memories | [`memory/conversation.py`](../src/parcel_robot/memory/conversation.py), [`memory/tiered.py`](../src/parcel_robot/memory/tiered.py) |
+| Model provider and voice/audio loops | [`providers.py`](../src/parcel_robot/providers.py), [`audio/voice_loop.py`](../src/parcel_robot/audio/voice_loop.py), [`duplex/`](../src/parcel_robot/duplex/) |
+| Voice arming and reaction selection | [`audio/arming.py`](../src/parcel_robot/audio/arming.py), [`voice/reaction_bridge.py`](../src/parcel_robot/voice/reaction_bridge.py) |
 | Capture/replay foundation | [`capture/`](../src/parcel_robot/capture/) |
 
 ARCH-1 measures `RobotRuntime` at about 14,942 class lines/345 methods/269 mutable

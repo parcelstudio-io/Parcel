@@ -26,7 +26,7 @@ from parcel_robot.duplex.config import DuplexConfig
 from parcel_robot.duplex.coordinator import DuplexCoordinator
 from parcel_robot.duplex.fillers import FillerPool
 from parcel_robot.providers import SentenceChunkedSynthesizer
-from parcel_robot.voice_pipeline import DuplexVoiceSession, VoiceStage
+from parcel_robot.voice.pipeline import DuplexVoiceSession, VoiceStage
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_RESULTS_DIR = Path(__file__).resolve().parent / "results"

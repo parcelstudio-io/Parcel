@@ -11,8 +11,8 @@ cannot create a second locomotion authority.
 Primary implementation references are
 [`runtime.py`](../src/parcel_robot/runtime.py),
 [`control/manager.py`](../src/parcel_robot/control/manager.py),
-[`voice_pipeline.py`](../src/parcel_robot/voice_pipeline.py),
-[`voice_audio.py`](../src/parcel_robot/voice_audio.py),
+[`voice/pipeline.py`](../src/parcel_robot/voice/pipeline.py),
+[`audio/voice_loop.py`](../src/parcel_robot/audio/voice_loop.py),
 [`duplex/frames.py`](../src/parcel_robot/duplex/frames.py),
 [`duplex/session_log.py`](../src/parcel_robot/duplex/session_log.py),
 [`context/builder.py`](../src/parcel_robot/context/builder.py), and

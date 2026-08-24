@@ -169,7 +169,7 @@ not true on this machine.** PyPI serves `0.0.1` as a 1.2 kB placeholder whose
 `CMakeDetermineCCompiler` because there is no C compiler here.
 
 Rather than leave the rung empty or ship a stub, `AecStage` in
-`voice_audio.py` is a real normalized-LMS adaptive canceller: deterministic,
+`audio/voice_loop.py` is a real normalized-LMS adaptive canceller: deterministic,
 numpy-only, unit-tested, and sitting exactly where an AEC3 backend would later
 plug in. Off by default — with `aec=None` the frame path is byte-identical,
 and a test asserts that by spying on every frame reaching the VAD.
@@ -206,8 +206,8 @@ What **is** landed — the measurement surfaces, in files this lane owns:
 | clock | where | field |
 |---|---|---|
 | STT request start / final | `providers.py` `WhisperCppProvider` | `last_metrics` = `{request_start_monotonic, final_monotonic, duration_s, audio_s, real_time_factor, status}` |
-| capture speech-end + semantic commit | `voice_audio.py` `MicrophoneVoiceLoop` | `last_turn_clocks` = `{speech_end_monotonic, semantic_commit_monotonic, endpoint_decision_s, utterance_s}` |
-| speaker first sample | `voice_audio.py` `SpeakerSink` | `first_chunk_started_monotonic`, `last_chunk_started_monotonic` |
+| capture speech-end + semantic commit | `audio/voice_loop.py` `MicrophoneVoiceLoop` | `last_turn_clocks` = `{speech_end_monotonic, semantic_commit_monotonic, endpoint_decision_s, utterance_s}` |
+| speaker first sample | `audio/voice_loop.py` `SpeakerSink` | `first_chunk_started_monotonic`, `last_chunk_started_monotonic` |
 
 All three mirror `LlamaCppProvider.last_metrics` in shape and are plain data —
 nothing reaches into the tracker, so these files stay dependency free.

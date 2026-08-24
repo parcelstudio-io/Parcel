@@ -77,11 +77,11 @@ def scanned_files() -> list[pathlib.Path]:
     candidates += [
         PACKAGE_ROOT / "geometry.py",
         PACKAGE_ROOT / "robot_profile.py",
-        PACKAGE_ROOT / "headless_city.py",
-        PACKAGE_ROOT / "mujoco_lidar.py",
+        PACKAGE_ROOT / "simulation" / "headless_city.py",
+        PACKAGE_ROOT / "simulation" / "mujoco_lidar.py",
         PACKAGE_ROOT / "sim.py",
         PACKAGE_ROOT / "instructnav" / "scoring.py",
-        PACKAGE_ROOT / "city_semantics.py",
+        PACKAGE_ROOT / "perception" / "city_semantics.py",
     ]
     keep = []
     for path in candidates:
@@ -123,6 +123,13 @@ def literal_lines(path: pathlib.Path, value: float) -> list[int]:
 #: quantities that happen to share the literal 0.35.
 ALLOWLIST: dict[tuple[str, float], tuple[int, str, str, str]] = {
     # --- Lane A owns these; the residue is deliberate ----------------------
+    # --- AWARE-1 (scrum/20260823/task_4) owns this one; a yaw RATE ------------
+    ("navigation/awareness_sweep.py", 0.35): (
+        1,
+        "not-a-radius",
+        "AWARE-1",
+        "sweep_vyaw default in rad/s — the idle head-turn yaw rate, not a body radius",
+    ),
     ("navigation/approach.py", 0.35): (
         1,
         "not-a-radius",
@@ -135,7 +142,7 @@ ALLOWLIST: dict[tuple[str, float], tuple[int, str, str, str]] = {
         "Lane A",
         "CollisionPolicy.slow_scale is dimensionless",
     ),
-    ("headless_city.py", 1.2): (
+    ("simulation/headless_city.py", 1.2): (
         1,
         "F-proximity",
         "Lane A (deferred)",
@@ -241,13 +248,13 @@ ALLOWLIST: dict[tuple[str, float], tuple[int, str, str, str]] = {
         "unassigned",
         "semantic-search yaw rate, not a body radius",
     ),
-    ("city_semantics.py", 0.32): (
+    ("perception/city_semantics.py", 0.32): (
         2,
         "F-robot-radius",
         "Lane C (vocabulary/sidecar)",
         "scene-metadata stamps; should read the profile once the sidecar lands",
     ),
-    ("city_semantics.py", 1.25): (
+    ("perception/city_semantics.py", 1.25): (
         1,
         "F-proximity",
         "Lane C (vocabulary/sidecar)",
@@ -446,7 +453,7 @@ def test_the_migrated_files_carry_zero_family_literals() -> None:
     measured = measured_counts()
     for relative in (
         "instructnav/scoring.py",
-        "mujoco_lidar.py",
+        "simulation/mujoco_lidar.py",
         "geometry.py",
         "sim.py",
         "navigation/proxemic_approach.py",

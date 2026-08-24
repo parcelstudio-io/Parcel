@@ -16,7 +16,7 @@ from evals.companion.run_embodied_plan_v1 import (
     run_suite,
     write_report,
 )
-from parcel_robot.headless_city import HeadlessCityQualityHarness, HeadlessCityWorld
+from parcel_robot.simulation.headless_city import HeadlessCityQualityHarness, HeadlessCityWorld
 
 
 @pytest.fixture(scope="module")

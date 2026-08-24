@@ -5,10 +5,10 @@ from pathlib import Path
 import mujoco
 import pytest
 
-from parcel_robot.gait import ScriptedTrotGait
 from parcel_robot.models import Pose, VelocityCommand
-from parcel_robot.sim_control import PoseController, bind_actuators
-from parcel_robot.sim_ipc import (
+from parcel_robot.motion.gait import ScriptedTrotGait
+from parcel_robot.simulation.control import PoseController, bind_actuators
+from parcel_robot.simulation.ipc import (
     PoseSocketServer,
     message_to_pose,
     message_to_velocity,
@@ -173,7 +173,7 @@ def test_socket_publish_and_poll(tmp_path):
 def test_expression_message_round_trip_and_validation() -> None:
     """Card A1: the expressive overlay is a validated transport message."""
 
-    from parcel_robot.sim_ipc import (
+    from parcel_robot.simulation.ipc import (
         MAX_EXPRESSION_OFFSET_RAD,
         expression_to_message,
         message_to_expression,

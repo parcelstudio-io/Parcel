@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .sim_ipc import DEFAULT_SOCKET
+from .simulation.ipc import DEFAULT_SOCKET
 from .skills.api import Dog
 
 REPO_ROOT = Path(__file__).resolve().parents[2]

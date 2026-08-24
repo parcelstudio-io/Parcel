@@ -41,10 +41,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from parcel_robot import memory_path
-from parcel_robot.conversation_store import SqliteConversationStore
-from parcel_robot.memory import PROVENANCE_COLUMNS, ConversationMemory
-from parcel_robot.memory_path import (
+from parcel_robot.memory import path as memory_path
+from parcel_robot.memory.conversation import PROVENANCE_COLUMNS, ConversationMemory
+from parcel_robot.memory.path import (
     ENV_PATH,
     ENV_PURPOSE,
     PURPOSE_OWNER,
@@ -59,6 +58,7 @@ from parcel_robot.memory_path import (
     resolve_memory_path,
     writer_class,
 )
+from parcel_robot.memory.store import SqliteConversationStore
 
 REPO = Path(__file__).resolve().parents[1]
 OWNER_STORE = REPO / "parcel_memory.sqlite3"
@@ -276,7 +276,7 @@ def test_the_library_never_declares_itself_the_owner() -> None:
         path.relative_to(REPO).as_posix()
         for path in (REPO / "src").rglob("*.py")
         if "__pycache__" not in path.parts
-        and path.name != "memory_path.py"
+        and path.relative_to(REPO).as_posix() != "src/parcel_robot/memory/path.py"
         and re.search(
             rf"(environ\[[\"']{ENV_PURPOSE}|setenv\([\"']{ENV_PURPOSE}|putenv\([\"']{ENV_PURPOSE})",
             path.read_text(encoding="utf-8", errors="ignore"),
@@ -445,7 +445,7 @@ def test_the_writer_label_does_not_call_an_undeclared_process_a_test(
 _NAME_ALLOWLIST = {
     # The resolver is the one module that must know the name, because knowing it
     # is its job (`OWNER_STORE_NAME`).
-    "src/parcel_robot/memory_path.py",
+    "src/parcel_robot/memory/path.py",
     "tests/test_owner_store_isolation.py",
     "tools/quarantine_synthetic_memory.py",
 }

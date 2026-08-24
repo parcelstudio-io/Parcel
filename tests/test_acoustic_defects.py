@@ -21,14 +21,14 @@ from typing import Self
 import numpy as np
 import pytest
 
-from parcel_robot.observability import STAGES, LatencyTracker
-from parcel_robot.voice_audio import (
+from parcel_robot.audio.voice_loop import (
     FRAME_SAMPLES,
     EnergyVad,
     MicrophoneVoiceLoop,
     SpeakerSink,
     pcm16_wav,
 )
+from parcel_robot.observability import STAGES, LatencyTracker
 
 
 # --------------------------------------------------------------------- N16
@@ -296,11 +296,11 @@ def test_n19_runtime_fans_in_acoustic_clocks_on_duplex_voice_path(
     ``_audio_chunk_started`` exactly as DuplexVoiceSession does.
     """
 
-    from parcel_robot.audio_io import AudioDeviceStatus
+    from parcel_robot.audio.devices import AudioDeviceStatus
     from parcel_robot.backends.base import OwnerTrack, RobotPose, SimObservation
     from parcel_robot.providers import SpeechStack
     from parcel_robot.runtime import RobotRuntime
-    from parcel_robot.voice_pipeline import VoiceStage
+    from parcel_robot.voice.pipeline import VoiceStage
     from tests.test_runtime import FakeSimulatorBackend
 
     repo = Path(__file__).resolve().parents[1]

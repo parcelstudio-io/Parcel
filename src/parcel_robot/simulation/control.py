@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import mujoco
 import numpy as np
 
-from .models import Pose
+from ..models import Pose
 
 
 @dataclass

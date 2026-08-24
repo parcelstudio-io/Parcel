@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from parcel_robot.endpointing import SileroVad, TurnEndpointer
+from parcel_robot.audio.endpointing import SileroVad, TurnEndpointer
 
 
 def _audio_tail(samples: int = 16_000) -> np.ndarray:

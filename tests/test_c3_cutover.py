@@ -47,7 +47,7 @@ from parcel_robot.navigation.semantic_map import (
     learned_map_candidates,
     semantic_candidates_from_observation,
 )
-from parcel_robot.perception_abstention import ABSTENTION_REASONS
+from parcel_robot.perception.abstention import ABSTENTION_REASONS
 from parcel_robot.perception_source.selection import (
     REGISTERED_SOURCES,
     SOURCE_LEARNED_MAP,
@@ -491,7 +491,7 @@ def test_evidence_confidence_is_never_a_constant_and_never_reaches_one() -> None
 def test_evidence_confidence_agrees_with_the_abstention_gates_frame_count() -> None:
     """Two modules that mean 'enough observations' must not drift apart."""
 
-    from parcel_robot.perception_abstention import MIN_EVIDENCE_FRAMES
+    from parcel_robot.perception.abstention import MIN_EVIDENCE_FRAMES
 
     assert EVIDENCE_SATURATION_FRAMES == float(MIN_EVIDENCE_FRAMES)
 
@@ -975,7 +975,7 @@ def test_scene_report_keys_match_across_both_arms_and_both_sources() -> None:
 
 
 def test_the_evidence_hedge_bands_agree_with_the_abstention_gate() -> None:
-    from parcel_robot.perception_abstention import MIN_EVIDENCE_FRAMES
+    from parcel_robot.perception.abstention import MIN_EVIDENCE_FRAMES
     from parcel_robot.runtime import SCENE_EVIDENCE_PHRASES, scene_evidence_phrase
 
     assert SCENE_EVIDENCE_PHRASES[-1][0] == MIN_EVIDENCE_FRAMES
@@ -1089,7 +1089,7 @@ def test_E2_the_abstention_gate_is_consumed_never_forked() -> None:
     semantic_map = (REPO / "src/parcel_robot/navigation/semantic_map.py").read_text(
         encoding="utf-8"
     )
-    assert "from parcel_robot.perception_abstention import" in semantic_map
+    assert "from parcel_robot.perception.abstention import" in semantic_map
     assert "assess_place_query" in semantic_map
 
 

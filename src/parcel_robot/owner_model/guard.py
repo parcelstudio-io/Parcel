@@ -64,7 +64,7 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 
-from ..memory_path import WRITER_OWNER_STACK
+from ..memory.path import WRITER_OWNER_STACK
 
 #: The ids R27 measured. Inclusive both ends.
 SYNTHETIC_ID_RANGE: tuple[int, int] = (2883, 3138)
@@ -98,7 +98,7 @@ class SyntheticRowsUnquarantined(RuntimeError):
     """This store still holds executor-written rows; nothing may be distilled.
 
     ``RuntimeError`` for the same reason
-    :class:`~parcel_robot.memory_path.MemoryPathRefused` is one: several call
+    :class:`~parcel_robot.memory.path.MemoryPathRefused` is one: several call
     sites catch ``ValueError`` broadly to keep a turn alive, and this refusal
     must not be swallowed by a never-break-a-turn guard. A distillation pass is
     a background write, not a turn; stopping it costs nothing and letting it
