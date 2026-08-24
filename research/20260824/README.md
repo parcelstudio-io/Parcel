@@ -34,6 +34,32 @@ a known place, remember) with no link at all. Everything else moves to
 | H7 | `../20260823/localization-delegation-bench/` | executor died after RESULTS; L1–L8 (L5 missed) | **core** — the MAP-role contract for the LIO on the body | verdict from RESULTS + tests; NEES miss = covariance must be calibrated before health thresholds trust it |
 | H8 | `../20260823/search-before-refuse/` | DESIGN only; executor died at start | **core** (owner's ask 2) | dispatch first when executors return |
 
+## RE-SCOPE 2026-08-24 (owner + RTP-1 review — supersedes the table below where they conflict)
+Owner's strategy: fastest path to an advanced CONNECTED conversational
+companion with autonomous navigation; the offline fallback is ONLY a canned
+line ("Sorry — I'm offline; all I can do is follow you until we're
+connected") plus follow-with-obstacle-avoidance and spoken/panel STOP.
+Early-exit every study at its decision. Sol's RTP-1 card
+(`scrum/20260824/task_1/`) reviewed: ACCEPT_WITH_REQUIRED_CHANGES
+(`CLAUDE_REVIEW.md`). Consequences here:
+- **H9 grammar + 8B-normalizer offline arms: DROPPED** (the floor no longer
+  needs compound planning offline). The folder's remaining question is the
+  **CONNECTED-PLANNER**: a hosted structured-output PlanSketch through an
+  explicit provider adapter, compiled/validated locally; corpus reused;
+  parcel-6c authors an independent adversarial intent-gate set (C7).
+- **H2: CLOSED** (VERDICT in its folder): deterministic drives own the tick,
+  LLM phrases, hosted converses/compiles. No more model comparisons.
+- **New top card: NAV-CORE** — non-oracle known-place navigation topology
+  decision (pre-registration in CLAUDE_REVIEW §NAV-CORE).
+- **New: VOICE-GATE** — through-air activation policy on the real XVF3800
+  (owner voice vs other person vs TV vs robot TTS; false opens/h, spoken-stop
+  recall, self-speech immunity) — decides owner-voice gating / wake phrase /
+  push-to-talk (C9).
+- **H8**: one tiny seam probe after NAV-CORE; full exploration deferred.
+- **H10**: vendor-confirmation letters only.
+- Artifact hygiene (C14): `research/**/logs/` untracked from here on;
+  canonical files = DESIGN / RESULTS / VERDICT + one compact results JSON.
+
 ## New items
 | # | folder | question | output |
 |---|---|---|---|

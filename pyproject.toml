@@ -155,6 +155,30 @@ voice = [
   "sounddevice>=0.5,<1",
   "websockets>=17,<18",
 ]
+# Research H7 (research/20260823/localization-delegation-bench): the delegated
+# MAP-role localizer behind `src/parcel_robot/localization/`.
+#
+#   .parcel/bin/pip install -e '.[localization]'
+#
+# NOT `kiss-icp`, which the H7 design named, and not `open3d`, its first
+# fallback. Measured on this host 2026-08-23 (CPython 3.14.4):
+#   * `pip install kiss-icp`   -> only the 1.3.0 sdist exists (no cp314 wheel)
+#     and its build fails at the requirements step: "ERROR: Use cmake.version
+#     instead of cmake.minimum-version with scikit-build-core >= 0.8".
+#   * `pip install open3d`     -> "Could not find a version that satisfies the
+#     requirement open3d (from versions: none)" on cp314.
+#   * `pip install small-gicp`  -> 1.0.1, cp314 wheel, imports and runs.
+# `small-gicp` is the same class of dependency KISS-ICP is (a C++ registration
+# library: voxel downsampling, KdTree correspondences, ICP / point-to-plane /
+# GICP / VGICP) with no ROS, no PCL and no torch, so the "delegate metric
+# localization, do not own a filter" property this repo is testing survives the
+# substitution. Nothing in `src/parcel_robot` imports it outside the
+# `localization/` package, and nothing in the runtime imports that package, so
+# the extra being absent changes no product behaviour — it only skips
+# `tests/test_h7_localization_contract.py`.
+localization = [
+  "small-gicp>=1.0,<2",
+]
 
 [project.scripts]
 parcel-agent = "parcel_robot.cli:main"

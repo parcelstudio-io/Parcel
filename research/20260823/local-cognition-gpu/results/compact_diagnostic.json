@@ -1,0 +1,2011 @@
+{
+ "gpu": [
+  {
+   "at_utc": "2026-08-24T05:03:26+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 307
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 3458
+    }
+   ],
+   "device": {
+    "memory_free_mib": 5725,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 26503,
+    "temperature_c": 78,
+    "utilization_pct": 89
+   },
+   "label": "compact:start"
+  },
+  {
+   "at_utc": "2026-08-24T05:04:17+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 307
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 3458
+    }
+   ],
+   "device": {
+    "memory_free_mib": 5725,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 26504,
+    "temperature_c": 83,
+    "utilization_pct": 96
+   },
+   "label": "compact:end"
+  }
+ ],
+ "kinds": {
+  "ignore": 57,
+  "look": 63
+ },
+ "model": "ministral-8b",
+ "note": "DIAGNOSTIC \u2014 not a pre-registered row; G1/G2 stand as measured",
+ "raw": [
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "curiosity 0.25 too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-01",
+   "error": "",
+   "output_tokens": 41,
+   "parsed": true,
+   "total_ms": 485.03921799419913,
+   "ttft_ms": 59.169543004827574
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-02",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 405.33154900185764,
+   "ttft_ms": 70.21652899857145
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "voice_lane_busy",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-03",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 432.44789900199976,
+   "ttft_ms": 71.54327600437682
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "quiet_hours",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-04",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 414.88749800191727,
+   "ttft_ms": 71.61770900711417
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-05",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 447.2369879949838,
+   "ttft_ms": 77.70107399846893
+  },
+  {
+   "decision": {
+    "confidence": 0.8,
+    "kind": "look",
+    "reason": "new backpack",
+    "schema_version": 1,
+    "target": "-30",
+    "text": ""
+   },
+   "digest_id": "ign-06",
+   "error": "",
+   "output_tokens": 31,
+   "parsed": true,
+   "total_ms": 381.87899100012146,
+   "ttft_ms": 65.54177500947844
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-07",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 406.77884899196215,
+   "ttft_ms": 72.75913600460626
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "battery=6%",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-08",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 417.2964030003641,
+   "ttft_ms": 71.75406500755344
+  },
+  {
+   "decision": {
+    "confidence": 0.35,
+    "kind": "look",
+    "reason": "novelty",
+    "schema_version": 1,
+    "target": "15",
+    "text": ""
+   },
+   "digest_id": "ign-09",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 402.6005859923316,
+   "ttft_ms": 72.45330300065689
+  },
+  {
+   "decision": {
+    "confidence": 0.85,
+    "kind": "look",
+    "reason": "planter_1",
+    "schema_version": 1,
+    "target": "-50",
+    "text": ""
+   },
+   "digest_id": "ign-10",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 424.8684609920019,
+   "ttft_ms": 73.13297200016677
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "recently-looked",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-11",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 436.3546509994194,
+   "ttft_ms": 68.56984600017313
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-12",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 452.92732800589874,
+   "ttft_ms": 78.89646200055722
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-13",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 393.441056003212,
+   "ttft_ms": 69.78607700148132
+  },
+  {
+   "decision": {
+    "confidence": 0.85,
+    "kind": "look",
+    "reason": "book moved",
+    "schema_version": 1,
+    "target": "25",
+    "text": ""
+   },
+   "digest_id": "ign-14",
+   "error": "",
+   "output_tokens": 31,
+   "parsed": true,
+   "total_ms": 402.9870310041588,
+   "ttft_ms": 76.92817400675267
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "rest_drive_high",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-15",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 425.52315100328997,
+   "ttft_ms": 66.96572901273612
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "quiet_hours",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-16",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 418.06527599692345,
+   "ttft_ms": 72.79327699507121
+  },
+  {
+   "decision": {
+    "confidence": 0.75,
+    "kind": "look",
+    "reason": "bag left @ -20deg",
+    "schema_version": 1,
+    "target": "-20",
+    "text": ""
+   },
+   "digest_id": "ign-17",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 456.50890699471347,
+   "ttft_ms": 72.14261298940983
+  },
+  {
+   "decision": {
+    "confidence": 0.66,
+    "kind": "look",
+    "reason": "light on hallway",
+    "schema_version": 1,
+    "target": "75",
+    "text": ""
+   },
+   "digest_id": "ign-18",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 400.40544400108047,
+   "ttft_ms": 67.91230100498069
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "voice_lane_busy",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-19",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 442.82142601150554,
+   "ttft_ms": 72.8123060107464
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner_speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-20",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 417.3179759964114,
+   "ttft_ms": 72.01292600075249
+  },
+  {
+   "decision": {
+    "confidence": 0.82,
+    "kind": "look",
+    "reason": "owner@+0deg",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "ign-21",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 418.7322459911229,
+   "ttft_ms": 72.53124099224806
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "look",
+    "reason": "lamp_post_1",
+    "schema_version": 1,
+    "target": "-15",
+    "text": ""
+   },
+   "digest_id": "ign-22",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 420.4382969910512,
+   "ttft_ms": 72.92604800022673
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "quiet_hours",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-23",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 417.1989949973067,
+   "ttft_ms": 71.45908800885081
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "curtain age 5.0s",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-24",
+   "error": "",
+   "output_tokens": 39,
+   "parsed": true,
+   "total_ms": 482.9013840062544,
+   "ttft_ms": 73.89266100653913
+  },
+  {
+   "decision": {
+    "confidence": 0.85,
+    "kind": "look",
+    "reason": "something moved by door",
+    "schema_version": 1,
+    "target": "65",
+    "text": ""
+   },
+   "digest_id": "look-01",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 406.54330200050026,
+   "ttft_ms": 64.08499099779874
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "voice_lane_busy",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-02",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 446.13863600534387,
+   "ttft_ms": 70.60829100373667
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-03",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 393.02901198971085,
+   "ttft_ms": 71.58307598729152
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "quiet_hours",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-04",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 422.12219499924686,
+   "ttft_ms": 77.56517799862195
+  },
+  {
+   "decision": {
+    "confidence": 0.78,
+    "kind": "look",
+    "reason": "motion at edge",
+    "schema_version": 1,
+    "target": "-140",
+    "text": ""
+   },
+   "digest_id": "look-05",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 422.4428809975507,
+   "ttft_ms": 77.89456700265873
+  },
+  {
+   "decision": {
+    "confidence": 0.78,
+    "kind": "look",
+    "reason": "squirrel on tree_1",
+    "schema_version": 1,
+    "target": "-45",
+    "text": ""
+   },
+   "digest_id": "look-06",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 459.0671579935588,
+   "ttft_ms": 71.44007900205906
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "look",
+    "reason": "novelty 0.82",
+    "schema_version": 1,
+    "target": "-25",
+    "text": ""
+   },
+   "digest_id": "look-07",
+   "error": "",
+   "output_tokens": 38,
+   "parsed": true,
+   "total_ms": 472.3708589881426,
+   "ttft_ms": 78.21810599125456
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-08",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 402.12747000623494,
+   "ttft_ms": 69.69473900971934
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "emergency-stopped",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-09",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 443.9416009990964,
+   "ttft_ms": 71.25838499632664
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-10",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 427.96378399361856,
+   "ttft_ms": 70.87274099467322
+  },
+  {
+   "decision": {
+    "confidence": 0.81,
+    "kind": "look",
+    "reason": "second bag appeared",
+    "schema_version": 1,
+    "target": "-55",
+    "text": ""
+   },
+   "digest_id": "look-11",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 416.2932650069706,
+   "ttft_ms": 72.82518601277843
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "curiosity 0.25 too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-12",
+   "error": "",
+   "output_tokens": 40,
+   "parsed": true,
+   "total_ms": 484.05947600258514,
+   "ttft_ms": 71.73033899744041
+  },
+  {
+   "decision": {
+    "confidence": 0.86,
+    "kind": "look",
+    "reason": "new backpack",
+    "schema_version": 1,
+    "target": "-30",
+    "text": ""
+   },
+   "digest_id": "rem-01",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 408.87288699741475,
+   "ttft_ms": 76.48684599553235
+  },
+  {
+   "decision": {
+    "confidence": 0.72,
+    "kind": "look",
+    "reason": "bench_1",
+    "schema_version": 1,
+    "target": "20",
+    "text": ""
+   },
+   "digest_id": "rem-02",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 402.3592909943545,
+   "ttft_ms": 77.43735499389004
+  },
+  {
+   "decision": {
+    "confidence": 0.68,
+    "kind": "look",
+    "reason": "table cleared",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "rem-03",
+   "error": "",
+   "output_tokens": 30,
+   "parsed": true,
+   "total_ms": 378.00024199532345,
+   "ttft_ms": 69.27634599560406
+  },
+  {
+   "decision": {
+    "confidence": 0.7,
+    "kind": "look",
+    "reason": "owner is back",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "rem-04",
+   "error": "",
+   "output_tokens": 30,
+   "parsed": true,
+   "total_ms": 386.09877599810716,
+   "ttft_ms": 73.53710298775695
+  },
+  {
+   "decision": {
+    "confidence": 0.83,
+    "kind": "look",
+    "reason": "dog on sidewalk",
+    "schema_version": 1,
+    "target": "-60",
+    "text": ""
+   },
+   "digest_id": "rem-05",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 408.0157699936535,
+   "ttft_ms": 76.52222999604419
+  },
+  {
+   "decision": {
+    "confidence": 0.55,
+    "kind": "look",
+    "reason": "sunlight moved",
+    "schema_version": 1,
+    "target": "30",
+    "text": ""
+   },
+   "digest_id": "rem-06",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 407.81834100198466,
+   "ttft_ms": 76.6267080034595
+  },
+  {
+   "decision": {
+    "confidence": 0.88,
+    "kind": "look",
+    "reason": "keys under couch",
+    "schema_version": 1,
+    "target": "-40",
+    "text": ""
+   },
+   "digest_id": "rem-07",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 404.9600169964833,
+   "ttft_ms": 67.38974100153428
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "look",
+    "reason": "planter_1 blocking",
+    "schema_version": 1,
+    "target": "5",
+    "text": ""
+   },
+   "digest_id": "rem-08",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 404.24584499851335,
+   "ttft_ms": 74.15120200312231
+  },
+  {
+   "decision": {
+    "confidence": 0.5,
+    "kind": "look",
+    "reason": "my charger",
+    "schema_version": 1,
+    "target": "70",
+    "text": ""
+   },
+   "digest_id": "rem-09",
+   "error": "",
+   "output_tokens": 30,
+   "parsed": true,
+   "total_ms": 385.01692899444606,
+   "ttft_ms": 78.23248699423857
+  },
+  {
+   "decision": {
+    "confidence": 0.89,
+    "kind": "look",
+    "reason": "parcel by front door",
+    "schema_version": 1,
+    "target": "85",
+    "text": ""
+   },
+   "digest_id": "rem-10",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 415.09618300187867,
+   "ttft_ms": 70.97520600655116
+  },
+  {
+   "decision": {
+    "confidence": 0.75,
+    "kind": "look",
+    "reason": "it started raining",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "rem-11",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 412.09023499686737,
+   "ttft_ms": 72.04205100424588
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "rem-12",
+   "error": "",
+   "output_tokens": 36,
+   "parsed": true,
+   "total_ms": 453.25567499094177,
+   "ttft_ms": 77.68515999487136
+  },
+  {
+   "decision": {
+    "confidence": 0.87,
+    "kind": "look",
+    "reason": "unrecognised bag",
+    "schema_version": 1,
+    "target": "-35",
+    "text": ""
+   },
+   "digest_id": "ask-01",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 423.786484010634,
+   "ttft_ms": 69.7505730058765
+  },
+  {
+   "decision": {
+    "confidence": 0.78,
+    "kind": "look",
+    "reason": "novelty 0.80",
+    "schema_version": 1,
+    "target": "15",
+    "text": ""
+   },
+   "digest_id": "ask-02",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 463.37263300665654,
+   "ttft_ms": 77.05535599961877
+  },
+  {
+   "decision": {
+    "confidence": 0.66,
+    "kind": "look",
+    "reason": "leash by door",
+    "schema_version": 1,
+    "target": "25",
+    "text": ""
+   },
+   "digest_id": "ask-03",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 410.99730199493933,
+   "ttft_ms": 74.53578399145044
+  },
+  {
+   "decision": {
+    "confidence": 0.58,
+    "kind": "look",
+    "reason": "two benches",
+    "schema_version": 1,
+    "target": "30",
+    "text": ""
+   },
+   "digest_id": "ask-04",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 411.26672900281847,
+   "ttft_ms": 78.00308000878431
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "look",
+    "reason": "person not met",
+    "schema_version": 1,
+    "target": "-20",
+    "text": ""
+   },
+   "digest_id": "ask-05",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 398.97192500939127,
+   "ttft_ms": 78.02162900043186
+  },
+  {
+   "decision": {
+    "confidence": 0.62,
+    "kind": "look",
+    "reason": "we usually walk by",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "ask-06",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 406.2166479998268,
+   "ttft_ms": 69.4021259987494
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "repeated noise",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "chk-01",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 449.6123620047001,
+   "ttft_ms": 94.02507399499882
+  },
+  {
+   "decision": {
+    "confidence": 0.84,
+    "kind": "look",
+    "reason": "front door ajar",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "chk-02",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 399.4711409904994,
+   "ttft_ms": 69.68461399083026
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "recently-looked",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "chk-03",
+   "error": "",
+   "output_tokens": 36,
+   "parsed": true,
+   "total_ms": 458.22025700181257,
+   "ttft_ms": 73.42814799631014
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "recently-looked-at",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "chk-04",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 457.5296620023437,
+   "ttft_ms": 74.36520600458607
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "recently-looked-at",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "chk-05",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 463.35506699688267,
+   "ttft_ms": 72.31011599651538
+  },
+  {
+   "decision": {
+    "confidence": 0.83,
+    "kind": "look",
+    "reason": "water on floor",
+    "schema_version": 1,
+    "target": "60",
+    "text": ""
+   },
+   "digest_id": "chk-06",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 394.5844859990757,
+   "ttft_ms": 73.755813005846
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-01",
+   "error": "",
+   "output_tokens": 36,
+   "parsed": true,
+   "total_ms": 457.98019399808254,
+   "ttft_ms": 72.0875990082277
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-02",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 399.1153820097679,
+   "ttft_ms": 71.4948430104414
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "voice_lane_busy",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-03",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 436.16241100244224,
+   "ttft_ms": 67.63990000763442
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "quiet_hours",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-04",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 420.157731990912,
+   "ttft_ms": 72.52356900426093
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-05",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 435.27170199376997,
+   "ttft_ms": 74.5040159963537
+  },
+  {
+   "decision": {
+    "confidence": 0.8,
+    "kind": "look",
+    "reason": "new backpack",
+    "schema_version": 1,
+    "target": "-30",
+    "text": ""
+   },
+   "digest_id": "ign-06",
+   "error": "",
+   "output_tokens": 31,
+   "parsed": true,
+   "total_ms": 390.85904900275636,
+   "ttft_ms": 69.42728400463238
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-07",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 395.56208600697573,
+   "ttft_ms": 73.53014200634789
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "battery=6%",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-08",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 428.09505300829187,
+   "ttft_ms": 72.16068101115525
+  },
+  {
+   "decision": {
+    "confidence": 0.35,
+    "kind": "look",
+    "reason": "mug on table",
+    "schema_version": 1,
+    "target": "15",
+    "text": ""
+   },
+   "digest_id": "ign-09",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 414.14044798875693,
+   "ttft_ms": 72.80388299841434
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "rest_drive_high",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-10",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 435.2675459958846,
+   "ttft_ms": 70.24702499620616
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "recently-looked",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-11",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 447.47013101004995,
+   "ttft_ms": 72.15497200377285
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-12",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 436.6291569895111,
+   "ttft_ms": 76.41245400009211
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-13",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 410.0626270083012,
+   "ttft_ms": 71.86994999938179
+  },
+  {
+   "decision": {
+    "confidence": 0.85,
+    "kind": "look",
+    "reason": "book moved",
+    "schema_version": 1,
+    "target": "25",
+    "text": ""
+   },
+   "digest_id": "ign-14",
+   "error": "",
+   "output_tokens": 31,
+   "parsed": true,
+   "total_ms": 389.27932899969164,
+   "ttft_ms": 77.68623100128025
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "rest_drive_high",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-15",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 434.88508800510317,
+   "ttft_ms": 65.48870500409976
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "quiet_hours",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-16",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 414.33987898926716,
+   "ttft_ms": 72.81074399361387
+  },
+  {
+   "decision": {
+    "confidence": 0.75,
+    "kind": "look",
+    "reason": "bag left @ -20deg",
+    "schema_version": 1,
+    "target": "-20",
+    "text": ""
+   },
+   "digest_id": "ign-17",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 453.48676400317345,
+   "ttft_ms": 69.57775200135075
+  },
+  {
+   "decision": {
+    "confidence": 0.66,
+    "kind": "look",
+    "reason": "light on hallway",
+    "schema_version": 1,
+    "target": "75",
+    "text": ""
+   },
+   "digest_id": "ign-18",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 405.43700799753424,
+   "ttft_ms": 72.00641599774826
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "voice_lane_busy",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-19",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 432.26760700054,
+   "ttft_ms": 72.34443799825385
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner_speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-20",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 435.141135007143,
+   "ttft_ms": 72.70433301164303
+  },
+  {
+   "decision": {
+    "confidence": 0.82,
+    "kind": "look",
+    "reason": "owner@+0deg",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "ign-21",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 408.39301100641023,
+   "ttft_ms": 72.3508580122143
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "look",
+    "reason": "lamp_post_1",
+    "schema_version": 1,
+    "target": "-15",
+    "text": ""
+   },
+   "digest_id": "ign-22",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 425.06142299680505,
+   "ttft_ms": 70.87022800988052
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "quiet_hours",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-23",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 416.29090199421626,
+   "ttft_ms": 72.67700099328067
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "curtain age 5.0s",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "ign-24",
+   "error": "",
+   "output_tokens": 39,
+   "parsed": true,
+   "total_ms": 478.6081269994611,
+   "ttft_ms": 70.01280000258703
+  },
+  {
+   "decision": {
+    "confidence": 0.85,
+    "kind": "look",
+    "reason": "something moved by door",
+    "schema_version": 1,
+    "target": "65",
+    "text": ""
+   },
+   "digest_id": "look-01",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 415.2362659951905,
+   "ttft_ms": 68.23395899846219
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "voice_lane_busy",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-02",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 429.6384479966946,
+   "ttft_ms": 72.16971299203578
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-03",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 412.0687230024487,
+   "ttft_ms": 73.70420600636862
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "quiet_hours",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-04",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 417.2581050079316,
+   "ttft_ms": 78.95264800754376
+  },
+  {
+   "decision": {
+    "confidence": 0.78,
+    "kind": "look",
+    "reason": "motion at edge",
+    "schema_version": 1,
+    "target": "-140",
+    "text": ""
+   },
+   "digest_id": "look-05",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 436.14058700040914,
+   "ttft_ms": 76.47113299753983
+  },
+  {
+   "decision": {
+    "confidence": 0.78,
+    "kind": "look",
+    "reason": "squirrel on tree_1",
+    "schema_version": 1,
+    "target": "-45",
+    "text": ""
+   },
+   "digest_id": "look-06",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 464.89636899787,
+   "ttft_ms": 73.91171000199392
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "look",
+    "reason": "novelty 0.82",
+    "schema_version": 1,
+    "target": "-25",
+    "text": ""
+   },
+   "digest_id": "look-07",
+   "error": "",
+   "output_tokens": 38,
+   "parsed": true,
+   "total_ms": 474.82068599492777,
+   "ttft_ms": 74.46653999795672
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "owner speaking",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-08",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 406.7774860013742,
+   "ttft_ms": 72.37023700145073
+  },
+  {
+   "decision": {
+    "confidence": 1.0,
+    "kind": "ignore",
+    "reason": "emergency-stopped",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-09",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 432.23178198968526,
+   "ttft_ms": 70.16759399266448
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-10",
+   "error": "",
+   "output_tokens": 35,
+   "parsed": true,
+   "total_ms": 445.85314398864284,
+   "ttft_ms": 73.04075198771898
+  },
+  {
+   "decision": {
+    "confidence": 0.81,
+    "kind": "look",
+    "reason": "second bag appeared",
+    "schema_version": 1,
+    "target": "-55",
+    "text": ""
+   },
+   "digest_id": "look-11",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 405.11762398818973,
+   "ttft_ms": 72.89299799595028
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "curiosity 0.25 too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "look-12",
+   "error": "",
+   "output_tokens": 40,
+   "parsed": true,
+   "total_ms": 504.4973409967497,
+   "ttft_ms": 72.4751359957736
+  },
+  {
+   "decision": {
+    "confidence": 0.86,
+    "kind": "look",
+    "reason": "new backpack",
+    "schema_version": 1,
+    "target": "-30",
+    "text": ""
+   },
+   "digest_id": "rem-01",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 403.97193099488504,
+   "ttft_ms": 78.0304219952086
+  },
+  {
+   "decision": {
+    "confidence": 0.72,
+    "kind": "look",
+    "reason": "bench_1",
+    "schema_version": 1,
+    "target": "20",
+    "text": ""
+   },
+   "digest_id": "rem-02",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 405.97300900844857,
+   "ttft_ms": 74.17923500179313
+  },
+  {
+   "decision": {
+    "confidence": 0.68,
+    "kind": "look",
+    "reason": "table cleared",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "rem-03",
+   "error": "",
+   "output_tokens": 30,
+   "parsed": true,
+   "total_ms": 383.63510799536016,
+   "ttft_ms": 72.42838499951176
+  },
+  {
+   "decision": {
+    "confidence": 0.7,
+    "kind": "look",
+    "reason": "owner is back",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "rem-04",
+   "error": "",
+   "output_tokens": 30,
+   "parsed": true,
+   "total_ms": 370.9788970008958,
+   "ttft_ms": 72.2077509999508
+  },
+  {
+   "decision": {
+    "confidence": 0.83,
+    "kind": "look",
+    "reason": "dog on sidewalk",
+    "schema_version": 1,
+    "target": "-60",
+    "text": ""
+   },
+   "digest_id": "rem-05",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 426.02032399736345,
+   "ttft_ms": 77.39606199902482
+  },
+  {
+   "decision": {
+    "confidence": 0.55,
+    "kind": "look",
+    "reason": "sunlight moved",
+    "schema_version": 1,
+    "target": "30",
+    "text": ""
+   },
+   "digest_id": "rem-06",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 402.0156000042334,
+   "ttft_ms": 77.39191499422304
+  },
+  {
+   "decision": {
+    "confidence": 0.88,
+    "kind": "look",
+    "reason": "keys under couch",
+    "schema_version": 1,
+    "target": "-40",
+    "text": ""
+   },
+   "digest_id": "rem-07",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 414.0733769891085,
+   "ttft_ms": 66.81036499503534
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "look",
+    "reason": "planter_1 blocking",
+    "schema_version": 1,
+    "target": "5",
+    "text": ""
+   },
+   "digest_id": "rem-08",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 411.4293849997921,
+   "ttft_ms": 77.42176098690834
+  },
+  {
+   "decision": {
+    "confidence": 0.5,
+    "kind": "look",
+    "reason": "my charger",
+    "schema_version": 1,
+    "target": "70",
+    "text": ""
+   },
+   "digest_id": "rem-09",
+   "error": "",
+   "output_tokens": 30,
+   "parsed": true,
+   "total_ms": 372.5134300038917,
+   "ttft_ms": 74.73935199959669
+  },
+  {
+   "decision": {
+    "confidence": 0.89,
+    "kind": "look",
+    "reason": "parcel by front door",
+    "schema_version": 1,
+    "target": "85",
+    "text": ""
+   },
+   "digest_id": "rem-10",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 428.26861499634106,
+   "ttft_ms": 73.33456599735655
+  },
+  {
+   "decision": {
+    "confidence": 0.75,
+    "kind": "look",
+    "reason": "it started raining",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "rem-11",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 395.9001869952772,
+   "ttft_ms": 73.74449700000696
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "curiosity too low",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "rem-12",
+   "error": "",
+   "output_tokens": 36,
+   "parsed": true,
+   "total_ms": 458.23462899716105,
+   "ttft_ms": 75.52928700170014
+  },
+  {
+   "decision": {
+    "confidence": 0.87,
+    "kind": "look",
+    "reason": "unrecognised bag",
+    "schema_version": 1,
+    "target": "-35",
+    "text": ""
+   },
+   "digest_id": "ask-01",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 427.7670169976773,
+   "ttft_ms": 73.09884000278544
+  },
+  {
+   "decision": {
+    "confidence": 0.78,
+    "kind": "look",
+    "reason": "novelty 0.80",
+    "schema_version": 1,
+    "target": "15",
+    "text": ""
+   },
+   "digest_id": "ask-02",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 459.80948201031424,
+   "ttft_ms": 74.51320000109263
+  },
+  {
+   "decision": {
+    "confidence": 0.66,
+    "kind": "look",
+    "reason": "leash by door",
+    "schema_version": 1,
+    "target": "25",
+    "text": ""
+   },
+   "digest_id": "ask-03",
+   "error": "",
+   "output_tokens": 33,
+   "parsed": true,
+   "total_ms": 428.274224002962,
+   "ttft_ms": 78.05848399584647
+  },
+  {
+   "decision": {
+    "confidence": 0.58,
+    "kind": "look",
+    "reason": "two benches",
+    "schema_version": 1,
+    "target": "30",
+    "text": ""
+   },
+   "digest_id": "ask-04",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 397.8175489901332,
+   "ttft_ms": 75.45584598847199
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "look",
+    "reason": "person not met",
+    "schema_version": 1,
+    "target": "-20",
+    "text": ""
+   },
+   "digest_id": "ask-05",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 410.9649729944067,
+   "ttft_ms": 77.4311349960044
+  },
+  {
+   "decision": {
+    "confidence": 0.62,
+    "kind": "look",
+    "reason": "we usually walk by",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "ask-06",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 393.12347599479835,
+   "ttft_ms": 68.9976139983628
+  },
+  {
+   "decision": {
+    "confidence": 0.9,
+    "kind": "ignore",
+    "reason": "repeated noise",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "chk-01",
+   "error": "",
+   "output_tokens": 34,
+   "parsed": true,
+   "total_ms": 425.2180199982831,
+   "ttft_ms": 69.16946399724111
+  },
+  {
+   "decision": {
+    "confidence": 0.84,
+    "kind": "look",
+    "reason": "front door ajar",
+    "schema_version": 1,
+    "target": "0",
+    "text": ""
+   },
+   "digest_id": "chk-02",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 405.20618901064154,
+   "ttft_ms": 73.51829500112217
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "recently-looked",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "chk-03",
+   "error": "",
+   "output_tokens": 36,
+   "parsed": true,
+   "total_ms": 443.0320850078715,
+   "ttft_ms": 70.93008801166434
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "recently-looked-at",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "chk-04",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 474.2062160075875,
+   "ttft_ms": 78.22061001206748
+  },
+  {
+   "decision": {
+    "confidence": 0.95,
+    "kind": "ignore",
+    "reason": "recently-looked-at",
+    "schema_version": 1,
+    "target": "",
+    "text": ""
+   },
+   "digest_id": "chk-05",
+   "error": "",
+   "output_tokens": 37,
+   "parsed": true,
+   "total_ms": 455.7373900024686,
+   "ttft_ms": 72.82834000943694
+  },
+  {
+   "decision": {
+    "confidence": 0.83,
+    "kind": "look",
+    "reason": "water on floor",
+    "schema_version": 1,
+    "target": "60",
+    "text": ""
+   },
+   "digest_id": "chk-06",
+   "error": "",
+   "output_tokens": 32,
+   "parsed": true,
+   "total_ms": 411.24286300328095,
+   "ttft_ms": 74.08558200404514
+  }
+ ],
+ "summary": {
+  "output_tokens_mean": 33.8,
+  "parse_failures": 0,
+  "parsed": 120,
+  "ticks": 120,
+  "tokens_per_s": 79.7,
+  "total_max_ms": 504.5,
+  "total_mean_ms": 423.8,
+  "total_p50_ms": 417.3,
+  "total_p95_ms": 474.2,
+  "ttft_p50_ms": 72.7,
+  "ttft_p95_ms": 78.1
+ }
+}

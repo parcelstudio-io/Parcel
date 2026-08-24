@@ -44,11 +44,13 @@ add a 5G router/hotspot on the payload rail; decide on-body compute after
 H9 (Orin NX + 8B floor if the compound grammar meets its bar; else an AGX
 Orin 64 GB payload for the 26B). The X30 Pro (AGX Orin, IP67, 56 kg, 4 m/s,
 resellers list 4G/5G) is an inspection platform in the wrong mass and price
-class; its two advantages are Go2 payloads. **Ladder:** L0 cloud+desk (full)
-→ L1 desk only → L2 body only (8B + grammar: listen, answer simply, stop,
-follow, go-to-known, remember, search-by-looking, honest refusal) → L3 no
-LLM (closed intents, follow, hold). Transitions on link health, never
-mid-motion; each rung is a typed manifest the conversation narrates.
+class; its two advantages are Go2 payloads. **Ladder (owner-simplified, 2026-08-24):** L0 cloud+desk (full) → L1 desk
+only → **L2 body only = the canned line ("Sorry — I'm offline; all I can do
+is follow you until we're connected") + follow-with-obstacle-avoidance
+(identity-gated, HOLD on ambiguity) + spoken/panel STOP — nothing else.**
+Transitions on link health, never mid-motion. The former 8B+grammar floor
+is dropped (RTP-1 C6 as amended by the owner); the 8B survives only as the
+connected tier's phrasing seat.
 **The desk GPU is part of the dog for M1.** The Orin NX (16 GB, no ORT
 aarch64 wheel, JetPack CPython 3.10) runs what must be local to the body:
 the ear (XVF3800 → Silero VAD → endpointing), the capture rail, the LIO
