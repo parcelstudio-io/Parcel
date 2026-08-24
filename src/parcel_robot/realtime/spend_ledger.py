@@ -148,6 +148,46 @@ def month_key(when: datetime | None = None) -> str:
     return moment.astimezone(timezone.utc).strftime("%Y-%m")
 
 
+def day_key(when: datetime | None = None) -> str:
+    """``"YYYY-MM-DD"`` in UTC. The period card A7's burn tracking uses.
+
+    UTC for :func:`month_key`'s reason exactly, and derived the same way: a day
+    that started in one timezone and ended in another is not a day a pacing cap
+    can be measured over.
+    """
+
+    moment = when or datetime.now(timezone.utc)
+    if moment.tzinfo is None:  # pragma: no cover - defensive
+        moment = moment.replace(tzinfo=timezone.utc)
+    return moment.astimezone(timezone.utc).strftime("%Y-%m-%d")
+
+
+@dataclass(frozen=True)
+class DayToDateSpend:
+    """What the ledger knows about ONE day. Card A7's per-day burn tracking.
+
+    Deliberately thinner than :class:`MonthToDateSpend`: the month total feeds a
+    ceiling and therefore has to explain itself, while the day total feeds a
+    pacing report (and an optional pacing cap) and only has to be honest about
+    whether it was readable.
+    """
+
+    day: str
+    usd: float
+    rows: int
+    readable: bool = True
+    path: str = ""
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "day": self.day,
+            "usd": round(self.usd, 6),
+            "rows": self.rows,
+            "readable": self.readable,
+            "path": self.path,
+        }
+
+
 @dataclass(frozen=True)
 class MonthToDateSpend:
     """What the ledger knows about this month. Never a bill.
@@ -250,6 +290,24 @@ def spend_row(
     entry["rate_card_as_of"] = price.as_of
     entry["split_tokens"] = dict(price.tokens or {})
     return entry
+
+
+def _entry_from_line(line: str, stripped: str) -> dict[str, object] | None:
+    """One ledger line as a mapping, or ``None`` when it is not one.
+
+    The single parser both readers use, so "what counts as a corrupt row" has
+    exactly one definition. Blank lines are the CALLER's business: a trailing
+    newline is not a corrupt row, and counting it as one would put a permanent
+    undercount warning on every healthy ledger.
+    """
+
+    if len(line) > MAX_ROW_BYTES:
+        return None
+    try:
+        entry = json.loads(stripped)
+    except ValueError:
+        return None
+    return entry if isinstance(entry, dict) else None
 
 
 def _whole(row: Mapping[str, object], key: str) -> int:
@@ -426,18 +484,11 @@ class SpendLedger:
         try:
             with self.path.open("r", encoding="utf-8") as handle:
                 for line in handle:
-                    if len(line) > MAX_ROW_BYTES:
-                        skipped += 1
-                        continue
                     stripped = line.strip()
                     if not stripped:
                         continue
-                    try:
-                        entry = json.loads(stripped)
-                    except ValueError:
-                        skipped += 1
-                        continue
-                    if not isinstance(entry, dict):
+                    entry = _entry_from_line(line, stripped)
+                    if entry is None:
                         skipped += 1
                         continue
                     row_month = entry.get("month")
@@ -494,6 +545,52 @@ class SpendLedger:
             rates_are_assumed=bool(assumed_rows) or rows == 0,
             path=path_text,
         )
+
+    def day_to_date(self, *, day: str | None = None) -> DayToDateSpend:
+        """Estimated spend for one UTC day. Total; never raises.
+
+        Card A7: EVENT-BUDGET's governor spec asks for per-day burn tracking
+        beside the monthly envelope. It reads the same durable file the month
+        reads — an in-process counter would forget the day's burn on exactly the
+        restart a runaway loop also survives, which is the argument this whole
+        file was written on.
+
+        Uncached on purpose: the day is read when a session OPENS, not per
+        narration, and a cache holding two periods is two ways to be stale.
+        """
+
+        wanted = day or day_key(self._now())
+        path_text = str(self.path)
+        try:
+            if not self.path.exists():
+                return DayToDateSpend(day=wanted, usd=0.0, rows=0, path=path_text)
+        except OSError:
+            return DayToDateSpend(day=wanted, usd=0.0, rows=0, readable=False, path=path_text)
+        total = 0.0
+        rows = 0
+        try:
+            with self.path.open("r", encoding="utf-8") as handle:
+                for line in handle:
+                    stripped = line.strip()
+                    if not stripped:
+                        continue
+                    entry = _entry_from_line(line, stripped)
+                    if entry is None:
+                        continue
+                    wall = entry.get("wall")
+                    if not isinstance(wall, str) or wall[:10] != wanted:
+                        continue
+                    usd = entry.get("estimated_usd")
+                    if isinstance(usd, bool) or not isinstance(usd, (int, float)):
+                        continue
+                    value = float(usd)
+                    if not math.isfinite(value):
+                        continue
+                    total += max(0.0, value)
+                    rows += 1
+        except Exception:  # noqa: BLE001 - OSError, UnicodeDecodeError, ...
+            return DayToDateSpend(day=wanted, usd=0.0, rows=0, readable=False, path=path_text)
+        return DayToDateSpend(day=wanted, usd=total, rows=rows, path=path_text)
 
     # -------------------------------------------------------------- plumbing
     def _announce(self, message: str) -> None:
@@ -557,8 +654,10 @@ __all__ = [
     "SPEND_LEDGER_NAME",
     "SPEND_LEDGER_SCHEMA",
     "SPEND_LEDGER_SCHEMA_V2",
+    "DayToDateSpend",
     "MonthToDateSpend",
     "SpendLedger",
+    "day_key",
     "month_key",
     "resolve_spend_ledger_path",
     "spend_row",

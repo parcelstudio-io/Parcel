@@ -1321,6 +1321,39 @@ class VoiceIdentityGate:
             return speaker_label(kind, None, enrolled=self.enabled)
         return speaker_label(kind, verdict, enrolled=self.enabled)
 
+    def score_buffer(self, payload: bytes) -> float | None:
+        """One-shot cosine for a WHOLE buffer, or ``None``. Card A7.
+
+        The pre-upload ear (``realtime/ear_gate.py``) has to ask "is this the
+        owner" about audio it is still holding, before any of it goes on the
+        wire. That is a different shape from :meth:`observe_frame`, which is a
+        streaming turn-cutter whose verdict lands BESIDE a relay that has already
+        happened. Both use the same embedder and the same profile; only this one
+        owns no state, so a caller cannot move this gate's counters or its
+        verdict by asking it a question.
+
+        Never raises and never mutates: a gate that cannot score returns ``None``
+        and lets the ear decide what "cannot verify" means (it means push-to-talk
+        admission, not a silent pass at some other threshold).
+        """
+
+        profile = self._profile
+        embedder = self._embedder
+        if profile is None or embedder is None or not payload:
+            return None
+        try:
+            embedding = embedder.embed(bytes(payload), self.sample_rate_hz)
+            if len(embedding) != profile.dim:
+                raise VoiceIdentityError(
+                    f"embedder returned {len(embedding)} dimensions and the enrolled "
+                    f"profile has {profile.dim}: these are different embedding spaces"
+                )
+            score = float(profile.score(embedding))
+        except Exception as error:  # noqa: BLE001 - an unscorable turn is not a crash
+            self._note(f"voice identity: could not score a buffered turn ({error})")
+            return None
+        return None if math.isnan(score) else score
+
     def note_rejection(self, wall: float | None = None) -> bool:
         """Count one refused turn; answer whether it may also be SPOKEN.
 

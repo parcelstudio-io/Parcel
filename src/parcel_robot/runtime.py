@@ -292,12 +292,18 @@ from parcel_robot.realtime.config import RealtimeConfig, default_realtime_config
 from parcel_robot.realtime.cost import realtime_spend_usd
 from parcel_robot.realtime.driver import ALARM_REVIVED as DRIVER_ALARM_REVIVED
 from parcel_robot.realtime.driver import RealtimeDriver
+from parcel_robot.realtime.ear_gate import (
+    EarGate,
+    EarGateConfig,
+    enrollment_channel_matches,
+)
 from parcel_robot.realtime.evidence_log import (
     STREAM_EVENT,
     STREAM_MISSION,
     STREAM_SAFETY,
     SessionEventLog,
 )
+from parcel_robot.realtime.hosted_budget import HostedCallGovernor, HostedCallRefused
 from parcel_robot.realtime.ingress import (
     KIND_CLOSED_INTENT,
     KIND_EMERGENCY,
@@ -2588,6 +2594,12 @@ class RobotRuntime:
         #: with no enrolled profile is still exactly the pre-card behaviour, the
         #: difference being that it SAYS so in the snapshot.
         self.realtime_voice_identity: VoiceIdentityGate | None = None
+        # Card A7 (DEC-0 pin: no new marked region — the invariants live in
+        # `realtime/ear_gate.py` and `realtime/hosted_budget.py`). The ear is the
+        # only route from a microphone frame to the wire; the governor is the
+        # only route from anything to a NEW hosted call.
+        self.realtime_ear: EarGate | None = None
+        self.realtime_governor: HostedCallGovernor | None = None
         self._realtime_panel_token: str | None = None
         #: Card R16. Facts the robot wanted to narrate while the lane was HUNG
         #: UP. Counted at ``_narrate_mission``'s door rather than in the lane,
@@ -8052,6 +8064,19 @@ class RobotRuntime:
             executed = False
             self._emit("realtime", f"{found.name} refused: {failure}", "warning")
 
+        # Card A7. The owner's turn is read IN ITS EXCHANGE, not context-free.
+        # Re-measured for this card on the frozen 174-turn corpus through the
+        # code that ships: `triage` alone calls **66** of the owner's own turns
+        # `hear_only`, because a mid-conversation reply ("yes that one") carries
+        # no second-person marker at all, and a dog that ignores a third of what
+        # its owner says is worse than one that answers the television.
+        # `EarGate.note_owner_turn` owns the exchange clock and calls
+        # `triage_in_exchange`, which recovers 58 of the 66. Anything the
+        # deterministic ingress already claimed is an unambiguous address and
+        # says so rather than being re-derived by grammar.
+        ear = self.realtime_ear
+        if ear is not None:
+            ear.note_owner_turn(clean, addressed=found.kind != KIND_NONE)
         self._write_realtime_ledger(
             "owner",
             ledger_text,
@@ -8885,6 +8910,12 @@ class RobotRuntime:
         # orphaned. `ensure_session` takes that decision while holding the lane.
         # The owner typing into the live box IS the per-connection gesture:
         # deliberate, local, and not "the service was reachable".
+        #
+        # Card A7: and it is a hosted call, so the envelope is asked here for the
+        # same reason it is asked on the microphone press. There is no ear on
+        # this path — a typed sentence has no audio to gate — so the governor is
+        # consulted directly.
+        self._require_hosted_budget("the owner's typed hosted turn")
         before = lane.session_id
         session_id = lane.ensure_session(handshake_token=token, mic_gesture=True)
         if session_id != before:
@@ -9001,6 +9032,9 @@ class RobotRuntime:
             )
         identity = self._build_voice_identity_gate()
         self.realtime_voice_identity = identity
+        # Card A7. Built BEFORE either gateway, because both hand their frames to
+        # `_realtime_owner_audio`, and that hop is the one this gate stands in.
+        self._build_ear_gate(identity)
         # ---- CARD HW-4 (task_37) — WHICH EAR: A CHROME TAB, OR THE XVF3800? -
         # The ONE branch this card adds to the runtime. `audio.gateway` is
         # absent from the SHA-locked base and resolves to `browser`, so with no
@@ -9052,6 +9086,95 @@ class RobotRuntime:
             gateway.bind_token(self._realtime_panel_token)
         gateway.start()
         return BrowserSink(gateway)
+
+    def _build_ear_gate(self, identity: VoiceIdentityGate | None) -> None:
+        """The pre-upload ear and the hosted-call governor. Card A7. Never raises.
+
+        WHY THIS IS A GATE AND NOT A LABEL
+        ----------------------------------
+        ``BrowserAudioGateway.accept_audio`` says of the identity hook that it
+        "never decides whether the frame goes up: it cannot". Every frame
+        therefore reached ``lane.send_audio`` before anything local had an
+        opinion about whose voice it was — Codex's freeze finding 3, *post-upload
+        identity is too late for cost and for privacy* — and H1 priced it: an
+        ungated ear in a room with a television opens 960.6 sessions/hour.
+        :class:`~parcel_robot.realtime.ear_gate.EarGate` is that missing
+        decision, and ``_realtime_owner_audio`` is the one hop it stands in.
+
+        A gate that cannot be constructed is a WARNING and a ``None`` — the same
+        fail-open direction the spend ledger takes, for the same reason: a
+        mistyped block must not be able to make a robot deaf without saying so.
+        With ``None`` the relay is byte-for-byte the pre-A7 one.
+        """
+
+        try:
+            from parcel_robot.realtime.protocol import PCM16_SAMPLE_RATE_HZ
+
+            section = self.store.section("audio")
+            block = section.get("ear") if isinstance(section, dict) else None
+            config = EarGateConfig.from_mapping(block)
+            ledger = self._realtime_spend_ledger
+            governor = HostedCallGovernor(
+                config=config.governor,
+                month_to_date=None if ledger is None else ledger.month_to_date,
+                day_to_date=None if ledger is None else ledger.day_to_date,
+                on_event=lambda message: self._emit("realtime", message, "warning"),
+            )
+            self.realtime_governor = governor
+            self.realtime_ear = EarGate(
+                config=config,
+                verify=self._ear_verifier(identity, config),
+                governor=governor,
+                on_event=lambda message: self._emit("realtime", message, "warning"),
+                sample_rate_hz=PCM16_SAMPLE_RATE_HZ,
+            )
+        except Exception as error:  # noqa: BLE001 - a gate may never block boot
+            self.realtime_ear = None
+            self.realtime_governor = None
+            self._emit(
+                "realtime",
+                f"the pre-upload ear gate could not be built ({error}); microphone "
+                "frames take the pre-A7 relay and the hosted-call envelope is NOT "
+                "being enforced this run",
+                "warning",
+            )
+
+    def _ear_verifier(
+        self, identity: VoiceIdentityGate | None, config: EarGateConfig
+    ) -> Callable[[bytes], float | None] | None:
+        """The ear's voice scorer, or ``None`` when there is nothing to score with.
+
+        ``None`` is the state this host is actually in — no owner audio has ever
+        been enrolled here — and it is not a failure: the ear then admits on the
+        owner's own push-to-talk press, which is the arm VOICE-GATE v2 chose for
+        M1 (owner recall 1.000, zero non-owner hosted bytes, 0 % replay under the
+        stated assumption that a spoofer does not also hold the button).
+
+        CHANNEL MATCH IS CHECKED HERE, NOT INSIDE THE EAR. VOICE-GATE F1: a
+        gallery enrolled through the same microphone and room is measurably
+        better than a clean one, and the 0.352 operating point was measured on a
+        channel-matched gallery. So when the operator has named the deployment
+        channel and the profile's own ``source`` does not carry it, this returns
+        ``None`` — scoring a room against a studio gallery and calling the result
+        identity is the failure the whole finding is about.
+        """
+
+        if identity is None or not identity.enabled:
+            return None
+        wanted = config.enrollment_channel
+        if wanted and not enrollment_channel_matches(
+            getattr(identity.profile, "source", ""), wanted
+        ):
+            self._emit(
+                "realtime",
+                "voice identity: the enrolled profile was not recorded through "
+                f"{wanted!r}, so the ear will not verify against it (VOICE-GATE F1: "
+                "the 0.352 operating point assumes a channel-matched gallery). "
+                "Push-to-talk remains the admission.",
+                "warning",
+            )
+            return None
+        return identity.score_buffer
 
     def _build_voice_identity_gate(self) -> VoiceIdentityGate | None:
         """Card F1-SI. The speaker-identity gate, or ``None``, and why.
@@ -9173,6 +9296,36 @@ class RobotRuntime:
             return False
         return getattr(self.voice_session, "_active_output", None) is not None
 
+    def _require_hosted_budget(self, purpose: str) -> None:
+        """Ask the envelope before opening a hosted call. Card A7.
+
+        Raises :class:`~parcel_robot.realtime.hosted_budget.HostedCallRefused` —
+        a TYPED refusal, so a caller can tell "the budget said no" (degrade to a
+        local behaviour and say so honestly) from "the socket died" (an
+        incident). With no governor wired this is a no-op and the pre-A7
+        behaviour is what runs.
+
+        Nothing on a safety path calls this. The spoken STOP is local by card A6,
+        the panel STOP, the operator remote and every watchdog are local by
+        construction, and none of them can reach this method — asserted
+        structurally in ``tests/test_a7_ear_governor.py`` rather than promised
+        here.
+        """
+
+        governor = self.realtime_governor
+        if governor is None:
+            return
+        governor.require(purpose)
+
+    def _raise_hosted_refusal(self) -> None:
+        """Re-raise the governor's last refusal as the typed exception."""
+
+        governor = self.realtime_governor
+        decision = None if governor is None else governor.last_decision
+        if decision is None or decision.admitted:  # pragma: no cover - defensive
+            raise RuntimeError("the ear refused the microphone press")
+        raise HostedCallRefused(decision)
+
     def _realtime_mic_gesture(self, open_: bool) -> None:
         """The owner pressed (or released) the microphone in their browser.
 
@@ -9196,6 +9349,9 @@ class RobotRuntime:
                 "absent or realtime.enabled is false"
             )
         if not open_:
+            ear = self.realtime_ear
+            if ear is not None:
+                ear.release()
             self._emit("realtime", "microphone closed; the session stays open", "info")
             return
         token = self._realtime_panel_token
@@ -9204,6 +9360,13 @@ class RobotRuntime:
                 "the realtime lane has no panel handshake token; the panel "
                 "server binds one at startup (fail-closed arming)"
             )
+        # Card A7. The press is what OPENS a billed session, so it is where the
+        # envelope is asked. `EarGate.press` consults the governor and returns a
+        # refused admission; raising here keeps this method's existing contract —
+        # the microphone stays shut and the browser is told the reason.
+        ear = self.realtime_ear
+        if ear is not None and ear.press().budget_refused:
+            self._raise_hosted_refusal()
         before = lane.session_id
         session_id = lane.ensure_session(handshake_token=token, mic_gesture=True)
         if session_id != before:
@@ -9419,11 +9582,23 @@ class RobotRuntime:
             self._emit("realtime", f"microphone not closed after hang-up: {error}", "warning")
 
     def _realtime_owner_audio(self, pcm: bytes) -> None:
-        """Owner microphone frames arriving from the browser, going up."""
+        """Owner microphone frames arriving from the browser, going up.
+
+        Card A7: through the LOCAL gate first. ``ear.offer_frame`` returns the
+        bytes that may leave the host — ``b""`` for every frame until a local
+        identity/engagement decision admits the turn, then the buffered pre-roll
+        plus the turn so far on the frame that admits it. A refused turn's buffer
+        is erased and no byte of it is ever handed to ``send_audio``.
+        """
 
         lane = self.realtime_lane
         if lane is None or not lane.active:
             return
+        ear = self.realtime_ear
+        if ear is not None:
+            pcm = ear.offer_frame(pcm)
+            if not pcm:
+                return
         try:
             lane.send_audio(pcm)
         except (RealtimeLaneError, RuntimeError) as error:
@@ -14984,6 +15159,14 @@ class RobotRuntime:
                 # is heard, so they go to the panel's event ring (and through
                 # `_emit`, to the evidence log) rather than to a logger.
                 on_note=lambda message: self._emit("realtime", message, "warning"),
+                # Card A7 (DEC-0 pin: one keyword, no marked region). H1 built
+                # the rate card and left this constructor untouched, so every row
+                # this runtime has ever written was priced at the FULL model's
+                # TEXT rates — measured +335.8 % over the published per-modality
+                # prices across 34 live responses, which grounded the dog roughly
+                # 4x early. The card is resolved from the model the config
+                # actually opens sockets to.
+                rate_card=self._realtime_rate_card(),
             )
             self._realtime_spend_note = str(path)
         except Exception as error:  # noqa: BLE001 - a ceiling may never block boot
@@ -14995,6 +15178,38 @@ class RobotRuntime:
                 "monthly_budget_usd is NOT being enforced this run",
                 "warning",
             )
+
+    def _realtime_rate_card(self) -> object | None:
+        """The published rate card for the model this config opens. Card A7.
+
+        Resolution order, and every step is a decision:
+
+        1. ``PARCEL_REALTIME_RATE_CARD`` — the operator's explicit override, and
+           it wins, because an operator pricing a model this repo has not written
+           down is exactly who that variable is for. Returning ``None`` here is
+           what hands the choice to ``SpendLedger``'s own env resolution.
+        2. the configured ``realtime.model`` — the model the socket will carry.
+        3. ``None``, meaning the legacy ASSUMED path, when the id is one no card
+           covers. Deliberately NOT the dearer default card: a ceiling that
+           silently prices an unknown model at 5x grounds the dog for a reason
+           the owner cannot see, and its rows would claim ``rates_are_assumed:
+           false`` while assuming the most of all.
+        """
+
+        from parcel_robot.realtime.cost import rate_card_for
+
+        if os.environ.get("PARCEL_REALTIME_RATE_CARD", "").strip():
+            return None
+        model = getattr(self.realtime_config, "model", "")
+        card = rate_card_for(model)
+        if card is None:
+            self._emit(
+                "realtime",
+                "hosted spend rows are priced at the legacy ASSUMED rates: no "
+                f"published rate card is known for model {model!r}",
+                "warning",
+            )
+        return card
 
     def _offer_evidence(self, stream: str, row: Mapping[str, object]) -> None:
         """Hand one ring row to the evidence log. Never raises, never waits."""

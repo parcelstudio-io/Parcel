@@ -871,7 +871,12 @@ def test_hosted_audio_reaches_the_browser_through_the_whole_real_pipe(
             assert _recv_json(client)["on"] is True
             # Opening the microphone is what opened the paid session.
             assert runtime.realtime_lane.active is True
-            client.send(b"\x05\x06" * 480)
+            # Card A7: the pre-upload ear holds the first 500 ms of a turn as
+            # pre-roll (H1 C3 measured 0 % first-word truncation at >= 500 ms and
+            # non-zero below it), so ONE 20 ms frame no longer reaches the lane.
+            # 26 frames = 520 ms, the first thing the wire may legally carry.
+            for _ in range(26):
+                client.send(b"\x05\x06" * 480)
 
             audio_back: list[bytes] = []
             deadline = time.monotonic() + 5.0

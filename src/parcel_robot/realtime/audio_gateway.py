@@ -2128,7 +2128,7 @@ RESAMPLER_KAISER_BETA = 8.6
 AUDIO_GATEWAY_BROWSER = "browser"
 AUDIO_GATEWAY_ARRAY = "array"
 AUDIO_GATEWAY_KINDS: tuple[str, ...] = (AUDIO_GATEWAY_ARRAY, AUDIO_GATEWAY_BROWSER)
-AUDIO_CONFIG_KEYS = frozenset({"device", "gateway"})
+AUDIO_CONFIG_KEYS = frozenset({"device", "ear", "gateway"})  # `ear` = card A7's block
 
 
 def resolve_audio_gateway_selection(section: object) -> tuple[str, object]:
