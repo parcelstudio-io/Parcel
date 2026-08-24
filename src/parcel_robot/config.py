@@ -317,6 +317,10 @@ OVERLAY_INTRODUCIBLE_KEYS = frozenset(
         # keys nothing reads is exactly the defect this list's own docstring
         # warns about, so they are gone and the numbers are in `backend.band`.
         # ---- END CARD HW-5 ---------------------------------------------------
+        # A6 STOP-LOCAL: the spoken stop's grammar policy (mode + name), which
+        # the SHA-locked base omits. Typo guard at the READ site as with `roam`:
+        # `audio.stop_hotword.StopHotwordConfig.from_mapping` refuses by name.
+        "stop_hotword",
     }
 )
 

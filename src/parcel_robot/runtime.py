@@ -27,9 +27,18 @@ from parcel_robot.audio.arming import (
 from parcel_robot.audio.devices import AudioDeviceStatus, detect_audio_devices
 from parcel_robot.audio.endpointing import SileroVad, TurnEndpointer
 from parcel_robot.audio.prosody import analyze_wav_chunk
+from parcel_robot.audio.stop_hotword import (
+    MODE_OFF,
+    StopHotwordConfig,
+    StopHotwordSpotter,
+    StopHotwordWatch,
+    StopLatch,
+    StopTappedVoiceLoop,
+)
 from parcel_robot.audio.voice_loop import (
     MicrophoneVoiceLoop,
     SpeakerSink,
+    pcm16_wav,
     resolve_audio_device,
 )
 from parcel_robot.authority import DEFAULT_SAFETY_ENVELOPE
@@ -274,6 +283,7 @@ from parcel_robot.prompting.loader import PromptLibrary
 from parcel_robot.providers import (
     LanguageModel,
     SentenceChunkedSynthesizer,
+    WhisperCppProvider,
     build_speech_stack,
     strip_emote_tags,
 )
@@ -641,6 +651,11 @@ REALTIME_PUMP_ALARM_MAX = 32
 #: records which one fired, by asking the ingress's own exported predicate.
 SAFETY_RULE_SPOKEN = "spoken_phrase"
 SAFETY_RULE_TYPED = "typed_phrase"
+#: Card A6 STOP-LOCAL. How long the local stop path waits on its transcriber
+#: before giving up on ONE window. Short on purpose: A9's bar is a tail bar, and
+#: a window that has not come back inside it is already too late to be the stop
+#: it was asked about. The next window is 300 ms behind it.
+STOP_HOTWORD_STT_TIMEOUT_S = 2.0
 #: How each source reads in the one sentence a person actually looks at. The
 #: panel entry names both controls because the runtime genuinely cannot tell
 #: them apart (see :data:`SAFETY_SOURCE_PANEL`) and a row that picked one would
@@ -2451,6 +2466,11 @@ class RobotRuntime:
         )
         self._speaker_sink: SpeakerSink | None = None
         self._microphone_loop: MicrophoneVoiceLoop | None = None
+        #: Card A6. Declared here beside the rail it taps so a constructor that
+        #: fails before the block below still has an attribute for close() to
+        #: find; the real build happens once the capture loop exists.
+        self._stop_hotword: StopHotwordWatch | None = None
+        self._stop_hotword_detail = "not built (no microphone rail)"
         synthesizer = None
         audio_chunk_player = None
         audio_interrupt = None
@@ -2504,7 +2524,16 @@ class RobotRuntime:
             allow_monitor_capture=resolve_allow_monitor_capture(speech_config),
         )
         if self._mic_arming.armed:
-            self._microphone_loop = MicrophoneVoiceLoop(
+            # Card A6 STOP-LOCAL, built BEFORE the rail that feeds it so the
+            # capture loop can be constructed with its tee already decided. No
+            # rail means no frames, so this is the only place it belongs.
+            self._stop_hotword, self._stop_hotword_detail = self._build_stop_hotword(
+                speech_config
+            )
+            loop_class = (
+                MicrophoneVoiceLoop if self._stop_hotword is None else StopTappedVoiceLoop
+            )
+            self._microphone_loop = loop_class(
                 recognizer=self.speech_stack.recognizer,
                 # The guarded entry point, not the raw session: spoken
                 # emergency phrases must latch the E-stop synchronously
@@ -2528,6 +2557,12 @@ class RobotRuntime:
                 endpointer=endpointer,
                 on_turn_commit=self._record_turn_commit,
             )
+            if self._stop_hotword is not None:
+                # The always-local spoken stop, onto the SAME latch the panel
+                # button engages, on its own thread. Additive: the panel STOP,
+                # the operator remote and every watchdog are unchanged whether
+                # this line runs or not.
+                self._microphone_loop.stop_hotword_tap = self._stop_hotword.submit_frame
         # FIX-A/F2: one startup summary of what the speech stack ACTUALLY
         # resolved to. A missing --config silently swapped the tuned semantic
         # endpointer for the energy default and nothing said so.
@@ -4926,6 +4961,15 @@ class RobotRuntime:
                 daemon=True,
             )
             self._expression_thread.start()
+            if self._stop_hotword is not None:
+                # Started BEFORE the capture loop, so the first frame the rail
+                # produces already has somewhere to go.
+                self._stop_hotword.start()
+                self._emit(
+                    "voice",
+                    f"Local STOP hotword armed: {self._stop_hotword_detail}",
+                    "info",
+                )
             if self._microphone_loop is not None:
                 try:
                     self._microphone_loop.start()
@@ -5038,6 +5082,14 @@ class RobotRuntime:
                     self._microphone_loop.close()
                 except BaseException as error:  # noqa: BLE001 - device teardown
                     auxiliary_error = error
+            if self._stop_hotword is not None:
+                # After the rail that feeds it: a stop path outliving its
+                # capture source by a moment is harmless, the reverse would
+                # drop frames into a dead queue.
+                try:
+                    self._stop_hotword.close()
+                except (OSError, RuntimeError) as error:
+                    auxiliary_error = auxiliary_error or error
             try:
                 self.voice_session.close(timeout=2.0)
             except BaseException as error:  # noqa: BLE001 - hardware teardown must continue
@@ -17062,6 +17114,92 @@ class RobotRuntime:
         detail = f"semantic: {endpointer.detail} + {vad_detail}"
         self._emit("voice", f"Endpointing: {detail}", "info")
         return neural_vad, endpointer, detail
+
+    def _build_stop_hotword(
+        self, speech_config: dict
+    ) -> tuple[StopHotwordWatch | None, str]:
+        """Card A6. Resolve ``stop_hotword:`` into a watch, or say why not.
+
+        Every failure here degrades LOUDLY and additively: no watch is built,
+        the reason is emitted and kept in the snapshot, and the panel STOP, the
+        operator remote and the local watchdogs are exactly what they were.
+        A6's own bar is that this path can be missing without anything else
+        becoming less safe.
+        """
+
+        try:
+            config = StopHotwordConfig.from_mapping(self.store.section("stop_hotword"))
+        except (TypeError, ValueError) as error:
+            self._emit("voice", f"Local STOP hotword refused its config: {error}", "error")
+            return None, f"refused: {error}"
+        if config.mode == MODE_OFF:
+            return None, "off (stop_hotword.mode=off)"
+        vad_model = speech_config.get("vad_model")
+        vad = SileroVad(str(vad_model), threshold=config.vad_threshold) if vad_model else None
+        if vad is None or not vad.available:
+            detail = f"unavailable: Silero weights unusable at {vad_model!r}"
+            self._emit("voice", f"Local STOP hotword {detail}", "warning")
+            return None, detail
+        # The transcriber is this path's OWN client, never the conversational
+        # recognizer object: a stop may not queue behind a dialogue turn's
+        # request state. PARCEL_STOP_HOTWORD_STT_URL points it at a second
+        # whisper server when one exists, which is how the shared-server
+        # contention below stops being a shared queue at all.
+        base_url = os.environ.get("PARCEL_STOP_HOTWORD_STT_URL", "").strip() or str(
+            speech_config.get("whisper_url", "http://127.0.0.1:8178")
+        )
+        recognizer = WhisperCppProvider(base_url=base_url, timeout=STOP_HOTWORD_STT_TIMEOUT_S)
+        spotter = StopHotwordSpotter(
+            config,
+            vad=vad,
+            transcribe=lambda pcm: recognizer.transcribe(pcm16_wav(pcm.tobytes())),
+            bare_window=self._stop_hotword_bare_window,
+        )
+        watch = StopHotwordWatch(
+            spotter,
+            self._stop_hotword_latched,
+            on_error=self._stop_hotword_failed,
+        )
+        return watch, f"{config.mode} (name={config.name!r}, stt={base_url})"
+
+    def _stop_hotword_bare_window(self) -> bool:
+        """Card A6, ``hybrid`` only: is a BARE "stop" live right now?
+
+        Open while the dog is speaking or while it is moving. Movement counts
+        as owner-commanded because the freeze list says it is: no self-initiated
+        translation ships (H3/Codex), so a moving robot is executing something
+        the owner asked for. Both are contexts in which a bare "stop" is far
+        more likely to be aimed at the robot than at a television — which is the
+        entire reason the mode exists, and which is NOT measured through air.
+        """
+
+        sink = self._speaker_sink
+        if sink is not None and bool(sink.playback_active):
+            return True
+        return bool(self._was_moving)
+
+    def _stop_hotword_latched(self, latch: StopLatch) -> None:
+        """The local spoken stop, into the SAME latch the panel button engages.
+
+        Deliberately three lines and no fourth. It does not call
+        ``voice_session.barge_in()`` the way the typed and hosted paths do: that
+        would put the conversational stack on the safety thread, and A2's whole
+        point is that this path touches none of it. The brain interrupt, the
+        preempt and the arbiter/controller latch all happen inside
+        ``emergency_stop`` exactly as they do for the panel.
+        """
+
+        self.agent.safety.engage_emergency_stop()
+        self.emergency_stop(
+            source=SAFETY_SOURCE_VOICE,
+            phrase=latch.spot.text,
+            rule=SAFETY_RULE_SPOKEN,
+        )
+
+    def _stop_hotword_failed(self, error: Exception) -> None:
+        """One warning per fault on the local stop path; the thread survives."""
+
+        self._emit("voice", f"Local STOP hotword fault: {error}", "warning")
 
     def _report_speech_stack(self, speech_config: dict) -> dict[str, object]:
         """FIX-A/F2: say out loud what the speech stack actually resolved to.

@@ -1,0 +1,7665 @@
+{
+ "provenance": {
+  "card": "A6 STOP-LOCAL (scrum/20260824/task_2)",
+  "generated_at": "2026-08-24T14:19:32Z",
+  "what": "Every ASR window the REAL parcel_robot.audio.stop_hotword spotter asked for while streaming the VOICE-GATE v2 tapes, with the wall time each transcription actually took. The tapes are in a scratch directory and will evaporate; these windows are the evidence that does not.",
+  "tier": "replay (VOICE-GATE's own word): real recorded room floor, real espeak/piper stimuli through the harness channel model, no loudspeaker, no through-air geometry, no AEC",
+  "asr": "whisper.cpp base.en resident on 127.0.0.1:8099 (models/whisper/ggml-base.en.bin, -t 8)",
+  "vad": "models/endpointing/silero_vad_v6.onnx via audio/endpointing.SileroVad",
+  "harness": "research/20260824/voice-gate/harness (corpus, channel, tapes, arena)",
+  "room_bed": "the XVF3800's own 49.6 min ambient recording (2 ch, ASR beam)",
+  "median_asr_s": 0.3687,
+  "mean_asr_s": 0.3937,
+  "voicegate_reference": {
+   "source": "research/20260824/voice-gate/results/stop_local.json",
+   "matcher": "harness STOP-LOCAL: Silero v6 + resident whisper base.en whole-word spot",
+   "recall": 0.875,
+   "p50_s": 0.3491659915013372,
+   "p95_s": 0.9352375220095306,
+   "tv_false_stops": 6,
+   "tv_false_stops_per_24h": 864.0
+  }
+ },
+ "tail": {
+  "recorded_voicegate_stop": {
+   "tape_seconds": 377.922,
+   "checks": 132,
+   "wall_s": 58.4,
+   "placements": [
+    {
+     "name": "stop_en_m3_0_1m/0deg",
+     "text": "Stop.",
+     "voice": "en+m3",
+     "geometry": "1m/0deg",
+     "speech_start_s": 3.416,
+     "speech_end_s": 3.64
+    },
+    {
+     "name": "stop_en_m3_1_1m/0deg",
+     "text": "Stop!",
+     "voice": "en+m3",
+     "geometry": "1m/0deg",
+     "speech_start_s": 8.7818,
+     "speech_end_s": 9.0058
+    },
+    {
+     "name": "stop_en_m3_2_1m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "en+m3",
+     "geometry": "1m/0deg",
+     "speech_start_s": 14.1678,
+     "speech_end_s": 14.9678
+    },
+    {
+     "name": "stop_en_m3_3_1m/0deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+m3",
+     "geometry": "1m/0deg",
+     "speech_start_s": 20.1129,
+     "speech_end_s": 21.4089
+    },
+    {
+     "name": "stop_en_f4_0_1m/0deg",
+     "text": "Stop.",
+     "voice": "en+f4",
+     "geometry": "1m/0deg",
+     "speech_start_s": 26.5632,
+     "speech_end_s": 26.8352
+    },
+    {
+     "name": "stop_en_f4_1_1m/0deg",
+     "text": "Stop!",
+     "voice": "en+f4",
+     "geometry": "1m/0deg",
+     "speech_start_s": 32.0044,
+     "speech_end_s": 32.2764
+    },
+    {
+     "name": "stop_en_f4_2_1m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "en+f4",
+     "geometry": "1m/0deg",
+     "speech_start_s": 37.4937,
+     "speech_end_s": 38.3737
+    },
+    {
+     "name": "stop_en_f4_3_1m/0deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+f4",
+     "geometry": "1m/0deg",
+     "speech_start_s": 43.5635,
+     "speech_end_s": 45.0515
+    },
+    {
+     "name": "stop_en_us_m7_0_1m/0deg",
+     "text": "Stop.",
+     "voice": "en-us+m7",
+     "geometry": "1m/0deg",
+     "speech_start_s": 50.1581,
+     "speech_end_s": 50.4621
+    },
+    {
+     "name": "stop_en_us_m7_1_1m/0deg",
+     "text": "Stop!",
+     "voice": "en-us+m7",
+     "geometry": "1m/0deg",
+     "speech_start_s": 55.5972,
+     "speech_end_s": 55.9012
+    },
+    {
+     "name": "stop_en_us_m7_2_1m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "en-us+m7",
+     "geometry": "1m/0deg",
+     "speech_start_s": 61.0719,
+     "speech_end_s": 61.9679
+    },
+    {
+     "name": "stop_en_us_m7_3_1m/0deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en-us+m7",
+     "geometry": "1m/0deg",
+     "speech_start_s": 67.1423,
+     "speech_end_s": 68.6303
+    },
+    {
+     "name": "stop_en_f2_0_1m/0deg",
+     "text": "Stop.",
+     "voice": "en+f2",
+     "geometry": "1m/0deg",
+     "speech_start_s": 73.7706,
+     "speech_end_s": 74.0266
+    },
+    {
+     "name": "stop_en_f2_1_1m/0deg",
+     "text": "Stop!",
+     "voice": "en+f2",
+     "geometry": "1m/0deg",
+     "speech_start_s": 79.1628,
+     "speech_end_s": 79.4188
+    },
+    {
+     "name": "stop_en_f2_2_1m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "en+f2",
+     "geometry": "1m/0deg",
+     "speech_start_s": 84.5869,
+     "speech_end_s": 85.4989
+    },
+    {
+     "name": "stop_en_f2_3_1m/0deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+f2",
+     "geometry": "1m/0deg",
+     "speech_start_s": 90.5962,
+     "speech_end_s": 92.0522
+    },
+    {
+     "name": "stop_en_m3_0_3m/30deg",
+     "text": "Stop.",
+     "voice": "en+m3",
+     "geometry": "3m/30deg",
+     "speech_start_s": 97.2585,
+     "speech_end_s": 97.3705
+    },
+    {
+     "name": "stop_en_m3_1_3m/30deg",
+     "text": "Stop!",
+     "voice": "en+m3",
+     "geometry": "3m/30deg",
+     "speech_start_s": 102.6243,
+     "speech_end_s": 102.7363
+    },
+    {
+     "name": "stop_en_m3_2_3m/30deg",
+     "text": "Parcel, stop.",
+     "voice": "en+m3",
+     "geometry": "3m/30deg",
+     "speech_start_s": 107.9303,
+     "speech_end_s": 108.6823
+    },
+    {
+     "name": "stop_en_m3_3_3m/30deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+m3",
+     "geometry": "3m/30deg",
+     "speech_start_s": 113.8914,
+     "speech_end_s": 115.1394
+    },
+    {
+     "name": "stop_en_f4_0_3m/30deg",
+     "text": "Stop.",
+     "voice": "en+f4",
+     "geometry": "3m/30deg",
+     "speech_start_s": 120.3897,
+     "speech_end_s": 120.5657
+    },
+    {
+     "name": "stop_en_f4_1_3m/30deg",
+     "text": "Stop!",
+     "voice": "en+f4",
+     "geometry": "3m/30deg",
+     "speech_start_s": 125.8309,
+     "speech_end_s": 125.9909
+    },
+    {
+     "name": "stop_en_f4_2_3m/30deg",
+     "text": "Parcel, stop.",
+     "voice": "en+f4",
+     "geometry": "3m/30deg",
+     "speech_start_s": 131.2242,
+     "speech_end_s": 132.1042
+    },
+    {
+     "name": "stop_en_f4_3_3m/30deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+f4",
+     "geometry": "3m/30deg",
+     "speech_start_s": 137.326,
+     "speech_end_s": 138.702
+    },
+    {
+     "name": "stop_en_us_m7_0_3m/30deg",
+     "text": "Stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/30deg",
+     "speech_start_s": 143.9846,
+     "speech_end_s": 144.1926
+    },
+    {
+     "name": "stop_en_us_m7_1_3m/30deg",
+     "text": "Stop!",
+     "voice": "en-us+m7",
+     "geometry": "3m/30deg",
+     "speech_start_s": 149.4237,
+     "speech_end_s": 149.6317
+    },
+    {
+     "name": "stop_en_us_m7_2_3m/30deg",
+     "text": "Parcel, stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/30deg",
+     "speech_start_s": 154.8344,
+     "speech_end_s": 155.6984
+    },
+    {
+     "name": "stop_en_us_m7_3_3m/30deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/30deg",
+     "speech_start_s": 160.9048,
+     "speech_end_s": 162.3608
+    },
+    {
+     "name": "stop_en_f2_0_3m/30deg",
+     "text": "Stop.",
+     "voice": "en+f2",
+     "geometry": "3m/30deg",
+     "speech_start_s": 167.6131,
+     "speech_end_s": 167.7571
+    },
+    {
+     "name": "stop_en_f2_1_3m/30deg",
+     "text": "Stop!",
+     "voice": "en+f2",
+     "geometry": "3m/30deg",
+     "speech_start_s": 173.0052,
+     "speech_end_s": 173.1492
+    },
+    {
+     "name": "stop_en_f2_2_3m/30deg",
+     "text": "Parcel, stop.",
+     "voice": "en+f2",
+     "geometry": "3m/30deg",
+     "speech_start_s": 178.3494,
+     "speech_end_s": 179.1654
+    },
+    {
+     "name": "stop_en_f2_3_3m/30deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+f2",
+     "geometry": "3m/30deg",
+     "speech_start_s": 184.3747,
+     "speech_end_s": 185.7187
+    },
+    {
+     "name": "stop_en_m3_0_3m/60deg",
+     "text": "Stop.",
+     "voice": "en+m3",
+     "geometry": "3m/60deg",
+     "speech_start_s": 190.989,
+     "speech_end_s": 191.101
+    },
+    {
+     "name": "stop_en_m3_1_3m/60deg",
+     "text": "Stop!",
+     "voice": "en+m3",
+     "geometry": "3m/60deg",
+     "speech_start_s": 196.3547,
+     "speech_end_s": 196.4667
+    },
+    {
+     "name": "stop_en_m3_2_3m/60deg",
+     "text": "Parcel, stop.",
+     "voice": "en+m3",
+     "geometry": "3m/60deg",
+     "speech_start_s": 201.6608,
+     "speech_end_s": 202.4128
+    },
+    {
+     "name": "stop_en_m3_3_3m/60deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+m3",
+     "geometry": "3m/60deg",
+     "speech_start_s": 207.6219,
+     "speech_end_s": 208.8699
+    },
+    {
+     "name": "stop_en_f4_0_3m/60deg",
+     "text": "Stop.",
+     "voice": "en+f4",
+     "geometry": "3m/60deg",
+     "speech_start_s": 214.1202,
+     "speech_end_s": 214.2802
+    },
+    {
+     "name": "stop_en_f4_1_3m/60deg",
+     "text": "Stop!",
+     "voice": "en+f4",
+     "geometry": "3m/60deg",
+     "speech_start_s": 219.5614,
+     "speech_end_s": 219.7214
+    },
+    {
+     "name": "stop_en_f4_2_3m/60deg",
+     "text": "Parcel, stop.",
+     "voice": "en+f4",
+     "geometry": "3m/60deg",
+     "speech_start_s": 224.9547,
+     "speech_end_s": 225.8347
+    },
+    {
+     "name": "stop_en_f4_3_3m/60deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+f4",
+     "geometry": "3m/60deg",
+     "speech_start_s": 231.0565,
+     "speech_end_s": 232.4325
+    },
+    {
+     "name": "stop_en_us_m7_0_3m/60deg",
+     "text": "Stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/60deg",
+     "speech_start_s": 237.7151,
+     "speech_end_s": 237.9231
+    },
+    {
+     "name": "stop_en_us_m7_1_3m/60deg",
+     "text": "Stop!",
+     "voice": "en-us+m7",
+     "geometry": "3m/60deg",
+     "speech_start_s": 243.1542,
+     "speech_end_s": 243.3622
+    },
+    {
+     "name": "stop_en_us_m7_2_3m/60deg",
+     "text": "Parcel, stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/60deg",
+     "speech_start_s": 248.5649,
+     "speech_end_s": 249.4289
+    },
+    {
+     "name": "stop_en_us_m7_3_3m/60deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/60deg",
+     "speech_start_s": 254.6353,
+     "speech_end_s": 256.0913
+    },
+    {
+     "name": "stop_en_f2_0_3m/60deg",
+     "text": "Stop.",
+     "voice": "en+f2",
+     "geometry": "3m/60deg",
+     "speech_start_s": 261.3436,
+     "speech_end_s": 261.4876
+    },
+    {
+     "name": "stop_en_f2_1_3m/60deg",
+     "text": "Stop!",
+     "voice": "en+f2",
+     "geometry": "3m/60deg",
+     "speech_start_s": 266.7357,
+     "speech_end_s": 266.8798
+    },
+    {
+     "name": "stop_en_f2_2_3m/60deg",
+     "text": "Parcel, stop.",
+     "voice": "en+f2",
+     "geometry": "3m/60deg",
+     "speech_start_s": 272.0799,
+     "speech_end_s": 272.8959
+    },
+    {
+     "name": "stop_en_f2_3_3m/60deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+f2",
+     "geometry": "3m/60deg",
+     "speech_start_s": 278.1052,
+     "speech_end_s": 279.4492
+    },
+    {
+     "name": "stop_en_m3_0_3m/0deg",
+     "text": "Stop.",
+     "voice": "en+m3",
+     "geometry": "3m/0deg",
+     "speech_start_s": 284.7195,
+     "speech_end_s": 284.8315
+    },
+    {
+     "name": "stop_en_m3_1_3m/0deg",
+     "text": "Stop!",
+     "voice": "en+m3",
+     "geometry": "3m/0deg",
+     "speech_start_s": 290.0852,
+     "speech_end_s": 290.1972
+    },
+    {
+     "name": "stop_en_m3_2_3m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "en+m3",
+     "geometry": "3m/0deg",
+     "speech_start_s": 295.3913,
+     "speech_end_s": 296.1433
+    },
+    {
+     "name": "stop_en_m3_3_3m/0deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+m3",
+     "geometry": "3m/0deg",
+     "speech_start_s": 301.3524,
+     "speech_end_s": 302.6004
+    },
+    {
+     "name": "stop_en_f4_0_3m/0deg",
+     "text": "Stop.",
+     "voice": "en+f4",
+     "geometry": "3m/0deg",
+     "speech_start_s": 307.8507,
+     "speech_end_s": 308.0107
+    },
+    {
+     "name": "stop_en_f4_1_3m/0deg",
+     "text": "Stop!",
+     "voice": "en+f4",
+     "geometry": "3m/0deg",
+     "speech_start_s": 313.2919,
+     "speech_end_s": 313.4519
+    },
+    {
+     "name": "stop_en_f4_2_3m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "en+f4",
+     "geometry": "3m/0deg",
+     "speech_start_s": 318.6852,
+     "speech_end_s": 319.5652
+    },
+    {
+     "name": "stop_en_f4_3_3m/0deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+f4",
+     "geometry": "3m/0deg",
+     "speech_start_s": 324.787,
+     "speech_end_s": 326.163
+    },
+    {
+     "name": "stop_en_us_m7_0_3m/0deg",
+     "text": "Stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/0deg",
+     "speech_start_s": 331.4456,
+     "speech_end_s": 331.6536
+    },
+    {
+     "name": "stop_en_us_m7_1_3m/0deg",
+     "text": "Stop!",
+     "voice": "en-us+m7",
+     "geometry": "3m/0deg",
+     "speech_start_s": 336.8847,
+     "speech_end_s": 337.0927
+    },
+    {
+     "name": "stop_en_us_m7_2_3m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/0deg",
+     "speech_start_s": 342.2954,
+     "speech_end_s": 343.1594
+    },
+    {
+     "name": "stop_en_us_m7_3_3m/0deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en-us+m7",
+     "geometry": "3m/0deg",
+     "speech_start_s": 348.3658,
+     "speech_end_s": 349.8218
+    },
+    {
+     "name": "stop_en_f2_0_3m/0deg",
+     "text": "Stop.",
+     "voice": "en+f2",
+     "geometry": "3m/0deg",
+     "speech_start_s": 355.0741,
+     "speech_end_s": 355.2181
+    },
+    {
+     "name": "stop_en_f2_1_3m/0deg",
+     "text": "Stop!",
+     "voice": "en+f2",
+     "geometry": "3m/0deg",
+     "speech_start_s": 360.4662,
+     "speech_end_s": 360.6102
+    },
+    {
+     "name": "stop_en_f2_2_3m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "en+f2",
+     "geometry": "3m/0deg",
+     "speech_start_s": 365.8104,
+     "speech_end_s": 366.6264
+    },
+    {
+     "name": "stop_en_f2_3_3m/0deg",
+     "text": "Hey, stop stop stop.",
+     "voice": "en+f2",
+     "geometry": "3m/0deg",
+     "speech_start_s": 371.8357,
+     "speech_end_s": 373.1797
+    }
+   ],
+   "windows": [
+    {
+     "window_end_s": 3.93,
+     "text": "Stop.",
+     "asr_s": 0.4047
+    },
+    {
+     "window_end_s": 9.24,
+     "text": "Stop.",
+     "asr_s": 0.3675
+    },
+    {
+     "window_end_s": 14.7,
+     "text": "Pause.",
+     "asr_s": 0.3759
+    },
+    {
+     "window_end_s": 15.21,
+     "text": "Pass or stop?",
+     "asr_s": 0.3846
+    },
+    {
+     "window_end_s": 20.49,
+     "text": "Okay.",
+     "asr_s": 0.367
+    },
+    {
+     "window_end_s": 21.12,
+     "text": "Okay, stop, stop.",
+     "asr_s": 0.3606
+    },
+    {
+     "window_end_s": 21.51,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3642
+    },
+    {
+     "window_end_s": 21.66,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3663
+    },
+    {
+     "window_end_s": 27.09,
+     "text": "Help.",
+     "asr_s": 0.3676
+    },
+    {
+     "window_end_s": 32.49,
+     "text": "Stop.",
+     "asr_s": 0.3723
+    },
+    {
+     "window_end_s": 38.04,
+     "text": "Pause.",
+     "asr_s": 0.3786
+    },
+    {
+     "window_end_s": 38.61,
+     "text": "Pass or stop.",
+     "asr_s": 0.384
+    },
+    {
+     "window_end_s": 44.04,
+     "text": "Hey",
+     "asr_s": 0.3622
+    },
+    {
+     "window_end_s": 44.43,
+     "text": "Hey, stop.",
+     "asr_s": 0.3839
+    },
+    {
+     "window_end_s": 44.82,
+     "text": "Hey stop stop stop",
+     "asr_s": 0.3527
+    },
+    {
+     "window_end_s": 45.27,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3652
+    },
+    {
+     "window_end_s": 50.7,
+     "text": "Stop.",
+     "asr_s": 0.3651
+    },
+    {
+     "window_end_s": 56.1,
+     "text": "Stop.",
+     "asr_s": 0.3637
+    },
+    {
+     "window_end_s": 61.62,
+     "text": "Potter soap.",
+     "asr_s": 0.3755
+    },
+    {
+     "window_end_s": 62.22,
+     "text": "Potter soap stop.",
+     "asr_s": 0.3928
+    },
+    {
+     "window_end_s": 67.74,
+     "text": "a",
+     "asr_s": 0.3642
+    },
+    {
+     "window_end_s": 68.16,
+     "text": "Okay, stop, stop.",
+     "asr_s": 0.3604
+    },
+    {
+     "window_end_s": 68.55,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3669
+    },
+    {
+     "window_end_s": 68.88,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3597
+    },
+    {
+     "window_end_s": 74.25,
+     "text": "Stop.",
+     "asr_s": 0.369
+    },
+    {
+     "window_end_s": 79.65,
+     "text": "Stop.",
+     "asr_s": 0.3713
+    },
+    {
+     "window_end_s": 85.14,
+     "text": "*possible*",
+     "asr_s": 0.3857
+    },
+    {
+     "window_end_s": 85.71,
+     "text": "Puzzle Stop.",
+     "asr_s": 0.3828
+    },
+    {
+     "window_end_s": 91.11,
+     "text": "Okay.",
+     "asr_s": 0.3707
+    },
+    {
+     "window_end_s": 91.5,
+     "text": "Hey, stop.",
+     "asr_s": 0.3858
+    },
+    {
+     "window_end_s": 91.89,
+     "text": "Hey, stop stop stop stop",
+     "asr_s": 0.3594
+    },
+    {
+     "window_end_s": 92.25,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3624
+    },
+    {
+     "window_end_s": 108.42,
+     "text": "Pause.",
+     "asr_s": 0.3778
+    },
+    {
+     "window_end_s": 108.87,
+     "text": "parcel stop.",
+     "asr_s": 0.3804
+    },
+    {
+     "window_end_s": 114.3,
+     "text": "Okay.",
+     "asr_s": 0.3746
+    },
+    {
+     "window_end_s": 114.75,
+     "text": "Okay stop stop stop.",
+     "asr_s": 2.2796
+    },
+    {
+     "window_end_s": 115.14,
+     "text": "Okay stop stop stop stop",
+     "asr_s": 0.3588
+    },
+    {
+     "window_end_s": 115.35,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3664
+    },
+    {
+     "window_end_s": 120.78,
+     "text": "It's all.",
+     "asr_s": 0.3838
+    },
+    {
+     "window_end_s": 126.03,
+     "text": "Stop.",
+     "asr_s": 0.3668
+    },
+    {
+     "window_end_s": 131.79,
+     "text": "Fossil.",
+     "asr_s": 0.3789
+    },
+    {
+     "window_end_s": 132.33,
+     "text": "Ah, it's all the top.",
+     "asr_s": 0.4011
+    },
+    {
+     "window_end_s": 137.52,
+     "text": "Okay.",
+     "asr_s": 0.3674
+    },
+    {
+     "window_end_s": 137.76,
+     "text": "Hey.",
+     "asr_s": 0.3654
+    },
+    {
+     "window_end_s": 138.24,
+     "text": "Okay, stop, stop.",
+     "asr_s": 0.3891
+    },
+    {
+     "window_end_s": 138.63,
+     "text": "Hey, stop, stop, stop.",
+     "asr_s": 0.3649
+    },
+    {
+     "window_end_s": 138.96,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3604
+    },
+    {
+     "window_end_s": 144.39,
+     "text": "Stop.",
+     "asr_s": 0.3687
+    },
+    {
+     "window_end_s": 149.85,
+     "text": "Stop.",
+     "asr_s": 0.3638
+    },
+    {
+     "window_end_s": 155.31,
+     "text": "Potter soul.",
+     "asr_s": 0.379
+    },
+    {
+     "window_end_s": 155.4,
+     "text": "Pottersal.",
+     "asr_s": 0.3825
+    },
+    {
+     "window_end_s": 155.91,
+     "text": "Pottersoul, stop.",
+     "asr_s": 0.4016
+    },
+    {
+     "window_end_s": 161.4,
+     "text": "Okay",
+     "asr_s": 0.3685
+    },
+    {
+     "window_end_s": 161.82,
+     "text": "Okay stop stop.",
+     "asr_s": 1.5349
+    },
+    {
+     "window_end_s": 162.21,
+     "text": "Okay stop stop stop stop",
+     "asr_s": 0.3572
+    },
+    {
+     "window_end_s": 162.57,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3571
+    },
+    {
+     "window_end_s": 167.94,
+     "text": "Stop.",
+     "asr_s": 0.3699
+    },
+    {
+     "window_end_s": 173.37,
+     "text": "Stop.",
+     "asr_s": 0.3689
+    },
+    {
+     "window_end_s": 179.04,
+     "text": "*Possible*",
+     "asr_s": 0.3982
+    },
+    {
+     "window_end_s": 179.4,
+     "text": "Pass or stop?",
+     "asr_s": 0.3888
+    },
+    {
+     "window_end_s": 184.56,
+     "text": "Hey",
+     "asr_s": 0.3609
+    },
+    {
+     "window_end_s": 185.01,
+     "text": "Okay, stop.",
+     "asr_s": 0.3828
+    },
+    {
+     "window_end_s": 185.4,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3647
+    },
+    {
+     "window_end_s": 185.79,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3665
+    },
+    {
+     "window_end_s": 185.94,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3639
+    },
+    {
+     "window_end_s": 191.19,
+     "text": "Stop.",
+     "asr_s": 0.3469
+    },
+    {
+     "window_end_s": 202.17,
+     "text": "...possible.",
+     "asr_s": 0.3822
+    },
+    {
+     "window_end_s": 202.68,
+     "text": "parcel stop.",
+     "asr_s": 0.3702
+    },
+    {
+     "window_end_s": 208.14,
+     "text": "Okay.\n Stop.",
+     "asr_s": 0.3993
+    },
+    {
+     "window_end_s": 208.53,
+     "text": "Okay stop stop stop stop!",
+     "asr_s": 1.5875
+    },
+    {
+     "window_end_s": 208.95,
+     "text": "Okay stop stop stop stop",
+     "asr_s": 0.3561
+    },
+    {
+     "window_end_s": 209.1,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3691
+    },
+    {
+     "window_end_s": 214.5,
+     "text": "That's all.",
+     "asr_s": 0.377
+    },
+    {
+     "window_end_s": 219.96,
+     "text": "Stop.",
+     "asr_s": 0.3698
+    },
+    {
+     "window_end_s": 225.21,
+     "text": "Aw.",
+     "asr_s": 0.3667
+    },
+    {
+     "window_end_s": 225.66,
+     "text": "- Fossil. - Fossil.",
+     "asr_s": 0.3884
+    },
+    {
+     "window_end_s": 226.08,
+     "text": "Awesome! Stop!",
+     "asr_s": 0.3827
+    },
+    {
+     "window_end_s": 231.24,
+     "text": "Hey",
+     "asr_s": 0.3465
+    },
+    {
+     "window_end_s": 231.69,
+     "text": "Okay, stop.",
+     "asr_s": 0.3852
+    },
+    {
+     "window_end_s": 232.05,
+     "text": "Okay, stop, stop.",
+     "asr_s": 1.2289
+    },
+    {
+     "window_end_s": 232.44,
+     "text": "Okay stop stop stop stop",
+     "asr_s": 0.3572
+    },
+    {
+     "window_end_s": 232.71,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3586
+    },
+    {
+     "window_end_s": 238.14,
+     "text": "Stop.",
+     "asr_s": 0.3742
+    },
+    {
+     "window_end_s": 243.57,
+     "text": "Stop.",
+     "asr_s": 0.3689
+    },
+    {
+     "window_end_s": 249.03,
+     "text": "Power Soul.",
+     "asr_s": 0.3782
+    },
+    {
+     "window_end_s": 249.42,
+     "text": "Potter soul stop.",
+     "asr_s": 0.3861
+    },
+    {
+     "window_end_s": 249.66,
+     "text": "Potter soul stop.",
+     "asr_s": 0.3914
+    },
+    {
+     "window_end_s": 255.12,
+     "text": "Okay.",
+     "asr_s": 0.3758
+    },
+    {
+     "window_end_s": 255.54,
+     "text": "Okay, stop. Stop.",
+     "asr_s": 0.3961
+    },
+    {
+     "window_end_s": 255.93,
+     "text": "Okay stop stop stop stop",
+     "asr_s": 0.3574
+    },
+    {
+     "window_end_s": 256.29,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3615
+    },
+    {
+     "window_end_s": 261.54,
+     "text": "Stop.",
+     "asr_s": 0.3757
+    },
+    {
+     "window_end_s": 267.09,
+     "text": "Stop.",
+     "asr_s": 0.3705
+    },
+    {
+     "window_end_s": 272.55,
+     "text": "\"Parsal\"",
+     "asr_s": 0.3889
+    },
+    {
+     "window_end_s": 272.94,
+     "text": "Pass or stop?",
+     "asr_s": 0.3842
+    },
+    {
+     "window_end_s": 273.18,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3897
+    },
+    {
+     "window_end_s": 278.58,
+     "text": "Hey",
+     "asr_s": 0.3467
+    },
+    {
+     "window_end_s": 278.97,
+     "text": "Hey, stop.",
+     "asr_s": 0.3908
+    },
+    {
+     "window_end_s": 279.33,
+     "text": "Hey stop stop stop stop",
+     "asr_s": 0.3567
+    },
+    {
+     "window_end_s": 279.66,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3676
+    },
+    {
+     "window_end_s": 284.91,
+     "text": "Stop.",
+     "asr_s": 0.3501
+    },
+    {
+     "window_end_s": 296.04,
+     "text": "*possible*",
+     "asr_s": 0.4088
+    },
+    {
+     "window_end_s": 296.37,
+     "text": "parcel stop.",
+     "asr_s": 0.3697
+    },
+    {
+     "window_end_s": 301.83,
+     "text": "Okay.",
+     "asr_s": 0.379
+    },
+    {
+     "window_end_s": 302.22,
+     "text": "Okay stop stop stop.",
+     "asr_s": 2.3172
+    },
+    {
+     "window_end_s": 302.61,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3684
+    },
+    {
+     "window_end_s": 302.82,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3674
+    },
+    {
+     "window_end_s": 308.16,
+     "text": "Stop.",
+     "asr_s": 0.3699
+    },
+    {
+     "window_end_s": 313.5,
+     "text": "It's all good.",
+     "asr_s": 0.3544
+    },
+    {
+     "window_end_s": 319.35,
+     "text": "Pause old...",
+     "asr_s": 0.4186
+    },
+    {
+     "window_end_s": 319.71,
+     "text": "Ah, stop.",
+     "asr_s": 0.3978
+    },
+    {
+     "window_end_s": 319.8,
+     "text": "puzzle stop.",
+     "asr_s": 0.3778
+    },
+    {
+     "window_end_s": 324.96,
+     "text": "Hey",
+     "asr_s": 0.3433
+    },
+    {
+     "window_end_s": 325.17,
+     "text": "Hey",
+     "asr_s": 0.347
+    },
+    {
+     "window_end_s": 325.65,
+     "text": "Okay stop.",
+     "asr_s": 0.377
+    },
+    {
+     "window_end_s": 326.01,
+     "text": "Hey stop stop stop",
+     "asr_s": 0.354
+    },
+    {
+     "window_end_s": 326.4,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3583
+    },
+    {
+     "window_end_s": 331.83,
+     "text": "Stop.",
+     "asr_s": 0.3728
+    },
+    {
+     "window_end_s": 337.14,
+     "text": "Stop.",
+     "asr_s": 0.3683
+    },
+    {
+     "window_end_s": 342.96,
+     "text": "Pottersoul.",
+     "asr_s": 0.3888
+    },
+    {
+     "window_end_s": 343.38,
+     "text": "Pottersoul stop.",
+     "asr_s": 0.3905
+    },
+    {
+     "window_end_s": 348.84,
+     "text": "Okay.",
+     "asr_s": 0.3732
+    },
+    {
+     "window_end_s": 349.26,
+     "text": "Okay, stop.",
+     "asr_s": 0.3834
+    },
+    {
+     "window_end_s": 349.65,
+     "text": "Okay stop stop stop stop",
+     "asr_s": 0.3547
+    },
+    {
+     "window_end_s": 350.04,
+     "text": "Stop, stop, stop.",
+     "asr_s": 0.3631
+    },
+    {
+     "window_end_s": 355.29,
+     "text": "Stop.",
+     "asr_s": 0.3685
+    },
+    {
+     "window_end_s": 360.66,
+     "text": "Stop.",
+     "asr_s": 0.372
+    },
+    {
+     "window_end_s": 366.54,
+     "text": "Pause.",
+     "asr_s": 1.216
+    },
+    {
+     "window_end_s": 366.87,
+     "text": "Puzzle Stop.",
+     "asr_s": 0.3764
+    },
+    {
+     "window_end_s": 372.72,
+     "text": "Okay, stop, stop.",
+     "asr_s": 0.3598
+    },
+    {
+     "window_end_s": 373.11,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3694
+    },
+    {
+     "window_end_s": 373.41,
+     "text": "Okay, stop, stop, stop.",
+     "asr_s": 0.3669
+    }
+   ]
+  },
+  "synthetic_piper_name": {
+   "tape_seconds": 293.853,
+   "checks": 209,
+   "wall_s": 78.2,
+   "placements": [
+    {
+     "name": "a6piper_ls0.85_0_1m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "ls0.85",
+     "geometry": "1m/0deg",
+     "speech_start_s": 3.016,
+     "speech_end_s": 3.752
+    },
+    {
+     "name": "a6piper_ls0.85_0_3m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "ls0.85",
+     "geometry": "3m/0deg",
+     "speech_start_s": 7.1884,
+     "speech_end_s": 7.8444
+    },
+    {
+     "name": "a6piper_ls0.85_0_3m/30deg",
+     "text": "Parcel, stop.",
+     "voice": "ls0.85",
+     "geometry": "3m/30deg",
+     "speech_start_s": 11.3289,
+     "speech_end_s": 11.9849
+    },
+    {
+     "name": "a6piper_ls0.85_0_3m/60deg",
+     "text": "Parcel, stop.",
+     "voice": "ls0.85",
+     "geometry": "3m/60deg",
+     "speech_start_s": 15.4693,
+     "speech_end_s": 16.1253
+    },
+    {
+     "name": "a6piper_ls0.85_1_1m/0deg",
+     "text": "Parcel, stop!",
+     "voice": "ls0.85",
+     "geometry": "1m/0deg",
+     "speech_start_s": 19.5938,
+     "speech_end_s": 20.4097
+    },
+    {
+     "name": "a6piper_ls0.85_1_3m/0deg",
+     "text": "Parcel, stop!",
+     "voice": "ls0.85",
+     "geometry": "3m/0deg",
+     "speech_start_s": 23.9359,
+     "speech_end_s": 24.7199
+    },
+    {
+     "name": "a6piper_ls0.85_1_3m/30deg",
+     "text": "Parcel, stop!",
+     "voice": "ls0.85",
+     "geometry": "3m/30deg",
+     "speech_start_s": 28.2621,
+     "speech_end_s": 29.0461
+    },
+    {
+     "name": "a6piper_ls0.85_1_3m/60deg",
+     "text": "Parcel, stop!",
+     "voice": "ls0.85",
+     "geometry": "3m/60deg",
+     "speech_start_s": 32.5883,
+     "speech_end_s": 33.3723
+    },
+    {
+     "name": "a6piper_ls0.85_2_1m/0deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls0.85",
+     "geometry": "1m/0deg",
+     "speech_start_s": 36.9465,
+     "speech_end_s": 37.9545
+    },
+    {
+     "name": "a6piper_ls0.85_2_3m/0deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls0.85",
+     "geometry": "3m/0deg",
+     "speech_start_s": 41.4584,
+     "speech_end_s": 42.4504
+    },
+    {
+     "name": "a6piper_ls0.85_2_3m/30deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls0.85",
+     "geometry": "3m/30deg",
+     "speech_start_s": 45.9704,
+     "speech_end_s": 46.9624
+    },
+    {
+     "name": "a6piper_ls0.85_2_3m/60deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls0.85",
+     "geometry": "3m/60deg",
+     "speech_start_s": 50.4823,
+     "speech_end_s": 51.4743
+    },
+    {
+     "name": "a6piper_ls0.85_3_1m/0deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls0.85",
+     "geometry": "1m/0deg",
+     "speech_start_s": 54.9463,
+     "speech_end_s": 56.0663
+    },
+    {
+     "name": "a6piper_ls0.85_3_3m/0deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls0.85",
+     "geometry": "3m/0deg",
+     "speech_start_s": 59.5366,
+     "speech_end_s": 60.5126
+    },
+    {
+     "name": "a6piper_ls0.85_3_3m/30deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls0.85",
+     "geometry": "3m/30deg",
+     "speech_start_s": 64.095,
+     "speech_end_s": 65.087
+    },
+    {
+     "name": "a6piper_ls0.85_3_3m/60deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls0.85",
+     "geometry": "3m/60deg",
+     "speech_start_s": 68.6534,
+     "speech_end_s": 69.6614
+    },
+    {
+     "name": "a6piper_ls1.0_0_1m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.0",
+     "geometry": "1m/0deg",
+     "speech_start_s": 73.1958,
+     "speech_end_s": 73.9477
+    },
+    {
+     "name": "a6piper_ls1.0_0_3m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.0",
+     "geometry": "3m/0deg",
+     "speech_start_s": 77.4566,
+     "speech_end_s": 78.1606
+    },
+    {
+     "name": "a6piper_ls1.0_0_3m/30deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.0",
+     "geometry": "3m/30deg",
+     "speech_start_s": 81.7015,
+     "speech_end_s": 82.4055
+    },
+    {
+     "name": "a6piper_ls1.0_0_3m/60deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.0",
+     "geometry": "3m/60deg",
+     "speech_start_s": 85.9464,
+     "speech_end_s": 86.6504
+    },
+    {
+     "name": "a6piper_ls1.0_1_1m/0deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.0",
+     "geometry": "1m/0deg",
+     "speech_start_s": 90.1432,
+     "speech_end_s": 91.0392
+    },
+    {
+     "name": "a6piper_ls1.0_1_3m/0deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.0",
+     "geometry": "3m/0deg",
+     "speech_start_s": 94.5827,
+     "speech_end_s": 95.4307
+    },
+    {
+     "name": "a6piper_ls1.0_1_3m/30deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.0",
+     "geometry": "3m/30deg",
+     "speech_start_s": 99.0061,
+     "speech_end_s": 99.8381
+    },
+    {
+     "name": "a6piper_ls1.0_1_3m/60deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.0",
+     "geometry": "3m/60deg",
+     "speech_start_s": 103.4136,
+     "speech_end_s": 104.2456
+    },
+    {
+     "name": "a6piper_ls1.0_2_1m/0deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.0",
+     "geometry": "1m/0deg",
+     "speech_start_s": 107.821,
+     "speech_end_s": 108.909
+    },
+    {
+     "name": "a6piper_ls1.0_2_3m/0deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.0",
+     "geometry": "3m/0deg",
+     "speech_start_s": 112.3677,
+     "speech_end_s": 113.4237
+    },
+    {
+     "name": "a6piper_ls1.0_2_3m/30deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.0",
+     "geometry": "3m/30deg",
+     "speech_start_s": 116.9145,
+     "speech_end_s": 117.9705
+    },
+    {
+     "name": "a6piper_ls1.0_2_3m/60deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.0",
+     "geometry": "3m/60deg",
+     "speech_start_s": 121.4612,
+     "speech_end_s": 122.5172
+    },
+    {
+     "name": "a6piper_ls1.0_3_1m/0deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.0",
+     "geometry": "1m/0deg",
+     "speech_start_s": 126.008,
+     "speech_end_s": 127.192
+    },
+    {
+     "name": "a6piper_ls1.0_3_3m/0deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.0",
+     "geometry": "3m/0deg",
+     "speech_start_s": 130.6376,
+     "speech_end_s": 131.6776
+    },
+    {
+     "name": "a6piper_ls1.0_3_3m/30deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.0",
+     "geometry": "3m/30deg",
+     "speech_start_s": 135.2191,
+     "speech_end_s": 136.2591
+    },
+    {
+     "name": "a6piper_ls1.0_3_3m/60deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.0",
+     "geometry": "3m/60deg",
+     "speech_start_s": 139.8007,
+     "speech_end_s": 140.8407
+    },
+    {
+     "name": "a6piper_ls1.15_0_1m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.15",
+     "geometry": "1m/0deg",
+     "speech_start_s": 144.3342,
+     "speech_end_s": 145.1662
+    },
+    {
+     "name": "a6piper_ls1.15_0_3m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.15",
+     "geometry": "3m/0deg",
+     "speech_start_s": 148.7229,
+     "speech_end_s": 149.5069
+    },
+    {
+     "name": "a6piper_ls1.15_0_3m/30deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.15",
+     "geometry": "3m/30deg",
+     "speech_start_s": 153.0955,
+     "speech_end_s": 153.8795
+    },
+    {
+     "name": "a6piper_ls1.15_0_3m/60deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.15",
+     "geometry": "3m/60deg",
+     "speech_start_s": 157.4681,
+     "speech_end_s": 158.2521
+    },
+    {
+     "name": "a6piper_ls1.15_1_1m/0deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.15",
+     "geometry": "1m/0deg",
+     "speech_start_s": 161.7927,
+     "speech_end_s": 162.6247
+    },
+    {
+     "name": "a6piper_ls1.15_1_3m/0deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.15",
+     "geometry": "3m/0deg",
+     "speech_start_s": 166.1001,
+     "speech_end_s": 166.9001
+    },
+    {
+     "name": "a6piper_ls1.15_1_3m/30deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.15",
+     "geometry": "3m/30deg",
+     "speech_start_s": 170.3914,
+     "speech_end_s": 171.1914
+    },
+    {
+     "name": "a6piper_ls1.15_1_3m/60deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.15",
+     "geometry": "3m/60deg",
+     "speech_start_s": 174.6827,
+     "speech_end_s": 175.4827
+    },
+    {
+     "name": "a6piper_ls1.15_2_1m/0deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.15",
+     "geometry": "1m/0deg",
+     "speech_start_s": 179.022,
+     "speech_end_s": 180.286
+    },
+    {
+     "name": "a6piper_ls1.15_2_3m/0deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.15",
+     "geometry": "3m/0deg",
+     "speech_start_s": 183.8286,
+     "speech_end_s": 185.0606
+    },
+    {
+     "name": "a6piper_ls1.15_2_3m/30deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.15",
+     "geometry": "3m/30deg",
+     "speech_start_s": 188.6191,
+     "speech_end_s": 189.8511
+    },
+    {
+     "name": "a6piper_ls1.15_2_3m/60deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.15",
+     "geometry": "3m/60deg",
+     "speech_start_s": 193.4097,
+     "speech_end_s": 194.6417
+    },
+    {
+     "name": "a6piper_ls1.15_3_1m/0deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.15",
+     "geometry": "1m/0deg",
+     "speech_start_s": 198.1362,
+     "speech_end_s": 199.4322
+    },
+    {
+     "name": "a6piper_ls1.15_3_3m/0deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.15",
+     "geometry": "3m/0deg",
+     "speech_start_s": 202.9196,
+     "speech_end_s": 204.0716
+    },
+    {
+     "name": "a6piper_ls1.15_3_3m/30deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.15",
+     "geometry": "3m/30deg",
+     "speech_start_s": 207.687,
+     "speech_end_s": 208.839
+    },
+    {
+     "name": "a6piper_ls1.15_3_3m/60deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.15",
+     "geometry": "3m/60deg",
+     "speech_start_s": 212.4544,
+     "speech_end_s": 213.6384
+    },
+    {
+     "name": "a6piper_ls1.3_0_1m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.3",
+     "geometry": "1m/0deg",
+     "speech_start_s": 217.2217,
+     "speech_end_s": 218.2137
+    },
+    {
+     "name": "a6piper_ls1.3_0_3m/0deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.3",
+     "geometry": "3m/0deg",
+     "speech_start_s": 221.7685,
+     "speech_end_s": 222.7285
+    },
+    {
+     "name": "a6piper_ls1.3_0_3m/30deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.3",
+     "geometry": "3m/30deg",
+     "speech_start_s": 226.3152,
+     "speech_end_s": 227.2752
+    },
+    {
+     "name": "a6piper_ls1.3_0_3m/60deg",
+     "text": "Parcel, stop.",
+     "voice": "ls1.3",
+     "geometry": "3m/60deg",
+     "speech_start_s": 230.862,
+     "speech_end_s": 231.838
+    },
+    {
+     "name": "a6piper_ls1.3_1_1m/0deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.3",
+     "geometry": "1m/0deg",
+     "speech_start_s": 235.5527,
+     "speech_end_s": 236.5767
+    },
+    {
+     "name": "a6piper_ls1.3_1_3m/0deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.3",
+     "geometry": "3m/0deg",
+     "speech_start_s": 240.3521,
+     "speech_end_s": 241.2961
+    },
+    {
+     "name": "a6piper_ls1.3_1_3m/30deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.3",
+     "geometry": "3m/30deg",
+     "speech_start_s": 245.1195,
+     "speech_end_s": 246.0635
+    },
+    {
+     "name": "a6piper_ls1.3_1_3m/60deg",
+     "text": "Parcel, stop!",
+     "voice": "ls1.3",
+     "geometry": "3m/60deg",
+     "speech_start_s": 249.8869,
+     "speech_end_s": 250.8309
+    },
+    {
+     "name": "a6piper_ls1.3_2_1m/0deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.3",
+     "geometry": "1m/0deg",
+     "speech_start_s": 254.5262,
+     "speech_end_s": 255.8382
+    },
+    {
+     "name": "a6piper_ls1.3_2_3m/0deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.3",
+     "geometry": "3m/0deg",
+     "speech_start_s": 259.4909,
+     "speech_end_s": 260.7709
+    },
+    {
+     "name": "a6piper_ls1.3_2_3m/30deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.3",
+     "geometry": "3m/30deg",
+     "speech_start_s": 264.4556,
+     "speech_end_s": 265.7356
+    },
+    {
+     "name": "a6piper_ls1.3_2_3m/60deg",
+     "text": "Hey Parcel, stop.",
+     "voice": "ls1.3",
+     "geometry": "3m/60deg",
+     "speech_start_s": 269.4203,
+     "speech_end_s": 270.7003
+    },
+    {
+     "name": "a6piper_ls1.3_3_1m/0deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.3",
+     "geometry": "1m/0deg",
+     "speech_start_s": 274.337,
+     "speech_end_s": 275.665
+    },
+    {
+     "name": "a6piper_ls1.3_3_3m/0deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.3",
+     "geometry": "3m/0deg",
+     "speech_start_s": 279.2321,
+     "speech_end_s": 280.4641
+    },
+    {
+     "name": "a6piper_ls1.3_3_3m/30deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.3",
+     "geometry": "3m/30deg",
+     "speech_start_s": 284.1271,
+     "speech_end_s": 285.3591
+    },
+    {
+     "name": "a6piper_ls1.3_3_3m/60deg",
+     "text": "Parcel, stop now.",
+     "voice": "ls1.3",
+     "geometry": "3m/60deg",
+     "speech_start_s": 289.0222,
+     "speech_end_s": 290.2542
+    }
+   ],
+   "windows": [
+    {
+     "window_end_s": 3.42,
+     "text": "Parcel.",
+     "asr_s": 0.374
+    },
+    {
+     "window_end_s": 3.72,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3798
+    },
+    {
+     "window_end_s": 3.96,
+     "text": "parcel stop.",
+     "asr_s": 0.3478
+    },
+    {
+     "window_end_s": 7.71,
+     "text": "Parseltz.",
+     "asr_s": 0.3865
+    },
+    {
+     "window_end_s": 8.07,
+     "text": "parcel stop.",
+     "asr_s": 0.3472
+    },
+    {
+     "window_end_s": 11.85,
+     "text": "Parseltz.",
+     "asr_s": 0.3926
+    },
+    {
+     "window_end_s": 12.24,
+     "text": "parcel stop.",
+     "asr_s": 0.3511
+    },
+    {
+     "window_end_s": 15.93,
+     "text": "Parseltz.",
+     "asr_s": 0.3898
+    },
+    {
+     "window_end_s": 16.38,
+     "text": "parcel stop.",
+     "asr_s": 0.3536
+    },
+    {
+     "window_end_s": 20.01,
+     "text": "Parcel.",
+     "asr_s": 0.3704
+    },
+    {
+     "window_end_s": 20.37,
+     "text": "parcel stop",
+     "asr_s": 0.3679
+    },
+    {
+     "window_end_s": 20.61,
+     "text": "parcel stop",
+     "asr_s": 0.3444
+    },
+    {
+     "window_end_s": 24.51,
+     "text": "Parcels.",
+     "asr_s": 0.381
+    },
+    {
+     "window_end_s": 24.87,
+     "text": "parcel stop",
+     "asr_s": 0.3495
+    },
+    {
+     "window_end_s": 24.96,
+     "text": "parcel stop",
+     "asr_s": 0.3478
+    },
+    {
+     "window_end_s": 28.8,
+     "text": "Parcel.",
+     "asr_s": 0.3802
+    },
+    {
+     "window_end_s": 29.16,
+     "text": "parcel stop.",
+     "asr_s": 0.3955
+    },
+    {
+     "window_end_s": 29.25,
+     "text": "parcel stop.",
+     "asr_s": 0.3732
+    },
+    {
+     "window_end_s": 33.03,
+     "text": "Parcel!",
+     "asr_s": 0.3717
+    },
+    {
+     "window_end_s": 33.42,
+     "text": "parcel stop.",
+     "asr_s": 0.3745
+    },
+    {
+     "window_end_s": 33.6,
+     "text": "parcel stop",
+     "asr_s": 0.3479
+    },
+    {
+     "window_end_s": 37.38,
+     "text": "Hey, Parcel.",
+     "asr_s": 0.3909
+    },
+    {
+     "window_end_s": 37.74,
+     "text": "Hey, parcel.",
+     "asr_s": 0.3884
+    },
+    {
+     "window_end_s": 38.19,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3616
+    },
+    {
+     "window_end_s": 41.94,
+     "text": "Hey, Parcel.",
+     "asr_s": 0.3611
+    },
+    {
+     "window_end_s": 42.18,
+     "text": "Hey Parcel!",
+     "asr_s": 0.3554
+    },
+    {
+     "window_end_s": 42.66,
+     "text": "Hey, parcel stop",
+     "asr_s": 0.3553
+    },
+    {
+     "window_end_s": 46.41,
+     "text": "Hey, Parcel.",
+     "asr_s": 0.3924
+    },
+    {
+     "window_end_s": 46.71,
+     "text": "Hey Parcels!",
+     "asr_s": 0.357
+    },
+    {
+     "window_end_s": 47.19,
+     "text": "Hey, parcel stop",
+     "asr_s": 0.354
+    },
+    {
+     "window_end_s": 50.94,
+     "text": "Hey, Parcel.",
+     "asr_s": 0.3591
+    },
+    {
+     "window_end_s": 51.3,
+     "text": "Hey Parcel!",
+     "asr_s": 0.3918
+    },
+    {
+     "window_end_s": 51.69,
+     "text": "Hey, parcel stop",
+     "asr_s": 0.3524
+    },
+    {
+     "window_end_s": 55.41,
+     "text": "parcel",
+     "asr_s": 0.3598
+    },
+    {
+     "window_end_s": 55.77,
+     "text": "Parcel, stop the...",
+     "asr_s": 0.3871
+    },
+    {
+     "window_end_s": 56.13,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.362
+    },
+    {
+     "window_end_s": 56.25,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3608
+    },
+    {
+     "window_end_s": 60.09,
+     "text": "Parcels.",
+     "asr_s": 0.3847
+    },
+    {
+     "window_end_s": 60.48,
+     "text": "parcel stop now",
+     "asr_s": 0.3497
+    },
+    {
+     "window_end_s": 60.81,
+     "text": "parcel stop now",
+     "asr_s": 0.3499
+    },
+    {
+     "window_end_s": 64.56,
+     "text": "parcel",
+     "asr_s": 0.3597
+    },
+    {
+     "window_end_s": 64.92,
+     "text": "parcel stop",
+     "asr_s": 0.351
+    },
+    {
+     "window_end_s": 65.37,
+     "text": "parcel stop now",
+     "asr_s": 0.3522
+    },
+    {
+     "window_end_s": 69.12,
+     "text": "parcel",
+     "asr_s": 0.3638
+    },
+    {
+     "window_end_s": 69.48,
+     "text": "parcel stop",
+     "asr_s": 0.372
+    },
+    {
+     "window_end_s": 69.93,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3597
+    },
+    {
+     "window_end_s": 73.62,
+     "text": "parcels,",
+     "asr_s": 0.3725
+    },
+    {
+     "window_end_s": 73.98,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3567
+    },
+    {
+     "window_end_s": 74.19,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3566
+    },
+    {
+     "window_end_s": 77.91,
+     "text": "Parcels.",
+     "asr_s": 0.379
+    },
+    {
+     "window_end_s": 78.27,
+     "text": "parcel stop.",
+     "asr_s": 0.3724
+    },
+    {
+     "window_end_s": 78.39,
+     "text": "parcel stop.",
+     "asr_s": 0.3499
+    },
+    {
+     "window_end_s": 82.2,
+     "text": "parcels.",
+     "asr_s": 0.3669
+    },
+    {
+     "window_end_s": 82.65,
+     "text": "parcel stop.",
+     "asr_s": 0.3513
+    },
+    {
+     "window_end_s": 86.4,
+     "text": "Parcels.",
+     "asr_s": 0.3803
+    },
+    {
+     "window_end_s": 86.76,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3805
+    },
+    {
+     "window_end_s": 86.88,
+     "text": "parcel stop.",
+     "asr_s": 0.3491
+    },
+    {
+     "window_end_s": 90.6,
+     "text": "parcel.",
+     "asr_s": 0.3698
+    },
+    {
+     "window_end_s": 90.96,
+     "text": "parcel stop",
+     "asr_s": 0.368
+    },
+    {
+     "window_end_s": 91.29,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3599
+    },
+    {
+     "window_end_s": 95.16,
+     "text": "Parcel.",
+     "asr_s": 0.3718
+    },
+    {
+     "window_end_s": 95.52,
+     "text": "parcel stop",
+     "asr_s": 0.3469
+    },
+    {
+     "window_end_s": 95.67,
+     "text": "parcel stop.",
+     "asr_s": 0.3735
+    },
+    {
+     "window_end_s": 99.48,
+     "text": "parcel.",
+     "asr_s": 0.3617
+    },
+    {
+     "window_end_s": 99.87,
+     "text": "parcel stop.",
+     "asr_s": 0.3717
+    },
+    {
+     "window_end_s": 100.08,
+     "text": "parcel stop",
+     "asr_s": 0.3459
+    },
+    {
+     "window_end_s": 103.83,
+     "text": "parcel",
+     "asr_s": 0.3613
+    },
+    {
+     "window_end_s": 104.19,
+     "text": "parcel stop",
+     "asr_s": 0.3676
+    },
+    {
+     "window_end_s": 104.49,
+     "text": "parcel stop",
+     "asr_s": 0.3463
+    },
+    {
+     "window_end_s": 108.24,
+     "text": "He personally.",
+     "asr_s": 0.3746
+    },
+    {
+     "window_end_s": 108.6,
+     "text": "Hey, Parcel.",
+     "asr_s": 0.3903
+    },
+    {
+     "window_end_s": 108.99,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3571
+    },
+    {
+     "window_end_s": 109.14,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.36
+    },
+    {
+     "window_end_s": 112.89,
+     "text": "Hey, personal.",
+     "asr_s": 0.3879
+    },
+    {
+     "window_end_s": 113.28,
+     "text": "Hey, Persol, stop.",
+     "asr_s": 0.4096
+    },
+    {
+     "window_end_s": 113.64,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3569
+    },
+    {
+     "window_end_s": 117.36,
+     "text": "He personally.",
+     "asr_s": 0.3698
+    },
+    {
+     "window_end_s": 117.72,
+     "text": "Pay parcels.",
+     "asr_s": 0.3885
+    },
+    {
+     "window_end_s": 118.11,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3587
+    },
+    {
+     "window_end_s": 118.2,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3623
+    },
+    {
+     "window_end_s": 121.95,
+     "text": "Hey, personal.",
+     "asr_s": 0.3866
+    },
+    {
+     "window_end_s": 122.34,
+     "text": "Hey, Persol.",
+     "asr_s": 0.3925
+    },
+    {
+     "window_end_s": 122.73,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3613
+    },
+    {
+     "window_end_s": 126.51,
+     "text": "parcel",
+     "asr_s": 0.3626
+    },
+    {
+     "window_end_s": 126.9,
+     "text": "Parcel, stop the night.",
+     "asr_s": 0.3989
+    },
+    {
+     "window_end_s": 127.29,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3603
+    },
+    {
+     "window_end_s": 127.38,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3613
+    },
+    {
+     "window_end_s": 131.13,
+     "text": "parcel",
+     "asr_s": 0.3617
+    },
+    {
+     "window_end_s": 131.52,
+     "text": "parcel stop",
+     "asr_s": 0.3683
+    },
+    {
+     "window_end_s": 131.94,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3605
+    },
+    {
+     "window_end_s": 135.69,
+     "text": "parcel",
+     "asr_s": 0.3604
+    },
+    {
+     "window_end_s": 136.08,
+     "text": "parcel stop me",
+     "asr_s": 0.3724
+    },
+    {
+     "window_end_s": 136.53,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3617
+    },
+    {
+     "window_end_s": 140.28,
+     "text": "Parcel.",
+     "asr_s": 0.3663
+    },
+    {
+     "window_end_s": 140.67,
+     "text": "parcel stop",
+     "asr_s": 0.35
+    },
+    {
+     "window_end_s": 141.12,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3611
+    },
+    {
+     "window_end_s": 144.81,
+     "text": "Parcels.",
+     "asr_s": 0.4041
+    },
+    {
+     "window_end_s": 145.2,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3531
+    },
+    {
+     "window_end_s": 145.38,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3552
+    },
+    {
+     "window_end_s": 149.16,
+     "text": "parcel.",
+     "asr_s": 0.3636
+    },
+    {
+     "window_end_s": 149.52,
+     "text": "parcel stop.",
+     "asr_s": 0.3712
+    },
+    {
+     "window_end_s": 149.73,
+     "text": "parcel stop.",
+     "asr_s": 0.3736
+    },
+    {
+     "window_end_s": 153.6,
+     "text": "Parcel.",
+     "asr_s": 0.3764
+    },
+    {
+     "window_end_s": 153.99,
+     "text": "parcel stop.",
+     "asr_s": 0.3801
+    },
+    {
+     "window_end_s": 154.14,
+     "text": "parcel stop.",
+     "asr_s": 0.3801
+    },
+    {
+     "window_end_s": 157.98,
+     "text": "Parcels.",
+     "asr_s": 0.3769
+    },
+    {
+     "window_end_s": 158.37,
+     "text": "parcel stop.",
+     "asr_s": 0.3489
+    },
+    {
+     "window_end_s": 158.49,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3535
+    },
+    {
+     "window_end_s": 162.24,
+     "text": "parcel",
+     "asr_s": 0.3611
+    },
+    {
+     "window_end_s": 162.6,
+     "text": "parcel stop.",
+     "asr_s": 0.3709
+    },
+    {
+     "window_end_s": 162.9,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3878
+    },
+    {
+     "window_end_s": 166.59,
+     "text": "parcel.",
+     "asr_s": 0.3848
+    },
+    {
+     "window_end_s": 166.98,
+     "text": "parcel stop.",
+     "asr_s": 0.4048
+    },
+    {
+     "window_end_s": 167.16,
+     "text": "parcel stop.",
+     "asr_s": 0.3738
+    },
+    {
+     "window_end_s": 170.88,
+     "text": "parcel.",
+     "asr_s": 0.3626
+    },
+    {
+     "window_end_s": 171.27,
+     "text": "\"Herssel, stop.\"",
+     "asr_s": 0.3876
+    },
+    {
+     "window_end_s": 171.45,
+     "text": "\"Herssel, stop.\"",
+     "asr_s": 0.4048
+    },
+    {
+     "window_end_s": 175.26,
+     "text": "Parcels.",
+     "asr_s": 0.3839
+    },
+    {
+     "window_end_s": 175.74,
+     "text": "Persil, stop.",
+     "asr_s": 0.3915
+    },
+    {
+     "window_end_s": 179.55,
+     "text": "Hey, Parsa.",
+     "asr_s": 0.3935
+    },
+    {
+     "window_end_s": 179.91,
+     "text": "Hey, parcel.",
+     "asr_s": 0.3519
+    },
+    {
+     "window_end_s": 180.42,
+     "text": "Hey parcel, stop.",
+     "asr_s": 0.3555
+    },
+    {
+     "window_end_s": 180.54,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3602
+    },
+    {
+     "window_end_s": 184.32,
+     "text": "Hey, Parsa!",
+     "asr_s": 0.3886
+    },
+    {
+     "window_end_s": 184.71,
+     "text": "Hey, parcel.",
+     "asr_s": 0.3533
+    },
+    {
+     "window_end_s": 185.28,
+     "text": "Hey parcel, stop.",
+     "asr_s": 0.3563
+    },
+    {
+     "window_end_s": 189.09,
+     "text": "Hey Parsa-",
+     "asr_s": 0.3837
+    },
+    {
+     "window_end_s": 189.51,
+     "text": "Hey, parcel.",
+     "asr_s": 0.3545
+    },
+    {
+     "window_end_s": 190.08,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3604
+    },
+    {
+     "window_end_s": 193.89,
+     "text": "Hey, Parsa!",
+     "asr_s": 0.3923
+    },
+    {
+     "window_end_s": 194.28,
+     "text": "Hey, parcel.",
+     "asr_s": 0.3539
+    },
+    {
+     "window_end_s": 194.76,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3619
+    },
+    {
+     "window_end_s": 194.85,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3597
+    },
+    {
+     "window_end_s": 198.57,
+     "text": "Parcel.",
+     "asr_s": 0.3648
+    },
+    {
+     "window_end_s": 198.93,
+     "text": "parcel, socket, and the other side.",
+     "asr_s": 0.4089
+    },
+    {
+     "window_end_s": 199.32,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.359
+    },
+    {
+     "window_end_s": 199.59,
+     "text": "parcel stop now.",
+     "asr_s": 0.3854
+    },
+    {
+     "window_end_s": 203.43,
+     "text": "parcel.",
+     "asr_s": 0.3699
+    },
+    {
+     "window_end_s": 203.82,
+     "text": "personal self-mariachi.",
+     "asr_s": 0.3912
+    },
+    {
+     "window_end_s": 204.21,
+     "text": "parcel, soft now.",
+     "asr_s": 0.3919
+    },
+    {
+     "window_end_s": 204.36,
+     "text": "Persil Soft Now.",
+     "asr_s": 0.3954
+    },
+    {
+     "window_end_s": 208.2,
+     "text": "parcel",
+     "asr_s": 0.3646
+    },
+    {
+     "window_end_s": 208.62,
+     "text": "parcel stop me.",
+     "asr_s": 0.375
+    },
+    {
+     "window_end_s": 209.01,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3596
+    },
+    {
+     "window_end_s": 209.13,
+     "text": "Persil, stop now.",
+     "asr_s": 0.3598
+    },
+    {
+     "window_end_s": 212.88,
+     "text": "parcel.",
+     "asr_s": 0.3669
+    },
+    {
+     "window_end_s": 213.24,
+     "text": "parcel suffer.",
+     "asr_s": 0.3714
+    },
+    {
+     "window_end_s": 213.63,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3615
+    },
+    {
+     "window_end_s": 213.9,
+     "text": "parcel stop now.",
+     "asr_s": 0.3587
+    },
+    {
+     "window_end_s": 217.65,
+     "text": "Parcels.",
+     "asr_s": 0.3812
+    },
+    {
+     "window_end_s": 218.01,
+     "text": "Parcels.",
+     "asr_s": 0.3815
+    },
+    {
+     "window_end_s": 218.49,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3567
+    },
+    {
+     "window_end_s": 222.24,
+     "text": "parcel.",
+     "asr_s": 0.3655
+    },
+    {
+     "window_end_s": 222.6,
+     "text": "parcel stop",
+     "asr_s": 0.3845
+    },
+    {
+     "window_end_s": 222.96,
+     "text": "parcel stop.",
+     "asr_s": 0.3727
+    },
+    {
+     "window_end_s": 226.8,
+     "text": "Parcels.",
+     "asr_s": 0.383
+    },
+    {
+     "window_end_s": 227.19,
+     "text": "parcel stop.",
+     "asr_s": 0.373
+    },
+    {
+     "window_end_s": 227.49,
+     "text": "parcel stop.",
+     "asr_s": 0.3714
+    },
+    {
+     "window_end_s": 231.36,
+     "text": "Parcel.",
+     "asr_s": 0.3721
+    },
+    {
+     "window_end_s": 231.51,
+     "text": "parcels.",
+     "asr_s": 0.3668
+    },
+    {
+     "window_end_s": 231.96,
+     "text": "parcel stop.",
+     "asr_s": 0.3718
+    },
+    {
+     "window_end_s": 232.05,
+     "text": "parcel stop.",
+     "asr_s": 0.3708
+    },
+    {
+     "window_end_s": 236.04,
+     "text": "parcel",
+     "asr_s": 0.3634
+    },
+    {
+     "window_end_s": 236.43,
+     "text": "parcel stop",
+     "asr_s": 0.368
+    },
+    {
+     "window_end_s": 236.79,
+     "text": "parcel stop.",
+     "asr_s": 0.3743
+    },
+    {
+     "window_end_s": 240.81,
+     "text": "parcel.",
+     "asr_s": 0.3679
+    },
+    {
+     "window_end_s": 240.96,
+     "text": "Parcels.",
+     "asr_s": 0.3889
+    },
+    {
+     "window_end_s": 241.53,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3761
+    },
+    {
+     "window_end_s": 245.58,
+     "text": "Parcel.",
+     "asr_s": 0.3682
+    },
+    {
+     "window_end_s": 245.73,
+     "text": "Parcels.",
+     "asr_s": 0.3848
+    },
+    {
+     "window_end_s": 246.21,
+     "text": "parcel stop.",
+     "asr_s": 0.3719
+    },
+    {
+     "window_end_s": 246.33,
+     "text": "Parcel, stop.",
+     "asr_s": 0.3559
+    },
+    {
+     "window_end_s": 250.32,
+     "text": "Parcel.",
+     "asr_s": 0.3729
+    },
+    {
+     "window_end_s": 250.5,
+     "text": "Parcel.",
+     "asr_s": 0.3688
+    },
+    {
+     "window_end_s": 250.95,
+     "text": "parcel stop",
+     "asr_s": 0.3703
+    },
+    {
+     "window_end_s": 251.04,
+     "text": "parcel stop.",
+     "asr_s": 0.3779
+    },
+    {
+     "window_end_s": 255.0,
+     "text": "Hate personal.",
+     "asr_s": 0.3765
+    },
+    {
+     "window_end_s": 255.45,
+     "text": "8-Parsal.",
+     "asr_s": 0.3931
+    },
+    {
+     "window_end_s": 255.93,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3619
+    },
+    {
+     "window_end_s": 256.08,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3575
+    },
+    {
+     "window_end_s": 259.95,
+     "text": "",
+     "asr_s": 0.3529
+    },
+    {
+     "window_end_s": 260.31,
+     "text": "A parcel.",
+     "asr_s": 0.3755
+    },
+    {
+     "window_end_s": 260.67,
+     "text": "A personal stop.",
+     "asr_s": 0.3824
+    },
+    {
+     "window_end_s": 261.03,
+     "text": "a parcel stop.",
+     "asr_s": 0.3583
+    },
+    {
+     "window_end_s": 264.9,
+     "text": "",
+     "asr_s": 0.3527
+    },
+    {
+     "window_end_s": 265.26,
+     "text": "Hey, parcel.",
+     "asr_s": 0.3837
+    },
+    {
+     "window_end_s": 265.62,
+     "text": "a parcel stop",
+     "asr_s": 0.3503
+    },
+    {
+     "window_end_s": 265.98,
+     "text": "a parcel stop.",
+     "asr_s": 0.3566
+    },
+    {
+     "window_end_s": 269.88,
+     "text": "Hey, Percy.",
+     "asr_s": 0.3849
+    },
+    {
+     "window_end_s": 270.24,
+     "text": "Hey, parcel.",
+     "asr_s": 0.3843
+    },
+    {
+     "window_end_s": 270.36,
+     "text": "Hey, parcel.",
+     "asr_s": 0.3843
+    },
+    {
+     "window_end_s": 270.81,
+     "text": "Hey, parcel, stop.",
+     "asr_s": 0.3606
+    },
+    {
+     "window_end_s": 270.96,
+     "text": "a parcel stop.",
+     "asr_s": 0.3551
+    },
+    {
+     "window_end_s": 274.77,
+     "text": "parcel",
+     "asr_s": 0.3603
+    },
+    {
+     "window_end_s": 275.13,
+     "text": "Harsell, stop.",
+     "asr_s": 0.3841
+    },
+    {
+     "window_end_s": 275.52,
+     "text": "Harsell, stop now.",
+     "asr_s": 0.3606
+    },
+    {
+     "window_end_s": 275.85,
+     "text": "Harsell, stop now.",
+     "asr_s": 0.3635
+    },
+    {
+     "window_end_s": 279.75,
+     "text": "Porcels.",
+     "asr_s": 0.3828
+    },
+    {
+     "window_end_s": 280.14,
+     "text": "parcel stop",
+     "asr_s": 0.3646
+    },
+    {
+     "window_end_s": 280.53,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3902
+    },
+    {
+     "window_end_s": 280.74,
+     "text": "parcel stop now.",
+     "asr_s": 0.3524
+    },
+    {
+     "window_end_s": 284.58,
+     "text": "parcel.",
+     "asr_s": 0.3653
+    },
+    {
+     "window_end_s": 284.94,
+     "text": "parcel stop",
+     "asr_s": 0.3655
+    },
+    {
+     "window_end_s": 285.33,
+     "text": "Harsal, stop now.",
+     "asr_s": 0.3617
+    },
+    {
+     "window_end_s": 285.66,
+     "text": "parcel stop now.",
+     "asr_s": 0.3539
+    },
+    {
+     "window_end_s": 289.5,
+     "text": "parcel.",
+     "asr_s": 0.3642
+    },
+    {
+     "window_end_s": 289.86,
+     "text": "parcel stop",
+     "asr_s": 0.3649
+    },
+    {
+     "window_end_s": 290.25,
+     "text": "Parcel, stop now.",
+     "asr_s": 0.3616
+    },
+    {
+     "window_end_s": 290.55,
+     "text": "parcel stop now.",
+     "asr_s": 0.3551
+    }
+   ]
+  }
+ },
+ "television": {
+  "tape_seconds": 600.0,
+  "checks": 976,
+  "placements": [],
+  "windows": [
+   {
+    "window_end_s": 3.87,
+    "text": "Police say...",
+    "asr_s": 0.3761
+   },
+   {
+    "window_end_s": 4.17,
+    "text": "Police say that all...",
+    "asr_s": 0.4194
+   },
+   {
+    "window_end_s": 4.56,
+    "text": "Police say the drivers...",
+    "asr_s": 0.3567
+   },
+   {
+    "window_end_s": 4.98,
+    "text": "Police say the drivers stop.",
+    "asr_s": 0.361
+   },
+   {
+    "window_end_s": 5.34,
+    "text": "say the drivers top after the game.",
+    "asr_s": 0.4181
+   },
+   {
+    "window_end_s": 5.73,
+    "text": "drivers top after the intersection.",
+    "asr_s": 0.4096
+   },
+   {
+    "window_end_s": 6.15,
+    "text": "to the intersection before.",
+    "asr_s": 0.3907
+   },
+   {
+    "window_end_s": 6.57,
+    "text": "the intersection before the collision.",
+    "asr_s": 0.401
+   },
+   {
+    "window_end_s": 6.99,
+    "text": "section before an occasion.",
+    "asr_s": 0.4001
+   },
+   {
+    "window_end_s": 7.08,
+    "text": "action before the collision.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 7.65,
+    "text": "for the collision.",
+    "asr_s": 0.3573
+   },
+   {
+    "window_end_s": 9.84,
+    "text": "Market",
+    "asr_s": 0.3611
+   },
+   {
+    "window_end_s": 10.2,
+    "text": "Market is closing.",
+    "asr_s": 0.3554
+   },
+   {
+    "window_end_s": 10.59,
+    "text": "Market is closed lower.",
+    "asr_s": 0.3583
+   },
+   {
+    "window_end_s": 10.95,
+    "text": "Market is closed lower today.",
+    "asr_s": 0.358
+   },
+   {
+    "window_end_s": 11.31,
+    "text": "It's closed lower today than men.",
+    "asr_s": 0.365
+   },
+   {
+    "window_end_s": 11.67,
+    "text": "",
+    "asr_s": 0.3538
+   },
+   {
+    "window_end_s": 12.06,
+    "text": "",
+    "asr_s": 0.3646
+   },
+   {
+    "window_end_s": 12.42,
+    "text": "",
+    "asr_s": 0.3642
+   },
+   {
+    "window_end_s": 12.81,
+    "text": "",
+    "asr_s": 0.3624
+   },
+   {
+    "window_end_s": 13.2,
+    "text": "wait for a distinct inflation report.",
+    "asr_s": 0.4031
+   },
+   {
+    "window_end_s": 13.65,
+    "text": "Distinflation Report.",
+    "asr_s": 0.3995
+   },
+   {
+    "window_end_s": 14.25,
+    "text": "report.",
+    "asr_s": 0.3676
+   },
+   {
+    "window_end_s": 16.44,
+    "text": "Go time.",
+    "asr_s": 0.378
+   },
+   {
+    "window_end_s": 16.83,
+    "text": "go to our website.",
+    "asr_s": 0.3925
+   },
+   {
+    "window_end_s": 17.22,
+    "text": "Go to our website for the-",
+    "asr_s": 0.3626
+   },
+   {
+    "window_end_s": 17.64,
+    "text": "to our website for the full story.",
+    "asr_s": 0.3702
+   },
+   {
+    "window_end_s": 18.03,
+    "text": "website for the full story and",
+    "asr_s": 0.3597
+   },
+   {
+    "window_end_s": 18.42,
+    "text": "for the full story and the ladies.",
+    "asr_s": 0.3662
+   },
+   {
+    "window_end_s": 18.78,
+    "text": "full story and parade this web.",
+    "asr_s": 0.3624
+   },
+   {
+    "window_end_s": 19.26,
+    "text": "and for latest weather.",
+    "asr_s": 0.3568
+   },
+   {
+    "window_end_s": 19.83,
+    "text": "this weather.",
+    "asr_s": 0.386
+   },
+   {
+    "window_end_s": 22.08,
+    "text": "The Prime Minister",
+    "asr_s": 0.351
+   },
+   {
+    "window_end_s": 22.47,
+    "text": "The Prime Minister said...",
+    "asr_s": 0.3871
+   },
+   {
+    "window_end_s": 22.83,
+    "text": "The Prime Minister said that...",
+    "asr_s": 0.3962
+   },
+   {
+    "window_end_s": 23.22,
+    "text": "Prime Minister Santo Otakis.",
+    "asr_s": 0.4161
+   },
+   {
+    "window_end_s": 23.64,
+    "text": "",
+    "asr_s": 0.3424
+   },
+   {
+    "window_end_s": 24.06,
+    "text": "and the Tonks will continue through.",
+    "asr_s": 0.3661
+   },
+   {
+    "window_end_s": 24.42,
+    "text": "talks will continue through my week.",
+    "asr_s": 0.3622
+   },
+   {
+    "window_end_s": 24.87,
+    "text": "continue through my weekend.",
+    "asr_s": 0.3601
+   },
+   {
+    "window_end_s": 27.75,
+    "text": "",
+    "asr_s": 0.3481
+   },
+   {
+    "window_end_s": 28.14,
+    "text": "follow me out at the same time.",
+    "asr_s": 0.4044
+   },
+   {
+    "window_end_s": 28.5,
+    "text": "Follow me out at the studio.",
+    "asr_s": 0.3659
+   },
+   {
+    "window_end_s": 28.92,
+    "text": "It'll be out of us too, Dilford.",
+    "asr_s": 0.376
+   },
+   {
+    "window_end_s": 29.31,
+    "text": "out of us to deal for tonight.",
+    "asr_s": 0.3657
+   },
+   {
+    "window_end_s": 29.7,
+    "text": "to deal for tonight stand. I did.",
+    "asr_s": 0.4287
+   },
+   {
+    "window_end_s": 30.09,
+    "text": "for tonight's 10 I didn't",
+    "asr_s": 0.3664
+   },
+   {
+    "window_end_s": 30.39,
+    "text": "tonight stand by the interview.",
+    "asr_s": 0.3645
+   },
+   {
+    "window_end_s": 33.21,
+    "text": "Police say...",
+    "asr_s": 0.3756
+   },
+   {
+    "window_end_s": 33.6,
+    "text": "Police say the drive-",
+    "asr_s": 0.3923
+   },
+   {
+    "window_end_s": 33.99,
+    "text": "Police say the driver's top...",
+    "asr_s": 0.405
+   },
+   {
+    "window_end_s": 34.41,
+    "text": "At least save the dry rooftop at this point.",
+    "asr_s": 0.4333
+   },
+   {
+    "window_end_s": 34.83,
+    "text": "",
+    "asr_s": 0.381
+   },
+   {
+    "window_end_s": 35.28,
+    "text": "",
+    "asr_s": 0.3685
+   },
+   {
+    "window_end_s": 35.67,
+    "text": "that mid-intersection before the-",
+    "asr_s": 0.4141
+   },
+   {
+    "window_end_s": 36.06,
+    "text": "Intersection before the collision.",
+    "asr_s": 0.3592
+   },
+   {
+    "window_end_s": 36.33,
+    "text": "before the collision.",
+    "asr_s": 0.3561
+   },
+   {
+    "window_end_s": 36.9,
+    "text": "for the collision.",
+    "asr_s": 0.3531
+   },
+   {
+    "window_end_s": 39.15,
+    "text": "Market",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 39.51,
+    "text": "Market is closing.",
+    "asr_s": 0.3552
+   },
+   {
+    "window_end_s": 39.87,
+    "text": "Market is closed low at the time.",
+    "asr_s": 0.4126
+   },
+   {
+    "window_end_s": 40.23,
+    "text": "market slow slow today.",
+    "asr_s": 0.4052
+   },
+   {
+    "window_end_s": 40.65,
+    "text": "slow, slow, until the end.",
+    "asr_s": 0.4217
+   },
+   {
+    "window_end_s": 41.07,
+    "text": "lower to a game in best of weight.",
+    "asr_s": 0.4209
+   },
+   {
+    "window_end_s": 41.52,
+    "text": "and invest of weight for later.",
+    "asr_s": 0.3656
+   },
+   {
+    "window_end_s": 41.97,
+    "text": "investors wait for latest inflation.",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 42.36,
+    "text": "wait for latest inflation with...",
+    "asr_s": 0.4035
+   },
+   {
+    "window_end_s": 42.75,
+    "text": "for latest inflation report.",
+    "asr_s": 0.3566
+   },
+   {
+    "window_end_s": 42.93,
+    "text": "latest inflation report.",
+    "asr_s": 0.356
+   },
+   {
+    "window_end_s": 45.75,
+    "text": "Come to college.",
+    "asr_s": 0.3863
+   },
+   {
+    "window_end_s": 46.11,
+    "text": "Go to Hollywood.",
+    "asr_s": 0.384
+   },
+   {
+    "window_end_s": 46.5,
+    "text": "Go to our website for the...",
+    "asr_s": 0.3636
+   },
+   {
+    "window_end_s": 46.89,
+    "text": "and go to our website for the full story.",
+    "asr_s": 0.3729
+   },
+   {
+    "window_end_s": 47.28,
+    "text": "website for the full stormy.",
+    "asr_s": 0.414
+   },
+   {
+    "window_end_s": 47.67,
+    "text": "for the full stormy and the lake.",
+    "asr_s": 0.3683
+   },
+   {
+    "window_end_s": 48.09,
+    "text": "full stormy and the latest weather.",
+    "asr_s": 0.3668
+   },
+   {
+    "window_end_s": 48.48,
+    "text": "and the latest weather.",
+    "asr_s": 0.3595
+   },
+   {
+    "window_end_s": 48.6,
+    "text": "it and the latest weather.",
+    "asr_s": 0.3635
+   },
+   {
+    "window_end_s": 51.39,
+    "text": "The Prime Minister",
+    "asr_s": 0.3497
+   },
+   {
+    "window_end_s": 51.78,
+    "text": "The Prime Minister's...",
+    "asr_s": 0.3561
+   },
+   {
+    "window_end_s": 52.14,
+    "text": "The Prime Minister sent the...",
+    "asr_s": 0.36
+   },
+   {
+    "window_end_s": 52.5,
+    "text": "the Prime Minister sent the tortoise.",
+    "asr_s": 0.4073
+   },
+   {
+    "window_end_s": 52.89,
+    "text": "Minister Santa Claus will continue.",
+    "asr_s": 0.3992
+   },
+   {
+    "window_end_s": 53.31,
+    "text": "",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 53.73,
+    "text": "thoughts will continue through the week.",
+    "asr_s": 0.3635
+   },
+   {
+    "window_end_s": 54.12,
+    "text": "will continue to prove a weekend.",
+    "asr_s": 0.3643
+   },
+   {
+    "window_end_s": 54.3,
+    "text": "continue through the weekend.",
+    "asr_s": 0.3562
+   },
+   {
+    "window_end_s": 57.18,
+    "text": "Follow me now.",
+    "asr_s": 0.3531
+   },
+   {
+    "window_end_s": 57.54,
+    "text": "Follow me out to the...",
+    "asr_s": 0.359
+   },
+   {
+    "window_end_s": 57.9,
+    "text": "Follow me now to the stupid",
+    "asr_s": 0.3588
+   },
+   {
+    "window_end_s": 58.26,
+    "text": "Follow me now to the studio for today.",
+    "asr_s": 0.3695
+   },
+   {
+    "window_end_s": 58.62,
+    "text": "out to the studio for tonight.",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 59.01,
+    "text": "",
+    "asr_s": 0.366
+   },
+   {
+    "window_end_s": 59.4,
+    "text": "We don't fall tonight to stand line in.",
+    "asr_s": 0.447
+   },
+   {
+    "window_end_s": 59.79,
+    "text": "tonight's deadline interview.",
+    "asr_s": 0.3585
+   },
+   {
+    "window_end_s": 59.88,
+    "text": "I don't know if you're going to need a deadline interview.",
+    "asr_s": 0.4312
+   },
+   {
+    "window_end_s": 62.79,
+    "text": "Like a superman.",
+    "asr_s": 0.3559
+   },
+   {
+    "window_end_s": 63.24,
+    "text": "like a Super Mario level",
+    "asr_s": 0.3577
+   },
+   {
+    "window_end_s": 63.6,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 63.69,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3608
+   },
+   {
+    "window_end_s": 64.53,
+    "text": "level like it's very",
+    "asr_s": 0.356
+   },
+   {
+    "window_end_s": 64.92,
+    "text": "like it's very like",
+    "asr_s": 0.359
+   },
+   {
+    "window_end_s": 65.28,
+    "text": "Like it's very like height",
+    "asr_s": 0.3565
+   },
+   {
+    "window_end_s": 65.64,
+    "text": "Like it's very like high detail.",
+    "asr_s": 0.3667
+   },
+   {
+    "window_end_s": 66.0,
+    "text": "very like high detail.",
+    "asr_s": 0.3557
+   },
+   {
+    "window_end_s": 67.68,
+    "text": "No.",
+    "asr_s": 0.3673
+   },
+   {
+    "window_end_s": 68.31,
+    "text": "and",
+    "asr_s": 0.3629
+   },
+   {
+    "window_end_s": 68.4,
+    "text": "and",
+    "asr_s": 0.3635
+   },
+   {
+    "window_end_s": 69.12,
+    "text": "And like one shot.",
+    "asr_s": 0.3882
+   },
+   {
+    "window_end_s": 69.51,
+    "text": "and like once you...",
+    "asr_s": 0.3568
+   },
+   {
+    "window_end_s": 69.66,
+    "text": "like once you",
+    "asr_s": 0.3485
+   },
+   {
+    "window_end_s": 70.14,
+    "text": "like once you get in.",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 70.5,
+    "text": "once you get into the...",
+    "asr_s": 0.3606
+   },
+   {
+    "window_end_s": 70.89,
+    "text": "get into the par.",
+    "asr_s": 0.3572
+   },
+   {
+    "window_end_s": 70.98,
+    "text": "get into the par.",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 73.41,
+    "text": "and I'm not sure if I'm going to be able to do that.",
+    "asr_s": 1.226
+   },
+   {
+    "window_end_s": 73.77,
+    "text": "it's just like everything.",
+    "asr_s": 0.362
+   },
+   {
+    "window_end_s": 74.64,
+    "text": "It's just like everything looks like.",
+    "asr_s": 0.3674
+   },
+   {
+    "window_end_s": 75.21,
+    "text": "everything looks like a computer.",
+    "asr_s": 0.3611
+   },
+   {
+    "window_end_s": 75.6,
+    "text": "looks like a computer game.",
+    "asr_s": 0.3574
+   },
+   {
+    "window_end_s": 75.78,
+    "text": "like a computer game.",
+    "asr_s": 0.3618
+   },
+   {
+    "window_end_s": 76.77,
+    "text": "game and they have",
+    "asr_s": 0.3534
+   },
+   {
+    "window_end_s": 77.13,
+    "text": "And they have...",
+    "asr_s": 0.3529
+   },
+   {
+    "window_end_s": 78.84,
+    "text": "I love these.",
+    "asr_s": 0.3538
+   },
+   {
+    "window_end_s": 79.2,
+    "text": "I love these like...",
+    "asr_s": 0.3552
+   },
+   {
+    "window_end_s": 79.32,
+    "text": "I love these like...",
+    "asr_s": 0.3576
+   },
+   {
+    "window_end_s": 80.61,
+    "text": "You know.",
+    "asr_s": 0.3834
+   },
+   {
+    "window_end_s": 81.15,
+    "text": "You know, it...",
+    "asr_s": 0.391
+   },
+   {
+    "window_end_s": 81.54,
+    "text": "You know, it's...",
+    "asr_s": 2.3409
+   },
+   {
+    "window_end_s": 81.96,
+    "text": "So if there's like--",
+    "asr_s": 0.3613
+   },
+   {
+    "window_end_s": 82.5,
+    "text": "If there's like a...",
+    "asr_s": 0.3632
+   },
+   {
+    "window_end_s": 84.51,
+    "text": "You know, like a --",
+    "asr_s": 0.3959
+   },
+   {
+    "window_end_s": 84.9,
+    "text": "You know, like in the Mario...",
+    "asr_s": 0.4146
+   },
+   {
+    "window_end_s": 85.32,
+    "text": "you know, like in a Mario game, then we'll...",
+    "asr_s": 0.3854
+   },
+   {
+    "window_end_s": 85.74,
+    "text": "like in a Mario game, they will have like a...",
+    "asr_s": 0.3812
+   },
+   {
+    "window_end_s": 86.13,
+    "text": "Mario game then we'll have like a question.",
+    "asr_s": 0.3725
+   },
+   {
+    "window_end_s": 86.52,
+    "text": "game, then it'll have like a question blocking it.",
+    "asr_s": 0.3792
+   },
+   {
+    "window_end_s": 86.91,
+    "text": "have like a question blocking of you like.",
+    "asr_s": 0.3696
+   },
+   {
+    "window_end_s": 87.18,
+    "text": "a question block and if you like",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 88.05,
+    "text": "of you like.",
+    "asr_s": 0.3899
+   },
+   {
+    "window_end_s": 89.61,
+    "text": "",
+    "asr_s": 0.3476
+   },
+   {
+    "window_end_s": 90.3,
+    "text": "No.\n Um.",
+    "asr_s": 0.3905
+   },
+   {
+    "window_end_s": 90.39,
+    "text": "- No.",
+    "asr_s": 0.3976
+   },
+   {
+    "window_end_s": 90.9,
+    "text": "you know, punch it.",
+    "asr_s": 0.3596
+   },
+   {
+    "window_end_s": 90.99,
+    "text": "So, punch it.",
+    "asr_s": 0.3578
+   },
+   {
+    "window_end_s": 91.71,
+    "text": "punch it a coin will come",
+    "asr_s": 0.3602
+   },
+   {
+    "window_end_s": 92.13,
+    "text": "a coin will come out.",
+    "asr_s": 0.3621
+   },
+   {
+    "window_end_s": 92.7,
+    "text": "coin will come out so like",
+    "asr_s": 0.3607
+   },
+   {
+    "window_end_s": 93.09,
+    "text": "come out. So like everyone.",
+    "asr_s": 0.3657
+   },
+   {
+    "window_end_s": 93.48,
+    "text": "So like everyone what",
+    "asr_s": 0.3539
+   },
+   {
+    "window_end_s": 93.57,
+    "text": "So, like everyone what...",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 95.22,
+    "text": "",
+    "asr_s": 0.3526
+   },
+   {
+    "window_end_s": 95.58,
+    "text": "",
+    "asr_s": 0.3577
+   },
+   {
+    "window_end_s": 95.94,
+    "text": "They come into the park.",
+    "asr_s": 0.3596
+   },
+   {
+    "window_end_s": 96.3,
+    "text": "When they come into the park, they get...",
+    "asr_s": 0.3723
+   },
+   {
+    "window_end_s": 96.66,
+    "text": "come into the park, they get like this.",
+    "asr_s": 0.3707
+   },
+   {
+    "window_end_s": 97.05,
+    "text": "to the park, they get like this little bracelet.",
+    "asr_s": 0.3757
+   },
+   {
+    "window_end_s": 97.44,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.362
+   },
+   {
+    "window_end_s": 97.62,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.3623
+   },
+   {
+    "window_end_s": 98.28,
+    "text": "little bracelet and then you can",
+    "asr_s": 0.3587
+   },
+   {
+    "window_end_s": 98.67,
+    "text": "and then you can go punch",
+    "asr_s": 0.3602
+   },
+   {
+    "window_end_s": 99.0,
+    "text": "And then you can go punch.",
+    "asr_s": 0.3638
+   },
+   {
+    "window_end_s": 101.19,
+    "text": "Police say...",
+    "asr_s": 0.3771
+   },
+   {
+    "window_end_s": 101.58,
+    "text": "Police say the right...",
+    "asr_s": 0.356
+   },
+   {
+    "window_end_s": 101.97,
+    "text": "Police say the driver's time.",
+    "asr_s": 0.3619
+   },
+   {
+    "window_end_s": 102.33,
+    "text": "Police say the driver's top 10.",
+    "asr_s": 0.368
+   },
+   {
+    "window_end_s": 102.72,
+    "text": "But right, we're stopped after the interview.",
+    "asr_s": 0.4306
+   },
+   {
+    "window_end_s": 103.11,
+    "text": "Microsoft have to be the intersection.",
+    "asr_s": 0.4069
+   },
+   {
+    "window_end_s": 103.56,
+    "text": "that the intersection before it.",
+    "asr_s": 0.4002
+   },
+   {
+    "window_end_s": 103.98,
+    "text": "the intersection before an acculation.",
+    "asr_s": 0.4085
+   },
+   {
+    "window_end_s": 104.37,
+    "text": "before the collision.",
+    "asr_s": 0.3535
+   },
+   {
+    "window_end_s": 105.06,
+    "text": "of a collision.",
+    "asr_s": 0.3852
+   },
+   {
+    "window_end_s": 107.13,
+    "text": "market",
+    "asr_s": 0.3591
+   },
+   {
+    "window_end_s": 107.52,
+    "text": "Market is closing.",
+    "asr_s": 0.3546
+   },
+   {
+    "window_end_s": 107.88,
+    "text": "Market is closed lower.",
+    "asr_s": 0.3551
+   },
+   {
+    "window_end_s": 108.24,
+    "text": "market is slower today.",
+    "asr_s": 0.3555
+   },
+   {
+    "window_end_s": 108.6,
+    "text": "It's slower today than men.",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 108.96,
+    "text": "",
+    "asr_s": 0.353
+   },
+   {
+    "window_end_s": 109.35,
+    "text": "today is in master's weight.",
+    "asr_s": 0.4082
+   },
+   {
+    "window_end_s": 109.71,
+    "text": "",
+    "asr_s": 0.3537
+   },
+   {
+    "window_end_s": 110.13,
+    "text": "",
+    "asr_s": 0.3503
+   },
+   {
+    "window_end_s": 110.49,
+    "text": "wait a ray-distinflation with all the...",
+    "asr_s": 0.439
+   },
+   {
+    "window_end_s": 110.88,
+    "text": "installation report.",
+    "asr_s": 0.3877
+   },
+   {
+    "window_end_s": 111.54,
+    "text": "report.",
+    "asr_s": 0.3759
+   },
+   {
+    "window_end_s": 113.73,
+    "text": "Don't tell me what's going on.",
+    "asr_s": 0.4022
+   },
+   {
+    "window_end_s": 114.12,
+    "text": "Go to our website.",
+    "asr_s": 0.418
+   },
+   {
+    "window_end_s": 114.54,
+    "text": "Go to our website for the full...",
+    "asr_s": 0.4147
+   },
+   {
+    "window_end_s": 114.96,
+    "text": "on Twitter.",
+    "asr_s": 0.3754
+   },
+   {
+    "window_end_s": 115.38,
+    "text": "site for the full story and",
+    "asr_s": 0.3582
+   },
+   {
+    "window_end_s": 115.77,
+    "text": "for the full story and the latest.",
+    "asr_s": 0.365
+   },
+   {
+    "window_end_s": 116.13,
+    "text": "story and parade this way.",
+    "asr_s": 0.4006
+   },
+   {
+    "window_end_s": 116.52,
+    "text": "and the latest weather.",
+    "asr_s": 0.3587
+   },
+   {
+    "window_end_s": 119.28,
+    "text": "The Prime Minister.",
+    "asr_s": 0.384
+   },
+   {
+    "window_end_s": 119.64,
+    "text": "The Prime Minister",
+    "asr_s": 0.3521
+   },
+   {
+    "window_end_s": 120.03,
+    "text": "The Prime Minister sent the...",
+    "asr_s": 0.4003
+   },
+   {
+    "window_end_s": 120.39,
+    "text": "the Prime Minister sent the talk.",
+    "asr_s": 0.3621
+   },
+   {
+    "window_end_s": 120.81,
+    "text": "Minister Santatost, what can be done.",
+    "asr_s": 0.4282
+   },
+   {
+    "window_end_s": 121.2,
+    "text": "and the talks will continue.",
+    "asr_s": 0.3587
+   },
+   {
+    "window_end_s": 121.65,
+    "text": "thoughts will continue through the lead.",
+    "asr_s": 0.3643
+   },
+   {
+    "window_end_s": 122.01,
+    "text": "love continue frequently. You can.",
+    "asr_s": 0.3994
+   },
+   {
+    "window_end_s": 122.16,
+    "text": "continue frequently.",
+    "asr_s": 0.3844
+   },
+   {
+    "window_end_s": 125.04,
+    "text": "",
+    "asr_s": 0.3445
+   },
+   {
+    "window_end_s": 125.43,
+    "text": "follow me out at the same time.",
+    "asr_s": 0.402
+   },
+   {
+    "window_end_s": 125.79,
+    "text": "follow me out at the studio",
+    "asr_s": 0.3583
+   },
+   {
+    "window_end_s": 126.21,
+    "text": "They'll be out of us too, they'll fart out.",
+    "asr_s": 0.3816
+   },
+   {
+    "window_end_s": 126.57,
+    "text": "out of us to deal for tonight.",
+    "asr_s": 0.3654
+   },
+   {
+    "window_end_s": 126.96,
+    "text": "to the offer tonight. I did.",
+    "asr_s": 0.4142
+   },
+   {
+    "window_end_s": 127.35,
+    "text": "for tonight's 10 I didn't",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 127.65,
+    "text": "tonight stand like interview.",
+    "asr_s": 0.3944
+   },
+   {
+    "window_end_s": 130.5,
+    "text": "Police say-",
+    "asr_s": 0.3731
+   },
+   {
+    "window_end_s": 130.92,
+    "text": "Police say the right way.",
+    "asr_s": 0.4001
+   },
+   {
+    "window_end_s": 131.31,
+    "text": "Police say the driver's top...",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 131.73,
+    "text": "Please stay in the drive with top 10 minutes.",
+    "asr_s": 0.4243
+   },
+   {
+    "window_end_s": 132.12,
+    "text": "the driver's top, and it didn't just happen.",
+    "asr_s": 0.3782
+   },
+   {
+    "window_end_s": 132.57,
+    "text": "",
+    "asr_s": 0.3658
+   },
+   {
+    "window_end_s": 132.96,
+    "text": "that little intersection before the--",
+    "asr_s": 0.4015
+   },
+   {
+    "window_end_s": 133.35,
+    "text": "Intersection before the collision.",
+    "asr_s": 0.3981
+   },
+   {
+    "window_end_s": 133.62,
+    "text": "before the collision.",
+    "asr_s": 0.3556
+   },
+   {
+    "window_end_s": 136.41,
+    "text": "markets",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 136.77,
+    "text": "Market is low.",
+    "asr_s": 0.3836
+   },
+   {
+    "window_end_s": 137.13,
+    "text": "Market is closed low.",
+    "asr_s": 0.3941
+   },
+   {
+    "window_end_s": 137.52,
+    "text": "Market is closed lower today.",
+    "asr_s": 0.3607
+   },
+   {
+    "window_end_s": 137.94,
+    "text": "slow, slow, slow, slow.",
+    "asr_s": 0.437
+   },
+   {
+    "window_end_s": 138.33,
+    "text": "(music)",
+    "asr_s": 0.3944
+   },
+   {
+    "window_end_s": 138.78,
+    "text": "",
+    "asr_s": 0.3593
+   },
+   {
+    "window_end_s": 139.2,
+    "text": "in Mestos Way to the latest influence.",
+    "asr_s": 0.4319
+   },
+   {
+    "window_end_s": 139.56,
+    "text": "us wait for latest inflation",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 140.01,
+    "text": "for latest inflation reports.",
+    "asr_s": 0.3558
+   },
+   {
+    "window_end_s": 140.22,
+    "text": "installation report.",
+    "asr_s": 0.3756
+   },
+   {
+    "window_end_s": 143.04,
+    "text": "Come to college.",
+    "asr_s": 0.381
+   },
+   {
+    "window_end_s": 143.43,
+    "text": "Go to how it went.",
+    "asr_s": 0.3601
+   },
+   {
+    "window_end_s": 143.82,
+    "text": "Go to our website for the-",
+    "asr_s": 0.364
+   },
+   {
+    "window_end_s": 144.21,
+    "text": "",
+    "asr_s": 0.3784
+   },
+   {
+    "window_end_s": 144.6,
+    "text": "website for the full story and",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 144.99,
+    "text": "for the full story and the lady.",
+    "asr_s": 0.3658
+   },
+   {
+    "window_end_s": 145.38,
+    "text": "full stormy and the latest weather.",
+    "asr_s": 0.368
+   },
+   {
+    "window_end_s": 145.77,
+    "text": "and the latest weather.",
+    "asr_s": 0.3482
+   },
+   {
+    "window_end_s": 145.86,
+    "text": "and the latest weather.",
+    "asr_s": 0.3945
+   },
+   {
+    "window_end_s": 146.4,
+    "text": "latest weather.",
+    "asr_s": 0.385
+   },
+   {
+    "window_end_s": 148.65,
+    "text": "The prime...",
+    "asr_s": 0.3776
+   },
+   {
+    "window_end_s": 149.04,
+    "text": "The Prime Minister's...",
+    "asr_s": 0.3895
+   },
+   {
+    "window_end_s": 149.43,
+    "text": "The Prime Minister said to the President",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 149.82,
+    "text": "The Prime Minister sat in the tortoise night.",
+    "asr_s": 0.4716
+   },
+   {
+    "window_end_s": 150.21,
+    "text": "",
+    "asr_s": 0.3602
+   },
+   {
+    "window_end_s": 150.69,
+    "text": "",
+    "asr_s": 0.3678
+   },
+   {
+    "window_end_s": 151.08,
+    "text": "",
+    "asr_s": 0.3687
+   },
+   {
+    "window_end_s": 151.47,
+    "text": "continue through the weekend.",
+    "asr_s": 0.3558
+   },
+   {
+    "window_end_s": 151.56,
+    "text": "continue through the weekend.",
+    "asr_s": 0.3592
+   },
+   {
+    "window_end_s": 152.22,
+    "text": "the weekend.",
+    "asr_s": 0.3475
+   },
+   {
+    "window_end_s": 154.44,
+    "text": "Follow me now.",
+    "asr_s": 0.3524
+   },
+   {
+    "window_end_s": 154.8,
+    "text": "Follow me out to the...",
+    "asr_s": 0.3614
+   },
+   {
+    "window_end_s": 155.16,
+    "text": "Follow me out of the tube.",
+    "asr_s": 0.3604
+   },
+   {
+    "window_end_s": 155.55,
+    "text": "Follow me now to the studio for today.",
+    "asr_s": 0.3703
+   },
+   {
+    "window_end_s": 155.94,
+    "text": "out of the studio for tonight.",
+    "asr_s": 0.364
+   },
+   {
+    "window_end_s": 156.33,
+    "text": "",
+    "asr_s": 0.3701
+   },
+   {
+    "window_end_s": 156.72,
+    "text": "for tonight's headline interview.",
+    "asr_s": 0.3607
+   },
+   {
+    "window_end_s": 157.14,
+    "text": "tonight's deadline interview.",
+    "asr_s": 0.3564
+   },
+   {
+    "window_end_s": 159.99,
+    "text": "Like a super...",
+    "asr_s": 0.3827
+   },
+   {
+    "window_end_s": 160.35,
+    "text": "like a super Mario",
+    "asr_s": 0.3533
+   },
+   {
+    "window_end_s": 160.74,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3586
+   },
+   {
+    "window_end_s": 160.98,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 161.82,
+    "text": "level like it's very",
+    "asr_s": 0.3567
+   },
+   {
+    "window_end_s": 162.21,
+    "text": "like it's very like",
+    "asr_s": 0.356
+   },
+   {
+    "window_end_s": 162.57,
+    "text": "Like it's very like height",
+    "asr_s": 0.3604
+   },
+   {
+    "window_end_s": 162.93,
+    "text": "Like it's very like high detail.",
+    "asr_s": 0.3665
+   },
+   {
+    "window_end_s": 163.32,
+    "text": "very like high detail.",
+    "asr_s": 0.3598
+   },
+   {
+    "window_end_s": 164.97,
+    "text": "No.",
+    "asr_s": 0.3956
+   },
+   {
+    "window_end_s": 165.69,
+    "text": "and",
+    "asr_s": 0.3654
+   },
+   {
+    "window_end_s": 166.38,
+    "text": "and like one.",
+    "asr_s": 0.4407
+   },
+   {
+    "window_end_s": 166.77,
+    "text": "And like once you...",
+    "asr_s": 0.3922
+   },
+   {
+    "window_end_s": 166.92,
+    "text": "like once you",
+    "asr_s": 0.3476
+   },
+   {
+    "window_end_s": 167.4,
+    "text": "like once you get in.",
+    "asr_s": 0.359
+   },
+   {
+    "window_end_s": 167.76,
+    "text": "once you get into the...",
+    "asr_s": 0.36
+   },
+   {
+    "window_end_s": 168.12,
+    "text": "get into the park.",
+    "asr_s": 0.3567
+   },
+   {
+    "window_end_s": 168.27,
+    "text": "get into the par.",
+    "asr_s": 0.3566
+   },
+   {
+    "window_end_s": 170.67,
+    "text": "of",
+    "asr_s": 2.3913
+   },
+   {
+    "window_end_s": 171.03,
+    "text": "it's just like everything.",
+    "asr_s": 0.3597
+   },
+   {
+    "window_end_s": 171.84,
+    "text": "It's just like everything looks like.",
+    "asr_s": 0.3663
+   },
+   {
+    "window_end_s": 172.5,
+    "text": "Everything looks like a computer.",
+    "asr_s": 0.3586
+   },
+   {
+    "window_end_s": 172.89,
+    "text": "looks like a computer game.",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 173.04,
+    "text": "like a computer game.",
+    "asr_s": 0.3595
+   },
+   {
+    "window_end_s": 174.0,
+    "text": "game and they have",
+    "asr_s": 0.3548
+   },
+   {
+    "window_end_s": 174.33,
+    "text": "and they have",
+    "asr_s": 0.3466
+   },
+   {
+    "window_end_s": 176.04,
+    "text": "I love these.",
+    "asr_s": 0.3531
+   },
+   {
+    "window_end_s": 176.4,
+    "text": "I love these lights.",
+    "asr_s": 0.3574
+   },
+   {
+    "window_end_s": 176.58,
+    "text": "I love these like...",
+    "asr_s": 0.3576
+   },
+   {
+    "window_end_s": 177.9,
+    "text": "You know.",
+    "asr_s": 0.3842
+   },
+   {
+    "window_end_s": 178.41,
+    "text": "You know.",
+    "asr_s": 0.3817
+   },
+   {
+    "window_end_s": 178.8,
+    "text": "You know, it's...",
+    "asr_s": 1.2316
+   },
+   {
+    "window_end_s": 179.19,
+    "text": "So if there's like--",
+    "asr_s": 0.361
+   },
+   {
+    "window_end_s": 179.82,
+    "text": "If there's like a...",
+    "asr_s": 0.3624
+   },
+   {
+    "window_end_s": 181.29,
+    "text": "[BLANK_AUDIO]",
+    "asr_s": 0.362
+   },
+   {
+    "window_end_s": 181.77,
+    "text": "You know, like a...",
+    "asr_s": 0.3974
+   },
+   {
+    "window_end_s": 182.16,
+    "text": "You know, like in the Mario game.",
+    "asr_s": 0.3672
+   },
+   {
+    "window_end_s": 182.58,
+    "text": "you know, like in a Mario game that will...",
+    "asr_s": 0.3744
+   },
+   {
+    "window_end_s": 182.97,
+    "text": "know, like in a Mario game, they will have like a...",
+    "asr_s": 0.3862
+   },
+   {
+    "window_end_s": 183.36,
+    "text": "in a Mario game, they will have like a question.",
+    "asr_s": 0.3768
+   },
+   {
+    "window_end_s": 183.75,
+    "text": "game that will have like a question blocking",
+    "asr_s": 0.3669
+   },
+   {
+    "window_end_s": 184.14,
+    "text": "have like a question blocking of you like",
+    "asr_s": 0.3664
+   },
+   {
+    "window_end_s": 184.47,
+    "text": "a question block and if you like",
+    "asr_s": 0.3617
+   },
+   {
+    "window_end_s": 185.28,
+    "text": "of you like.",
+    "asr_s": 0.3893
+   },
+   {
+    "window_end_s": 186.93,
+    "text": "",
+    "asr_s": 0.3507
+   },
+   {
+    "window_end_s": 187.53,
+    "text": ">> No.",
+    "asr_s": 0.3793
+   },
+   {
+    "window_end_s": 187.65,
+    "text": ">> No.\n >> No.",
+    "asr_s": 0.3995
+   },
+   {
+    "window_end_s": 188.19,
+    "text": "you know, punch it.",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 188.28,
+    "text": "So, punch it.",
+    "asr_s": 0.3586
+   },
+   {
+    "window_end_s": 188.52,
+    "text": "Punch it.",
+    "asr_s": 0.3752
+   },
+   {
+    "window_end_s": 189.0,
+    "text": "punch it a coin will come",
+    "asr_s": 0.3584
+   },
+   {
+    "window_end_s": 189.42,
+    "text": "a coin will come out.",
+    "asr_s": 0.3607
+   },
+   {
+    "window_end_s": 189.96,
+    "text": "a coin will come out.\n So like--",
+    "asr_s": 0.3761
+   },
+   {
+    "window_end_s": 190.35,
+    "text": "come out. So like everyone.",
+    "asr_s": 0.3635
+   },
+   {
+    "window_end_s": 190.74,
+    "text": "So like everyone what",
+    "asr_s": 0.3558
+   },
+   {
+    "window_end_s": 190.92,
+    "text": "So like everyone went...",
+    "asr_s": 0.3568
+   },
+   {
+    "window_end_s": 192.51,
+    "text": "They come in.",
+    "asr_s": 0.3822
+   },
+   {
+    "window_end_s": 192.87,
+    "text": "They come into the...",
+    "asr_s": 0.3909
+   },
+   {
+    "window_end_s": 193.26,
+    "text": "They come into the park",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 193.68,
+    "text": "they come into the park, they get like",
+    "asr_s": 0.3682
+   },
+   {
+    "window_end_s": 194.04,
+    "text": "into the park they get like this little",
+    "asr_s": 0.3662
+   },
+   {
+    "window_end_s": 194.43,
+    "text": "of the park, they get like this little bracelet.",
+    "asr_s": 0.3757
+   },
+   {
+    "window_end_s": 194.88,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.3623
+   },
+   {
+    "window_end_s": 195.57,
+    "text": "bracelet and then you can go",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 195.96,
+    "text": "and then you can go punch",
+    "asr_s": 0.3597
+   },
+   {
+    "window_end_s": 196.23,
+    "text": "And then you can go punch",
+    "asr_s": 0.3601
+   },
+   {
+    "window_end_s": 198.48,
+    "text": "Police say...",
+    "asr_s": 0.3769
+   },
+   {
+    "window_end_s": 198.87,
+    "text": "Police say that right...",
+    "asr_s": 0.389
+   },
+   {
+    "window_end_s": 199.26,
+    "text": "Police say the driver's top",
+    "asr_s": 0.3614
+   },
+   {
+    "window_end_s": 199.65,
+    "text": "Police say that drivers stop testing.",
+    "asr_s": 0.3639
+   },
+   {
+    "window_end_s": 200.04,
+    "text": "the drivers top at the interest.",
+    "asr_s": 0.4082
+   },
+   {
+    "window_end_s": 200.43,
+    "text": "time.",
+    "asr_s": 0.3927
+   },
+   {
+    "window_end_s": 200.85,
+    "text": "to the intersection before the...",
+    "asr_s": 0.3992
+   },
+   {
+    "window_end_s": 201.27,
+    "text": "the intersection before the collision.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 201.66,
+    "text": "section before the collision.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 204.36,
+    "text": "Market",
+    "asr_s": 0.3454
+   },
+   {
+    "window_end_s": 204.72,
+    "text": "market slow.",
+    "asr_s": 0.3759
+   },
+   {
+    "window_end_s": 205.08,
+    "text": "Market is closed long.",
+    "asr_s": 0.3915
+   },
+   {
+    "window_end_s": 205.47,
+    "text": "Market is closed lower today.",
+    "asr_s": 0.3598
+   },
+   {
+    "window_end_s": 205.89,
+    "text": "It's closed lower today than mess.",
+    "asr_s": 0.4182
+   },
+   {
+    "window_end_s": 206.25,
+    "text": "",
+    "asr_s": 0.3646
+   },
+   {
+    "window_end_s": 206.67,
+    "text": "Today is in Master's weight.",
+    "asr_s": 0.3643
+   },
+   {
+    "window_end_s": 207.06,
+    "text": "as investors wait for a distant...",
+    "asr_s": 0.4128
+   },
+   {
+    "window_end_s": 207.45,
+    "text": "",
+    "asr_s": 0.3603
+   },
+   {
+    "window_end_s": 207.87,
+    "text": "a ray-distinflation with all of us.",
+    "asr_s": 0.3742
+   },
+   {
+    "window_end_s": 208.17,
+    "text": "latest inflation report.",
+    "asr_s": 0.3567
+   },
+   {
+    "window_end_s": 210.96,
+    "text": "Go time.",
+    "asr_s": 0.3758
+   },
+   {
+    "window_end_s": 211.32,
+    "text": "Go time it went.",
+    "asr_s": 0.3902
+   },
+   {
+    "window_end_s": 211.71,
+    "text": "Go to our website for the...",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 212.13,
+    "text": "on the website for the full story.",
+    "asr_s": 0.3651
+   },
+   {
+    "window_end_s": 212.52,
+    "text": "website for the full story.",
+    "asr_s": 0.3631
+   },
+   {
+    "window_end_s": 212.91,
+    "text": "for the full story and the latest.",
+    "asr_s": 0.365
+   },
+   {
+    "window_end_s": 213.3,
+    "text": "full story and play this well.",
+    "asr_s": 0.3629
+   },
+   {
+    "window_end_s": 213.69,
+    "text": "and parade this forever.",
+    "asr_s": 0.3921
+   },
+   {
+    "window_end_s": 213.81,
+    "text": "and the latest weather.",
+    "asr_s": 0.3878
+   },
+   {
+    "window_end_s": 214.56,
+    "text": "wherever.",
+    "asr_s": 0.3651
+   },
+   {
+    "window_end_s": 216.6,
+    "text": "The Prime Minister",
+    "asr_s": 0.3501
+   },
+   {
+    "window_end_s": 216.99,
+    "text": "The Prime Minister",
+    "asr_s": 0.3476
+   },
+   {
+    "window_end_s": 217.35,
+    "text": "The Prime Minister sent the",
+    "asr_s": 0.3555
+   },
+   {
+    "window_end_s": 217.71,
+    "text": "Prime Minister said the talks.",
+    "asr_s": 0.3595
+   },
+   {
+    "window_end_s": 218.07,
+    "text": "Minister Santa Claus will come.",
+    "asr_s": 0.3991
+   },
+   {
+    "window_end_s": 218.43,
+    "text": "Senator Santonatox will continue.",
+    "asr_s": 0.4145
+   },
+   {
+    "window_end_s": 218.85,
+    "text": "the talks will continue through the week.",
+    "asr_s": 0.3663
+   },
+   {
+    "window_end_s": 219.27,
+    "text": "will continue through the weekend.",
+    "asr_s": 0.3603
+   },
+   {
+    "window_end_s": 219.45,
+    "text": "continue through the weekend.",
+    "asr_s": 0.359
+   },
+   {
+    "window_end_s": 222.3,
+    "text": "",
+    "asr_s": 0.3644
+   },
+   {
+    "window_end_s": 222.66,
+    "text": "Follow me out of the...",
+    "asr_s": 0.3597
+   },
+   {
+    "window_end_s": 223.05,
+    "text": "Follow me out of the studio.",
+    "asr_s": 0.3641
+   },
+   {
+    "window_end_s": 223.41,
+    "text": "I'll be out of the studio for today.",
+    "asr_s": 0.3698
+   },
+   {
+    "window_end_s": 223.8,
+    "text": "out of the studio for tonight.",
+    "asr_s": 0.3613
+   },
+   {
+    "window_end_s": 224.19,
+    "text": "That's two of the 0 for tonight. 10. I.",
+    "asr_s": 0.4349
+   },
+   {
+    "window_end_s": 224.58,
+    "text": "for tonight's 10-line interview.",
+    "asr_s": 0.367
+   },
+   {
+    "window_end_s": 224.94,
+    "text": "tonight's deadline interview.",
+    "asr_s": 0.3545
+   },
+   {
+    "window_end_s": 227.73,
+    "text": "",
+    "asr_s": 0.349
+   },
+   {
+    "window_end_s": 228.09,
+    "text": "Police say the driver...",
+    "asr_s": 0.3932
+   },
+   {
+    "window_end_s": 228.45,
+    "text": "Police say the driver's time",
+    "asr_s": 0.3603
+   },
+   {
+    "window_end_s": 228.87,
+    "text": "Police say the driver's top tattoo.",
+    "asr_s": 0.3655
+   },
+   {
+    "window_end_s": 229.26,
+    "text": "",
+    "asr_s": 0.3688
+   },
+   {
+    "window_end_s": 229.65,
+    "text": "",
+    "asr_s": 0.361
+   },
+   {
+    "window_end_s": 230.04,
+    "text": "",
+    "asr_s": 0.3567
+   },
+   {
+    "window_end_s": 230.43,
+    "text": "the intersection before the collision.",
+    "asr_s": 0.3591
+   },
+   {
+    "window_end_s": 230.79,
+    "text": "before the collision.",
+    "asr_s": 0.3569
+   },
+   {
+    "window_end_s": 230.88,
+    "text": "before the collision.",
+    "asr_s": 0.3525
+   },
+   {
+    "window_end_s": 231.51,
+    "text": "the collision.",
+    "asr_s": 0.3774
+   },
+   {
+    "window_end_s": 233.73,
+    "text": "Markets",
+    "asr_s": 0.3608
+   },
+   {
+    "window_end_s": 234.12,
+    "text": "Market is closed.",
+    "asr_s": 0.3819
+   },
+   {
+    "window_end_s": 234.51,
+    "text": "market is closed low the time.",
+    "asr_s": 0.4144
+   },
+   {
+    "window_end_s": 234.9,
+    "text": "",
+    "asr_s": 0.3626
+   },
+   {
+    "window_end_s": 235.32,
+    "text": "slow lower to gain in best of...",
+    "asr_s": 0.4201
+   },
+   {
+    "window_end_s": 235.71,
+    "text": "lower to gain in master's weight.",
+    "asr_s": 0.4165
+   },
+   {
+    "window_end_s": 236.16,
+    "text": "and in best of weight, the latest...",
+    "asr_s": 0.4219
+   },
+   {
+    "window_end_s": 236.58,
+    "text": "",
+    "asr_s": 0.3544
+   },
+   {
+    "window_end_s": 237.03,
+    "text": "the latest inflation report.",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 237.39,
+    "text": "latest inflation report.",
+    "asr_s": 0.3519
+   },
+   {
+    "window_end_s": 237.48,
+    "text": "latest inflation report.",
+    "asr_s": 0.3553
+   },
+   {
+    "window_end_s": 240.27,
+    "text": "come to college.",
+    "asr_s": 0.3873
+   },
+   {
+    "window_end_s": 240.63,
+    "text": "Go to Hollywood.",
+    "asr_s": 0.3893
+   },
+   {
+    "window_end_s": 241.02,
+    "text": "Go to our website for the next video.",
+    "asr_s": 0.367
+   },
+   {
+    "window_end_s": 241.41,
+    "text": "Go to our website for the full story.",
+    "asr_s": 0.3706
+   },
+   {
+    "window_end_s": 241.8,
+    "text": "website for the full story.",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 242.19,
+    "text": "for the full story and for the next one.",
+    "asr_s": 0.3722
+   },
+   {
+    "window_end_s": 242.58,
+    "text": "the full stormy and the latest.",
+    "asr_s": 0.3642
+   },
+   {
+    "window_end_s": 242.97,
+    "text": "and to the latest weather.",
+    "asr_s": 0.3616
+   },
+   {
+    "window_end_s": 243.12,
+    "text": "and the latest weather.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 245.91,
+    "text": "The prime line is the same.",
+    "asr_s": 0.4313
+   },
+   {
+    "window_end_s": 246.27,
+    "text": "The Prime Minister",
+    "asr_s": 0.3496
+   },
+   {
+    "window_end_s": 246.72,
+    "text": "The Prime Minister sent the...",
+    "asr_s": 0.3608
+   },
+   {
+    "window_end_s": 247.08,
+    "text": "Prime Minister Santa Claus.",
+    "asr_s": 1.1818
+   },
+   {
+    "window_end_s": 247.47,
+    "text": "Minister Santa Claus will continue.",
+    "asr_s": 0.4087
+   },
+   {
+    "window_end_s": 248.67,
+    "text": "will continue through the weekend.",
+    "asr_s": 0.3613
+   },
+   {
+    "window_end_s": 248.85,
+    "text": "continue through the weekend.",
+    "asr_s": 0.3554
+   },
+   {
+    "window_end_s": 251.73,
+    "text": "Follow me.",
+    "asr_s": 0.3513
+   },
+   {
+    "window_end_s": 252.09,
+    "text": "Follow me out to the...",
+    "asr_s": 0.3594
+   },
+   {
+    "window_end_s": 252.45,
+    "text": "Follow me out of the studio.",
+    "asr_s": 0.3622
+   },
+   {
+    "window_end_s": 252.81,
+    "text": "Follow me now to the studio for today.",
+    "asr_s": 0.3715
+   },
+   {
+    "window_end_s": 253.2,
+    "text": "out of the studio for tonight.",
+    "asr_s": 0.3638
+   },
+   {
+    "window_end_s": 253.59,
+    "text": "",
+    "asr_s": 0.3633
+   },
+   {
+    "window_end_s": 253.98,
+    "text": "Don't for tonight's headline interview.",
+    "asr_s": 0.3674
+   },
+   {
+    "window_end_s": 254.4,
+    "text": "tonight's headline interview.",
+    "asr_s": 0.3572
+   },
+   {
+    "window_end_s": 257.28,
+    "text": "Like a super...",
+    "asr_s": 0.3813
+   },
+   {
+    "window_end_s": 257.64,
+    "text": "like a Super Mario",
+    "asr_s": 0.3548
+   },
+   {
+    "window_end_s": 258.03,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 258.24,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.359
+   },
+   {
+    "window_end_s": 259.05,
+    "text": "level like it's.",
+    "asr_s": 0.3899
+   },
+   {
+    "window_end_s": 259.41,
+    "text": "like it's very like",
+    "asr_s": 0.3578
+   },
+   {
+    "window_end_s": 259.8,
+    "text": "Like it's very like high",
+    "asr_s": 0.3558
+   },
+   {
+    "window_end_s": 260.16,
+    "text": "Like it's very like high detail.",
+    "asr_s": 0.3676
+   },
+   {
+    "window_end_s": 260.58,
+    "text": "very like high detail.",
+    "asr_s": 0.3646
+   },
+   {
+    "window_end_s": 262.26,
+    "text": "No.",
+    "asr_s": 0.3677
+   },
+   {
+    "window_end_s": 262.86,
+    "text": "and...",
+    "asr_s": 0.3668
+   },
+   {
+    "window_end_s": 262.95,
+    "text": "Hell and...",
+    "asr_s": 0.3817
+   },
+   {
+    "window_end_s": 263.67,
+    "text": "And like one.",
+    "asr_s": 0.3897
+   },
+   {
+    "window_end_s": 264.06,
+    "text": "and like once you...",
+    "asr_s": 0.3572
+   },
+   {
+    "window_end_s": 264.21,
+    "text": "like once you",
+    "asr_s": 0.3497
+   },
+   {
+    "window_end_s": 264.69,
+    "text": "like once you get in.",
+    "asr_s": 0.3613
+   },
+   {
+    "window_end_s": 265.05,
+    "text": "once you get into the...",
+    "asr_s": 0.3572
+   },
+   {
+    "window_end_s": 265.44,
+    "text": "get into the par.",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 265.56,
+    "text": "get into the par.",
+    "asr_s": 0.3567
+   },
+   {
+    "window_end_s": 267.96,
+    "text": "It's you",
+    "asr_s": 2.9384
+   },
+   {
+    "window_end_s": 268.32,
+    "text": "it's just like everything.",
+    "asr_s": 0.3831
+   },
+   {
+    "window_end_s": 269.19,
+    "text": "It's just like everything looks like.",
+    "asr_s": 0.3656
+   },
+   {
+    "window_end_s": 269.79,
+    "text": "Everything looks like a computer.",
+    "asr_s": 0.3603
+   },
+   {
+    "window_end_s": 270.18,
+    "text": "looks like a computer game.",
+    "asr_s": 0.3561
+   },
+   {
+    "window_end_s": 270.33,
+    "text": "like a computer game.",
+    "asr_s": 0.3571
+   },
+   {
+    "window_end_s": 271.29,
+    "text": "game and they have",
+    "asr_s": 0.3557
+   },
+   {
+    "window_end_s": 271.62,
+    "text": "And they have...",
+    "asr_s": 0.3539
+   },
+   {
+    "window_end_s": 273.39,
+    "text": "I love these.",
+    "asr_s": 0.3538
+   },
+   {
+    "window_end_s": 273.75,
+    "text": "I love these like...",
+    "asr_s": 0.3572
+   },
+   {
+    "window_end_s": 273.84,
+    "text": "I love these like...",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 275.19,
+    "text": "You know.",
+    "asr_s": 0.3822
+   },
+   {
+    "window_end_s": 275.58,
+    "text": "",
+    "asr_s": 0.3534
+   },
+   {
+    "window_end_s": 276.0,
+    "text": "You know, it's...",
+    "asr_s": 0.3641
+   },
+   {
+    "window_end_s": 276.36,
+    "text": "know if there's",
+    "asr_s": 0.3546
+   },
+   {
+    "window_end_s": 276.75,
+    "text": "If there's like a",
+    "asr_s": 0.3574
+   },
+   {
+    "window_end_s": 277.14,
+    "text": "If there's like a...",
+    "asr_s": 0.3706
+   },
+   {
+    "window_end_s": 279.06,
+    "text": "You know, like a...",
+    "asr_s": 0.4029
+   },
+   {
+    "window_end_s": 279.45,
+    "text": "You know, like in the Mario game.",
+    "asr_s": 0.3682
+   },
+   {
+    "window_end_s": 279.87,
+    "text": "You know, like in a Mario game that will...",
+    "asr_s": 0.3754
+   },
+   {
+    "window_end_s": 280.26,
+    "text": "you know, like in a Mario game, they will have like a...",
+    "asr_s": 0.3869
+   },
+   {
+    "window_end_s": 280.65,
+    "text": "Mario game they will have like a question.",
+    "asr_s": 0.3698
+   },
+   {
+    "window_end_s": 281.04,
+    "text": "game they will have like a question blocking the",
+    "asr_s": 0.3721
+   },
+   {
+    "window_end_s": 281.43,
+    "text": "have like a question blocking the view like",
+    "asr_s": 0.3649
+   },
+   {
+    "window_end_s": 281.73,
+    "text": "a question block and if you like",
+    "asr_s": 0.3647
+   },
+   {
+    "window_end_s": 282.54,
+    "text": "and if you like it.",
+    "asr_s": 0.409
+   },
+   {
+    "window_end_s": 284.13,
+    "text": "",
+    "asr_s": 0.3458
+   },
+   {
+    "window_end_s": 284.85,
+    "text": "No.",
+    "asr_s": 0.3795
+   },
+   {
+    "window_end_s": 284.94,
+    "text": "",
+    "asr_s": 0.3668
+   },
+   {
+    "window_end_s": 285.42,
+    "text": "you know, punch it.",
+    "asr_s": 0.3617
+   },
+   {
+    "window_end_s": 285.54,
+    "text": "Punch it.",
+    "asr_s": 0.3821
+   },
+   {
+    "window_end_s": 286.29,
+    "text": "punch it a coin will come",
+    "asr_s": 0.3597
+   },
+   {
+    "window_end_s": 286.71,
+    "text": "a coin will come out.",
+    "asr_s": 0.3616
+   },
+   {
+    "window_end_s": 287.25,
+    "text": "coin will come out. So like",
+    "asr_s": 0.3616
+   },
+   {
+    "window_end_s": 287.64,
+    "text": "come out. So like everyone.",
+    "asr_s": 0.3617
+   },
+   {
+    "window_end_s": 288.03,
+    "text": "So like everyone what",
+    "asr_s": 0.3545
+   },
+   {
+    "window_end_s": 288.15,
+    "text": "So, like everyone wouldn't.",
+    "asr_s": 0.359
+   },
+   {
+    "window_end_s": 289.77,
+    "text": "",
+    "asr_s": 0.3537
+   },
+   {
+    "window_end_s": 290.13,
+    "text": "They come into the...",
+    "asr_s": 0.3903
+   },
+   {
+    "window_end_s": 290.49,
+    "text": "They come into the park",
+    "asr_s": 0.3558
+   },
+   {
+    "window_end_s": 290.91,
+    "text": "When they come into the park, they get like,",
+    "asr_s": 0.3744
+   },
+   {
+    "window_end_s": 291.27,
+    "text": "into the park they get like this.",
+    "asr_s": 0.3658
+   },
+   {
+    "window_end_s": 291.66,
+    "text": "to the park, they get like this little bracelet.",
+    "asr_s": 0.3781
+   },
+   {
+    "window_end_s": 292.05,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.3619
+   },
+   {
+    "window_end_s": 292.17,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.362
+   },
+   {
+    "window_end_s": 292.86,
+    "text": "bracelet and then you can go",
+    "asr_s": 0.3601
+   },
+   {
+    "window_end_s": 293.25,
+    "text": "and then you can go punch",
+    "asr_s": 0.3606
+   },
+   {
+    "window_end_s": 293.67,
+    "text": "And then you can go punch me.",
+    "asr_s": 0.3672
+   },
+   {
+    "window_end_s": 295.77,
+    "text": "Police say...",
+    "asr_s": 0.3772
+   },
+   {
+    "window_end_s": 296.16,
+    "text": "Police say that right...",
+    "asr_s": 0.3912
+   },
+   {
+    "window_end_s": 296.55,
+    "text": "Police say the driver's time.",
+    "asr_s": 0.3615
+   },
+   {
+    "window_end_s": 296.97,
+    "text": "at least say that drivers talk to them.",
+    "asr_s": 0.4222
+   },
+   {
+    "window_end_s": 297.36,
+    "text": "The drivers stop at the intersection.",
+    "asr_s": 0.4156
+   },
+   {
+    "window_end_s": 297.81,
+    "text": "top of it. Intersection.",
+    "asr_s": 0.399
+   },
+   {
+    "window_end_s": 298.23,
+    "text": "at the intersection before the...",
+    "asr_s": 0.3577
+   },
+   {
+    "window_end_s": 298.65,
+    "text": "intersection before an occasion.",
+    "asr_s": 0.3566
+   },
+   {
+    "window_end_s": 298.92,
+    "text": "action before the collision.",
+    "asr_s": 0.3583
+   },
+   {
+    "window_end_s": 301.65,
+    "text": "Market",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 302.01,
+    "text": "Market slow.",
+    "asr_s": 0.3734
+   },
+   {
+    "window_end_s": 302.4,
+    "text": "Market is slow, slow, slow.",
+    "asr_s": 0.4161
+   },
+   {
+    "window_end_s": 302.79,
+    "text": "Market is closed lower today.",
+    "asr_s": 0.3612
+   },
+   {
+    "window_end_s": 303.21,
+    "text": "Slow, slow, and easy mess.",
+    "asr_s": 0.3654
+   },
+   {
+    "window_end_s": 303.6,
+    "text": "lower today is in master's way.",
+    "asr_s": 0.365
+   },
+   {
+    "window_end_s": 303.99,
+    "text": "Today's investors wait but they...",
+    "asr_s": 0.4038
+   },
+   {
+    "window_end_s": 304.38,
+    "text": "investors wait but they just in fact...",
+    "asr_s": 0.4058
+   },
+   {
+    "window_end_s": 304.8,
+    "text": "Wait, parade is inflation.",
+    "asr_s": 0.4032
+   },
+   {
+    "window_end_s": 305.22,
+    "text": "a latest inflation report.",
+    "asr_s": 0.3564
+   },
+   {
+    "window_end_s": 305.46,
+    "text": "This is the latest inflation report.",
+    "asr_s": 0.364
+   },
+   {
+    "window_end_s": 308.28,
+    "text": "Don't tell me.",
+    "asr_s": 0.3898
+   },
+   {
+    "window_end_s": 308.67,
+    "text": "Don't tell me website.",
+    "asr_s": 0.3995
+   },
+   {
+    "window_end_s": 309.06,
+    "text": "Go to our website for the...",
+    "asr_s": 0.3634
+   },
+   {
+    "window_end_s": 309.48,
+    "text": "to our website for the full story.",
+    "asr_s": 0.3672
+   },
+   {
+    "window_end_s": 309.87,
+    "text": "website for the full story and",
+    "asr_s": 0.3614
+   },
+   {
+    "window_end_s": 310.26,
+    "text": "for the full story and the ladies.",
+    "asr_s": 0.3677
+   },
+   {
+    "window_end_s": 310.65,
+    "text": "full story and the latest web.",
+    "asr_s": 0.3631
+   },
+   {
+    "window_end_s": 311.04,
+    "text": "and the latest weather.",
+    "asr_s": 0.3551
+   },
+   {
+    "window_end_s": 313.86,
+    "text": "That right now.",
+    "asr_s": 0.3798
+   },
+   {
+    "window_end_s": 314.22,
+    "text": "The Prime Minister",
+    "asr_s": 0.3493
+   },
+   {
+    "window_end_s": 314.61,
+    "text": "The Prime Minister said that...",
+    "asr_s": 0.3964
+   },
+   {
+    "window_end_s": 314.97,
+    "text": "Prime Minister said the talks.",
+    "asr_s": 0.3593
+   },
+   {
+    "window_end_s": 315.39,
+    "text": "Minister Sam Patalke's love can be.",
+    "asr_s": 0.4289
+   },
+   {
+    "window_end_s": 315.75,
+    "text": "and the talks will continue.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 316.2,
+    "text": "talks will continue through the lead.",
+    "asr_s": 0.3635
+   },
+   {
+    "window_end_s": 316.56,
+    "text": "will continue frequently.",
+    "asr_s": 0.3535
+   },
+   {
+    "window_end_s": 316.71,
+    "text": "continue through her weekend.",
+    "asr_s": 0.3596
+   },
+   {
+    "window_end_s": 319.56,
+    "text": "",
+    "asr_s": 0.3485
+   },
+   {
+    "window_end_s": 319.92,
+    "text": "Follow me out of the...",
+    "asr_s": 0.3578
+   },
+   {
+    "window_end_s": 320.28,
+    "text": "Follow me out of the studio.",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 320.64,
+    "text": "follow me out on the studio for",
+    "asr_s": 0.3647
+   },
+   {
+    "window_end_s": 321.03,
+    "text": "out of a studio for tonight.",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 321.42,
+    "text": "",
+    "asr_s": 0.359
+   },
+   {
+    "window_end_s": 321.81,
+    "text": "for tonight's 10 I didn't.",
+    "asr_s": 0.3677
+   },
+   {
+    "window_end_s": 322.23,
+    "text": "tonight's headline interview.",
+    "asr_s": 0.3983
+   },
+   {
+    "window_end_s": 322.89,
+    "text": "I didn't interview.",
+    "asr_s": 0.3619
+   },
+   {
+    "window_end_s": 325.05,
+    "text": "Police say...",
+    "asr_s": 0.3748
+   },
+   {
+    "window_end_s": 325.44,
+    "text": "Police say the drive-thruge...",
+    "asr_s": 0.4224
+   },
+   {
+    "window_end_s": 325.83,
+    "text": "Police say the driver's top...",
+    "asr_s": 0.412
+   },
+   {
+    "window_end_s": 326.28,
+    "text": "Please say the drive with top tap video.",
+    "asr_s": 0.4425
+   },
+   {
+    "window_end_s": 326.7,
+    "text": "the drywood stop tapping it into a set.",
+    "asr_s": 0.4297
+   },
+   {
+    "window_end_s": 327.15,
+    "text": "talk about the intersection with...",
+    "asr_s": 0.4196
+   },
+   {
+    "window_end_s": 327.6,
+    "text": "",
+    "asr_s": 0.3623
+   },
+   {
+    "window_end_s": 328.02,
+    "text": "section before the collision.",
+    "asr_s": 0.3551
+   },
+   {
+    "window_end_s": 328.17,
+    "text": "before the collision.",
+    "asr_s": 0.353
+   },
+   {
+    "window_end_s": 330.96,
+    "text": "Market to the city.",
+    "asr_s": 1.2184
+   },
+   {
+    "window_end_s": 331.32,
+    "text": "Market is low.",
+    "asr_s": 0.3854
+   },
+   {
+    "window_end_s": 332.55,
+    "text": "Slow, slow, slow, slow. - And invest in it.",
+    "asr_s": 0.4402
+   },
+   {
+    "window_end_s": 332.94,
+    "text": "I'm just gonna get in the best of weight.",
+    "asr_s": 0.4565
+   },
+   {
+    "window_end_s": 333.39,
+    "text": "and investors wait for later.",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 333.87,
+    "text": "mister's weight, the latest inflation.",
+    "asr_s": 0.3667
+   },
+   {
+    "window_end_s": 334.26,
+    "text": "wait for latest inflation with",
+    "asr_s": 0.3573
+   },
+   {
+    "window_end_s": 334.65,
+    "text": "latest inflation report.",
+    "asr_s": 0.3529
+   },
+   {
+    "window_end_s": 334.77,
+    "text": "latest inflation report.",
+    "asr_s": 0.355
+   },
+   {
+    "window_end_s": 337.59,
+    "text": "Come to college.",
+    "asr_s": 0.3846
+   },
+   {
+    "window_end_s": 337.95,
+    "text": "Go to how it went.",
+    "asr_s": 0.4146
+   },
+   {
+    "window_end_s": 338.34,
+    "text": "Go to how it went, fight for the...",
+    "asr_s": 0.3712
+   },
+   {
+    "window_end_s": 338.76,
+    "text": "and go to our website for the full story.",
+    "asr_s": 0.4321
+   },
+   {
+    "window_end_s": 339.15,
+    "text": "website for the full story and",
+    "asr_s": 0.3595
+   },
+   {
+    "window_end_s": 339.6,
+    "text": "for the full stormy and the later.",
+    "asr_s": 0.3692
+   },
+   {
+    "window_end_s": 339.96,
+    "text": "full stormy and the latest weather.",
+    "asr_s": 0.3669
+   },
+   {
+    "window_end_s": 340.41,
+    "text": "and the latest weather.",
+    "asr_s": 0.362
+   },
+   {
+    "window_end_s": 343.23,
+    "text": "",
+    "asr_s": 0.354
+   },
+   {
+    "window_end_s": 343.62,
+    "text": "The Prime Minister's...",
+    "asr_s": 0.3548
+   },
+   {
+    "window_end_s": 343.98,
+    "text": "The Prime Minister sent the...",
+    "asr_s": 0.3571
+   },
+   {
+    "window_end_s": 344.34,
+    "text": "the Prime Minister sent in the talks.",
+    "asr_s": 0.41
+   },
+   {
+    "window_end_s": 344.7,
+    "text": "Minister Santa Claus will come.",
+    "asr_s": 0.3982
+   },
+   {
+    "window_end_s": 345.12,
+    "text": "",
+    "asr_s": 0.3565
+   },
+   {
+    "window_end_s": 345.54,
+    "text": "thoughts will continue through the meeting.",
+    "asr_s": 0.362
+   },
+   {
+    "window_end_s": 345.9,
+    "text": "will continue through the weekend.",
+    "asr_s": 0.3567
+   },
+   {
+    "window_end_s": 346.14,
+    "text": "continue through the weekend.",
+    "asr_s": 0.358
+   },
+   {
+    "window_end_s": 349.02,
+    "text": "Follow me now.",
+    "asr_s": 0.3517
+   },
+   {
+    "window_end_s": 349.38,
+    "text": "Follow me now to the...",
+    "asr_s": 0.3624
+   },
+   {
+    "window_end_s": 349.74,
+    "text": "Follow me out of the stupid...",
+    "asr_s": 0.3621
+   },
+   {
+    "window_end_s": 350.13,
+    "text": "Follow me out of the studio for today.",
+    "asr_s": 0.37
+   },
+   {
+    "window_end_s": 350.52,
+    "text": "out of the studio for tonight.",
+    "asr_s": 0.3626
+   },
+   {
+    "window_end_s": 350.91,
+    "text": "",
+    "asr_s": 0.3745
+   },
+   {
+    "window_end_s": 351.3,
+    "text": "don't for tonight's deadline in to.",
+    "asr_s": 0.4289
+   },
+   {
+    "window_end_s": 351.69,
+    "text": "tonight's deadline interview.",
+    "asr_s": 0.3557
+   },
+   {
+    "window_end_s": 354.54,
+    "text": "Like a super.",
+    "asr_s": 0.3816
+   },
+   {
+    "window_end_s": 354.9,
+    "text": "like a Super Mario",
+    "asr_s": 0.3538
+   },
+   {
+    "window_end_s": 355.29,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3596
+   },
+   {
+    "window_end_s": 355.53,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.36
+   },
+   {
+    "window_end_s": 356.37,
+    "text": "level like it's very",
+    "asr_s": 0.3554
+   },
+   {
+    "window_end_s": 356.76,
+    "text": "like it's very like",
+    "asr_s": 0.3581
+   },
+   {
+    "window_end_s": 357.12,
+    "text": "Like it's very like high",
+    "asr_s": 0.3616
+   },
+   {
+    "window_end_s": 357.48,
+    "text": "Like it's very like high detail.",
+    "asr_s": 0.3642
+   },
+   {
+    "window_end_s": 357.87,
+    "text": "very like high detail.",
+    "asr_s": 0.361
+   },
+   {
+    "window_end_s": 359.52,
+    "text": "So...",
+    "asr_s": 0.3679
+   },
+   {
+    "window_end_s": 360.15,
+    "text": "Hell, and...",
+    "asr_s": 0.381
+   },
+   {
+    "window_end_s": 360.24,
+    "text": "Hell, and...",
+    "asr_s": 0.3536
+   },
+   {
+    "window_end_s": 360.93,
+    "text": "and like one.",
+    "asr_s": 0.3886
+   },
+   {
+    "window_end_s": 361.29,
+    "text": "and like once you...",
+    "asr_s": 0.3575
+   },
+   {
+    "window_end_s": 361.5,
+    "text": "like once you",
+    "asr_s": 0.3514
+   },
+   {
+    "window_end_s": 361.98,
+    "text": "like once you get in.",
+    "asr_s": 0.3594
+   },
+   {
+    "window_end_s": 362.34,
+    "text": "once you get into the...",
+    "asr_s": 0.3613
+   },
+   {
+    "window_end_s": 362.7,
+    "text": "get into the park.",
+    "asr_s": 0.3623
+   },
+   {
+    "window_end_s": 362.82,
+    "text": "get into the par.",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 365.28,
+    "text": "and that's why I'm so excited to see you later.",
+    "asr_s": 1.2734
+   },
+   {
+    "window_end_s": 365.67,
+    "text": "it's just like everything.",
+    "asr_s": 0.3602
+   },
+   {
+    "window_end_s": 366.45,
+    "text": "It's just like everything looks like.",
+    "asr_s": 0.3648
+   },
+   {
+    "window_end_s": 367.05,
+    "text": "Everything looks like a computer.",
+    "asr_s": 0.3593
+   },
+   {
+    "window_end_s": 367.44,
+    "text": "looks like a computer game.",
+    "asr_s": 0.3601
+   },
+   {
+    "window_end_s": 367.59,
+    "text": "like a computer game.",
+    "asr_s": 0.3584
+   },
+   {
+    "window_end_s": 368.58,
+    "text": "game and they have",
+    "asr_s": 0.3533
+   },
+   {
+    "window_end_s": 368.88,
+    "text": "and they have",
+    "asr_s": 0.352
+   },
+   {
+    "window_end_s": 370.59,
+    "text": "I love these.",
+    "asr_s": 0.3535
+   },
+   {
+    "window_end_s": 370.95,
+    "text": "I love these lights.",
+    "asr_s": 0.3557
+   },
+   {
+    "window_end_s": 371.16,
+    "text": "I love these like...",
+    "asr_s": 0.3569
+   },
+   {
+    "window_end_s": 372.45,
+    "text": "You know.",
+    "asr_s": 0.3808
+   },
+   {
+    "window_end_s": 372.84,
+    "text": "You know, it's a good thing.",
+    "asr_s": 0.3981
+   },
+   {
+    "window_end_s": 373.32,
+    "text": "You know, it's...",
+    "asr_s": 1.5871
+   },
+   {
+    "window_end_s": 373.74,
+    "text": "So if there's--",
+    "asr_s": 0.3602
+   },
+   {
+    "window_end_s": 374.4,
+    "text": "If there's like a...",
+    "asr_s": 0.3606
+   },
+   {
+    "window_end_s": 375.78,
+    "text": "[BLANK_AUDIO]",
+    "asr_s": 0.3656
+   },
+   {
+    "window_end_s": 376.35,
+    "text": "You know, like it's...",
+    "asr_s": 0.403
+   },
+   {
+    "window_end_s": 376.74,
+    "text": "You know, like in the morning.",
+    "asr_s": 0.3663
+   },
+   {
+    "window_end_s": 377.16,
+    "text": "You know, like in a Mario game, it'll...",
+    "asr_s": 0.3795
+   },
+   {
+    "window_end_s": 377.55,
+    "text": "like in a Mario game that will have like a...",
+    "asr_s": 0.3735
+   },
+   {
+    "window_end_s": 377.94,
+    "text": "Mario game they will have like a question.",
+    "asr_s": 0.3697
+   },
+   {
+    "window_end_s": 378.33,
+    "text": "game that will have like a question block in the",
+    "asr_s": 0.37
+   },
+   {
+    "window_end_s": 378.72,
+    "text": "have like a question blocking of you like",
+    "asr_s": 0.3633
+   },
+   {
+    "window_end_s": 379.02,
+    "text": "a question block and if you like",
+    "asr_s": 0.3646
+   },
+   {
+    "window_end_s": 379.98,
+    "text": "you like it.",
+    "asr_s": 0.388
+   },
+   {
+    "window_end_s": 381.45,
+    "text": "No.",
+    "asr_s": 0.3701
+   },
+   {
+    "window_end_s": 382.23,
+    "text": "You know.",
+    "asr_s": 0.3789
+   },
+   {
+    "window_end_s": 382.71,
+    "text": "you know, punch it.",
+    "asr_s": 0.362
+   },
+   {
+    "window_end_s": 382.83,
+    "text": "So, punch it.",
+    "asr_s": 0.3565
+   },
+   {
+    "window_end_s": 383.1,
+    "text": "um punch it.",
+    "asr_s": 0.3826
+   },
+   {
+    "window_end_s": 383.58,
+    "text": "punch it, a coin will come",
+    "asr_s": 0.3632
+   },
+   {
+    "window_end_s": 383.97,
+    "text": "it a coin will come out.",
+    "asr_s": 0.3602
+   },
+   {
+    "window_end_s": 384.54,
+    "text": "coin will come out. So like a",
+    "asr_s": 0.3676
+   },
+   {
+    "window_end_s": 384.93,
+    "text": "come out. So like everyone.",
+    "asr_s": 0.3628
+   },
+   {
+    "window_end_s": 385.32,
+    "text": "So like everyone what",
+    "asr_s": 0.3519
+   },
+   {
+    "window_end_s": 385.53,
+    "text": "So like everyone would.",
+    "asr_s": 0.398
+   },
+   {
+    "window_end_s": 387.15,
+    "text": "They come in.",
+    "asr_s": 0.3523
+   },
+   {
+    "window_end_s": 387.57,
+    "text": "they come into the...",
+    "asr_s": 0.3936
+   },
+   {
+    "window_end_s": 387.93,
+    "text": "They come into the park.",
+    "asr_s": 0.3562
+   },
+   {
+    "window_end_s": 388.35,
+    "text": "come into the park, they get like...",
+    "asr_s": 0.3666
+   },
+   {
+    "window_end_s": 388.71,
+    "text": "into the park big like this little.",
+    "asr_s": 0.3662
+   },
+   {
+    "window_end_s": 389.1,
+    "text": "hard big like this little bracelet.",
+    "asr_s": 0.3629
+   },
+   {
+    "window_end_s": 389.46,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.364
+   },
+   {
+    "window_end_s": 390.12,
+    "text": "bracelet and then you can",
+    "asr_s": 0.3571
+   },
+   {
+    "window_end_s": 390.51,
+    "text": "and then you can go punch",
+    "asr_s": 0.3628
+   },
+   {
+    "window_end_s": 390.78,
+    "text": "and then you can go punch",
+    "asr_s": 0.3597
+   },
+   {
+    "window_end_s": 393.06,
+    "text": "Police say...",
+    "asr_s": 0.377
+   },
+   {
+    "window_end_s": 393.42,
+    "text": "Police say the right...",
+    "asr_s": 0.3584
+   },
+   {
+    "window_end_s": 393.81,
+    "text": "Police say the driver's time.",
+    "asr_s": 0.363
+   },
+   {
+    "window_end_s": 394.17,
+    "text": "Police say the driver's top 10.",
+    "asr_s": 0.3667
+   },
+   {
+    "window_end_s": 394.56,
+    "text": "the drivers top. It has to be interesting.",
+    "asr_s": 0.4167
+   },
+   {
+    "window_end_s": 394.95,
+    "text": "",
+    "asr_s": 0.354
+   },
+   {
+    "window_end_s": 395.37,
+    "text": "to the intersection before...",
+    "asr_s": 0.3871
+   },
+   {
+    "window_end_s": 395.73,
+    "text": "the intersection before the collision.",
+    "asr_s": 0.3603
+   },
+   {
+    "window_end_s": 396.12,
+    "text": "section before an occasion.",
+    "asr_s": 0.3967
+   },
+   {
+    "window_end_s": 396.21,
+    "text": "action before an occasion.",
+    "asr_s": 0.3593
+   },
+   {
+    "window_end_s": 398.94,
+    "text": "market.",
+    "asr_s": 0.3633
+   },
+   {
+    "window_end_s": 399.3,
+    "text": "Market is slow.",
+    "asr_s": 0.3841
+   },
+   {
+    "window_end_s": 399.69,
+    "text": "Market is closed lower.",
+    "asr_s": 0.3576
+   },
+   {
+    "window_end_s": 400.08,
+    "text": "market is closed lower today.",
+    "asr_s": 0.3606
+   },
+   {
+    "window_end_s": 400.44,
+    "text": "It's closed lower today than men.",
+    "asr_s": 0.3662
+   },
+   {
+    "window_end_s": 400.83,
+    "text": "",
+    "asr_s": 0.3626
+   },
+   {
+    "window_end_s": 401.22,
+    "text": "Today is in Master's weight.",
+    "asr_s": 0.4073
+   },
+   {
+    "window_end_s": 401.61,
+    "text": "has in master's weight, the latest in...",
+    "asr_s": 0.4435
+   },
+   {
+    "window_end_s": 402.03,
+    "text": "Wait, my latest inflation.",
+    "asr_s": 0.3987
+   },
+   {
+    "window_end_s": 402.48,
+    "text": "a redist inflation report.",
+    "asr_s": 0.3591
+   },
+   {
+    "window_end_s": 402.72,
+    "text": "latest inflation report.",
+    "asr_s": 0.3591
+   },
+   {
+    "window_end_s": 405.54,
+    "text": "Go time.",
+    "asr_s": 0.3757
+   },
+   {
+    "window_end_s": 405.9,
+    "text": "Go to our website.",
+    "asr_s": 0.3921
+   },
+   {
+    "window_end_s": 406.29,
+    "text": "Go to our website for the...",
+    "asr_s": 0.364
+   },
+   {
+    "window_end_s": 406.71,
+    "text": "on our website for the full story.",
+    "asr_s": 0.3636
+   },
+   {
+    "window_end_s": 407.1,
+    "text": "website for the full story.",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 407.49,
+    "text": "for the full story and belief.",
+    "asr_s": 0.3629
+   },
+   {
+    "window_end_s": 407.88,
+    "text": "full story and play this game.",
+    "asr_s": 0.3624
+   },
+   {
+    "window_end_s": 408.33,
+    "text": "and play this forever.",
+    "asr_s": 0.3955
+   },
+   {
+    "window_end_s": 411.18,
+    "text": "The prime minister.",
+    "asr_s": 0.3832
+   },
+   {
+    "window_end_s": 411.6,
+    "text": "The Prime Minister said...",
+    "asr_s": 0.3898
+   },
+   {
+    "window_end_s": 411.99,
+    "text": "The Prime Minister said that...",
+    "asr_s": 0.4103
+   },
+   {
+    "window_end_s": 412.38,
+    "text": "Prime Minister Sam Paton.",
+    "asr_s": 0.4124
+   },
+   {
+    "window_end_s": 412.8,
+    "text": "Mr. Sant-Atonk's love continues.",
+    "asr_s": 0.4376
+   },
+   {
+    "window_end_s": 413.22,
+    "text": "the talks will continue through",
+    "asr_s": 0.3574
+   },
+   {
+    "window_end_s": 413.67,
+    "text": "will continue through the week.",
+    "asr_s": 0.3591
+   },
+   {
+    "window_end_s": 414.0,
+    "text": "continue through the weekend.",
+    "asr_s": 0.3598
+   },
+   {
+    "window_end_s": 414.63,
+    "text": "through that weekend.",
+    "asr_s": 0.3497
+   },
+   {
+    "window_end_s": 416.85,
+    "text": "",
+    "asr_s": 0.3542
+   },
+   {
+    "window_end_s": 417.21,
+    "text": "Follow me out of the...",
+    "asr_s": 0.3598
+   },
+   {
+    "window_end_s": 417.57,
+    "text": "Follow me out if I still do.",
+    "asr_s": 0.3632
+   },
+   {
+    "window_end_s": 417.93,
+    "text": "follow me out at the studio for",
+    "asr_s": 0.3621
+   },
+   {
+    "window_end_s": 418.32,
+    "text": "out of us to deal for tonight.",
+    "asr_s": 0.368
+   },
+   {
+    "window_end_s": 418.71,
+    "text": "us to deal for tonight.",
+    "asr_s": 0.3978
+   },
+   {
+    "window_end_s": 419.1,
+    "text": "for tonight's 10-9 interview.",
+    "asr_s": 0.3656
+   },
+   {
+    "window_end_s": 419.49,
+    "text": "tonight stand right in to view.",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 422.31,
+    "text": "Police say...",
+    "asr_s": 0.3701
+   },
+   {
+    "window_end_s": 422.7,
+    "text": "Police say the right...",
+    "asr_s": 0.3565
+   },
+   {
+    "window_end_s": 423.09,
+    "text": "Police say the driver's talking.",
+    "asr_s": 0.3642
+   },
+   {
+    "window_end_s": 423.45,
+    "text": "Police say the driver stopped at me.",
+    "asr_s": 0.4141
+   },
+   {
+    "window_end_s": 423.84,
+    "text": "",
+    "asr_s": 0.3616
+   },
+   {
+    "window_end_s": 424.26,
+    "text": "I will stop that mid-intersection.",
+    "asr_s": 0.3687
+   },
+   {
+    "window_end_s": 424.65,
+    "text": "that mid-intersection before the-",
+    "asr_s": 0.3653
+   },
+   {
+    "window_end_s": 425.04,
+    "text": "the intersection before the collision.",
+    "asr_s": 0.3597
+   },
+   {
+    "window_end_s": 425.46,
+    "text": "before the collision.",
+    "asr_s": 0.3536
+   },
+   {
+    "window_end_s": 428.25,
+    "text": "Market",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 428.61,
+    "text": "Market is closing.",
+    "asr_s": 0.3834
+   },
+   {
+    "window_end_s": 429.0,
+    "text": "Market is closed low at the end.",
+    "asr_s": 0.4058
+   },
+   {
+    "window_end_s": 429.39,
+    "text": "market slow, slow, until day.",
+    "asr_s": 0.4128
+   },
+   {
+    "window_end_s": 429.81,
+    "text": "slow, slow, slow, slow.",
+    "asr_s": 1.0505
+   },
+   {
+    "window_end_s": 430.23,
+    "text": "lower took a bit faster weight.",
+    "asr_s": 0.4091
+   },
+   {
+    "window_end_s": 431.31,
+    "text": "Just wait for latest inflation.",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 431.73,
+    "text": "the latest inflation report.",
+    "asr_s": 0.3581
+   },
+   {
+    "window_end_s": 432.06,
+    "text": "This is my latest inflation report.",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 434.91,
+    "text": "Come to Hollywood.",
+    "asr_s": 0.3846
+   },
+   {
+    "window_end_s": 435.3,
+    "text": "Go to how it went.",
+    "asr_s": 0.398
+   },
+   {
+    "window_end_s": 435.69,
+    "text": "Go to how it went, time to fill the f-",
+    "asr_s": 0.378
+   },
+   {
+    "window_end_s": 436.11,
+    "text": "How it went, time to fill the full storm.",
+    "asr_s": 0.374
+   },
+   {
+    "window_end_s": 436.5,
+    "text": "website for the full story and",
+    "asr_s": 0.3586
+   },
+   {
+    "window_end_s": 436.89,
+    "text": "for the full stormy and for the later.",
+    "asr_s": 0.3713
+   },
+   {
+    "window_end_s": 437.25,
+    "text": "full stormy and the latest weather.",
+    "asr_s": 0.3666
+   },
+   {
+    "window_end_s": 437.7,
+    "text": "and the latest weather.",
+    "asr_s": 0.3564
+   },
+   {
+    "window_end_s": 440.46,
+    "text": "The prime wave is a little bit different from the end of\n the video.",
+    "asr_s": 1.2374
+   },
+   {
+    "window_end_s": 440.82,
+    "text": "The Prime Minister",
+    "asr_s": 0.3505
+   },
+   {
+    "window_end_s": 442.08,
+    "text": "",
+    "asr_s": 0.3588
+   },
+   {
+    "window_end_s": 442.44,
+    "text": "",
+    "asr_s": 0.3586
+   },
+   {
+    "window_end_s": 442.8,
+    "text": "thoughts will continue through the meeting.",
+    "asr_s": 0.3662
+   },
+   {
+    "window_end_s": 443.16,
+    "text": "will continue through the weekend.",
+    "asr_s": 0.36
+   },
+   {
+    "window_end_s": 443.4,
+    "text": "continue through the weekend.",
+    "asr_s": 0.3571
+   },
+   {
+    "window_end_s": 446.28,
+    "text": "Follow me now.",
+    "asr_s": 0.355
+   },
+   {
+    "window_end_s": 446.64,
+    "text": "Follow me now to the...",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 447.0,
+    "text": "Follow me now to the stupid",
+    "asr_s": 0.3612
+   },
+   {
+    "window_end_s": 447.39,
+    "text": "Follow me now to the studio for today.",
+    "asr_s": 0.3711
+   },
+   {
+    "window_end_s": 447.78,
+    "text": "out of the studio for tonight.",
+    "asr_s": 0.3652
+   },
+   {
+    "window_end_s": 448.17,
+    "text": "",
+    "asr_s": 0.3636
+   },
+   {
+    "window_end_s": 448.56,
+    "text": "for tonight's headline interview.",
+    "asr_s": 0.3586
+   },
+   {
+    "window_end_s": 448.98,
+    "text": "Tonight's deadline interview.",
+    "asr_s": 0.3575
+   },
+   {
+    "window_end_s": 451.83,
+    "text": "Like a soup.",
+    "asr_s": 0.353
+   },
+   {
+    "window_end_s": 452.19,
+    "text": "like a super Mario",
+    "asr_s": 0.3544
+   },
+   {
+    "window_end_s": 452.55,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 452.82,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.357
+   },
+   {
+    "window_end_s": 453.63,
+    "text": "level like it's very...",
+    "asr_s": 0.3977
+   },
+   {
+    "window_end_s": 453.99,
+    "text": "like it's very like",
+    "asr_s": 0.3572
+   },
+   {
+    "window_end_s": 454.41,
+    "text": "Like it's very like height",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 454.77,
+    "text": "Like it's very like high detail.",
+    "asr_s": 0.3663
+   },
+   {
+    "window_end_s": 455.16,
+    "text": "very like high detail.",
+    "asr_s": 0.3582
+   },
+   {
+    "window_end_s": 456.81,
+    "text": "Well...",
+    "asr_s": 0.3655
+   },
+   {
+    "window_end_s": 457.53,
+    "text": "and",
+    "asr_s": 0.3633
+   },
+   {
+    "window_end_s": 458.22,
+    "text": "and like one.",
+    "asr_s": 1.207
+   },
+   {
+    "window_end_s": 458.61,
+    "text": "and like once you...",
+    "asr_s": 0.3559
+   },
+   {
+    "window_end_s": 458.76,
+    "text": "like once you",
+    "asr_s": 0.3508
+   },
+   {
+    "window_end_s": 459.24,
+    "text": "like once you get in.",
+    "asr_s": 0.3603
+   },
+   {
+    "window_end_s": 459.6,
+    "text": "once you get into the...",
+    "asr_s": 0.3582
+   },
+   {
+    "window_end_s": 459.99,
+    "text": "get into the park.",
+    "asr_s": 0.3554
+   },
+   {
+    "window_end_s": 460.11,
+    "text": "get into the park.",
+    "asr_s": 0.3557
+   },
+   {
+    "window_end_s": 460.77,
+    "text": "to the park.",
+    "asr_s": 0.3539
+   },
+   {
+    "window_end_s": 462.51,
+    "text": "it's just like",
+    "asr_s": 2.6075
+   },
+   {
+    "window_end_s": 462.87,
+    "text": "it's just like everything.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 463.74,
+    "text": "It's just like everything looks like.",
+    "asr_s": 0.3666
+   },
+   {
+    "window_end_s": 464.34,
+    "text": "everything looks like a computer.",
+    "asr_s": 0.3574
+   },
+   {
+    "window_end_s": 464.73,
+    "text": "looks like a computer game.",
+    "asr_s": 0.3578
+   },
+   {
+    "window_end_s": 464.88,
+    "text": "like a computer game.",
+    "asr_s": 0.3566
+   },
+   {
+    "window_end_s": 465.84,
+    "text": "game and they have",
+    "asr_s": 0.355
+   },
+   {
+    "window_end_s": 466.14,
+    "text": "And they have.",
+    "asr_s": 0.3845
+   },
+   {
+    "window_end_s": 467.91,
+    "text": "I love these.",
+    "asr_s": 0.3532
+   },
+   {
+    "window_end_s": 468.3,
+    "text": "I love these lights.",
+    "asr_s": 0.3537
+   },
+   {
+    "window_end_s": 468.42,
+    "text": "I know these like...",
+    "asr_s": 0.3596
+   },
+   {
+    "window_end_s": 469.74,
+    "text": "You know.",
+    "asr_s": 0.3834
+   },
+   {
+    "window_end_s": 470.25,
+    "text": "You know, it...",
+    "asr_s": 0.3881
+   },
+   {
+    "window_end_s": 470.64,
+    "text": "You know, it's- it's- it's-",
+    "asr_s": 0.3772
+   },
+   {
+    "window_end_s": 471.03,
+    "text": "So if there's like--",
+    "asr_s": 0.3614
+   },
+   {
+    "window_end_s": 471.42,
+    "text": "If there's like a",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 471.66,
+    "text": "If there's like a...",
+    "asr_s": 0.358
+   },
+   {
+    "window_end_s": 473.13,
+    "text": "[BLANK_AUDIO]",
+    "asr_s": 0.3607
+   },
+   {
+    "window_end_s": 473.61,
+    "text": "You know, like a...",
+    "asr_s": 0.3988
+   },
+   {
+    "window_end_s": 474.0,
+    "text": "You know, like in the Mario Kart.",
+    "asr_s": 0.4182
+   },
+   {
+    "window_end_s": 474.42,
+    "text": "You know, like in a Mario game, it'll...",
+    "asr_s": 0.3791
+   },
+   {
+    "window_end_s": 474.84,
+    "text": "like in a Mario game that will have like a...",
+    "asr_s": 0.3762
+   },
+   {
+    "window_end_s": 475.23,
+    "text": "Mario game that will have like a question.",
+    "asr_s": 0.3685
+   },
+   {
+    "window_end_s": 475.62,
+    "text": "game, it'll have like a question blocking.",
+    "asr_s": 0.3718
+   },
+   {
+    "window_end_s": 476.01,
+    "text": "have like a question block and if you like",
+    "asr_s": 0.37
+   },
+   {
+    "window_end_s": 476.31,
+    "text": "a question block and if you like",
+    "asr_s": 0.3638
+   },
+   {
+    "window_end_s": 477.09,
+    "text": "and if you like it.",
+    "asr_s": 0.3589
+   },
+   {
+    "window_end_s": 478.74,
+    "text": "",
+    "asr_s": 0.3483
+   },
+   {
+    "window_end_s": 479.4,
+    "text": "No.",
+    "asr_s": 0.3999
+   },
+   {
+    "window_end_s": 479.49,
+    "text": "No.",
+    "asr_s": 0.3936
+   },
+   {
+    "window_end_s": 480.03,
+    "text": "you know, punch it.",
+    "asr_s": 0.3613
+   },
+   {
+    "window_end_s": 480.12,
+    "text": "So, punch it.",
+    "asr_s": 0.3573
+   },
+   {
+    "window_end_s": 480.81,
+    "text": "punch it a coin will come",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 481.23,
+    "text": "a coin will come out.",
+    "asr_s": 0.359
+   },
+   {
+    "window_end_s": 481.77,
+    "text": "a coin will come out.",
+    "asr_s": 0.3589
+   },
+   {
+    "window_end_s": 482.13,
+    "text": "will come out. So like everyone.",
+    "asr_s": 0.3661
+   },
+   {
+    "window_end_s": 482.49,
+    "text": "So like everyone what",
+    "asr_s": 0.3532
+   },
+   {
+    "window_end_s": 482.64,
+    "text": "So like everyone what",
+    "asr_s": 0.3549
+   },
+   {
+    "window_end_s": 484.35,
+    "text": "",
+    "asr_s": 0.3541
+   },
+   {
+    "window_end_s": 484.71,
+    "text": "They come into the...",
+    "asr_s": 0.3934
+   },
+   {
+    "window_end_s": 485.07,
+    "text": "They come into the park.",
+    "asr_s": 0.3573
+   },
+   {
+    "window_end_s": 485.49,
+    "text": "they come into the park, they get like",
+    "asr_s": 0.3695
+   },
+   {
+    "window_end_s": 485.85,
+    "text": "into the park they get like this little",
+    "asr_s": 0.3669
+   },
+   {
+    "window_end_s": 486.24,
+    "text": "the park they get like this little bracelet.",
+    "asr_s": 0.369
+   },
+   {
+    "window_end_s": 486.69,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.3596
+   },
+   {
+    "window_end_s": 487.38,
+    "text": "little bracelet and then you can",
+    "asr_s": 0.361
+   },
+   {
+    "window_end_s": 487.74,
+    "text": "and then you can go...",
+    "asr_s": 0.3604
+   },
+   {
+    "window_end_s": 488.1,
+    "text": "And then you can go punch.",
+    "asr_s": 0.3647
+   },
+   {
+    "window_end_s": 490.35,
+    "text": "Police say...",
+    "asr_s": 0.3758
+   },
+   {
+    "window_end_s": 490.74,
+    "text": "Police say the right...",
+    "asr_s": 0.3959
+   },
+   {
+    "window_end_s": 491.13,
+    "text": "Police say the driver's top.",
+    "asr_s": 0.3628
+   },
+   {
+    "window_end_s": 491.55,
+    "text": "at least say the driver's top ten to the end.",
+    "asr_s": 0.4376
+   },
+   {
+    "window_end_s": 491.94,
+    "text": "But drivers stop after the intersection.",
+    "asr_s": 0.409
+   },
+   {
+    "window_end_s": 492.39,
+    "text": "top-to-the-intersection.",
+    "asr_s": 0.418
+   },
+   {
+    "window_end_s": 492.81,
+    "text": "at the intersection before the...",
+    "asr_s": 0.3604
+   },
+   {
+    "window_end_s": 493.23,
+    "text": "intersection before the collision.",
+    "asr_s": 0.392
+   },
+   {
+    "window_end_s": 493.44,
+    "text": "perception before the collision.",
+    "asr_s": 0.3612
+   },
+   {
+    "window_end_s": 494.13,
+    "text": "of a collision.",
+    "asr_s": 0.3524
+   },
+   {
+    "window_end_s": 496.2,
+    "text": "market.",
+    "asr_s": 0.3634
+   },
+   {
+    "window_end_s": 496.56,
+    "text": "Market slow.",
+    "asr_s": 0.3743
+   },
+   {
+    "window_end_s": 496.95,
+    "text": "Market is closed lower.",
+    "asr_s": 0.3535
+   },
+   {
+    "window_end_s": 497.34,
+    "text": "Market is slower today.",
+    "asr_s": 0.3569
+   },
+   {
+    "window_end_s": 497.7,
+    "text": "It's slow, slower today than me.",
+    "asr_s": 0.3729
+   },
+   {
+    "window_end_s": 498.06,
+    "text": "",
+    "asr_s": 0.3568
+   },
+   {
+    "window_end_s": 498.45,
+    "text": "today is in master's weight.",
+    "asr_s": 0.3641
+   },
+   {
+    "window_end_s": 498.81,
+    "text": "",
+    "asr_s": 0.3576
+   },
+   {
+    "window_end_s": 499.2,
+    "text": "Masters weight, the latest inflation.",
+    "asr_s": 0.361
+   },
+   {
+    "window_end_s": 499.56,
+    "text": "weight, the latest inflation report.",
+    "asr_s": 0.3638
+   },
+   {
+    "window_end_s": 500.01,
+    "text": "latest inflation report.",
+    "asr_s": 0.3595
+   },
+   {
+    "window_end_s": 502.8,
+    "text": "Go time.",
+    "asr_s": 0.3794
+   },
+   {
+    "window_end_s": 503.16,
+    "text": "Go to our website.",
+    "asr_s": 0.3894
+   },
+   {
+    "window_end_s": 503.55,
+    "text": "Go to our website for the...",
+    "asr_s": 0.3632
+   },
+   {
+    "window_end_s": 503.94,
+    "text": "Go to our website for the full story.",
+    "asr_s": 0.3682
+   },
+   {
+    "window_end_s": 504.33,
+    "text": "website for the full story.",
+    "asr_s": 0.3619
+   },
+   {
+    "window_end_s": 504.72,
+    "text": "for the full story and the latest.",
+    "asr_s": 0.3682
+   },
+   {
+    "window_end_s": 505.11,
+    "text": "full story and the latest way.",
+    "asr_s": 0.3632
+   },
+   {
+    "window_end_s": 505.5,
+    "text": "and the latest weather.",
+    "asr_s": 0.3584
+   },
+   {
+    "window_end_s": 505.65,
+    "text": "and the latest weather.",
+    "asr_s": 0.3962
+   },
+   {
+    "window_end_s": 508.47,
+    "text": "The Prime Minister",
+    "asr_s": 0.3469
+   },
+   {
+    "window_end_s": 508.89,
+    "text": "The Prime Minister said",
+    "asr_s": 0.3541
+   },
+   {
+    "window_end_s": 509.25,
+    "text": "The Prime Minister sent the...",
+    "asr_s": 0.3592
+   },
+   {
+    "window_end_s": 509.61,
+    "text": "Prime Minister Santa Claus.",
+    "asr_s": 0.4104
+   },
+   {
+    "window_end_s": 509.97,
+    "text": "Minister Santon Attalke's love continues.",
+    "asr_s": 0.4307
+   },
+   {
+    "window_end_s": 510.39,
+    "text": "the San Antonio.",
+    "asr_s": 0.3972
+   },
+   {
+    "window_end_s": 510.84,
+    "text": "talks will continue through the week.",
+    "asr_s": 0.3646
+   },
+   {
+    "window_end_s": 511.29,
+    "text": "continue through the weekend.",
+    "asr_s": 0.3596
+   },
+   {
+    "window_end_s": 514.14,
+    "text": "",
+    "asr_s": 0.3446
+   },
+   {
+    "window_end_s": 514.5,
+    "text": "follow me out of the",
+    "asr_s": 0.3568
+   },
+   {
+    "window_end_s": 514.86,
+    "text": "Follow me out on the studio.",
+    "asr_s": 0.3635
+   },
+   {
+    "window_end_s": 515.22,
+    "text": "",
+    "asr_s": 0.3643
+   },
+   {
+    "window_end_s": 515.61,
+    "text": "out of us to deal for tonight.",
+    "asr_s": 0.3659
+   },
+   {
+    "window_end_s": 516.0,
+    "text": "us to deal for tonight.",
+    "asr_s": 0.36
+   },
+   {
+    "window_end_s": 516.39,
+    "text": "for tonight stand right in to.",
+    "asr_s": 0.4018
+   },
+   {
+    "window_end_s": 516.78,
+    "text": "tonight stand right in to view.",
+    "asr_s": 0.4628
+   },
+   {
+    "window_end_s": 519.69,
+    "text": "Police say-",
+    "asr_s": 0.3766
+   },
+   {
+    "window_end_s": 520.17,
+    "text": "Police say the driver's name is...",
+    "asr_s": 0.4264
+   },
+   {
+    "window_end_s": 520.56,
+    "text": "Belize save the right with top time!",
+    "asr_s": 0.4252
+   },
+   {
+    "window_end_s": 521.01,
+    "text": "It's getting the dry most tough in the internet.",
+    "asr_s": 0.4337
+   },
+   {
+    "window_end_s": 521.46,
+    "text": "",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 521.91,
+    "text": "",
+    "asr_s": 0.3587
+   },
+   {
+    "window_end_s": 522.3,
+    "text": "the intersection before the collision.",
+    "asr_s": 0.3584
+   },
+   {
+    "window_end_s": 522.72,
+    "text": "before the collision.",
+    "asr_s": 0.3557
+   },
+   {
+    "window_end_s": 525.54,
+    "text": "Markets.",
+    "asr_s": 0.3639
+   },
+   {
+    "window_end_s": 525.9,
+    "text": "Market is closing.",
+    "asr_s": 0.3825
+   },
+   {
+    "window_end_s": 526.29,
+    "text": "Market is closed, lower.",
+    "asr_s": 0.3992
+   },
+   {
+    "window_end_s": 526.68,
+    "text": "market is low, low, until then.",
+    "asr_s": 0.4307
+   },
+   {
+    "window_end_s": 527.1,
+    "text": "slow, slow, slow, slow.",
+    "asr_s": 0.4165
+   },
+   {
+    "window_end_s": 527.55,
+    "text": "I just love it again, I didn't mess up weight.",
+    "asr_s": 0.4488
+   },
+   {
+    "window_end_s": 527.97,
+    "text": "and the latest.",
+    "asr_s": 0.3808
+   },
+   {
+    "window_end_s": 528.42,
+    "text": "Master's weight, the latest inflation.",
+    "asr_s": 0.3628
+   },
+   {
+    "window_end_s": 528.81,
+    "text": "wait for latest inflation with...",
+    "asr_s": 0.3956
+   },
+   {
+    "window_end_s": 529.2,
+    "text": "latest inflation report.",
+    "asr_s": 0.3541
+   },
+   {
+    "window_end_s": 529.32,
+    "text": "latest inflation report.",
+    "asr_s": 0.3566
+   },
+   {
+    "window_end_s": 532.11,
+    "text": "- Come to the house. - Come to the house.",
+    "asr_s": 0.4145
+   },
+   {
+    "window_end_s": 532.47,
+    "text": "Go until now it went.",
+    "asr_s": 0.3915
+   },
+   {
+    "window_end_s": 532.89,
+    "text": "Go to our website for the",
+    "asr_s": 0.3612
+   },
+   {
+    "window_end_s": 533.31,
+    "text": "Go to our website for the full story.",
+    "asr_s": 0.3694
+   },
+   {
+    "window_end_s": 533.7,
+    "text": "website for the full story.",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 534.09,
+    "text": "for the full story and the lady.",
+    "asr_s": 0.3674
+   },
+   {
+    "window_end_s": 534.48,
+    "text": "full storm in the latest weather.",
+    "asr_s": 0.3625
+   },
+   {
+    "window_end_s": 534.87,
+    "text": "and the latest weather.",
+    "asr_s": 0.357
+   },
+   {
+    "window_end_s": 534.99,
+    "text": "and the latest weather.",
+    "asr_s": 0.3573
+   },
+   {
+    "window_end_s": 537.75,
+    "text": "The prime line is a little bit different.",
+    "asr_s": 0.4315
+   },
+   {
+    "window_end_s": 538.11,
+    "text": "The Prime Minister",
+    "asr_s": 0.3478
+   },
+   {
+    "window_end_s": 538.56,
+    "text": "The Prime Minister said the President...",
+    "asr_s": 0.406
+   },
+   {
+    "window_end_s": 538.92,
+    "text": "Prime Minister Santo Torton.",
+    "asr_s": 0.4166
+   },
+   {
+    "window_end_s": 539.34,
+    "text": "",
+    "asr_s": 0.3603
+   },
+   {
+    "window_end_s": 539.76,
+    "text": "",
+    "asr_s": 0.3577
+   },
+   {
+    "window_end_s": 540.15,
+    "text": "thoughts will continue through the week.",
+    "asr_s": 0.3626
+   },
+   {
+    "window_end_s": 540.51,
+    "text": "will continue through the weekend.",
+    "asr_s": 0.3579
+   },
+   {
+    "window_end_s": 540.69,
+    "text": "continue through the weekend.",
+    "asr_s": 0.361
+   },
+   {
+    "window_end_s": 543.6,
+    "text": "Follow me now.",
+    "asr_s": 0.3526
+   },
+   {
+    "window_end_s": 543.99,
+    "text": "Follow me out of the t-",
+    "asr_s": 0.3609
+   },
+   {
+    "window_end_s": 544.35,
+    "text": "Follow me how to lift you down",
+    "asr_s": 0.3654
+   },
+   {
+    "window_end_s": 544.74,
+    "text": "Follow me out of the studio for today.",
+    "asr_s": 0.3689
+   },
+   {
+    "window_end_s": 545.13,
+    "text": "out of the studio for tonight.",
+    "asr_s": 0.3618
+   },
+   {
+    "window_end_s": 545.52,
+    "text": "",
+    "asr_s": 0.3657
+   },
+   {
+    "window_end_s": 545.91,
+    "text": "",
+    "asr_s": 0.356
+   },
+   {
+    "window_end_s": 546.24,
+    "text": "Tonight's deadline isn't on you.",
+    "asr_s": 0.3665
+   },
+   {
+    "window_end_s": 546.9,
+    "text": "I didn't tell you.",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 549.15,
+    "text": "like a super...",
+    "asr_s": 0.3805
+   },
+   {
+    "window_end_s": 549.54,
+    "text": "like a Super Mario League.",
+    "asr_s": 0.3949
+   },
+   {
+    "window_end_s": 549.93,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3586
+   },
+   {
+    "window_end_s": 550.08,
+    "text": "like a Super Mario level.",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 550.92,
+    "text": "level like it's very...",
+    "asr_s": 0.3977
+   },
+   {
+    "window_end_s": 551.31,
+    "text": "like it's very like",
+    "asr_s": 0.3554
+   },
+   {
+    "window_end_s": 551.73,
+    "text": "Like it's very like height",
+    "asr_s": 0.3602
+   },
+   {
+    "window_end_s": 552.09,
+    "text": "like it's very like high detail.",
+    "asr_s": 0.3675
+   },
+   {
+    "window_end_s": 552.48,
+    "text": "very like high detail.",
+    "asr_s": 0.357
+   },
+   {
+    "window_end_s": 552.66,
+    "text": "like high detail.",
+    "asr_s": 0.3543
+   },
+   {
+    "window_end_s": 553.92,
+    "text": "",
+    "asr_s": 0.3459
+   },
+   {
+    "window_end_s": 554.67,
+    "text": "Bell and...",
+    "asr_s": 0.3722
+   },
+   {
+    "window_end_s": 554.79,
+    "text": "and...",
+    "asr_s": 0.3669
+   },
+   {
+    "window_end_s": 555.51,
+    "text": "And like one--",
+    "asr_s": 0.3827
+   },
+   {
+    "window_end_s": 555.9,
+    "text": "and like once you...",
+    "asr_s": 0.3578
+   },
+   {
+    "window_end_s": 556.05,
+    "text": "like once you",
+    "asr_s": 0.3505
+   },
+   {
+    "window_end_s": 556.53,
+    "text": "like once you get in.",
+    "asr_s": 0.3583
+   },
+   {
+    "window_end_s": 556.89,
+    "text": "once you get into the...",
+    "asr_s": 0.361
+   },
+   {
+    "window_end_s": 557.25,
+    "text": "get into the park.",
+    "asr_s": 0.3563
+   },
+   {
+    "window_end_s": 557.4,
+    "text": "get into the par.",
+    "asr_s": 0.3538
+   },
+   {
+    "window_end_s": 559.8,
+    "text": "",
+    "asr_s": 0.345
+   },
+   {
+    "window_end_s": 560.16,
+    "text": "it's just like everything.",
+    "asr_s": 0.3601
+   },
+   {
+    "window_end_s": 560.52,
+    "text": "It's just like everything looks",
+    "asr_s": 0.3611
+   },
+   {
+    "window_end_s": 560.91,
+    "text": "It's just like everything looks like.",
+    "asr_s": 0.3646
+   },
+   {
+    "window_end_s": 561.0,
+    "text": "It's just like everything looks like.",
+    "asr_s": 0.3667
+   },
+   {
+    "window_end_s": 561.63,
+    "text": "Everything looks like a computer.",
+    "asr_s": 0.3622
+   },
+   {
+    "window_end_s": 562.02,
+    "text": "looks like a computer game.",
+    "asr_s": 0.3616
+   },
+   {
+    "window_end_s": 562.17,
+    "text": "like a computer game.",
+    "asr_s": 0.3614
+   },
+   {
+    "window_end_s": 563.16,
+    "text": "game and they have",
+    "asr_s": 0.3552
+   },
+   {
+    "window_end_s": 563.46,
+    "text": "And they have...",
+    "asr_s": 0.3558
+   },
+   {
+    "window_end_s": 565.17,
+    "text": "I love these.",
+    "asr_s": 0.3521
+   },
+   {
+    "window_end_s": 565.53,
+    "text": "I love these lights.",
+    "asr_s": 0.3578
+   },
+   {
+    "window_end_s": 565.71,
+    "text": "I love these like...",
+    "asr_s": 0.3552
+   },
+   {
+    "window_end_s": 567.03,
+    "text": "You know.",
+    "asr_s": 0.3828
+   },
+   {
+    "window_end_s": 567.54,
+    "text": "You know, it-",
+    "asr_s": 0.3889
+   },
+   {
+    "window_end_s": 567.93,
+    "text": "You know, it's- it's- it's-",
+    "asr_s": 0.3753
+   },
+   {
+    "window_end_s": 568.32,
+    "text": "So if there's like--",
+    "asr_s": 0.3614
+   },
+   {
+    "window_end_s": 568.71,
+    "text": "If there's like a",
+    "asr_s": 0.3571
+   },
+   {
+    "window_end_s": 569.04,
+    "text": "if there's like a...",
+    "asr_s": 0.3597
+   },
+   {
+    "window_end_s": 570.36,
+    "text": "[BLANK_AUDIO]",
+    "asr_s": 0.3632
+   },
+   {
+    "window_end_s": 570.9,
+    "text": "You know, like a...",
+    "asr_s": 0.3928
+   },
+   {
+    "window_end_s": 571.29,
+    "text": "You know, like in the morning.",
+    "asr_s": 0.3657
+   },
+   {
+    "window_end_s": 571.71,
+    "text": "you know, like in a Mario game that will...",
+    "asr_s": 0.38
+   },
+   {
+    "window_end_s": 572.1,
+    "text": "you know, like in a Mario game, they will have like a...",
+    "asr_s": 0.3874
+   },
+   {
+    "window_end_s": 572.49,
+    "text": "Mario game they will have like a question.",
+    "asr_s": 0.3685
+   },
+   {
+    "window_end_s": 572.88,
+    "text": "game that will have like a question blocking",
+    "asr_s": 0.365
+   },
+   {
+    "window_end_s": 573.27,
+    "text": "have like a question blocking of you like",
+    "asr_s": 0.3662
+   },
+   {
+    "window_end_s": 573.57,
+    "text": "a question block interview.",
+    "asr_s": 0.3599
+   },
+   {
+    "window_end_s": 574.56,
+    "text": "you like.",
+    "asr_s": 0.3882
+   },
+   {
+    "window_end_s": 575.97,
+    "text": "No.",
+    "asr_s": 0.346
+   },
+   {
+    "window_end_s": 576.66,
+    "text": "[BLANK_AUDIO]",
+    "asr_s": 0.3927
+   },
+   {
+    "window_end_s": 576.78,
+    "text": "",
+    "asr_s": 0.354
+   },
+   {
+    "window_end_s": 577.23,
+    "text": "No, um, punch it.",
+    "asr_s": 0.4086
+   },
+   {
+    "window_end_s": 577.38,
+    "text": "So, punch it.",
+    "asr_s": 0.3557
+   },
+   {
+    "window_end_s": 577.65,
+    "text": "um, punch it.",
+    "asr_s": 0.3979
+   },
+   {
+    "window_end_s": 578.16,
+    "text": "punch it, a coin will come.",
+    "asr_s": 0.3636
+   },
+   {
+    "window_end_s": 578.52,
+    "text": "it, a coin will come out.",
+    "asr_s": 0.3632
+   },
+   {
+    "window_end_s": 579.09,
+    "text": "coin will come out. So like",
+    "asr_s": 0.3627
+   },
+   {
+    "window_end_s": 579.48,
+    "text": "come out. So like everyone.",
+    "asr_s": 0.3615
+   },
+   {
+    "window_end_s": 579.87,
+    "text": "So like everyone would",
+    "asr_s": 0.354
+   },
+   {
+    "window_end_s": 580.02,
+    "text": "So like everyone what...",
+    "asr_s": 0.3971
+   },
+   {
+    "window_end_s": 581.7,
+    "text": "They come in.",
+    "asr_s": 0.3843
+   },
+   {
+    "window_end_s": 582.12,
+    "text": "They come into the...",
+    "asr_s": 0.3954
+   },
+   {
+    "window_end_s": 582.51,
+    "text": "They come into the park.",
+    "asr_s": 0.3639
+   },
+   {
+    "window_end_s": 582.93,
+    "text": "come into the park they get like this.",
+    "asr_s": 0.3666
+   },
+   {
+    "window_end_s": 583.32,
+    "text": "to the park. They get like this little bird.",
+    "asr_s": 0.3772
+   },
+   {
+    "window_end_s": 583.71,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.3636
+   },
+   {
+    "window_end_s": 583.98,
+    "text": "they get like this little bracelet.",
+    "asr_s": 0.363
+   },
+   {
+    "window_end_s": 584.7,
+    "text": "bracelet and then you can go",
+    "asr_s": 0.3604
+   },
+   {
+    "window_end_s": 585.09,
+    "text": "and then you can go punch",
+    "asr_s": 0.3585
+   },
+   {
+    "window_end_s": 585.36,
+    "text": "And then you can go punch",
+    "asr_s": 0.3605
+   },
+   {
+    "window_end_s": 587.64,
+    "text": "Police say...",
+    "asr_s": 0.3837
+   },
+   {
+    "window_end_s": 588.03,
+    "text": "Police say that right now.",
+    "asr_s": 0.3607
+   },
+   {
+    "window_end_s": 588.42,
+    "text": "Police say the driver's top",
+    "asr_s": 0.3577
+   },
+   {
+    "window_end_s": 588.81,
+    "text": "at least say the drivers top.",
+    "asr_s": 0.4066
+   },
+   {
+    "window_end_s": 589.17,
+    "text": "the drivers top after the interest.",
+    "asr_s": 0.416
+   },
+   {
+    "window_end_s": 589.59,
+    "text": "top-to-the-intersection.",
+    "asr_s": 0.4031
+   },
+   {
+    "window_end_s": 590.01,
+    "text": "at the intersection before the...",
+    "asr_s": 0.358
+   },
+   {
+    "window_end_s": 590.43,
+    "text": "intersection before an occasion.",
+    "asr_s": 0.399
+   },
+   {
+    "window_end_s": 590.76,
+    "text": "action before the collision.",
+    "asr_s": 0.3594
+   },
+   {
+    "window_end_s": 593.49,
+    "text": "market.",
+    "asr_s": 0.3626
+   },
+   {
+    "window_end_s": 593.85,
+    "text": "Market slow.",
+    "asr_s": 0.3776
+   },
+   {
+    "window_end_s": 594.24,
+    "text": "Market is slow slowly.",
+    "asr_s": 0.3915
+   },
+   {
+    "window_end_s": 594.63,
+    "text": "Market is closed lower today.",
+    "asr_s": 0.36
+   },
+   {
+    "window_end_s": 595.05,
+    "text": "Slow, slow, and today is investing.",
+    "asr_s": 0.4211
+   },
+   {
+    "window_end_s": 595.41,
+    "text": "Those lower today's investors win.",
+    "asr_s": 0.4009
+   },
+   {
+    "window_end_s": 595.86,
+    "text": "today is investors wait for a.",
+    "asr_s": 0.4043
+   },
+   {
+    "window_end_s": 596.28,
+    "text": "investors wait for their latest information.",
+    "asr_s": 0.4058
+   },
+   {
+    "window_end_s": 596.7,
+    "text": "Wait, the latest inflation will be...",
+    "asr_s": 0.4164
+   },
+   {
+    "window_end_s": 597.12,
+    "text": "latest inflation report.",
+    "asr_s": 0.3544
+   },
+   {
+    "window_end_s": 597.3,
+    "text": "latest inflation report.",
+    "asr_s": 0.3561
+   },
+   {
+    "window_end_s": 597.96,
+    "text": "report.",
+    "asr_s": 0.3669
+   }
+  ]
+ },
+ "room": {
+  "tape_seconds": 2978.432,
+  "checks": 0,
+  "placements": [],
+  "windows": []
+ }
+}
