@@ -355,7 +355,16 @@ DIGEST_SENTINELS: dict[str, str] = {
     # 1 unsupported, measured on a scratch manifest before this line changed.
     # Previous pin: d251f781421e33e7b96c2e34730075d3bf4c241264fea66fdaaa4fc4fa2004b7
     "evals/companion/embodied_plan_v1/manifest.json": "d1bb1a8daed637b1620be992d5373dd67d907954b3fc73d0c08c14863519fbcb",
-    "evals/companion/personal_convo_v1/manifest.json": "d338f3352cd9597aeb9977f75c139d926bdfba1fe1d6b036b9a3ace08a1cf114",
+    # Previous pin: d338f3352cd9597aeb9977f75c139d926bdfba1fe1d6b036b9a3ace08a1cf114
+    # Re-pinned 2026-08-24 (Lane A close, integrator Fable): DEC-FS-1 (0ec1d7c)
+    # moved memory.py into memory/ and re-pinned the manifest's INNER lock on
+    # build_memory_fixture.py as change_class "repin-only" (added 0 / removed 0
+    # / repinned 1, freeze_provenance recorded inside the manifest itself) —
+    # but this OUTER pin on the manifest file was not moved with it, so the
+    # gate was red on an already-authorized two-line import diff. No eval
+    # OUTPUT moved; the chain of custody is the manifest's own provenance
+    # entry, verified against the previous pack_digest at the DEC-FS-1 close.
+    "evals/companion/personal_convo_v1/manifest.json": "a3d6ff7287de507e74b1f44c2417ed49f153c489f79ae32a896f494563f4f2ef",
 }
 
 # ---------------------------------------------------------------------------

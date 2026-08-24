@@ -249,7 +249,10 @@ def test_a_kidnapping_is_NOT_detected_the_H7_finding() -> None:
     That is structural, not a threshold that needs raising: a kidnapped scan
     matcher does not travel to the right answer and report the distance, it
     converges to the nearest wrong one.  H7 row L4 measures the same thing on
-    the real scenes (missed on ``city_block``, caught on ``city_block_b``), and
+    the real scenes — missed on the symmetric product scene, caught on the
+    asymmetric held-out one (named in the L4 row itself; the held-out scene
+    guard is why neither is named here — this file loads NO scene, it builds
+    the synthetic ROOM above) — and
     the milestone ADR's conclusion follows from it: a MAP-role contract needs
     global place recognition or an independent jump detector, which no
     scan-matching provider supplies.  See
