@@ -35,3 +35,22 @@ room-scale) goes to `bridge/timing.py`'s record at reconciliation.
 Does not prove: everything the RESULTS' own section lists — sim ray engine,
 synthetic detector noise, kinematic body, harness-seeded map, and the latch/
 margin being models of a proposed policy rather than product behavior.
+
+## Amendment (2026-08-24, after parcel-6c's 4b lens + verifier re-measurement)
+1. Attribution of the latch's 0.00 m is CONFIRMED non-circular (controls:
+   same seeds unlatched moved 0.23–0.84 m; gated seed-303 arm A moved
+   0.252 m pre-latch, 0.00 after).
+2. Wording corrected: the gated latches fired at t=0.9 s on ambient
+   `global_match_ambiguity` (journalled margins ≤ 0.005) — the latch **held
+   motion in a world it had already judged globally ambiguous**; the
+   kidnap-ONSET catch in a normal layout (JUMP_BOUND jump/mismatch path)
+   was never exercised and is now an A3 acceptance criterion + proposed v3
+   row. No journal anywhere fires `localization_jump_m` yet.
+3. The operator-path row was a harness artifact (1 Hz live-truth feed, 79
+   silent re-arms — functionally auto-resume under ambiguity). Fixed
+   one-shot and re-measured (`REFUTER_4B_REMEASURE.md`): one journalled
+   re-arm, 0.14–0.32 m bounded motion, standing ambiguity re-latches, all
+   episodes end latched, 0 false arrivals. A4 path (b) evidence is now the
+   one-shot transaction only; RESULTS' singular phrasing is superseded by
+   the re-measure note.
+4. R4b's REFUTED-on-shipped-arms verdict is untouched by all of the above.

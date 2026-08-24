@@ -237,6 +237,7 @@ class _Runner:
         spec = self.spec
         goal = PLACES_BY_ID[spec.goal_id]
         measured = VelocityCommand()
+        self._operator_used = False
         for tick in range(MAX_STEPS):
             t_s = tick * CONTROL_DT_S
             if spec.kidnap_at_s is not None and not self._kidnapped and t_s >= spec.kidnap_at_s:
@@ -261,10 +262,18 @@ class _Runner:
             update = self.stack.update(self.body.pose, scan, t_s)
             if self.latch is not None:
                 self.latch.observe(update=update, scan=scan, t_s=t_s)
-                if spec.operator_rescue_at_s is not None and t_s >= spec.operator_rescue_at_s:
-                    self.latch.try_rearm_by_operator(
-                        scan, self.stack, self.body.pose, t_s
-                    )
+                # 4b-lens fix (parcel-6c, 2026-08-24): the operator's statement is a
+                # ONE-SHOT transaction, not a standing 1 Hz oracle feed.  Capture the
+                # stated pose once at the rescue tick, attempt the journalled
+                # transaction once; afterwards only the margin path may re-arm.
+                if (
+                    spec.operator_rescue_at_s is not None
+                    and t_s >= spec.operator_rescue_at_s
+                    and not self._operator_used
+                ):
+                    self._operator_used = True
+                    stated_pose = self.body.pose  # captured exactly once
+                    self.latch.try_rearm_by_operator(scan, self.stack, stated_pose, t_s)
                 else:
                     self.latch.try_rearm_by_margin(scan, self.stack, t_s)
             believed = self.stack.map_pose()
