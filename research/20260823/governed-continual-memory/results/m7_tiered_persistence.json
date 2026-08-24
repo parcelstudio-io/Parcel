@@ -1,0 +1,81 @@
+{
+  "answers_identical": true,
+  "graph_id": "cross_session_memory",
+  "recorded_at_utc": "2026-08-24T02:47:49.896331+00:00",
+  "retrieval_after": [
+    "T2:I have a big job interview this Monday and I'm really nervous about it. I heard back on Friday \u2014 I got the offer! I'm so relieved and thrilled.",
+    "T1:user:I watered the plants and the basil is finally coming back.",
+    "T1:assistant:Basil is stubborn but rewarding once it takes.",
+    "T1:user:I think I'll repaint the hallway a pale green sometime soon.",
+    "T1:assistant:Pale green is calming \u2014 it should suit the light there.",
+    "T1:user:The coffee shop on the corner changed their beans again.",
+    "T1:assistant:Hopefully the new roast is one you enjoy.",
+    "T1:user:I might try a new podcast on my commute tomorrow.",
+    "T1:assistant:A good commute podcast makes the ride disappear."
+  ],
+  "retrieval_before": [
+    "T2:I have a big job interview this Monday and I'm really nervous about it. I heard back on Friday \u2014 I got the offer! I'm so relieved and thrilled.",
+    "T1:user:I watered the plants and the basil is finally coming back.",
+    "T1:assistant:Basil is stubborn but rewarding once it takes.",
+    "T1:user:I think I'll repaint the hallway a pale green sometime soon.",
+    "T1:assistant:Pale green is calming \u2014 it should suit the light there.",
+    "T1:user:The coffee shop on the corner changed their beans again.",
+    "T1:assistant:Hopefully the new roast is one you enjoy.",
+    "T1:user:I might try a new podcast on my commute tomorrow.",
+    "T1:assistant:A good commute podcast makes the ride disappear."
+  ],
+  "rows_restored": 17,
+  "snapshot_bytes": 3459,
+  "snapshot_bytes_identical": true,
+  "stats": {
+    "summaries_distilled": 0,
+    "tier1_recent": 8,
+    "tier2_summaries": 1,
+    "tier3_profile_facts": 0,
+    "turns": 16
+  },
+  "tier2_summaries": 1,
+  "tier3_case": {
+    "profile_after": [
+      {
+        "confidence": 0.6,
+        "key": "preference",
+        "value": "they like short answers before coffee"
+      },
+      {
+        "confidence": 0.6,
+        "key": "sister_name",
+        "value": "their sister is called Hana"
+      }
+    ],
+    "profile_before": [
+      {
+        "confidence": 0.6,
+        "key": "preference",
+        "value": "they like short answers before coffee"
+      },
+      {
+        "confidence": 0.6,
+        "key": "sister_name",
+        "value": "their sister is called Hana"
+      }
+    ],
+    "profile_identical": true,
+    "snapshot_bytes_identical": true,
+    "stats_after": {
+      "summaries_distilled": 2,
+      "tier1_recent": 2,
+      "tier2_summaries": 1,
+      "tier3_profile_facts": 2,
+      "turns": 8
+    },
+    "stats_before": {
+      "summaries_distilled": 2,
+      "tier1_recent": 2,
+      "tier2_summaries": 1,
+      "tier3_profile_facts": 2,
+      "turns": 8
+    }
+  },
+  "tier3_profile_keys": []
+}

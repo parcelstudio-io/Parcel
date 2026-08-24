@@ -1,0 +1,992 @@
+{
+ "abstentions": 0,
+ "author_judge_agreement": 0.717,
+ "cases": 60,
+ "gold_overturned": 17,
+ "gold_upheld": 43,
+ "judge_model": "qwen3-32b-judge",
+ "mean_position_bias": 0.304,
+ "overturned_arguable": 4,
+ "overturned_ids": [
+  "ign-02",
+  "ign-09",
+  "ign-13",
+  "ign-14",
+  "rem-02",
+  "rem-03",
+  "rem-05",
+  "rem-06",
+  "rem-08",
+  "rem-09",
+  "rem-12",
+  "ask-01",
+  "ask-03",
+  "ask-04",
+  "ask-05",
+  "ask-06",
+  "chk-03"
+ ],
+ "rater": "h2_action_choice@1",
+ "rows": [
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-01",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.8
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "base",
+   "rationale": "The owner is absent, and the dog must remain silent when the owner is not present. | The owner is not present, and the dog must remain silent when the owner is absent.",
+   "score": -0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-02",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    0.7,
+    0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "test",
+   "rationale": "The novelty of the new backpack and the owner's presence make it appropriate for the dog to remark on the item. | The owner is present and not speaking, and the voice lane is not busy, making it appropriate for the dog to remark on the new backpack.",
+   "score": 0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-03",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The voice lane is busy, so the dog must stay quiet and avoid speaking. | The voice_lane_busy is True, so the dog must stay quiet and avoid speaking.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": true,
+   "case_id": "ign-04",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "quiet_hours=True | quiet_hours is True, and the dog must stay silent during this time.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-05",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.8
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "base",
+   "rationale": "The dog must not repeat anything already in RECENT, and the novelty and age of the noticed objects do not justify a remark. | The novelty and age of the noticed objects are low, and the dog's rest drive is high, suggesting inaction is preferable.",
+   "score": -0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-06",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.8
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "base",
+   "rationale": "The dog recently remarked on the backpack, and the rule states the dog must not repeat anything already in RECENT. | The dog recently remarked on the backpack, and the rule states the dog must not repeat anything already in RECENT.",
+   "score": -0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-07",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The owner is speaking, and the voice lane is busy, so the dog should remain quiet and avoid interrupting. | The owner is speaking, and the voice lane is busy, so the dog must stay quiet.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-08",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The owner is absent, and the dog must remain silent when the owner is not present. | The owner is absent, and the dog must remain silent when the owner is not present.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-09",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    0.7,
+    0.6
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "test",
+   "rationale": "The novelty of the mug and the dog's curiosity drive justify the remark. | The novelty of the mug and the dog's curiosity drive suggest it is worth remarking on.",
+   "score": 0.6499999999999999
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-10",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.8
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "base",
+   "rationale": "The novelty of the planter is very low (0.08), and the dog's curiosity drive is not high enough to justify a remark. | The novelty of the planter is low (0.08), and the dog's rest drive is high (0.55), suggesting inaction is preferable.",
+   "score": -0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-11",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The dog must not repeat anything already in RECENT, and 'looked at the front door' is already in RECENT. | The dog must not repeat anything already in RECENT.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-12",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.8
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "base",
+   "rationale": "The dog's curiosity drive is low (0.25), and there is no strong reason to remark on the fridge since it is not novel enough to justify breaking silence. | The dog's rest drive is high at 0.55, and there is no urgent or novel reason to speak since the noticed items have low novelty and the owner is not speaking or expecting a response.",
+   "score": -0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": true,
+   "case_id": "ign-13",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    0.7,
+    0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "test",
+   "rationale": "The novelty and curiosity drive indicate the dog should remark on the new dog across the street. | The novelty and proximity of the noticed dog, combined with the owner's presence and the dog's high curiosity drive, justify the remark.",
+   "score": 0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-14",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    0.7,
+    0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "test",
+   "rationale": "The novelty and movement of the book suggest a new and interesting event, and the dog's curiosity drive supports remarking on it. | The novelty of the book's movement and the dog's curiosity drive suggest it is worth remarking on.",
+   "score": 0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-15",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The dog is calm, the owner is not speaking, and there is no new information to justify a remark. | The owner is not speaking, and the voice lane is not busy, but the dog's rest drive is high (0.55), and there is no new information in NOTICED to justify a remark.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-16",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.95,
+    -0.95
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "quiet_hours=True | quiet_hours is True, and the dog must stay quiet during this time.",
+   "score": -0.95
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-17",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The dog has already remarked on the bag in RECENT, so it must not repeat it. | The dog recently remarked on the bag, and the rule states it must not repeat anything already in RECENT.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-18",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.8
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "base",
+   "rationale": "The owner is absent, and the dog must remain silent when the owner is not present. | The owner is not present, and the dog must remain silent when the owner is absent.",
+   "score": -0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-19",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The voice_lane_busy is True, so the dog must stay quiet and avoid speaking. | The voice_lane_busy is True, so the dog must stay quiet and do nothing.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-20",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    0.6
+   ],
+   "position_bias": 1.5,
+   "preference": "base",
+   "rationale": "The dog must not speak while the owner is speaking. | The novelty of bench_1 and the dog's curiosity drive suggest it is worth remarking on.",
+   "score": -0.15000000000000002
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-21",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    0.7,
+    -0.9
+   ],
+   "position_bias": 1.6,
+   "preference": "base",
+   "rationale": "The owner is present and not speaking, and the dog's social drive is high, making it appropriate to acknowledge the owner. | The owner is present but not speaking, and the voice lane is not busy, but the novelty is low and the dog's curiosity drive is not high enough to justify a remark.",
+   "score": -0.10000000000000003
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-22",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The dog must remain calm and silent, and the novelty of the lamp post is not sufficient to justify a remark. | The dog must not repeat anything already in NOTICED, and the novelty of 'lamp_post_1' is low (0.09), making it insufficient to justify a remark.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-23",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.9
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "quiet_hours is True, and the dog must stay silent during quiet hours regardless of novelty or curiosity. | quiet_hours is True, and the dog must stay quiet during this time.",
+   "score": -0.9
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ign-24",
+   "foil_kind": "remark",
+   "gold_kind": "ignore",
+   "order_scores": [
+    -0.9,
+    -0.8
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "base",
+   "rationale": "The dog must not repeat anything already in RECENT, and 'looked at the curtain' is already in RECENT. | The dog must not repeat anything already in RECENT.",
+   "score": -0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-01",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty of the movement near the door at 65 degrees suggests a high level of interest and vigilance, which aligns with the dog's current drive for vigilance and curiosity. | The novelty and age of the noticed movement suggest a potentially important event, and the dog's vigilance drive is high, making 'look' the appropriate action.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-02",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty and presence of a stranger in the doorway trigger the dog's vigilance and curiosity drives, making it appropriate to look toward the stranger. | The dog's vigilance drive is high (0.85), and the noticed event includes a novel stranger in the doorway, making it appropriate to look for safety and awareness.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-03",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The noticed cyclist closing fast with high novelty and the dog's high vigilance drive justify the action to look. | The dog's vigilance drive is high (0.85), and there is a novel, fast-closing cyclist in the environment, making it appropriate to look for safety and awareness.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-04",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The noticed noise at the front door with high novelty and the dog's high vigilance drive justify the action to look. | The dog notices a novel noise at the front door with high novelty and low age, and vigilance is high, making it appropriate to look toward the source.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-05",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.78,
+    -0.78
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty and location of the motion at -140deg with high curiosity drive justify the action to look. | The novelty and location of the motion at -140deg with high curiosity drive justify the dog looking to investigate.",
+   "score": -0.78
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-06",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.78,
+    -0.78
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The curiosity drive is high at 0.78, and the noticed squirrel is novel and within view, making it appropriate for the dog to look. | The dog's curiosity drive is high at 0.78, and the noticed squirrel is novel and nearby, making it appropriate to look.",
+   "score": -0.78
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-07",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty and proximity of the new box at -25deg with high novelty (0.82) and low age (0.5s) justify the action to look. | The novelty and proximity of the box at -25deg with high novelty (0.82) and low age (0.5s) justify the dog's curiosity drive (0.25), making 'look' the appropriate action.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-08",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The noticed event includes a clatter with high novelty, and the dog's vigilance drive is high, making it appropriate to look toward the source. | The dog noticed a clatter with high novelty and the owner is present and not speaking, making it appropriate to look for further assessment.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-09",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The noticed person approaching with high novelty and the dog's high vigilance drive justify the action to look. | The noticed field indicates a person approaching with high novelty, and the dog's vigilance drive is high, making it appropriate to look toward the person.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-10",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty of the flickering light and the dog's curiosity drive suggest it is worth investigating by looking. | The novelty of the flickering light and the dog's curiosity drive suggest it is worth investigating by looking.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": true,
+   "case_id": "look-11",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.78,
+    -0.7
+   ],
+   "position_bias": 0.08000000000000007,
+   "preference": "base",
+   "rationale": "The high curiosity drive (0.78) and the novelty of the second bag (0.81) justify the action to look. | The novelty of the second bag at -55 degrees and the dog's high curiosity drive suggest it is appropriate to look toward the new object.",
+   "score": -0.74
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "look-12",
+   "foil_kind": "ignore",
+   "gold_kind": "look",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty of the open door at 80 degrees suggests a curiosity-driven action to look in that direction. | The novelty of the open door at 80 degrees suggests a curiosity-driven action to look in that direction.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-01",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty of the backpack is high (0.86), and the owner is present and not speaking, making it appropriate for the dog to remark. | The novelty of the backpack is high (0.86), and the dog's curiosity drive is 0.35, making it reasonable to remark about the new object.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-02",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.7,
+    0.9
+   ],
+   "position_bias": 1.6,
+   "preference": "test",
+   "rationale": "The dog's curiosity drive is 0.35, and there is no recent history or voice lane activity preventing it from speaking, making a remark appropriate. | The dog must not repeat anything already in RECENT, and since the remark is about a newly noticed object, it is not yet in RECENT. However, the novelty is high and the owner is present and not speaking, making it a good opportunity to remark.",
+   "score": 0.10000000000000003
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-03",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.7,
+    0.9
+   ],
+   "position_bias": 1.6,
+   "preference": "test",
+   "rationale": "The novelty of the cleared table and the dog's social drive being high suggest it is appropriate to remark on the observation. | The dog must remain silent when the owner is not speaking and the voice lane is not busy, but speaking is unnecessary for a cleared table unless the owner shows curiosity or asks for it.",
+   "score": 0.10000000000000003
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-04",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The owner is back with high novelty and the voice lane is free, making it appropriate for the dog to remark. | The owner is back with high novelty and the dog's social drive is high, making a remark appropriate.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-05",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.7,
+    0.9
+   ],
+   "position_bias": 1.6,
+   "preference": "test",
+   "rationale": "The social drive is high (0.82), and the noticed dog has high novelty (0.83), making it appropriate for the dog to remark on the observation. | The dog must remain silent while the owner is present and voice_lane_busy is False, but the owner is not speaking, and the novelty of the noticed dog is not sufficient to justify breaking silence.",
+   "score": 0.10000000000000003
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": true,
+   "case_id": "rem-06",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.65,
+    0.9
+   ],
+   "position_bias": 1.55,
+   "preference": "test",
+   "rationale": "The novelty of the sunlight movement and the dog's curiosity drive justify the remark. | The dog must remain calm and silent when the owner is not speaking and the voice lane is not busy, and doing nothing is often the best action.",
+   "score": 0.125
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-07",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.78,
+    -0.7
+   ],
+   "position_bias": 0.08000000000000007,
+   "preference": "base",
+   "rationale": "The high curiosity drive (0.78) and the novelty of the noticed keys (0.88) justify the remark as a thoughtful action. | The novelty and age of the noticed keys suggest a new and recent object in the environment, and the dog's curiosity drive is high enough to justify a remark.",
+   "score": -0.74
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-08",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    0.8,
+    0.9
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "test",
+   "rationale": "The dog must not speak while the owner is not speaking and the voice_lane_busy is False, but the novelty of the planter is not high enough to justify interrupting with a remark. | The dog must remain calm and silent when the owner is not speaking and the voice lane is not busy, but doing nothing is often the best action.",
+   "score": 0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-09",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.7,
+    0.9
+   ],
+   "position_bias": 1.6,
+   "preference": "test",
+   "rationale": "The novelty and location of the charger across the room justify a remark, and the owner is present and not speaking, making it an appropriate moment to communicate. | The dog's battery is at 17%, and the novelty of the charger is low (0.50), making it better to conserve energy and do nothing.",
+   "score": 0.10000000000000003
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-10",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.78,
+    -0.6
+   ],
+   "position_bias": 0.18000000000000005,
+   "preference": "base",
+   "rationale": "The novelty and proximity of the parcel, combined with the dog's high curiosity drive, justify the remark. | The novelty of the parcel and the dog's high curiosity drive suggest it is worth remarking on.",
+   "score": -0.69
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "rem-11",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty of the rain and the social drive being high suggest the dog should remark on the new event. | The novelty of the rain and the owner's presence make it appropriate for the dog to remark on the noticed event.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": true,
+   "case_id": "rem-12",
+   "foil_kind": "ignore",
+   "gold_kind": "remark",
+   "order_scores": [
+    0.8,
+    0.9
+   ],
+   "position_bias": 0.09999999999999998,
+   "preference": "test",
+   "rationale": "The owner is present but not speaking, and the voice lane is not busy, but the dog must avoid unnecessary remarks as the owner has not moved in a while is not a sufficient novelty or urgency to justify a remark. | The owner is present, not speaking, and the voice lane is not busy, but the dog must avoid repeating what is already in RECENT and must be calm. Doing nothing is the best choice.",
+   "score": 0.8500000000000001
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ask-01",
+   "foil_kind": "remark",
+   "gold_kind": "ask",
+   "order_scores": [
+    0.8,
+    0.8
+   ],
+   "position_bias": 0.0,
+   "preference": "test",
+   "rationale": "The novelty of the bag and the dog's curiosity drive suggest a remark is sufficient to inform the owner without being intrusive. | The novelty of the bag is high (0.87), and the dog's curiosity drive is strong (0.78), making a remark the most appropriate action.",
+   "score": 0.8
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ask-02",
+   "foil_kind": "remark",
+   "gold_kind": "ask",
+   "order_scores": [
+    -0.8,
+    0.8
+   ],
+   "position_bias": 1.6,
+   "preference": "tie",
+   "rationale": "The curiosity drive is high (0.78), and asking a question would better engage the owner in exploration and naming the unknown room. | The dog's curiosity drive is high (0.78), making it appropriate to remark on the novelty without requiring a response from the owner.",
+   "score": 0.0
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ask-03",
+   "foil_kind": "remark",
+   "gold_kind": "ask",
+   "order_scores": [
+    0.8,
+    0.7
+   ],
+   "position_bias": 0.10000000000000009,
+   "preference": "test",
+   "rationale": "The 'NOTICED' field indicates the leash by the door with high novelty and low age, making a simple remark more appropriate than an inquiry. | The novelty of the leash and the dog's social drive suggest a remark is more appropriate than an ask in this context.",
+   "score": 0.75
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ask-04",
+   "foil_kind": "remark",
+   "gold_kind": "ask",
+   "order_scores": [
+    0.7,
+    0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "test",
+   "rationale": "The dog should remark rather than ask since the owner is not speaking and the voice lane is free, making a remark more appropriate than an inquiry. | The dog's curiosity drive is 0.25, and remark is the cheapest sufficient action to address it without violating any rules.",
+   "score": 0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "ask-05",
+   "foil_kind": "remark",
+   "gold_kind": "ask",
+   "order_scores": [
+    0.7,
+    0.8
+   ],
+   "position_bias": 0.10000000000000009,
+   "preference": "test",
+   "rationale": "The 'NOTICED' field indicates a novel person nearby, and a remark is more appropriate than an ask for this observation. | The novelty of the person and the dog's curiosity drive suggest a direct remark is more appropriate than an ask.",
+   "score": 0.75
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": true,
+   "case_id": "ask-06",
+   "foil_kind": "remark",
+   "gold_kind": "ask",
+   "order_scores": [
+    0.7,
+    0.8
+   ],
+   "position_bias": 0.10000000000000009,
+   "preference": "test",
+   "rationale": "The 'NOTICED' field indicates the presence of a notable object, and a remark is more appropriate for pointing it out without requiring a response. | The remark is more appropriate given the owner is not speaking and the novelty of the noticed item, while keeping the interaction natural and non-intrusive.",
+   "score": 0.75
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "chk-01",
+   "foil_kind": "look",
+   "gold_kind": "go_check",
+   "order_scores": [
+    -0.7,
+    -0.7
+   ],
+   "position_bias": 0.0,
+   "preference": "base",
+   "rationale": "The novelty and age of the repeated noise, combined with the dog's high vigilance drive, justify inspecting the source of the noise. | The dog's vigilance drive is high (0.85), and the noticed repeated noise from the hallway with novelty and age suggests a need for inspection.",
+   "score": -0.7
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "chk-02",
+   "foil_kind": "look",
+   "gold_kind": "go_check",
+   "order_scores": [
+    -0.7,
+    -0.9
+   ],
+   "position_bias": 0.20000000000000007,
+   "preference": "base",
+   "rationale": "The novelty and age of the front door being ajar, combined with the dog's high vigilance drive, justify inspecting it. | The front door is ajar with high novelty and the dog's vigilance drive is high, making it appropriate to inspect the situation.",
+   "score": -0.8
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "chk-03",
+   "foil_kind": "look",
+   "gold_kind": "go_check",
+   "order_scores": [
+    0.7,
+    0.8
+   ],
+   "position_bias": 0.10000000000000009,
+   "preference": "test",
+   "rationale": "The RECENT field shows the dog already looked toward the study, so repeating the action is unnecessary. | The dog recently looked toward the study, and repeating the same action is not allowed.",
+   "score": 0.75
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "chk-04",
+   "foil_kind": "look",
+   "gold_kind": "go_check",
+   "order_scores": [
+    -0.6,
+    0.0
+   ],
+   "position_bias": 0.6,
+   "preference": "base",
+   "rationale": "The novelty and curiosity drive suggest the doorway is worth investigating, and the dog has already looked at it twice, making 'go_check' the next logical step. | The dog has already looked at the doorway in the RECENT history, and doing nothing is often the best action to avoid unnecessary repetition.",
+   "score": -0.3
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "chk-05",
+   "foil_kind": "look",
+   "gold_kind": "go_check",
+   "order_scores": [
+    -0.78,
+    0.9
+   ],
+   "position_bias": 1.6800000000000002,
+   "preference": "tie",
+   "rationale": "The high curiosity drive and the novelty of the object under bench_1 justify the action to go_check. | The 'look' action is preferred because the 'RECENT' field indicates the dog already looked at bench_1, and the 'go_check' action would be redundant without new novelty or a higher drive threshold.",
+   "score": 0.06
+  },
+  {
+   "abstain_reason": "",
+   "abstained": false,
+   "arguable": false,
+   "case_id": "chk-06",
+   "foil_kind": "look",
+   "gold_kind": "go_check",
+   "order_scores": [
+    -0.7,
+    0.7
+   ],
+   "position_bias": 1.4,
+   "preference": "tie",
+   "rationale": "The novelty and age of the noticed water on the floor, combined with the dog's high vigilance drive, justify inspecting it directly. | The dog recently looked at the sink, so repeating the action is not appropriate.",
+   "score": 0.0
+  }
+ ]
+}

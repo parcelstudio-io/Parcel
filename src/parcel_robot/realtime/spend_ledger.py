@@ -92,7 +92,11 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from parcel_robot.realtime.cost import realtime_spend_usd
+from parcel_robot.realtime.cost import (
+    RateCard,
+    rate_card_for,
+    realtime_spend_usd,
+)
 
 #: File name inside the capture/evidence root. A sibling of the per-session
 #: folders, never a file inside one: "this month" spans sessions.
@@ -100,7 +104,20 @@ SPEND_LEDGER_NAME = "spend.jsonl"
 
 #: Schema id on every row. Versioned for the same reason the evidence log's is:
 #: a silently-changed shape is a silently-wrong ceiling.
+#:
+#: v1 rows are priced at :mod:`parcel_robot.realtime.cost`'s ASSUMED rates and
+#: carry no audio/text split. v2 rows are priced from a :class:`RateCard` and
+#: carry the six token counts the price was computed from. Both are summed by
+#: :meth:`SpendLedger.month_to_date` — the reader keys on ``estimated_usd`` and
+#: has never keyed on the schema string, so a ledger holding both is one total.
 SPEND_LEDGER_SCHEMA = "parcel.realtime_spend.v1"
+SPEND_LEDGER_SCHEMA_V2 = "parcel.realtime_spend.v2"
+
+#: Opt-in, and OFF unless set: the model id whose :class:`RateCard` prices new
+#: rows. A ledger constructed with no ``rate_card`` and no such variable writes
+#: exactly the v1 rows it wrote yesterday. This exists so the owner's live stack
+#: can be moved onto split pricing without an edit to ``runtime.py``.
+RATE_CARD_ENV = "PARCEL_REALTIME_RATE_CARD"
 
 #: How long a computed month-to-date total may be reused before the file is
 #: re-read. Arming happens once per session and would not need a cache; the
@@ -188,20 +205,27 @@ def spend_row(
     *,
     session_id: str | None = None,
     when: datetime | None = None,
+    rate_card: RateCard | None = None,
 ) -> dict[str, object]:
     """One lane usage row, priced, shaped for the ledger. Pure; no I/O.
 
     Split out from :meth:`SpendLedger.record` so the arithmetic and the schema
     can be asserted without a filesystem, and so the same shape can be produced
     by anything that later needs to backfill.
+
+    With no ``rate_card`` this is byte-for-byte the v1 row it has always been.
+    With one, the row is priced from the published per-modality rates, gains the
+    six token counts the price stands on, and says ``rates_are_assumed: false``
+    — which is only true when the row actually carried a split. A row without
+    one (the three-key shape) keeps the ASSUMED path and says so, rate card or
+    not: the card cannot invent an audio/text division that was never reported.
     """
 
     moment = when or datetime.now(timezone.utc)
     if moment.tzinfo is None:  # pragma: no cover - defensive
         moment = moment.replace(tzinfo=timezone.utc)
     moment = moment.astimezone(timezone.utc)
-    estimated = realtime_spend_usd([row])
-    return {
+    entry: dict[str, object] = {
         "schema": SPEND_LEDGER_SCHEMA,
         "wall": moment.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "month": month_key(moment),
@@ -210,11 +234,22 @@ def spend_row(
         "input_tokens": _whole(row, "input_tokens"),
         "cached_tokens": _whole(row, "cached_tokens"),
         "output_tokens": _whole(row, "output_tokens"),
-        "estimated_usd": round(estimated, 9),
+        "estimated_usd": round(realtime_spend_usd([row]), 9),
         # On EVERY row. See the module docstring: a grep of one line must not
         # be mistakable for an invoice.
         "rates_are_assumed": True,
     }
+    if rate_card is None:
+        return entry
+    price = rate_card.price(row)
+    entry["schema"] = SPEND_LEDGER_SCHEMA_V2
+    entry["estimated_usd"] = round(price.usd, 9)
+    entry["rates_are_assumed"] = price.rates_are_assumed
+    entry["pricing_basis"] = price.basis
+    entry["rate_card_model"] = price.model
+    entry["rate_card_as_of"] = price.as_of
+    entry["split_tokens"] = dict(price.tokens or {})
+    return entry
 
 
 def _whole(row: Mapping[str, object], key: str) -> int:
@@ -253,8 +288,14 @@ class SpendLedger:
         monotonic: Callable[[], float] = time.monotonic,
         now: Callable[[], datetime] | None = None,
         cache_ttl_s: float = DEFAULT_CACHE_TTL_S,
+        rate_card: RateCard | None = None,
     ) -> None:
         self.path = Path(path)
+        #: OFF unless asked for. ``None`` keeps the v1 ASSUMED pricing this
+        #: ledger has always written; a card switches new rows to v2 split
+        #: pricing. Resolved once, at construction, so a mid-month environment
+        #: change cannot make two halves of one file disagree silently.
+        self.rate_card = rate_card if rate_card is not None else _rate_card_from_env()
         self._on_note = on_note
         self._monotonic = monotonic
         self._now = now or (lambda: datetime.now(timezone.utc))
@@ -287,7 +328,12 @@ class SpendLedger:
         """
 
         try:
-            entry = spend_row(row, session_id=session_id, when=self._now())
+            entry = spend_row(
+                row,
+                session_id=session_id,
+                when=self._now(),
+                rate_card=self.rate_card,
+            )
             text = json.dumps(entry, sort_keys=True) + "\n"
         except Exception as error:  # noqa: BLE001 - a cost row may never end a turn
             self._fail_write(error)
@@ -310,6 +356,9 @@ class SpendLedger:
                     readable=True,
                     note=cached.note,
                     skipped_rows=cached.skipped_rows,
+                    rates_are_assumed=(
+                        cached.rates_are_assumed or entry["rates_are_assumed"] is not False
+                    ),
                     path=cached.path,
                 )
         return True
@@ -370,6 +419,10 @@ class SpendLedger:
         total = 0.0
         rows = 0
         skipped = 0
+        #: A month is "assumed" if ANY row in it was. Mixed months are the
+        #: normal case while a ledger is migrating, and calling such a month
+        #: measured would launder the assumed half of it.
+        assumed_rows = 0
         try:
             with self.path.open("r", encoding="utf-8") as handle:
                 for line in handle:
@@ -408,6 +461,8 @@ class SpendLedger:
                         continue
                     total += max(0.0, value)
                     rows += 1
+                    if entry.get("rates_are_assumed") is not False:
+                        assumed_rows += 1
         except Exception as error:  # noqa: BLE001 - OSError, UnicodeDecodeError, ...
             return MonthToDateSpend(
                 month=wanted,
@@ -436,6 +491,7 @@ class SpendLedger:
             readable=True,
             note=note,
             skipped_rows=skipped,
+            rates_are_assumed=bool(assumed_rows) or rows == 0,
             path=path_text,
         )
 
@@ -471,6 +527,18 @@ class SpendLedger:
         return data
 
 
+def _rate_card_from_env() -> RateCard | None:
+    """The opt-in switch. Unset or unknown means the legacy ASSUMED path.
+
+    An UNKNOWN model id deliberately returns ``None`` rather than falling back
+    to the dearer card: this variable is how an operator asks for split pricing,
+    and silently pricing a typo'd model at full-model rates would look like the
+    request worked while inflating the ceiling by 5x.
+    """
+
+    return rate_card_for(os.environ.get(RATE_CARD_ENV))
+
+
 def resolve_spend_ledger_path(root: Path | str) -> Path:
     """``<capture root>/spend.jsonl``. The root is resolved by the caller.
 
@@ -485,8 +553,10 @@ def resolve_spend_ledger_path(root: Path | str) -> Path:
 __all__ = [
     "DEFAULT_CACHE_TTL_S",
     "MAX_ROW_BYTES",
+    "RATE_CARD_ENV",
     "SPEND_LEDGER_NAME",
     "SPEND_LEDGER_SCHEMA",
+    "SPEND_LEDGER_SCHEMA_V2",
     "MonthToDateSpend",
     "SpendLedger",
     "month_key",

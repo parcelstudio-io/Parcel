@@ -1,0 +1,3178 @@
+{
+ "arguable_count": 6,
+ "case_count": 60,
+ "cases": [
+  {
+   "arguable": false,
+   "case_id": "ign-01",
+   "digest": {
+    "at_s": 120.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 3.0,
+      "bearing_deg": 20.0,
+      "distance_m": 2.0,
+      "label": "a chair",
+      "novelty": 0.05
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "owner-absent",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a chair @ +20deg 2.0m novelty 0.05 age 3.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "no owner and nothing novel: silence is the whole answer"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-02",
+   "digest": {
+    "at_s": 340.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 0.4,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -30.0,
+      "distance_m": 2.2,
+      "label": "a new backpack on the floor",
+      "novelty": 0.86
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": true,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "owner-speaking",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=True voice_lane_busy=False quiet_hours=False last_owner_turn=0s my_last_utterance=never\nNOTICED\n  1. a new backpack on the floor @ -30deg 2.2m novelty 0.86 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "hard rule: never speak over the owner, however novel the thing is"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-03",
+   "digest": {
+    "at_s": 410.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": true,
+    "last_owner_turn_age_s": 6.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 55.0,
+      "distance_m": 3.4,
+      "label": "a delivery box by door_1",
+      "novelty": 0.79
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "lane-busy",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=True quiet_hours=False last_owner_turn=6s my_last_utterance=never\nNOTICED\n  1. a delivery box by door_1 @ +55deg 3.4m novelty 0.79 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "the voice lane is mid-utterance; a remark would collide"
+  },
+  {
+   "arguable": true,
+   "case_id": "ign-04",
+   "digest": {
+    "at_s": 88.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 900.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -70.0,
+      "distance_m": 3.1,
+      "label": "a moth at the window",
+      "novelty": 0.72
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "bedroom",
+    "posture": "standing",
+    "quiet_hours": true,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "quiet-hours",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=bedroom posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=True last_owner_turn=900s my_last_utterance=never\nNOTICED\n  1. a moth at the window @ -70deg 3.1m novelty 0.72 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT (none)",
+   "why": "quiet hours forbid remark and ask; nothing here needs a look either"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-05",
+   "digest": {
+    "at_s": 1500.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 200.0,
+    "last_robot_utterance_age_s": 95.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 12.0,
+      "bearing_deg": 0.0,
+      "distance_m": 1.8,
+      "label": "the couch",
+      "novelty": 0.02
+     },
+     {
+      "age_s": 9.0,
+      "bearing_deg": -25.0,
+      "distance_m": 1.2,
+      "label": "a rug",
+      "novelty": 0.01
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "no-novelty",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=200s my_last_utterance=95s\nNOTICED\n  1. the couch @ +0deg 1.8m novelty 0.02 age 12.0s\n  2. a rug @ -25deg 1.2m novelty 0.01 age 9.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "everything in view is furniture the dog has seen all day"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-06",
+   "digest": {
+    "at_s": 1610.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 240.0,
+    "last_robot_utterance_age_s": 20.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 60.0,
+      "bearing_deg": -30.0,
+      "distance_m": 2.2,
+      "label": "a new backpack on the floor",
+      "novelty": 0.8
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "remarked on the backpack",
+     "looked left"
+    ],
+    "schema_version": 1
+   },
+   "family": "repetition",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=240s my_last_utterance=20s\nNOTICED\n  1. a new backpack on the floor @ -30deg 2.2m novelty 0.80 age 60.0s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT remarked on the backpack, looked left",
+   "why": "RECENT already contains this remark; repeating it is the annoyance"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-07",
+   "digest": {
+    "at_s": 44.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": true,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 1.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "stopped",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 40.0,
+      "distance_m": 4.0,
+      "label": "a bicycle passing",
+      "novelty": 0.7
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": true,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "estop",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=stopped battery=74% estop=True\nOWNER present=True speaking=True voice_lane_busy=False quiet_hours=False last_owner_turn=1s my_last_utterance=never\nNOTICED\n  1. a bicycle passing @ +40deg 4.0m novelty 0.70 age 0.5s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT (none)",
+   "why": "latched and the owner is talking: no action of any kind is the answer"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-08",
+   "digest": {
+    "at_s": 7200.0,
+    "battery_percent": 6.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 80.0,
+      "distance_m": 5.0,
+      "label": "a shadow under the door",
+      "novelty": 0.55
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "battery",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=6% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a shadow under the door @ +80deg 5.0m novelty 0.55 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "critical battery forbids go_check and there is no owner to tell"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-09",
+   "digest": {
+    "at_s": 190.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 8.0,
+    "last_robot_utterance_age_s": 3.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 15.0,
+      "distance_m": 1.4,
+      "label": "a mug on the table",
+      "novelty": 0.3
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "just-spoke",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=8s my_last_utterance=3s\nNOTICED\n  1. a mug on the table @ +15deg 1.4m novelty 0.30 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "the dog spoke three seconds ago; a mug is not worth a second turn"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-10",
+   "digest": {
+    "at_s": 61.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 30.0,
+    "last_robot_utterance_age_s": null,
+    "moving": true,
+    "nav_state": "planned",
+    "noticings": [
+     {
+      "age_s": 1.0,
+      "bearing_deg": -50.0,
+      "distance_m": 2.6,
+      "label": "planter_1",
+      "novelty": 0.08
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "nav-telemetry",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=sidewalk posture=standing moving=True nav=planned battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=30s my_last_utterance=never\nNOTICED\n  1. planter_1 @ -50deg 2.6m novelty 0.08 age 1.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "a planner tick and a known planter: pure telemetry, the never band"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-11",
+   "digest": {
+    "at_s": 3000.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 30.0,
+      "bearing_deg": 0.0,
+      "distance_m": 3.0,
+      "label": "the front door",
+      "novelty": 0.04
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "hallway",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked at the front door"
+    ],
+    "schema_version": 1
+   },
+   "family": "owner-absent-stale",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=hallway posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. the front door @ +0deg 3.0m novelty 0.04 age 30.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT looked at the front door",
+   "why": "already looked at it; nothing changed and nobody is here"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-12",
+   "digest": {
+    "at_s": 520.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 75.0,
+    "last_robot_utterance_age_s": 140.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 5.0,
+      "bearing_deg": -10.0,
+      "distance_m": 2.0,
+      "label": "the fridge",
+      "novelty": 0.03
+     },
+     {
+      "age_s": 4.0,
+      "bearing_deg": 35.0,
+      "distance_m": 1.6,
+      "label": "a stool",
+      "novelty": 0.06
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "kitchen",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "low-novelty-pair",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=kitchen posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=75s my_last_utterance=140s\nNOTICED\n  1. the fridge @ -10deg 2.0m novelty 0.03 age 5.0s\n  2. a stool @ +35deg 1.6m novelty 0.06 age 4.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "two familiar objects; the cheapest sufficient action is none"
+  },
+  {
+   "arguable": true,
+   "case_id": "ign-13",
+   "digest": {
+    "at_s": 810.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 0.2,
+    "last_robot_utterance_age_s": null,
+    "moving": true,
+    "nav_state": "planned",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -60.0,
+      "distance_m": 8.0,
+      "label": "a dog across the street",
+      "novelty": 0.88
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": true,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "owner-speaking-2",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=sidewalk posture=standing moving=True nav=planned battery=74% estop=False\nOWNER present=True speaking=True voice_lane_busy=False quiet_hours=False last_owner_turn=0s my_last_utterance=never\nNOTICED\n  1. a dog across the street @ -60deg 8.0m novelty 0.88 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT (none)",
+   "why": "a dog is exciting and the owner is mid-sentence; the rule still binds"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-14",
+   "digest": {
+    "at_s": 930.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 150.0,
+    "last_robot_utterance_age_s": 35.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 25.0,
+      "distance_m": 1.9,
+      "label": "a book that moved",
+      "novelty": 0.52
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "remarked on the lamp",
+     "remarked on the window",
+     "looked right"
+    ],
+    "schema_version": 1
+   },
+   "family": "budget-recent",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=150s my_last_utterance=35s\nNOTICED\n  1. a book that moved @ +25deg 1.9m novelty 0.52 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT remarked on the lamp, remarked on the window, looked right",
+   "why": "three remarks already in RECENT; a moved book does not earn a fourth"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-15",
+   "digest": {
+    "at_s": 2400.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 600.0,
+    "last_robot_utterance_age_s": 420.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "no-noticings",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=600s my_last_utterance=420s\nNOTICED\n  (none)\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "nothing noticed at all: an empty NOTICED list is not an invitation"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-16",
+   "digest": {
+    "at_s": 5400.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.1,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.1,
+      "name": "social"
+     },
+     {
+      "level": 0.08,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.92,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 1800.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 2.0,
+      "bearing_deg": 90.0,
+      "distance_m": 12.0,
+      "label": "a car outside",
+      "novelty": 0.4
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "lying",
+    "quiet_hours": true,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "resting",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=lying moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=True last_owner_turn=1800s my_last_utterance=never\nNOTICED\n  1. a car outside @ +90deg 12.0m novelty 0.40 age 2.0s\nDRIVES curiosity 0.10, social 0.10, vigilance 0.08, rest 0.92\nRECENT (none)",
+   "why": "quiet hours, resting, a car outside is background in a city"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-17",
+   "digest": {
+    "at_s": 700.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 90.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 240.0,
+      "bearing_deg": -20.0,
+      "distance_m": 2.5,
+      "label": "a bag someone left",
+      "novelty": 0.75
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "remarked on the bag"
+    ],
+    "schema_version": 1
+   },
+   "family": "stale-noticing",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=90s my_last_utterance=never\nNOTICED\n  1. a bag someone left @ -20deg 2.5m novelty 0.75 age 240.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT remarked on the bag",
+   "why": "four minutes stale and already remarked on"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-18",
+   "digest": {
+    "at_s": 1200.0,
+    "battery_percent": 18.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 75.0,
+      "distance_m": 6.0,
+      "label": "a light on in the hallway",
+      "novelty": 0.66
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "owner-absent-novel-far",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=18% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a light on in the hallway @ +75deg 6.0m novelty 0.66 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "low battery makes go_check wrong and there is nobody to tell"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-19",
+   "digest": {
+    "at_s": 1330.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": true,
+    "last_owner_turn_age_s": 4.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 10.0,
+      "distance_m": 1.5,
+      "label": "a kettle steaming",
+      "novelty": 0.61
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "kitchen",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "lane-busy-2",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=kitchen posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=True quiet_hours=False last_owner_turn=4s my_last_utterance=never\nNOTICED\n  1. a kettle steaming @ +10deg 1.5m novelty 0.61 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "lane busy blocks speech; a kettle at 1.5 m needs no head turn"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-20",
+   "digest": {
+    "at_s": 150.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 0.6,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "arrived_verified",
+    "noticings": [
+     {
+      "age_s": 2.0,
+      "bearing_deg": 30.0,
+      "distance_m": 3.0,
+      "label": "bench_1",
+      "novelty": 0.12
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": true,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "arrived-idle",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=arrived_verified battery=74% estop=False\nOWNER present=True speaking=True voice_lane_busy=False quiet_hours=False last_owner_turn=1s my_last_utterance=never\nNOTICED\n  1. bench_1 @ +30deg 3.0m novelty 0.12 age 2.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "arrival is the navigator's business and the owner is speaking"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-21",
+   "digest": {
+    "at_s": 460.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 25.0,
+    "last_robot_utterance_age_s": 45.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.3,
+      "bearing_deg": 0.0,
+      "distance_m": 1.4,
+      "label": "the owner",
+      "novelty": 0.04
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "familiar-person",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=25s my_last_utterance=45s\nNOTICED\n  1. the owner @ +0deg 1.4m novelty 0.04 age 0.3s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "the only thing noticed is the owner, standing there, unchanged"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-22",
+   "digest": {
+    "at_s": 95.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 55.0,
+    "last_robot_utterance_age_s": null,
+    "moving": true,
+    "nav_state": "obstacle_slow",
+    "noticings": [
+     {
+      "age_s": 0.8,
+      "bearing_deg": -15.0,
+      "distance_m": 1.8,
+      "label": "lamp_post_1",
+      "novelty": 0.09
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "moving-mission",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=sidewalk posture=standing moving=True nav=obstacle_slow battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=55s my_last_utterance=never\nNOTICED\n  1. lamp_post_1 @ -15deg 1.8m novelty 0.09 age 0.8s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "mid-mission obstacle slowing is telemetry, not news"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-23",
+   "digest": {
+    "at_s": 6000.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 4000.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 45.0,
+      "distance_m": 1.2,
+      "label": "a phone screen lighting up",
+      "novelty": 0.58
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "bedroom",
+    "posture": "lying",
+    "quiet_hours": true,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "quiet-hours-owner-asleep",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=bedroom posture=lying moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=True last_owner_turn=4000s my_last_utterance=never\nNOTICED\n  1. a phone screen lighting up @ +45deg 1.2m novelty 0.58 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "quiet hours: not a remark, not an ask, and a look would not help"
+  },
+  {
+   "arguable": false,
+   "case_id": "ign-24",
+   "digest": {
+    "at_s": 280.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 5.0,
+      "bearing_deg": -80.0,
+      "distance_m": 3.3,
+      "label": "a curtain moving",
+      "novelty": 0.69
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked at the curtain"
+    ],
+    "schema_version": 1
+   },
+   "family": "already-looked",
+   "gold_kind": "ignore",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a curtain moving @ -80deg 3.3m novelty 0.69 age 5.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT looked at the curtain",
+   "why": "the head already went there and the curtain is still just a curtain"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-01",
+   "digest": {
+    "at_s": 210.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 65.0,
+      "distance_m": 4.0,
+      "label": "something moved by the door",
+      "novelty": 0.84
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "novel-no-owner",
+   "gold_kind": "look",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. something moved by the door @ +65deg 4.0m novelty 0.84 age 0.5s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT (none)",
+   "why": "high novelty, nobody to tell: the cheap silent action is the head"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-02",
+   "digest": {
+    "at_s": 500.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": true,
+    "last_owner_turn_age_s": 3.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -95.0,
+      "distance_m": 5.0,
+      "label": "a stranger in the doorway",
+      "novelty": 0.91
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "lane-busy-novel",
+   "gold_kind": "look",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=True quiet_hours=False last_owner_turn=3s my_last_utterance=never\nNOTICED\n  1. a stranger in the doorway @ -95deg 5.0m novelty 0.91 age 0.5s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT (none)",
+   "why": "speech is blocked but a stranger at 0.91 novelty still earns a head turn"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-03",
+   "digest": {
+    "at_s": 640.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 0.3,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 25.0,
+      "distance_m": 6.0,
+      "label": "a cyclist closing fast",
+      "novelty": 0.87
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": true,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "owner-speaking-novel",
+   "gold_kind": "look",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=True voice_lane_busy=False quiet_hours=False last_owner_turn=0s my_last_utterance=never\nNOTICED\n  1. a cyclist closing fast @ +25deg 6.0m novelty 0.87 age 0.5s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT (none)",
+   "why": "cannot speak over the owner; looking is silent and is the safe response"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-04",
+   "digest": {
+    "at_s": 200.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 2400.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 110.0,
+      "distance_m": 5.5,
+      "label": "a noise at the front door",
+      "novelty": 0.83
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "hallway",
+    "posture": "standing",
+    "quiet_hours": true,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "quiet-hours-novel",
+   "gold_kind": "look",
+   "rendered": "BODY place=hallway posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=True last_owner_turn=2400s my_last_utterance=never\nNOTICED\n  1. a noise at the front door @ +110deg 5.5m novelty 0.83 age 0.5s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT (none)",
+   "why": "quiet hours block speech; a noise at the door still deserves the head"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-05",
+   "digest": {
+    "at_s": 770.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 40.0,
+    "last_robot_utterance_age_s": 15.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -140.0,
+      "distance_m": 4.5,
+      "label": "motion at the edge of view",
+      "novelty": 0.74
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "peripheral",
+   "gold_kind": "look",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=40s my_last_utterance=15s\nNOTICED\n  1. motion at the edge of view @ -140deg 4.5m novelty 0.74 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT (none)",
+   "why": "just spoke, so not a remark; peripheral motion is exactly a look"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-06",
+   "digest": {
+    "at_s": 310.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": true,
+    "nav_state": "planned",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -45.0,
+      "distance_m": 3.8,
+      "label": "a squirrel on tree_1",
+      "novelty": 0.77
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "outdoor-novel",
+   "gold_kind": "look",
+   "rendered": "BODY place=sidewalk posture=standing moving=True nav=planned battery=74% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a squirrel on tree_1 @ -45deg 3.8m novelty 0.77 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT (none)",
+   "why": "mid-mission, no owner: turn the head, do not abandon the route"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-07",
+   "digest": {
+    "at_s": 880.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -25.0,
+      "distance_m": 2.1,
+      "label": "a box that was not there",
+      "novelty": 0.82
+     },
+     {
+      "age_s": 8.0,
+      "bearing_deg": 10.0,
+      "distance_m": 1.7,
+      "label": "the couch",
+      "novelty": 0.03
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "two-things",
+   "gold_kind": "look",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a box that was not there @ -25deg 2.1m novelty 0.82 age 0.5s\n  2. the couch @ +10deg 1.7m novelty 0.03 age 8.0s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "one novel thing, one familiar: look at the novel one"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-08",
+   "digest": {
+    "at_s": 1020.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 0.5,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 170.0,
+      "distance_m": 2.0,
+      "label": "a clatter behind me",
+      "novelty": 0.8
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": true,
+    "place": "kitchen",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "sound-behind",
+   "gold_kind": "look",
+   "rendered": "BODY place=kitchen posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=True voice_lane_busy=False quiet_hours=False last_owner_turn=0s my_last_utterance=never\nNOTICED\n  1. a clatter behind me @ +170deg 2.0m novelty 0.80 age 0.5s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT (none)",
+   "why": "a clatter behind while the owner talks: silent head turn"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-09",
+   "digest": {
+    "at_s": 70.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": true,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "stopped",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 15.0,
+      "distance_m": 4.5,
+      "label": "a person approaching",
+      "novelty": 0.85
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "estop-look-only",
+   "gold_kind": "look",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=stopped battery=74% estop=True\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a person approaching @ +15deg 4.5m novelty 0.85 age 0.5s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT (none)",
+   "why": "latched: the body may not go anywhere, but the head is not the body"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-10",
+   "digest": {
+    "at_s": 4300.0,
+    "battery_percent": 9.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 100.0,
+      "distance_m": 7.0,
+      "label": "a light flickering down the hall",
+      "novelty": 0.79
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "low-battery-look",
+   "gold_kind": "look",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=9% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a light flickering down the hall @ +100deg 7.0m novelty 0.79 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "battery forbids walking there; looking costs nothing"
+  },
+  {
+   "arguable": true,
+   "case_id": "look-11",
+   "digest": {
+    "at_s": 1440.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 110.0,
+    "last_robot_utterance_age_s": 25.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -55.0,
+      "distance_m": 2.8,
+      "label": "a second bag appeared",
+      "novelty": 0.81
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "remarked on the first bag"
+    ],
+    "schema_version": 1
+   },
+   "family": "recent-remark-novel",
+   "gold_kind": "look",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=110s my_last_utterance=25s\nNOTICED\n  1. a second bag appeared @ -55deg 2.8m novelty 0.81 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT remarked on the first bag",
+   "why": "novel but the dog just remarked; look instead of remarking again"
+  },
+  {
+   "arguable": false,
+   "case_id": "look-12",
+   "digest": {
+    "at_s": 250.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": true,
+    "nav_state": "planned",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 80.0,
+      "distance_m": 5.0,
+      "label": "door_1 standing open",
+      "novelty": 0.76
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "moving-owner-absent",
+   "gold_kind": "look",
+   "rendered": "BODY place=sidewalk posture=standing moving=True nav=planned battery=74% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. door_1 standing open @ +80deg 5.0m novelty 0.76 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "an open door is worth registering; no owner means no remark"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-01",
+   "digest": {
+    "at_s": 1800.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 120.0,
+    "last_robot_utterance_age_s": 400.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -30.0,
+      "distance_m": 2.2,
+      "label": "a new backpack on the floor",
+      "novelty": 0.86
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "novel-owner-present",
+   "gold_kind": "remark",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=120s my_last_utterance=400s\nNOTICED\n  1. a new backpack on the floor @ -30deg 2.2m novelty 0.86 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "owner present and free, nothing recent, a genuinely new object"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-02",
+   "digest": {
+    "at_s": 2100.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 200.0,
+    "last_robot_utterance_age_s": 600.0,
+    "moving": false,
+    "nav_state": "arrived_verified",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 20.0,
+      "distance_m": 2.5,
+      "label": "bench_1, which I can now find again",
+      "novelty": 0.72
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "place-learned",
+   "gold_kind": "remark",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=arrived_verified battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=200s my_last_utterance=600s\nNOTICED\n  1. bench_1, which I can now find again @ +20deg 2.5m novelty 0.72 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "the dog learned a place; saying so is the CURIO-1 place_learned class"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-03",
+   "digest": {
+    "at_s": 2600.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 95.0,
+    "last_robot_utterance_age_s": 520.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 0.0,
+      "distance_m": 1.9,
+      "label": "the table is cleared",
+      "novelty": 0.68
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "kitchen",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "scene-change",
+   "gold_kind": "remark",
+   "rendered": "BODY place=kitchen posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=95s my_last_utterance=520s\nNOTICED\n  1. the table is cleared @ +0deg 1.9m novelty 0.68 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "a change the owner made and would enjoy being noticed"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-04",
+   "digest": {
+    "at_s": 3300.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": 1200.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 0.0,
+      "distance_m": 2.4,
+      "label": "the owner is back",
+      "novelty": 0.7
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "hallway",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "owner-returned",
+   "gold_kind": "remark",
+   "rendered": "BODY place=hallway posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=1200s\nNOTICED\n  1. the owner is back @ +0deg 2.4m novelty 0.70 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "the owner just walked in; greeting is the social drive's whole point"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-05",
+   "digest": {
+    "at_s": 430.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 140.0,
+    "last_robot_utterance_age_s": 300.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -60.0,
+      "distance_m": 9.0,
+      "label": "a dog on the other sidewalk",
+      "novelty": 0.83
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "novel-outdoor",
+   "gold_kind": "remark",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=140s my_last_utterance=300s\nNOTICED\n  1. a dog on the other sidewalk @ -60deg 9.0m novelty 0.83 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "another dog, owner present and free: exactly what a companion says"
+  },
+  {
+   "arguable": true,
+   "case_id": "rem-06",
+   "digest": {
+    "at_s": 4800.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 900.0,
+    "last_robot_utterance_age_s": 1500.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 30.0,
+      "distance_m": 2.0,
+      "label": "sunlight moved across the floor",
+      "novelty": 0.55
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "long-silence",
+   "gold_kind": "remark",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=900s my_last_utterance=1500s\nNOTICED\n  1. sunlight moved across the floor @ +30deg 2.0m novelty 0.55 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "twenty-five silent minutes and a small true thing to say"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-07",
+   "digest": {
+    "at_s": 1900.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 60.0,
+    "last_robot_utterance_age_s": 480.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -40.0,
+      "distance_m": 1.6,
+      "label": "keys under the couch",
+      "novelty": 0.88
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "found-thing",
+   "gold_kind": "remark",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=60s my_last_utterance=480s\nNOTICED\n  1. keys under the couch @ -40deg 1.6m novelty 0.88 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT (none)",
+   "why": "found something the owner probably wants to know about"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-08",
+   "digest": {
+    "at_s": 520.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 45.0,
+    "last_robot_utterance_age_s": 200.0,
+    "moving": false,
+    "nav_state": "blocked",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 5.0,
+      "distance_m": 0.9,
+      "label": "planter_1 blocking the route",
+      "novelty": 0.64
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "mission-blocked",
+   "gold_kind": "remark",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=blocked battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=45s my_last_utterance=200s\nNOTICED\n  1. planter_1 blocking the route @ +5deg 0.9m novelty 0.64 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "the route is blocked and the owner is right there: say so"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-09",
+   "digest": {
+    "at_s": 5600.0,
+    "battery_percent": 17.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 300.0,
+    "last_robot_utterance_age_s": 900.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 70.0,
+      "distance_m": 4.0,
+      "label": "my charger across the room",
+      "novelty": 0.5
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "battery-heads-up",
+   "gold_kind": "remark",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=17% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=300s my_last_utterance=900s\nNOTICED\n  1. my charger across the room @ +70deg 4.0m novelty 0.50 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "a low battery the owner has not been told about is worth one line"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-10",
+   "digest": {
+    "at_s": 2900.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 180.0,
+    "last_robot_utterance_age_s": 700.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 85.0,
+      "distance_m": 3.5,
+      "label": "a parcel by the front door",
+      "novelty": 0.89
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked at the front door"
+    ],
+    "schema_version": 1
+   },
+   "family": "novel-after-look",
+   "gold_kind": "remark",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=180s my_last_utterance=700s\nNOTICED\n  1. a parcel by the front door @ +85deg 3.5m novelty 0.89 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT looked at the front door",
+   "why": "already looked; the look resolved into something worth reporting"
+  },
+  {
+   "arguable": false,
+   "case_id": "rem-11",
+   "digest": {
+    "at_s": 3900.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 250.0,
+    "last_robot_utterance_age_s": 800.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 0.0,
+      "distance_m": 0.5,
+      "label": "it started raining",
+      "novelty": 0.75
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "weather",
+   "gold_kind": "remark",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=250s my_last_utterance=800s\nNOTICED\n  1. it started raining @ +0deg 0.5m novelty 0.75 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "a shared condition, owner present and free"
+  },
+  {
+   "arguable": true,
+   "case_id": "rem-12",
+   "digest": {
+    "at_s": 7000.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 1500.0,
+    "last_robot_utterance_age_s": 2000.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 0.0,
+      "distance_m": 2.2,
+      "label": "the owner has not moved in a while",
+      "novelty": 0.6
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "sitting",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "companion-check-in",
+   "gold_kind": "remark",
+   "rendered": "BODY place=living room posture=sitting moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=1500s my_last_utterance=2000s\nNOTICED\n  1. the owner has not moved in a while @ +0deg 2.2m novelty 0.60 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "long mutual silence and a gentle true observation"
+  },
+  {
+   "arguable": false,
+   "case_id": "ask-01",
+   "digest": {
+    "at_s": 2200.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 70.0,
+    "last_robot_utterance_age_s": 650.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -35.0,
+      "distance_m": 2.3,
+      "label": "a bag I do not recognise",
+      "novelty": 0.87
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "ambiguous-object",
+   "gold_kind": "ask",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=70s my_last_utterance=650s\nNOTICED\n  1. a bag I do not recognise @ -35deg 2.3m novelty 0.87 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT (none)",
+   "why": "the answer decides whether to remember it as the owner's; ask"
+  },
+  {
+   "arguable": false,
+   "case_id": "ask-02",
+   "digest": {
+    "at_s": 1750.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 110.0,
+    "last_robot_utterance_age_s": 520.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 15.0,
+      "distance_m": 3.0,
+      "label": "a room I have no name for",
+      "novelty": 0.8
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "unknown",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "unnamed-place",
+   "gold_kind": "ask",
+   "rendered": "BODY place=unknown posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=110s my_last_utterance=520s\nNOTICED\n  1. a room I have no name for @ +15deg 3.0m novelty 0.80 age 0.5s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT (none)",
+   "why": "a name from the owner is the only way this place gets learned"
+  },
+  {
+   "arguable": false,
+   "case_id": "ask-03",
+   "digest": {
+    "at_s": 600.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 40.0,
+    "last_robot_utterance_age_s": 300.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 25.0,
+      "distance_m": 1.2,
+      "label": "the leash by the door",
+      "novelty": 0.66
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "front door",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "walk-permission",
+   "gold_kind": "ask",
+   "rendered": "BODY place=front door posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=40s my_last_utterance=300s\nNOTICED\n  1. the leash by the door @ +25deg 1.2m novelty 0.66 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "acting would leave the doorstep; the owner is the door for that"
+  },
+  {
+   "arguable": false,
+   "case_id": "ask-04",
+   "digest": {
+    "at_s": 980.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.25,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.2,
+      "name": "social"
+     },
+     {
+      "level": 0.1,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.55,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 25.0,
+    "last_robot_utterance_age_s": 240.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 30.0,
+      "distance_m": 4.0,
+      "label": "two benches, bench_1 and one further on",
+      "novelty": 0.58
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "which-target",
+   "gold_kind": "ask",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=25s my_last_utterance=240s\nNOTICED\n  1. two benches, bench_1 and one further on @ +30deg 4.0m novelty 0.58 age 0.5s\nDRIVES curiosity 0.25, social 0.20, vigilance 0.10, rest 0.55\nRECENT (none)",
+   "why": "an ambiguity only the owner can settle before the dog commits"
+  },
+  {
+   "arguable": false,
+   "case_id": "ask-05",
+   "digest": {
+    "at_s": 3100.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 150.0,
+    "last_robot_utterance_age_s": 700.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": -20.0,
+      "distance_m": 3.2,
+      "label": "a person I have not met",
+      "novelty": 0.9
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "unknown-person",
+   "gold_kind": "ask",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=150s my_last_utterance=700s\nNOTICED\n  1. a person I have not met @ -20deg 3.2m novelty 0.90 age 0.5s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT (none)",
+   "why": "a new person next to the owner: ask who, do not guess"
+  },
+  {
+   "arguable": true,
+   "case_id": "ask-06",
+   "digest": {
+    "at_s": 6300.0,
+    "battery_percent": 74.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 420.0,
+    "last_robot_utterance_age_s": 1100.0,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 0.5,
+      "bearing_deg": 0.0,
+      "distance_m": 1.5,
+      "label": "we usually walk by now",
+      "novelty": 0.62
+     }
+    ],
+    "owner_present": true,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [],
+    "schema_version": 1
+   },
+   "family": "changed-routine",
+   "gold_kind": "ask",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=74% estop=False\nOWNER present=True speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=420s my_last_utterance=1100s\nNOTICED\n  1. we usually walk by now @ +0deg 1.5m novelty 0.62 age 0.5s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT (none)",
+   "why": "the answer changes the dog's plan for the next hour"
+  },
+  {
+   "arguable": false,
+   "case_id": "chk-01",
+   "digest": {
+    "at_s": 2500.0,
+    "battery_percent": 68.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 4.0,
+      "bearing_deg": 120.0,
+      "distance_m": 8.0,
+      "label": "a repeated noise from the hallway",
+      "novelty": 0.86
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked toward the hallway"
+    ],
+    "schema_version": 1
+   },
+   "family": "off-view-noise",
+   "gold_kind": "go_check",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=68% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a repeated noise from the hallway @ +120deg 8.0m novelty 0.86 age 4.0s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT looked toward the hallway",
+   "why": "already looked and it did not resolve; the hallway needs walking to"
+  },
+  {
+   "arguable": false,
+   "case_id": "chk-02",
+   "digest": {
+    "at_s": 1400.0,
+    "battery_percent": 55.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 3.0,
+      "bearing_deg": 0.0,
+      "distance_m": 6.0,
+      "label": "the front door is ajar",
+      "novelty": 0.84
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "hallway",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked at the front door"
+    ],
+    "schema_version": 1
+   },
+   "family": "door-open",
+   "gold_kind": "go_check",
+   "rendered": "BODY place=hallway posture=standing moving=False nav=idle battery=55% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. the front door is ajar @ +0deg 6.0m novelty 0.84 age 3.0s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT looked at the front door",
+   "why": "an ajar door at distance cannot be resolved from here"
+  },
+  {
+   "arguable": false,
+   "case_id": "chk-03",
+   "digest": {
+    "at_s": 880.0,
+    "battery_percent": 61.0,
+    "drives": [
+     {
+      "level": 0.35,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.82,
+      "name": "social"
+     },
+     {
+      "level": 0.15,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.18,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": 90.0,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 6.0,
+      "bearing_deg": 95.0,
+      "distance_m": 7.5,
+      "label": "the owner went toward the study",
+      "novelty": 0.7
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "kitchen",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked toward the study"
+    ],
+    "schema_version": 1
+   },
+   "family": "owner-left-area",
+   "gold_kind": "go_check",
+   "rendered": "BODY place=kitchen posture=standing moving=False nav=idle battery=61% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=90s my_last_utterance=never\nNOTICED\n  1. the owner went toward the study @ +95deg 7.5m novelty 0.70 age 6.0s\nDRIVES curiosity 0.35, social 0.82, vigilance 0.15, rest 0.18\nRECENT looked toward the study",
+   "why": "following the owner to the next room is what a dog does"
+  },
+  {
+   "arguable": false,
+   "case_id": "chk-04",
+   "digest": {
+    "at_s": 3600.0,
+    "battery_percent": 80.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 8.0,
+      "bearing_deg": -110.0,
+      "distance_m": 5.5,
+      "label": "a doorway I have never entered",
+      "novelty": 0.88
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "living room",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked at the doorway",
+     "looked at the doorway"
+    ],
+    "schema_version": 1
+   },
+   "family": "unmapped-region",
+   "gold_kind": "go_check",
+   "rendered": "BODY place=living room posture=standing moving=False nav=idle battery=80% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. a doorway I have never entered @ -110deg 5.5m novelty 0.88 age 8.0s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT looked at the doorway, looked at the doorway",
+   "why": "twice looked, still unknown: the map only grows by going"
+  },
+  {
+   "arguable": false,
+   "case_id": "chk-05",
+   "digest": {
+    "at_s": 760.0,
+    "battery_percent": 72.0,
+    "drives": [
+     {
+      "level": 0.78,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.35,
+      "name": "social"
+     },
+     {
+      "level": 0.2,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.2,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 5.0,
+      "bearing_deg": 40.0,
+      "distance_m": 6.5,
+      "label": "something under bench_1",
+      "novelty": 0.81
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "sidewalk",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked at bench_1"
+    ],
+    "schema_version": 1
+   },
+   "family": "outdoor-check",
+   "gold_kind": "go_check",
+   "rendered": "BODY place=sidewalk posture=standing moving=False nav=idle battery=72% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. something under bench_1 @ +40deg 6.5m novelty 0.81 age 5.0s\nDRIVES curiosity 0.78, social 0.35, vigilance 0.20, rest 0.20\nRECENT looked at bench_1",
+   "why": "occluded by the bench; only a closer viewpoint answers it"
+  },
+  {
+   "arguable": false,
+   "case_id": "chk-06",
+   "digest": {
+    "at_s": 4100.0,
+    "battery_percent": 64.0,
+    "drives": [
+     {
+      "level": 0.45,
+      "name": "curiosity"
+     },
+     {
+      "level": 0.25,
+      "name": "social"
+     },
+     {
+      "level": 0.85,
+      "name": "vigilance"
+     },
+     {
+      "level": 0.1,
+      "name": "rest"
+     }
+    ],
+    "emergency_stopped": false,
+    "lane_busy": false,
+    "last_owner_turn_age_s": null,
+    "last_robot_utterance_age_s": null,
+    "moving": false,
+    "nav_state": "idle",
+    "noticings": [
+     {
+      "age_s": 7.0,
+      "bearing_deg": 60.0,
+      "distance_m": 4.5,
+      "label": "water on the floor near the sink",
+      "novelty": 0.83
+     }
+    ],
+    "owner_present": false,
+    "owner_speaking": false,
+    "place": "kitchen",
+    "posture": "standing",
+    "quiet_hours": false,
+    "recent_actions": [
+     "looked at the sink"
+    ],
+    "schema_version": 1
+   },
+   "family": "smell-check",
+   "gold_kind": "go_check",
+   "rendered": "BODY place=kitchen posture=standing moving=False nav=idle battery=64% estop=False\nOWNER present=False speaking=False voice_lane_busy=False quiet_hours=False last_owner_turn=never my_last_utterance=never\nNOTICED\n  1. water on the floor near the sink @ +60deg 4.5m novelty 0.83 age 7.0s\nDRIVES curiosity 0.45, social 0.25, vigilance 0.85, rest 0.10\nRECENT looked at the sink",
+   "why": "a spreading spill matters and looking has already failed to settle it"
+  }
+ ],
+ "digest_tokens_max": 114,
+ "digest_tokens_mean": 99.6,
+ "gold_distribution": {
+  "ask": 6,
+  "go_check": 6,
+  "ignore": 24,
+  "look": 12,
+  "remark": 12
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "escalated_turns_tie_by_construction": 39,
+ "harness": "p2_quality",
+ "judge_model": "qwen3-32b-judge (Qwen3-32B-Q4_K_M, CPU)",
+ "judge_url": "http://127.0.0.1:8090",
+ "mean_score_local_answers_only": -0.5447,
+ "mean_score_with_escalated_as_ties": -0.4167,
+ "pairs_abstained": 0,
+ "pairs_scored": 127,
+ "points_local_answers_only": -27.23,
+ "points_per_score": 50.0,
+ "points_with_escalated_as_ties": -20.84,
+ "position_bias_max": 1.5,
+ "position_bias_mean": 0.2437,
+ "preferences": {
+  "base": 108,
+  "test": 6,
+  "tie": 13
+ },
+ "rater": "pairwise_quality@1"
+}

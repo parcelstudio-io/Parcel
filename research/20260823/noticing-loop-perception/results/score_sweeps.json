@@ -1,0 +1,861 @@
+{
+ "loops": [],
+ "sweeps": [
+  {
+   "which": "photos_640",
+   "provider": "cuda_fp16",
+   "frames": 156,
+   "detect_ms": {
+    "p50": 336.56625149887986,
+    "p95": 721.0306627530372,
+    "mean": 389.20843969819356,
+    "max": 823.0845159996534
+   },
+   "preprocess_ms": {
+    "p50": 260.7520814999589,
+    "p95": 393.2347865425981,
+    "n": 30
+   },
+   "truncated_frames": 40,
+   "verification": null,
+   "thresholds": {
+    "0.020": {
+     "person_gt": 650,
+     "person_matched": 539,
+     "person_recall_instance": 0.8292307692307692,
+     "person_recall_image": 0.9935897435897436,
+     "person_false_positives": 1779,
+     "person_fp_per_frame": 11.403846153846153,
+     "predictions": 13549,
+     "matched": 738,
+     "precision_all_labels": 0.05446896449922504
+    },
+    "0.050": {
+     "person_gt": 650,
+     "person_matched": 523,
+     "person_recall_instance": 0.8046153846153846,
+     "person_recall_image": 0.9935897435897436,
+     "person_false_positives": 651,
+     "person_fp_per_frame": 4.173076923076923,
+     "predictions": 4880,
+     "matched": 719,
+     "precision_all_labels": 0.1473360655737705
+    },
+    "0.080": {
+     "person_gt": 650,
+     "person_matched": 507,
+     "person_recall_instance": 0.78,
+     "person_recall_image": 0.9935897435897436,
+     "person_false_positives": 346,
+     "person_fp_per_frame": 2.217948717948718,
+     "predictions": 2777,
+     "matched": 693,
+     "precision_all_labels": 0.24954987396471012
+    },
+    "0.100": {
+     "person_gt": 650,
+     "person_matched": 492,
+     "person_recall_instance": 0.7569230769230769,
+     "person_recall_image": 0.9935897435897436,
+     "person_false_positives": 272,
+     "person_fp_per_frame": 1.7435897435897436,
+     "predictions": 2192,
+     "matched": 673,
+     "precision_all_labels": 0.30702554744525545
+    },
+    "0.120": {
+     "person_gt": 650,
+     "person_matched": 486,
+     "person_recall_instance": 0.7476923076923077,
+     "person_recall_image": 0.9935897435897436,
+     "person_false_positives": 193,
+     "person_fp_per_frame": 1.2371794871794872,
+     "predictions": 1760,
+     "matched": 662,
+     "precision_all_labels": 0.37613636363636366
+    },
+    "0.150": {
+     "person_gt": 650,
+     "person_matched": 473,
+     "person_recall_instance": 0.7276923076923076,
+     "person_recall_image": 0.9807692307692307,
+     "person_false_positives": 125,
+     "person_fp_per_frame": 0.8012820512820513,
+     "predictions": 1388,
+     "matched": 645,
+     "precision_all_labels": 0.46469740634005763
+    },
+    "0.200": {
+     "person_gt": 650,
+     "person_matched": 438,
+     "person_recall_instance": 0.6738461538461539,
+     "person_recall_image": 0.967948717948718,
+     "person_false_positives": 67,
+     "person_fp_per_frame": 0.42948717948717946,
+     "predictions": 969,
+     "matched": 589,
+     "precision_all_labels": 0.6078431372549019
+    },
+    "0.250": {
+     "person_gt": 650,
+     "person_matched": 390,
+     "person_recall_instance": 0.6,
+     "person_recall_image": 0.9423076923076923,
+     "person_false_positives": 44,
+     "person_fp_per_frame": 0.28205128205128205,
+     "predictions": 748,
+     "matched": 521,
+     "precision_all_labels": 0.696524064171123
+    },
+    "0.300": {
+     "person_gt": 650,
+     "person_matched": 330,
+     "person_recall_instance": 0.5076923076923077,
+     "person_recall_image": 0.8589743589743589,
+     "person_false_positives": 17,
+     "person_fp_per_frame": 0.10897435897435898,
+     "predictions": 567,
+     "matched": 447,
+     "precision_all_labels": 0.7883597883597884
+    },
+    "0.400": {
+     "person_gt": 650,
+     "person_matched": 156,
+     "person_recall_instance": 0.24,
+     "person_recall_image": 0.5064102564102564,
+     "person_false_positives": 3,
+     "person_fp_per_frame": 0.019230769230769232,
+     "predictions": 267,
+     "matched": 240,
+     "precision_all_labels": 0.898876404494382
+    },
+    "0.500": {
+     "person_gt": 650,
+     "person_matched": 15,
+     "person_recall_instance": 0.023076923076923078,
+     "person_recall_image": 0.0641025641025641,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 67,
+     "matched": 63,
+     "precision_all_labels": 0.9402985074626866
+    }
+   }
+  },
+  {
+   "which": "photos_native",
+   "provider": "cpu_int8",
+   "frames": 156,
+   "detect_ms": {
+    "p50": 1092.1045459981542,
+    "p95": 1268.7407747544057,
+    "mean": 1077.478799493502,
+    "max": 1449.8276249942137
+   },
+   "preprocess_ms": {
+    "p50": 91.15236050274689,
+    "p95": 184.317212094902,
+    "n": 30
+   },
+   "truncated_frames": 52,
+   "verification": null,
+   "thresholds": {
+    "0.020": {
+     "person_gt": 650,
+     "person_matched": 496,
+     "person_recall_instance": 0.7630769230769231,
+     "person_recall_image": 1.0,
+     "person_false_positives": 2112,
+     "person_fp_per_frame": 13.538461538461538,
+     "predictions": 18165,
+     "matched": 669,
+     "precision_all_labels": 0.036829066886870356
+    },
+    "0.050": {
+     "person_gt": 650,
+     "person_matched": 472,
+     "person_recall_instance": 0.7261538461538461,
+     "person_recall_image": 0.9935897435897436,
+     "person_false_positives": 724,
+     "person_fp_per_frame": 4.641025641025641,
+     "predictions": 6240,
+     "matched": 638,
+     "precision_all_labels": 0.10224358974358974
+    },
+    "0.080": {
+     "person_gt": 650,
+     "person_matched": 455,
+     "person_recall_instance": 0.7,
+     "person_recall_image": 0.9935897435897436,
+     "person_false_positives": 393,
+     "person_fp_per_frame": 2.519230769230769,
+     "predictions": 3322,
+     "matched": 612,
+     "precision_all_labels": 0.18422636965683323
+    },
+    "0.100": {
+     "person_gt": 650,
+     "person_matched": 440,
+     "person_recall_instance": 0.676923076923077,
+     "person_recall_image": 0.9935897435897436,
+     "person_false_positives": 284,
+     "person_fp_per_frame": 1.8205128205128205,
+     "predictions": 2451,
+     "matched": 592,
+     "precision_all_labels": 0.24153406772745817
+    },
+    "0.120": {
+     "person_gt": 650,
+     "person_matched": 424,
+     "person_recall_instance": 0.6523076923076923,
+     "person_recall_image": 0.9871794871794872,
+     "person_false_positives": 200,
+     "person_fp_per_frame": 1.2820512820512822,
+     "predictions": 1869,
+     "matched": 572,
+     "precision_all_labels": 0.30604601391118247
+    },
+    "0.150": {
+     "person_gt": 650,
+     "person_matched": 387,
+     "person_recall_instance": 0.5953846153846154,
+     "person_recall_image": 0.967948717948718,
+     "person_false_positives": 127,
+     "person_fp_per_frame": 0.8141025641025641,
+     "predictions": 1325,
+     "matched": 524,
+     "precision_all_labels": 0.39547169811320754
+    },
+    "0.200": {
+     "person_gt": 650,
+     "person_matched": 321,
+     "person_recall_instance": 0.4938461538461538,
+     "person_recall_image": 0.8782051282051282,
+     "person_false_positives": 66,
+     "person_fp_per_frame": 0.4230769230769231,
+     "predictions": 825,
+     "matched": 429,
+     "precision_all_labels": 0.52
+    },
+    "0.250": {
+     "person_gt": 650,
+     "person_matched": 243,
+     "person_recall_instance": 0.37384615384615383,
+     "person_recall_image": 0.7948717948717948,
+     "person_false_positives": 35,
+     "person_fp_per_frame": 0.22435897435897437,
+     "predictions": 521,
+     "matched": 329,
+     "precision_all_labels": 0.6314779270633397
+    },
+    "0.300": {
+     "person_gt": 650,
+     "person_matched": 172,
+     "person_recall_instance": 0.26461538461538464,
+     "person_recall_image": 0.6282051282051282,
+     "person_false_positives": 15,
+     "person_fp_per_frame": 0.09615384615384616,
+     "predictions": 346,
+     "matched": 243,
+     "precision_all_labels": 0.7023121387283237
+    },
+    "0.400": {
+     "person_gt": 650,
+     "person_matched": 66,
+     "person_recall_instance": 0.10153846153846154,
+     "person_recall_image": 0.2948717948717949,
+     "person_false_positives": 2,
+     "person_fp_per_frame": 0.01282051282051282,
+     "predictions": 133,
+     "matched": 107,
+     "precision_all_labels": 0.8045112781954887
+    },
+    "0.500": {
+     "person_gt": 650,
+     "person_matched": 16,
+     "person_recall_instance": 0.024615384615384615,
+     "person_recall_image": 0.07692307692307693,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 50,
+     "matched": 39,
+     "precision_all_labels": 0.78
+    }
+   }
+  },
+  {
+   "which": "photos_native",
+   "provider": "cuda_fp16",
+   "frames": 156,
+   "detect_ms": {
+    "p50": 375.0245205083047,
+    "p95": 466.0615967513877,
+    "mean": 374.88618808334326,
+    "max": 492.0131659891922
+   },
+   "preprocess_ms": {
+    "p50": 144.2207985019195,
+    "p95": 253.35685660174929,
+    "n": 30
+   },
+   "truncated_frames": 35,
+   "verification": {
+    "threshold": 0.1,
+    "frames": 6,
+    "agreed": 6,
+    "disagreed": 0
+   },
+   "thresholds": {
+    "0.020": {
+     "person_gt": 650,
+     "person_matched": 552,
+     "person_recall_instance": 0.8492307692307692,
+     "person_recall_image": 0.9871794871794872,
+     "person_false_positives": 1487,
+     "person_fp_per_frame": 9.532051282051283,
+     "predictions": 12165,
+     "matched": 752,
+     "precision_all_labels": 0.061816687217427044
+    },
+    "0.050": {
+     "person_gt": 650,
+     "person_matched": 532,
+     "person_recall_instance": 0.8184615384615385,
+     "person_recall_image": 0.9871794871794872,
+     "person_false_positives": 483,
+     "person_fp_per_frame": 3.0961538461538463,
+     "predictions": 4173,
+     "matched": 730,
+     "precision_all_labels": 0.17493410016774502
+    },
+    "0.080": {
+     "person_gt": 650,
+     "person_matched": 513,
+     "person_recall_instance": 0.7892307692307692,
+     "person_recall_image": 0.9871794871794872,
+     "person_false_positives": 261,
+     "person_fp_per_frame": 1.6730769230769231,
+     "predictions": 2449,
+     "matched": 701,
+     "precision_all_labels": 0.2862392813393222
+    },
+    "0.100": {
+     "person_gt": 650,
+     "person_matched": 504,
+     "person_recall_instance": 0.7753846153846153,
+     "person_recall_image": 0.9871794871794872,
+     "person_false_positives": 178,
+     "person_fp_per_frame": 1.141025641025641,
+     "predictions": 1899,
+     "matched": 685,
+     "precision_all_labels": 0.3607161664033702
+    },
+    "0.120": {
+     "person_gt": 650,
+     "person_matched": 489,
+     "person_recall_instance": 0.7523076923076923,
+     "person_recall_image": 0.9807692307692307,
+     "person_false_positives": 141,
+     "person_fp_per_frame": 0.9038461538461539,
+     "predictions": 1565,
+     "matched": 669,
+     "precision_all_labels": 0.42747603833865816
+    },
+    "0.150": {
+     "person_gt": 650,
+     "person_matched": 469,
+     "person_recall_instance": 0.7215384615384616,
+     "person_recall_image": 0.9807692307692307,
+     "person_false_positives": 89,
+     "person_fp_per_frame": 0.5705128205128205,
+     "predictions": 1204,
+     "matched": 642,
+     "precision_all_labels": 0.5332225913621262
+    },
+    "0.200": {
+     "person_gt": 650,
+     "person_matched": 406,
+     "person_recall_instance": 0.6246153846153846,
+     "person_recall_image": 0.9615384615384616,
+     "person_false_positives": 50,
+     "person_fp_per_frame": 0.32051282051282054,
+     "predictions": 854,
+     "matched": 561,
+     "precision_all_labels": 0.6569086651053864
+    },
+    "0.250": {
+     "person_gt": 650,
+     "person_matched": 304,
+     "person_recall_instance": 0.4676923076923077,
+     "person_recall_image": 0.8653846153846154,
+     "person_false_positives": 23,
+     "person_fp_per_frame": 0.14743589743589744,
+     "predictions": 576,
+     "matched": 439,
+     "precision_all_labels": 0.7621527777777778
+    },
+    "0.300": {
+     "person_gt": 650,
+     "person_matched": 201,
+     "person_recall_instance": 0.30923076923076925,
+     "person_recall_image": 0.6602564102564102,
+     "person_false_positives": 12,
+     "person_fp_per_frame": 0.07692307692307693,
+     "predictions": 378,
+     "matched": 308,
+     "precision_all_labels": 0.8148148148148148
+    },
+    "0.400": {
+     "person_gt": 650,
+     "person_matched": 56,
+     "person_recall_instance": 0.08615384615384615,
+     "person_recall_image": 0.23717948717948717,
+     "person_false_positives": 1,
+     "person_fp_per_frame": 0.00641025641025641,
+     "predictions": 149,
+     "matched": 133,
+     "precision_all_labels": 0.8926174496644296
+    },
+    "0.500": {
+     "person_gt": 650,
+     "person_matched": 3,
+     "person_recall_instance": 0.004615384615384616,
+     "person_recall_image": 0.019230769230769232,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 40,
+     "matched": 37,
+     "precision_all_labels": 0.925
+    }
+   }
+  },
+  {
+   "which": "renders_1280",
+   "provider": "cpu_int8",
+   "frames": 42,
+   "detect_ms": {
+    "p50": 993.9363414887339,
+    "p95": 1067.882343101519,
+    "mean": 965.9771836917831,
+    "max": 1150.9051250031916
+   },
+   "preprocess_ms": {
+    "p50": 203.48397699126508,
+    "p95": 223.1962420475611,
+    "n": 30
+   },
+   "truncated_frames": 0,
+   "verification": null,
+   "thresholds": {
+    "0.020": {
+     "person_gt": 189,
+     "person_matched": 54,
+     "person_recall_instance": 0.2857142857142857,
+     "person_recall_image": 0.7631578947368421,
+     "person_false_positives": 41,
+     "person_fp_per_frame": 0.9761904761904762,
+     "predictions": 2235,
+     "matched": 213,
+     "precision_all_labels": 0.0953020134228188
+    },
+    "0.050": {
+     "person_gt": 189,
+     "person_matched": 3,
+     "person_recall_instance": 0.015873015873015872,
+     "person_recall_image": 0.07894736842105263,
+     "person_false_positives": 3,
+     "person_fp_per_frame": 0.07142857142857142,
+     "predictions": 695,
+     "matched": 118,
+     "precision_all_labels": 0.1697841726618705
+    },
+    "0.080": {
+     "person_gt": 189,
+     "person_matched": 1,
+     "person_recall_instance": 0.005291005291005291,
+     "person_recall_image": 0.02631578947368421,
+     "person_false_positives": 1,
+     "person_fp_per_frame": 0.023809523809523808,
+     "predictions": 383,
+     "matched": 98,
+     "precision_all_labels": 0.2558746736292428
+    },
+    "0.100": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 279,
+     "matched": 84,
+     "precision_all_labels": 0.3010752688172043
+    },
+    "0.120": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 231,
+     "matched": 79,
+     "precision_all_labels": 0.341991341991342
+    },
+    "0.150": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 183,
+     "matched": 71,
+     "precision_all_labels": 0.3879781420765027
+    },
+    "0.200": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 119,
+     "matched": 54,
+     "precision_all_labels": 0.453781512605042
+    },
+    "0.250": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 69,
+     "matched": 40,
+     "precision_all_labels": 0.5797101449275363
+    },
+    "0.300": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 43,
+     "matched": 24,
+     "precision_all_labels": 0.5581395348837209
+    },
+    "0.400": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 15,
+     "matched": 9,
+     "precision_all_labels": 0.6
+    },
+    "0.500": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 2,
+     "matched": 1,
+     "precision_all_labels": 0.5
+    }
+   }
+  },
+  {
+   "which": "renders_1280",
+   "provider": "cuda_fp16",
+   "frames": 42,
+   "detect_ms": {
+    "p50": 257.93954949767794,
+    "p95": 467.02417800843244,
+    "mean": 282.2836313335713,
+    "max": 551.5129229897866
+   },
+   "preprocess_ms": {
+    "p50": 239.75138600508217,
+    "p95": 402.39980625119637,
+    "n": 30
+   },
+   "truncated_frames": 0,
+   "verification": {
+    "threshold": 0.1,
+    "frames": 6,
+    "agreed": 6,
+    "disagreed": 0
+   },
+   "thresholds": {
+    "0.020": {
+     "person_gt": 189,
+     "person_matched": 125,
+     "person_recall_instance": 0.6613756613756614,
+     "person_recall_image": 0.9736842105263158,
+     "person_false_positives": 78,
+     "person_fp_per_frame": 1.8571428571428572,
+     "predictions": 1736,
+     "matched": 313,
+     "precision_all_labels": 0.18029953917050692
+    },
+    "0.050": {
+     "person_gt": 189,
+     "person_matched": 31,
+     "person_recall_instance": 0.164021164021164,
+     "person_recall_image": 0.5526315789473685,
+     "person_false_positives": 18,
+     "person_fp_per_frame": 0.42857142857142855,
+     "predictions": 597,
+     "matched": 174,
+     "precision_all_labels": 0.2914572864321608
+    },
+    "0.080": {
+     "person_gt": 189,
+     "person_matched": 6,
+     "person_recall_instance": 0.031746031746031744,
+     "person_recall_image": 0.13157894736842105,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 337,
+     "matched": 132,
+     "precision_all_labels": 0.3916913946587537
+    },
+    "0.100": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 270,
+     "matched": 114,
+     "precision_all_labels": 0.4222222222222222
+    },
+    "0.120": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 222,
+     "matched": 105,
+     "precision_all_labels": 0.47297297297297297
+    },
+    "0.150": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 180,
+     "matched": 95,
+     "precision_all_labels": 0.5277777777777778
+    },
+    "0.200": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 131,
+     "matched": 80,
+     "precision_all_labels": 0.6106870229007634
+    },
+    "0.250": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 78,
+     "matched": 47,
+     "precision_all_labels": 0.6025641025641025
+    },
+    "0.300": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 48,
+     "matched": 31,
+     "precision_all_labels": 0.6458333333333334
+    },
+    "0.400": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 11,
+     "matched": 8,
+     "precision_all_labels": 0.7272727272727273
+    },
+    "0.500": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 1,
+     "matched": 1,
+     "precision_all_labels": 1.0
+    }
+   }
+  },
+  {
+   "which": "renders_640",
+   "provider": "cuda_fp16",
+   "frames": 42,
+   "detect_ms": {
+    "p50": 384.37638999312185,
+    "p95": 615.1007566913903,
+    "mean": 409.57515840446354,
+    "max": 683.7741600029403
+   },
+   "preprocess_ms": {
+    "p50": 238.55826450017048,
+    "p95": 500.37846710110875,
+    "n": 30
+   },
+   "truncated_frames": 0,
+   "verification": null,
+   "thresholds": {
+    "0.020": {
+     "person_gt": 189,
+     "person_matched": 153,
+     "person_recall_instance": 0.8095238095238095,
+     "person_recall_image": 1.0,
+     "person_false_positives": 86,
+     "person_fp_per_frame": 2.0476190476190474,
+     "predictions": 1828,
+     "matched": 355,
+     "precision_all_labels": 0.19420131291028447
+    },
+    "0.050": {
+     "person_gt": 189,
+     "person_matched": 141,
+     "person_recall_instance": 0.746031746031746,
+     "person_recall_image": 1.0,
+     "person_false_positives": 44,
+     "person_fp_per_frame": 1.0476190476190477,
+     "predictions": 750,
+     "matched": 302,
+     "precision_all_labels": 0.4026666666666667
+    },
+    "0.080": {
+     "person_gt": 189,
+     "person_matched": 83,
+     "person_recall_instance": 0.43915343915343913,
+     "person_recall_image": 0.8947368421052632,
+     "person_false_positives": 30,
+     "person_fp_per_frame": 0.7142857142857143,
+     "predictions": 457,
+     "matched": 215,
+     "precision_all_labels": 0.47045951859956237
+    },
+    "0.100": {
+     "person_gt": 189,
+     "person_matched": 45,
+     "person_recall_instance": 0.23809523809523808,
+     "person_recall_image": 0.631578947368421,
+     "person_false_positives": 13,
+     "person_fp_per_frame": 0.30952380952380953,
+     "predictions": 341,
+     "matched": 165,
+     "precision_all_labels": 0.4838709677419355
+    },
+    "0.120": {
+     "person_gt": 189,
+     "person_matched": 19,
+     "person_recall_instance": 0.10052910052910052,
+     "person_recall_image": 0.3684210526315789,
+     "person_false_positives": 7,
+     "person_fp_per_frame": 0.16666666666666666,
+     "predictions": 253,
+     "matched": 125,
+     "precision_all_labels": 0.49407114624505927
+    },
+    "0.150": {
+     "person_gt": 189,
+     "person_matched": 6,
+     "person_recall_instance": 0.031746031746031744,
+     "person_recall_image": 0.13157894736842105,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 193,
+     "matched": 98,
+     "precision_all_labels": 0.5077720207253886
+    },
+    "0.200": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 136,
+     "matched": 79,
+     "precision_all_labels": 0.5808823529411765
+    },
+    "0.250": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 92,
+     "matched": 61,
+     "precision_all_labels": 0.6630434782608695
+    },
+    "0.300": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 54,
+     "matched": 35,
+     "precision_all_labels": 0.6481481481481481
+    },
+    "0.400": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 10,
+     "matched": 8,
+     "precision_all_labels": 0.8
+    },
+    "0.500": {
+     "person_gt": 189,
+     "person_matched": 0,
+     "person_recall_instance": 0.0,
+     "person_recall_image": 0.0,
+     "person_false_positives": 0,
+     "person_fp_per_frame": 0.0,
+     "predictions": 1,
+     "matched": 1,
+     "precision_all_labels": 1.0
+    }
+   }
+  }
+ ]
+}

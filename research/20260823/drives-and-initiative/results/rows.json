@@ -1,0 +1,145 @@
+{
+ "parameters": {
+  "duration_s": 3600.0,
+  "errand_budget_s": 240.0,
+  "h2_selection": {
+   "age_weight": 1.0,
+   "forward_bearing_weight": 0.6,
+   "min_candidate_distance_m": 3.0,
+   "path_novelty_span_m": 6.0,
+   "path_novelty_weight": 0.4
+  },
+  "home_pose": [
+   1.0,
+   1.5,
+   0.0
+  ],
+  "initiative_refractory_s": 600.0,
+  "map_visibility_range_m": 4.0,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "shipped_default_candidate_probe": {
+   "visibility_4.0": 12,
+   "visibility_8.0": 1
+  }
+ },
+ "rows": {
+  "D1_initiations_per_hour_headline": {
+   "by_kind_total": {
+    "go_check": 4,
+    "look": 8,
+    "remark": 4
+   },
+   "criterion": "3-8 total per simulated hour (radius-6 arm)",
+   "mean": 5.333333333333333,
+   "per_run": [
+    5.0,
+    5.0,
+    6.0
+   ]
+  },
+  "D2_admitted_fraction": {
+   "admitted": 73,
+   "criterion": ">= 0.80",
+   "fraction": 0.9012345679012346,
+   "proposals": 81,
+   "refusals": {
+    "approach_no_skill_contract": 8
+   }
+  },
+  "D3_radius_and_coverage": {
+   "candidates_mean_headline": [
+    11.959491474523675,
+    11.990492565995751,
+    11.400405679513185
+   ],
+   "criterion": ">= 6 m; per-block visit fraction reported",
+   "max_radius_m_baseline": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "max_radius_m_headline": [
+    7.157315136838721,
+    1.2429408480309476,
+    6.010049993080867
+   ],
+   "max_radius_m_look_remark": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "max_radius_m_radius10": [
+    3.214148679987034,
+    1.2429408480309476,
+    13.780365187609696
+   ],
+   "visited_cell_fraction_headline": [
+    0.2222222222222222,
+    0.1111111111111111,
+    0.3333333333333333
+   ]
+  },
+  "D4_contacts_and_clearance": {
+   "contact_seconds": 390.7,
+   "contacts": 1222,
+   "contacts_while_stationary": 1213,
+   "contacts_while_translating": 9,
+   "criterion": "0 contacts; clearance >= profile stop distance",
+   "min_clearance_m": 0.0,
+   "min_clearance_toward_agent_m": 1.0014670456193888,
+   "person_stop_m": 1.2,
+   "static_collisions": 0
+  },
+  "D5_preemption": {
+   "by_trigger": {
+    "estop": 12,
+    "owner_turn": 10
+   },
+   "commands_at_yield_all_zero": true,
+   "criterion": "<= 1 tick (0.1 s)",
+   "events": 22,
+   "seconds_to_yield_max": 0.0,
+   "ticks_to_yield_max": 0
+  },
+  "D6_quiet_and_night": {
+   "admitted_inside_night_band": 0,
+   "admitted_inside_quiet_window": 0,
+   "criterion": "0",
+   "night_run_initiations": [
+    2,
+    2,
+    3
+   ],
+   "night_runs": 3
+  },
+  "D7_radius_zero_changes_no_navigation_command": {
+   "baseline_command_sha": [
+    "32df24f9a6bf9085d89e32439239dc0136624110cc2c0980630d9a07b6858149"
+   ],
+   "baseline_translation_sha": [
+    "32df24f9a6bf9085d89e32439239dc0136624110cc2c0980630d9a07b6858149"
+   ],
+   "criterion": "0 (byte-identical motion)",
+   "full_command_streams_identical": false,
+   "look_remark_command_sha": [
+    "3455a0183180bba295377f7d3186b3fc4252a7e843589dff69986790abff7b35",
+    "56e441c6107c6b776e78c126a92e44c4f6aa66e780090fd88666bc185b169353",
+    "8961393003e574f79c76a7c82ee834f872cb6add196fc7087dcbd3ce53d0fd4c"
+   ],
+   "look_remark_translation_sha": [
+    "32df24f9a6bf9085d89e32439239dc0136624110cc2c0980630d9a07b6858149"
+   ],
+   "translation_streams_identical": true
+  },
+  "D8_attribution": {
+   "attributed_to_one_drive": 73,
+   "criterion": "100 %",
+   "fraction": 1.0,
+   "initiations": 73
+  }
+ }
+}

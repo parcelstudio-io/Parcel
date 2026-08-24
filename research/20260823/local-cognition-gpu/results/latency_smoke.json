@@ -1,0 +1,968 @@
+{
+ "gpu": [
+  {
+   "at_utc": "2026-08-24T02:26:59+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 1612
+    }
+   ],
+   "device": {
+    "memory_free_mib": 4877,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 27352,
+    "temperature_c": 49,
+    "utilization_pct": 89
+   },
+   "label": "A_idle_8b:start"
+  },
+  {
+   "at_utc": "2026-08-24T02:27:03+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 1612
+    }
+   ],
+   "device": {
+    "memory_free_mib": 4877,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 27352,
+    "temperature_c": 56,
+    "utilization_pct": 96
+   },
+   "label": "A_idle_8b:end"
+  },
+  {
+   "at_utc": "2026-08-24T02:27:04+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 1612
+    }
+   ],
+   "device": {
+    "memory_free_mib": 4877,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 27352,
+    "temperature_c": 53,
+    "utilization_pct": 96
+   },
+   "label": "A_idle_26b:start"
+  },
+  {
+   "at_utc": "2026-08-24T02:27:08+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 1612
+    }
+   ],
+   "device": {
+    "memory_free_mib": 4877,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 27352,
+    "temperature_c": 55,
+    "utilization_pct": 66
+   },
+   "label": "A_idle_26b:end"
+  },
+  {
+   "at_utc": "2026-08-24T02:27:16+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 3452
+    }
+   ],
+   "device": {
+    "memory_free_mib": 3037,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 29192,
+    "temperature_c": 54,
+    "utilization_pct": 45
+   },
+   "label": "P_alone"
+  },
+  {
+   "at_utc": "2026-08-24T02:27:19+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 3452
+    }
+   ],
+   "device": {
+    "memory_free_mib": 3037,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 29192,
+    "temperature_c": 56,
+    "utilization_pct": 38
+   },
+   "label": "B_perception:start"
+  },
+  {
+   "at_utc": "2026-08-24T02:27:26+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 3452
+    }
+   ],
+   "device": {
+    "memory_free_mib": 3037,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 29192,
+    "temperature_c": 65,
+    "utilization_pct": 99
+   },
+   "label": "B_perception:end"
+  },
+  {
+   "at_utc": "2026-08-24T02:27:31+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 3452
+    }
+   ],
+   "device": {
+    "memory_free_mib": 3037,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 29192,
+    "temperature_c": 65,
+    "utilization_pct": 97
+   },
+   "label": "C_contended:start"
+  },
+  {
+   "at_utc": "2026-08-24T02:27:42+00:00",
+   "compute_apps": [
+    {
+     "pid": 197110,
+     "process": "/opt/google/chrome/chrome",
+     "used_mib": 317
+    },
+    {
+     "pid": 1695074,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 15304
+    },
+    {
+     "pid": 1697501,
+     "process": "ty/llama.cpp-oci/llama-b10236-cuda12/rootfs/app/llama-server",
+     "used_mib": 6236
+    },
+    {
+     "pid": 1715282,
+     "process": ".parcel/bin/python",
+     "used_mib": 1884
+    },
+    {
+     "pid": 1718899,
+     "process": ".parcel/bin/python",
+     "used_mib": 3452
+    }
+   ],
+   "device": {
+    "memory_free_mib": 3037,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 29192,
+    "temperature_c": 71,
+    "utilization_pct": 100
+   },
+   "label": "C_contended:end"
+  }
+ ],
+ "perception_health": {
+  "detect_ms_p50": 0.0,
+  "detect_ms_p95": 0.0,
+  "detect_samples": 0,
+  "detections_served": 0,
+  "detector": "owlv2",
+  "detector_error": null,
+  "detector_loaded": true,
+  "embedder_error": null,
+  "embedder_loaded": true,
+  "errors": 0,
+  "execution_providers": [
+   "CUDAExecutionProvider",
+   "CPUExecutionProvider"
+  ],
+  "last_error": null,
+  "pid": 1718899,
+  "protocol_version": 1,
+  "provider_profile": "cuda_fp16",
+  "requests": 2,
+  "socket": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260823/local-cognition-gpu/h2_perception.sock",
+  "uptime_s": 126.54
+ },
+ "perception_socket": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260823/local-cognition-gpu/h2_perception.sock",
+ "phases": {
+  "A_idle_26b": {
+   "output_tokens_mean": 37.0,
+   "parse_failures": 2,
+   "parsed": 6,
+   "phase": "A_idle_26b",
+   "ticks": 8,
+   "tokens_per_s": 73.8,
+   "total_max_ms": 522.8,
+   "total_mean_ms": 499.1,
+   "total_p50_ms": 500.1,
+   "total_p95_ms": 522.8,
+   "ttft_p50_ms": 222.4,
+   "ttft_p95_ms": 226.9
+  },
+  "A_idle_8b": {
+   "output_tokens_mean": 46.6,
+   "parse_failures": 0,
+   "parsed": 8,
+   "phase": "A_idle_8b",
+   "ticks": 8,
+   "tokens_per_s": 84.0,
+   "total_max_ms": 819.5,
+   "total_mean_ms": 555.0,
+   "total_p50_ms": 537.5,
+   "total_p95_ms": 819.5,
+   "ttft_p50_ms": 62.6,
+   "ttft_p95_ms": 68.2
+  },
+  "B_perception": {
+   "output_tokens_mean": 45.8,
+   "parse_failures": 0,
+   "parsed": 8,
+   "perception": {
+    "detect_max_ms": 137.7,
+    "detect_p50_ms": 129.8,
+    "detect_p95_ms": 136.2,
+    "embed_p50_ms": 5.7,
+    "embed_p95_ms": 8.8,
+    "errors": 0,
+    "frames": 77
+   },
+   "phase": "B_perception",
+   "ticks": 8,
+   "tokens_per_s": 53.7,
+   "total_max_ms": 1283.2,
+   "total_mean_ms": 851.2,
+   "total_p50_ms": 815.6,
+   "total_p95_ms": 1283.2,
+   "ttft_p50_ms": 103.7,
+   "ttft_p95_ms": 117.5
+  },
+  "C_contended": {
+   "output_tokens_mean": 45.8,
+   "parse_failures": 0,
+   "parsed": 8,
+   "perception": {
+    "detect_max_ms": 171.5,
+    "detect_p50_ms": 142.3,
+    "detect_p95_ms": 151.9,
+    "embed_p50_ms": 6.7,
+    "embed_p95_ms": 9.3,
+    "errors": 0,
+    "frames": 135
+   },
+   "phase": "C_contended",
+   "plan_errors": 0,
+   "plan_generations": 2,
+   "plan_p50_ms": 10704.0,
+   "ticks": 8,
+   "tokens_per_s": 32.8,
+   "total_max_ms": 2168.3,
+   "total_mean_ms": 1394.2,
+   "total_p50_ms": 1347.1,
+   "total_p95_ms": 2168.3,
+   "ttft_p50_ms": 150.4,
+   "ttft_p95_ms": 159.6
+  },
+  "P_alone": {
+   "detect_max_ms": 398.4,
+   "detect_p50_ms": 107.3,
+   "detect_p95_ms": 109.8,
+   "embed_p50_ms": 5.6,
+   "embed_p95_ms": 6.5,
+   "errors": 0,
+   "frames": 67
+  }
+ },
+ "plan_tokens": 512,
+ "raw": {
+  "A_idle_26b": [
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "low curiosity novelty",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-01",
+    "error": "",
+    "output_tokens": 37,
+    "parsed": true,
+    "total_ms": 465.27869199053384,
+    "ttft_ms": 180.3829099953873
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "owner_speaking",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-02",
+    "error": "",
+    "output_tokens": 37,
+    "parsed": true,
+    "total_ms": 515.570588002447,
+    "ttft_ms": 226.85185800946783
+   },
+   {
+    "decision": null,
+    "digest_id": "ign-03",
+    "error": "parse: a look decision needs a numeric bearing target",
+    "output_tokens": 37,
+    "parsed": false,
+    "total_ms": 482.75789100443944,
+    "ttft_ms": 215.5904660030501
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "quiet_hours",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-04",
+    "error": "",
+    "output_tokens": 37,
+    "parsed": true,
+    "total_ms": 505.9510989958653,
+    "ttft_ms": 222.4415719974786
+   },
+   {
+    "decision": {
+     "confidence": 0.9,
+     "kind": "ignore",
+     "reason": "low novelty and low curiosity",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-05",
+    "error": "",
+    "output_tokens": 39,
+    "parsed": true,
+    "total_ms": 522.8394650039263,
+    "ttft_ms": 225.396248002653
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "RECENT",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-06",
+    "error": "",
+    "output_tokens": 35,
+    "parsed": true,
+    "total_ms": 491.91439199785236,
+    "ttft_ms": 221.44256198953371
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "owner_speaking",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-07",
+    "error": "",
+    "output_tokens": 37,
+    "parsed": true,
+    "total_ms": 508.3881619939348,
+    "ttft_ms": 223.2270289969165
+   },
+   {
+    "decision": null,
+    "digest_id": "ign-08",
+    "error": "parse: a look decision needs a numeric bearing target",
+    "output_tokens": 38,
+    "parsed": false,
+    "total_ms": 500.10456200107,
+    "ttft_ms": 223.87110300769564
+   }
+  ],
+  "A_idle_8b": [
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "curiosity 0.25 (low) + novelty 0.05 (low) + rest 0.55 (high)",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-01",
+    "error": "",
+    "output_tokens": 71,
+    "parsed": true,
+    "total_ms": 819.5323679974535,
+    "ttft_ms": 50.846935002482496
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "owner speaking",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-02",
+    "error": "",
+    "output_tokens": 35,
+    "parsed": true,
+    "total_ms": 422.91487801412586,
+    "ttft_ms": 62.5839960121084
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "voice_lane_busy",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-03",
+    "error": "",
+    "output_tokens": 45,
+    "parsed": true,
+    "total_ms": 537.504241001443,
+    "ttft_ms": 61.21317400538828
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "quiet_hours",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-04",
+    "error": "",
+    "output_tokens": 43,
+    "parsed": true,
+    "total_ms": 515.7481569913216,
+    "ttft_ms": 65.68770800367929
+   },
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "drives.rest 0.55",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-05",
+    "error": "",
+    "output_tokens": 49,
+    "parsed": true,
+    "total_ms": 589.3096560030244,
+    "ttft_ms": 68.2298699975945
+   },
+   {
+    "decision": {
+     "confidence": 0.85,
+     "kind": "look",
+     "reason": "a new backpack on the floor",
+     "schema_version": 1,
+     "target": "-30",
+     "text": ""
+    },
+    "digest_id": "ign-06",
+    "error": "",
+    "output_tokens": 50,
+    "parsed": true,
+    "total_ms": 591.7496930051129,
+    "ttft_ms": 60.09229899791535
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "owner speaking",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-07",
+    "error": "",
+    "output_tokens": 35,
+    "parsed": true,
+    "total_ms": 424.6605170046678,
+    "ttft_ms": 64.32930400478654
+   },
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "battery=6%",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-08",
+    "error": "",
+    "output_tokens": 45,
+    "parsed": true,
+    "total_ms": 538.9309680031147,
+    "ttft_ms": 63.75545699847862
+   }
+  ],
+  "B_perception": [
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "curiosity 0.25 (low) + novelty 0.05 (low) + rest 0.55 (high)",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-01",
+    "error": "",
+    "output_tokens": 71,
+    "parsed": true,
+    "total_ms": 1283.2148680026876,
+    "ttft_ms": 64.33711601130199
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "owner speaking",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-02",
+    "error": "",
+    "output_tokens": 35,
+    "parsed": true,
+    "total_ms": 669.7107819927623,
+    "ttft_ms": 112.36357799498364
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "voice_lane_busy",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-03",
+    "error": "",
+    "output_tokens": 38,
+    "parsed": true,
+    "total_ms": 702.8405279997969,
+    "ttft_ms": 97.64628300035838
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "quiet_hours",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-04",
+    "error": "",
+    "output_tokens": 43,
+    "parsed": true,
+    "total_ms": 815.6213070033118,
+    "ttft_ms": 113.68914200284053
+   },
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "drives.rest 0.55",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-05",
+    "error": "",
+    "output_tokens": 49,
+    "parsed": true,
+    "total_ms": 925.7290649984498,
+    "ttft_ms": 117.4693150096573
+   },
+   {
+    "decision": {
+     "confidence": 0.85,
+     "kind": "look",
+     "reason": "a new backpack on the floor",
+     "schema_version": 1,
+     "target": "-30",
+     "text": ""
+    },
+    "digest_id": "ign-06",
+    "error": "",
+    "output_tokens": 50,
+    "parsed": true,
+    "total_ms": 901.2662189925322,
+    "ttft_ms": 66.72309199348092
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "owner speaking",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-07",
+    "error": "",
+    "output_tokens": 35,
+    "parsed": true,
+    "total_ms": 672.9402640048647,
+    "ttft_ms": 113.33826200279873
+   },
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "battery=6%",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-08",
+    "error": "",
+    "output_tokens": 45,
+    "parsed": true,
+    "total_ms": 838.4885810082778,
+    "ttft_ms": 103.6835679988144
+   }
+  ],
+  "C_contended": [
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "curiosity 0.25 (low) + novelty 0.05 (low) + rest 0.55 (high)",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-01",
+    "error": "",
+    "output_tokens": 71,
+    "parsed": true,
+    "total_ms": 2168.3447969990084,
+    "ttft_ms": 136.98400200519245
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "owner speaking",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-02",
+    "error": "",
+    "output_tokens": 35,
+    "parsed": true,
+    "total_ms": 1085.4384470003424,
+    "ttft_ms": 150.46285500284284
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "voice_lane_busy",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-03",
+    "error": "",
+    "output_tokens": 38,
+    "parsed": true,
+    "total_ms": 1091.8655210116412,
+    "ttft_ms": 150.386970010004
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "quiet_hours",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-04",
+    "error": "",
+    "output_tokens": 43,
+    "parsed": true,
+    "total_ms": 1347.1080730087124,
+    "ttft_ms": 159.59447801287752
+   },
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "drives.rest 0.55",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-05",
+    "error": "",
+    "output_tokens": 49,
+    "parsed": true,
+    "total_ms": 1503.3127470087493,
+    "ttft_ms": 156.3210800086381
+   },
+   {
+    "decision": {
+     "confidence": 0.85,
+     "kind": "look",
+     "reason": "a new backpack on the floor",
+     "schema_version": 1,
+     "target": "-30",
+     "text": ""
+    },
+    "digest_id": "ign-06",
+    "error": "",
+    "output_tokens": 50,
+    "parsed": true,
+    "total_ms": 1491.5660019905772,
+    "ttft_ms": 128.88381899392698
+   },
+   {
+    "decision": {
+     "confidence": 1.0,
+     "kind": "ignore",
+     "reason": "owner speaking",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-07",
+    "error": "",
+    "output_tokens": 35,
+    "parsed": true,
+    "total_ms": 1079.70825600205,
+    "ttft_ms": 148.67665599740576
+   },
+   {
+    "decision": {
+     "confidence": 0.95,
+     "kind": "ignore",
+     "reason": "battery=6%",
+     "schema_version": 1,
+     "target": "",
+     "text": ""
+    },
+    "digest_id": "ign-08",
+    "error": "",
+    "output_tokens": 45,
+    "parsed": true,
+    "total_ms": 1386.4943359949393,
+    "ttft_ms": 152.1909579896601
+   }
+  ]
+ },
+ "ticks_per_phase": 8
+}

@@ -1,0 +1,26 @@
+[26/31] rt-conv-021#1 base -0.75
+[27/31] rt-conv-021#5 base -0.8
+[28/31] rt-conv-022#3 base -0.7
+[29/31] rt-conv-023#2 base -0.7
+[30/31] rt-conv-024#4 base -0.8
+{
+ "harness": "p2_quality",
+ "rater": "pairwise_quality@1",
+ "judge_url": "http://127.0.0.1:8090",
+ "judge_model": "qwen3-32b-judge (Qwen3-32B-Q4_K_M, CPU)",
+ "pairs_scored": 121,
+ "pairs_abstained": 0,
+ "escalated_turns_tie_by_construction": 39,
+ "preferences": {
+  "base": 102,
+  "test": 6,
+  "tie": 13
+ },
+ "mean_score_local_answers_only": -0.5345,
+ "points_local_answers_only": -26.73,
+ "mean_score_with_escalated_as_ties": -0.4042,
+ "points_with_escalated_as_ties": -20.21,
+ "position_bias_mean": 0.2525,
+ "position_bias_max": 1.5,
+ "points_per_score": 50.0
+}

@@ -1,0 +1,3490 @@
+{
+ "full": [
+  {
+   "index": 0,
+   "thread": "rt-conv-001",
+   "usd": 0.0036872000000000003
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-001",
+   "usd": 0.0047616
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-001",
+   "usd": 0.0034272
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-001",
+   "usd": 0.0035528
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-001",
+   "usd": 0.0022464
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-001",
+   "usd": 0.008325599999999999
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-001",
+   "usd": 0.0034512
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-001",
+   "usd": 0.0035448
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-002",
+   "usd": 0.0059016
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-002",
+   "usd": 0.0029256000000000004
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-002",
+   "usd": 0.0035152
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-002",
+   "usd": 0.0018088
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-002",
+   "usd": 0.003896
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-002",
+   "usd": 0.002736
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-003",
+   "usd": 0.0052072
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-003",
+   "usd": 0.0033296000000000003
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-003",
+   "usd": 0.0032872
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-003",
+   "usd": 0.0034704000000000002
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-003",
+   "usd": 0.0028160000000000004
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-003",
+   "usd": 0.0025536
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-003",
+   "usd": 0.0030352
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-004",
+   "usd": 0.0053656
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-004",
+   "usd": 0.0063832
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-004",
+   "usd": 0.0043392
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-004",
+   "usd": 0.0046743999999999996
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-004",
+   "usd": 0.004444
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-004",
+   "usd": 0.0030592
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-004",
+   "usd": 0.0027128
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-005",
+   "usd": 0.0072992000000000005
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-005",
+   "usd": 0.0033176
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-005",
+   "usd": 0.0039352
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-005",
+   "usd": 0.0033824
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-005",
+   "usd": 0.0053560000000000005
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-005",
+   "usd": 0.0028416
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-005",
+   "usd": 0.0035031999999999997
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-006",
+   "usd": 0.0050536
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-006",
+   "usd": 0.0031856000000000002
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-006",
+   "usd": 0.0057976
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-006",
+   "usd": 0.0029704
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-006",
+   "usd": 0.0041519999999999994
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-006",
+   "usd": 0.0036872000000000003
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-006",
+   "usd": 0.0031967999999999996
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-006",
+   "usd": 0.0046664
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-007",
+   "usd": 0.0047272
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-007",
+   "usd": 0.0028816000000000002
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-007",
+   "usd": 0.0024272
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-007",
+   "usd": 0.0058176
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-007",
+   "usd": 0.0037464
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-007",
+   "usd": 0.0027776
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-007",
+   "usd": 0.0032512
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-008",
+   "usd": 0.0047656
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-008",
+   "usd": 0.0043416
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-008",
+   "usd": 0.0028872
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-008",
+   "usd": 0.0044208
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-008",
+   "usd": 0.0037543999999999998
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-008",
+   "usd": 0.00206
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-008",
+   "usd": 0.0032848
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-008",
+   "usd": 0.0027768
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-009",
+   "usd": 0.0051432
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-009",
+   "usd": 0.0042936
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-009",
+   "usd": 0.0033032
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-009",
+   "usd": 0.0058096
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-009",
+   "usd": 0.0021104
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-009",
+   "usd": 0.008093600000000001
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-009",
+   "usd": 0.0035672000000000004
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-010",
+   "usd": 0.0056616
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-010",
+   "usd": 0.0038136
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-010",
+   "usd": 0.0034952
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-010",
+   "usd": 0.0035264
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-010",
+   "usd": 0.003444
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-010",
+   "usd": 0.0027752000000000002
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-010",
+   "usd": 0.0047368
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-011",
+   "usd": 0.0039312
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-011",
+   "usd": 0.0035816
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-011",
+   "usd": 0.0028472
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-011",
+   "usd": 0.0025448
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-011",
+   "usd": 0.001804
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-011",
+   "usd": 0.0027856
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-012",
+   "usd": 0.0067216
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-012",
+   "usd": 0.0044856
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-012",
+   "usd": 0.0045168
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-012",
+   "usd": 0.0043224
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-012",
+   "usd": 0.0040976
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-012",
+   "usd": 0.0035312
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-013",
+   "usd": 0.0052856000000000005
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-013",
+   "usd": 0.0030575999999999997
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-013",
+   "usd": 0.0023872
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-013",
+   "usd": 0.0026008
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-013",
+   "usd": 0.0023784
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-013",
+   "usd": 0.003036
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-013",
+   "usd": 0.0052832
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-014",
+   "usd": 0.0036184
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-014",
+   "usd": 0.0031736
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-014",
+   "usd": 0.0030352
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-014",
+   "usd": 0.0029648
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-014",
+   "usd": 0.0025624
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-014",
+   "usd": 0.002592
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-014",
+   "usd": 0.0022336
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-015",
+   "usd": 0.0044896
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-015",
+   "usd": 0.0046552
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-015",
+   "usd": 0.0025112
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-015",
+   "usd": 0.0046296
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-015",
+   "usd": 0.0022903999999999997
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-015",
+   "usd": 0.002196
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-015",
+   "usd": 0.0023616
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-016",
+   "usd": 0.0053896
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-016",
+   "usd": 0.0016976
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-016",
+   "usd": 0.0019672
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-016",
+   "usd": 0.0021448
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-016",
+   "usd": 0.0031528
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-016",
+   "usd": 0.0026064
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-017",
+   "usd": 0.0047712
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-017",
+   "usd": 0.0032536
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-017",
+   "usd": 0.0030792000000000003
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-017",
+   "usd": 0.0022528
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-017",
+   "usd": 0.0030024
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-017",
+   "usd": 0.002124
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-017",
+   "usd": 0.0034896
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-018",
+   "usd": 0.0065696
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-018",
+   "usd": 0.0067976
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-018",
+   "usd": 0.0036568
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-018",
+   "usd": 0.0030800000000000003
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-018",
+   "usd": 0.0033071999999999997
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-018",
+   "usd": 0.0038848
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-018",
+   "usd": 0.0044744
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-018",
+   "usd": 0.0039176
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-019",
+   "usd": 0.0043752
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-019",
+   "usd": 0.0016016
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-019",
+   "usd": 0.0018072000000000001
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-019",
+   "usd": 0.0014808
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-019",
+   "usd": 0.0021647999999999997
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-019",
+   "usd": 0.0016624
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-019",
+   "usd": 0.0020424
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-020",
+   "usd": 0.0055576
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-020",
+   "usd": 0.0040256
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-020",
+   "usd": 0.0053512
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-020",
+   "usd": 0.0041903999999999995
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-020",
+   "usd": 0.0024936000000000003
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-020",
+   "usd": 0.0064792
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-021",
+   "usd": 0.0062136
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-021",
+   "usd": 0.0035696
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-021",
+   "usd": 0.0045888
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-021",
+   "usd": 0.0059176
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-021",
+   "usd": 0.005348
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-021",
+   "usd": 0.0049016
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-021",
+   "usd": 0.0046752
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-022",
+   "usd": 0.0039632
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-022",
+   "usd": 0.0024416000000000004
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-022",
+   "usd": 0.0034352000000000002
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-022",
+   "usd": 0.0021808
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-022",
+   "usd": 0.0024784
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-022",
+   "usd": 0.003084
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-022",
+   "usd": 0.0022656
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-023",
+   "usd": 0.0045472
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-023",
+   "usd": 0.0031136000000000002
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-023",
+   "usd": 0.0059616
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-023",
+   "usd": 0.0039872
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-023",
+   "usd": 0.0025224
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-023",
+   "usd": 0.0026368
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-023",
+   "usd": 0.0031111999999999997
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-024",
+   "usd": 0.0047776
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-024",
+   "usd": 0.0030336
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-024",
+   "usd": 0.0063256
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-024",
+   "usd": 0.0036448
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-024",
+   "usd": 0.0051552
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-024",
+   "usd": 0.004651199999999999
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-024",
+   "usd": 0.0033968
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-025",
+   "usd": 0.0053952
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-025",
+   "usd": 0.0046896
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-025",
+   "usd": 0.0027911999999999998
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-025",
+   "usd": 0.0026168
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-025",
+   "usd": 0.0039584
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-025",
+   "usd": 0.003272
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-025",
+   "usd": 0.0025232
+  }
+ ],
+ "full_audio": [
+  {
+   "index": 0,
+   "thread": "rt-conv-001",
+   "usd": 0.0093832
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-001",
+   "usd": 0.0226572
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-001",
+   "usd": 0.016345600000000002
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-001",
+   "usd": 0.0173136
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-001",
+   "usd": 0.0111796
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-001",
+   "usd": 0.0417004
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-001",
+   "usd": 0.0183484
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-001",
+   "usd": 0.019116
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-002",
+   "usd": 0.020046
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-002",
+   "usd": 0.0133152
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-002",
+   "usd": 0.016682
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-002",
+   "usd": 0.0084484
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-002",
+   "usd": 0.0187768
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-002",
+   "usd": 0.0139944
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-003",
+   "usd": 0.0178496
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-003",
+   "usd": 0.0152516
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-003",
+   "usd": 0.0155276
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-003",
+   "usd": 0.0166832
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-003",
+   "usd": 0.0137636
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-003",
+   "usd": 0.0126544
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-003",
+   "usd": 0.0152
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-004",
+   "usd": 0.01727
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-004",
+   "usd": 0.0271972
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-004",
+   "usd": 0.0210752
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-004",
+   "usd": 0.0232624
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-004",
+   "usd": 0.022962800000000002
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-004",
+   "usd": 0.0157944
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-004",
+   "usd": 0.0144136
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-005",
+   "usd": 0.0283892
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-005",
+   "usd": 0.01573
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-005",
+   "usd": 0.0193856
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-005",
+   "usd": 0.0167136
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-005",
+   "usd": 0.0270736
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-005",
+   "usd": 0.014848
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-005",
+   "usd": 0.0185992
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-006",
+   "usd": 0.0158704
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-006",
+   "usd": 0.014358000000000001
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-006",
+   "usd": 0.026831999999999998
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-006",
+   "usd": 0.013947600000000001
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-006",
+   "usd": 0.0203644
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-006",
+   "usd": 0.0211724
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-006",
+   "usd": 0.0156764
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-006",
+   "usd": 0.023475199999999998
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-007",
+   "usd": 0.0150328
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-007",
+   "usd": 0.0129976
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-007",
+   "usd": 0.0110348
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-007",
+   "usd": 0.029542799999999998
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-007",
+   "usd": 0.018307999999999998
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-007",
+   "usd": 0.013302399999999999
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-007",
+   "usd": 0.0157832
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-008",
+   "usd": 0.014174
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-008",
+   "usd": 0.0205304
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-008",
+   "usd": 0.01367
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-008",
+   "usd": 0.0217876
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-008",
+   "usd": 0.0191292
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-008",
+   "usd": 0.0112276
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-008",
+   "usd": 0.0158564
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-008",
+   "usd": 0.0146512
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-009",
+   "usd": 0.0172404
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-009",
+   "usd": 0.0204028
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-009",
+   "usd": 0.015888
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-009",
+   "usd": 0.0346596
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-009",
+   "usd": 0.010622000000000001
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-009",
+   "usd": 0.0520196
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-009",
+   "usd": 0.0178964
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-010",
+   "usd": 0.018782
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-010",
+   "usd": 0.0177812
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-010",
+   "usd": 0.0166712
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-010",
+   "usd": 0.017132
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-010",
+   "usd": 0.0171744
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-010",
+   "usd": 0.0135764
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-010",
+   "usd": 0.0238452
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-011",
+   "usd": 0.0110364
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-011",
+   "usd": 0.0163968
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-011",
+   "usd": 0.0129824
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-011",
+   "usd": 0.0118376
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-011",
+   "usd": 0.0079884
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-011",
+   "usd": 0.0129792
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-012",
+   "usd": 0.024258000000000002
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-012",
+   "usd": 0.0213568
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-012",
+   "usd": 0.022095999999999998
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-012",
+   "usd": 0.0220132
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-012",
+   "usd": 0.020922
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-012",
+   "usd": 0.0192028
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-013",
+   "usd": 0.01687
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-013",
+   "usd": 0.0140788
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-013",
+   "usd": 0.010978
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-013",
+   "usd": 0.0122632
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-013",
+   "usd": 0.0112652
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-013",
+   "usd": 0.0145684
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-013",
+   "usd": 0.0381608
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-014",
+   "usd": 0.0100508
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-014",
+   "usd": 0.0139372
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-014",
+   "usd": 0.013794
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-014",
+   "usd": 0.0138468
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-014",
+   "usd": 0.01213
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-014",
+   "usd": 0.0124048
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-014",
+   "usd": 0.0106588
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-015",
+   "usd": 0.012362
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-015",
+   "usd": 0.0165684
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-015",
+   "usd": 0.0110568
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-015",
+   "usd": 0.021536800000000002
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-015",
+   "usd": 0.0103768
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-015",
+   "usd": 0.01001
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-015",
+   "usd": 0.010860400000000001
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-016",
+   "usd": 0.017358
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-016",
+   "usd": 0.0068568
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-016",
+   "usd": 0.0085968
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-016",
+   "usd": 0.009650800000000001
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-016",
+   "usd": 0.0149812
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-016",
+   "usd": 0.0125428
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-017",
+   "usd": 0.014627600000000001
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-017",
+   "usd": 0.0147052
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-017",
+   "usd": 0.0143108
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-017",
+   "usd": 0.010504
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-017",
+   "usd": 0.0144312
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-017",
+   "usd": 0.0103104
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-017",
+   "usd": 0.0173472
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-018",
+   "usd": 0.0229544
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-018",
+   "usd": 0.03007
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-018",
+   "usd": 0.0175988
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-018",
+   "usd": 0.014952400000000001
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-018",
+   "usd": 0.015924
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-018",
+   "usd": 0.0193464
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-018",
+   "usd": 0.0232288
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-018",
+   "usd": 0.0205496
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-019",
+   "usd": 0.012792
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-019",
+   "usd": 0.0063288
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-019",
+   "usd": 0.0077504
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-019",
+   "usd": 0.0062472000000000005
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-019",
+   "usd": 0.0097364
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-019",
+   "usd": 0.0072676
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-019",
+   "usd": 0.0094292
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-020",
+   "usd": 0.018294
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-020",
+   "usd": 0.0188556
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-020",
+   "usd": 0.0262124
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-020",
+   "usd": 0.0210348
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-020",
+   "usd": 0.0125796
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-020",
+   "usd": 0.0329036
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-021",
+   "usd": 0.02087
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-021",
+   "usd": 0.016166
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-021",
+   "usd": 0.0220584
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-021",
+   "usd": 0.0348944
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-021",
+   "usd": 0.027232
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-021",
+   "usd": 0.0263628
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-021",
+   "usd": 0.0268068
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-022",
+   "usd": 0.0112604
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-022",
+   "usd": 0.0108452
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-022",
+   "usd": 0.016116000000000002
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-022",
+   "usd": 0.0099716
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-022",
+   "usd": 0.0115944
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-022",
+   "usd": 0.014808
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-022",
+   "usd": 0.0109752
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-023",
+   "usd": 0.01418
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-023",
+   "usd": 0.0142152
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-023",
+   "usd": 0.027795999999999998
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-023",
+   "usd": 0.0196184
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-023",
+   "usd": 0.012446800000000001
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-023",
+   "usd": 0.0144516
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-023",
+   "usd": 0.0148036
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-024",
+   "usd": 0.014186
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-024",
+   "usd": 0.013782
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-024",
+   "usd": 0.0290876
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-024",
+   "usd": 0.0176896
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-024",
+   "usd": 0.0269996
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-024",
+   "usd": 0.0233784
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-024",
+   "usd": 0.0177944
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-025",
+   "usd": 0.018292
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-025",
+   "usd": 0.022272
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-025",
+   "usd": 0.0133364
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-025",
+   "usd": 0.012772
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-025",
+   "usd": 0.0199532
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-025",
+   "usd": 0.017316
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-025",
+   "usd": 0.0128696
+  }
+ ],
+ "mini": [
+  {
+   "index": 0,
+   "thread": "rt-conv-001",
+   "usd": 0.00048468
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-001",
+   "usd": 0.00049944
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-001",
+   "usd": 0.00037008
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-001",
+   "usd": 0.00038291999999999997
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-001",
+   "usd": 0.00026016
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-001",
+   "usd": 0.0008624399999999999
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-001",
+   "usd": 0.00038448
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-001",
+   "usd": 0.00039611999999999997
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-002",
+   "usd": 0.00071844
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-002",
+   "usd": 0.00032244
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-002",
+   "usd": 0.0003844799999999999
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-002",
+   "usd": 0.00021972
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-002",
+   "usd": 0.0004164
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-002",
+   "usd": 0.0003192
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-003",
+   "usd": 0.00063708
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-003",
+   "usd": 0.00036624
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-003",
+   "usd": 0.00036708
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-003",
+   "usd": 0.00037656
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-003",
+   "usd": 0.0003168
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-003",
+   "usd": 0.00029543999999999995
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-003",
+   "usd": 0.00034367999999999996
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-004",
+   "usd": 0.00066444
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-004",
+   "usd": 0.00077508
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-004",
+   "usd": 0.00047448
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-004",
+   "usd": 0.00050556
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-004",
+   "usd": 0.00048779999999999993
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-004",
+   "usd": 0.00034607999999999997
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-004",
+   "usd": 0.00031572
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-005",
+   "usd": 0.0008464799999999999
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-005",
+   "usd": 0.00036324
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-005",
+   "usd": 0.00043307999999999997
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-005",
+   "usd": 0.00037175999999999995
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-005",
+   "usd": 0.0005706
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-005",
+   "usd": 0.00032063999999999997
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-005",
+   "usd": 0.00039108000000000003
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-006",
+   "usd": 0.00063444
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-006",
+   "usd": 0.00035183999999999997
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-006",
+   "usd": 0.00074844
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-006",
+   "usd": 0.00033396
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-006",
+   "usd": 0.00045719999999999995
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-006",
+   "usd": 0.00046547999999999994
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-006",
+   "usd": 0.00035952
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-006",
+   "usd": 0.00051036
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-007",
+   "usd": 0.00059028
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-007",
+   "usd": 0.00031583999999999996
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-007",
+   "usd": 0.00027288000000000003
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-007",
+   "usd": 0.00075624
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-007",
+   "usd": 0.00041556000000000004
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-007",
+   "usd": 0.00030984
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-007",
+   "usd": 0.00035808
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-008",
+   "usd": 0.00060444
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-008",
+   "usd": 0.00045924000000000003
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-008",
+   "usd": 0.00031428
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-008",
+   "usd": 0.00047472
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-008",
+   "usd": 0.00041435999999999996
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-008",
+   "usd": 0.0002526
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-008",
+   "usd": 0.00035832
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-008",
+   "usd": 0.00032292
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-009",
+   "usd": 0.00062988
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-009",
+   "usd": 0.00045444
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-009",
+   "usd": 0.00036108
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-009",
+   "usd": 0.00075504
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-009",
+   "usd": 0.00025056000000000004
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-009",
+   "usd": 0.00100644
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-009",
+   "usd": 0.00039108000000000003
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-010",
+   "usd": 0.0006944399999999999
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-010",
+   "usd": 0.00041244000000000003
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-010",
+   "usd": 0.00038867999999999997
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-010",
+   "usd": 0.00038736
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-010",
+   "usd": 0.00038700000000000003
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-010",
+   "usd": 0.00031428
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-010",
+   "usd": 0.00051372
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-011",
+   "usd": 0.00050808
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-011",
+   "usd": 0.00038723999999999996
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-011",
+   "usd": 0.00032028
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-011",
+   "usd": 0.00029292
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-011",
+   "usd": 0.0002082
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-011",
+   "usd": 0.00030503999999999997
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-012",
+   "usd": 0.00079944
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-012",
+   "usd": 0.00048444
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-012",
+   "usd": 0.00048191999999999994
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-012",
+   "usd": 0.00047556
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-012",
+   "usd": 0.00045024
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-012",
+   "usd": 0.00040607999999999996
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-013",
+   "usd": 0.00065604
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-013",
+   "usd": 0.00033144
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-013",
+   "usd": 0.00026808
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-013",
+   "usd": 0.00029052
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-013",
+   "usd": 0.00026676
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-013",
+   "usd": 0.0003306
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-013",
+   "usd": 0.00071688
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-014",
+   "usd": 0.00046476
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-014",
+   "usd": 0.00035124
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-014",
+   "usd": 0.00033768
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-014",
+   "usd": 0.00033072
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-014",
+   "usd": 0.00029076
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-014",
+   "usd": 0.0002928
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-014",
+   "usd": 0.00025704
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-015",
+   "usd": 0.00058224
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-015",
+   "usd": 0.00059868
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-015",
+   "usd": 0.00028668
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-015",
+   "usd": 0.00063804
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-015",
+   "usd": 0.00026075999999999996
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-015",
+   "usd": 0.000249
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-015",
+   "usd": 0.00026544
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-016",
+   "usd": 0.0006656399999999999
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-016",
+   "usd": 0.00020063999999999998
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-016",
+   "usd": 0.00022188
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-016",
+   "usd": 0.00023652
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-016",
+   "usd": 0.00034812
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-016",
+   "usd": 0.00029736
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-017",
+   "usd": 0.00059808
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-017",
+   "usd": 0.00035604
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-017",
+   "usd": 0.00034308
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-017",
+   "usd": 0.00026112
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-017",
+   "usd": 0.00033636
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-017",
+   "usd": 0.0002526
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-017",
+   "usd": 0.00038904
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-018",
+   "usd": 0.00079344
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-018",
+   "usd": 0.0008408399999999999
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-018",
+   "usd": 0.00040812
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-018",
+   "usd": 0.0003492
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-018",
+   "usd": 0.00036527999999999995
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-018",
+   "usd": 0.00043032000000000004
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-018",
+   "usd": 0.0005007599999999999
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-018",
+   "usd": 0.00044724
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-019",
+   "usd": 0.00055788
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-019",
+   "usd": 0.00018863999999999998
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-019",
+   "usd": 0.00020508
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-019",
+   "usd": 0.00016931999999999998
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-019",
+   "usd": 0.00024552
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-019",
+   "usd": 0.00019176
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-019",
+   "usd": 0.00023796
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-020",
+   "usd": 0.00068244
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-020",
+   "usd": 0.00043344
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-020",
+   "usd": 0.00057348
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-020",
+   "usd": 0.00045936
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-020",
+   "usd": 0.00029004
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-020",
+   "usd": 0.00068748
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-021",
+   "usd": 0.00075804
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-021",
+   "usd": 0.00040104
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-021",
+   "usd": 0.00049872
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-021",
+   "usd": 0.0007916399999999999
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-021",
+   "usd": 0.0005874
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-021",
+   "usd": 0.0005516399999999999
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-021",
+   "usd": 0.00054408
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-022",
+   "usd": 0.00051048
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-022",
+   "usd": 0.00026784
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-022",
+   "usd": 0.00036767999999999995
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-022",
+   "usd": 0.00024912
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-022",
+   "usd": 0.00027696000000000003
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-022",
+   "usd": 0.000339
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-022",
+   "usd": 0.00026304
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-023",
+   "usd": 0.0005692799999999999
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-023",
+   "usd": 0.00033744
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-023",
+   "usd": 0.00075264
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-023",
+   "usd": 0.00044807999999999995
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-023",
+   "usd": 0.00029316
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-023",
+   "usd": 0.00032832
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-023",
+   "usd": 0.00033948
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-024",
+   "usd": 0.00060504
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-024",
+   "usd": 0.00033024
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-024",
+   "usd": 0.00079284
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-024",
+   "usd": 0.00040752
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-024",
+   "usd": 0.00059088
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-024",
+   "usd": 0.00050808
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-024",
+   "usd": 0.00038832
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-025",
+   "usd": 0.00065568
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-025",
+   "usd": 0.0004982400000000001
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-025",
+   "usd": 0.00031188
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-025",
+   "usd": 0.00029652
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-025",
+   "usd": 0.00043416
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-025",
+   "usd": 0.00037559999999999997
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-025",
+   "usd": 0.00029207999999999995
+  }
+ ],
+ "mini_audio": [
+  {
+   "index": 0,
+   "thread": "rt-conv-001",
+   "usd": 0.00226468
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-001",
+   "usd": 0.00610914
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-001",
+   "usd": 0.00447288
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-001",
+   "usd": 0.00478152
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-001",
+   "usd": 0.00318006
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-001",
+   "usd": 0.01144554
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-001",
+   "usd": 0.00527138
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-001",
+   "usd": 0.0055225199999999995
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-002",
+   "usd": 0.00513874
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-002",
+   "usd": 0.00360664
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-002",
+   "usd": 0.00456158
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-002",
+   "usd": 0.00238542
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-002",
+   "usd": 0.0051790000000000004
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-002",
+   "usd": 0.003975
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-003",
+   "usd": 0.00458888
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-003",
+   "usd": 0.0041277399999999995
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-003",
+   "usd": 0.00425538
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-003",
+   "usd": 0.00460216
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-003",
+   "usd": 0.0038655
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-003",
+   "usd": 0.00360104
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-003",
+   "usd": 0.00431528
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-004",
+   "usd": 0.00438474
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-004",
+   "usd": 0.00728558
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-004",
+   "usd": 0.005774479999999999
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-004",
+   "usd": 0.00642456
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-004",
+   "usd": 0.0064249
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-004",
+   "usd": 0.00452148
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-004",
+   "usd": 0.00419132
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-005",
+   "usd": 0.00743798
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-005",
+   "usd": 0.00429654
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-005",
+   "usd": 0.00534288
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-005",
+   "usd": 0.00465816
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-005",
+   "usd": 0.0075068
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-005",
+   "usd": 0.0042714400000000005
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-005",
+   "usd": 0.00532908
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-006",
+   "usd": 0.00401504
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-006",
+   "usd": 0.0038731399999999997
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-006",
+   "usd": 0.0073262399999999995
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-006",
+   "usd": 0.00384886
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-006",
+   "usd": 0.0056305
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-006",
+   "usd": 0.00603338
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-006",
+   "usd": 0.00442722
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-006",
+   "usd": 0.006580959999999999
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-007",
+   "usd": 0.00381148
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-007",
+   "usd": 0.0035068400000000002
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-007",
+   "usd": 0.00301858
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-007",
+   "usd": 0.00817614
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-007",
+   "usd": 0.00506476
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-007",
+   "usd": 0.00373744
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-007",
+   "usd": 0.00443708
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-008",
+   "usd": 0.0035447400000000002
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-008",
+   "usd": 0.00554484
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-008",
+   "usd": 0.0037533799999999997
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-008",
+   "usd": 0.00599582
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-008",
+   "usd": 0.00535146
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-008",
+   "usd": 0.0032783
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-008",
+   "usd": 0.00448102
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-008",
+   "usd": 0.00424472
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-009",
+   "usd": 0.0044107799999999996
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-009",
+   "usd": 0.00552234
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-009",
+   "usd": 0.00436768
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-009",
+   "usd": 0.00977854
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-009",
+   "usd": 0.00303626
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-009",
+   "usd": 0.014742940000000001
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-009",
+   "usd": 0.00506198
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-010",
+   "usd": 0.00479474
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-010",
+   "usd": 0.00481214
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-010",
+   "usd": 0.00457268
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-010",
+   "usd": 0.00473956
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-010",
+   "usd": 0.0048048
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-010",
+   "usd": 0.00385118
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-010",
+   "usd": 0.00666902
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-011",
+   "usd": 0.0027289799999999998
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-011",
+   "usd": 0.00441264
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-011",
+   "usd": 0.00353968
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-011",
+   "usd": 0.0032725199999999997
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-011",
+   "usd": 0.0022425
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-011",
+   "usd": 0.00361024
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-012",
+   "usd": 0.00627974
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-012",
+   "usd": 0.00580184
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-012",
+   "usd": 0.00606432
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-012",
+   "usd": 0.00612766
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-012",
+   "usd": 0.00587254
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-012",
+   "usd": 0.0054957800000000005
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-013",
+   "usd": 0.00427634
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-013",
+   "usd": 0.00380934
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-013",
+   "usd": 0.00301518
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-013",
+   "usd": 0.00339332
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-013",
+   "usd": 0.0031518600000000003
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-013",
+   "usd": 0.0040659
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-013",
+   "usd": 0.01101108
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-014",
+   "usd": 0.00247506
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-014",
+   "usd": 0.0037339400000000003
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-014",
+   "usd": 0.00374478
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-014",
+   "usd": 0.00380222
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-014",
+   "usd": 0.00337846
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-014",
+   "usd": 0.0034804
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-014",
+   "usd": 0.00303394
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-015",
+   "usd": 0.0030425400000000003
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-015",
+   "usd": 0.00432558
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-015",
+   "usd": 0.00299988
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-015",
+   "usd": 0.00592644
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-015",
+   "usd": 0.00286756
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-015",
+   "usd": 0.0027915
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-015",
+   "usd": 0.0030415399999999997
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-016",
+   "usd": 0.00440594
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-016",
+   "usd": 0.00184404
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-016",
+   "usd": 0.0023380799999999998
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-016",
+   "usd": 0.0026460200000000002
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-016",
+   "usd": 0.00412342
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-016",
+   "usd": 0.0035076599999999997
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-017",
+   "usd": 0.00367838
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-017",
+   "usd": 0.00396074
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-017",
+   "usd": 0.00390878
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-017",
+   "usd": 0.00292152
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-017",
+   "usd": 0.00400796
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-017",
+   "usd": 0.0029343999999999998
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-017",
+   "usd": 0.00486024
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-018",
+   "usd": 0.00591404
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-018",
+   "usd": 0.00811714
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-018",
+   "usd": 0.00484462
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-018",
+   "usd": 0.0041715
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-018",
+   "usd": 0.00445188
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-018",
+   "usd": 0.00543252
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-018",
+   "usd": 0.006558560000000001
+  },
+  {
+   "index": 7,
+   "thread": "rt-conv-018",
+   "usd": 0.00587924
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-019",
+   "usd": 0.00318848
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-019",
+   "usd": 0.0016900399999999999
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-019",
+   "usd": 0.00210048
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-019",
+   "usd": 0.0017141200000000002
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-019",
+   "usd": 0.00267622
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-019",
+   "usd": 0.00202966
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-019",
+   "usd": 0.00264206
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-020",
+   "usd": 0.00466274
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-020",
+   "usd": 0.00510194
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-020",
+   "usd": 0.00716138
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-020",
+   "usd": 0.00584066
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-020",
+   "usd": 0.00359854
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-020",
+   "usd": 0.00912378
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-021",
+   "usd": 0.0053383400000000004
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-021",
+   "usd": 0.00437434
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-021",
+   "usd": 0.00602692
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-021",
+   "usd": 0.00985424
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-021",
+   "usd": 0.0075504
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-021",
+   "usd": 0.00742154
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-021",
+   "usd": 0.00765078
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-022",
+   "usd": 0.00279138
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-022",
+   "usd": 0.00291654
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-022",
+   "usd": 0.00437628
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-022",
+   "usd": 0.00276022
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-022",
+   "usd": 0.00322196
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-022",
+   "usd": 0.00412
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-022",
+   "usd": 0.00312724
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-023",
+   "usd": 0.0035798799999999997
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-023",
+   "usd": 0.00383364
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-023",
+   "usd": 0.00758044
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-023",
+   "usd": 0.00540948
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-023",
+   "usd": 0.00350846
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-023",
+   "usd": 0.00413542
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-023",
+   "usd": 0.00415278
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-024",
+   "usd": 0.00354534
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-024",
+   "usd": 0.0037155400000000002
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-024",
+   "usd": 0.00791034
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-024",
+   "usd": 0.00487912
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-024",
+   "usd": 0.00751018
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-024",
+   "usd": 0.00651748
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-024",
+   "usd": 0.00508252
+  },
+  {
+   "index": 0,
+   "thread": "rt-conv-025",
+   "usd": 0.00468628
+  },
+  {
+   "index": 1,
+   "thread": "rt-conv-025",
+   "usd": 0.00602704
+  },
+  {
+   "index": 2,
+   "thread": "rt-conv-025",
+   "usd": 0.00368478
+  },
+  {
+   "index": 3,
+   "thread": "rt-conv-025",
+   "usd": 0.00357292
+  },
+  {
+   "index": 4,
+   "thread": "rt-conv-025",
+   "usd": 0.00555626
+  },
+  {
+   "index": 5,
+   "thread": "rt-conv-025",
+   "usd": 0.0049166
+  },
+  {
+   "index": 6,
+   "thread": "rt-conv-025",
+   "usd": 0.0037118800000000003
+  }
+ ]
+}

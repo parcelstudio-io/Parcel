@@ -1,0 +1,73 @@
+{
+ "run": "rgb_only_photos_640",
+ "clip": "/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/h6/corpus/clips/photos_640.npz",
+ "clip_has_depth": false,
+ "detector": "daemon",
+ "detector_name": "owlv2-daemon",
+ "resolution": [
+  640,
+  360
+ ],
+ "labels": [
+  "person",
+  "chair",
+  "car",
+  "bicycle",
+  "dog",
+  "bench",
+  "cup",
+  "backpack",
+  "umbrella",
+  "traffic light"
+ ],
+ "polls": 32,
+ "frames_published": 0,
+ "wall_s": 0.0008231160027207807,
+ "poll_hz": 38876.65881142529,
+ "detection_ttl_ms": null,
+ "publish_latency_ms": {
+  "p50": 0.0,
+  "p95": 0.0,
+  "mean": 0.0,
+  "min": 0.0,
+  "max": 0.0
+ },
+ "expired_at_publish": 0,
+ "expired_fraction": null,
+ "map_writes": 0,
+ "map_writes_fresh_only": 0,
+ "ingress_stats": {
+  "polls": 0,
+  "detections_last": 0,
+  "candidates_last": 0,
+  "last_latency_ms": 0.0,
+  "last_detect_ms": 0.0,
+  "errors": 33,
+  "last_error": "RuntimeError: camera backend produced no RGB/depth buffers",
+  "last_query": [
+   "person",
+   "chair",
+   "car",
+   "bicycle",
+   "dog",
+   "bench",
+   "cup",
+   "backpack",
+   "umbrella",
+   "traffic light"
+  ],
+  "reactive_reads": 0,
+  "frames_published": 0,
+  "frame_callback_errors": 0,
+  "detections_truncated": 0,
+  "leased_inferences": 0,
+  "queries_dropped": 0,
+  "last_dropped_queries": [],
+  "embedded_detections": 0,
+  "relief_patches": 0,
+  "embed_failures": 0,
+  "last_embed_error": null
+ },
+ "latencies_ms": [],
+ "per_frame": []
+}

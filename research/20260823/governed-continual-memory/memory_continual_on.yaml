@@ -1,0 +1,19 @@
+# H5 overlay — the ONLY place `memory.continual` is switched on.
+#
+# The flag lives in code (`memory/scheduler.py`, `ContinualMemoryConfig`) and
+# defaults OFF; `configs/robot.yaml` is untouched by this experiment. The
+# harness reads this file through `ContinualMemoryConfig.from_settings`, so the
+# config path itself is exercised rather than a hand-built dataclass — an
+# unknown key here is a hard error, which is the property that stops
+# `enabld: true` from looking like a switch nobody flipped.
+memory:
+  continual:
+    enabled: true
+    # The harness drives the triggers explicitly, so the idle gap is short and
+    # one new turn is enough; a product default would be 300 s / 4 turns.
+    idle_seconds: 1.0
+    min_new_turns: 1
+    # The whole history in one window: the pass that can resurrect a revoked
+    # fact is exactly the pass that re-reads old turns (see RESULTS.md M4).
+    turn_window: 200
+    respect_revocations: true

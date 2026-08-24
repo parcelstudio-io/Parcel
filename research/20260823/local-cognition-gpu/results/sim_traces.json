@@ -1,0 +1,149 @@
+[
+ {
+  "collisions": 0,
+  "directive": "go to the sidewalk",
+  "final_pose": [
+   1.63,
+   2.52,
+   0.978
+  ],
+  "lidar_obstacles": 64,
+  "min_clearance_m": 1.158,
+  "notes": [
+   "arrived_verified",
+   "grid_align err=-11.2 route=2 status=planned|clear",
+   "grid_align err=-13.0 route=2 status=planned|clear",
+   "grid_align err=-15.1 route=2 status=planned|clear",
+   "grid_align err=-17.5 route=2 status=planned|clear",
+   "grid_align err=-20.4 route=2 status=planned|clear",
+   "grid_align err=-23.7 route=2 status=planned|clear",
+   "grid_align err=-27.6 route=2 status=planned|clear",
+   "grid_align err=-32.1 route=2 status=planned|clear",
+   "grid_align err=-36.7 route=2 status=planned|clear",
+   "grid_align err=-41.2 route=2 status=planned|clear",
+   "grid_align err=-45.8 route=2 status=planned|clear",
+   "grid_align err=-50.4 route=2 status=planned|clear",
+   "grid_align err=-55.0 route=2 status=planned|clear",
+   "grid_align err=-59.6 route=2 status=planned|clear",
+   "grid_align err=-64.2 route=2 status=planned|clear",
+   "grid_align err=-68.7 route=2 status=planned|clear",
+   "grid_align err=-7.1 route=2 status=planned|clear",
+   "grid_align err=-72.9 route=2 status=planned|clear",
+   "grid_align err=-76.0 route=2 status=planned|clear",
+   "grid_align err=-78.0 route=2 status=planned|clear",
+   "grid_align err=-79.1 route=2 status=planned|clear",
+   "grid_align err=-8.3 route=2 status=planned|clear",
+   "grid_align err=-9.6 route=2 status=planned|clear"
+  ],
+  "objects": [
+   "bldg_3",
+   "bldg_4",
+   "planter_2",
+   "tree_2"
+  ],
+  "owner_visible": true,
+  "phases": [
+   "arrived",
+   "running",
+   "searching",
+   "verifying"
+  ],
+  "reason": "arrived_verified",
+  "regions": [],
+  "status": "arrived",
+  "steps": 200,
+  "target_id": "sidewalk"
+ },
+ {
+  "collisions": 0,
+  "directive": "go to the bench",
+  "final_pose": [
+   1.21,
+   2.54,
+   -3.04
+  ],
+  "lidar_obstacles": 64,
+  "min_clearance_m": 0.8,
+  "notes": [
+   "grid_align err=10.4 route=3 status=planned|clear",
+   "grid_align err=12.1 route=3 status=planned|clear",
+   "grid_align err=14.1 route=3 status=planned|clear",
+   "grid_align err=16.4 route=3 status=planned|clear",
+   "grid_align err=19.0 route=3 status=planned|clear",
+   "grid_align err=22.1 route=3 status=planned|clear",
+   "grid_align err=25.7 route=3 status=planned|clear",
+   "grid_align err=29.9 route=3 status=planned|clear",
+   "grid_align err=34.5 route=3 status=planned|clear",
+   "grid_align err=39.1 route=3 status=planned|clear",
+   "grid_align err=43.7 route=3 status=planned|clear",
+   "grid_align err=48.3 route=3 status=planned|clear",
+   "grid_align err=52.8 route=3 status=planned|clear",
+   "grid_align err=57.4 route=3 status=planned|clear",
+   "grid_align err=62.0 route=3 status=planned|clear",
+   "grid_align err=65.0 route=2 status=planned|clear",
+   "grid_align err=66.0 route=2 status=planned|clear",
+   "grid_align err=66.1 route=3 status=planned|clear",
+   "grid_align err=69.2 route=3 status=planned|clear",
+   "grid_align err=7.4 route=2 status=planned|obstacle_slow",
+   "grid_align err=9.0 route=3 status=planned|clear",
+   "grid_track err=0.0 goal=1.8 route=3 status=planned|obstacle_projected_speed_cap",
+   "grid_track err=0.0 goal=1.9 route=2 status=planned|obstacle_projected_speed_cap",
+   "grid_track err=0.1 goal=1.8 route=3 status=planned|obstacle_projected_speed_cap"
+  ],
+  "objects": [
+   "bench_1",
+   "bldg_1",
+   "bldg_2",
+   "bldg_5",
+   "door_1",
+   "lamp_post_1",
+   "lamp_post_2",
+   "planter_1",
+   "tree_1"
+  ],
+  "owner_visible": true,
+  "phases": [
+   "running",
+   "searching"
+  ],
+  "reason": "navigation_step_limit",
+  "regions": [
+   "sidewalk"
+  ],
+  "status": "timed_out",
+  "steps": 600,
+  "target_id": "bench_1"
+ },
+ {
+  "collisions": 0,
+  "directive": "go to the fountain",
+  "final_pose": [
+   2.88,
+   2.51,
+   -0.001
+  ],
+  "lidar_obstacles": 64,
+  "min_clearance_m": 0.675,
+  "notes": [
+   "scan_behavior_rotate",
+   "search_entity_align",
+   "search_entity_frontier",
+   "semantic_target_not_found"
+  ],
+  "objects": [
+   "bldg_4",
+   "planter_2",
+   "tree_2"
+  ],
+  "owner_visible": true,
+  "phases": [
+   "failed",
+   "searching"
+  ],
+  "reason": "semantic_target_not_found",
+  "regions": [],
+  "status": "failed",
+  "steps": 379,
+  "target_id": null
+ }
+]

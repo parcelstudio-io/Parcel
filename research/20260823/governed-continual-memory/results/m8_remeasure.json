@@ -1,0 +1,53 @@
+{
+  "distillation_wall_s": {
+    "max": 6.5016,
+    "median": 5.178,
+    "min": 4.0683,
+    "passes": 12,
+    "total": 61.602
+  },
+  "gpu_after": {
+    "gpu_util_pct": 94,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 30593
+  },
+  "gpu_before": {
+    "gpu_util_pct": 3,
+    "memory_total_mib": 32760,
+    "memory_used_mib": 30639
+  },
+  "note": "M8 re-measured with the GPU otherwise quiet (preamble contention rule)",
+  "proposer_stats": {
+    "calls": 12,
+    "constrained": true,
+    "failures": [],
+    "fallback_rate": 0.0,
+    "fallbacks": 0,
+    "sample_reply": "{\n    \"facts\": [\n      {\n        \"key\": \"owner_name\",\n        \"value\": \"Their name is Elena.\",\n        \"confidence\": 1.0\n      },\n      {\n        \"key\": \"sister_name\",\n        \"value\": \"Their sister's name is Hana.\",\n        \"confidence\": 1.0\n      },\n      {\n        \"key\": \"sister_location\",\n        \"value\": \"Hana lives two streets away.\",\n        \"confidence\": 1.0\n      },\n      {\n        \"key\": \"preference_communication\",\n        \"value\": \"They like short answers before coffee.\",\n        \"confidence\": 1.0\n      },\n      {\n        \"key\": \"routine_walk\",\n        \"value\": \"They usually walk to the park at seven in the morning.\",\n        \"confidence\": 1.0\n      },\n      {\n        \"key\": \"current_location\",\n        \"value\": \"They live in Manhattan for now.\",\n        \"confidence\": 1.0\n      },\n      {\n        \"key\": \"workplace\",\n        \"value\": \"They work at a small design studio near the river.\",\n        \"confidence\": 1.0\n      },\n      {\n        \"key\": \"medication\",\n        \"value\": \"Their blood pressure medication is amlodipine.\",\n        \"confidence\": 1.0\n      },\n      {\n        \"key\": \"wifi_password\",\n        \"value\": \"Their wifi password is hunter2.\",\n        \"confidence\": 1.0\n      }\n    ]\n  }"
+  },
+  "scores": {
+    "granted_absent_from_graph": 1,
+    "granted_matched": 34,
+    "granted_rows": 35,
+    "ground_truth_facts": 39,
+    "ground_truth_proposable": 36,
+    "proposal_precision": 0.9655,
+    "proposal_recall": 0.8611,
+    "proposals_total": 107,
+    "proposals_unique": 58,
+    "proposals_unmatched": 2,
+    "row_precision": 0.9556,
+    "row_recall": 0.75,
+    "rows_total": 45,
+    "rows_unmatched": 2,
+    "uncovered_fact_ids": [
+      "a_finance_mortgage",
+      "b_finance_card",
+      "b_routine_walk",
+      "b_third_party_divorce",
+      "c_finance_salary",
+      "c_health_therapist"
+    ]
+  },
+  "wall_s": 61.634
+}

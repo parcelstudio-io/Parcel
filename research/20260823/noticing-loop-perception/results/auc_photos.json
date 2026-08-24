@@ -1,0 +1,28 @@
+{
+ "clip": "photos_640.npz",
+ "labels": [
+  "person",
+  "chair",
+  "car",
+  "bicycle",
+  "dog",
+  "bench",
+  "cup",
+  "backpack",
+  "umbrella",
+  "traffic light"
+ ],
+ "burn_in": "first-half",
+ "burn_in_frames": 78,
+ "probe_frames": 156,
+ "gallery_size": 249,
+ "probes": 495,
+ "identified": 345,
+ "new_n": 171,
+ "seen_n": 174,
+ "novelty_new_mean": 0.1689918600461456,
+ "novelty_seen_mean": 2.8630597910614494e-06,
+ "novelty_new_median": 0.153033385012469,
+ "novelty_seen_median": 2.6322619314234075e-06,
+ "auc": 1.0
+}

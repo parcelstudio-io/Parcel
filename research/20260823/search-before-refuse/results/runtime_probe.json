@@ -1,0 +1,154 @@
+{
+  "explicit_search": {
+    "find the city books": {
+      "admitted": true,
+      "normalized": "find the city books",
+      "reason": "explicit_search"
+    },
+    "look for city books": {
+      "admitted": true,
+      "normalized": "look for city books",
+      "reason": "explicit_search"
+    }
+  },
+  "nouns": {
+    "bench": {
+      "admission": {
+        "admitted": true,
+        "alternatives": [],
+        "fact": "",
+        "query": "bench",
+        "reason": "known_place"
+      },
+      "compiled_goal": {
+        "kind": "object",
+        "place_class": "object",
+        "query": "bench",
+        "terminal_relation": "near"
+      },
+      "directive": "go to bench",
+      "door": {
+        "raised": "RuntimeError",
+        "reply": "My camera feed is stale right now, so I'm holding still. Give me a moment and try again."
+      },
+      "router_normalized": "go to bench"
+    },
+    "city books": {
+      "admission": {
+        "admitted": false,
+        "alternatives": [
+          "bench",
+          "building",
+          "crosswalk"
+        ],
+        "fact": "the robot's map has no place called 'city books'; the places it does know nearby are the bench, the building and the crosswalk; ask the owner which of those they mean, or which real place they want",
+        "query": "city books",
+        "reason": "unknown_place"
+      },
+      "compiled_goal": {
+        "kind": "object",
+        "place_class": "unknown",
+        "query": "city books",
+        "terminal_relation": "near"
+      },
+      "directive": "go to city books",
+      "door": {
+        "raised": "ValueError",
+        "reply": "the robot's map has no place called 'city books'; the places it does know nearby are the bench, the building and the crosswalk; ask the owner which of those they mean, or which real place they want"
+      },
+      "router_normalized": "go to city books"
+    },
+    "narnia": {
+      "admission": {
+        "admitted": false,
+        "alternatives": [
+          "bench",
+          "building",
+          "crosswalk"
+        ],
+        "fact": "the robot's map has no place called 'narnia'; the places it does know nearby are the bench, the building and the crosswalk; ask the owner which of those they mean, or which real place they want",
+        "query": "narnia",
+        "reason": "unknown_place"
+      },
+      "compiled_goal": {
+        "kind": "object",
+        "place_class": "unknown",
+        "query": "narnia",
+        "terminal_relation": "near"
+      },
+      "directive": "go to narnia",
+      "door": {
+        "raised": "ValueError",
+        "reply": "the robot's map has no place called 'narnia'; the places it does know nearby are the bench, the building and the crosswalk; ask the owner which of those they mean, or which real place they want"
+      },
+      "router_normalized": "go to narnia"
+    },
+    "the sidewalk": {
+      "admission": {
+        "admitted": true,
+        "alternatives": [],
+        "fact": "",
+        "query": "sidewalk",
+        "reason": "known_place"
+      },
+      "compiled_goal": {
+        "kind": "region",
+        "place_class": "region",
+        "query": "sidewalk",
+        "terminal_relation": "inside"
+      },
+      "directive": "go to the sidewalk",
+      "door": {
+        "raised": "RuntimeError",
+        "reply": "My camera feed is stale right now, so I'm holding still. Give me a moment and try again."
+      },
+      "router_normalized": "go to the sidewalk"
+    }
+  },
+  "offer_places": [
+    "bench",
+    "building",
+    "crosswalk",
+    "door",
+    "lamppost",
+    "planter",
+    "sidewalk",
+    "tree"
+  ],
+  "scene_object_vocabulary": [
+    "lamppost",
+    "lamp post",
+    "streetlight",
+    "street light",
+    "lamp",
+    "bench",
+    "seat",
+    "park bench",
+    "bench seat",
+    "tree",
+    "trees",
+    "street tree",
+    "planter",
+    "plant pot",
+    "flower box",
+    "pot",
+    "building",
+    "bldg",
+    "storefront",
+    "building face",
+    "door",
+    "doorway",
+    "entrance",
+    "entry",
+    "front door"
+  ],
+  "scene_region_vocabulary": [
+    "sidewalk",
+    "pavement",
+    "safe region",
+    "crosswalk",
+    "crossing",
+    "zebra crossing",
+    "cross walk"
+  ]
+}

@@ -33,6 +33,13 @@ enforces leaf imports — import from the defining module, never a package.
   concept each, never `utils/`; product seams only where your DESIGN.md
   OWNS names them, flag-off by default; both DEC ratchets must stay green
   (`tests/test_dec0_debt_ratchet.py`, `tests/test_decig2_import_ratchet.py`).
+- **One CPU judge server on the host at a time** (added 2026-08-24 after two
+  Qwen3-32B CPU judges drove the load to ~200 on 192 cores and turned every
+  latency row into an upper bound): before starting `models/judge/*`, check
+  `ss -ltnp | grep 8090`; reuse a running judge (alias `qwen3-32b-judge`)
+  instead of starting another; cap `--threads 48 --threads-batch 48`; stop it
+  when your adjudication batch ends. Record `uptime` 1-min load beside every
+  latency row; latency headline rows count only when the 1-min load is < 60.
 - Hosted spend: H1 only, ≤ $2.00, itemized; everyone else $0.
 - Scratch: `/tmp/claude-1000/-home-jaewoo-jang-Desktop-Projects-Parcel/0b505906-665b-45ea-a2b7-686b3aecb89d/scratchpad/<hypothesis>/`.
   Durable artifacts (scripts, results JSON/CSV, small plots) go in your

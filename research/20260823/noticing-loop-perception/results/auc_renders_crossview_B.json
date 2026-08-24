@@ -1,0 +1,26 @@
+{
+ "clip": "renders_640.npz",
+ "labels": [
+  "person",
+  "bench",
+  "tree",
+  "building",
+  "lamppost",
+  "planter",
+  "door"
+ ],
+ "burn_in": "focus:pedestrian_1,pedestrian_2,pedestrian_5,pedestrian_6",
+ "burn_in_frames": 24,
+ "probe_frames": 18,
+ "exclude_burn_in_frames": true,
+ "gallery_size": 111,
+ "probes": 76,
+ "identified": 39,
+ "new_n": 1,
+ "seen_n": 38,
+ "novelty_new_mean": 0.07677789721521266,
+ "novelty_seen_mean": 0.08802065251023575,
+ "novelty_new_median": 0.07677789721521266,
+ "novelty_seen_median": 0.08710771312508014,
+ "auc": 0.34210526315789475
+}

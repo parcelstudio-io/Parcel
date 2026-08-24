@@ -1,0 +1,99 @@
+{
+  "fake_adapter_physical_loc": 102,
+  "fake_adapter_product_imports": {
+    "parcel_robot.contracts.body_intent": [
+      "BodyCapabilityManifest",
+      "BodyIntentV1",
+      "degrade",
+      "dropped_axes"
+    ]
+  },
+  "fake_adapter_total_lines": 124,
+  "manifests_differ": {
+    "differing_fields": [
+      "gaze_pitch",
+      "gestures",
+      "max_rates",
+      "name",
+      "posture_offsets"
+    ],
+    "fake_quadruped": {
+      "gaze_pitch": false,
+      "gaze_yaw": true,
+      "gestures": [
+        "wag",
+        "perk_ears"
+      ],
+      "hold_is_command": true,
+      "locomotion_velocity": true,
+      "max_rates": [
+        [
+          "gaze_yaw",
+          1.5
+        ]
+      ],
+      "name": "research_fake_quadruped",
+      "posture_offsets": false
+    },
+    "sim": {
+      "gaze_pitch": true,
+      "gaze_yaw": true,
+      "gestures": [
+        "sit",
+        "bow",
+        "stand",
+        "lie_down",
+        "stretch",
+        "play_bow",
+        "paw_wave"
+      ],
+      "hold_is_command": true,
+      "locomotion_velocity": true,
+      "max_rates": [
+        [
+          "posture_dz",
+          0.1
+        ],
+        [
+          "posture_pitch",
+          0.5
+        ],
+        [
+          "posture_roll",
+          0.5
+        ],
+        [
+          "gaze_yaw",
+          4.0
+        ],
+        [
+          "gaze_pitch",
+          4.0
+        ]
+      ],
+      "name": "mujoco_sim",
+      "posture_offsets": true
+    }
+  },
+  "product_hashes": {
+    "src/parcel_robot/contracts/body_intent.py": "8a96a91de0bc6c5d1885e2ea0389ff30354162a35dceacefc2e5a370dc80459c",
+    "src/parcel_robot/control/go2_sport_body_adapter.py": "e0ccc5d2daf18e3452a76c03bc737e1c711b21288a89b094bd86279c4909830b",
+    "src/parcel_robot/motion/body_composer.py": "3e37e1797dd68a69f407f36e5509979512db2eec197c83e4c2e3ebf494f2698b",
+    "src/parcel_robot/simulation/body_adapter.py": "5595ab715b5c50c80790f8c07b69068e85fdf10af9cea1ffdd3b238d6b393d8d"
+  },
+  "product_modules_changed": [],
+  "run": {
+    "degrade_violations": 0,
+    "dropped_axes": {
+      "gaze_pitch": 30000,
+      "posture": 30000
+    },
+    "frames": 30000,
+    "hold_frames": 9000,
+    "manifest": "research_fake_quadruped",
+    "move_frames": 21000,
+    "neck_yaw_rad": -0.01867,
+    "rate_refusals": 23478,
+    "watchdog_faults": 0
+  }
+}

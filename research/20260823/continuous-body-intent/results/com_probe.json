@@ -1,0 +1,26 @@
+{
+  "envelope": {
+    "grid_points": 289,
+    "max_horizontal_com_shift_m": 0.00065,
+    "max_vertical_com_shift_m": 0.001595,
+    "reference_com_m": [
+      -0.002169,
+      0.0,
+      0.248594
+    ],
+    "worst_case_offsets": {
+      "body_height_m": 0.02,
+      "body_pitch_rad": -0.10472
+    }
+  },
+  "note": "subtree_com of the robot root body with the expression overlay written into qpos and mj_forward run; no physics step, no viewer, no socket.",
+  "replay": {
+    "available": true,
+    "max_horizontal_com_shift_m": 0.000131,
+    "max_vertical_com_shift_m": 0.000319,
+    "mean_horizontal_com_shift_m": 6.2e-05,
+    "points": 1199,
+    "trace": "research/20260823/continuous-body-intent/results/trace_idle_hold.json"
+  },
+  "scene": "/home/jaewoo-jang/Desktop/Projects/Parcel/src/parcel_robot/scenes/city_block.xml"
+}

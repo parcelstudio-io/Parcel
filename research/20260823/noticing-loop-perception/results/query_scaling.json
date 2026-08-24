@@ -1,0 +1,62 @@
+{
+ "clip": "photos_640.npz",
+ "resolution": [
+  640,
+  360
+ ],
+ "provider_profile": "cuda_fp16",
+ "execution_providers": [
+  "CUDAExecutionProvider",
+  "CPUExecutionProvider"
+ ],
+ "rows": {
+  "1": {
+   "phrases": 1,
+   "detect_daemon_ms_mean": 310.92240000000004,
+   "detect_daemon_ms_median": 316.52,
+   "wall_ms_median": 320.5232710024575,
+   "ipc_overhead_ms_median": 3.8293835046705738,
+   "n": 20
+  },
+  "2": {
+   "phrases": 2,
+   "detect_daemon_ms_mean": 198.01005,
+   "detect_daemon_ms_median": 192.9375,
+   "wall_ms_median": 195.78054099838482,
+   "ipc_overhead_ms_median": 2.218255506665443,
+   "n": 20
+  },
+  "4": {
+   "phrases": 4,
+   "detect_daemon_ms_mean": 318.2366,
+   "detect_daemon_ms_median": 319.3665,
+   "wall_ms_median": 323.32462399062933,
+   "ipc_overhead_ms_median": 4.274939000013774,
+   "n": 20
+  },
+  "7": {
+   "phrases": 7,
+   "detect_daemon_ms_mean": 416.51345000000003,
+   "detect_daemon_ms_median": 412.734,
+   "wall_ms_median": 418.7732589998632,
+   "ipc_overhead_ms_median": 4.8364075041543515,
+   "n": 20
+  },
+  "10": {
+   "phrases": 10,
+   "detect_daemon_ms_mean": 289.21825,
+   "detect_daemon_ms_median": 253.40249999999997,
+   "wall_ms_median": 256.376850498782,
+   "ipc_overhead_ms_median": 2.8730700013986876,
+   "n": 20
+  },
+  "16": {
+   "phrases": 16,
+   "detect_daemon_ms_mean": 304.1176,
+   "detect_daemon_ms_median": 288.6195,
+   "wall_ms_median": 292.7250880020438,
+   "ipc_overhead_ms_median": 4.241526501601555,
+   "n": 20
+  }
+ }
+}

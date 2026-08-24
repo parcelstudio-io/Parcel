@@ -1,0 +1,159 @@
+{
+  "arms": {
+    "A_fixture_deterministic": {
+      "arm": "A_fixture_deterministic",
+      "failed_check_categories": {},
+      "families_failing": [],
+      "families_passing": [
+        "adaptability_no_sycophancy",
+        "affect_handling",
+        "asr_robustness",
+        "cross_session_memory",
+        "fact_tool_composition",
+        "in_session_context",
+        "interactivity_clarification",
+        "persona_consistency"
+      ],
+      "families_recency_window_blocked": [],
+      "family_status": {
+        "adaptability_no_sycophancy": "pass",
+        "affect_handling": "pass",
+        "asr_robustness": "pass",
+        "cross_session_memory": "pass",
+        "fact_tool_composition": "pass",
+        "in_session_context": "pass",
+        "interactivity_clarification": "pass",
+        "persona_consistency": "pass"
+      },
+      "gpu_after": {},
+      "gpu_before": {},
+      "judge_calibration": "qualified",
+      "pack_digest": "353e2d779b03f93effb33cd2d8142e31fa6ae18182a69c6f4ac7f096b16a1c0a",
+      "summarizer_quality": null,
+      "turn_count": 13,
+      "turns_passed": 13,
+      "wall_s": 0.01
+    },
+    "B_fixture_live_memory": {
+      "arm": "B_fixture_live_memory",
+      "failed_check_categories": {},
+      "families_failing": [],
+      "families_passing": [
+        "adaptability_no_sycophancy",
+        "affect_handling",
+        "asr_robustness",
+        "cross_session_memory",
+        "fact_tool_composition",
+        "in_session_context",
+        "interactivity_clarification",
+        "persona_consistency"
+      ],
+      "families_recency_window_blocked": [],
+      "family_status": {
+        "adaptability_no_sycophancy": "pass",
+        "affect_handling": "pass",
+        "asr_robustness": "pass",
+        "cross_session_memory": "pass",
+        "fact_tool_composition": "pass",
+        "in_session_context": "pass",
+        "interactivity_clarification": "pass",
+        "persona_consistency": "pass"
+      },
+      "gpu_after": {
+        "gpu_util_pct": 93,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 30601
+      },
+      "gpu_before": {
+        "gpu_util_pct": 42,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 31074
+      },
+      "judge_calibration": "qualified",
+      "pack_digest": "353e2d779b03f93effb33cd2d8142e31fa6ae18182a69c6f4ac7f096b16a1c0a",
+      "summarizer_quality": {
+        "contains_offer": true,
+        "durable_fact_coverage": 0.5,
+        "evidence_term_hits": {
+          "friday": true,
+          "interview": false,
+          "monday": false,
+          "offer": true
+        },
+        "report_only": true,
+        "summarizer_calls": 8,
+        "summary_chars": 240,
+        "summary_text": "The user received a job offer on Friday and is feeling relieved and thrilled. They are moving from Manhattan to Brooklyn at the end of the month. Their sister, Mina, is visiting next weekend. The user reorganized the kitchen cabinets today.",
+        "summary_words": 41,
+        "used_fallback": true
+      },
+      "turn_count": 13,
+      "turns_passed": 13,
+      "wall_s": 63.68
+    },
+    "C_live_everything": {
+      "arm": "C_live_everything",
+      "failed_check_categories": {
+        "clarification": 6,
+        "fact_recall": 6,
+        "tool": 1,
+        "word_budget": 8
+      },
+      "families_failing": [
+        "adaptability_no_sycophancy",
+        "affect_handling",
+        "cross_session_memory",
+        "fact_tool_composition",
+        "in_session_context",
+        "interactivity_clarification",
+        "persona_consistency"
+      ],
+      "families_passing": [
+        "asr_robustness"
+      ],
+      "families_recency_window_blocked": [],
+      "family_status": {
+        "adaptability_no_sycophancy": "fail",
+        "affect_handling": "fail",
+        "asr_robustness": "pass",
+        "cross_session_memory": "fail",
+        "fact_tool_composition": "fail",
+        "in_session_context": "fail",
+        "interactivity_clarification": "fail",
+        "persona_consistency": "fail"
+      },
+      "gpu_after": {
+        "gpu_util_pct": 39,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 30574
+      },
+      "gpu_before": {
+        "gpu_util_pct": 93,
+        "memory_total_mib": 32760,
+        "memory_used_mib": 30601
+      },
+      "judge_calibration": "qualified",
+      "pack_digest": "353e2d779b03f93effb33cd2d8142e31fa6ae18182a69c6f4ac7f096b16a1c0a",
+      "summarizer_quality": {
+        "contains_offer": true,
+        "durable_fact_coverage": 0.25,
+        "evidence_term_hits": {
+          "friday": false,
+          "interview": false,
+          "monday": false,
+          "offer": true
+        },
+        "report_only": true,
+        "summarizer_calls": 8,
+        "summary_chars": 276,
+        "summary_text": "The user got the job offer they were nervous about and is feeling relieved and thrilled. They are moving from Manhattan to Brooklyn at the end of the month and are looking forward to their sister Mina's visit next weekend. The user also reorganized the kitchen cabinets today.",
+        "summary_words": 48,
+        "used_fallback": true
+      },
+      "turn_count": 13,
+      "turns_passed": 3,
+      "wall_s": 173.81
+    }
+  },
+  "recorded_at_utc": "2026-08-24T02:49:22.561317+00:00"
+}

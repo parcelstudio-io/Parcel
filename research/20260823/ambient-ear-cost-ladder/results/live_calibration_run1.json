@@ -1,0 +1,1365 @@
+{
+ "assumed_vs_raw_error_pct": 330.377,
+ "ceiling_usd": 2.0,
+ "harness": "live_calibration",
+ "ledger_month_to_date": {
+  "month": "2026-08",
+  "note": "",
+  "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260823/ambient-ear-cost-ladder/results/live_spend_v2.jsonl",
+  "rates_are_assumed": false,
+  "readable": true,
+  "rows": 33,
+  "skipped_rows": 0,
+  "usd": 0.022261
+ },
+ "ledger_vs_raw_error_pct": 0.0,
+ "legacy_month_to_date": {
+  "month": "2026-08",
+  "note": "",
+  "path": "/home/jaewoo-jang/Desktop/Projects/Parcel/research/20260823/ambient-ear-cost-ladder/results/live_spend_v1.jsonl",
+  "rates_are_assumed": true,
+  "readable": true,
+  "rows": 33,
+  "skipped_rows": 0,
+  "usd": 0.095806
+ },
+ "model": "gpt-realtime-2.1-mini",
+ "responses": 33,
+ "rows": [
+  {
+   "flat_row": {
+    "cached_tokens": 0,
+    "input_audio_tokens": 0,
+    "input_tokens": 477,
+    "output_audio_tokens": 0,
+    "output_tokens": 48,
+    "response_id": "resp_EGF9dDfrACi6M1vkJjWio"
+   },
+   "owner_text": "morning",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 0,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 0
+     },
+     "image_tokens": 0,
+     "text_tokens": 477
+    },
+    "input_tokens": 477,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 30,
+     "text_tokens": 48
+    },
+    "output_tokens": 48,
+    "total_tokens": 525
+   },
+   "reply_text": "Morning, Jae. Ready to take it slow and easy today?",
+   "response_id": "resp_EGF9dDfrACi6M1vkJjWio",
+   "usd_assumed_legacy": 0.002676,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0004014,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0004014
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 448,
+    "input_audio_tokens": 0,
+    "input_tokens": 513,
+    "output_audio_tokens": 0,
+    "output_tokens": 231,
+    "response_id": "resp_EGF9dUegThmdZ2qblTypA"
+   },
+   "owner_text": "I am hungry, let's go to mcdonald's",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 448,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 448
+     },
+     "image_tokens": 0,
+     "text_tokens": 513
+    },
+    "input_tokens": 513,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 207,
+     "text_tokens": 231
+    },
+    "output_tokens": 231,
+    "total_tokens": 744
+   },
+   "reply_text": "I\u2019m ready to head out when you are, and we can walk to McDonald\u2019s together.",
+   "response_id": "resp_EGF9dUegThmdZ2qblTypA",
+   "usd_assumed_legacy": 0.0041352,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00062028,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00062028
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 512,
+    "input_audio_tokens": 0,
+    "input_tokens": 555,
+    "output_audio_tokens": 0,
+    "output_tokens": 76,
+    "response_id": "resp_EGF9fs0GwcgMrAPv03TgA"
+   },
+   "owner_text": "the one by the petrol station, not the one in town",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 512,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 512
+     },
+     "image_tokens": 0,
+     "text_tokens": 555
+    },
+    "input_tokens": 555,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 41,
+     "text_tokens": 76
+    },
+    "output_tokens": 76,
+    "total_tokens": 631
+   },
+   "reply_text": "Got it, Jae. We\u2019ll aim for the McDonald\u2019s by the petrol station\u2014let\u2019s go together and see where the walk takes us.",
+   "response_id": "resp_EGF9fs0GwcgMrAPv03TgA",
+   "usd_assumed_legacy": 0.0015928,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00023892,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00023892
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 576,
+    "input_audio_tokens": 0,
+    "input_tokens": 600,
+    "output_audio_tokens": 0,
+    "output_tokens": 96,
+    "response_id": "resp_EGF9f9V7AR0v9KaTWKV5L"
+   },
+   "owner_text": "how far is that",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 576,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 576
+     },
+     "image_tokens": 0,
+     "text_tokens": 600
+    },
+    "input_tokens": 600,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 57,
+     "text_tokens": 96
+    },
+    "output_tokens": 96,
+    "total_tokens": 696
+   },
+   "reply_text": "I don\u2019t have a map distance right here, Jae. I can\u2019t see exactly how far it is, so you\u2019d get a better estimate from a maps app.",
+   "response_id": "resp_EGF9f9V7AR0v9KaTWKV5L",
+   "usd_assumed_legacy": 0.0018624,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00027936,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00027936
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 576,
+    "input_audio_tokens": 0,
+    "input_tokens": 652,
+    "output_audio_tokens": 0,
+    "output_tokens": 95,
+    "response_id": "resp_EGF9gXAN958mxo8OiTbsF"
+   },
+   "owner_text": "okay let's do it, but slowly",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 576,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 576
+     },
+     "image_tokens": 0,
+     "text_tokens": 652
+    },
+    "input_tokens": 652,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 71,
+     "text_tokens": 95
+    },
+    "output_tokens": 95,
+    "total_tokens": 747
+   },
+   "reply_text": "Okay, Jae. We\u2019ll move slowly together. Tell me when you\u2019re ready to start.",
+   "response_id": "resp_EGF9gXAN958mxo8OiTbsF",
+   "usd_assumed_legacy": 0.0020544,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00030816,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00030816
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 640,
+    "input_audio_tokens": 0,
+    "input_tokens": 688,
+    "output_audio_tokens": 0,
+    "output_tokens": 131,
+    "response_id": "resp_EGF9gb0IlleGeFIksxFEu"
+   },
+   "owner_text": "are we going the right way",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 640,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 640
+     },
+     "image_tokens": 0,
+     "text_tokens": 688
+    },
+    "input_tokens": 688,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 87,
+     "text_tokens": 131
+    },
+    "output_tokens": 131,
+    "total_tokens": 819
+   },
+   "reply_text": "I\u2019m not sure yet, Jae. I can\u2019t confirm the exact route from here, so if the map says we\u2019re on the right road, we\u2019ll follow that and keep it slow.",
+   "response_id": "resp_EGF9gb0IlleGeFIksxFEu",
+   "usd_assumed_legacy": 0.002544,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0003816,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0003816
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 747,
+    "output_audio_tokens": 0,
+    "output_tokens": 75,
+    "response_id": "resp_EGF9h6vYWaM06jtTcGbix"
+   },
+   "owner_text": "actually hold on, let me grab my wallet",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 704,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 704
+     },
+     "image_tokens": 0,
+     "text_tokens": 747
+    },
+    "input_tokens": 747,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 42,
+     "text_tokens": 75
+    },
+    "output_tokens": 75,
+    "total_tokens": 822
+   },
+   "reply_text": "Sure, Jae. I\u2019ll wait here with you\u2014take your time. We\u2019ll head out when you\u2019re ready, nice and slow.",
+   "response_id": "resp_EGF9h6vYWaM06jtTcGbix",
+   "usd_assumed_legacy": 0.0016536,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00024804,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00024804
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 790,
+    "output_audio_tokens": 0,
+    "output_tokens": 53,
+    "response_id": "resp_EGF9igsafopttcz34VuCR"
+   },
+   "owner_text": "right, carry on",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 768,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 768
+     },
+     "image_tokens": 0,
+     "text_tokens": 790
+    },
+    "input_tokens": 790,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 33,
+     "text_tokens": 53
+    },
+    "output_tokens": 53,
+    "total_tokens": 843
+   },
+   "reply_text": "Thanks, Jae. I\u2019m ready to keep walking, slowly and together.",
+   "response_id": "resp_EGF9igsafopttcz34VuCR",
+   "usd_assumed_legacy": 0.0012432,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00018648,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00018648
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 0,
+    "input_audio_tokens": 0,
+    "input_tokens": 481,
+    "output_audio_tokens": 0,
+    "output_tokens": 416,
+    "response_id": "resp_EGF9l8aL5fp5eF6ff9nHn"
+   },
+   "owner_text": "hey, wait by the door for me",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 0,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 0
+     },
+     "image_tokens": 0,
+     "text_tokens": 481
+    },
+    "input_tokens": 481,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 386,
+     "text_tokens": 416
+    },
+    "output_tokens": 416,
+    "total_tokens": 897
+   },
+   "reply_text": "Got it. I\u2019m nearby and ready for you. Take the time you need, and I\u2019m staying close to the door.",
+   "response_id": "resp_EGF9l8aL5fp5eF6ff9nHn",
+   "usd_assumed_legacy": 0.00858,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.001287,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.001287
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 448,
+    "input_audio_tokens": 0,
+    "input_tokens": 521,
+    "output_audio_tokens": 0,
+    "output_tokens": 143,
+    "response_id": "resp_EGF9nVstuNIvw3bIYp7r2"
+   },
+   "owner_text": "no not that one",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 448,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 448
+     },
+     "image_tokens": 0,
+     "text_tokens": 521
+    },
+    "input_tokens": 521,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 71,
+     "text_tokens": 143
+    },
+    "output_tokens": 143,
+    "total_tokens": 664
+   },
+   "reply_text": "Ahh, gotcha. I assumed the front door you meant, but you\u2019re not talking about that one.\n\nI\u2019m in the front yard and I see a door and a side gate by the house. I\u2019m not sure which you want. Point me, or say \u201cdoor\u201d or \u201cgate,\u201d and I\u2019ll wait there.",
+   "response_id": "resp_EGF9nVstuNIvw3bIYp7r2",
+   "usd_assumed_legacy": 0.0027592,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00041388,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00041388
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 512,
+    "input_audio_tokens": 0,
+    "input_tokens": 604,
+    "output_audio_tokens": 0,
+    "output_tokens": 122,
+    "response_id": "resp_EGF9oAw7v8kuu4uF5fyxE"
+   },
+   "owner_text": "the one we always use",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 512,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 512
+     },
+     "image_tokens": 0,
+     "text_tokens": 604
+    },
+    "input_tokens": 604,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 106,
+     "text_tokens": 122
+    },
+    "output_tokens": 122,
+    "total_tokens": 726
+   },
+   "reply_text": "Right, the usual front door. I\u2019m waiting there.",
+   "response_id": "resp_EGF9oAw7v8kuu4uF5fyxE",
+   "usd_assumed_legacy": 0.0025248,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00037872,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00037872
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 576,
+    "input_audio_tokens": 0,
+    "input_tokens": 629,
+    "output_audio_tokens": 0,
+    "output_tokens": 56,
+    "response_id": "resp_EGF9oGnRr45Y8nrOFz7RO"
+   },
+   "owner_text": "yes that one",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 576,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 576
+     },
+     "image_tokens": 0,
+     "text_tokens": 629
+    },
+    "input_tokens": 629,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 29,
+     "text_tokens": 56
+    },
+    "output_tokens": 56,
+    "total_tokens": 685
+   },
+   "reply_text": "Perfect. I\u2019m at the usual front door, and I\u2019ll stay where you expect me, nice and ready.",
+   "response_id": "resp_EGF9oGnRr45Y8nrOFz7RO",
+   "usd_assumed_legacy": 0.0013384,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00020076,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00020076
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 640,
+    "input_audio_tokens": 0,
+    "input_tokens": 668,
+    "output_audio_tokens": 0,
+    "output_tokens": 82,
+    "response_id": "resp_EGF9pvBmKF3romznHfDur"
+   },
+   "owner_text": "stay there until I come out",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 640,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 640
+     },
+     "image_tokens": 0,
+     "text_tokens": 668
+    },
+    "input_tokens": 668,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 47,
+     "text_tokens": 82
+    },
+    "output_tokens": 82,
+    "total_tokens": 750
+   },
+   "reply_text": "Yep\u2014I'm staying here at the usual front door. If I\u2019re still here when you come out, I\u2019ll be ready to walk right beside you.",
+   "response_id": "resp_EGF9pvBmKF3romznHfDur",
+   "usd_assumed_legacy": 0.00168,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.000252,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.000252
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 640,
+    "input_audio_tokens": 0,
+    "input_tokens": 715,
+    "output_audio_tokens": 0,
+    "output_tokens": 125,
+    "response_id": "resp_EGF9pAc8P2nUuoXgLnLah"
+   },
+   "owner_text": "good, I'll be two minutes",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 640,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 640
+     },
+     "image_tokens": 0,
+     "text_tokens": 715
+    },
+    "input_tokens": 715,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 106,
+     "text_tokens": 125
+    },
+    "output_tokens": 125,
+    "total_tokens": 840
+   },
+   "reply_text": "Got it, I\u2019m here. Take your time\u2014I've got you.",
+   "response_id": "resp_EGF9pAc8P2nUuoXgLnLah",
+   "usd_assumed_legacy": 0.002556,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0003834,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0003834
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 0,
+    "input_audio_tokens": 0,
+    "input_tokens": 479,
+    "output_audio_tokens": 0,
+    "output_tokens": 216,
+    "response_id": "resp_EGF9sgdUOjLk3E1yfg7W5"
+   },
+   "owner_text": "can we walk to the shop on the other side of the dual carriageway",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 0,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 0
+     },
+     "image_tokens": 0,
+     "text_tokens": 479
+    },
+    "input_tokens": 479,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 183,
+     "text_tokens": 216
+    },
+    "output_tokens": 216,
+    "total_tokens": 695
+   },
+   "reply_text": "Sure, Jae. Let\u2019s try walking toward the shop. If we can\u2019t find a safe way across, we\u2019ll stop and wait.",
+   "response_id": "resp_EGF9sgdUOjLk3E1yfg7W5",
+   "usd_assumed_legacy": 0.005372,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0008058,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0008058
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 448,
+    "input_audio_tokens": 0,
+    "input_tokens": 527,
+    "output_audio_tokens": 0,
+    "output_tokens": 64,
+    "response_id": "resp_EGF9ugSkxhqioTlnx1BW7"
+   },
+   "owner_text": "there's a crossing about half a mile up",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 448,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 448
+     },
+     "image_tokens": 0,
+     "text_tokens": 527
+    },
+    "input_tokens": 527,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 42,
+     "text_tokens": 64
+    },
+    "output_tokens": 64,
+    "total_tokens": 591
+   },
+   "reply_text": "That sounds good. Let\u2019s head toward that crossing together and see what it looks like.",
+   "response_id": "resp_EGF9ugSkxhqioTlnx1BW7",
+   "usd_assumed_legacy": 0.0015192,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00022788,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00022788
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 512,
+    "input_audio_tokens": 0,
+    "input_tokens": 560,
+    "output_audio_tokens": 0,
+    "output_tokens": 74,
+    "response_id": "resp_EGF9uMJZuCGoEC0GO0PbD"
+   },
+   "owner_text": "so you can't do it",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 512,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 512
+     },
+     "image_tokens": 0,
+     "text_tokens": 560
+    },
+    "input_tokens": 560,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 41,
+     "text_tokens": 74
+    },
+    "output_tokens": 74,
+    "total_tokens": 634
+   },
+   "reply_text": "I hear you, Jae. The crossing might be the safer choice, and we\u2019ll need to see how it looks when we get there.",
+   "response_id": "resp_EGF9uMJZuCGoEC0GO0PbD",
+   "usd_assumed_legacy": 0.0015808,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00023712,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00023712
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 576,
+    "input_audio_tokens": 0,
+    "input_tokens": 604,
+    "output_audio_tokens": 0,
+    "output_tokens": 118,
+    "response_id": "resp_EGF9vscPxDdcvtGkJURZV"
+   },
+   "owner_text": "what could you do instead",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 576,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 576
+     },
+     "image_tokens": 0,
+     "text_tokens": 604
+    },
+    "input_tokens": 604,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 77,
+     "text_tokens": 118
+    },
+    "output_tokens": 118,
+    "total_tokens": 722
+   },
+   "reply_text": "We could stay on this side of the road and look for a safer route to the nearest crossing. If it\u2019s closed or too busy, we can pause and try a different path.",
+   "response_id": "resp_EGF9vscPxDdcvtGkJURZV",
+   "usd_assumed_legacy": 0.0022304,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00033456,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00033456
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 576,
+    "input_audio_tokens": 0,
+    "input_tokens": 660,
+    "output_audio_tokens": 0,
+    "output_tokens": 86,
+    "response_id": "resp_EGF9wiRozSnjfKxzdNHPE"
+   },
+   "owner_text": "fine, let's just go to the corner then",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 576,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 576
+     },
+     "image_tokens": 0,
+     "text_tokens": 660
+    },
+    "input_tokens": 660,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 35,
+     "text_tokens": 86
+    },
+    "output_tokens": 86,
+    "total_tokens": 746
+   },
+   "reply_text": "Got it, let\u2019s take a calm walk to the corner together. I\u2019ll keep it steady and pay attention.We\u2019re walking to the corner now. I\u2019ll stay with you by your side.",
+   "response_id": "resp_EGF9wiRozSnjfKxzdNHPE",
+   "usd_assumed_legacy": 0.0019424,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00029136,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00029136
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 640,
+    "input_audio_tokens": 0,
+    "input_tokens": 720,
+    "output_audio_tokens": 0,
+    "output_tokens": 73,
+    "response_id": "resp_EGF9xWXKNfr6LVaniyDPc"
+   },
+   "owner_text": "yeah that's better",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 640,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 640
+     },
+     "image_tokens": 0,
+     "text_tokens": 720
+    },
+    "input_tokens": 720,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 55,
+     "text_tokens": 73
+    },
+    "output_tokens": 73,
+    "total_tokens": 793
+   },
+   "reply_text": "Nice. That feels calmer. We\u2019ll keep going and stay steady.",
+   "response_id": "resp_EGF9xWXKNfr6LVaniyDPc",
+   "usd_assumed_legacy": 0.001744,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0002616,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0002616
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 748,
+    "output_audio_tokens": 0,
+    "output_tokens": 56,
+    "response_id": "resp_EGF9ymaAewDUZkvIDnPHs"
+   },
+   "owner_text": "it's getting dark anyway",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 704,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 704
+     },
+     "image_tokens": 0,
+     "text_tokens": 748
+    },
+    "input_tokens": 748,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 30,
+     "text_tokens": 56
+    },
+    "output_tokens": 56,
+    "total_tokens": 804
+   },
+   "reply_text": "Yeah, it\u2019s getting darker. We\u2019ll keep it gentle and stay focused on a safe, steady path.",
+   "response_id": "resp_EGF9ymaAewDUZkvIDnPHs",
+   "usd_assumed_legacy": 0.0013536,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00020304,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00020304
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 0,
+    "input_audio_tokens": 0,
+    "input_tokens": 479,
+    "output_audio_tokens": 0,
+    "output_tokens": 160,
+    "response_id": "resp_EGFA1gJIbBWftyYeytoAR"
+   },
+   "owner_text": "let's go down to the mailbox",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 0,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 0
+     },
+     "image_tokens": 0,
+     "text_tokens": 479
+    },
+    "input_tokens": 479,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 135,
+     "text_tokens": 160
+    },
+    "output_tokens": 160,
+    "total_tokens": 639
+   },
+   "reply_text": "Let\u2019s do it together. I\u2019m ready to walk there by your side\u2014just point the way.",
+   "response_id": "resp_EGFA1gJIbBWftyYeytoAR",
+   "usd_assumed_legacy": 0.004476,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0006714,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0006714
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 448,
+    "input_audio_tokens": 0,
+    "input_tokens": 522,
+    "output_audio_tokens": 0,
+    "output_tokens": 92,
+    "response_id": "resp_EGFA287LDHrIWJhBhNK0r"
+   },
+   "owner_text": "and then straight back, I've got a call at nine thirty",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 448,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 448
+     },
+     "image_tokens": 0,
+     "text_tokens": 522
+    },
+    "input_tokens": 522,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 20,
+     "text_tokens": 92
+    },
+    "output_tokens": 92,
+    "total_tokens": 614
+   },
+   "reply_text": "Got it\u2014I'll keep it simple and nice. Let\u2019s plan the quick loop so you can get back to your call.Right. We\u2019ll head to the mailbox, then turn around and come straight back. Quick, calm, and no loitering\u2014so you can get back for your call.",
+   "response_id": "resp_EGFA287LDHrIWJhBhNK0r",
+   "usd_assumed_legacy": 0.0019472,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00029208,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00029208
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 512,
+    "input_audio_tokens": 0,
+    "input_tokens": 607,
+    "output_audio_tokens": 0,
+    "output_tokens": 106,
+    "response_id": "resp_EGFA2keKSx4gmz6cDG6UX"
+   },
+   "owner_text": "how long does that take us usually",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 512,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 512
+     },
+     "image_tokens": 0,
+     "text_tokens": 607
+    },
+    "input_tokens": 607,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 43,
+     "text_tokens": 106
+    },
+    "output_tokens": 106,
+    "total_tokens": 713
+   },
+   "reply_text": "Usually? It\u2019s pretty quick\u2014often about five to ten minutes, depending on how much sniffing and curiosity we do on the way.\n\nBut I can\u2019t promise that\u2019s exact without the robot\u2019s timing report. If we keep it steady, we\u2019ll likely be back comfortably before your call.",
+   "response_id": "resp_EGFA2keKSx4gmz6cDG6UX",
+   "usd_assumed_legacy": 0.0022808,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00034212,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00034212
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 576,
+    "input_audio_tokens": 0,
+    "input_tokens": 681,
+    "output_audio_tokens": 0,
+    "output_tokens": 112,
+    "response_id": "resp_EGFA3cK7wMCWPB2CQk01N"
+   },
+   "owner_text": "alright go on then",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 576,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 576
+     },
+     "image_tokens": 0,
+     "text_tokens": 681
+    },
+    "input_tokens": 681,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 63,
+     "text_tokens": 112
+    },
+    "output_tokens": 112,
+    "total_tokens": 793
+   },
+   "reply_text": "Alright, we\u2019re heading out now. I\u2019ll walk beside you and report when I\u2019ve got updates.I\u2019m with you. We\u2019re walking together, steady and safe\u2014no fuss.",
+   "response_id": "resp_EGFA3cK7wMCWPB2CQk01N",
+   "usd_assumed_legacy": 0.0024424,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00036636,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00036636
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 742,
+    "output_audio_tokens": 0,
+    "output_tokens": 157,
+    "response_id": "resp_EGFA4wJ40sOrRn1RpGYBy"
+   },
+   "owner_text": "wait for me at the gate",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 704,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 704
+     },
+     "image_tokens": 0,
+     "text_tokens": 742
+    },
+    "input_tokens": 742,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 104,
+     "text_tokens": 157
+    },
+    "output_tokens": 157,
+    "total_tokens": 899
+   },
+   "reply_text": "Got it, I\u2019m ready. I understood you want me to wait at the gate\u2014but I don\u2019t have a way to report that I\u2019ve actually reached it yet. If the robot reports it, I\u2019ll say one short thing about that.",
+   "response_id": "resp_EGFA4wJ40sOrRn1RpGYBy",
+   "usd_assumed_legacy": 0.0029456,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00044184,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00044184
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 809,
+    "output_audio_tokens": 0,
+    "output_tokens": 75,
+    "response_id": "resp_EGFA5fabeSCUO1IQY9VcA"
+   },
+   "owner_text": "did you see the post van go past",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 704,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 704
+     },
+     "image_tokens": 0,
+     "text_tokens": 809
+    },
+    "input_tokens": 809,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 36,
+     "text_tokens": 75
+    },
+    "output_tokens": 75,
+    "total_tokens": 884
+   },
+   "reply_text": "I didn\u2019t get a report of the post van going past. If it was out there, you\u2019d hear the robot tell you about it. For now, no update.",
+   "response_id": "resp_EGFA5fabeSCUO1IQY9VcA",
+   "usd_assumed_legacy": 0.0019016,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00028524,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00028524
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 860,
+    "output_audio_tokens": 0,
+    "output_tokens": 113,
+    "response_id": "resp_EGFA5IcdUo4GbA0qaVDPU"
+   },
+   "owner_text": "never mind, let's head back",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 768,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 768
+     },
+     "image_tokens": 0,
+     "text_tokens": 860
+    },
+    "input_tokens": 860,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 49,
+     "text_tokens": 113
+    },
+    "output_tokens": 113,
+    "total_tokens": 973
+   },
+   "reply_text": "Sure thing\u2014heading back sounds good. I\u2019m with you in spirit, and we\u2019ll only do the quick way back.\n\nI can\u2019t claim we\u2019ve turned around until the robot reports it, but we can keep it simple and steady. Let me know when you\u2019re ready for a brief update.",
+   "response_id": "resp_EGFA5IcdUo4GbA0qaVDPU",
+   "usd_assumed_legacy": 0.0024832,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00037248,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00037248
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 480,
+    "output_audio_tokens": 0,
+    "output_tokens": 303,
+    "response_id": "resp_EGFA9TrwoqBxaiNjAjXNQ"
+   },
+   "owner_text": "go upstairs and see if my keys are on the bedside table",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 128,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 128
+     },
+     "image_tokens": 0,
+     "text_tokens": 480
+    },
+    "input_tokens": 480,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 248,
+     "text_tokens": 303
+    },
+    "output_tokens": 303,
+    "total_tokens": 783
+   },
+   "reply_text": "Alright, I\u2019ll head up and take a quick look. Then I\u2019ll let you know what I find.No report yet\u2014I haven\u2019t confirmed anything upstairs yet. I\u2019ll wait for the result before I say more.",
+   "response_id": "resp_EGFA9TrwoqBxaiNjAjXNQ",
+   "usd_assumed_legacy": 0.0063072,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00094608,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00094608
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 448,
+    "input_audio_tokens": 0,
+    "input_tokens": 543,
+    "output_audio_tokens": 0,
+    "output_tokens": 66,
+    "response_id": "resp_EGFAAwXMgIcASTOW5PGok"
+   },
+   "owner_text": "why not",
+   "phase": "text",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 448,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 448
+     },
+     "image_tokens": 0,
+     "text_tokens": 543
+    },
+    "input_tokens": 543,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "reasoning_tokens": 40,
+     "text_tokens": 66
+    },
+    "output_tokens": 66,
+    "total_tokens": 609
+   },
+   "reply_text": "Because I can\u2019t say it happened yet. I\u2019m waiting for the robot\u2019s own report before I confirm.",
+   "response_id": "resp_EGFAAwXMgIcASTOW5PGok",
+   "usd_assumed_legacy": 0.0016152,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.00024228,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.00024228
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 0,
+    "input_audio_tokens": 19,
+    "input_tokens": 498,
+    "output_audio_tokens": 214,
+    "output_tokens": 390,
+    "response_id": "resp_EGFAJOLac09dkjurOiRF0"
+   },
+   "frames_during_silence": [
+    "session.created",
+    "session.updated"
+   ],
+   "phase": "audio",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 19,
+     "cached_tokens": 0,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 0
+     },
+     "image_tokens": 0,
+     "text_tokens": 479
+    },
+    "input_tokens": 498,
+    "output_token_details": {
+     "audio_tokens": 214,
+     "reasoning_tokens": 105,
+     "text_tokens": 176
+    },
+    "output_tokens": 390,
+    "total_tokens": 888
+   },
+   "response_id": "resp_EGFAJOLac09dkjurOiRF0",
+   "silence_uploaded_s": 20.0,
+   "usd_assumed_legacy": 0.008232,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0051798,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0051798,
+   "utterance_s": 2.273
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 0,
+    "input_audio_tokens": 19,
+    "input_tokens": 498,
+    "output_audio_tokens": 214,
+    "output_tokens": 390,
+    "response_id": "resp_EGFAJOLac09dkjurOiRF0"
+   },
+   "frames_during_silence": [
+    "session.created",
+    "session.updated"
+   ],
+   "phase": "audio",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 19,
+     "cached_tokens": 0,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 0
+     },
+     "image_tokens": 0,
+     "text_tokens": 479
+    },
+    "input_tokens": 498,
+    "output_token_details": {
+     "audio_tokens": 214,
+     "reasoning_tokens": 105,
+     "text_tokens": 176
+    },
+    "output_tokens": 390,
+    "total_tokens": 888
+   },
+   "response_id": "resp_EGFAJOLac09dkjurOiRF0",
+   "silence_uploaded_s": 1.5,
+   "usd_assumed_legacy": 0.008232,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0051798,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0051798,
+   "utterance_s": 2.273
+  },
+  {
+   "flat_row": {
+    "cached_tokens": 0,
+    "input_audio_tokens": 0,
+    "input_tokens": 0,
+    "output_audio_tokens": 0,
+    "output_tokens": 0,
+    "response_id": "resp_EGFAM69GAfEN2TCv3cMuM"
+   },
+   "frames_during_silence": [
+    "session.created",
+    "session.updated"
+   ],
+   "phase": "audio",
+   "raw_usage": {
+    "input_token_details": {
+     "audio_tokens": 0,
+     "cached_tokens": 0,
+     "cached_tokens_details": {
+      "audio_tokens": 0,
+      "image_tokens": 0,
+      "text_tokens": 0
+     },
+     "image_tokens": 0,
+     "text_tokens": 0
+    },
+    "input_tokens": 0,
+    "output_token_details": {
+     "audio_tokens": 0,
+     "text_tokens": 0
+    },
+    "output_tokens": 0,
+    "total_tokens": 0
+   },
+   "response_id": "resp_EGFAM69GAfEN2TCv3cMuM",
+   "silence_uploaded_s": 1.5,
+   "usd_assumed_legacy": 0.0,
+   "usd_ledger_basis": "split_apportioned",
+   "usd_ledger_flat": 0.0,
+   "usd_raw_basis": "split",
+   "usd_raw_split": 0.0,
+   "utterance_s": 2.273
+  }
+ ],
+ "stopped_because": "",
+ "usd_assumed_legacy_total": 0.095806,
+ "usd_ledger_flat_total": 0.022261,
+ "usd_raw_split_total": 0.022261
+}

@@ -1,0 +1,126 @@
+{
+  "base_pose": {
+    "drift_xy_m": 0.0,
+    "drift_z_m": 0.0,
+    "max_excursion_xy_m": 0.0,
+    "poll_errors": 3,
+    "samples": 581
+  },
+  "byte_identity": {
+    "byte_identical": true,
+    "composer_messages": 0,
+    "first_difference": null,
+    "today_messages": 0
+  },
+  "composer": {
+    "clamp_events": 0,
+    "emergency_ticks": 0,
+    "epoch": 0,
+    "hold_ticks": 29713,
+    "limited_ticks": 275,
+    "max_clamp_excess_frac": 0.0,
+    "seq": 29713
+  },
+  "derivatives": {
+    "gaze_pitch": {
+      "declared_jerk_bound": 5000.0,
+      "max_abs_d1": 1.654358,
+      "max_abs_d2": 72.5747,
+      "max_abs_d3": 5023.92,
+      "max_d3_over_bound_ratio": 1.00478,
+      "samples": 29710,
+      "ticks_over_bound": 1,
+      "ticks_over_bound_beyond_1pct": 0
+    },
+    "gaze_yaw": {
+      "declared_jerk_bound": 4000.0,
+      "max_abs_d1": 4.0,
+      "max_abs_d2": 82.63,
+      "max_abs_d3": 4634.5,
+      "max_d3_over_bound_ratio": 1.15862,
+      "samples": 29710,
+      "ticks_over_bound": 14,
+      "ticks_over_bound_beyond_1pct": 3
+    },
+    "posture_dz": {
+      "declared_jerk_bound": 100.0,
+      "max_abs_d1": 0.043751,
+      "max_abs_d2": 0.466,
+      "max_abs_d3": 17.85,
+      "max_d3_over_bound_ratio": 0.17847,
+      "samples": 29710,
+      "ticks_over_bound": 0,
+      "ticks_over_bound_beyond_1pct": 0
+    },
+    "posture_pitch": {
+      "declared_jerk_bound": 500.0,
+      "max_abs_d1": 0.136954,
+      "max_abs_d2": 6.8633,
+      "max_abs_d3": 345.29,
+      "max_d3_over_bound_ratio": 0.69059,
+      "samples": 29710,
+      "ticks_over_bound": 0,
+      "ticks_over_bound_beyond_1pct": 0
+    },
+    "posture_roll": {
+      "declared_jerk_bound": 500.0,
+      "max_abs_d1": 0.0,
+      "max_abs_d2": 0.0,
+      "max_abs_d3": 0.0,
+      "max_d3_over_bound_ratio": 0.0,
+      "samples": 29710,
+      "ticks_over_bound": 0,
+      "ticks_over_bound_beyond_1pct": 0
+    }
+  },
+  "emission_hz_mean": 49.518,
+  "envelope_violations": 0,
+  "estop": {
+    "injected": false
+  },
+  "fake_quadruped": {
+    "dropped_axes": {
+      "gaze_pitch": 6240,
+      "posture": 29712
+    },
+    "frames": 29713,
+    "hold_frames": 29713,
+    "manifest": "research_fake_quadruped",
+    "move_frames": 0,
+    "neck_yaw_rad": 0.0,
+    "rate_refusals": 679,
+    "watchdog_faults": 0
+  },
+  "gap_ms_max": 85.318,
+  "gap_ms_p50": 20.0,
+  "gap_ms_p99": 21.003,
+  "gaps_over_100ms": 0,
+  "go2_stub": {
+    "adapter_calls_attempted": 29713,
+    "adapter_refusals": 29713,
+    "calls_planned": {
+      "Euler": 2369,
+      "Move": 0,
+      "StopMove": 29713
+    }
+  },
+  "ipc": {
+    "local_validation_failures": [],
+    "messages_sent": 29713,
+    "reply_samples": 594,
+    "seeded_rejection_probe": "expression.FL_thigh exceeds the expressive overlay limit",
+    "server_rejections": [],
+    "transport_drops": 58,
+    "transport_retries": 133
+  },
+  "seconds": 600.041,
+  "sim_adapter": {
+    "expression_publishes": 29713,
+    "stop_publishes": 0,
+    "velocity_publishes": 0
+  },
+  "state": "idle_look",
+  "ticks": 29713,
+  "trace_points": 1188
+}
+wrote /home/jaewoo-jang/Desktop/Projects/Parcel/research/20260823/continuous-body-intent/results/state_idle_look.json

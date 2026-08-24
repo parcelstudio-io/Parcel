@@ -1,0 +1,1827 @@
+{
+  "operating_points": {
+    "label_strength": {
+      "absent_questions": 10,
+      "absent_refusal_rate": 1.0,
+      "absent_refused": 10,
+      "answers": [
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "lamppost",
+          "place": {
+            "bearing_rad": 0.5051,
+            "distance_m": 4.577,
+            "entry_id": "place-ac1a02825d644727",
+            "evidence_frames": 16,
+            "label": "lamppost",
+            "last_seen_wall_s": 1787356720.520436,
+            "names": [
+              "lamppost"
+            ],
+            "visits": 1
+          },
+          "query": "lamppost",
+          "reason": "grounded",
+          "text": "I last saw a lamppost about 5 m away ahead and to my left, a while back.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "lamppost",
+          "place": {
+            "bearing_rad": 0.5051,
+            "distance_m": 4.577,
+            "entry_id": "place-ac1a02825d644727",
+            "evidence_frames": 16,
+            "label": "lamppost",
+            "last_seen_wall_s": 1787356720.520436,
+            "names": [
+              "lamppost"
+            ],
+            "visits": 1
+          },
+          "query": "where is the lamppost",
+          "reason": "grounded",
+          "text": "I last saw a lamppost about 5 m away ahead and to my left, a while back.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "bench",
+          "place": {
+            "bearing_rad": -0.3693,
+            "distance_m": 6.648,
+            "entry_id": "place-64321ae07de342cc",
+            "evidence_frames": 12,
+            "label": "bench",
+            "last_seen_wall_s": 1787367602.0,
+            "names": [
+              "bench"
+            ],
+            "visits": 4
+          },
+          "query": "bench",
+          "reason": "grounded",
+          "text": "I last saw a bench about 7 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "bench",
+          "place": {
+            "bearing_rad": -0.3693,
+            "distance_m": 6.648,
+            "entry_id": "place-64321ae07de342cc",
+            "evidence_frames": 12,
+            "label": "bench",
+            "last_seen_wall_s": 1787367602.0,
+            "names": [
+              "bench"
+            ],
+            "visits": 4
+          },
+          "query": "where is the bench",
+          "reason": "grounded",
+          "text": "I last saw a bench about 7 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "tree",
+          "place": {
+            "bearing_rad": 0.3154,
+            "distance_m": 9.993,
+            "entry_id": "place-0acee94908164bb8",
+            "evidence_frames": 12,
+            "label": "tree",
+            "last_seen_wall_s": 1787367612.0,
+            "names": [
+              "tree"
+            ],
+            "visits": 4
+          },
+          "query": "tree",
+          "reason": "grounded",
+          "text": "I last saw a tree about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "tree",
+          "place": {
+            "bearing_rad": 0.3154,
+            "distance_m": 9.993,
+            "entry_id": "place-0acee94908164bb8",
+            "evidence_frames": 12,
+            "label": "tree",
+            "last_seen_wall_s": 1787367612.0,
+            "names": [
+              "tree"
+            ],
+            "visits": 4
+          },
+          "query": "where is the tree",
+          "reason": "grounded",
+          "text": "I last saw a tree about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "planter",
+          "place": {
+            "bearing_rad": 0.7124,
+            "distance_m": 5.814,
+            "entry_id": "place-277f87f104ee49d5",
+            "evidence_frames": 12,
+            "label": "planter",
+            "last_seen_wall_s": 1787367622.0,
+            "names": [
+              "planter"
+            ],
+            "visits": 4
+          },
+          "query": "planter",
+          "reason": "grounded",
+          "text": "I last saw a planter about 6 m away ahead and to my left, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "planter",
+          "place": {
+            "bearing_rad": 0.7124,
+            "distance_m": 5.814,
+            "entry_id": "place-277f87f104ee49d5",
+            "evidence_frames": 12,
+            "label": "planter",
+            "last_seen_wall_s": 1787367622.0,
+            "names": [
+              "planter"
+            ],
+            "visits": 4
+          },
+          "query": "where is the planter",
+          "reason": "grounded",
+          "text": "I last saw a planter about 6 m away ahead and to my left, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "trash can",
+          "place": {
+            "bearing_rad": -0.4765,
+            "distance_m": 3.489,
+            "entry_id": "place-48dd1b982bc44286",
+            "evidence_frames": 12,
+            "label": "trash can",
+            "last_seen_wall_s": 1787367632.0,
+            "names": [
+              "trash can"
+            ],
+            "visits": 4
+          },
+          "query": "trash can",
+          "reason": "grounded",
+          "text": "I last saw a trash can about 3 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "trash can",
+          "place": {
+            "bearing_rad": -0.4765,
+            "distance_m": 3.489,
+            "entry_id": "place-48dd1b982bc44286",
+            "evidence_frames": 12,
+            "label": "trash can",
+            "last_seen_wall_s": 1787367632.0,
+            "names": [
+              "trash can"
+            ],
+            "visits": 4
+          },
+          "query": "where is the trash can",
+          "reason": "grounded",
+          "text": "I last saw a trash can about 3 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "fire hydrant",
+          "place": {
+            "bearing_rad": -0.4636,
+            "distance_m": 8.721,
+            "entry_id": "place-96fb9c8169f549b7",
+            "evidence_frames": 12,
+            "label": "fire hydrant",
+            "last_seen_wall_s": 1787367642.0,
+            "names": [
+              "fire hydrant"
+            ],
+            "visits": 4
+          },
+          "query": "fire hydrant",
+          "reason": "grounded",
+          "text": "I last saw a fire hydrant about 9 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "fire hydrant",
+          "place": {
+            "bearing_rad": -0.4636,
+            "distance_m": 8.721,
+            "entry_id": "place-96fb9c8169f549b7",
+            "evidence_frames": 12,
+            "label": "fire hydrant",
+            "last_seen_wall_s": 1787367642.0,
+            "names": [
+              "fire hydrant"
+            ],
+            "visits": 4
+          },
+          "query": "where is the fire hydrant",
+          "reason": "grounded",
+          "text": "I last saw a fire hydrant about 9 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "door",
+          "place": {
+            "bearing_rad": 0.0997,
+            "distance_m": 12.06,
+            "entry_id": "place-b4f5f7e220024ee8",
+            "evidence_frames": 12,
+            "label": "door",
+            "last_seen_wall_s": 1787367652.0,
+            "names": [
+              "door"
+            ],
+            "visits": 4
+          },
+          "query": "door",
+          "reason": "grounded",
+          "text": "I last saw a door about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "door",
+          "place": {
+            "bearing_rad": 0.0997,
+            "distance_m": 12.06,
+            "entry_id": "place-b4f5f7e220024ee8",
+            "evidence_frames": 12,
+            "label": "door",
+            "last_seen_wall_s": 1787367652.0,
+            "names": [
+              "door"
+            ],
+            "visits": 4
+          },
+          "query": "where is the door",
+          "reason": "grounded",
+          "text": "I last saw a door about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "awning",
+          "place": {
+            "bearing_rad": -0.089,
+            "distance_m": 11.245,
+            "entry_id": "place-d8dd4e4a3bcb4e15",
+            "evidence_frames": 12,
+            "label": "awning",
+            "last_seen_wall_s": 1787367662.0,
+            "names": [
+              "awning"
+            ],
+            "visits": 4
+          },
+          "query": "awning",
+          "reason": "grounded",
+          "text": "I last saw an awning about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "awning",
+          "place": {
+            "bearing_rad": -0.089,
+            "distance_m": 11.245,
+            "entry_id": "place-d8dd4e4a3bcb4e15",
+            "evidence_frames": 12,
+            "label": "awning",
+            "last_seen_wall_s": 1787367662.0,
+            "names": [
+              "awning"
+            ],
+            "visits": 4
+          },
+          "query": "where is the awning",
+          "reason": "grounded",
+          "text": "I last saw an awning about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "bench",
+          "place": {
+            "bearing_rad": -0.3693,
+            "distance_m": 6.648,
+            "entry_id": "place-64321ae07de342cc",
+            "evidence_frames": 12,
+            "label": "bench",
+            "last_seen_wall_s": 1787367602.0,
+            "names": [
+              "bench"
+            ],
+            "visits": 4
+          },
+          "query": "the bench near here",
+          "reason": "grounded",
+          "text": "I last saw a bench about 7 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "tree",
+          "place": {
+            "bearing_rad": 0.3154,
+            "distance_m": 9.993,
+            "entry_id": "place-0acee94908164bb8",
+            "evidence_frames": 12,
+            "label": "tree",
+            "last_seen_wall_s": 1787367612.0,
+            "names": [
+              "tree"
+            ],
+            "visits": 4
+          },
+          "query": "that tree",
+          "reason": "grounded",
+          "text": "I last saw a tree about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "trash can",
+          "place": {
+            "bearing_rad": -0.4765,
+            "distance_m": 3.489,
+            "entry_id": "place-48dd1b982bc44286",
+            "evidence_frames": 12,
+            "label": "trash can",
+            "last_seen_wall_s": 1787367632.0,
+            "names": [
+              "trash can"
+            ],
+            "visits": 4
+          },
+          "query": "a trash can",
+          "reason": "grounded",
+          "text": "I last saw a trash can about 3 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "door",
+          "place": {
+            "bearing_rad": 0.0997,
+            "distance_m": 12.06,
+            "entry_id": "place-b4f5f7e220024ee8",
+            "evidence_frames": 12,
+            "label": "door",
+            "last_seen_wall_s": 1787367652.0,
+            "names": [
+              "door"
+            ],
+            "visits": 4
+          },
+          "query": "the door",
+          "reason": "grounded",
+          "text": "I last saw a door about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "fountain",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"fountain\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "postbox",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"postbox\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "bicycle rack",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"bicycle rack\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "statue",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"statue\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "where is the fountain",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"where is the fountain\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "phone booth",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"phone booth\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "picnic table",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"picnic table\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "bus shelter",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"bus shelter\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "where is the statue",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"where is the statue\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "vending machine",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"vending machine\" anywhere I have been.",
+          "top1_correct": false
+        }
+      ],
+      "entries_persisted": 8,
+      "map": {
+        "active_entries": 8,
+        "archived_frames": 16,
+        "entries": 8,
+        "evidence_frames": {
+          "awning": 12,
+          "bench": 12,
+          "door": 12,
+          "fire hydrant": 12,
+          "lamppost": 16,
+          "planter": 12,
+          "trash can": 12,
+          "tree": 12
+        },
+        "labels": [
+          "awning",
+          "bench",
+          "door",
+          "fire hydrant",
+          "lamppost",
+          "planter",
+          "trash can",
+          "tree"
+        ],
+        "navigability": {
+          "awning": 0.5,
+          "bench": 0.625,
+          "door": 0.375,
+          "fire hydrant": 0.25,
+          "lamppost": 0.625,
+          "planter": 0.25,
+          "trash can": 0.5,
+          "tree": 0.375
+        },
+        "path_poses": 37,
+        "synthesized_frames": 84
+      },
+      "present_questions": 20,
+      "present_top1_correct": 20,
+      "present_top1_rate": 1.0,
+      "reload_answers_identical": true,
+      "reloaded_answers": [
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "lamppost",
+          "place": {
+            "bearing_rad": 0.5051,
+            "distance_m": 4.577,
+            "entry_id": "place-ac1a02825d644727",
+            "evidence_frames": 16,
+            "label": "lamppost",
+            "last_seen_wall_s": 1787356720.52,
+            "names": [
+              "lamppost"
+            ],
+            "visits": 1
+          },
+          "query": "lamppost",
+          "reason": "grounded",
+          "text": "I last saw a lamppost about 5 m away ahead and to my left, a while back.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "lamppost",
+          "place": {
+            "bearing_rad": 0.5051,
+            "distance_m": 4.577,
+            "entry_id": "place-ac1a02825d644727",
+            "evidence_frames": 16,
+            "label": "lamppost",
+            "last_seen_wall_s": 1787356720.52,
+            "names": [
+              "lamppost"
+            ],
+            "visits": 1
+          },
+          "query": "where is the lamppost",
+          "reason": "grounded",
+          "text": "I last saw a lamppost about 5 m away ahead and to my left, a while back.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "bench",
+          "place": {
+            "bearing_rad": -0.3693,
+            "distance_m": 6.648,
+            "entry_id": "place-64321ae07de342cc",
+            "evidence_frames": 12,
+            "label": "bench",
+            "last_seen_wall_s": 1787367602.0,
+            "names": [
+              "bench"
+            ],
+            "visits": 4
+          },
+          "query": "bench",
+          "reason": "grounded",
+          "text": "I last saw a bench about 7 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "bench",
+          "place": {
+            "bearing_rad": -0.3693,
+            "distance_m": 6.648,
+            "entry_id": "place-64321ae07de342cc",
+            "evidence_frames": 12,
+            "label": "bench",
+            "last_seen_wall_s": 1787367602.0,
+            "names": [
+              "bench"
+            ],
+            "visits": 4
+          },
+          "query": "where is the bench",
+          "reason": "grounded",
+          "text": "I last saw a bench about 7 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "tree",
+          "place": {
+            "bearing_rad": 0.3154,
+            "distance_m": 9.993,
+            "entry_id": "place-0acee94908164bb8",
+            "evidence_frames": 12,
+            "label": "tree",
+            "last_seen_wall_s": 1787367612.0,
+            "names": [
+              "tree"
+            ],
+            "visits": 4
+          },
+          "query": "tree",
+          "reason": "grounded",
+          "text": "I last saw a tree about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "tree",
+          "place": {
+            "bearing_rad": 0.3154,
+            "distance_m": 9.993,
+            "entry_id": "place-0acee94908164bb8",
+            "evidence_frames": 12,
+            "label": "tree",
+            "last_seen_wall_s": 1787367612.0,
+            "names": [
+              "tree"
+            ],
+            "visits": 4
+          },
+          "query": "where is the tree",
+          "reason": "grounded",
+          "text": "I last saw a tree about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "planter",
+          "place": {
+            "bearing_rad": 0.7124,
+            "distance_m": 5.814,
+            "entry_id": "place-277f87f104ee49d5",
+            "evidence_frames": 12,
+            "label": "planter",
+            "last_seen_wall_s": 1787367622.0,
+            "names": [
+              "planter"
+            ],
+            "visits": 4
+          },
+          "query": "planter",
+          "reason": "grounded",
+          "text": "I last saw a planter about 6 m away ahead and to my left, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "planter",
+          "place": {
+            "bearing_rad": 0.7124,
+            "distance_m": 5.814,
+            "entry_id": "place-277f87f104ee49d5",
+            "evidence_frames": 12,
+            "label": "planter",
+            "last_seen_wall_s": 1787367622.0,
+            "names": [
+              "planter"
+            ],
+            "visits": 4
+          },
+          "query": "where is the planter",
+          "reason": "grounded",
+          "text": "I last saw a planter about 6 m away ahead and to my left, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "trash can",
+          "place": {
+            "bearing_rad": -0.4765,
+            "distance_m": 3.489,
+            "entry_id": "place-48dd1b982bc44286",
+            "evidence_frames": 12,
+            "label": "trash can",
+            "last_seen_wall_s": 1787367632.0,
+            "names": [
+              "trash can"
+            ],
+            "visits": 4
+          },
+          "query": "trash can",
+          "reason": "grounded",
+          "text": "I last saw a trash can about 3 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "trash can",
+          "place": {
+            "bearing_rad": -0.4765,
+            "distance_m": 3.489,
+            "entry_id": "place-48dd1b982bc44286",
+            "evidence_frames": 12,
+            "label": "trash can",
+            "last_seen_wall_s": 1787367632.0,
+            "names": [
+              "trash can"
+            ],
+            "visits": 4
+          },
+          "query": "where is the trash can",
+          "reason": "grounded",
+          "text": "I last saw a trash can about 3 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "fire hydrant",
+          "place": {
+            "bearing_rad": -0.4636,
+            "distance_m": 8.721,
+            "entry_id": "place-96fb9c8169f549b7",
+            "evidence_frames": 12,
+            "label": "fire hydrant",
+            "last_seen_wall_s": 1787367642.0,
+            "names": [
+              "fire hydrant"
+            ],
+            "visits": 4
+          },
+          "query": "fire hydrant",
+          "reason": "grounded",
+          "text": "I last saw a fire hydrant about 9 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "fire hydrant",
+          "place": {
+            "bearing_rad": -0.4636,
+            "distance_m": 8.721,
+            "entry_id": "place-96fb9c8169f549b7",
+            "evidence_frames": 12,
+            "label": "fire hydrant",
+            "last_seen_wall_s": 1787367642.0,
+            "names": [
+              "fire hydrant"
+            ],
+            "visits": 4
+          },
+          "query": "where is the fire hydrant",
+          "reason": "grounded",
+          "text": "I last saw a fire hydrant about 9 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "door",
+          "place": {
+            "bearing_rad": 0.0997,
+            "distance_m": 12.06,
+            "entry_id": "place-b4f5f7e220024ee8",
+            "evidence_frames": 12,
+            "label": "door",
+            "last_seen_wall_s": 1787367652.0,
+            "names": [
+              "door"
+            ],
+            "visits": 4
+          },
+          "query": "door",
+          "reason": "grounded",
+          "text": "I last saw a door about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "door",
+          "place": {
+            "bearing_rad": 0.0997,
+            "distance_m": 12.06,
+            "entry_id": "place-b4f5f7e220024ee8",
+            "evidence_frames": 12,
+            "label": "door",
+            "last_seen_wall_s": 1787367652.0,
+            "names": [
+              "door"
+            ],
+            "visits": 4
+          },
+          "query": "where is the door",
+          "reason": "grounded",
+          "text": "I last saw a door about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "awning",
+          "place": {
+            "bearing_rad": -0.089,
+            "distance_m": 11.245,
+            "entry_id": "place-d8dd4e4a3bcb4e15",
+            "evidence_frames": 12,
+            "label": "awning",
+            "last_seen_wall_s": 1787367662.0,
+            "names": [
+              "awning"
+            ],
+            "visits": 4
+          },
+          "query": "awning",
+          "reason": "grounded",
+          "text": "I last saw an awning about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "awning",
+          "place": {
+            "bearing_rad": -0.089,
+            "distance_m": 11.245,
+            "entry_id": "place-d8dd4e4a3bcb4e15",
+            "evidence_frames": 12,
+            "label": "awning",
+            "last_seen_wall_s": 1787367662.0,
+            "names": [
+              "awning"
+            ],
+            "visits": 4
+          },
+          "query": "where is the awning",
+          "reason": "grounded",
+          "text": "I last saw an awning about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "bench",
+          "place": {
+            "bearing_rad": -0.3693,
+            "distance_m": 6.648,
+            "entry_id": "place-64321ae07de342cc",
+            "evidence_frames": 12,
+            "label": "bench",
+            "last_seen_wall_s": 1787367602.0,
+            "names": [
+              "bench"
+            ],
+            "visits": 4
+          },
+          "query": "the bench near here",
+          "reason": "grounded",
+          "text": "I last saw a bench about 7 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "tree",
+          "place": {
+            "bearing_rad": 0.3154,
+            "distance_m": 9.993,
+            "entry_id": "place-0acee94908164bb8",
+            "evidence_frames": 12,
+            "label": "tree",
+            "last_seen_wall_s": 1787367612.0,
+            "names": [
+              "tree"
+            ],
+            "visits": 4
+          },
+          "query": "that tree",
+          "reason": "grounded",
+          "text": "I last saw a tree about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "trash can",
+          "place": {
+            "bearing_rad": -0.4765,
+            "distance_m": 3.489,
+            "entry_id": "place-48dd1b982bc44286",
+            "evidence_frames": 12,
+            "label": "trash can",
+            "last_seen_wall_s": 1787367632.0,
+            "names": [
+              "trash can"
+            ],
+            "visits": 4
+          },
+          "query": "a trash can",
+          "reason": "grounded",
+          "text": "I last saw a trash can about 3 m away ahead and to my right, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": true,
+          "expected_label": "door",
+          "place": {
+            "bearing_rad": 0.0997,
+            "distance_m": 12.06,
+            "entry_id": "place-b4f5f7e220024ee8",
+            "evidence_frames": 12,
+            "label": "door",
+            "last_seen_wall_s": 1787367652.0,
+            "names": [
+              "door"
+            ],
+            "visits": 4
+          },
+          "query": "the door",
+          "reason": "grounded",
+          "text": "I last saw a door about 10 m away straight ahead, earlier today, on 4 separate visits.",
+          "top1_correct": true
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "fountain",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"fountain\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "postbox",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"postbox\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "bicycle rack",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"bicycle rack\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "statue",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"statue\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "where is the fountain",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"where is the fountain\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "phone booth",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"phone booth\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "picnic table",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"picnic table\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "bus shelter",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"bus shelter\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "where is the statue",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"where is the statue\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "vending machine",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"vending machine\" anywhere I have been.",
+          "top1_correct": false
+        }
+      ]
+    },
+    "shipped_robust_z": {
+      "absent_questions": 10,
+      "absent_refusal_rate": 1.0,
+      "absent_refused": 10,
+      "answers": [
+        {
+          "alternatives": [
+            "lamppost"
+          ],
+          "answered": false,
+          "expected_label": "lamppost",
+          "place": null,
+          "query": "lamppost",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"lamppost\" anywhere I have been. What I do know about round here: lamppost.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "lamppost"
+          ],
+          "answered": false,
+          "expected_label": "lamppost",
+          "place": null,
+          "query": "where is the lamppost",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the lamppost\" anywhere I have been. What I do know about round here: lamppost.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "bench"
+          ],
+          "answered": false,
+          "expected_label": "bench",
+          "place": null,
+          "query": "bench",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"bench\" anywhere I have been. What I do know about round here: bench.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "bench"
+          ],
+          "answered": false,
+          "expected_label": "bench",
+          "place": null,
+          "query": "where is the bench",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the bench\" anywhere I have been. What I do know about round here: bench.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "tree"
+          ],
+          "answered": false,
+          "expected_label": "tree",
+          "place": null,
+          "query": "tree",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"tree\" anywhere I have been. What I do know about round here: tree.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "tree"
+          ],
+          "answered": false,
+          "expected_label": "tree",
+          "place": null,
+          "query": "where is the tree",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the tree\" anywhere I have been. What I do know about round here: tree.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "planter"
+          ],
+          "answered": false,
+          "expected_label": "planter",
+          "place": null,
+          "query": "planter",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"planter\" anywhere I have been. What I do know about round here: planter.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "planter"
+          ],
+          "answered": false,
+          "expected_label": "planter",
+          "place": null,
+          "query": "where is the planter",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the planter\" anywhere I have been. What I do know about round here: planter.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "trash can"
+          ],
+          "answered": false,
+          "expected_label": "trash can",
+          "place": null,
+          "query": "trash can",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"trash can\" anywhere I have been. What I do know about round here: trash can.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "trash can"
+          ],
+          "answered": false,
+          "expected_label": "trash can",
+          "place": null,
+          "query": "where is the trash can",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the trash can\" anywhere I have been. What I do know about round here: trash can.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "fire hydrant"
+          ],
+          "answered": false,
+          "expected_label": "fire hydrant",
+          "place": null,
+          "query": "fire hydrant",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"fire hydrant\" anywhere I have been. What I do know about round here: fire hydrant.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "fire hydrant"
+          ],
+          "answered": false,
+          "expected_label": "fire hydrant",
+          "place": null,
+          "query": "where is the fire hydrant",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the fire hydrant\" anywhere I have been. What I do know about round here: fire hydrant.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "door"
+          ],
+          "answered": false,
+          "expected_label": "door",
+          "place": null,
+          "query": "door",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"door\" anywhere I have been. What I do know about round here: door.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "door"
+          ],
+          "answered": false,
+          "expected_label": "door",
+          "place": null,
+          "query": "where is the door",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the door\" anywhere I have been. What I do know about round here: door.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "awning"
+          ],
+          "answered": false,
+          "expected_label": "awning",
+          "place": null,
+          "query": "awning",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"awning\" anywhere I have been. What I do know about round here: awning.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "awning"
+          ],
+          "answered": false,
+          "expected_label": "awning",
+          "place": null,
+          "query": "where is the awning",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the awning\" anywhere I have been. What I do know about round here: awning.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "bench"
+          ],
+          "answered": false,
+          "expected_label": "bench",
+          "place": null,
+          "query": "the bench near here",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"the bench near here\" anywhere I have been. What I do know about round here: bench.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "tree"
+          ],
+          "answered": false,
+          "expected_label": "tree",
+          "place": null,
+          "query": "that tree",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"that tree\" anywhere I have been. What I do know about round here: tree.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "trash can"
+          ],
+          "answered": false,
+          "expected_label": "trash can",
+          "place": null,
+          "query": "a trash can",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"a trash can\" anywhere I have been. What I do know about round here: trash can.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "door"
+          ],
+          "answered": false,
+          "expected_label": "door",
+          "place": null,
+          "query": "the door",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"the door\" anywhere I have been. What I do know about round here: door.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "fountain",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"fountain\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "postbox",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"postbox\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "bicycle rack",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"bicycle rack\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "statue",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"statue\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "where is the fountain",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"where is the fountain\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "phone booth",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"phone booth\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "picnic table",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"picnic table\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "bus shelter",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"bus shelter\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "where is the statue",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"where is the statue\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "vending machine",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"vending machine\" anywhere I have been.",
+          "top1_correct": false
+        }
+      ],
+      "entries_persisted": 8,
+      "map": {
+        "active_entries": 8,
+        "archived_frames": 16,
+        "entries": 8,
+        "evidence_frames": {
+          "awning": 12,
+          "bench": 12,
+          "door": 12,
+          "fire hydrant": 12,
+          "lamppost": 16,
+          "planter": 12,
+          "trash can": 12,
+          "tree": 12
+        },
+        "labels": [
+          "awning",
+          "bench",
+          "door",
+          "fire hydrant",
+          "lamppost",
+          "planter",
+          "trash can",
+          "tree"
+        ],
+        "navigability": {
+          "awning": 0.5,
+          "bench": 0.625,
+          "door": 0.375,
+          "fire hydrant": 0.25,
+          "lamppost": 0.625,
+          "planter": 0.25,
+          "trash can": 0.5,
+          "tree": 0.375
+        },
+        "path_poses": 37,
+        "synthesized_frames": 84
+      },
+      "present_questions": 20,
+      "present_top1_correct": 0,
+      "present_top1_rate": 0.0,
+      "reload_answers_identical": true,
+      "reloaded_answers": [
+        {
+          "alternatives": [
+            "lamppost"
+          ],
+          "answered": false,
+          "expected_label": "lamppost",
+          "place": null,
+          "query": "lamppost",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"lamppost\" anywhere I have been. What I do know about round here: lamppost.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "lamppost"
+          ],
+          "answered": false,
+          "expected_label": "lamppost",
+          "place": null,
+          "query": "where is the lamppost",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the lamppost\" anywhere I have been. What I do know about round here: lamppost.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "bench"
+          ],
+          "answered": false,
+          "expected_label": "bench",
+          "place": null,
+          "query": "bench",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"bench\" anywhere I have been. What I do know about round here: bench.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "bench"
+          ],
+          "answered": false,
+          "expected_label": "bench",
+          "place": null,
+          "query": "where is the bench",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the bench\" anywhere I have been. What I do know about round here: bench.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "tree"
+          ],
+          "answered": false,
+          "expected_label": "tree",
+          "place": null,
+          "query": "tree",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"tree\" anywhere I have been. What I do know about round here: tree.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "tree"
+          ],
+          "answered": false,
+          "expected_label": "tree",
+          "place": null,
+          "query": "where is the tree",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the tree\" anywhere I have been. What I do know about round here: tree.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "planter"
+          ],
+          "answered": false,
+          "expected_label": "planter",
+          "place": null,
+          "query": "planter",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"planter\" anywhere I have been. What I do know about round here: planter.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "planter"
+          ],
+          "answered": false,
+          "expected_label": "planter",
+          "place": null,
+          "query": "where is the planter",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the planter\" anywhere I have been. What I do know about round here: planter.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "trash can"
+          ],
+          "answered": false,
+          "expected_label": "trash can",
+          "place": null,
+          "query": "trash can",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"trash can\" anywhere I have been. What I do know about round here: trash can.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "trash can"
+          ],
+          "answered": false,
+          "expected_label": "trash can",
+          "place": null,
+          "query": "where is the trash can",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the trash can\" anywhere I have been. What I do know about round here: trash can.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "fire hydrant"
+          ],
+          "answered": false,
+          "expected_label": "fire hydrant",
+          "place": null,
+          "query": "fire hydrant",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"fire hydrant\" anywhere I have been. What I do know about round here: fire hydrant.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "fire hydrant"
+          ],
+          "answered": false,
+          "expected_label": "fire hydrant",
+          "place": null,
+          "query": "where is the fire hydrant",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the fire hydrant\" anywhere I have been. What I do know about round here: fire hydrant.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "door"
+          ],
+          "answered": false,
+          "expected_label": "door",
+          "place": null,
+          "query": "door",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"door\" anywhere I have been. What I do know about round here: door.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "door"
+          ],
+          "answered": false,
+          "expected_label": "door",
+          "place": null,
+          "query": "where is the door",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the door\" anywhere I have been. What I do know about round here: door.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "awning"
+          ],
+          "answered": false,
+          "expected_label": "awning",
+          "place": null,
+          "query": "awning",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"awning\" anywhere I have been. What I do know about round here: awning.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "awning"
+          ],
+          "answered": false,
+          "expected_label": "awning",
+          "place": null,
+          "query": "where is the awning",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"where is the awning\" anywhere I have been. What I do know about round here: awning.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "bench"
+          ],
+          "answered": false,
+          "expected_label": "bench",
+          "place": null,
+          "query": "the bench near here",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"the bench near here\" anywhere I have been. What I do know about round here: bench.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "tree"
+          ],
+          "answered": false,
+          "expected_label": "tree",
+          "place": null,
+          "query": "that tree",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"that tree\" anywhere I have been. What I do know about round here: tree.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "trash can"
+          ],
+          "answered": false,
+          "expected_label": "trash can",
+          "place": null,
+          "query": "a trash can",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"a trash can\" anywhere I have been. What I do know about round here: trash can.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [
+            "door"
+          ],
+          "answered": false,
+          "expected_label": "door",
+          "place": null,
+          "query": "the door",
+          "reason": "indecisive_ranking",
+          "text": "I have not seen anything like \"the door\" anywhere I have been. What I do know about round here: door.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "fountain",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"fountain\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "postbox",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"postbox\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "bicycle rack",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"bicycle rack\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "statue",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"statue\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "where is the fountain",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"where is the fountain\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "phone booth",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"phone booth\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "picnic table",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"picnic table\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "bus shelter",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"bus shelter\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "where is the statue",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"where is the statue\" anywhere I have been.",
+          "top1_correct": false
+        },
+        {
+          "alternatives": [],
+          "answered": false,
+          "expected_label": "",
+          "place": null,
+          "query": "vending machine",
+          "reason": "no_detector_support",
+          "text": "I have not seen anything like \"vending machine\" anywhere I have been.",
+          "top1_correct": false
+        }
+      ]
+    }
+  },
+  "recorded_at_utc": "2026-08-24T02:47:14.853269+00:00"
+}

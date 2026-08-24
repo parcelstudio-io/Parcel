@@ -1,0 +1,284 @@
+{
+  "criteria": {
+    "B1": "emission rate (steady, all states) >= 20 Hz, no gap > 100 ms",
+    "B2": "envelope compliance (+/-2 cm / +/-6 deg / head limits) 100 %",
+    "B3": "posture/gaze jerk within the limiter's declared bound; spectral roll-off reported",
+    "B4": "IPC rejections over 10 min = 0",
+    "B5": "COM drift while HOLD < 1 cm",
+    "B6": "e-stop -> HOLD within 1 tick",
+    "B7": "navigating-state velocity byte-identical to today's path",
+    "B8": "fake-quadruped adapter <= 150 LOC; 0 lines of product code to support it",
+    "B9": "loop P99 with composer <= today + 5 %"
+  },
+  "rows": {
+    "B1": {
+      "measured": {
+        "emission_hz_mean_by_state": {
+          "estop": 49.924,
+          "idle_hold": 49.849,
+          "idle_look": 49.518,
+          "navigating": 49.953
+        },
+        "gaps_over_100ms_total": 0,
+        "max_gap_ms_by_state": {
+          "estop": 70.321,
+          "idle_hold": 71.276,
+          "idle_look": 85.318,
+          "navigating": 82.895
+        },
+        "ticks_total": 119552,
+        "worst_gap_ms": 85.318,
+        "worst_state_hz": 49.518
+      },
+      "met": true
+    },
+    "B2": {
+      "measured": {
+        "amplitude_clamp_events": {
+          "estop": 0,
+          "idle_hold": 0,
+          "idle_look": 0,
+          "navigating": 0
+        },
+        "compliance_pct": 100.0,
+        "envelope_violations": 0,
+        "max_clamp_excess_frac": 0.0,
+        "ticks_checked": 119552
+      },
+      "met": true
+    },
+    "B3": {
+      "measured": {
+        "declared_bypass": "compose(emergency=True) snaps posture/gaze to zero in one tick (module docstring; the same bypass SCurveVelocityShaper.step declares for the velocity axis). One snap puts the step inside 3 four-sample third-difference windows.",
+        "jitter_free_bench": {
+          "gaze_pitch": {
+            "band_energy_ratio_out_over_raw": [
+              0.97736,
+              0.93867,
+              0.73135
+            ],
+            "declared_max_jerk": 5000.0,
+            "emitted_d3": 4907.5,
+            "passed_through_unchanged_pct": 98.927,
+            "within": true
+          },
+          "gaze_yaw": {
+            "band_energy_ratio_out_over_raw": [
+              0.99533,
+              0.97046,
+              0.18529
+            ],
+            "declared_max_jerk": 4000.0,
+            "emitted_d3": 4000.0,
+            "passed_through_unchanged_pct": 99.123,
+            "within": true
+          },
+          "posture_dz": {
+            "band_energy_ratio_out_over_raw": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "declared_max_jerk": 100.0,
+            "emitted_d3": 17.5,
+            "passed_through_unchanged_pct": 99.033,
+            "within": true
+          },
+          "posture_pitch": {
+            "band_energy_ratio_out_over_raw": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "declared_max_jerk": 500.0,
+            "emitted_d3": 342.9,
+            "passed_through_unchanged_pct": 99.877,
+            "within": true
+          }
+        },
+        "wall_clock_ticks_over_bound_beyond_1pct": 7,
+        "wall_clock_ticks_over_bound_by_state": {
+          "estop": 3,
+          "idle_hold": 0,
+          "idle_look": 15,
+          "navigating": 1
+        },
+        "wall_clock_ticks_over_bound_strict": 19,
+        "wall_clock_windows_measured": 597700,
+        "wall_clock_worst_d3_over_bound_ratio": {
+          "gaze_pitch": 1.00478,
+          "gaze_yaw": 27.81858,
+          "posture_dz": 0.17847,
+          "posture_pitch": 0.69059,
+          "posture_roll": 0.0
+        }
+      },
+      "met": false
+    },
+    "B4": {
+      "measured": {
+        "local_validation_failures": 0,
+        "messages_sent": 76690,
+        "reply_samples": 1533,
+        "seeded_rejection_probe_detected": {
+          "estop": true,
+          "idle_hold": true,
+          "idle_look": true,
+          "navigating": true
+        },
+        "server_rejections_on_sampled_replies": 0
+      },
+      "met": true
+    },
+    "B5": {
+      "measured": {
+        "com_probe": {
+          "idle_hold_replay_horizontal_m": 0.000131,
+          "idle_hold_replay_vertical_m": 0.000319,
+          "worst_case_envelope_horizontal_m": 0.00065,
+          "worst_case_envelope_vertical_m": 0.001595
+        },
+        "sim_base_drift_m": {
+          "idle_hold": 0.0,
+          "idle_look": 0.0
+        },
+        "sim_base_note": "parcel_robot.sim writes qpos[:3] every step (place_kinematic_base), so the reported base cannot drift while holding; this row proves the pin, not the posture. The COM probe below is the physical answer."
+      },
+      "met": true
+    },
+    "B6": {
+      "measured": {
+        "hold_seen": true,
+        "injected": true,
+        "intent_latency_ms": 17.6596,
+        "intent_latency_ticks": 0.883,
+        "wire_stop_latency_ms": 17.6596,
+        "wire_stop_latency_ticks": 0.883
+      },
+      "met": true
+    },
+    "B7": {
+      "measured": {
+        "estop": {
+          "byte_identical": true,
+          "composer_messages": 1699,
+          "first_difference": null,
+          "today_messages": 1699
+        },
+        "idle_hold": {
+          "byte_identical": true,
+          "composer_messages": 0,
+          "first_difference": null,
+          "today_messages": 0
+        },
+        "idle_look": {
+          "byte_identical": true,
+          "composer_messages": 0,
+          "first_difference": null,
+          "today_messages": 0
+        },
+        "navigating": {
+          "byte_identical": true,
+          "composer_messages": 3402,
+          "first_difference": null,
+          "today_messages": 3402
+        }
+      },
+      "met": true
+    },
+    "B8": {
+      "measured": {
+        "degrade_violations": 0,
+        "fake_adapter_physical_loc": 102,
+        "fake_adapter_product_imports": {
+          "parcel_robot.contracts.body_intent": [
+            "BodyCapabilityManifest",
+            "BodyIntentV1",
+            "degrade",
+            "dropped_axes"
+          ]
+        },
+        "fake_adapter_total_lines": 124,
+        "manifest_fields_that_differ": [
+          "gaze_pitch",
+          "gestures",
+          "max_rates",
+          "name",
+          "posture_offsets"
+        ],
+        "product_modules_changed": [],
+        "watchdog_faults": 0
+      },
+      "met": true
+    },
+    "B9": {
+      "measured": {
+        "compose_plus_apply_us": {
+          "max_ms": 202.9,
+          "mean_ms": 27.9,
+          "p50_ms": 28.6,
+          "p95_ms": 35.0,
+          "p99_ms": 44.4
+        },
+        "loadavg": {
+          "baseline": [
+            165.26,
+            168.21,
+            160.85
+          ],
+          "in_loop": [
+            221.25,
+            187.56,
+            169.89
+          ],
+          "thread": [
+            103.43,
+            162.61,
+            166.69
+          ]
+        },
+        "loop_work_p50_ms": {
+          "baseline": 11.9374,
+          "in_loop": 11.3347,
+          "thread": 7.3161
+        },
+        "loop_work_p99_ms": {
+          "baseline": 44.4404,
+          "in_loop": 44.4402,
+          "thread": 18.2366
+        },
+        "p99_delta_pct": {
+          "baseline": 0.0,
+          "in_loop": -0.0,
+          "thread": -58.964
+        },
+        "synthetic_loop": {
+          "p50_delta_pct": 1961.644,
+          "p99_delta_pct": 1704.73,
+          "with_composer_5_ticks": {
+            "max_ms": 0.8119,
+            "mean_ms": 0.1586,
+            "n": 100000,
+            "p50_ms": 0.1505,
+            "p95_ms": 0.2031,
+            "p99_ms": 0.2671
+          },
+          "without_composer": {
+            "max_ms": 0.682,
+            "mean_ms": 0.0066,
+            "n": 100000,
+            "p50_ms": 0.0073,
+            "p95_ms": 0.011,
+            "p99_ms": 0.0148
+          }
+        },
+        "transport_drops": {
+          "baseline": 0,
+          "in_loop": 0,
+          "thread": 0
+        }
+      },
+      "met": true
+    }
+  }
+}

@@ -1,0 +1,24 @@
+=== gemma8081 (port 8081) ===
+classification: {"binary_cuda_ready": true, "gpu_planner_run_authorized": true, "memory_admission_ready": true, "model_ready": true, "nvidia_driver_ready": true, "ready_for_gpu_inference": true, "ready_to_build_pinned_cuda_binary": false}
+profile: llama-b10236-cuda12-oci-gemma4-26b-a4b-q4
+binary: version: 10236 (1464c62d8)
+device: CUDA0: NVIDIA RTX 5000 Ada Generation (32227 MiB, 30020 MiB free)
+model sha256: 3eca3b8f6d7baf218a7dd6bba5fb59a56ee25fe2d567b6f5f589b4f697eca51d  (14439363584 bytes, hash_matches=True)
+recorded_at_utc: 2026-08-24T02:13:52.411609Z
+0.02.408.305 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 8192, kv_unified = 'true'
+0.02.413.923 I srv  llama_server: listening on http://127.0.0.1:8081
+
+=== ministral8082 (port 8082) ===
+classification: {"binary_cuda_ready": true, "gpu_planner_run_authorized": true, "memory_admission_ready": true, "model_ready": true, "nvidia_driver_ready": true, "ready_for_gpu_inference": true, "ready_to_build_pinned_cuda_binary": false}
+profile: llama-b10236-cuda12-oci-ministral3-8b-instruct-q4-k-m
+binary: version: 10236 (1464c62d8)
+device: CUDA0: NVIDIA RTX 5000 Ada Generation (32227 MiB, 14736 MiB free)
+model sha256: 33e7a72cf5e6e2cfc2f2847075acc013d68bba023e35310cef86b5cf8fdca761  (5198911904 bytes, hash_matches=True)
+recorded_at_utc: 2026-08-24T02:14:28.170478Z
+0.01.078.831 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 8192, kv_unified = 'true'
+0.01.080.845 I srv  llama_server: listening on http://127.0.0.1:8082
+
+Achieved layer offload is not printed at this verbosity; the per-process
+nvidia-smi figures measured here (15,304 MiB gemma / 6,236 MiB ministral)
+match the full-offload values retained in docs/REASONER_GPU_PROFILE.md
+(15,280 / 6,220 MiB), which is corroboration, not a log line.

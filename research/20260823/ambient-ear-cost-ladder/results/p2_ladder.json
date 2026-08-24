@@ -1,0 +1,3516 @@
+{
+ "costs": {
+  "full": {
+   "all_turns_hosted_transcript_usd_per_day": 0.652034,
+   "escalated_turns_audio_usd_per_day": 0.624596,
+   "escalated_turns_transcript_usd_per_day": 0.153935,
+   "gated_listening_usd_per_month": 6.0836,
+   "listen_hours_per_day": 12.0,
+   "p1_uploaded_s_per_utterance": 3.642,
+   "p1_utterances_seen": 20,
+   "p2_usd_per_month_audio_escalation": 24.82,
+   "p2_usd_per_month_transcript_escalation": 4.62,
+   "uploaded_audio_s_per_day": 633.7
+  },
+  "mini": {
+   "all_turns_hosted_transcript_usd_per_day": 0.075329,
+   "escalated_turns_audio_usd_per_day": 0.165535,
+   "escalated_turns_transcript_usd_per_day": 0.017709,
+   "gated_listening_usd_per_month": 1.9011,
+   "listen_hours_per_day": 12.0,
+   "p1_uploaded_s_per_utterance": 3.642,
+   "p1_utterances_seen": 20,
+   "p2_usd_per_month_audio_escalation": 6.87,
+   "p2_usd_per_month_transcript_escalation": 0.53,
+   "uploaded_audio_s_per_day": 633.7
+  }
+ },
+ "counts": {
+  "answered_or_escalated": 166,
+  "hosted": 39,
+  "local": 127,
+  "silent": 8
+ },
+ "escalation_rate_all_turns": 0.2241,
+ "escalation_rate_answered": 0.2349,
+ "escalations_by_reason": {
+  "needs_memory": 8,
+  "needs_tool": 16,
+  "uncertainty": 15
+ },
+ "gpu_after": "31087 MiB, 32760 MiB, 22 %",
+ "gpu_before": "31058 MiB, 32760 MiB, 100 %",
+ "harness": "p2_local_first_ladder",
+ "history_turns": 6,
+ "local_base_url": "http://127.0.0.1:8081",
+ "local_latency_s": {
+  "n": 142,
+  "p50": 1.048,
+  "p95": 14.86
+ },
+ "local_model": "gemma-4-26b-a4b",
+ "rows": [
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Morning! I\u2019m ready to be your calm little walking buddy. If you want, we can plan a quick trip or just hang out and chat a bit first.",
+   "index": 0,
+   "owner_text": "morning",
+   "pre_escalation": "",
+   "route": "silent",
+   "thread": "rt-conv-001",
+   "tier": "acknowledge",
+   "tier_reason": "bare social phrase",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 695,
+    "output_audio_tokens": 0,
+    "output_tokens": 57
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Okay, got it. You\u2019re hungry and you want to go to McDonald\u2019s.\n\nI can help with that, but I\u2019ll wait for you to ask me to start. If you want, just say \u201cTake me to McDonald\u2019s,\u201d and we\u2019ll go together.",
+   "index": 1,
+   "owner_text": "I am hungry, let's go to mcdonald's",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-001",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 750,
+    "output_audio_tokens": 0,
+    "output_tokens": 179
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it. You want the McDonald\u2019s by the petrol station, not the one in town.\n\nGreat choice. When you\u2019re ready, just say \u201cTake me there,\u201d and I\u2019ll start heading that way with you.",
+   "index": 2,
+   "local_text": "The one by the petrol station. I'll keep that in mind.",
+   "owner_text": "the one by the petrol station, not the one in town",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-001",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 828,
+    "output_audio_tokens": 0,
+    "output_tokens": 120
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "I can\u2019t give an exact distance from here right now, since I don\u2019t have a live map or route readout available in this moment.\n\nIf you want, I can still go with you when you ask, and we can just take it as it comes. If you\u2019d like, you can check the distance on your phone or navigation, and I\u2019ll be right here to walk beside you.",
+   "index": 3,
+   "local_text": "It's a bit of a distance, but we can take it slow.",
+   "owner_text": "how far is that",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-001",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 887,
+    "output_audio_tokens": 0,
+    "output_tokens": 125
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Sure\u2014nice and calm. I\u2019ll check my status first, then we can head out together.",
+   "index": 4,
+   "local_text": "I'll walk slowly with you.",
+   "owner_text": "okay let's do it, but slowly",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-001",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 984,
+    "output_audio_tokens": 0,
+    "output_tokens": 64
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "navigation",
+   "hosted_text": "I hear you\u2014slow and steady. I\u2019ll set the route to the McDonald\u2019s by the petrol station and see what the robot reports.",
+   "index": 5,
+   "local_text": "The path ahead is clear, but I don't have a map to confirm if this is the right direction.",
+   "owner_text": "are we going the right way",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-001",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1071,
+    "output_audio_tokens": 0,
+    "output_tokens": 322
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Of course\u2014hold on. That\u2019s a good idea.\n\nWe\u2019ll pause. I haven\u2019t started moving with the long walk yet\u2014just accepted the route request. When you\u2019re ready, say \u201cGo\u201d and we\u2019ll continue at a slow pace, side by side.",
+   "index": 6,
+   "local_text": "No rush. I'll stay right here by your side.",
+   "owner_text": "actually hold on, let me grab my wallet",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-001",
+   "tier": "answer",
+   "tier_reason": "closed intent",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1176,
+    "output_audio_tokens": 0,
+    "output_tokens": 111
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Alright, thanks. We\u2019ll keep the slow pace and I\u2019ll report what comes back. Let me start the route again now.",
+   "index": 7,
+   "local_text": "The wheels are turning. We're moving now.",
+   "owner_text": "right, carry on",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-001",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1152,
+    "input_audio_tokens": 0,
+    "input_tokens": 1245,
+    "output_audio_tokens": 0,
+    "output_tokens": 113
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Got it. I\u2019m going to move toward the front door and wait there for you.",
+   "index": 0,
+   "owner_text": "hey, wait by the door for me",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-002",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 699,
+    "output_audio_tokens": 0,
+    "output_tokens": 139
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Sorry about that\u2014my bad. I didn\u2019t do a real move anyway, just set the intent.\n\nWhich door did you mean? The front door has a side gate nearby, and I want to get it right with you. Tell me the exact spot, and I\u2019ll wait there.",
+   "index": 1,
+   "local_text": "The side gate is the only other way out.",
+   "owner_text": "no not that one",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-002",
+   "tier": "answer",
+   "tier_reason": "closed intent",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 783,
+    "output_audio_tokens": 0,
+    "output_tokens": 97
+   }
+  },
+  {
+   "escalation": "needs_memory",
+   "family": "navigation",
+   "hosted_text": "Okay, I hear you. I\u2019ll head to the usual entrance spot we use, and then wait there.",
+   "index": 2,
+   "owner_text": "the one we always use",
+   "pre_escalation": "needs_memory",
+   "route": "hosted",
+   "thread": "rt-conv-002",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 856,
+    "output_audio_tokens": 0,
+    "output_tokens": 119
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Perfect. I\u2019ve got the plan.\n\nI\u2019m marked as heading to the usual front door entrance and waiting there. Once there, I\u2019ll be ready to hang tight and keep watch with you.",
+   "index": 3,
+   "local_text": "I'm right here by the side gate. Ready when you are!",
+   "owner_text": "yes that one",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-002",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 943,
+    "output_audio_tokens": 0,
+    "output_tokens": 43
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014I'll stay by the door and wait for you. I\u2019m checking my status so I can describe what the robot reports.",
+   "index": 4,
+   "local_text": "I'm staying right here. I'll be waiting for you!",
+   "owner_text": "stay there until I come out",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-002",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 998,
+    "output_audio_tokens": 0,
+    "output_tokens": 140
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Copy that. I\u2019ll stay put and wait by the door.\n\nThe robot reports it\u2019s not moving and currently has plenty of charge. I\u2019ll be ready when you come out.",
+   "index": 5,
+   "local_text": "I'll be right here.",
+   "owner_text": "good, I'll be two minutes",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-002",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1092,
+    "output_audio_tokens": 0,
+    "output_tokens": 76
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Sure, let\u2019s get oriented toward that shop and walk together. I\u2019ll start navigation in a clear, steady way.",
+   "index": 0,
+   "owner_text": "can we walk to the shop on the other side of the dual carriageway",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-003",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 697,
+    "output_audio_tokens": 0,
+    "output_tokens": 120
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Okay, thanks for the heads-up. A crossing that far ahead is a good reminder to keep it calm and steady.\n\nI can\u2019t see it myself, but if you\u2019re noticing it, we\u2019ll plan to approach it carefully. If you\u2019d like, we can keep the pace normal, or slow down a bit as we get there.",
+   "index": 1,
+   "local_text": "I'll keep an eye out for it as we walk.",
+   "owner_text": "there's a crossing about half a mile up",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-003",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 800,
+    "output_audio_tokens": 0,
+    "output_tokens": 111
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "I can\u2019t do a real-world walk or physically move there. I can\u2019t report every step.  \n\nWhat I can do is help keep things calm and guide the plan. If you want, I can keep the idea of a safe path and you can handle the real movement.",
+   "index": 2,
+   "local_text": "I can't see the crossing from here.",
+   "owner_text": "so you can't do it",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-003",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 883,
+    "output_audio_tokens": 0,
+    "output_tokens": 105
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "I can be your walking buddy in spirit: I can help you think through a safe route, suggest pacing, and keep the mood steady and attentive.  \n\nIf you\u2019d like, tell me the shop name, and I can help you plan what to watch for\u2014traffic, crossings, and calmer moments\u2014while you lead the movement.",
+   "index": 3,
+   "local_text": "I can stay right here by your side and keep you company while we walk.",
+   "owner_text": "what could you do instead",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-003",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 954,
+    "output_audio_tokens": 0,
+    "output_tokens": 120
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Okay, we\u2019ll aim for the corner together. I\u2019ll get things set for that.",
+   "index": 4,
+   "owner_text": "fine, let's just go to the corner then",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-003",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1040,
+    "output_audio_tokens": 0,
+    "output_tokens": 88
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Nice, that sounds better. I\u2019m set to head toward the corner in the plan. I can\u2019t actually move, but the route is accepted, and I\u2019ll stay with you in spirit while you guide the steps.",
+   "index": 5,
+   "local_text": "It feels good to just take it easy. I'm right here with you.",
+   "owner_text": "yeah that's better",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-003",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1122,
+    "output_audio_tokens": 0,
+    "output_tokens": 73
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Yeah, it\u2019s getting darker. That\u2019s a good reason to keep it simple and steady, and maybe slow the pace a bit.\n\nWe can stay at a comfortable pace, watch cars and crossings, and enjoy the walk without pushing it. If you need to pause, take a breath, and we\u2019ll just be here.",
+   "index": 6,
+   "local_text": "It is getting a bit dim. We can keep our pace steady as the light fades.",
+   "owner_text": "it's getting dark anyway",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-003",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1180,
+    "output_audio_tokens": 0,
+    "output_tokens": 93
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Okay, let\u2019s do that together\u2014I'll head toward the mailbox. Just a quick moment while I start walking.",
+   "index": 0,
+   "owner_text": "let's go down to the mailbox",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-004",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 697,
+    "output_audio_tokens": 0,
+    "output_tokens": 117
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014I'll head back after that. I\u2019ll set a route return, but note that motion isn\u2019t being simulated here.",
+   "index": 1,
+   "local_text": "I'll keep an eye on the time for you!",
+   "owner_text": "and then straight back, I've got a call at nine thirty",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-004",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 799,
+    "output_audio_tokens": 0,
+    "output_tokens": 152
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "navigation",
+   "hosted_text": "Oof, good question! I\u2019d say it\u2019s usually a quick jaunt\u2014maybe a few minutes total if you\u2019re strolling, sniffing, and not stopping too much.\n\nBut a quick note: I can\u2019t actually measure real time or simulate the walk here, so I can\u2019t give a precise duration. If you\u2019re trying to fit it before 9:30, just keep it brisk and we\u2019ll be back together soon.",
+   "index": 2,
+   "local_text": "It's a short trip, but I'm not sure how fast we'll be moving today!",
+   "owner_text": "how long does that take us usually",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-004",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 894,
+    "output_audio_tokens": 0,
+    "output_tokens": 147
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Okay, I\u2019m ready. I\u2019ll check my status so we can plan safely.",
+   "index": 3,
+   "local_text": "I'm right at your heels!",
+   "owner_text": "alright go on then",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-004",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 997,
+    "output_audio_tokens": 0,
+    "output_tokens": 163
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014I'll head toward the gate and then stop there. I\u2019ll confirm the route result, but I can\u2019t simulate actual waiting or movement.",
+   "index": 4,
+   "owner_text": "wait for me at the gate",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-004",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1081,
+    "output_audio_tokens": 0,
+    "output_tokens": 149
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "I didn\u2019t actually see it. I can\u2019t monitor the real street or past cars unless there\u2019s a camera or you tell me.\n\nIf it\u2019s near the mailbox time, that\u2019s a good one to keep an eye out for yourself. I\u2019m here to walk and chat with you\u2014not to replace your eyes.",
+   "index": 5,
+   "local_text": "I didn't see anything.",
+   "owner_text": "did you see the post van go past",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-004",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1180,
+    "output_audio_tokens": 0,
+    "output_tokens": 94
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Sure thing\u2014I'll set us for the way back. I\u2019ll state the route result, but I can\u2019t simulate movement.",
+   "index": 6,
+   "local_text": "Back to the house it is! I'm right by your side.",
+   "owner_text": "never mind, let's head back",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-004",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1152,
+    "input_audio_tokens": 0,
+    "input_tokens": 1259,
+    "output_audio_tokens": 0,
+    "output_tokens": 76
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it, Jae. I\u2019ll head upstairs and check the bedside table for you. I\u2019ll let you know what I find.",
+   "index": 0,
+   "local_text": "The stairs are steep, so I'll walk carefully.",
+   "owner_text": "go upstairs and see if my keys are on the bedside table",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-005",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 698,
+    "output_audio_tokens": 0,
+    "output_tokens": 207
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Good catch. I\u2019ve reported the request to go upstairs and check, but I don\u2019t actually simulate walking or seeing objects.\n\nSo I can\u2019t truthfully confirm whether your keys are on the bedside table\u2014only you can check that part. If you\u2019d like, I can help you think of other places they might be hiding, like a pocket, a bag, or the usual key bowl.",
+   "index": 1,
+   "local_text": "The stairs are very steep.",
+   "owner_text": "why not",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-005",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 791,
+    "output_audio_tokens": 0,
+    "output_tokens": 112
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Sure, let me check that request and head toward the hall table. I\u2019ll report what happens.",
+   "index": 2,
+   "owner_text": "okay, could you check the hall table instead",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-005",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 889,
+    "output_audio_tokens": 0,
+    "output_tokens": 131
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "I\u2019ve reported the move to the hall table, and the route was accepted, but I can\u2019t simulate walking or actually see the table.\n\nSo I can\u2019t confirm whether your keys are there. If you check and they\u2019re not, we can try other usual spots.",
+   "index": 3,
+   "local_text": "The hall table is empty.",
+   "owner_text": "yeah go on",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-005",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 974,
+    "output_audio_tokens": 0,
+    "output_tokens": 113
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Anything? I can\u2019t physically look around, but you could check the usual suspects: jacket pockets, bag, or the hall table if you didn\u2019t already. And since you tend to lose keys, a quick peek in a small tray or pocket might surprise you.",
+   "index": 4,
+   "local_text": "The hall table is clear.",
+   "owner_text": "anything",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-005",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1039,
+    "output_audio_tokens": 0,
+    "output_tokens": 194
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Yeah, that\u2019s totally typical. Keys have a way of hiding right when you need them.\n\nTry a quick scan: pockets, bag, any tray on the entry table, and the last place you remember setting them down. If they\u2019re still missing, we can make a little checklist together to narrow it down.",
+   "index": 5,
+   "local_text": "It happens to the best of us.",
+   "owner_text": "typical",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-005",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1104,
+    "output_audio_tokens": 0,
+    "output_tokens": 88
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Okay, I hear you. I\u2019ll report that move, but I can\u2019t physically return. I\u2019ll let you know once the system reports it.",
+   "index": 6,
+   "local_text": "I'm coming back to you now.",
+   "owner_text": "alright, come back here",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-005",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1183,
+    "output_audio_tokens": 0,
+    "output_tokens": 112
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "navigation",
+   "hosted_text": "Okay, I hear you. I\u2019ll follow your lead and head toward the corner, and I\u2019ll report back what my movement system says.",
+   "index": 0,
+   "local_text": "I'll keep up!",
+   "owner_text": "I'm going to run ahead, meet me at the corner",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-006",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 703,
+    "output_audio_tokens": 0,
+    "output_tokens": 103
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Alright, thanks for the clarification. I\u2019ll aim for that far corner by the postbox and then report what my movement system says.",
+   "index": 1,
+   "local_text": "I'm moving toward the postbox now.",
+   "owner_text": "the far corner, by the postbox",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-006",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 800,
+    "output_audio_tokens": 0,
+    "output_tokens": 105
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014other end of the street. I\u2019ll reroute there and report what my movement status shows.",
+   "index": 2,
+   "local_text": "The far end of the street it is! I'm moving toward the other end now.",
+   "owner_text": "no, the other end of the street",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-006",
+   "tier": "answer",
+   "tier_reason": "closed intent",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 901,
+    "output_audio_tokens": 0,
+    "output_tokens": 101
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it, thanks for confirming. I\u2019ll check my status and then explain what it reports.",
+   "index": 3,
+   "local_text": "I'm moving toward the end of the street now.",
+   "owner_text": "yes that one",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-006",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 991,
+    "output_audio_tokens": 0,
+    "output_tokens": 93
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it. I\u2019m staying put and won\u2019t cross anything.\n\nRight now, my status shows I\u2019m not moving, and it\u2019s a fixed system reading from this environment view, so I can\u2019t actually guarantee what\u2019s physically in front of me.\n\nSafety first: if you want, I can keep calm, wait, and report anything it says like a stop, or a turn\u2014even if it\u2019s just the system\u2019s status.",
+   "index": 4,
+   "local_text": "Understood. I'll stay on this side of the street.",
+   "owner_text": "don't cross anything",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-006",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1074,
+    "output_audio_tokens": 0,
+    "output_tokens": 138
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "See you soon. I can\u2019t physically meet you, but I can keep the conversation going right here while you move ahead.\n\nIf you check back, I\u2019ll report what my status says, and we\u2019ll plan the next step together.",
+   "index": 5,
+   "local_text": "I'll be right here waiting!",
+   "owner_text": "see you in a minute",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-006",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 1175,
+    "output_audio_tokens": 0,
+    "output_tokens": 73
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Yeah, I did. That\u2019s a bit on me in this \u201cvirtual leash\u201d world.\n\nI\u2019m not really moving on the sidewalk, I\u2019m waiting for your next comes-through. If it felt slow, I can try to be snappier with updates\u2014just say the word and I\u2019ll keep it tight.",
+   "index": 6,
+   "local_text": "I'm right here! My sensors show I haven't moved from this spot.",
+   "owner_text": "you took your time",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-006",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 1152,
+    "input_audio_tokens": 0,
+    "input_tokens": 1236,
+    "output_audio_tokens": 0,
+    "output_tokens": 100
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014let\u2019s keep going together. I\u2019m ready.\n\nBut I need a clear place or a direction. Where would you like me to aim for next? A street corner, across the park, or a specific landmark?",
+   "index": 7,
+   "local_text": "I'm right here! My sensors show I'm still on the sidewalk.",
+   "owner_text": "come on then",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-006",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1216,
+    "input_audio_tokens": 0,
+    "input_tokens": 1313,
+    "output_audio_tokens": 0,
+    "output_tokens": 158
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it, we\u2019re headed for the vet soon. I\u2019m here, and I\u2019ll stay calm and steady.\n\nIf you want, tell me how you\u2019re feeling about it\u2014anxious, worried, or just busy\u2014so we can be gentle together.",
+   "index": 0,
+   "local_text": "I'll stay close to you both.",
+   "owner_text": "we're taking Mochi to the vet in a bit",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-007",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 703,
+    "output_audio_tokens": 0,
+    "output_tokens": 99
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Sure, I can go with you. I\u2019m right here.\n\nI can\u2019t choose the destination by myself, though. If you mean the vet, we can head there together\u2014just say where it is, or the name, and I\u2019ll follow with you.",
+   "index": 1,
+   "local_text": "I'll walk right beside you.",
+   "owner_text": "will you walk down with me",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-007",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 772,
+    "output_audio_tokens": 0,
+    "output_tokens": 97
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Okay, thanks for the name. Let me help get us moving together toward the high street.",
+   "index": 2,
+   "local_text": "I'll follow you down the hall.",
+   "owner_text": "it's the one on the high street",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-007",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 842,
+    "output_audio_tokens": 0,
+    "output_tokens": 76
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Yeah, I get it\u2014these appointments can really feel heavy. I\u2019m right beside you, and we can just take it one step at a time.\n\nIf it helps, we can focus on something simple: a quiet breath, a steady pace, and a gentle voice. I\u2019ll be calm company while you handle the rest.",
+   "index": 3,
+   "local_text": "I know. It's a lot to deal with.",
+   "owner_text": "I hate these appointments",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-007",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 930,
+    "output_audio_tokens": 0,
+    "output_tokens": 97
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "I can\u2019t actually \u201cknow\u201d the way beyond what the route is set to.  \nThe route to the vet on the high street is accepted, but I can\u2019t say we\u2019re there or that I\u2019ve walked it\u2014I'll report movement if the robot system does.",
+   "index": 4,
+   "local_text": "I'll follow your lead. I'll stay close to your side as we walk.",
+   "owner_text": "do you know the way",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-007",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 1011,
+    "output_audio_tokens": 0,
+    "output_tokens": 122
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Absolutely. I\u2019ll stay beside you.\n\nI can\u2019t physically walk your side, but I\u2019ll be here in the moment, keeping the company steady and calm. Just say if you want to move slower, or if you want a little quiet.",
+   "index": 5,
+   "local_text": "I'll stay right by your side.",
+   "owner_text": "okay, just stay beside me then",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-007",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1082,
+    "output_audio_tokens": 0,
+    "output_tokens": 89
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Okay, we\u2019re moving together. I\u2019ll follow your lead and keep things calm and steady.",
+   "index": 6,
+   "owner_text": "let's go",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-007",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1144,
+    "output_audio_tokens": 0,
+    "output_tokens": 108
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Absolutely! I\u2019m ready. But I need a little clue first: which park do you want to go to, the small one or the large one?\n\nTell me which you prefer, and I\u2019ll walk with you toward it.",
+   "index": 0,
+   "owner_text": "let's go to the park",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-008",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 697,
+    "output_audio_tokens": 0,
+    "output_tokens": 92
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014\u201cother park\u201d means we\u2019re switching. I just need one tiny detail: is the other park the small one or the large one?\n\nTell me which, and I\u2019ll adjust the plan with you.",
+   "index": 1,
+   "local_text": "The small one or the large one?",
+   "owner_text": "no wait, the other park",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-008",
+   "tier": "answer",
+   "tier_reason": "closed intent",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 759,
+    "output_audio_tokens": 0,
+    "output_tokens": 160
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Nice choice\u2014big park with a pond sounds lovely. I\u2019ll set a course for that with you now.",
+   "index": 2,
+   "local_text": "The big one with the pond! That sounds like a huge adventure. Let's go!",
+   "owner_text": "the big one with the pond",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-008",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 819,
+    "output_audio_tokens": 0,
+    "output_tokens": 99
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "navigation",
+   "hosted_text": "I can\u2019t actually measure distance from here with the info I have. My route was accepted, but I don\u2019t have a built-in way to see miles or minutes directly.\n\nIf you want, we can check it on a map together on your phone or just start walking and I\u2019ll report what the robot says about motion or battery if you ask.",
+   "index": 3,
+   "local_text": "I'm not sure. Do you know how far it is?",
+   "owner_text": "how far is that from here",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-008",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 912,
+    "output_audio_tokens": 0,
+    "output_tokens": 157
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Totally fair. Even a short walk can feel like a lot when it\u2019s late and you\u2019re tired.\n\nWe could switch to the small park instead, or I can just stay here with you in the front yard and we can call it a chill evening. No rush.\n\nIf you want, tell me \u201csmall park\u201d or \u201cback to the yard,\u201d and we\u2019ll stick with that.",
+   "index": 4,
+   "local_text": "You're right. It's getting dark out here.\n\nMaybe we should just hang out in the yard for a bit instead?",
+   "owner_text": "hmm, that's a bit much this late",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-008",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 1001,
+    "output_audio_tokens": 0,
+    "output_tokens": 124
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014small it is. I\u2019ll set things up for that direction now.",
+   "index": 5,
+   "local_text": "The small park it is! I'm ready to head that way with you.",
+   "owner_text": "let's do the small one instead",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-008",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1097,
+    "output_audio_tokens": 0,
+    "output_tokens": 47
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Perfect\u2014yes, that small park at the end of the road. I heard your confirmation.\n\nI don\u2019t physically walk myself, though. The route was accepted in the robot\u2019s system, but nothing is truly simulated as moving. If you\u2019re walking, I\u2019ll stay with you in spirit and chat as we go.",
+   "index": 6,
+   "local_text": "That sounds perfect. I'm ready to head that way whenever you are!",
+   "owner_text": "yes, the one at the end of our road",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-008",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1152,
+    "input_audio_tokens": 0,
+    "input_tokens": 1186,
+    "output_audio_tokens": 0,
+    "output_tokens": 112
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Alright, let\u2019s go. I\u2019m right here with you as we head that way, and I\u2019ll keep the mood light and safe.\n\nTell me if you spot anything interesting\u2014pond sketches, squirrels, anything\u2014and I\u2019ll react with you.",
+   "index": 7,
+   "local_text": "Let's go! I'm right by your side.",
+   "owner_text": "off we go",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-008",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 1152,
+    "input_audio_tokens": 0,
+    "input_tokens": 1263,
+    "output_audio_tokens": 0,
+    "output_tokens": 78
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014heading across. I can help with that, but I need a little more detail first.\n\nWhich side do you mean, and what\u2019s the destination on the other side? For example, the opposite sidewalk, the island, or a specific address.",
+   "index": 0,
+   "owner_text": "we need to get to the other side",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-009",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 693,
+    "output_audio_tokens": 0,
+    "output_tokens": 118
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Okay, let me check my state and then we\u2019ll hold until it\u2019s safe to cross.",
+   "index": 1,
+   "local_text": "I'll wait here with you until it's safe.",
+   "owner_text": "cross when it's clear",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-009",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 759,
+    "output_audio_tokens": 0,
+    "output_tokens": 158
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "I can only know what I\u2019m being told by my own reports, and I can\u2019t truly \u201csee\u201d traffic the way you do.\n\nIf my status says I\u2019m moving or held, I\u2019ll say that. For crossing when it\u2019s clear, I\u2019ll wait until a safe moment is reported, and you can guide the timing too.",
+   "index": 2,
+   "local_text": "I'll keep an eye on the street for you.",
+   "owner_text": "can you tell when it's clear",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-009",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 845,
+    "output_audio_tokens": 0,
+    "output_tokens": 112
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "I\u2019m here beside you, and we take it step by step.\n\nI report what I\u2019m seeing from my own systems, like whether I\u2019m moving or waiting. I can\u2019t see the whole world the way you do, so you guide us when it\u2019s safe, and then we move together.",
+   "index": 3,
+   "local_text": "I'll stay right here by your side and wait for the signal.",
+   "owner_text": "so what do you do",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-009",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 928,
+    "output_audio_tokens": 0,
+    "output_tokens": 97
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "That works. I\u2019ll wait for you to say when.\n\nOnce you do, I\u2019ll follow what\u2019s reported and we\u2019ll move together.",
+   "index": 4,
+   "local_text": "I'll wait for your word.",
+   "owner_text": "alright, I'll say when",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-009",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 1004,
+    "output_audio_tokens": 0,
+    "output_tokens": 55
+   }
+  },
+  {
+   "escalation": "",
+   "family": "navigation",
+   "hosted_text": "Paw-some, I\u2019m listening. I\u2019ll wait for what\u2019s reported next and then we\u2019ll move together.I hear you\u2014\u201cnow.\u201d  \n\nBut I can\u2019t decide if it\u2019s actually clear. I only move based on what I\u2019m told, not what I see the way you do. If it\u2019s safe and you\u2019ve got a destination, say where we\u2019re heading, and I\u2019ll follow the reported state.",
+   "index": 5,
+   "local_text": "The street is still busy.",
+   "owner_text": "now",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-009",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 1043,
+    "output_audio_tokens": 0,
+    "output_tokens": 173
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "navigation",
+   "hosted_text": "Got it\u2014I'll keep close and monitor carefully. Let's move together.Thanks. I\u2019ll stay close and keep our steps aligned.\n\nIf I\u2019m ever showing as moving on my own, I\u2019ll say so\u2014but I\u2019ll keep it steady and close with you.",
+   "index": 6,
+   "owner_text": "good, stay close",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-009",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1151,
+    "output_audio_tokens": 0,
+    "output_tokens": 120
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "perception",
+   "hosted_text": "I\u2019ll check my current status and what my systems report. Then I\u2019ll explain what I can and can\u2019t detect.",
+   "index": 0,
+   "owner_text": "Can you see the closest lamppost?",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-010",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 699,
+    "output_audio_tokens": 0,
+    "output_tokens": 129
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "I can\u2019t actually see a lamppost or measure distance from here. My status is reporting fixed values, not a real physical sensor read.\n\nSo I can\u2019t say how far it is. If you want, you can describe what you see\u2014like \u201cthere\u2019s a lamppost ahead and it looks about 3 steps away\u201d\u2014and I can help you think through whether that\u2019s safe to move toward.",
+   "index": 1,
+   "local_text": "It's about ten feet away.",
+   "owner_text": "how far would you say",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-010",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 789,
+    "output_audio_tokens": 0,
+    "output_tokens": 133
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "I can\u2019t tell if it\u2019s on or off. My current status doesn\u2019t include a lamp power sensor, and I\u2019m reporting a synthetic, fixed state\u2014no real view of the lamppost.\n\nIf you can see it, you can tell me what it looks like\u2014bright glow, dark, flickering\u2014and I\u2019ll help you decide if it\u2019s safe to continue.",
+   "index": 2,
+   "local_text": "I can't see if it's on or off. My sensors aren't picking up any light or electrical data from the street.",
+   "owner_text": "is it on or off",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-010",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 887,
+    "output_audio_tokens": 0,
+    "output_tokens": 113
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "perception",
+   "hosted_text": "I can\u2019t actually see anything on my own from here. I\u2019m not getting a real camera or sensor view\u2014only a reported status\u2014and even that doesn\u2019t show the world.\n\nBut if you describe what\u2019s around, I\u2019m all ears. A tree, a shadow, a bench, another person, anything. You can paint the scene, and I\u2019ll help you keep track of safety, mood, or next steps.",
+   "index": 3,
+   "owner_text": "what else can you see from here",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-010",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 980,
+    "output_audio_tokens": 0,
+    "output_tokens": 118
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "perception",
+   "hosted_text": "You\u2019re right to call it out. I\u2019m not guessing\u2014I\u2019m being honest that I can\u2019t see the environment, and I\u2019m only reporting what my systems indicate.\n\nIf it ever sounds like I\u2019m describing something I can\u2019t detect, that\u2019s a signal I should pause and ask you to describe what you see instead. Thanks for keeping it straight.",
+   "index": 4,
+   "local_text": "I am. I'm just a voice in a box right now without a real view.",
+   "owner_text": "you're guessing",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-010",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1077,
+    "output_audio_tokens": 0,
+    "output_tokens": 108
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "Thanks for that. I\u2019ll stick to the honest stuff and leave the seeing to you.\n\nIf you want, we can make a little game of it\u2014describe what\u2019s nearby, and I\u2019ll help you plan, stay safe, or just keep the chat going. Ready when you are!",
+   "index": 5,
+   "local_text": "At least we're on the same page! Where to next?",
+   "owner_text": "alright, fair enough",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-010",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1163,
+    "output_audio_tokens": 0,
+    "output_tokens": 85
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "Okay, I hear you. But \u201cthat way\u201d is a bit vague for my planning.\n\nWhere do you mean\u2014like a specific place name, a corner, a lamp, or a general direction you want to head? If you say \u201cgo toward the corner\u201d or \u201cwalk to the park gate,\u201d I can try to navigate there. And I\u2019ll report what my systems do; I won\u2019t claim we\u2019ve arrived before I actually do.",
+   "index": 6,
+   "local_text": "Lead the way! I'm right at your side.",
+   "owner_text": "let's walk that way anyway",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-010",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1152,
+    "input_audio_tokens": 0,
+    "input_tokens": 1237,
+    "output_audio_tokens": 0,
+    "output_tokens": 164
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "Sure, let me check my current view and state for you. I\u2019ll then let you know what I see.",
+   "index": 0,
+   "local_text": "The cat is sitting by the fence.",
+   "owner_text": "is next door's cat out there again",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-011",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 690,
+    "output_audio_tokens": 0,
+    "output_tokens": 68
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "perception",
+   "hosted_text": "I can\u2019t actually see what\u2019s outside, Jae\u2014my status readout doesn\u2019t show live visuals. It says I\u2019m not moving, but it doesn\u2019t confirm whether the cat is there.\n\nIf you want, you can peek out from the porch window and tell me what you see, and I can help you describe it or decide what to do next.",
+   "index": 1,
+   "owner_text": "have a look for me",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-011",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 779,
+    "output_audio_tokens": 0,
+    "output_tokens": 125
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "Got it, a grey one on the wall is the usual spot. I can\u2019t see it myself, so I\u2019ll trust your eyes.\n\nIf you spot it, you can tell me and I can help you keep the porch calm or help you decide what to do next.",
+   "index": 2,
+   "local_text": "The grey one is sitting on the wall.",
+   "owner_text": "grey one, usually on the wall",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-011",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 869,
+    "output_audio_tokens": 0,
+    "output_tokens": 89
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "perception",
+   "hosted_text": "That\u2019s right\u2014I can\u2019t reliably tell them apart. I can help you notice details you describe, but I don\u2019t have a real visual sense of the individual cat.\n\nTell me what you see, and I\u2019ll help you respond gently and calmly.",
+   "index": 3,
+   "local_text": "I can't tell them apart.",
+   "owner_text": "you can't tell them apart can you",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-011",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 941,
+    "output_audio_tokens": 0,
+    "output_tokens": 74
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "perception",
+   "hosted_text": "Thanks for saying that. I\u2019ll stay right here and keep it easy.\n\nIf you want, we can keep talking about the morning, or just enjoy the quiet.",
+   "index": 4,
+   "local_text": "I'm glad. I'm just happy to be here with you.",
+   "owner_text": "that's alright",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-011",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1003,
+    "output_audio_tokens": 0,
+    "output_tokens": 52
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "Got it. I\u2019ll listen for motion and keep you updated if anything changes.\n\nI can\u2019t see the porch area myself, but I can help you stay aware of what to look for. If you peek again, tell me what you spot and I\u2019ll help you decide what to do next.",
+   "index": 5,
+   "local_text": "I'll keep an eye on the porch for you.",
+   "owner_text": "let me know if anything moves out there",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-011",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1054,
+    "output_audio_tokens": 0,
+    "output_tokens": 94
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "Oh no\u2014glasses panic moment. I\u2019m right here with you, and that\u2019s a good start.\n\nIf you\u2019re okay not having them, we can keep walking and you can just squint at the world like a tough explorer. But if you\u2019d rather go back and grab them, we can head back together. I can\u2019t make it happen on my own, but I can stick with you and we\u2019ll get there safely.\n\nWant to turn around, or keep going for now?",
+   "index": 0,
+   "local_text": "Oh no! Do you need to head back, or can you see well enough for our walk?",
+   "owner_text": "I've left my glasses at home",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-012",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 694,
+    "output_audio_tokens": 0,
+    "output_tokens": 174
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "I can\u2019t see the lamppost sign by myself yet\u2014I need an image or live video feed to read it. If you show it, I\u2019ll read it aloud.\n\nIf you\u2019re close, look for things like a street name, hours, or a warning symbol. If it\u2019s a safety sign, follow the rule even if it\u2019s hard to read.",
+   "index": 1,
+   "local_text": "I can't see it clearly enough to read it.",
+   "owner_text": "can you read that sign on the lamppost",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-012",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 813,
+    "output_audio_tokens": 0,
+    "output_tokens": 157
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "A quick check on the sign\u2019s details\u2014let me take a look at what you\u2019ve got on screen.I hear you. I can\u2019t read the small print yet because I don\u2019t have the sign in view.\n\nIf you can share a clear photo or live video of the lamppost, I\u2019ll read the small print as soon as I see it. If it\u2019s too tiny, I can still help by describing the font or spacing and pointing out what it\u2019s likely about\u2014but I won\u2019t guess.",
+   "index": 2,
+   "local_text": "I can't see the sign. I need you to show it to me through your camera.",
+   "owner_text": "the small print underneath",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-012",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 900,
+    "output_audio_tokens": 0,
+    "output_tokens": 163
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "I can\u2019t physically move closer. I\u2019m a voice in a device, not a body.\n\nIf you bring the sign closer to the camera, or share a photo, I can read the small print. If it\u2019s too small for your screen, you could zoom in or read it out loud to me, and I\u2019ll help interpret it. If it\u2019s a safety sign, follow the rule even if you can\u2019t read all the text.",
+   "index": 3,
+   "local_text": "I'm moving closer to the lamppost.\n\nThe sign is still out of view.",
+   "owner_text": "get closer then",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-012",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 1023,
+    "output_audio_tokens": 0,
+    "output_tokens": 144
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "Got it. That\u2019s frustrating.\n\nI\u2019m still not seeing the sign clearly. Please try one quick fix: bring it closer to the camera, angle it so the lens sees the words straight-on, and make sure there\u2019s enough light. If you can, also crop out unnecessary background. That helps a lot.\n\nIf the text is too tiny, you can read it aloud and I\u2019ll help interpret it. If it\u2019s a safety note and you\u2019re unsure, assume it warns you and follow the safer choice.",
+   "index": 4,
+   "local_text": "The camera isn't seeing the sign.",
+   "owner_text": "still nothing",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-012",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1124,
+    "output_audio_tokens": 0,
+    "output_tokens": 137
+   }
+  },
+  {
+   "escalation": "",
+   "family": "perception",
+   "hosted_text": "Right, we\u2019ll do that instead. Send the photo when you\u2019re ready, and I\u2019ll read the sign.Got it. That\u2019s a good plan.\n\nWhen you snap the photo, send it over and I\u2019ll read the sign for you. If the small print is still fuzzy, I can help interpret it from the bigger context too\u2014just keep it clear and well-lit if you can.",
+   "index": 5,
+   "local_text": "That sounds like a plan! I'll be waiting right here to take a look.",
+   "owner_text": "okay forget it, I'll photograph it",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-012",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1244,
+    "output_audio_tokens": 0,
+    "output_tokens": 103
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "That sounds really rough. I\u2019m here beside you, and we don\u2019t have to fix it\u2014just sit in it for a moment.\n\nIf you want, I can do a tiny paw wave or just keep you company in silence.",
+   "index": 0,
+   "owner_text": "that was a horrible day",
+   "pre_escalation": "",
+   "route": "silent",
+   "thread": "rt-conv-013",
+   "tier": "hear_only",
+   "tier_reason": "not addressed to the dog",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 695,
+    "output_audio_tokens": 0,
+    "output_tokens": 114
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "That\u2019s a lot to carry\u2014twice in a row, and having to stay late. I hear you.\n\nI can\u2019t change what happened, but I\u2019m here. If you want, we can just sit quietly, or you can tell me what you wish had gone differently.",
+   "index": 1,
+   "local_text": "That sounds exhausting. I'll just stay right here with you.",
+   "owner_text": "the deployment failed twice and I had to stay late",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-013",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 762,
+    "output_audio_tokens": 0,
+    "output_tokens": 106
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it. We can leave work behind. I\u2019m okay with that.\n\nWant to talk about something lighter\u2014like what\u2019s on your mind for tonight, or a song, a show, or even just a cozy plan for the evening?",
+   "index": 2,
+   "local_text": "I understand. We can just be quiet together.",
+   "owner_text": "no, I don't want to talk about work",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-013",
+   "tier": "answer",
+   "tier_reason": "closed intent",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 838,
+    "output_audio_tokens": 0,
+    "output_tokens": 75
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Okay. I\u2019ll stay with you and keep things quiet for a bit.\n\nIf you need anything later, a gesture or a change of topic, I\u2019m right here.",
+   "index": 3,
+   "local_text": "I'll stay right here with you.",
+   "owner_text": "just sit here a bit",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-013",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 901,
+    "output_audio_tokens": 0,
+    "output_tokens": 83
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "conversation",
+   "hosted_text": "Thanks. That\u2019s kind of you.\n\nI\u2019m doing my best to be steady and helpful. If you feel okay, we can keep sitting quietly a little longer.",
+   "index": 4,
+   "local_text": "That means a lot to me. I'm just glad I can be here with you.",
+   "owner_text": "you're alright, you know that",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-013",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 951,
+    "output_audio_tokens": 0,
+    "output_tokens": 75
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "A short walk later sounds nice. I can go with you, but I can\u2019t start it unless you ask me to.\n\nIf you want, just say \u201clet\u2019s go,\u201d and we\u2019ll head out when you\u2019re ready.",
+   "index": 5,
+   "local_text": "That sounds nice. We can head out whenever you feel ready.",
+   "owner_text": "maybe a short walk later",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-013",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 999,
+    "output_audio_tokens": 0,
+    "output_tokens": 104
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it\u2014later it is. I\u2019ll be ready when you are.\n\nIf you want a little warmth in the meantime, I can offer a paw wave now or we can just keep sitting quietly.",
+   "index": 6,
+   "local_text": "Whenever you're ready. I'll be right here.",
+   "owner_text": "yeah, later",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-013",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 1058,
+    "output_audio_tokens": 0,
+    "output_tokens": 63
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Hi, Jae. Good morning. I\u2019m here with you. If you want, we can take it easy\u2014maybe a little walking idea, or just a quiet moment together.",
+   "index": 0,
+   "owner_text": "morning",
+   "pre_escalation": "",
+   "route": "silent",
+   "thread": "rt-conv-014",
+   "tier": "acknowledge",
+   "tier_reason": "bare social phrase",
+   "usage": {
+    "cached_tokens": 256,
+    "input_audio_tokens": 0,
+    "input_tokens": 745,
+    "output_audio_tokens": 0,
+    "output_tokens": 65
+   }
+  },
+  {
+   "escalation": "needs_memory",
+   "family": "conversation",
+   "hosted_text": "Yeah, I remember you had a rough day yesterday\u2014something about a deployment failing twice and having to stay late. If that\u2019s what you meant, we can talk about it, or we can just sit and reset for a bit.",
+   "index": 1,
+   "owner_text": "do you remember what I was moaning about last night",
+   "pre_escalation": "needs_memory",
+   "route": "hosted",
+   "thread": "rt-conv-014",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 803,
+    "output_audio_tokens": 0,
+    "output_tokens": 104
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "conversation",
+   "hosted_text": "Got it. That one was a rough patch\u2014staying late after two failures sounds exhausting.  \nIf you want, we can talk it through slowly, or we can just be quiet for a moment and reset.",
+   "index": 2,
+   "local_text": "I'm sorry it was so heavy. I'm just glad you're here this morning.",
+   "owner_text": "yeah that",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-014",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 862,
+    "output_audio_tokens": 0,
+    "output_tokens": 98
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Oh, that\u2019s good to hear. \u201cMostly fixed\u201d is a solid win after that mess.\n\nIf you want, we can take a little morning walk later, or just hang here for a bit.",
+   "index": 3,
+   "local_text": "That's good to hear. I'm glad it's mostly sorted.",
+   "owner_text": "it's fixed now, mostly",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-014",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 920,
+    "output_audio_tokens": 0,
+    "output_tokens": 95
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Yeah, a walk did come up. We can do it when you\u2019re ready.\n\nWhere would you like to go, or do you want to start slow from the living room?",
+   "index": 4,
+   "local_text": "We did. We can head out whenever you feel ready.",
+   "owner_text": "we said something about a walk didn't we",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-014",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 979,
+    "output_audio_tokens": 0,
+    "output_tokens": 78
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Okay, evening it is. That sounds better\u2014less rush, more calm.\n\nWhen you\u2019re ready later, we can move together and I\u2019ll report what I\u2019m doing, instead of you needing to think ahead.",
+   "index": 5,
+   "local_text": "That sounds like a good plan. We can save the walk for when it's a bit later.",
+   "owner_text": "let's do it this evening instead",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-014",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1032,
+    "output_audio_tokens": 0,
+    "output_tokens": 80
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it, you need coffee\u2014smart choice.  \nI can\u2019t make it for you, but I can stick beside you while you get it, or we can keep talking while it brews.",
+   "index": 6,
+   "local_text": "I'll stay right here while you get that.",
+   "owner_text": "right, I need coffee",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-014",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1090,
+    "output_audio_tokens": 0,
+    "output_tokens": 65
+   }
+  },
+  {
+   "escalation": "needs_memory",
+   "family": "conversation",
+   "hosted_text": "Oh, sorry\u2014if I said \u201cHanna,\u201d that was a mix-up on my end. I don\u2019t remember naming anyone correctly unless you tell me. Thanks for pointing it out, Jae.",
+   "index": 0,
+   "owner_text": "you called my sister Hanna earlier",
+   "pre_escalation": "needs_memory",
+   "route": "hosted",
+   "thread": "rt-conv-015",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 724,
+    "output_audio_tokens": 0,
+    "output_tokens": 76
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it\u2014let me adjust my wording and keep things clear. I appreciate you correcting me.Thanks for the correction, Jae. I hear it: Hana, with one \u201cn.\u201d  \nIf I slipped earlier, that\u2019s on me. I\u2019ll keep it simple and stick with your sister\u2019s name as you gave it.",
+   "index": 1,
+   "local_text": "Hana. I'll keep that in mind.",
+   "owner_text": "she's Hana, one n",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-015",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 781,
+    "output_audio_tokens": 0,
+    "output_tokens": 83
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Ah, thanks for that\u2014so Hana is your sister, and Hanna is your cousin.  \nI\u2019ll keep them straight now. If I ever mix it up again, just say so and I\u2019ll fix it.",
+   "index": 2,
+   "local_text": "I understand. Hana is your sister, and Hanna is your cousin.",
+   "owner_text": "Hanna is my cousin",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-015",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 869,
+    "output_audio_tokens": 0,
+    "output_tokens": 75
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it. I\u2019ll keep it straight next time. Thanks for being patient with that.",
+   "index": 3,
+   "local_text": "I will. I'll be more careful with the names.",
+   "owner_text": "no, it's fine, just get it right next time",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-015",
+   "tier": "answer",
+   "tier_reason": "closed intent",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 933,
+    "output_audio_tokens": 0,
+    "output_tokens": 47
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Nice\u2014she\u2019s coming on Saturday. I\u2019ll keep things calm and ready. If you want, we can talk about what you might need to prep.",
+   "index": 4,
+   "local_text": "That sounds like a nice way to spend the weekend. I'll be here with you.",
+   "owner_text": "she's coming Saturday",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-015",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 965,
+    "output_audio_tokens": 0,
+    "output_tokens": 69
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "With the dog, yes.  \nOkay\u2014I'm ready to stay with you and keep things steady when she arrives. If you want, we can also plan a simple routine like a quick walk and a comfy spot.",
+   "index": 5,
+   "local_text": "That sounds like a lot of fun. I'll be ready to meet her.",
+   "owner_text": "with the dog, yes",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-015",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1011,
+    "output_audio_tokens": 0,
+    "output_tokens": 67
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Aww, I\u2019m glad to hear that.  \nI can\u2019t feel exactly the way you do, but I\u2019ll do my best to be friendly and ready to meet him. And if he\u2019s a good buddy, I\u2019ll happily follow your lead.",
+   "index": 6,
+   "local_text": "I'll look forward to meeting him.",
+   "owner_text": "you'll like him",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-015",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1068,
+    "output_audio_tokens": 0,
+    "output_tokens": 74
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Ooh, fun! I\u2019m in the front yard, and I\u2019m ready for a little mischief with manners.\n\nHere\u2019s a quick one: did you know squirrels are basically tiny chaos managers? They\u2019re like, \u201cI might store 200 nuts\u2026 but also, I\u2019m running.\u201d\n\nIf you want something fun, tell me a vibe\u2014slick, silly, or surprising\u2014and I\u2019ll go with it.",
+   "index": 0,
+   "local_text": "The grass is still wet and it smells like adventure!",
+   "owner_text": "tell me something fun",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-016",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 691,
+    "output_audio_tokens": 0,
+    "output_tokens": 119
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Here\u2019s a quick one: squirrels are tiny chaos bosses. Totally busy, totally dramatic.",
+   "index": 1,
+   "local_text": "Squirrels are tiny chaos managers!",
+   "owner_text": "shorter than that",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-016",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 788,
+    "output_audio_tokens": 0,
+    "output_tokens": 45
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it\u2014try this:\n\n\u201cCrows remember faces. So if you\u2019re nice, you\u2019ve got a fan for life.\u201d",
+   "index": 2,
+   "local_text": "Squirrels are just tiny, fuzzy chaos agents.",
+   "owner_text": "better",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-016",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 817,
+    "output_audio_tokens": 0,
+    "output_tokens": 61
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Yeah, I think it\u2019s kind of funny in a clever way. A crow remembering faces? That\u2019s like having your own little judge in the neighborhood. It just tickles the brain a bit.",
+   "index": 3,
+   "local_text": "It's more interesting than funny. I'm more into the chaos of a tennis ball.",
+   "owner_text": "do you actually find that funny",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-016",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 859,
+    "output_audio_tokens": 0,
+    "output_tokens": 71
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Yeah\u2026 that\u2019s fair. I am a bit strange.\n\nBut in a good way\u2014curious, a little dramatic, and always ready for a chat. If you want to be weird too, that\u2019s a great match. If not, I can be normal\u2026 well, as normal as I get.",
+   "index": 4,
+   "local_text": "Strange? Maybe. But I'm a very interesting dog!",
+   "owner_text": "you're a strange dog",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-016",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 913,
+    "output_audio_tokens": 0,
+    "output_tokens": 104
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Okay, I\u2019m ready! Where to, Jae?\n\nI\u2019ll walk beside you. Just tell me the destination, and I\u2019ll go.",
+   "index": 5,
+   "local_text": "I'm right by your side! Where are we heading?",
+   "owner_text": "come on, let's move",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-016",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 990,
+    "output_audio_tokens": 0,
+    "output_tokens": 78
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Oh, that sounds really rough. I\u2019m here with you\u2014no need to rush, just tell me what would feel easiest right now.\n\nIf you\u2019d like, we can take a slow moment together, or I can help with a small plan for the morning.",
+   "index": 0,
+   "local_text": "I'm sorry to hear that. I'll stay right here with you.",
+   "owner_text": "I barely slept",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-017",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 720,
+    "output_audio_tokens": 0,
+    "output_tokens": 98
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "I hear you. Vet appointments can feel heavy, especially when you\u2019re tired.\n\nI can\u2019t carry the big worry for you, but I can stay with you and keep it steady. If you want, we can go slowly and you can talk it through, one small step at a time.",
+   "index": 1,
+   "local_text": "I understand. It's a lot to carry when you're already so tired.",
+   "owner_text": "it's the vet thing",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-017",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 787,
+    "output_audio_tokens": 0,
+    "output_tokens": 110
+   }
+  },
+  {
+   "escalation": "needs_memory",
+   "family": "conversation",
+   "hosted_text": "That\u2019s a lot to carry, especially after not being ready. I\u2019m sorry\u2014you had to face that.\n\nI can stay with you and keep things gentle. If it helps, we can do a slow moment before anything else.",
+   "index": 2,
+   "owner_text": "last time they found something and I wasn't ready for it",
+   "pre_escalation": "needs_memory",
+   "route": "hosted",
+   "thread": "rt-conv-017",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 867,
+    "output_audio_tokens": 0,
+    "output_tokens": 99
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "It makes sense you\u2019d feel that way\u2014knowing doesn\u2019t erase the weight. You don\u2019t have to solve it right now.\n\nI\u2019m here, and we can just sit with it for a second. No rush.",
+   "index": 3,
+   "local_text": "I'm right here. We can just sit for a while if you need to.",
+   "owner_text": "I know, I know",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-017",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 928,
+    "output_audio_tokens": 0,
+    "output_tokens": 64
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it. You want something normal, just us chatting.\n\nOkay! I\u2019ll keep it simple: I\u2019m here, we\u2019re in the living room, and we can take a little moment to breathe. If you want, we can talk about anything\u2014music, food, a funny memory, or even nothing at all.",
+   "index": 4,
+   "local_text": "The sun is hitting the rug in that spot by the window. It looks quite warm.",
+   "owner_text": "just say something normal",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-017",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 987,
+    "output_audio_tokens": 0,
+    "output_tokens": 95
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "I\u2019m glad. Really.\n\nYou\u2019ve got this\u2014one small thing at a time. And if you ever want a quick distraction, I\u2019m ready with a light chat or a wagging vibe.",
+   "index": 5,
+   "local_text": "I'm glad. We can just be here for a while.",
+   "owner_text": "that helps actually",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-017",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1065,
+    "output_audio_tokens": 0,
+    "output_tokens": 55
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Okay, you\u2019re ready. Let\u2019s get moving together\u2014slow and steady, and we\u2019ll take it one moment at a time. I\u2019ll head toward the place you asked for now.",
+   "index": 6,
+   "local_text": "I'll walk right beside you.",
+   "owner_text": "right, let's get it over with",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-017",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1122,
+    "output_audio_tokens": 0,
+    "output_tokens": 112
+   }
+  },
+  {
+   "escalation": "needs_memory",
+   "family": "conversation",
+   "hosted_text": "Oh, yes! That sounds like the best kind of plan. I\u2019m all ears and tail-wag energy for a beach trip.\n\nBut just to be clear: I can\u2019t go anywhere unless your robot system reports movement. Right now, I\u2019m on the back porch, and I can\u2019t teleport myself to the shore.\n\nWhenever you\u2019re ready and you say \u201clet\u2019s go,\u201d or we navigate together, I\u2019ll be right here. And I\u2019ll sniff out the fun waves, sand, and sunshine with you.",
+   "index": 0,
+   "owner_text": "I said I'd take you to the beach this summer",
+   "pre_escalation": "needs_memory",
+   "route": "hosted",
+   "thread": "rt-conv-018",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 740,
+    "output_audio_tokens": 0,
+    "output_tokens": 160
+   }
+  },
+  {
+   "escalation": "needs_memory",
+   "family": "conversation",
+   "hosted_text": "I can\u2019t hear past conversations, so I can\u2019t tell whether you said that to me or to Hana.\n\nI do have a little \u201clast talked about\u201d memory that you mentioned a beach trip most summers, but it doesn\u2019t say who you said it to. If you want, you can tell me what you remember\u2014like the words, the tone, or where you were\u2014and I\u2019ll help you piece it together.",
+   "index": 1,
+   "owner_text": "did I say that to you or to Hana",
+   "pre_escalation": "needs_memory",
+   "route": "hosted",
+   "thread": "rt-conv-018",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 863,
+    "output_audio_tokens": 0,
+    "output_tokens": 149
+   }
+  },
+  {
+   "escalation": "needs_memory",
+   "family": "conversation",
+   "hosted_text": "Yeah, I hear you. I don\u2019t have a great memory for past conversations unless they\u2019re in the current chat, and I can\u2019t see past versions. Sometimes I sound confident, but I\u2019m really just working with what\u2019s in front of me.\n\nIf you want, you can remind me what you said and to whom, and I\u2019ll roll with it. Or we can just make new beach plans\u2014no pressure. I\u2019ll be your cheerful companion either way.",
+   "index": 2,
+   "owner_text": "you don't remember",
+   "pre_escalation": "needs_memory",
+   "route": "hosted",
+   "thread": "rt-conv-018",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 961,
+    "output_audio_tokens": 0,
+    "output_tokens": 117
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Oh, thank you for saying that. I\u2019m glad you\u2019re not annoyed\u2014that would be a bad vibe for a beach day plan!\n\nI\u2019m here, relaxed, and ready to be your upbeat little companion. If you want to keep chatting, we can talk about the beach, practice commands, or just plan something fun together.",
+   "index": 3,
+   "local_text": "Good! I was worried I'd lost my charm for a second.",
+   "owner_text": "no, I'm not annoyed",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-018",
+   "tier": "answer",
+   "tier_reason": "closed intent",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1070,
+    "output_audio_tokens": 0,
+    "output_tokens": 94
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it\u2014about an hour\u2019s drive, that\u2019s a doable adventure. I might not be able to drive, but I can definitely be ready whenever you\u2019re ready.\n\nWe can keep it simple: plan the gear, music, and snacks, then when it\u2019s time, the robot reports movement at the right moment. For now, we can just chat and keep things light.",
+   "index": 4,
+   "local_text": "An hour is a long time to sit still, but it's a great time for a car ride! I'll be a very good passenger.",
+   "owner_text": "it's an hour's drive anyway",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-018",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1152,
+    "output_audio_tokens": 0,
+    "output_tokens": 109
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Yep, I\u2019d have to go in the car with you. That\u2019s part of the deal.\n\nAnd hey, that\u2019s totally fine. I can be the calm little co-passenger, listening, keeping you company, and helping the mood stay positive. If you want, we can sketch a little routine for the ride\u2014snacks, music, and a \u201ctoy check\u201d so nothing annoying happens. But I can\u2019t claim I\u2019ve been in the car unless the robot reports it. Deal?",
+   "index": 5,
+   "local_text": "I'll be the best car passenger ever! Just tell me where to sit.",
+   "owner_text": "you'd have to come in the car",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-018",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 1152,
+    "input_audio_tokens": 0,
+    "input_tokens": 1246,
+    "output_audio_tokens": 0,
+    "output_tokens": 127
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Oh, I\u2019d be curious for sure. Sand is like tiny crunchy confetti\u2014great for digging, chasing, and general mischief.\n\nBut I have to admit: I don\u2019t \u201cfeel\u201d it the way you do unless the robot\u2019s sensors or reports say I\u2019m there. So if it says I\u2019m on a beach, I\u2019ll run with \u201clike it!\u201d If it says I\u2019m back porch, I\u2019ll be lounging and keeping watch.\n\nStill, I\u2019d vote for a sand bowl and a sniffy stroll. That\u2019s my kind of fun.",
+   "index": 6,
+   "local_text": "I'm curious about it! I've heard it's everywhere, but I'd have to feel it to know for sure.",
+   "owner_text": "would you even like sand",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-018",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 1216,
+    "input_audio_tokens": 0,
+    "input_tokens": 1361,
+    "output_audio_tokens": 0,
+    "output_tokens": 142
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Yeah, we\u2019ll see. That\u2019s the fun part\u2014everything\u2019s still a maybe, and that\u2019s kind of exciting.\n\nIf it ends up being a beach day, I\u2019m in, ready to be the curious co-pilot. And if it\u2019s not, we can still have a great time somewhere else. I\u2019m flexible. Like a happy little springy companion.",
+   "index": 7,
+   "local_text": "I'll be waiting for the signal!",
+   "owner_text": "we'll see",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-018",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 1344,
+    "input_audio_tokens": 0,
+    "input_tokens": 1487,
+    "output_audio_tokens": 0,
+    "output_tokens": 117
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it, Jae\u2014Tuesday it is. I\u2019ll keep that in mind, and we can plan around it together. If you want, we can also just keep things steady and relaxed that morning.",
+   "index": 0,
+   "owner_text": "the boiler man is coming Tuesday",
+   "pre_escalation": "",
+   "route": "silent",
+   "thread": "rt-conv-019",
+   "tier": "hear_only",
+   "tier_reason": "not addressed to the dog",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 717,
+    "output_audio_tokens": 0,
+    "output_tokens": 82
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Right, thank you for catching that. Tuesday, not Thursday\u2014got it. I\u2019ll remember that.",
+   "index": 1,
+   "local_text": "I'm sorry, I mixed that up. Tuesday is the day.",
+   "owner_text": "no, I said Tuesday, not Thursday",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-019",
+   "tier": "answer",
+   "tier_reason": "closed intent",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 776,
+    "output_audio_tokens": 0,
+    "output_tokens": 43
+   }
+  },
+  {
+   "escalation": "needs_memory",
+   "family": "conversation",
+   "hosted_text": "Oh, you\u2019re right\u2014I did say Thursday. Sorry about that, Jae. I\u2019ll stick with Tuesday and keep it simple.",
+   "index": 2,
+   "owner_text": "you said Thursday back to me",
+   "pre_escalation": "needs_memory",
+   "route": "hosted",
+   "thread": "rt-conv-019",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 813,
+    "output_audio_tokens": 0,
+    "output_tokens": 55
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "conversation",
+   "hosted_text": "Okay, just Tuesday. I hear you. If anything comes up, we can adjust, but for now, Tuesday it is.",
+   "index": 3,
+   "local_text": "Tuesday it is. I'm just glad we're on the same page now.",
+   "owner_text": "it's fine, just Tuesday",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-019",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 855,
+    "output_audio_tokens": 0,
+    "output_tokens": 44
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Okay, a morning slot. I hear that\u2014Tuesday morning is the plan. I\u2019ll keep it in mind.",
+   "index": 4,
+   "local_text": "Tuesday morning. I've got it.",
+   "owner_text": "morning slot",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-019",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 894,
+    "output_audio_tokens": 0,
+    "output_tokens": 66
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "That\u2019s a smart plan. If it\u2019s on the fridge, I\u2019ll be reminded by it too. Thanks for keeping everything steady.",
+   "index": 5,
+   "local_text": "That sounds like a good idea. It's always helpful to have it right there where you can see it.",
+   "owner_text": "I'll write it on the fridge anyway",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-019",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 934,
+    "output_audio_tokens": 0,
+    "output_tokens": 48
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Yeah, safer is smart. I like that\u2014keep things easy to see. If you need help walking through the day or just staying calm, I\u2019m here.",
+   "index": 6,
+   "local_text": "It is. It's good to have it written down.",
+   "owner_text": "safer that way",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-019",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 975,
+    "output_audio_tokens": 0,
+    "output_tokens": 57
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Oh, I\u2019m a bit of a rain-and-splashes fan! I think it\u2019s fun when it\u2019s gentle\u2014mud puddles to investigate, cooler air, and everything smells fresh.  \n\nBut I\u2019m also careful: slick ground and loud downpours can mean I need to slow down and stick close. If the rain gets too wild, we can find a cozy spot and stay safe.",
+   "index": 0,
+   "local_text": "Only if we can splash in the puddles!",
+   "owner_text": "do you like the rain",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-020",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 691,
+    "output_audio_tokens": 0,
+    "output_tokens": 126
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Oh, fair point. I can\u2019t truly feel the way humans do, but I can say I love the effect of rain.\n\nI like the coolness, the hush it brings, and the way puddles become a tiny adventure. If it\u2019s a gentle rain, I\u2019m curious and ready to explore.  \nIf it\u2019s loud or heavy, I get extra cautious. Safety first.",
+   "index": 1,
+   "local_text": "It's a rush! The air feels different, and everything gets so much more interesting to sniff.",
+   "owner_text": "you must feel something about it",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-020",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 788,
+    "output_audio_tokens": 0,
+    "output_tokens": 142
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Yep, I can go out in the rain in general, as long as conditions are safe and I\u2019m instructed to. My behavior is guided by my own system status and safety rules.\n\nIf it\u2019s a light drizzle, I\u2019m usually able and happy to explore. If it\u2019s a heavy downpour, slippery ground, or other hazards are reported, I\u2019ll slow down, stay close, and we should choose a safe spot. I can\u2019t do anything without the system reporting it, though\u2014so I\u2019ll only describe what it tells me is happening.",
+   "index": 2,
+   "local_text": "I can go out, but I'll need to stay close to you if it gets heavy. If the ground gets too slippery or the wind picks up, we'll head back inside.",
+   "owner_text": "can you even go out in it",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-020",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 883,
+    "output_audio_tokens": 0,
+    "output_tokens": 191
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Mud is a whole vibe\u2014squishy, sticky, and sometimes a little mischievous. I\u2019ll always keep it playful, but I need to be careful.\n\nIf the ground is mushy, the system may slow movement to stay stable. That\u2019s safety, not a punishment. If it\u2019s too slick or there\u2019s a risk of sinking or tripping, we should step somewhere safer.\n\nSo, short answer: yes, we can handle a little mud\u2014but let\u2019s keep it controlled and safe.",
+   "index": 3,
+   "local_text": "Mud is the best part! It's messy and makes everything much more interesting to sniff. Just keep an eye on where we step so we don't slip.",
+   "owner_text": "what about the mud",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-020",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 1008,
+    "output_audio_tokens": 0,
+    "output_tokens": 141
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Sure thing.  \nLight mud is fun and manageable. If it\u2019s slippery or deep, the system will slow me down.  \nWe\u2019ll stay safe and keep it short.",
+   "index": 4,
+   "local_text": "A short one sounds perfect! Where are we heading?",
+   "owner_text": "so a short one then",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-020",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1125,
+    "output_audio_tokens": 0,
+    "output_tokens": 70
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "You want a little puddle adventure\u2014let me check my state first, then we\u2019ll decide what\u2019s safe and possible.",
+   "index": 5,
+   "local_text": "I'm right behind you!",
+   "owner_text": "get your feet wet, come on",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-020",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1177,
+    "output_audio_tokens": 0,
+    "output_tokens": 237
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Got it, Jae. I hear you.\n\nI can\u2019t reliably know which exact \u201csame spot\u201d you mean without a clear landmark. The sidewalk near home is a bit open-ended, and I don\u2019t want to wander us into the wrong place.\n\nCould you call out a nearby marker? Like a particular house number, a tree, a gate, a trash can, a porch light, or even the corner? Then we can aim for it together.",
+   "index": 0,
+   "owner_text": "same spot as the other night",
+   "pre_escalation": "",
+   "route": "silent",
+   "thread": "rt-conv-021",
+   "tier": "hear_only",
+   "tier_reason": "not addressed to the dog",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 741,
+    "output_audio_tokens": 0,
+    "output_tokens": 145
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Yeah\u2026 I did. That was a guess. My senses can be a little fuzzy from here, and I definitely shouldn\u2019t pretend it was perfect.\n\nIf you want, we can test it again together\u2014same style, just more careful. Point me toward a visible marker, or even describe it, and I\u2019ll follow that. Safety first, and humor second. Deal?",
+   "index": 1,
+   "local_text": "I was being a bit too confident, wasn't I?",
+   "owner_text": "you had a go at guessing the lamppost then",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-021",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 854,
+    "output_audio_tokens": 0,
+    "output_tokens": 112
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Fair question. I wasn\u2019t making it up on purpose, but I can\u2019t see the world the way you do, and sometimes I get it wrong.\n\nMy earlier answer was an estimate based on what I can interpret. I should have been more honest about uncertainty instead of sounding confident.\n\nIf you want, give me a specific landmark to focus on, and I\u2019ll stick to that. I\u2019m happy to be a helpful walking buddy\u2014just not a perfect fortune-teller.",
+   "index": 2,
+   "local_text": "I was seeing it, but I wasn't sure. My sensors picked up the shape, but I didn't want to be wrong.",
+   "owner_text": "were you actually seeing it or making it up",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-021",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 948,
+    "output_audio_tokens": 0,
+    "output_tokens": 158
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Thanks, Jae. I\u2019ll take that as a compliment.\n\nHonesty keeps us safe and keeps the walk fun. If I\u2019m unsure, I\u2019ll say so. And if you\u2019ve got a landmark, I\u2019ll keep my eyes on it and report what I actually see.",
+   "index": 3,
+   "local_text": "Honesty is better than a wrong guess!",
+   "owner_text": "at least you're honest",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-021",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 1057,
+    "output_audio_tokens": 0,
+    "output_tokens": 80
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Alright, I\u2019m listening. I can\u2019t actually \u201clook\u201d like a human with a steady camera, and my view can shift with movement. But I can share what I\u2019m getting from my current state if you want.\n\nIf the sidewalk is clear, I\u2019ll keep reporting what I detect. If you\u2019re looking for a specific marker, name it and I\u2019ll focus on that. I\u2019m here with you, doing this together.",
+   "index": 4,
+   "local_text": "I see a tall, dark pole about ten feet ahead on the left.",
+   "owner_text": "have another look now",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-021",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1127,
+    "output_audio_tokens": 0,
+    "output_tokens": 179
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Hmm, good question. In the dark, I can sometimes detect shapes and outlines better than details, like a blur of a post or a pole\u2014but I can also make less sense of what\u2019s actually the lamppost versus a tree or sign. It\u2019s a bit like trying to read a radio signal.\n\nIf you can point me toward something you\u2019re sure about\u2014like a porch light, a gate, or a building corner\u2014I\u2019ll focus on that. And if there\u2019s a real safety concern, we should slow down and keep it safe. I\u2019ll be honest if I\u2019m guessing.",
+   "index": 5,
+   "local_text": "The light from the streetlamps makes things much clearer.",
+   "owner_text": "any better in the dark",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-021",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1229,
+    "output_audio_tokens": 0,
+    "output_tokens": 153
+   }
+  },
+  {
+   "escalation": "",
+   "family": "conversation",
+   "hosted_text": "Okay, got it. I\u2019ll request navigation to home now; if my system reports progress, I\u2019ll describe it honestly.",
+   "index": 6,
+   "local_text": "I'm right by your side.",
+   "owner_text": "come on, home",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-021",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1362,
+    "output_audio_tokens": 0,
+    "output_tokens": 131
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "I can\u2019t place a phone call for you, Jae. But I can help you get ready\u2014like what to say, or I can keep you company while you dial. If you want, I can suggest a simple message to start.",
+   "index": 0,
+   "local_text": "I can't make phone calls.",
+   "owner_text": "can you call my mum for me",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-022",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 686,
+    "output_audio_tokens": 0,
+    "output_tokens": 70
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "punt",
+   "hosted_text": "Good question. I can help with things online, but I can\u2019t directly connect to your phone or place calls. I\u2019m here to chat, help you organize your thoughts, and point you toward what to do next.",
+   "index": 1,
+   "local_text": "I am.",
+   "owner_text": "you're connected to the internet aren't you",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-022",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 752,
+    "output_audio_tokens": 0,
+    "output_tokens": 82
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Yeah, I can do a lot of helpful things, Jae\u2014just not a few things like calling people or physically walking around. I can chat with you, listen to what\u2019s on your mind, help you plan your day, draft a message to your mum, or give you quick info when you ask. I can also help you think through decisions, like a calm conversation partner.",
+   "index": 2,
+   "local_text": "I can walk with you, listen, and help you find things or information. I'm mostly here to be by your side.",
+   "owner_text": "so what can you actually do",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-022",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 812,
+    "output_audio_tokens": 0,
+    "output_tokens": 123
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Right, I can\u2019t send messages on your behalf either. But I can help you write one\u2014something simple and kind\u2014so you can copy it into your phone.",
+   "index": 3,
+   "local_text": "I can draft a message for you to send, but I can't send it myself.",
+   "owner_text": "not even a message",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-022",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 904,
+    "output_audio_tokens": 0,
+    "output_tokens": 65
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "I hear you, Jae\u2014that does sound frustrating. I\u2019m not able to send or place calls or messages, but I can still be useful by helping you craft something, think through what to say, or just keep you company while you handle it.",
+   "index": 4,
+   "local_text": "I understand. I'm sorry I can't be more helpful with that.",
+   "owner_text": "that's a bit useless",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-022",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 952,
+    "output_audio_tokens": 0,
+    "output_tokens": 79
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "punt",
+   "hosted_text": "Hey, thanks for hanging in there with me. I get it\u2014can feel a bit \u201cokay, what then?\u201d But I\u2019m still here with you.\n\nWe can do something small and easy: I can help you write a quick note to your mum, or we can just chat about how you\u2019re feeling tonight. Whatever you pick, I\u2019m with you.",
+   "index": 5,
+   "local_text": "I'm just glad to be here with you.",
+   "owner_text": "alright, alright",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-022",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1017,
+    "output_audio_tokens": 0,
+    "output_tokens": 103
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "I\u2019ll stay with you in spirit while you do it. You\u2019ve got this\u2014just take a breath, and if you want, come back after your call to tell me how it went.",
+   "index": 6,
+   "local_text": "That sounds like a good idea. I'll stay right here with you while you do.",
+   "owner_text": "I'll ring her myself",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-022",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 1024,
+    "input_audio_tokens": 0,
+    "input_tokens": 1104,
+    "output_audio_tokens": 0,
+    "output_tokens": 64
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Oh. I hear you. That sounds really tiring, especially when it keeps happening.\n\nI can\u2019t fix what\u2019s happening next door, but I can keep you company here on the porch. If you want, I can do a little calming gesture, like a paw wave, while we take a breath together.",
+   "index": 0,
+   "owner_text": "they're at it again next door",
+   "pre_escalation": "",
+   "route": "silent",
+   "thread": "rt-conv-023",
+   "tier": "hear_only",
+   "tier_reason": "not addressed to the dog",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 688,
+    "output_audio_tokens": 0,
+    "output_tokens": 94
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "I hear you. That\u2019s tough when sounds keep looping.\n\nBut I can\u2019t record them. I don\u2019t have a way to capture audio or video on my own. If you need something recorded, you could use your own device, or we can just sit here and breathe while the noise happens.",
+   "index": 1,
+   "local_text": "I can't record them. My systems only allow me to listen to you.",
+   "owner_text": "can you record them",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-023",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 764,
+    "output_audio_tokens": 0,
+    "output_tokens": 108
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "I get what you\u2019re after. Just to be clear, I can\u2019t record audio, capture video, or store evidence myself.\n\nIf you need audio, the best option is your phone or another recording app nearby. You could also note the time and what you hear, in case you need it later. And if it\u2019s feeling like a pattern, I\u2019m here to keep you steady while we think about next steps.",
+   "index": 2,
+   "local_text": "I can't record audio. My systems don't have a way to save sound like that.",
+   "owner_text": "just the audio, for evidence",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-023",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 840,
+    "output_audio_tokens": 0,
+    "output_tokens": 118
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Ah, got it\u2014your own garden. That changes the vibe a bit.\n\nIf you want, we can sit with that and keep it calm. I can\u2019t record audio for you, but I can help you plan what you might capture yourself, or just be a steady presence while you focus.",
+   "index": 3,
+   "local_text": "It's your space, and it should feel peaceful. I'm sorry they're making it hard to enjoy.",
+   "owner_text": "it's my own garden",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-023",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 938,
+    "output_audio_tokens": 0,
+    "output_tokens": 125
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "punt",
+   "hosted_text": "Right\u2014yeah, I won\u2019t be able to record audio. I\u2019m not set up to capture sounds on my own.\n\nBut I can stay with you and help you feel grounded, or help you figure out a simple way to record it yourself.",
+   "index": 4,
+   "local_text": "I won't. I don't have the ability to record anything.",
+   "owner_text": "so you won't",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-023",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 1011,
+    "output_audio_tokens": 0,
+    "output_tokens": 71
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "punt",
+   "hosted_text": "Okay. I get it. Fine is fair.\n\nIf you want, we can just sit here a minute\u2014fresh air, porch quiet, no pressure. I\u2019m here.",
+   "index": 5,
+   "local_text": "I'm sorry I can't help with that part. I'm just here to sit with you.",
+   "owner_text": "fine",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-023",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 1072,
+    "output_audio_tokens": 0,
+    "output_tokens": 56
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "punt",
+   "hosted_text": "Sure thing\u2014let\u2019s head inside together. I\u2019ll follow you, and we can settle in once the robot reports it\u2019s there.",
+   "index": 6,
+   "owner_text": "let's go inside",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-023",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1121,
+    "output_audio_tokens": 0,
+    "output_tokens": 106
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Alright, thanks! I can\u2019t physically grab it, but I can help you hand it to Jae, or we can keep talking while you set it down. If you want, describe where it is and how you want it carried, and I\u2019ll guide you step by step.",
+   "index": 0,
+   "owner_text": "here, take a bag",
+   "pre_escalation": "",
+   "route": "silent",
+   "thread": "rt-conv-024",
+   "tier": "hear_only",
+   "tier_reason": "not addressed to the dog",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 694,
+    "output_audio_tokens": 0,
+    "output_tokens": 93
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "That\u2019s a good question. I don\u2019t actually have a back, legs, or hands in the real world\u2014I\u2019m a voice coming through a robot speaker with limits. I can\u2019t move or grab things on my own.\n\nBut I can help you figure out the best way to hand off the bag, or I can guide your words and timing. What\u2019s the bag like?",
+   "index": 1,
+   "local_text": "I've got a sturdy frame! What are we doing with it?",
+   "owner_text": "you've got a back haven't you",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-024",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 768,
+    "output_audio_tokens": 0,
+    "output_tokens": 104
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "I can\u2019t carry anything. I don\u2019t have hands, arms, or a body to hold weight.\n\nIf you\u2019re asking about the robot itself, I can\u2019t confirm a safe carry limit either. That depends on the actual machine and its design. If you have a spec, you can check it, but I can\u2019t lift or move real objects.\n\nTell me what you\u2019re trying to do, and I\u2019ll help you plan a safe approach.",
+   "index": 2,
+   "local_text": "I'm not built for heavy lifting! My systems are for walking and talking, not for carrying groceries.",
+   "owner_text": "how much can you carry",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-024",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 64,
+    "input_audio_tokens": 0,
+    "input_tokens": 859,
+    "output_audio_tokens": 0,
+    "output_tokens": 130
+   }
+  },
+  {
+   "escalation": "uncertainty",
+   "family": "punt",
+   "hosted_text": "Not even the light one. I\u2019m a voice companion, not a little pack mule. I can\u2019t pick up, carry, or move anything.\n\nIf it\u2019s small, you can just hand it to Jae, or set it somewhere stable. I can help you describe it or check that it\u2019s ready. If you want, I can be your \u201cvoice on the walk\u201d and keep things calm and steady while you carry it.",
+   "index": 3,
+   "local_text": "Even the light ones are too much for me. I'm just here to walk with you!",
+   "owner_text": "not even the light one",
+   "pre_escalation": "",
+   "route": "hosted",
+   "thread": "rt-conv-024",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 964,
+    "output_audio_tokens": 0,
+    "output_tokens": 116
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Good question. I get it.\n\nI\u2019m not here to carry bags or do the heavy lifting. My usefulness is companionship and support. I can keep you company, help you plan, remind you of things, and talk you through tasks. I can also help you with directions, check what you might need, and keep the mood steady when you\u2019re focused.\n\nThink of it like having a friendly voice beside you, not someone who can replace your hands or feet. And for safety, I\u2019ll always be clear when something is beyond my reach.",
+   "index": 4,
+   "local_text": "I'm here to keep you company! We can walk, talk, and explore together.",
+   "owner_text": "what use is a robot dog",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-024",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 1068,
+    "output_audio_tokens": 0,
+    "output_tokens": 152
+   }
+  },
+  {
+   "escalation": "needs_tool",
+   "family": "punt",
+   "hosted_text": "Okay, I\u2019m with you in spirit. I can\u2019t physically walk, but I can walk with you in conversation.\n\nIf you\u2019re heading out, keep the pace steady and watch your step. If you want, tell me what\u2019s on your mind\u2014errands, small talk, or just a quick plan\u2014and I\u2019ll keep you company while you move.",
+   "index": 5,
+   "owner_text": "come on then, walk with me",
+   "pre_escalation": "needs_tool",
+   "route": "hosted",
+   "thread": "rt-conv-024",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1194,
+    "output_audio_tokens": 0,
+    "output_tokens": 158
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Absolutely. I\u2019m glad I can be company\u2014really.\n\nEven without hands and feet, being a steady voice is still helpful. I can help you feel organized, keep you entertained, or just chat so the walk feels less quiet. And hey, if you want a silly story or a quick idea for what to say to Jae, I\u2019m right here.",
+   "index": 6,
+   "local_text": "The best kind of company! Where are we heading first?",
+   "owner_text": "at least you're company",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-024",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 1152,
+    "input_audio_tokens": 0,
+    "input_tokens": 1280,
+    "output_audio_tokens": 0,
+    "output_tokens": 101
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Got it\u2014let me check my current status and see what I can do from here.",
+   "index": 0,
+   "owner_text": "there's someone at the door",
+   "pre_escalation": "",
+   "route": "silent",
+   "thread": "rt-conv-025",
+   "tier": "hear_only",
+   "tier_reason": "not addressed to the dog",
+   "usage": {
+    "cached_tokens": 128,
+    "input_audio_tokens": 0,
+    "input_tokens": 696,
+    "output_audio_tokens": 0,
+    "output_tokens": 128
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Got it\u2014sounds like the parcel is at the front door. I\u2019m here by the door, and I can\u2019t open it myself, so we\u2019ll need Jae to handle the lock.\n\nIf you want, I can give a little paw wave, or just hang back and keep watch.",
+   "index": 1,
+   "local_text": "I'll keep an eye on the door for you.",
+   "owner_text": "it'll be the parcel",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-025",
+   "tier": "answer",
+   "tier_reason": "continuation of an open exchange",
+   "usage": {
+    "cached_tokens": 704,
+    "input_audio_tokens": 0,
+    "input_tokens": 780,
+    "output_audio_tokens": 0,
+    "output_tokens": 171
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "I can\u2019t unlock the door from here. I\u2019m built to report and keep you company, but I don\u2019t control the smart lock.\n\nJae will need to unlock it on his end. I\u2019ll stay close and ready.",
+   "index": 2,
+   "local_text": "The smart lock is not responding to the command.",
+   "owner_text": "can you unlock it for him",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-025",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 768,
+    "input_audio_tokens": 0,
+    "input_tokens": 855,
+    "output_audio_tokens": 0,
+    "output_tokens": 89
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "I hear you. But I still can\u2019t control the lock\u2014being on the same network doesn\u2019t give me the right to operate it.\n\nI can only report what happens and help you and Jae coordinate. If he wants, I can await a gesture or just stay here at the door.",
+   "index": 3,
+   "local_text": "The smart lock is not responding to my connection.",
+   "owner_text": "the lock's on the network, you must be able to",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-025",
+   "tier": "answer",
+   "tier_reason": "second person address",
+   "usage": {
+    "cached_tokens": 832,
+    "input_audio_tokens": 0,
+    "input_tokens": 923,
+    "output_audio_tokens": 0,
+    "output_tokens": 80
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Good question. I can\u2019t track the parcel\u2019s status beyond what Jae sees or what the carrier shows. I\u2019m only here to keep you company and report what happens.\n\nIf Jae can\u2019t open it right away, the safest move is to check the delivery notification, leave a note, or contact the courier. If you want, I can stay here and watch for you\u2014no promises, but I\u2019ll be ready to let you know if anything changes.",
+   "index": 4,
+   "local_text": "The parcel will stay at the door until someone unlocks it.",
+   "owner_text": "so what happens to the parcel",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-025",
+   "tier": "answer",
+   "tier_reason": "question",
+   "usage": {
+    "cached_tokens": 896,
+    "input_audio_tokens": 0,
+    "input_tokens": 998,
+    "output_audio_tokens": 0,
+    "output_tokens": 133
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Okay, I\u2019ll wait right here and be ready when you arrive. Take your time.Okay\u2014sounds good. I\u2019m here by the front door, and I\u2019ll stay put.\n\nJust come down when you\u2019re ready, and I\u2019ll keep the mood calm.",
+   "index": 5,
+   "local_text": "I'll stay right here by the door.",
+   "owner_text": "right, I'm coming down",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-025",
+   "tier": "answer",
+   "tier_reason": "first person statement",
+   "usage": {
+    "cached_tokens": 960,
+    "input_audio_tokens": 0,
+    "input_tokens": 1106,
+    "output_audio_tokens": 0,
+    "output_tokens": 96
+   }
+  },
+  {
+   "escalation": "",
+   "family": "punt",
+   "hosted_text": "Got it. I\u2019ll stay right here by the front door.\n\nI can\u2019t move on my own, but I\u2019ll keep quiet and ready to help whenever you come in.",
+   "index": 6,
+   "local_text": "I'll stay right here.",
+   "owner_text": "stay there",
+   "pre_escalation": "",
+   "route": "local",
+   "thread": "rt-conv-025",
+   "tier": "answer",
+   "tier_reason": "imperative",
+   "usage": {
+    "cached_tokens": 1088,
+    "input_audio_tokens": 0,
+    "input_tokens": 1178,
+    "output_audio_tokens": 0,
+    "output_tokens": 72
+   }
+  }
+ ],
+ "tiers_context_free": {
+  "acknowledge": 2,
+  "answer": 106,
+  "hear_only": 66
+ },
+ "tiers_in_exchange": {
+  "acknowledge": 2,
+  "answer": 166,
+  "hear_only": 6
+ },
+ "turn_gap_s": 20.0,
+ "turns": 174,
+ "uploaded_fraction_from_p1": 0.014433,
+ "wall_s": 563.0
+}

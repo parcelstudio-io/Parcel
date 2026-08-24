@@ -1,0 +1,25 @@
+{
+ "clip": "renders_640.npz",
+ "labels": [
+  "person",
+  "bench",
+  "tree",
+  "building",
+  "lamppost",
+  "planter",
+  "door"
+ ],
+ "label_filter": "person",
+ "frames": 42,
+ "embedded_instance_views": 35,
+ "instances": 7,
+ "pairs": 35,
+ "novelty_new_mean": 0.07198391451209567,
+ "novelty_seen_mean": 0.05100679669144331,
+ "novelty_new_median": 0.06838938135001804,
+ "novelty_seen_median": 0.054205057454861594,
+ "auc_new_vs_seen": 0.8024489795918367,
+ "paired_new_greater": 28,
+ "paired_equal": 7,
+ "formula_agrees_with_product": true
+}

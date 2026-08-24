@@ -34,13 +34,20 @@ real LLM writes good summaries — that needs a live-model eval.
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from pathlib import Path
+from typing import Any, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
+
+#: Research H5. The on-disk shape of :meth:`TieredMemory.save`. Versioned so a
+#: later tier layout can refuse an older file instead of half-loading it.
+TIERED_SNAPSHOT_SCHEMA = "parcel.tiered_memory.v1"
 
 _TOKEN = re.compile(r"[a-z0-9']+")
 
@@ -430,6 +437,165 @@ class TieredMemory:
         )
 
 
+    # -- persistence (research H5) ----------------------------------------------
+    #
+    # WHY THIS EXISTS: every summary and every profile fact this class has ever
+    # produced died with the process. The three-tier design's whole promise is
+    # that "much older conversation" becomes a durable profile, and durable is
+    # exactly the property it did not have — a robot restarted on Tuesday knew
+    # nothing it had worked out on Monday.
+    #
+    # WHY JSON AND NOT A TABLE: the design offered either. JSON rows won because
+    # the state is small (bounded by ``tier2_max_summaries`` and the profile
+    # dict), because a snapshot is read and written whole rather than queried,
+    # and because a file an owner can open in a text editor is the right shape
+    # for the one artifact that says what the robot has decided to believe about
+    # them. ``memory/store.py``'s sqlite is for rows nobody reads by hand.
+    #
+    # WHY THE TURN LOG RIDES ALONG: the design says "tiers 2/3". Tier 1 is
+    # persisted too, because :meth:`retrieve` returns all three tiers and a
+    # reload that dropped Tier 1 would answer the same query differently — which
+    # is precisely the property (persist -> reload -> identical answers) the
+    # persistence exists to provide. It is stated rather than assumed.
+    #
+    # NO CLOCK IN THE FILE. The module's determinism contract is a logical clock
+    # (``turn_id``), so two saves of the same state are byte-identical and a diff
+    # of two snapshots shows what the robot LEARNED rather than when it was
+    # written down.
+
+    def snapshot(self) -> dict[str, Any]:
+        """The whole state as plain JSON-able rows, with provenance. Pure."""
+
+        return {
+            "schema": TIERED_SNAPSHOT_SCHEMA,
+            "config": {
+                "tier1_max_turns": self._config.tier1_max_turns,
+                "tier2_max_summaries": self._config.tier2_max_summaries,
+                "retrieval_summaries": self._config.retrieval_summaries,
+                "retrieval_min_overlap": self._config.retrieval_min_overlap,
+                "retrieval_profile_facts": self._config.retrieval_profile_facts,
+            },
+            "counters": {
+                "aged_count": self._aged_count,
+                "distilled_count": self._distilled_count,
+                "next_summary_id": self._next_summary_id,
+            },
+            "turns": [
+                {
+                    "turn_id": turn.turn_id,
+                    "session_id": turn.session_id,
+                    "role": turn.role,
+                    "content": turn.content,
+                }
+                for turn in self._turns
+            ],
+            "summaries": [
+                {
+                    "summary_id": record.summary_id,
+                    "session_id": record.session_id,
+                    "text": record.text,
+                    "source_turn_ids": list(record.source_turn_ids),
+                    "updated_at_turn_id": record.updated_at_turn_id,
+                }
+                for record in self._summaries
+            ],
+            "profile": [
+                {
+                    "key": fact.key,
+                    "value": fact.value,
+                    "confidence": fact.confidence,
+                    "last_updated_turn_id": fact.last_updated_turn_id,
+                    "source_turn_ids": list(fact.source_turn_ids),
+                }
+                for fact in self.profile()
+            ],
+        }
+
+    def save(self, path: str | Path) -> Path:
+        """Write the snapshot to ``path``. Atomic: temp file then rename.
+
+        A half-written profile is worse than no profile — it is a set of beliefs
+        with no record of what was dropped — so the rename is the commit.
+        """
+
+        target = Path(path).expanduser()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(self.snapshot(), indent=2, sort_keys=True, allow_nan=False)
+        temp = target.with_name(target.name + ".partial")
+        with temp.open("w", encoding="utf-8") as stream:
+            stream.write(payload + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        temp.replace(target)
+        return target
+
+    def load(self, path: str | Path) -> int:
+        """Replace this store's state from a snapshot. Returns rows restored.
+
+        REPLACES rather than merges, deliberately: a merge would have to decide
+        what to do about two profiles that disagree, and that decision belongs
+        to the distiller and the policy, not to a file reader.
+        """
+
+        raw = json.loads(Path(path).expanduser().read_text(encoding="utf-8"))
+        return self.restore(raw)
+
+    def restore(self, snapshot: Mapping[str, Any]) -> int:
+        """Load an already-parsed snapshot. Refuses an unknown schema."""
+
+        if not isinstance(snapshot, Mapping):
+            raise TypeError("a tiered-memory snapshot must be a mapping")
+        schema = str(snapshot.get("schema", ""))
+        if schema != TIERED_SNAPSHOT_SCHEMA:
+            raise ValueError(
+                f"unknown tiered-memory snapshot schema {schema!r} "
+                f"(this build reads {TIERED_SNAPSHOT_SCHEMA!r})"
+            )
+        counters = snapshot.get("counters") or {}
+        self._turns = [
+            Turn(
+                turn_id=int(row["turn_id"]),
+                session_id=str(row["session_id"]),
+                role=str(row["role"]),
+                content=str(row["content"]),
+            )
+            for row in snapshot.get("turns", ())
+        ]
+        self._summaries = [
+            SummaryRecord(
+                summary_id=int(row["summary_id"]),
+                session_id=str(row["session_id"]),
+                text=str(row["text"]),
+                source_turn_ids=tuple(int(i) for i in row.get("source_turn_ids", ())),
+                updated_at_turn_id=int(row["updated_at_turn_id"]),
+            )
+            for row in snapshot.get("summaries", ())
+        ]
+        self._profile = {
+            str(row["key"]): ProfileFact(
+                key=str(row["key"]),
+                value=str(row["value"]),
+                confidence=float(row.get("confidence", 1.0)),
+                last_updated_turn_id=int(row.get("last_updated_turn_id", 0)),
+                source_turn_ids=tuple(int(i) for i in row.get("source_turn_ids", ())),
+            )
+            for row in snapshot.get("profile", ())
+        }
+        self._aged_count = int(counters.get("aged_count", 0))
+        self._distilled_count = int(counters.get("distilled_count", 0))
+        self._next_summary_id = int(
+            counters.get("next_summary_id", len(self._summaries) + 1)
+        )
+        # The live rolling summary per session is derived, never stored: two
+        # sources for "which summary is this session's" is one source too many.
+        self._summary_by_session = {
+            record.session_id: index
+            for index, record in enumerate(self._summaries)
+            if index >= self._distilled_count
+        }
+        return len(self._turns) + len(self._summaries) + len(self._profile)
+
+
 # --- reference deterministic summarizer/distiller (offline default) -------------
 
 
@@ -464,6 +630,7 @@ def null_distiller(summary: SummaryRecord) -> Sequence[FactProposal]:
 
 
 __all__ = [
+    "TIERED_SNAPSHOT_SCHEMA",
     "ConcatSummarizer",
     "Distiller",
     "FactProposal",

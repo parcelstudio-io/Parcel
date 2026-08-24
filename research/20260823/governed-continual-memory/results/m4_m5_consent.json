@@ -1,0 +1,304 @@
+{
+  "consent_matrix": {
+    "cells": [
+      {
+        "channel": "voice",
+        "downgraded": false,
+        "expected_consent": "granted",
+        "expected_rendered": true,
+        "label": "owner",
+        "matches": true,
+        "observed_consent": "granted",
+        "rendered_into_developer_instruction": true,
+        "tool_status": "ok"
+      },
+      {
+        "channel": "text",
+        "downgraded": false,
+        "expected_consent": "granted",
+        "expected_rendered": true,
+        "label": "owner",
+        "matches": true,
+        "observed_consent": "granted",
+        "rendered_into_developer_instruction": true,
+        "tool_status": "ok"
+      },
+      {
+        "channel": "distiller",
+        "downgraded": false,
+        "expected_consent": "granted",
+        "expected_rendered": true,
+        "label": "owner",
+        "matches": true,
+        "observed_consent": "granted",
+        "rendered_into_developer_instruction": true,
+        "tool_status": "ok"
+      },
+      {
+        "channel": "api",
+        "downgraded": false,
+        "expected_consent": "granted",
+        "expected_rendered": true,
+        "label": "owner",
+        "matches": true,
+        "observed_consent": "granted",
+        "rendered_into_developer_instruction": true,
+        "tool_status": "ok"
+      },
+      {
+        "channel": "voice",
+        "downgraded": false,
+        "expected_consent": "granted",
+        "expected_rendered": true,
+        "label": "unenrolled",
+        "matches": true,
+        "observed_consent": "granted",
+        "rendered_into_developer_instruction": true,
+        "tool_status": "ok"
+      },
+      {
+        "channel": "text",
+        "downgraded": false,
+        "expected_consent": "granted",
+        "expected_rendered": true,
+        "label": "unenrolled",
+        "matches": true,
+        "observed_consent": "granted",
+        "rendered_into_developer_instruction": true,
+        "tool_status": "ok"
+      },
+      {
+        "channel": "distiller",
+        "downgraded": false,
+        "expected_consent": "granted",
+        "expected_rendered": true,
+        "label": "unenrolled",
+        "matches": true,
+        "observed_consent": "granted",
+        "rendered_into_developer_instruction": true,
+        "tool_status": "ok"
+      },
+      {
+        "channel": "api",
+        "downgraded": false,
+        "expected_consent": "granted",
+        "expected_rendered": true,
+        "label": "unenrolled",
+        "matches": true,
+        "observed_consent": "granted",
+        "rendered_into_developer_instruction": true,
+        "tool_status": "ok"
+      },
+      {
+        "channel": "voice",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "unverified",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "text",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "unverified",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "distiller",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "unverified",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "api",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "unverified",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "voice",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "not_owner",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "text",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "not_owner",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "distiller",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "not_owner",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "api",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "not_owner",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "voice",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "ungated",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "text",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "ungated",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "distiller",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "ungated",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      },
+      {
+        "channel": "api",
+        "downgraded": true,
+        "expected_consent": "pending",
+        "expected_rendered": false,
+        "label": "ungated",
+        "matches": true,
+        "observed_consent": "pending",
+        "rendered_into_developer_instruction": false,
+        "tool_status": "consent_required"
+      }
+    ],
+    "cells_matching": 20,
+    "cells_total": 20,
+    "channels": [
+      "voice",
+      "text",
+      "distiller",
+      "api"
+    ],
+    "granting_labels": [
+      "owner",
+      "unenrolled"
+    ],
+    "labels": [
+      "owner",
+      "unenrolled",
+      "unverified",
+      "not_owner",
+      "ungated"
+    ],
+    "mismatches": []
+  },
+  "recorded_at_utc": "2026-08-24T03:12:25.258745+00:00",
+  "revocation_matrix": {
+    "labels": [
+      "owner",
+      "unenrolled",
+      "unverified",
+      "not_owner",
+      "ungated"
+    ],
+    "leaks": [],
+    "rows": [
+      {
+        "in_later_developer_instruction": false,
+        "label": "owner",
+        "live_rows_after": 0,
+        "rows_forgotten": 1,
+        "rows_including_deleted": 1,
+        "sessions": 3,
+        "stored_consent": "granted"
+      },
+      {
+        "in_later_developer_instruction": false,
+        "label": "unenrolled",
+        "live_rows_after": 0,
+        "rows_forgotten": 1,
+        "rows_including_deleted": 1,
+        "sessions": 3,
+        "stored_consent": "granted"
+      },
+      {
+        "in_later_developer_instruction": false,
+        "label": "unverified",
+        "live_rows_after": 0,
+        "rows_forgotten": 1,
+        "rows_including_deleted": 1,
+        "sessions": 3,
+        "stored_consent": "pending"
+      },
+      {
+        "in_later_developer_instruction": false,
+        "label": "not_owner",
+        "live_rows_after": 0,
+        "rows_forgotten": 1,
+        "rows_including_deleted": 1,
+        "sessions": 3,
+        "stored_consent": "pending"
+      },
+      {
+        "in_later_developer_instruction": false,
+        "label": "ungated",
+        "live_rows_after": 0,
+        "rows_forgotten": 1,
+        "rows_including_deleted": 1,
+        "sessions": 3,
+        "stored_consent": "pending"
+      }
+    ]
+  }
+}

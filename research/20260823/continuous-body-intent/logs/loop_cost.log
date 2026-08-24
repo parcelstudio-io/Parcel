@@ -1,0 +1,114 @@
+{
+  "arms": {
+    "baseline": {
+      "arm": "baseline",
+      "loadavg_after": [
+        221.25,
+        187.56,
+        169.89
+      ],
+      "loadavg_before": [
+        165.26,
+        168.21,
+        160.85
+      ],
+      "loop_work": {
+        "max_ms": 110.146,
+        "mean_ms": 14.7422,
+        "n": 3000,
+        "p50_ms": 11.9374,
+        "p95_ms": 34.4793,
+        "p99_ms": 44.4404
+      },
+      "observation_errors": 0,
+      "seconds": 300.017,
+      "transport_drops": 0,
+      "transport_retries": 0
+    },
+    "in_loop": {
+      "arm": "in_loop",
+      "loadavg_after": [
+        103.43,
+        162.61,
+        166.69
+      ],
+      "loadavg_before": [
+        221.25,
+        187.56,
+        169.89
+      ],
+      "loop_work": {
+        "max_ms": 68.4842,
+        "mean_ms": 14.0659,
+        "n": 3000,
+        "p50_ms": 11.3347,
+        "p95_ms": 32.9931,
+        "p99_ms": 44.4402
+      },
+      "observation_errors": 0,
+      "seconds": 300.0,
+      "transport_drops": 0,
+      "transport_retries": 0
+    },
+    "thread": {
+      "arm": "thread",
+      "loadavg_after": [
+        68.5,
+        103.55,
+        139.87
+      ],
+      "loadavg_before": [
+        103.43,
+        162.61,
+        166.69
+      ],
+      "loop_work": {
+        "max_ms": 23.2713,
+        "mean_ms": 8.0184,
+        "n": 3000,
+        "p50_ms": 7.3161,
+        "p95_ms": 15.7907,
+        "p99_ms": 18.2366
+      },
+      "observation_errors": 0,
+      "seconds": 300.0,
+      "transport_drops": 0,
+      "transport_retries": 0
+    }
+  },
+  "micro": {
+    "compose_plus_apply": {
+      "max_ms": 0.2029,
+      "mean_ms": 0.0279,
+      "n": 100000,
+      "p50_ms": 0.0286,
+      "p95_ms": 0.035,
+      "p99_ms": 0.0444
+    }
+  },
+  "p99_delta_pct": {
+    "baseline": 0.0,
+    "in_loop": -0.0,
+    "thread": -58.964
+  },
+  "synthetic_loop": {
+    "p50_delta_pct": 1961.644,
+    "p99_delta_pct": 1704.73,
+    "with_composer_5_ticks": {
+      "max_ms": 0.8119,
+      "mean_ms": 0.1586,
+      "n": 100000,
+      "p50_ms": 0.1505,
+      "p95_ms": 0.2031,
+      "p99_ms": 0.2671
+    },
+    "without_composer": {
+      "max_ms": 0.682,
+      "mean_ms": 0.0066,
+      "n": 100000,
+      "p50_ms": 0.0073,
+      "p95_ms": 0.011,
+      "p99_ms": 0.0148
+    }
+  }
+}

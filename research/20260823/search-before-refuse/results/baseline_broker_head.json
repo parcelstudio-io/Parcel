@@ -1,0 +1,261 @@
+{
+  "ask": {
+    "bench": {
+      "navigate_calls": [
+        [
+          "bench",
+          "",
+          {}
+        ]
+      ],
+      "result": {
+        "admitted": "Okay\u2014I'll navigate toward bench safely.",
+        "completion_note": "this has NOT finished; the robot's own systems report the ending separately, and only then may you say it is done",
+        "detail": "started: the robot is walking to bench",
+        "directive": "go to bench",
+        "finished": false,
+        "place": "bench",
+        "relation_hint": "",
+        "status": "ok",
+        "tense": "started",
+        "tool": "navigate_to"
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 1,
+        "rejected": 0,
+        "unknown_place_asks": 0,
+        "unknown_place_mode": "ask"
+      }
+    },
+    "city books": {
+      "navigate_calls": [],
+      "result": {
+        "detail": "not started: the robot has no place by that name on its map, so it has not moved; ask the owner where it is or offer to go and look for it. Places the robot does know: crosswalk, sidewalk, planter, bench, lamppost",
+        "finished": false,
+        "place": "city books",
+        "reason": "unknown_place",
+        "status": "unknown_place",
+        "tense": "not started",
+        "tool": "navigate_to",
+        "valid_places": [
+          "crosswalk",
+          "sidewalk",
+          "planter",
+          "bench",
+          "lamppost"
+        ]
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 0,
+        "rejected": 1,
+        "unknown_place_asks": 1,
+        "unknown_place_mode": "ask"
+      }
+    },
+    "narnia": {
+      "navigate_calls": [],
+      "result": {
+        "detail": "not started: the robot has no place by that name on its map, so it has not moved; ask the owner where it is or offer to go and look for it. Places the robot does know: crosswalk, sidewalk, planter, bench, lamppost",
+        "finished": false,
+        "place": "narnia",
+        "reason": "unknown_place",
+        "status": "unknown_place",
+        "tense": "not started",
+        "tool": "navigate_to",
+        "valid_places": [
+          "crosswalk",
+          "sidewalk",
+          "planter",
+          "bench",
+          "lamppost"
+        ]
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 0,
+        "rejected": 1,
+        "unknown_place_asks": 1,
+        "unknown_place_mode": "ask"
+      }
+    },
+    "the bookshop on the corner": {
+      "navigate_calls": [],
+      "result": {
+        "detail": "not started: the robot has no place by that name on its map, so it has not moved; ask the owner where it is or offer to go and look for it. Places the robot does know: crosswalk, sidewalk, planter, bench, lamppost",
+        "finished": false,
+        "place": "the bookshop on the corner",
+        "reason": "unknown_place",
+        "status": "unknown_place",
+        "tense": "not started",
+        "tool": "navigate_to",
+        "valid_places": [
+          "crosswalk",
+          "sidewalk",
+          "planter",
+          "bench",
+          "lamppost"
+        ]
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 0,
+        "rejected": 1,
+        "unknown_place_asks": 1,
+        "unknown_place_mode": "ask"
+      }
+    },
+    "with owner": {
+      "navigate_calls": [],
+      "result": {
+        "detail": "not started: 'with owner' describes an action, not a place; if the owner wants you to come along use follow_owner, and if they want a lap around them use circle_owner. Places the robot does know: crosswalk, sidewalk, planter, bench, lamppost",
+        "finished": false,
+        "place": "with owner",
+        "reason": "not_a_place_name",
+        "status": "rejected",
+        "tense": "not started",
+        "tool": "navigate_to",
+        "valid_places": [
+          "crosswalk",
+          "sidewalk",
+          "planter",
+          "bench",
+          "lamppost"
+        ]
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 0,
+        "rejected": 1,
+        "unknown_place_asks": 0,
+        "unknown_place_mode": "ask"
+      }
+    }
+  },
+  "refuse": {
+    "bench": {
+      "navigate_calls": [
+        [
+          "bench",
+          "",
+          {}
+        ]
+      ],
+      "result": {
+        "admitted": "Okay\u2014I'll navigate toward bench safely.",
+        "completion_note": "this has NOT finished; the robot's own systems report the ending separately, and only then may you say it is done",
+        "detail": "started: the robot is walking to bench",
+        "directive": "go to bench",
+        "finished": false,
+        "place": "bench",
+        "relation_hint": "",
+        "status": "ok",
+        "tense": "started",
+        "tool": "navigate_to"
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 1,
+        "rejected": 0,
+        "unknown_place_asks": 0,
+        "unknown_place_mode": "refuse"
+      }
+    },
+    "city books": {
+      "navigate_calls": [
+        [
+          "city books",
+          "",
+          {}
+        ]
+      ],
+      "result": {
+        "detail": "not started: the robot's map has no place called 'city books'; the places it does know nearby are the crosswalk, the sidewalk and the planter; ask the owner which of those they mean, or which real place they want",
+        "finished": false,
+        "status": "rejected",
+        "tense": "not started",
+        "tool": "navigate_to"
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 0,
+        "rejected": 1,
+        "unknown_place_asks": 0,
+        "unknown_place_mode": "refuse"
+      }
+    },
+    "narnia": {
+      "navigate_calls": [
+        [
+          "narnia",
+          "",
+          {}
+        ]
+      ],
+      "result": {
+        "detail": "not started: the robot's map has no place called 'city books'; the places it does know nearby are the crosswalk, the sidewalk and the planter; ask the owner which of those they mean, or which real place they want",
+        "finished": false,
+        "status": "rejected",
+        "tense": "not started",
+        "tool": "navigate_to"
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 0,
+        "rejected": 1,
+        "unknown_place_asks": 0,
+        "unknown_place_mode": "refuse"
+      }
+    },
+    "the bookshop on the corner": {
+      "navigate_calls": [
+        [
+          "the bookshop on the corner",
+          "",
+          {}
+        ]
+      ],
+      "result": {
+        "detail": "not started: the robot's map has no place called 'city books'; the places it does know nearby are the crosswalk, the sidewalk and the planter; ask the owner which of those they mean, or which real place they want",
+        "finished": false,
+        "status": "rejected",
+        "tense": "not started",
+        "tool": "navigate_to"
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 0,
+        "rejected": 1,
+        "unknown_place_asks": 0,
+        "unknown_place_mode": "refuse"
+      }
+    },
+    "with owner": {
+      "navigate_calls": [],
+      "result": {
+        "detail": "not started: 'with owner' describes an action, not a place; if the owner wants you to come along use follow_owner, and if they want a lap around them use circle_owner. Places the robot does know: crosswalk, sidewalk, planter, bench, lamppost",
+        "finished": false,
+        "place": "with owner",
+        "reason": "not_a_place_name",
+        "status": "rejected",
+        "tense": "not started",
+        "tool": "navigate_to",
+        "valid_places": [
+          "crosswalk",
+          "sidewalk",
+          "planter",
+          "bench",
+          "lamppost"
+        ]
+      },
+      "snapshot": {
+        "dropped": 0,
+        "executed": 0,
+        "rejected": 1,
+        "unknown_place_asks": 0,
+        "unknown_place_mode": "refuse"
+      }
+    }
+  }
+}

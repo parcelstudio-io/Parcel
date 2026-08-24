@@ -1,0 +1,85 @@
+rating gemma-26b
+rt-conv-002 base -0.9
+rt-conv-001 base -0.7
+rt-conv-003 test 0.44999999999999996
+rt-conv-004 base -0.7
+rt-conv-005 base -0.9
+rt-conv-008 base -0.6
+rt-conv-007 base -0.7
+rt-conv-006 base -0.7
+rt-conv-009 base -0.8500000000000001
+rt-conv-011 tie 0.0
+rt-conv-010 base -0.8500000000000001
+rt-conv-012 base -0.75
+rt-conv-013 base -0.75
+rt-conv-015 base -0.7
+rt-conv-014 base -0.75
+rt-conv-016 base -0.6499999999999999
+rt-conv-017 base -0.6499999999999999
+rt-conv-018 base -0.75
+rt-conv-019 base -0.6
+rt-conv-020 base -0.6499999999999999
+rt-conv-021 base -0.9
+rt-conv-022 base -0.6499999999999999
+rt-conv-023 base -0.75
+rt-conv-024 base -0.8500000000000001
+rt-conv-025 test 0.8
+rt-conv-001 base -0.75
+rt-conv-002 base -0.6499999999999999
+rt-conv-003 base -0.7
+rt-conv-004 base -0.10000000000000003
+rt-conv-005 base -0.9
+gemma-26b {
+ "rater": "pairwise_quality@1",
+ "judge_model": "qwen3-32b-judge",
+ "rated": 30,
+ "abstentions": 0,
+ "mean_score": -0.605,
+ "local_wins": 2,
+ "hosted_wins": 27,
+ "ties": 1,
+ "mean_position_bias": 0.163
+}
+rating ministral-8b
+rt-conv-004 base -0.6
+rt-conv-002 base -0.6
+rt-conv-003 test 0.7
+rt-conv-001 base -0.15
+rt-conv-005 base -0.9
+rt-conv-007 base -0.6499999999999999
+rt-conv-008 tie -0.05000000000000002
+rt-conv-006 tie -0.04999999999999999
+rt-conv-009 tie 0.04999999999999999
+rt-conv-011 test 0.8
+rt-conv-010 test 0.10000000000000003
+rt-conv-012 base -0.6499999999999999
+rt-conv-013 base -0.7
+rt-conv-014 base -0.7
+rt-conv-015 base -0.7
+rt-conv-016 base -0.6
+rt-conv-017 base -0.7
+rt-conv-018 base -0.55
+rt-conv-019 base -0.7
+rt-conv-020 tie 0.0
+rt-conv-021 base -0.75
+rt-conv-022 base -0.6
+rt-conv-024 base -0.6499999999999999
+rt-conv-023 base -0.75
+rt-conv-025 test 0.10000000000000003
+rt-conv-001 tie 0.0
+rt-conv-002 base -0.6499999999999999
+rt-conv-003 base -0.6499999999999999
+rt-conv-004 base -0.75
+rt-conv-005 test 0.6
+ministral-8b {
+ "rater": "pairwise_quality@1",
+ "judge_model": "qwen3-32b-judge",
+ "rated": 30,
+ "abstentions": 0,
+ "mean_score": -0.358,
+ "local_wins": 5,
+ "hosted_wins": 20,
+ "ties": 5,
+ "mean_position_bias": 0.383
+}
+wrote /home/jaewoo-jang/Desktop/Projects/Parcel/research/20260823/local-cognition-gpu/results/talker_rated.json

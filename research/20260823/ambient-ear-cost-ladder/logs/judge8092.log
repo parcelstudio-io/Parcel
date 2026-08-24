@@ -1,0 +1,40 @@
+55.18.170.986 I slot launch_slot_: id  0 | task 4310 | processing task, is_child = 0
+55.21.141.439 I slot print_timing: id  1 | task 4200 | n_decoded =    108, tg =   3.55 t/s, tg_3s =   1.74 t/s
+55.21.141.730 I slot print_timing: id  3 | task 4201 | n_decoded =    108, tg =   3.55 t/s, tg_3s =   1.74 t/s
+55.21.373.249 I slot print_timing: id  1 | task 4200 | prompt eval time =   10633.22 ms /   417 tokens (   25.50 ms per token,    39.22 tokens per second)
+55.21.373.258 I slot print_timing: id  1 | task 4200 |        eval time =   30672.65 ms /   109 tokens (  281.40 ms per token,     3.55 tokens per second)
+55.21.373.259 I slot print_timing: id  1 | task 4200 |       total time =   41305.87 ms /   526 tokens
+55.21.373.260 I slot print_timing: id  1 | task 4200 |    graphs reused =       3740
+55.21.373.343 I slot      release: id  1 | task 4200 | stop processing: n_tokens = 756, truncated = 0
+55.21.755.251 I slot get_availabl: id  1 | task -1 | selected slot by LCP similarity, f_sim_best = 0.552 (> 0.100 thold), f_keep = 0.474
+55.21.755.316 W srv         alloc:  - making room for prompt cache entry, removing oldest entry (size = 173.259 MiB)
+55.21.861.118 I slot launch_slot_: id  1 | task 4314 | processing task, is_child = 0
+55.25.349.580 I slot print_timing: id  3 | task 4201 | n_decoded =    111, tg =   3.20 t/s, tg_3s =   0.71 t/s
+55.25.579.429 I slot print_timing: id  3 | task 4201 | prompt eval time =   10633.43 ms /   543 tokens (   19.58 ms per token,    51.07 tokens per second)
+55.25.579.434 I slot print_timing: id  3 | task 4201 |        eval time =   34878.48 ms /   112 tokens (  311.42 ms per token,     3.21 tokens per second)
+55.25.579.434 I slot print_timing: id  3 | task 4201 |       total time =   45511.91 ms /   655 tokens
+55.25.579.435 I slot print_timing: id  3 | task 4201 |    graphs reused =       3740
+55.25.579.498 I slot      release: id  3 | task 4201 | stop processing: n_tokens = 884, truncated = 0
+55.25.795.671 I slot get_availabl: id  3 | task -1 | selected slot by LCP similarity, f_sim_best = 0.580 (> 0.100 thold), f_keep = 0.507
+55.25.795.740 I slot launch_slot_: id  3 | task 4318 | processing task, is_child = 0
+55.44.872.043 I slot print_timing: id  2 | task 4282 | n_decoded =    100, tg =   3.06 t/s, tg_3s =   3.06 t/s
+55.45.570.931 I slot print_timing: id  2 | task 4282 | prompt eval time =    2991.83 ms /   234 tokens (   12.79 ms per token,    78.21 tokens per second)
+55.45.570.935 I slot print_timing: id  2 | task 4282 |        eval time =   33424.94 ms /   103 tokens (  324.51 ms per token,     3.08 tokens per second)
+55.45.570.936 I slot print_timing: id  2 | task 4282 |       total time =   36416.78 ms /   337 tokens
+55.45.570.937 I slot print_timing: id  2 | task 4282 |    graphs reused =       3808
+55.45.571.005 I slot      release: id  2 | task 4282 | stop processing: n_tokens = 961, truncated = 0
+55.45.955.281 I slot get_availabl: id  2 | task -1 | selected slot by LCP similarity, f_sim_best = 0.249 (> 0.100 thold), f_keep = 0.239
+55.45.955.344 W srv         alloc:  - making room for prompt cache entry, removing oldest entry (size = 197.511 MiB)
+55.46.080.243 I slot launch_slot_: id  2 | task 4390 | processing task, is_child = 0
+55.59.081.438 I slot print_timing: id  0 | task 4310 | n_decoded =    100, tg =   2.64 t/s, tg_3s =   2.64 t/s
+55.59.791.347 I slot print_timing: id  1 | task 4314 | n_decoded =    100, tg =   2.90 t/s, tg_3s =   2.90 t/s
+56.00.498.732 I slot print_timing: id  3 | task 4318 | n_decoded =    100, tg =   3.24 t/s, tg_3s =   3.24 t/s
+56.00.572.427 W srv          stop: cancel task, id_task = 4310
+56.00.572.433 W srv          stop: cancel task, id_task = 4318
+56.00.572.663 W srv          stop: cancel task, id_task = 4314
+56.00.581.178 W srv          stop: cancel task, id_task = 4390
+56.00.735.371 I slot      release: id  2 | task 4390 | stop processing: n_tokens = 954, truncated = 0
+56.00.735.384 I slot      release: id  1 | task 4314 | stop processing: n_tokens = 751, truncated = 0
+56.00.735.392 I slot      release: id  3 | task 4318 | stop processing: n_tokens = 873, truncated = 0
+56.00.735.399 I slot      release: id  0 | task 4310 | stop processing: n_tokens = 1025, truncated = 0
+56.10.427.157 I srv    operator(): operator(): cleaning up before exit...

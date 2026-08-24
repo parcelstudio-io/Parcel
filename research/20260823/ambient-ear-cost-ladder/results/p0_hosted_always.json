@@ -1,0 +1,73 @@
+{
+ "audio_out_per_text_out_measured": 1.5406,
+ "audio_out_ratios": [
+  1.3729,
+  1.7083
+ ],
+ "days_per_month": 30.0,
+ "harness": "p0_hosted_always",
+ "listen_hours_per_day": 12.0,
+ "models": {
+  "full": {
+   "as_of": "2026-08-23",
+   "audio_day_usd_per_month": 89.63,
+   "audio_day_with_tv_usd_per_month": {
+    "0h": 89.63,
+    "12h": 5575.51,
+    "4h": 1918.26
+   },
+   "floor_usd_per_month_assumed_refuted": 414.72,
+   "floor_usd_per_month_measured": 0.0,
+   "listening_usd_per_hour_assumed": 1.152,
+   "median_turn_usd_audio_modelled": 0.015863,
+   "model": "gpt-realtime-2.1",
+   "text_day_usd_per_month": 19.56,
+   "turns_usd_per_day_audio_modelled": 2.9877,
+   "turns_usd_per_day_text_measured": 0.65203
+  },
+  "mini": {
+   "as_of": "2026-08-23",
+   "audio_day_usd_per_month": 24.6,
+   "audio_day_with_tv_usd_per_month": {
+    "0h": 24.6,
+    "12h": 1536.18,
+    "4h": 528.46
+   },
+   "floor_usd_per_month_assumed_refuted": 129.6,
+   "floor_usd_per_month_measured": 0.0,
+   "listening_usd_per_hour_assumed": 0.36,
+   "median_turn_usd_audio_modelled": 0.004371,
+   "model": "gpt-realtime-2.1-mini",
+   "text_day_usd_per_month": 2.26,
+   "turns_usd_per_day_audio_modelled": 0.81985,
+   "turns_usd_per_day_text_measured": 0.07533
+  }
+ },
+ "silence_billing": {
+  "billed": false,
+  "probes": [
+   {
+    "input_audio_tokens": 19,
+    "phase": "audio_60s_silence",
+    "uploaded_s": 63.773
+   },
+   {
+    "input_audio_tokens": 0,
+    "phase": "audio_60s_silence",
+    "uploaded_s": 5.273
+   },
+   {
+    "input_audio_tokens": 19,
+    "phase": "audio_no_silence",
+    "uploaded_s": 3.773
+   },
+   {
+    "input_audio_tokens": 37,
+    "phase": "audio_no_silence",
+    "uploaded_s": 5.273
+   }
+  ]
+ },
+ "tv_opens_per_hour_measured": 960.61,
+ "words_per_second_measured": 4.578
+}
